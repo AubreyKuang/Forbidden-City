@@ -104,6 +104,12 @@ label.opt:has(input:checked){background:#ffe9b0;box-shadow:inset 0 0 0 2px var(-
 #toast{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:60;display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none}
 #toast div{background:var(--ink);color:var(--gold);border:2px solid var(--gold2);padding:5px 14px;font-size:14px;animation:tin .25s steps(3)}
 @keyframes tin{from{transform:translateY(-8px);opacity:0}}
+#mapwrap{position:relative;line-height:0}
+#mapc{width:100%;aspect-ratio:200/128;display:block;cursor:pointer;border:3px solid var(--ink);image-rendering:pixelated}
+.mlab{position:absolute;transform:translate(-50%,-50%);font:11px/1.35 var(--f-ui);padding:0 3px;background:#2a1712cc;color:#ffe08a;border:1px solid var(--gold2);cursor:pointer;white-space:nowrap}
+.mlab:hover,.mlab:focus-visible{background:var(--wall);outline:none}
+@media (max-width:480px){.mlab{font-size:9px;padding:0 1px}}
+textarea.inp{max-width:100%;min-height:70px;font-size:12px;word-break:break-all}
 .title-wrap{text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px;padding:14px 0}
 .log-filter{display:flex;gap:6px;margin-bottom:8px}
 @media (max-width:760px){
@@ -265,7 +271,7 @@ function assignPalace(c){
   const min=Math.min(...Object.values(cnt));c.palace=pick(PALACES.filter(p=>cnt[p]===min));
 }
 function addConsort(c,rank,why){
-  c.rank=rank; S.consorts.push(c); assignPalace(c); S.ys.c++;
+  c.rank=rank; S.consorts.push(c); assignPalace(c); S.ys.c++; initRel(c); assignArc(c);
   story(c,`${why}，封为${RANKS[rank]}，赐居${c.palace}。`);
   log(`${fullName(c)}（${c.fam.t}之女）${why}，封${RANKS[rank]}。`);
 }
@@ -623,9 +629,9 @@ function nightWith(c,fromEvent){
   const fm=e.style==='风流'?1.5:1;
   const s=cchg(c,{favor:10*fm,mood:10,aff:(c.trait==='痴情'?9:6)});
   c.nights++;
-  let p=.11+(e.style==='风流'?.06:0)+(S.flags.bless===S.turn?.1:0)-(c.trait==='体弱'?.05:0)-(e.age>50?.07:0)+(e.health>80?.03:0);
+  let p=.18+(e.style==='风流'?.06:0)+(S.flags.bless===S.turn?.1:0)-(c.trait==='体弱'?.05:0)-(e.age>50?.07:0)+(e.health>80?.03:0);
   if(!c.preg&&S.turn-c.lastBirth>=3&&chance(p)){c.preg=1}
-  harem().forEach(o=>{if(o!==c&&TRAITS[o.trait].jealous)o.mood=clamp(o.mood-2)});
+  harem().forEach(o=>{if(o!==c&&TRAITS[o.trait].jealous){o.mood=clamp(o.mood-2);relAdd(o,c,-3)}});
   story(c,`奉召侍寝。${line}`);
   log(`召${cName(c)}侍寝。`);
   setScene('night');
@@ -657,7 +663,7 @@ const A={
       let txt=`晋${fullName(c)}为${cName(c)}。`;const s=cchg(c,{mood:20,aff:8,favor:3});let s2='';
       if(c.fam.p<30&&nr>=6){s2=chg({prestige:-3});txt+='\n朝中有大臣上书，言其出身微贱，不宜居高位。'}
       if(c.fam.p>=70&&nr>=5){s2=chg({prestige:2});txt+='\n其父在朝中深感皇恩，愈发尽心。'}
-      harem().forEach(o=>{if(o!==c&&TRAITS[o.trait].jealous)o.mood=clamp(o.mood-6)});
+      harem().forEach(o=>{if(o!==c&&TRAITS[o.trait].jealous){o.mood=clamp(o.mood-6);relAdd(o,c,-6)}});
       story(c,`晋封为${cName(c)}。`);log(`晋${fullName(c)}为${cName(c)}。`,nr>=5);AU.sfx('joy');
       return txt+fx(s,s2)};
     if(nr>=4&&!c.title){
@@ -723,7 +729,7 @@ function growKid(k){
   const a=kidAge(k);if(a<3)return;const m=k.tutor?1.6:1,g=()=>R()*.9*m;
   if(k.policy==='读书')k.lit+=g()*1.7;else if(k.policy==='习武'){k.mar+=g()*1.7;k.hp+=.08}else if(k.policy==='修德')k.vir+=g()*1.7;
   else if(k.policy==='放养'){k.hp+=.25;k.amb+=.1;k.love+=.05}else{k.lit+=g()*.65;k.mar+=g()*.65;k.vir+=g()*.65}
-  ['lit','mar','vir','hp','amb','love'].forEach(s=>k[s]=clamp(k[s]));
+  ['lit','mar','vir','hp','amb','love'].forEach(s=>k[s]=clamp(k[s]));supTick(k);
 }
 A.kidVisit=function(id){const k=kidById(id);if(!useE())return;const a=kidAge(k);
   k.love=clamp(k.love+10);const st=pick(['lit','mar','vir']);k[st]=clamp(k[st]+2);
@@ -793,9 +799,9 @@ const COURT=[
     story(off,'其父督办赈灾不力，遭御史弹劾，她日夜忧惧。');return `赈灾银两被层层克扣，灾情反而加重。${fx(chg({treasury:-200,people:-5}),cchg(off,{mood:-12}))}`}});
   return {title:'黄河决堤',text:'工部急奏：入夏以来暴雨连绵，黄河于开封段决口，良田万顷尽成泽国，灾民流离失所。',choices:ch}},
  ()=>{const e=E();const gen=harem().find(c=>c.trait==='将门');const ch=[
-   {t:'御驾亲征',f:()=>{const p=.35+e.wu/180;if(chance(p)){log('北狄犯边，帝御驾亲征，大破敌军。',1);return `你身先士卒，三战三捷，狄戎远遁漠北。${fx(chg({prestige:12,people:5,treasury:-300}))}`}
-     log('帝亲征北狄失利，负伤而还。',1);return `大军中伏，你虽突围而出，却身负箭伤。${fx(chg({prestige:-10,health:-15,treasury:-400}))}`}},
    {t:'遣大将出征',f:()=>{if(chance(.6)){log('北狄犯边，王师击退之。');return `王师告捷。${fx(chg({treasury:-300,prestige:5}))}`}return `前线失利，丢了两座城池。${fx(chg({treasury:-300,prestige:-5,people:-5}))}`}},
+   {t:'御驾亲征',f:()=>{const p=.35+e.wu/180;if(chance(p)){log('北狄犯边，帝御驾亲征，大破敌军。',1);return `你身先士卒，三战三捷，狄戎远遁漠北。${fx(chg({prestige:12,people:5,treasury:-300}))}`}
+     log('帝亲征北狄失利，负伤而还。',1);return `大军中伏，你虽突围而出，却身负箭伤。${fx(chg({prestige:-10,health:-10,treasury:-400}))}`}},
    {t:'遣使议和，岁赐金帛',f:()=>{log('与北狄议和，岁赐金帛。');return `边境暂安，朝中却有人暗讽软弱。${fx(chg({treasury:-150,prestige:-6}))}`}}];
   if(gen)ch.push({t:`命${cName(gen)}的父兄领兵`,f:()=>{if(chance(.75)){story(gen,'父兄领兵出征北境，大胜而归。');log(`${fullName(gen)}之父兄领兵击退北狄。`,1);return `将门虎子，果然不凡。${fx(chg({treasury:-250,prestige:8}),cchg(gen,{aff:12,mood:15}))}`}
     story(gen,'父兄出征失利，兄长战死沙场。她哭了整整三日。');return `兵败。她的兄长战死沙场。${fx(chg({treasury:-300,prestige:-6}),cchg(gen,{mood:-30}))}`}});
@@ -859,6 +865,7 @@ function courtEvent(spont){
 
 /* ============ 后宫事件 ============ */
 function punishEv(A_,B,crime){
+  if(B)relAdd(A_,B,-40);
   return {title:'真相大白',por:A_,sfx:'gong',text:`人证物证俱在，${crime}一事，竟是${cName(A_)}所为。\n她跪在殿中，钗环散乱：“臣妾……臣妾一时糊涂！”`,choices:[
     {t:'打入冷宫',f:()=>{const s=A_.fam.p>=70?chg({prestige:-2}):'';A_.cold=true;A_.palace='冷宫';story(A_,`${crime}事发，被打入冷宫。`);log(`${fullName(A_)}因${crime}事发，打入冷宫。`,1);if(B){cchg(B,{aff:8,mood:15});story(B,`陛下查明${crime}真相，为她主持公道。`)}AU.sfx('sad');return `${fx(s,cchg(A_,{mood:-50,aff:-30}))}`}},
     {t:'降位禁足',f:()=>{A_.rank=Math.max(0,A_.rank-2);if(A_.rank===8)A_.rank=5;story(A_,`${crime}事发，被降为${RANKS[A_.rank]}，禁足宫中。`);log(`${fullName(A_)}因${crime}事发，降为${RANKS[A_.rank]}。`,1);if(B)cchg(B,{aff:5,mood:8});return fx(cchg(A_,{mood:-30,aff:-15,favor:-20}))}},
@@ -872,9 +879,9 @@ const HAREM=[
    {t:'今夜便宿在她宫里',cond:()=>E().energy>0&&!a.preg,why:'精力不足',f:()=>{nightWith(a);return null}},
    {t:'冷言训诫：“后宫当以和睦为先。”',f:()=>{story(a,'因妒生怨，遭陛下训诫，回宫后闭门不出。');a.scheme=clamp(a.scheme+3);return fx(cchg(a,{mood:-15,aff:-6,favor:-3}))}}]}},
  function musk(){const h=harem();const sc=h.filter(c=>c.scheme>=65&&(c.mood<70||c.scheme>=80));if(!sc.length)return null;const a=pick(sc);
-  const ts=h.filter(c=>c!==a&&(c.favor>=a.favor||c.preg));if(!ts.length)return null;const b=pick(ts);
+  const ts=h.filter(c=>c!==a&&(c.favor>=a.favor||c.preg));if(!ts.length)return null;const b=ts.sort((x,y)=>relGet(a,x)-relGet(a,y))[0];
   return {title:'香囊疑案',por:b,text:`${cName(b)}宫中的宫女整理衣物时，发现主子常佩的香囊里竟混了麝香。${cName(b)}面色惨白，跪在殿前请陛下做主。`,choices:[
-   {t:'命慎刑司彻查',f:()=>{if(chance(.35+E().prestige/250+(a.known?.15:0))){a.known=true;pushNow(punishEv(a,b,'香囊藏麝'));return `慎刑司连夜审讯，顺藤摸瓜，竟查到了${cName(a)}宫中……`}
+   {t:'命慎刑司彻查',f:()=>{if(chance(.35+E().prestige/250+(a.known?.15:0)+allyBonus(b))){a.known=true;pushNow(punishEv(a,b,'香囊藏麝'));return `慎刑司连夜审讯，顺藤摸瓜，竟查到了${cName(a)}宫中……`}
      story(b,'香囊一案不了了之，她从此饮食起居分外小心。');return `线索断在一名投井的小太监身上，此案只得不了了之。${fx(cchg(b,{mood:-10}))}`}},
    {t:'加赏安抚，不予深究',f:()=>{story(b,'香囊一案，陛下并未深究。');a.scheme=clamp(a.scheme+3);return `${fx(chg({treasury:-20}),cchg(b,{mood:4,aff:-3}))}`}}]}},
  function slip(){const h=harem();const b=h.find(c=>c.preg>=3&&!c.prot);if(!b)return null;const a=h.find(c=>c!==b&&c.scheme>=60);if(!a)return null;
@@ -884,10 +891,10 @@ const HAREM=[
   return {title:'石阶惊变',por:b,sfx:'err',text:`${cName(b)}在御花园赏花时，石阶上不知被谁泼了桐油，失足滑倒，腹痛不止！`,choices:[
    {t:'急召太医',f:()=>chance(.6)?(story(b,'在御花园失足滑倒，所幸太医救治及时，母子平安。'),`太医施针用药，总算保住了胎儿。${fx(cchg(b,{mood:-5,aff:5}))}`):lose()},
    {t:'亲自赶去守着她（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{E().energy--;renderTop();return chance(.82)?(story(b,'失足滑倒，陛下亲自守了一夜，母子平安。'),`你守了她整整一夜，天亮时她终于安稳睡去。${fx(cchg(b,{mood:5,aff:15}))}`):lose()}}]}},
- function wugu(){const h=harem();if(h.length<3)return null;const a=h.find(c=>c.scheme>=72);if(!a)return null;const v=pick(h.filter(c=>c!==a&&c.rank!==8));if(!v)return null;
+ function wugu(){const h=harem();if(h.length<3)return null;const a=h.find(c=>c.scheme>=72);if(!a)return null;const v=h.filter(c=>c!==a&&c.rank!==8).sort((x,y)=>relGet(a,x)-relGet(a,y))[0];if(!v)return null;
   return {title:'巫蛊之祸',por:v,sfx:'gong',text:`宫人在${cName(v)}床下搜出一个布偶，背后写着陛下的生辰八字，扎满银针。\n${cName(v)}哭喊冤枉。`,choices:[
    {t:'人赃并获，打入冷宫',f:()=>{v.cold=true;v.palace='冷宫';story(v,'被指行巫蛊之术，打入冷宫。她至死喊冤。');log(`${fullName(v)}以巫蛊罪打入冷宫。`,1);S.flags.wronged={v:v.id,a:a.id};return fx(cchg(v,{mood:-50,aff:-20}))}},
-   {t:'此事蹊跷，暗中彻查',f:()=>{if(chance(.4+E().prestige/250)){a.known=true;pushNow(punishEv(a,v,'栽赃巫蛊'));return '密查之下，发现布偶上的针脚与某宫绣娘如出一辙……'}story(v,'被卷入巫蛊疑案，虽未定罪，却也百口莫辩。');return `查不出头绪，${cName(v)}从此惶惶不可终日。${fx(cchg(v,{mood:-15}))}`}},
+   {t:'此事蹊跷，暗中彻查',f:()=>{if(chance(.4+E().prestige/250+allyBonus(v))){a.known=true;pushNow(punishEv(a,v,'栽赃巫蛊'));return '密查之下，发现布偶上的针脚与某宫绣娘如出一辙……'}story(v,'被卷入巫蛊疑案，虽未定罪，却也百口莫辩。');return `查不出头绪，${cName(v)}从此惶惶不可终日。${fx(cchg(v,{mood:-15}))}`}},
    {t:'当众焚毁布偶，严禁议论',f:()=>{story(v,'被卷入巫蛊疑案，陛下当众焚毁布偶，力保她清白。');return `${fx(cchg(v,{aff:12,mood:5}),chg({prestige:-1}))}`}}]}},
  function birthday(){const c=pick(harem());if(!c)return null;return {title:'芳辰',por:c,text:`今日是${cName(c)}的生辰。`,choices:[
    {t:'设宴庆贺（国库-30万两）',f:()=>{story(c,'生辰之日，陛下为她设宴，六宫同贺。');AU.sfx('joy');return fx(chg({treasury:-30}),cchg(c,{mood:20,aff:10,favor:5}))}},
@@ -927,7 +934,7 @@ const HAREM=[
    {t:'置之不理',f:()=>fx(cchg(c,{mood:-10}))}]}},
  function ambition(){const cs=harem().filter(c=>c.favor>=60&&c.rank<7&&c.rank>=1);if(!cs.length)return null;const c=pick(cs);const nr=c.rank+1;
   return {title:'求晋位分',por:c,text:`${cName(c)}依偎在你身边，娇声道：“臣妾伺候陛下也有些日子了……”言下之意，是想晋一晋位分。`,choices:[
-   {t:`晋为${RANKS[nr]}`,cond:()=>rankCount(nr)<RANK_CAP[nr],why:`${RANKS[nr]}已满`,f:()=>{c.rank=nr;if(nr>=4&&!c.title)c.title=pick(TITLES.filter(t=>!harem().some(x=>x.title===t)));story(c,`蒙恩晋为${cName(c)}。`);log(`晋${fullName(c)}为${cName(c)}。`);harem().forEach(o=>{if(o!==c&&TRAITS[o.trait].jealous)o.mood=clamp(o.mood-6)});return fx(cchg(c,{mood:20,aff:8}))}},
+   {t:`晋为${RANKS[nr]}`,cond:()=>rankCount(nr)<RANK_CAP[nr],why:`${RANKS[nr]}已满`,f:()=>{c.rank=nr;if(nr>=4&&!c.title)c.title=pick(TITLES.filter(t=>!harem().some(x=>x.title===t)));story(c,`蒙恩晋为${cName(c)}。`);log(`晋${fullName(c)}为${cName(c)}。`);harem().forEach(o=>{if(o!==c&&TRAITS[o.trait].jealous){o.mood=clamp(o.mood-6);relAdd(o,c,-6)}});return fx(cchg(c,{mood:20,aff:8}))}},
    {t:'笑而不语',f:()=>fx(cchg(c,{mood:-8}))}]}},
  function family(){const c=officialC(20);if(!c)return null;return {title:'外戚请托',por:c,text:`${cName(c)}小心翼翼地开口：家中幼弟今年中了举，不知陛下可否赏个差事？`,choices:[
    {t:'准，授七品官',f:()=>{c.fam.p=Math.min(95,c.fam.p+8);story(c,'陛下恩准，她的幼弟入朝为官。');return fx(chg({prestige:-2}),cchg(c,{aff:10,mood:12}))}},
@@ -1013,7 +1020,7 @@ A.endMonth=function(){
   e.treasury+=inc-exp;
   // 后宫
   for(const c of alive()){
-    if(!c.cold){c.favor=clamp(c.favor-(c.trait==='淡泊'?1:2));if(c.favor<25)c.mood=clamp(c.mood-3);else if(c.favor>60)c.mood=clamp(c.mood+1)}else c.mood=clamp(c.mood-3);
+    if(!c.cold){c.favor=clamp(c.favor-(c.bond?0:c.trait==='淡泊'?1:2));if(c.favor<25)c.mood=clamp(c.mood-3);else if(c.favor>60)c.mood=clamp(c.mood+1)}else c.mood=clamp(c.mood-3);
     if(c.preg>0){c.preg++;if(c.preg===2)pushEv(pregEvent(c));if(c.preg>=10)pushEv(birthEvent(c))}
   }
   kidsAlive().forEach(growKid);
@@ -1022,7 +1029,7 @@ A.endMonth=function(){
   if(S.month>12){S.month=1;S.year++;e.age++;newYear=true;alive().forEach(c=>c.age++)}
   let dh=-.17-(e.age>40?(e.age-40)*.05:0)-Math.max(0,(e.nightsMonth||0)-3)*1.2-(e.style==='风流'?.05:0);
   e.health=clamp(e.health+dh);e.nightsMonth=0;e.energy=maxEnergy();
-  if(e.treasury<0){const d=Math.min(8,Math.ceil(-e.treasury/400));chg({people:-1-d,prestige:-1});if(e.treasury<-800)chg({health:-.5});log(`国库亏空${-e.treasury}万两，百官俸禄迟发，民间加征赋税。`)}
+  if(e.treasury<0){const d=Math.min(8,Math.ceil(-e.treasury/400));chg({people:-1-d,prestige:-1});log(`国库亏空${-e.treasury}万两，百官俸禄迟发，民间加征赋税。`)}
   if(S.cands.length){S.cands=[];log('选秀礼毕。')}
   toast(`${dateStr()}　岁入${inc}　支出${exp}`);
   // 岁末总结
@@ -1030,7 +1037,9 @@ A.endMonth=function(){
   // 事件
   if(S.month===2&&S.turn-S.flags.lastXX>=34) pushEv({title:'三年大选',sfx:'chime',text:'又到三年一度的大选之期，各地秀女已候于储秀宫。',choices:[{t:'前去看看',f:()=>{genCands();UI.view='xx';return null}},{t:'今年免了',f:()=>{S.flags.lastXX=S.turn;return fx(chg({people:2}))}}]});
   const fest=chance(.7)?festival():null;if(fest)pushEv(fest);
-  if(chance(.6))pushEv(haremEvent());
+  relTick();const arcEv=arcTick();if(arcEv)pushEv(arcEv);
+  if(chance(arcEv?.3:.55))pushEv(haremEvent());
+  pushEv(heirTick());
   if(chance(.22))pushEv(courtEvent(true));
   if(chance(.28))pushEv(kidEvent());
   pushEv(milestone());
@@ -1050,7 +1059,7 @@ function deathEvent(why){
   const score=e.prestige*.5+e.people*.5;
   const shi=score>=80?'圣':score>=68?'文':score>=56?'景':score>=44?'恭':score>=32?'哀':'炀';
   const miao=['太祖','太宗','高宗','仁宗','宣宗','英宗','宪宗','孝宗','穆宗','神宗'][S.gen-1]||'睿宗';
-  const sons=kidsAlive().filter(k=>k.sex==='m');let heir=S.heir&&kidById(S.heir);if(!heir||!heir.alive)heir=sons.sort((a,b)=>a.born-b.born)[0];
+  const sons=kidsAlive().filter(k=>k.sex==='m'&&!k.jailed);let heir=S.heir&&kidById(S.heir);if(!heir||!heir.alive)heir=sons.sort((a,b)=>a.born-b.born)[0];
   const nC=S.consorts.length,nK=S.children.length;
   let t= why==='民变'?`流民四起，叛军攻破京城。${e.era}${cnNum(yrs)}年，${e.sur}${e.name}自缢于宫中，享年${e.age}岁。`
     :`${dateStr()}，${e.sur}${e.name}崩于养心殿，享年${e.age}岁，在位${yrs}年。`;
@@ -1070,11 +1079,11 @@ function succeed(h){
     S.emp={sur:old.sur,name:h.name,era:v,age:Math.max(a,14),health:clamp(h.hp+10),prestige:clamp(35+h.vir/3),people:old.people,treasury:old.treasury,energy:3,nightsMonth:0,
       style:h.mar>h.lit+15?'尚武':h.lit>h.mar+15?'文雅':'勤政',wen:rd(h.lit),wu:rd(h.mar),seed:h.seed};
     S.flags.dowager={name:mom?`${mom.sur}太后`:'太后',alive:!!(mom&&mom.alive)};
-    S.consorts=[];S.children=[];S.heir=null;S.cands=[];S.gen++;S.year=1;S.over=false;S.genChar=GEN_CHARS[(GEN_CHARS.indexOf(S.genChar)+1)%GEN_CHARS.length];
+    S.consorts=[];S.children=[];S.rel={};S.heir=null;S.cands=[];S.gen++;S.year=1;S.over=false;S.genChar=GEN_CHARS[(GEN_CHARS.indexOf(S.genChar)+1)%GEN_CHARS.length];
     S.flags.lastXX=-99;S.emp.energy=maxEnergy();
     log(`━━ 第${cnNum(S.gen)}代 ━━ ${v}元年，新帝${S.emp.sur}${h.name}登基，尊生母为${S.flags.dowager.name}。`,1);
     if(S.emp.age>=15){const em=makeGirl({fam:pick(FAMS.slice(0,4)),trait:pick(['温婉','聪慧','城府','骄矜'])});em.favor=35;em.aff=30;addConsort(em,8,'新帝登基，奉遗诏册立');}
-    UI.view='home';AU.sfx('gong');
+    migrate();UI.view='map';AU.sfx('gong');
     return `${v}元年，新帝登基，大赦天下。属于你的故事，翻开了新的一页。`}}]});
 }
 
@@ -1084,7 +1093,7 @@ function save(slot){try{localStorage.setItem(SKEY+slot,JSON.stringify(S));return
 function load(slot){try{const t=localStorage.getItem(SKEY+slot);if(!t)return false;S=JSON.parse(t);return true}catch(e){return false}}
 function slotInfo(slot){try{const t=localStorage.getItem(SKEY+slot);if(!t)return null;const s=JSON.parse(t);return `${s.emp.sur}${s.emp.name}·${dateStr(s)}·后妃${s.consorts.filter(c=>c.alive&&!c.gone).length}`}catch(e){return null}}
 A.save=function(slot){if(save(slot)){toast('已存档');AU.sfx('chime')}else toast('存档失败：浏览器禁用了本地存储');render()};
-A.load=function(slot){if(load(slot)){Q.length=0;UI.view='home';toast('已读档');setScene('court');render()}else toast('该存档为空')};
+A.load=function(slot){if(load(slot)){Q.length=0;migrate();UI.view='map';toast('已读档');setScene('court');render()}else toast('该存档为空')};
 
 /* ============ 开局 ============ */
 A.newGame=function(){UI.view='new';render()};
@@ -1103,7 +1112,7 @@ A.start=function(){
   const old=makeGirl({});old.favor=55;old.aff=60;old.rank=3;S.consorts.push(old);assignPalace(old);story(old,'潜邸旧人，陪伴陛下多年。新帝登基，册为贵人。');
   log(`${era}元年三月，新帝${sur}${name}登基，改元${era}，大赦天下。`,1);
   log(`册嫡妻${fullName(em)}为皇后，潜邸旧人${fullName(old)}为贵人。`);
-  UI.view='home';setScene('court');AU.sfx('gong');render();
+  migrate();UI.view='map';setScene('court');AU.sfx('gong');render();
   pushEv({title:'登基',por:'emp',text:`${era}元年三月，先帝龙驭上宾，你在太和钟声中登上了宸极殿的御座。\n嫡妻${fullName(em)}册为皇后，潜邸旧人${fullName(old)}册为贵人。\n礼部奏请：新帝登基，当广选秀女，以充后宫、绵延皇嗣。`,choices:[
     {t:'准奏，即刻选秀',f:()=>{genCands(7);UI.view='xx';return null}},{t:'暂缓，先理朝政',f:()=>'你把选秀之事暂且搁下。三年大选之期一到，礼部自会再奏。'}]});
 };
@@ -1119,14 +1128,14 @@ function renderTop(){
    <span class="st">国库 <b>${e.treasury}</b>万两</span><span class="st">精力 ${pips}</span><span class="sp"></span>
    <button class="btn gold sm" onclick="A.endMonth()" ${S.over?'disabled':''}>结束本月 ▸</button>`;
 }
-const MENU=[['home','御书房'],['court','上朝'],['harem','后宫'],['cards','翻牌子'],['xx','选秀'],['kids','皇嗣'],['out','出巡'],['log','起居注'],['sys','存档']];
+const MENU=[['map','宫城'],['court','上朝'],['harem','后宫'],['cards','翻牌子'],['xx','选秀'],['kids','皇嗣'],['out','出巡'],['log','起居注'],['sys','存档']];
 function renderMenu(){const m=$('#menu');if(!S){m.innerHTML='';m.hidden=true;return}m.hidden=false;
-  m.innerHTML=MENU.map(([k,l])=>k==='court'?`<button class="btn" onclick="A.court()">${l}<small>精力-1</small></button>`:`<button class="btn${UI.view===k||(UI.view==='consort'&&k==='harem')||(UI.view==='kid'&&k==='kids')?' on':''}" onclick="A.go('${k}')">${l}</button>`).join('')}
+  m.innerHTML=MENU.map(([k,l])=>k==='court'?`<button class="btn" onclick="A.court()">${l}<small>精力-1</small></button>`:`<button class="btn${UI.view===k||(['palace','place'].includes(UI.view)&&k==='map')||(UI.view==='consort'&&k==='harem')||(UI.view==='kid'&&k==='kids')?' on':''}" onclick="A.go('${k}')">${l}</button>`).join('')}
 function renderPanel(){const p=$('#panel');const v=UI.view;
   if(!S){p.innerHTML=v==='new'?viewNew():viewTitle();return}
-  p.innerHTML=({home:viewHome,harem:viewHarem,consort:viewConsort,cards:viewCards,xx:viewXX,kids:viewKids,kid:viewKid,out:viewOut,log:viewLog,sys:viewSys}[v]||viewHome)();
+  p.innerHTML=({map:viewMap,palace:viewPalace,place:viewPlace,home:viewHome,harem:viewHarem,consort:viewConsort,cards:viewCards,xx:viewXX,kids:viewKids,kid:viewKid,out:viewOut,log:viewLog,sys:viewSys}[v]||viewHome)();
 }
-function render(){renderTop();renderMenu();renderPanel()}
+function render(){renderTop();renderMenu();renderPanel();if(S&&UI.view==='map')mountMap()}
 function viewTitle(){
   const slots=['auto','1','2','3'].map(s=>({s,i:slotInfo(s)})).filter(x=>x.i);
   return `<div class="title-wrap">${pixText('宸宫纪',18,'#e8b84a',5)}
@@ -1152,13 +1161,13 @@ function viewHome(){
    <div class="stats" style="margin-top:6px">${bar('龙体',e.health,'#4f9078')}${bar('威望',e.prestige,'#a87a26')}${bar('民心',e.people,'#3b5fa8')}${bar('文才',e.wen)}${bar('武略',e.wu)}</div>
    <div style="margin-top:6px">后宫 ${h.length} 人${alive().some(c=>c.cold)?`（冷宫 ${alive().filter(c=>c.cold).length}）`:''}　皇嗣 ${k.length} 位　储君：${heir?esc(heir.name):'未立'}　${S.flags.dowager&&S.flags.dowager.alive?esc(S.flags.dowager.name)+'健在':''}</div>
    </div></div>
-   <p class="hint">每月有${maxEnergy()}点精力：上朝、召幸、闲谈、探望皇嗣、出巡都要花费精力；赏赐、晋封、选秀不花精力。用完后点「结束本月」，宫中会发生新的事。</p>
+   <p class="hint">每月有${maxEnergy()}点精力：上朝、召幸、闲谈、探望皇嗣、出巡都要花费精力；赏赐、晋封、选秀不花精力。用完后点「结束本月」，宫中会发生新的事。侍寝后若怀上龙胎，要到下个月末太医才诊得出喜脉。每位妃嫔都有一段专属故事，情分越深越容易推进。</p>
    <h3>近事</h3><ul class="story">${recent.map(l=>`<li class="${l.b?'big':''}"><time>${esc(l.d)}</time>${esc(l.t)}</li>`).join('')||'<li>尚无记载</li>'}</ul>`}
 function viewHarem(){
   const all=alive();const g=r=>all.filter(c=>!c.cold&&r(c)).sort((a,b)=>b.rank-a.rank||b.favor-a.favor);
   const sec=(t,arr)=>arr.length?`<h3>${t}（${arr.length}）</h3><div class="grid">${arr.map(consortCard).join('')}</div>`:'';
   const dead=S.consorts.filter(c=>!c.alive||c.gone);
-  return `<h2>后宫</h2><p class="hint">点击妃嫔查看详情、互动与她的故事。各位分名额：嫔6、妃4、贵妃2、皇贵妃1、皇后1。</p>
+  return `<h2>后宫</h2><p class="hint">点击妃嫔查看详情、互动与她的故事。各位分名额：嫔6、妃4、贵妃2、皇贵妃1、皇后1。</p>${facHTML()}
    ${sec('中宫',g(c=>c.rank===8))}${sec('妃位',g(c=>c.rank>=5&&c.rank<8))}${sec('嫔位',g(c=>c.rank===4))}${sec('小主',g(c=>c.rank<4))}${sec('冷宫',all.filter(c=>c.cold))}
    ${dead.length?`<h3>故人</h3><div class="hint">${dead.map(c=>`<button class="btn sm" onclick="A.go('consort',${c.id})">${esc(fullName(c))}${c.gone?'（出宫）':'（已故）'}</button>`).join(' ')}</div>`:''}`}
 function viewConsort(){
@@ -1185,6 +1194,7 @@ function viewConsort(){
     <div class="stats" style="margin-top:6px">${st('容貌',c.looks)}${st('才情',c.talent)}${st('德行',c.virtue)}${st('心机',c.scheme,!c.known)}${bar('恩宠',c.favor)}${bar('心情',c.mood,'#4f9078')}${bar('情分',c.aff,'#c26f93')}</div>
     <div style="margin-top:4px">侍寝 ${c.nights} 次${c.preg>=2?`　<span class="tag r">有孕${c.preg}月</span>`:''}${kids.length?`　子女：${kids.map(k=>`<button class="btn sm" onclick="A.go('kid',${k.id})">${esc(k.name)}</button>`).join(' ')}`:''}</div>
    </div></div>
+   ${arcLine(c)}${relLine(c)}
    <div class="acts">${acts}</div>
    <h3>她的故事</h3><ul class="story">${c.story.slice().reverse().map(s=>`<li><time>${esc(s.d)}</time>${esc(s.t)}</li>`).join('')}</ul>`}
 function viewCards(){
@@ -1209,7 +1219,7 @@ function viewKid(){
   const pol=['均衡','读书','习武','修德','放养'];
   return `<h2>${esc(kidName(k))}<button class="btn sm" onclick="A.go('kids')">◂ 返回</button></h2>
    <div class="row">${porImg(k,112)}<div class="grow"><div>${a}岁　生母：${esc(k.momName)}${k.married?'　已婚嫁':''}</div>
-   <div class="stats" style="margin-top:6px">${bar('才学',k.lit,'#3b5fa8')}${bar('武艺',k.mar,'#a3262a')}${bar('品德',k.vir,'#4f9078')}${bar('体魄',k.hp,'#a87a26')}${bar('野心',k.amb,'#6b4a33')}${bar('父爱',k.love,'#c26f93')}</div></div></div>
+   <div class="stats" style="margin-top:6px">${bar('才学',k.lit,'#3b5fa8')}${bar('武艺',k.mar,'#a3262a')}${bar('品德',k.vir,'#4f9078')}${bar('体魄',k.hp,'#a87a26')}${bar('野心',k.amb,'#6b4a33')}${bar('父爱',k.love,'#c26f93')}${k.sex==='m'&&kidAge(k)>=10?bar('朝臣支持',k.sup||0,'#3b5fa8'):''}</div>${k.away?'<div class="hint">已就藩</div>':''}${k.jailed?'<div class="hint">圈禁于宗人府</div>':''}</div></div>
    ${k.alive?`<div class="acts"><button class="btn" onclick="A.kidVisit(${k.id})">探望<small>精力-1</small></button>
     ${a>=6?`<button class="btn ${k.tutor?'on':'jade'}" onclick="A.kidTutor(${k.id})">${k.tutor?'已延请太傅':'延请太傅'}<small>每月5万两</small></button>`:''}
     ${k.sex==='m'&&a>=5&&S.heir!==k.id?`<button class="btn gold" onclick="A.kidHeir(${k.id})">立为太子</button>`:''}
@@ -1222,13 +1232,376 @@ function viewOut(){
 function viewLog(){
   const L=S.log.filter(l=>UI.logF==='all'?true:l.b).slice().reverse();
   return `<h2>起居注</h2><div class="log-filter"><button class="btn sm ${UI.logF==='all'?'on':''}" onclick="UI.logF='all';render()">全部</button><button class="btn sm ${UI.logF==='big'?'on':''}" onclick="UI.logF='big';render()">只看大事</button></div>
-   ${S.history.length?`<p class="hint">历代：${S.history.map(h=>esc(`${h.miao}${h.shi}皇帝 ${h.sur}${h.name}（${h.era}，在位${h.yrs}年）`)).join('；')}</p>`:''}
+   ${S.history.length?`<p class="hint">历代：${S.history.map(h=>esc(`${h.shi?h.miao+h.shi+'皇帝':h.miao} ${h.sur}${h.name}（${h.era}，在位${h.yrs}年）`)).join('；')}</p>`:''}
    <ul class="story" style="max-height:560px">${L.map(l=>`<li class="${l.b?'big':''}"><time>${esc(l.d)}</time>${esc(l.t)}</li>`).join('')}</ul>`}
 function viewSys(){
   return `<h2>存档</h2><p class="hint">存档保存在本浏览器中；每月结束时会自动存档。</p>
    ${['1','2','3'].map(s=>`<div class="acts" style="align-items:center"><b>存档${s}</b><span class="hint grow">${esc(slotInfo(s)||'空')}</span><button class="btn sm gold" onclick="A.save('${s}')">保存</button><button class="btn sm" onclick="A.load('${s}')">读取</button></div>`).join('')}
    <div class="acts" style="align-items:center"><b>自动</b><span class="hint grow">${esc(slotInfo('auto')||'空')}</span><button class="btn sm" onclick="A.load('auto')">读取</button></div>
+   <h3>存档码</h3><p class="hint">导出后复制这串字，可以换浏览器继续玩，也可以发给别人看你的进度。</p><textarea id="savecode" class="inp" aria-label="存档码"></textarea><div class="acts"><button class="btn sm gold" onclick="A.exportSave()">导出存档码</button><button class="btn sm" onclick="A.importSave()">导入存档码</button></div>
    <h3>其他</h3><div class="acts"><button class="btn sm" onclick="S=null;UI.view='title';render()">返回标题</button></div>`}
+
+/* ============ 关系与派系 ============ */
+const rk=(a,b)=>a.id<b.id?a.id+'_'+b.id:b.id+'_'+a.id;
+function relGet(a,b){if(!a||!b||a===b||!S.rel)return 0;return S.rel[rk(a,b)]||0}
+function relAdd(a,b,v){if(!a||!b||a===b)return;S.rel=S.rel||{};const k=rk(a,b);S.rel[k]=clamp((S.rel[k]||0)+v,-100,100)}
+function initRel(c){harem().forEach(o=>{if(o===c)return;let v=ri(-8,12);if(o.trait===c.trait)v+=6;if(TRAITS[c.trait].jealous&&o.favor>40)v-=8;if(Math.abs(o.fam.p-c.fam.p)<15)v+=4;relAdd(c,o,v)})}
+function leaders(){const h=harem(),L=[],em=empress();if(em)L.push(em);
+  const others=h.filter(c=>c.rank>=5&&c.rank<8).sort((a,b)=>(b.rank*20+b.favor+b.scheme*.5)-(a.rank*20+a.favor+a.scheme*.5));
+  for(const o of others){if(L.length>=2)break;L.push(o)}
+  return L}
+function factions(){const L=leaders(),map={},neutral=[];L.forEach(l=>map[l.id]=[]);
+  harem().forEach(c=>{if(L.includes(c))return;let best=null,bv=8;
+    L.forEach(l=>{const v=relGet(c,l)+(l.rank===8&&c.virtue>60?6:0)+(l.scheme>60&&c.scheme>60?6:0);if(v>bv){bv=v;best=l}});
+    if(best)map[best.id].push(c);else neutral.push(c)});
+  return {L,map,neutral}}
+function facOf(c){const f=factions();for(const l of f.L){if(l===c||f.map[l.id].includes(c))return l}return null}
+function allyBonus(v){if(!v)return 0;return Math.min(.25,harem().filter(o=>o!==v&&relGet(o,v)>=40).length*.08)}
+function relTick(){const h=harem(),f=factions(),fid={};
+  f.L.forEach(l=>{fid[l.id]=l.id;f.map[l.id].forEach(m=>fid[m.id]=l.id)});
+  for(let i=0;i<h.length;i++)for(let j=i+1;j<h.length;j++){const a=h[i],b=h[j];let d=0;
+    if(fid[a.id]&&fid[a.id]===fid[b.id])d+=1.5;else if(fid[a.id]&&fid[b.id])d-=1.2;
+    if(TRAITS[a.trait].jealous&&b.favor>a.favor+15)d-=2;if(TRAITS[b.trait].jealous&&a.favor>b.favor+15)d-=2;
+    if(a.trait==='温婉'||b.trait==='温婉')d+=.5;
+    const k=rk(a,b);S.rel[k]=clamp((S.rel[k]||0)*.985+d,-100,100)}}
+function facHTML(){const f=factions();if(!f.L.length)return '';
+  const box=(t,arr)=>`<div class="card" style="cursor:default;flex-direction:column"><div class="nm">${t}</div><div>${arr.length?arr.map(c=>`<span class="tag">${esc(cName(c))}</span>`).join(''):'<span class="hint">尚无依附者</span>'}</div></div>`;
+  return `<h3>派系</h3><div class="grid">${f.L.map(l=>box(esc(cName(l))+'一派',f.map[l.id])).join('')}${f.neutral.length?box('中立',f.neutral):''}</div>`}
+function relLine(c){if(!c.alive||c.gone)return '';
+  const h=harem().filter(o=>o!==c).map(o=>[o,relGet(c,o)]).sort((a,b)=>b[1]-a[1]);
+  const good=h.filter(x=>x[1]>=30).slice(0,4),bad=h.filter(x=>x[1]<=-30).slice(-4),fac=c.cold?null:facOf(c);
+  return `<div>派系：${fac?(fac===c?'一派之首':esc(cName(fac))+'一派'):'中立'}${good.length?`　交好：${good.map(([o])=>`<span class="tag g">${esc(cName(o))}</span>`).join('')}`:''}${bad.length?`　交恶：${bad.map(([o])=>`<span class="tag r">${esc(cName(o))}</span>`).join('')}`:''}</div>`}
+HAREM.push(
+ function clash(){const f=factions();if(f.L.length<2)return null;const [a,b]=f.L,ma=f.map[a.id],mb=f.map[b.id];if(!ma.length&&!mb.length)return null;
+  const side=(w,l,mw,ml)=>()=>{[w,...mw].forEach(c=>cchg(c,{mood:8}));[l,...ml].forEach(c=>{cchg(c,{mood:-8});relAdd(c,w,-6)});story(w,`派系相争，陛下站在了她这一边。`);return `${cName(w)}一派扬眉吐气，${cName(l)}一派面色难看。`};
+  return {title:'派系倾轧',text:`晨昏定省时，${cName(a)}一派与${cName(b)}一派为${pick(['御花园赏花的座次','内务府分发的冰例','中秋宴上谁坐陛下左手边','新入宫的小主该住哪处偏殿'])}争执不下，两边都盯着你。\n${cName(a)}身边：${ma.map(cName).join('、')||'无人'}\n${cName(b)}身边：${mb.map(cName).join('、')||'无人'}`,choices:[
+   {t:`偏向${cName(a)}`,f:side(a,b,ma,mb)},{t:`偏向${cName(b)}`,f:side(b,a,mb,ma)},
+   {t:'各打五十大板：“都回去抄《女诫》。”',f:()=>{[a,b,...ma,...mb].forEach(c=>cchg(c,{mood:-4}));relAdd(a,b,4);return '两边都闭了嘴，表面上总算和气了几分。'}}]}},
+ function sisters(){const h=harem();let best=null,bv=45;for(let i=0;i<h.length;i++)for(let j=i+1;j<h.length;j++){const v=relGet(h[i],h[j]);if(v>bv){bv=v;best=[h[i],h[j]]}}if(!best)return null;const [a,b]=best;
+  return {title:'姐妹情深',por:a,text:`${cName(a)}与${cName(b)}在${a.palace}一同做了一桌江南点心，派人来请陛下。`,choices:[
+   {t:'前往（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{E().energy--;renderTop();story(a,`与${fullName(b)}一同宴请陛下，三人说笑到月上中天。`);story(b,`与${fullName(a)}一同宴请陛下。`);relAdd(a,b,6);return fx(cchg(a,{aff:6,mood:8}),cchg(b,{aff:6,mood:8}))}},
+   {t:'赏她们一桌御膳',f:()=>{relAdd(a,b,3);return fx(chg({treasury:-5}),cchg(a,{mood:5}),cchg(b,{mood:5}))}}]}},
+ function defect(){const f=factions();if(!f.L.length)return null;const pool=f.neutral.filter(c=>c.rank<=3&&c.favor<35);if(!pool.length)return null;const c=pick(pool),l=pick(f.L);
+  return {title:'投靠',por:c,text:`有宫人看见，${cName(c)}近来常往${l.palace}跑，给${cName(l)}送这送那。看样子是想找个靠山。`,choices:[
+   {t:'由她去',f:()=>{relAdd(c,l,25);story(c,`投靠了${fullName(l)}。`);return `${cName(c)}从此成了${cName(l)}身边的人。`}},
+   {t:'召她侍寝，让她不必依附旁人',cond:()=>E().energy>0&&!c.preg,why:'精力不足',f:()=>{nightWith(c);return null}},
+   {t:`提点${cName(l)}：后宫不许结党`,f:()=>{relAdd(c,l,-10);return fx(cchg(l,{mood:-8,aff:-3}))}}]}},
+ function poisonHeir(){if(!S.heir)return null;const h=kidById(S.heir);if(!h||!h.alive)return null;const hm=byId(h.mom);
+  const sus=harem().filter(c=>c.id!==h.mom&&c.scheme>=65&&S.children.some(k=>k.mom===c.id&&k.sex==='m'&&k.alive&&k.id!==h.id));if(!sus.length)return null;const a=pick(sus);
+  return {title:'东宫惊魂',por:h,sfx:'gong',text:`太子的晚膳里验出了砒霜，试菜的小太监当场毙命。${hm&&hm.alive?'\n'+cName(hm)+'哭着跪在殿外，求陛下做主。':''}`,choices:[
+   {t:'封锁东宫，彻查到底',f:()=>{if(chance(.4+E().prestige/250+allyBonus(hm))){a.known=true;pushNow(punishEv(a,hm&&hm.alive?hm:null,'谋害储君'));return '御膳房的线索，一路指向了……'}return '下毒的厨子在狱中自尽，线索断了。太子从此每餐都要银针试毒。'}},
+   {t:'加派侍卫，暗中提防',f:()=>{h.hp=clamp(h.hp-3);return '你没有声张，只是太子身边多了四个带刀侍卫。'}}]}}
+);
+
+/* ============ 夺嫡 ============ */
+function supTick(k){if(k.sex!=='m'||!k.alive||k.away||k.jailed)return;if(kidAge(k)<10)return;const m=byId(k.mom);
+  const d=k.amb/140+(m&&m.alive&&!m.cold?m.fam.p/220+(m.rank>=6?.25:0):0)+(S.heir===k.id?.5:0)+(k.lit+k.vir)/400-(k.amb<30?.4:0);
+  k.sup=clamp((k.sup||0)+d-.25)}
+function heirTick(){
+  const sons=kidsAlive().filter(k=>k.sex==='m'&&!k.away&&!k.jailed);if(!sons.length)return null;
+  const heir=S.heir&&kidById(S.heir);
+  const reb=sons.find(k=>k.id!==S.heir&&kidAge(k)>=16&&k.amb>=78&&(k.sup||0)>=65&&(E().prestige<60||E().health<45));
+  if(reb&&chance(.3))return coupEvent(reb);
+  if(heir&&heir.alive){const rv=sons.filter(k=>k!==heir&&kidAge(k)>=12&&(k.sup||0)>(heir.sup||0)+15&&k.amb>=60).sort((a,b)=>b.sup-a.sup)[0];
+    if(rv&&chance(.35))return {title:'储位之争',por:rv,text:`朝中渐成两党：一派拥立太子${heir.name}，一派推举${kidName(rv)}。今日早朝，两边几乎当廷吵了起来。\n（太子得朝臣支持${rd(heir.sup||0)}，${rv.name}得${rd(rv.sup)}）`,choices:[
+      {t:'力挺太子，申斥结党之人',f:()=>{rv.sup=clamp(rv.sup-25);rv.amb=clamp(rv.amb-8);rv.love=clamp(rv.love-10);heir.sup=clamp((heir.sup||0)+10);kstory(rv,'拥立他的大臣遭父皇申斥。');return fx(chg({prestige:3}))}},
+      {t:`顺应人心，改立${rv.name}`,f:()=>{A.kidHeir(rv.id);return null}},
+      {t:`命${rv.name}就藩，远离京城`,cond:()=>kidAge(rv)>=14,why:'年纪尚小',f:()=>{rv.away=true;rv.title=rv.title||pick(['晋','楚','燕','蜀','吴','齐'])+'王';rv.sup=clamp(rv.sup-40);rv.amb=clamp(rv.amb-15);kstory(rv,'被命就藩，离京而去。');log(`${rv.name}就藩。`,1);const m=byId(rv.mom);if(m&&m.alive)cchg(m,{mood:-25,aff:-10});return `${rv.name}跪别父皇，出了京城。`}}]}}
+  const c=sons.find(k=>k.id!==S.heir&&kidAge(k)>=12&&k.amb>=55&&!k.facAsked);
+  if(c&&chance(.3)){c.facAsked=true;const m=byId(c.mom);return {title:'皇子结党',por:c,text:`有人密报：${kidName(c)}近来与${m?m.fam.t+'一系的':''}几位大臣过从甚密，常在府中宴饮至深夜。`,choices:[
+    {t:'严加申斥',f:()=>{c.amb=clamp(c.amb-15);c.sup=clamp((c.sup||0)-15);c.love=clamp(c.love-10);kstory(c,'私结朝臣，被父皇严加申斥。');return '§野心-15　朝臣支持-15　父爱-10'}},
+    {t:'默许，看他有几分本事',f:()=>{c.sup=clamp((c.sup||0)+12);c.amb=clamp(c.amb+5);return '§朝臣支持+12　野心+5'}},
+    {t:'交给他一桩差事历练',f:()=>{c.lit=clamp(c.lit+4);c.mar=clamp(c.mar+4);c.sup=clamp((c.sup||0)+6);kstory(c,'奉旨办差，颇有建树。');return '§才学+4　武艺+4　朝臣支持+6'}}]}}
+  return null}
+function coupEvent(k){return {title:'逼宫',por:k,sfx:'gong',text:`三更时分，宫门外火光冲天。${kidName(k)}率府兵与九门提督的人马围住了宸极殿，递进一道“请父皇颐养天年”的折子。`,choices:[
+  {t:'调禁军平叛',f:()=>{const h=S.heir&&kidById(S.heir);const p=.35+E().prestige/180+(h&&h.alive?(h.sup||0)/400:0);
+    if(chance(p)){k.jailed=true;k.sup=0;k.title='庶人';kstory(k,'起兵逼宫，兵败被擒，圈禁于宗人府。');log(`${k.name}逼宫失败，圈禁宗人府。`,1);const m=byId(k.mom);if(m&&m.alive){m.cold=true;m.palace='冷宫';story(m,'其子逼宫失败，她被打入冷宫。')}return `禁军在午门外击溃了叛军。${fx(chg({prestige:6}))}`}
+    log(`${k.name}逼宫，禁军倒戈，帝被迫禅位。`,1);pushNow(abdicateEvent(k));return '禁军倒戈了。'}},
+  {t:'开门，和他谈',f:()=>{S.heir=k.id;k.amb=clamp(k.amb-20);kstory(k,'起兵逼宫，迫使父皇立他为太子。');log(`${k.name}兵谏，被立为太子。`,1);return `你答应立他为太子。他跪下叩头，眼里却没有一丝愧色。${fx(chg({prestige:-12}))}`}},
+  {t:'禅位于他',f:()=>{pushNow(abdicateEvent(k));return null}}]}}
+function abdicateEvent(k){S.over=true;const e=E();S.history.push({sur:e.sur,name:e.name,era:e.era,yrs:S.year,miao:'太上皇',shi:''});
+  return {title:'禅位',por:'emp',text:`${dateStr()}，${e.sur}${e.name}禅位于${k.name}，移居西苑，称太上皇。`,choices:[{t:`以${k.name}的身份继续`,f:()=>{succeed(k);return null}},{t:'重新开局',f:()=>{S=null;UI.view='title';return null}}]}}
+
+/* ============ 妃嫔主线 ============ */
+function aNext(c,st,a,b){c.arc.st=st;c.arc.t=S.turn+ri(a,b)}
+function aEnd(c,title,text){c.arc.done=true;c.arc.end=title;c.arc.t=1e9;story(c,`【${ARCS[c.arc.id].name}·${title}】${text}`);log(`${fullName(c)}「${ARCS[c.arc.id].name}」——${title}。`,1)}
+const ok1={t:'好'};
+const ARCS={
+ general:{name:'边关烽火',fit:c=>c.trait==='将门',stages:[
+  (c,f)=>c.aff<25?null:{text:`${cName(c)}收到一封家书，读完后脸色有些发白。\n“家父在北境屡立战功，麾下十万儿郎只认帅旗、不认虎符……臣妾怕，怕有人在陛下面前说三道四。”`,choices:[
+    {t:'“朕信得过将军。”',f:()=>{f.trust=1;aNext(c,1,3,5);story(c,'为父亲的兵权忧心，陛下说信得过将军。');return fx(cchg(c,{aff:8,mood:10}))}},
+    {t:'“兵权过重，终非长久之计。”',f:()=>{aNext(c,1,3,5);story(c,'为父亲的兵权忧心，陛下却说兵权过重。她一夜未眠。');return fx(cchg(c,{aff:-3,mood:-8}))}},
+    {t:'让她修书，劝父亲上表交权',f:()=>{f.letter=1;aNext(c,1,3,5);story(c,'奉陛下之意，修书劝父亲交出兵权。');return `她咬着唇，提笔写了很久。${fx(cchg(c,{aff:3}))}`}}]},
+  (c,f)=>{if(f.letter&&chance(.6))return {text:`北境送来一道奏表：${cName(c)}之父自陈年迈，愿交出半数兵权，只求留在边关终老。`,choices:[
+      {t:'准其所请，加封一等公',f:()=>{aEnd(c,'将相和','父亲自请交权，受封一等公。她在宫中再无后顾之忧。');return fx(chg({prestige:5,treasury:-40}),cchg(c,{aff:20,mood:20}))}},
+      {t:'准其交权，不必封赏',f:()=>{aEnd(c,'解甲','父亲交出兵权，朝廷却未有封赏。她什么也没说。');return fx(chg({prestige:3}),cchg(c,{aff:-5}))}}]};
+    return {text:`兵部密报：${cName(c)}之父私扩军饷，还与北狄互市，边关只知有将军、不知有朝廷。${f.trust?'\n你想起曾对她说过“信得过将军”。':''}`,choices:[
+      {t:'召将军回京述职',f:()=>{f.act='recall';aNext(c,2,1,3);return '圣旨已经出京。'}},
+      {t:'派监军暗中查访',f:()=>{f.act='spy';aNext(c,2,2,4);return '一位不起眼的户部主事随粮草北上了。'}},
+      {t:'压下密报，不予理会',f:()=>{f.act='ignore';aNext(c,2,3,6);return '你把密报锁进了匣子。'}}]}},
+  (c,f)=>{if(f.act==='recall')return {text:`将军接旨后迟迟不动身，只上折称旧伤复发。朝中议论纷纷：将军这是不敢回京。\n${cName(c)}跪在乾清宫外，求你再给父亲一次机会。`,choices:[
+      {t:'亲赴居庸关相迎，以示信任',f:()=>{if(chance(.45+c.aff/250+E().prestige/400)){aEnd(c,'君臣相得','陛下亲赴关外相迎，将军当场交出兵符，痛哭流涕。');return fx(chg({prestige:8,people:3}),cchg(c,{aff:25,mood:20}))}aNext(c,3,0,1);return '将军没有来。来的是一封战书。'}},
+      {t:'下旨削爵，夺其兵权',f:()=>{aEnd(c,'削爵','父亲被夺去兵权、削去爵位，回京后郁郁而终。');return fx(chg({prestige:4}),cchg(c,{mood:-40,aff:-25}))}}]};
+    if(f.act==='spy'){if(chance(.55))return {text:'监军回报：将军扩饷，是因朝廷拖欠边军粮饷已有两年；与北狄互市，换的是过冬的棉衣。将军是清白的。',choices:[
+        {t:'补发欠饷，嘉奖将军',f:()=>{aEnd(c,'清白','监军查明父亲清白，陛下补发边军欠饷。她跪谢天恩。');return fx(chg({treasury:-120,prestige:4}),cchg(c,{aff:18,mood:15}))}}]};
+      return {text:'监军回报：将军确有不臣之心，已暗中联络北狄，约定秋后起事。',choices:[{t:'先下手为强，调兵北上',f:()=>{aNext(c,3,0,0);return '大军北上。'}}]}}
+    if(chance(.5)){aEnd(c,'相安','此后数年，北境平静无事，父亲再未让她忧心。');return {text:'北境这几年出奇地安静。',choices:[ok1]}}
+    return {text:`北境急报：${cName(c)}之父以“清君侧”为名起兵南下！`,choices:[{t:'调兵平叛',f:()=>{aNext(c,3,0,0);return fx(chg({prestige:-6,people:-4}))}}]}},
+  (c,f)=>({text:`叛军已至宣府。${cName(c)}脱簪跪在雪地里：“家父罪该万死。臣妾愿替父受死，只求陛下饶过我母亲和幼弟。”`,choices:[
+    {t:'让她修书劝降',cond:()=>c.aff>=55,why:'情分不足（需55）',f:()=>{aEnd(c,'大义','她写了一封血书。三日后，父亲单骑入营请罪，叛乱不战而平。');c.mood=clamp(c.mood-20);return fx(chg({prestige:8,people:4}),cchg(c,{aff:15}))}},
+    {t:'平叛，只罪其父，不株连她',f:()=>{aEnd(c,'孤女','叛乱平定，父亲伏诛。她保住了位分，却再也没有笑过。');return fx(chg({prestige:4,treasury:-200}),cchg(c,{mood:-50,aff:5}))}},
+    {t:'平叛，将她废入冷宫',f:()=>{c.cold=true;c.palace='冷宫';aEnd(c,'连坐','叛乱平定，她以罪臣之女的身份被打入冷宫。');return fx(chg({prestige:5,treasury:-200}),cchg(c,{mood:-60,aff:-30}))}}]})]},
+ scholar:{name:'故人诗',fit:c=>c.trait==='才女'||c.talent>=80,stages:[
+  (c,f)=>c.aff<20?null:{text:`今科状元的殿试文章里，引了一句诗：“${f.poem=pick(POEMS)}”\n你记得，这句诗曾写在${cName(c)}送你的花笺上。`,choices:[
+    {t:'召她来问个明白',f:()=>{f.asked=1;aNext(c,1,2,4);story(c,'陛下问起她与新科状元的旧事。她坦白入宫前曾与他有过诗书往来。');return `她跪下，坦白入宫前曾与他在诗社相识，有过几回诗书往来。“发乎情，止乎礼，此后再无联系。”${fx(cchg(c,{aff:3}))}`}},
+    {t:'不动声色',f:()=>{aNext(c,1,2,4);return '你把那篇文章放在了一边。'}}]},
+  (c,f)=>({text:`琼林宴上，状元奉旨献诗。他念到一半，${cName(c)}失手打翻了酒盏，满座寂然。`,choices:[
+    {t:'笑说“诗好，连娘娘都听醉了”',f:()=>{aNext(c,2,2,4);return fx(cchg(c,{aff:6}))}},
+    {t:'冷眼看着',f:()=>{aNext(c,2,2,4);return fx(cchg(c,{mood:-10}))}},
+    {t:'当晚召她侍寝',cond:()=>E().energy>0&&!c.preg,why:'精力不足',f:()=>{aNext(c,2,2,4);nightWith(c);return null}}]}),
+  (c,f)=>({text:`宫门侍卫截下一封信，是状元托人带给${cName(c)}的。信上只有两个字：“珍重”。`,choices:[
+    {t:'烧了信，什么也不说',f:()=>{c.talent=clamp(c.talent+5);aEnd(c,'知音','陛下烧了那封信，从未提起。后来她知道了，从此为陛下写的诗比从前多了许多。');return fx(cchg(c,{aff:22,mood:10}))}},
+    {t:'召她对质',f:()=>{if(f.asked||c.aff>=60){aEnd(c,'此心已许','她看完信，当着陛下的面把它投进炭盆：“臣妾此生，只是陛下的人。”');return fx(cchg(c,{aff:15}))}aEnd(c,'心结','对质之后，两人之间多了一道看不见的墙。');return fx(cchg(c,{aff:-20,mood:-15}))}},
+    {t:'将状元外放岭南',f:()=>{c.talent=clamp(c.talent-10);aEnd(c,'诗绝','状元被外放岭南。她从此搁笔，再没写过一首诗。');return fx(cchg(c,{mood:-25,aff:-10}),chg({people:-2}))}},
+    {t:'成全他们，放她出宫',f:()=>{c.gone=true;aEnd(c,'成全','陛下下旨放她出宫。听说后来她与状元在江南开了一间书院。');return `她在殿前叩了三个头，泪流满面。${fx(chg({people:4,prestige:-3}))}`}}]})]},
+ secret:{name:'旧案',fit:c=>c.fam.t==='宫女'||(c.fam.t==='寒门'&&c.scheme>=50),stages:[
+  (c,f)=>c.aff<25?null:{text:`你半夜醒来，发现${cName(c)}不在身边。她披着外衣坐在灯下，正借着烛光偷看一卷发黄的旧档。`,choices:[
+    {t:'装睡，看她做什么',f:()=>{f.watch=1;aNext(c,1,1,3);return '她看了很久，最后把那卷档案藏进了妆奁的夹层里。'}},
+    {t:'开口问她',f:()=>{aNext(c,1,1,3);return `她吓了一跳，随即笑道：“臣妾睡不着，翻翻闲书罢了。”她在撒谎。${fx(cchg(c,{mood:-5}))}`}},
+    {t:'命暗卫查她的底细',f:()=>{aNext(c,1,1,2);return '暗卫领命而去。'}}]},
+  (c,f)=>({text:`暗卫回报：${fullName(c)}本不姓${c.sur}。她是十二年前“江南盐案”中被抄家问斩的户部侍郎之女，全家只逃出她一个。\n她入宫，是为了查当年的卷宗。`,choices:[
+    {t:'当面问她',f:()=>{aNext(c,2,0,1);return '你去了她宫里。'}},
+    {t:'先下手为强，将她拿下',f:()=>{c.cold=true;c.palace='冷宫';aEnd(c,'囚鸟','身世败露，以欺君之罪被打入冷宫。她始终没有说出入宫的目的。');return fx(cchg(c,{mood:-50,aff:-30}))}},
+    {t:'佯装不知，看她下一步',f:()=>{f.wait=1;aNext(c,2,2,4);return '你决定再等等。'}}]}),
+  (c,f)=>({text:`${f.wait?'她终于找到了当年的判词。那夜她':'她'}跪在你面前，额头抵着冰冷的地砖：\n“家父蒙冤而死，臣妾隐姓埋名入宫，只为替他翻案。可如今……臣妾对陛下，是真的动了心。”`,choices:[
+    {t:'下旨重审江南盐案',f:()=>{aNext(c,3,2,3);return `她怔住了，泪如雨下。${fx(cchg(c,{aff:15}))}`}},
+    {t:'“念你孝心，朕不追究。此事到此为止。”',f:()=>{aEnd(c,'尘封','陛下赦了她的欺君之罪，旧案却从此尘封。她心中感激，也有遗憾。');return fx(cchg(c,{aff:10,mood:-10}))}},
+    {t:'“欺君之罪，不可饶恕。”',f:()=>{c.cold=true;c.palace='冷宫';aEnd(c,'冷月','她被打入冷宫，那卷旧档被当众烧毁。');return fx(cchg(c,{mood:-60,aff:-40}))}}]}),
+  (c,f)=>({text:'大理寺重审盐案，结果令人心惊：当年主审此案、构陷侍郎的，正是如今权倾朝野的内阁首辅。',choices:[
+    {t:'依法严办首辅',f:()=>{c.fam={t:'平反忠臣之后',p:45};harem().filter(x=>x.fam.t==='内阁首辅').forEach(x=>{cchg(x,{mood:-30,aff:-15});relAdd(x,c,-40)});aEnd(c,'昭雪','首辅下狱，父亲沉冤得雪。她在宫中设了灵位，第二天红着眼眶对陛下笑了。');return fx(chg({people:10,prestige:-4}),cchg(c,{aff:30,mood:25}))}},
+    {t:'为她父亲平反，但不动首辅',f:()=>{c.fam={t:'平反忠臣之后',p:30};aEnd(c,'半昭雪','父亲得以平反，元凶却依旧位极人臣。她说，这样已经很好了。');return fx(chg({people:3}),cchg(c,{aff:10,mood:5}))}}]})]},
+ ill:{name:'续命汤',fit:c=>c.trait==='体弱',stages:[
+  (c,f)=>({text:`太医院院判私下禀报：${cName(c)}的病是胎里带来的心疾，以眼下的脉象，恐怕熬不过三年。`,choices:[
+    {t:'遍寻天下名医（国库-50万两）',f:()=>{f.seek=1;aNext(c,1,2,4);return fx(chg({treasury:-50}))}},
+    {t:'告诉她实情',f:()=>{f.tell=1;aNext(c,1,1,3);story(c,'得知自己的病情，她沉默良久，只说想再看一眼江南的春天。');return `她沉默了很久，最后笑了：“臣妾小时候在江南住过，想再看一次那里的春天。”${fx(cchg(c,{aff:8}))}`}},
+    {t:'瞒着她',f:()=>{aNext(c,1,3,5);return '你嘱咐太医院，一个字也不许透露。'}}]}),
+  (c,f)=>{if(f.seek)return {text:'一位云游郎中揭了皇榜，说有一方可治心疾，药引是昆仑山上的雪灵芝，十年一开。',choices:[
+      {t:'派人去昆仑取药（国库-120万两）',f:()=>{f.herb=1;aNext(c,2,4,7);return fx(chg({treasury:-120}))}},
+      {t:'恐是江湖骗子，作罢',f:()=>{aNext(c,2,6,10);return '你命人把郎中送出了城。'}}]};
+    if(f.tell)return {text:`${cName(c)}靠在窗边，望着南方：“陛下，臣妾想去江南。”`,choices:[
+      {t:'陪她南巡（国库-150万两，龙体-3）',f:()=>{f.trip=1;story(c,'陛下陪她南下。烟雨西湖，她靠在陛下肩头，说这是她这辈子最好的日子。');aNext(c,2,3,6);return fx(chg({treasury:-150,health:-3,people:3}),cchg(c,{aff:30,mood:40}))}},
+      {t:'宫规森严，不能出京',f:()=>{aNext(c,2,4,8);return fx(cchg(c,{mood:-15}))}}]};
+    aNext(c,2,4,8);return {text:`${cName(c)}从宫人的窃窃私语里知道了自己的病情。她没有哭闹，只是把你送她的东西一件件收进了箱子里。`,choices:[{t:'去看她',f:()=>fx(cchg(c,{mood:-10,aff:-5}))}]}},
+  (c,f)=>{if(f.herb&&chance(.7)){c.trait='温婉';aEnd(c,'回春','雪灵芝入药，她的心疾竟慢慢好了。她开始学骑马，虽然总是摔下来。');return {text:'昆仑雪灵芝送到了。三个月后，太医惊喜地禀报：她的脉象平稳了。',choices:[{t:'太好了',f:()=>fx(cchg(c,{aff:20,mood:30}))}]}}
+    if(f.trip&&chance(.4)){aEnd(c,'江南春','从江南回来后，她的病竟一日好过一日。太医说，心病还须心药医。');return {text:'从江南回来后，她的气色一日好过一日。',choices:[{t:'太好了',f:()=>fx(cchg(c,{mood:20}))}]}}
+    c.alive=false;aEnd(c,f.trip?'烟雨':'香消',f.trip?'她走在一个春天的清晨，枕边放着从西湖带回的一枝柳。':'一个雪夜，她安静地走了。');AU.sfx('sad');
+    return {text:`${fullName(c)}薨了。${f.trip?'宫人说，她走之前一直在笑。':''}`,choices:[{t:'追封，厚葬',f:()=>{c.rank=Math.min(7,c.rank+1);return fx(chg({treasury:-30}))}},{t:'……'}]}}]},
+ envoy:{name:'驼铃',fit:c=>c.fam.t==='西域贡女',stages:[
+  (c,f)=>({text:`西域使团再次入京。使臣请求私下拜见${cName(c)}，说是带来了她母亲的口信。`,choices:[
+    {t:'准',f:()=>{f.v='allow';aNext(c,1,2,4);return '使臣在她宫里待了一个时辰。'}},
+    {t:'准，但派人在屏风后听着',f:()=>{f.v='listen';aNext(c,1,0,1);return '你安排了一个懂西域话的小太监。'}},
+    {t:'不准',f:()=>{f.v='deny';aNext(c,1,2,4);return fx(cchg(c,{mood:-12}))}}]}),
+  (c,f)=>{if(f.v==='listen')return {text:'小太监回报：使臣要她打探京城九门布防，以她母亲的性命相要挟。她当场拒绝了，哭着说“陛下待我很好”。',choices:[
+      {t:'出兵西域，救出她的母亲（国库-300万两）',f:()=>{aEnd(c,'驼铃归','王师西出阳关，接回了她的母亲。她说，从此这里就是她的家。');return fx(chg({treasury:-300,prestige:8}),cchg(c,{aff:40,mood:40}))}},
+      {t:'驱逐使臣，厚赏她的忠贞',f:()=>{aEnd(c,'忠贞','她拒绝了母国的要挟。陛下厚赏了她，却救不回她的母亲。');return fx(chg({prestige:3}),cchg(c,{aff:15,mood:-15}))}}]};
+    if(f.v==='allow')return {text:'兵部急报：九门布防图失窃。线索指向了西域使团，以及见过使臣的人。',choices:[
+      {t:'审问她',f:()=>{aNext(c,2,0,1);return '她被带到了慎刑司。'}},
+      {t:'不必审了，将她遣返西域',f:()=>{c.gone=true;aEnd(c,'遣返','她被遣返西域，临走时一直回头。');return fx(chg({prestige:-2}))}}]};
+    aEnd(c,'思乡','她再也没见到母国来的人。每到月圆，她都会对着西边唱一支听不懂的歌。');return {text:`${cName(c)}郁郁寡欢了很久。`,choices:[{t:'……',f:()=>fx(cchg(c,{mood:-10}))}]}},
+  (c,f)=>({text:'慎刑司审了三天。她承认布防图是她画的——使臣扣着她的母亲，她别无选择。\n“臣妾死不足惜，只求陛下……别杀我娘。”',choices:[
+    {t:'饶恕她，出兵救其母（国库-300万两）',f:()=>{aEnd(c,'赎罪','陛下饶恕了她，还派兵救回了她的母亲。她从此死心塌地。');return fx(chg({treasury:-300,prestige:4}),cchg(c,{aff:45,mood:30}))}},
+    {t:'打入冷宫',f:()=>{c.cold=true;c.palace='冷宫';aEnd(c,'沙尽','她被打入冷宫。听说她的母亲死在了那年冬天。');return fx(chg({prestige:3}),cchg(c,{mood:-60,aff:-30}))}}]})]},
+ ambition:{name:'凤位',fit:c=>c.rank!==8&&(c.trait==='城府'||c.scheme>=78),stages:[
+  (c,f)=>c.rank===8?(aEnd(c,'凤仪','她已登上后位，母仪天下。'),{text:`${cName(c)}如今已是中宫。`,choices:[ok1]}):c.rank<3?null:{text:`你注意到，内务府总管与坤宁宫的掌事姑姑近来常常出入${c.palace}。`,choices:[
+    {t:'敲打她几句',f:()=>{f.w=1;c.scheme=clamp(c.scheme-8);aNext(c,1,4,8);return fx(cchg(c,{mood:-10}))}},
+    {t:'静观其变',f:()=>{aNext(c,1,3,6);return '你什么也没说。'}},
+    {t:'暗中扶持她',f:()=>{f.back=1;aNext(c,1,3,6);return '你让内务府给她宫里多拨了些人手。'}}]},
+  (c,f)=>{const em=empress();if(c.rank===8){aEnd(c,'凤仪','她已登上后位。');return {text:`${cName(c)}如今已是中宫。`,choices:[ok1]}}
+    if(!em)return {text:`${cName(c)}替你研墨，状似无意地说：“中宫之位空悬已久，六宫无主，终归不成体统。”`,choices:[
+      {t:'“你想做皇后？”',f:()=>{aNext(c,2,0,1);return '她垂下眼睛，笑而不语。'}},
+      {t:'装作没听懂',f:()=>{aEnd(c,'心冷','她再也没提过后位，只是看陛下的眼神冷了几分。');return fx(cchg(c,{aff:-10}))}}]};
+    return {text:`坤宁宫传出消息：皇后夜夜惊梦，太医查出皇后常用的安神香里掺了曼陀罗。所有线索都指向一个早已投井的宫女。${f.back?'\n你想起自己曾暗中扶持过谁。':''}`,choices:[
+      {t:'彻查到底',f:()=>{if(chance(.4+E().prestige/250+(f.w?.1:0)+allyBonus(em))){c.known=true;aEnd(c,'败露','谋害中宫之事败露。');pushNow(punishEv(c,em,'谋害中宫'));return '顺着曼陀罗的来处，查到了一个你没想到的地方……'}aNext(c,2,3,6);return '查无实据。'}},
+      {t:'借机废后',f:()=>{em.rank=6;assignPalace(em);story(em,'以“失德”之名被废，降为贵妃。');log(`废皇后${fullName(em)}。`,1);aNext(c,2,0,1);return fx(chg({prestige:-8}),cchg(em,{mood:-40,aff:-20}))}},
+      {t:'安抚皇后，加强守卫',f:()=>{aNext(c,2,4,8);return fx(cchg(em,{aff:6}))}}]}},
+  (c,f)=>{if(empress()&&empress()!==c){aEnd(c,'蛰伏','她没能更进一步，却也没有露出破绽，依旧温婉得体地站在众人之中。');return {text:`${cName(c)}近来安静了许多。`,choices:[ok1]}}
+    if(c.rank===8){aEnd(c,'凤仪','步步为营，终登后位。');return {text:`${cName(c)}如今已是中宫。`,choices:[ok1]}}
+    return {text:`中宫空悬。${cName(c)}一身素服跪在乾清宫外：“臣妾愿为陛下打理六宫。”`,choices:[
+      {t:'立她为后',cond:()=>c.rank>=5,why:'位分不足（需妃位以上）',f:()=>{c.rank=8;c.palace='坤宁宫';aEnd(c,'凤仪','步步为营，终登后位。');log(`册${fullName(c)}为皇后。`,1);return fx(chg({prestige:2}),cchg(c,{aff:15,mood:30}))}},
+      {t:'晋她为皇贵妃，代掌凤印',cond:()=>rankCount(7)<1&&c.rank<7,why:'皇贵妃位已满',f:()=>{c.rank=7;if(!c.title)c.title=pick(TITLES);aEnd(c,'摄六宫','以皇贵妃之尊代掌凤印，离后位只差一步。');return fx(cchg(c,{aff:8,mood:15}))}},
+      {t:'拒绝',f:()=>{c.scheme=clamp(c.scheme+10);aEnd(c,'怨怼','求后位不得，她心中的怨恨越积越深。');return fx(cchg(c,{aff:-15,mood:-20}))}}]}}]},
+ greed:{name:'金玉其外',fit:c=>c.trait==='贪财',stages:[
+  (c,f)=>({text:`京城里有传言：${cName(c)}的兄长打着“国舅爷”的旗号，在外收受贿赂、包揽词讼。`,choices:[
+    {t:'让她自己去管教兄长',f:()=>{f.v='self';aNext(c,1,2,4);return '她连声保证，会写信骂醒兄长。'}},
+    {t:'派人去查',f:()=>{aNext(c,1,1,3);return '都察院领了旨。'}},
+    {t:'小事，不必理会',f:()=>{aNext(c,1,3,5);return fx(chg({people:-2}))}}]}),
+  (c,f)=>{if(f.v==='self'&&chance(.5+c.aff/200)){c.trait='温婉';aEnd(c,'回头','兄长收了手，她也把攒下的私房钱捐了一半给善堂。');return {text:`${cName(c)}拿出一半的私房钱捐给了京城的善堂。“臣妾不想让陛下为难。”`,choices:[{t:'好',f:()=>fx(chg({people:4}),cchg(c,{aff:12}))}]}}
+    return {text:`都察院查实：${cName(c)}的兄长贪墨受贿，数额高达二百万两，其中不少进了她宫里的库房。`,choices:[
+      {t:'抄没充公，流放其兄',f:()=>{aEnd(c,'抄家','兄长被流放，她宫里的珠宝被抄没了一大半。');return fx(chg({treasury:200,people:6}),cchg(c,{mood:-35,aff:-15}))}},
+      {t:'令其退赃，不再追究',f:()=>{aEnd(c,'退赃','兄长退还了赃款，此事不了了之。');return fx(chg({treasury:100,people:-2}),cchg(c,{mood:-10,aff:5}))}},
+      {t:'压下此案',f:()=>{c.fam.p=Math.min(95,c.fam.p+15);aEnd(c,'外戚','此案被压下，她的娘家越发骄横。');return fx(chg({people:-8,prestige:-3}),cchg(c,{aff:15,mood:10}))}}]}}]},
+ kite:{name:'纸鸢',fit:c=>['活泼','骄矜','淡泊','善妒'].includes(c.trait),stages:[
+  (c,f)=>c.aff<30?null:{text:`御花园里，${cName(c)}放的纸鸢断了线，晃晃悠悠落在了乾清宫的屋脊上。她站在宫墙下，急得直跺脚。`,choices:[
+    {t:'命小太监爬上去取',f:()=>{aNext(c,1,2,5);return fx(cchg(c,{mood:8}))}},
+    {t:'亲自搭梯子去取',f:()=>{aNext(c,1,2,5);story(c,'纸鸢落在乾清宫屋脊上，陛下亲自搭梯子替她取了下来。');return `御前的太监吓得跪了一地。你把纸鸢递给她时，她笑得比春光还亮。${fx(cchg(c,{aff:10,mood:15}),chg({prestige:-1}))}`}},
+    {t:'“一只纸鸢而已，再做一只便是。”',f:()=>{aNext(c,1,3,6);return fx(cchg(c,{mood:-5}))}}]},
+  (c,f)=>c.aff<45?null:{text:`上元将近。${cName(c)}扯着你的袖子：“听说宫外的灯会有一条街那么长……臣妾长这么大，还没逛过呢。”`,choices:[
+    {t:'微服带她出宫（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{E().energy--;renderTop();f.out=1;aNext(c,2,3,6);story(c,'上元夜，陛下微服带她出宫看灯。她买了一盏兔子灯，一路舍不得放下。');return `你们在人潮里走散了一回，找到她时，她正举着一盏兔子灯站在桥头四处张望。${fx(cchg(c,{aff:15,mood:20}))}`}},
+    {t:'在宫里为她办一场灯会（国库-40万两）',f:()=>{aNext(c,2,3,6);harem().forEach(o=>{if(o!==c&&TRAITS[o.trait].jealous){o.mood=clamp(o.mood-6);relAdd(o,c,-8)}});return fx(chg({treasury:-40}),cchg(c,{aff:8,mood:15}))}},
+    {t:'宫规不许',f:()=>{aNext(c,2,4,8);return fx(cchg(c,{mood:-10}))}}]},
+  (c,f)=>{if(c.aff>=65){c.bond=true;aEnd(c,'知己',f.out?'那盏兔子灯一直挂在她的床头。她说，陛下是这宫里唯一懂她的人。':'她说，陛下是这宫里唯一懂她的人。');return {text:`${cName(c)}亲手扎了一只新纸鸢送你，上面画着两个牵手的小人。${'\n'}§她的恩宠从此不再衰减`,choices:[ok1]}}
+    aEnd(c,'少年游','那些放纸鸢的春天，渐渐成了她回忆里最轻快的日子。');return {text:`${cName(c)}把旧纸鸢收进了箱底。她长大了些，也安静了些。`,choices:[ok1]}}]},
+ love:{name:'鸳鸯帕',fit:()=>true,stages:[
+  (c,f)=>c.aff<40?null:{text:`你去${c.palace}时没让人通报。${cName(c)}正低头绣一方帕子，见你进来，慌忙往身后藏。`,choices:[
+    {t:'假装没看见',f:()=>{aNext(c,1,2,5);return '她松了一口气，脸却还是红的。'}},
+    {t:'一把抢过来看',f:()=>{aNext(c,1,2,5);story(c,'绣了一方鸳鸯帕，被陛下抢去看了，羞得三天不敢抬头。');return `是一对鸳鸯，绣得歪歪扭扭的。${fx(cchg(c,{aff:6,mood:10}))}`}}]},
+  (c,f)=>c.aff<55?null:{text:`你染了风寒，高烧三日。${cName(c)}衣不解带地守在榻前，药都是她亲口试过温才喂你。`,choices:[
+    {t:'醒来时握住她的手',f:()=>{aNext(c,2,3,6);story(c,'陛下染病，她守了三天三夜。陛下醒来时握住了她的手。');return fx(cchg(c,{aff:12,favor:8}))}},
+    {t:'厚赏她',f:()=>{aNext(c,2,3,6);return fx(chg({treasury:-20}),cchg(c,{mood:10,aff:4}))}}]},
+  (c,f)=>{if(c.aff<70){if(!f.wait){f.wait=1;c.arc.t=S.turn+6;return null}aEnd(c,'相敬如宾','岁月流转，两人之间少了些心动，多了些安稳。');return {text:`${cName(c)}依旧温和，只是不再像从前那样盼着你来。`,choices:[{t:'……'}]}}
+    const sc=c.id%3;f.sc=sc;
+    return {text:sc===0?`那夜宫中走水，火从${c.palace}的偏殿烧起来。你赶到时，${cName(c)}正从火里往外跑，怀里紧紧抱着那方鸳鸯帕——她是回去拿它的。`:sc===1?`太液池上泛舟，船身忽然一歪，${cName(c)}落进了水里。她被捞上来时冻得发抖，手里还攥着那方鸳鸯帕。`:`围猎时一头受惊的野猪冲向御帐，${cName(c)}想也没想，扑过来挡在了你身前。她袖中掉出那方鸳鸯帕。`,choices:[
+      {t:sc===0?'冲进去把她拉出来':sc===1?'亲手为她裹上大氅，守她一夜':'抱起她，亲自送回营帐',f:()=>{const s=chg({health:-1});c.bond=true;aEnd(c,'同心',['那夜陛下冲进火场把她拉了出来。','太液池落水，陛下守了她一夜。','围猎遇险，她以身护驾。'][sc]+'从此她的恩宠再不会淡去。');return `${['你们都被烟熏得满脸乌黑，她却笑出了眼泪。','她烧了一夜，醒来第一句话是问你有没有着凉。','她只擦破了手臂，却被你抱了一路，羞得把脸埋进你怀里。'][sc]}${fx(s,cchg(c,{aff:25,favor:20}))}\n§她的恩宠从此不再衰减`}},
+      {t:'命人好生照料她',f:()=>{c.bond=true;aEnd(c,'同心','危急之时，她心里想的是那方鸳鸯帕，和绣它时想着的人。');return fx(cchg(c,{aff:15}))+'\n§她的恩宠从此不再衰减'}}]}}]}
+};
+function assignArc(c){if(c.arc)return;for(const id of ['secret','envoy','general','ill','scholar','greed','ambition','kite','love']){if(ARCS[id].fit(c)){c.arc={id,st:0,t:S.turn+ri(2,5),done:false,end:null,f:{}};return}}}
+function arcTick(){const due=alive().filter(c=>c.arc&&!c.arc.done&&!c.cold&&S.turn>=c.arc.t).sort((a,b)=>a.arc.t-b.arc.t);
+  for(const c of due){const st=ARCS[c.arc.id].stages[c.arc.st];if(!st){c.arc.done=true;continue}
+    const ev=st(c,c.arc.f);if(ev){if(!c.arc.done&&c.arc.t<=S.turn)c.arc.t=S.turn+99;ev.title=ev.title||ARCS[c.arc.id].name;ev.por=ev.por||c;return ev}
+    if(c.arc.t<=S.turn)c.arc.t=S.turn+1}
+  return null}
+function arcLine(c){if(!c.arc)return '';const a=ARCS[c.arc.id];
+  return `<div style="margin-top:4px">主线「${a.name}」：${c.arc.done?`<span class="tag y">结局·${esc(c.arc.end)}</span>`:`第${cnNum(c.arc.st+1)}幕<span class="hint">（情分越高越容易推进）</span>`}</div>`}
+
+/* ============ 宫城地图 ============ */
+const MW=200,MH=128,HY=[46,64,82,100];
+const MAPC=document.createElement('canvas');MAPC.width=MW;MAPC.height=MH;MAPC.id='mapc';MAPC.setAttribute('aria-label','宫城地图');
+const mg=MAPC.getContext('2d');
+const PLACES=[
+ {id:'qq',n:'乾清宫',r:[80,68,40,11],d:[100,82],k:'view',v:'home',sc:'court'},
+ {id:'kn',n:'坤宁宫',r:[82,50,36,11],d:[100,64],k:'palace',p:'坤宁宫',sc:'harem'},
+ {id:'cj',n:'宸极殿',r:[78,86,44,12],d:[100,100],k:'place',sc:'court'},
+ {id:'yh',n:'御花园',r:[58,12,84,30],d:[100,46],k:'place',sc:'garden'},
+ {id:'sw',n:'神武门',r:[90,2,20,6],d:[100,9],k:'view',v:'out',sc:'city'},
+ {id:'wm',n:'午门',r:[90,119,20,7],d:[100,117],k:'view',v:'out',sc:'court'},
+ {id:'lg',n:'冷宫',r:[10,16,26,14],d:[23,46],k:'palace',p:'冷宫',sc:'night'},
+ {id:'wy',n:'文渊阁',r:[164,16,26,14],d:[177,46],k:'view',v:'log',sc:'court'},
+ {id:'js',n:'敬事房',r:[122,104,28,10],d:[136,100],k:'view',v:'cards',sc:'night'},
+ {id:'ss',n:'上书房',r:[156,104,30,10],d:[171,100],k:'view',v:'kids',sc:'court'},
+ {id:'cn',n:'慈宁宫',r:[14,104,30,10],d:[29,100],k:'place',sc:'harem'}];
+[[['景仁宫','承乾宫','钟粹宫','延禧宫','永和宫','景阳宫'],[124,158]],[['永寿宫','翊坤宫','储秀宫','启祥宫','长春宫','咸福宫'],[14,48]]].forEach(([names,xs])=>names.forEach((n,i)=>{const x=xs[i%2],y=[50,68,86][Math.floor(i/2)];PLACES.push({id:'p'+n,n,r:[x,y,26,12],d:[x+13,y+14],k:'palace',p:n,sc:'harem'})}));
+const emp={x:100,y:82,path:[],arrive:null,trail:[]};
+const NPC=new Map();let hoverP=null,mapParts=[];
+function nearestH(y){return HY.reduce((a,b)=>Math.abs(b-y)<Math.abs(a-y)?b:a)}
+function planPath(sx,sy,tx,ty){const pts=[];let x=sx,y=sy;
+  if(!HY.includes(y)){const ny=(x===100&&(y<46||y>100))?(y<46?46:100):nearestH(y);pts.push([x,ny]);y=ny}
+  if(!HY.includes(ty)){const ny=ty<46?46:100;if(y!==ny){const sv=Math.abs(x-44)<Math.abs(x-154)?44:154;pts.push([sv,y],[sv,ny]);y=ny}pts.push([100,y],[100,ty]);return pts}
+  if(ty===y){pts.push([tx,ty]);return pts}
+  const vx=[44,154].sort((a,b)=>(Math.abs(x-a)+Math.abs(a-tx))-(Math.abs(x-b)+Math.abs(b-tx)))[0];
+  pts.push([vx,y],[vx,ty],[tx,ty]);return pts}
+function stepTo(n,sp){const [tx,ty]=n.path[0],dx=tx-n.x,dy=ty-n.y,d=Math.hypot(dx,dy);if(d<=sp){n.x=tx;n.y=ty;n.path.shift();return !n.path.length}n.x+=dx/d*sp;n.y+=dy/d*sp;return false}
+function npcHome(c){const pl=PLACES.find(p=>p.k==='palace'&&p.p===c.palace);return pl?pl.d:[100,64]}
+function npcSync(){const ids=new Set();alive().forEach(c=>{ids.add(c.id);if(!NPC.has(c.id)){const h=c.cold?[23,46]:npcHome(c);NPC.set(c.id,{x:h[0],y:h[1],path:[],wait:ri(5,60),ox:ri(-3,3),where:'home'})}});[...NPC.keys()].forEach(id=>{if(!ids.has(id))NPC.delete(id)})}
+function npcStep(){npcSync();for(const [id,n] of NPC){const c=byId(id);if(!c)continue;
+  if(c.cold){n.x=23;n.y=46;n.path=[];n.where='cold';continue}
+  if(n.path.length){stepTo(n,1.2);continue}
+  if(n.wait>0){n.wait--;continue}
+  const home=npcHome(c),r=R();let dest,where;
+  if(c.preg>=2||r<.45){dest=home;where='home'}else if(r<.75){dest=[100,46];where='garden'}
+  else if(r<.88){const al=harem().filter(o=>o!==c&&relGet(c,o)>=30);dest=al.length?npcHome(pick(al)):home;where=al.length?'visit':'home'}else{dest=[100,64];where='kn'}
+  n.path=planPath(Math.round(n.x),Math.round(n.y),dest[0],dest[1]);if(where==='garden')n.path.push([ri(64,136),ri(16,38)]);
+  n.where=where;n.wait=ri(60,220)}}
+function goPlace(p){AU.sfx('click');if(Math.round(emp.x)===p.d[0]&&Math.round(emp.y)===p.d[1]&&!emp.path.length){arrive(p);return}
+  emp.path=planPath(Math.round(emp.x),Math.round(emp.y),p.d[0],p.d[1]);emp.arrive=()=>arrive(p)}
+function arrive(p){S.pos={x:p.d[0],y:p.d[1]};setScene(p.sc);AU.sfx('page');
+  if(p.k==='view')UI.view=p.v;else if(p.k==='palace'){UI.view='palace';UI.sel=p.p}else{UI.view='place';UI.sel=p.id}
+  render()}
+function nearestPlace(){const p=PLACES.find(p=>S.pos&&p.d[0]===S.pos.x&&p.d[1]===S.pos.y);return p?p.n+'门前':'宫道上'}
+function mapTick(){if(!S||UI.view!=='map'||modalOpen)return;
+  if(emp.path.length){const done=stepTo(emp,3.5);emp.trail.push([emp.x,emp.y]);if(emp.trail.length>5)emp.trail.shift();
+    if(done){S.pos={x:Math.round(emp.x),y:Math.round(emp.y)};if(emp.arrive){const f=emp.arrive;emp.arrive=null;f()}}}
+  npcStep();drawMap()}
+function M(x,y,w,h,c){mg.fillStyle=c;mg.fillRect(Math.round(x),Math.round(y),w,h)}
+function drawMap(){const s=season();
+  M(0,0,MW,MH,'#7a1a1e');M(1,1,MW-2,1,'#a3262a');M(3,3,MW-6,MH-6,s===3?'#e4e0d8':'#cbbd9f');
+  for(let y=5;y<MH-4;y+=4)for(let x=5+((y>>2)%2)*4;x<MW-4;x+=8)M(x,y,1,1,s===3?'#d4d0c8':'#bcae8f');
+  const RC=s===3?'#f6f4f0':'#e9dfca',RE=s===3?'#d9d4cb':'#cdbf9f';
+  HY.forEach(y=>{M(10,y-2,180,5,RC);M(10,y+3,180,1,RE)});[44,154].forEach(x=>M(x-2,46,5,56,RC));M(98,6,5,42,RC);M(98,98,5,22,RC);
+  // 御花园
+  const G=[58,12,84,30];M(G[0],G[1],G[2],G[3],['#8bbd6e','#5f9e4f','#b39a4c','#d9e2dc'][s]);M(G[0],G[1],G[2],1,'#a3262a');
+  for(let y=-5;y<=5;y++)for(let x=-13;x<=13;x++)if((x/13)**2+(y/5)**2<=1)M(76+x,28+y,1,1,(x+y+frame)%7?'#4a8fb0':'#7fb9d4');
+  M(116,18,10,7,'#ece7db');M(117,16,8,5,'#3f8a7a');M(118,15,6,1,'#2c6b5e');M(120,14,2,1,GOLD);
+  const tc=[['#f4a6c0','#e27aa0'],['#3f8a44','#2f6e36'],['#e08a3a','#c0602a'],['#f4f6f8','#c8d0d6']][s];
+  [[64,16],[70,38],[92,16],[132,30],[136,16],[110,38],[62,26],[126,38]].forEach(([x,y],i)=>{M(x,y+2,1,2,'#5a3a22');M(x-1,y,3,2,tc[i%2]);M(x,y-1,1,1,tc[(i+1)%2])});
+  M(104,30,4,3,'#8f8f8f');M(105,29,2,1,'#a8a8a8');
+  // 建筑
+  PLACES.forEach(p=>{if(p.id==='yh')return;const [x,y,w,h]=p.r;
+    if(p.id==='sw'||p.id==='wm'){M(x,y,w,h,'#a3262a');M(x+1,y+1,w-2,2,YROOF[0]);M(x+1,y+2,w-2,1,YROOF[1]);M(x+w/2-2,y+h-2,4,2,'#3a2a20');}
+    else{const cold=p.id==='lg',roof=cold?['#7d7d84','#5c5c63','#47474d']:p.id==='wy'?GROOF:YROOF;
+      M(x,y,w,h,cold?'#6d6a66':'#a3262a');M(x+1,y+1,w-2,h-2,s===3?'#eeeae4':'#dacdb2');
+      const rx=x+3,ry=y+2,rw=w-6,rh=Math.max(4,h-5);M(rx,ry,rw,rh,roof[0]);for(let i=rx+1;i<rx+rw;i+=2)M(i,ry,1,rh,roof[1]);M(rx,ry+(rh>>1),rw,1,roof[2]);M(rx,ry+rh-1,rw,1,roof[1]);
+      M(rx,ry,1,1,roof[2]);M(rx+rw-1,ry,1,1,roof[2]);
+      if(s===3)M(rx,ry,rw,rh>>1,'#f2f5f8');
+      const top=p.d[1]<y;M(p.d[0]-2,top?y:y+h-1,4,1,'#3a2a20');
+      if(p.k==='palace'&&p.p!=='冷宫'&&harem().some(c=>c.palace===p.p&&c.preg>=2)){M(x+w-4,y+1,2,2,'#f08aa8')}
+      if(S.cands&&S.cands.length&&p.p==='储秀宫'){M(x+1,y+1,2,2,GOLD)}}
+    if(hoverP===p){mg.strokeStyle='#ffd86b';mg.lineWidth=1;mg.strokeRect(x-.5,y-.5,w+1,h+1)}});
+  // 妃嫔
+  for(const [id,n] of NPC){const c=byId(id);if(!c)continue;const x=Math.round(n.x+n.ox),y=Math.round(n.y);
+    if(n.where==='home'&&!n.path.length&&n.wait>0&&(frame+id)%40<28)continue;
+    M(x-1,y-6,3,2,'#1d1520');M(x-1,y-4,3,1,'#f2cfb2');M(x-1,y-3,3,3,c.cold?'#8a8a8a':ROBES[c.rank]);M(x-1,y,1,1,INK);M(x+1,y,1,1,INK);
+    if(c.preg>=2)M(x,y-8,1,1,'#f08aa8');if(c.rank>=5)M(x+1,y-7,1,1,GOLD)}
+  // 皇帝与太监
+  const tr=emp.trail[0]||[emp.x,emp.y];const ax=Math.round(tr[0])-4,ay=Math.round(tr[1]);
+  M(ax-1,ay-5,3,1,'#33363c');M(ax-1,ay-4,3,1,'#f2cfb2');M(ax-1,ay-3,3,3,'#5b6b85');M(ax-2,ay-8,5,1,'#c0392b');M(ax,ay-7,1,3,'#5a3a22');
+  const ex=Math.round(emp.x),ey=Math.round(emp.y),bob=emp.path.length&&frame%2?1:0;
+  M(ex-2,ey-7-bob,5,1,'#1b1b24');M(ex-1,ey-8-bob,3,1,'#1b1b24');M(ex-1,ey-6-bob,3,1,'#f2cfb2');M(ex-1,ey-5-bob,3,4,'#e8b52c');M(ex,ey-4-bob,1,1,'#c0392b');M(ex-1,ey-1,1,1,INK);M(ex+1,ey-1,1,1,INK);
+  // 四季
+  const want=[18,0,14,30][s];if(mapParts.length<want&&chance(.5))mapParts.push({x:R()*MW,y:-2,vx:s===3?.1:.4,vy:s===3?.35:.3,t:R()*6,c:s===0?'#f7b6c8':s===2?pick(['#e0893a','#c9562a']):'#ffffff'});
+  mapParts.forEach(p=>{p.t+=.2;p.x+=p.vx+Math.sin(p.t)*.3;p.y+=p.vy;M(p.x,p.y,1,1,p.c)});mapParts=mapParts.filter(p=>p.y<MH&&p.x<MW);
+}
+function meetConsort(c){if(!c||!c.alive||c.gone)return;setScene('harem');
+  const t=pick(['正带着宫女往御花园去','刚从坤宁宫请安出来','抱着一卷书匆匆走过','停下脚步，盈盈一拜','站在宫墙下看一树新开的花','提着一盒点心，说正要去看望姐妹']);
+  pushEv({title:'宫道偶遇',por:c,text:`你在宫道上遇见了${cName(c)}，她${t}。`,choices:[
+    {t:'闲话家常（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{A.chat(c.id);return null}},
+    {t:'今夜召她侍寝（精力-1）',cond:()=>E().energy>0&&!c.preg,why:c.preg?'她有孕在身':'精力不足',f:()=>{nightWith(c);return null}},
+    {t:'赏她一支簪子（国库-10万两）',f:()=>fx(chg({treasury:-10}),cchg(c,{mood:10,aff:3}))},
+    {t:'点头作别'}]})}
+MAPC.addEventListener('click',e=>{if(!S)return;const r=MAPC.getBoundingClientRect(),mx=(e.clientX-r.left)/r.width*MW,my=(e.clientY-r.top)/r.height*MH;
+  let best=null,bd=6;for(const [id,n] of NPC){const d=Math.hypot(n.x+n.ox-mx,n.y-3-my);if(d<bd){bd=d;best=[id,n]}}
+  if(best){const c=byId(best[0]),n=best[1];if(!c)return;n.path=[];n.wait=400;let tx=Math.round(n.x),ty=Math.round(n.y);
+    if(!HY.includes(ty)){if(ty<46){tx=100;ty=46}else ty=nearestH(ty)}
+    AU.sfx('click');emp.path=planPath(Math.round(emp.x),Math.round(emp.y),tx,ty);
+    emp.arrive=()=>{n.wait=ri(30,80);if(c.cold){UI.view='palace';UI.sel='冷宫';setScene('night');render();return}meetConsort(c)};
+    if(!emp.path.length)emp.arrive();return}
+  const p=PLACES.find(p=>mx>=p.r[0]&&mx<=p.r[0]+p.r[2]&&my>=p.r[1]&&my<=p.r[1]+p.r[3]);if(p)goPlace(p)});
+MAPC.addEventListener('mousemove',e=>{const r=MAPC.getBoundingClientRect(),mx=(e.clientX-r.left)/r.width*MW,my=(e.clientY-r.top)/r.height*MH;
+  hoverP=PLACES.find(p=>mx>=p.r[0]&&mx<=p.r[0]+p.r[2]&&my>=p.r[1]&&my<=p.r[1]+p.r[3])||null});
+MAPC.addEventListener('mouseleave',()=>{hoverP=null});
+setInterval(mapTick,50);
+function mountMap(){const w=$('#mapwrap');if(!w)return;w.appendChild(MAPC);
+  PLACES.forEach(p=>{const b=document.createElement('button');b.className='mlab';b.textContent=p.n;const [x,y,ww,h]=p.r;
+    b.style.left=((x+ww/2)/MW*100)+'%';b.style.top=((y+h/2)/MH*100)+'%';
+    b.onclick=()=>goPlace(p);b.ondblclick=()=>{emp.path=[];emp.arrive=null;emp.x=p.d[0];emp.y=p.d[1];arrive(p)};
+    b.onmouseenter=()=>{hoverP=p};b.onmouseleave=()=>{hoverP=null};w.appendChild(b)})}
+const backBtn=`<button class="btn sm" onclick="A.go('map')">◂ 返回宫城</button>`;
+function viewMap(){return `<h2>宫城<span class="hint" style="font-size:13px;letter-spacing:0">点宫殿前往，点路上的小人与她相遇；双击宫殿名直接抵达</span></h2><div id="mapwrap"></div><p class="hint">你在${esc(nearestPlace())}。粉点是有孕的妃嫔，金点是储秀宫正在选秀。</p>`}
+function viewPalace(){const name=UI.sel,res=name==='冷宫'?alive().filter(c=>c.cold):harem().filter(c=>c.palace===name);
+  const extra=name==='储秀宫'&&S.cands.length?`<div class="acts"><button class="btn gold" onclick="A.go('xx')">秀女正在候选（${S.cands.length}人）</button></div>`:'';
+  return `<h2>${esc(name)}${backBtn}</h2><p class="hint">${name==='冷宫'?'荒草萋萋，宫门深锁。':name==='坤宁宫'?'中宫所居，凤仪万方。':'宫门半掩，廊下挂着鸟笼。'}</p>${extra}${res.length?`<div class="grid">${res.map(consortCard).join('')}</div>`:'<p class="hint">此处暂无人居住。</p>'}`}
+function viewPlace(){const id=UI.sel;
+  if(id==='cj')return `<h2>宸极殿${backBtn}</h2><p>文武百官已在丹墀下候着。</p><div class="acts"><button class="btn gold" onclick="A.court()">临朝听政<small>精力-1</small></button></div>`;
+  if(id==='yh'){const here=[...NPC].filter(([i,n])=>n.where==='garden'&&!n.path.length).map(([i])=>byId(i)).filter(c=>c&&c.alive&&!c.cold);
+    return `<h2>御花园${backBtn}</h2><p>${['桃花开得正好，蜂蝶纷飞。','荷风送香，蝉鸣阵阵。','丹桂飘香，满地金黄。','红梅映雪，暗香浮动。'][season()]}</p><div class="acts"><button class="btn" onclick="A.out('garden')">园中漫步<small>精力-1</small></button></div>${here.length?`<h3>园中的人</h3><div class="grid">${here.map(c=>`<button class="card" onclick="meetConsort(byId(${c.id}))">${porImg(c,48)}<div class="grow"><div class="nm">${esc(cName(c))}</div><div>正在园中${['赏花','喂鱼','扑蝶','散步'][c.id%4]}</div></div></button>`).join('')}</div>`:'<p class="hint">园中此刻没有旁人。</p>'}`}
+  if(id==='cn'){const d=S.flags.dowager;return `<h2>慈宁宫${backBtn}</h2>${d&&d.alive?`<p>${esc(d.name)}正在佛堂诵经。</p><div class="acts"><button class="btn" onclick="A.greet()">请安<small>精力-1</small></button></div>`:'<p class="hint">慈宁宫已经空了，只有佛前的长明灯还亮着。</p>'}`}
+  return viewMap()}
+A.greet=function(){if(!useE())return;const ev=dowagerEvent();if(ev){pushEv(ev);return}
+  pushEv({title:'请安',text:`${S.flags.dowager.name}${pick(['拉着你的手问长问短，叮嘱你夜里早些歇息。','说起你小时候爬树摔破了膝盖，笑出了眼泪。','让你尝了尝她亲手做的素点心。'])}${fx(chg({prestige:1,health:1}))}`,choices:[ok1]})};
+A.exportSave=function(){try{const t=btoa(unescape(encodeURIComponent(JSON.stringify(S))));const ta=$('#savecode');ta.value=t;ta.focus();ta.select();
+  if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast('存档码已复制'),()=>toast('已选中，请手动复制'));else toast('已选中，请手动复制')}catch(e){toast('导出失败')}};
+A.importSave=function(){try{const t=$('#savecode').value.trim();const s=JSON.parse(decodeURIComponent(escape(atob(t))));if(!s.emp)throw 0;S=s;Q.length=0;migrate();UI.view='map';toast('已导入存档');render()}catch(e){toast('存档码无效，请检查是否复制完整')}};
+function migrate(){if(!S)return;S.rel=S.rel||{};S.pos=S.pos||{x:100,y:82};alive().forEach(c=>{if(!c.arc)assignArc(c)});S.children.forEach(k=>{if(k.sup===undefined)k.sup=0});
+  NPC.clear();emp.x=S.pos.x;emp.y=S.pos.y;emp.path=[];emp.arrive=null;emp.trail=[]}
 
 /* ============ 启动 ============ */
 setScene('court');render();requestAnimationFrame(loop);
