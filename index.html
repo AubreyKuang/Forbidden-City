@@ -205,6 +205,8 @@ body{background:#f3eee4}
 .title-wrap h1,.brand::before,.mtitle{font-family:var(--f-ui);letter-spacing:.06em}
 .title-wrap h1{font-weight:750}
 #scene,.por{filter:saturate(.78)}
+.por.court-lady{background:radial-gradient(ellipse at 48% 36%,#faf0df,#e2cba8);filter:none}
+.por.court-lady.cold{filter:grayscale(.8) brightness(.9)}
 .btn,.btn.jade{background:#efe8dc;color:var(--ink);border:0;box-shadow:none;letter-spacing:0}
 .btn:hover,.btn.jade:hover{background:#e8dfd1;filter:none;box-shadow:none}
 .btn.gold,.btn.primary,.title-wrap>.btn.gold{background:var(--red);color:#fff9ec;font-weight:650}
@@ -228,6 +230,7 @@ body{background:#f3eee4}
 .detail-head h2{margin:2px 0 6px!important}
 .detail-head p{margin:0;color:var(--ink2);line-height:1.65}
 .detail-head .por{width:88px;height:auto}
+.detail-head .por.court-lady{width:112px}
 .detail-back{margin:0 0 10px}
 .detail-actions{margin:16px 0 22px;padding:12px 0 15px;border-bottom:1px solid #c5aa86}
 .detail-action-label{display:block;margin:0 0 8px;color:#6f4639;font-size:12px;font-weight:750;letter-spacing:.08em}
@@ -262,7 +265,7 @@ body{background:#f3eee4}
 .detail-content .stats{grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr))}
 .detail-content .story{max-height:none}
 @media(max-width:600px){.detail-columns{grid-template-columns:1fr;gap:14px}.detail-stack{gap:14px}}
-@media(max-width:480px){.detail-head{gap:12px;padding:14px}.detail-head .por{width:66px}.detail-vitals{grid-template-columns:repeat(3,minmax(0,1fr))}.detail-vitals .bar{padding:3px 2px 6px}.detail-actions .btn{min-height:44px}.detail-content{gap:8px}}
+@media(max-width:480px){.detail-head{gap:12px;padding:14px}.detail-head .por{width:66px}.detail-head .por.court-lady{width:76px}.detail-vitals{grid-template-columns:repeat(3,minmax(0,1fr))}.detail-vitals .bar{padding:3px 2px 6px}.detail-actions .btn{min-height:44px}.detail-content{gap:8px}}
 
 /* Game viewport: scene layer, status HUD, and a fixed command dock. */
 body{background:#181b20;padding-block:14px;color:var(--ink)}
@@ -734,8 +737,235 @@ const HAIRS=[['#1b1421','#3b2c47','#665276'],['#2a1914','#4f3429','#7a5644'],['#
 const IRIS=['#4a2c1e','#70401f','#30233d','#3b2b1a','#5a2a24'];
 const INK='#2a1712',GOLD='#e8b84a',GOLDD='#a87a26',RED='#d0303a',JADE='#5fb08f',PEARL='#f7f1e3',LASH='#1d1218',EW='#fffaf2';
 const PIBO=['#f6c9d4','#cfe3f2','#e6dcf6','#f8e6b8','#d6eedf','#fbd9c4'];
+// Paint whole pixels on a taller grid for the close-up court portraits.
+const LADY_WIDTH=64,LADY_HEIGHT=80;
+const ladyCanvas=document.createElement('canvas');
+ladyCanvas.width=LADY_WIDTH;ladyCanvas.height=LADY_HEIGHT;
+const ladyInk=ladyCanvas.getContext('2d');
+const LADY_SKIN=[
+  ['#ffebd7','#f5cdb1','#daa287','#a9635d','#b96c75'],
+  ['#ffe1c5','#edbb99','#d39779','#9e6057','#af666d'],
+  ['#fff0e0','#f4ccb7','#dba393','#a46a69','#bd7683']
+];
+const LADY_HAIR=[
+  ['#211827','#35263a','#574058','#78596d'],
+  ['#251923','#382831','#5e4249','#805857'],
+  ['#171d2b','#293141','#46516a','#636e87']
+];
+
+const LADY_UPDOS=[
+  [[23,19],[20,13],[23,8],[31,5],[38,7],[43,12],[40,20]],
+  [[16,20],[13,15],[15,9],[22,7],[28,10],[32,15],[37,10],[44,8],[50,11],[51,17],[47,22]],
+  [[19,20],[18,15],[24,12],[32,11],[38,6],[46,6],[52,11],[51,16],[44,21]],
+  [[18,21],[17,15],[23,11],[28,11],[29,4],[33,2],[38,5],[39,11],[46,12],[49,17],[46,22]],
+  [[19,21],[20,15],[25,11],[34,10],[43,12],[46,17],[44,22]],
+  [[18,22],[16,15],[22,11],[27,11],[32,5],[39,4],[44,7],[43,12],[48,14],[49,20]]
+];
+
+function courtPortrait(sp,key){
+  const W=LADY_WIDTH,H=LADY_HEIGHT;
+  const pixels=Array(W*H).fill(null);
+  const put=(x,y,color)=>{
+    x=Math.round(x);y=Math.round(y);
+    if(x>=0&&x<W&&y>=0&&y<H)pixels[y*W+x]=color;
+  };
+  const block=(x,y,w,h,color)=>{
+    for(let j=0;j<h;j++)for(let i=0;i<w;i++)put(x+i,y+j,color);
+  };
+  const area=(points,color)=>{
+    const top=Math.max(0,Math.floor(Math.min(...points.map(p=>p[1]))));
+    const end=Math.min(H,Math.ceil(Math.max(...points.map(p=>p[1]))));
+    for(let y=top;y<end;y++){
+      const edges=[];
+      const scan=y+.5;
+      for(let i=0;i<points.length;i++){
+        const [x1,y1]=points[i], [x2,y2]=points[(i+1)%points.length];
+        if((scan>=y1&&scan<y2)||(scan>=y2&&scan<y1))edges.push(x1+(scan-y1)*(x2-x1)/(y2-y1));
+      }
+      edges.sort((a,b)=>a-b);
+      for(let i=0;i+1<edges.length;i+=2){
+        const left=Math.max(0,Math.ceil(edges[i]-.5)),right=Math.min(W,Math.ceil(edges[i+1]-.5));
+        for(let x=left;x<right;x++)put(x,y,color);
+      }
+    }
+  };
+  const stroke=(points,color)=>{
+    for(let i=1;i<points.length;i++){
+      const [x,y]=points[i-1],[nx,ny]=points[i];
+      const steps=Math.max(Math.abs(nx-x),Math.abs(ny-y),1);
+      for(let step=0;step<=steps;step++)put(x+(nx-x)*step/steps,y+(ny-y)*step/steps,color);
+    }
+  };
+  const oval=(cx,cy,rx,ry,color)=>{
+    for(let y=Math.ceil(cy-ry);y<=cy+ry;y++)for(let x=Math.ceil(cx-rx);x<=cx+rx;x++){
+      if(((x-cx)/rx)**2+((y-cy)/ry)**2<=1)put(x,y,color);
+    }
+  };
+  const jewel=(x,y,main,light)=>{
+    put(x,y-1,main);block(x-1,y,3,2,main);put(x,y+2,main);put(x,y,light);
+  };
+  const petal=(x,y,c,l)=>{
+    [[0,-2],[-2,0],[2,0],[-1,2],[1,2]].forEach(([dx,dy])=>{
+      block(x+dx,y+dy,2,2,c);put(x+dx,y+dy,l);
+    });
+    jewel(x,y,'#c58e4a','#ffe4a4');
+  };
+
+  const seed=sp.seed||7;
+  const [light,skin,shadow,deep,blush]=LADY_SKIN[seed%3];
+  const [hair,hairBase,hairSheen,hairLight]=LADY_HAIR[(seed>>5)%3];
+  const gold='#d9a85a',goldLight='#ffe2a2',goldDark='#a47645';
+  const robe=sp.robe,robeLight=shade(robe,.21),robeShade=shade(robe,-.23);
+  const robeDeep=shade(robe,-.39),thread=shade(robe,.43);
+  const silk=sp.lin||'#f3e2c3',silkShade=shade(silk,-.19);
+  const gems=[['#954c68','#ed9e9e'],['#3d7772','#a1c9a4'],['#765b92','#c7aada'],['#a74c46','#e89772']];
+  const [gem,gemLight]=gems[(seed>>7)%gems.length];
+
+  // Hair behind the shoulders, with a different top silhouette for each hair arrangement.
+  area([[15,59],[14,39],[15,28],[20,20],[27,16],[38,16],[47,22],[51,33],[49,59],[40,63],[22,63]],hair);
+  area([[15,47],[16,29],[21,22],[27,20],[22,29],[21,51],[24,60],[18,60]],hairBase);
+  area([[44,24],[49,31],[50,46],[47,58],[43,60],[45,46]],hairBase);
+  const bun=LADY_UPDOS[sp.hs]||LADY_UPDOS[0];
+  area(bun,hair);
+  stroke(bun.slice(1,-1).map(([x,y])=>[x,y+2]),hairBase);
+  stroke(bun.slice(1,-2).map(([x,y])=>[x,y+3]),hairSheen);
+
+  // A fitted shoulder silhouette and two planes of folded cloth.
+  area([[7,80],[8,69],[13,62],[23,55],[28,52],[39,52],[43,55],[53,61],[58,69],[59,80]],robeDeep);
+  area([[9,80],[10,69],[15,62],[25,55],[39,54],[45,57],[53,62],[56,69],[57,80]],robe);
+  area([[10,70],[15,63],[25,57],[28,60],[17,68],[13,80],[9,80]],robeLight);
+  area([[42,56],[53,62],[57,70],[57,80],[48,80],[45,66],[37,60]],robeShade);
+  stroke([[14,69],[21,64],[26,62]],robeShade);
+  stroke([[12,77],[17,71],[24,68]],robeShade);
+  stroke([[44,66],[51,70],[54,76]],robeLight);
+  stroke([[41,73],[46,77],[47,80]],robeDeep);
+  if(sp.pat!==5){
+    for(const [x,y] of [[16,74],[22,68],[27,76],[43,74],[49,67],[51,77]]){
+      if(sp.pat===1||sp.pat===2){
+        put(x-1,y,thread);put(x+1,y,thread);put(x,y-1,thread);put(x,y+1,thread);put(x,y,robeLight);
+      }else{
+        stroke([[x-2,y],[x-1,y-1],[x+1,y-1],[x+2,y],[x+1,y+1],[x,y+1]],robeLight);
+        put(x,y,thread);
+      }
+    }
+  }
+  if(sp.pibo&&!sp.fur){
+    const ribbon=shade(sp.pibo,-.19);
+    area([[11,64],[19,58],[24,57],[21,63],[15,67],[13,74],[12,80],[8,80],[9,70]],ribbon);
+    stroke([[11,66],[16,61],[21,59]],shade(sp.pibo,.07));
+    area([[44,56],[51,60],[56,65],[59,76],[58,80],[55,80],[54,71],[50,65],[43,60]],ribbon);
+    stroke([[48,60],[53,65],[55,70]],shade(sp.pibo,.06));
+  }
+  area([[27,46],[38,47],[39,54],[41,56],[32,62],[25,56],[27,53]],shadow);
+  area([[28,47],[35,48],[36,54],[32,58],[27,55],[28,52]],skin);
+  if(sp.cs===1){
+    area([[25,54],[29,59],[39,55],[42,58],[37,65],[36,80],[28,80],[29,65],[23,58]],silkShade);
+    area([[26,55],[31,61],[39,56],[39,59],[35,65],[34,80],[30,80],[31,65]],silk);
+  }else if(sp.cs===2){
+    area([[24,54],[29,57],[34,58],[39,55],[42,58],[37,63],[31,65],[26,62],[22,58]],silk);
+    stroke([[24,57],[29,61],[34,62],[40,57]],silkShade);
+    stroke([[36,63],[40,68],[42,77]],thread);
+  }else{
+    area([[24,54],[28,56],[44,72],[41,77],[23,60],[22,57]],silkShade);
+    area([[24,54],[28,56],[43,73],[41,75],[23,58]],silk);
+    area([[39,54],[43,56],[39,62],[26,76],[21,76],[23,72],[35,60]],silkShade);
+    area([[39,54],[42,56],[38,61],[25,75],[22,75],[24,72],[36,59]],silk);
+    stroke([[41,57],[35,64],[27,73]],goldDark);
+  }
+  if(sp.fur){
+    for(const [x,y] of [[13,63],[16,61],[19,60],[21,58],[45,58],[48,60],[51,61],[54,63]]){
+      oval(x,y,2,2,'#dbc5b3');put(x,y-1,'#f8e9d2');
+    }
+  }
+  if(sp.rank>=4)jewel(33,72,goldDark,goldLight);
+
+  // One asymmetric plane of shade gives the face a slight turn.
+  const cheek=seed%3, jaw=cheek===0?23:cheek===1?21:22;
+  area([[17,31],[20,25],[26,22],[38,21],[44,25],[47,32],[46,40],[43,47],[39,51],[34,53],[29,52],[jaw,47],[19,42]],shadow);
+  area([[19,31],[22,26],[28,23],[38,23],[43,26],[44,31],[44,38],[41,45],[37,49],[32,51],[27,49],[jaw,45],[20,40]],skin);
+  area([[22,29],[27,24],[36,23],[42,26],[41,30],[38,32],[36,38],[32,43],[28,45],[23,43],[20,38]],shade(skin,.22));
+  stroke([[23,30],[25,27],[31,25]],shade(skin,.31));
+  area([[19,33],[18,34],[18,39],[21,42],[22,38],[21,34]],skin);
+  put(19,37,deep);
+  oval(24,40,2,1,shade(blush,.53));put(24,41,shade(blush,.48));oval(40,39,2,1,shade(blush,.47));
+  const stern=sp.expression==='proud',soft=sp.expression==='gentle';
+  const eyeLift=stern?-1:soft?1:0;
+  const brow=stern?'#44303b':hairSheen;
+  stroke([[21,31+eyeLift],[24,29],[27,soft?30:29],[29,stern?31:30]],brow);
+  stroke([[35,stern?30:29],[38,28],[42,28],[43,29+eyeLift]],brow);
+  const pupil=['#533944','#61432e','#4a354e'][(seed>>8)%3];
+  // A solid lash line reads at 40px; two light pixels are enough for each iris.
+  area([[21,35+eyeLift],[24,33],[28,33],[31,35],[28,37],[24,37]],'#fff3dd');
+  area([[34,34],[37,32],[41,32],[44,33+eyeLift],[41,36],[37,36]],'#fff3dd');
+  const gaze=soft?-1:stern?1:0;
+  block(26+gaze,34,2,3,pupil);block(38+gaze,33,2,3,pupil);
+  put(27+gaze,34,'#2c202b');put(39+gaze,33,'#2c202b');
+  put(26+gaze,35,'#fbe6d4');put(38+gaze,34,'#fbe6d4');
+  stroke([[20,34+eyeLift],[22,34],[24,33],[28,33],[30,34]],hair);
+  stroke([[34,34],[37,32],[41,32],[44,32+eyeLift]],hair);
+  stroke([[33,38],[34,41],[32,42]],shadow);put(31,40,shade(light,-.05));
+  stroke([[30,45],[32,44],[34,45],[36,soft?44:45]],shade(deep,.12));
+  block(32,45,3,1,blush);put(33,46,shade(blush,.43));
+  if((seed>>12)%5===0)put(40,38,deep);
+
+  // Sweep the hair around the face, with one accessory chosen from the outfit palette.
+  area([[14,34],[15,28],[19,21],[25,17],[37,16],[45,19],[50,24],[51,33],[47,37],[44,31],[42,26],[37,22],[30,22],[24,25],[20,31],[18,37]],hair);
+  area([[16,31],[18,25],[23,21],[30,18],[39,18],[45,22],[47,26],[42,23],[36,20],[29,21],[23,24],[19,30]],hairBase);
+  stroke([[18,26],[23,22],[30,19],[36,19],[41,20]],hairSheen);
+  stroke([[20,25],[25,22],[29,21]],hairLight);
+  if(sp.bang===2){
+    area([[20,24],[30,21],[37,21],[32,25],[26,28],[20,28]],hairBase);
+    stroke([[20,28],[26,28],[30,26]],hair);
+  }else if(sp.bang===1){
+    area([[26,21],[36,19],[44,23],[45,30],[40,28],[35,24],[30,24]],hair);
+    stroke([[33,21],[39,23],[43,27]],hairSheen);
+  }else if(sp.bang===3){
+    area([[17,29],[21,23],[29,20],[34,20],[30,24],[23,27],[20,32]],hairBase);
+    stroke([[20,28],[24,25],[30,23]],hairSheen);
+  }
+  if(sp.crown){
+    area([[14,22],[17,15],[22,12],[26,12],[31,7],[37,9],[41,12],[47,12],[51,17],[52,22],[45,20],[20,21]],'#654537');
+    stroke([[14,22],[17,16],[22,13],[27,14],[32,9],[36,10],[41,14],[47,13],[50,17],[51,22]],gold);
+    stroke([[17,20],[24,18],[32,16],[41,17],[49,19]],goldLight);
+    [[19,17],[26,15],[34,12],[42,15],[48,17]].forEach(([x,y])=>jewel(x,y,gem,gemLight));
+    stroke([[27,13],[30,11],[33,8],[36,9],[38,7]],goldLight);
+    jewel(38,8,gem,gemLight);
+    for(const [x,len] of [[16,13],[19,9],[47,9],[50,13]]){
+      block(x,22,1,len,goldDark);
+      for(let y=23;y<22+len;y+=3)put(x,y,'#f2d6a7');
+      jewel(x,22+len,gem,gemLight);
+    }
+  }else{
+    const side=(seed>>9)%2, x=side?45:20;
+    if(sp.rank>=3){
+      stroke(side?[[39,23],[47,17],[51,16]]:[[24,24],[17,18],[13,17]],gold);
+      jewel(side?50:14,16,gem,gemLight);
+      stroke([[x,21],[x+(side?3:-3),26],[x+(side?3:-3),30]],goldDark);
+      put(x+(side?3:-3),30,'#ead6b3');
+    }
+    if(sp.rank>=5)petal(x,21,gem,gemLight);
+    else if(sp.rank>=2)jewel(x,21,gem,gemLight);
+    else stroke([[18,24],[23,20],[26,20]],goldDark);
+  }
+  if(sp.rank>=2){
+    put(19,40,goldLight);put(19,41,goldDark);jewel(19,43,gem,gemLight);
+    put(46,37,goldLight);put(46,38,goldDark);jewel(46,40,gem,gemLight);
+  }
+
+  ladyInk.clearRect(0,0,W,H);
+  for(let i=0;i<pixels.length;i++){
+    if(!pixels[i])continue;
+    ladyInk.fillStyle=pixels[i];
+    ladyInk.fillRect(i%W,Math.floor(i/W),1,1);
+  }
+  const url=ladyCanvas.toDataURL();
+  POR.set(key,url);
+  return url;
+}
+
 function portrait(sp){
   const key=JSON.stringify(sp);if(POR.has(key))return POR.get(key);
+  if(sp.courtLady)return courtPortrait(sp,key);
   const W=48,H=60,g=new Array(W*H).fill(null),r=mulberry32(sp.seed||7);
   const set=(x,y,c)=>{x=Math.round(x);y=Math.round(y);if(x>=0&&y>=0&&x<W&&y<H)g[y*W+x]=c};
   const get=(x,y)=>(x>=0&&y>=0&&x<W&&y<H)?g[y*W+x]:null;
@@ -880,7 +1110,8 @@ function porSpec(x){
     if(a<12)return {kind:x.sex==='m'?'boy':'girl',seed:x.seed,robe:x.sex==='m'?'#4a7fb5':'#e79ab4'};
     return x.sex==='m'?{kind:'prince',seed:x.seed,robe:S.heir===x.id?'#d9a92f':'#3b5fa8',crown:S.heir===x.id}:{kind:'f',seed:x.seed,hs:x.seed%2?1:4,bang:2,robe:'#e07a9c',rank:4,pibo:PIBO[x.seed%6]}}
   if(x.maid)return {kind:'f',seed:x.seed,hs:4,bang:2,robe:seasonTint('#7f9db3'),rank:0,cs:0,pat:5,lin:'#eef2f4',fur:S&&season()===3};
-  return {kind:'f',seed:x.seed,hs:x.seed%6,bang:(x.seed>>3)%4,robe:seasonTint(robeOf(x)),rank:x.rank,crown:x.rank===8&&!x.cold,
+  return {kind:'f',courtLady:true,expression:['骄纵','骄矜','善妒'].includes(x.trait)?'proud':x.trait==='温婉'?'gentle':'calm',
+    seed:x.seed,hs:x.seed%6,bang:(x.seed>>3)%4,robe:seasonTint(robeOf(x)),rank:x.rank,crown:x.rank===8&&!x.cold,
     pibo:(x.seed>>12)%3?PIBO[(x.seed>>5)%6]:null,cs:(x.trait==='将门'||x.t2==='擅骑射')?2:[0,1,3,0][(x.seed>>6)%4],pat:(x.seed>>9)%6,lin:LINS[(x.seed>>14)%4],
     fur:!!S&&season()===3&&!x.cold};
 }
@@ -892,7 +1123,8 @@ function robeOf(x){if(x.maid)return '#7f9db3';const p=RPAL[rTier(x.rank)];return
 function seasonTint(c){return S?shade(c,[.1,.2,0,-.1][season()]):c}
 function porImg(x,size=64){
   const cold=x&&x.cold, dead=x&&x.alive===false;
-  return `<img class="px por${cold||dead?' cold':''}" alt="" src="${portrait(porSpec(x))}" width="${size}" height="${size*1.25}">`;
+  const spec=porSpec(x);
+  return `<img class="px por${spec.courtLady?' court-lady':''}${cold||dead?' cold':''}" alt="" src="${portrait(spec)}" width="${size}" height="${size*1.25}">`;
 }
 function porName(x){ if(x&&x.isMom) return x.name; if(x&&x.sur&&!x.sex&&S&&!S.consorts.includes(x)) return fullName(x); if(x==='emp') return `${E().sur}${E().name}`; if(x.sex) return kidName(x); return cName(x)}
 
