@@ -598,6 +598,7 @@ const FAMS=[
  {t:'翰林学士',p:50,w:3},{t:'知府',p:38,w:4},{t:'皇商',p:30,w:2},{t:'太医院院判',p:28,w:2},{t:'县令',p:20,w:3},{t:'书香门第',p:15,w:3},{t:'寒门',p:5,w:2}];
 const TRAITS={
  '温婉':{d:'性情温和，善解人意。',virtue:12},
+ '骄纵':{d:'得宠时敢当面争待遇。若有孕，往往更早开口；一再破例会让她胆子更大。',looks:5,jealous:1},
  '骄矜':{d:'出身矜贵，心高气傲，易生妒意。',looks:6,jealous:1},
  '聪慧':{d:'冰雪聪明，一点即透。',talent:12},
  '善妒':{d:'爱憎分明，见不得旁人得宠。',scheme:14,jealous:1},
@@ -615,6 +616,7 @@ const STYLES={
  '尚武':'弓马娴熟。御驾亲征、围猎更易成功，皇子武艺更佳。',
  '文雅':'精通诗书。皇嗣才学更佳，与才女更易投契。'};
 const NIGHT={
+ '骄纵':['她把灯盏挪近，仰头看你：“臣妾留了最好的桂花酒。陛下来得再晚些，臣妾就自己喝了。”'],
  '温婉':['她亲手为你斟了一盏温热的桂花酿，烛影摇红，软语温存。','她替你解下朝冠，轻声问起今日朝事，你竟絮絮说了许久。'],
  '骄矜':['她倚在榻上，挑眉笑道：“陛下可算想起臣妾了。”','她故意不理你，直到你哄了半晌，才肯展颜一笑。'],
  '聪慧':['你们对弈至三更，她连胜两局，又不着痕迹地输了第三局。','她与你论起前朝史事，见解独到，令你刮目相看。'],
@@ -629,6 +631,7 @@ const NIGHT={
  '贪财':['她把玩着你新赏的玉镯，笑得眉眼弯弯：“陛下待臣妾真好。”'],
  '_':['红烛帐暖，一夜春宵。','窗外细雨潺潺，帐内温香软玉。','更漏声声，她伏在你怀里睡熟了。']};
 const CHAT={
+ '骄纵':['她往你身边挪了挪：“旁人说臣妾脾气大，陛下倒说说，臣妾哪次开口没有缘由？”','她翻看账册，说新来的宫女手巧，谁也不许把那孩子调走。'],
  '温婉':['她为你理了理衣襟，轻声道：“陛下操劳国事，也要顾惜龙体。”','她说起新来的小宫女想家哭了一夜，便许那孩子每月往家里捎一封信。'],
  '骄矜':['“陛下瞧瞧这支金累丝凤钗，可还配得上臣妾？”她扬着下巴，神情却有几分期待。','她抱怨内务府送来的料子颜色太素：“这样的东西，也敢往臣妾宫里送。”'],
  '聪慧':['她随口点评了几句近日的奏议，竟句句切中要害。','她出了个字谜考你，你猜了半天，她笑得前仰后合。'],
@@ -1242,7 +1245,7 @@ A.xxEnd=function(){S.cands=[];log('选秀礼毕。');A.go('harem')};
 function suggestName(sex){const used=new Set(S.children.map(k=>k.name));let n,t=0;do{n=sex==='m'?S.genChar+pick(BOYC):pick(GIRLA)+pick(GIRLB)}while(used.has(n)&&++t<40);return n}
 function makeKid(c,sex,name){
   const e=E();const ord=S.children.filter(k=>k.sex===sex).length+1;
-  const k={id:S.nid++,name,sex,mom:c.id,momName:fullName(c),born:S.turn,ord,
+  const k={id:S.nid++,name,sex,mom:c.id,momName:fullName(c),born:S.turn,birthMonth:S.month,ord,
     lit:clamp(c.talent*.3+e.wen*.2+ri(0,15)+(e.style==='文雅'?8:0)),mar:clamp(e.wu*.3+(c.trait==='将门'?18:0)+ri(0,15)+(e.style==='尚武'?8:0)),
     vir:clamp(c.virtue*.3+ri(0,18)),hp:clamp(55+ri(0,35)-(c.trait==='体弱'?15:0)),amb:clamp(c.scheme*.5+ri(0,30)),
     love:50,policy:'均衡',tutor:false,title:'',alive:true,married:false,adult:false,story:[],seed:ri(1,2e9)};
@@ -1430,7 +1433,7 @@ const HAREM=[
    {t:'人赃并获，打入冷宫',f:()=>{v.cold=true;v.palace='冷宫';story(v,'被指行巫蛊之术，打入冷宫。她至死喊冤。');setXin(v,'怨恨','被诬行巫蛊','emp');log(`${fullName(v)}以巫蛊罪打入冷宫。`,1);S.flags.wronged={v:v.id,a:a.id};return fx(cchg(v,{mood:-50,aff:-20}))}},
    {t:'此事蹊跷，暗中彻查',f:()=>{if(chance(.4+E().prestige/250+allyBonus(v))){a.known=true;pushNow(punishEv(a,v,'栽赃巫蛊'));return '密查之下，发现布偶上的针脚与某宫绣娘如出一辙……'}story(v,'被卷入巫蛊疑案，虽未定罪，却也百口莫辩。');return `查不出头绪，${cName(v)}从此惶惶不可终日。${fx(cchg(v,{mood:-15}))}`}},
    {t:'当众焚毁布偶，严禁议论',f:()=>{story(v,'被卷入巫蛊疑案，陛下当众焚毁布偶，力保她清白。');return `${fx(cchg(v,{aff:12,mood:5}),chg({prestige:-1}))}`}}]}},
- function birthday(){const c=pick(harem());if(!c)return null;return {title:'芳辰',por:c,text:`今日是${cName(c)}的生辰。`,choices:[
+ function birthday(){const eligible=harem().filter(c=>c.rank<8&&birthMonth(c)===S.month);if(!eligible.length)return null;const c=pick(eligible);return {title:'芳辰',por:c,text:`今日是${cName(c)}的生辰。`,choices:[
    {t:'设宴庆贺（国库-30万两）',f:()=>{story(c,'生辰之日，陛下为她设宴，六宫同贺。');remember(c,'bday','生辰设宴');AU.sfx('joy');return fx(chg({treasury:-30}),cchg(c,{mood:20,aff:10,favor:5}))}},
    {t:'赏一柄玉如意',f:()=>{story(c,'生辰之日，陛下赏了一柄玉如意。');return fx(chg({treasury:-10}),cchg(c,{mood:10,aff:4}))}},
    {t:'国事繁忙，顾不上了',f:()=>{story(c,'生辰之日，陛下忙于国事，未曾露面。她对着一桌冷了的寿面坐到深夜。');return fx(cchg(c,{mood:-12,aff:-4}))}}]}},
@@ -1670,10 +1673,10 @@ function succeed(h){
   const old=E(),mom=byId(h.mom),a=kidAge(h);
   pushNow({title:'新君登基',por:h,text:`${h.name}即将即位。请为新朝拟定年号（二字）：`,input:{def:pick(ERAS.filter(x=>x!==old.era)),max:2},choices:[{t:'改元',f:v=>{
     S.emp={sur:old.sur,name:h.name,era:v,age:Math.max(a,14),health:clamp(h.hp+10),prestige:clamp(35+h.vir/3),people:old.people,treasury:old.treasury,energy:3,nightsMonth:0,
-      style:h.mar>h.lit+15?'尚武':h.lit>h.mar+15?'文雅':'勤政',wen:rd(h.lit),wu:rd(h.mar),seed:h.seed};
+      style:h.mar>h.lit+15?'尚武':h.lit>h.mar+15?'文雅':'勤政',wen:rd(h.lit),wu:rd(h.mar),seed:h.seed,birthMonth:birthMonth(h)};
     S.flags.dowager={name:mom?`${mom.sur}太后`:'太后',sur:mom?.sur,fam:mom?{...mom.fam}:undefined,clan:mom?clanKey(mom):undefined,lastOffer:null,cooldown:24,alive:!!(mom&&mom.alive)};
     S.consorts=[];S.children=[];S.rel={};S.courtPolicy={};S.courtPolicyTurn=null;S.heir=null;S.cands=[];S.gen++;S.year=1;S.over=false;S.genChar=GEN_CHARS[(GEN_CHARS.indexOf(S.genChar)+1)%GEN_CHARS.length];
-    S.flags.lastXX=-99;S.emp.energy=maxEnergy();
+    S.flags.lastXX=-99;delete S.flags.lastProudDemand;delete S.lastGardenBanquet;S.gardenPlans=[];S.emp.energy=maxEnergy();
     log(`━━ 第${cnNum(S.gen)}代 ━━ ${v}元年，新帝${S.emp.sur}${h.name}登基，尊生母为${S.flags.dowager.name}。`,1);
     if(S.emp.age>=15){const em=makeGirl({fam:pick(FAMS.slice(0,4)),trait:pick(['温婉','聪慧','城府','骄矜'])});em.favor=35;em.aff=30;addConsort(em,8,'新帝登基，奉遗诏册立');}
     migrate();UI.view='map';AU.sfx('gong');
@@ -1695,7 +1698,7 @@ A.start=function(){
   const fv=id=>{const el=$(id);return el?el.value:''};
   const sur=(fv('#f-sur')||'萧').trim().slice(0,2),name=(fv('#f-name')||'彻').trim().slice(0,2),era=(fv('#f-era')||'永宁').trim().slice(0,2);
   const style=(document.querySelector('input[name=f-style]:checked')||{}).value||'勤政';
-  S={v:1,emp:{sur,name,era,age:18,health:90,prestige:50,people:60,treasury:800,energy:3,nightsMonth:0,style,wen:50,wu:50,seed:ri(1,2e9)},
+  S={v:1,emp:{sur,name,era,age:18,birthMonth:3,health:90,prestige:50,people:60,treasury:800,energy:3,nightsMonth:0,style,wen:50,wu:50,seed:ri(1,2e9)},
     year:1,month:3,turn:0,consorts:[],children:[],cands:[],log:[],nid:1,gen:1,heir:null,genChar:pick(GEN_CHARS),
     flags:{lastXX:-99,dowager:{name:'太后',alive:true},peek:0},history:[],ys:{c:0,b:0,n:0},over:false};
   const e=S.emp;
@@ -1852,7 +1855,7 @@ function viewHome(){
    <div style="margin-top:6px">后宫 ${h.length} 人${alive().some(c=>c.cold)?`（冷宫 ${alive().filter(c=>c.cold).length}）`:''}　皇嗣 ${k.length} 位　储君：${heir?esc(heir.name):'未立'}　${S.flags.dowager&&S.flags.dowager.alive?esc(S.flags.dowager.name)+'健在':''}</div>
    </div></div>
    <p class="hint">每月有${maxEnergy()}点精力：上朝、召幸、闲谈、探望皇嗣、出巡都要花费精力；赏赐、晋封、选秀不花精力。用完后点「结束本月」，宫中会发生新的事。侍寝后若怀上龙胎，要到下个月末太医才诊得出喜脉。每位妃嫔都有一段专属故事，情分越深越容易推进。</p>
-   ${courtBlocHTML()}<h3>近事</h3><ul class="story">${recent.map(l=>`<li class="${l.b?'big':''}"><time>${esc(l.d)}</time>${esc(l.t)}</li>`).join('')||'<li>尚无记载</li>'}</ul>`}
+   ${birthdayBanquetButtons()}${proudDemandNotice()}${courtBlocHTML()}<h3>近事</h3><ul class="story">${recent.map(l=>`<li class="${l.b?'big':''}"><time>${esc(l.d)}</time>${esc(l.t)}</li>`).join('')||'<li>尚无记载</li>'}</ul>`}
 function viewHarem(){
   const all=alive().filter(c=>!c.maid);const g=r=>all.filter(c=>!c.cold&&r(c)).sort((a,b)=>b.rank-a.rank||b.favor-a.favor);
   const sec=(t,arr)=>arr.length?`<h3>${t}（${arr.length}）</h3><div class="grid">${arr.map(consortCard).join('')}</div>`:'';
@@ -1909,6 +1912,7 @@ function viewConsort(){
    <div class="detail-vitals">${bar('恩宠',c.favor)}${bar('心情',c.mood,'#517369')}${bar('情分',c.aff,'#936375')}</div>
    <div class="detail-stack">
     ${act&&!c.cold?initiativeHTML(c):''}
+    ${act&&c.rank===8?birthdayBanquetButtons():''}
     <div class="detail-columns">
      ${detailSection('近况与性情',`<p class="hint">${esc(TRAITS[c.trait].d)} · 侍寝 ${c.nights} 次</p>${act?xinDetail(c)+deepLine(c):''}<div class="stats">${st('容貌',c.looks)}${st('才情',c.talent)}${st('德行',c.virtue)}${st('心机',c.scheme,!c.known)}</div>`)}
      ${detailSection('家族与人际',`${kids.length?`<div>子女：${kids.map(k=>`<button class="btn quiet sm" onclick="A.go('kid',${k.id})">${esc(k.name)}</button>`).join(' ')}</div>`:''}${family}`)}
@@ -2339,14 +2343,14 @@ function mountMap(){const w=$('#mapwrap');if(!w)return;w.appendChild(MAPC);
     b.onclick=()=>goPlace(p);b.ondblclick=()=>{emp.path=[];emp.arrive=null;emp.x=p.d[0];emp.y=p.d[1];arrive(p)};
     b.onmouseenter=()=>{hoverP=p};b.onmouseleave=()=>{hoverP=null};w.appendChild(b)})}
 const backBtn=`<button class="btn sm" onclick="A.go('map')">◂ 返回宫城</button>`;
-function viewMap(){return `<section class="map-play" aria-label="宫城地图"><header class="map-location"><h2>宫城</h2><span class="hint">当前位置 · ${esc(nearestPlace())}</span></header><div id="mapwrap"></div><p class="map-legend">点宫殿前往 · 点小人偶遇 · 双击宫殿名直达 · 粉点：有孕 · 金点：选秀</p>${initiativeNotices()}${gardenFamilyNotice()}</section>`;}
+function viewMap(){return `<section class="map-play" aria-label="宫城地图"><header class="map-location"><h2>宫城</h2><span class="hint">当前位置 · ${esc(nearestPlace())}</span></header><div id="mapwrap"></div><p class="map-legend">点宫殿前往 · 点小人偶遇 · 双击宫殿名直达 · 粉点：有孕 · 金点：选秀</p>${initiativeNotices()}${birthdayBanquetButtons()}${proudDemandNotice()}${gardenFamilyNotice()}</section>`;}
 function viewPalace(){const name=UI.sel,res=name==='冷宫'?alive().filter(c=>c.cold):harem().filter(c=>c.palace===name);
   const extra=name==='储秀宫'&&S.cands.length?`<div class="acts"><button class="btn gold" onclick="A.go('xx')">秀女正在候选（${S.cands.length}人）</button></div>`:'';
   return `<h2>${esc(name)}${backBtn}</h2><p class="hint">${name==='冷宫'?'荒草萋萋，宫门深锁。':name==='坤宁宫'?'中宫所居，凤仪万方。':'宫门半掩，廊下挂着鸟笼。'}</p>${extra}${res.length?`<div class="grid">${res.map(consortCard).join('')}</div>`:'<p class="hint">此处暂无人居住。</p>'}`}
 function viewPlace(){const id=UI.sel;
   if(id==='cj')return `<h2>宸极殿${backBtn}</h2><p>文武百官已在丹墀下候着。</p><div class="acts"><button class="btn gold" onclick="A.court()">临朝听政<small>精力-1</small></button></div>`;
   if(id==='yh'){const here=[...NPC].filter(([i,n])=>n.where==='garden'&&!n.path.length).map(([i])=>byId(i)).filter(c=>c&&c.alive&&!c.cold&&c.id!==gardenFamilyMoment()?.mother);
-    return `<h2>御花园${backBtn}</h2><p>${['桃花开得正好，蜂蝶纷飞。','荷风送香，蝉鸣阵阵。','丹桂飘香，满地金黄。','红梅映雪，暗香浮动。'][season()]}</p><div class="acts"><button class="btn" onclick="A.out('garden')">园中漫步<small>精力-1</small></button>${banquetReady()?`<button class="btn gold" onclick="A.openBanquet()">筹办小宴</button>`:'<span class="hint">小宴每三个月可办一次</span>'}</div>${gardenFamilyNotice()}${here.length?`<h3>园中的人</h3><div class="grid">${here.map(c=>`<button class="card" onclick="meetConsort(byId(${c.id}))">${porImg(c,48)}<div class="grow"><div class="nm">${esc(cName(c))}</div><div>正在园中${['赏花','喂鱼','扑蝶','散步'][c.id%4]}</div></div></button>`).join('')}</div>`:'<p class="hint">园中此刻没有旁人。</p>'}`}
+    return `<h2>御花园${backBtn}</h2><p>${['桃花开得正好，蜂蝶纷飞。','荷风送香，蝉鸣阵阵。','丹桂飘香，满地金黄。','红梅映雪，暗香浮动。'][season()]}</p><div class="acts"><button class="btn" onclick="A.out('garden')">园中漫步<small>精力-1</small></button>${banquetReady()?`<button class="btn gold" onclick="A.openBanquet()">筹办小宴</button>`:'<span class="hint">小宴每三个月可办一次</span>'}</div>${birthdayBanquetButtons()}${gardenFamilyNotice()}${here.length?`<h3>园中的人</h3><div class="grid">${here.map(c=>`<button class="card" onclick="meetConsort(byId(${c.id}))">${porImg(c,48)}<div class="grow"><div class="nm">${esc(cName(c))}</div><div>正在园中${['赏花','喂鱼','扑蝶','散步'][c.id%4]}</div></div></button>`).join('')}</div>`:'<p class="hint">园中此刻没有旁人。</p>'}`}
   if(id==='cn'){const d=S.flags.dowager;return `<h2>慈宁宫${backBtn}</h2>${d&&d.alive?`<p>${esc(d.name)}正在佛堂诵经。</p><div class="acts"><button class="btn" onclick="A.greet()">请安<small>精力-1</small></button></div>`:'<p class="hint">慈宁宫已经空了，只有佛前的长明灯还亮着。</p>'}`}
   return viewMap()}
 A.greet=function(){if(!useE())return;const ev=dowagerEvent();if(ev){pushEv(ev);return}
@@ -3114,7 +3118,14 @@ function familyLifeTick() {
       const text = `${k.name}记得上次小宴，主动邀${cName(mother)}到园中再${plan.activity === '投壶' ? '练一回投壶' : '画一幅花枝'}。`;
       recordFamilyTime(k, mother, plan.activity, text, `孩子还记得那回小宴上的约定，自己来邀她同行。`, { place: '御花园', gain: 9 });
       S.familyMoment = { turn: S.turn, child: k.id, mother: mother.id, place: '御花园', text };
+      S.banquetReunion={...plan,text};
       return;
+    } else if (plan.guest) {
+      const first=byId(plan.guest), second=byId(plan.partner);
+      if (inPalace(first) && inPalace(second)) {
+        relAdd(first,second,4);
+        S.banquetReunion={...plan,text:`${cName(first)}带着${plan.activity==='投壶'?'铜壶':'新裁的花笺'}赴约，${cName(second)}已经在亭里等她。`};
+      }
     }
   }
   const candidates = [];
@@ -3193,60 +3204,166 @@ function consortFamilyPanel(mother) {
 }
 
 const GARDEN_FAMILY_SPOT = [117,35];
-const GARDEN_ACTIVITIES = { toss: '投壶', paint: '共绘花枝' };
-const banquetGuests = () => [...alive().filter(inPalace), ...kidsAlive().filter(k => childInPalace(k) && kidAge(k) >= 5)];
+const GARDEN_ACTIVITIES = {
+  toss: { label:'投壶', prompt:'花亭前摆好了远近两只铜壶。头一轮由你定玩法。', moves:[
+    { label:'近壶试投 · 先让孩子和新手试手', bonus:14, skill:'mar' },
+    { label:'两人接力 · 同席的人轮流投', bonus:5, skill:'mar', cooperate:true },
+    { label:'挑战远壶 · 请擅射的人领投', bonus:-8, skill:'mar', showcase:true }
+  ] },
+  paint: { label:'共绘花枝', prompt:'案上铺着长幅花笺，石绿、胭脂和墨都已研好。你想怎么起笔？', moves:[
+    { label:'先勾花枝 · 给初学的人留个样子', bonus:14, skill:'lit' },
+    { label:'轮流添花 · 每人接着上一笔画', bonus:5, skill:'lit', cooperate:true },
+    { label:'即兴设色 · 请擅画的人领笔', bonus:-8, skill:'lit', showcase:true }
+  ] }
+};
 const gardenPlace = () => PLACES.find(p => p.id === 'yh');
-const banquetReady = () => !S.over && S.turn - (S.lastGardenBanquet ?? -3) >= 3;
+const birthMonth = person => person.birthMonth ?? (Math.abs(person.seed || 0)%12+1);
 
-A.openBanquet = function() {
-  if (!banquetReady() || modalOpen) return;
-  UI.banquet = { activity: 'toss', seats: [] };
+function banquetKind(kind) {
+  if (kind === 'garden') return { title:'御花园小宴', cost:15,
+    ready:!S.over && S.turn-(S.lastGardenBanquet ?? -3)>=3 };
+  if (!['emperor','empress'].includes(kind)) return null;
+  const host = kind === 'emperor' ? E() : empress();
+  if (!host) return null;
+  const title = kind === 'emperor' ? '皇帝万寿宴' : '皇后千秋宴';
+  return { title, host, cost:30, ready:!S.over && birthMonth(host)===S.month && host.birthFeastYear!==S.year };
+}
+
+function birthdayBanquetButtons() {
+  const feasts = ['emperor','empress'].map(kind=>[kind,banquetKind(kind)]).filter(([,feast])=>feast);
+  return `<div class="acts">${feasts.map(([kind,feast])=>feast.ready
+    ? `<button class="btn gold" onclick="A.openBanquet('${kind}')">筹办${feast.title}</button>`
+    : `<span class="hint">${feast.title} · ${MONTHS[birthMonth(feast.host)-1]}${feast.host.birthFeastYear===S.year?'（本年已办）':''}</span>`).join('')}</div>`;
+}
+
+const banquetGuests = all => [...alive().filter(inPalace),
+  ...kidsAlive().filter(k=>childInPalace(k)&&(all||kidAge(k)>=5))];
+const banquetReady = () => banquetKind('garden').ready;
+const banquetDraft = () => UI.view==='banquet' ? UI.banquet : null;
+
+A.openBanquet = function(kind='garden') {
+  if (!banquetKind(kind)?.ready || modalOpen) return;
+  UI.banquet = { kind, activity:'toss', all:kind!=='garden', seats:[] };
+  setScene('garden');
   A.go('banquet');
 };
 
 A.banquetActivity = function(activity) {
-  if (UI.view !== 'banquet' || !UI.banquet || !Object.hasOwn(GARDEN_ACTIVITIES, activity)) return;
-  UI.banquet.activity = activity;
+  const draft = banquetDraft();
+  if (!draft || !Object.hasOwn(GARDEN_ACTIVITIES,activity)) return;
+  draft.activity=activity;
+  render();
+};
+
+A.banquetInviteAll = function(all) {
+  const draft = banquetDraft();
+  if (!draft) return;
+  draft.all=all;
   render();
 };
 
 A.banquetGuest = function(id) {
-  if (UI.view !== 'banquet' || !UI.banquet || !banquetGuests().some(p => p.id === id)) return;
-  const seats = UI.banquet.seats;
-  const index = seats.indexOf(id);
-  if (index >= 0) seats.splice(index, 1);
-  else if (seats.length < 4) seats.push(id);
+  const draft = banquetDraft();
+  if (!draft || draft.all || !banquetGuests(false).some(p=>p.id===id)) return;
+  const index=draft.seats.indexOf(id);
+  if (index>=0) draft.seats.splice(index,1);
+  else if (draft.seats.length<4) draft.seats.push(id);
   render();
 };
 
-A.banquetMove = function(index, direction) {
-  if (UI.view !== 'banquet' || !UI.banquet || ![-1, 1].includes(direction)) return;
-  const seats = UI.banquet.seats, other = index + direction;
-  if (!Number.isInteger(index) || index < 0 || index >= seats.length || other < 0 || other >= seats.length) return;
-  [seats[index], seats[other]] = [seats[other], seats[index]];
+A.banquetMove = function(index,direction) {
+  const draft = banquetDraft();
+  if (!draft || draft.all || ![-1,1].includes(direction)) return;
+  const {seats}=draft, other=index+direction;
+  if (!Number.isInteger(index)||index<0||index>=seats.length||other<0||other>=seats.length) return;
+  [seats[index],seats[other]]=[seats[other],seats[index]];
   render();
 };
+
+function banquetAttendees(draft, feast) {
+  const available = banquetGuests(draft.all);
+  const people = draft.all ? available : available.filter(p=>draft.seats.includes(p.id))
+    .sort((a,b)=>draft.seats.indexOf(a.id)-draft.seats.indexOf(b.id));
+  if (draft.kind==='empress' && !people.includes(feast.host)) people.unshift(feast.host);
+  return people;
+}
+
+function banquetProblem(draft, feast, people) {
+  if (!feast?.ready) return '这场宴会目前不能举办。';
+  if (people.length<(draft.kind==='garden'?2:1)||people.every(p=>p.sex)) return '还需选足宾客，并至少有一位妃嫔或宫人在席。';
+  if (E().energy<=0) return '本月精力已尽。';
+  if (E().treasury<feast.cost) return '国库银两不足。';
+  return '';
+}
+
+function banquetChildCount(children) {
+  const sons=children.filter(k=>k.sex==='m').length;
+  return `皇子 ${sons} 位 · 公主 ${children.length-sons} 位`;
+}
+
+function banquetGuestFamily(p,children) {
+  if (p.sex) {
+    const foster=fosterOf(p);
+    return `${kidAge(p)}岁 · 生母 ${p.momName}${foster?` · 养母 ${fullName(foster)}`:''}`;
+  }
+  const own=children.filter(k=>k.mom===p.id);
+  const raising=children.filter(k=>k.foster===p.id && k.mom!==p.id);
+  return `亲生${banquetChildCount(own)}${raising.length?`　养育${banquetChildCount(raising)}`:''}`;
+}
 
 function viewBanquet() {
-  const draft = UI.banquet;
-  if (!draft) return viewMap();
-  const people = banquetGuests();
-  const seated = draft.seats.map(id => people.find(p => p.id === id)).filter(Boolean);
-  const enough = seated.length >= 2 && seated.some(p => !p.sex) && E().energy > 0 && E().treasury >= 15 && banquetReady();
-  return `<h2>御花园小宴 <button class="btn sm" onclick="arrive(gardenPlace())">返回御花园</button></h2>
-    <p class="hint">请两至四位宾客，至少一位娘娘或宫人。相邻宾客同玩一轮。每三个月可办一次。</p>
-    <div class="acts">${Object.entries(GARDEN_ACTIVITIES).map(([key, label]) =>
-      `<button class="btn sm" aria-pressed="${draft.activity === key}" onclick="A.banquetActivity('${key}')">${label}</button>`).join('')}</div>
-    <h3>座次</h3>
-    ${seated.length ? `<ol class="banquet-seats">${seated.map((p, i) =>
-      `<li><strong>${esc(familyName(p))}</strong><div class="acts">
-        <button class="btn quiet sm" aria-label="${esc(familyName(p))}前移" ${i === 0 ? 'disabled' : ''} onclick="A.banquetMove(${i},-1)">前移</button>
-        <button class="btn quiet sm" aria-label="${esc(familyName(p))}后移" ${i === seated.length-1 ? 'disabled' : ''} onclick="A.banquetMove(${i},1)">后移</button>
-        <button class="btn quiet sm" aria-label="撤下${esc(familyName(p))}" onclick="A.banquetGuest(${p.id})">撤下</button></div></li>`).join('')}</ol>` : '<p class="hint">点选宾客，依次入席。</p>'}
-    <div class="grid">${people.filter(p => !draft.seats.includes(p.id)).map(p =>
-      `<button class="card" ${seated.length >= 4 ? 'disabled' : ''} onclick="A.banquetGuest(${p.id})">${porImg(p,40)}<span class="grow"><strong>${esc(familyName(p))}</strong>
-        <small>${esc(p.sex ? `${kidAge(p)}岁 · ${p.policy} · 生母 ${p.momName}${fosterOf(p) ? ' · 养母 '+fullName(fosterOf(p)) : ''}` : `${p.trait} · ${p.t2}`)}</small></span></button>`).join('')}</div>
-    <div class="acts"><button class="btn gold" ${enough ? '' : 'disabled'} onclick="A.holdBanquet()">开宴<small>精力-1 · 国库-15万两</small></button></div>`;
+  const draft=banquetDraft(), feast=draft&&banquetKind(draft.kind);
+  if (!feast) return viewMap();
+  const people=banquetAttendees(draft,feast);
+  const children=kidsAlive();
+  const problem=banquetProblem(draft,feast,people);
+  const guestCards = draft.all?'':banquetGuests(false).filter(p=>!people.includes(p)).map(p=>
+    `<button class="card" ${draft.seats.length>=4?'disabled':''} onclick="A.banquetGuest(${p.id})">${porImg(p,40)}
+      <span class="grow"><strong>${esc(familyName(p))}</strong>
+      ${p.sex?'':`<small>${esc(p.trait)} · ${esc(p.t2)}</small>`}
+      <small>${esc(banquetGuestFamily(p,children))}</small></span></button>`).join('');
+  return `<h2>${feast.title} <button class="btn sm" onclick="arrive(gardenPlace())">返回御花园</button></h2>
+    <p class="hint">在世皇嗣 · ${banquetChildCount(children)}</p>
+    ${draft.kind==='empress'?`<p class="hint">寿星皇后 · ${esc(banquetGuestFamily(feast.host,children))}</p>`:''}
+    <div class="acts"><button class="btn jade" aria-pressed="${draft.all}" onclick="A.banquetInviteAll(true)">全员宴请</button>
+    <button class="btn" aria-pressed="${!draft.all}" onclick="A.banquetInviteAll(false)">自选宾客</button></div>
+    ${draft.all
+      ? `<p class="hint">全邀在宫的妃嫔、宫人与皇嗣，共 ${people.length} 位，其中${banquetChildCount(people.filter(p=>p.sex))}。按家人分桌，幼童可观礼。</p>`
+      : `<h3>座次</h3><p class="hint">自选至多四位宾客。相邻两人同玩一轮。${draft.kind==='empress'?'皇后为寿星，自动入席。':''}</p>
+        <ol class="banquet-seats">${draft.seats.map((id,i)=>{
+          const p=people.find(person=>person.id===id);
+          return p?`<li><strong>${esc(familyName(p))}</strong><div class="acts">
+            <button class="btn quiet sm" aria-label="${esc(familyName(p))}前移" ${i===0?'disabled':''} onclick="A.banquetMove(${i},-1)">前移</button>
+            <button class="btn quiet sm" aria-label="${esc(familyName(p))}后移" ${i===draft.seats.length-1?'disabled':''} onclick="A.banquetMove(${i},1)">后移</button>
+            <button class="btn quiet sm" aria-label="撤下${esc(familyName(p))}" onclick="A.banquetGuest(${id})">撤下</button></div>
+            <div class="hint">${esc(banquetGuestFamily(p,children))}</div></li>`:'';
+        }).join('')}</ol><div class="grid">${guestCards}</div>`}
+    <h3>席间活动</h3><div class="acts">${Object.entries(GARDEN_ACTIVITIES).map(([key,act])=>
+      `<button class="btn sm" aria-pressed="${draft.activity===key}" onclick="A.banquetActivity('${key}')">${act.label}</button>`).join('')}</div>
+    <div class="acts"><button class="btn gold" ${problem?'disabled':''} onclick="A.holdBanquet()">开宴<small>精力-1 · 国库-${feast.cost}万两</small></button></div>
+    ${problem?`<p class="hint">${problem}</p>`:''}`;
+}
+
+function banquetTables(people) {
+  const remaining=new Set(people), tables=[];
+  const seat=(p,table)=>{if (remaining.delete(p)) table.push(p)};
+  for (const k of people.filter(p=>p.sex && kidAge(p)>=5)) {
+    if (!remaining.has(k)) continue;
+    const family=mothersOf(k).filter(m=>remaining.has(m));
+    if (!family.length) continue;
+    const table=[];
+    seat(family[0],table);
+    seat(k,table);
+    if (family[1]) seat(family[1],table);
+    tables.push(table);
+  }
+  for (const p of remaining) {
+    const parent=p.sex ? tables.find(t=>t.length<4 && mothersOf(p).some(m=>t.includes(m))) : null;
+    let table=parent || tables.find(t=>t.length<4);
+    if (!table) tables.push(table=[]);
+    seat(p,table);
+  }
+  return tables;
 }
 
 function banquetTalent(p, toss) {
@@ -3256,66 +3373,208 @@ function banquetTalent(p, toss) {
 }
 
 A.holdBanquet = function() {
-  const draft = UI.banquet;
-  if (modalOpen || UI.view !== 'banquet' || !draft || !banquetReady() || E().treasury < 15) return;
-  const { activity, seats } = draft, guests = banquetGuests();
-  const people = seats.map(id => guests.find(p => p.id === id));
-  if (!Object.hasOwn(GARDEN_ACTIVITIES,activity) || people.length < 2 || people.length > 4 ||
-      new Set(seats).size !== seats.length || people.some(p => !p) || people.every(p => p.sex) || !useE()) return;
-  S.lastGardenBanquet = S.turn;
-  E().treasury -= 15;
-  const label = GARDEN_ACTIVITIES[activity], toss = activity === 'toss';
-  const lines = [], perspectives = new Map();
-  const relations = people.slice(1).map((p,i) => [people[i],p]);
-  for (const [a,b] of relations) {
-    const k = a.sex ? a : b.sex ? b : null;
-    const mother = k && !a.sex ? a : k && !b.sex ? b : null;
-    const paired = mother && mothersOf(k).includes(mother);
-    if (paired) {
-      const trust = childTrust(k, mother);
-      const skill = banquetTalent(mother,toss);
-      const opensUp = skill >= 60 || trust >= 48 || mother.t2 === '护短' || mother.trait === '温婉';
-      const action = toss
-        ? skill >= 60 ? `帮${k.name}扶稳手肘，下一支箭果然投中了` : `蹲下来陪${k.name}数投中的箭，没投中的也捡回来再试`
-        : skill >= 60 ? `在${k.name}画歪的花枝旁添了几笔，两人的画接在了一起` : `请${k.name}选花的颜色，两人一笔一笔填满了花笺`;
-      const child = opensUp
-        ? `${cName(mother)}${action}。`
-        : `${cName(mother)}递来${toss ? '一支箭' : '一支笔'}，两人先各自试了一回，后来才说上话。`;
-      const adult = opensUp ? `见${k.name}愿意让她帮忙，想以后再陪孩子${toss?'练一回':'画一幅'}。` : `见${k.name}还拘谨，便让孩子按自己的步调来。`;
-      recordFamilyTime(k, mother, label, child, adult, { place: '御花园', gain: opensUp ? 11 : 5, stat: toss ? 'mar' : 'lit' });
-      lines.push(child);
-      if (opensUp && familyVisitAllowed(k,mother) && !S.gardenPlans?.some(p => p.turn === S.turn+2)) {
-        (S.gardenPlans ||= []).push({ turn: S.turn+2, child: k.id, mother: mother.id, activity: label });
+  const draft=banquetDraft(), feast=draft&&banquetKind(draft.kind);
+  if (modalOpen || !feast || !Object.hasOwn(GARDEN_ACTIVITIES,draft.activity)) return;
+  const people=banquetAttendees(draft,feast);
+  const problem=banquetProblem(draft,feast,people);
+  if (problem) {toast(problem);return}
+  const activity=GARDEN_ACTIVITIES[draft.activity];
+  const tables=draft.all?banquetTables(people):[people];
+  pushEv({ title:`${feast.title} · ${activity.label}`, cast:people.slice(0,4),
+    text:`${people.length} 位宾客入席，分 ${tables.length} 桌。\n${activity.prompt}`,
+    choices:[...activity.moves.map((move,i)=>({t:move.label, primary:i===0, f:()=>{
+      playBanquet(draft,feast,people,tables,move);
+      return null;
+    }})), {t:'再看看席单'}] });
+};
+
+function playBanquet(draft,feast,people,tables,move) {
+  if (!useE()) return;
+  E().treasury-=feast.cost;
+  if (feast.host) feast.host.birthFeastYear=S.year;
+  else S.lastGardenBanquet=S.turn;
+  const label=GARDEN_ACTIVITIES[draft.activity].label, toss=draft.activity==='toss';
+  const lines=[];
+  let entries=0, successes=0;
+  for (const table of tables) {
+    const players=table.filter(p=>!p.sex||kidAge(p)>=5);
+    if (!players.length) continue;
+    const skilled=players.reduce((best,p)=>banquetTalent(p,toss)>banquetTalent(best,toss)?p:best);
+    for (const p of players) {
+      const talent=banquetTalent(p,toss);
+      const score=talent+move.bonus+(move.showcase && p!==skilled?Math.max(0,(banquetTalent(skilled,toss)-talent)*.4):0);
+      if (score>=48) {
+        successes++;
+        if (p.sex) skillGain(p,move.skill,1);
+        else cchg(p,{mood:move.showcase && p===skilled?5:3});
       }
-      continue;
+      entries++;
     }
-    const friendly = relGet(a,b) >= -25;
-    const competitive = [a,b].find(p => p.t2 === '好胜' || (p.sex && p.amb >= 75));
-    const lead = competitive || (banquetTalent(a,toss) >= banquetTalent(b,toss) ? a : b);
-    const peer = lead === a ? b : a;
-    const action = friendly
-      ? competitive ? '兴致正高，又邀身旁的人来一轮' : toss ? '示范如何瞄准壶口' : '给身旁的人留了半张纸'
-      : '行了礼，各做各的，席上没怎么搭话';
-    lines.push(`${familyName(lead)}和${familyName(peer)}相邻。席间，${familyName(lead)}${action}。`);
-    relAdd(a,b,friendly ? competitive ? 3 : 6 : 1);
-    perspectives.set(lead.id,{ person:lead.id, subject:peer.id, interpretation:`与${familyName(peer)}同席${label}，${action}。`, emotion:friendly?.65:.12, impact:65 });
-    perspectives.set(peer.id,{ person:peer.id, subject:lead.id, interpretation:friendly?`与${familyName(lead)}同席${label}，愿意下次再试。`:`小宴上与${familyName(lead)}同席，仍然生分。`, emotion:friendly?.55:.05, impact:64 });
+    for (let i=1;i<table.length;i++) {
+      const a=table[i-1], b=table[i];
+      if ((a.sex && kidAge(a)<5)||(b.sex && kidAge(b)<5)) continue;
+      lines.push(banquetPair(a,b,label,toss,move));
+    }
+    for (let i=1;i<table.length-1;i++) {
+      const k=table[i], left=table[i-1], right=table[i+1];
+      if (!k.sex || kidAge(k)<5 || !k.foster || ![left.id,right.id].includes(k.mom) || ![left.id,right.id].includes(k.foster)) continue;
+      if (relGet(left,right)>=-15) {
+        relAdd(left,right,5);
+        lines.push(`${k.name}请两位母亲也${toss?'各投一支':'各添一朵花'}。散席时，她们还在商量孩子下回想玩什么。`);
+      } else {
+        lines.push(`${k.name}来回给两位母亲看自己的${toss?'投壶成绩':'花笺'}。两人各夸了一句，仍有些拘束。`);
+      }
+    }
   }
-  people.slice(1,-1).forEach((k,i) => {
-    const left=people[i],right=people[i+2];
-    if (!k.sex || !k.foster || ![left.id,right.id].includes(k.mom) || ![left.id,right.id].includes(k.foster)) return;
-    if (relGet(left,right) >= -15) {
-      relAdd(left,right,5);
-      lines.push(`${k.name}把${toss?'剩下的箭分给两人，请她们也各投一支':'半张花笺递给两人，请她们各添一朵花'}。散席时，她们还在商量孩子下回想玩什么。`);
+  if (feast.host) {
+    if (draft.kind==='empress') {
+      const queen=feast.host;
+      cchg(queen,{mood:16,aff:8});
+      remember(queen,'bday','陛下在我生辰亲自主持千秋宴。');
+      story(queen,'生辰设千秋宴，众人来贺。');
+      lines.unshift('皇后受了众人的寿礼，请掌事姑姑把寿面先分给孩子们。');
     } else {
-      lines.push(`${k.name}来回给两位母亲看自己的${toss?'投壶成绩':'花笺'}。两人各夸了一句，仍有些拘束。`);
+      chg({prestige:Math.min(5,2+successes)});
+      for (const k of people.filter(p=>p.sex)) skillGain(k,'love',3);
+      lines.unshift('众人向陛下贺寿，年幼的皇嗣跟着母亲行礼。');
     }
-  });
-  if (perspectives.size) NPCMemory.record(S,{ type:'garden-banquet', time:S.turn, location:'御花园', participants:seats.slice(), object:label }, [...perspectives.values()]);
-  log(`御花园设小宴，${people.map(familyName).join('、')}同席${label}。`);
-  UI.banquet = null;
+  }
+  const follow=S.gardenPlans?.find(plan=>plan.turn===S.turn+2);
+  const promise=follow? `\n§${familyName(kidById(follow.child)||byId(follow.guest))}约好两个月后再来御花园。`:'';
+  const result=toss?`${successes} 人投中，共 ${entries} 人试投`:`${successes} 人完成画作，共 ${entries} 人执笔`;
+  log(`${feast.title}，${people.length} 位宾客同席${label}。 ${result}。`);
+  UI.banquet=null;
   arrive(gardenPlace());
-  pushEv({ title:`小宴 · ${label}`, cast:people, text:lines.join('\n'), choices:[ok1] });
+  const demand=proudBanquetGuest(people);
+  if (demand) pushNow(proudDemandEvent(demand,people));
+  pushNow({title:`${feast.title} · ${label}`, cast:people.slice(0,4),
+    text:`§${result}${promise}\n${lines.slice(0,6).join('\n')}`, choices:[ok1]});
+}
+
+function banquetPair(a,b,label,toss,move) {
+  const k=a.sex?a:b.sex?b:null;
+  const mother=k && (!a.sex?a:!b.sex?b:null);
+  if (mother && mothersOf(k).includes(mother)) {
+    const trust=childTrust(k,mother), skill=banquetTalent(mother,toss);
+    const opensUp=skill>=60 || trust>=48 || mother.t2==='护短' || mother.trait==='温婉' || move.cooperate;
+    const action=toss
+      ? skill>=60?`帮${k.name}扶稳手肘，下一支箭果然投中了`:`蹲下来陪${k.name}数投中的箭，没投中的也捡回来再试`
+      : skill>=60?`在${k.name}画歪的花枝旁添了几笔，两人的画接在了一起`:`请${k.name}选花的颜色，两人一笔一笔填满了花笺`;
+    const child=opensUp?`${cName(mother)}${action}。`:
+      `${cName(mother)}递来${toss?'一支箭':'一支笔'}，两人先各自试了一回，后来才说上话。`;
+    const adult=opensUp?`见${k.name}愿意让她帮忙，想以后再陪孩子${toss?'练一回':'画一幅'}。`:
+      `见${k.name}还拘谨，便让孩子按自己的步调来。`;
+    recordFamilyTime(k,mother,label,child,adult,{place:'御花园',gain:opensUp?11:5,stat:move.skill});
+    if (opensUp && familyVisitAllowed(k,mother)) planGardenReunion({child:k.id,mother:mother.id,activity:label});
+    return child;
+  }
+  const friendly=relGet(a,b)>=-25;
+  const competitive=[a,b].find(p=>p.t2==='好胜'||(p.sex&&p.amb>=75));
+  const lead=competitive || (banquetTalent(a,toss)>=banquetTalent(b,toss)?a:b);
+  const peer=lead===a?b:a;
+  const action=friendly
+    ? competitive?'兴致正高，又邀身旁的人来一轮':toss?'示范如何瞄准壶口':'给身旁的人留了半张纸'
+    : '行了礼，各做各的，席上没怎么搭话';
+  relAdd(a,b,friendly?(move.cooperate?8:competitive?3:6):1);
+  NPCMemory.record(S,{type:'garden-banquet',time:S.turn,location:'御花园',participants:[a.id,b.id],object:label},[
+    {person:lead.id,subject:peer.id,interpretation:`与${familyName(peer)}同席${label}，${action}。`,emotion:friendly?.65:.12,impact:65},
+    {person:peer.id,subject:lead.id,interpretation:friendly?`与${familyName(lead)}同席${label}，愿意下次再试。`:`小宴上与${familyName(lead)}同席，仍然生分。`,emotion:friendly?.55:.05,impact:64}
+  ]);
+  if (friendly && !a.sex && !b.sex) planGardenReunion({guest:lead.id,partner:peer.id,activity:label});
+  return `${familyName(lead)}和${familyName(peer)}相邻。席间，${familyName(lead)}${action}。`;
+}
+
+function planGardenReunion(plan) {
+  const plans=S.gardenPlans ||= [], turn=S.turn+2;
+  const existing=plans.findIndex(item=>item.turn===turn);
+  if (existing<0) plans.push({...plan,turn});
+  else if (plan.child && !plans[existing].child) plans[existing]={...plan,turn};
+}
+
+function proudBanquetGuest(people) {
+  if (S.over || S.turn-(S.flags.lastProudDemand ?? -4)<4) return null;
+  return people.filter(c=>!c.sex && inPalace(c) && !c.maid && c.rank<8 && c.trait==='骄纵' &&
+      c.favor>=(c.preg>=2?56:70)-4*(c.palacePrivilege||0))
+    .sort((a,b)=>(b.favor+(b.preg>=2?16:0))-(a.favor+(a.preg>=2?16:0)))[0];
+}
+
+function proudDemandNotice() {
+  const c=proudBanquetGuest(harem());
+  return c?`<div class="acts"><button class="btn sm jade" onclick="A.hearProudDemand()">${esc(cName(c))} · ${c.preg>=2?'有孕请旨':'宫中起争执'}</button></div>`:'';
+}
+
+A.hearProudDemand = function() {
+  if (modalOpen) return;
+  const c=proudBanquetGuest(harem());
+  if (c) pushEv(proudDemandEvent(c));
+};
+
+function proudDemandEvent(c,guests) {
+  const atBanquet=!!guests, queen=empress();
+  const present=guests||harem();
+  const other=present.filter(p=>!p.sex&&p!==c&&p!==queen).sort((a,b)=>relGet(c,a)-relGet(c,b))[0];
+  const witness=present.includes(queen)?queen:other;
+  const name=cName(c), pregnancy=c.preg>=2, repeated=(c.palacePrivilege||0)>0;
+  let text=atBanquet
+    ? `正席上菜前，${name}看了眼席签：“${pregnancy?'臣妾近来有孕，坐远了怕照应不及':'陛下平日最懂臣妾的心'}，今日就让我坐在御座旁吧。”`
+    : `${name}${pregnancy?'以有孕为由，叫御膳房先把别宫的燕窝送到自己宫里':'把内务府送往别宫的新缎截下，说自己要先挑'}。`;
+  if (repeated) text+='她又道：“上回陛下也准了，怎么这回就不行？”';
+  if (witness) text+=`\n${cName(witness)}${witness===queen?'放下茶盏：“有孕该照顾。各宫的分例和席次，也得有个准绳。”':'听见这话，默默把原本准备好的贺礼收回袖里。'}`;
+  const settle=(decision)=>{
+    S.flags.lastProudDemand=S.turn;
+    let result;
+    if (decision==='yield') {
+      c.palacePrivilege=Math.min(3,(c.palacePrivilege||0)+1);
+      cchg(c,{mood:12,favor:5,aff:4});
+      if(witness){relAdd(c,witness,-14);cchg(witness,{mood:-9});}
+      result=atBanquet?'你让人照她的意思改了座次。她笑着坐下，旁人少了几分谈兴。':'内务府照她的吩咐改了分例。下回她会记得，向你开口就能破例。';
+    } else if (decision==='care') {
+      cchg(c,{mood:5,aff:3});
+      if(witness)relAdd(c,witness,3);
+      result=pregnancy?'你请太医按她的需要开调养单，额外从御前支取。各宫原有的份例照发。':'你问她究竟缺什么，准她从御前另领一份。其他人的份例照旧。';
+    } else {
+      c.palacePrivilege=Math.max(0,(c.palacePrivilege||0)-1);
+      cchg(c,{mood:-12,favor:-8,aff:-3});
+      setXin(c,'委屈','越过宫规，当众被劝回');
+      if(witness)cchg(witness,{mood:6,aff:3});
+      result=atBanquet?'你示意她照原定座次入席。她没有再争，却比旁人早一步离席。':'你命内务府照例发放。她收下原有的份例，几日没再来御前。';
+    }
+    story(c,result);remember(c,decision==='rules'?'hurt':'care',result);
+    if(witness)remember(witness,decision==='yield'?'hurt':'care',
+      decision==='yield'?`陛下为${name}破例，我的话没有被听进去。`:
+        decision==='care'?`陛下准许照顾${name}，各宫的份例照旧。`:`陛下听了宫中各人的话，仍按原来的规矩办。`);
+    log(`${name}因${atBanquet?'席次':'分例'}请旨。 ${result}`);
+    return result;
+  };
+  return {title:atBanquet?'席间争座':pregnancy?'恃宠争例':'内务府争执',por:c,text,choices:[
+    {t:'这回依她',f:()=>settle('yield')},
+    {t:pregnancy?'照顾身孕，席次和分例照旧':'另给她一份，其他人照旧',f:()=>settle('care')},
+    {t:'按宫规办',f:()=>settle('rules')}
+  ]};
+}
+
+function showGardenReunion() {
+  const reunion=S.banquetReunion;
+  if (!reunion || reunion.turn!==S.turn || reunion.joined) return null;
+  const first=kidById(reunion.child)||byId(reunion.guest);
+  const second=byId(reunion.mother||reunion.partner);
+  if (!(first?.sex ? familyVisitAllowed(first,second) : inPalace(first)&&inPalace(second))) return null;
+  return {reunion,first,second};
+}
+
+A.joinGardenReunion = function() {
+  const meeting=showGardenReunion();
+  if (!meeting || modalOpen) return;
+  const {reunion,first,second}=meeting;
+  setScene('garden');
+  pushEv({title:'御花园赴约',cast:[first,second],text:reunion.text,choices:[
+    {t:'陪他们再玩一轮',f:()=>{
+      reunion.joined=true;
+      if (first.sex) skillGain(first,reunion.activity==='投壶'?'mar':'lit',2);
+      else cchg(first,{aff:3,mood:4});
+      cchg(second,{aff:3,mood:4});
+      return `${familyName(first)}见你来了，把身旁的位置让给你。`;
+    }}, {t:'让他们自己玩'}]});
 };
 
 function gardenFamilyMoment() {
@@ -3324,9 +3583,10 @@ function gardenFamilyMoment() {
 }
 
 function gardenFamilyNotice() {
-  const moment = gardenFamilyMoment();
-  return moment
-    ? `<p class="initiative-note">${esc(moment.text)} <button class="btn sm quiet" onclick="A.go('kid',${moment.child})">看看孩子</button></p>` : '';
+  const meeting=showGardenReunion();
+  if(meeting)return `<p class="initiative-note">${esc(meeting.reunion.text)} <button class="btn sm jade" onclick="A.joinGardenReunion()">去御花园赴约</button></p>`;
+  const moment=gardenFamilyMoment();
+  return moment?`<p class="initiative-note">${esc(moment.text)} <button class="btn sm quiet" onclick="A.go('kid',${moment.child})">看看孩子</button></p>`:'';
 }
 
 function conKidLine(c){const ks=kidsAlive().map(k=>[k,relGet(c,k)]).filter(([k,v])=>raisers(k).includes(c)||Math.abs(v)>=25).sort((a,b)=>b[1]-a[1]);if(!ks.length)return '';
