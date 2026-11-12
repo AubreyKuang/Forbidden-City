@@ -187,30 +187,6 @@ body{background:linear-gradient(155deg,#f6f2e9,#e7dece) fixed;color:var(--ink)}
 .title-wrap>.btn.gold{background:var(--red);color:#fff8ea;width:100%;max-width:280px}
 .title-wrap .save-list{display:grid;width:100%;max-width:360px;gap:8px}
 .title-wrap .save-list .btn{background:#eee6d9;color:var(--ink);text-align:left;white-space:normal;overflow-wrap:anywhere}
-@media(min-width:900px){
-  #app{display:grid;align-items:start}
-  #app[data-layout="landing"]{grid-template-columns:minmax(320px,.9fr) minmax(0,1.1fr);grid-template-areas:"top top" "panel scene";gap:16px}
-  #app[data-layout="landing"] #stage,#app[data-layout="landing"] #panel{height:100%;min-height:440px}
-  #app[data-layout="landing"] #scene{height:100%;min-height:440px;max-height:none;aspect-ratio:auto;object-fit:cover}
-  #app[data-layout="game"]{grid-template-columns:190px minmax(0,1fr);grid-template-areas:"top top" "scene panel" "menu panel";grid-template-rows:auto auto 1fr;gap:12px 16px}
-  #app[data-layout="game"] #menu{grid-template-columns:1fr}
-  #app[data-layout="game"] #menu .btn{display:flex;align-items:center;justify-content:space-between;text-align:left;padding:8px 13px;min-height:37px}
-  #app[data-layout="game"] #menu .btn.on{box-shadow:inset 3px 0 var(--red)}
-  #app[data-layout="game"] #panel{min-height:520px}
-  #app[data-layout="game"] #snd{font-size:10px;min-height:27px;padding:4px 7px}
-  #app[data-layout="setup"]{grid-template-columns:minmax(0,1fr);grid-template-areas:"top" "panel"}
-  #app[data-layout="setup"] #stage{display:none}
-  #top{grid-area:top}#stage{grid-area:scene}#menu{grid-area:menu}#panel{grid-area:panel}
-}
-@media(max-width:899px){
-  #app[data-layout="landing"] #panel{order:-1}
-  #app[data-layout="landing"] #top,#app[data-layout="setup"] #stage{display:none}
-  #app[data-layout="game"] #scene{max-height:110px}
-  #top .brand{font-size:0;gap:0}
-  #top .st{font-size:12px}
-  #menu{grid-template-columns:repeat(5,minmax(0,1fr))}
-}
-
 /* Shared tones and type for the illustrated world and the interface. */
 :root{--ink:#292723;--ink2:#625d52;--wall:#743a34;--red:#783d35;--paper:#fffcf6;--paper2:#ebe4d8;--paperhi:#faf5eb;--jade:#3c6357}
 body{background:#f3eee4}
@@ -267,11 +243,142 @@ body{background:#f3eee4}
 .detail-content .stats{grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr))}
 .detail-fold .story{max-height:360px}
 @media(max-width:480px){.detail-head{gap:12px;padding:14px}.detail-head .por{width:66px}.detail-vitals{grid-template-columns:repeat(3,minmax(0,1fr))}.detail-vitals .bar{padding:8px}.detail-actions .btn{min-height:44px}.detail-content{gap:8px}}
+
+/* Game viewport: scene layer, status HUD, and a fixed command dock. */
+body{background:#181b20;padding-block:14px;color:var(--ink)}
+#app[data-layout]{
+  position:relative;isolation:isolate;overflow:hidden;display:grid;align-items:stretch;
+  max-width:1440px;height:calc(100dvh - 28px);min-height:490px;
+  border-radius:18px;background:#222a2d;gap:0;
+  grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;
+  grid-template-areas:"top" "panel" "menu";
+}
+#app[data-layout] #stage{position:absolute;inset:0;height:100%;min-height:0;border-radius:0;z-index:-2;display:block}
+#app[data-layout] #scene{width:100%;height:100%;min-height:0;max-height:none;aspect-ratio:auto;object-fit:cover;object-position:center 52%}
+#stage::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#121c25a0,#17222b30 45%,#101722c0);pointer-events:none}
+#app[data-layout="landing"] #stage::after,#app[data-layout="setup"] #stage::after{background:linear-gradient(90deg,#111922ed,#111922b8 38%,#11192220 85%)}
+#top,#menu,#panel{grid-area:auto;min-width:0}
+#app #top{grid-area:top;display:flex;align-items:center;gap:10px 18px;padding:11px 18px;background:#18232bf0;color:#f9efe0;border-radius:0;box-shadow:0 1px 0 #fae3bc28;z-index:2}
+.hud-identity{display:grid;gap:1px;line-height:1.4;white-space:nowrap}
+#top .date{color:#f8dbab;font-weight:700;font-size:15px}
+.hud-person{font-size:12px;color:#f1e1ca}
+.hud-stats,.hud-controls{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.hud-stats{flex:1}
+#top .st{background:#ffffff0e;color:#e9decc;padding:4px 8px;font-size:12px}
+#top .st b{color:#fff3d9}
+#top .pip{background:#e8ba71}.pip.off,#top .pip.off{background:#555451}
+#app #snd{position:static;background:#ffffff13;color:#f5ebd9;border:0;font-size:12px;min-height:36px;padding:7px 10px}
+#app #snd.on{background:#496456}
+#top .hud-next{background:#ecc98d;color:#332619;min-height:36px}
+#top .hud-next:hover{background:#f5d8a8}
+#app[data-layout] #panel{
+  grid-area:panel;position:relative;align-self:stretch;justify-self:center;
+  width:min(calc(100% - 32px),940px);min-height:0;margin:14px 0;
+  overflow:auto;overscroll-behavior:contain;padding:20px 24px;
+  box-shadow:0 12px 28px #10161e44;background:#fffcf5f7;
+}
+#app[data-layout="game"]:not([data-view="map"]) #panel{align-self:start;max-height:calc(100% - 28px);width:min(calc(100% - 32px),850px)}
+#app[data-layout="landing"] #panel{justify-self:start;display:flex;align-items:center;order:0;width:min(100%,590px);background:transparent;box-shadow:none;margin:0;padding:0}
+#app[data-layout="landing"] #top{background:#18232b75}
+#app[data-layout="landing"] .title-wrap{padding:clamp(25px,6vw,88px);width:100%;gap:18px}
+#app[data-layout="landing"] .title-wrap h1{color:#fff0cf;text-shadow:0 4px 16px #141d29a8;font-size:clamp(58px,9vw,114px)}
+#app[data-layout="landing"] .title-wrap .eyebrow,#app[data-layout="landing"] .intro{color:#eadcc6}
+#app[data-layout="landing"] .title-wrap>.btn.gold{background:#ecc98d;color:#332619}
+#app[data-layout="landing"] .save-list .btn{background:#17232cd9;color:#fff1da}
+#app[data-view="map"] #panel{display:grid;place-items:center;background:transparent;box-shadow:none;padding:0;overflow:auto;margin:8px 0}
+.map-play{width:min(100%,calc((100dvh - 194px) * 1.5625),1060px);min-width:min(100%,380px);margin:auto;color:#fff0d8}
+.map-location{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:2px 12px;background:#19252df2;padding:6px 12px;border-radius:9px 9px 0 0;font-size:12px;line-height:1.5}
+#panel .map-location h2{font-size:16px;color:#ffebc9;margin:0}
+.map-location .hint,.map-legend{color:#f3e1c7;font-size:12px}
+.map-legend{margin:0;background:#19252df2;padding:5px 12px;border-radius:0 0 9px 9px;line-height:1.5}
+#app[data-view="map"] #mapc{border-radius:0}
+#app[data-layout="game"] #menu{
+  grid-area:menu;z-index:2;display:grid;grid-template-columns:repeat(11,minmax(0,1fr));
+  gap:4px;background:#19242df7;border:0;border-top:1px solid #fae3bc29;border-radius:0;padding:7px 12px;
+}
+#app[data-layout="game"] #menu .btn{
+  display:flex;justify-content:center;align-items:center;flex-direction:column;
+  gap:2px;min-height:48px;padding:4px 2px;text-align:center;color:#e4d9c8;font-size:12px;
+}
+#app[data-layout="game"] #menu .btn:hover{background:#ffffff13}
+#app[data-layout="game"] #menu .btn.on{background:#e9c68e;color:#2c2419;box-shadow:none}
+#modal{align-items:flex-end;padding-bottom:clamp(14px,9dvh,85px);background:#111a285c;backdrop-filter:blur(2px)}
+#mbox{max-width:740px;max-height:100%;border-radius:14px;border-top:3px solid #a97b48;box-shadow:0 16px 48px #0d131b60}
+@media(max-width:700px){
+  body{padding:0}
+  #app[data-layout]{height:100dvh;min-height:0;border-radius:0}
+  #app #top{padding:8px 10px;gap:6px 10px}
+  .hud-controls{margin-left:auto;gap:5px}
+  .hud-stats{order:3;flex-basis:100%;gap:4px}
+  #top .st{font-size:11px;padding:2px 5px}
+  #app[data-layout] #panel{width:calc(100% - 16px);margin:7px 0;padding:14px}
+  #app[data-layout="game"]:not([data-view="map"]) #panel{width:calc(100% - 16px);max-height:calc(100% - 14px)}
+  #app[data-view="map"] #panel{padding:0}
+  #app[data-layout="landing"] #panel{width:100%;padding:0}
+  #app[data-layout="landing"] #stage::after{background:linear-gradient(90deg,#111922e8,#1119225c)}
+  #app[data-layout="game"] #menu{grid-template-columns:repeat(6,minmax(0,1fr));padding:5px 6px max(5px,env(safe-area-inset-bottom));gap:3px}
+  #app[data-layout="game"] #menu .btn{min-height:40px}
+  .map-play{min-width:0;width:100%}
+  .map-location{padding:6px 8px}
+  .map-legend{padding:5px 8px}
+  #modal{padding-bottom:max(12px,env(safe-area-inset-bottom))}
+}
+
+/* Vermilion lacquer and bronze are shared by the palace art and game controls. */
+body{background:#241917}
+#app[data-layout]{background:#31221e}
+#stage::after{background:linear-gradient(180deg,#2c1d19b0,#2d1d1938 44%,#251814ae)}
+#app[data-layout="landing"] #stage::after,#app[data-layout="setup"] #stage::after{background:linear-gradient(90deg,#291a16f2,#2e1d18bb 42%,#37261a17 92%)}
+#app #top{background:#402522f5;color:#fff0d7;box-shadow:0 1px 0 #e5b77557}
+#app[data-layout="landing"] #top{background:#3c231ea3}
+.brand::before{background:#963d2d;color:#fff0cf}
+.hud-identity{display:flex;gap:9px;align-items:center}
+.hud-identity .por{display:block;width:37px;height:auto;background:#6d4732;border-radius:6px;filter:none}
+.hud-name{display:grid;gap:2px}
+#top .date{color:#f6dca9}
+.hud-person{color:#efdfc7}
+#top .hud-next{background:#eac481;color:#38261a}
+#top .hud-next:hover{background:#f4d5a0}
+#top .st{background:#ffedc413}
+#app[data-layout="game"] #menu{background:#3d2420f7;border-top-color:#d7ac6c65}
+#app[data-layout="game"] #menu .btn{color:#f4e6ce;border-radius:7px}
+#app[data-layout="game"] #menu .btn:hover{background:#ffedd31c}
+#app[data-layout="game"] #menu .btn.on{background:#6b3a2b;color:#fff0d3;box-shadow:inset 0 -2px #dcad68}
+.dock-icon{width:23px;height:23px;display:block;object-fit:contain}
+.map-location,.map-legend{background:#4b2a24f5;color:#f8e8cb}
+.map-location{border-bottom:1px solid #d6a56667}
+.mlab{background:#512d25ec;color:#fff0d1;box-shadow:0 1px 0 #311b16a3}
+.mlab:hover,.mlab:focus-visible{background:#7a3e2e;color:#fff3db}
+#app[data-layout="game"]:not([data-view="map"]) #panel{background:#fbf2dff9;border-top:2px solid #b78751}
+#app[data-layout="landing"] .save-list .btn{background:#432822e8;color:#fff0d8}
+#app[data-layout="landing"] .title-wrap>.btn.gold{background:#eac481;color:#38261a}
+#modal{background:#291b1760}
+#mbox{background:#fff4df;border-top-color:#ab7747}
+.mtitle{color:#69372c;border-bottom:1px solid #e7d6ba}
+.pais{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:14px;justify-content:start}
+.pai{
+  width:100%;min-width:0;min-height:148px;display:flex;flex-direction:column;
+  align-items:center;justify-content:space-between;gap:8px;padding:11px 8px;
+  background:#335a49;color:#fff0cf;border-radius:22px 22px 7px 7px;
+  box-shadow:inset 0 -3px #234639;line-height:1.4;
+}
+.pai::before{content:"";width:7px;height:7px;border:1px solid #ecd1a1;border-radius:50%;flex:none}
+.pai strong{writing-mode:vertical-rl;letter-spacing:.1em;font-weight:650}
+.pai small{opacity:1;color:#f2e6ca}
+.pai:hover{background:#416d58}
+.pai[disabled]{background:#626358;color:#f3e6c9;box-shadow:inset 0 -3px #4b4d44}
+.pai[disabled] small{color:#f3e6c9}
+@media(max-width:700px){
+  #app[data-layout="landing"] #stage::after{background:linear-gradient(90deg,#2a1a16ed,#32201860)}
+  .hud-identity .por{width:29px}
+  .hud-identity{gap:6px}
+  .dock-icon{width:19px;height:19px}
+}
 </style>
 
 <div id="app">
   <header id="top"></header>
-  <div id="stage"><canvas id="scene" width="192" height="80"></canvas><div id="loc"></div><button id="snd" class="btn sm" onclick="AU.toggle()">♪ 开启声音</button></div>
+  <div id="stage" aria-hidden="true"><canvas id="scene" width="192" height="80"></canvas></div>
   <nav id="menu" aria-label="宫廷导航"></nav>
   <main id="panel" class="pix"></main>
 </div>
@@ -596,27 +703,6 @@ function addConsort(c,rank,why){
   log(`${fullName(c)}（${c.fam.t}之女）${why}，封${RANKS[rank]}。`);
 }
 
-/* ============ 像素文字（代码现场把字体栅格化成像素） ============ */
-const PT_CACHE=new Map();
-function pixText(text,size,color,scale){
-  const key=text+size+color+scale; if(PT_CACHE.has(key)) return PT_CACHE.get(key);
-  const font=`700 ${size}px ${getComputedStyle(document.documentElement).getPropertyValue('--f-ui')}`;
-  const c=document.createElement('canvas'),x=c.getContext('2d');x.font=font;
-  const w=Math.ceil(x.measureText(text).width)+4,h=size+5;c.width=w;c.height=h;
-  x.font=font;x.textBaseline='top';x.fillStyle='#fff';x.fillText(text,2,2);
-  const d=x.getImageData(0,0,w,h),a=d.data,on=new Uint8Array(w*h);
-  for(let i=0;i<w*h;i++) on[i]=a[i*4+3]>120?1:0;
-  const o=x.createImageData(w,h),b=o.data;
-  const put=(i,hex)=>{const n=parseInt(hex.slice(1),16);b[i*4]=n>>16;b[i*4+1]=n>>8&255;b[i*4+2]=n&255;b[i*4+3]=255};
-  for(let y=0;y<h;y++)for(let X=0;X<w;X++){const i=y*w+X;
-    if(on[i]) put(i,y<h*0.45?shade(color,.25):color);
-    else if((X>0&&on[i-1])||(y>0&&on[i-w])||(X<w-1&&on[i+1])||(y<h-1&&on[i+w])) put(i,'#2a1712');
-    else if(X>0&&y>0&&on[i-w-1]) put(i,'#00000088'.slice(0,7));}
-  x.putImageData(o,0,0);
-  const url=c.toDataURL(),html=`<img class="px" alt="${esc(text)}" src="${url}" width="${w*scale}" height="${h*scale}">`;
-  PT_CACHE.set(key,html);return html;
-}
-
 /* ============ 像素立绘（逐像素生成） ============ */
 const PC=document.createElement('canvas');PC.width=48;PC.height=60;const pcx=PC.getContext('2d');
 const POR=new Map();
@@ -799,7 +885,7 @@ const AU={ctx:null,on:false,bus:null,wet:null,timer:null,next:0,step:0,mode:'cou
     return true;}catch(e){return false} },
   toggle(){ if(!this.init()){toast('此浏览器不支持网页音频');return}
     this.on=!this.on; if(this.ctx.state==='suspended') this.ctx.resume();
-    $('#snd').textContent=this.on?'♪ 声音：开':'♪ 开启声音'; $('#snd').classList.toggle('on',this.on);
+    $('#snd').textContent=this.on?'♪ 声音：开':'♪ 开启声音'; $('#snd').classList.toggle('on',this.on);$('#snd').setAttribute('aria-pressed',this.on);
     if(this.on){this.next=this.ctx.currentTime+.1;this.timer=setInterval(()=>this.sched(),100);this.sfx('chime')} else {clearInterval(this.timer)} },
   out(vol,wet=1){const g=this.ctx.createGain();g.gain.value=vol;g.connect(this.bus);if(wet){const w=this.ctx.createGain();w.gain.value=wet;g.connect(w);w.connect(this.wet)}return g},
   // Karplus-Strong 拨弦：用噪声 + 延迟线平均算出古筝般的音色
@@ -862,8 +948,7 @@ const AU={ctx:null,on:false,bus:null,wet:null,timer:null,next:0,step:0,mode:'cou
 const SC=$('#scene'),sg=SC.getContext('2d'),SW=192,SH=80;
 let scene='court',parts=[],frame=0,lastT=0,LIGHTS=[];
 const clouds=[{x:10,y:6},{x:90,y:13},{x:150,y:4}];
-const LOCN={court:'宸极殿',harem:'东西六宫',garden:'御花园',city:'京城·朱雀大街',night:'夜·后宫'};
-function setScene(m){ if(scene!==m){scene=m;parts=[]} $('#loc').innerHTML=pixText(LOCN[m]||'',11,'#e8b84a',2); AU.setMode(m)}
+function setScene(m){ if(scene!==m){scene=m;parts=[]} AU.setMode(m)}
 function P(x,y,w,h,c){sg.fillStyle=c;sg.fillRect(Math.round(x),Math.round(y),w,h)}
 const SKY=[['#7fbde6','#a8d4ef','#d3ecf6'],['#4fa3dd','#86c6ef','#c0e4f7'],['#d99a66','#ebbd8a','#f6dcb4'],['#8d9fb6','#b5c3d4','#dce4ed']];
 const NSKY=['#070a22','#0e1438','#1a2150'];
@@ -962,7 +1047,14 @@ function loop(t){ if(t-lastT>100){lastT=t;frame++;drawScene()} requestAnimationF
 
 /* ============ 弹窗与事件队列 ============ */
 function fmt(t){return String(t).split('\n').map(l=>l.startsWith('§')?`<p class="fx">${esc(l.slice(1))}</p>`:l?`<p>${esc(l)}</p>`:'').join('')}
-function pushEv(ev){if(!ev)return;Q.push(ev);if(!modalOpen)nextEv()}
+function pushEv(ev){
+  if(!ev)return;
+  if(ev.maidEncounter){
+    if(!maidEncounterReady())return;
+    S.flags.lastMaidEncounter=S.turn;
+  }
+  Q.push(ev);if(!modalOpen)nextEv();
+}
 function pushNow(ev){if(!ev)return;Q.unshift(ev);if(!modalOpen)nextEv()}
 function nextEv(){
   if(Q.length){openModal(Q.shift());return}
@@ -1135,8 +1227,11 @@ A.out=function(kind){ if(!useE())return; const e=E();
     const roll=R();
     if(roll<.5&&h.length){const c=pick(h);const t=pick([`${cName(c)}正在亭中扑蝶，见你来了，红着脸躲到柱子后面。`,`你远远听见琴声，循声而去，原来是${cName(c)}在水榭抚琴。`,`${cName(c)}在池边喂鱼，鱼儿聚了一大片。她笑着分了你一把鱼食。`,`细雨忽至，你与${cName(c)}在回廊下躲雨，说了许多话。`]);
       story(c,`与陛下在御花园偶遇。${t}`);pushEv({title:'御花园偶遇',por:c,text:t+fx(cchg(c,{favor:6,aff:6,mood:10})),choices:[{t:'今夜便召她侍寝',cond:()=>E().energy>0&&!c.preg,why:c.preg?'她有孕在身':'精力不足',f:()=>{nightWith(c);return null}},{t:'与她作别'}]});}
-    else if(roll<.75) pushEv(maidEvent('御花园'));
-    else {const s=chg({health:2});pushEv({title:'御花园',text:`${pick(['春日融融，百花争艳。','荷风送香，蝉鸣阵阵。','丹桂飘香，层林尽染。','红梅映雪，暗香浮动。'][season()])}你独自走了一圈，心旷神怡。${fx(s)}`,choices:[{t:'回宫'}]})}
+    else {
+      const encounter=roll>=.5&&roll<.6?maidEvent('御花园'):null;
+      if(encounter){pushEv(encounter);return;}
+      const s=chg({health:2});pushEv({title:'御花园',text:`${pick(['春日融融，百花争艳。','荷风送香，蝉鸣阵阵。','丹桂飘香，层林尽染。','红梅映雪，暗香浮动。'][season()])}你独自走了一圈，心旷神怡。${fx(s)}`,choices:[{t:'回宫'}]});
+    }
   }
   else if(kind==='city'){setScene('city');
     const ev=pick(['girl','tea','porridge','assassin','girl']);
@@ -1160,9 +1255,11 @@ A.out=function(kind){ if(!useE())return; const e=E();
   else if(kind==='spa'){setScene('garden');const s=chg({health:5,treasury:-60});log('帝往西山温泉行宫休养。');
     pushEv({title:'温泉行宫',text:`西山温泉氤氲，你静养了几日，精神好了许多。${fx(s)}`,choices:[{t:'回宫'}]})}
 };
+function maidEncounterReady(){return S.turn-(S.flags.lastMaidEncounter??-Infinity)>=4;}
 function maidEvent(where){
+  if(!maidEncounterReady())return null;
   const g=makeGirl({fam:{t:'宫女',p:3},age:ri(16,19)});
-  return {title:'宫女',por:g,text:`${where}的花径上，一个小宫女正低头扫落花，口中轻轻哼着家乡的小调。你问她名字，她慌忙跪下：“奴婢${fullName(g)}。”`,choices:[
+  return {title:'宫女',maidEncounter:true,por:g,text:`${where}的花径上，一个小宫女正低头扫落花，口中轻轻哼着家乡的小调。你问她名字，她慌忙跪下：“奴婢${fullName(g)}。”`,choices:[
     {t:'今夜召她侍寝（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{g.maid=true;g.near=false;g.palace='尚衣局';g.favor=20;g.aff=25;S.consorts.push(g);deepen(g);story(g,`本是${where}一带当差的宫女，被陛下看中。`);maidNight(g);return null}},
     {t:'收为官女子',f:()=>{addConsort(g,0,'本为宫女，蒙陛下青眼');g.favor=25;g.aff=30;return `${fullName(g)}受宠若惊，磕了好几个头。`}},
     {t:'赏她一支簪子',f:()=>'她捧着簪子，红着脸退下了。'}]};
@@ -1293,7 +1390,6 @@ const HAREM=[
    {t:'准其母入宫小住',f:()=>{story(c,'母亲病重，陛下特许其母入宫小住养病。');momVisit(c,ri(1,2));return fx(chg({treasury:-10}),cchg(c,{mood:20,aff:10}))}},
    {t:'赐药材送去她家中',f:()=>fx(chg({treasury:-15}),cchg(c,{mood:10,aff:5}))},
    {t:'宫规森严，不可坏了规矩',f:()=>fx(cchg(c,{mood:-12}))}]}},
- ()=>maidEvent('长街'),
  function empressReport(){const em=empress();if(!em)return null;
   if(em.virtue>=60) return {title:'中宫奏事',por:em,text:'皇后奏请：后宫用度日增，臣妾愿率六宫减省膳食衣料，以充国用。',choices:[
    {t:'准奏，皇后贤德',f:()=>{story(em,'率六宫节俭用度，陛下赞其贤德。');harem().forEach(c=>{if(c!==em)c.mood=clamp(c.mood-3)});return fx(chg({treasury:60,prestige:2}),cchg(em,{aff:6}))}},
@@ -1473,7 +1569,7 @@ A.endMonth=function(){
   const add=(e,p)=>{if(e)opt.push([e,p+R()])};
   add(chance(.8)?festival():null,5);add(chance(.9)?haremEvent():null,6);add(chance(.5)?haremEvent():null,3);
   add(chance(.65)?quirkEvent():null,5);add(chance(.5)?histEvent():null,6);add(chance(.4)?courtEvent(true):null,4);
-  add(chance(.45)?kidEvent():null,4);add(chance(.55)?xinEvent():null,6);add(chance(.25)?teaMaid():null,5);add(chance(.3)?nearMaidEvent():null,4);add(chance(.3)?fosterEvent():null,4);add(chance(.45)?relEvent():null,5);add(chance(.35)?clanEvent():null,5);add(chance(.5)?visitorEvent():null,5);add(chance(.15)?dowagerEvent():null,3);
+  add(chance(.45)?kidEvent():null,4);add(chance(.55)?xinEvent():null,6);add(monthlyMaidEvent(),4);add(chance(.3)?fosterEvent():null,4);add(chance(.45)?relEvent():null,5);add(chance(.35)?clanEvent():null,5);add(chance(.5)?visitorEvent():null,5);add(chance(.15)?dowagerEvent():null,3);
   opt.sort((a,b)=>b[1]-a[1]);const seen=new Set();must.forEach(e=>{seen.add(e.title);pushEv(e)});
   for(const [e] of opt){if(Q.length+(modalOpen?1:0)>=Math.max(must.length,ri(2,4)))break;if(seen.has(e.title))continue;seen.add(e.title);pushEv(e)}
   log(`—— ${dateStr()} ——`);
@@ -1553,23 +1649,55 @@ A.start=function(){
 /* ============ 渲染 ============ */
 function bar(l,v,c){v=rd(v);return `<div class="bar"><span>${l}</span><i><b style="width:${clamp(v)}%;${c?`background:${c}`:''}"></b></i><em>${v}</em></div>`}
 function renderTop(){
-  const t=$('#top');if(!S){t.innerHTML=`<span class="brand">宸宫纪</span><span class="sp"></span><span>宫廷经营模拟</span>`;return}
+  const t=$('#top');
+  const sound=`<button id="snd" class="btn sm${AU.on?' on':''}" aria-pressed="${AU.on}" onclick="AU.toggle()">${AU.on?'♪ 声音：开':'♪ 开启声音'}</button>`;
+  if(!S){t.innerHTML=`<span class="brand">宸宫纪</span><span class="sp"></span>${sound}`;return}
   const e=E(),mx=maxEnergy();let pips='';for(let i=0;i<mx;i++)pips+=`<span class="pip${i<e.energy?'':' off'}"></span>`;
   const hd=e.health>=80?'康健':e.health>=55?'安好':e.health>=30?'欠安':'病笃';
-  t.innerHTML=`<span class="brand">宸宫纪</span><span class="date">${esc(dateStr())}</span><span class="st">帝 <b>${esc(e.sur+e.name)}</b> ${e.age}岁</span>
-   <span class="st">龙体 <b>${rd(e.health)}</b>${hd}</span><span class="st">威望 <b>${rd(e.prestige)}</b></span><span class="st">民心 <b>${rd(e.people)}</b></span>
-   <span class="st">国库 <b>${e.treasury}</b>万两</span><span class="st">精力 ${pips}</span><span class="sp"></span>
-   <button class="btn gold sm" onclick="A.endMonth()" ${S.over?'disabled':''}>结束本月 ▸</button>`;
+  t.innerHTML=`<div class="hud-identity">${porImg('emp',38)}<div class="hud-name"><span class="date">${esc(dateStr())}</span><span class="hud-person">${esc(e.sur+e.name)} · ${e.age}岁</span></div></div>
+   <div class="hud-stats"><span class="st" title="${hd}">龙体 <b>${rd(e.health)}</b></span><span class="st">威望 <b>${rd(e.prestige)}</b></span><span class="st">民心 <b>${rd(e.people)}</b></span>
+   <span class="st">国库 <b>${e.treasury}</b>万两</span><span class="st" aria-label="精力 ${e.energy}／${mx}">精力 ${pips}</span></div>
+   <div class="hud-controls">${sound}<button class="btn gold sm hud-next" onclick="A.endMonth()" ${S.over?'disabled':''}>结束本月 ▸</button></div>`;
 }
 const MENU=[['map','宫城'],['home','御书房'],['court','上朝'],['harem','后宫'],['cards','翻牌子'],['xx','选秀'],['kids','皇嗣'],['rel','人际'],['out','出巡'],['log','起居注'],['sys','存档']];
+const DOCK_ART={
+  map:['....g....','..ggggg..','ggggggggg','.rr...rr.','.rg...gr.','.rg...gr.','ggggggggg'],
+  home:['.ggggggg.','.g.....g.','.ggggggg.','.g.r.r.g.','.g.r.r.g.','.ggggggg.','...ggg...'],
+  court:['.gggggg..','.g...ggg.','.g.g.gg..','.g...g...','.g.g.g...','gg...g...','.ggggg...'],
+  harem:['..g.g.g..','.ggggggg.','...ggg...','..rrrrr..','...rrr...','..rrrrr..','.rrrrrrr.'],
+  cards:['...jjj...','..jjjjj..','..jgggj..','..jgjgj..','..jgggj..','..jjjjj..','..jjjjj..'],
+  xx:['...rrr...','..rgrgr..','.rrgggrr.','..rrgrr..','...rrr...','....j....','...jjj...'],
+  kids:['..g.g.g..','..ggggg..','..rrrrr..','..rgrgr..','..rrrrr..','...rrr...','..rrrrr..'],
+  rel:['..gg.gg..','.gjjgjjg.','.gjjjjjg.','..gjjjg..','...gjg...','....g....','....g....'],
+  out:['....g....','..ggggg..','.ggggggg.','ggggggggg','..r.r.r..','..r.r.r..','....r....'],
+  log:['.ggggggg.','.grrrrgg.','.grggrgg.','.grrrrgg.','.grggrgg.','.grrrrgg.','.ggggggg.'],
+  sys:['...ggg...','...ggg...','....g....','..rrrrr..','..rgrgr..','..rgrgr..','..rrrrr..']
+};
+const dockImages=new Map();
+function dockIcon(key){
+  if(!dockImages.has(key)){
+    const canvas=document.createElement('canvas');canvas.width=9;canvas.height=9;
+    const pen=canvas.getContext('2d'),colors={g:'#eeca8a',r:'#ce7754',j:'#93bd9b'};
+    DOCK_ART[key].forEach((row,y)=>[...row].forEach((dot,x)=>{
+      if(!colors[dot])return;
+      pen.fillStyle=colors[dot];pen.fillRect(x,y+1,1,1);
+    }));
+    dockImages.set(key,canvas.toDataURL());
+  }
+  return `<img class="dock-icon px" src="${dockImages.get(key)}" alt="" aria-hidden="true">`;
+}
 function renderMenu(){const m=$('#menu');if(!S){m.innerHTML='';m.hidden=true;return}m.hidden=false;
-  m.innerHTML=MENU.map(([k,l])=>k==='court'?`<button class="btn" onclick="A.court()">${l}<small>精力-1</small></button>`:`<button class="btn${UI.view===k||(['palace','place'].includes(UI.view)&&k==='map')||(UI.view==='consort'&&k==='harem')||(UI.view==='kid'&&k==='kids')?' on':''}" onclick="A.go('${k}')">${l}</button>`).join('')}
+  const current={palace:'map',place:'map',consort:'harem',kid:'kids'}[UI.view]||UI.view;
+  m.innerHTML=MENU.map(([k,l])=>`<button class="btn${current===k?' on':''}" ${current===k?'aria-current="page"':''} ${k==='court'?'title="精力-1"':''} onclick="${k==='court'?'A.court()':`A.go('${k}')`}">${dockIcon(k)}<span>${l}</span></button>`).join('');
+}
 function renderPanel(){const p=$('#panel');const v=UI.view;
   if(!S){p.innerHTML=v==='new'?viewNew():viewTitle();return}
   p.innerHTML=({rel:viewRel,map:viewMap,palace:viewPalace,place:viewPlace,home:viewHome,harem:viewHarem,consort:viewConsort,cards:viewCards,xx:viewXX,kids:viewKids,kid:viewKid,out:viewOut,log:viewLog,sys:viewSys}[v]||viewHome)();
 }
 function render(){
-  $('#app').setAttribute('data-layout',S?'game':UI.view==='new'?'setup':'landing');
+  const app=$('#app');
+  app.setAttribute('data-layout',S?'game':UI.view==='new'?'setup':'landing');
+  app.setAttribute('data-view',UI.view);
   renderTop();renderMenu();renderPanel();if(S&&UI.view==='map')mountMap();
 }
 function viewTitle(){
@@ -1701,8 +1829,9 @@ function viewConsort(){
 }
 function viewCards(){
   const h=harem().sort((a,b)=>b.rank-a.rank||b.favor-a.favor).concat(maids().filter(m=>m.near));
-  return `<h2>翻牌子</h2><p class="hint">敬事房呈上绿头牌。翻谁的牌子，今夜便召谁侍寝（精力-1）。本月已侍寝 ${E().nightsMonth||0} 次，一月超过三次有损龙体。</p>
-   <div class="pais">${h.map(c=>`<button class="pai" ${c.preg?'disabled':''} onclick="A.night(${c.id})">${esc(cName(c))}<small>${c.preg?'有孕':'恩宠'+rd(c.favor)}</small></button>`).join('')||'<p class="hint">后宫空虚，先去选秀吧。</p>'}</div>`}
+  return `<h2>敬事房 · 翻牌子</h2><p class="hint">敬事房呈上绿头牌。翻谁的牌子，今夜便召谁侍寝（精力-1）。本月已侍寝 ${E().nightsMonth||0} 次，一月超过三次有损龙体。</p>
+   ${h.length?`<div class="pais">${h.map(c=>`<button class="pai" ${c.preg?'disabled':''} onclick="A.night(${c.id})"><strong>${esc(cName(c))}</strong><small>${c.preg?'有孕':'恩宠 '+rd(c.favor)}</small></button>`).join('')}</div>`:'<p class="hint">后宫空虚，先去选秀吧。</p>'}`;
+}
 function viewXX(){
   const since=S.turn-S.flags.lastXX;
   if(!S.cands.length) return `<h2>选秀</h2><p>距上次选秀：${S.flags.lastXX<0?'从未':`${Math.floor(since/12)}年${since%12}月`}。三年一度大选可在二月自动举行；也可随时下旨，但未满三年会耗费国库、有损民心。</p>
@@ -2100,7 +2229,7 @@ function mountMap(){const w=$('#mapwrap');if(!w)return;w.appendChild(MAPC);
     b.onclick=()=>goPlace(p);b.ondblclick=()=>{emp.path=[];emp.arrive=null;emp.x=p.d[0];emp.y=p.d[1];arrive(p)};
     b.onmouseenter=()=>{hoverP=p};b.onmouseleave=()=>{hoverP=null};w.appendChild(b)})}
 const backBtn=`<button class="btn sm" onclick="A.go('map')">◂ 返回宫城</button>`;
-function viewMap(){return `<h2>宫城<span class="hint" style="font-size:13px;letter-spacing:0">点宫殿前往，点路上的小人与她相遇；双击宫殿名直接抵达</span></h2><div id="mapwrap"></div><p class="hint">你在${esc(nearestPlace())}。粉点是有孕的妃嫔，金点是储秀宫正在选秀。</p>`}
+function viewMap(){return `<section class="map-play" aria-label="宫城地图"><header class="map-location"><h2>宫城</h2><span class="hint">当前位置 · ${esc(nearestPlace())}</span></header><div id="mapwrap"></div><p class="map-legend">点宫殿前往 · 点小人偶遇 · 双击宫殿名直达 · 粉点：有孕 · 金点：选秀</p></section>`;}
 function viewPalace(){const name=UI.sel,res=name==='冷宫'?alive().filter(c=>c.cold):harem().filter(c=>c.palace===name);
   const extra=name==='储秀宫'&&S.cands.length?`<div class="acts"><button class="btn gold" onclick="A.go('xx')">秀女正在候选（${S.cands.length}人）</button></div>`:'';
   return `<h2>${esc(name)}${backBtn}</h2><p class="hint">${name==='冷宫'?'荒草萋萋，宫门深锁。':name==='坤宁宫'?'中宫所居，凤仪万方。':'宫门半掩，廊下挂着鸟笼。'}</p>${extra}${res.length?`<div class="grid">${res.map(consortCard).join('')}</div>`:'<p class="hint">此处暂无人居住。</p>'}`}
@@ -2492,6 +2621,15 @@ function afterMaidNight(g){return {title:'天明',por:g,text:`天快亮时，${g
   {t:'封为官女子',f:()=>{promoteMaid(g,0);setXin(g,'欢喜','一夜承恩，封为官女子');return `她磕头谢恩。${fx(cchg(g,{mood:15,aff:6}))}`}},
   {t:'留在身边，做贴身宫女',f:()=>{g.near=true;g.palace='乾清宫';story(g,'承恩后未受册封，留在御前做贴身宫女，随时侍奉在侧。');return `她留在了乾清宫，每日为你奉茶研墨。${fx(cchg(g,{aff:8}))}\n§「后宫」页的「贴身宫女」里能找到她，翻牌子时也有她`}},
   {t:'赏些银子，让她回去当差',f:()=>{g.near=false;g.palace='尚衣局';story(g,'承恩一夜，次日被打发回尚衣局当差。');setXin(g,'委屈','承恩一夜，次日便被打发回去');return `她谢了恩，回去了。宫里没有人再提起那一夜。${fx(cchg(g,{mood:-10}))}`}}]}}
+function monthlyMaidEvent(){
+  if(!maidEncounterReady()||!chance(.12))return null;
+  const pool=[()=>maidEvent('长街')];
+  const attendants=maids().filter(m=>m.near);
+  if(attendants.length<4)pool.push(teaMaid);
+  if(attendants.some(m=>!m.preg))pool.push(nearMaidEvent);
+  const event=pick(pool)();
+  return event?{...event,maidEncounter:true}:null;
+}
 function teaMaid(){if(maids().filter(m=>m.near).length>=4)return null;const g=makeGirl({fam:{t:'宫女',p:3},age:ri(16,20)});
   return {title:'奉茶',por:g,text:`夜深了，你还在乾清宫批折子。奉茶的宫女${g.given}换了第三回茶，见你揉眉心，小声说：“陛下，奴婢给您按一按？”她的手很凉，力道却刚好。`,choices:[
    {t:'今夜留她（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{g.maid=true;g.near=false;g.palace='乾清宫';g.favor=20;g.aff=25;S.consorts.push(g);deepen(g);story(g,'本是乾清宫奉茶的宫女，深夜被陛下留下。');maidNight(g);return null}},
