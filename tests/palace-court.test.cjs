@@ -74,25 +74,30 @@ test('the relationship graph shows fathers, consorts and close or hostile ties',
   assert.match(run(`$('#panel').innerHTML`),/关系图/);
 });
 
-test('four brothers keep distinct faces as they age, on promotion and after loading',()=>{
+test('ten princes and ten princesses keep distinct faces as they age and after loading',()=>{
   const {run}=boot(15);
   const cells=JSON.parse(run(`JSON.stringify((()=>{
     const [mother,other]=harem();
-    const sons=['承安','承明','承昭','承翊'].map(name=>makeKid(mother,'m',name));
+    const sons=Array.from({length:10},(_,i)=>makeKid(mother,'m','皇子'+i));
+    const daughters=Array.from({length:10},(_,i)=>makeKid(mother,'f','公主'+i));
+    const children=[...sons,...daughters];
     sons[0].foster=other.id;
+    delete sons[7].ord;
+    delete daughters[8].ord;
     const stages=[0,8,18].map(age=>{
-      sons.forEach(k=>{k.born=S.turn-age*12});
-      return sons.map(portraitCell);
+      children.forEach(k=>{k.born=S.turn-age*12});
+      return children.map(portraitCell);
     });
     S.heir=sons[0].id;
     mother.alive=false;
     const graph=familyGraphSVG();
-    assert.match(graph,/承安/);
+    assert.match(graph,/皇子0/);
     assert.match(graph,/抚养/);
     save('1');load('1');migrate();
     return {stages,loaded:S.children.map(portraitCell)};
   })())`));
-  assert.deepEqual(cells.stages,[[28,29,30,31],[32,33,34,35],[36,37,38,39]]);
+  assert.equal(new Set(cells.stages.flat()).size,60);
+  assert.deepEqual(cells.stages.map(stage=>stage.slice(0,4)),[[28,29,30,31],[32,33,34,35],[36,37,38,39]]);
   assert.deepEqual(cells.loaded,cells.stages[2]);
 });
 
