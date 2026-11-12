@@ -93,7 +93,7 @@ function pushEv(ev){
 function pushNow(ev){if(!ev)return;Q.unshift(ev);if(!modalOpen)nextEv()}
 function nextEv(){
   if(Q.length){openModal(Q.shift());return}
-  modalOpen=false;curEv=null;$('#modal').hidden=true;checkEnd();render();
+  modalOpen=false;curEv=null;const modal=$('#modal');modal.hidden=true;modal.setAttribute('data-scene','');checkEnd();render();
 }
 function openModal(ev){
   modalOpen=true;curEv=ev;if(ev.onShow)ev.onShow();const b=$('#mbox');
@@ -106,7 +106,7 @@ function openModal(ev){
     const style=ev.danger?(c.f?' danger':' quiet'):c.primary||ev.choices.length===1||(ev.input&&i===0)?' primary':'';
     h+=`<button class="btn${style}" ${ok?'':'disabled'} onclick="choose(${i})">${esc(c.t)}${!ok&&c.why?`<small>${esc(c.why)}</small>`:''}</button>`;
   });
-  b.innerHTML=h+'</div>';$('#modal').hidden=false;b.scrollTop=0;
+  b.innerHTML=h+'</div>';const modal=$('#modal');modal.setAttribute('data-scene',ev.scene||'');modal.hidden=false;b.scrollTop=0;
   if(ev.sfx) AU.sfx(ev.sfx); else AU.sfx('page');
   const inp=$('#minput'); if(inp) setTimeout(()=>inp.select(),30);
 }
@@ -285,6 +285,6 @@ A.start=function(){
   log(`${era}元年三月，新帝${sur}${name}登基，改元${era}，大赦天下。`,1);
   log(`册嫡妻${fullName(em)}为皇后，潜邸旧人${fullName(old)}为贵人。`);
   migrate();UI.view='map';setScene('court');AU.sfx('gong');render();
-  pushEv({title:'登基',por:'emp',text:`${era}元年三月，先帝龙驭上宾，你在太和钟声中登上了宸极殿的御座。\n嫡妻${fullName(em)}册为皇后，潜邸旧人${fullName(old)}册为贵人。\n礼部奏请：新帝登基，当广选秀女，以充后宫、绵延皇嗣。`,choices:[
+  pushEv({title:'登基',scene:'coronation',por:'emp',text:`${era}元年三月，先帝龙驭上宾，你在太和钟声中登上了宸极殿的御座。\n嫡妻${fullName(em)}册为皇后，潜邸旧人${fullName(old)}册为贵人。\n礼部奏请：新帝登基，当广选秀女，以充后宫、绵延皇嗣。`,choices:[
     {t:'准奏，即刻选秀',primary:true,f:()=>{genCands(7);UI.view='xx';return null}},{t:'暂缓，先理朝政',f:()=>'你把选秀之事暂且搁下。三年大选之期一到，礼部自会再奏。'}]});
 };

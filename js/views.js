@@ -63,59 +63,93 @@ function viewTitle(){
    <button class="btn gold" onclick="A.newGame()">新开一局</button>
    ${slots.length?`<div class="save-list">${slots.map(x=>`<button class="btn sm" onclick="A.load('${x.s}')">读取${x.s==='auto'?'自动存档':'存档'+x.s}：${esc(x.i)}</button>`).join('')}</div>`:''}</div>`}
 function viewNew(){
-  return `<h2>登基大典</h2><div class="form">
-   <div class="two"><label>国姓<input id="f-sur" class="inp" maxlength="2" value="萧"></label><label>名讳<input id="f-name" class="inp" maxlength="2" value="${pick(['彻','珩','翊','昭','衍','恪'])}"></label></div>
-   <label>年号<input id="f-era" class="inp" maxlength="2" value="${pick(ERAS)}"></label>
-   <div>帝王性情</div>
-   ${Object.entries(STYLES).map(([k,d],i)=>`<label class="opt"><input type="radio" name="f-style" value="${k}" ${i===0?'checked':''}><span><b>${k}</b>　<span class="hint">${d}</span></span></label>`).join('')}
-   <div class="acts"><button class="btn gold" onclick="A.start()">登基</button><button class="btn sm" onclick="A.go('title')">返回</button></div></div>`}
+  return `<section class="story-scene coronation-scene" aria-labelledby="coronation-title">
+    <header><p>宸极殿</p><h2 id="coronation-title">登基大典</h2></header>
+  </section>
+  <form class="coronation-form" onsubmit="event.preventDefault();A.start()">
+    <div class="coronation-names">
+      <label>国姓<input id="f-sur" class="inp" maxlength="2" value="萧"></label>
+      <label>名讳<input id="f-name" class="inp" maxlength="2" value="${pick(['彻','珩','翊','昭','衍','恪'])}"></label>
+      <label>年号<input id="f-era" class="inp" maxlength="2" value="${pick(ERAS)}"></label>
+    </div>
+    <fieldset class="coronation-styles"><legend>帝王性情</legend>
+      <div>${Object.entries(STYLES).map(([k,d],i)=>`<label class="opt"><input type="radio" name="f-style" value="${k}" ${i===0?'checked':''}><span><b>${k}</b><span class="hint">${d}</span></span></label>`).join('')}</div>
+    </fieldset>
+    <div class="coronation-actions"><button type="button" class="btn quiet sm" onclick="A.go('title')">返回</button><button type="submit" class="btn primary">登基</button></div>
+  </form>`}
 function consortCard(c){
   const tags=[xinTag(c),c.visitor?'<span class="tag y">母亲在宫</span>':'',c.preg>=2?'<span class="tag r">有孕</span>':'',c.cold?'<span class="tag k">冷宫</span>':'',c.rank===8?'<span class="tag y">中宫</span>':''].join('');
   return `<button class="card" onclick="A.go('consort',${c.id})">${porImg(c,72)}<div class="grow"><div class="nm">${esc(cName(c))}</div><div>${esc(fullName(c))} · ${c.age}岁 · ${esc(c.palace)}</div><div>${tags}<span class="tag">${c.trait}</span></div>${bar('恩宠',c.favor)}${bar('心情',c.mood,'#4f9078')}</div></button>`}
 
 /* ---- 人物关系图：父兄 → 妃嫔 → 皇嗣，妃嫔之间的亲疏用连线表示 ---- */
 function familyGraphSVG(){
-  const people=S.consorts.filter(c=>c.alive&&!c.gone&&!c.maid).sort((a,b)=>clanKey(a)===clanKey(b)?b.rank-a.rank:clanKey(a)>clanKey(b)?1:-1);
-  if(!people.length)return '<p class="hint">目前没有入宫的妃嫔。</p>';
-  const col=96,W=Math.max(720,people.length*col+60),kids=new Map();
-  for(const k of kidsAlive()){if(!kids.has(k.mom))kids.set(k.mom,[]);kids.get(k.mom).push(k)}
-  const maxKids=Math.max(0,...people.map(c=>kids.get(c.id)?.length||0));
-  const H=330+maxKids*34,x=i=>40+col/2+i*col,yF=50,yC=200,yK=280;
-  const pos=new Map(people.map((c,i)=>[c.id,x(i)]));
-  const t=(s,n=5)=>esc(String(s).slice(0,n));
-  let out=`<svg class="family-graph" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="人物关系图">`;
-  // 帝王：横线连着每位妃嫔，名牌最后再画，压在连线上面
-  const ex=(x(0)+x(people.length-1))/2;
-  out+=`<line x1="${ex}" y1="${yC-58}" x2="${ex}" y2="${yC-40}" stroke="#a87a26"/><line x1="${x(0)}" y1="${yC-40}" x2="${x(people.length-1)}" y2="${yC-40}" stroke="#a87a26"/>`;
-  const emperor=`<rect x="${ex-46}" y="${yC-86}" width="92" height="28" rx="6" fill="#a87a26"/><text x="${ex}" y="${yC-67}" text-anchor="middle" fill="#fff6e0" font-size="13">${esc(E().sur+E().name)}</text>`;
-  // 妃嫔之间的亲疏
-  for(let i=0;i<people.length;i++)for(let j=i+1;j<people.length;j++){
-    const v=relGet(people[i],people[j]);if(Math.abs(v)<30)continue;
-    const x1=pos.get(people[i].id),x2=pos.get(people[j].id),mid=(x1+x2)/2,lift=yC+52+Math.min(60,(x2-x1)/6);
-    out+=`<path d="M${x1} ${yC+22} Q${mid} ${lift} ${x2} ${yC+22}" fill="none" stroke="${v>0?'#4f9078':'#b8473c'}" stroke-width="${1+Math.abs(v)/40}" stroke-dasharray="${v>0?'':'4 3'}" opacity=".75"><title>${esc(fullName(people[i]))} 与 ${esc(fullName(people[j]))}：${v>0?'亲近':'不和'} ${Math.round(v)}</title></path>`;
+  const kids=new Map();
+  for(const k of kidsAlive()){
+    if(!kids.has(k.mom))kids.set(k.mom,[]);
+    kids.get(k.mom).push(k);
   }
-  people.forEach(c=>{
-    const cx=pos.get(c.id),h=houseOf(c),st=stanceOf(c),color=BLOC_COLOR[st]||'#8a8277';
-    out+=`<line x1="${cx}" y1="${yC-40}" x2="${cx}" y2="${yC-22}" stroke="#a87a26" opacity=".6"/>`;
-    if(h){out+=`<line x1="${cx}" y1="${yF+22}" x2="${cx}" y2="${yC-22}" stroke="${color}" stroke-dasharray="2 3"/>
-      <g><title>${esc(h.father.name)}（${esc(h.father.office)}）· 兄长${esc(h.brother.name)}（${esc(h.brother.post)}）· ${esc(blocName(st))}</title>
-      <rect x="${cx-42}" y="${yF-18}" width="84" height="40" rx="5" fill="#fff8ea" stroke="${color}" stroke-width="2" opacity="${h.father.alive?1:.55}"/>
-      <text x="${cx}" y="${yF-2}" text-anchor="middle" font-size="11" fill="#3a2a22">${t(h.father.name,4)}${h.father.alive?'':'†'}</text>
-      <text x="${cx}" y="${yF+14}" text-anchor="middle" font-size="10" fill="${color}">${t(blocName(st),4)}·${t(h.father.office,4)}</text></g>`;}
-    out+=`<g class="node" onclick="A.go('consort',${c.id})" style="cursor:pointer"><title>${esc(cName(c))} · 恩宠 ${Math.round(c.favor)}</title>
-      <rect x="${cx-42}" y="${yC-22}" width="84" height="44" rx="7" fill="${c.rank===8?'#f5dfb0':'#fff2df'}" stroke="${c.cold?'#555':'#9a483e'}" stroke-width="2"/>
-      <text x="${cx}" y="${yC-4}" text-anchor="middle" font-size="12" fill="#3a2a22">${t(fullName(c),4)}</text>
-      <text x="${cx}" y="${yC+13}" text-anchor="middle" font-size="10" fill="#7a5a4a">${t(cName(c),5)}</text></g>`;
-    (kids.get(c.id)||[]).forEach((k,i)=>{const ky=yK+i*34,foster=k.foster!==k.mom&&fosterOf(k);
-      out+=`<line x1="${cx}" y1="${yC+22}" x2="${cx}" y2="${ky-12}" stroke="#9a483e" opacity=".5"/><g class="node" onclick="A.go('kid',${k.id})" style="cursor:pointer">
-      <title>${esc(kidName(k))}${foster?` · 由${esc(fullName(foster))}抚养`:''}</title>
-      ${foster?`<text x="${cx+40}" y="${ky+4}" font-size="9" fill="#7a5a4a">养于${t(fullName(foster),3)}</text>`:''}
-      <rect x="${cx-38}" y="${ky-12}" width="76" height="26" rx="13" fill="${S.heir===k.id?'#f5dfb0':'#eef3ea'}" stroke="${k.sex==='m'?'#3b5fa8':'#b0587a'}"/>
-      <text x="${cx}" y="${ky+5}" text-anchor="middle" font-size="11" fill="#2a2a2a">${t(k.name,4)}${S.heir===k.id?'·储':''}</text></g>`;});
+  const people=S.consorts.filter(c=>(c.alive&&!c.gone&&!c.maid)||kids.has(c.id))
+    .sort((a,b)=>clanKey(a).localeCompare(clanKey(b),'zh-CN')||b.rank-a.rank);
+  if(!people.length)return '<p class="hint">目前没有入宫的妃嫔。</p>';
+
+  const col=174, W=people.length*col+24;
+  const houseY=12, rulerY=103, consortY=191, childY=299, childStep=66;
+  const H=childY+Math.max(0,...people.map(c=>kids.get(c.id)?.length||0))*childStep;
+  const x=i=>12+col*(i+.5), rulerX=W/2, gold='#ac824d', blood='#a46354';
+  const branchY=consortY-17, consortBottom=consortY+66;
+  const line=(x1,y1,x2,y2,color)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}"/>`;
+  const at=(cx,y)=>`--graph-x:${cx}px;--graph-y:${y}px`;
+  const label=(name,role)=>`<span class="graph-person"><strong>${esc(name)}</strong><small>${esc(role)}</small></span>`;
+  let wires=line(rulerX,rulerY+60,rulerX,branchY,gold)+line(x(0),branchY,x(people.length-1),branchY,gold);
+  let cards=`<button class="graph-card graph-ruler" style="${at(rulerX,rulerY)}" onclick="A.go('home')">
+    ${porImg('emp',40)}${label(E().sur+E().name,'皇帝')}</button>`;
+
+  for(let i=0;i<people.length;i++)for(let j=i+1;j<people.length;j++){
+    const a=people[i],b=people[j],v=relGet(a,b);
+    if(Math.abs(v)<30)continue;
+    const x1=x(i),x2=x(j),lift=consortBottom+21+Math.min(34,(x2-x1)/12);
+    wires+=`<path d="M${x1} ${consortBottom} Q${(x1+x2)/2} ${lift} ${x2} ${consortBottom}" fill="none" stroke="${v>0?'#4f9078':'#b8473c'}"
+      stroke-width="${1+Math.abs(v)/40}" ${v>0?'':'stroke-dasharray="4 3"'}><title>${esc(fullName(a))} 与 ${esc(fullName(b))}：${v>0?'亲近':'不和'}</title></path>`;
+  }
+
+  people.forEach((c,i)=>{
+    const cx=x(i),h=houseOf(c),stance=stanceOf(c),color=BLOC_COLOR[stance]||'#8a8277';
+    wires+=line(cx,branchY,cx,consortY,gold);
+    if(h){
+      const rail=cx-col/2+4, military=stance==='army'?1:0;
+      const kin=(p,role,tile,office)=>`<div class="graph-kin-person">
+        ${porImg({official:tile,seed:c.seed+tile,alive:p.alive},27)}${label(p.name+(p.alive?'':' †'),role+' · '+office)}</div>`;
+      wires+=`<path d="M${cx} ${houseY+82} v7 H${rail} V${consortY+23} H${cx-75}" fill="none" stroke="${color}" stroke-dasharray="3 3"/>`;
+      cards+=`<div class="graph-card graph-house" style="${at(cx,houseY)};--house-color:${color}">
+        ${kin(h.father,'父亲',military,h.father.office)}
+        ${kin(h.brother,'兄长',2+military,h.brother.post)}
+      </div>`;
+    }
+
+    cards+=`<button class="graph-card graph-consort${c.rank===8?' graph-crown':''}" style="${at(cx,consortY)}" onclick="A.go('consort',${c.id})">
+      ${porImg(c,41)}${label(fullName(c),cName(c))}</button>`;
+    const children=kids.get(c.id)||[], rail=cx-col/2+4;
+    if(children.length){
+      const last=childY+(children.length-1)*childStep+26;
+      wires+=`<path d="M${cx} ${consortBottom} v9 H${rail} V${last}" fill="none" stroke="${blood}"/>`;
+    }
+    children.forEach((k,j)=>{
+      const y=childY+j*childStep,foster=k.foster!==k.mom&&fosterOf(k);
+      const role=S.heir===k.id?'皇太子':k.sex==='m'?'皇子':'公主';
+      wires+=line(rail,y+26,cx-75,y+26,blood);
+      cards+=`<button class="graph-card graph-child${S.heir===k.id?' graph-crown':''}" style="${at(cx,y)}" onclick="A.go('kid',${k.id})">
+        ${porImg(k,34)}${label(k.name,role+(foster?' · 由'+fullName(foster)+'抚养':''))}</button>`;
+    });
   });
-  out+=emperor+'</svg>';
+
   const legend=COURT_BLOCS.map(b=>`<span class="tag" style="border-color:${BLOC_COLOR[b.id]};color:${BLOC_COLOR[b.id]}">${b.name}</span>`).join('');
-  return `<div class="graph-legend">${legend}<span class="hint">绿实线：亲近　红虚线：不和　上排是父亲，下排是皇嗣。点人名查看详情。</span></div><div class="graph-wrap">${out}</div>`;
+  return `<div class="graph-legend">${legend}<span class="hint">绿实线：亲近　红虚线：不和　皇嗣列在生母下方。</span></div>
+    <div class="graph-wrap" tabindex="0" aria-label="家族关系，可横向滚动">
+      <div class="graph-sheet" style="width:${W}px;height:${H}px">
+        <svg class="family-graph" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true">${wires}</svg>
+        <div class="graph-people">${cards}</div>
+      </div>
+    </div>`;
 }
 A.familyMode=function(mode){UI.familyMode=mode;render()};
 /* ---- 起居注纪念卡 ---- */
@@ -255,7 +289,10 @@ function viewXX(){
   const since=S.turn-S.flags.lastXX;
   if(!S.cands.length) return `<h2>选秀</h2><p>距上次选秀：${S.flags.lastXX<0?'从未':`${Math.floor(since/12)}年${since%12}月`}。三年一度大选可在二月自动举行；也可随时下旨，但未满三年会耗费国库、有损民心。</p>
     <div class="acts"><button class="btn gold" onclick="A.xxDecree()">下旨选秀</button></div>`;
-  return `<h2>储秀宫·选秀<button class="btn sm" onclick="A.xxEnd()">结束选秀</button></h2>
+  return `<section class="story-scene selection-scene" aria-labelledby="selection-title">
+    <header><p>储秀宫</p><h2 id="selection-title">选秀</h2></header>
+    <button class="btn sm" onclick="A.xxEnd()">结束选秀</button>
+   </section>
    <p class="hint">容貌、才情一望便知；德行、心机需要暗访（剩余 ${S.flags.peek} 次）。本月结束时未选的秀女会遣返回家。</p>
    <div class="grid">${S.cands.map(c=>`<div class="card" style="cursor:default;flex-direction:column">
      <div class="row" style="gap:8px">${porImg(c,64)}<div class="grow"><div class="nm">${esc(fullName(c))}</div><div>${c.age}岁 · ${esc(c.fam.t)}之女</div>${c.kinNote?`<div><span class="tag y">${esc(c.kinNote)}</span></div>`:''}<div><span class="tag">${c.trait}</span></div></div></div>

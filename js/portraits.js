@@ -145,6 +145,7 @@ function portrait(sp){
   const url=PC.toDataURL();POR.set(key,url);return url;
 }
 function porSpec(x){
+  if(x.official!==undefined)return {kind:'prince',seed:x.seed,robe:x.official%2?'#8d4e37':'#3c6a68'};
   if(x&&x.isMom)return {kind:'f',seed:x.seed,hs:0,bang:2,robe:'#6e5a4c',rank:2,cs:1,pat:1,lin:'#efe6d6',elder:true};
   if(x==='emp'){const e=E();return {kind:'emp',seed:e.seed,robe:'#e8b52c',age:e.age}}
   if(x.sex){const a=kidAge(x);
@@ -164,6 +165,9 @@ function robeOf(x){if(x.maid)return '#7f9db3';const p=RPAL[rTier(x.rank)];return
 function seasonTint(c){return S?shade(c,[.1,.2,0,-.1][season()]):c}
 const PORTRAIT_WIDTH=112,PORTRAIT_HEIGHT=140,PORTRAIT_COLUMNS=4;
 const portraitAtlas=document.createElement('img');
+const familyAtlas=document.createElement('img');
+const FAMILY_PORTRAIT_START=28;
+const portraitSheet=cell=>cell>=FAMILY_PORTRAIT_START?familyAtlas:portraitAtlas;
 const atlasCanvas=document.createElement('canvas');
 atlasCanvas.width=PORTRAIT_WIDTH;atlasCanvas.height=PORTRAIT_HEIGHT;
 const atlasInk=atlasCanvas.getContext('2d');
@@ -200,13 +204,17 @@ function assignConsortPortrait(c){
 function portraitCell(x){
   const pickIndex=(seed,count)=>Math.floor(mulberry32(seed||7)()*count);
   if(x==='emp')return E().age>=40?13:12;
+  if(x.official!==undefined)return FAMILY_PORTRAIT_START+12+x.official;
   if(x.isMom)return 9;
   if(x.maid)return 10;
   if(x.sex){
     const age=kidAge(x);
+    if(x.sex==='m'){
+      const variant=x.ord>0?(x.ord-1)%4:pickIndex(x.seed,4);
+      return FAMILY_PORTRAIT_START+(age<3?0:age<12?4:8)+variant;
+    }
     if(age<3)return 18+pickIndex(x.seed,2);
-    if(age<12)return x.sex==='m'?16:17;
-    return x.sex==='m'?(S.heir===x.id?15:14):11;
+    return age<12?17:11;
   }
   const cells=consortPortraits(x);
   return cells.includes(x.artPortrait)?x.artPortrait:cells[pickIndex(x.seed,cells.length)];
@@ -215,11 +223,12 @@ function portraitCell(x){
 function atlasPortrait(cell,rank){
   const key=cell+':'+rank;
   if(ART_CACHE.has(key))return ART_CACHE.get(key);
-  const x=(cell%PORTRAIT_COLUMNS)*PORTRAIT_WIDTH;
-  const y=Math.floor(cell/PORTRAIT_COLUMNS)*PORTRAIT_HEIGHT;
+  const tile=cell>=FAMILY_PORTRAIT_START?cell-FAMILY_PORTRAIT_START:cell;
+  const x=(tile%PORTRAIT_COLUMNS)*PORTRAIT_WIDTH;
+  const y=Math.floor(tile/PORTRAIT_COLUMNS)*PORTRAIT_HEIGHT;
   atlasInk.clearRect(0,0,PORTRAIT_WIDTH,PORTRAIT_HEIGHT);
   atlasInk.imageSmoothingEnabled=false;
-  atlasInk.drawImage(portraitAtlas,x,y,PORTRAIT_WIDTH,PORTRAIT_HEIGHT,0,0,PORTRAIT_WIDTH,PORTRAIT_HEIGHT);
+  atlasInk.drawImage(portraitSheet(cell),x,y,PORTRAIT_WIDTH,PORTRAIT_HEIGHT,0,0,PORTRAIT_WIDTH,PORTRAIT_HEIGHT);
   // Keep the same face on promotion. Add the ornaments above the existing hair.
   if(rank===8)atlasInk.drawImage(portraitAtlas,26,702,60,30,26,1,60,30);
   const src=atlasCanvas.toDataURL();
@@ -227,19 +236,22 @@ function atlasPortrait(cell,rank){
   return src;
 }
 
-const portraitAtlasReady=()=>portraitAtlas.naturalWidth&&typeof location!=='undefined'&&location.protocol!=='file:';
-portraitAtlas.addEventListener('load',()=>{
-  if(!portraitAtlasReady())return;
+const portraitAtlasReady=cell=>portraitSheet(cell).naturalWidth&&typeof location!=='undefined'&&location.protocol!=='file:';
+function refreshAtlasPortraits(){
   document.querySelectorAll('img[data-portrait-cell]').forEach(img=>{
-    img.src=atlasPortrait(Number(img.dataset.portraitCell),Number(img.dataset.portraitRank));
+    const cell=Number(img.dataset.portraitCell);
+    if(portraitAtlasReady(cell))img.src=atlasPortrait(cell,Number(img.dataset.portraitRank));
   });
-});
+}
+portraitAtlas.addEventListener('load',refreshAtlasPortraits);
+familyAtlas.addEventListener('load',refreshAtlasPortraits);
 portraitAtlas.src='./palace-portraits-b.webp';
+familyAtlas.src='./palace-family.webp';
 
 function porImg(x,size=64){
   const cold=x&&x.cold, dead=x&&x.alive===false;
   const cell=portraitCell(x),rank=x!=='emp'&&!x.sex&&!x.isMom&&!x.maid&&!cold&&x.rank===8?8:0;
-  const src=portraitAtlasReady()?atlasPortrait(cell,rank):portrait(porSpec(x));
+  const src=portraitAtlasReady(cell)?atlasPortrait(cell,rank):portrait(porSpec(x));
   return `<img class="px por palace-portrait${cold||dead?' cold':''}" alt="" src="${src}" data-portrait-cell="${cell}" data-portrait-rank="${rank}" width="${size}" height="${size*1.25}">`;
 }
 function porName(x){ if(x&&x.isMom) return x.name; if(x&&x.sur&&!x.sex&&S&&!S.consorts.includes(x)) return fullName(x); if(x==='emp') return `${E().sur}${E().name}`; if(x.sex) return kidName(x); return cName(x)}
