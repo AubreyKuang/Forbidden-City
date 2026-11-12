@@ -883,11 +883,11 @@ function porName(x){ if(x&&x.isMom) return x.name; if(x&&x.sur&&!x.sex&&S&&!S.co
 /* ============ 音频（Web Audio 现场合成，无音频文件） ============ */
 // Each phrase has sixteen slots. Empty slots let the strings and room decay.
 const SCORE={
-  court:{beat:.70,root:-5,phrases:[[[0,0],[3,2],[6,3],[10,2],[13,1]],[[1,1],[4,3],[7,4],[11,2],[14,0]]]},
-  harem:{beat:.76,root:-5,phrases:[[[0,2],[3,3],[7,5],[10,4],[13,2]],[[1,4],[4,5],[8,3],[11,2],[14,0]]]},
-  garden:{beat:.73,root:-4,phrases:[[[0,1],[4,3],[7,4],[10,5],[14,3]],[[1,3],[4,4],[8,2],[11,1],[14,0]]]},
-  night:{beat:.91,root:-6,phrases:[[[0,0],[5,2],[10,1],[14,0]],[[1,2],[6,3],[10,2],[14,0]]]},
-  city:{beat:.63,root:-5,phrases:[[[0,0],[3,2],[5,3],[8,4],[11,2],[14,1]],[[1,1],[3,3],[6,4],[9,3],[12,1],[15,0]]]}
+  court:{beat:.64,phrases:[[[0,2],[3,3],[5,4],[8,3],[11,2],[14,5]],[[1,3],[4,5],[7,4],[10,2],[13,1],[15,0]]]},
+  harem:{beat:.68,phrases:[[[0,2],[3,4],[7,5],[10,4],[12,3],[14,5]],[[1,4],[4,5],[7,6],[10,5],[13,3],[15,2]]]},
+  garden:{beat:.64,phrases:[[[0,3],[3,5],[5,6],[8,5],[11,4],[14,5]],[[1,2],[4,4],[7,5],[10,3],[13,2],[15,0]]]},
+  night:{beat:.78,phrases:[[[0,2],[4,3],[7,4],[11,3],[14,5]],[[1,3],[5,4],[9,2],[13,1],[15,0]]]},
+  city:{beat:.59,phrases:[[[0,2],[2,3],[5,4],[8,5],[11,3],[14,5]],[[0,3],[3,4],[5,6],[8,5],[11,3],[13,2],[15,0]]]}
 };
 const AU={ctx:null,on:false,bus:null,master:null,wet:null,timer:null,next:0,step:0,mode:'court',ks:new Map(),
   init(){ if(this.ctx) return true; try{
@@ -895,8 +895,8 @@ const AU={ctx:null,on:false,bus:null,master:null,wet:null,timer:null,next:0,step
     this.bus=c.createGain();this.bus.gain.value=.40;const mlp=c.createBiquadFilter();mlp.type='lowpass';mlp.frequency.value=2600;mlp.Q.value=.5;const comp=c.createDynamicsCompressor();comp.threshold.value=-18;comp.knee.value=12;comp.ratio.value=6;comp.attack.value=.004;comp.release.value=.25;this.bus.connect(mlp);mlp.connect(comp);
     this.master=c.createGain();this.master.gain.value=0;comp.connect(this.master);this.master.connect(c.destination);
     const d1=c.createDelay(1),d2=c.createDelay(1),fb=c.createGain(),lp=c.createBiquadFilter();
-    d1.delayTime.value=.27;d2.delayTime.value=.41;fb.gain.value=.3;lp.type='lowpass';lp.frequency.value=1600;
-    this.wet=c.createGain();this.wet.gain.value=.32;this.wet.connect(d1);this.wet.connect(d2);
+    d1.delayTime.value=.24;d2.delayTime.value=.36;fb.gain.value=.22;lp.type='lowpass';lp.frequency.value=1800;
+    this.wet=c.createGain();this.wet.gain.value=.25;this.wet.connect(d1);this.wet.connect(d2);
     d1.connect(lp);d2.connect(lp);lp.connect(fb);fb.connect(d1);lp.connect(this.bus);
     return true;}catch(e){return false} },
   toggle(){ if(!this.init()){toast('此浏览器不支持网页音频');return}
@@ -911,7 +911,7 @@ const AU={ctx:null,on:false,bus:null,master:null,wet:null,timer:null,next:0,step
   ksBuf(f){const k=Math.round(f); if(this.ks.has(k)) return this.ks.get(k);
     const sr=this.ctx.sampleRate,len=Math.floor(sr*2.2),b=this.ctx.createBuffer(1,len,sr),d=b.getChannelData(0),N=Math.max(2,Math.round(sr/f));
     const ex=new Float32Array(N);for(let i=0;i<N;i++)ex[i]=Math.random()*2-1;
-    for(let pass=0;pass<4;pass++)for(let i=1;i<N;i++)ex[i]=ex[i]*.5+ex[i-1]*.5;
+    for(let pass=0;pass<3;pass++)for(let i=1;i<N;i++)ex[i]=ex[i]*.5+ex[i-1]*.5;
     let mx=0;for(let i=0;i<N;i++)mx=Math.max(mx,Math.abs(ex[i]));for(let i=0;i<N;i++)d[i]=ex[i]/(mx||1)*.8*Math.sin(Math.PI*i/N);
     const dec=f>600?.9935:.9962;
     for(let i=N;i<len;i++) d[i]=(d[i-N]*.5+d[i-N+1]*.5)*dec;
@@ -920,7 +920,7 @@ const AU={ctx:null,on:false,bus:null,master:null,wet:null,timer:null,next:0,step
     this.ks.set(k,b);return b},
   pluck(f,t,vol=.3,bend=false){const c=this.ctx,s=c.createBufferSource();s.buffer=this.ksBuf(f);
     if(bend){s.playbackRate.setValueAtTime(1,t+.18);s.playbackRate.linearRampToValueAtTime(1.025,t+.43);s.playbackRate.linearRampToValueAtTime(1,t+.72)}
-    const hp=c.createBiquadFilter();hp.type='highpass';hp.frequency.value=90;const lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.value=Math.min(1900,f*3.4);lp.Q.value=.4;s.connect(hp);hp.connect(lp);lp.connect(this.out(vol,.7));s.start(t);s.stop(t+2.2)},
+    const hp=c.createBiquadFilter();hp.type='highpass';hp.frequency.value=115;const lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.value=Math.min(2350,f*4.1);lp.Q.value=.4;s.connect(hp);hp.connect(lp);lp.connect(this.out(vol,.62));s.start(t);s.stop(t+2.2)},
   flute(f,t,dur,vol=.055){const c=this.ctx,o=c.createOscillator(),g=c.createGain(),v=c.createOscillator(),vg=c.createGain();
     o.type='sine';o.frequency.value=f;v.frequency.value=4.2;vg.gain.value=f*.005;v.connect(vg);vg.connect(o.frequency);
     g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.26);g.gain.setValueAtTime(vol,t+dur-.36);g.gain.linearRampToValueAtTime(0,t+dur);
@@ -934,16 +934,17 @@ const AU={ctx:null,on:false,bus:null,master:null,wet:null,timer:null,next:0,step
   // 五声音阶（宫商角徵羽）——D 宫
   note(d,oct=0){const sc=[0,2,4,7,9];const o=Math.floor(d/5),i=((d%5)+5)%5;return 293.66*2**((sc[i]+12*(o+oct))/12)},
   sched(){ if(!this.on) return; const c=this.ctx; const m=this.mode;
-    const {beat,root,phrases}=SCORE[m]||SCORE.court;
+    const {beat,phrases}=SCORE[m]||SCORE.court;
     if(this.next<c.currentTime-.15)this.next=c.currentTime+.025;
     while(this.next<c.currentTime+.4){
       const t=Math.max(this.next,c.currentTime+.005), st=this.step%16, bar=Math.floor(this.step/16);
       const phrase=phrases[bar%phrases.length], hit=phrase.find(([slot])=>slot===st);
-      if(st===0)this.pluck(this.note(root+(bar%2?3:0)),t,.073);
+      // Light tonic/fifth support, away from the first beat.
+      if(st===8&&!hit)this.pluck(this.note(bar%2?0:3),t,.052);
       if(hit){
         const f=this.note(hit[1]), answer=hit===phrase[phrase.length-1]&&bar%2===0;
-        if(answer)this.flute(f,t,beat*2.6);
-        else this.pluck(f,t,m==='night'?.14:.18,st>=8);
+        if(answer)this.flute(f,t,beat*1.95,.042);
+        else this.pluck(f,t,m==='night'?.13:.17,st>=8);
       }
       this.step++; this.next+=beat/2;
     } },
