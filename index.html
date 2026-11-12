@@ -121,6 +121,43 @@ textarea.inp{max-width:100%;min-height:70px;font-size:12px;word-break:break-all}
 }
 @media (max-width:420px){ #menu{grid-template-columns:repeat(3,1fr)} .btn{font-size:13px;padding:6px 4px} }
 @media (prefers-reduced-motion:reduce){ .pai:hover,.card:hover{transform:none} #toast div{animation:none} }
+
+/* Contemporary palace UI: quiet surfaces, clear hierarchy, pixel artwork retained. */
+:root{--bg:#172826;--bg2:#233c37;--wall:#793a32;--red:#943f35;--red2:#ad5849;--gold:#d8b979;--gold2:#98733b;--paper:#f7f4ed;--paper2:#e4ddd0;--paperhi:#fffdf8;--ink:#283832;--ink2:#637069;--mut:#71796d;--jade:#416d5b;--jade2:#305444;color-scheme:light}
+body{margin:0;background:radial-gradient(ellipse at 12% 0%,#375448 0,transparent 55%),var(--bg);padding-block:24px 48px;line-height:1.75}
+#app{max-width:1120px;gap:16px}
+#top{background:#203b34;border:1px solid #ffffff20;border-radius:16px;box-shadow:0 8px 24px #00000012;padding:16px 20px;gap:10px 22px;color:#ebe8dc}
+#top .date{letter-spacing:2px}.pip{border-radius:50%;box-shadow:none}.pip.off{background:#ffffff25}
+#stage{border:1px solid #ffffff20;border-radius:18px;overflow:hidden;box-shadow:0 12px 32px #00000020}
+#scene{max-height:290px;object-fit:cover}#loc{left:16px;top:16px}#snd{right:16px;top:16px}
+#menu{padding:6px;background:#203b34;border:1px solid #ffffff15;border-radius:14px;gap:4px}
+.btn{border:1px solid transparent;border-radius:10px;background:var(--red);box-shadow:none;padding:10px 14px;font-size:14px;letter-spacing:.5px;min-height:42px;transition:background .15s,transform .15s,box-shadow .15s}
+.btn:hover{filter:brightness(1.06);box-shadow:0 4px 12px #192e2414}.btn:active{transform:translateY(1px);box-shadow:none}
+.btn.on,.btn.gold{background:var(--gold);color:#332a1e;box-shadow:none}.btn.jade{background:var(--jade);box-shadow:none}.btn.sm{padding:7px 10px;min-height:34px}
+#menu .btn{background:transparent;color:#d9e2d9;padding:10px 4px;box-shadow:none}
+#menu .btn:hover{background:#ffffff0c}#menu .btn.on{background:#f7f4ed;color:#34473b;font-weight:600}
+.pix{border:1px solid #e4ddd0;border-radius:18px;box-shadow:0 12px 36px #00000014;background:var(--paper)}
+#panel{padding:28px;min-height:280px}#panel h2{font-size:24px;letter-spacing:2px;color:var(--ink);margin-bottom:20px;font-family:"Songti SC","STSong",serif}
+#panel h2::before{width:4px;height:22px;border-radius:3px;background:var(--red);box-shadow:none}
+#panel h3{border-bottom:1px solid var(--paper2);padding-bottom:10px;margin-top:24px;letter-spacing:1px}.hint{line-height:1.85}
+.grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr));gap:14px}
+.card{border:1px solid var(--paper2);border-radius:12px;padding:14px;gap:12px;box-shadow:none;transition:transform .15s,box-shadow .15s;overflow-wrap:anywhere}
+.card:hover{background:#fffefa;transform:translateY(-2px);box-shadow:0 8px 20px #2c3e3010;border-color:#c0b39b}.card .nm{font-size:16px;margin-bottom:4px}
+.por{border:1px solid #d9cfba;border-radius:9px;background:linear-gradient(#eee7d5,#dcd6bd)}
+.tag{border:1px solid #dbd6c8;border-radius:5px;background:#eeeade;padding:2px 6px;margin:3px 3px 3px 0;font-size:11px;letter-spacing:.2px}
+.tag.r{background:#f2ddd6;color:#823d35;border-color:#e9c8bc}.tag.g{background:#e1ece2;color:#315d45;border-color:#c5dbc9}.tag.y{background:#f0e6cd;color:#725a2d;border-color:#e1d2ac}
+.bar{margin-top:4px}.bar i{height:5px;border:0;border-radius:4px;background:#e7e3d8;overflow:hidden}.bar i b{border-radius:4px}
+.stats{gap:10px 20px}.acts{gap:8px;margin:16px 0}.story{gap:8px}.story li{border-left-width:2px;border-radius:0 8px 8px 0;padding:10px 14px}.story li.big{background:#f2ead7}
+.inp{border:1px solid #ccc7b9;border-radius:8px;padding:10px 12px;min-height:44px}label.opt{border:1px solid var(--paper2);border-radius:10px;padding:12px 14px}label.opt:has(input:checked){background:#f0e8d5;box-shadow:none;border-color:var(--gold2)}input[type=radio]{accent-color:var(--red)}
+.pai{border:1px solid #8da696;border-radius:24px 24px 8px 8px;box-shadow:0 4px 12px #193a2518;background:linear-gradient(#537d66,#345a48)}
+#modal{background:#102720b8;backdrop-filter:blur(7px)}#mbox{padding:28px;max-width:640px;max-height:calc(100dvh - 32px);overscroll-behavior:contain}
+.mtitle{line-height:1.5;font-family:"Songti SC","STSong",serif;font-size:26px;font-weight:700;color:var(--wall);letter-spacing:3px;margin:0 0 24px;padding-bottom:16px;border-bottom:1px solid var(--paper2)}
+.mch{gap:10px;margin-top:24px}.mch .btn{padding:12px 16px}.mtext{line-height:1.95}#toast div{border:1px solid #bca46f;border-radius:10px;padding:10px 18px;background:#203b34;color:#f4e5bd;animation:tin .2s ease}
+#mapc{border:0;border-radius:10px}.mlab{border-color:#cdb57880;border-radius:4px;padding:3px 6px;background:#20392fea;line-height:1.4}
+.title-wrap{padding:32px 12px;gap:20px}.title-wrap h1{font-family:"Songti SC","STSong",serif;font-size:clamp(44px,8vw,72px);line-height:1.2;letter-spacing:.2em;text-indent:.2em;color:var(--wall);margin:0;font-weight:600}.eyebrow{font-size:11px;letter-spacing:3px;color:var(--ink2)}.title-rule{width:48px;height:2px;background:var(--gold2)}.title-wrap>.btn.gold{min-width:200px}.title-wrap>.hint{max-width:460px}
+@media(max-width:760px){body{padding-top:12px}#app{gap:12px}#top{padding:12px;gap:8px 14px}#panel{padding:20px}#scene{max-height:220px}#menu{grid-template-columns:repeat(5,minmax(0,1fr))}.btn{letter-spacing:0}#mbox{padding:20px}.mlab{padding:2px 3px}}
+@media(max-width:420px){body{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}#panel{padding:16px}#top{font-size:13px}#menu .btn{font-size:12px;padding:9px 2px}.mlab{font-size:9px;padding:1px 2px}.title-wrap{padding:22px 0}.row{gap:12px}.btn{padding:9px 10px}}
+@media(prefers-reduced-motion:reduce){.btn,.card{transition:none}.btn:active,.card:hover{transform:none}}
 </style>
 
 <div id="app">
@@ -407,7 +444,7 @@ function assignPalace(c){
   const min=Math.min(...Object.values(cnt));c.palace=pick(PALACES.filter(p=>cnt[p]===min));
 }
 function addConsort(c,rank,why){
-  c.rank=rank; S.consorts.push(c); assignPalace(c); S.ys.c++; initRel(c); assignArc(c); deepen(c); clanKey(c); if(c.kin)for(const id in c.kin){const o=byId(+id);if(o&&o.alive)relAdd(c,o,(isRival(c,o)?-30:45)-relGet(c,o))}
+  c.rank=rank; c.enteredAt=S.turn; S.consorts.push(c); assignPalace(c); S.ys.c++; initRel(c); assignArc(c); deepen(c); clanKey(c); if(c.kin)for(const id in c.kin){const o=byId(+id);if(o&&o.alive)relAdd(c,o,(isRival(c,o)?-30:45)-relGet(c,o))}
   story(c,`${why}，封为${RANKS[rank]}，赐居${c.palace}。`);
   log(`${fullName(c)}（${c.fam.t}之女）${why}，封${RANKS[rank]}。`);
 }
@@ -785,8 +822,8 @@ function nextEv(){
   modalOpen=false;curEv=null;$('#modal').hidden=true;checkEnd();render();
 }
 function openModal(ev){
-  modalOpen=true;curEv=ev;const b=$('#mbox');
-  let h=`<div class="mtitle">${pixText(ev.title,14,'#a3262a',2)}</div><div class="mbody">`;
+  modalOpen=true;curEv=ev;if(ev.onShow)ev.onShow();const b=$('#mbox');
+  let h=`<div class="mtitle">${esc(ev.title)}</div><div class="mbody">`;
   if(ev.por) h+=`<div class="mpor">${porImg(ev.por,112)}<div>${esc(porName(ev.por))}</div></div>`;
   h+=`<div class="mtext">${fmt(ev.text)}${ev.ref?`<p class="ref">典出 · ${esc(ev.ref)}</p>`:''}${ev.input?`<input id="minput" class="inp" maxlength="${ev.input.max||4}" value="${esc(ev.input.def||'')}" aria-label="输入">`:''}</div></div><div class="mch">`;
   ev.choices.forEach((c,i)=>{const ok=!c.cond||c.cond();h+=`<button class="btn${i===0?' gold':''}" ${ok?'':'disabled'} onclick="choose(${i})">${esc(c.t)}${!ok&&c.why?`<small>${esc(c.why)}</small>`:''}</button>`});
@@ -803,7 +840,7 @@ function choose(i){
 function showRes(res){
   if(typeof res==='string') res={text:res};
   const b=$('#mbox');
-  b.innerHTML=`<div class="mtitle">${pixText(res.title||curEv.title,14,'#a3262a',2)}</div><div class="mbody">${res.por?`<div class="mpor">${porImg(res.por,96)}</div>`:''}<div class="mtext">${fmt(res.text)}</div></div><div class="mch"><button class="btn gold" onclick="nextEv()">继续</button></div>`;
+  b.innerHTML=`<div class="mtitle">${esc(res.title||curEv.title)}</div><div class="mbody">${res.por?`<div class="mpor">${porImg(res.por,96)}</div>`:''}<div class="mtext">${fmt(res.text)}</div></div><div class="mch"><button class="btn gold" onclick="nextEv()">继续</button></div>`;
   b.scrollTop=0;renderTop();
 }
 
@@ -1188,14 +1225,61 @@ function milestone(){
 }
 
 /* ============ 太后与节令 ============ */
-function dowagerEvent(){const d=S.flags.dowager;if(!d||!d.alive)return null;
+// Persist maternal identity, recommendation history and continuous eligibility across saves.
+function ensureDowager(){
+  const d=S.flags.dowager;if(!d)return null;
+  const legacy=S.consorts.filter(c=>c.fam.t==='太后母家');
+  d.sur=d.sur||d.name.replace(/太后$/,'')||legacy[0]?.sur||pick(SUR.filter(x=>x!==S.emp.sur));
+  d.fam=d.fam||{t:'太后母家',p:72};
+  d.clan=d.clan||d.sur+'|'+d.fam.t;
+  for(const c of legacy){c.sur=d.sur;c.clan=d.clan;c.fam={...d.fam,p:c.fam.p};}
+  if(d.lastOffer===undefined)d.lastOffer=(d.recommended||legacy.length)?S.turn:null;
+  if(d.cooldown===undefined)d.cooldown=24;
+  delete d.recommended;delete d.candidate;
+  for(const c of S.consorts.filter(c=>c.clan===d.clan)){
+    if(c.enteredAt===undefined)c.enteredAt=S.turn;
+  }
+  return d;
+}
+function dowagerKin(){const d=ensureDowager();return d?S.consorts.filter(c=>c.clan===d.clan&&c.alive&&!c.gone&&!c.maid):[]}
+function dowagerTick(){
+  for(const c of dowagerKin()){
+    if(c.favor<20&&!c.cold){if(c.neglectedSince===undefined)c.neglectedSince=S.turn}
+    else delete c.neglectedSince;
+  }
+}
+function dowagerProposal(d){
+  if(d.lastOffer!==null&&S.turn-d.lastOffer<d.cooldown)return null;
+  const kin=dowagerKin();
+  // A pregnancy or a family member in disgrace makes another introduction inappropriate.
+  if(kin.some(c=>c.preg||c.cold))return null;
+  const eligible=kin.filter(c=>c.age>=17&&S.turn-c.enteredAt>=24);
+  const neglected=eligible.find(c=>c.favor<20&&c.neglectedSince!==undefined&&S.turn-c.neglectedSince>=12);
+  const childless=eligible.find(c=>c.lastBirth<0&&!S.children.some(k=>k.mom===c.id));
+  const sister=neglected||childless;
+  if(kin.length&&!sister)return null;
+  const reason=sister?(neglected?'久未承宠，独居宫中':'入宫已有两年，膝下仍无子女'):'';
+  const g=makeGirl({sur:d.sur,fam:{...d.fam},age:sister?Math.min(ri(16,19),sister.age-1):ri(16,19)});
+  g.clan=d.clan;
+  const text=sister?`${d.name}说：“${fullName(sister)}${reason}，哀家想着，让她的堂妹${fullName(g)}入宫，也好有个说话的伴儿。皇帝意下如何？”`:
+    `${d.name}说：“哀家母族有位姑娘${fullName(g)}，性子${g.trait}，模样也周正，皇帝看看？”`;
+  return {title:'太后荐人',por:g,text,onShow:()=>{d.lastOffer=S.turn;d.cooldown=24},choices:[
+    {t:'准她入宫，封为贵人',f:()=>{
+      if(S.consorts.some(c=>c.id===g.id))return '她已经入宫了。';
+      if(sister){g.kin={[sister.id]:'堂姐'};g.kinRival={};sister.kin=sister.kin||{};sister.kin[g.id]='堂妹';g.kinNote=`${fullName(sister)}的堂妹`;}
+      addConsort(g,3,'由太后举荐入宫');
+      remember(g,'family',sister?`太后因${fullName(sister)}${reason}，举荐我入宫与堂姐相伴。`:'太后举荐我入宫，陛下准许，封为贵人。');
+      if(sister){story(sister,`太后因她${reason}，举荐堂妹${fullName(g)}入宫相伴。`);remember(sister,'family',`陛下准许太后举荐的堂妹${fullName(g)}入宫，与我作伴。`);}
+      return '太后点头，嘱咐她入宫后恪守宫规。'+fx(chg({prestige:1}));}},
+    {t:'婉拒，暂不添新人',f:()=>{d.cooldown=12;if(sister)remember(sister,'family','太后想让堂妹入宫陪伴我，陛下暂未答应。');return '太后收起画像：“也罢，此事以后再议。”';}}
+  ]};
+}
+function dowagerEvent(){const d=ensureDowager();if(!d||!d.alive)return null;
   if(S.turn>36&&chance(.04)){d.alive=false;log(`${d.name}崩逝，举国服丧。`,1);AU.sfx('sad');harem().forEach(c=>c.mood=clamp(c.mood-5));
     return {title:'国丧',sfx:'gong',text:`${d.name}于慈宁宫崩逝。宫中缟素，举国服丧。`,choices:[{t:'厚葬，守孝二十七日',f:()=>fx(chg({treasury:-80,people:4,prestige:2}))}]}}
   const r=R();
   if(r<.35&&kidsAlive().length===0&&S.turn>=12) return {title:'慈宁宫',text:`${d.name}召你去慈宁宫，拉着你的手叹气：“皇帝登基也有些时日了，膝下却还空着，哀家这心里不踏实啊。”`,choices:[{t:'儿臣明白',f:()=>'太后点点头，又絮絮叨叨嘱咐了许多。'}]};
-  if(r<.6){const g=makeGirl({fam:{t:'太后母家',p:72}});return {title:'太后荐人',por:g,text:`${d.name}说：“哀家娘家有个侄孙女，性子${g.trait}，模样也周正，皇帝看看？”`,choices:[
-    {t:'谨遵母后懿旨，封为贵人',f:()=>{addConsort(g,3,'由太后举荐入宫');return '太后十分欢喜。'+fx(chg({prestige:1}))}},
-    {t:'婉拒',f:()=>'太后脸色淡了几分，却也没说什么。'}]}}
+  if(r<.6){const proposal=dowagerProposal(d);if(proposal)return proposal;}
   if(S.month===9) return {title:'太后千秋',text:`今日是${d.name}千秋节。`,choices:[
     {t:'大办寿宴（国库-60万两）',f:()=>fx(chg({treasury:-60,prestige:3,people:1}))},{t:'一切从简',f:()=>fx(chg({people:2}))}]};
   return null;
@@ -1233,7 +1317,7 @@ A.endMonth=function(){
   if(newYear){const y=S.ys;pushEv({title:'岁首',sfx:'chime',text:`爆竹声中一岁除。${dateStr()}，陛下${e.age}岁。\n去岁：新入宫${y.c}人，皇嗣降生${y.b}位，侍寝${y.n}次。\n国库${e.treasury}万两，威望${rd(e.prestige)}，民心${rd(e.people)}。`,choices:[{t:'新岁新气象'}]});S.ys={c:0,b:0,n:0}}
   // 事件
   if(S.month===2&&S.turn-S.flags.lastXX>=34) pushEv({title:'三年大选',sfx:'chime',text:'又到三年一度的大选之期，各地秀女已候于储秀宫。',choices:[{t:'前去看看',f:()=>{genCands();UI.view='xx';return null}},{t:'今年免了',f:()=>{S.flags.lastXX=S.turn;return fx(chg({people:2}))}}]});
-  relTick();kidRelTick();clanTick();
+  relTick();kidRelTick();clanTick();dowagerTick();
   const must=[arcTick(),heirTick(),milestone()].filter(Boolean),opt=[];
   const add=(e,p)=>{if(e)opt.push([e,p+R()])};
   add(chance(.8)?festival():null,5);add(chance(.9)?haremEvent():null,6);add(chance(.5)?haremEvent():null,3);
@@ -1275,7 +1359,7 @@ function succeed(h){
   pushNow({title:'新君登基',por:h,text:`${h.name}即将即位。请为新朝拟定年号（二字）：`,input:{def:pick(ERAS.filter(x=>x!==old.era)),max:2},choices:[{t:'改元',f:v=>{
     S.emp={sur:old.sur,name:h.name,era:v,age:Math.max(a,14),health:clamp(h.hp+10),prestige:clamp(35+h.vir/3),people:old.people,treasury:old.treasury,energy:3,nightsMonth:0,
       style:h.mar>h.lit+15?'尚武':h.lit>h.mar+15?'文雅':'勤政',wen:rd(h.lit),wu:rd(h.mar),seed:h.seed};
-    S.flags.dowager={name:mom?`${mom.sur}太后`:'太后',alive:!!(mom&&mom.alive)};
+    S.flags.dowager={name:mom?`${mom.sur}太后`:'太后',sur:mom?.sur,fam:mom?{...mom.fam}:undefined,clan:mom?clanKey(mom):undefined,lastOffer:null,cooldown:24,alive:!!(mom&&mom.alive)};
     S.consorts=[];S.children=[];S.rel={};S.heir=null;S.cands=[];S.gen++;S.year=1;S.over=false;S.genChar=GEN_CHARS[(GEN_CHARS.indexOf(S.genChar)+1)%GEN_CHARS.length];
     S.flags.lastXX=-99;S.emp.energy=maxEnergy();
     log(`━━ 第${cnNum(S.gen)}代 ━━ ${v}元年，新帝${S.emp.sur}${h.name}登基，尊生母为${S.flags.dowager.name}。`,1);
@@ -1335,7 +1419,7 @@ function renderPanel(){const p=$('#panel');const v=UI.view;
 function render(){renderTop();renderMenu();renderPanel();if(S&&UI.view==='map')mountMap()}
 function viewTitle(){
   const slots=['auto','1','2','3'].map(s=>({s,i:slotInfo(s)})).filter(x=>x.i);
-  return `<div class="title-wrap">${pixText('宸宫纪',18,'#e8b84a',5)}
+  return `<div class="title-wrap"><div class="eyebrow">FORBIDDEN CITY · 宫廷纪事</div><h1>宸宫纪</h1><div class="title-rule"></div>
    <div class="hint">执掌江山，坐拥六宫。选秀纳妃，养育皇嗣，写下属于你的一朝本纪。</div>
    <button class="btn gold" onclick="A.newGame()">新开一局</button>
    ${slots.map(x=>`<button class="btn sm" onclick="A.load('${x.s}')">读取${x.s==='auto'?'自动存档':'存档'+x.s}：${esc(x.i)}</button>`).join('')}
@@ -1805,7 +1889,7 @@ A.greet=function(){if(!useE())return;const ev=dowagerEvent();if(ev){pushEv(ev);r
 A.exportSave=function(){try{const t=btoa(unescape(encodeURIComponent(JSON.stringify(S))));const ta=$('#savecode');ta.value=t;ta.focus();ta.select();
   if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast('存档码已复制'),()=>toast('已选中，请手动复制'));else toast('已选中，请手动复制')}catch(e){toast('导出失败')}};
 A.importSave=function(){try{const t=$('#savecode').value.trim();const s=JSON.parse(decodeURIComponent(escape(atob(t))));if(!s.emp)throw 0;S=s;Q.length=0;migrate();UI.view='map';toast('已导入存档');render()}catch(e){toast('存档码无效，请检查是否复制完整')}};
-function migrate(){if(!S)return;S.rel=S.rel||{};S.pos=S.pos||{x:100,y:82};alive().forEach(c=>{if(!c.arc)assignArc(c);deepen(c);clanKey(c)});S.children.forEach(k=>{if(k.sup===undefined)k.sup=0});
+function migrate(){if(!S)return;ensureDowager();S.rel=S.rel||{};S.pos=S.pos||{x:100,y:82};alive().forEach(c=>{if(!c.arc)assignArc(c);deepen(c);clanKey(c)});S.children.forEach(k=>{if(k.sup===undefined)k.sup=0});
   NPC.clear();emp.x=S.pos.x;emp.y=S.pos.y;emp.path=[];emp.arrive=null;emp.trail=[]}
 
 /* ============ 人物立体：小性子、喜好、心愿、往事、记忆 ============ */
@@ -2224,7 +2308,8 @@ function fosterLine(c){const fk=S.children.filter(k=>k.foster===c.id&&k.alive),o
   return (fk.length?`<div>养育：${fk.map(k=>`<button class="btn sm" onclick="A.go('kid',${k.id})">${esc(k.name)}</button>`).join(' ')}</div>`:'')+(own.length?`<div class="hint">亲生却交给旁人抚养：${own.map(k=>`${esc(k.name)}（养母${esc(fullName(fosterOf(k)))}）`).join('、')}</div>`:'')}
 
 /* ============ 人际关系：妃嫔、皇嗣 ============ */
-function relWord(v,kind){
+function relWord(v,kind,c,k){
+  if(kind==='ck'&&c&&k&&k.mom===c.id)return k.sex==='m'?'亲生皇子':'亲生公主';
   if(kind==='ck')return v>=60?'视如己出':v>=25?'疼爱':v>-25?'寻常':v>-60?'冷淡':'敌视';
   if(kind==='kk')return v>=60?'手足情深':v>=25?'亲近':v>-25?'寻常':v>-60?'不和':'势同水火';
   return v>=60?'情同姐妹':v>=30?'交好':v>-30?'泛泛':v>-60?'不睦':'势同水火'}
@@ -2278,7 +2363,7 @@ function kidRelLine(k){const sib=kidsAlive().filter(o=>o!==k).map(o=>[o,relGet(o
   const tag=(o,v,kd,n)=>`<span class="tag ${relCls(v)}" title="${rd(v)}">${esc(n)}·${relWord(v,kd)}</span>`;
   return `<div style="margin-top:4px">手足：${sib.length?sib.map(([o,v])=>tag(o,v,'kk',o.name)).join(''):'<span class="hint">都还寻常</span>'}</div><div>宫中娘娘：${con.length?con.map(([c,v])=>tag(c,v,'ck',cName(c))).join(''):'<span class="hint">都还寻常</span>'}</div>`}
 function conKidLine(c){const ks=kidsAlive().map(k=>[k,relGet(c,k)]).filter(([k,v])=>raisers(k).includes(c)||Math.abs(v)>=25).sort((a,b)=>b[1]-a[1]);if(!ks.length)return '';
-  return `<div>对皇嗣：${ks.map(([k,v])=>`<span class="tag ${relCls(v)}" title="${rd(v)}">${esc(k.name)}·${relWord(v,'ck')}</span>`).join('')}</div>`}
+  return `<div>对皇嗣：${ks.map(([k,v])=>`<span class="tag ${relCls(v)}" title="${rd(v)}">${esc(k.name)}·${relWord(v,'ck',c,k)}</span>`).join('')}</div>`}
 /* 人际总览：每人好感与讨厌的人 */
 function viewRel(){const cs=harem().concat(maids().filter(m=>m.near)),ks=kidsAlive(),all=[...cs,...ks];
   if(!all.length)return '<h2>人际</h2><p class="hint">宫里还没有人。</p>';
@@ -2290,7 +2375,7 @@ function viewRel(){const cs=harem().concat(maids().filter(m=>m.near)),ks=kidsAli
 /* ============ 家族 ============ */
 const KIN_TXT={'亲姐':'亲姐姐','亲妹':'亲妹妹','堂姐':'堂姐','堂妹':'堂妹'};
 function clanKey(c){return c.clan||(c.clan=c.sur+'|'+c.fam.t)}
-function clanName(key){const [s,t]=key.split('|');return `${s}氏（${t}家）`}
+function clanName(key){const [s,t]=key.split('|');return `${s}氏（${t.endsWith('家')?t:t+'家'}）`}
 function clanMembers(key){return alive().filter(c=>!c.maid&&clanKey(c)===key&&!NOCLAN.includes(key.split('|')[1]))}
 const NOCLAN=['宫女','寒门','西域贡女','歌女','良家子','先帝才人'];
 const hasClan=c=>!c.maid&&!NOCLAN.includes((c.clan||'').split('|')[1]||c.fam.t);
