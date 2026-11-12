@@ -158,12 +158,64 @@ body{margin:0;background:radial-gradient(ellipse at 12% 0%,#375448 0,transparent
 @media(max-width:760px){body{padding-top:12px}#app{gap:12px}#top{padding:12px;gap:8px 14px}#panel{padding:20px}#scene{max-height:220px}#menu{grid-template-columns:repeat(5,minmax(0,1fr))}.btn{letter-spacing:0}#mbox{padding:20px}.mlab{padding:2px 3px}}
 @media(max-width:420px){body{padding-left:max(10px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}#panel{padding:16px}#top{font-size:13px}#menu .btn{font-size:12px;padding:9px 2px}.mlab{font-size:9px;padding:1px 2px}.title-wrap{padding:22px 0}.row{gap:12px}.btn{padding:9px 10px}}
 @media(prefers-reduced-motion:reduce){.btn,.card{transition:none}.btn:active,.card:hover{transform:none}}
+
+/* Command bar and workspace layout */
+:root{--paper:#fcfaf5;--paperhi:#fffdf8;--paper2:#e6ddd0;--ink:#262823;--ink2:#5e6257;--wall:#742e2c;--red:#863a34;--gold:#e8ce9b}
+body{background:linear-gradient(155deg,#f6f2e9,#e7dece) fixed;color:var(--ink)}
+#app{max-width:1320px;gap:12px}
+#top{background:#232a26;color:#f8f1e3;box-shadow:none;border-radius:12px;gap:10px;padding:12px 16px}
+.brand{display:flex;align-items:center;gap:9px;font-weight:700;white-space:nowrap}
+.brand::before{content:"宸";display:grid;place-items:center;width:29px;height:29px;border-radius:7px;background:#9a483e;color:#fff2dc;font-family:"Songti SC",serif}
+#top .date{letter-spacing:0;font-size:14px}
+#top .st{padding:3px 8px;border-radius:6px;background:#ffffff10;font-size:13px}
+#top .st b{color:#f8e5bb}
+#stage{box-shadow:none;border-radius:12px}
+#loc{display:none}
+#snd{top:auto;bottom:8px;right:8px;background:#232a26ed;color:#fff6e7}
+#menu{background:var(--paper);border:1px solid var(--paper2);border-radius:12px}
+#menu .btn{color:var(--ink2);padding:7px 4px}
+#menu .btn:hover{background:#f1e9db}
+#menu .btn.on{background:#f0e0d6;color:#722d2a}
+#panel{border-radius:12px;box-shadow:none;min-width:0}
+#panel h2{font-family:var(--f-ui);font-size:clamp(22px,3vw,30px);letter-spacing:0;line-height:1.35;margin-bottom:14px}
+#panel h2::before{display:none}
+#panel h3{color:var(--ink);font-size:15px;letter-spacing:0}
+#app[data-layout="landing"] #panel{padding:0}
+.title-wrap{align-items:flex-start;text-align:left;padding:clamp(26px,5vw,70px);gap:18px}
+.title-wrap h1{font-size:clamp(54px,8vw,106px);text-indent:0;letter-spacing:.09em}
+.title-wrap .intro{max-width:30ch;font-size:16px;line-height:1.8;margin:0;color:var(--ink2)}
+.title-wrap>.btn.gold{background:var(--red);color:#fff8ea;width:100%;max-width:280px}
+.title-wrap .save-list{display:grid;width:100%;max-width:360px;gap:8px}
+.title-wrap .save-list .btn{background:#eee6d9;color:var(--ink);text-align:left;white-space:normal;overflow-wrap:anywhere}
+@media(min-width:900px){
+  #app{display:grid;align-items:start}
+  #app[data-layout="landing"]{grid-template-columns:minmax(320px,.9fr) minmax(0,1.1fr);grid-template-areas:"top top" "panel scene";gap:16px}
+  #app[data-layout="landing"] #stage,#app[data-layout="landing"] #panel{height:100%;min-height:440px}
+  #app[data-layout="landing"] #scene{height:100%;min-height:440px;max-height:none;aspect-ratio:auto;object-fit:cover}
+  #app[data-layout="game"]{grid-template-columns:190px minmax(0,1fr);grid-template-areas:"top top" "scene panel" "menu panel";grid-template-rows:auto auto 1fr;gap:12px 16px}
+  #app[data-layout="game"] #menu{grid-template-columns:1fr}
+  #app[data-layout="game"] #menu .btn{display:flex;align-items:center;justify-content:space-between;text-align:left;padding:8px 13px;min-height:37px}
+  #app[data-layout="game"] #menu .btn.on{box-shadow:inset 3px 0 var(--red)}
+  #app[data-layout="game"] #panel{min-height:520px}
+  #app[data-layout="game"] #snd{font-size:10px;min-height:27px;padding:4px 7px}
+  #app[data-layout="setup"]{grid-template-columns:minmax(0,1fr);grid-template-areas:"top" "panel"}
+  #app[data-layout="setup"] #stage{display:none}
+  #top{grid-area:top}#stage{grid-area:scene}#menu{grid-area:menu}#panel{grid-area:panel}
+}
+@media(max-width:899px){
+  #app[data-layout="landing"] #panel{order:-1}
+  #app[data-layout="landing"] #top,#app[data-layout="setup"] #stage{display:none}
+  #app[data-layout="game"] #scene{max-height:110px}
+  #top .brand{font-size:0;gap:0}
+  #top .st{font-size:12px}
+  #menu{grid-template-columns:repeat(5,minmax(0,1fr))}
+}
 </style>
 
 <div id="app">
   <header id="top"></header>
   <div id="stage"><canvas id="scene" width="192" height="80"></canvas><div id="loc"></div><button id="snd" class="btn sm" onclick="AU.toggle()">♪ 开启声音</button></div>
-  <nav id="menu"></nav>
+  <nav id="menu" aria-label="宫廷导航"></nav>
   <main id="panel" class="pix"></main>
 </div>
 <div id="modal" hidden><div id="mbox" class="pix" role="dialog" aria-modal="true"></div></div>
@@ -1401,10 +1453,10 @@ A.start=function(){
 /* ============ 渲染 ============ */
 function bar(l,v,c){v=rd(v);return `<div class="bar"><span>${l}</span><i><b style="width:${clamp(v)}%;${c?`background:${c}`:''}"></b></i><em>${v}</em></div>`}
 function renderTop(){
-  const t=$('#top');if(!S){t.innerHTML=`<span class="date">宸宫纪</span><span class="sp"></span><span>像素宫廷养成</span>`;return}
+  const t=$('#top');if(!S){t.innerHTML=`<span class="brand">宸宫纪</span><span class="sp"></span><span>宫廷经营模拟</span>`;return}
   const e=E(),mx=maxEnergy();let pips='';for(let i=0;i<mx;i++)pips+=`<span class="pip${i<e.energy?'':' off'}"></span>`;
   const hd=e.health>=80?'康健':e.health>=55?'安好':e.health>=30?'欠安':'病笃';
-  t.innerHTML=`<span class="date">${esc(dateStr())}</span><span class="st">帝 <b>${esc(e.sur+e.name)}</b> ${e.age}岁</span>
+  t.innerHTML=`<span class="brand">宸宫纪</span><span class="date">${esc(dateStr())}</span><span class="st">帝 <b>${esc(e.sur+e.name)}</b> ${e.age}岁</span>
    <span class="st">龙体 <b>${rd(e.health)}</b>${hd}</span><span class="st">威望 <b>${rd(e.prestige)}</b></span><span class="st">民心 <b>${rd(e.people)}</b></span>
    <span class="st">国库 <b>${e.treasury}</b>万两</span><span class="st">精力 ${pips}</span><span class="sp"></span>
    <button class="btn gold sm" onclick="A.endMonth()" ${S.over?'disabled':''}>结束本月 ▸</button>`;
@@ -1416,14 +1468,16 @@ function renderPanel(){const p=$('#panel');const v=UI.view;
   if(!S){p.innerHTML=v==='new'?viewNew():viewTitle();return}
   p.innerHTML=({rel:viewRel,map:viewMap,palace:viewPalace,place:viewPlace,home:viewHome,harem:viewHarem,consort:viewConsort,cards:viewCards,xx:viewXX,kids:viewKids,kid:viewKid,out:viewOut,log:viewLog,sys:viewSys}[v]||viewHome)();
 }
-function render(){renderTop();renderMenu();renderPanel();if(S&&UI.view==='map')mountMap()}
+function render(){
+  $('#app').setAttribute('data-layout',S?'game':UI.view==='new'?'setup':'landing');
+  renderTop();renderMenu();renderPanel();if(S&&UI.view==='map')mountMap();
+}
 function viewTitle(){
   const slots=['auto','1','2','3'].map(s=>({s,i:slotInfo(s)})).filter(x=>x.i);
-  return `<div class="title-wrap"><div class="eyebrow">FORBIDDEN CITY · 宫廷纪事</div><h1>宸宫纪</h1><div class="title-rule"></div>
-   <div class="hint">执掌江山，坐拥六宫。选秀纳妃，养育皇嗣，写下属于你的一朝本纪。</div>
+  return `<div class="title-wrap"><div class="eyebrow">FORBIDDEN CITY</div><h1>宸宫纪</h1>
+   <p class="intro">在宫城里处理朝政、走访后宫，写下属于你的一朝本纪。</p>
    <button class="btn gold" onclick="A.newGame()">新开一局</button>
-   ${slots.map(x=>`<button class="btn sm" onclick="A.load('${x.s}')">读取${x.s==='auto'?'自动存档':'存档'+x.s}：${esc(x.i)}</button>`).join('')}
-   <p class="hint" style="max-width:520px">画面、立绘、字体与音乐均由代码在打开网页时现场生成。点击右上角「♪」开启古筝与环境音。</p></div>`}
+   ${slots.length?`<div class="save-list">${slots.map(x=>`<button class="btn sm" onclick="A.load('${x.s}')">读取${x.s==='auto'?'自动存档':'存档'+x.s}：${esc(x.i)}</button>`).join('')}</div>`:''}</div>`}
 function viewNew(){
   return `<h2>登基大典</h2><div class="form">
    <div class="two"><label>国姓<input id="f-sur" class="inp" maxlength="2" value="萧"></label><label>名讳<input id="f-name" class="inp" maxlength="2" value="${pick(['彻','珩','翊','昭','衍','恪'])}"></label></div>
