@@ -166,8 +166,13 @@ function seasonTint(c){return S?shade(c,[.1,.2,0,-.1][season()]):c}
 const PORTRAIT_WIDTH=112,PORTRAIT_HEIGHT=140,PORTRAIT_COLUMNS=4;
 const portraitAtlas=document.createElement('img');
 const familyAtlas=document.createElement('img');
+const descendantAtlas=document.createElement('img');
 const FAMILY_PORTRAIT_START=28;
-const portraitSheet=cell=>cell>=FAMILY_PORTRAIT_START?familyAtlas:portraitAtlas;
+const DESCENDANT_PORTRAIT_START=44;
+const DESCENDANT_VARIANTS=10;
+const EXISTING_PRINCE_VARIANTS=4;
+const EXTRA_PRINCE_VARIANTS=DESCENDANT_VARIANTS-EXISTING_PRINCE_VARIANTS;
+const portraitSheet=cell=>cell>=DESCENDANT_PORTRAIT_START?descendantAtlas:cell>=FAMILY_PORTRAIT_START?familyAtlas:portraitAtlas;
 const atlasCanvas=document.createElement('canvas');
 atlasCanvas.width=PORTRAIT_WIDTH;atlasCanvas.height=PORTRAIT_HEIGHT;
 const atlasInk=atlasCanvas.getContext('2d');
@@ -201,29 +206,32 @@ function assignConsortPortrait(c){
   }
   c.artPortrait=best;
 }
+function childPortraitCell(child){
+  const age=kidAge(child);
+  const stage=age<3?0:age<12?1:2;
+  const ordinal=child.ord>0?child.ord:S.children.filter(k=>k.sex===child.sex).findIndex(k=>k.id===child.id)+1;
+  const variant=ordinal>0?(ordinal-1)%DESCENDANT_VARIANTS:Math.floor(mulberry32(child.seed||7)()*DESCENDANT_VARIANTS);
+  if(child.sex==='m'){
+    if(variant<EXISTING_PRINCE_VARIANTS)return FAMILY_PORTRAIT_START+stage*EXISTING_PRINCE_VARIANTS+variant;
+    return DESCENDANT_PORTRAIT_START+stage*EXTRA_PRINCE_VARIANTS+variant-EXISTING_PRINCE_VARIANTS;
+  }
+  return DESCENDANT_PORTRAIT_START+3*EXTRA_PRINCE_VARIANTS+stage*DESCENDANT_VARIANTS+variant;
+}
+
 function portraitCell(x){
-  const pickIndex=(seed,count)=>Math.floor(mulberry32(seed||7)()*count);
   if(x==='emp')return E().age>=40?13:12;
   if(x.official!==undefined)return FAMILY_PORTRAIT_START+12+x.official;
   if(x.isMom)return 9;
   if(x.maid)return 10;
-  if(x.sex){
-    const age=kidAge(x);
-    if(x.sex==='m'){
-      const variant=x.ord>0?(x.ord-1)%4:pickIndex(x.seed,4);
-      return FAMILY_PORTRAIT_START+(age<3?0:age<12?4:8)+variant;
-    }
-    if(age<3)return 18+pickIndex(x.seed,2);
-    return age<12?17:11;
-  }
+  if(x.sex)return childPortraitCell(x);
   const cells=consortPortraits(x);
-  return cells.includes(x.artPortrait)?x.artPortrait:cells[pickIndex(x.seed,cells.length)];
+  return cells.includes(x.artPortrait)?x.artPortrait:cells[Math.floor(mulberry32(x.seed||7)()*cells.length)];
 }
 
 function atlasPortrait(cell,rank){
   const key=cell+':'+rank;
   if(ART_CACHE.has(key))return ART_CACHE.get(key);
-  const tile=cell>=FAMILY_PORTRAIT_START?cell-FAMILY_PORTRAIT_START:cell;
+  const tile=cell>=DESCENDANT_PORTRAIT_START?cell-DESCENDANT_PORTRAIT_START:cell>=FAMILY_PORTRAIT_START?cell-FAMILY_PORTRAIT_START:cell;
   const x=(tile%PORTRAIT_COLUMNS)*PORTRAIT_WIDTH;
   const y=Math.floor(tile/PORTRAIT_COLUMNS)*PORTRAIT_HEIGHT;
   atlasInk.clearRect(0,0,PORTRAIT_WIDTH,PORTRAIT_HEIGHT);
@@ -245,12 +253,14 @@ function refreshAtlasPortraits(){
 }
 portraitAtlas.addEventListener('load',refreshAtlasPortraits);
 familyAtlas.addEventListener('load',refreshAtlasPortraits);
+descendantAtlas.addEventListener('load',refreshAtlasPortraits);
 portraitAtlas.src='./palace-portraits-b.webp';
 familyAtlas.src='./palace-family.webp';
 
 function porImg(x,size=64){
   const cold=x&&x.cold, dead=x&&x.alive===false;
   const cell=portraitCell(x),rank=x!=='emp'&&!x.sex&&!x.isMom&&!x.maid&&!cold&&x.rank===8?8:0;
+  if(cell>=DESCENDANT_PORTRAIT_START&&!descendantAtlas.src)descendantAtlas.src='./palace-descendants.webp?v=2';
   const src=portraitAtlasReady(cell)?atlasPortrait(cell,rank):portrait(porSpec(x));
   return `<img class="px por palace-portrait${cold||dead?' cold':''}" alt="" src="${src}" data-portrait-cell="${cell}" data-portrait-rank="${rank}" width="${size}" height="${size*1.25}">`;
 }
