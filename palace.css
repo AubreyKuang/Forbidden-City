@@ -475,7 +475,7 @@ body{background:#241917}
 .graph-people{pointer-events:none}
 .graph-card{
   position:absolute;left:var(--graph-x);top:var(--graph-y);transform:translateX(-50%);
-  width:150px;min-width:0;display:flex;align-items:center;gap:7px;padding:5px 7px;
+  width:var(--graph-card-width,150px);height:var(--graph-card-height,auto);min-width:0;display:flex;align-items:center;gap:8px;padding:5px 7px;
   border:1px solid #bb9a76;border-radius:8px;background:#fff5e2;color:#4b2e23;
   text-align:left;line-height:1.25;box-shadow:0 2px 5px #5a392317;
 }
@@ -486,13 +486,11 @@ button.graph-card:hover,button.graph-card:focus-visible{outline:2px solid #94644
 .graph-person strong{font-size:14px;overflow-wrap:anywhere}
 .graph-person small{font-size:11px;color:#72564a;overflow-wrap:anywhere}
 .graph-ruler,.graph-crown{background:#fbebc7;border-color:#ae7d3f}
-.graph-ruler{height:61px}
-.graph-consort{height:66px}
-.graph-house{height:82px;display:grid;gap:3px;border-left:3px solid var(--house-color)}
+.graph-house{display:grid;gap:3px;border-left:3px solid var(--house-color)}
 .graph-kin-person{display:flex;align-items:center;gap:6px;min-width:0}
 .graph-kin-person strong{font-size:12px}
 .graph-kin-person small{font-size:10px}
-.graph-child{height:53px;background:#f7f3e5}
+.graph-child{background:#f7f3e5}
 .graph-child.graph-crown{background:#fbebc7}
 
 /* 宫中岁时活动与府中来信 */
@@ -503,3 +501,10 @@ button.graph-card:hover,button.graph-card:focus-visible{outline:2px solid #94644
 .palace-activity .grow small{display:block;color:#745747}
 .season-map-leads{margin:4px 0;padding:6px 10px;border-radius:5px;background:#542d25;color:#fff0ca;font-size:12px}
 .mlab.seasonal-lit{border-color:#f6c073;box-shadow:0 0 5px #e99858;background:#783c2d}
+
+.portrait-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,250px),1fr))}
+button.portrait-card{align-items:center}
+.portrait-card .bar i{min-width:0}
+.family-person{display:inline-flex;align-items:center;gap:10px;text-align:left;max-width:100%;padding:4px 8px}
+.family-person span{min-width:0;overflow-wrap:anywhere}
+.family-branch .family-person small{display:block;margin-inline-start:0}
