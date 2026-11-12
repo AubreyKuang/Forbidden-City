@@ -1,9 +1,7 @@
 const assert=require('node:assert/strict');
-const fs=require('node:fs');
 const vm=require('node:vm');
-const path=require('node:path');
+const {runGameScripts}=require('./game-scripts.cjs');
 // Stub drawing and storage to exercise the complete game script without a browser.
-const src=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8').match(/<script>([\s\S]*)<\/script>/)[1];
 const noop=()=>{};
 const canvas=new Proxy({measureText:()=>({width:100}),getImageData:()=>({data:[]}),createImageData:(w,h)=>({data:new Uint8Array(w*h*4)})}, {get:(o,k)=>o[k]||noop});
 const el=()=>({hidden:false,innerHTML:'',value:'',style:{},getContext:()=>canvas,toDataURL:()=>'',setAttribute:noop,addEventListener:noop,appendChild:noop,scrollIntoView:noop,remove:noop});
@@ -18,7 +16,7 @@ math.random=()=>{
   return ((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);
 };
 const ctx=vm.createContext({Math:math,forceRoll:roll=>{forcedRoll=roll;},document,localStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v)},requestAnimationFrame:noop,setTimeout:noop,setInterval:noop,getComputedStyle:()=>({getPropertyValue:()=>'sans-serif'}),console,assert});
-vm.runInContext(src,ctx);
+runGameScripts(ctx);
 vm.runInContext(`
 const drain = () => {
   for(let i=0;modalOpen && i<150;i++){
@@ -318,5 +316,27 @@ A.go('consort',poet.id);
 assert.match($('#panel').innerHTML,/aria-label="人物操作"/);
 assert.match($('#panel').innerHTML,/闲话家常/);
 assert.match($('#panel').innerHTML,/detail-vitals/);
+// A legacy consort retains her portrait ID, while older Western arrivals receive distinct dancer art.
+{
+  const stateBefore=JSON.stringify(S);
+  const regular=harem().find(c=>c.rank!==8);
+  regular.artPortrait=3;
+  const west=[];
+  for(let i=0;i<WESTERN_PORTRAITS.length;i++){
+    const c=makeGirl({fam:{t:'西域贡女',p:10},trait:'活泼'});
+    c.artPortrait=1;
+    S.consorts.push(c);
+    west.push(c.id);
+  }
+  save('1');load('1');migrate();
+  const cells=west.map(id=>portraitCell(byId(id)));
+  assert.equal(new Set(cells).size,3,'distinct outfits for Western arrivals');
+  assert.ok(cells.every(cell=>PORTRAIT_CLOTHES[cell]==='西域舞衣'));
+  assert.equal(portraitCell(byId(regular.id)),3);
+  save('1');load('1');migrate();
+  assert.deepEqual(west.map(id=>portraitCell(byId(id))),cells);
+  S=JSON.parse(stateBefore);
+  migrate();
+}
 console.log('PASS: 60 months, banquets, saves, family memories, historical scenes, map routines, autonomous follow-ups and diverse storylines');
 `,ctx,{timeout:15000});

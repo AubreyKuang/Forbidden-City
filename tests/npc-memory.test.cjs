@@ -1,17 +1,8 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const path = require('node:path');
 const vm = require('node:vm');
-const root = path.resolve(__dirname, '..');
-const read = name => fs.readFileSync(path.join(root, name), 'utf8');
-const dollhouse = fs.existsSync(path.join(root, 'js/social.js'));
-const palace = !fs.existsSync(path.join(root, 'npc-memory.js')) && !dollhouse;
-const html = read('index.html');
-const end = 'return { record, influence, recall };\n})();';
-const memorySource = palace
-  ? html.slice(html.indexOf('const NPCMemory ='), html.indexOf(end) + end.length)
-  : read(dollhouse ? 'js/npc-memory.js' : 'npc-memory.js');
+const { read, scripts } = require('./game-scripts.cjs');
+const memorySource = read('js/npc-memory.js');
 function runtime(extra = {}) {
   const context = vm.createContext(extra);
   vm.runInContext(memorySource, context);
@@ -30,8 +21,7 @@ function loadFunction(ctx, source, name, next) {
   vm.runInContext(source.slice(start, finish), ctx);
 }
 test('all entry-point scripts parse', () => {
-  for (const match of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)) new vm.Script(match[1]);
-  for (const match of html.matchAll(/<script src="([^"]+)"/g)) new vm.Script(read(match[1]));
+  assert.ok(scripts.length > 0);
 });
 test('independent perspectives, unknown observers, duplicate event and sequence gap', () => {
   const ctx=runtime(), world={};
@@ -71,53 +61,15 @@ test('capacity, retained sources, confidence and twenty save/load cycles', () =>
   assert.equal(ctx.memory.influence(uncertain,'alice','bob'),0);
   assert.equal(ctx.memory.influence({},'alice','bob'),0);
 });
-if(dollhouse) {
-  test('actual startSocial applies argument once and respects observer distance/visibility', () => {
-    const noop=()=>{};
-    const make=(pid,x)=>({pid,name:pid,persona:'normal',heart:'normal',job:'none',x,y:0,tx:x,ty:0,state:'idle',needs:{fun:60,hunger:60,energy:60}});
-    const a=make('alice',0), b=make('bob',1), near=make('charlie',2), far=make('diana',50), hidden=make('hidden',2);
-    a.act={kind:'argue'};
-    const G={dolls:[a,b,near,far,hidden],rel:{}};
-    const ctx=runtime({G,PERSONAS:{normal:{}},compat:()=>1,isF:()=>true,isE:()=>true,face:noop,say:noop,spawnHeart:noop,SFX:{play:noop},HOOK:{toast:noop},pick:a=>a[0],absNow:()=>100,lying:()=>false,canSee:n=>n!==hidden,addLog:noop,setTimeout:noop});
-    vm.runInContext(read('js/social.js'),ctx);
-    ctx.startSocial(a,b);
-    assert.equal(ctx.memory.recall(G,'alice').length,1);
-    assert.equal(ctx.memory.recall(G,'bob').length,1);
-    assert.equal(ctx.memory.recall(G,'charlie').length,1);
-    assert.equal(ctx.memory.recall(G,'diana').length,0);
-    assert.equal(ctx.memory.recall(G,'hidden').length,0);
-    assert.ok(ctx.rel(a,b).f<25);
-    vm.runInContext('weighted = list => list',ctx);
-    const withMemory=ctx.pickPartner(a,[b])[0][1];
-    const saved=G.npcMemory; delete G.npcMemory;
-    assert.ok(withMemory<ctx.pickPartner(a,[b])[0][1]);
-    G.npcMemory=saved;
-  });
-} else if(palace) {
-  test('actual quarrel and legacy remember entry points produce distinct memories', () => {
-    const S={turn:5},ctx=runtime({S,fullName:c=>c.name});
-    loadFunction(ctx,html,'remember','function deepLine(');
-    const a={id:1,name:'Alice'},b={id:2,name:'Bob'};
-    ctx.rememberQuarrel(a,b,a.id);
-    assert.match(ctx.memory.recall(S,1)[0].interpretation,/判给了我/);
-    assert.match(ctx.memory.recall(S,2)[0].interpretation,/判给了她/);
-    assert.equal(ctx.memory.recall(S,3).length,0);
-    ctx.remember(a,'hurt','被降位');
-    assert.ok(ctx.memory.influence(S,1,'emperor')<0);
-    assert.ok(S.npcMemory.events['event-1'].participants.includes(2));
-  });
-} else {
-  test('actual give entry point records gift and charges inventory once', () => {
-    const state={day:1,time:480,inv:{cookie:2},need:{mood:50}};
-    const relation={done:{},notes:{}},n={id:'alice',x:1,y:2,gifts:{cookie:15}};
-    const ctx=runtime({state,D:{},rel:()=>relation,note:()=>{},advanceTime:n=>state.time+=n,updateHud:()=>{},nt:()=>({giftLines:['Thanks {i}']}),tierOf:()=>0,itemLabel:k=>k,talk:(n,t,o,cb)=>cb(),nm:()=> 'Alice',addPts:()=>{},clampN:n=>n,milestone:()=>{}});
-    loadFunction(ctx,html,'rememberPlayer','function addPts(');
-    loadFunction(ctx,html,'give','function ');
-    ctx.give(n,'cookie');
-    assert.equal(state.inv.cookie,1);
-    assert.equal(relation.done.gift,true);
-    assert.equal(ctx.memory.recall(state,'alice')[0].interpretation.object,'cookie');
-    assert.equal(state.npcMemory.events['event-1'].type,'gift');
-    assert.ok(ctx.memory.influence(state,'alice','player')>0);
-  });
-}
+test('actual quarrel and legacy remember entry points produce distinct memories', () => {
+  const S={turn:5},ctx=runtime({S,fullName:c=>c.name});
+  loadFunction(ctx,read('js/personality.js'),'remember','function deepLine(');
+  const a={id:1,name:'Alice'},b={id:2,name:'Bob'};
+  ctx.rememberQuarrel(a,b,a.id);
+  assert.match(ctx.memory.recall(S,1)[0].interpretation,/判给了我/);
+  assert.match(ctx.memory.recall(S,2)[0].interpretation,/判给了她/);
+  assert.equal(ctx.memory.recall(S,3).length,0);
+  ctx.remember(a,'hurt','被降位');
+  assert.ok(ctx.memory.influence(S,1,'emperor')<0);
+  assert.ok(S.npcMemory.events['event-1'].participants.includes(2));
+});

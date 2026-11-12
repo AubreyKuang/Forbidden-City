@@ -1,12 +1,10 @@
 const assert=require('node:assert/strict');
 const {test}=require('node:test');
-const fs=require('node:fs');
 const vm=require('node:vm');
-const path=require('node:path');
+const {runGameScripts}=require('./game-scripts.cjs');
 
 // Same harness as palace-flow: run the whole game script with drawing and storage stubbed.
 function boot(seedValue=4242){
-  const src=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8').match(/<script>([\s\S]*)<\/script>/)[1];
   const noop=()=>{};
   const canvas=new Proxy({measureText:()=>({width:100}),getImageData:()=>({data:[]}),createImageData:(w,h)=>({data:new Uint8Array(w*h*4)})},{get:(o,k)=>o[k]||noop});
   const el=()=>({hidden:false,innerHTML:'',value:'',style:{},getContext:()=>canvas,toDataURL:()=>'',setAttribute:noop,addEventListener:noop,appendChild:noop,scrollIntoView:noop,remove:noop});
@@ -16,7 +14,7 @@ function boot(seedValue=4242){
   math.random=()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);
   const ctx=vm.createContext({Math:math,document,localStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v)},
     requestAnimationFrame:noop,setTimeout:noop,setInterval:noop,getComputedStyle:()=>({getPropertyValue:()=>'sans-serif'}),console,assert,confirm:()=>true,Date});
-  vm.runInContext(src,ctx);
+  runGameScripts(ctx);
   vm.runInContext(`var drain=()=>{for(let i=0;modalOpen&&i<150;i++){if($('#mbox').innerHTML.includes('onclick="nextEv()"'))nextEv();else choose(curEv.choices.findIndex(c=>!c.cond||c.cond()));}};
     A.newGame();A.start();drain();`,ctx);
   return {ctx,storage,run:code=>vm.runInContext(code,ctx)};

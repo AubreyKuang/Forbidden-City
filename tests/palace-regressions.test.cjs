@@ -1,17 +1,17 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
-const fs=require('node:fs');
 const vm=require('node:vm');
-const html=fs.readFileSync(require('node:path').join(__dirname,'../index.html'),'utf8');
-function source(from,to){return html.slice(html.indexOf(from),html.indexOf(to,html.indexOf(from)));}
+const {read}=require('./game-scripts.cjs');
+const visits=read('js/visits.js'),heirs=read('js/heirs.js');
+function source(script,from,to){return script.slice(script.indexOf(from),to?script.indexOf(to,script.indexOf(from)):undefined);}
 function setup(d={name:'沈太后',alive:true}){
   const S={flags:{dowager:d},emp:{sur:'萧'},consorts:[],children:[],turn:1,month:1};
   let id=100;
   const ctx=vm.createContext({S,SUR:['沈','苏'],pick:a=>a[0],ri:a=>a,fullName:c=>c.sur+'兰',remember:()=>{},story:()=>{},R:()=>.5,chance:()=>false,kidsAlive:()=>S.children,makeGirl:o=>({id:id++,alive:true,favor:10,lastBirth:-99,trait:'温婉',...o}),addConsort:g=>{g.enteredAt=S.turn;S.consorts.push(g)},chg:()=>'',fx:()=>'',harem:()=>S.consorts,byId:id=>S.consorts.find(c=>c.id===id),relGet:()=>80,rd:Math.round,esc:String});
-  vm.runInContext(source('function ensureDowager()','function festival()'),ctx);
-  vm.runInContext(source('const fosterOf=','const raisesKid='),ctx);
-  vm.runInContext(source('function relWord(','function initKidRel('),ctx);
-  vm.runInContext(source('function conKidLine(','/* ============ 家族'),ctx);
+  vm.runInContext(source(visits,'function ensureDowager()','function festival()'),ctx);
+  vm.runInContext(source(heirs,'const fosterOf=','const raisesKid='),ctx);
+  vm.runInContext(source(heirs,'function relWord(','function initKidRel('),ctx);
+  vm.runInContext(source(heirs,'function conKidLine('),ctx);
   return ctx;
 }
 test('discarded optional proposal does not consume cooldown or create kin links',()=>{
@@ -70,8 +70,8 @@ test('multiple later recommendations remain possible and cooldown survives a ser
 });
 test('accepted relatives write independent persistent NPC memories through the actual memory implementation',()=>{
   const c=established();
-  vm.runInContext(source('const NPCMemory =','/* ============ 工具'),c);
-  vm.runInContext(source('function remember(c,','function deepLine('),c);
+  vm.runInContext(read('js/npc-memory.js'),c);
+  vm.runInContext(source(read('js/personality.js'),'function remember(c,','function deepLine('),c);
   const ev=c.dowagerEvent();ev.onShow();ev.choices[0].f();
   const memories=vm.runInContext('NPCMemory.recall(S,1)',c);assert.ok(memories.some(m=>String(m.interpretation).includes('堂妹')));
   const younger=vm.runInContext(`NPCMemory.recall(S,${ev.por.id})`,c);assert.ok(younger.some(m=>String(m.interpretation).includes('堂姐')));
