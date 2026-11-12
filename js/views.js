@@ -39,7 +39,7 @@ function dockIcon(key){
   return `<img class="dock-icon px" src="${dockImages.get(key)}" alt="" aria-hidden="true">`;
 }
 function renderMenu(){const m=$('#menu');if(!S){m.innerHTML='';m.hidden=true;return}m.hidden=false;
-  const current={palace:'map',place:'map',banquet:'map',consort:'harem',kid:'kids'}[UI.view]||UI.view;
+  const current={palace:'map',place:'map',banquet:'map',consort:'harem',kid:'kids',princess:'out'}[UI.view]||UI.view;
   m.innerHTML=MENU.map(([k,l])=>`<button class="btn${current===k?' on':''}" ${current===k?'aria-current="page"':''} ${k==='court'?'title="精力-1"':''} onclick="${k==='court'?'A.court()':`A.go('${k}')`}">${dockIcon(k)}<span>${l}</span></button>`).join('');
 }
 let panelRoute;
@@ -47,7 +47,7 @@ function renderPanel(){
   const p=$('#panel'),v=UI.view;
   const route=JSON.stringify([v,UI.sel]);
   if(!S)p.innerHTML=v==='new'?viewNew():viewTitle();
-  else p.innerHTML=({family:viewFamily,map:viewMap,palace:viewPalace,place:viewPlace,banquet:viewBanquet,home:viewHome,harem:viewHarem,consort:viewConsort,cards:viewCards,xx:viewXX,kids:viewKids,kid:viewKid,out:viewOut,log:viewLog,sys:viewSys}[v]||viewHome)();
+  else p.innerHTML=({family:viewFamily,map:viewMap,palace:viewPalace,place:viewPlace,banquet:viewBanquet,home:viewHome,harem:viewHarem,consort:viewConsort,cards:viewCards,xx:viewXX,kids:viewKids,kid:viewKid,princess:viewPrincessEstate,out:viewOut,log:viewLog,sys:viewSys}[v]||viewHome)();
   if(route!==panelRoute){p.scrollTop=0;panelRoute=route;}
 }
 function render(){
@@ -305,8 +305,8 @@ function viewKid(){
   const k=kidById(UI.sel);if(!k)return viewKids();const a=kidAge(k);
   const pol=['均衡','读书','习武','修德','放养'];
   const foster=fosterOf(k),mom=byId(k.mom);
-  const status=[k.alive?`${a}岁`:k.lost?'下落不明':'已夭折',k.married?'已婚嫁':'',k.away?'已就藩':'',k.jailed?'圈禁于宗人府':''].filter(Boolean).join(' · ');
-  const care=k.alive?`<div class="hint">当前方针：${esc(k.policy)} · 三岁起生效</div><div class="acts">
+  const status=[k.alive?`${a}岁`:k.lost?'下落不明':'已夭折',k.married?'已婚嫁':'',k.estate?'已开府':'',k.away?'已就藩':'',k.jailed?'圈禁于宗人府':''].filter(Boolean).join(' · ');
+  const care=k.alive&&!k.estate?`<div class="hint">当前方针：${esc(k.policy)} · 三岁起生效</div><div class="acts">
     ${pol.map(p=>`<button class="btn sm ${k.policy===p?'on':''}" aria-pressed="${k.policy===p}" onclick="A.kidPolicy(${k.id},'${p}')">${p}</button>`).join('')}</div>
     <div class="acts">${a>=6?`<button class="btn ${k.tutor?'on':''}" onclick="A.kidTutor(${k.id})">${k.tutor?'已延请太傅':'延请太傅'}<small>每月5万两</small></button>`:''}
     ${a<14?`<button class="btn" onclick="A.foster(${k.id})">${foster?'换一位养母':'交给妃嫔抚养'}</button>`:''}
@@ -316,10 +316,11 @@ function viewKid(){
   return `<button class="btn quiet sm detail-back" onclick="A.go('kids')">← 返回皇嗣</button>
    <header class="detail-head">${porImg(k,112)}<div class="grow"><p>${status}</p><h2>${esc(kidName(k))}</h2>
     <p>生母 ${esc(k.momName)}${foster?` · 养母 ${esc(cName(foster))}`:''}</p></div></header>
-   ${k.alive?`<div class="detail-actions" role="group" aria-label="人物操作"><span class="detail-action-label" aria-hidden="true">人物操作</span><div class="acts"><button class="btn primary" onclick="A.kidVisit(${k.id})">探望<small>精力-1</small></button></div></div>`:''}
+   ${k.alive&&!k.estate?`<div class="detail-actions" role="group" aria-label="人物操作"><span class="detail-action-label" aria-hidden="true">人物操作</span><div class="acts"><button class="btn primary" onclick="A.kidVisit(${k.id})">探望<small>精力-1</small></button></div></div>`:''}
    <div class="detail-vitals">${bar('才学',k.lit,'#617991')}${bar('武艺',k.mar,'#92504a')}${bar('品德',k.vir,'#517369')}</div>
    <div class="detail-stack">
     ${k.alive?initiativeHTML(k):''}
+    ${princessActions(k)}
     ${k.alive?detailSection('与母亲的日常',kidFamilyPanel(k)):''}
     ${detailSection('教养与抚养',care)}
     <div class="detail-columns">
@@ -332,7 +333,7 @@ function viewKid(){
 }
 function viewOut(){
   const o=[['garden','御花园','偶遇妃嫔、宫女，或独自散心'],['city','微服出宫','体察民情，也许会遇见有缘人'],['hunt','南苑围猎','武略越高越易成功，有受伤风险'],['temple','护国寺祈福','民心、龙体小增，本月更易得子'],['spa','温泉行宫','休养龙体（国库-50万两）']];
-  return `<h2>出巡</h2><p class="hint">每次出巡花费1点精力。</p><div class="grid">${o.map(([k,n,d])=>`<button class="card" onclick="A.out('${k}')"><div class="grow"><div class="nm">${n}</div><div>${d}</div></div></button>`).join('')}</div>`}
+  return `<h2>出巡</h2><p class="hint">每次出巡花费1点精力。</p><div class="grid">${o.map(([k,n,d])=>`<button class="card" onclick="A.out('${k}')"><div class="grow"><div class="nm">${n}</div><div>${d}</div></div></button>`).join('')}</div>${princessEstatePanel()}`}
 function viewLog(){
   const L=S.log.filter(l=>UI.logF==='all'?true:l.b).slice().reverse();
   return `<h2>起居注</h2><div class="log-filter"><button class="btn sm ${UI.logF==='all'?'on':''}" onclick="UI.logF='all';render()">全部</button><button class="btn sm ${UI.logF==='big'?'on':''}" onclick="UI.logF='big';render()">只看大事</button><button class="btn sm" onclick="A.logCard()">保存上月纪念卡</button></div>

@@ -41,7 +41,7 @@ A.kidTitle=function(id){const k=kidById(id);pushEv({title:k.sex==='m'?'封王':'
 /* ============ 皇嗣事件 ============ */
 function kcd(k,t,n=24){k.cd=k.cd||{};if(S.turn-(k.cd[t]===undefined?-99:k.cd[t])<n)return false;k.cd[t]=S.turn;return true}
 function kidEvent(){
-  const ks=shuffle(kidsAlive());if(!ks.length)return null;
+  const ks=shuffle(kidsAlive().filter(k=>!k.estate));if(!ks.length)return null;
   for(const k of ks){const a=kidAge(k);
     if(a<8&&S.turn-(k.sick===undefined?-99:k.sick)>=18&&chance(.3)){k.sick=S.turn;const ill=pick([['夜里发起高热，乳母急得团团转','一场高热'],['出了痘疹，浑身滚烫','出痘'],['贪凉吃多了冰酪，上吐下泻','积食腹泻'],['着了风寒，咳得小脸通红','风寒咳嗽']]); return {title:'皇嗣染恙',por:k,text:`${kidName(k)}${ill[0]}。`,choices:[
       {t:'宣太医',f:()=>{if(chance(.9)||k.hp>60){kstory(k,`${a}岁时${ill[1]}，所幸太医及时诊治。`);return '服了几剂药，烧退了。'}k.alive=false;kstory(k,'幼时染病夭折。');{const mm=byId(k.mom);if(mm&&mm.alive)setXin(mm,'悲恸',`${k.name}夭折`)}log(`${kidName(k)}夭折。`,1);AU.sfx('sad');return `太医尽力了……${kidName(k)}没能熬过去。`}},
@@ -63,11 +63,7 @@ function kidEvent(){
 }
 function milestone(){
   for(const k of kidsAlive()){const a=kidAge(k);
-    if(k.sex==='f'&&a>=15&&!k.married&&!k.asked){k.asked=true;return {title:'公主婚事',por:k,text:`${kidName(k)}已年满十五，到了议婚的年纪。`,choices:[
-      {t:'下嫁重臣之子，笼络朝臣',f:()=>{k.married=true;kstory(k,'下嫁重臣之子，十里红妆。');log(`${kidName(k)}下嫁。`,1);return fx(chg({prestige:4,treasury:-50}))}},
-      {t:'远嫁北狄和亲，换边境安宁',f:()=>{k.married=true;kstory(k,'远嫁北狄和亲。临行前，她回头望了紫禁城最后一眼。');log(`${kidName(k)}和亲北狄。`,1);AU.sfx('sad');const m=byId(k.mom);if(m&&m.alive)cchg(m,{mood:-30,aff:-10});return fx(chg({prestige:3,people:6}))}},
-      {t:'让她自己挑选驸马',f:()=>{k.married=true;kstory(k,'自择驸马，嫁给了一位寒门状元，夫妻和睦。');log(`${kidName(k)}自择驸马。`);k.love=clamp(k.love+15);return '她红着脸说出了一个名字——今科状元。§父爱+15'}},
-      {t:'再留几年',f:()=>{k.asked=false;k.born-=0;return '你舍不得女儿出嫁。'}}]}}
+    if(k.sex==='f'){const event=princessMilestone(k);if(event)return event;}
     if(k.sex==='m'&&a>=16&&!k.adult){k.adult=true;if(S.heir===k.id)continue;return {title:'皇子成年',por:k,text:`${kidName(k)}年满十六，按祖制当封王开府。`,choices:[
       {t:'封亲王，留京辅政',f:()=>{A.kidTitle(k.id);k.amb=clamp(k.amb+10);return null}},
       {t:'封王，就藩地方',f:()=>{k.title=pick(['晋','楚','燕','蜀','吴','齐'])+'王';k.amb=clamp(k.amb-10);kstory(k,`受封${k.title}，就藩地方。`);log(`封${k.name}为${k.title}，就藩。`);return `${k.name}辞别父皇，前往封地。`}}]}}
