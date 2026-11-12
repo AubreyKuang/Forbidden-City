@@ -63,10 +63,37 @@ assert.equal(save('3'),true);S.turn++;assert.equal(save('3'),true);
 localStorage.setItem(SKEY+'3','{invalid');A.load('3');assert.equal(S.turn,turn);
 assert.equal(S.courtPolicyTurn,turn);assert.equal(S.flags.lastMaidEncounter,firstEncounter+4);
 let lastMaid=S.flags.lastMaidEncounter;
+const ambientTurns=new Map();
 for(let i=0;i<60;i++){
   S.emp.health=100;S.emp.people=100;S.emp.treasury=1000;A.endMonth();drain();
   if(lastMaid!==S.flags.lastMaidEncounter){assert.ok(S.flags.lastMaidEncounter-lastMaid>=4);lastMaid=S.flags.lastMaidEncounter;}
+  for(const [title,seenAt] of Object.entries(S.flags.ambientRecent)){
+    if(seenAt!==S.turn)continue;
+    assert.ok(seenAt-(ambientTurns.get(title)??-Infinity)>=4,title);
+    ambientTurns.set(title,seenAt);
+  }
 }
 assert.equal(S.turn,turn+60);
-console.log('PASS: new game, ten panels, shared maid cooldown, dowager events, biological label, politics, family tree, backup saves, 60 months');
+assert.ok(ambientTurns.size>0);
+// The same court can play differently when a character's situation or education changes.
+const actor=harem()[0]||makeGirl({trait:'温婉'});
+S.consorts=[actor];actor.trait='温婉';actor.t2='嗜甜';actor.alive=true;actor.gone=false;actor.cold=false;actor.maid=false;
+delete actor.initiative;delete actor.qcd;
+S.flags.initiativeTurns={};E().health=70;E().energy=4;
+const discardedQuirk=quirkEvent();assert.ok(discardedQuirk);assert.equal(actor.qcd,undefined);
+initiativeTick();assert.equal(actor.initiative.id,'broth');assert.equal(E().health,71);
+A.go('map');assert.match($('#panel').innerHTML,/送汤/);
+A.go('consort',actor.id);assert.match($('#panel').innerHTML,/去向她道谢/);
+A.answerInitiative(actor.id,false);assert.equal(E().energy,3);
+assert.match($('#panel').innerHTML,/你已回应/);
+A.answerInitiative(actor.id,false);assert.equal(E().energy,3);
+const savedTurn=S.turn;A.load('auto');assert.equal(S.turn,savedTurn);
+const reloaded=byId(actor.id);assert.ok(reloaded.initiative.response);
+assert.ok(NPCMemory.recall(S,actor.id).some(m=>String(m.interpretation).includes('送汤')));
+S.turn++;initiativeTick();assert.equal(currentInitiative(reloaded),null);
+const student=makeKid(reloaded,'m','承学');student.born=S.turn-8*12;student.lit=35;student.policy='均衡';
+S.children=[student];initiativeTick();assert.equal(currentInitiative(student),null);
+A.kidPolicy(student.id,'读书');initiativeTick();assert.equal(student.initiative.id,'study');assert.equal(student.lit,36);
+A.go('kid',student.id);assert.match($('#panel').innerHTML,/主动校书/);
+console.log('PASS: ten panels, maid cooldown, dowager events, politics, backup saves, 60 months, character initiatives, education and persisted responses');
 `,ctx,{timeout:15000});
