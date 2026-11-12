@@ -55,7 +55,8 @@ const younger=byId(later.por.id);assert.equal(elder.sur,younger.sur);assert.equa
 const child=makeKid(elder,'m','承安');child.foster=younger.id;
 A.go('consort',elder.id);assert.match($('#panel').innerHTML,/亲生皇子/);
 A.save('1');const turn=S.turn;S.turn++;A.load('1');assert.equal(S.turn,turn);assert.ok(NPCMemory.recall(S,elder.id).length);
-A.go('harem');assert.match($('#panel').innerHTML,/家族关系树/);
+A.go('harem');assert.doesNotMatch($('#panel').innerHTML,/家族关系树/);
+A.go('family');assert.match($('#panel').innerHTML,/家族关系树/);assert.match($('#panel').innerHTML,/抚养/);
 A.go('home');assert.match($('#panel').innerHTML,/朝堂势力/);
 const beforeCourt=E().energy;A.courtPolicy('civil');assert.equal(E().energy,beforeCourt-1);
 A.courtPolicy('army');assert.equal(E().energy,beforeCourt-1);
@@ -95,5 +96,12 @@ const student=makeKid(reloaded,'m','承学');student.born=S.turn-8*12;student.li
 S.children=[student];initiativeTick();assert.equal(currentInitiative(student),null);
 A.kidPolicy(student.id,'读书');initiativeTick();assert.equal(student.initiative.id,'study');assert.equal(student.lit,36);
 A.go('kid',student.id);assert.match($('#panel').innerHTML,/主动校书/);
-console.log('PASS: ten panels, maid cooldown, dowager events, politics, backup saves, 60 months, character initiatives, education and persisted responses');
+reloaded.trait='才女';delete reloaded.initiative;S.month=4;
+assert.equal(PALACE_INITIATIVES.fan.match(reloaded),false);
+S.month=5;initiativeTick();assert.equal(reloaded.initiative.id,'fan');
+A.go('consort',reloaded.id);assert.match($('#panel').innerHTML,/《东京梦华录》卷八·端午/);
+delete student.initiative;student.policy='习武';student.mar=40;student.hp=60;
+S.month=11;assert.equal(PALACE_INITIATIVES.skate.match(student),false);
+S.month=12;initiativeTick();assert.equal(student.initiative.id,'skate');assert.equal(student.mar,42);
+console.log('PASS: ten panels, cooldowns, politics, backup saves, 60 months, initiatives, education, persisted responses and historical season gates');
 `,ctx,{timeout:15000});

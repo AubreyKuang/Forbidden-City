@@ -11,7 +11,7 @@ function setup(d={name:'沈太后',alive:true}){
   vm.runInContext(source('function ensureDowager()','function festival()'),ctx);
   vm.runInContext(source('const fosterOf=','const raisesKid='),ctx);
   vm.runInContext(source('function relWord(','function initKidRel('),ctx);
-  vm.runInContext(source('function conKidLine(','/* 人际总览'),ctx);
+  vm.runInContext(source('function conKidLine(','/* ============ 家族'),ctx);
   return ctx;
 }
 test('discarded optional proposal does not consume cooldown or create kin links',()=>{
