@@ -494,3 +494,12 @@ button.graph-card:hover,button.graph-card:focus-visible{outline:2px solid #94644
 .graph-kin-person small{font-size:10px}
 .graph-child{height:53px;background:#f7f3e5}
 .graph-child.graph-crown{background:#fbebc7}
+
+/* 宫中岁时活动与府中来信 */
+.palace-activity{margin:12px 0;padding:12px 14px;border:1px solid #c3a177;border-left:4px solid #93613f;border-radius:8px;background:#fbefd9;color:#4d3327}
+#panel .palace-activity h3{margin:0 0 6px;padding:0 0 5px;color:#723d2c;border-bottom:1px solid #d9bfa1}
+.palace-activity p{margin:6px 0}
+.palace-activity .acts{margin:8px 0 0}
+.palace-activity .grow small{display:block;color:#745747}
+.season-map-leads{margin:4px 0;padding:6px 10px;border-radius:5px;background:#542d25;color:#fff0ca;font-size:12px}
+.mlab.seasonal-lit{border-color:#f6c073;box-shadow:0 0 5px #e99858;background:#783c2d}
