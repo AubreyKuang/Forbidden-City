@@ -2,7 +2,7 @@
 
 像素风中国古代宫廷养成游戏：当皇帝、选秀纳妃、生儿育女、代代传位。
 
-**▶ 在线试玩：https://aubreykuang.github.io/Forbidden-City/**（电脑、手机浏览器都能直接打开）
+**▶ 在线试玩：https://aubreykuang.github.io/Forbidden-City/**
 
 **整个游戏只有一个 `index.html`，没有任何图片、模型或音频文件。** 画面、立绘、像素字体和古筝配乐，都是在打开网页时由代码现场生成的。（`docs/screenshots/` 里的截图只用于本说明，游戏本身不加载它们。）
 
