@@ -236,12 +236,17 @@ body{background:#f3eee4}
 .detail-vitals .bar{display:grid;grid-template-columns:1fr auto;gap:5px;padding:10px 12px;background:#f7f1e7;border-radius:8px;margin:0;font-size:13px}
 .detail-vitals .bar i{grid-row:2;grid-column:1/-1;min-width:0;background:#e8dfd0}
 .detail-vitals .bar em{grid-row:1;grid-column:2;width:auto;font-weight:650}
-.detail-stack{display:grid;gap:0;margin-top:12px}
+.detail-stack{display:grid;gap:18px;margin-top:16px}
+.detail-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.detail-section{border-top:1px solid var(--paper2);min-width:0}
+#panel .detail-section h3{margin:10px 0 8px;padding:0;border:0;font-size:15px}
 .detail-fold{border-top:1px solid var(--paper2);min-width:0}
 .detail-fold summary{cursor:pointer;padding:13px 2px;font-weight:650;color:var(--ink);line-height:1.5}
-.detail-content{display:grid;gap:10px;padding:0 2px 16px;overflow-wrap:anywhere}
+.detail-content{display:grid;gap:8px;padding:0 2px 4px;overflow-wrap:anywhere}
+.detail-content p,.detail-content .acts{margin:0}
 .detail-content .stats{grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr))}
-.detail-fold .story{max-height:360px}
+.detail-content .story{max-height:none}
+@media(max-width:600px){.detail-columns{grid-template-columns:1fr;gap:14px}.detail-stack{gap:14px}}
 @media(max-width:480px){.detail-head{gap:12px;padding:14px}.detail-head .por{width:66px}.detail-vitals{grid-template-columns:repeat(3,minmax(0,1fr))}.detail-vitals .bar{padding:8px}.detail-actions .btn{min-height:44px}.detail-content{gap:8px}}
 
 /* Game viewport: scene layer, status HUD, and a fixed command dock. */
@@ -1690,9 +1695,13 @@ function renderMenu(){const m=$('#menu');if(!S){m.innerHTML='';m.hidden=true;ret
   const current={palace:'map',place:'map',consort:'harem',kid:'kids'}[UI.view]||UI.view;
   m.innerHTML=MENU.map(([k,l])=>`<button class="btn${current===k?' on':''}" ${current===k?'aria-current="page"':''} ${k==='court'?'title="精力-1"':''} onclick="${k==='court'?'A.court()':`A.go('${k}')`}">${dockIcon(k)}<span>${l}</span></button>`).join('');
 }
-function renderPanel(){const p=$('#panel');const v=UI.view;
-  if(!S){p.innerHTML=v==='new'?viewNew():viewTitle();return}
-  p.innerHTML=({rel:viewRel,map:viewMap,palace:viewPalace,place:viewPlace,home:viewHome,harem:viewHarem,consort:viewConsort,cards:viewCards,xx:viewXX,kids:viewKids,kid:viewKid,out:viewOut,log:viewLog,sys:viewSys}[v]||viewHome)();
+let panelRoute;
+function renderPanel(){
+  const p=$('#panel'),v=UI.view;
+  const route=JSON.stringify([v,UI.sel]);
+  if(!S)p.innerHTML=v==='new'?viewNew():viewTitle();
+  else p.innerHTML=({rel:viewRel,map:viewMap,palace:viewPalace,place:viewPlace,home:viewHome,harem:viewHarem,consort:viewConsort,cards:viewCards,xx:viewXX,kids:viewKids,kid:viewKid,out:viewOut,log:viewLog,sys:viewSys}[v]||viewHome)();
+  if(route!==panelRoute){p.scrollTop=0;panelRoute=route;}
 }
 function render(){
   const app=$('#app');
@@ -1777,12 +1786,17 @@ function viewHarem(){
   return `<h2>后宫</h2><p class="hint">点击妃嫔查看详情、互动与她的故事。各位分名额：嫔6、妃4、贵妃2、皇贵妃1、皇后1。</p>${facHTML()}${clanHTML()}${familyTreeHTML()}
    ${sec('中宫',g(c=>c.rank===8))}${sec('妃位',g(c=>c.rank>=5&&c.rank<8))}${sec('嫔位',g(c=>c.rank===4))}${sec('小主',g(c=>c.rank<4))}${sec('冷宫',all.filter(c=>c.cold))}${sec('贴身宫女',maids().filter(m=>m.near))}${sec('承恩宫女',maids().filter(m=>!m.near))}
    ${dead.length?`<h3>故人</h3><div class="hint">${dead.map(c=>`<button class="btn sm" onclick="A.go('consort',${c.id})">${esc(fullName(c))}${c.gone?'（出宫）':'（已故）'}</button>`).join(' ')}</div>`:''}`}
-function detailFold(title,content,open=false){
-  return content?`<details class="detail-fold" ${open?'open':''}><summary>${title}</summary><div class="detail-content">${content}</div></details>`:'';
+function detailSection(title,content){
+  return content?`<section class="detail-section"><h3>${title}</h3><div class="detail-content">${content}</div></section>`:'';
+}
+function detailFold(title,content){
+  return content?`<details class="detail-fold"><summary>${title}</summary><div class="detail-content">${content}</div></details>`:'';
 }
 function detailStory(person){
   const entries=person.story.slice().reverse().map(s=>`<li><time>${esc(s.d)}</time>${esc(s.t)}</li>`);
-  return entries.length?`<ul class="story">${entries.join('')}</ul>`:'<p class="hint">尚无记载。</p>';
+  if(!entries.length)return '<p class="hint">尚无记载。</p>';
+  const list=items=>`<ul class="story">${items.join('')}</ul>`;
+  return list(entries.slice(0,2))+(entries.length>2?detailFold(`更早的记录（${entries.length-2}条）`,list(entries.slice(2))):'');
 }
 function viewConsort(){
   const c=byId(UI.sel);if(!c)return viewHarem();
@@ -1820,10 +1834,12 @@ function viewConsort(){
    ${acts?`<div class="detail-actions"><div class="acts">${acts}</div></div>`:''}
    <div class="detail-vitals">${bar('恩宠',c.favor)}${bar('心情',c.mood,'#517369')}${bar('情分',c.aff,'#936375')}</div>
    <div class="detail-stack">
-    ${detailFold('近况与性情',`<p class="hint">${esc(TRAITS[c.trait].d)} · 侍寝 ${c.nights} 次</p>${act?xinDetail(c)+deepLine(c):''}<div class="stats">${st('容貌',c.looks)}${st('才情',c.talent)}${st('德行',c.virtue)}${st('心机',c.scheme,!c.known)}</div>`)}
-    ${detailFold('家族与人际',`${kids.length?`<div>子女：${kids.map(k=>`<button class="btn quiet sm" onclick="A.go('kid',${k.id})">${esc(k.name)}</button>`).join(' ')}</div>`:''}${family}`)}
-    ${detailFold('她的故事',arcLine(c)+detailStory(c))}
-    ${detailFold('册封与宫务',management?`<div class="acts">${management}</div>`:'')}
+    <div class="detail-columns">
+     ${detailSection('近况与性情',`<p class="hint">${esc(TRAITS[c.trait].d)} · 侍寝 ${c.nights} 次</p>${act?xinDetail(c)+deepLine(c):''}<div class="stats">${st('容貌',c.looks)}${st('才情',c.talent)}${st('德行',c.virtue)}${st('心机',c.scheme,!c.known)}</div>`)}
+     ${detailSection('家族与人际',`${kids.length?`<div>子女：${kids.map(k=>`<button class="btn quiet sm" onclick="A.go('kid',${k.id})">${esc(k.name)}</button>`).join(' ')}</div>`:''}${family}`)}
+    </div>
+    ${detailSection('册封与宫务',management?`<div class="acts">${management}</div>`:'')}
+    ${detailSection('她的故事',arcLine(c)+detailStory(c))}
     ${detailFold('处置',penalties?`<div class="acts">${penalties}</div>`:'')}
    </div>`;
 }
@@ -1863,11 +1879,13 @@ function viewKid(){
    ${k.alive?`<div class="detail-actions"><div class="acts"><button class="btn primary" onclick="A.kidVisit(${k.id})">探望<small>精力-1</small></button></div></div>`:''}
    <div class="detail-vitals">${bar('才学',k.lit,'#617991')}${bar('武艺',k.mar,'#92504a')}${bar('品德',k.vir,'#517369')}</div>
    <div class="detail-stack">
-    ${detailFold('教养与抚养',care)}
-    ${detailFold('其他属性',`<div class="stats">${bar('体魄',k.hp,'#a87a26')}${bar('野心',k.amb,'#6b4a33')}${bar('父爱',k.love,'#936375')}${k.sex==='m'&&a>=10?bar('支持',k.sup||0,'#617991'):''}</div>`)}
-    ${detailFold('宫中关系',k.alive?kidRelLine(k):'')}
-    ${detailFold('封号与储位',titles?`<div class="acts">${titles}</div>`:'')}
-    ${detailFold('成长记',detailStory(k))}
+    ${detailSection('教养与抚养',care)}
+    <div class="detail-columns">
+     ${detailSection('其他属性',`<div class="stats">${bar('体魄',k.hp,'#a87a26')}${bar('野心',k.amb,'#6b4a33')}${bar('父爱',k.love,'#936375')}${k.sex==='m'&&a>=10?bar('支持',k.sup||0,'#617991'):''}</div>`)}
+     ${detailSection('宫中关系',k.alive?kidRelLine(k):'')}
+    </div>
+    ${detailSection('封号与储位',titles?`<div class="acts">${titles}</div>`:'')}
+    ${detailSection('成长记',detailStory(k))}
    </div>`;
 }
 function viewOut(){
