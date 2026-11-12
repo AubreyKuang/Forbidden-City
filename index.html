@@ -237,6 +237,7 @@ body{background:#f3eee4}
 .detail-vitals .bar i{grid-row:2;grid-column:1/-1;min-width:0;background:#e8dfd0}
 .detail-vitals .bar em{grid-row:1;grid-column:2;width:auto;font-weight:650}
 .initiative-note{padding:12px 14px;background:#efe5d1;border-radius:8px}.initiative-note p{margin:4px 0}.initiative-note small{color:var(--ink2)}.initiative-note>small{display:block;margin-top:3px}.initiative-note>.btn{margin-top:8px}.initiative-note .btn small{color:inherit}.initiative-notices{display:flex;flex-wrap:wrap;gap:6px;padding:6px 0}.initiative-notices .btn{background:#4b2a24;color:#fff0d1}
+.family-branch{border-bottom:1px solid var(--paper2);padding:7px 0}.family-branch summary{cursor:pointer;padding:4px 0}.family-branch summary .hint{margin-inline-start:8px}.family-branch ul{margin:2px 0 5px;padding-inline-start:20px}.family-branch li::marker{color:#ae8565}.family-branch li .hint{margin-inline-start:4px}
 .detail-stack{display:grid;gap:18px;margin-top:16px}
 .detail-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
 .detail-section{border-top:1px solid var(--paper2);min-width:0}
@@ -1673,7 +1674,7 @@ function renderTop(){
    <span class="st">国库 <b>${e.treasury}</b>万两</span><span class="st" aria-label="精力 ${e.energy}／${mx}">精力 ${pips}</span></div>
    <div class="hud-controls">${sound}<button class="btn gold sm hud-next" onclick="A.endMonth()" ${S.over?'disabled':''}>结束本月 ▸</button></div>`;
 }
-const MENU=[['map','宫城'],['home','御书房'],['court','上朝'],['harem','后宫'],['cards','翻牌子'],['xx','选秀'],['kids','皇嗣'],['rel','人际'],['out','出巡'],['log','起居注'],['sys','存档']];
+const MENU=[['map','宫城'],['home','御书房'],['court','上朝'],['harem','后宫'],['cards','翻牌子'],['xx','选秀'],['kids','皇嗣'],['family','家族'],['out','出巡'],['log','起居注'],['sys','存档']];
 const DOCK_ART={
   map:['....g....','..ggggg..','ggggggggg','.rr...rr.','.rg...gr.','.rg...gr.','ggggggggg'],
   home:['.ggggggg.','.g.....g.','.ggggggg.','.g.r.r.g.','.g.r.r.g.','.ggggggg.','...ggg...'],
@@ -1682,7 +1683,7 @@ const DOCK_ART={
   cards:['...jjj...','..jjjjj..','..jgggj..','..jgjgj..','..jgggj..','..jjjjj..','..jjjjj..'],
   xx:['...rrr...','..rgrgr..','.rrgggrr.','..rrgrr..','...rrr...','....j....','...jjj...'],
   kids:['..g.g.g..','..ggggg..','..rrrrr..','..rgrgr..','..rrrrr..','...rrr...','..rrrrr..'],
-  rel:['..gg.gg..','.gjjgjjg.','.gjjjjjg.','..gjjjg..','...gjg...','....g....','....g....'],
+  family:['..gg.gg..','.gjjgjjg.','.gjjjjjg.','..gjjjg..','...gjg...','....g....','....g....'],
   out:['....g....','..ggggg..','.ggggggg.','ggggggggg','..r.r.r..','..r.r.r..','....r....'],
   log:['.ggggggg.','.grrrrgg.','.grggrgg.','.grrrrgg.','.grggrgg.','.grrrrgg.','.ggggggg.'],
   sys:['...ggg...','...ggg...','....g....','..rrrrr..','..rgrgr..','..rgrgr..','..rrrrr..']
@@ -1709,7 +1710,7 @@ function renderPanel(){
   const p=$('#panel'),v=UI.view;
   const route=JSON.stringify([v,UI.sel]);
   if(!S)p.innerHTML=v==='new'?viewNew():viewTitle();
-  else p.innerHTML=({rel:viewRel,map:viewMap,palace:viewPalace,place:viewPlace,home:viewHome,harem:viewHarem,consort:viewConsort,cards:viewCards,xx:viewXX,kids:viewKids,kid:viewKid,out:viewOut,log:viewLog,sys:viewSys}[v]||viewHome)();
+  else p.innerHTML=({family:viewFamily,map:viewMap,palace:viewPalace,place:viewPlace,home:viewHome,harem:viewHarem,consort:viewConsort,cards:viewCards,xx:viewXX,kids:viewKids,kid:viewKid,out:viewOut,log:viewLog,sys:viewSys}[v]||viewHome)();
   if(route!==panelRoute){p.scrollTop=0;panelRoute=route;}
 }
 function render(){
@@ -1763,20 +1764,34 @@ function courtBlocHTML(){
     return `<article class="card" style="display:block;cursor:default"><b>${bloc.name}</b><div>${bloc.interest}</div>${bar('影响力',courtStanding(bloc))}<button class="btn sm" onclick="A.courtPolicy('${bloc.id}')" ${unavailable?'disabled':''}>采纳建议 · 国库 ${bloc.cost.treasury}</button></article>`;
   }).join('')}</div>`;
 }
-function familyTreeHTML(){
-  const byClan=new Map();
-  for(const c of S.consorts.filter(c=>!c.maid)){
-    const key=clanKey(c);
-    if(!byClan.has(key))byClan.set(key,[]);
-    byClan.get(key).push(c);
-  }
-  const kidsByMother=new Map();
+function viewFamily(){
+  const byClan=new Map(),kidsByMother=new Map();
   for(const k of S.children){
     if(!kidsByMother.has(k.mom))kidsByMother.set(k.mom,[]);
     kidsByMother.get(k.mom).push(k);
   }
-  const tree=[...byClan].map(([key,people])=>`<li><details><summary>${esc(clanName(key))} · ${people.length} 人</summary><ul>${people.map(c=>`<li><button class="btn sm" onclick="A.go('consort',${c.id})">${esc(fullName(c))}</button> ${c.alive?'':'（已故）'}${kidsByMother.has(c.id)?`<ul>${kidsByMother.get(c.id).map(k=>`<li><button class="btn sm" onclick="A.go('kid',${k.id})">${esc(kidName(k))}</button>${k.foster&&k.foster!==c.id&&byId(k.foster)?` · 由${esc(fullName(byId(k.foster)))}抚养`:''}</li>`).join('')}</ul>`:''}</li>`).join('')}</ul></details></li>`).join('');
-  return `<h3>家族关系树</h3>${tree?`<ul class="story">${tree}</ul>`:'<p class="hint">目前没有入宫的妃嫔。</p>'}`;
+  for(const c of S.consorts){
+    if(c.maid&&!kidsByMother.has(c.id))continue;
+    const key=hasClan(c)?clanKey(c):null;
+    if(!byClan.has(key))byClan.set(key,[]);
+    byClan.get(key).push(c);
+  }
+  const childLine=k=>{
+    const foster=k.foster!==k.mom&&fosterOf(k);
+    return `<li><button class="btn quiet sm" onclick="A.go('kid',${k.id})">${esc(kidName(k))}</button>${foster?`<span class="hint">由${esc(fullName(foster))}抚养</span>`:''}</li>`;
+  };
+  const branch=(label,people,force='')=>{
+    const childCount=people.reduce((sum,c)=>sum+(kidsByMother.get(c.id)?.length||0),0);
+    return `<details class="family-branch"><summary><strong>${esc(label)}</strong><span class="hint">${people.length} 人 · ${childCount} 位皇嗣${force}</span></summary>
+      <ul>${people.map(c=>`<li><button class="btn quiet sm" onclick="A.go('consort',${c.id})">${esc(fullName(c))}</button>${!c.alive?'<span class="hint">已故</span>':c.gone?'<span class="hint">已出宫</span>':''}
+        ${kidsByMother.has(c.id)?`<ul>${kidsByMother.get(c.id).map(childLine).join('')}</ul>`:''}</li>`).join('')}</ul></details>`;
+  };
+  const branches=[...byClan].sort(([a],[b])=>Number(a==null)-Number(b==null)).map(([key,people])=>
+    branch(key?clanName(key):'未列家族',people,key?` · 势力 ${Math.max(...people.map(c=>rd(c.fam.p)))}`:'')).join('');
+  const unlisted=S.children.filter(k=>!byId(k.mom));
+  return `<h2>家族关系树</h2><p class="hint">皇嗣列在生母名下，另标养母。点名字可查看人物。</p>
+    ${branches||'<p class="hint">目前没有入宫的妃嫔。</p>'}
+    ${unlisted.length?`<details class="family-branch"><summary>生母未载</summary><ul>${unlisted.map(childLine).join('')}</ul></details>`:''}`;
 }
 function viewHome(){
   const e=E(),h=harem(),k=kidsAlive(),heir=S.heir&&kidById(S.heir);
@@ -1792,7 +1807,7 @@ function viewHarem(){
   const all=alive().filter(c=>!c.maid);const g=r=>all.filter(c=>!c.cold&&r(c)).sort((a,b)=>b.rank-a.rank||b.favor-a.favor);
   const sec=(t,arr)=>arr.length?`<h3>${t}（${arr.length}）</h3><div class="grid">${arr.map(consortCard).join('')}</div>`:'';
   const dead=S.consorts.filter(c=>!c.alive||c.gone);
-  return `<h2>后宫</h2><p class="hint">点击妃嫔查看详情、互动与她的故事。各位分名额：嫔6、妃4、贵妃2、皇贵妃1、皇后1。</p>${facHTML()}${clanHTML()}${familyTreeHTML()}
+  return `<h2>后宫</h2><p class="hint">点击妃嫔查看详情、互动与她的故事。各位分名额：嫔6、妃4、贵妃2、皇贵妃1、皇后1。</p>${facHTML()}
    ${sec('中宫',g(c=>c.rank===8))}${sec('妃位',g(c=>c.rank>=5&&c.rank<8))}${sec('嫔位',g(c=>c.rank===4))}${sec('小主',g(c=>c.rank<4))}${sec('冷宫',all.filter(c=>c.cold))}${sec('贴身宫女',maids().filter(m=>m.near))}${sec('承恩宫女',maids().filter(m=>!m.near))}
    ${dead.length?`<h3>故人</h3><div class="hint">${dead.map(c=>`<button class="btn sm" onclick="A.go('consort',${c.id})">${esc(fullName(c))}${c.gone?'（出宫）':'（已故）'}</button>`).join(' ')}</div>`:''}`}
 function detailSection(title,content){
@@ -2411,7 +2426,62 @@ const initiativeAlly=c=>harem().find(o=>o!==c&&relGet(c,o)>=15);
 const initiativeChild=(c,minAge)=>kidsAlive().find(k=>
   kidAge(k)>=minAge&&!k.away&&!k.jailed&&(k.foster===c.id||(!k.foster&&k.mom===c.id)));
 const skillGain=(k,key,amount)=>{k[key]=clamp(k[key]+amount)};
+const INITIATIVE_SOURCES={
+  song:'https://zh.wikisource.org/wiki/東京夢華錄/卷八',
+  beijing:'https://zh.wikisource.org/wiki/燕京歲時記'
+};
 const PALACE_INITIATIVES={
+  fan:{
+    title:'端午画扇', seasonal:true, source:'song', ref:'《东京梦华录》卷八·端午',
+    match:c=>S.month===5&&(c.trait==='才女'||c.like==='字画'),
+    text:()=> '端午将近，她画了两柄团扇。一柄已经上色，另一柄特意留着空白等人题字。',
+    start:c=>cchg(c,{mood:3}), button:'给团扇题字', respond:c=>cchg(c,{aff:6})
+  },
+  iceTickets:{
+    title:'查点冰票', seasonal:true, source:'beijing', ref:'《燕京岁时记》·赐冰',
+    match:c=>S.month===6&&(c.trait==='聪慧'||c.trait==='体弱'),
+    target:c=>harem().find(o=>o!==c&&o.mood<=65&&relGet(c,o)>=0),
+    text:(c,o)=>'暑热正盛，她把两宫的用冰账对过一遍，发现'+cName(o)+'那边还没领冰，先让人送了一份。',
+    start:(c,o)=>{relAdd(c,o,3);return cchg(o,{mood:3});},
+    button:'替两宫补上冰例（国库-6）', cost:6,
+    respond:(c,o)=>{relAdd(c,o,4);return cchg(c,{mood:4})+' · '+cchg(o,{mood:4});}
+  },
+  sprouts:{
+    title:'七夕种生', seasonal:true, source:'song', ref:'《东京梦华录》卷八·七夕',
+    match:c=>S.month===7&&(c.trait==='活泼'||c.t2==='念旧'),
+    target:c=>initiativeChild(c,3),
+    text:(c,k)=>'她和'+k.name+'用瓷盘浸豆，看它发芽，再拿彩线围起一个小院。',
+    start:(c,k)=>{relAdd(c,k,4);return '亲子关系改善';},
+    button:'陪孩子给小院添一座桥', respond:(c,k)=>{skillGain(k,'love',4);return '父爱 +4';}
+  },
+  chrysanthemum:{
+    title:'重阳摆菊', seasonal:true, source:'beijing', ref:'《燕京岁时记》·九花山子',
+    match:c=>S.month===9&&(c.trait==='淡泊'||c.like==='花草'), target:initiativeAlly,
+    text:(c,o)=>'她和'+cName(o)+'把高矮不同的菊盆叠成一座小花山，特意给最小的那盆留了个好位置。',
+    start:(c,o)=>{relAdd(c,o,4);return '两人关系改善';},
+    button:'把花山移到御花园同赏', respond:(c,o)=>cchg(c,{mood:5})+' · '+cchg(o,{mood:5})
+  },
+  cakes:{
+    title:'重阳分糕', seasonal:true, source:'song', ref:'《东京梦华录》卷八·重阳',
+    match:c=>S.month===9&&(c.t2==='擅厨艺'||c.t2==='嗜甜'), target:initiativeAlly,
+    text:(c,o)=>'她做了几层枣栗糕，把蒸得最好的一笼送给'+cName(o)+'，自己留了有些塌的一笼。',
+    start:(c,o)=>{relAdd(c,o,3);return cchg(o,{mood:3});},
+    button:'请两宫一起尝糕', respond:(c,o)=>{relAdd(c,o,4);return cchg(c,{aff:4});}
+  },
+  skate:{
+    title:'太液池练冰嬉', seasonal:true, child:true, source:'beijing', ref:'《燕京岁时记》·溜冰鞋',
+    match:k=>S.month===12&&kidAge(k)>=8&&k.policy==='习武'&&k.mar>=32&&k.hp>=45,
+    text:()=> '孩子看完太液池的冰嬉，跟着教习在岸边练起步。第一圈还要扶人，第二圈已经能自己转弯。',
+    start:k=>{skillGain(k,'mar',2);return '武艺 +2';},
+    button:'看孩子滑完一圈', respond:k=>{skillGain(k,'love',4);return '父爱 +4';}
+  },
+  porridge:{
+    title:'腊八分粥', seasonal:true, source:'beijing', ref:'《燕京岁时记》·腊八粥',
+    match:c=>S.month===12&&(c.t2==='信佛'||c.t2==='擅厨艺'||c.trait==='温婉'),
+    text:()=> '她领着宫人淘米剥果，天刚亮便分好几碗。给值夜宫人的那一份还特意温着。',
+    start:c=>cchg(c,{mood:3}), button:'拨粮多煮一锅（国库-8）', cost:8,
+    respond:c=>chg({people:2})+' · '+cchg(c,{aff:4})
+  },
   broth:{
     title:'送汤', match:c=>E().health<82&&(c.trait==='温婉'||c.t2==='嘴硬心软'),
     text:c=>c.t2==='嘴硬心软'?'她让小厨房熬了汤，嘱咐宫人说是御膳房送的。':'她见你近来劳累，亲自送了一盅热汤到乾清宫。',
@@ -2494,7 +2564,7 @@ function initiativeTick(){
     const ready=shuffle(people).filter(p=>S.turn-(p.initiative?.turn??-Infinity)>=4);
     ready.sort((a,b)=>(a.initiative?.turn??-1)-(b.initiative?.turn??-1));
     for(const person of ready){
-      for(const [id,rule] of shuffle(types)){
+      for(const [id,rule] of shuffle(types).sort((a,b)=>Number(!!b[1].seasonal)-Number(!!a[1].seasonal))){
         if(!!rule.child!==!!index||S.turn-(recent[id]??-Infinity)<7||!rule.match(person))continue;
         const target=rule.target?.(person),memory=rule.memory?.(person);
         if((rule.target&&!target)||(rule.memory&&!memory))continue;
@@ -2516,7 +2586,8 @@ function initiativeHTML(person){
     ? `<small>你已回应 · ${esc(move.response)}</small>`
     : `<button class="btn sm" onclick="A.answerInitiative(${person.id},${!!person.sex})">${esc(rule.button)}<small>精力-1</small></button>`;
   return `<section class="initiative-note"><strong>${esc(rule.title)}</strong><p>${esc(move.text)}</p>
-    ${move.effect?`<small>${esc(move.effect)}</small>`:''}${response}</section>`;
+    ${move.effect?`<small>${esc(move.effect)}</small>`:''}${response}
+    ${rule.ref?`<small class="initiative-ref">参考 <a href="${INITIATIVE_SOURCES[rule.source]}" target="_blank" rel="noopener noreferrer">${esc(rule.ref)}</a></small>`:''}</section>`;
 }
 function initiativeNotices(){
   const people=[...harem(),...kidsAlive()].filter(p=>currentInitiative(p));
@@ -2894,14 +2965,6 @@ function kidRelLine(k){const sib=kidsAlive().filter(o=>o!==k).map(o=>[o,relGet(o
   return `<div style="margin-top:4px">手足：${sib.length?sib.map(([o,v])=>tag(o,v,'kk',o.name)).join(''):'<span class="hint">都还寻常</span>'}</div><div>宫中娘娘：${con.length?con.map(([c,v])=>tag(c,v,'ck',cName(c))).join(''):'<span class="hint">都还寻常</span>'}</div>`}
 function conKidLine(c){const ks=kidsAlive().map(k=>[k,relGet(c,k)]).filter(([k,v])=>raisers(k).includes(c)||Math.abs(v)>=25).sort((a,b)=>b[1]-a[1]);if(!ks.length)return '';
   return `<div>对皇嗣：${ks.map(([k,v])=>`<span class="tag ${relCls(v)}" title="${rd(v)}">${esc(k.name)}·${relWord(v,'ck',c,k)}</span>`).join('')}</div>`}
-/* 人际总览：每人好感与讨厌的人 */
-function viewRel(){const cs=harem().concat(maids().filter(m=>m.near)),ks=kidsAlive(),all=[...cs,...ks];
-  if(!all.length)return '<h2>人际</h2><p class="hint">宫里还没有人。</p>';
-  const nm=o=>o.sex?o.name:cName(o);
-  const lines=x=>{const r=all.filter(o=>o!==x).map(o=>[o,relGet(x,o)]);const like=r.filter(e=>e[1]>=25).sort((a,b)=>b[1]-a[1]).slice(0,4),hate=r.filter(e=>e[1]<=-25).sort((a,b)=>a[1]-b[1]).slice(0,4);
-    return `<div>好感：${like.length?like.map(([o])=>`<span class="tag g">${esc(nm(o))}</span>`).join(''):'<span class="hint">无</span>'}</div><div>讨厌：${hate.length?hate.map(([o])=>`<span class="tag r">${esc(nm(o))}</span>`).join(''):'<span class="hint">无</span>'}</div>`};
-  const card=x=>`<button class="card" onclick="A.go('${x.sex?'kid':'consort'}',${x.id})">${porImg(x,48)}<div class="grow"><div class="nm">${esc(x.sex?kidName(x):cName(x))}</div>${lines(x)}</div></button>`;
-  return `<h2>人际</h2><p class="hint">每个人最有好感和最讨厌的人。点卡片看详情。</p><h3>妃嫔</h3><div class="grid">${cs.map(card).join('')}</div>${ks.length?`<h3>皇嗣</h3><div class="grid">${ks.map(card).join('')}</div>`:''}`}
 /* ============ 家族 ============ */
 const KIN_TXT={'亲姐':'亲姐姐','亲妹':'亲妹妹','堂姐':'堂姐','堂妹':'堂妹'};
 function clanKey(c){return c.clan||(c.clan=c.sur+'|'+c.fam.t)}
@@ -2922,8 +2985,6 @@ function clanEcho(c,t){const ms=clanMembers(clanKey(c));ms.filter(o=>o!==c).forE
 function clanLine(c){if(c.maid||!c.alive||c.gone)return '';if(!hasClan(c))return `<div>家族：出身${esc(c.fam.t)}，娘家没有倚仗</div>`;const k=clanKey(c),ms=clanMembers(k).filter(o=>o!==c);
   const kt=o=>(c.kin&&c.kin[o.id])?KIN_TXT[c.kin[o.id]]:'同族';
   return `<div>家族：${esc(clanName(k))}　势力 ${rd(c.fam.p)}${ms.length?`　同族在宫：${ms.map(o=>`<span class="tag ${isRival(c,o)?'r':'g'}">${esc(cName(o))}·${kt(o)}${isRival(c,o)?'·不和':''}</span>`).join('')}`:''}</div>`}
-function clanHTML(){const cl=clans();if(!cl.length)return '';
-  return `<h3>家族</h3><div class="grid">${cl.map(([k,ms])=>`<div class="card" style="cursor:default;flex-direction:column"><div class="nm">${esc(clanName(k))}</div><div class="hint">势力 ${rd(ms[0].fam.p)}，在宫中 ${ms.length} 人</div><div>${ms.map(c=>`<span class="tag">${esc(cName(c))}</span>`).join('')}</div></div>`).join('')}</div>`}
 function clanEvent(){
   for(const [k,ms] of shuffle(clans())){const [a,b]=shuffle(ms),rv=isRival(a,b),kt=a.kin&&a.kin[b.id],r=R();
     if(rv&&r<.5)return {title:'嫡庶',por:a,text:`${cName(a)}与${cName(b)}是${kt?'亲生':'同族'}姐妹，在娘家时一个是嫡出、一个是庶出，从小就不对付。今日请安，两人又为座次争了起来，家里的老夫人连夜递了牌子进宫。`,choices:[
