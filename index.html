@@ -236,6 +236,7 @@ body{background:#f3eee4}
 .detail-vitals .bar{display:grid;grid-template-columns:1fr auto;gap:5px;padding:10px 12px;background:#f7f1e7;border-radius:8px;margin:0;font-size:13px}
 .detail-vitals .bar i{grid-row:2;grid-column:1/-1;min-width:0;background:#e8dfd0}
 .detail-vitals .bar em{grid-row:1;grid-column:2;width:auto;font-weight:650}
+.initiative-note{padding:12px 14px;background:#efe5d1;border-radius:8px}.initiative-note p{margin:4px 0}.initiative-note small{color:var(--ink2)}.initiative-note>small{display:block;margin-top:3px}.initiative-note>.btn{margin-top:8px}.initiative-note .btn small{color:inherit}.initiative-notices{display:flex;flex-wrap:wrap;gap:6px;padding:6px 0}.initiative-notices .btn{background:#4b2a24;color:#fff0d1}
 .detail-stack{display:grid;gap:18px;margin-top:16px}
 .detail-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
 .detail-section{border-top:1px solid var(--paper2);min-width:0}
@@ -1058,6 +1059,7 @@ function pushEv(ev){
     if(!maidEncounterReady())return;
     S.flags.lastMaidEncounter=S.turn;
   }
+  ev.onQueue?.();
   Q.push(ev);if(!modalOpen)nextEv();
 }
 function pushNow(ev){if(!ev)return;Q.unshift(ev);if(!modalOpen)nextEv()}
@@ -1569,14 +1571,21 @@ A.endMonth=function(){
   if(newYear){const y=S.ys;pushEv({title:'岁首',sfx:'chime',text:`爆竹声中一岁除。${dateStr()}，陛下${e.age}岁。\n去岁：新入宫${y.c}人，皇嗣降生${y.b}位，侍寝${y.n}次。\n国库${e.treasury}万两，威望${rd(e.prestige)}，民心${rd(e.people)}。`,choices:[{t:'新岁新气象'}]});S.ys={c:0,b:0,n:0}}
   // 事件
   if(S.month===2&&S.turn-S.flags.lastXX>=34) pushEv({title:'三年大选',sfx:'chime',text:'又到三年一度的大选之期，各地秀女已候于储秀宫。',choices:[{t:'前去看看',f:()=>{genCands();UI.view='xx';return null}},{t:'今年免了',f:()=>{S.flags.lastXX=S.turn;return fx(chg({people:2}))}}]});
-  relTick();kidRelTick();clanTick();dowagerTick();
+  relTick();kidRelTick();clanTick();dowagerTick();initiativeTick();
   const must=[arcTick(),heirTick(),milestone()].filter(Boolean),opt=[];
   const add=(e,p)=>{if(e)opt.push([e,p+R()])};
   add(chance(.8)?festival():null,5);add(chance(.9)?haremEvent():null,6);add(chance(.5)?haremEvent():null,3);
   add(chance(.65)?quirkEvent():null,5);add(chance(.5)?histEvent():null,6);add(chance(.4)?courtEvent(true):null,4);
   add(chance(.45)?kidEvent():null,4);add(chance(.55)?xinEvent():null,6);add(monthlyMaidEvent(),4);add(chance(.3)?fosterEvent():null,4);add(chance(.45)?relEvent():null,5);add(chance(.35)?clanEvent():null,5);add(chance(.5)?visitorEvent():null,5);add(chance(.15)?dowagerEvent():null,3);
   opt.sort((a,b)=>b[1]-a[1]);const seen=new Set();must.forEach(e=>{seen.add(e.title);pushEv(e)});
-  for(const [e] of opt){if(Q.length+(modalOpen?1:0)>=Math.max(must.length,ri(2,4)))break;if(seen.has(e.title))continue;seen.add(e.title);pushEv(e)}
+  const recent=S.flags.ambientRecent ||= {};
+  for(const [title,turn] of Object.entries(recent))if(S.turn-turn>=4)delete recent[title];
+  const limit=Math.max(must.length,ri(2,4));
+  for(const [e] of opt){
+    if(Q.length+(modalOpen?1:0)>=limit)break;
+    if(seen.has(e.title)||Object.hasOwn(recent,e.title))continue;
+    recent[e.title]=S.turn;seen.add(e.title);pushEv(e);
+  }
   log(`—— ${dateStr()} ——`);
   setScene(pick(['court','harem','garden']));
   save('auto');
@@ -1834,6 +1843,7 @@ function viewConsort(){
    ${acts?`<div class="detail-actions"><div class="acts">${acts}</div></div>`:''}
    <div class="detail-vitals">${bar('恩宠',c.favor)}${bar('心情',c.mood,'#517369')}${bar('情分',c.aff,'#936375')}</div>
    <div class="detail-stack">
+    ${act&&!c.cold?initiativeHTML(c):''}
     <div class="detail-columns">
      ${detailSection('近况与性情',`<p class="hint">${esc(TRAITS[c.trait].d)} · 侍寝 ${c.nights} 次</p>${act?xinDetail(c)+deepLine(c):''}<div class="stats">${st('容貌',c.looks)}${st('才情',c.talent)}${st('德行',c.virtue)}${st('心机',c.scheme,!c.known)}</div>`)}
      ${detailSection('家族与人际',`${kids.length?`<div>子女：${kids.map(k=>`<button class="btn quiet sm" onclick="A.go('kid',${k.id})">${esc(k.name)}</button>`).join(' ')}</div>`:''}${family}`)}
@@ -1879,6 +1889,7 @@ function viewKid(){
    ${k.alive?`<div class="detail-actions"><div class="acts"><button class="btn primary" onclick="A.kidVisit(${k.id})">探望<small>精力-1</small></button></div></div>`:''}
    <div class="detail-vitals">${bar('才学',k.lit,'#617991')}${bar('武艺',k.mar,'#92504a')}${bar('品德',k.vir,'#517369')}</div>
    <div class="detail-stack">
+    ${k.alive?initiativeHTML(k):''}
     ${detailSection('教养与抚养',care)}
     <div class="detail-columns">
      ${detailSection('其他属性',`<div class="stats">${bar('体魄',k.hp,'#a87a26')}${bar('野心',k.amb,'#6b4a33')}${bar('父爱',k.love,'#936375')}${k.sex==='m'&&a>=10?bar('支持',k.sup||0,'#617991'):''}</div>`)}
@@ -2247,7 +2258,7 @@ function mountMap(){const w=$('#mapwrap');if(!w)return;w.appendChild(MAPC);
     b.onclick=()=>goPlace(p);b.ondblclick=()=>{emp.path=[];emp.arrive=null;emp.x=p.d[0];emp.y=p.d[1];arrive(p)};
     b.onmouseenter=()=>{hoverP=p};b.onmouseleave=()=>{hoverP=null};w.appendChild(b)})}
 const backBtn=`<button class="btn sm" onclick="A.go('map')">◂ 返回宫城</button>`;
-function viewMap(){return `<section class="map-play" aria-label="宫城地图"><header class="map-location"><h2>宫城</h2><span class="hint">当前位置 · ${esc(nearestPlace())}</span></header><div id="mapwrap"></div><p class="map-legend">点宫殿前往 · 点小人偶遇 · 双击宫殿名直达 · 粉点：有孕 · 金点：选秀</p></section>`;}
+function viewMap(){return `<section class="map-play" aria-label="宫城地图"><header class="map-location"><h2>宫城</h2><span class="hint">当前位置 · ${esc(nearestPlace())}</span></header><div id="mapwrap"></div><p class="map-legend">点宫殿前往 · 点小人偶遇 · 双击宫殿名直达 · 粉点：有孕 · 金点：选秀</p>${initiativeNotices()}</section>`;}
 function viewPalace(){const name=UI.sel,res=name==='冷宫'?alive().filter(c=>c.cold):harem().filter(c=>c.palace===name);
   const extra=name==='储秀宫'&&S.cands.length?`<div class="acts"><button class="btn gold" onclick="A.go('xx')">秀女正在候选（${S.cands.length}人）</button></div>`:'';
   return `<h2>${esc(name)}${backBtn}</h2><p class="hint">${name==='冷宫'?'荒草萋萋，宫门深锁。':name==='坤宁宫'?'中宫所居，凤仪万方。':'宫门半掩，廊下挂着鸟笼。'}</p>${extra}${res.length?`<div class="grid">${res.map(consortCard).join('')}</div>`:'<p class="hint">此处暂无人居住。</p>'}`}
@@ -2395,6 +2406,143 @@ A.wish=function(id){const c=byId(id),w=WISHES[c.wish];if(!w||!w.btn||c.wishDone)
   const t=w.f(c);c.wishDone=true;setXin(c,NEGX.includes(xinOf(c))?'释然':'欢喜',`心愿「${w.t}」得偿`);remember(c,'wish',w.t);story(c,`陛下成全了她的心愿：${w.t}。`);log(`帝成全${fullName(c)}的心愿：${w.t}。`);
   pushEv({title:'成全',por:c,sfx:'joy',text:t+fx(cchg(c,{aff:22,mood:30})),choices:[ok1]})};
 
+/* ============ 人物主动行动 ============ */
+const initiativeAlly=c=>harem().find(o=>o!==c&&relGet(c,o)>=15);
+const initiativeChild=(c,minAge)=>kidsAlive().find(k=>
+  kidAge(k)>=minAge&&!k.away&&!k.jailed&&(k.foster===c.id||(!k.foster&&k.mom===c.id)));
+const skillGain=(k,key,amount)=>{k[key]=clamp(k[key]+amount)};
+const PALACE_INITIATIVES={
+  broth:{
+    title:'送汤', match:c=>E().health<82&&(c.trait==='温婉'||c.t2==='嘴硬心软'),
+    text:c=>c.t2==='嘴硬心软'?'她让小厨房熬了汤，嘱咐宫人说是御膳房送的。':'她见你近来劳累，亲自送了一盅热汤到乾清宫。',
+    start:()=>chg({health:1}), button:'去向她道谢', respond:c=>cchg(c,{aff:5,mood:4})
+  },
+  wager:{
+    title:'投壶约赛', match:c=>!c.preg&&c.mood>=40&&(c.trait==='骄矜'||c.t2==='好胜'),
+    target:c=>harem().find(o=>o!==c&&!o.preg&&o.favor>=c.favor+8),
+    text:(c,o)=>'她向'+cName(o)+'约了一局投壶，特意请对方先投。两宫的人都来围观。',
+    start:(c,o)=>{relAdd(c,o,-2);return '两宫关系稍显紧张';}, button:'亲自主持，按成绩定名次', respond:(c,o)=>{relAdd(c,o,7);return '两宫关系改善 · '+cchg(c,{mood:5})}
+  },
+  ledger:{
+    title:'重算账目', match:c=>(c.trait==='聪慧'||c.t2==='好读史')&&(E().treasury<450||S.flags.lastCourt),
+    text:()=> '她核对了本宫的领用簿，找出两笔重记的支出，把原簿和自己算的数一并送来。',
+    start:()=>chg({treasury:4}), button:'请她教各宫核账', respond:c=>chg({treasury:12})+' · '+cchg(c,{aff:4})
+  },
+  gardenWalk:{
+    title:'邀友赏花', match:c=>!c.preg&&(c.trait==='淡泊'||c.trait==='活泼'||c.t2==='爱猫'),
+    target:initiativeAlly,
+    text:(c,o)=>'她请'+cName(o)+'到御花园散步。两人绕过热闹的亭子，坐在树荫下聊了半日。',
+    start:(c,o)=>{relAdd(c,o,4);return cchg(c,{mood:3})}, button:'把水榭留给她们', respond:(c,o)=>cchg(o,{mood:6})+' · '+cchg(c,{aff:3})
+  },
+  tutorVisit:{
+    title:'拜访太傅', match:c=>c.trait==='城府'||c.t2==='护短', target:c=>initiativeChild(c,6),
+    text:(c,k)=>'她独自去见了太傅，请他替'+k.name+'列出擅长和欠缺的功课。',
+    start:(c,k)=>{skillGain(k,'lit',1);return '才学 +1';}, button:'亲自看功课', respond:(c,k)=>{skillGain(k,'love',4);return '父爱 +4';}
+  },
+  keepsake:{
+    title:'拿出旧礼', match:c=>c.trait==='痴情'||c.t2==='念旧',
+    memory:c=>NPCMemory.recall(S,c.id).find(m=>m.subject==='emperor'&&['care','gift','wish'].includes(m.type)&&typeof m.interpretation==='string'),
+    text:(c,o,m)=>'她整理妆奁时提起一件旧事：“'+m.interpretation+'。”旁人已经忘了，她还记着。',
+    start:c=>cchg(c,{mood:3}), button:'陪她说说那天的事', respond:c=>cchg(c,{aff:7})
+  },
+  stove:{
+    title:'移座避寒', match:c=>season()===3&&(c.trait==='体弱'||c.t2==='畏寒'),
+    text:()=> '她让人把读书用的案几移到朝阳的窗边，又把值夜的宫女调进暖阁。',
+    start:c=>cchg(c,{mood:4}), button:'拨一盆好炭（国库-8）', cost:8, respond:c=>cchg(c,{mood:8,aff:3})
+  },
+  archery:{
+    title:'带孩子练弓', match:c=>!c.preg&&(c.trait==='将门'||c.t2==='擅骑射'), target:c=>initiativeChild(c,6),
+    text:(c,k)=>'她带'+k.name+'到南苑，先教站姿，再让孩子自己拉了第一张轻弓。',
+    start:(c,k)=>{skillGain(k,'mar',2);return '武艺 +2';}, button:'到南苑看他们练习', respond:(c,k)=>{skillGain(k,'mar',2);skillGain(k,'love',3);return '武艺 +2 · 父爱 +3';}
+  },
+  poetry:{
+    title:'改诗一首', match:c=>c.trait==='才女',
+    text:()=> '她把一首新诗退回给小宫女重写，自己也改了三遍首句，才肯把两稿一起送来。',
+    start:c=>cchg(c,{mood:3}), button:'读两稿，留一句评语', respond:c=>cchg(c,{aff:6})
+  },
+  barter:{
+    title:'换置首饰', match:c=>c.trait==='贪财'&&c.favor>=35,
+    text:()=> '她把几件用不上的旧饰交给内务府，问能否换成一件常戴的。账簿上列得一清二楚。',
+    start:c=>cchg(c,{mood:2}), button:'准照原价换置', respond:c=>cchg(c,{aff:5,mood:5})
+  },
+  study:{
+    title:'主动校书', child:true, match:k=>k.policy==='读书'&&k.lit>=28,
+    text:()=> '散学后，孩子留下来对照两本旧抄卷，把抄错的地方逐个标了出来。',
+    start:k=>{skillGain(k,'lit',1);return '才学 +1';}, button:'让孩子讲一遍发现', respond:k=>{skillGain(k,'lit',2);skillGain(k,'love',3);return '才学 +2 · 父爱 +3';}
+  },
+  spar:{
+    title:'约手足比试', child:true, match:k=>k.policy==='习武'&&k.mar>=25,
+    target:k=>kidsAlive().find(o=>o!==k&&kidAge(o)>=6&&!o.away&&!o.jailed&&relGet(k,o)>=5),
+    text:(k,o)=>'孩子拉'+o.name+'一起练习，输了的一方主动请对方教招式。',
+    start:(k,o)=>{skillGain(k,'mar',1);relAdd(k,o,3);return '武艺 +1 · 手足关系改善';},
+    button:'让两人交换教练', respond:(k,o)=>{skillGain(k,'mar',2);skillGain(o,'mar',2);relAdd(k,o,5);return '两人武艺 +2 · 手足关系改善';}
+  },
+  mentor:{
+    title:'给手足补课', child:true, match:k=>k.policy==='修德'&&k.vir>=30,
+    target:k=>kidsAlive().find(o=>o!==k&&kidAge(o)>=5&&kidAge(o)<kidAge(k)&&!o.away&&!o.jailed),
+    text:(k,o)=>'孩子拿着自己的字帖，去教'+o.name+'写那几个总记错的字。',
+    start:(k,o)=>{skillGain(o,'lit',1);relAdd(k,o,3);return '手足才学 +1 · 关系改善';},
+    button:'把字帖留给两人', respond:(k,o)=>{skillGain(k,'vir',2);relAdd(k,o,4);return '品德 +2 · 手足关系改善';}
+  }
+};
+
+function initiativeTick(){
+  const recent=S.flags.initiativeTurns ||= {};
+  const types=Object.entries(PALACE_INITIATIVES);
+  const groups=[harem(),kidsAlive().filter(k=>kidAge(k)>=6&&!k.away&&!k.jailed)];
+  groups.forEach((people,index)=>{
+    const ready=shuffle(people).filter(p=>S.turn-(p.initiative?.turn??-Infinity)>=4);
+    ready.sort((a,b)=>(a.initiative?.turn??-1)-(b.initiative?.turn??-1));
+    for(const person of ready){
+      for(const [id,rule] of shuffle(types)){
+        if(!!rule.child!==!!index||S.turn-(recent[id]??-Infinity)<7||!rule.match(person))continue;
+        const target=rule.target?.(person),memory=rule.memory?.(person);
+        if((rule.target&&!target)||(rule.memory&&!memory))continue;
+        const text=rule.text(person,target,memory),effect=rule.start(person,target);
+        person.initiative={id,turn:S.turn,text,effect,target:target?.id};
+        recent[id]=S.turn;
+        return;
+      }
+    }
+  });
+}
+function currentInitiative(person){
+  return person?.initiative?.turn===S.turn?person.initiative:null;
+}
+function initiativeHTML(person){
+  const move=currentInitiative(person),rule=PALACE_INITIATIVES[move?.id];
+  if(!rule)return '';
+  const response=move.response
+    ? `<small>你已回应 · ${esc(move.response)}</small>`
+    : `<button class="btn sm" onclick="A.answerInitiative(${person.id},${!!person.sex})">${esc(rule.button)}<small>精力-1</small></button>`;
+  return `<section class="initiative-note"><strong>${esc(rule.title)}</strong><p>${esc(move.text)}</p>
+    ${move.effect?`<small>${esc(move.effect)}</small>`:''}${response}</section>`;
+}
+function initiativeNotices(){
+  const people=[...harem(),...kidsAlive()].filter(p=>currentInitiative(p));
+  if(!people.length)return '';
+  return `<div class="initiative-notices" aria-label="本月宫中动向">${people.map(p=>
+    `<button class="btn sm" onclick="A.go('${p.sex?'kid':'consort'}',${p.id})">${esc(p.sex?kidName(p):cName(p))} · ${esc(PALACE_INITIATIVES[p.initiative.id]?.title||'近况')}</button>`
+  ).join('')}</div>`;
+}
+A.answerInitiative=function(id,child){
+  if(!S||S.over||modalOpen)return;
+  const person=child?kidById(id):byId(id),move=currentInitiative(person),rule=PALACE_INITIATIVES[move?.id];
+  if(!rule||move.response||!person.alive||person.gone||person.cold||person.away||person.jailed)return;
+  const target=move.target==null?null:kidById(move.target)||byId(move.target);
+  if(rule.target&&(!target?.alive||target.gone||target.cold||target.away||target.jailed)){
+    toast('对方已经不能赴约');return;
+  }
+  if(rule.cost&&E().treasury<rule.cost){toast('国库不足');return;}
+  if(!useE())return;
+  const cost=rule.cost?chg({treasury:-rule.cost}):'';
+  move.response=[cost,rule.respond(person,target)].filter(Boolean).join(' · ');
+  const result=`「${rule.title}」陛下${rule.button.replace(/（.*）/,'')}。`;
+  if(child)kstory(person,result);else story(person,result);
+  remember(person,'care',result);
+  save('auto');render();toast(move.response);
+};
+
 /* ============ 小性子引出的宫中琐事 ============ */
 const QEV={
  '怕雷':c=>season()!==1?null:{title:'雷雨夜',por:c,text:`半夜电闪雷鸣，${c.palace}的宫女冒雨跑来乾清宫：“我们小主吓得缩在床角，谁也不让碰。”`,choices:[
@@ -2447,7 +2595,7 @@ const QEV={
  '记仇':c=>{const o=harem().find(x=>x!==c&&relGet(c,x)<=-40);if(!o)return null;return {title:'旧账',por:c,text:`${cName(c)}把${cName(o)}当年在请安时说过的一句酸话，一字不差地学给你听，末了说：“臣妾不是记仇，臣妾只是记性好。”`,choices:[
    {t:'笑着劝和',f:()=>{relAdd(c,o,5);return fx(cchg(c,{mood:3}))}},{t:'冷落那一位',f:()=>{relAdd(c,o,-5);return fx(cchg(c,{mood:8}),cchg(o,{favor:-8,mood:-8}))}}]}},
 };
-function quirkEvent(){for(const c of shuffle(harem())){deepen(c);if(S.turn-(c.qcd===undefined?-99:c.qcd)<10)continue;const f=QEV[c.t2];if(f){const ev=f(c);if(ev){c.qcd=S.turn;return ev}}}return null}
+function quirkEvent(){for(const c of shuffle(harem())){deepen(c);if(S.turn-(c.qcd??-99)<10)continue;const ev=QEV[c.t2]?.(c);if(ev)return {...ev,onQueue:()=>{c.qcd=S.turn}};}return null}
 
 /* ============ 古代历史典故事件 ============ */
 COURT.push(
@@ -2626,7 +2774,7 @@ const XEV={
    {t:'敲打她',f:()=>{setXin(c,'惶恐','野心被陛下点破');c.scheme=clamp(c.scheme-5);return fx(cchg(c,{mood:-8}))}},
    {t:'由她去',f:()=>{c.fam.p=Math.min(95,c.fam.p+5);return '她娘家的门槛，被人踏破了。'}}]},
 };
-function xinEvent(){for(const c of shuffle(alive().filter(c=>!c.gone))){const k=xinOf(c);if(k==='平和'||S.turn-(c.xcd===undefined?-99:c.xcd)<6)continue;const f=XEV[k];if(!f)continue;const ev=f(c,c.xin);if(ev){c.xcd=S.turn;return ev}}return null}
+function xinEvent(){for(const c of shuffle(alive().filter(c=>!c.gone))){const k=xinOf(c);if(k==='平和'||S.turn-(c.xcd??-99)<6)continue;const ev=XEV[k]?.(c,c.xin);if(ev)return {...ev,onQueue:()=>{c.xcd=S.turn}};}return null}
 
 /* ============ 宫女承恩 ============ */
 const maids=()=>alive().filter(c=>c.maid);
