@@ -393,3 +393,104 @@ body{background:#241917}
   .hud-identity{gap:6px}
   .dock-icon{width:19px;height:19px}
 }
+
+/* Illustrated opening scenes */
+:root{--coronation-art:url("./palace-coronation.webp");--selection-art:url("./palace-selection.webp")}
+#app[data-layout="setup"] #panel{
+  width:100%;margin:0;padding:0;border-radius:0;background:#3d251e;box-shadow:none;
+}
+.story-scene{
+  position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+  padding:clamp(16px,3vw,38px);background-color:#59352a;background-size:cover;background-position:center;
+  color:#fff0d4;border-bottom:1px solid #d4a46e;
+}
+.story-scene header p{margin:0 0 3px;letter-spacing:.18em;font-size:12px;color:#f0cf9a}
+#panel .story-scene h2{
+  margin:0;color:inherit;font-size:clamp(28px,4.5vw,60px);line-height:1.2;
+  text-shadow:0 2px 12px #261610;
+}
+#panel .story-scene h2::before{display:none}
+.coronation-scene{
+  min-height:clamp(220px,47dvh,510px);
+  background-image:linear-gradient(105deg,#301c16c4,transparent 57%),var(--coronation-art);
+  background-position:center 55%;
+}
+.coronation-form{
+  width:min(100%,900px);margin:auto;padding:15px clamp(14px,3vw,30px) 17px;color:#f7e8d1;
+}
+.coronation-names{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 12px}
+.coronation-names label{font-size:13px;color:#f1d5a5}
+.coronation-names .inp{
+  display:block;width:100%;margin-top:4px;min-height:38px;padding:6px 10px;
+  border-color:#a67d59;background:#fcf3e2;color:#412922;font-size:16px;
+}
+.coronation-styles{min-inline-size:0;border:0;margin:11px 0 0;padding:0}
+.coronation-styles legend{padding:0;margin:0 0 4px;color:#f1d5a5;font-size:13px}
+.coronation-styles>div{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.coronation-styles .opt{
+  display:flex;align-items:flex-start;gap:6px;margin:0;padding:7px 9px;
+  background:#52362c;border-color:#8a6250;color:#fff1d8;font-size:13px;
+}
+.coronation-styles .opt input{margin:5px 0 0;flex:none}
+.coronation-styles .opt .hint{display:block;font-size:12px;line-height:1.45;color:#e6d3b9}
+.coronation-styles .opt:has(input:checked){background:#754337;border-color:#e5b778}
+.coronation-styles .opt:focus-within{outline:2px solid #f8cd90;outline-offset:2px}
+.coronation-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+.coronation-actions .quiet,.selection-scene .btn{
+  background:#34201ddd;border-color:#cf9f70;color:#fff0d4;
+}
+.coronation-actions .primary{min-width:120px;background:#eac080;color:#39261a}
+.selection-scene{
+  min-height:clamp(146px,25dvh,280px);margin:-2px -2px 14px;border-radius:9px;
+  background-image:linear-gradient(95deg,#302019df,transparent 58%),var(--selection-art);
+  background-position:center 53%;
+}
+#panel .selection-scene h2{font-size:clamp(24px,4vw,40px)}
+#modal[data-scene="coronation"]{
+  backdrop-filter:none;padding-bottom:max(12px,env(safe-area-inset-bottom));
+  background:linear-gradient(180deg,#24160e00 43%,#261711c4),var(--coronation-art) center 42% / cover,#493027;
+}
+#modal[data-scene="coronation"] #mbox{max-width:680px;max-height:68%;padding:15px 20px}
+#modal[data-scene="coronation"] .mtitle{margin:0 0 8px;padding-bottom:8px;text-align:left}
+#modal[data-scene="coronation"] .mpor .por{width:76px;height:auto}
+#modal[data-scene="coronation"] .mtext{line-height:1.65}
+#modal[data-scene="coronation"] .mtext p{margin:0 0 4px}
+#modal[data-scene="coronation"] .mch{flex-direction:row;flex-wrap:wrap;margin-top:10px}
+@media(max-width:700px){
+  .coronation-scene{
+    min-height:clamp(205px,35dvh,300px);
+    background-image:linear-gradient(145deg,#301c16a8,transparent 65%),var(--coronation-art);
+  }
+  .coronation-styles>div{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .coronation-actions .btn{min-height:42px}
+  #modal[data-scene="coronation"] #mbox{padding:12px}
+  #modal[data-scene="coronation"] .mpor .por{width:55px;height:auto}
+  #modal[data-scene="coronation"] .mch .btn{flex:1 1 auto;text-align:center;padding:8px 10px}
+}
+
+/* Portrait cards and relationship lines share a scrollable family sheet. */
+.graph-wrap{background:#efe2ca;border-color:#cdb18d}
+.graph-sheet{position:relative;margin:0 auto}
+.family-graph,.graph-people{position:absolute;inset:0}
+.graph-people{pointer-events:none}
+.graph-card{
+  position:absolute;left:var(--graph-x);top:var(--graph-y);transform:translateX(-50%);
+  width:150px;min-width:0;display:flex;align-items:center;gap:7px;padding:5px 7px;
+  border:1px solid #bb9a76;border-radius:8px;background:#fff5e2;color:#4b2e23;
+  text-align:left;line-height:1.25;box-shadow:0 2px 5px #5a392317;
+}
+button.graph-card{pointer-events:auto;cursor:pointer;font-family:inherit}
+button.graph-card:hover,button.graph-card:focus-visible{outline:2px solid #946440;outline-offset:2px}
+.graph-card .por{display:block;flex:none;object-fit:cover;margin:0}
+.graph-person{min-width:0;display:grid;gap:3px}
+.graph-person strong{font-size:14px;overflow-wrap:anywhere}
+.graph-person small{font-size:11px;color:#72564a;overflow-wrap:anywhere}
+.graph-ruler,.graph-crown{background:#fbebc7;border-color:#ae7d3f}
+.graph-ruler{height:61px}
+.graph-consort{height:66px}
+.graph-house{height:82px;display:grid;gap:3px;border-left:3px solid var(--house-color)}
+.graph-kin-person{display:flex;align-items:center;gap:6px;min-width:0}
+.graph-kin-person strong{font-size:12px}
+.graph-kin-person small{font-size:10px}
+.graph-child{height:53px;background:#f7f3e5}
+.graph-child.graph-crown{background:#fbebc7}
