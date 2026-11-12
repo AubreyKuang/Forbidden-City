@@ -252,6 +252,7 @@ body{background:#f3eee4}
 .detail-vitals .bar i{grid-row:2;grid-column:1/-1;min-width:0;background:#e8dfd0}
 .detail-vitals .bar em{grid-row:1;grid-column:2;width:auto;font-weight:650}
 .family-time-row{display:flex;flex-wrap:wrap;align-items:start;justify-content:space-between;gap:6px 12px;padding:8px 0;border-bottom:1px solid #dac8aa}.family-time-row p{margin:4px 0}.banquet-cast{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin:0 0 12px}.banquet-cast figure{margin:0;text-align:center}.banquet-cast figcaption{font-size:.85em}.banquet-seats{padding-left:24px}.banquet-seats li{padding:5px}.banquet-seats .acts{display:inline-flex;margin:0 0 0 8px}.initiative-note{padding:12px 14px;background:#efe5d1;border-radius:8px}.initiative-note p{margin:4px 0}.initiative-note small{color:var(--ink2)}.initiative-note>small{display:block;margin-top:3px}.initiative-note>.btn{margin-top:8px}.initiative-note .btn small{color:inherit}.initiative-notices{display:flex;flex-wrap:wrap;gap:6px;padding:6px 0}.initiative-notices .btn{background:#4b2a24;color:#fff0d1}
+.graph-wrap{overflow-x:auto;border:1px solid var(--paper2);border-radius:8px;background:#fffaf0;margin-top:8px}.family-graph{display:block;font-family:var(--f-ui)}.family-graph .node:hover rect{filter:brightness(.94)}.graph-legend{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}.graph-legend .tag{background:#fff}
 .family-branch{border-bottom:1px solid var(--paper2);padding:7px 0}.family-branch summary{cursor:pointer;padding:4px 0}.family-branch summary .hint{margin-inline-start:8px}.family-branch ul{margin:2px 0 5px;padding-inline-start:20px}.family-branch li::marker{color:#ae8565}.family-branch li .hint{margin-inline-start:4px}
 .detail-stack{display:grid;gap:18px;margin-top:16px}
 .detail-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
@@ -409,25 +410,57 @@ body{background:#241917}
 <div id="toast"></div>
 
 <script>
-/* Shared snapshot storage. The primary key remains readable by older builds. */
+/* Shared snapshot storage. The primary key remains readable by older builds.
+   v2: older saves are migrated instead of rejected, and a few dated snapshots are kept for rewinding. */
 const SaveManager = (() => {
-  const version = 1;
-  function decode(raw, valid) {
+  const version = 2;
+  const SNAPSHOTS = 4;
+  function decode(raw, valid, migrate) {
     try {
-      const data = JSON.parse(raw);
-      if (!data || (data.saveVersion != null && data.saveVersion !== version) || !valid(data)) return null;
+      let data = JSON.parse(raw);
+      if (!data || typeof data !== 'object') return null;
+      const from = data.saveVersion ?? 1;
+      if (from > version) return null;
+      if (from < version && migrate) data = migrate(data, from);
+      if (!data || !valid(data)) return null;
       return data;
     } catch {
       return null;
     }
   }
 
-  function load(storage, key, valid) {
+  function load(storage, key, valid, migrate) {
     try {
-      return decode(storage.getItem(key), valid) || decode(storage.getItem(key + ':backup'), valid);
+      return decode(storage.getItem(key), valid, migrate) || decode(storage.getItem(key + ':backup'), valid, migrate);
     } catch {
       return null;
     }
+  }
+  function readSnapshots(storage, key) {
+    try {
+      const list = JSON.parse(storage.getItem(key + ':snapshots') || '[]');
+      return Array.isArray(list) ? list.filter(entry => entry && typeof entry.raw === 'string') : [];
+    } catch {
+      return [];
+    }
+  }
+  function snapshot(storage, key, data, valid, meta = {}) {
+    const raw = JSON.stringify({ ...data, saveVersion: version });
+    if (!decode(raw, valid)) return false;
+    let list = readSnapshots(storage, key).filter(entry => entry.label !== meta.label);
+    list.push({ ...meta, savedAt: Date.now(), raw });
+    list = list.slice(-SNAPSHOTS);
+    while (list.length) {
+      try { storage.setItem(key + ':snapshots', JSON.stringify(list)); return true; } catch { list.shift(); }
+    }
+    return false;
+  }
+  function snapshots(storage, key) {
+    return readSnapshots(storage, key).map(({ raw, ...meta }, index) => ({ ...meta, index }));
+  }
+  function restore(storage, key, index, valid, migrate) {
+    const entry = readSnapshots(storage, key)[index];
+    return entry ? decode(entry.raw, valid, migrate) : null;
   }
 
   function save(storage, key, data, valid) {
@@ -444,7 +477,7 @@ const SaveManager = (() => {
     }
   }
 
-  return { load, save };
+  return { load, save, snapshot, snapshots, restore, version };
 })();
 
 // Deterministic NPC memory. Store the ledger with the game's save data.
@@ -1709,15 +1742,18 @@ A.endMonth=function(){
   if(S.cands.length){S.cands=[];log('选秀礼毕。')}
   toast(`${dateStr()}　岁入${inc}　支出${exp}`);
   // 岁末总结
+  if(newYear)snapshotYear();
   if(newYear){const y=S.ys;pushEv({title:'岁首',sfx:'chime',text:`爆竹声中一岁除。${dateStr()}，陛下${e.age}岁。\n去岁：新入宫${y.c}人，皇嗣降生${y.b}位，侍寝${y.n}次。\n国库${e.treasury}万两，威望${rd(e.prestige)}，民心${rd(e.people)}。`,choices:[{t:'新岁新气象'}]});S.ys={c:0,b:0,n:0}}
   // 事件
   if(S.month===2&&S.turn-S.flags.lastXX>=34) pushEv({title:'三年大选',sfx:'chime',text:'又到三年一度的大选之期，各地秀女已候于储秀宫。',choices:[{t:'前去看看',f:()=>{genCands();UI.view='xx';return null}},{t:'今年免了',f:()=>{S.flags.lastXX=S.turn;return fx(chg({people:2}))}}]});
-  relTick();kidRelTick();clanTick();dowagerTick();initiativeTick();familyLifeTick();
+  relTick();kidRelTick();clanTick();dowagerTick();initiativeTick();familyLifeTick();courtTick();
   const must=[arcTick(),heirTick(),milestone()].filter(Boolean),opt=[];
+  // 积压的奏折：离宫期间攒下的朝堂事务，月末一并呈上
+  while((S.flags.memorials||0)>0){S.flags.memorials--;const memo=factionEvent();if(memo&&!must.some(e=>e.title===memo.title))must.push(memo)}
   const add=(e,p)=>{if(e)opt.push([e,p+R()])};
   add(chance(.8)?festival():null,5);add(chance(.9)?haremEvent():null,6);add(chance(.5)?haremEvent():null,3);
   add(chance(.65)?quirkEvent():null,5);add(chance(.5)?histEvent():null,6);add(chance(.4)?courtEvent(true):null,4);
-  add(chance(.45)?kidEvent():null,4);add(chance(.55)?xinEvent():null,6);add(monthlyMaidEvent(),4);add(chance(.3)?fosterEvent():null,4);add(chance(.45)?relEvent():null,5);add(chance(.35)?clanEvent():null,5);add(chance(.5)?visitorEvent():null,5);add(chance(.15)?dowagerEvent():null,3);
+  add(chance(.45)?kidEvent():null,4);add(chance(.55)?xinEvent():null,6);add(monthlyMaidEvent(),4);add(chance(.3)?fosterEvent():null,4);add(chance(.45)?relEvent():null,5);add(chance(.35)?clanEvent():null,5);add(chance(.45)?factionEvent():null,6);add(chance(.5)?visitorEvent():null,5);add(chance(.15)?dowagerEvent():null,3);
   opt.sort((a,b)=>b[1]-a[1]);const seen=new Set();must.forEach(e=>{seen.add(e.title);pushEv(e)});
   const recent=S.flags.ambientRecent ||= {};
   for(const [title,turn] of Object.entries(recent))if(S.turn-turn>=4)delete recent[title];
@@ -1773,11 +1809,13 @@ function succeed(h){
 /* ============ 存档 ============ */
 const SKEY='chengongji_v1_';
 const validPalaceSave=s=>!!s.emp&&Array.isArray(s.consorts)&&Array.isArray(s.children)&&Number.isFinite(s.turn);
-function save(slot){return S&&SaveManager.save(localStorage,SKEY+slot,S,validPalaceSave)}
-function load(slot){const data=SaveManager.load(localStorage,SKEY+slot,validPalaceSave);if(!data)return false;S=data;return true}
+function save(slot){if(S)S.savedAt=Date.now();return S&&SaveManager.save(localStorage,SKEY+slot,S,validPalaceSave)}
+// v1 存档照常读取；缺的父兄、立场等字段由 migrate() 在读档后补上
+const migratePalaceSave=(s,from)=>s;
+function load(slot){const data=SaveManager.load(localStorage,SKEY+slot,validPalaceSave,migratePalaceSave);if(!data)return false;S=data;return true}
 function slotInfo(slot){const s=SaveManager.load(localStorage,SKEY+slot,validPalaceSave);return s?`${s.emp.sur}${s.emp.name}·${dateStr(s)}·后妃${s.consorts.filter(c=>c.alive&&!c.gone).length}`:null}
 A.save=function(slot){if(save(slot)){toast('已存档');AU.sfx('chime')}else toast('存档失败：浏览器禁用了本地存储');render()};
-A.load=function(slot){if(load(slot)){Q.length=0;migrate();UI.view='map';toast('已读档');setScene('court');UI.banquet=null;render()}else toast('该存档为空')};
+A.load=function(slot){if(load(slot)){Q.length=0;migrate();offlineMemorials();UI.view='map';toast('已读档');setScene('court');UI.banquet=null;render()}else toast('该存档为空')};
 
 /* ============ 开局 ============ */
 A.newGame=function(){UI.view='new';render()};
@@ -1896,6 +1934,7 @@ A.courtPolicy=function(id){
     S.courtPolicy[group.id]=Math.max(-30,Math.min(30,previous+(group===bloc?10:-2)));
   }
   log(`御书房议政，优先采纳${bloc.name}建议。`,1);
+  courtEcho(id);
   save('auto');render();
 };
 function courtBlocHTML(){
@@ -1904,7 +1943,175 @@ function courtBlocHTML(){
     return `<article class="card" style="display:block;cursor:default"><b>${bloc.name}</b><div>${bloc.interest}</div>${bar('影响力',courtStanding(bloc))}<button class="btn sm" onclick="A.courtPolicy('${bloc.id}')" ${unavailable?'disabled':''}>采纳建议 · 国库 ${bloc.cost.treasury}</button></article>`;
   }).join('')}</div>`;
 }
+/* ============ 父兄、立场与朝局 ============ */
+// 每位妃嫔的父亲和兄长都是有名有姓的人，分属五大集团之一。朝堂上的事会落到具体的人和妃嫔身上。
+const OFFICE_BLOC={'内阁首辅':'civil','吏部尚书':'civil','户部侍郎':'civil','翰林学士':'civil','知府':'civil','县令':'civil','书香门第':'civil',
+  '镇国大将军':'army','两江总督':'army','皇商':'kin','太医院院判':'dowager','寒门':null};
+const FATHER_NAMES=['敬之','文远','守义','承业','怀瑾','思齐','伯庸','仲谋','子衡','季安','修远','明德','元朗','景行','致远','叔夜','延年','鸿儒'];
+const BROTHER_NAMES=['子昂','云深','少卿','长风','清和','怀远','叔宝','仲安','伯言','子期','砚秋','望舒','承泽','慕白'];
+const BROTHER_POSTS={civil:['翰林院编修','户部主事','监察御史','知县'],army:['游击将军','守备','参将','骁骑校尉'],kin:['盐运使','苏州织造','内务府员外郎'],dowager:['太医院吏目','宗人府主事'],none:['举人','国子监生']};
+const FRONTIERS=['雁门关','玉门关','居庸关','嘉峪关','山海关'];
+const blocName=id=>COURT_BLOCS.find(b=>b.id===id)?.name||'无所依附';
+const BLOC_COLOR={kin:'#b8742c',civil:'#3b5fa8',army:'#9a3b33',dowager:'#7a5a99',princes:'#2f7d62'};
+function houseOf(c){
+  if(!c||c.maid)return null;
+  if(c.house)return c.house;
+  const seed=(c.seed||c.id*7919)>>>0,bloc=Object.hasOwn(OFFICE_BLOC,c.fam?.t)?OFFICE_BLOC[c.fam.t]:null;
+  const posts=BROTHER_POSTS[bloc||'none'];
+  c.house={bloc,
+    father:{name:c.sur+FATHER_NAMES[seed%FATHER_NAMES.length],office:c.fam?.t||'寒门',age:42+seed%17,alive:true},
+    brother:{name:c.sur+BROTHER_NAMES[(seed>>>5)%BROTHER_NAMES.length],post:posts[(seed>>>9)%posts.length],merit:20+(seed>>>3)%30,away:false}};
+  return c.house;
+}
+// 立场：父兄所在的集团；娘家势力大的妃嫔也会被看作外戚一派
+function stanceOf(c){const h=houseOf(c);if(!h)return null;return h.bloc||(c.fam?.p>=55?'kin':null)}
+function houseLine(c){
+  const h=houseOf(c);if(!h)return '';
+  const st=stanceOf(c);
+  return `<div>父亲：${esc(h.father.name)}（${esc(h.father.office)}${h.father.alive?'':'，已故'}）　兄长：${esc(h.brother.name)}（${esc(h.brother.post)}${h.brother.away?'，外放':''}）　立场：<span class="tag" style="border-color:${BLOC_COLOR[st]||'#999'}">${esc(blocName(st))}</span></div>`;
+}
+const policyNudge=(id,v)=>{S.courtPolicy ||= {};S.courtPolicy[id]=Math.max(-30,Math.min(30,(S.courtPolicy[id]||0)+v))};
+// 采纳某一派的建议：同派妃嫔高兴，与之相争的一派妃嫔不痛快
+const BLOC_RIVAL={kin:'civil',civil:'kin',army:'civil',dowager:'princes',princes:'dowager'};
+function courtEcho(id){
+  const glad=[],sour=[];
+  for(const c of harem()){
+    const st=stanceOf(c);
+    if(st===id){cchg(c,{mood:4});glad.push(c);}
+    else if(st&&st===BLOC_RIVAL[id]){cchg(c,{mood:-3});sour.push(c);}
+  }
+  if(glad.length)log(`${glad.map(cName).join('、')}的娘家在朝中得了脸面。`);
+  if(sour.length)story(sour[0],`陛下采纳了${blocName(id)}的建议，她父亲${houseOf(sour[0]).father.name}在朝上碰了钉子。`);
+}
+// 每月：兄长攒军功或政绩，父亲渐老，偶有致仕或病故
+function courtTick(){
+  for(const c of harem()){
+    const h=houseOf(c);if(!h)continue;
+    h.brother.merit=clamp(h.brother.merit+(h.bloc==='army'?(E().wu-50)/40:.3)+R()*.6);
+    if(S.month===1&&h.father.alive){h.father.age++;
+      if(h.father.age>=66&&chance(.12)){h.father.alive=false;cchg(c,{mood:-15});setXin(c,'悲恸',`父亲${h.father.name}病故`);story(c,`父亲${h.father.name}在家中病故。`);log(`${cName(c)}之父${h.father.name}病故。`,1);c.fam.p=Math.max(5,c.fam.p-10);}}
+  }
+}
+// 朝堂派系事件：都落在具体的父兄、妃嫔和皇子身上
+function factionEvent(){
+  const pool=[];
+  const withHouse=harem().filter(c=>houseOf(c)&&c.house.father.alive);
+  const kin=withHouse.filter(c=>stanceOf(c)==='kin'&&c.favor>=45);
+  if(kin.length){const c=pick(kin),h=houseOf(c);pool.push({title:'外戚请封',por:c,text:`${h.father.name}递了折子，请擢其子${h.brother.name}为京官。朝中都知道，这是${cName(c)}的娘家。文官们已经在私下议论“恩出于内”。`,choices:[
+    {t:'准了',f:()=>{h.brother.post='通政司参议';h.brother.merit+=8;c.fam.p=Math.min(95,c.fam.p+6);policyNudge('kin',5);policyNudge('civil',-4);story(c,`陛下准了兄长${h.brother.name}入京为官。`);return fx(cchg(c,{mood:8,aff:3}),chg({prestige:-2}))}},
+    {t:'驳回：“官职是朝廷的，不是谁家的。”',f:()=>{policyNudge('civil',3);setXin(c,'委屈','娘家请封被驳');return fx(cchg(c,{mood:-8}),chg({prestige:2}))}},
+    {t:'外放历练，三年后再议',f:()=>{h.brother.away=true;h.brother.post='外放'+pick(['知州','同知','通判']);h.brother.merit+=4;policyNudge('civil',1);return fx(cchg(c,{mood:-2}))+`\n§${h.brother.name}出京赴任`}}]});}
+  const civil=withHouse.filter(c=>stanceOf(c)==='civil');
+  if(civil.length){const c=pick(civil),h=houseOf(c);pool.push({title:'科场案',ref:'科场舞弊（明·弘治己未科场案）',por:c,text:`今科会试有舞弊传闻，御史顺藤摸瓜，查到${h.father.name}的门生头上。${cName(c)}一早就跪在殿外，说父亲为官清白。`,choices:[
+    {t:'严查到底',f:()=>{c.fam.p=Math.max(5,c.fam.p-12);policyNudge('civil',4);setXin(c,'惶恐','父亲牵涉科场案');story(c,`父亲${h.father.name}因科场案受审。`);return fx(cchg(c,{mood:-10}),chg({people:4,prestige:2}))}},
+    {t:`看在${cName(c)}面上，从轻发落`,f:()=>{policyNudge('civil',-5);return fx(cchg(c,{mood:6,aff:4}),chg({people:-3,prestige:-2}))}},
+    {t:'交三司会审，查清再说',f:()=>{if(chance(.55)){story(c,`三司会审还了父亲${h.father.name}清白。`);policyNudge('civil',2);return '三司会审，门生确有舞弊，却与'+h.father.name+'无关。'+fx(cchg(c,{mood:8}),chg({people:2}))}
+      c.fam.p=Math.max(5,c.fam.p-8);setXin(c,'惶恐','父亲被查出失察之责');return h.father.name+'失察，罚俸一年。'+fx(cchg(c,{mood:-6}),chg({people:2}))}}]});}
+  const army=withHouse.filter(c=>stanceOf(c)==='army');
+  if(army.length){const c=pick(army),h=houseOf(c),place=pick(FRONTIERS),win=chance(.35+E().wu/200+h.brother.merit/300);
+    pool.push(win?{title:'边关捷报',por:c,text:`${place}八百里加急：${h.brother.name}率部夜袭敌营，斩获颇丰。${cName(c)}听到消息，在宫里给兄长供了一盏长明灯。`,choices:[
+      {t:'厚赏，加封其兄',f:()=>{h.brother.merit+=15;h.brother.post=pick(['副将','总兵','都指挥使']);policyNudge('army',5);story(c,`兄长${h.brother.name}在${place}立功受封。`);return fx(cchg(c,{mood:10,aff:3}),chg({treasury:-20,prestige:3}))}},
+      {t:'记功，暂不封赏',f:()=>{policyNudge('army',-3);return fx(cchg(c,{mood:-4}))}}]}
+    :{title:'边关失利',por:c,text:`${place}急报：${h.brother.name}中了埋伏，折损了三百骑。武将们说胜败乃兵家常事，御史却要问罪。${cName(c)}已经两天没吃下饭。`,choices:[
+      {t:'依律问责',f:()=>{h.brother.merit=Math.max(0,h.brother.merit-15);policyNudge('army',-2);policyNudge('civil',2);setXin(c,'惶恐','兄长兵败受责');return fx(cchg(c,{mood:-12}),chg({people:1}))}},
+      {t:'宽宥，许他戴罪立功',f:()=>{policyNudge('army',4);return fx(cchg(c,{mood:6,aff:5}),chg({prestige:-1}))}}]});}
+  const dw=S.flags.dowager;
+  if(dw?.alive){const pref=harem().filter(c=>c.rank<8&&(stanceOf(c)==='dowager'||c.virtue>=70)).sort((a,b)=>b.virtue-a.virtue)[0];
+    if(pref)pool.push({title:'慈宁宫',por:pref,text:`${dw.name}召陛下用膳，席间夸${cName(pref)}温良贤淑，又叹皇家子嗣单薄，“哀家看着她就喜欢”。话没说透，意思谁都明白。`,choices:[
+      {t:'遵太后之意，多去她宫里',f:()=>{policyNudge('dowager',5);const em=empress();if(em&&em!==pref)cchg(em,{mood:-3});return fx(cchg(pref,{favor:8,mood:8}),chg({prestige:1}))}},
+      {t:'“儿臣心里有数。”',f:()=>{policyNudge('dowager',-4);return fx(chg({prestige:1}))}}]});}
+  const sons=kidsAlive().filter(k=>k.sex==='m'&&kidAge(k)>=6&&byId(k.mom));
+  if(sons.length>=2&&!S.heir){const [a,b]=shuffle(sons).slice(0,2),ma=byId(a.mom),mb=byId(b.mom),fa=houseOf(ma)?.father,fb=houseOf(mb)?.father;
+    pool.push({title:'国本之争',ref:'明·万历国本之争',por:ma,text:`${fa?fa.name:'朝臣'}领着一班人上疏，请早立${kidName(a)}为储；${fb?fb.name:'另一派'}的人则推${kidName(b)}。两位皇子的生母在御花园碰见，谁也没有先开口。`,choices:[
+      {t:`暗示倾向${kidName(a)}`,f:()=>{a.sup=clamp((a.sup||0)+10);policyNudge('princes',3);setXin(mb,'嫉恨','陛下倾向别家皇子',ma.id);relAdd(ma,mb,-12);return fx(cchg(ma,{mood:8}),cchg(mb,{mood:-8}))}},
+      {t:`暗示倾向${kidName(b)}`,f:()=>{b.sup=clamp((b.sup||0)+10);policyNudge('princes',3);setXin(ma,'嫉恨','陛下倾向别家皇子',mb.id);relAdd(ma,mb,-12);return fx(cchg(mb,{mood:8}),cchg(ma,{mood:-8}))}},
+      {t:'“储位之事，谁再提，罚俸。”',f:()=>{policyNudge('princes',-5);return fx(chg({prestige:2,people:-1}))}}]});}
+  return pool.length?pick(pool):null;
+}
+// 离开太久，御案上会积下奏折；下个月末一并呈上
+function offlineMemorials(){
+  if(!S||!S.savedAt)return;
+  const hours=(Date.now()-S.savedAt)/36e5;
+  if(hours<1)return;
+  const n=Math.min(3,Math.floor(hours/2)+1);
+  S.flags.memorials=Math.min(3,(S.flags.memorials||0)+n);
+  toast(`陛下离宫约${Math.round(hours)}个时辰，御案上积了${S.flags.memorials}份奏折，月末呈上`);
+}
+/* ---- 人物关系图：父兄 → 妃嫔 → 皇嗣，妃嫔之间的亲疏用连线表示 ---- */
+function familyGraphSVG(){
+  const people=S.consorts.filter(c=>c.alive&&!c.gone&&!c.maid).sort((a,b)=>clanKey(a)===clanKey(b)?b.rank-a.rank:clanKey(a)>clanKey(b)?1:-1);
+  if(!people.length)return '<p class="hint">目前没有入宫的妃嫔。</p>';
+  const col=96,W=Math.max(720,people.length*col+60),kids=new Map();
+  for(const k of kidsAlive()){if(!kids.has(k.mom))kids.set(k.mom,[]);kids.get(k.mom).push(k)}
+  const maxKids=Math.max(0,...people.map(c=>kids.get(c.id)?.length||0));
+  const H=330+maxKids*34,x=i=>40+col/2+i*col,yF=50,yC=200,yK=280;
+  const pos=new Map(people.map((c,i)=>[c.id,x(i)]));
+  const t=(s,n=5)=>esc(String(s).slice(0,n));
+  let out=`<svg class="family-graph" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="人物关系图">`;
+  // 帝王：横线连着每位妃嫔，名牌最后再画，压在连线上面
+  const ex=(x(0)+x(people.length-1))/2;
+  out+=`<line x1="${ex}" y1="${yC-58}" x2="${ex}" y2="${yC-40}" stroke="#a87a26"/><line x1="${x(0)}" y1="${yC-40}" x2="${x(people.length-1)}" y2="${yC-40}" stroke="#a87a26"/>`;
+  const emperor=`<rect x="${ex-46}" y="${yC-86}" width="92" height="28" rx="6" fill="#a87a26"/><text x="${ex}" y="${yC-67}" text-anchor="middle" fill="#fff6e0" font-size="13">${esc(E().sur+E().name)}</text>`;
+  // 妃嫔之间的亲疏
+  for(let i=0;i<people.length;i++)for(let j=i+1;j<people.length;j++){
+    const v=relGet(people[i],people[j]);if(Math.abs(v)<30)continue;
+    const x1=pos.get(people[i].id),x2=pos.get(people[j].id),mid=(x1+x2)/2,lift=yC+52+Math.min(60,(x2-x1)/6);
+    out+=`<path d="M${x1} ${yC+22} Q${mid} ${lift} ${x2} ${yC+22}" fill="none" stroke="${v>0?'#4f9078':'#b8473c'}" stroke-width="${1+Math.abs(v)/40}" stroke-dasharray="${v>0?'':'4 3'}" opacity=".75"><title>${esc(fullName(people[i]))} 与 ${esc(fullName(people[j]))}：${v>0?'亲近':'不和'} ${Math.round(v)}</title></path>`;
+  }
+  people.forEach(c=>{
+    const cx=pos.get(c.id),h=houseOf(c),st=stanceOf(c),color=BLOC_COLOR[st]||'#8a8277';
+    out+=`<line x1="${cx}" y1="${yC-40}" x2="${cx}" y2="${yC-22}" stroke="#a87a26" opacity=".6"/>`;
+    if(h){out+=`<line x1="${cx}" y1="${yF+22}" x2="${cx}" y2="${yC-22}" stroke="${color}" stroke-dasharray="2 3"/>
+      <g><title>${esc(h.father.name)}（${esc(h.father.office)}）· 兄长${esc(h.brother.name)}（${esc(h.brother.post)}）· ${esc(blocName(st))}</title>
+      <rect x="${cx-42}" y="${yF-18}" width="84" height="40" rx="5" fill="#fff8ea" stroke="${color}" stroke-width="2" opacity="${h.father.alive?1:.55}"/>
+      <text x="${cx}" y="${yF-2}" text-anchor="middle" font-size="11" fill="#3a2a22">${t(h.father.name,4)}${h.father.alive?'':'†'}</text>
+      <text x="${cx}" y="${yF+14}" text-anchor="middle" font-size="10" fill="${color}">${t(blocName(st),4)}·${t(h.father.office,4)}</text></g>`;}
+    out+=`<g class="node" onclick="A.go('consort',${c.id})" style="cursor:pointer"><title>${esc(cName(c))} · 恩宠 ${Math.round(c.favor)}</title>
+      <rect x="${cx-42}" y="${yC-22}" width="84" height="44" rx="7" fill="${c.rank===8?'#f5dfb0':'#fff2df'}" stroke="${c.cold?'#555':'#9a483e'}" stroke-width="2"/>
+      <text x="${cx}" y="${yC-4}" text-anchor="middle" font-size="12" fill="#3a2a22">${t(fullName(c),4)}</text>
+      <text x="${cx}" y="${yC+13}" text-anchor="middle" font-size="10" fill="#7a5a4a">${t(cName(c),5)}</text></g>`;
+    (kids.get(c.id)||[]).forEach((k,i)=>{const ky=yK+i*34,foster=k.foster!==k.mom&&fosterOf(k);
+      out+=`<line x1="${cx}" y1="${yC+22}" x2="${cx}" y2="${ky-12}" stroke="#9a483e" opacity=".5"/><g class="node" onclick="A.go('kid',${k.id})" style="cursor:pointer">
+      <title>${esc(kidName(k))}${foster?` · 由${esc(fullName(foster))}抚养`:''}</title>
+      ${foster?`<text x="${cx+40}" y="${ky+4}" font-size="9" fill="#7a5a4a">养于${t(fullName(foster),3)}</text>`:''}
+      <rect x="${cx-38}" y="${ky-12}" width="76" height="26" rx="13" fill="${S.heir===k.id?'#f5dfb0':'#eef3ea'}" stroke="${k.sex==='m'?'#3b5fa8':'#b0587a'}"/>
+      <text x="${cx}" y="${ky+5}" text-anchor="middle" font-size="11" fill="#2a2a2a">${t(k.name,4)}${S.heir===k.id?'·储':''}</text></g>`;});
+  });
+  out+=emperor+'</svg>';
+  const legend=COURT_BLOCS.map(b=>`<span class="tag" style="border-color:${BLOC_COLOR[b.id]};color:${BLOC_COLOR[b.id]}">${b.name}</span>`).join('');
+  return `<div class="graph-legend">${legend}<span class="hint">绿实线：亲近　红虚线：不和　上排是父亲，下排是皇嗣。点人名查看详情。</span></div><div class="graph-wrap">${out}</div>`;
+}
+A.familyMode=function(mode){UI.familyMode=mode;render()};
+/* ---- 起居注纪念卡 ---- */
+A.logCard=function(){
+  const marks=S.log.map((l,i)=>l.t.startsWith('——')?i:-1).filter(i=>i>=0);
+  const from=marks.length>=2?marks[marks.length-2]+1:0,to=marks.length?marks[marks.length-1]:S.log.length;
+  const lines=S.log.slice(from,to).filter(l=>!l.t.startsWith('——')).slice(-12);
+  const W=360,H=540,c=document.createElement('canvas');c.width=W*2;c.height=H*2;const g=c.getContext('2d');g.scale(2,2);
+  g.fillStyle='#5a2e28';g.fillRect(0,0,W,H);g.fillStyle='#f6ead2';g.fillRect(12,12,W-24,H-24);
+  g.fillStyle='#a87a26';for(let i=12;i<W-12;i+=8){g.fillRect(i,12,4,4);g.fillRect(i+4,H-16,4,4)}for(let i=12;i<H-12;i+=8){g.fillRect(12,i+4,4,4);g.fillRect(W-16,i,4,4)}
+  const font='"Songti SC","STSong","Noto Serif CJK SC",serif';
+  g.textAlign='center';g.fillStyle='#5a2e28';g.font=`700 28px ${font}`;g.fillText('起居注',W/2,62);
+  g.font=`14px ${font}`;g.fillStyle='#7a5a4a';g.fillText(`${E().sur}${E().name} · ${lines[0]?.d||dateStr()}`,W/2,86);
+  g.fillStyle='#5a2e28';g.fillRect(36,98,W-72,2);g.textAlign='left';g.font=`13px ${font}`;let y=126;
+  for(const l of lines){if(y>H-60)break;g.fillStyle=l.b?'#9a3b33':'#3a2a22';let row='';
+    for(const ch of '· '+l.t){if(g.measureText(row+ch).width>W-80){g.fillText(row,40,y);y+=19;row='  '+ch;if(y>H-60)break}else row+=ch}
+    if(row&&y<=H-60){g.fillText(row,40,y);y+=24}}
+  g.textAlign='center';g.fillStyle='#a08870';g.font=`11px ${font}`;g.fillText('宸宫纪 · 像素后宫',W/2,H-30);
+  if(!c.toBlob){toast('当前环境不能导出图片');return}
+  c.toBlob(b=>{if(!b)return;const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`起居注-${dateStr()}.png`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)},'image/png');
+};
+/* ---- 岁首快照：每年正月留一份，最多四份 ---- */
+function snapshotYear(){try{SaveManager.snapshot(localStorage,SKEY+'auto',S,validPalaceSave,{label:'y-'+S.gen+'-'+S.year,day:S.turn,date:dateStr()})}catch(e){}}
+A.rewind=function(index){
+  const snap=SaveManager.snapshots(localStorage,SKEY+'auto').find(s=>s.index===index);
+  if(!snap||!confirm(`回到${snap.date}？之后发生的事都会被改写。`))return;
+  const data=SaveManager.restore(localStorage,SKEY+'auto',index,validPalaceSave,(s)=>s);
+  if(!data){toast('这份快照读不出来了');return}
+  S=data;Q.length=0;migrate();UI.view='map';setScene('court');toast(`回到了${dateStr()}`);save('auto');render();
+};
 function viewFamily(){
+  if((UI.familyMode||'graph')==='graph')return `<h2>家族关系树</h2><div class="acts"><button class="btn sm on">关系图</button><button class="btn sm" onclick="A.familyMode('list')">家族列表</button></div>${familyGraphSVG()}`;
   const byClan=new Map(),kidsByMother=new Map();
   for(const k of S.children){
     if(!kidsByMother.has(k.mom))kidsByMother.set(k.mom,[]);
@@ -1929,7 +2136,7 @@ function viewFamily(){
   const branches=[...byClan].sort(([a],[b])=>Number(a==null)-Number(b==null)).map(([key,people])=>
     branch(key?clanName(key):'未列家族',people,key?` · 势力 ${Math.max(...people.map(c=>rd(c.fam.p)))}`:'')).join('');
   const unlisted=S.children.filter(k=>!byId(k.mom));
-  return `<h2>家族关系树</h2><p class="hint">皇嗣列在生母名下，另标养母。点名字可查看人物。</p>
+  return `<h2>家族关系树</h2><div class="acts"><button class="btn sm" onclick="A.familyMode('graph')">关系图</button><button class="btn sm on">家族列表</button></div><p class="hint">皇嗣列在生母名下，另标养母。点名字可查看人物。</p>
     ${branches||'<p class="hint">目前没有入宫的妃嫔。</p>'}
     ${unlisted.length?`<details class="family-branch"><summary>生母未载</summary><ul>${unlisted.map(childLine).join('')}</ul></details>`:''}`;
 }
@@ -1988,7 +2195,7 @@ function viewConsort(){
     acts+=`<button class="btn primary" onclick="A.uncold(${c.id})">放出冷宫</button>`;
     penalties+=`<button class="btn danger" onclick="A.away(${c.id})">遣出宫</button>`;
   }
-  const family=act?visitorLine(c)+fosterLine(c)+clanLine(c)+conKidLine(c)+relLine(c):'';
+  const family=act?visitorLine(c)+fosterLine(c)+clanLine(c)+houseLine(c)+conKidLine(c)+relLine(c):'';
   return `<button class="btn quiet sm detail-back" onclick="A.go('harem')">← 返回后宫</button>
    <header class="detail-head">${porImg(c,128)}<div class="grow">
     <p>${esc(fullName(c))} · ${c.age}岁 · ${c.alive?c.gone?'已出宫':esc(c.palace):'已故'}</p>
@@ -2062,7 +2269,7 @@ function viewOut(){
   return `<h2>出巡</h2><p class="hint">每次出巡花费1点精力。</p><div class="grid">${o.map(([k,n,d])=>`<button class="card" onclick="A.out('${k}')"><div class="grow"><div class="nm">${n}</div><div>${d}</div></div></button>`).join('')}</div>`}
 function viewLog(){
   const L=S.log.filter(l=>UI.logF==='all'?true:l.b).slice().reverse();
-  return `<h2>起居注</h2><div class="log-filter"><button class="btn sm ${UI.logF==='all'?'on':''}" onclick="UI.logF='all';render()">全部</button><button class="btn sm ${UI.logF==='big'?'on':''}" onclick="UI.logF='big';render()">只看大事</button></div>
+  return `<h2>起居注</h2><div class="log-filter"><button class="btn sm ${UI.logF==='all'?'on':''}" onclick="UI.logF='all';render()">全部</button><button class="btn sm ${UI.logF==='big'?'on':''}" onclick="UI.logF='big';render()">只看大事</button><button class="btn sm" onclick="A.logCard()">保存上月纪念卡</button></div>
    ${S.history.length?`<p class="hint">历代：${S.history.map(h=>esc(`${h.shi?h.miao+h.shi+'皇帝':h.miao} ${h.sur}${h.name}（${h.era}，在位${h.yrs}年）`)).join('；')}</p>`:''}
    <ul class="story" style="max-height:560px">${L.map(l=>`<li class="${l.b?'big':''}"><time>${esc(l.d)}</time>${esc(l.t)}</li>`).join('')}</ul>`}
 function viewSys(){
@@ -2070,7 +2277,13 @@ function viewSys(){
    ${['1','2','3'].map(s=>`<div class="acts" style="align-items:center"><b>存档${s}</b><span class="hint grow">${esc(slotInfo(s)||'空')}</span><button class="btn sm gold" onclick="A.save('${s}')">保存</button><button class="btn sm" onclick="A.load('${s}')">读取</button></div>`).join('')}
    <div class="acts" style="align-items:center"><b>自动</b><span class="hint grow">${esc(slotInfo('auto')||'空')}</span><button class="btn sm" onclick="A.load('auto')">读取</button></div>
    <h3>存档码</h3><p class="hint">导出后复制这串字，可以换浏览器继续玩，也可以发给别人看你的进度。</p><textarea id="savecode" class="inp" aria-label="存档码"></textarea><div class="acts"><button class="btn sm gold" onclick="A.exportSave()">导出存档码</button><button class="btn sm" onclick="A.importSave()">导入存档码</button></div>
+   ${rewindHTML()}
    <h3>其他</h3><div class="acts"><button class="btn sm" onclick="S=null;UI.view='title';render()">返回标题</button></div>`}
+function rewindHTML(){
+  const snaps=SaveManager.snapshots(localStorage,SKEY+'auto').sort((a,b)=>b.day-a.day);
+  if(!snaps.length)return '';
+  return `<h3>岁首快照</h3><p class="hint">每年正月自动留一份，最多四份。回到那年岁首，之后的事会重新发生。</p>${snaps.map(s=>`<div class="acts" style="align-items:center"><span class="grow">${esc(s.date||'')}</span><button class="btn sm" onclick="A.rewind(${s.index})">回到这里</button></div>`).join('')}`;
+}
 
 /* ============ 关系与派系 ============ */
 const rk=(a,b)=>a.id<b.id?a.id+'_'+b.id:b.id+'_'+a.id;
@@ -2688,6 +2901,7 @@ A.exportSave=function(){try{const t=btoa(unescape(encodeURIComponent(JSON.string
   if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast('存档码已复制'),()=>toast('已选中，请手动复制'));else toast('已选中，请手动复制')}catch(e){toast('导出失败')}};
 A.importSave=function(){try{const t=$('#savecode').value.trim();const s=JSON.parse(decodeURIComponent(escape(atob(t))));if(!s.emp)throw 0;S=s;Q.length=0;migrate();UI.view='map';toast('已导入存档');render()}catch(e){toast('存档码无效，请检查是否复制完整')}};
 function migrate(){if(!S)return;ensureDowager();S.rel=S.rel||{};S.pos=S.pos||{x:100,y:82};reconcileScholarArcs();[...S.consorts,...(S.cands||[])].forEach(assignConsortPortrait);alive().forEach(c=>{if(!c.arc)assignArc(c);deepen(c);clanKey(c)});S.children.forEach(k=>{if(k.sup===undefined)k.sup=0});
+  alive().forEach(houseOf);S.flags.memorials ??= 0;
   NPC.clear();emp.x=S.pos.x;emp.y=S.pos.y;emp.path=[];emp.arrive=null;emp.trail=[]}
 
 /* ============ 人物立体：小性子、喜好、心愿、往事、记忆 ============ */
