@@ -123,3 +123,82 @@ test('version 1 saves load, rewinding restores a new-year snapshot, and absence 
   run(`A.endMonth();drain();`);
   assert.equal(run(`S.flags.memorials`),0);
 });
+
+test('a princess opens her own estate, sends project letters and stays in the family after succession',()=>{
+  const {run}=boot();
+  run(`
+    const mother=harem()[0], p=makeKid(mother,'f','明昭'), h=makeKid(mother,'m','承安');
+    p.born=S.turn-16*12;h.born=S.turn-15*12;p.lit=70;p.mar=30;
+    assert.equal(milestone().title,'公主开府来信');
+    A.openPrincess(p.id);choose(0);drain();
+    assert.equal(p.estate.pursuit,'books');assert.equal(p.married,false);assert.equal(childInPalace(p),false);
+    const oldTreasury=E().treasury;
+    A.princessLetter(p.id);choose(0);drain();
+    assert.equal(E().treasury,oldTreasury-20);assert.equal(p.estate.due,S.turn+2);
+    A.princessLetter(p.id);assert.equal(modalOpen,false);
+    S.turn+=2;A.princessLetter(p.id);choose(0);drain();
+    assert.equal(p.estate.stage,'done');assert.equal(p.lit,75);
+    const mood=mother.mood;A.princessVisit(p.id);choose(0);drain();assert.ok(mother.mood>mood);
+    A.princessVisit(p.id);assert.equal(modalOpen,false);
+    succeed(h);choose(0);drain();
+    assert.equal(kidById(p.id),undefined);
+    assert.equal(estatePrincesses()[0].estate.stage,'done');
+    assert.equal(princessKinship(estatePrincesses()[0]),'皇姐');
+    save('1');load('1');migrate();
+    assert.equal(princessById(p.id).estate.stage,'done');
+    assert.ok(NPCMemory.recall(S,p.id).some(m=>m.type==='princess_result'));
+  `);
+});
+
+test('princess marriage can be postponed and leaves a personal route when agreed',()=>{
+  const {run}=boot();
+  run(`
+    const p=makeKid(harem()[0],'f','宁华');p.born=S.turn-15*12;p.lit=75;
+    A.princessMarriage(p.id);choose(3);drain();
+    const due=p.marriageAfter;
+    A.princessMarriage(p.id);assert.equal(modalOpen,false);
+    S.turn=due;A.princessMarriage(p.id);choose(0);
+    assert.equal(curEv.title,'灯下谈婚事');choose(0);drain();
+    assert.equal(p.princessMarriage,'scholar');assert.equal(p.married,true);
+    A.openPrincess(p.id);choose(0);drain();assert.equal(p.estate.route,'scholar');
+  `);
+});
+
+test('lantern hunt follows three map locations, scores once and survives reload',()=>{
+  const {run}=boot();
+  run(`
+    const [mother]=harem(), a=makeKid(mother,'m','承光'), b=makeKid(mother,'f','明月');
+    a.born=b.born=S.turn-8*12;S.month=1;
+    const place=id=>arrive(PLACES.find(p=>p.id===id));
+    place('yh');const before=relGet(a,b);
+    A.startLantern('team');A.guessLantern('wy',0);assert.equal(activeLantern().step,0);
+    A.guessLantern('yh',1);assert.equal(lanternStop().place,'wy');
+    save('1');load('1');migrate();assert.equal(activeLantern().correct,1);
+    place('wy');A.guessLantern('wy',0);
+    place('ss');A.guessLantern('ss',2);drain();
+    assert.equal(seasonJournal().lanternRecord.score,3);
+    assert.equal(relGet(kidById(a.id),kidById(b.id)),before+6);
+    A.guessLantern('ss',2);assert.equal(lanternStop(),null);
+    S.month=2;S.turn++;assert.equal(activeLantern(),null);
+  `);
+});
+
+test('flower conditions and the passed inkstone give separate delayed follow-ups',()=>{
+  const {run}=boot();
+  run(`
+    const c=harem()[0];c.like='花草';S.month=2;
+    const place=id=>arrive(PLACES.find(p=>p.id===id));
+    place('yh');A.plantPalaceFlower('sun');const flower=springFlower();
+    A.seePalaceFlower();assert.equal(modalOpen,false);
+    S.turn=flower.due;S.month=1;S.year++;A.seePalaceFlower();choose(0);drain();
+    assert.equal(flower.plot,'shade');assert.equal(flower.due,S.turn+12);
+    S.turn=flower.due;S.year++;A.seePalaceFlower();choose(0);drain();assert.equal(flower.seen,true);
+    const a=makeKid(c,'m','承书'),b=makeKid(c,'f','静仪');
+    a.born=S.turn-13*12;b.born=S.turn-6*12;
+    place('ss');const before=b.lit;A.passPalaceInkstone(b.id);assert.equal(a.passedInkstone,true);
+    A.readInkstoneEssay();assert.equal(modalOpen,false);
+    S.turn+=3;A.readInkstoneEssay();choose(0);drain();
+    assert.equal(seasonJournal().inkstone,undefined);assert.equal(b.lit,before+4);
+    assert.equal(inkstonePair(),null);
+  `);
+});
