@@ -340,5 +340,35 @@ assert.match($('#panel').innerHTML,/detail-vitals/);
   S=JSON.parse(stateBefore);
   migrate();
 }
+// A birth clears the pregnancy flag at delivery, not at naming: once the birth
+// event is raised, the 翻牌子 card must stop showing 有孕, the child must
+// already exist, and the autosave must agree — a reload before naming used to
+// leave the card stuck on 有孕 with no child recorded.
+{
+  drain();
+  S.emp.health=100;S.emp.people=100;S.emp.treasury=1000;
+  harem().forEach(c=>{c.preg=0});
+  const mom=harem().find(c=>c.rank<8&&c.alive&&!c.cold);
+  mom.preg=9;mom.lastBirth=-99;mom.trait='温婉';mom.swapRisk=false;
+  const kidsBefore=S.children.length,turnBefore=S.turn;
+  A.endMonth();
+  assert.equal(curEv.title,'弄璋弄瓦');
+  assert.match($('#mbox').innerHTML,/诞下/);
+  assert.equal(mom.preg,0,'pregnancy flag clears at delivery');
+  assert.equal(mom.lastBirth,turnBefore+1,'lastBirth recorded for the new month');
+  assert.equal(S.children.length,kidsBefore+1,'child exists from delivery');
+  assert.equal(S.children[kidsBefore].mom,mom.id);
+  assert.doesNotMatch(viewCards(),/有孕/,'翻牌子 card no longer shows 有孕 before naming');
+  const savedBirth=JSON.parse(localStorage.getItem('chengongji_v1_auto'));
+  assert.equal(savedBirth.consorts.find(c=>c.id===mom.id).preg,0,'autosave has flag cleared');
+  assert.equal(savedBirth.children.length,kidsBefore+1,'autosave has the child');
+  const suggested=curEv.input.def;
+  choose(0);
+  if($('#mbox').innerHTML.includes('onclick="nextEv()"'))nextEv();
+  assert.equal(S.children[kidsBefore].name,suggested,'naming keeps the suggested name when accepted');
+  drain();
+  assert.equal(mom.preg,0,'flag stays cleared after naming');
+  assert.doesNotMatch(viewCards(),/有孕/,'card still clean after the birth queue drains');
+}
 console.log('PASS: 60 months, banquets, saves, family memories, historical scenes, map routines, autonomous follow-ups and diverse storylines');
 `,ctx,{timeout:15000});

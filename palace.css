@@ -428,12 +428,14 @@ body{background:#241917}
 .coronation-styles legend{padding:0;margin:0 0 4px;color:#f1d5a5;font-size:13px}
 .coronation-styles>div{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
 .coronation-styles .opt{
-  display:flex;align-items:flex-start;gap:6px;margin:0;padding:7px 9px;
+  display:flex;align-items:flex-start;gap:6px;margin:0;padding:7px 9px;position:relative;
   background:#52362c;border-color:#8a6250;color:#fff1d8;font-size:13px;
 }
 .coronation-styles .opt input{margin:5px 0 0;flex:none}
 .coronation-styles .opt .hint{display:block;font-size:12px;line-height:1.45;color:#e6d3b9}
-.coronation-styles .opt:has(input:checked){background:#754337;border-color:#e5b778}
+.coronation-styles .opt-check{display:none;position:absolute;top:6px;right:6px;background:#eac080;color:#39261a;font-size:11px;font-weight:700;line-height:1.5;padding:1px 7px;border-radius:20px}
+.coronation-styles .opt:has(input:checked){background:#754337;border-color:#e5b778;box-shadow:0 0 0 1px #e5b778}
+.coronation-styles .opt:has(input:checked) .opt-check{display:inline-block}
 .coronation-styles .opt:focus-within{outline:2px solid #f8cd90;outline-offset:2px}
 .coronation-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
 .coronation-actions .quiet,.selection-scene .btn{

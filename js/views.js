@@ -73,7 +73,7 @@ function viewNew(){
       <label>年号<input id="f-era" class="inp" maxlength="2" value="${pick(ERAS)}"></label>
     </div>
     <fieldset class="coronation-styles"><legend>帝王性情</legend>
-      <div>${Object.entries(STYLES).map(([k,d],i)=>`<label class="opt"><input type="radio" name="f-style" value="${k}" ${i===0?'checked':''}><span><b>${k}</b><span class="hint">${d}</span></span></label>`).join('')}</div>
+      <div>${Object.entries(STYLES).map(([k,d],i)=>`<label class="opt"><input type="radio" name="f-style" value="${k}" ${i===0?'checked':''}><span><b>${k}</b><span class="hint">${d}</span></span><span class="opt-check" aria-hidden="true">✓ 已选</span></label>`).join('')}</div>
     </fieldset>
     <div class="coronation-actions"><button type="button" class="btn quiet sm" onclick="A.go('title')">返回</button><button type="submit" class="btn primary">登基</button></div>
   </form>`}

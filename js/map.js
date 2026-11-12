@@ -96,6 +96,8 @@ function initiativeMapScenes() {
 
 function goPlace(p){AU.sfx('click');if(Math.round(emp.x)===p.d[0]&&Math.round(emp.y)===p.d[1]&&!emp.path.length){arrive(p);return}
   emp.path=planPath(Math.round(emp.x),Math.round(emp.y),p.d[0],p.d[1]);emp.arrive=()=>arrive(p)}
+// 宫名按钮是直达：点一下就到，不必等皇帝慢慢走过去（走路仍可点地图上的宫殿本身）。
+function goDirect(p){emp.path=[];emp.arrive=null;emp.x=p.d[0];emp.y=p.d[1];arrive(p)}
 function arrive(p){S.pos={x:p.d[0],y:p.d[1]};setScene(p.sc);AU.sfx('page');
   if(p.k==='view')UI.view=p.v;else if(p.k==='palace'){UI.view='palace';UI.sel=p.p}else{UI.view='place';UI.sel=p.id}
   render()}
@@ -299,13 +301,15 @@ setInterval(mapTick,50);
 function mountMap(){const w=$('#mapwrap');if(!w)return;w.appendChild(MAPC);
   PLACES.forEach(p=>{const b=document.createElement('button');b.className='mlab'+(['qq','kn','cj','yh','sw','wm'].includes(p.id)?' landmark':'');b.textContent=p.n;if(lanternStop()?.place===p.id){b.className+=' seasonal-lit';b.title='上元寻灯';}const [x,y,ww,h]=p.r;
     b.style.left=((x+ww/2)/MW*100)+'%';b.style.top=((y+(p.id==='yh'?h/2:h-2))/MH*100)+'%';
-    b.onclick=()=>goPlace(p);b.ondblclick=()=>{emp.path=[];emp.arrive=null;emp.x=p.d[0];emp.y=p.d[1];arrive(p)};
+    b.onclick=()=>goDirect(p);b.ondblclick=()=>goDirect(p);
     b.onmouseenter=()=>{hoverP=p};b.onmouseleave=()=>{hoverP=null};w.appendChild(b)})}
 const backBtn=`<button class="btn sm" onclick="A.go('map')">◂ 返回宫城</button>`;
-function viewMap(){return `<section class="map-play" aria-label="宫城地图"><header class="map-location"><h2>宫城</h2><span class="hint">当前位置 · ${esc(nearestPlace())}</span></header><div id="mapwrap"></div><p class="map-legend">点宫殿前往 · 点小人偶遇 · 双击宫殿名直达 · 绿点：有人活动 · 粉点：有孕 · 金点：选秀</p>${seasonalMapNotices()}${princessMapNotice()}${initiativeNotices()}${birthdayBanquetButtons()}${proudDemandNotice()}${gardenFamilyNotice()}</section>`;}
+function viewMap(){return `<section class="map-play" aria-label="宫城地图"><header class="map-location"><h2>宫城</h2><span class="hint">当前位置 · ${esc(nearestPlace())}</span></header><div id="mapwrap"></div><p class="map-legend">点宫殿名直达 · 点宫殿步行前往 · 点小人偶遇 · 绿点：有人活动 · 粉点：有孕 · 金点：选秀</p>${seasonalMapNotices()}${princessMapNotice()}${initiativeNotices()}${birthdayBanquetButtons()}${proudDemandNotice()}${gardenFamilyNotice()}</section>`;}
 function viewPalace(){const name=UI.sel,res=name==='冷宫'?alive().filter(c=>c.cold):harem().filter(c=>c.palace===name);
   const extra=name==='储秀宫'&&S.cands.length?`<div class="acts"><button class="btn gold" onclick="A.go('xx')">秀女正在候选（${S.cands.length}人）</button></div>`:'';
-  return `<h2>${esc(name)}${backBtn}</h2><p class="hint">${name==='冷宫'?'荒草萋萋，宫门深锁。':name==='坤宁宫'?'中宫所居，凤仪万方。':'宫门半掩，廊下挂着鸟笼。'}</p>${extra}${res.length?`<div class="grid">${res.map(consortCard).join('')}</div>`:'<p class="hint">此处暂无人居住。</p>'}`}
+  const note=name==='冷宫'?'荒草萋萋，宫门深锁。':name==='坤宁宫'?'中宫所居，凤仪万方。':(PALACE_NOTES[name]||'宫门半掩，廊下挂着鸟笼。');
+  const count=res.length?(name==='冷宫'?`<p class="hint">冷宫里关着 ${res.length} 人。</p>`:`<p class="hint">住着 ${res.length} 位妃嫔。</p>`):'';
+  return `<h2>${esc(name)}${backBtn}</h2><p class="hint">${note}</p>${extra}${count}${res.length?`<div class="grid">${res.map(consortCard).join('')}</div>`:'<p class="hint">此处暂无人居住。</p>'}`}
 function viewPlace(){const id=UI.sel;
   if(id==='cj')return `<h2>宸极殿${backBtn}</h2><p>文武百官已在丹墀下候着。</p><div class="acts"><button class="btn gold" onclick="A.court()">临朝听政<small>精力-1</small></button></div>`;
   if(id==='yh'){const here=[...NPC].filter(([i,n])=>n.where==='garden'&&!n.path.length).map(([i])=>byId(i)).filter(c=>inPalace(c)&&c.id!==gardenFamilyMoment()?.mother&&
