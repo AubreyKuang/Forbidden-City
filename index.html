@@ -279,6 +279,44 @@ body{background:#f3eee4}
 <div id="toast"></div>
 
 <script>
+/* Shared snapshot storage. The primary key remains readable by older builds. */
+const SaveManager = (() => {
+  const version = 1;
+  function decode(raw, valid) {
+    try {
+      const data = JSON.parse(raw);
+      if (!data || (data.saveVersion != null && data.saveVersion !== version) || !valid(data)) return null;
+      return data;
+    } catch {
+      return null;
+    }
+  }
+
+  function load(storage, key, valid) {
+    try {
+      return decode(storage.getItem(key), valid) || decode(storage.getItem(key + ':backup'), valid);
+    } catch {
+      return null;
+    }
+  }
+
+  function save(storage, key, data, valid) {
+    try {
+      const next = JSON.stringify({ ...data, saveVersion: version });
+      if (!decode(next, valid)) return false;
+      const previous = storage.getItem(key);
+      if (previous === next) return true;
+      if (decode(previous, valid)) storage.setItem(key + ':backup', previous);
+      storage.setItem(key, next);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  return { load, save };
+})();
+
 // Deterministic NPC memory. Store the ledger with the game's save data.
 const NPCMemory = (() => {
   const SHORT_LIMIT = 32;
@@ -1473,7 +1511,7 @@ function succeed(h){
     S.emp={sur:old.sur,name:h.name,era:v,age:Math.max(a,14),health:clamp(h.hp+10),prestige:clamp(35+h.vir/3),people:old.people,treasury:old.treasury,energy:3,nightsMonth:0,
       style:h.mar>h.lit+15?'尚武':h.lit>h.mar+15?'文雅':'勤政',wen:rd(h.lit),wu:rd(h.mar),seed:h.seed};
     S.flags.dowager={name:mom?`${mom.sur}太后`:'太后',sur:mom?.sur,fam:mom?{...mom.fam}:undefined,clan:mom?clanKey(mom):undefined,lastOffer:null,cooldown:24,alive:!!(mom&&mom.alive)};
-    S.consorts=[];S.children=[];S.rel={};S.heir=null;S.cands=[];S.gen++;S.year=1;S.over=false;S.genChar=GEN_CHARS[(GEN_CHARS.indexOf(S.genChar)+1)%GEN_CHARS.length];
+    S.consorts=[];S.children=[];S.rel={};S.courtPolicy={};S.courtPolicyTurn=null;S.heir=null;S.cands=[];S.gen++;S.year=1;S.over=false;S.genChar=GEN_CHARS[(GEN_CHARS.indexOf(S.genChar)+1)%GEN_CHARS.length];
     S.flags.lastXX=-99;S.emp.energy=maxEnergy();
     log(`━━ 第${cnNum(S.gen)}代 ━━ ${v}元年，新帝${S.emp.sur}${h.name}登基，尊生母为${S.flags.dowager.name}。`,1);
     if(S.emp.age>=15){const em=makeGirl({fam:pick(FAMS.slice(0,4)),trait:pick(['温婉','聪慧','城府','骄矜'])});em.favor=35;em.aff=30;addConsort(em,8,'新帝登基，奉遗诏册立');}
@@ -1483,9 +1521,10 @@ function succeed(h){
 
 /* ============ 存档 ============ */
 const SKEY='chengongji_v1_';
-function save(slot){try{localStorage.setItem(SKEY+slot,JSON.stringify(S));return true}catch(e){return false}}
-function load(slot){try{const t=localStorage.getItem(SKEY+slot);if(!t)return false;S=JSON.parse(t);return true}catch(e){return false}}
-function slotInfo(slot){try{const t=localStorage.getItem(SKEY+slot);if(!t)return null;const s=JSON.parse(t);return `${s.emp.sur}${s.emp.name}·${dateStr(s)}·后妃${s.consorts.filter(c=>c.alive&&!c.gone).length}`}catch(e){return null}}
+const validPalaceSave=s=>!!s.emp&&Array.isArray(s.consorts)&&Array.isArray(s.children)&&Number.isFinite(s.turn);
+function save(slot){return S&&SaveManager.save(localStorage,SKEY+slot,S,validPalaceSave)}
+function load(slot){const data=SaveManager.load(localStorage,SKEY+slot,validPalaceSave);if(!data)return false;S=data;return true}
+function slotInfo(slot){const s=SaveManager.load(localStorage,SKEY+slot,validPalaceSave);return s?`${s.emp.sur}${s.emp.name}·${dateStr(s)}·后妃${s.consorts.filter(c=>c.alive&&!c.gone).length}`:null}
 A.save=function(slot){if(save(slot)){toast('已存档');AU.sfx('chime')}else toast('存档失败：浏览器禁用了本地存储');render()};
 A.load=function(slot){if(load(slot)){Q.length=0;migrate();UI.view='map';toast('已读档');setScene('court');render()}else toast('该存档为空')};
 
@@ -1522,7 +1561,7 @@ function renderTop(){
    <span class="st">国库 <b>${e.treasury}</b>万两</span><span class="st">精力 ${pips}</span><span class="sp"></span>
    <button class="btn gold sm" onclick="A.endMonth()" ${S.over?'disabled':''}>结束本月 ▸</button>`;
 }
-const MENU=[['map','宫城'],['court','上朝'],['harem','后宫'],['cards','翻牌子'],['xx','选秀'],['kids','皇嗣'],['rel','人际'],['out','出巡'],['log','起居注'],['sys','存档']];
+const MENU=[['map','宫城'],['home','御书房'],['court','上朝'],['harem','后宫'],['cards','翻牌子'],['xx','选秀'],['kids','皇嗣'],['rel','人际'],['out','出巡'],['log','起居注'],['sys','存档']];
 function renderMenu(){const m=$('#menu');if(!S){m.innerHTML='';m.hidden=true;return}m.hidden=false;
   m.innerHTML=MENU.map(([k,l])=>k==='court'?`<button class="btn" onclick="A.court()">${l}<small>精力-1</small></button>`:`<button class="btn${UI.view===k||(['palace','place'].includes(UI.view)&&k==='map')||(UI.view==='consort'&&k==='harem')||(UI.view==='kid'&&k==='kids')?' on':''}" onclick="A.go('${k}')">${l}</button>`).join('')}
 function renderPanel(){const p=$('#panel');const v=UI.view;
@@ -1549,6 +1588,50 @@ function viewNew(){
 function consortCard(c){
   const tags=[xinTag(c),c.visitor?'<span class="tag y">母亲在宫</span>':'',c.preg>=2?'<span class="tag r">有孕</span>':'',c.cold?'<span class="tag k">冷宫</span>':'',c.rank===8?'<span class="tag y">中宫</span>':''].join('');
   return `<button class="card" onclick="A.go('consort',${c.id})">${porImg(c,56)}<div class="grow"><div class="nm">${esc(cName(c))}</div><div>${esc(fullName(c))} · ${c.age}岁 · ${esc(c.palace)}</div><div>${tags}<span class="tag">${c.trait}</span></div>${bar('恩宠',c.favor)}${bar('心情',c.mood,'#4f9078')}</div></button>`}
+const COURT_BLOCS=[
+  {id:'kin',name:'外戚',interest:'家族地位与官职',metric:()=>Math.max(0,...harem().map(c=>c.fam.p)),cost:{treasury:-12},gain:{prestige:3}},
+  {id:'civil',name:'文官',interest:'科举、财政与民政',metric:()=>E().people,cost:{treasury:-10},gain:{people:5,wen:2}},
+  {id:'army',name:'武将',interest:'军功与边防',metric:()=>E().wu,cost:{treasury:-16},gain:{wu:4,prestige:2}},
+  {id:'dowager',name:'太后',interest:'宗室血脉与宫廷稳定',metric:()=>S.flags.dowager?.alive?65:0,cost:{treasury:-8},gain:{prestige:4}},
+  {id:'princes',name:'皇子',interest:'储位与继承',metric:()=>Math.max(0,...kidsAlive().filter(k=>k.sex==='m').map(k=>k.sup||0)),cost:{treasury:-12},gain:{prestige:3,people:2}}
+];
+function courtStanding(bloc){return clamp(Math.round(bloc.metric()+(S.courtPolicy?.[bloc.id]||0)))}
+A.courtPolicy=function(id){
+  const bloc=COURT_BLOCS.find(group=>group.id===id);
+  if(!bloc||S.courtPolicyTurn===S.turn||E().energy<=0||E().treasury< -bloc.cost.treasury)return;
+  if(id==='dowager'&&!S.flags.dowager?.alive)return;
+  S.courtPolicy ||= {};
+  E().energy--;
+  S.courtPolicyTurn=S.turn;
+  chg({...bloc.cost,...bloc.gain});
+  for(const group of COURT_BLOCS){
+    const previous=S.courtPolicy[group.id]||0;
+    S.courtPolicy[group.id]=Math.max(-30,Math.min(30,previous+(group===bloc?10:-2)));
+  }
+  log(`御书房议政，优先采纳${bloc.name}建议。`,1);
+  save('auto');render();
+};
+function courtBlocHTML(){
+  return `<h3>朝堂势力</h3><div class="grid">${COURT_BLOCS.map(bloc=>{
+    const unavailable=S.courtPolicyTurn===S.turn||E().energy<=0||E().treasury< -bloc.cost.treasury||(bloc.id==='dowager'&&!S.flags.dowager?.alive);
+    return `<article class="card" style="display:block;cursor:default"><b>${bloc.name}</b><div>${bloc.interest}</div>${bar('影响力',courtStanding(bloc))}<button class="btn sm" onclick="A.courtPolicy('${bloc.id}')" ${unavailable?'disabled':''}>采纳建议 · 国库 ${bloc.cost.treasury}</button></article>`;
+  }).join('')}</div>`;
+}
+function familyTreeHTML(){
+  const byClan=new Map();
+  for(const c of S.consorts.filter(c=>!c.maid)){
+    const key=clanKey(c);
+    if(!byClan.has(key))byClan.set(key,[]);
+    byClan.get(key).push(c);
+  }
+  const kidsByMother=new Map();
+  for(const k of S.children){
+    if(!kidsByMother.has(k.mom))kidsByMother.set(k.mom,[]);
+    kidsByMother.get(k.mom).push(k);
+  }
+  const tree=[...byClan].map(([key,people])=>`<li><details><summary>${esc(clanName(key))} · ${people.length} 人</summary><ul>${people.map(c=>`<li><button class="btn sm" onclick="A.go('consort',${c.id})">${esc(fullName(c))}</button> ${c.alive?'':'（已故）'}${kidsByMother.has(c.id)?`<ul>${kidsByMother.get(c.id).map(k=>`<li><button class="btn sm" onclick="A.go('kid',${k.id})">${esc(kidName(k))}</button>${k.foster&&k.foster!==c.id&&byId(k.foster)?` · 由${esc(fullName(byId(k.foster)))}抚养`:''}</li>`).join('')}</ul>`:''}</li>`).join('')}</ul></details></li>`).join('');
+  return `<h3>家族关系树</h3>${tree?`<ul class="story">${tree}</ul>`:'<p class="hint">目前没有入宫的妃嫔。</p>'}`;
+}
 function viewHome(){
   const e=E(),h=harem(),k=kidsAlive(),heir=S.heir&&kidById(S.heir);
   const recent=S.log.filter(l=>!l.t.startsWith('——')).slice(-8).reverse();
@@ -1558,12 +1641,12 @@ function viewHome(){
    <div style="margin-top:6px">后宫 ${h.length} 人${alive().some(c=>c.cold)?`（冷宫 ${alive().filter(c=>c.cold).length}）`:''}　皇嗣 ${k.length} 位　储君：${heir?esc(heir.name):'未立'}　${S.flags.dowager&&S.flags.dowager.alive?esc(S.flags.dowager.name)+'健在':''}</div>
    </div></div>
    <p class="hint">每月有${maxEnergy()}点精力：上朝、召幸、闲谈、探望皇嗣、出巡都要花费精力；赏赐、晋封、选秀不花精力。用完后点「结束本月」，宫中会发生新的事。侍寝后若怀上龙胎，要到下个月末太医才诊得出喜脉。每位妃嫔都有一段专属故事，情分越深越容易推进。</p>
-   <h3>近事</h3><ul class="story">${recent.map(l=>`<li class="${l.b?'big':''}"><time>${esc(l.d)}</time>${esc(l.t)}</li>`).join('')||'<li>尚无记载</li>'}</ul>`}
+   ${courtBlocHTML()}<h3>近事</h3><ul class="story">${recent.map(l=>`<li class="${l.b?'big':''}"><time>${esc(l.d)}</time>${esc(l.t)}</li>`).join('')||'<li>尚无记载</li>'}</ul>`}
 function viewHarem(){
   const all=alive().filter(c=>!c.maid);const g=r=>all.filter(c=>!c.cold&&r(c)).sort((a,b)=>b.rank-a.rank||b.favor-a.favor);
   const sec=(t,arr)=>arr.length?`<h3>${t}（${arr.length}）</h3><div class="grid">${arr.map(consortCard).join('')}</div>`:'';
   const dead=S.consorts.filter(c=>!c.alive||c.gone);
-  return `<h2>后宫</h2><p class="hint">点击妃嫔查看详情、互动与她的故事。各位分名额：嫔6、妃4、贵妃2、皇贵妃1、皇后1。</p>${facHTML()}${clanHTML()}
+  return `<h2>后宫</h2><p class="hint">点击妃嫔查看详情、互动与她的故事。各位分名额：嫔6、妃4、贵妃2、皇贵妃1、皇后1。</p>${facHTML()}${clanHTML()}${familyTreeHTML()}
    ${sec('中宫',g(c=>c.rank===8))}${sec('妃位',g(c=>c.rank>=5&&c.rank<8))}${sec('嫔位',g(c=>c.rank===4))}${sec('小主',g(c=>c.rank<4))}${sec('冷宫',all.filter(c=>c.cold))}${sec('贴身宫女',maids().filter(m=>m.near))}${sec('承恩宫女',maids().filter(m=>!m.near))}
    ${dead.length?`<h3>故人</h3><div class="hint">${dead.map(c=>`<button class="btn sm" onclick="A.go('consort',${c.id})">${esc(fullName(c))}${c.gone?'（出宫）':'（已故）'}</button>`).join(' ')}</div>`:''}`}
 function detailFold(title,content,open=false){
