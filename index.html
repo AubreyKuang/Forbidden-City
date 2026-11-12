@@ -205,6 +205,8 @@ body{background:#f3eee4}
 .title-wrap h1,.brand::before,.mtitle{font-family:var(--f-ui);letter-spacing:.06em}
 .title-wrap h1{font-weight:750}
 #scene,.por{filter:saturate(.78)}
+.por.palace-portrait{background:radial-gradient(ellipse at 50% 35%,#fff1d6,#dbc19a);filter:none}
+.por.palace-portrait.cold{filter:grayscale(.85) brightness(.9)}
 .btn,.btn.jade{background:#efe8dc;color:var(--ink);border:0;box-shadow:none;letter-spacing:0}
 .btn:hover,.btn.jade:hover{background:#e8dfd1;filter:none;box-shadow:none}
 .btn.gold,.btn.primary,.title-wrap>.btn.gold{background:var(--red);color:#fff9ec;font-weight:650}
@@ -227,7 +229,7 @@ body{background:#f3eee4}
 .detail-head .grow{min-width:min(100%,155px)}
 .detail-head h2{margin:2px 0 6px!important}
 .detail-head p{margin:0;color:var(--ink2);line-height:1.65}
-.detail-head .por{width:88px;height:auto}
+.detail-head .por{width:112px;height:auto}
 .detail-back{margin:0 0 10px}
 .detail-actions{margin:16px 0 22px;padding:12px 0 15px;border-bottom:1px solid #c5aa86}
 .detail-action-label{display:block;margin:0 0 8px;color:#6f4639;font-size:12px;font-weight:750;letter-spacing:.08em}
@@ -262,7 +264,7 @@ body{background:#f3eee4}
 .detail-content .stats{grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr))}
 .detail-content .story{max-height:none}
 @media(max-width:600px){.detail-columns{grid-template-columns:1fr;gap:14px}.detail-stack{gap:14px}}
-@media(max-width:480px){.detail-head{gap:12px;padding:14px}.detail-head .por{width:66px}.detail-vitals{grid-template-columns:repeat(3,minmax(0,1fr))}.detail-vitals .bar{padding:3px 2px 6px}.detail-actions .btn{min-height:44px}.detail-content{gap:8px}}
+@media(max-width:480px){.detail-head{gap:12px;padding:14px}.detail-head .por{width:80px}.detail-vitals{grid-template-columns:repeat(3,minmax(0,1fr))}.detail-vitals .bar{padding:3px 2px 6px}.detail-actions .btn{min-height:44px}.detail-content{gap:8px}}
 
 /* Game viewport: scene layer, status HUD, and a fixed command dock. */
 body{background:#181b20;padding-block:14px;color:var(--ink)}
@@ -306,7 +308,7 @@ body{background:#181b20;padding-block:14px;color:var(--ink)}
 #app[data-layout="landing"] .title-wrap>.btn.gold{background:#ecc98d;color:#332619}
 #app[data-layout="landing"] .save-list .btn{background:#17232cd9;color:#fff1da}
 #app[data-view="map"] #panel{display:grid;place-items:center;background:transparent;box-shadow:none;padding:0;overflow:auto;margin:8px 0}
-.map-play{width:min(100%,calc((100dvh - 194px) * 1.5625),1060px);min-width:min(100%,380px);margin:auto;color:#fff0d8}
+.map-play{width:min(100%,calc((100dvh - 235px) * 1.5625),1060px);min-width:min(100%,380px);margin:auto;color:#fff0d8}
 .map-location{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:2px 12px;background:#19252df2;padding:6px 12px;border-radius:9px 9px 0 0;font-size:12px;line-height:1.5}
 #panel .map-location h2{font-size:16px;color:#ffebc9;margin:0}
 .map-location .hint,.map-legend{color:#f3e1c7;font-size:12px}
@@ -367,7 +369,8 @@ body{background:#241917}
 .dock-icon{width:23px;height:23px;display:block;object-fit:contain}
 .map-location,.map-legend{background:#4b2a24f5;color:#f8e8cb}
 .map-location{border-bottom:1px solid #d6a56667}
-.mlab{background:#512d25ec;color:#fff0d1;box-shadow:0 1px 0 #311b16a3}
+.mlab{background:#4a3025e8;color:#fff3da;box-shadow:0 1px 1px #24181099;border:1px solid #b99159a0}
+.mlab.landmark{background:#573329f5;color:#ffe4af;border-color:#dcb578}
 .mlab:hover,.mlab:focus-visible{background:#7a3e2e;color:#fff3db}
 #app[data-layout="game"]:not([data-view="map"]) #panel{background:#fbf2dff9;border-top:2px solid #b78751}
 #app[data-layout="landing"] .save-list .btn{background:#432822e8;color:#fff0d8}
@@ -710,10 +713,12 @@ function makeGirl(o={}){
   const trait=o.trait||pick(Object.keys(TRAITS)), T=TRAITS[trait], fam=o.fam||pickW(FAMS);
   let g1=pick(GIV),g2=pick(GIV); while(g2===g1) g2=pick(GIV);
   const sur=o.sur||pick(SUR.filter(x=>!S||x!==S.emp.sur));
-  return {id:S.nid++, sur, given:o.given||(chance(.45)?g1:g1+g2), age:o.age||ri(16,19), trait, fam,
+  const girl={id:S.nid++, sur, given:o.given||(chance(.45)?g1:g1+g2), age:o.age||ri(16,19), trait, fam,
     looks:clamp(ri(40,88)+(T.looks||0)), talent:clamp(ri(30,85)+(T.talent||0)), virtue:clamp(ri(30,85)+(T.virtue||0)), scheme:clamp(ri(15,75)+(T.scheme||0)),
     rank:0, palace:'', favor:ri(5,15), mood:65, aff:ri(10,25), preg:0, prot:false, lastBirth:-99, alive:true, cold:false, gone:false,
     seed:ri(1,2e9), title:'', story:[], nights:0, known:false};
+  assignConsortPortrait(girl);
+  return girl;
 }
 function assignPalace(c){
   if(c.rank===8){c.palace='坤宁宫';return}
@@ -890,9 +895,72 @@ const LINS=['#f7efe2','#fbe3ea','#e6f2ea','#fbf0d2'];
 const rTier=r=>r<=1?0:r<=3?1:r<=5?2:r<=7?3:4;
 function robeOf(x){if(x.maid)return '#7f9db3';const p=RPAL[rTier(x.rank)];return (x.robeC&&p.includes(x.robeC))?x.robeC:p[(x.seed>>2)%p.length]}
 function seasonTint(c){return S?shade(c,[.1,.2,0,-.1][season()]):c}
+const PORTRAIT_WIDTH=80,PORTRAIT_HEIGHT=100,PORTRAIT_COLUMNS=4;
+const portraitAtlas=document.createElement('img');
+const atlasCanvas=document.createElement('canvas');
+atlasCanvas.width=PORTRAIT_WIDTH;atlasCanvas.height=PORTRAIT_HEIGHT;
+const atlasInk=atlasCanvas.getContext('2d');
+const ART_CACHE=new Map();
+
+const CONSORT_PORTRAIT_COUNT=7;
+function assignConsortPortrait(c){
+  if(Number.isInteger(c.artPortrait)&&c.artPortrait>=1&&c.artPortrait<=CONSORT_PORTRAIT_COUNT)return;
+  const usage=Array(CONSORT_PORTRAIT_COUNT+1).fill(0);
+  for(const other of [...S.consorts,...(S.cands||[])]){
+    if(other!==c&&other.alive&&!other.gone&&!other.maid&&other.artPortrait)usage[other.artPortrait]++;
+  }
+  const favorite={骄纵:1,骄矜:1,温婉:2,才女:3,将门:4,活泼:5,淡泊:6}[c.trait];
+  const start=favorite||1+Math.floor(mulberry32(c.seed||7)()*CONSORT_PORTRAIT_COUNT);
+  let best=start;
+  for(let i=1;i<CONSORT_PORTRAIT_COUNT;i++){
+    const cell=1+(start-1+i)%CONSORT_PORTRAIT_COUNT;
+    if(usage[cell]<usage[best])best=cell;
+  }
+  c.artPortrait=best;
+}
+function portraitCell(x){
+  const pickIndex=(seed,count)=>Math.floor(mulberry32(seed||7)()*count);
+  if(x==='emp')return E().age>=40?13:12;
+  if(x.isMom)return 9;
+  if(x.maid)return 10;
+  if(x.sex){
+    const age=kidAge(x);
+    if(age<3)return 18+pickIndex(x.seed,2);
+    if(age<12)return x.sex==='m'?16:17;
+    return x.sex==='m'?(S.heir===x.id?15:14):11;
+  }
+  return x.artPortrait||1+pickIndex(x.seed,CONSORT_PORTRAIT_COUNT);
+}
+
+function atlasPortrait(cell,rank){
+  const key=cell+':'+rank;
+  if(ART_CACHE.has(key))return ART_CACHE.get(key);
+  const x=(cell%PORTRAIT_COLUMNS)*PORTRAIT_WIDTH;
+  const y=Math.floor(cell/PORTRAIT_COLUMNS)*PORTRAIT_HEIGHT;
+  atlasInk.clearRect(0,0,PORTRAIT_WIDTH,PORTRAIT_HEIGHT);
+  atlasInk.imageSmoothingEnabled=false;
+  atlasInk.drawImage(portraitAtlas,x,y,PORTRAIT_WIDTH,PORTRAIT_HEIGHT,0,0,PORTRAIT_WIDTH,PORTRAIT_HEIGHT);
+  // Keep the same face on promotion. Add the ornaments above the existing hair.
+  if(rank===8)atlasInk.drawImage(portraitAtlas,19,502,42,22,19,1,42,22);
+  const src=atlasCanvas.toDataURL();
+  ART_CACHE.set(key,src);
+  return src;
+}
+
+const portraitAtlasReady=()=>portraitAtlas.naturalWidth&&typeof location!=='undefined'&&location.protocol!=='file:';
+portraitAtlas.addEventListener('load',()=>{
+  if(!portraitAtlasReady())return;
+  document.querySelectorAll('img[data-portrait-cell]').forEach(img=>{
+    img.src=atlasPortrait(Number(img.dataset.portraitCell),Number(img.dataset.portraitRank));
+  });
+});
+portraitAtlas.src='./palace-portraits.webp';
+
 function porImg(x,size=64){
   const cold=x&&x.cold, dead=x&&x.alive===false;
-  return `<img class="px por${cold||dead?' cold':''}" alt="" src="${portrait(porSpec(x))}" width="${size}" height="${size*1.25}">`;
+  const cell=portraitCell(x),rank=x!=='emp'&&!x.sex&&!x.isMom&&!x.maid&&!cold&&x.rank===8?8:0;
+  const src=portraitAtlasReady()?atlasPortrait(cell,rank):portrait(porSpec(x));
+  return `<img class="px por palace-portrait${cold||dead?' cold':''}" alt="" src="${src}" data-portrait-cell="${cell}" data-portrait-rank="${rank}" width="${size}" height="${size*1.25}">`;
 }
 function porName(x){ if(x&&x.isMom) return x.name; if(x&&x.sur&&!x.sex&&S&&!S.consorts.includes(x)) return fullName(x); if(x==='emp') return `${E().sur}${E().name}`; if(x.sex) return kidName(x); return cName(x)}
 
@@ -1051,8 +1119,10 @@ function ground(c1,c2,y){P(0,y,SW,SH-y,c1);for(let yy=y+3;yy<SH;yy+=4)for(let x=
 function drawCourt(s){
   sky(SKY[s]);clouds.forEach(c=>cloud(c.x,c.y,'#ffffffcc'));
   P(0,38,SW,10,'#9b2428');roof(-8,31,SW+16,YROOF);
-  hall(60,33,72,12,{double:true});
-  for(let i=0;i<3;i++){P(56-i*5,45+i*3,80+i*10,3,i%2?'#d8d2c4':'#ece7db');P(56-i*5,47+i*3,80+i*10,1,'#b9b2a2')}
+  if(!drawBuildingArt(sg,0,42,10,108,45)){
+    hall(60,33,72,12,{double:true});
+    for(let i=0;i<3;i++){P(56-i*5,45+i*3,80+i*10,3,i%2?'#d8d2c4':'#ece7db');P(56-i*5,47+i*3,80+i*10,1,'#b9b2a2')}
+  }
   ground('#c9c2b2','#b7af9e',54);P(86,54,20,26,'#e3dccb');for(let y=46;y<54;y+=2)P(88,y,16,1,'#f6f2e8');
   P(30,30,1,24,'#5a3a22');P(31,30,6,4,'#c0392b');P(160,30,1,24,'#5a3a22');P(161,30,6,4,'#c0392b');
   for(let i=0;i<4;i++){fig(20+i*12,58,'#3b5fa8','#b8333a');fig(136+i*12,58,'#3b5fa8','#b8333a')}
@@ -1064,7 +1134,9 @@ function drawHarem(s,night){
   if(night){for(let i=0;i<30;i++){const x=(i*53)%SW,y=(i*29)%34;if((frame+i)%23)P(x,y,1,1,'#fff8d0')} P(150,6,8,8,'#fff3c4');P(151,5,6,10,'#fff3c4');P(149,7,10,6,'#fff3c4');P(154,7,2,2,'#e9dcae')}
   else clouds.forEach(c=>cloud(c.x,c.y,'#ffffffbb'));
   P(0,36,SW,8,'#9b2428');roof(-8,29,SW+16,YROOF);
-  hall(18,45,56,11,{lit:night});hall(118,45,56,11,{lit:night});
+  for(const x of [10,110]){
+    if(!drawBuildingArt(sg,1,x,23,72,33,night?'brightness(.64) saturate(.76)':'none'))hall(x+8,45,56,11,{lit:night});
+  }
   ground(night?'#7d7465':'#d9cfbb',night?'#6c6456':'#c8bea9',56);
   P(80,56,32,24,night?'#8a8070':'#e8dfcc');
   tree(94,40,s);
@@ -1078,8 +1150,10 @@ function drawGarden(s){
   P(0,44,SW,8,s===3?'#e8eef2':'#6c9a5a');
   P(0,52,SW,28,s===3?'#9fbccb':'#4a8fb0');
   for(let i=0;i<14;i++){const x=(i*37+frame)%SW,y=55+(i*7)%22;P(x,y,6,1,'#7fb9d4')}
-  P(118,40,52,4,'#ece7db');P(118,43,52,1,'#b9b2a2');
-  [122,134,152,164].forEach(x=>P(x,26,2,14,'#a3262a'));roof(114,19,60,GROOF);P(143,14,2,5,GOLD);P(142,13,4,1,GOLD);
+  if(!drawBuildingArt(sg,5,109,13,70,33)){
+    P(118,40,52,4,'#ece7db');P(118,43,52,1,'#b9b2a2');
+    [122,134,152,164].forEach(x=>P(x,26,2,14,'#a3262a'));roof(114,19,60,GROOF);P(143,14,2,5,GOLD);P(142,13,4,1,GOLD);
+  }
   for(let x=60;x<110;x++){const y=50-Math.round(Math.sin((x-60)/50*Math.PI)*8);P(x,y,1,2,'#a3262a');if(x%5===0)P(x,y-3,1,3,'#a3262a')}
   P(18,20,3,32,'#5a3a22');
   const wc=s===3?'#d7dfe4':s===2?'#c9a240':'#7fbf5a';
@@ -1800,7 +1874,7 @@ function viewNew(){
    <div class="acts"><button class="btn gold" onclick="A.start()">登基</button><button class="btn sm" onclick="A.go('title')">返回</button></div></div>`}
 function consortCard(c){
   const tags=[xinTag(c),c.visitor?'<span class="tag y">母亲在宫</span>':'',c.preg>=2?'<span class="tag r">有孕</span>':'',c.cold?'<span class="tag k">冷宫</span>':'',c.rank===8?'<span class="tag y">中宫</span>':''].join('');
-  return `<button class="card" onclick="A.go('consort',${c.id})">${porImg(c,56)}<div class="grow"><div class="nm">${esc(cName(c))}</div><div>${esc(fullName(c))} · ${c.age}岁 · ${esc(c.palace)}</div><div>${tags}<span class="tag">${c.trait}</span></div>${bar('恩宠',c.favor)}${bar('心情',c.mood,'#4f9078')}</div></button>`}
+  return `<button class="card" onclick="A.go('consort',${c.id})">${porImg(c,72)}<div class="grow"><div class="nm">${esc(cName(c))}</div><div>${esc(fullName(c))} · ${c.age}岁 · ${esc(c.palace)}</div><div>${tags}<span class="tag">${c.trait}</span></div>${bar('恩宠',c.favor)}${bar('心情',c.mood,'#4f9078')}</div></button>`}
 const COURT_BLOCS=[
   {id:'kin',name:'外戚',interest:'家族地位与官职',metric:()=>Math.max(0,...harem().map(c=>c.fam.p)),cost:{treasury:-12},gain:{prestige:3}},
   {id:'civil',name:'文官',interest:'科举、财政与民政',metric:()=>E().people,cost:{treasury:-10},gain:{people:5,wen:2}},
@@ -2394,7 +2468,128 @@ function mapTick(){if(!S||UI.view!=='map'||modalOpen)return;
   if(emp.path.length){const done=stepTo(emp,3.5);emp.trail.push([emp.x,emp.y]);if(emp.trail.length>5)emp.trail.shift();
     if(done){S.pos={x:Math.round(emp.x),y:Math.round(emp.y)};if(emp.arrive){const f=emp.arrive;emp.arrive=null;f()}}}
   npcStep();drawMap()}
-function M(x,y,w,h,c){mg.fillStyle=c;mg.fillRect(Math.round(x),Math.round(y),w,h)}
+const MAP_SCALE=2;
+MAPC.width=MW*MAP_SCALE;MAPC.height=MH*MAP_SCALE;
+mg.setTransform(MAP_SCALE,0,0,MAP_SCALE,0,0);
+mg.imageSmoothingEnabled=false;
+const terrainCanvas=document.createElement('canvas');
+terrainCanvas.width=MAPC.width;terrainCanvas.height=MAPC.height;
+const terrainInk=terrainCanvas.getContext('2d');
+terrainInk.setTransform(MAP_SCALE,0,0,MAP_SCALE,0,0);
+terrainInk.imageSmoothingEnabled=false;
+const buildingAtlas=document.createElement('img');
+let terrainSeason=-1;
+buildingAtlas.addEventListener('load',()=>{terrainSeason=-1});
+buildingAtlas.src='./palace-buildings.webp';
+let mapInk=mg;
+function M(x,y,w,h,c){mapInk.fillStyle=c;mapInk.fillRect(Math.round(x*MAP_SCALE)/MAP_SCALE,Math.round(y*MAP_SCALE)/MAP_SCALE,w,h)}
+
+function mapPaving(x,y,w,h,palette){
+  const [edge,shadow,stone,joint,light]=palette;
+  M(x,y,w,h,edge);M(x+.5,y+.5,w-1,h-1,stone);M(x+1,y+h-1,w-2,.5,shadow);
+  for(let row=0;row<h-2;row+=2.5){
+    const line=y+1+row;
+    M(x+1,line,w-2,.5,joint);
+    for(let col=2+(Math.round(row/2.5)%2)*3;col<w-1;col+=6)M(x+col,line,.5,Math.min(2,h-row-2),joint);
+  }
+  M(x+1,y+.5,w-2,.5,light);
+}
+
+function mapTree(x,y,s,size=1){
+  const [dark,leaf,glow]=[
+    ['#4e6150','#64836c','#e0a6ac'],['#405c4d','#577760','#9db477'],
+    ['#8b5740','#ab794e','#d5a66b'],['#53645f','#788681','#e8e3d6']
+  ][s];
+  M(x-2*size,y-1,5*size,2,'#342e2844');M(x,y-3,.75,4,'#634330');
+  M(x-2.5*size,y-5,5*size,3,dark);M(x-1.5*size,y-6.5,3*size,4,leaf);
+  M(x-2*size,y-5.5,2.5*size,2,leaf);M(x-size,y-6,1.5*size,1,glow);
+  M(x+.5*size,y-4.5,1.5*size,.75,glow);
+}
+
+function drawBuildingArt(ctx,cell,x,y,w,h,filter='none'){
+  if(!buildingAtlas.naturalWidth)return false;
+  ctx.imageSmoothingEnabled=false;
+  ctx.filter=filter;
+  ctx.drawImage(buildingAtlas,cell%3*128,Math.floor(cell/3)*80,128,80,x,y,w,h);
+  ctx.filter='none';
+  return true;
+}
+
+function mapBuilding(cell,x,y,w,h,s,cold=false){
+  if(drawBuildingArt(mapInk,cell,x,y,w,h,cold?'grayscale(.8) brightness(.85)':'none')){
+    if(s===3){
+      M(x+w*.26,y+h*.26,w*.47,.5,'#f4ede3c8');
+      M(x+w*.14,y+h*.43,w*.7,.5,'#ebe8e2b0');
+    }
+    return;
+  }
+  const red=cold?'#6f5a55':'#914a3c',roof=cell===2||cell===5?'#486755':'#a37a40';
+  M(x+2,y+h*.44,w-4,h*.5,red);M(x+3,y+h-1,w-6,1,'#a89b83');
+  M(x,y+h*.32,w,h*.16,'#4b3528');M(x+2,y+h*.16,w-4,h*.18,roof);M(x+5,y+h*.08,w-10,h*.12,roof);
+  for(let i=4;i<w-4;i+=3)M(x+i,y+h*.49,.75,h*.32,'#d48963');
+}
+
+function drawMapTerrain(s){
+  if(terrainSeason===s)return;
+  terrainSeason=s;
+  mapInk=terrainInk;
+  const winter=s===3;
+  const paving=winter?['#a89f90','#b2a99a','#e0d8c9','#c9beb0','#f8f1e3']:
+    ['#97826d','#ab967b','#d9c6a7','#c8b492','#f0ddbf'];
+  M(0,0,MW,MH,winter?'#c5c3b4':'#bba98c');
+  M(3,2,194,124,winter?'#e1dacf':'#d5c2a1');
+  // Rows of warm stone courts are framed by the cinnabar perimeter.
+  for(let y=8;y<MH-4;y+=4)for(let x=5+(y%8?2:0);x<MW-4;x+=8)M(x,y,1.5,.5,winter?'#cac1b2':'#beaa88');
+  M(2,0,196,2.5,'#563329');M(2,2.5,196,1,'#b9774d');
+  for(const x of [2,196]){
+    M(x,3,2,121,'#6e3b32');M(x+1,4,.5,119,'#c68461');
+    for(let y=8;y<124;y+=9)M(x-1,y,4,2,'#92503d');
+  }
+  M(2,124,196,2.5,'#6e3b32');M(2,124,196,.5,'#cf8c61');
+  for(const y of HY)mapPaving(6,y-3,188,6.5,paving);
+  for(const x of [44,100,154])mapPaving(x-2.5,x===100?4:43,5.5,x===100?118:60,paving);
+  mapPaving(77,39,46,7,paving);
+  mapPaving(76,113,48,6,paving);
+
+  // Garden: shaded trees, koi pond, stepping stones and a waterside pavilion.
+  M(58,12,84,30,'#71564a');
+  M(59,13,82,28,winter?'#bcc3b4':['#81936d','#687f5f','#a18a61'][s]);
+  M(60,14,80,1,'#c4986f');
+  for(let i=0;i<28;i++){
+    const x=61+(i*23)%78,y=15+(i*17)%23;
+    M(x,y,1.5,.5,i%3===0?'#e8c6a166':'#42594345');
+  }
+  for(let y=-7;y<=7;y++)for(let x=-16;x<=16;x++){
+    const d=(x/16)**2+(y/7)**2;
+    if(d>1)continue;
+    const color=d>.88?'#927d61':d>.72?'#87a8a0':y<0?'#588b8b':'#416f78';
+    M(79+x,27+y,1,1,color);
+    if(d<.7&&(x+3*y)%11===0)M(79+x,27+y,2,.5,'#a4c2af');
+  }
+  for(const [x,y] of [[73,26],[84,29],[88,24]]){
+    M(x,y,1.5,.5,'#f0b97e');M(x+.5,y+.5,.5,.5,'#db875f');
+  }
+  mapPaving(96,28,5,13,paving);
+  mapPaving(100,28,22,3.5,paving);
+  mapBuilding(5,114,13,22,15,s);
+  [[64,19],[68,38],[92,18],[132,36],[136,21],[107,38],[63,29],[126,37]].forEach(([x,y],i)=>mapTree(x,y,s,i%3===0?1.2:1));
+  for(const x of [10,49,149,190])for(const y of [18,28,36,109,116])mapTree(x,y,s,.75);
+  for(const [x,y] of [[73,52],[126,52],[76,70],[124,70],[73,90],[126,90]])mapTree(x,y,s,.7);
+
+  for(const p of PLACES){
+    if(p.id==='yh')continue;
+    const [x,y,w,h]=p.r;
+    const cell=p.id==='cj'?0:p.id==='qq'||p.id==='kn'||p.id==='cn'?1:
+      ['wy','ss'].includes(p.id)?2:['sw','wm'].includes(p.id)?4:3;
+    if(cell!==4){
+      M(x-.5,y+.5,w+1,h+1,'#60493644');
+      mapPaving(x,y+h-2,w,3,paving);
+    }
+    mapBuilding(cell,x,y-1,w,h+2,s,p.id==='lg');
+  }
+  mapInk=mg;
+}
+
 function figOnMap(x,y,color,small){
   const top=y-(small?5:7);
   M(x-1,top,3,2,'#1d1520');M(x-1,top+2,3,1,'#f2cfb2');
@@ -2402,29 +2597,18 @@ function figOnMap(x,y,color,small){
 }
 function drawMap(){const s=season(),family=gardenFamilyMoment(),scenes=initiativeMapScenes();
   const busy=new Set(scenes.flatMap(scene=>scene.visitors.map(p=>p.id)));
-  M(0,0,MW,MH,s===3?'#e9e5dd':'#e7dcc7');M(1,1,MW-2,1,'#b79d80');M(1,MH-2,MW-2,1,'#b79d80');
-  for(let y=5;y<MH-4;y+=4)for(let x=5+((y>>2)%2)*4;x<MW-4;x+=8)M(x,y,1,1,s===3?'#dcd7cd':'#dcd0b9');
-  const RC=s===3?'#f6f4f0':'#f8f0df',RE=s===3?'#e5ded1':'#e3d6bf';
-  HY.forEach(y=>{M(10,y-2,180,5,RC);M(10,y+3,180,1,RE)});[44,154].forEach(x=>M(x-2,46,5,56,RC));M(98,6,5,42,RC);M(98,98,5,22,RC);
-  // 御花园
-  const G=[58,12,84,30];M(G[0],G[1],G[2],G[3],['#8bbd6e','#5f9e4f','#b39a4c','#d9e2dc'][s]);M(G[0],G[1],G[2],1,'#a3262a');
-  for(let y=-5;y<=5;y++)for(let x=-13;x<=13;x++)if((x/13)**2+(y/5)**2<=1)M(76+x,28+y,1,1,(x+y+frame)%7?'#4a8fb0':'#7fb9d4');
-  M(116,18,10,7,'#ece7db');M(117,16,8,5,'#3f8a7a');M(118,15,6,1,'#2c6b5e');M(120,14,2,1,GOLD);
-  const tc=[['#f4a6c0','#e27aa0'],['#3f8a44','#2f6e36'],['#e08a3a','#c0602a'],['#f4f6f8','#c8d0d6']][s];
-  [[64,16],[70,38],[92,16],[132,30],[136,16],[110,38],[62,26],[126,38]].forEach(([x,y],i)=>{M(x,y+2,1,2,'#5a3a22');M(x-1,y,3,2,tc[i%2]);M(x,y-1,1,1,tc[(i+1)%2])});
-  M(104,30,4,3,'#8f8f8f');M(105,29,2,1,'#a8a8a8');
-  // 建筑
-  PLACES.forEach(p=>{if(p.id==='yh')return;const [x,y,w,h]=p.r;
-    if(p.id==='sw'||p.id==='wm'){M(x,y,w,h,'#a3262a');M(x+1,y+1,w-2,2,YROOF[0]);M(x+1,y+2,w-2,1,YROOF[1]);M(x+w/2-2,y+h-2,4,2,'#3a2a20');}
-    else{const cold=p.id==='lg',roof=cold?['#7d7d84','#5c5c63','#47474d']:p.id==='wy'?GROOF:YROOF;
-      M(x,y,w,h,s===3?'#d8d1c6':'#d8c6a7');M(x,y+h-1,w,1,cold?'#8d8983':'#ac7967');
-      const rx=x+3,ry=y+2,rw=w-6,rh=Math.max(4,h-5);M(rx,ry,rw,rh,roof[0]);for(let i=rx+1;i<rx+rw;i+=2)M(i,ry,1,rh,roof[1]);M(rx,ry+(rh>>1),rw,1,roof[2]);M(rx,ry+rh-1,rw,1,roof[1]);
-      M(rx,ry,1,1,roof[2]);M(rx+rw-1,ry,1,1,roof[2]);
-      if(s===3)M(rx,ry,rw,rh>>1,'#f2f5f8');
-      const top=p.d[1]<y;M(p.d[0]-2,top?y:y+h-1,4,1,'#3a2a20');
-      if(p.k==='palace'&&p.p!=='冷宫'&&harem().some(c=>c.palace===p.p&&c.preg>=2)){M(x+w-4,y+1,2,2,'#f08aa8')}
-      if(S.cands&&S.cands.length&&p.p==='储秀宫'){M(x+1,y+1,2,2,GOLD)}}
-    if(hoverP===p){mg.strokeStyle='#ffd86b';mg.lineWidth=1;mg.strokeRect(x-.5,y-.5,w+1,h+1)}});
+  drawMapTerrain(s);
+  mg.drawImage(terrainCanvas,0,0,MW,MH);
+  const occupied=new Set(harem().filter(c=>c.preg>=2).map(c=>c.palace));
+  for(const p of PLACES){
+    const [x,y,w,h]=p.r;
+    if(p.k==='palace'&&occupied.has(p.p))M(x+w-3,y+1,2,2,'#f7a4b3');
+    if(S.cands?.length&&p.p==='储秀宫')M(x+1,y+1,2,2,GOLD);
+    if(hoverP===p){
+      mg.strokeStyle='#ffe2a8';mg.lineWidth=.65;
+      mg.strokeRect(x-.5,y-.5,w+1,h+1);
+    }
+  }
   // 妃嫔
   for(const [id,n] of NPC){const c=byId(id);if(!c||family?.mother===id||busy.has(id))continue;const x=Math.round(n.x+n.ox),y=Math.round(n.y);
     if(n.where==='home'&&!n.path.length&&n.wait>0&&(frame+id)%40<28)continue;
@@ -2476,8 +2660,8 @@ MAPC.addEventListener('mousemove',e=>{const r=MAPC.getBoundingClientRect(),mx=(e
 MAPC.addEventListener('mouseleave',()=>{hoverP=null});
 setInterval(mapTick,50);
 function mountMap(){const w=$('#mapwrap');if(!w)return;w.appendChild(MAPC);
-  PLACES.forEach(p=>{const b=document.createElement('button');b.className='mlab';b.textContent=p.n;const [x,y,ww,h]=p.r;
-    b.style.left=((x+ww/2)/MW*100)+'%';b.style.top=((y+h/2)/MH*100)+'%';
+  PLACES.forEach(p=>{const b=document.createElement('button');b.className='mlab'+(['qq','kn','cj','yh','sw','wm'].includes(p.id)?' landmark':'');b.textContent=p.n;const [x,y,ww,h]=p.r;
+    b.style.left=((x+ww/2)/MW*100)+'%';b.style.top=((y+(p.id==='yh'?h/2:h-2))/MH*100)+'%';
     b.onclick=()=>goPlace(p);b.ondblclick=()=>{emp.path=[];emp.arrive=null;emp.x=p.d[0];emp.y=p.d[1];arrive(p)};
     b.onmouseenter=()=>{hoverP=p};b.onmouseleave=()=>{hoverP=null};w.appendChild(b)})}
 const backBtn=`<button class="btn sm" onclick="A.go('map')">◂ 返回宫城</button>`;
@@ -2503,7 +2687,7 @@ A.greet=function(){if(!useE())return;const ev=dowagerEvent();if(ev){pushEv(ev);r
 A.exportSave=function(){try{const t=btoa(unescape(encodeURIComponent(JSON.stringify(S))));const ta=$('#savecode');ta.value=t;ta.focus();ta.select();
   if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast('存档码已复制'),()=>toast('已选中，请手动复制'));else toast('已选中，请手动复制')}catch(e){toast('导出失败')}};
 A.importSave=function(){try{const t=$('#savecode').value.trim();const s=JSON.parse(decodeURIComponent(escape(atob(t))));if(!s.emp)throw 0;S=s;Q.length=0;migrate();UI.view='map';toast('已导入存档');render()}catch(e){toast('存档码无效，请检查是否复制完整')}};
-function migrate(){if(!S)return;ensureDowager();S.rel=S.rel||{};S.pos=S.pos||{x:100,y:82};reconcileScholarArcs();alive().forEach(c=>{if(!c.arc)assignArc(c);deepen(c);clanKey(c)});S.children.forEach(k=>{if(k.sup===undefined)k.sup=0});
+function migrate(){if(!S)return;ensureDowager();S.rel=S.rel||{};S.pos=S.pos||{x:100,y:82};reconcileScholarArcs();[...S.consorts,...(S.cands||[])].forEach(assignConsortPortrait);alive().forEach(c=>{if(!c.arc)assignArc(c);deepen(c);clanKey(c)});S.children.forEach(k=>{if(k.sup===undefined)k.sup=0});
   NPC.clear();emp.x=S.pos.x;emp.y=S.pos.y;emp.path=[];emp.arrive=null;emp.trail=[]}
 
 /* ============ 人物立体：小性子、喜好、心愿、往事、记忆 ============ */
