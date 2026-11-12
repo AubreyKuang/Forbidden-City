@@ -133,6 +133,139 @@ textarea.inp{max-width:100%;min-height:70px;font-size:12px;word-break:break-all}
 <div id="toast"></div>
 
 <script>
+// Deterministic NPC memory. Store the ledger with the game's save data.
+const NPCMemory = (() => {
+  const SHORT_LIMIT = 32;
+  const LONG_LIMIT = 50;
+  const WEIGHTS = { emotion: .35, relationship: .2, impact: .25, novelty: .1, goal: .1 };
+  const ledgers = new WeakMap();
+  const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+  const empty = () => ({ short: [], long: [], life: [] });
+
+  function ledger(world) {
+    return world.npcMemory ||= { version: 1, sequence: 0, events: {}, people: {} };
+  }
+
+  function index(data, person) {
+    if (!ledgers.has(data)) ledgers.set(data, new Map());
+    const people = ledgers.get(data);
+    if (!people.has(person)) {
+      const bySubject = new Map();
+      const memory = Object.hasOwn(data.people, person) ? data.people[person] : empty();
+      for (const entry of [...memory.short, ...memory.long]) {
+        if (!bySubject.has(entry.subject)) bySubject.set(entry.subject, []);
+        bySubject.get(entry.subject).push(entry);
+      }
+      people.set(person, bySubject);
+    }
+    return people.get(person);
+  }
+
+  function promote(memory, entry) {
+    memory.long.push(entry);
+    memory.long.sort((a, b) => b.importance - a.importance || b.sequence - a.sequence);
+    memory.long.length = Math.min(LONG_LIMIT, memory.long.length);
+    memory.life = memory.long.slice(0, 8).map(({ sources, interpretation }) => ({
+      sources, interpretation
+    }));
+  }
+
+  function remember(data, event, view) {
+    const person = String(view.person);
+    if (!Object.hasOwn(data.people, person)) {
+      Object.defineProperty(data.people, person, { value: empty(), enumerable: true });
+    }
+    const memory = data.people[person];
+    const subject = String(view.subject);
+    const related = index(data, person).get(subject) || [];
+    const confidence = clamp(view.confidence ?? 1, 0, 1);
+    const signals = {
+      emotion: Math.abs(view.emotion) * 100,
+      relationship: view.relationship ?? 50,
+      impact: view.impact ?? 50,
+      novelty: related.some(entry => entry.type === event.type) ? 15 : 90,
+      goal: view.goal ?? 50
+    };
+    const importance = Math.round(Object.entries(WEIGHTS).reduce(
+      (total, [key, weight]) => total + clamp(signals[key], 0, 100) * weight, 0));
+    if (importance < 25) return;
+    const entry = {
+      sources: [event.id], sequence: event.sequence, time: event.time,
+      type: event.type, subject, interpretation: view.interpretation,
+      emotion: view.emotion, confidence, importance, channel: view.channel || 'participant'
+    };
+    if (importance >= 72) {
+      promote(memory, entry);
+    } else {
+      memory.short.push(entry);
+      const similar = memory.short.filter(item =>
+        item.subject === subject && item.type === event.type &&
+        Math.sign(item.emotion) === Math.sign(entry.emotion));
+      if (similar.length >= 3) {
+        const merged = {
+          ...entry, sources: similar.flatMap(item => item.sources),
+          importance: Math.max(60, ...similar.map(item => item.importance)),
+          emotion: similar.reduce((sum, item) => sum + item.emotion, 0) / similar.length,
+          confidence: Math.min(...similar.map(item => item.confidence)),
+          interpretation: entry.interpretation,
+          occurrences: similar.length
+        };
+        memory.short = memory.short.filter(item => !similar.includes(item));
+        promote(memory, merged);
+      }
+      while (memory.short.length > SHORT_LIMIT) {
+        memory.short.sort((a, b) => a.importance - b.importance || a.sequence - b.sequence);
+        const oldest = memory.short.shift();
+        if (oldest.importance >= 62) promote(memory, oldest);
+      }
+    }
+    ledgers.get(data).delete(person);
+  }
+
+  function record(world, facts, views) {
+    const data = ledger(world);
+    const sequence = facts.sequence ?? data.sequence + 1;
+    // Events arrive in order. The watermark also rejects duplicates after compaction.
+    if (sequence <= data.sequence) return null;
+    if (sequence !== data.sequence + 1) throw new Error('NPC memory event sequence gap');
+    const event = { ...facts, id: `event-${sequence}`, sequence };
+    data.sequence = sequence;
+    data.events[event.id] = event;
+    const observers = new Set();
+    for (const view of views) {
+      const person = String(view.person);
+      if (observers.has(person)) continue;
+      observers.add(person);
+      remember(data, event, view);
+    }
+    // Keep all retained memory sources and the most recent objective events.
+    if (sequence % 64 === 0) {
+      const retained = new Set(Object.values(data.people).flatMap(memory =>
+        [...memory.short, ...memory.long].flatMap(entry => entry.sources)));
+      for (const [id, source] of Object.entries(data.events)) {
+        if (source.sequence <= sequence - 64 && !retained.has(id)) delete data.events[id];
+      }
+    }
+    return event;
+  }
+
+  function influence(world, person, subject) {
+    if (!world.npcMemory) return 0;
+    const entries = index(world.npcMemory, String(person)).get(String(subject)) || [];
+    return clamp(entries.reduce((total, entry) =>
+      total + entry.emotion * entry.confidence * entry.importance / 100 *
+        (entry.importance >= 60 ? 2 : 1), 0), -4, 4);
+  }
+
+  function recall(world, person) {
+    const memory = world.npcMemory?.people[String(person)];
+    return memory ? [...memory.short, ...memory.long].sort((a, b) => b.sequence - a.sequence) : [];
+  }
+
+  return { record, influence, recall };
+})();
+
+
 'use strict';
 /* ============ 工具 ============ */
 const $=s=>document.querySelector(s);
@@ -983,9 +1116,9 @@ const HAREM=[
    {t:'替她说两句好话',f:()=>{story(em,`陛下袒护${fullName(tgt)}，她面上不显，心里却记下了。`);em.scheme=clamp(em.scheme+3);return fx(cchg(em,{mood:-12,aff:-4}),cchg(tgt,{aff:5}))}}]}},
  function quarrel(){const h=harem().filter(c=>c.rank<8);if(h.length<2)return null;const [a,b]=shuffle(h);
   return {title:'争执',text:`晨起请安时，${cName(a)}与${cName(b)}为一匹蜀锦的归属起了争执，闹到了御前。`,choices:[
-   {t:`判给${cName(a)}`,f:()=>fx(cchg(a,{mood:10}),cchg(b,{mood:-10,aff:-3}))},
-   {t:`判给${cName(b)}`,f:()=>fx(cchg(b,{mood:10}),cchg(a,{mood:-10,aff:-3}))},
-   {t:'各赏一匹，息事宁人',f:()=>fx(chg({treasury:-15}),cchg(a,{mood:4}),cchg(b,{mood:4}))}]}},
+   {t:`判给${cName(a)}`,f:()=>{rememberQuarrel(a,b,a.id);return fx(cchg(a,{mood:10}),cchg(b,{mood:-10,aff:-3}))}},
+   {t:`判给${cName(b)}`,f:()=>{rememberQuarrel(a,b,b.id);return fx(cchg(b,{mood:10}),cchg(a,{mood:-10,aff:-3}))}},
+   {t:'各赏一匹，息事宁人',f:()=>{rememberQuarrel(a,b);return fx(chg({treasury:-15}),cchg(a,{mood:4}),cchg(b,{mood:4}))}}]}},
  function coldPlea(){const cs=alive().filter(c=>c.cold);if(!cs.length)return null;const c=pick(cs);const w=S.flags.wronged&&S.flags.wronged.v===c.id;
   return {title:'冷宫来信',por:c,text:w?`冷宫里的${fullName(c)}托一个老宫女捎来血书：“巫蛊一事，实乃有人栽赃。求陛下明察！”`:`冷宫里的${fullName(c)}托人送来一方旧帕，上面绣着当年你赐她的一句诗。`,choices:[
    {t:'放她出冷宫',f:()=>{A.uncold(c.id);if(w){const a=byId(S.flags.wronged.a);S.flags.wronged=null;if(a&&a.alive&&!a.cold){a.known=true;pushNow(punishEv(a,c,'栽赃巫蛊'))}}return `${fullName(c)}出了冷宫，形容憔悴，却仍向你深深一拜。`}},
@@ -1324,7 +1457,7 @@ function leaders(){const h=harem(),L=[],em=empress();if(em)L.push(em);
   return L}
 function factions(){const L=leaders(),map={},neutral=[];L.forEach(l=>map[l.id]=[]);
   harem().forEach(c=>{if(L.includes(c))return;let best=null,bv=8;
-    L.forEach(l=>{const v=relGet(c,l)+(l.rank===8&&c.virtue>60?6:0)+(l.scheme>60&&c.scheme>60?6:0);if(v>bv){bv=v;best=l}});
+    L.forEach(l=>{const v=relGet(c,l)+3*NPCMemory.influence(S,c.id,l.id)+(l.rank===8&&c.virtue>60?6:0)+(l.scheme>60&&c.scheme>60?6:0);if(v>bv){bv=v;best=l}});
     if(best)map[best.id].push(c);else neutral.push(c)});
   return {L,map,neutral}}
 function facOf(c){const f=factions();for(const l of f.L){if(l===c||f.map[l.id].includes(c))return l}return null}
@@ -1752,7 +1885,22 @@ function deepen(c){if(!c)return;
   if(!woundOK(c,c.wound))c.wound=pick(Object.keys(WOUNDS).filter(w=>woundOK(c,w)));
   if(!c.wishDone&&!wishOK(c,c.wish))c.wish=pick(Object.keys(WISHES).filter(w=>wishOK(c,w)));
   if(c.wish==='title'&&c.title)c.wishDone=true}
-function remember(c,k,t){if(!c)return;c.mem=c.mem||[];c.mem.push({k,turn:S.turn,t});if(c.mem.length>12)c.mem.shift()}
+function remember(c,k,t){
+  if(!c)return;
+  const negative=k==='hurt'||k==='neglect';
+  NPCMemory.record(S,{type:k,time:S.turn,location:c.palace,participants:[c.id],outcome:t},[
+    {person:c.id,subject:'emperor',interpretation:t,emotion:negative?-.9:.85,impact:85}
+  ]);
+}
+function rememberQuarrel(a,b,winner){
+  NPCMemory.record(S,{type:'quarrel',time:S.turn,location:'御前',
+    participants:[a.id,b.id],object:'蜀锦',outcome:winner??'both'},
+    [[a,b],[b,a]].map(([person,other])=>({
+      person:person.id,subject:other.id,impact:90,
+      emotion:winner===other.id?-.95:winner===person.id?-.65:-.45,
+      interpretation:`我与${fullName(other)}争蜀锦，${winner===person.id?'陛下判给了我':winner===other.id?'陛下判给了她':'陛下各赏一匹'}`
+    })));
+}
 function deepLine(c){deepen(c);if(c.wish==='title'&&c.title&&!c.wishDone){c.wishDone=true}const w=WISHES[c.wish];
   return `<div style="margin-top:4px">小性子：<span class="tag">${c.t2}</span>　喜好：${c.kl?`<span class="tag g">${c.like}</span>不喜<span class="tag r">${c.hate}</span>`:'<span class="hint">多闲谈才知道</span>'}</div>
   <div>心愿：${c.wishKnown?`${esc(w.t)}${c.wishDone?' <span class="tag y">已成全</span>':w.btn?` <button class="btn sm jade" onclick="A.wish(${c.id})">${esc(w.btn)}</button>`:' <span class="hint">（生下孩子便成全了）</span>'}`:'<span class="hint">情分到 50 以后，闲谈时她也许会说</span>'}</div>
@@ -1766,7 +1914,9 @@ A.chat=function(id){const c=byId(id);if(!c||!useE())return;deepen(c);const L=[];
   else if(en.length&&chance(.4)){const o=pick(en)[0];L.push(`提到${cName(o)}，她的脸色淡了下来：“${pick(['她那张嘴，臣妾不想提。','前儿请安，她当着众人的面给臣妾难堪。','陛下还是少去她那儿吧——臣妾随口一说。'])}”${c.t2==='记仇'?'她顿了顿：“这笔账臣妾记着。”':''}`)}
   const kid=S.children.filter(k=>(k.mom===c.id||k.foster===c.id)&&k.alive);
   if(kid.length&&chance(.4)){const k=pick(kid),a=kidAge(k);L.push(`说起${k.name}，她滔滔不绝：“${a<3?'昨儿会叫“父皇”了，含含糊糊的，可把臣妾高兴坏了。':a<10?'太傅说背书快，就是坐不住。':'孩子大了，心思也多了，臣妾有时都猜不透。'}”`)}
-  if(c.mem&&c.mem.length&&chance(.3)){const m=pick(c.mem);if(c.t2==='记仇'&&m.k==='hurt')L.push('她似笑非笑：“那年的事，臣妾可一直记着呢。”');else if(MEMT[m.k])L.push(pick(MEMT[m.k]))}
+  const memories=NPCMemory.recall(S,c.id).map(entry=>({k:entry.type,t:entry.interpretation}));
+  const dialogueMemories=memories.concat(c.mem||[]).filter(m=>MEMT[m.k]||m.k==='hurt');
+  if(dialogueMemories.length&&chance(.3)){const m=pick(dialogueMemories);if(c.t2==='记仇'&&m.k==='hurt')L.push('她似笑非笑：“那年的事，臣妾可一直记着呢。”');else if(MEMT[m.k])L.push(pick(MEMT[m.k]))}
   let rev='';
   if(!c.kl&&chance(.35)){c.kl=true;rev+=`\n她随口说起，自己最喜欢${c.like}，最烦${c.hate}。`}
   if(c.aff>=50&&!c.wishKnown&&chance(.5)){c.wishKnown=true;rev+=`\n她犹豫了很久，小声说出一个心愿：${WISHES[c.wish].t}。`;story(c,`对陛下说出心愿：${WISHES[c.wish].t}。`)}
