@@ -236,7 +236,7 @@ body{background:#f3eee4}
 .detail-vitals .bar{display:grid;grid-template-columns:1fr auto;gap:5px;padding:10px 12px;background:#f7f1e7;border-radius:8px;margin:0;font-size:13px}
 .detail-vitals .bar i{grid-row:2;grid-column:1/-1;min-width:0;background:#e8dfd0}
 .detail-vitals .bar em{grid-row:1;grid-column:2;width:auto;font-weight:650}
-.initiative-note{padding:12px 14px;background:#efe5d1;border-radius:8px}.initiative-note p{margin:4px 0}.initiative-note small{color:var(--ink2)}.initiative-note>small{display:block;margin-top:3px}.initiative-note>.btn{margin-top:8px}.initiative-note .btn small{color:inherit}.initiative-notices{display:flex;flex-wrap:wrap;gap:6px;padding:6px 0}.initiative-notices .btn{background:#4b2a24;color:#fff0d1}
+.family-time-row{display:flex;flex-wrap:wrap;align-items:start;justify-content:space-between;gap:6px 12px;padding:8px 0;border-bottom:1px solid #dac8aa}.family-time-row p{margin:4px 0}.banquet-cast{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin:0 0 12px}.banquet-cast figure{margin:0;text-align:center}.banquet-cast figcaption{font-size:.85em}.banquet-seats{padding-left:24px}.banquet-seats li{padding:5px}.banquet-seats .acts{display:inline-flex;margin:0 0 0 8px}.initiative-note{padding:12px 14px;background:#efe5d1;border-radius:8px}.initiative-note p{margin:4px 0}.initiative-note small{color:var(--ink2)}.initiative-note>small{display:block;margin-top:3px}.initiative-note>.btn{margin-top:8px}.initiative-note .btn small{color:inherit}.initiative-notices{display:flex;flex-wrap:wrap;gap:6px;padding:6px 0}.initiative-notices .btn{background:#4b2a24;color:#fff0d1}
 .family-branch{border-bottom:1px solid var(--paper2);padding:7px 0}.family-branch summary{cursor:pointer;padding:4px 0}.family-branch summary .hint{margin-inline-start:8px}.family-branch ul{margin:2px 0 5px;padding-inline-start:20px}.family-branch li::marker{color:#ae8565}.family-branch li .hint{margin-inline-start:4px}
 .detail-stack{display:grid;gap:18px;margin-top:16px}
 .detail-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
@@ -1119,7 +1119,8 @@ function nextEv(){
 }
 function openModal(ev){
   modalOpen=true;curEv=ev;if(ev.onShow)ev.onShow();const b=$('#mbox');
-  let h=`<div class="mtitle">${esc(ev.title)}</div><div class="mbody">`;
+  const cast=ev.cast?.length?`<div class="banquet-cast" aria-label="小宴宾客">${ev.cast.map(p=>`<figure>${porImg(p,56)}<figcaption>${esc(porName(p))}</figcaption></figure>`).join('')}</div>`:'';
+  let h=`<div class="mtitle">${esc(ev.title)}</div>${cast}<div class="mbody">`;
   if(ev.por) h+=`<div class="mpor">${porImg(ev.por,112)}<div>${esc(porName(ev.por))}</div></div>`;
   h+=`<div class="mtext">${fmt(ev.text)}${ev.ref?`<p class="ref">典出 · ${esc(ev.ref)}</p>`:''}${ev.input?`<input id="minput" class="inp" maxlength="${ev.input.max||4}" value="${esc(ev.input.def||'')}" aria-label="输入">`:''}</div></div><div class="mch">`;
   ev.choices.forEach((c,i)=>{
@@ -1621,7 +1622,7 @@ A.endMonth=function(){
   if(newYear){const y=S.ys;pushEv({title:'岁首',sfx:'chime',text:`爆竹声中一岁除。${dateStr()}，陛下${e.age}岁。\n去岁：新入宫${y.c}人，皇嗣降生${y.b}位，侍寝${y.n}次。\n国库${e.treasury}万两，威望${rd(e.prestige)}，民心${rd(e.people)}。`,choices:[{t:'新岁新气象'}]});S.ys={c:0,b:0,n:0}}
   // 事件
   if(S.month===2&&S.turn-S.flags.lastXX>=34) pushEv({title:'三年大选',sfx:'chime',text:'又到三年一度的大选之期，各地秀女已候于储秀宫。',choices:[{t:'前去看看',f:()=>{genCands();UI.view='xx';return null}},{t:'今年免了',f:()=>{S.flags.lastXX=S.turn;return fx(chg({people:2}))}}]});
-  relTick();kidRelTick();clanTick();dowagerTick();initiativeTick();
+  relTick();kidRelTick();clanTick();dowagerTick();initiativeTick();familyLifeTick();
   const must=[arcTick(),heirTick(),milestone()].filter(Boolean),opt=[];
   const add=(e,p)=>{if(e)opt.push([e,p+R()])};
   add(chance(.8)?festival():null,5);add(chance(.9)?haremEvent():null,6);add(chance(.5)?haremEvent():null,3);
@@ -1686,7 +1687,7 @@ function save(slot){return S&&SaveManager.save(localStorage,SKEY+slot,S,validPal
 function load(slot){const data=SaveManager.load(localStorage,SKEY+slot,validPalaceSave);if(!data)return false;S=data;return true}
 function slotInfo(slot){const s=SaveManager.load(localStorage,SKEY+slot,validPalaceSave);return s?`${s.emp.sur}${s.emp.name}·${dateStr(s)}·后妃${s.consorts.filter(c=>c.alive&&!c.gone).length}`:null}
 A.save=function(slot){if(save(slot)){toast('已存档');AU.sfx('chime')}else toast('存档失败：浏览器禁用了本地存储');render()};
-A.load=function(slot){if(load(slot)){Q.length=0;migrate();UI.view='map';toast('已读档');setScene('court');render()}else toast('该存档为空')};
+A.load=function(slot){if(load(slot)){Q.length=0;migrate();UI.view='map';toast('已读档');setScene('court');UI.banquet=null;render()}else toast('该存档为空')};
 
 /* ============ 开局 ============ */
 A.newGame=function(){UI.view='new';render()};
@@ -1751,7 +1752,7 @@ function dockIcon(key){
   return `<img class="dock-icon px" src="${dockImages.get(key)}" alt="" aria-hidden="true">`;
 }
 function renderMenu(){const m=$('#menu');if(!S){m.innerHTML='';m.hidden=true;return}m.hidden=false;
-  const current={palace:'map',place:'map',consort:'harem',kid:'kids'}[UI.view]||UI.view;
+  const current={palace:'map',place:'map',banquet:'map',consort:'harem',kid:'kids'}[UI.view]||UI.view;
   m.innerHTML=MENU.map(([k,l])=>`<button class="btn${current===k?' on':''}" ${current===k?'aria-current="page"':''} ${k==='court'?'title="精力-1"':''} onclick="${k==='court'?'A.court()':`A.go('${k}')`}">${dockIcon(k)}<span>${l}</span></button>`).join('');
 }
 let panelRoute;
@@ -1759,7 +1760,7 @@ function renderPanel(){
   const p=$('#panel'),v=UI.view;
   const route=JSON.stringify([v,UI.sel]);
   if(!S)p.innerHTML=v==='new'?viewNew():viewTitle();
-  else p.innerHTML=({family:viewFamily,map:viewMap,palace:viewPalace,place:viewPlace,home:viewHome,harem:viewHarem,consort:viewConsort,cards:viewCards,xx:viewXX,kids:viewKids,kid:viewKid,out:viewOut,log:viewLog,sys:viewSys}[v]||viewHome)();
+  else p.innerHTML=({family:viewFamily,map:viewMap,palace:viewPalace,place:viewPlace,banquet:viewBanquet,home:viewHome,harem:viewHarem,consort:viewConsort,cards:viewCards,xx:viewXX,kids:viewKids,kid:viewKid,out:viewOut,log:viewLog,sys:viewSys}[v]||viewHome)();
   if(route!==panelRoute){p.scrollTop=0;panelRoute=route;}
 }
 function render(){
@@ -1912,6 +1913,7 @@ function viewConsort(){
      ${detailSection('近况与性情',`<p class="hint">${esc(TRAITS[c.trait].d)} · 侍寝 ${c.nights} 次</p>${act?xinDetail(c)+deepLine(c):''}<div class="stats">${st('容貌',c.looks)}${st('才情',c.talent)}${st('德行',c.virtue)}${st('心机',c.scheme,!c.known)}</div>`)}
      ${detailSection('家族与人际',`${kids.length?`<div>子女：${kids.map(k=>`<button class="btn quiet sm" onclick="A.go('kid',${k.id})">${esc(k.name)}</button>`).join(' ')}</div>`:''}${family}`)}
     </div>
+    ${act?detailSection('与孩子的日常',consortFamilyPanel(c)):''}
     ${detailSection('册封与宫务',management?`<div class="acts">${management}</div>`:'')}
     ${detailSection('她的故事',arcLine(c)+detailStory(c))}
     ${detailFold('处置',penalties?`<div class="acts">${penalties}</div>`:'')}
@@ -1954,6 +1956,7 @@ function viewKid(){
    <div class="detail-vitals">${bar('才学',k.lit,'#617991')}${bar('武艺',k.mar,'#92504a')}${bar('品德',k.vir,'#517369')}</div>
    <div class="detail-stack">
     ${k.alive?initiativeHTML(k):''}
+    ${k.alive?detailSection('与母亲的日常',kidFamilyPanel(k)):''}
     ${detailSection('教养与抚养',care)}
     <div class="detail-columns">
      ${detailSection('其他属性',`<div class="stats">${bar('体魄',k.hp,'#a87a26')}${bar('野心',k.amb,'#6b4a33')}${bar('父爱',k.love,'#936375')}${k.sex==='m'&&a>=10?bar('支持',k.sup||0,'#617991'):''}</div>`)}
@@ -2259,7 +2262,12 @@ function mapTick(){if(!S||UI.view!=='map'||modalOpen)return;
     if(done){S.pos={x:Math.round(emp.x),y:Math.round(emp.y)};if(emp.arrive){const f=emp.arrive;emp.arrive=null;f()}}}
   npcStep();drawMap()}
 function M(x,y,w,h,c){mg.fillStyle=c;mg.fillRect(Math.round(x),Math.round(y),w,h)}
-function drawMap(){const s=season();
+function figOnMap(x,y,color,small){
+  const top=y-(small?5:7);
+  M(x-1,top,3,2,'#1d1520');M(x-1,top+2,3,1,'#f2cfb2');
+  M(x-1,top+3,3,y-top-3,color);M(x-1,y,1,1,INK);M(x+1,y,1,1,INK);
+}
+function drawMap(){const s=season(),family=gardenFamilyMoment();
   M(0,0,MW,MH,s===3?'#e9e5dd':'#e7dcc7');M(1,1,MW-2,1,'#b79d80');M(1,MH-2,MW-2,1,'#b79d80');
   for(let y=5;y<MH-4;y+=4)for(let x=5+((y>>2)%2)*4;x<MW-4;x+=8)M(x,y,1,1,s===3?'#dcd7cd':'#dcd0b9');
   const RC=s===3?'#f6f4f0':'#f8f0df',RE=s===3?'#e5ded1':'#e3d6bf';
@@ -2284,10 +2292,15 @@ function drawMap(){const s=season();
       if(S.cands&&S.cands.length&&p.p==='储秀宫'){M(x+1,y+1,2,2,GOLD)}}
     if(hoverP===p){mg.strokeStyle='#ffd86b';mg.lineWidth=1;mg.strokeRect(x-.5,y-.5,w+1,h+1)}});
   // 妃嫔
-  for(const [id,n] of NPC){const c=byId(id);if(!c)continue;const x=Math.round(n.x+n.ox),y=Math.round(n.y);
+  for(const [id,n] of NPC){const c=byId(id);if(!c||family?.mother===id)continue;const x=Math.round(n.x+n.ox),y=Math.round(n.y);
     if(n.where==='home'&&!n.path.length&&n.wait>0&&(frame+id)%40<28)continue;
     M(x-1,y-6,3,2,'#1d1520');M(x-1,y-4,3,1,'#f2cfb2');M(x-1,y-3,3,3,c.cold?'#8a8a8a':robeOf(c));M(x-1,y,1,1,INK);M(x+1,y,1,1,INK);
     if(c.preg>=2)M(x,y-8,1,1,'#f08aa8');if(c.rank>=5)M(x+1,y-7,1,1,GOLD)}
+  if(family){
+    const x=GARDEN_FAMILY_SPOT[0], y=GARDEN_FAMILY_SPOT[1], child=kidById(family.child);
+    figOnMap(x-4,y,robeOf(byId(family.mother)),false);
+    figOnMap(x+4,y,child.sex==='m'?'#527987':'#ae6c82',true);
+  }
   // 皇帝与太监
   const tr=emp.trail[0]||[emp.x,emp.y];const ax=Math.round(tr[0])-4,ay=Math.round(tr[1]);
   M(ax-1,ay-5,3,1,'#33363c');M(ax-1,ay-4,3,1,'#f2cfb2');M(ax-1,ay-3,3,3,'#5b6b85');M(ax-2,ay-8,5,1,'#c0392b');M(ax,ay-7,1,3,'#5a3a22');
@@ -2305,7 +2318,11 @@ function meetConsort(c){if(!c||!c.alive||c.gone)return;setScene('harem');
     {t:'赏她一支簪子（国库-10万两）',f:()=>fx(chg({treasury:-10}),cchg(c,{mood:10,aff:3}))},
     {t:'点头作别'}]})}
 MAPC.addEventListener('click',e=>{if(!S)return;const r=MAPC.getBoundingClientRect(),mx=(e.clientX-r.left)/r.width*MW,my=(e.clientY-r.top)/r.height*MH;
-  let best=null,bd=6;for(const [id,n] of NPC){const d=Math.hypot(n.x+n.ox-mx,n.y-3-my);if(d<bd){bd=d;best=[id,n]}}
+  const family=gardenFamilyMoment();
+  if(family&&Math.abs(mx-GARDEN_FAMILY_SPOT[0])<9&&Math.abs(my-GARDEN_FAMILY_SPOT[1]+3)<5){
+    goPlace(gardenPlace());return;
+  }
+  let best=null,bd=6;for(const [id,n] of NPC){if(family?.mother===id)continue;const d=Math.hypot(n.x+n.ox-mx,n.y-3-my);if(d<bd){bd=d;best=[id,n]}}
   if(best){const c=byId(best[0]),n=best[1];if(!c)return;n.path=[];n.wait=400;let tx=Math.round(n.x),ty=Math.round(n.y);
     if(!HY.includes(ty)){if(ty<46){tx=100;ty=46}else ty=nearestH(ty)}
     AU.sfx('click');emp.path=planPath(Math.round(emp.x),Math.round(emp.y),tx,ty);
@@ -2322,14 +2339,14 @@ function mountMap(){const w=$('#mapwrap');if(!w)return;w.appendChild(MAPC);
     b.onclick=()=>goPlace(p);b.ondblclick=()=>{emp.path=[];emp.arrive=null;emp.x=p.d[0];emp.y=p.d[1];arrive(p)};
     b.onmouseenter=()=>{hoverP=p};b.onmouseleave=()=>{hoverP=null};w.appendChild(b)})}
 const backBtn=`<button class="btn sm" onclick="A.go('map')">◂ 返回宫城</button>`;
-function viewMap(){return `<section class="map-play" aria-label="宫城地图"><header class="map-location"><h2>宫城</h2><span class="hint">当前位置 · ${esc(nearestPlace())}</span></header><div id="mapwrap"></div><p class="map-legend">点宫殿前往 · 点小人偶遇 · 双击宫殿名直达 · 粉点：有孕 · 金点：选秀</p>${initiativeNotices()}</section>`;}
+function viewMap(){return `<section class="map-play" aria-label="宫城地图"><header class="map-location"><h2>宫城</h2><span class="hint">当前位置 · ${esc(nearestPlace())}</span></header><div id="mapwrap"></div><p class="map-legend">点宫殿前往 · 点小人偶遇 · 双击宫殿名直达 · 粉点：有孕 · 金点：选秀</p>${initiativeNotices()}${gardenFamilyNotice()}</section>`;}
 function viewPalace(){const name=UI.sel,res=name==='冷宫'?alive().filter(c=>c.cold):harem().filter(c=>c.palace===name);
   const extra=name==='储秀宫'&&S.cands.length?`<div class="acts"><button class="btn gold" onclick="A.go('xx')">秀女正在候选（${S.cands.length}人）</button></div>`:'';
   return `<h2>${esc(name)}${backBtn}</h2><p class="hint">${name==='冷宫'?'荒草萋萋，宫门深锁。':name==='坤宁宫'?'中宫所居，凤仪万方。':'宫门半掩，廊下挂着鸟笼。'}</p>${extra}${res.length?`<div class="grid">${res.map(consortCard).join('')}</div>`:'<p class="hint">此处暂无人居住。</p>'}`}
 function viewPlace(){const id=UI.sel;
   if(id==='cj')return `<h2>宸极殿${backBtn}</h2><p>文武百官已在丹墀下候着。</p><div class="acts"><button class="btn gold" onclick="A.court()">临朝听政<small>精力-1</small></button></div>`;
-  if(id==='yh'){const here=[...NPC].filter(([i,n])=>n.where==='garden'&&!n.path.length).map(([i])=>byId(i)).filter(c=>c&&c.alive&&!c.cold);
-    return `<h2>御花园${backBtn}</h2><p>${['桃花开得正好，蜂蝶纷飞。','荷风送香，蝉鸣阵阵。','丹桂飘香，满地金黄。','红梅映雪，暗香浮动。'][season()]}</p><div class="acts"><button class="btn" onclick="A.out('garden')">园中漫步<small>精力-1</small></button></div>${here.length?`<h3>园中的人</h3><div class="grid">${here.map(c=>`<button class="card" onclick="meetConsort(byId(${c.id}))">${porImg(c,48)}<div class="grow"><div class="nm">${esc(cName(c))}</div><div>正在园中${['赏花','喂鱼','扑蝶','散步'][c.id%4]}</div></div></button>`).join('')}</div>`:'<p class="hint">园中此刻没有旁人。</p>'}`}
+  if(id==='yh'){const here=[...NPC].filter(([i,n])=>n.where==='garden'&&!n.path.length).map(([i])=>byId(i)).filter(c=>c&&c.alive&&!c.cold&&c.id!==gardenFamilyMoment()?.mother);
+    return `<h2>御花园${backBtn}</h2><p>${['桃花开得正好，蜂蝶纷飞。','荷风送香，蝉鸣阵阵。','丹桂飘香，满地金黄。','红梅映雪，暗香浮动。'][season()]}</p><div class="acts"><button class="btn" onclick="A.out('garden')">园中漫步<small>精力-1</small></button>${banquetReady()?`<button class="btn gold" onclick="A.openBanquet()">筹办小宴</button>`:'<span class="hint">小宴每三个月可办一次</span>'}</div>${gardenFamilyNotice()}${here.length?`<h3>园中的人</h3><div class="grid">${here.map(c=>`<button class="card" onclick="meetConsort(byId(${c.id}))">${porImg(c,48)}<div class="grow"><div class="nm">${esc(cName(c))}</div><div>正在园中${['赏花','喂鱼','扑蝶','散步'][c.id%4]}</div></div></button>`).join('')}</div>`:'<p class="hint">园中此刻没有旁人。</p>'}`}
   if(id==='cn'){const d=S.flags.dowager;return `<h2>慈宁宫${backBtn}</h2>${d&&d.alive?`<p>${esc(d.name)}正在佛堂诵经。</p><div class="acts"><button class="btn" onclick="A.greet()">请安<small>精力-1</small></button></div>`:'<p class="hint">慈宁宫已经空了，只有佛前的长明灯还亮着。</p>'}`}
   return viewMap()}
 A.greet=function(){if(!useE())return;const ev=dowagerEvent();if(ev){pushEv(ev);return}
@@ -2938,21 +2955,24 @@ A.foster=function(id){const k=kidById(id);const m=byId(k.mom);
   if(!cands.length){toast('眼下没有合适的妃嫔（需贵人及以上）');return}
   pushEv({title:'抚养',por:k,text:`把${kidName(k)}交给谁抚养？\n${m&&m.alive?`生母${cName(m)}会很难过。`:'孩子的生母已经不在了。'}养母的德行、才情、心机会影响孩子的成长，她的家世也会成为孩子将来的倚仗。`,
     choices:[...cands.map(c=>({t:`${cName(c)}（德${rd(c.virtue)} 才${rd(c.talent)}${c.known?' 心机'+rd(c.scheme):''}，${c.fam.t}，${raisesKid(c)?'已有孩子':'膝下无子'}）`,f:()=>doFoster(k,c)})),{t:'再想想'}]})};
-function doFoster(k,c){const m=byId(k.mom),old=fosterOf(k),childless=!raisesKid(c);k.foster=c.id;k.fosterT=S.turn;relAdd(c,k,Math.max(0,50-relGet(c,k)));
+function doFoster(k,c){const m=byId(k.mom),old=fosterOf(k),childless=!raisesKid(c);if(m&&m.alive&&m!==c&&!k.motherBonds?.[m.id]){(k.motherBonds ||= {})[m.id]={trust:childTrust(k,m)}}
+  if(old&&old!==c&&!k.motherBonds?.[old.id]){(k.motherBonds ||= {})[old.id]={trust:childTrust(k,old)}}
+  k.foster=c.id;k.fosterT=S.turn;relAdd(c,k,Math.max(0,50-relGet(c,k)));
   kstory(k,`交由${fullName(c)}抚养。`);story(c,`陛下将${kidName(k)}交给她抚养。`);log(`${kidName(k)}交由${fullName(c)}抚养。`,1);
   setXin(c,'欢喜',`得以抚养${k.name}`);let s=cchg(c,{aff:childless?12:6,mood:childless?20:8});
   if(m&&m.alive&&m!==c){relAdd(m,c,-25);const hate=m.scheme>=60||m.t2==='记仇';setXin(m,hate?'怨恨':'悲恸',`亲生的${k.name}被抱给了${fullName(c)}`,hate?c.id:null);s+='　'+cchg(m,{mood:-30,aff:-8});story(m,`亲生的${k.name}被抱去给${fullName(c)}抚养。`)}
   if(old&&old.alive&&old!==c){setXin(old,'委屈',`养了多年的${k.name}被抱走`);cchg(old,{mood:-15})}
   return `${fullName(c)}接过孩子，抱得很紧。${fx(s)}`}
 A.unfoster=function(id){const k=kidById(id),c=fosterOf(k),m=byId(k.mom);if(!m||!m.alive){toast('生母已不在');return}
-  k.foster=null;kstory(k,'回到生母身边。');if(c&&c.alive){setXin(c,'委屈',`${k.name}被抱回生母身边`);cchg(c,{mood:-15})}
+  if(c&&!k.motherBonds?.[c.id]){(k.motherBonds ||= {})[c.id]={trust:childTrust(k,c)}}
+  k.foster=null;delete k.visitRule;kstory(k,'回到生母身边。');if(c&&c.alive){setXin(c,'委屈',`${k.name}被抱回生母身边`);cchg(c,{mood:-15})}
   setXin(m,'欢喜',`${k.name}回到身边`);cchg(m,{mood:25,aff:6});story(m,`${k.name}回到了她身边。`);toast('孩子回到了生母身边');render()};
 function fosterOffer(k,why){return {title:'抚养',por:k,text:why+'\n按宫中旧例，可将孩子交给位分高的妃嫔抚养，将来也好有个倚仗。',choices:[{t:'挑一位妃嫔抚养',f:()=>{A.foster(k.id);return null}},{t:'不必',f:()=>'你没有把孩子交给旁人。'}]}}
-function fosterEvent(){const ks=kidsAlive().filter(k=>{const m=byId(k.mom),f=fosterOf(k);return f&&f.alive&&m&&m.alive&&!m.cold&&kidAge(k)<14});if(!ks.length)return null;
+function fosterEvent(){const ks=kidsAlive().filter(k=>{const m=byId(k.mom),f=fosterOf(k);return !k.visitRule&&familyVisitAllowed(k,m)&&inPalace(f)&&kidAge(k)<14});if(!ks.length)return null;
   const k=pick(ks),m=byId(k.mom),f=fosterOf(k);
-  return {title:'生母',por:m,text:`${cName(m)}趁${cName(f)}去请安，偷偷去看了${k.name}。孩子不认得她，怯生生地往乳母身后躲。${cName(f)}回来撞见，两人在廊下僵持着。`,choices:[
-   {t:`准${cName(m)}每月探望一次`,f:()=>{relAdd(m,f,5);setXin(m,'感激','准她每月看望孩子');return fx(cchg(m,{mood:15,aff:6}),cchg(f,{mood:-5}))}},
-   {t:'孩子已有养母，不得再来',f:()=>{relAdd(m,f,-15);setXin(m,'悲恸','不许她再见孩子');return fx(cchg(m,{mood:-20}),cchg(f,{aff:4}))}},
+  return {title:'生母',por:m,text:`${cName(m)}趁${cName(f)}去请安，偷偷去看了${k.name}。${childTrust(k,m)>=48?'孩子认得她，拉着她说了好一会儿话。':'孩子怯生生地往乳母身后躲。'}${cName(f)}回来撞见，两人在廊下僵持着。`,choices:[
+   {t:`准${cName(m)}平日探望`,f:()=>{A.familyVisitRule(k.id,'open');relAdd(m,f,5);setXin(m,'感激','准她每月看望孩子');return fx(cchg(m,{mood:15,aff:6}),cchg(f,{mood:-5}))}},
+   {t:'暂缓私下探望',f:()=>{A.familyVisitRule(k.id,'closed');relAdd(m,f,-15);setXin(m,'悲恸','不许她再见孩子');return fx(cchg(m,{mood:-20}),cchg(f,{aff:4}))}},
    {t:'把孩子还给生母',f:()=>{A.unfoster(k.id);return null}}]}}
 function fosterLine(c){const fk=S.children.filter(k=>k.foster===c.id&&k.alive),own=S.children.filter(k=>k.mom===c.id&&k.foster&&k.alive);
   return (fk.length?`<div>养育：${fk.map(k=>`<button class="btn sm" onclick="A.go('kid',${k.id})">${esc(k.name)}</button>`).join(' ')}</div>`:'')+(own.length?`<div class="hint">亲生却交给旁人抚养：${own.map(k=>`${esc(k.name)}（养母${esc(fullName(fosterOf(k)))}）`).join('、')}</div>`:'')}
@@ -3012,6 +3032,303 @@ function kidRelLine(k){const sib=kidsAlive().filter(o=>o!==k).map(o=>[o,relGet(o
   const con=harem().filter(c=>!raisers(k).includes(c)).map(c=>[c,relGet(c,k)]).filter(x=>Math.abs(x[1])>=25).sort((a,b)=>b[1]-a[1]);
   const tag=(o,v,kd,n)=>`<span class="tag ${relCls(v)}" title="${rd(v)}">${esc(n)}·${relWord(v,kd)}</span>`;
   return `<div style="margin-top:4px">手足：${sib.length?sib.map(([o,v])=>tag(o,v,'kk',o.name)).join(''):'<span class="hint">都还寻常</span>'}</div><div>宫中娘娘：${con.length?con.map(([c,v])=>tag(c,v,'ck',cName(c))).join(''):'<span class="hint">都还寻常</span>'}</div>`}
+/* ============ 母子日常与御花园小宴 ============ */
+const inPalace = c => c?.alive && !c.gone && !c.cold;
+const childInPalace = k => k?.alive && !k.away && !k.jailed && !k.married;
+const familyName = person => person.sex ? kidName(person) : cName(person);
+const mothersOf = k => [...new Set([byId(k.mom), fosterOf(k)].filter(Boolean))];
+
+function childTrust(k, mother) {
+  const saved = k.motherBonds?.[mother.id]?.trust;
+  if (saved !== undefined) return saved;
+  const raisedByMother = (k.foster || k.mom) === mother.id;
+  const monthsTogether = k.fosterT ?? k.born;
+  return raisedByMother
+    ? Math.min(68, 38 + Math.max(0, S.turn - monthsTogether))
+    : Math.min(60, 22 + Math.max(0, monthsTogether - k.born));
+}
+
+function familyVisitAllowed(k, mother) {
+  return childInPalace(k) && inPalace(mother) && mothersOf(k).includes(mother) &&
+    !(k.foster && k.mom === mother.id && k.visitRule === 'closed');
+}
+
+function recordFamilyTime(k, mother, activity, childView, motherView, { gain = 8, place = '宫中', stat } = {}) {
+  const trust = clamp(childTrust(k, mother) + gain);
+  const bonds = k.motherBonds ||= {};
+  bonds[mother.id] = { trust, turn: S.turn, activity, childView, motherView };
+  relAdd(mother, k, gain / 2);
+  cchg(mother, { mood: 3 });
+  if (stat) skillGain(k, stat, 1);
+  NPCMemory.record(S, { type: 'family-time', time: S.turn, location: place,
+    participants: [k.id, mother.id], object: activity }, [
+    { person: k.id, subject: mother.id, interpretation: childView, emotion: .75, impact: 75 },
+    { person: mother.id, subject: k.id, interpretation: motherView, emotion: .8, impact: 78 }
+  ]);
+}
+
+const FAMILY_ACTIVITIES = {
+  cradle: { title: '哄睡', place: '宫中', child: '听见熟悉的歌声，渐渐睡安稳了。', mother: '哼着旧曲哄孩子入睡，孩子一直攥着她的衣袖。' },
+  paint: { title: '一同描画', place: '御花园', stat: 'lit', child: '画歪了花枝，她便在旁添了一只小雀。', mother: '孩子坚持留下那根画歪的花枝，说风吹过的树就该是这样。' },
+  archery: { title: '练习投壶', place: '御花园', stat: 'mar', child: '练了几次才投中，她记得头一回就差了多少。', mother: '孩子嫌壶口太近，自己往后退了一步再投。' },
+  cakes: { title: '做点心', place: '宫中', child: '把第一块捏成了团子，她照样给蒸了。', mother: '孩子把最好看的那块留给她，自己吃了蒸破的。' },
+  walk: { title: '并肩散步', place: '御花园', child: '走到池边才肯说出这几日烦心的事。', mother: '两人绕了池子一圈，孩子终于肯告诉她近来在愁什么。' },
+  listen: { title: '听孩子说心事', place: '宫中', child: '心里有话，想起她从前肯听自己慢慢说，便去找她。', mother: '孩子主动来找她说话。她放下手中的事，听孩子从头讲完。' },
+  reading: { title: '一起读书', place: '宫中', stat: 'lit', child: '有一处读不懂，她用自己小时候的事讲明白了。', mother: '念到有趣处，孩子合上书，换了自己的话又说了一遍。' }
+};
+
+function familyActivity(k, mother, seeking) {
+  if (kidAge(k) < 3) return FAMILY_ACTIVITIES.cradle;
+  if (seeking) return FAMILY_ACTIVITIES.listen;
+  const activities = [];
+  if (mother.trait === '才女' || mother.like === '字画') activities.push('paint');
+  if (kidAge(k) >= 6 && (mother.trait === '将门' || mother.t2 === '擅骑射')) activities.push('archery');
+  if (mother.t2 === '嗜甜' || mother.t2 === '擅厨艺') activities.push('cakes');
+  if (kidAge(k) >= 5 && (k.policy === '读书' || mother.t2 === '好读史')) activities.push('reading');
+  activities.push('walk');
+  const last = k.motherBonds?.[mother.id]?.activity;
+  return FAMILY_ACTIVITIES[activities.find(key => FAMILY_ACTIVITIES[key].title !== last) || activities[0]];
+}
+
+function spendFamilyTime(k, mother, seeking) {
+  const act = familyActivity(k, mother, seeking);
+  const childView = `与${cName(mother)}${act.title === '哄睡' ? '相处' : '相聚'}。${act.child}`;
+  recordFamilyTime(k, mother, act.title, childView, `${k.name}在身边。${act.mother}`, {
+    place: act.place, stat: act.stat, gain: seeking ? 9 : 7
+  });
+  const text = seeking
+    ? `${k.name}心里有事，主动去找了${cName(mother)}。两人说了许久。`
+    : `${cName(mother)}带着${k.name}${act.title === '哄睡' ? '，在窗边轻声哼曲' : act.title}。`;
+  S.familyMoment = { turn: S.turn, child: k.id, mother: mother.id, place: act.place, text };
+  return childView;
+}
+
+function familyLifeTick() {
+  if (S.familyMoment?.turn === S.turn) return;
+  const pending = S.gardenPlans || [];
+  S.gardenPlans = pending.filter(plan => plan.turn > S.turn);
+  const plan = pending.find(item => item.turn === S.turn);
+  if (plan) {
+    const k = kidById(plan.child), mother = byId(plan.mother);
+    if (familyVisitAllowed(k, mother)) {
+      const text = `${k.name}记得上次小宴，主动邀${cName(mother)}到园中再${plan.activity === '投壶' ? '练一回投壶' : '画一幅花枝'}。`;
+      recordFamilyTime(k, mother, plan.activity, text, `孩子还记得那回小宴上的约定，自己来邀她同行。`, { place: '御花园', gain: 9 });
+      S.familyMoment = { turn: S.turn, child: k.id, mother: mother.id, place: '御花园', text };
+      return;
+    }
+  }
+  const candidates = [];
+  for (const k of kidsAlive()) {
+    const options = mothersOf(k).filter(m => familyVisitAllowed(k, m));
+    const seeking = kidAge(k) >= 4 && (k.hp < 55 || (S.turn - k.born) % 5 === 0);
+    for (const mother of options) {
+      const last = k.motherBonds?.[mother.id]?.turn ?? -3;
+      if (S.turn - last < 3) continue;
+      const separated = k.foster && k.mom === mother.id;
+      if (separated && !k.visitRule && !seeking && relGet(mother, fosterOf(k)) < -10) continue;
+      const trust = childTrust(k, mother) + NPCMemory.influence(S, k.id, mother.id) * 6;
+      if (seeking && trust < 35) continue;
+      const priority = seeking ? trust : Math.min(24, S.turn - last) + (separated && k.visitRule === 'open' ? 4 : 0);
+      candidates.push({ k, mother, seeking, priority: priority + (seeking ? 30 : 0) });
+    }
+  }
+  candidates.sort((a, b) => b.priority - a.priority);
+  if (candidates.length) {
+    const { k, mother, seeking } = candidates[0];
+    spendFamilyTime(k, mother, seeking);
+  }
+}
+
+function currentFamilyMoment() {
+  const moment = S.familyMoment;
+  if (moment?.turn === S.turn && familyVisitAllowed(kidById(moment.child), byId(moment.mother))) return moment;
+}
+
+A.familyVisitRule = function(id, rule) {
+  const k = kidById(id);
+  if (S.over || !childInPalace(k) || !k.foster || !inPalace(byId(k.mom)) || !['open','closed'].includes(rule)) return;
+  if (k.visitRule === rule) return;
+  k.visitRule = rule;
+  const mother = byId(k.mom);
+  remember(mother, rule === 'open' ? 'care' : 'hurt', rule === 'open' ? `准我平日去看${k.name}` : `暂缓我私下探望${k.name}`);
+  log(rule === 'open' ? `准${fullName(mother)}平日探望${k.name}。` : `暂缓${fullName(mother)}私下探望${k.name}。`);
+  render();
+};
+
+A.familyTime = function(childId, motherId) {
+  const k = kidById(childId), mother = byId(motherId);
+  if (modalOpen || !familyVisitAllowed(k, mother) || k.motherBonds?.[motherId]?.turn === S.turn || !useE()) return;
+  const text = spendFamilyTime(k, mother, false);
+  pushEv({ title: '陪伴', por: k, text, choices: [ok1] });
+};
+
+function familyTimePanel(k, mothers) {
+  return mothers.map(mother => {
+    const bond = k.motherBonds?.[mother.id];
+    const trust = childTrust(k, mother);
+    const closeness = kidAge(k) < 3
+      ? trust >= 45 ? '认得她的声音' : '还在熟悉她的声音'
+      : trust >= 68 ? '有事愿意先来找她' : trust >= 45 ? '相处自在' : '见面还有些拘谨';
+    const ready = familyVisitAllowed(k, mother) && bond?.turn !== S.turn;
+    return `<article class="family-time-row"><div><strong>${mother.id === k.mom ? '生母' : '养母'} · ${esc(fullName(mother))}</strong>
+      <p class="hint">${inPalace(mother) ? closeness : '如今无法相见'}</p>
+      ${bond?.activity ? `<p>${esc(UI.view === 'kid' ? bond.childView : bond.motherView)}</p>` : ''}</div>
+      ${ready ? `<button class="btn sm jade" onclick="A.familyTime(${k.id},${mother.id})">一起陪陪孩子<small>精力-1</small></button>` : ''}</article>`;
+  }).join('');
+}
+
+function kidFamilyPanel(k) {
+  const separated = childInPalace(k) && k.foster && inPalace(byId(k.mom));
+  const rule = k.visitRule === 'open' ? '准许平日探望' : k.visitRule === 'closed' ? '暂缓私下探望' : '照宫中旧例';
+  const controls = separated ? `<p class="hint">生母探望安排 · ${rule}</p><div class="acts">
+    <button class="btn sm" aria-pressed="${k.visitRule === 'open'}" onclick="A.familyVisitRule(${k.id},'open')">准许探望</button>
+    <button class="btn sm" aria-pressed="${k.visitRule === 'closed'}" onclick="A.familyVisitRule(${k.id},'closed')">暂缓探望</button></div>` : '';
+  return familyTimePanel(k, mothersOf(k)) + controls;
+}
+
+function consortFamilyPanel(mother) {
+  return S.children.filter(k => k.alive && (k.mom === mother.id || k.foster === mother.id)).map(k =>
+    `<div><button class="btn quiet sm" onclick="A.go('kid',${k.id})">${esc(kidName(k))}</button>${familyTimePanel(k,[mother])}</div>`
+  ).join('');
+}
+
+const GARDEN_FAMILY_SPOT = [117,35];
+const GARDEN_ACTIVITIES = { toss: '投壶', paint: '共绘花枝' };
+const banquetGuests = () => [...alive().filter(inPalace), ...kidsAlive().filter(k => childInPalace(k) && kidAge(k) >= 5)];
+const gardenPlace = () => PLACES.find(p => p.id === 'yh');
+const banquetReady = () => !S.over && S.turn - (S.lastGardenBanquet ?? -3) >= 3;
+
+A.openBanquet = function() {
+  if (!banquetReady() || modalOpen) return;
+  UI.banquet = { activity: 'toss', seats: [] };
+  A.go('banquet');
+};
+
+A.banquetActivity = function(activity) {
+  if (UI.view !== 'banquet' || !UI.banquet || !Object.hasOwn(GARDEN_ACTIVITIES, activity)) return;
+  UI.banquet.activity = activity;
+  render();
+};
+
+A.banquetGuest = function(id) {
+  if (UI.view !== 'banquet' || !UI.banquet || !banquetGuests().some(p => p.id === id)) return;
+  const seats = UI.banquet.seats;
+  const index = seats.indexOf(id);
+  if (index >= 0) seats.splice(index, 1);
+  else if (seats.length < 4) seats.push(id);
+  render();
+};
+
+A.banquetMove = function(index, direction) {
+  if (UI.view !== 'banquet' || !UI.banquet || ![-1, 1].includes(direction)) return;
+  const seats = UI.banquet.seats, other = index + direction;
+  if (!Number.isInteger(index) || index < 0 || index >= seats.length || other < 0 || other >= seats.length) return;
+  [seats[index], seats[other]] = [seats[other], seats[index]];
+  render();
+};
+
+function viewBanquet() {
+  const draft = UI.banquet;
+  if (!draft) return viewMap();
+  const people = banquetGuests();
+  const seated = draft.seats.map(id => people.find(p => p.id === id)).filter(Boolean);
+  const enough = seated.length >= 2 && seated.some(p => !p.sex) && E().energy > 0 && E().treasury >= 15 && banquetReady();
+  return `<h2>御花园小宴 <button class="btn sm" onclick="arrive(gardenPlace())">返回御花园</button></h2>
+    <p class="hint">请两至四位宾客，至少一位娘娘或宫人。相邻宾客同玩一轮。每三个月可办一次。</p>
+    <div class="acts">${Object.entries(GARDEN_ACTIVITIES).map(([key, label]) =>
+      `<button class="btn sm" aria-pressed="${draft.activity === key}" onclick="A.banquetActivity('${key}')">${label}</button>`).join('')}</div>
+    <h3>座次</h3>
+    ${seated.length ? `<ol class="banquet-seats">${seated.map((p, i) =>
+      `<li><strong>${esc(familyName(p))}</strong><div class="acts">
+        <button class="btn quiet sm" aria-label="${esc(familyName(p))}前移" ${i === 0 ? 'disabled' : ''} onclick="A.banquetMove(${i},-1)">前移</button>
+        <button class="btn quiet sm" aria-label="${esc(familyName(p))}后移" ${i === seated.length-1 ? 'disabled' : ''} onclick="A.banquetMove(${i},1)">后移</button>
+        <button class="btn quiet sm" aria-label="撤下${esc(familyName(p))}" onclick="A.banquetGuest(${p.id})">撤下</button></div></li>`).join('')}</ol>` : '<p class="hint">点选宾客，依次入席。</p>'}
+    <div class="grid">${people.filter(p => !draft.seats.includes(p.id)).map(p =>
+      `<button class="card" ${seated.length >= 4 ? 'disabled' : ''} onclick="A.banquetGuest(${p.id})">${porImg(p,40)}<span class="grow"><strong>${esc(familyName(p))}</strong>
+        <small>${esc(p.sex ? `${kidAge(p)}岁 · ${p.policy} · 生母 ${p.momName}${fosterOf(p) ? ' · 养母 '+fullName(fosterOf(p)) : ''}` : `${p.trait} · ${p.t2}`)}</small></span></button>`).join('')}</div>
+    <div class="acts"><button class="btn gold" ${enough ? '' : 'disabled'} onclick="A.holdBanquet()">开宴<small>精力-1 · 国库-15万两</small></button></div>`;
+}
+
+function banquetTalent(p, toss) {
+  if (p.sex) return toss ? p.mar : p.lit;
+  if (toss) return p.trait === '将门' || p.t2 === '擅骑射' ? 80 : 35;
+  return p.talent + (p.like === '字画' ? 15 : 0);
+}
+
+A.holdBanquet = function() {
+  const draft = UI.banquet;
+  if (modalOpen || UI.view !== 'banquet' || !draft || !banquetReady() || E().treasury < 15) return;
+  const { activity, seats } = draft, guests = banquetGuests();
+  const people = seats.map(id => guests.find(p => p.id === id));
+  if (!Object.hasOwn(GARDEN_ACTIVITIES,activity) || people.length < 2 || people.length > 4 ||
+      new Set(seats).size !== seats.length || people.some(p => !p) || people.every(p => p.sex) || !useE()) return;
+  S.lastGardenBanquet = S.turn;
+  E().treasury -= 15;
+  const label = GARDEN_ACTIVITIES[activity], toss = activity === 'toss';
+  const lines = [], perspectives = new Map();
+  const relations = people.slice(1).map((p,i) => [people[i],p]);
+  for (const [a,b] of relations) {
+    const k = a.sex ? a : b.sex ? b : null;
+    const mother = k && !a.sex ? a : k && !b.sex ? b : null;
+    const paired = mother && mothersOf(k).includes(mother);
+    if (paired) {
+      const trust = childTrust(k, mother);
+      const skill = banquetTalent(mother,toss);
+      const opensUp = skill >= 60 || trust >= 48 || mother.t2 === '护短' || mother.trait === '温婉';
+      const action = toss
+        ? skill >= 60 ? `帮${k.name}扶稳手肘，下一支箭果然投中了` : `蹲下来陪${k.name}数投中的箭，没投中的也捡回来再试`
+        : skill >= 60 ? `在${k.name}画歪的花枝旁添了几笔，两人的画接在了一起` : `请${k.name}选花的颜色，两人一笔一笔填满了花笺`;
+      const child = opensUp
+        ? `${cName(mother)}${action}。`
+        : `${cName(mother)}递来${toss ? '一支箭' : '一支笔'}，两人先各自试了一回，后来才说上话。`;
+      const adult = opensUp ? `见${k.name}愿意让她帮忙，想以后再陪孩子${toss?'练一回':'画一幅'}。` : `见${k.name}还拘谨，便让孩子按自己的步调来。`;
+      recordFamilyTime(k, mother, label, child, adult, { place: '御花园', gain: opensUp ? 11 : 5, stat: toss ? 'mar' : 'lit' });
+      lines.push(child);
+      if (opensUp && familyVisitAllowed(k,mother) && !S.gardenPlans?.some(p => p.turn === S.turn+2)) {
+        (S.gardenPlans ||= []).push({ turn: S.turn+2, child: k.id, mother: mother.id, activity: label });
+      }
+      continue;
+    }
+    const friendly = relGet(a,b) >= -25;
+    const competitive = [a,b].find(p => p.t2 === '好胜' || (p.sex && p.amb >= 75));
+    const lead = competitive || (banquetTalent(a,toss) >= banquetTalent(b,toss) ? a : b);
+    const peer = lead === a ? b : a;
+    const action = friendly
+      ? competitive ? '兴致正高，又邀身旁的人来一轮' : toss ? '示范如何瞄准壶口' : '给身旁的人留了半张纸'
+      : '行了礼，各做各的，席上没怎么搭话';
+    lines.push(`${familyName(lead)}和${familyName(peer)}相邻。席间，${familyName(lead)}${action}。`);
+    relAdd(a,b,friendly ? competitive ? 3 : 6 : 1);
+    perspectives.set(lead.id,{ person:lead.id, subject:peer.id, interpretation:`与${familyName(peer)}同席${label}，${action}。`, emotion:friendly?.65:.12, impact:65 });
+    perspectives.set(peer.id,{ person:peer.id, subject:lead.id, interpretation:friendly?`与${familyName(lead)}同席${label}，愿意下次再试。`:`小宴上与${familyName(lead)}同席，仍然生分。`, emotion:friendly?.55:.05, impact:64 });
+  }
+  people.slice(1,-1).forEach((k,i) => {
+    const left=people[i],right=people[i+2];
+    if (!k.sex || !k.foster || ![left.id,right.id].includes(k.mom) || ![left.id,right.id].includes(k.foster)) return;
+    if (relGet(left,right) >= -15) {
+      relAdd(left,right,5);
+      lines.push(`${k.name}把${toss?'剩下的箭分给两人，请她们也各投一支':'半张花笺递给两人，请她们各添一朵花'}。散席时，她们还在商量孩子下回想玩什么。`);
+    } else {
+      lines.push(`${k.name}来回给两位母亲看自己的${toss?'投壶成绩':'花笺'}。两人各夸了一句，仍有些拘束。`);
+    }
+  });
+  if (perspectives.size) NPCMemory.record(S,{ type:'garden-banquet', time:S.turn, location:'御花园', participants:seats.slice(), object:label }, [...perspectives.values()]);
+  log(`御花园设小宴，${people.map(familyName).join('、')}同席${label}。`);
+  UI.banquet = null;
+  arrive(gardenPlace());
+  pushEv({ title:`小宴 · ${label}`, cast:people, text:lines.join('\n'), choices:[ok1] });
+};
+
+function gardenFamilyMoment() {
+  const moment = currentFamilyMoment();
+  return moment?.place === '御花园' ? moment : null;
+}
+
+function gardenFamilyNotice() {
+  const moment = gardenFamilyMoment();
+  return moment
+    ? `<p class="initiative-note">${esc(moment.text)} <button class="btn sm quiet" onclick="A.go('kid',${moment.child})">看看孩子</button></p>` : '';
+}
+
 function conKidLine(c){const ks=kidsAlive().map(k=>[k,relGet(c,k)]).filter(([k,v])=>raisers(k).includes(c)||Math.abs(v)>=25).sort((a,b)=>b[1]-a[1]);if(!ks.length)return '';
   return `<div>对皇嗣：${ks.map(([k,v])=>`<span class="tag ${relCls(v)}" title="${rd(v)}">${esc(k.name)}·${relWord(v,'ck',c,k)}</span>`).join('')}</div>`}
 /* ============ 家族 ============ */
