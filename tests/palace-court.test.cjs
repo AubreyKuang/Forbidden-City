@@ -68,8 +68,32 @@ test('the relationship graph shows fathers, consorts and close or hostile ties',
   assert.ok(svg.includes(father));
   assert.match(svg,/stroke="#b8473c"/);
   assert.match(svg,/A\.go\('consort'/);
+  assert.match(svg,/graph-kin-person[\s\S]*data-portrait-cell="4[0-3]"/);
+  assert.match(svg,/graph-consort[\s\S]*data-portrait-cell=/);
   run(`A.go('family')`);
   assert.match(run(`$('#panel').innerHTML`),/关系图/);
+});
+
+test('four brothers keep distinct faces as they age, on promotion and after loading',()=>{
+  const {run}=boot(15);
+  const cells=JSON.parse(run(`JSON.stringify((()=>{
+    const [mother,other]=harem();
+    const sons=['承安','承明','承昭','承翊'].map(name=>makeKid(mother,'m',name));
+    sons[0].foster=other.id;
+    const stages=[0,8,18].map(age=>{
+      sons.forEach(k=>{k.born=S.turn-age*12});
+      return sons.map(portraitCell);
+    });
+    S.heir=sons[0].id;
+    mother.alive=false;
+    const graph=familyGraphSVG();
+    assert.match(graph,/承安/);
+    assert.match(graph,/抚养/);
+    save('1');load('1');migrate();
+    return {stages,loaded:S.children.map(portraitCell)};
+  })())`));
+  assert.deepEqual(cells.stages,[[28,29,30,31],[32,33,34,35],[36,37,38,39]]);
+  assert.deepEqual(cells.loaded,cells.stages[2]);
 });
 
 test('version 1 saves load, rewinding restores a new-year snapshot, and absence piles up memorials',()=>{

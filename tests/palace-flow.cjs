@@ -27,7 +27,9 @@ const drain = () => {
 };
 assert.match($('#panel').innerHTML,/新开一局/);
 A.newGame();assert.match($('#panel').innerHTML,/登基大典/);
-A.start();assert.match($('#mbox').innerHTML,/登基/);drain();
+assert.match($('#panel').innerHTML,/coronation-scene/);
+A.start();assert.match($('#mbox').innerHTML,/登基/);assert.equal(curEv.scene,'coronation');drain();
+assert.match($('#panel').innerHTML,/selection-scene/);
 for(const [key,name] of MENU.filter(([key])=>key!=='court')){A.go(key);assert.ok($('#panel').innerHTML.length,key)}
 // A discarded monthly candidate must not block a later garden encounter.
 forceRoll(.05);assert.ok(monthlyMaidEvent()?.maidEncounter);
