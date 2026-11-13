@@ -418,6 +418,42 @@ test('flood installments postpone half the cost and consume the next monthly mem
   `);
 });
 
+test('prebooked freight discounts only the first grain follow-up and survives reload',()=>{
+  for(const finish of ['grain','cash','delay']){
+    const {run}=boot();
+    run(`
+      const option=label=>curEv.choices.findIndex(c=>c.t.includes(label));
+      S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index:FLOOD_INDEX,floodNeed:'grain'};
+      E().treasury=174;E().energy=1;E().people=50;
+      A.court();assert.equal(option('预订运粮车'),-1);choose(option('稍后再议'));
+      S.flags.grainReserveGen=S.gen;
+      A.court();choose(option('预订运粮车'));
+      assert.equal(E().treasury,174);
+      E().treasury++;
+      choose(option('预订运粮车'));drain();assert.equal(load('auto'),true);
+      assert.deepEqual([E().treasury,E().energy,E().people,grainReserveReady()],[0,0,54,true]);
+      assert.equal(S.flags.floodRelief.freightBooked,true);
+      A.endMonth();drain();
+      A.court();assert.match(curEv.choices[option('已订运粮车')].preview,/−10 万两/);
+      choose(option('稍后再议'));assert.equal(load('auto'),true);
+      E().energy=1;
+      E().treasury=${finish==='grain'?10:finish==='cash'?150:35};
+      A.court();choose(option('${finish==='grain'?'已订运粮车':finish==='cash'?'拨清余款':'拨周转银'}'));
+      assert.equal(E().treasury,0);
+      assert.equal(grainReserveReady(),'${finish}'!=='grain');
+      drain();
+      if('${finish}'==='delay'){
+        A.endMonth();drain();A.court();
+        assert.equal(option('已订运粮车'),-1);
+        assert.match(curEv.choices[option('调常平仓粮')].preview,/−50 万两/);
+      }else{
+        assert.equal(floodReliefDue(),false);
+        A.court();assert.equal(modalOpen,false);
+      }
+    `);
+  }
+});
+
 test('unfunded flood relief reduces public support once whether declined or left unread',()=>{
   for(const action of ['stop','unread','defer']){
     const {run}=boot();

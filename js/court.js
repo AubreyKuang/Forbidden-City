@@ -296,6 +296,7 @@ function reliefDelegation(index){
 }
 const FLOOD_INSTALLMENT=150;
 const FLOOD_GRAIN_FREIGHT=50;
+const FLOOD_FREIGHT_DEPOSIT=25, FLOOD_FREIGHT_BALANCE=10;
 const FLOOD_ARMY_SHELTER_COST=80;
 const FLOOD_BRIDGE_COST=35;
 const FLOOD_UNFUNDED={people:-3};
@@ -304,13 +305,16 @@ function floodReliefDue(){
   return (flood?.turn===S.turn&&flood.gen===S.gen)||
     !!(brief?.turn===S.turn&&brief.gen===S.gen&&brief.floodFollowup&&!brief.done);
 }
-function stagedFloodRelief(brief){
-  return {t:'先拨急赈，留待下月续拨',
-    preview:'国库 −150 万两 · 民心 +4 · 下月奏折改为赈灾回奏',
-    cond:()=>E().treasury>=FLOOD_INSTALLMENT,why:'国库银两不足',
+function stagedFloodRelief(brief,freightBooked=false){
+  const cost=FLOOD_INSTALLMENT+(freightBooked?FLOOD_FREIGHT_DEPOSIT:0);
+  return {t:freightBooked?'先拨急赈，并预订运粮车':'先拨急赈，留待下月续拨',
+    preview:`国库 −${cost} 万两 · 民心 +4 · 下月奏折改为赈灾回奏`+
+      (freightBooked?` · 含订车费 ${FLOOD_FREIGHT_DEPOSIT} 万两 · 次月调粮只需再付 ${FLOOD_FREIGHT_BALANCE} 万两 · 逾期或改用他法，订金不退`:''),
+    cond:()=>E().treasury>=cost&&(!freightBooked||grainReserveReady()),why:freightBooked?'国库银两不足，或无可调储粮':'国库银两不足',
     f:()=>{
-      S.flags.floodRelief={turn:S.turn+1,gen:S.gen,floodNeed:brief.floodNeed};
-      return `第一批粮银已经发往灾区，先供灾民安置。下月还需拨一百五十万两收尾。${fx(chg({treasury:-FLOOD_INSTALLMENT,people:4}))}`;
+      S.flags.floodRelief={turn:S.turn+1,gen:S.gen,floodNeed:brief.floodNeed,...(freightBooked?{freightBooked:true}:{})};
+      const next=freightBooked?`运粮车已订好。下月仓中仍有粮时，再付 ${FLOOD_FREIGHT_BALANCE} 万两即可运送。`:'下月还需拨一百五十万两收尾。';
+      return `第一批粮银已经发往灾区，先供灾民安置。${next}${fx(chg({treasury:-cost,people:4}))}`;
     }};
 }
 function floodReliefEvent(brief){
@@ -340,18 +344,21 @@ function floodReliefEvent(brief){
   }
   if(brief.floodNeed==='grain'){
     event.text+='\n灾区安置已稳，粮道仍未通。常平仓若有存粮，可以另拨运费调粮。';
+    const freight=brief.freightBooked?FLOOD_FREIGHT_BALANCE:FLOOD_GRAIN_FREIGHT;
+    if(brief.freightBooked)event.text+='\n运粮车只保留到本月，逾期或改用他法，订金不退。';
     if(grainReserveReady())event.choices.splice(1,0,{
-      t:'调常平仓粮，拨运费收尾',
-      preview:`国库 −${FLOOD_GRAIN_FREIGHT} 万两 · 民心 +4 · 用完本批储粮`,
-      cond:()=>E().treasury>=FLOOD_GRAIN_FREIGHT,why:`须有 ${FLOOD_GRAIN_FREIGHT} 万两和 1 点精力`,
+      t:brief.freightBooked?'调常平仓粮，用已订运粮车收尾':'调常平仓粮，拨运费收尾',
+      preview:`国库 −${freight} 万两 · 民心 +4 · 用完本批储粮`,
+      cond:()=>grainReserveReady()&&E().treasury>=freight,why:`须有储粮、${freight} 万两和 1 点精力`,
       f:()=>{
         delete S.flags.grainReserveGen;
-        return `户部绕开受损粮道，把常平仓的存粮送到了灾区。${fx(chg({treasury:-FLOOD_GRAIN_FREIGHT,people:4}))}`;
+        return `户部绕开受损粮道，把常平仓的存粮送到了灾区。${fx(chg({treasury:-freight,people:4}))}`;
       }});
   }
   if(!brief.extended)event.choices.push({
     t:'拨周转银，延一月收尾',
-    preview:`国库 −${FLOOD_BRIDGE_COST} 万两 · 民心 −1 · 下月再呈赈灾回奏 · 仅可延期一次`,
+    preview:`国库 −${FLOOD_BRIDGE_COST} 万两 · 民心 −1 · 下月再呈赈灾回奏 · 仅可延期一次`+
+      (brief.freightBooked?' · 本月订车失效':''),
     delegated:true,cond:()=>E().treasury>=FLOOD_BRIDGE_COST,why:`国库至少需 ${FLOOD_BRIDGE_COST} 万两`,
     f:()=>{
       S.flags.floodRelief={turn:S.turn+1,gen:S.gen,floodNeed:brief.floodNeed,extended:true};
@@ -409,7 +416,7 @@ function monthlyCourtEvent(){
   if(flood?.turn===S.turn&&flood.gen===S.gen){
     delete S.flags.floodRelief;
     S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index:FLOOD_INDEX,floodFollowup:true,floodNeed:flood.floodNeed,
-      ...(flood.extended===true?{extended:true}:{})};
+      ...(flood.extended===true?{extended:true}:flood.freightBooked===true?{freightBooked:true}:{})};
     save('auto');
     return floodReliefEvent(S.flags.monthlyCourt);
   }

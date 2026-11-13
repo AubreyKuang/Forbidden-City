@@ -180,8 +180,9 @@ const A={
     const brief=S.flags.monthlyCourt;
     const delegation=brief.floodFollowup?null:reliefDelegation(brief.index);
     const installment=brief.index===FLOOD_INDEX&&!brief.floodFollowup?stagedFloodRelief(brief):null;
+    const freightBooking=installment&&brief.floodNeed==='grain'&&grainReserveReady()?stagedFloodRelief(brief,true):null;
     ev.scene='monthly-court';
-    ev.choices=[...ev.choices,...[delegation,installment].filter(Boolean)].map((choice,index)=>{
+    ev.choices=[...ev.choices,...[delegation,installment,freightBooking].filter(Boolean)].map((choice,index)=>{
       const cost=choice.delegated?0:1;
       return {...choice,t:`${choice.t}（${cost?'精力 −1':'免耗精力'}）`,
         preview:choice.preview||COURT_PREVIEWS[brief.index]?.[index],
