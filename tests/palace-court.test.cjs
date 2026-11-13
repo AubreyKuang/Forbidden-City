@@ -540,6 +540,36 @@ test('a proven case can direct fifty of the eighty recovered taels to relief and
   `);
 });
 
+test('relief suspension follows the same official across saves and ends after three subsequent turns',()=>{
+  const {run}=boot();
+  run(`
+    const c=harem()[0],id=c.id;
+    const father=houseOf(c).father;
+    father.office='户部侍郎';
+    S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index:FLOOD_INDEX,floodNeed:'grain'};
+    const appointment=()=>curEv.choices.some(choice=>choice.person===id&&choice.t.includes('督办'));
+    A.court();
+    assert.equal(appointment(),true);
+    choose(curEv.choices.length-1);
+    S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index:IMPEACHMENT_INDEX,review:true,
+      impeachment:{person:id,matching:true,guilty:true}};
+    E().energy=1;
+    A.court();choose(curEv.choices.findIndex(choice=>choice.t.includes('退银直拨灾区')));drain();
+    assert.equal(load('auto'),true);
+    assert.equal(houseOf(byId(id)).father.office,'户部侍郎');
+    assert.match(houseLine(byId(id)),/停办赈务中/);
+    for(let month=1;month<=4;month++){
+      S.turn++;
+      S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index:FLOOD_INDEX,floodNeed:'grain'};
+      A.court();
+      assert.equal(appointment(),month===4);
+      if(month<4)assert.match(curEv.text,/仍在停办赈务期间/);
+      choose(curEv.choices.length-1);
+    }
+    assert.doesNotMatch(houseLine(byId(id)),/停办赈务中/);
+  `);
+});
+
 test('an ineligible impeachment subject frees the next month for a regular memorial',()=>{
   const {run}=boot();
   run(`

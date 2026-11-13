@@ -1,6 +1,8 @@
 /* ============ 朝堂事件 ============ */
 const FLOOD_DIRECT_COST=300, FLOOD_DIKE_COST=90, FLOOD_DIKE_SAVING=140;
-const officialC=(p=50)=>{const a=harem().filter(c=>c.fam.p>=p);return a.length?pick(a):null};
+const RELIEF_SUSPENSION_MONTHS=3;
+const reliefSuspended=father=>father?.reliefResumeTurn>S.turn;
+const officialC=(p=50)=>{const a=harem().filter(c=>c.fam.p>=p&&!reliefSuspended(houseOf(c)?.father));return a.length?pick(a):null};
 const COURT=[
  brief=>{const off=brief?harem().find(c=>c.id===brief.person):officialC(50);const ch=[
    {t:'拨银三百万两赈灾',f:()=>{log('黄河决堤，帝拨银三百万两赈灾。',1);return `赈灾粮银连夜出京，灾民感念皇恩。${fx(chg({treasury:-FLOOD_DIRECT_COST,people:10,prestige:3}))}`}},
@@ -130,12 +132,16 @@ function monthlyFloodEvent(brief){
       }};
   }
   event.cast=[];
+  const suspended=new Set();
   for(const [specialty,terms] of Object.entries(FLOOD_SUPERVISION)){
     const consort=harem().find(c=>{
       if(!hasClan(c)||c.fam.t.includes('（获罪）'))return false;
       const father=houseOf(c).father;
-      return father.alive&&terms.offices.includes(father.office)&&
-        !paternalFamily(c).some(relative=>relative.fam.t.includes('（获罪）'));
+      if(!father.alive||!terms.offices.includes(father.office)||
+        paternalFamily(c).some(relative=>relative.fam.t.includes('（获罪）')))return false;
+      if(!reliefSuspended(father))return true;
+      suspended.add(father.name);
+      return false;
     });
     if(!consort)continue;
     const father=houseOf(consort).father;
@@ -157,6 +163,7 @@ function monthlyFloodEvent(brief){
       }
     });
   }
+  if(suspended.size)event.text+='\n仍在停办赈务期间：'+[...suspended].join('、')+'。';
   if(!floodDikeReady()){
     const cost=FLOOD_DIRECT_COST+FLOOD_DIKE_COST;
     event.choices.push({t:'拨足赈款，并修复险堤',
@@ -231,11 +238,12 @@ function impeachmentEvent(brief){
     choices=[verdict,alternative];
     if(file.guilty)choices.push({
       t:'退银直拨灾区，留任',
-      preview:'国库 +30 万两 · 民心 +5 · 威望 +1 · 她的心情 −12',
+      preview:`国库 +30 万两 · 民心 +5 · 威望 +1 · 她的心情 −12 · 停办赈务 ${RELIEF_SUSPENSION_MONTHS} 个月`,
       f:()=>{
-        story(consort,'其父退清赈银，暂留原任。户部将其中五十万两直接拨往灾区。');
-        log(`${father}退清截留的赈银，户部直拨五十万两赈灾。`,1);
-        return `${father}退还八十万两，暂留原任。户部直拨五十万两救急，余款入库。${fx(chg({treasury:30,people:5,prestige:1}),cchg(consort,{mood:-12}))}`;
+        houseOf(consort).father.reliefResumeTurn=S.turn+RELIEF_SUSPENSION_MONTHS+1;
+        story(consort,'其父退清赈银，留任但停办赈务三个月。户部将其中五十万两直接拨往灾区。');
+        log(`${father}退清截留的赈银，户部直拨五十万两赈灾，涉案官员停办赈务三个月。`,1);
+        return `${father}退还八十万两，保留原任，停办赈务三个月。户部直拨五十万两救急，余款入库。${fx(chg({treasury:30,people:5,prestige:1}),cchg(consort,{mood:-12}))}`;
       }});
   }else choices.push({t:'封存账册，下月复审',preview:'下月的奏折改为查账回奏 · 届时仍须批复',
     f:()=>{
@@ -525,7 +533,8 @@ function stanceOf(c){const h=houseOf(c);if(!h)return null;return h.bloc||(c.fam?
 function houseLine(c){
   const h=houseOf(c);if(!h)return '';
   const st=stanceOf(c);
-  return `<div>父亲：${esc(h.father.name)}（${esc(h.father.office)}${h.father.honor?' · '+esc(h.father.honor):''}${h.father.alive?'':'，已故'}）　兄长：${esc(h.brother.name)}（${esc(h.brother.post)}${h.brother.away?'，外放':''}）　立场：<span class="tag" style="border-color:${BLOC_COLOR[st]||'#999'}">${esc(blocName(st))}</span></div>`;
+  const suspension=h.father.alive&&reliefSuspended(h.father)?' · 停办赈务中':'';
+  return `<div>父亲：${esc(h.father.name)}（${esc(h.father.office)}${h.father.honor?' · '+esc(h.father.honor):''}${suspension}${h.father.alive?'':'，已故'}）　兄长：${esc(h.brother.name)}（${esc(h.brother.post)}${h.brother.away?'，外放':''}）　立场：<span class="tag" style="border-color:${BLOC_COLOR[st]||'#999'}">${esc(blocName(st))}</span></div>`;
 }
 const policyNudge=(id,v)=>{S.courtPolicy ||= {};S.courtPolicy[id]=Math.max(-30,Math.min(30,(S.courtPolicy[id]||0)+v))};
 // 采纳某一派的建议：同派妃嫔高兴，与之相争的一派妃嫔不痛快
