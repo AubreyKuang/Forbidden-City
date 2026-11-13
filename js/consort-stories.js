@@ -57,7 +57,7 @@ const ARCS={
   }
  ]},
  secret:{name:'旧案',fit:c=>c.fam.t==='宫女'||(c.fam.t==='寒门'&&c.scheme>=50),stages:[
-  (c,f)=>c.aff<25?null:{text:`你半夜醒来，发现${cName(c)}不在身边。她披着外衣坐在灯下，正借着烛光偷看一卷发黄的旧档。`,choices:[
+  (c,f)=>c.aff<40?null:{text:`你半夜醒来，发现${cName(c)}不在身边。她披着外衣坐在灯下，正借着烛光偷看一卷发黄的旧档。`,choices:[
     {t:'装睡，看她做什么',f:()=>{f.watch=1;aNext(c,1,1,3);return '她看了很久，最后把那卷档案藏进了妆奁的夹层里。'}},
     {t:'开口问她',f:()=>{aNext(c,1,1,3);return `她吓了一跳，随即笑道：“臣妾睡不着，翻翻闲书罢了。”她在撒谎。${fx(cchg(c,{mood:-5}))}`}},
     {t:'命暗卫查她的底细',f:()=>{aNext(c,1,1,2);return '暗卫领命而去。'}}]},
@@ -180,6 +180,29 @@ function makeArc(id,delay){
   return {id,st:0,t:S.turn+delay,done:false,end:null,f:{}};
 }
 
+// Fixed biographies belong to a few people, not everyone with the same background.
+const RARE_ARCS={secret:.15,envoy:.25,general:.30,greed:.25};
+function everydayArc(c){
+  const id=['craft','kite','love'].find(id=>ARCS[id].fit(c));
+  return makeArc(id,8+c.id%7);
+}
+function arcStarted(c){return c.arc.st>0||c.arc.startedAt!=null||Object.keys(c.arc.f||{}).length>0}
+function reconcileRareArcs(){
+  const owners=S.flags.rareArcOwners ||= {};
+  for(const id of Object.keys(RARE_ARCS)){
+    const people=S.consorts.filter(c=>c.arc?.id===id);
+    const started=people.filter(c=>c.arc.done||arcStarted(c));
+    const owner=people.find(c=>c.id===owners[id])||started[0]||people.find(c=>c.alive&&!c.gone&&ARCS[id].fit(c));
+    if(owners[id]==null&&owner)owners[id]=owner.id;
+    for(const c of people){
+      // Keep choices already made and all recorded outcomes in old saves.
+      if(c.arc.done||arcStarted(c))continue;
+      if(c.id!==owners[id])c.arc=everydayArc(c);
+      else if(!c.arc.paced){c.arc.t=Math.max(c.arc.t,S.turn+8);c.arc.paced=true;}
+    }
+  }
+}
+
 function reconcileScholarArcs(){
   const scholars=S.consorts.filter(c=>c.arc?.id==='scholar');
   if(!scholars.length)return;
@@ -195,17 +218,32 @@ function reconcileScholarArcs(){
 
 function assignArc(c){
   if(c.arc)return;
+  const owners=S.flags.rareArcOwners ||= {};
   for(const id of ['secret','envoy','general','ill','scholar','greed','ambition','craft','kite','love']){
     if(!ARCS[id].fit(c)||id==='scholar'&&S.flags.scholarArc!=null)continue;
-    c.arc=makeArc(id,id==='scholar'?ri(8,12):ri(2,5));
+    if(RARE_ARCS[id]&&(owners[id]!=null||S.consorts.some(o=>o.arc?.id===id)||!chance(RARE_ARCS[id])))continue;
+    c.arc=makeArc(id,RARE_ARCS[id]?ri(8,14):id==='scholar'?ri(8,12):ri(4,8));
+    if(RARE_ARCS[id]){owners[id]=c.id;c.arc.paced=true;}
     if(id==='scholar')S.flags.scholarArc=c.id;
     return;
   }
 }
 
-function arcTick(){const due=alive().filter(c=>c.arc&&!c.arc.done&&!c.cold&&S.turn>=c.arc.t).sort((a,b)=>a.arc.t-b.arc.t);
+function arcTick(){
+  const pace=S.flags.arcPacing ||= {byType:{}};
+  if(S.turn-(pace.last??-99)<2)return null;
+  const due=alive().filter(c=>c.arc&&!c.arc.done&&!c.cold&&S.turn>=c.arc.t).sort((a,b)=>a.arc.t-b.arc.t);
   for(const c of due){const st=ARCS[c.arc.id].stages[c.arc.st];if(!st){c.arc.done=true;continue}
-    const ev=st(c,c.arc.f);if(ev){if(!c.arc.done&&c.arc.t<=S.turn)c.arc.t=S.turn+99;ev.title=ev.title||ARCS[c.arc.id].name;ev.por=ev.por||c;return ev}
+    const id=c.arc.id,last=pace.byType[id];
+    if(RARE_ARCS[id]&&S.turn-(pace.investigation??-99)<4)continue;
+    if(last&&last.person!==c.id&&S.turn-last.turn<12)continue;
+    const ev=st(c,c.arc.f);if(ev){
+      if(!c.arc.done&&c.arc.t<=S.turn)c.arc.t=S.turn+99;
+      ev.title=ev.title||ARCS[id].name;ev.por=ev.por||c;
+      const queued=ev.onQueue;
+      ev.onQueue=()=>{queued?.();c.arc.startedAt??=S.turn;pace.last=S.turn;pace.byType[id]={turn:S.turn,person:c.id};if(RARE_ARCS[id])pace.investigation=S.turn;};
+      return ev;
+    }
     if(c.arc.t<=S.turn)c.arc.t=S.turn+1}
   return null}
 function arcLine(c){if(!c.arc)return '';const a=ARCS[c.arc.id],name=c.arc.id==='craft'&&c.arc.f.craft!==undefined?consortCraft(c).title:a.name;

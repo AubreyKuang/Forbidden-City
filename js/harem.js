@@ -106,23 +106,6 @@ function pregEvent(c){if(c.maid)return {title:'喜脉',por:c,sfx:'joy',text:`太
   {t:'加派人手悉心照料（国库-20万两）',f:()=>{c.prot=true;story(c,'诊出喜脉，陛下加派人手悉心照料。');log(`${fullName(c)}有孕。`,1);return fx(chg({treasury:-20,prestige:2}),cchg(c,{mood:20,aff:8}))}},
   {t:'晋她一级位分',cond:()=>c.rank<7&&rankCount(c.rank+1)<RANK_CAP[c.rank+1],why:'位分已满',f:()=>{c.rank++;if(c.rank>=4&&!c.title)c.title=pick(TITLES.filter(t=>!harem().some(x=>x.title===t)));story(c,`诊出喜脉，晋为${cName(c)}。`);log(`${fullName(c)}有孕，晋为${cName(c)}。`,1);return fx(chg({prestige:2}),cchg(c,{mood:25,aff:6}))}},
   {t:'赏',f:()=>{story(c,'诊出喜脉。');log(`${fullName(c)}有孕。`,1);return fx(chg({treasury:-10,prestige:2}),cchg(c,{mood:12}))}}]}}
-function birthEvent(c){const sex=chance(.5)?'m':'f';
-  // Delivery is recorded when the birth is announced, not when the child is
-  // named: the child is created and the pregnancy flag clears here, so the
-  // 翻牌子 card stops showing 有孕 the moment the birth happens. The child
-  // must be created here too — the end-of-month autosave runs after this
-  // event is raised, so clearing only the flag would let a reload before
-  // naming lose the child entirely (no re-fire, since preg would be 0).
-  // lastBirth is S.turn+1: the naming click used to record it after this
-  // month had already advanced, and the re-conception gap is measured from it.
-  const k=makeKid(c,sex,suggestName(sex));c.preg=0;c.prot=false;c.lastBirth=S.turn+1;
-  return {title:'弄璋弄瓦',por:c,sfx:'joy',text:`${cName(c)}于${c.palace}临盆，阵痛一日一夜，诞下一位${sex==='m'?'小皇子':'小公主'}。\n请陛下赐名（不含姓氏）：`,input:{def:k.name,max:3},choices:[
-    {t:'赐名',f:v=>{k.name=v;deepen(c);if(c.wish==='child'&&!c.wishDone){c.wishDone=true;c.wishKnown=true}remember(c,'child','生下孩子');if(c.swapRisk){c.swapRisk=false;if(chance(.7))Q.unshift(swapEvent(c,k))}
-      let s=chg({prestige:sex==='m'?4:2});let t=`${kidName(k)}，${E().sur}${v}。`;
-      if(chance(c.trait==='体弱'?.12:.03)){c.alive=false;story(c,`诞下${v}后血崩，撒手人寰。`);log(`${fullName(c)}诞下${kidName(k)}后薨逝。`,1);AU.sfx('sad');t+=`\n然而产后血崩，${fullName(c)}没能挺过那个夜晚。`;kstory(k,`降生。生母${k.momName}因难产薨逝。`)}
-      else{setXin(c,'欢喜','诞下皇嗣');story(c,`诞下${kidName(k)}，陛下赐名“${v}”。`);log(`${fullName(c)}诞下${kidName(k)}，赐名${v}。`,1);kstory(k,`降生于${c.palace}，生母${k.momName}。`);s+='　'+cchg(c,{mood:25,aff:10,favor:8})}
-      if(!c.alive)Q.unshift(fosterOffer(k,'孩子的生母已经不在了。'));else if(c.maid||c.rank<=1)Q.unshift(fosterOffer(k,`${kidName(k)}的生母只是${c.maid?'宫女':RANKS[c.rank]}。`));return {text:t+fx(s),por:k}}}]}}
-
 /* ============ 关系与派系 ============ */
 const rk=(a,b)=>a.id<b.id?a.id+'_'+b.id:b.id+'_'+a.id;
 function relGet(a,b){if(!a||!b||a===b||!S.rel)return 0;return S.rel[rk(a,b)]||0}

@@ -112,6 +112,18 @@ const BROTHER_POSTS={civil:['翰林院编修','户部主事','监察御史','知
 const FRONTIERS=['雁门关','玉门关','居庸关','嘉峪关','山海关'];
 const blocName=id=>COURT_BLOCS.find(b=>b.id===id)?.name||'无所依附';
 const BLOC_COLOR={kin:'#b8742c',civil:'#3b5fa8',army:'#9a3b33',dowager:'#7a5a99',princes:'#2f7d62'};
+function sameFather(a,b){
+  const left=a.house?.father,right=b.house?.father;
+  if(left?.id!=null&&right?.id!=null&&left.id===right.id)return true;
+  if(a.fatherId!=null&&a.fatherId===b.fatherId)return true;
+  const kin=[a.kin?.[b.id],b.kin?.[a.id]].filter(Boolean);
+  if(kin.some(k=>/^亲[姐妹]$/.test(k)))return true;
+  if(kin.some(k=>/^堂[姐妹]$/.test(k)))return false;
+  // Before fathers had an identity, the same father was copied into each daughter.
+  // Only reconcile within a clan; explicit cousins and two identified fathers stay separate.
+  return !!(left&&right&&(!left.id||!right.id)&&clanKey(a)===clanKey(b)&&
+    left.name===right.name&&left.office===right.office);
+}
 function paternalFamily(c){
   const people=[...new Set([...(S?.consorts||[]),...(S?.cands||[]),c])].filter(p=>p&&!p.maid);
   const relatives=new Set([c]);
@@ -120,35 +132,53 @@ function paternalFamily(c){
     changed=false;
     for(const person of people){
       if(relatives.has(person))continue;
-      if([...relatives].some(other=>(person.fatherId!=null&&person.fatherId===other.fatherId)||
-        /^亲[姐妹]$/.test(person.kin?.[other.id]||'')||/^亲[姐妹]$/.test(other.kin?.[person.id]||''))){
+      if([...relatives].some(other=>sameFather(person,other))){
         relatives.add(person);changed=true;
       }
     }
   }
   return [...relatives].sort((a,b)=>a.id-b.id);
 }
+function identifyFather(family,house){
+  const root=family[0],father=house.father;
+  father.id ||= 'father-'+S.gen+'-'+root.id;
+  // Generated cousins may have picked the same short name. Distinguish those people.
+  const taken=new Set([...(S.consorts||[]),...(S.cands||[])].filter(p=>
+    !family.includes(p)&&clanKey(p)===clanKey(root)&&p.house?.father.id&&p.house.father.id!==father.id)
+    .map(p=>p.house.father.name));
+  if(taken.has(father.name)){
+    const available=FATHER_NAMES.map(name=>root.sur+name);
+    let suffix=1;
+    father.name=available.find(name=>!taken.has(name))||root.sur+'承'+suffix;
+    while(taken.has(father.name))father.name=root.sur+'承'+(++suffix);
+  }
+  family.forEach(p=>{p.house=house;p.fatherId=root.id;});
+  for(const person of family)for(const sister of family){
+    if(person===sister)continue;
+    person.kin ||= {};
+    if(!person.kin[sister.id]||person.kin[sister.id].startsWith('堂'))
+      person.kin[sister.id]='亲'+(sister.age>person.age||(sister.age===person.age&&sister.id<person.id)?'姐':'妹');
+  }
+  return house;
+}
 function houseOf(c){
   if(!c||c.maid)return null;
   const family=paternalFamily(c),root=family[0];
-  if(root.house){
-    family.forEach(p=>{p.house=root.house;p.fatherId=root.id;});
-    return root.house;
-  }
+  const existing=family.find(p=>p.house)?.house;
+  if(existing)return identifyFather(family,existing);
   const seed=(root.seed||root.id*7919)>>>0,bloc=Object.hasOwn(OFFICE_BLOC,root.fam?.t)?OFFICE_BLOC[root.fam.t]:null;
   const posts=BROTHER_POSTS[bloc||'none'];
   root.house={bloc,
     father:{name:root.sur+FATHER_NAMES[seed%FATHER_NAMES.length],office:root.fam?.t||'寒门',age:42+seed%17,alive:true},
     brother:{name:root.sur+BROTHER_NAMES[(seed>>>5)%BROTHER_NAMES.length],post:posts[(seed>>>9)%posts.length],merit:20+(seed>>>3)%30,away:false}};
-  family.forEach(p=>{p.house=root.house;p.fatherId=root.id;});
-  return c.house;
+  return identifyFather(family,root.house);
 }
 // 立场：父兄所在的集团；娘家势力大的妃嫔也会被看作外戚一派
 function stanceOf(c){const h=houseOf(c);if(!h)return null;return h.bloc||(c.fam?.p>=55?'kin':null)}
 function houseLine(c){
   const h=houseOf(c);if(!h)return '';
   const st=stanceOf(c);
-  return `<div>父亲：${esc(h.father.name)}（${esc(h.father.office)}${h.father.alive?'':'，已故'}）　兄长：${esc(h.brother.name)}（${esc(h.brother.post)}${h.brother.away?'，外放':''}）　立场：<span class="tag" style="border-color:${BLOC_COLOR[st]||'#999'}">${esc(blocName(st))}</span></div>`;
+  return `<div>父亲：${esc(h.father.name)}（${esc(h.father.office)}${h.father.honor?' · '+esc(h.father.honor):''}${h.father.alive?'':'，已故'}）　兄长：${esc(h.brother.name)}（${esc(h.brother.post)}${h.brother.away?'，外放':''}）　立场：<span class="tag" style="border-color:${BLOC_COLOR[st]||'#999'}">${esc(blocName(st))}</span></div>`;
 }
 const policyNudge=(id,v)=>{S.courtPolicy ||= {};S.courtPolicy[id]=Math.max(-30,Math.min(30,(S.courtPolicy[id]||0)+v))};
 // 采纳某一派的建议：同派妃嫔高兴，与之相争的一派妃嫔不痛快
@@ -182,6 +212,32 @@ function courtTick(){
       }}
   }
 }
+function militaryMeritEvent(c,place,relative='brother'){
+  const h=houseOf(c),officer=h[relative],kin=relative==='father'?'父亲':'兄长';
+  const mark=()=>{officer.merit=clamp((officer.merit||0)+15);policyNudge('army',5);};
+  const next=c.rank+1,promotable=()=>c.alive&&!c.cold&&!c.gone&&next<8&&c.rank+1===next&&rankCount(next)<RANK_CAP[next];
+  return {title:'边关捷报',por:c,
+    onQueue:()=>{S.flags.lastMilitaryMerit=S.turn;},
+    text:`传旨公公捧着${place}八百里捷报进殿：${officer.name}率部夜袭敌营，斩获颇丰。${relative==='father'?`其子${h.brother.name}也随军效力。`:''}\n${cName(c)}听见${kin}的名字，忙起身听旨，眼中难掩喜色。`,choices:[
+      {t:`厚赏，加封其${relative==='father'?'父':'兄'}（国库-20）`,cond:()=>E().treasury>=20,why:'国库银两不足',f:()=>{
+        mark();if(relative==='brother')h.brother.post='总兵';else h.father.honor='护国功臣';
+        story(c,`${kin}${officer.name}在${place}立功受封。`);log(`${officer.name}在${place}立功，朝廷加封厚赏。`,1);
+        return fx(cchg(c,{mood:10,aff:3}),chg({treasury:-20,prestige:3}));
+      }},
+      {t:next<8?`以军功加恩，晋${cName(c)}为${RANKS[next]}`:'位分已不能再晋，改行赏赐',person:c,cond:promotable,
+        why:next>=8?'中宫需另行册立，不能因军功直接升后':'该位分名额已满或人物已不在宫',f:()=>{
+          if(!promotable())return '眼下不合晋封条件，仍请按原位分论赏。';
+          mark();c.rank=next;if(next>=4&&!c.title)c.title=pick(TITLES.filter(t=>!harem().some(x=>x.title===t)))||'昭';assignPalace(c);
+          story(c,`${kin}${officer.name}在${place}立功，陛下当场加恩，晋为${cName(c)}。`);remember(c,'promo',`因${kin}军功晋封`);setXin(c,'欢喜','父兄立功，当场获晋封');clanEcho(c,'up');
+          log(`以${officer.name}军功，加恩晋${fullName(c)}为${cName(c)}。`,1);return fx(cchg(c,{mood:20,aff:8,favor:5}),chg({prestige:2}));
+        }},
+      {t:`赏${cName(c)}锦缎珠玉（国库-15）`,person:c,cond:()=>E().treasury>=15,why:'国库银两不足',f:()=>{
+        mark();remember(c,'gift','父兄立功，陛下当场赏赐锦缎珠玉');story(c,`${kin}${officer.name}立功，自己获赏锦缎珠玉。`);setXin(c,'欢喜','父兄立功，获赏锦缎珠玉');log(`因${officer.name}军功，赏${fullName(c)}锦缎珠玉。`,1);
+        return fx(chg({treasury:-15,prestige:1}),cchg(c,{mood:15,aff:6,favor:3}));
+      }},
+      {t:'记功，暂不封赏',f:()=>{officer.merit=clamp((officer.merit||0)+8);story(c,`${kin}${officer.name}在${place}立功，已记入功册，暂未封赏。`);return fx(cchg(c,{mood:-4}));}}
+    ]};
+}
 // 朝堂派系事件：都落在具体的父兄、妃嫔和皇子身上
 function factionEvent(){
   const pool=[];
@@ -198,10 +254,8 @@ function factionEvent(){
     {t:'交三司会审，查清再说',f:()=>{if(chance(.55)){story(c,`三司会审还了父亲${h.father.name}清白。`);policyNudge('civil',2);return '三司会审，门生确有舞弊，却与'+h.father.name+'无关。'+fx(cchg(c,{mood:8}),chg({people:2}))}
       c.fam.p=Math.max(5,c.fam.p-8);setXin(c,'惶恐','父亲被查出失察之责');return h.father.name+'失察，罚俸一年。'+fx(cchg(c,{mood:-6}),chg({people:2}))}}]});}
   const army=withHouse.filter(c=>stanceOf(c)==='army');
-  if(army.length){const c=pick(army),h=houseOf(c),place=pick(FRONTIERS),win=chance(.35+E().wu/200+h.brother.merit/300);
-    pool.push(win?{title:'边关捷报',por:c,text:`${place}八百里加急：${h.brother.name}率部夜袭敌营，斩获颇丰。${cName(c)}听到消息，在宫里给兄长供了一盏长明灯。`,choices:[
-      {t:'厚赏，加封其兄',f:()=>{h.brother.merit+=15;h.brother.post=pick(['副将','总兵','都指挥使']);policyNudge('army',5);story(c,`兄长${h.brother.name}在${place}立功受封。`);return fx(cchg(c,{mood:10,aff:3}),chg({treasury:-20,prestige:3}))}},
-      {t:'记功，暂不封赏',f:()=>{policyNudge('army',-3);return fx(cchg(c,{mood:-4}))}}]}
+  if(army.length&&S.turn-(S.flags.lastMilitaryMerit??-99)>=6){const c=pick(army),h=houseOf(c),place=pick(FRONTIERS),win=chance(.35+E().wu/200+h.brother.merit/300);
+    pool.push(win?militaryMeritEvent(c,place,chance(.35)?'father':'brother')
     :{title:'边关失利',por:c,text:`${place}急报：${h.brother.name}中了埋伏，折损了三百骑。武将们说胜败乃兵家常事，御史却要问罪。${cName(c)}已经两天没吃下饭。`,choices:[
       {t:'依律问责',f:()=>{h.brother.merit=Math.max(0,h.brother.merit-15);policyNudge('army',-2);policyNudge('civil',2);setXin(c,'惶恐','兄长兵败受责');return fx(cchg(c,{mood:-12}),chg({people:1}))}},
       {t:'宽宥，许他戴罪立功',f:()=>{policyNudge('army',4);return fx(cchg(c,{mood:6,aff:5}),chg({prestige:-1}))}}]});}

@@ -308,6 +308,7 @@ setInterval(mapTick,50);
 function mapActivityLeads(){
   if(!S||S.over)return [];
   const leads=[],meeting=showGardenReunion(),stop=lanternStop(),work=duanwuWork();
+  const school=schoolScene();if(school&&!school.scene.result)leads.push({place:'ss',title:SCHOOL_TITLES[school.scene.kind],text:school.cast.map(k=>k.name).join('与')+'正在窗下说话。',cast:school.cast});
   if(meeting)leads.push({place:'yh',title:'御花园赴约',button:'去御花园赴约',text:meeting.reunion.text,cast:[meeting.first,meeting.second],expires:true});
   if(stop)leads.push({place:stop.place,title:'上元寻灯 · '+stop.name,text:'正月灯会，带孩子走一走，猜一回灯谜。',cast:(activeLantern()?.ids||lanternChildren().map(k=>k.id)).map(kidById),expires:!!activeLantern()});
   if(work?.stage==='review')leads.push({place:'yh',title:'查验端午筹备',text:'宴席与节礼已备好，两位主事等你来核对。',cast:duanwuOfficers(work)});
@@ -374,8 +375,8 @@ function viewPlace(){const id=UI.sel;
   if(id==='ss'||id==='wy'){
     const school=id==='ss';
     return `<h2>${school?'上书房':'文渊阁'}${backBtn}</h2>
-      ${seasonalPlacePanel(id)}
-      ${initiativesAt(id)||'<p class="hint">此刻只有当值宫人在这里。</p>'}
+      ${school?schoolPanel():''}${seasonalPlacePanel(id)}
+      ${initiativesAt(id)||(school?'':'<p class="hint">此刻只有当值宫人在这里。</p>')}
       <button class="btn" onclick="A.go('${school?'kids':'log'}')">${school?'查看皇嗣':'翻阅起居注'}</button>`;
   }
   if(id==='cn'){const d=S.flags.dowager;return `<h2>慈宁宫${backBtn}</h2>${d&&d.alive?`<p>${esc(d.name)}正在佛堂诵经。</p><div class="acts"><button class="btn" onclick="A.greet()">请安<small>精力-1</small></button></div>`:'<p class="hint">慈宁宫已经空了，只有佛前的长明灯还亮着。</p>'}${initiativesAt('cn')}`}

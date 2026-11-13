@@ -296,7 +296,7 @@ const XEV={
    {t:'准她出家',f:()=>{c.gone=true;story(c,'剪发出家，从此青灯古佛。');log(`${fullName(c)}出家。`,1);return '她剪下的头发用红绳系着，托人送了回来。'}},
    {t:'去看她（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{E().energy--;renderTop();if(chance(.3+c.aff/250)){setXin(c,'感激','万念俱灰时陛下来了');if(c.cold)A.uncold(c.id);return '你握住她的手，她的手冰凉。过了很久，她轻轻回握了一下。'}return `她始终没有抬头。${fx(cchg(c,{aff:2}))}`}},
    {t:'不准',f:()=>fx(cchg(c,{mood:-5}))}]}),
- '欢喜':c=>c.cold?null:{title:'新衣',por:c,text:`${cName(c)}心情极好，派人来请陛下去看她新裁的衣裳，说用的是今年江南新进的料子。`,choices:[
+ '欢喜':c=>c.cold||c.aff<30||!(['珠翠','绸缎'].includes(c.like)||['骄矜','骄纵'].includes(c.trait))?null:{title:'新衣',por:c,text:`${cName(c)}心情极好，派人来请陛下去看她新裁的衣裳，说用的是今年江南新进的料子。`,choices:[
    {t:'去看看（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{E().energy--;renderTop();c.robeC=pick(RPAL[rTier(c.rank)]);return fx(cchg(c,{aff:6,favor:6}))+'\n§她换上了新衣裳'}},
    {t:'让她改日穿给朕看',f:()=>fx(cchg(c,{mood:-3}))}]},
  '感激':c=>c.cold?null:{title:'寝衣',por:c,text:`${cName(c)}熬了三夜，为陛下绣了一件寝衣，针脚密得看不出接头。`,choices:[{t:'当晚就穿上',f:()=>fx(cchg(c,{aff:6,mood:10}))}]},
@@ -304,4 +304,17 @@ const XEV={
    {t:'敲打她',f:()=>{setXin(c,'惶恐','野心被陛下点破');c.scheme=clamp(c.scheme-5);return fx(cchg(c,{mood:-8}))}},
    {t:'由她去',f:()=>{c.fam.p=Math.min(95,c.fam.p+5);return '她娘家的门槛，被人踏破了。'}}]},
 };
-function xinEvent(){for(const c of shuffle(alive().filter(c=>!c.gone))){const k=xinOf(c);if(k==='平和'||S.turn-(c.xcd??-99)<6)continue;const ev=XEV[k]?.(c,c.xin);if(ev)return {...ev,onQueue:()=>{c.xcd=S.turn}};}return null}
+function xinEvent(){
+  const pace=S.flags.xinPacing ||= {byTitle:{}};
+  if(S.turn-(pace.last??-99)<2)return null;
+  for(const c of shuffle(alive())){
+    const k=xinOf(c),x=c.xin;
+    if(k==='平和'||x?.eventTurn!=null||S.turn-(c.xcd??-99)<6)continue;
+    const ev=XEV[k]?.(c,x);if(!ev)continue;
+    // The whole court shares a cooldown; changing the speaker cannot bypass it.
+    const last=pace.byTitle[ev.title]??S.flags.ambientRecent?.[ev.title]??-99;
+    if(S.turn-last<(ev.title==='新衣'||ev.title==='寝衣'?12:8))continue;
+    return {...ev,onQueue:()=>{c.xcd=S.turn;x.eventTurn=S.turn;pace.last=S.turn;pace.byTitle[ev.title]=S.turn;}};
+  }
+  return null;
+}

@@ -41,7 +41,9 @@ const banquetReady = () => banquetKind('garden').ready;
 const banquetDraft = () => UI.view==='banquet' ? UI.banquet : null;
 
 A.openBanquet = function(kind='garden') {
-  if (!banquetKind(kind)?.ready || modalOpen) return;
+  if(modalOpen){toast('请先处理眼前的事件。');return;}
+  const feast=banquetKind(kind);
+  if(!feast?.ready){toast(feast?.host?`${feast.title}在${MONTHS[birthMonth(feast.host)-1]}举办${feast.host.birthFeastYear===S.year?'，本年已办过':''}。`:'眼下还不能筹办这场宴会。');return;}
   UI.banquet = { kind, activity:'toss', all:kind!=='garden', seats:[] };
   setScene('garden');
   A.go('banquet');
@@ -124,8 +126,8 @@ function viewBanquet() {
   return `<h2>${feast.title} <button class="btn sm" onclick="arrive(gardenPlace())">返回御花园</button></h2>
     <p class="hint">在世皇嗣 · ${banquetChildCount(children)}</p>
     ${draft.kind==='empress'?`<p class="hint">寿星皇后 · ${esc(banquetGuestFamily(feast.host,children))}</p>`:''}
-    <div class="acts"><button class="btn jade" aria-pressed="${draft.all}" onclick="A.banquetInviteAll(true)">全员宴请</button>
-    <button class="btn" aria-pressed="${!draft.all}" onclick="A.banquetInviteAll(false)">自选宾客</button></div>
+    <div class="acts"><button class="btn ${draft.all?'on':''}" aria-pressed="${draft.all}" onclick="A.banquetInviteAll(true)">全员宴请</button>
+    <button class="btn ${!draft.all?'on':''}" aria-pressed="${!draft.all}" onclick="A.banquetInviteAll(false)">自选宾客</button></div>
     ${draft.all
       ? `<p class="hint">全邀在宫的妃嫔、宫人与皇嗣，共 ${people.length} 位，其中${banquetChildCount(people.filter(p=>p.sex))}。按家人分桌，幼童可观礼。</p>`
       : `<h3>座次</h3><p class="hint">自选至多四位宾客。相邻两人同玩一轮。${draft.kind==='empress'?'皇后为寿星，自动入席。':''}</p>
@@ -137,8 +139,8 @@ function viewBanquet() {
             <button class="btn quiet sm" aria-label="撤下${esc(familyName(p))}" onclick="A.banquetGuest(${id})">撤下</button></div>
             <div class="hint">${esc(banquetGuestFamily(p,children))}</div></li>`:'';
         }).join('')}</ol><div class="grid">${guestCards}</div>`}
-    <h3>席间活动</h3><div class="acts">${Object.entries(GARDEN_ACTIVITIES).map(([key,act])=>
-      `<button class="btn sm" aria-pressed="${draft.activity===key}" onclick="A.banquetActivity('${key}')">${act.label}</button>`).join('')}</div>
+    <p class="banquet-selection" role="status">已选：${draft.all?'全员宴请':'自选宾客'} · ${GARDEN_ACTIVITIES[draft.activity].label} · ${people.length} 位宾客</p><h3>席间活动</h3><div class="acts">${Object.entries(GARDEN_ACTIVITIES).map(([key,act])=>
+      `<button class="btn sm ${draft.activity===key?'on':''}" aria-pressed="${draft.activity===key}" onclick="A.banquetActivity('${key}')">${act.label}</button>`).join('')}</div>
     <div class="acts"><button class="btn gold" ${problem?'disabled':''} onclick="A.holdBanquet()">开宴<small>精力-1 · ${feast.cost?`国库-${feast.cost}万两`:'筹备时已拨款'}</small></button></div>
     ${problem?`<p class="hint">${problem}</p>`:''}`;
 }

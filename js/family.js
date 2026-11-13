@@ -143,7 +143,7 @@ function familyTimePanel(k, mothers) {
       ? trust >= 45 ? '认得她的声音' : '还在熟悉她的声音'
       : trust >= 68 ? '有事愿意先来找她' : trust >= 45 ? '相处自在' : '见面还有些拘谨';
     const ready = familyVisitAllowed(k, mother) && bond?.turn !== S.turn;
-    return `<article class="family-time-row"><div><strong>${mother.id === k.mom ? '生母' : '养母'} · ${esc(fullName(mother))}</strong>
+    return `<article class="family-time-row"><div><strong>${mother.id === k.mom ? '生母' : '养母'} · ${parentLink(mother.id)}</strong>
       <p class="hint">${inPalace(mother) ? closeness : '如今无法相见'}</p>
       ${bond?.activity ? `<p>${esc(UI.view === 'kid' ? bond.childView : bond.motherView)}</p>` : ''}</div>
       ${ready ? `<button class="btn sm jade" onclick="A.familyTime(${k.id},${mother.id})">一起陪陪孩子<small>精力-1</small></button>` : ''}</article>`;
