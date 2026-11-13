@@ -210,12 +210,55 @@ test('selling stored grain takes one energy, saves the proceeds, and removes the
     assert.equal(E().treasury,160);
     assert.equal(E().energy,1);
     assert.equal(grainReserveReady(),false);
-    assert.doesNotMatch(viewMap(),/查看常平仓/);
+    assert.match(viewMap(),/常平仓暂无备荒粮/);
     A.grainReserve();
-    assert.equal(modalOpen,false);
+    assert.equal(curEv.choices.some(c=>c.t.includes('售粮')),false);
+    choose(curEv.choices.findIndex(c=>c.t==='暂不购粮'));
     A.court();
     assert.equal(curEv.title,'蝗灾');
     assert.equal(curEv.choices.some(c=>c.t.includes('发放常平仓储粮')),false);
+  `);
+});
+
+test('seasonal grain purchases fill half a reserve per month, persist, and do not spend the memorial',()=>{
+  const {run}=boot();
+  run(`
+    const option=label=>curEv.choices.findIndex(c=>c.t.includes(label));
+    const buy=()=>option('买半批粮');
+    S.turn=5;S.month=8;S.flags.impeachmentSeen=true;
+    E().treasury=74;E().energy=2;E().people=50;
+    A.grainReserve();assert.match(curEv.choices[buy()].preview,/75 万两/);
+    choose(buy());assert.equal(grainReserveReady(),false);assert.equal(E().energy,2);
+    E().treasury=185;E().energy=0;
+    choose(buy());assert.equal(grainReserveReady(),false);assert.equal(E().treasury,185);
+    E().energy=2;choose(buy());drain();assert.equal(load('auto'),true);
+    assert.deepEqual([E().treasury,E().energy,halfGrainReserve(),S.flags.monthlyCourt?.done],[110,1,true,undefined]);
+    A.grainReserve();assert.equal(curEv.choices[buy()].cond(),false);choose(option('留粮备荒'));
+    A.court();assert.equal(curEv.title,'五谷丰登');choose(option('稍后再议'));
+    S.turn++;S.month=11;
+    A.grainReserve();assert.match(curEv.choices[buy()].preview,/110 万两/);
+    choose(buy());drain();assert.equal(load('auto'),true);
+    assert.deepEqual([E().treasury,E().energy,grainReserveReady(),halfGrainReserve()],[0,0,true,false]);
+    A.grainReserve();assert.equal(buy(),-1);choose(option('留粮备荒'));
+    S.turn++;
+    S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index:LOCUST_INDEX};
+    A.court();choose(option('发放常平仓储粮'));drain();
+    assert.deepEqual([E().people,E().energy,grainReserveReady()],[56,0,false]);
+  `);
+});
+
+test('a failed grain purchase restores funds, energy, stock, monthly eligibility and log',()=>{
+  const {run}=boot();
+  run(`
+    S.flags.grainReserveGen=S.gen;S.flags.grainReserveHalf=true;
+    E().treasury=150;E().energy=1;
+    const history=JSON.stringify(S.log),write=save;
+    save=()=>false;
+    A.grainReserve();choose(curEv.choices.findIndex(c=>c.t.includes('买半批粮')));drain();
+    assert.deepEqual([E().treasury,E().energy,halfGrainReserve(),S.flags.grainPurchaseTurn],[150,1,true,undefined]);
+    assert.equal(JSON.stringify(S.log),history);
+    save=write;
+    A.grainReserve();assert.equal(curEv.choices.find(c=>c.t.includes('买半批粮')).cond(),true);
   `);
 });
 
