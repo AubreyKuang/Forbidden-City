@@ -558,6 +558,32 @@ test('transporting stored grain requires silver and energy, extends relief, and 
   `);
 });
 
+test('a locust memorial can consume the arriving grain order and leaves full stores intact',()=>{
+  for(const delayed of [false,true])boot().run(`
+    S.month=${delayed?9:8};S.turn=S.month-1;
+    const cost=${delayed?75:65},order={gen:S.gen,turn:S.turn,delayed:${delayed}};
+    const brief={turn:S.turn,gen:S.gen,index:LOCUST_INDEX};
+    Object.assign(S.flags,{autumnGrainOrder:order,monthlyCourt:brief,grainReserveGen:S.gen});
+    Object.assign(E(),{people:60,treasury:cost-1,energy:1});
+    const option=()=>curEv.choices.findIndex(c=>c.t.includes('用预订秋粮'));
+    A.court();assert.equal(curEv.choices[option()].cond(),false);
+    E().treasury=cost;
+    E().energy=0;assert.equal(curEv.choices[option()].cond(),false);
+    E().energy=1;S.flags.grainReliefTurn=S.turn;assert.equal(curEv.choices[option()].cond(),false);
+    delete S.flags.grainReliefTurn;
+    S.flags.grainPurchaseTurn=S.turn;assert.equal(curEv.choices[option()].cond(),false);
+    delete S.flags.grainPurchaseTurn;
+    const write=save,history=JSON.stringify(S.log);
+    save=()=>false;choose(option());drain();
+    assert.deepEqual([E().treasury,E().energy,E().people,S.flags.monthlyCourt,S.flags.autumnGrainOrder,JSON.stringify(S.log)],
+      [cost,1,60,brief,order,history]);
+    save=write;A.court();choose(option());drain();assert.equal(load('auto'),true);
+    assert.deepEqual([E().treasury,E().energy,E().people,grainReserveReady(),halfGrainReserve(),S.flags.monthlyCourt.done,
+      S.flags.autumnGrainOrder,S.flags.grainPurchaseTurn,S.flags.grainReliefTurn],[0,0,66,true,false,true,undefined,S.turn,S.turn]);
+    A.court();assert.equal(modalOpen,false);
+  `);
+});
+
 test('delegating the exam resolves the memorial without spending the last energy point',()=>{
   const {run}=boot();
   run(`

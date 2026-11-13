@@ -172,17 +172,33 @@ function cancelAutumnGrainChoice(){
       return `粮商已收回预留的半批粮，退还 ${AUTUMN_GRAIN_REFUND} 万两。余下订金由粮商留存。${fx(result)}`;
     },false)};
 }
+function autumnGrainBalance(){
+  return AUTUMN_GRAIN_BALANCE+(S.flags.autumnGrainOrder?.delayed===true?AUTUMN_GRAIN_DELAY_FEE:0);
+}
+function settleAutumnGrainRelief(cost,people){
+  delete S.flags.autumnGrainOrder;
+  S.flags.grainPurchaseTurn=S.turn;
+  S.flags.grainReliefTurn=S.turn;
+  log(`户部付尾款和运费共 ${cost} 万两，将预订的半批秋粮直接送往缺粮村落。`);
+  return `粮商已将预订的半批秋粮送到村里，百姓当天就领到了口粮。${fx(chg({treasury:-cost,people}))}`;
+}
+function autumnGrainReliefBlock(cost){
+  if(autumnGrainOrderStatus()!=='due')return '须到约定月份方可领取秋粮';
+  if(S.flags.grainPurchaseTurn===S.turn)return '本月已购粮，无法再领取';
+  if(S.flags.grainReliefTurn===S.turn)return '本月已发过救急粮';
+  if(E().treasury<cost)return `须有 ${cost} 万两支付尾款和运费`;
+  return '';
+}
 function collectAutumnGrainChoice(direct=false){
-  const balance=AUTUMN_GRAIN_BALANCE+(S.flags.autumnGrainOrder?.delayed===true?AUTUMN_GRAIN_DELAY_FEE:0);
+  const balance=autumnGrainBalance();
   const cost=balance+(direct?AUTUMN_GRAIN_DELIVERY:0);
   const month=S.month===9?'九月':'八月';
   const blocked=()=>{
+    if(direct)return autumnGrainReliefBlock(cost)||(E().people>GRAIN_RELIEF_THRESHOLD?`须民心不高于 ${GRAIN_RELIEF_THRESHOLD}`:'');
     if(autumnGrainOrderStatus()!=='due')return '须到约定月份方可领取秋粮';
-    if(!direct&&!grainStorageHasRoom())return '常平仓已满，须先腾出半批仓位';
+    if(!grainStorageHasRoom())return '常平仓已满，须先腾出半批仓位';
     if(S.flags.grainPurchaseTurn===S.turn)return '本月已购粮，无法再领取';
-    if(direct&&S.flags.grainReliefTurn===S.turn)return '本月已发过救急粮';
-    if(direct&&E().people>GRAIN_RELIEF_THRESHOLD)return `须民心不高于 ${GRAIN_RELIEF_THRESHOLD}`;
-    if(E().treasury<cost)return direct?`须有 ${cost} 万两支付尾款和运费`:`须有 ${cost} 万两尾款`;
+    if(E().treasury<cost)return `须有 ${cost} 万两尾款`;
     return '';
   };
   return {t:direct?'付尾款和运费，直送秋粮救急':'付尾款，领取半批秋粮',
@@ -190,13 +206,8 @@ function collectAutumnGrainChoice(direct=false){
       :`国库 −${cost} 万两 · 免耗精力 · 用掉${month}购粮名额`,
     cond:()=>!blocked(),why:blocked(),
     f:()=>saveGrainAction(()=>{
+      if(direct)return settleAutumnGrainRelief(cost,AUTUMN_GRAIN_RELIEF_PEOPLE);
       delete S.flags.autumnGrainOrder;
-      if(direct){
-        S.flags.grainPurchaseTurn=S.turn;
-        S.flags.grainReliefTurn=S.turn;
-        log(`户部付尾款和运费共 ${cost} 万两，将预订的半批秋粮直接送往缺粮村落。`);
-        return `粮商已将预订的半批秋粮送到村里，百姓当天就领到了口粮。${fx(chg({treasury:-cost,people:AUTUMN_GRAIN_RELIEF_PEOPLE}))}`;
-      }
       storePurchasedGrain();
       const result=chg({treasury:-cost});
       log(`户部付清 ${cost} 万两尾款，收到半批秋粮。`);
@@ -294,6 +305,15 @@ function monthlyGrainEvent(index){
         log('蝗灾，户部从灾区附近购粮，当场发给灾民。');
         return `粮商把粮直接送到赈济点，灾民当天就领到了口粮。${fx(chg({treasury:-LOCUST_LOCAL_PURCHASE_COST,people:LOCUST_LOCAL_PURCHASE_PEOPLE}))}`;
       }});
+  }
+  if(index===LOCUST_INDEX&&autumnGrainOrderStatus()==='due'){
+    const cost=autumnGrainBalance()+AUTUMN_GRAIN_DELIVERY;
+    const people=LOCUST_LOCAL_PURCHASE_PEOPLE;
+    event.text+='\n预订的半批秋粮已经到货。户部可令粮商直接送去蝗灾最重的村落。';
+    event.choices.push({t:'用预订秋粮赈济蝗灾',grainTransaction:true,
+      preview:`国库 −${cost} 万两 · 民心 +${people} · 保留仓粮 · 用掉当月购粮和救急粮名额`,
+      cond:()=>!autumnGrainReliefBlock(cost),why:autumnGrainReliefBlock(cost),
+      f:()=>settleAutumnGrainRelief(cost,people)});
   }
   return event;
 }

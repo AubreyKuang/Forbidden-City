@@ -188,13 +188,19 @@ const A={
         preview:choice.preview||COURT_PREVIEWS[brief.index]?.[index],
         cond:()=>!brief.done&&(!cost||E().energy>0)&&(!choice.cond||choice.cond()),why:choice.why||'精力不足',
         f:()=>{
-          if(brief.done||(cost&&!useE()))return;
-          brief.done=true;
-          S.flags.lastCourt=ev.title;
-          log(`批复奏折「${ev.title}」，${choice.t}。`);
-          const result=choice.f?.();
-          brief.result={title:ev.title,choice:choice.t,text:(typeof result==='string'?result:result?.text||'').replace(/§/g,''),
-            person:choice.person??ev.person,child:ev.sons?.[index]};
+          if(brief.done)return;
+          const settle=record=>{
+            record.done=true;
+            S.flags.lastCourt=ev.title;
+            log(`批复奏折「${ev.title}」，${choice.t}。`);
+            const result=choice.f?.();
+            record.result={title:ev.title,choice:choice.t,text:(typeof result==='string'?result:result?.text||'').replace(/§/g,''),
+              person:choice.person??ev.person,child:ev.sons?.[index]};
+            return result;
+          };
+          if(choice.grainTransaction)return saveGrainAction(()=>settle(S.flags.monthlyCourt={...brief}),Boolean(cost));
+          if(cost&&!useE())return;
+          const result=settle(brief);
           save('auto');
           return result;
         }};
