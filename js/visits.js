@@ -95,9 +95,9 @@ function dowagerProposal(d){
 }
 function dowagerEvent(){const d=ensureDowager();if(!d||!d.alive)return null;
   const r=R();
-  if(r<.35&&kidsAlive().length===0&&S.turn>=12) return {title:'慈宁宫',text:`${d.name}召你去慈宁宫，拉着你的手叹气：“皇帝登基也有些时日了，膝下却还空着，哀家这心里不踏实啊。”`,choices:[{t:'儿臣明白',f:()=>'太后点点头，又絮絮叨叨嘱咐了许多。'}]};
+  if(r<.35&&kidsAlive().length===0&&S.turn>=12) return {title:'慈宁宫',por:dowagerPerson(d),text:`${d.name}召你去慈宁宫，拉着你的手叹气：“皇帝登基也有些时日了，膝下却还空着，哀家这心里不踏实啊。”`,choices:[{t:'儿臣明白',f:()=>'太后点点头，又絮絮叨叨嘱咐了许多。'}]};
   if(r<.6){const proposal=dowagerProposal(d);if(proposal)return proposal;}
-  if(S.month===9) return {title:'太后千秋',text:`今日是${d.name}千秋节。`,choices:[
+  if(S.month===9) return {title:'太后千秋',por:dowagerPerson(d),text:`今日是${d.name}千秋节。`,choices:[
     {t:'大办寿宴（国库-60万两）',f:()=>fx(chg({treasury:-60,prestige:3,people:1}))},{t:'一切从简',f:()=>fx(chg({people:2}))}]};
   return null;
 }
@@ -111,7 +111,7 @@ function festival(){const m=S.month,h=harem();if(!h.length)return null;
 }
 
 A.greet=function(){if(!S.flags.dowager?.alive){A.go('place','cn');return;}if(!useE())return;const ev=dowagerEvent();if(ev){pushEv(ev);return}
-  pushEv({title:'请安',text:`${S.flags.dowager.name}${pick(['拉着你的手问长问短，叮嘱你夜里早些歇息。','说起你小时候爬树摔破了膝盖，笑出了眼泪。','让你尝了尝她亲手做的素点心。'])}${fx(chg({prestige:1,health:1}))}`,choices:[ok1]})};
+  pushEv({title:'请安',por:dowagerPerson(S.flags.dowager),text:`${S.flags.dowager.name}${pick(['拉着你的手问长问短，叮嘱你夜里早些歇息。','说起你小时候爬树摔破了膝盖，笑出了眼泪。','让你尝了尝她亲手做的素点心。'])}${fx(chg({prestige:1,health:1}))}`,choices:[ok1]})};
 
 /* ============ 母亲入宫小住 ============ */
 const momObj=c=>c.visitor?{isMom:true,seed:c.visitor.seed,name:c.visitor.name,alive:true}:null;

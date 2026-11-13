@@ -139,9 +139,8 @@ function deepLine(c){deepen(c);if(c.wish==='title'&&c.title&&!c.wishDone){c.wish
   <div>平日消遣：<span class="tag">${esc(c.hobby)}</span></div>
   <div>心愿：${c.wishKnown?`${esc(w.t)}${c.wishDone?' <span class="tag y">已成全</span>':w.btn?` <button class="btn sm jade" onclick="A.wish(${c.id})">${esc(w.btn)}</button>`:' <span class="hint">（生下孩子便成全了）</span>'}`:'<span class="hint">情分到 50 以后，闲谈时她也许会说</span>'}</div>
   ${c.woundKnown?`<div>往事：${esc(WOUNDS[c.wound])}</div>`:'<div class="hint">往事：情分到 65 以后，她也许会对你说起</div>'}`}
-A.chat=function(id){const c=byId(id);if(!c||!useE())return;deepen(c);const L=[];const xk=xinOf(c);
-  if(xk!=='平和')L.push(cName(c)+xinLine(c));else L.push(c.mood<30?pick([`${cName(c)}眼圈微红，像是刚哭过，见你来了忙低头拭泪。`,`${cName(c)}恹恹地靠在榻上，见你来了才勉强起身。`]):c.mood>80?pick([`${cName(c)}老远就迎了出来，笑意藏都藏不住。`,`${cName(c)}正哼着小曲修剪花枝，见你来了，剪子一丢就过来行礼。`]):pick([`${cName(c)}正在窗下做针线。`,`${cName(c)}在廊下逗鹦鹉。`,`${cName(c)}刚沏好一壶茶。`,`${cName(c)}在灯下翻一卷书。`]));
-  L.push(chance(.45)?pick(QUIRKS[c.t2]):pick(CHAT[c.trait]||CHAT['温婉']));
+A.chat=function(id,fromEvent=false){const c=byId(id);if((modalOpen&&!fromEvent)||!inPalace(c)||!useE())return;deepen(c);const L=[];const xk=xinOf(c);
+  const voice=characterVoice(c,'talk');L.push(voice.stage);L.push(`“${voice.text}”`);
   if(S.flags.lastCourt&&(c.t2==='好读史'||c.t2==='直言')&&chance(.6))L.push(c.t2==='好读史'?`她听说了「${S.flags.lastCourt}」的事。${HISTC[S.flags.lastCourt]||'她说：“以史为镜，可以知兴替。”'}`:`她听说了「${S.flags.lastCourt}」的事，直截了当地说：“陛下那样处置，${pick(['臣妾觉得不妥。','臣妾觉得极好。','怕是要挨骂的。'])}”`);
   const others=harem().filter(o=>o!==c).map(o=>[o,relGet(c,o)]),fr=others.filter(x=>x[1]>=30),en=others.filter(x=>x[1]<=-30);
   if(fr.length&&chance(.35)){const o=pick(fr)[0],hobby=sharedConsortHobby(c,o);L.push(`说起${cName(o)}，她眉眼都软了：“${hobby?`下回得了闲，臣妾想约她${CONSORT_HOBBIES[hobby].activity}。`:pick(['她前儿送了我一盒胭脂，颜色正好。','我们约好了，开春一起去放纸鸢。','她做的梅花糕，比御膳房的还好吃。','她病的那几天，是我守着的。'])}”`)}
@@ -149,7 +148,7 @@ A.chat=function(id){const c=byId(id);if(!c||!useE())return;deepen(c);const L=[];
   const kid=S.children.filter(k=>(k.mom===c.id||k.foster===c.id)&&k.alive);
   if(kid.length&&chance(.4)){const k=pick(kid),a=kidAge(k),bond=k.motherBonds?.[c.id];
     L.push(bond?.motherView&&S.turn-bond.turn<=6?`说起${k.name}，她想起近来的一件事。 ${bond.motherView}`:
-      `说起${k.name}，她滔滔不绝：“${a<3?'昨儿会叫“父皇”了，含含糊糊的，可把臣妾高兴坏了。':a<10?'太傅说背书快，就是坐不住。':'孩子大了，心思也多了，臣妾有时都猜不透。'}”`)}
+      `说起${k.name}，她滔滔不绝：“${a<3?'孩子还小，臣妾想把这些日子好好记住。':a<10?'一天比一天有主意了，臣妾也想多听听孩子自己的话。':'孩子大了，心思也多了，臣妾有时都猜不透。'}”`)}
   const memories=NPCMemory.recall(S,c.id).map(entry=>({k:entry.type,t:entry.interpretation}));
   const dialogueMemories=memories.concat(c.mem||[]).filter(m=>MEMT[m.k]||m.k==='hurt');
   if(dialogueMemories.length&&chance(.3)){const m=pick(dialogueMemories);if(c.t2==='记仇'&&m.k==='hurt')L.push('她似笑非笑：“那年的事，臣妾可一直记着呢。”');else if(MEMT[m.k])L.push(pick(MEMT[m.k]))}
@@ -161,7 +160,7 @@ A.chat=function(id){const c=byId(id);if(!c||!useE())return;deepen(c);const L=[];
   if(c.aff>=50&&sch.length&&chance(.25)){const x=pick(sch);x.known=true;rev+=`\n她压低声音：“${cName(x)}那边，陛下还是留个心眼好。”（${cName(x)}的心机已显露：${rd(x.scheme)}）`}
   if(NEGX.includes(xk)){const p={'思念':.8,'委屈':.6,'惶恐':.55,'嫉恨':.25,'悲恸':.3,'怨恨':.12,'心如死灰':.1}[xk]+c.aff/400;if(chance(p)){const nk=xk==='思念'?'欢喜':'释然';setXin(c,nk,'陛下陪她说了许久的话');rev+=`\n§心境：${xk} → ${nk}`}else rev+=`\n§她的心境仍是「${xk}」`}
   const s=cchg(c,{aff:c.trait==='痴情'?8:5,mood:8,favor:2});
-  story(c,`陛下驾临闲话。${L[1]}`);setScene('harem');
+  story(c,`陛下驾临闲话。${L[1]}`);rememberConversation(c,voice,c.palace);setScene('harem');
   pushEv({title:'闲话家常',por:c,text:L.join('\n')+rev+fx(s),choices:[ok1]})};
 A.gift=function(id){const c=byId(id);deepen(c);if(E().treasury<20){toast('国库不足');return}
   let opts=shuffle(LIKES).slice(0,4);if(c.kl&&!opts.includes(c.like))opts[0]=c.like;

@@ -34,7 +34,7 @@ const DEV={
     }
     for(const field of ['name','given','sur','era'])if(Object.hasOwn(next,field)&&(typeof next[field]!=='string'||!next[field].trim()))throw Error(field+' 不可为空');
     if(next.portraitOverride!=null&&(!Number.isInteger(next.portraitOverride)||next.portraitOverride<0||next.portraitOverride>=PORTRAIT_COUNT))throw Error('立绘编号不在图集范围内');
-    if(next.portraitVariant!=null&&(!Number.isInteger(next.portraitVariant)||next.portraitVariant<0||next.portraitVariant>=DESCENDANT_VARIANTS))throw Error('皇嗣形象编号需为 0–'+(DESCENDANT_VARIANTS-1));
+    if(next.portraitVariant!=null&&(!Number.isInteger(next.portraitVariant)||next.portraitVariant<0||next.portraitVariant>=portraitVariantCount(next)))throw Error('皇嗣形象编号需为 0–'+(portraitVariantCount(next)-1));
     if(kind==='consort'){
       if(!Number.isInteger(next.rank)||next.rank<0||next.rank>8)throw Error('位分需在 0–8 之间');
       if(!TRAITS[next.trait])throw Error('请选择已有性情');
@@ -66,6 +66,34 @@ const DEV={
       if(next.consorts.filter(c=>c.alive&&!c.gone&&!c.cold&&c.rank===8).length>1)throw Error('不能同时有两位皇后');
     }
     return next;
+  },
+  previewAge(value){
+    const age=Number(value);if(!DEV.draft||!Number.isInteger(age)||age<0||age>130)return;
+    if(DEV.target.startsWith('kid:')){DEV.draft.born=S.turn-age*12;DEV.draft.portraitOverride=null;}
+    else DEV.draft.age=age;
+    DEV.gallery();
+  },
+  saveAge(){
+    const input=$('#dev-fields').querySelector('[data-dev-field="age"]');if(!input)throw Error('当前对象没有年龄字段');
+    const patch={age:Number(input.value)};if(input.value==='')throw Error('请填写年龄');
+    if(DEV.target.startsWith('kid:'))patch.portraitOverride=null;
+    DEV.applyPatch(DEV.target,patch);DEV.refresh();DEV.message('年龄已保存，立绘已按年龄更新。');
+  },
+  jumpTime(amount,unit='month'){
+    if(!S||S.over||modalOpen)throw Error('请先进入游戏并处理当前事件');
+    if(!['month','year'].includes(unit)||!Number.isInteger(amount)||amount<1)throw Error('请输入正整数月数或年数');
+    const months=amount*(unit==='year'?12:1);if(months>1200)throw Error('单次最多跳过一百年');
+    const before=DEV.clone(S),years=Math.floor((S.month-1+months)/12);
+    localStorage.setItem(SKEY+'dev-backup',JSON.stringify(before));
+    try{
+      S.turn+=months;S.year+=years;S.month=(S.month-1+months)%12+1;
+      for(const p of [E(),...S.consorts,...S.cands])if(p.alive!==false)p.age+=years;
+      // born-based children, spouses and descendants age automatically with S.turn.
+      // This is a debug calendar/age jump; it never chooses story outcomes for the user.
+      POR.clear();ART_CACHE.clear();resetMapPosition(S.pos||{x:100,y:82});
+      if(!save('auto'))throw Error('存档失败，时间快进已撤回');
+      render();DEV.refresh();DEV.message(`已跳过${amount}${unit==='year'?'年':'个月'}，现为${dateStr()}。人物年龄已同步，可回退。`);
+    }catch(error){S=before;render();throw error;}
   },
   applyPatch(key,patch){
     if(modalOpen)throw Error('请先处理当前游戏事件，再修改属性');
@@ -103,6 +131,7 @@ const DEV={
   },
   select(key){
     $('#dev-panel').scrollTop=0;
+    $('#dev-target').value=key;
     DEV.target=key;const record=DEV.record();DEV.patch=null;$('#dev-confirm').disabled=true;$('#dev-preview').textContent='预览修改后，才能保存。';
     if(!record){$('#dev-fields').innerHTML='<p>请先新开一局，或载入正式版存档副本。</p>';$('#dev-json').value='';$('#dev-gallery').innerHTML='';return;}
     DEV.source=JSON.stringify(record);DEV.draft=DEV.clone(record);$('#dev-json').value=JSON.stringify(record,null,2);
@@ -112,21 +141,22 @@ const DEV={
       const options=field==='trait'?Object.keys(TRAITS):field==='palace'?['坤宁宫',...PALACES,'冷宫']:field==='rank'?RANKS:null;
       if(options)return `<label>${label}<select data-dev-field="${field}" data-dev-type="${field==='rank'?'number':'string'}">${options.map((o,i)=>`<option value="${esc(field==='rank'?i:o)}" ${(field==='rank'?i:o)===value?'selected':''}>${esc(o)}</option>`).join('')}</select></label>`;
       const bool=['alive','cold','gone','away','jailed','married','tutor'].includes(field),number=typeof value==='number'||['age','foster'].includes(field);
-      return `<label>${label}<input data-dev-field="${field}" data-dev-type="${bool?'boolean':number?'number':'string'}" type="${bool?'checkbox':number?'number':'text'}" ${bool?(value?'checked':''):`value="${esc(value??'')}"`}></label>`;
+      return `<label>${label}<input data-dev-field="${field}" data-dev-type="${bool?'boolean':number?'number':'string'}" type="${bool?'checkbox':number?'number':'text'}" ${field==='age'?'min="0" max="130" step="1" oninput="DEV.previewAge(this.value)"':''} ${bool?(value?'checked':''):`value="${esc(value??'')}"`}>${field==='age'?'<button type="button" class="btn sm jade" onclick="DEV.safely(DEV.saveAge)">应用年龄</button>':''}</label>`;
     }).join('');
     $('#dev-advanced').open=kind==='world';DEV.gallery();DEV.message('已读取当前属性。');
   },
   gallery(){
     const kind=DEV.target.split(':')[0],p=DEV.draft;if(!p)return;
     let choices=[];
-    if(kind==='kid')choices=Array.from({length:DESCENDANT_VARIANTS},(_,v)=>({value:v,cell:childPortraitCell({...p,portraitVariant:v}),label:'形象 '+(v+1)}));
+    if(kind==='kid')choices=Array.from({length:portraitVariantCount(p)},(_,v)=>({value:v,cell:childPortraitCell({...p,portraitVariant:v}),label:'形象 '+(v+1)}));
     else if(kind==='emp')choices=[12,13].map(cell=>({cell,value:cell,label:cell===12?'青年':'壮年'}));
     else if(kind==='consort')choices=[...CONSORT_PORTRAITS,...WESTERN_PORTRAITS,8,9,10,11].map(cell=>({cell,value:cell,label:PORTRAIT_CLOTHES[cell]||'形象 '+cell}));
     $('#dev-gallery').innerHTML=choices.map(({cell,value,label})=>{
       ensurePortraitSheet(cell);
       const current=kind==='kid'?childPortraitCell(p):p.portraitOverride??(kind==='emp'?(p.age>=40?13:12):portraitCell(p));
       const src=portraitAtlasReady(cell)?atlasPortrait(cell,0):'';
-      return `<button type="button" class="dev-face" aria-pressed="${current===cell}" onclick="DEV.face(${value})">${src?`<img src="${src}" alt="">`:''}<span>${esc(label)}</span></button>`;
+      const selected=kind==='kid'&&p.portraitOverride==null?childPortraitVariant(p)===value:current===cell;
+      return `<button type="button" class="dev-face" aria-pressed="${selected}" onclick="DEV.face(${value})">${src?`<img src="${src}" alt="">`:''}<span>${esc(label)}</span></button>`;
     }).join('');
   },
   face(value){
@@ -145,7 +175,7 @@ const DEV={
       for(const key of ['portraitOverride','portraitVariant'])if(Object.hasOwn(DEV.draft,key))patch[key]=DEV.draft[key];
     }
     const next=DEV.validate(DEV.target,patch),changes=Object.keys(next).filter(k=>JSON.stringify(original[k])!==JSON.stringify(next[k]));
-    const labels={lit:'才学',mar:'武艺',vir:'品德',hp:'体魄',amb:'野心',love:'父爱',sup:'支持',age:'年龄',treasury:'国库',health:'龙体',wen:'文才',wu:'武略',favor:'恩宠',mood:'心情',aff:'情分',talent:'才情',virtue:'德行',scheme:'心机',looks:'容貌',rank:'位分',palace:'宫殿',trait:'性情',preg:'孕月',portraitOverride:'立绘编号',portraitVariant:'皇嗣形象（0–'+(DESCENDANT_VARIANTS-1)+'）'};
+    const labels={lit:'才学',mar:'武艺',vir:'品德',hp:'体魄',amb:'野心',love:'父爱',sup:'支持',age:'年龄',treasury:'国库',health:'龙体',wen:'文才',wu:'武略',favor:'恩宠',mood:'心情',aff:'情分',talent:'才情',virtue:'德行',scheme:'心机',looks:'容貌',rank:'位分',palace:'宫殿',trait:'性情',preg:'孕月',portraitOverride:'立绘编号',portraitVariant:'皇嗣形象（0–'+(portraitVariantCount(next)-1)+'）'};
     DEV.patch=patch;$('#dev-preview').textContent=changes.length?changes.map(k=>k==='born'&&DEV.target.startsWith('kid:')?`年龄：${kidAge(original)} → ${Math.floor((S.turn-next.born)/12)} 岁`:`${labels[k]||k}：${JSON.stringify(original[k])??'未设置'} → ${JSON.stringify(next[k])}`).join('\n'):'没有发生修改';
     $('#dev-confirm').disabled=!changes.length;DEV.message('预览已生成，确认后写入测试存档。');
   },
@@ -158,6 +188,7 @@ function mountDevTools(){
   const root=document.createElement('div');root.innerHTML=`<button id="dev-launch" onclick="DEV.open()">DEV · 金手指</button><section id="dev-panel" role="dialog" aria-label="金手指面板" hidden>
     <div class="dev-head"><h2>金手指</h2><button class="btn sm" onclick="DEV.close()">收起</button></div><p class="dev-help">测试模式 · 独立测试存档。选择人物，修改数值或立绘，预览后保存。</p>
     <div class="dev-actions"><button class="btn sm" onclick="DEV.safely(DEV.copyProduction)">载入正式版存档副本</button><button class="btn sm" onclick="DEV.safely(DEV.restore)">回退上一次修改</button></div>
+    <section class="dev-time"><h3>跳过时间</h3><p class="dev-help">快进日历与人物年龄，便于预览成长。随机剧情、政务和生育不在这里自动结算，可回退上一次修改。</p><div class="dev-actions"><input id="dev-time-amount" type="number" min="1" max="1200" step="1" value="12" aria-label="跳过数量"><select id="dev-time-unit" aria-label="时间单位"><option value="month">个月</option><option value="year">年</option></select><button class="btn jade" onclick="DEV.safely(()=>DEV.jumpTime(Number($('#dev-time-amount').value),$('#dev-time-unit').value))">跳过并保存</button></div></section>
     <label>编辑对象<select id="dev-target" onchange="DEV.safely(()=>DEV.select(this.value))"></select></label><div class="dev-actions"><button class="btn sm" onclick="DEV.refresh()">重新读取当前属性</button></div>
     <div id="dev-fields" class="dev-fields"></div><h3>立绘预览</h3><div id="dev-gallery" class="dev-gallery"></div>
     <div class="dev-actions"><button class="btn jade" onclick="DEV.safely(()=>DEV.preview())">预览常用属性修改</button></div>

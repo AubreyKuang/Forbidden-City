@@ -100,7 +100,7 @@ assert.ok(ambientTurns.size>0);
 // The same court can play differently when a character's situation or education changes.
 const actor=harem()[0]||makeGirl({trait:'温婉'});
 S.consorts=[actor];actor.trait='温婉';actor.t2='嗜甜';actor.alive=true;actor.gone=false;actor.cold=false;actor.maid=false;
-delete actor.initiative;delete actor.qcd;
+delete actor.initiative;delete actor.qcd;delete S.flags.ambientRecent?.['牙疼'];delete S.flags.ambientPeople?.['牙疼'];
 S.flags.initiativeTurns={};E().health=70;E().energy=4;
 const discardedQuirk=quirkEvent();assert.ok(discardedQuirk);assert.equal(actor.qcd,undefined);
 initiativeTick();assert.equal(actor.initiative.id,'broth');assert.equal(E().health,71);

@@ -1,11 +1,11 @@
 /* Young children live with their current caregiver; visits reveal domestic scenes. */
 function youngChildMother(k){
-  if(!childInPalace(k)||k.pendingName||kidAge(k)>=6)return null;
+  if(!childInPalace(k)||k.married||k.pendingName||kidAge(k)>=6)return null;
   const mother=byId(k.foster||k.mom);
   return inPalace(mother)&&mother.palace&&mother.palace!=='冷宫'?mother:null;
 }
 function childResidence(k){
-  if(!childInPalace(k)||k.pendingName||kidAge(k)>=6)return '';
+  if(!childInPalace(k)||k.married||k.pendingName||kidAge(k)>=6)return '';
   const mother=youngChildMother(k);
   return mother?`随${k.foster?'养母':'生母'}${cName(mother)}同住 · ${mother.palace}`:'暂由乳母照料，未随母同住';
 }

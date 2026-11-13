@@ -672,3 +672,19 @@ button.family-room-person{cursor:pointer}button.family-room-person:hover{color:#
 
 /* Give the portrait its own space on narrow person-detail screens. */
 @media(max-width:600px){.detail-head{flex-direction:column;align-items:center;text-align:center}.detail-head .grow{width:100%;min-width:0}.detail-head .por{width:176px;height:220px}}
+
+/* Personal speech and household life share the warm portrait panel. */
+.character-voice{margin-top:14px;padding:12px 16px;background:#fffcf37a;border-left:2px solid #bca16d;border-radius:0 8px 8px 0;text-align:left;max-width:44em}
+.character-voice small{display:block;color:var(--ink2);font-size:12px;line-height:1.6}
+.character-voice blockquote{margin:6px 0 0;line-height:1.9;color:var(--ink);font-size:15px}
+.residence-tabs{display:flex;gap:10px;margin:16px 0}
+.residence-tabs .btn{flex:1;display:flex;align-items:center;justify-content:center;gap:14px;min-height:46px;font-size:16px}
+.residence-tabs span{font-size:12px;opacity:.85}
+.past-children{margin-top:24px}.past-children summary{cursor:pointer;padding:12px 0;color:var(--ink2)}
+.spouse-portrait{margin:0;flex-shrink:0;text-align:center;width:112px}.spouse-portrait .por{width:112px;height:140px;object-fit:contain}
+.spouse-portrait figcaption{font-size:12px;line-height:1.6;margin-top:6px}
+.household-panel{padding:18px;margin:18px 0;background:#f4ecdd;border-radius:12px}
+.household-panel>h3{margin-top:0}.household-panel>.bar{max-width:450px}
+.household-children{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0}
+.household-children article{display:flex;align-items:center;gap:8px;padding:8px;background:#fffcf37a;border-radius:8px}.household-children small{display:block;line-height:1.7}
+@media(max-width:600px){.marriage-panel{flex-direction:row;flex-wrap:wrap}.marriage-panel>.grow{flex:1;min-width:130px}.household-panel{padding:14px}.character-voice{padding:10px 12px}}

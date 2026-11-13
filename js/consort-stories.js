@@ -1,4 +1,4 @@
-/* ============ 妃嫔主线 ============ */
+/* ============ 妃嫔个人经历 ============ */
 function aNext(c,st,a,b){c.arc.st=st;c.arc.t=S.turn+ri(a,b)}
 function aEnd(c,title,text){c.arc.done=true;c.arc.end=title;c.arc.t=1e9;if(ARCX[title])setXin(c,ARCX[title],`「${ARCS[c.arc.id].name}」${title}`,ARCX[title]==='怨恨'?'emp':null);story(c,`【${ARCS[c.arc.id].name}·${title}】${text}`);log(`${fullName(c)}「${ARCS[c.arc.id].name}」——${title}。`,1)}
 const ok1={t:'好'};
@@ -247,4 +247,4 @@ function arcTick(){
     if(c.arc.t<=S.turn)c.arc.t=S.turn+1}
   return null}
 function arcLine(c){if(!c.arc)return '';const a=ARCS[c.arc.id],name=c.arc.id==='craft'&&c.arc.f.craft!==undefined?consortCraft(c).title:a.name;
-  return `<div style="margin-top:4px">主线「${name}」：${c.arc.done?`<span class="tag y">结局·${esc(c.arc.end)}</span>`:`第${cnNum(c.arc.st+1)}幕<span class="hint">（情分越高越容易推进）</span>`}</div>`}
+  return `<div style="margin-top:4px">经历「${name}」：${c.arc.done?`<span class="tag y">结局·${esc(c.arc.end)}</span>`:`第${cnNum(c.arc.st+1)}幕<span class="hint">（情分越高越容易推进）</span>`}</div>`}

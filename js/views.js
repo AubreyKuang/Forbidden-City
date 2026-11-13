@@ -13,7 +13,7 @@ function renderTop(){
    <span class="st">国库 <b>${e.treasury}</b>万两</span><span class="st">精力 <b>${e.energy}／${mx}</b><span aria-hidden="true">${pips}</span></span></div>
    <div class="hud-controls">${sound}<button id="finish-month" class="btn gold sm hud-next" onclick="A.finishMonth()" ${S.over?'disabled':''}>结束本月 ▸</button></div>`;
 }
-const MENU=[['map','宫城'],['home','御书房'],['court','上朝'],['harem','后宫'],['cards','翻牌子'],['xx','选秀'],['kids','皇嗣'],['family','家族'],['out','出巡'],['log','起居注'],['sys','存档']];
+const MENU=[['map','宫城'],['home','御书房'],['court','理政'],['harem','后宫'],['cards','翻牌子'],['xx','选秀'],['kids','皇嗣'],['family','家族'],['out','出巡'],['log','起居注'],['sys','存档']];
 const DOCK_ART={
   map:['....g....','..ggggg..','ggggggggg','.rr...rr.','.rg...gr.','.rg...gr.','ggggggggg'],
   home:['.ggggggg.','.g.....g.','.ggggggg.','.g.r.r.g.','.g.r.r.g.','.ggggggg.','...ggg...'],
@@ -41,12 +41,12 @@ function dockIcon(key){
   return `<img class="dock-icon px" src="${dockImages.get(key)}" alt="" aria-hidden="true">`;
 }
 function renderMenu(){const m=$('#menu');if(!S){m.innerHTML='';m.hidden=true;return}m.hidden=false;
-  const current={palace:'map',place:'map',banquet:'map',consort:'harem',kid:'kids',princess:'out'}[UI.view]||UI.view;
-  m.innerHTML=MENU.map(([k,l])=>`<button class="btn${current===k?' on':''}" ${current===k?'aria-current="page"':''} onclick="${k==='court'?'A.court()':`A.go('${k}')`}">${dockIcon(k)}<span>${l}</span>${k==='court'?'<small>查看奏折</small>':''}</button>`).join('');
+  const current={relative:'family',palace:'map',place:'map',banquet:'map',consort:'harem',kid:'kids',princess:'out'}[UI.view]||UI.view;
+  m.innerHTML=MENU.map(([k,l])=>`<button class="btn${current===k?' on':''}" ${current===k?'aria-current="page"':''} onclick="${k==='court'?'A.court()':`A.go('${k}')`}">${dockIcon(k)}<span>${l}</span></button>`).join('');
 }
 let panelRoute;
 let personBackStack=[];
-const PERSON_DETAIL_VIEWS=['consort','kid'];
+const PERSON_DETAIL_VIEWS=['consort','kid','relative'];
 function rememberPersonRoute(view,id){
   if(!PERSON_DETAIL_VIEWS.includes(view)){personBackStack=[];return;}
   if(!PERSON_DETAIL_VIEWS.includes(UI.view)||personBackStack.at(-1)?.state!==S)personBackStack=[];
@@ -76,7 +76,7 @@ function renderPanel(){
   const p=$('#panel'),v=UI.view;
   const route=JSON.stringify([v,UI.sel]);
   if(!S)p.innerHTML=v==='new'?viewNew():viewTitle();
-  else p.innerHTML=({family:viewFamily,map:viewMap,palace:viewPalace,place:viewPlace,banquet:viewBanquet,home:viewHome,harem:viewHarem,consort:viewConsort,cards:viewCards,xx:viewXX,kids:viewKids,kid:viewKid,princess:viewPrincessEstate,out:viewOut,log:viewLog,sys:viewSys}[v]||viewHome)();
+  else p.innerHTML=({relative:viewRoyalRelative,family:viewFamily,map:viewMap,palace:viewPalace,place:viewPlace,banquet:viewBanquet,home:viewHome,harem:viewHarem,consort:viewConsort,cards:viewCards,xx:viewXX,kids:viewKids,kid:viewKid,princess:viewPrincessEstate,out:viewOut,log:viewLog,sys:viewSys}[v]||viewHome)();
   if(route!==panelRoute){p.scrollTop=0;panelRoute=route;}
 }
 function render(){
@@ -114,11 +114,12 @@ function dowagerFamilyPanel(){
   const d=ensureDowager();
   if(!d)return '';
   const name=d.name==='太后'?d.sur+'太后':d.name;
-  const portrait=d.portrait||{isMom:true,seed:91};
+  const portrait=dowagerPerson(d);
   const kin=S.consorts.filter(c=>!c.maid&&clanKey(c)===d.clan);
   return `<section class="dowager-family" aria-label="太后与母家亲族">
     <div class="dowager-line"><div class="dowager-person">${porImg({...portrait,alive:d.alive},64)}<span><strong>${esc(name)}</strong><small>${d.alive?'慈宁宫':'已故'}</small></span></div>
-      <span class="family-link">母子 →</span><button class="btn quiet dowager-person" onclick="A.go('home')">${porImg('emp',52)}<span><strong>${esc(E().sur+E().name)}</strong><small>皇帝</small></span></button></div>
+      <span class="family-link">${esc(d.relation||'母子')} →</span><button class="btn quiet dowager-person" onclick="A.go('home')">${porImg('emp',52)}<span><strong>${esc(E().sur+E().name)}</strong><small>皇帝</small></span></button></div>
+    ${S.flags.birthDowager?`<div class="dowager-line">${porImg(dowagerPerson(S.flags.birthDowager),64)}<span><strong>${esc(S.flags.birthDowager.name)}</strong><small>生母 · ${esc(S.flags.birthDowager.fullName)}${S.flags.birthDowager.alive?'':' · 已故'}</small></span></div>`:''}
     <div class="dowager-clan"><span class="family-link">母家同族 ↳</span><div><strong>${esc(clanName(d.clan))}</strong>
       <p class="hint">${kin.length?kin.map(c=>esc(fullName(c))).join('、'):'尚无母家族女入宫'}</p><small>下方按父亲分支，同父姐妹共用一个父亲节点。</small></div></div></section>`;
 }
@@ -224,7 +225,7 @@ A.logCard=function(){
 };
 
 function viewFamily(){
-  if((UI.familyMode||'graph')==='graph')return `<h2>家族关系树</h2><div class="acts"><button class="btn sm on">关系图</button><button class="btn sm" onclick="A.familyMode('list')">家族列表</button></div>${dowagerFamilyPanel()}${familyGraphSVG()}`;
+  if((UI.familyMode||'graph')==='graph')return `<h2>家族关系树</h2><div class="acts"><button class="btn sm on">关系图</button><button class="btn sm" onclick="A.familyMode('list')">家族列表</button></div>${dowagerFamilyPanel()}${familyGraphSVG()}${royalRelativesPanel()}`;
   const byClan=new Map(),kidsByMother=new Map();
   for(const k of S.children){
     if(!kidsByMother.has(k.mom))kidsByMother.set(k.mom,[]);
@@ -256,7 +257,7 @@ function viewFamily(){
     branch(key?clanName(key):'未列家族',people,key?` · 势力 ${Math.max(...people.map(c=>rd(c.fam.p)))}`:'')).join('');
   const unlisted=S.children.filter(k=>!byId(k.mom));
   return `<h2>家族关系树</h2><div class="acts"><button class="btn sm" onclick="A.familyMode('graph')">关系图</button><button class="btn sm on">家族列表</button></div><p class="hint">皇嗣列在生母名下，另标养母。点名字可查看人物。</p>
-    ${dowagerFamilyPanel()}${branches||'<p class="hint">目前没有入宫的妃嫔。</p>'}
+    ${dowagerFamilyPanel()}${branches||'<p class="hint">目前没有入宫的妃嫔。</p>'}${royalRelativesPanel()}
     ${unlisted.length?`<details class="family-branch"><summary>生母未载</summary><ul>${unlisted.map(childLine).join('')}</ul></details>`:''}`;
 }
 function viewHome(){
@@ -321,6 +322,7 @@ function viewConsort(){
     <h2>${esc(cName(c))}</h2>
     <p>${esc(c.fam.t)} · ${esc(c.trait)}${c.preg>=2?` <span class="tag r">有孕${c.preg}月</span>`:''}</p>
     ${PORTRAIT_CLOTHES[portraitCell(c)]?`<p>衣着 · ${PORTRAIT_CLOTHES[portraitCell(c)]}</p>`:''}
+    ${characterVoiceHTML(c)}
    </div></header>
    ${acts?`<div class="detail-actions" role="group" aria-label="人物操作"><span class="detail-action-label" aria-hidden="true">人物操作</span><div class="acts">${acts}</div></div>`:''}
    <div class="detail-vitals">${bar('恩宠',c.favor)}${bar('心情',c.mood,'#517369')}${bar('情分',c.aff,'#936375')}</div>
@@ -334,6 +336,7 @@ function viewConsort(){
     </div>
     ${act?detailSection('与孩子的日常',consortFamilyPanel(c)):''}
     ${detailSection('册封与宫务',management?`<div class="acts">${management}</div>`:'')}
+    ${personalExperiencePanel(c)}
     ${detailSection('她的故事',arcLine(c)+detailStory(c))}
     ${detailFold('处置',penalties?`<div class="acts">${penalties}</div>`:'')}
    </div>`;
@@ -359,16 +362,29 @@ function viewXX(){
 function parentLink(id,name){
   const c=byId(id);return c?`<button class="person-link" onclick="A.go('consort',${c.id})">${esc(name||fullName(c))}</button>`:esc(name||'未记载');
 }
+function childListCard(k){
+  return `<article class="card portrait-card child-card"><button class="child-portrait" aria-label="查看${esc(kidName(k))}" onclick="A.go('kid',${k.id})">${porImg(k,72)}</button><div class="grow"><button class="person-link nm" onclick="A.go('kid',${k.id})">${esc(kidName(k))}</button><div>${k.alive?kidAge(k)+'岁':k.lost?'下落不明':'已故'} · 生母 ${parentLink(k.mom,k.momName)}${fosterOf(k)?` · 养母 ${parentLink(k.foster)}`:''}</div>${birthTags(k)}${bar('才学',k.lit,'#3b5fa8')}${bar('武艺',k.mar,'#a3262a')}${bar('品德',k.vir,'#4f9078')}</div></article>`;
+}
+A.kidsResidence=function(group){
+  if(!['palace','out'].includes(group))return;
+  UI.kidsResidence=group;AU.sfx('click');render();
+};
 function viewKids(){
-  const ks=S.children;
-  return `<h2>皇嗣</h2>${pendingBirthPanel()}<div class="acts"><button class="btn jade" onclick="A.visitMapActivity('ss')">去上书房看看 →</button></div>${ks.length?`<div class="grid portrait-grid">${ks.map(k=>`<article class="card portrait-card child-card"><button class="child-portrait" aria-label="查看${esc(kidName(k))}" onclick="A.go('kid',${k.id})">${porImg(k,72)}</button><div class="grow"><button class="person-link nm" onclick="A.go('kid',${k.id})">${esc(kidName(k))}</button><div>${k.alive?kidAge(k)+'岁':k.lost?'下落不明':'已夭折'} · 生母 ${parentLink(k.mom,k.momName)}${fosterOf(k)?` · 养母 ${parentLink(k.foster)}`:''}</div>${childResidence(k)?`<p class="hint">${esc(childResidence(k))}</p>`:''}${birthTags(k)}${bar('才学',k.lit,'#3b5fa8')}${bar('武艺',k.mar,'#a3262a')}${bar('品德',k.vir,'#4f9078')}</div></article>`).join('')}</div>`:'<p class="hint">膝下尚无子嗣。多召幸妃嫔，或去护国寺祈福。</p>'}`;
+  const living=S.children.filter(k=>k.alive),past=S.children.filter(k=>!k.alive);
+  const groups={palace:living.filter(k=>!childHasLeftPalace(k)),out:living.filter(childHasLeftPalace)};
+  const selected=UI.kidsResidence==='out'?'out':'palace';
+  const grid=ks=>`<div class="grid portrait-grid">${ks.map(childListCard).join('')}</div>`;
+  return `<h2>皇嗣</h2>${pendingBirthPanel()}<div class="acts"><button class="btn jade" onclick="A.visitMapActivity('ss')">去上书房看看 →</button></div>${S.children.length?`
+    <div class="residence-tabs" role="group" aria-label="皇嗣居处">${[['palace','宫内'],['out','已出宫']].map(([id,label])=>`<button class="btn ${selected===id?'primary on':''}" aria-pressed="${selected===id}" onclick="A.kidsResidence('${id}')">${label}<span>${groups[id].length}</span></button>`).join('')}</div>
+    <section aria-label="${selected==='palace'?'宫内皇嗣':'已出宫皇嗣'}">${groups[selected].length?grid(groups[selected]):`<p class="hint">${selected==='palace'?'目前没有住在宫内的皇子公主。':'尚无皇子公主出宫。'}</p>`}</section>
+    ${past.length?`<details class="past-children"><summary>已故与失踪 · ${past.length}</summary>${grid(past)}</details>`:''}`:'<p class="hint">膝下尚无子嗣。多召幸妃嫔，或去护国寺祈福。</p>'}`;
 }
 function viewKid(){
   const k=kidById(UI.sel);if(!k)return viewKids();const a=kidAge(k);
   const pol=['均衡','读书','习武','修德','放养'];
   const foster=fosterOf(k),mom=byId(k.mom);
   const status=[k.alive?`${a}岁`:k.lost?'下落不明':'已夭折',k.married?'已婚嫁':'',k.estate?'已开府':'',k.away?'已就藩':'',k.jailed?'圈禁于宗人府':''].filter(Boolean).join(' · ');
-  const care=k.alive&&!k.estate?`<div class="hint">当前方针：${esc(k.policy)} · 三岁起生效</div><div class="acts">
+  const care=childInPalace(k)?`<div class="hint">当前方针：${esc(k.policy)} · 三岁起生效</div><div class="acts">
     ${pol.map(p=>`<button class="btn sm ${k.policy===p?'on':''}" aria-pressed="${k.policy===p}" onclick="A.kidPolicy(${k.id},'${p}')">${p}</button>`).join('')}</div>
     <div class="acts">${a>=6?`<button class="btn ${k.tutor?'on':''}" onclick="A.kidTutor(${k.id})">${k.tutor?'已延请太傅':'延请太傅'}<small>每月5万两</small></button>`:''}
     ${a<14?`<button class="btn" onclick="A.foster(${k.id})">${foster?'换一位养母':'交给妃嫔抚养'}</button>`:''}
@@ -377,10 +393,11 @@ function viewKid(){
     ${a>=12?`<button class="btn" onclick="A.kidTitle(${k.id})">赐封号</button>`:''}`.trim():'';
   return `${personBackButton('kids')}
    <header class="detail-head">${porImg(k,224)}<div class="grow"><p>${status}</p><h2>${esc(kidName(k))}</h2>
-    <p>生母 ${parentLink(k.mom,k.momName)}${foster?` · 养母 ${parentLink(k.foster)}`:''}</p>${childResidence(k)?`<p class="hint">${esc(childResidence(k))}</p><button class="btn sm jade" onclick="A.visitChildHome(${k.id})" ${youngChildMother(k)?'':'disabled'}>去宫里看看 →</button>`:''}${birthTags(k)}</div></header>
+    <p>生母 ${parentLink(k.mom,k.momName)}${foster?` · 养母 ${parentLink(k.foster)}`:''}</p>${childResidence(k)?`<p class="hint">${esc(childResidence(k))}</p><button class="btn sm jade" onclick="A.visitChildHome(${k.id})" ${youngChildMother(k)?'':'disabled'}>去宫里看看 →</button>`:''}${birthTags(k)}${childHasLeftPalace(k)?`<p class="hint">${k.jailed?'宗人府圈禁':k.princessMarriage==='frontier'?'远嫁北境':k.away?'已赴封地':'居于公主府'}</p>`:''}${characterVoiceHTML(k)}</div></header>
    ${k.pendingName?pendingBirthPanel():''}
-   ${k.alive&&!k.estate?`<div class="detail-actions" role="group" aria-label="人物操作"><span class="detail-action-label" aria-hidden="true">人物操作</span><div class="acts"><button class="btn primary" onclick="A.kidVisit(${k.id})">探望<small>精力-1</small></button></div></div>`:''}
+   ${k.alive&&!k.estate&&!k.jailed&&!k.pendingName?`<div class="detail-actions" role="group" aria-label="人物操作"><span class="detail-action-label" aria-hidden="true">人物操作</span><div class="acts"><button class="btn primary" onclick="A.kidVisit(${k.id})">${childHasLeftPalace(k)?'写家书':'探望'}<small>精力-1</small></button></div></div>`:''}
    ${marriagePanel(k)}
+   ${householdPanel(k)}
    <div class="detail-vitals">${bar('才学',k.lit,'#617991')}${bar('武艺',k.mar,'#92504a')}${bar('品德',k.vir,'#517369')}</div>
    <div class="detail-stack">
     ${k.alive?initiativeHTML(k):''}

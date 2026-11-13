@@ -339,7 +339,7 @@ A.endMonth=function(){
   if(newYear){const y=S.ys;pushEv({title:'岁首',sfx:'chime',text:`爆竹声中一岁除。${dateStr()}，陛下${e.age}岁。\n去岁：新入宫${y.c}人，皇嗣降生${y.b}位，侍寝${y.n}次。\n国库${e.treasury}万两，威望${rd(e.prestige)}，民心${rd(e.people)}。`,choices:[{t:'新岁新气象'}]});S.ys={c:0,b:0,n:0}}
   // 事件
   if(S.month===2&&S.turn-S.flags.lastXX>=34) pushEv({title:'三年大选',sfx:'chime',text:'又到三年一度的大选之期，各地秀女已候于储秀宫。',choices:[{t:'前去看看',f:()=>{genCands();UI.view='xx';return null}},{t:'今年免了',f:()=>{S.flags.lastXX=S.turn;return fx(chg({people:2}))}}]});
-  relTick();consortSocialTick();kidRelTick();clanTick();dowagerTick();initiativeTick();familyLifeTick();childLifeTick();courtTick();seasonalTick();palaceDutiesTick();palaceRomanceTick();
+  relTick();consortSocialTick();kidRelTick();clanTick();dowagerTick();initiativeTick();familyLifeTick();childLifeTick();courtTick();seasonalTick();palaceDutiesTick();palaceRomanceTick();marriedLifeTick();personalExperienceTick();
   const passing=dowagerPassingEvent();if(passing)pushEv(passing);
   const must=[passing?null:arcTick(),heirTick(),milestone()].filter(Boolean),opt=[];
   // 积压的奏折：离宫期间攒下的朝堂事务，月末一并呈上
@@ -387,18 +387,19 @@ function deathEvent(why){
   return {title:why==='民变'?'国破':'龙驭宾天',por:'emp',text:t,choices:ch};
 }
 function succeed(h){
-  const old=E(),mom=byId(h.mom),a=kidAge(h);
+  const old=E(),a=kidAge(h);
   pushNow({title:'新君登基',por:h,text:`${h.name}即将即位。请为新朝拟定年号（二字）：`,input:{def:pick(ERAS.filter(x=>x!==old.era)),max:2},choices:[{t:'改元',f:v=>{
+    inheritDowager(h);
     S.emp={sur:old.sur,name:h.name,era:v,age:Math.max(a,14),health:clamp(h.hp+10),prestige:clamp(35+h.vir/3),people:old.people,treasury:old.treasury,energy:3,nightsMonth:0,
-      style:h.mar>h.lit+15?'尚武':h.lit>h.mar+15?'文雅':'勤政',wen:rd(h.lit),wu:rd(h.mar),seed:h.seed,birthMonth:birthMonth(h)};
-    S.flags.dowager={name:mom?`${mom.sur}太后`:'太后',portrait:mom?{fam:{...mom.fam},seed:mom.seed,artPortrait:mom.artPortrait,trait:mom.trait,rank:8}:undefined,sur:mom?.sur,fam:mom?{...mom.fam}:undefined,clan:mom?clanKey(mom):undefined,lastOffer:null,cooldown:24,alive:!!(mom&&mom.alive)};
+      style:h.mar>h.lit+15?'尚武':h.lit>h.mar+15?'文雅':'勤政',wen:rd(h.lit),wu:rd(h.mar),seed:h.seed,portraitOverride:portraitCell(h),birthMonth:birthMonth(h)};
     archivePrincessEstates(h);
     S.consorts=[];S.children=[];S.rel={};S.courtPolicy={};S.courtPolicyTurn=null;S.heir=null;S.cands=[];S.gen++;S.year=1;S.over=false;S.genChar=GEN_CHARS[(GEN_CHARS.indexOf(S.genChar)+1)%GEN_CHARS.length];
     S.flags.lastXX=-99;delete S.flags.lastProudDemand;delete S.flags.scholarArc;delete S.flags.rareArcOwners;delete S.flags.arcPacing;delete S.flags.xinPacing;delete S.flags.lastLiteraryGathering;delete S.lastGardenBanquet;S.gardenPlans=[];seasonalTick();S.emp.energy=maxEnergy();
-    log(`━━ 第${cnNum(S.gen)}代 ━━ ${v}元年，新帝${S.emp.sur}${h.name}登基，尊生母为${S.flags.dowager.name}。`,1);
+    log(`━━ 第${cnNum(S.gen)}代 ━━ ${v}元年，新帝${S.emp.sur}${h.name}登基，尊${S.flags.dowager.fullName||S.flags.dowager.name}为${S.flags.dowager.name}${S.flags.birthDowager?.alive?`，另尊生母${S.flags.birthDowager.fullName}为皇太后`:""}。`,1);
     if(S.emp.age>=15){const em=marriageEmpress(h)||makeGirl({fam:pick(FAMS.slice(0,4)),trait:pick(['温婉','聪慧','城府','骄矜'])});em.favor=35;em.aff=30;addConsort(em,8,h.spouse?'潜邸嫡妻，随新帝登基册立':'新帝登基，奉遗诏册立');}
+    inheritHousehold(h,empress());S.ys={c:0,b:0,n:0};UI.kidsResidence='palace';
     migrate();UI.view='map';AU.sfx('gong');
-    return `${v}元年，新帝登基，大赦天下。属于你的故事，翻开了新的一页。`}}]});
+    return {title:'新朝家人',por:dowagerPerson(S.flags.dowager),text:`${v}元年，新帝登基，大赦天下。\n${S.flags.dowager.fullName||S.flags.dowager.name}${S.flags.dowager.alive?'尊为'+S.flags.dowager.name+'，居慈宁宫。':'已故，尊谥存于宗谱。'}${S.flags.birthDowager?.alive?'\n生母'+S.flags.birthDowager.fullName+'亦尊为皇太后。':''}\n潜邸妻儿与亲族的往来，由此接入新朝。`}}}]});
 }
 
 /* ============ 开局 ============ */

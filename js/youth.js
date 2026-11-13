@@ -100,6 +100,6 @@ function rememberedMatch(k){
 function rememberedMatchEvent(k){
   const guest=rememberedMatch(k);if(!guest)return null;
   return {title:'再谈旧日相识',cast:[k,guest],valid:()=>!!rememberedMatch(k),text:`${k.name}仍记得${guest.name}。如今两人都已长成，礼部将${guest.fatherName}家的名帖送来。\n她问：“父皇当年说会记得，今日可否再认真问问他的意思，也听听我的？”`,choices:[
-    {t:'双方愿意，再议定亲事',f:()=>{if(!rememberedMatch(k))return null;k.married=true;guest.married=k.id;k.spouse={id:guest.id,name:guest.name,fatherName:guest.fatherName};k.princessMarriage='acquaintance';if(k.estate)k.estate.route='acquaintance';k.love=clamp(k.love+12);princessMemory(k,'princess_marriage',`与少年时相识的${guest.name}互问心意后，婚事议定。`);log(`${kidName(k)}与${guest.name}议定婚事。`,1);save('auto');return '双方答应后，礼部才开始筹办。她说，多谢父皇记得，也肯等她自己拿定主意。'}},
+    {t:'双方愿意，再议定亲事',f:()=>{if(!rememberedMatch(k))return null;k.married=true;guest.married=k.id;k.spouse={...guest,marriedAt:S.turn};k.princessMarriage='acquaintance';if(k.estate)k.estate.route='acquaintance';k.love=clamp(k.love+12);princessMemory(k,'princess_marriage',`与少年时相识的${guest.name}互问心意后，婚事议定。`);log(`${kidName(k)}与${guest.name}议定婚事。`,1);ensureMarriedLife(k);save('auto');return '双方答应后，礼部才开始筹办。她说，多谢父皇记得，也肯等她自己拿定主意。'}},
     {t:'先不定亲，再相处一段时间',f:()=>{k.marriageAfter=S.turn+6;save('auto');return '名帖暂且收起，双方都还有时间再想一想。'}}]};
 }

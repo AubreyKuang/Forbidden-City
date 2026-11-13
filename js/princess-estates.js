@@ -49,7 +49,7 @@ function princessMarriage(k){
 }
 function princessMatchReview(k,id){
   const match=PRINCESS_MATCHES[id],person=marriageCandidate(k,id);save('auto');
-  return {title:'灯下谈婚事',cast:[k,person],valid:()=>marriageReady(k),text:`${person.name} · ${kidAge(person)}岁 · ${match.name}\n${match.note}${id==='official'?'\n婚仪需国库五十万两。':''}\n她把名帖推过来，等你回答。`,choices:[
+  return {title:'灯下谈婚事',cast:[k,person],valid:()=>marriageReady(k),text:`${person.name} · ${kidAge(person)}岁 · ${match.name}\n${match.note}\n${marriageProfileText(k,person)}${id==='official'?'\n婚仪需国库五十万两。':''}\n她把名帖推过来，等你回答。`,choices:[
     {t:id==='scholar'?'准她自择驸马':id==='frontier'?'允准和亲':'允准这门亲事',cond:()=>marriageReady(k)&&(id!=='official'||E().treasury>=50),f:()=>{
       if(!marriageReady(k)||(id==='official'&&E().treasury<50))return null;
       k.married=true;k.spouse={...person,marriedAt:S.turn};
@@ -61,8 +61,9 @@ function princessMatchReview(k,id){
       if(id==='frontier'&&mother?.alive)cchg(mother,{mood:-18,aff:-5});
       if(id==='scholar')k.love=clamp(k.love+15);
       const gains=id==='frontier'?chg({prestige:3,people:6}):id==='official'?chg({prestige:4,treasury:-50}):'父爱+15';
-      save('auto');return fx(gains);
+      ensureMarriedLife(k);save('auto');return fx(gains);
     }},
+    {t:'先让两人谈谈日常',f:()=>{pushNow(marriageMeeting(k,person,()=>princessMatchReview(k,id)));return null;}},
     {t:'再看别的人选',f:()=>{pushNow(princessMarriage(k));return null;}},
     {t:'先不定亲',f:()=>{k.marriageAfter=S.turn+6;save('auto');return '她把名帖收回，婚事暂且搁下。';}}
   ]};
@@ -126,7 +127,8 @@ function viewPrincessEstate(){
     <section class="palace-activity"><h3>${plan.title}</h3><p>${esc(message)}</p><div class="acts">
     ${e.stage==='proposal'||ready?`<button class="btn gold" onclick="A.princessLetter(${k.id})">${ready?'读她的回信':'读府中来信'}</button>`:''}
     ${S.turn>=e.nextVisit?`<button class="btn jade" onclick="A.princessVisit(${k.id})">${local?'请她回宫探亲':'写信邀她还宫'}</button>`:''}</div></section>
-    ${k.reign?'':princessActions(k,false)}
+    ${marriagePanel(k)}
+    ${householdPanel(k)}
     ${detailSection('府中记事',detailStory(k))}`;
 }
 A.princessLetter=function(id){

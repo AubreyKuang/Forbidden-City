@@ -13,7 +13,7 @@ const PLACE_GUIDES={
 function placeGuide(p){
   const base=PLACE_GUIDES[p.id];
   let purpose=base?.[0]||(p.id==='lg'?'受罚者幽居之所。':p.id==='kn'?'皇后居所，主持六宫家事。':PALACE_NOTES[p.p]||'妃嫔日常起居之所。');
-  let activities=base?[...base[1]]:p.id==='lg'?['查看被幽禁的人物','进入人物详情处置或赦免']:['探望居住的妃嫔','闲话、赏赐与人物往来'];
+  let activities=base?[...base[1]]:p.id==='lg'?['查看被幽禁的人物','进入人物详情处置或赦免']:[];
   let residents=[],label='此刻在场';
   const leads=mapActivityLeads().filter(l=>l.place===p.id);
   if(p.k==='palace'){
@@ -26,7 +26,8 @@ function placeGuide(p){
       const scene=palaceLifeScene(p.p);
       if(scene&&!scene.scene.result)activities.push(scene.scene.kind==='nursery'?scene.scene.activity.title:'亲眷入宫 · 少年初识');
     }
-    if(p.p==='储秀宫')activities.push(S.cands.length?`选秀候选 ${S.cands.length} 人 · 可留牌、暗访`:'选秀开启时可在此留牌、暗访');
+    purpose=residents.length?'居住：'+residents.join('、'):'暂时无人居住';
+    activities=[];
   }else if(p.id==='cn'){
     if(S.flags.dowager?.alive)residents=[S.flags.dowager.name];
     else{purpose='太后旧居，设有追思之所。';activities=['添香追思','陪母族亲眷追忆'];}
@@ -39,6 +40,7 @@ function placeGuide(p){
 }
 function placeGuideHTML(p){
   const info=placeGuide(p);
+  if(p.k==='palace')return `<strong class="map-tip-title">${esc(p.n)}</strong><p class="map-tip-people">${esc(info.purpose)}</p>${info.live.length?`<p class="map-tip-live">正在发生 · ${esc(info.live.slice(0,3).join('、'))}</p>`:''}`;
   return `<strong class="map-tip-title">${esc(p.n)}</strong><p>${esc(info.purpose)}</p><span class="map-tip-label">可以做什么</span><ul>${info.activities.map(t=>`<li>${esc(t)}</li>`).join('')}</ul>
     ${info.live.length?`<p class="map-tip-live">正在发生 · ${esc(info.live.slice(0,3).join('、'))}${info.live.length>3?`等 ${info.live.length} 项`:''}</p>`:''}
     <p class="map-tip-people">${info.label} · ${esc(info.residents.slice(0,3).join('、')||(p.k==='palace'?'暂无人居住':'暂无已知人物'))}${info.residents.length>3?`等 ${info.residents.length} 人`:''}</p>`;

@@ -280,7 +280,7 @@ function drawMap(){const s=season(),family=gardenFamilyMoment(),scenes=initiativ
 function meetConsort(c){if(!c||!c.alive||c.gone)return;setScene('harem');
   const t=npcRoutineText(c,NPC.get(c.id));
   pushEv({title:'宫道偶遇',por:c,text:`你在宫道上遇见了${cName(c)}，她${t}。`,choices:[
-    {t:'闲话家常（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{A.chat(c.id);return null}},
+    {t:'闲话家常（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{A.chat(c.id,true);return null}},
     {t:'今夜召她侍寝（精力-1）',cond:()=>E().energy>0&&!c.preg,why:c.preg?'她有孕在身':'精力不足',f:()=>{nightWith(c);return null}},
     {t:'赏她一支簪子（国库-10万两）',f:()=>fx(chg({treasury:-10}),cchg(c,{mood:10,aff:3}))},
     {t:'点头作别'}]})}
@@ -309,7 +309,7 @@ setInterval(mapTick,50);
 // Derive leads from live activities so expired or unavailable characters leave the map.
 function mapActivityLeads(){
   if(!S||S.over)return [];
-  const leads=palaceRomanceLeads(),meeting=showGardenReunion(),stop=lanternStop(),work=duanwuWork();
+  const leads=[...palaceRomanceLeads(),...personalExperienceLeads()],meeting=showGardenReunion(),stop=lanternStop(),work=duanwuWork();
   const school=schoolScene();if(school&&!school.scene.result)leads.push({place:'ss',title:SCHOOL_TITLES[school.scene.kind],text:school.cast.map(k=>k.name).join('与')+'正在窗下说话。',cast:school.cast});
   if(meeting)leads.push({place:'yh',title:'御花园赴约',button:'去御花园赴约',text:meeting.reunion.text,cast:[meeting.first,meeting.second],expires:true});
   if(stop)leads.push({place:stop.place,title:'上元寻灯 · '+stop.name,text:'正月灯会，带孩子走一走，猜一回灯谜。',cast:(activeLantern()?.ids||lanternChildren().map(k=>k.id)).map(kidById),expires:!!activeLantern()});
@@ -440,5 +440,5 @@ function viewPlace(){const id=UI.sel;
       ${initiativesAt(id)||(school?'':'<p class="hint">此刻只有当值宫人在这里。</p>')}
       <button class="btn" onclick="A.go('${school?'kids':'log'}')">${school?'查看皇嗣':'翻阅起居注'}</button>`;
   }
-  if(id==='cn'){const d=S.flags.dowager;return `<h2>慈宁宫${backBtn}</h2>${d&&d.alive?`<p>${esc(d.name)}正在佛堂诵经。</p><div class="acts"><button class="btn" onclick="A.greet()">请安<small>精力-1</small></button></div>`:mourningPlacePanel()}${initiativesAt('cn')}`}
+  if(id==='cn'){const d=S.flags.dowager;return `<h2>慈宁宫${backBtn}</h2>${dowagerCourtPanel()}${d&&d.alive?`<p>${esc(d.name)}正在佛堂诵经。</p><div class="acts"><button class="btn" onclick="A.greet()">请安<small>精力-1</small></button></div>`:mourningPlacePanel()}${initiativesAt('cn')}`}
   return viewMap()}

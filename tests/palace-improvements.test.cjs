@@ -819,7 +819,7 @@ test('princess official route cannot spend an unavailable marriage budget',()=>{
 
 test('all map place guides are read only and show activities without drawing new palace events',()=>{
   const {run}=boot();
-  run(`var before=JSON.stringify(S);for(const p of PLACES){var guide=placeGuide(p);assert.ok(guide.purpose);assert.ok(guide.activities.length);assert.match(placeGuideHTML(p),/可以做什么/);}
+  run(`var before=JSON.stringify(S);for(const p of PLACES){var guide=placeGuide(p);assert.ok(guide.purpose);if(p.k==='palace'){assert.equal(guide.activities.length,0);assert.doesNotMatch(placeGuideHTML(p),/可以做什么/);}else{assert.ok(guide.activities.length);assert.match(placeGuideHTML(p),/可以做什么/);}}
     assert.equal(JSON.stringify(S),before);assert.equal(S.palaceLife?.checked?.['永和宫'],undefined);`);
 });
 
@@ -937,8 +937,8 @@ test('expanded portrait atlases keep legacy identities, stable growth and every 
     }
     var before=S.children.map(portraitCell);S=JSON.parse(JSON.stringify(S));assert.deepEqual(S.children.map(portraitCell),before);
     for(let cell=0;cell<PORTRAIT_COUNT;cell++){const sheet=portraitSheet(cell),xy=portraitTile(cell,sheet);assert.ok(xy[0]>=0&&xy[0]<448);assert.ok(xy[1]>=0&&xy[1]<sheet.rows*140);}
-    assert.equal(CONSORT_PORTRAITS.length+WESTERN_PORTRAITS.length,63);
-    assert.equal(new Set([...CONSORT_PORTRAITS,...WESTERN_PORTRAITS]).size,63);
+    assert.equal(CONSORT_PORTRAITS.length+WESTERN_PORTRAITS.length,67);
+    assert.equal(new Set([...CONSORT_PORTRAITS,...WESTERN_PORTRAITS]).size,67);
     assert.equal(portraitSheet(239).src,'./palace-royal-regalia.webp?v=1');`);
 });
 test('prince brides share the expanded portrait pool without duplicate faces or changes after marriage and succession',()=>{
@@ -992,4 +992,132 @@ test('grass play leaves a mother-child follow-up and initiative cooldown cannot 
     a.initiative=b.initiative=null;a.trait='巧手';b.trait='好学';a.hobby=b.hobby='读书';relAdd(a,b,30-relGet(a,b));S.flags.initiativeTurns={};
     initiativeTick();assert.equal(S.flags.initiativeTurns.paperMending,S.turn);a.initiative=b.initiative=null;S.turn+=11;initiativeTick();assert.notEqual(a.initiative?.id,'paperMending');assert.notEqual(b.initiative?.id,'paperMending');
     for(const [id,match] of Object.entries(original))PALACE_INITIATIVES[id].match=match;`);
+});
+
+test('residence tabs use actual departure, retain their selection, and omit nursery addresses from cards',()=>{
+  const {run}=boot();run(`var m=harem()[0],baby=makeKid(m,'f','小公主'),adult=makeKid(m,'m','留宫皇子'),away=makeKid(m,'m','就藩皇子'),girl=makeKid(m,'f','开府公主'),far=makeKid(m,'f','远嫁公主');
+    adult.born=away.born=girl.born=far.born=S.turn-240;adult.married=true;away.away=true;girl.estate={};far.princessMarriage='frontier';
+    A.go('kids');UI.kidsResidence='palace';var html=viewKids();assert.match(html,/小公主/);assert.match(html,/留宫皇子/);assert.doesNotMatch(html,/就藩皇子|开府公主|远嫁公主|随生母.*同住/);
+    A.kidsResidence('out');html=viewKids();assert.match(html,/就藩皇子/);assert.match(html,/开府公主/);assert.match(html,/远嫁公主/);assert.doesNotMatch(html,/小公主/);
+    A.go('kid',away.id);A.backPerson('kids');assert.equal(UI.kidsResidence,'out');assert.equal(childInPalace(adult),true);
+    baby.alive=false;assert.match(viewKids(),/已故与失踪/);`);
+});
+
+test('husband portraits survive ordinary and acquaintance marriages and incomplete legacy saves',()=>{
+  const {run}=boot();run(`var k=makeKid(harem()[0],'f','明昭');k.born=S.turn-240;var p=marriageCandidate(k,'scholar'),face=portraitCell(p);
+    pushEv(princessMatchReview(k,'scholar'));choose(0);drain();assert.match(marriagePanel(k),/驸马/);assert.ok(marriagePanel(k).includes('data-portrait-cell="'+face+'"'));
+    S=JSON.parse(JSON.stringify(S));k=kidById(k.id);assert.equal(portraitCell(spouseAppearance(k)),face);
+    k.spouse={id:'old-guest',name:'沈知行',fatherName:'沈仲明'};S.youngGuests={old:{id:'old-guest',name:'沈知行',seed:678,sex:'m',born:k.born,portraitVariant:24}};
+    face=portraitCell(S.youngGuests.old);assert.equal(portraitCell(spouseAppearance(k)),face);ensureMarriedLife(k);assert.equal(portraitCell(spouseAppearance(k)),face);
+    delete S.youngGuests;k.spouse={name:'顾怀远'};face=portraitCell(spouseAppearance(k));ensureMarriedLife(k);S=JSON.parse(JSON.stringify(S));k=kidById(k.id);assert.equal(portraitCell(spouseAppearance(k)),face);`);
+});
+
+test('personal speech is stable, side-effect free, and every temperament has its own lines',()=>{
+  const {run,force}=boot();run(`var c=harem()[0];c.aff=60;c.mood=70;var before=JSON.stringify(S),first=characterVoiceHTML(c);for(var i=0;i<6;i++)assert.equal(characterVoiceHTML(c),first);assert.equal(JSON.stringify(S),before);
+    for(var trait of Object.keys(TRAITS)){assert.ok(CONSORT_VOICES[trait].length>=3);c.trait=trait;assert.deepEqual(consortVoicePool(c)[0].lines,CONSORT_VOICES[trait]);}
+    var all=new Set(Object.values(CONSORT_VOICES).flat());assert.equal(all.size,Object.values(CONSORT_VOICES).flat().length);`);
+  force(.314);run(`characterVoiceHTML(c);assert.equal(R(),.314);`);
+});
+
+test('speech respects death, grief, confinement, newborn ages and real gifts',()=>{
+  const {run}=boot();run(`var c=harem()[0];c.aff=60;c.xin={k:'悲恸'};assert.equal(characterVoice(c).key,'grief');c.cold=true;assert.equal(characterVoice(c).key,'cold');c.alive=false;assert.equal(characterVoice(c),null);
+    c.alive=true;c.cold=false;c.xin={k:'平和'};assert.ok(!consortVoicePool(c).some(v=>v.key==='gift'));remember(c,'gift','字画');assert.ok(consortVoicePool(c).some(v=>v.key==='gift'));S.turn+=3;assert.ok(!consortVoicePool(c).some(v=>v.key==='gift'));
+    var k=makeKid(c,'f','清月');assert.equal(characterVoice(k).text,'');k.born=S.turn-72;c.cold=true;assert.equal(characterVoice(k).key,'mother-away');c.cold=false;k.away=true;assert.equal(characterVoice(k).letter,true);
+    k.jailed=true;assert.equal(characterVoice(k).key,'confined');`);
+});
+
+test('paid conversations preserve rewards, remember the speaker, and reject unavailable characters',()=>{
+  const {run}=boot();run(`var c=harem()[0];c.aff=35;c.mood=50;E().energy=4;A.chat(c.id);assert.equal(E().energy,3);assert.equal(c.aff,c.trait==='痴情'?43:40);drain();assert.ok(NPCMemory.recall(S,c.id).some(m=>m.type==='personal-conversation'));
+    c.cold=true;A.chat(c.id);assert.equal(E().energy,3);var k=makeKid(c,'m','承平');k.born=S.turn-240;k.away=true;A.kidVisit(k.id);assert.equal(curEv.title,'皇嗣家书');assert.match(curEv.text,/回信/);drain();assert.equal(E().energy,2);k.jailed=true;A.kidVisit(k.id);A.kidVisit(-1);assert.equal(E().energy,2);`);
+});
+
+const marriedFixture=`var mother=harem()[0];var son=makeKid(mother,'m','承宁'),daughter=makeKid(mother,'f','清嘉');son.born=daughter.born=S.turn-240;for(var k of [son,daughter]){k.married=true;k.spouse={...marriageCandidate(k,'scholar'),marriedAt:S.turn};ensureMarriedLife(k);}`;
+test('married households keep distinct fixed personalities and create varied regular chronicles without modals',()=>{
+  const {run}=boot();run(marriedFixture);run(`var profiles=JSON.stringify([son.marriageNature,son.spouse.marriageNature]);for(var month=1;month<=36;month++){S.turn++;marriedLifeTick();}assert.ok(son.household.history.filter(x=>x.type==='household_daily').length>=5);assert.equal(modalOpen,false);
+    var notes=son.household.history.filter(x=>x.type==='household_daily');for(var i=1;i<notes.length;i++)assert.notEqual(notes[i].t,notes[i-1].t);assert.equal(JSON.stringify([son.marriageNature,son.spouse.marriageNature]),profiles);
+    var snapshot=JSON.stringify(S);marriedLifeTick();assert.equal(JSON.stringify(S),snapshot);S=JSON.parse(snapshot);son=kidById(son.id);assert.equal(JSON.stringify([son.marriageNature,son.spouse.marriageNature]),profiles);assert.match(householdPanel(son),/夫妻信任|府中和睦/);`);
+});
+
+test('both princess and prince households record pregnancy, births and counts once, with an adult and recovery gate',()=>{
+  const {run}=boot();run(marriedFixture);run(`S.turn+=3;assert.ok(startHouseholdPregnancy(son,son.spouse));assert.ok(startHouseholdPregnancy(daughter,daughter.spouse));assert.equal(startHouseholdPregnancy(son,son.spouse),false);
+    assert.match(householdPanel(daughter),/清嘉有孕/);var preg=son.household.pregnancies[0];assert.equal(deliverHouseholdChild(son,preg),null);S.turn+=9;marriedLifeTick();
+    for(var k of [son,daughter]){assert.equal(k.household.children.length,1);assert.equal(k.household.pregnancies.length,0);assert.match(householdSummary(k),/1子0女|0子1女/);assert.ok(k.story.some(s=>/平安诞下/.test(s.t)));assert.equal(startHouseholdPregnancy(k,k.spouse),false);}
+    assert.equal(deliverHouseholdChild(son,preg),null);var count=son.household.children.length;marriedLifeTick();assert.equal(son.household.children.length,count);
+    son.born=S.turn-17*12;son.household.lastBirth=-99;assert.equal(householdCanConceive(son,son.spouse),false);son.born=S.turn-240;son.spouse.born=S.turn-17*12;assert.equal(householdCanConceive(son,son.spouse),false);`);
+});
+
+test('confinement and death stop household events, pregnancies and inappropriate mother visits',()=>{
+  const {run}=boot();run(marriedFixture);run(`S.turn+=6;startHouseholdPregnancy(son,son.spouse);son.jailed=true;S.turn++;marriedLifeTick();assert.equal(son.household.pregnancies.length,0);assert.equal(householdSceneEvent(son),null);var history=son.story.length;S.turn+=12;marriedLifeTick();assert.equal(son.story.length,history);
+    mother.cold=true;for(var i=0;i<30;i++)recordHouseholdNews(daughter);assert.ok(daughter.household.history.some(x=>/许可递送/.test(x.t)));assert.ok(!daughter.household.history.some(x=>/请安时陪/.test(x.t)));
+    daughter.alive=false;assert.equal(householdActive(daughter),false);A.householdVisit(daughter.id);assert.equal(modalOpen,false);`);
+});
+
+test('household choices have lasting, one-time consequences and enforce cost and cooldown',()=>{
+  const {run}=boot();run(marriedFixture);run(`S.turn+=6;son.household.pending={id:'accounts',turn:S.turn};E().energy=0;var ev=householdSceneEvent(son);assert.equal(ev.choices[0].cond(),false);E().energy=3;var trust=son.spouse.trust;pushEv(ev);choose(0);drain();assert.equal(E().energy,2);assert.equal(son.spouse.trust,trust+5);assert.equal(son.household.pending,null);assert.equal(ev.choices[0].f(),null);assert.equal(son.spouse.trust,trust+5);assert.equal(makeHouseholdScene(son),null);
+    son.household.nextNews=S.turn+100;S.turn+=2;marriedLifeTick();assert.equal(son.spouse.trust,trust+7);assert.ok(son.story.some(x=>/两个月后/.test(x.t)));`);
+});
+
+test('household projects and concubines retain identities, costs, limits and relationship consequences',()=>{
+  const {run}=boot();run(marriedFixture);run(`E().treasury=100;A.householdProject(son.id);choose(0);drain();assert.equal(E().treasury,90);var project=son.household.project,lit=son.lit;S.turn+=3;marriedLifeTick();assert.equal(son.household.project,undefined);assert.equal(son.lit,Math.min(100,lit+4));A.householdProject(son.id);assert.equal(modalOpen,false);
+    S.turn+=24;son.amb=80;var trust=son.spouse.trust;A.householdConcubine(son.id);var face=portraitCell(son.household.concubineCandidate);choose(0);drain();assert.equal(son.household.concubines.length,1);assert.equal(portraitCell(son.household.concubines[0]),face);assert.ok(son.spouse.trust<trust);assert.equal(E().treasury,70);A.householdConcubine(son.id);assert.equal(modalOpen,false);`);
+});
+
+test('succession preserves the previous empress and birth mother portraits and inherits the new emperor family',()=>{
+  const {run}=boot();run(`var queen=empress(),mother=harem().find(c=>c!==queen);queen.portraitOverride=242;mother.portraitOverride=243;var son=makeKid(mother,'m','承宁'),sister=makeKid(mother,'f','清嘉');son.born=sister.born=S.turn-240;son.married=true;son.spouse={...marriageCandidate(son,'scholar'),marriedAt:S.turn-24};ensureMarriedLife(son);S.turn+=3;startHouseholdPregnancy(son,son.spouse);S.turn+=9;deliverHouseholdChild(son,son.household.pregnancies[0]);var baby=son.household.children[0],wifeFace=portraitCell(son.spouse),queenId=queen.id,motherId=mother.id;
+    succeed(son);choose(0);drain();assert.equal(S.flags.dowager.personId,queenId);assert.equal(S.flags.birthDowager.personId,motherId);assert.equal(portraitCell(dowagerPerson(S.flags.dowager)),242);assert.equal(portraitCell(dowagerPerson(S.flags.birthDowager)),243);assert.equal(portraitCell(empress()),wifeFace);
+    assert.equal(S.children.length,1);assert.equal(S.children[0].born,baby.born);assert.equal(S.children[0].name,baby.given);assert.equal(S.children[0].mom,empress().id);assert.equal(S.ys.b,0);
+    UI.sel='cn';assert.match(viewPlace(),/嫡母.*先帝皇后/);assert.ok(viewPlace().includes('data-portrait-cell="242"'));assert.match(royalRelativesPanel(),/清嘉/);
+    var snapshot=JSON.stringify(S);S=JSON.parse(snapshot);migrate();assert.equal(portraitCell(dowagerPerson(S.flags.dowager)),242);S.flags.dowager.lastOffer=S.turn;A.greet();assert.equal(portraitCell(curEv.por),242);drain();`);
+});
+
+test('residential palace guides show actual names or an empty residence instead of repeated instructions',()=>{
+  const {run}=boot();run(`var p=PLACES.find(p=>p.id==='kn'),queen=empress();var html=placeGuideHTML(p);assert.match(html,new RegExp(fullName(queen)));assert.doesNotMatch(html,/可以做什么|闲话、赏赐|探望居住/);queen.cold=true;assert.match(placeGuideHTML(p),/暂时无人居住/);`);
+});
+
+test('new portrait sheet appends only, keeps four princess options and shared consort choices',()=>{
+  const {run}=boot();run(`assert.equal(PORTRAIT_COUNT,248);assert.equal(portraitSheet(240).scale,4);for(var cell=240;cell<244;cell++)assert.ok(CONSORT_PORTRAITS.includes(cell));
+    var k=makeKid(harem()[0],'f','明昭');for(var v=26;v<30;v++){k.portraitVariant=v;k.born=S.turn-216;assert.equal(portraitCell(k),244+v-26);k.born=S.turn-72;assert.ok(portraitCell(k)<240);}
+    assert.equal(portraitSheet(239).src,'./palace-royal-regalia.webp?v=1');`);
+});
+
+test('all 64 personal episodes have unique authored entries, valid sources and matching conditions',()=>{
+  const {run}=boot();run(`assert.equal(PERSONAL_EPISODES.length,64);assert.equal(new Set(PERSONAL_EPISODES.map(e=>e.id)).size,64);assert.equal(new Set(PERSONAL_EPISODES.map(e=>e.title)).size,64);
+    for(var e of PERSONAL_EPISODES){for(var key of ['begin','action','success','setback','privateResult'])assert.ok(e[key]?.length>5,e.id+' '+key);assert.ok(EXPERIENCE_GROUPS[e.group]);assert.ok(EXPERIENCE_SOURCES[e.source]);}
+    var c=harem()[0];c.trait='好学';c.hobby='读书';assert.equal(experienceEligible(c,PERSONAL_EPISODES[0]),true);c.cold=true;assert.equal(experienceEligible(c,PERSONAL_EPISODES[0]),false);c.cold=false;assert.equal(experienceEligible(c,PERSONAL_EPISODES[48]),false);
+    var k=makeKid(c,'f','清宁');k.born=S.turn-48;assert.equal(experienceEligible(c,PERSONAL_EPISODES[48]),true);assert.equal(experienceEligible(c,PERSONAL_EPISODES[51]),false);`);
+});
+
+test('personal episodes have two durable stages, cannot reroll on rendering, and apply outcomes once',()=>{
+  const {run,force}=boot();run(`var c=harem()[0];c.trait='好学';c.hobby='读书';E().energy=4;var episode=PERSONAL_EPISODES[0];assert.equal(offerPersonalExperience(c,episode),true);
+    var before=JSON.stringify(S);personalExperiencePanel(c);personalExperienceEvent(c);assert.equal(JSON.stringify(S),before);
+    A.personalExperience(c.id);choose(0);drain();assert.equal(E().energy,3);assert.equal(c.personalExperiences.current.stage,'working');assert.equal(personalExperienceEvent(c),null);
+    S=JSON.parse(JSON.stringify(S));c=byId(c.id);S.turn=c.personalExperiences.current.due;c.cold=true;assert.equal(personalExperienceEvent(c),null);c.cold=false;A.personalExperience(c.id);var ev=curEv;`);
+  force(0);run(`choose(0);drain();assert.equal(c.personalExperiences.history[0].outcome,'有所成');assert.ok(c.story.some(x=>x.t.includes(episode.success)));var after=JSON.stringify(S);ev.choices[0].f();assert.equal(JSON.stringify(S),after);assert.equal(offerPersonalExperience(c,episode),false);
+    assert.ok(NPCMemory.recall(S,c.id).some(m=>m.type==='personal-experience'));assert.ok(consortVoicePool(c).some(v=>v.key==='experience'));`);
+});
+
+test('all authored personal episodes execute support, setback, private and postponed branches without broken state',()=>{
+  const {run,force}=boot();
+  run(`var parent=harem()[0];for(var age of [5,7,13]){var k=makeKid(parent,'f','验收女儿');k.born=S.turn-age*12;}`);
+  for(let index=0;index<64;index++){
+    run(`var c=harem()[0],e=PERSONAL_EPISODES[${index}];c.alive=true;c.cold=false;c.trait='聪慧';c.hobby='读书';c.age=25;c.aff=70;c.rank=5;c.favor=20;c.talent=50;c.personalExperiences={seen:{},history:[],lastEnd:-99,current:{id:e.id,stage:'offered'}};E().energy=4;
+      S.children.forEach((k,i)=>k.born=S.turn-[5,7,13][i]*12);pushEv(personalExperienceEvent(c));choose(0);drain();S.turn=c.personalExperiences.current.due;pushEv(personalExperienceEvent(c));`);
+    force(.999);run(`choose(0);drain();assert.equal(c.personalExperiences.history[0].outcome,'有遗憾');assert.equal(c.personalExperiences.history[0].t,e.setback);
+      c.personalExperiences.current={id:e.id,stage:'offered'};pushEv(personalExperienceEvent(c));choose(1);drain();assert.equal(c.personalExperiences.history.at(-1).t,e.privateResult);
+      c.personalExperiences.current={id:e.id,stage:'offered'};pushEv(personalExperienceEvent(c));choose(2);drain();assert.equal(c.personalExperiences.history.at(-1).outcome,'搁置');`);
+  }
+});
+
+test('personal episode scheduling obeys palace, personal and topic intervals without interrupting the player',()=>{
+  const {run,force}=boot();run(`S.turn=24;for(var c of harem()){c.enteredAt=0;c.aff=65;c.trait='好学';c.hobby='读书';}`);force(0,0,0);run(`personalExperienceTick();var c=harem().find(c=>c.personalExperiences?.current);assert.ok(c);var id=c.personalExperiences.current.id,saved=JSON.stringify(S);personalExperienceTick();assert.equal(JSON.stringify(S),saved);assert.equal(modalOpen,false);var rule=experienceRule(c);endPersonalExperience(c,rule,rule.privateResult,'自主');S.turn++;personalExperienceTick();assert.equal(c.personalExperiences.current,undefined);
+    S=JSON.parse(JSON.stringify(S));assert.equal(S.flags.personalExperiencePace.topics[id],24);assert.ok(byId(c.id).personalExperiences.seen[id]!==undefined);`);
+});
+
+test('mother episodes retain the eligible children through saves without transferring the reward to a sibling',()=>{
+  const {run}=boot();run(`var mother=harem()[0],baby=makeKid(mother,'m','幼子'),older=makeKid(mother,'f','清嘉');older.born=S.turn-72;var e=PERSONAL_EPISODES[48];
+    assert.equal(offerPersonalExperience(mother,e),true);assert.deepEqual(mother.personalExperiences.current.childIds,[older.id]);E().energy=4;
+    pushEv(personalExperienceEvent(mother));choose(0);drain();var babyVirtue=baby.vir,olderVirtue=older.vir,id=mother.id,babyId=baby.id,olderId=older.id;
+    S=JSON.parse(JSON.stringify(S));mother=byId(id);S.turn=mother.personalExperiences.current.due;
+    older=kidById(olderId);older.away=true;assert.equal(personalExperienceEvent(mother),null);older.away=false;
+    pushEv(personalExperienceEvent(mother));choose(0);drain();assert.equal(kidById(babyId).vir,babyVirtue);assert.equal(older.vir,Math.min(100,olderVirtue+2));`);
 });

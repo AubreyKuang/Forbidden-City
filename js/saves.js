@@ -272,6 +272,6 @@ A.undoImport=function(){
   }catch{toast('导入前的存档无法读取');return;}
   resetMapPosition(S.pos);showRestoredPalace();toast('已恢复导入前的进度');
 };
-function migrate(resetPosition=true){if(!S)return;ensureDowager();S.rel=S.rel||{};S.pos=S.pos||{x:100,y:82};reconcileScholarArcs();reconcileRareArcs();[...S.consorts,...(S.cands||[])].forEach(assignConsortPortrait);(S.cands||[]).forEach(deepen);alive().forEach(c=>{if(!c.arc)assignArc(c);deepen(c);clanKey(c)});S.children.forEach(k=>{if(k.sup===undefined)k.sup=0});
+function migrate(resetPosition=true){if(!S)return;royalHouseholds().forEach(ensureMarriedLife);ensureDowager();S.rel=S.rel||{};S.pos=S.pos||{x:100,y:82};reconcileScholarArcs();reconcileRareArcs();[...S.consorts,...(S.cands||[])].forEach(assignConsortPortrait);(S.cands||[]).forEach(deepen);alive().forEach(c=>{if(!c.arc)assignArc(c);deepen(c);clanKey(c)});S.children.forEach(k=>{if(k.sup===undefined)k.sup=0});
   alive().forEach(houseOf);S.flags.memorials ??= 0;childLifeTick();migrateMourning();reconcilePalaceRomance();
   if(resetPosition)resetMapPosition(S.pos)}

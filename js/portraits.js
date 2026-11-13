@@ -175,7 +175,9 @@ const LEGACY_DESCENDANT_VARIANTS=10;
 const DESCENDANT_VARIANTS=26;
 const EXISTING_PRINCE_VARIANTS=4;
 const EXTRA_PRINCE_VARIANTS=LEGACY_DESCENDANT_VARIANTS-EXISTING_PRINCE_VARIANTS;
-const BEAUTY_PORTRAIT_START=92, YOUNG_ROYAL_PORTRAIT_START=136, PORTRAIT_COUNT=240;
+const BEAUTY_PORTRAIT_START=92, YOUNG_ROYAL_PORTRAIT_START=136, PORTRAIT_COUNT=248;
+const PRINCESS_VARIANTS=30;
+const portraitVariantCount=child=>child.sex==='f'?PRINCESS_VARIANTS:DESCENDANT_VARIANTS;
 const portraitSheets=[
   {start:0,rows:7,scale:2,src:'./palace-portraits-b.webp?v=original-hd-1',image:portraitAtlas},
   {start:FAMILY_PORTRAIT_START,rows:4,scale:2,src:'./palace-family.webp?v=original-hd-1',image:familyAtlas},
@@ -184,7 +186,8 @@ const portraitSheets=[
   {start:YOUNG_ROYAL_PORTRAIT_START,rows:9,scale:2,src:'./palace-young-royals.webp?v=1',image:youngRoyalAtlas},
   {start:172,rows:9,scale:2,src:'./palace-young-royals-2.webp?v=1',image:document.createElement('img')},
   {start:208,rows:2,scale:2,src:'./palace-regalia.webp?v=1',image:document.createElement('img')},
-  {start:216,rows:6,scale:2,src:'./palace-royal-regalia.webp?v=1',image:document.createElement('img')}
+  {start:216,rows:6,scale:2,src:'./palace-royal-regalia.webp?v=1',image:document.createElement('img')},
+  {start:240,rows:2,scale:4,src:'./palace-gentle-portraits.webp?v=1',image:document.createElement('img')}
 ];
 const portraitSheet=cell=>portraitSheets.slice().reverse().find(sheet=>cell>=sheet.start)||portraitSheets[0];
 function ensurePortraitSheet(cell){const sheet=portraitSheet(cell);if(!sheet.image.src)sheet.image.src=sheet.src;}
@@ -197,7 +200,7 @@ atlasCanvas.width=PORTRAIT_WIDTH;atlasCanvas.height=PORTRAIT_HEIGHT;
 const atlasInk=atlasCanvas.getContext('2d');
 const ART_CACHE=new Map();
 
-const CONSORT_PORTRAITS=[1,2,3,4,5,6,7,21,...Array.from({length:44},(_,i)=>92+i).filter(cell=>![102,103,134,135].includes(cell)),...Array.from({length:8},(_,i)=>208+i)];
+const CONSORT_PORTRAITS=[1,2,3,4,5,6,7,21,...Array.from({length:44},(_,i)=>92+i).filter(cell=>![102,103,134,135].includes(cell)),...Array.from({length:8},(_,i)=>208+i),240,241,242,243];
 const WESTERN_PORTRAITS=[22,23,24,102,103,134,135];
 const PORTRAIT_CLOTHES={
   1:'圆领袍',2:'齐胸襦裙',3:'宋式褙子',4:'窄袖骑装',5:'齐腰襦裙',
@@ -212,6 +215,7 @@ const PORTRAIT_CLOTHES={
   '宋式褙子','齐胸襦裙','窄袖骑装','齐胸襦裙','交领襦裙','宋式褙子','宋式褙子','华绣宫装','齐腰襦裙','宋式褙子','西域舞衣','西域舞衣'
 ].forEach((clothes,i)=>{PORTRAIT_CLOTHES[BEAUTY_PORTRAIT_START+i]=clothes;});
 for(let cell=208;cell<216;cell++)PORTRAIT_CLOTHES[cell]='盛装华服';
+['华绣宫装','宋式褙子','交领襦裙','齐腰襦裙'].forEach((name,i)=>{PORTRAIT_CLOTHES[240+i]=name;});
 const consortPortraits=c=>c.fam?.t==='西域贡女'?WESTERN_PORTRAITS:CONSORT_PORTRAITS;
 
 function assignConsortPortrait(c){
@@ -238,18 +242,23 @@ function assignConsortPortrait(c){
 function childPortraitVariant(child){
   const ordinal=child.ord>0?child.ord:S.children.filter(k=>k.sex===child.sex).findIndex(k=>k.id===child.id)+1;
   // Old saves derived identity from ten variants. Keep that fallback permanently stable.
-  return Number.isInteger(child.portraitVariant)&&child.portraitVariant>=0&&child.portraitVariant<DESCENDANT_VARIANTS?child.portraitVariant:ordinal>0?(ordinal-1)%LEGACY_DESCENDANT_VARIANTS:Math.floor(mulberry32(child.seed||7)()*LEGACY_DESCENDANT_VARIANTS);
+  return Number.isInteger(child.portraitVariant)&&child.portraitVariant>=0&&child.portraitVariant<portraitVariantCount(child)?child.portraitVariant:ordinal>0?(ordinal-1)%LEGACY_DESCENDANT_VARIANTS:Math.floor(mulberry32(child.seed||7)()*LEGACY_DESCENDANT_VARIANTS);
 }
 function assignChildPortrait(child){
-  const usage=Array(DESCENDANT_VARIANTS).fill(0);
-  S.children.filter(k=>k.sex===child.sex).forEach(k=>usage[childPortraitVariant(k)]++);
-  const start=Math.floor(mulberry32(child.seed||7)()*DESCENDANT_VARIANTS);
+  // New adult faces share four childhood sets; keep young siblings distinct too.
+  const existing=S.children.filter(k=>k.sex===child.sex);
+  const count=portraitVariantCount(child),usage=Array(count).fill(0),youngUsage=Array(DESCENDANT_VARIANTS).fill(0);
+  const young=v=>child.sex==='f'&&v>=26?v-26:v;
+  existing.forEach(k=>{const v=childPortraitVariant(k);if(v<count){usage[v]++;youngUsage[young(v)]++;}});
+  const score=v=>usage[v]+(existing.length<DESCENDANT_VARIANTS?youngUsage[young(v)]*(existing.length+1):0);
+  const start=Math.floor(mulberry32(child.seed||7)()*count);
   let best=start;
-  for(let i=1;i<DESCENDANT_VARIANTS;i++){const v=(start+i)%DESCENDANT_VARIANTS;if(usage[v]<usage[best])best=v;}
+  for(let i=1;i<count;i++){const v=(start+i)%count;if(score(v)<score(best))best=v;}
   child.portraitVariant=best;
 }
 function childPortraitCell(child){
-  const age=kidAge(child),stage=age<3?0:age<12?1:2,variant=childPortraitVariant(child);
+  const age=kidAge(child),stage=age<3?0:age<12?1:2;let variant=childPortraitVariant(child);
+  if(child.sex==='f'&&variant>=26){if(age>=18)return 244+variant-26;variant-=26;}
   if(variant>=22)return 216+(child.sex==='m'?0:12)+stage*4+variant-22;
   if(variant>=LEGACY_DESCENDANT_VARIANTS){
     const extra=variant-LEGACY_DESCENDANT_VARIANTS;

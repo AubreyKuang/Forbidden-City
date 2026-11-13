@@ -36,10 +36,21 @@ function marriageStatus(k){
 function marriageButton(k,small=false){
   return marriageEligible(k)?`<button class="btn ${small?'sm ':''}gold" onclick="A.kidMarriage(${k.id})" ${marriageReady(k)?'':'disabled'}>议婚 / 赐婚${marriageReady(k)?' →':`<small>还需${k.marriageAfter-S.turn}个月</small>`}</button>`:'';
 }
+function spouseAppearance(k){
+  const spouse=k?.spouse;if(!spouse)return null;
+  if(spouse.appearance)return spouse;
+  // Old acquaintance marriages saved only a name and id. Recover the guest first;
+  // otherwise derive a stable adult identity without consuming gameplay randomness.
+  const guest=Object.values(S.youngGuests||{}).find(p=>p.id===spouse.id);
+  const person={...guest,...spouse};
+  let seed=2166136261;
+  for(const ch of `${k.id}:${person.id||person.name}`)seed=Math.imul(seed^ch.charCodeAt(0),16777619)>>>0;
+  return {sex:k.sex==='f'?'m':'f',born:k.born,seed,...person,courtGuest:true};
+}
 function marriagePanel(k){
   if(!k.alive||kidAge(k)<15||k.pendingName)return '';
   const spouse=k.spouse;
-  return `<section class="marriage-panel" aria-label="皇嗣婚事">${spouse?.appearance?porImg(spouse,72):''}<div><strong>${esc(marriageStatus(k))}</strong><p class="hint">${spouse?esc(spouse.background||spouse.fatherName&&spouse.fatherName+'之子'||'双方心意已定'):
+  return `<section class="marriage-panel" aria-label="皇嗣婚事">${spouse?`<figure class="spouse-portrait">${porImg(spouseAppearance(k),112)}<figcaption>${k.sex==='f'?'驸马':'王妃'} · ${esc(spouse.name)}</figcaption></figure>`:''}<div class="grow"><strong>${esc(marriageStatus(k))}</strong><p class="hint">${spouse?esc(spouse.background||spouse.fatherName&&spouse.fatherName+'之子'||'双方心意已定'):
     k.married?'这门婚事已经记入起居注。':'先看名帖、听本人意愿，再确认赐婚；也可以暂缓半年。'}</p>${Number.isFinite(spouse?.trust)?`<p class="hint">夫妻信任 ${rd(spouse.trust)} / 100${spouse.story?.length?' · '+esc(spouse.story[spouse.story.length-1].t):''}</p>`:''}</div>${marriageButton(k)}</section>`;
 }
 function princeMarriage(k){
@@ -53,13 +64,14 @@ function princeMarriage(k){
 function princeMatchReview(k,route){
   const p=marriageCandidate(k,route),match=PRINCE_MATCHES[route],statName={lit:'才学',mar:'武艺',vir:'品德'}[match.stat];
   const fits=k[match.stat]>=Math.max(k.lit,k.mar,k.vir);
-  return {title:'赐婚前问心意',cast:[k,p],valid:()=>marriageReady(k),text:`${p.name} · ${kidAge(p)}岁 · ${p.background}\n${match.note}\n${k.name}${fits?'听得认真，说两人倒有相投之处。':'想了想，说愿意先听她亲口谈谈将来的打算。'}\n礼部已分别问过双方，二人愿意议定。婚仪需国库五十万两；婚后${statName}+${match.gain}，父爱+${fits?10:5}。`,choices:[
+  return {title:'赐婚前问心意',cast:[k,p],valid:()=>marriageReady(k),text:`${p.name} · ${kidAge(p)}岁 · ${p.background}\n${match.note}\n${k.name}${fits?'听得认真，说两人倒有相投之处。':'想了想，说愿意先听她亲口谈谈将来的打算。'}\n${marriageProfileText(k,p)}\n礼部已分别问过双方，二人愿意议定。婚仪需国库五十万两；婚后${statName}+${match.gain}，父爱+${fits?10:5}。`,choices:[
     {t:'下诏赐婚 · 国库−50万两',primary:true,cond:()=>E().treasury>=50&&marriageReady(k),f:()=>{
       if(!marriageReady(k)||E().treasury<50)return null;
       k.married=true;k.spouse={...p,marriedAt:S.turn};k[match.stat]=clamp(k[match.stat]+match.gain);k.love=clamp(k.love+(fits?10:5));
       princessMemory(k,'child_marriage',`经问双方心意，与${p.name}议定婚事。`,'礼部');log(`${kidName(k)}赐婚${p.name}。`,1);
-      const result=chg({treasury:-50});save('auto');return `${k.name}与${p.name}的婚事已定。${k.away?'礼部将诏书送往封地。':'婚后仍留京，原有课业和亲人往来照常。'}${fx(result)}`;
+      ensureMarriedLife(k);const result=chg({treasury:-50});save('auto');return `${k.name}与${p.name}的婚事已定。${k.away?'礼部将诏书送往封地。':'婚后仍留京，原有课业和亲人往来照常。'}${fx(result)}`;
     }},
+    {t:'先让两人谈谈日常',f:()=>{pushNow(marriageMeeting(k,p,()=>princeMatchReview(k,route)));return null;}},
     {t:'再看别的人选',f:()=>{pushNow(princeMarriage(k));return null;}},
     {t:'暂缓半年',f:()=>{k.marriageAfter=S.turn+6;save('auto');return '婚事暂缓半年。';}}
   ]};

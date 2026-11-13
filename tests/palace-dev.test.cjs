@@ -52,6 +52,25 @@ test('new portrait ranges are selectable and reject cells beyond the final atlas
   const {run}=boot();run(`var lady=harem()[0],child=makeKid(lady,'f','明昭');
     DEV.applyPatch('consort:'+lady.id,{portraitOverride:215});assert.equal(portraitCell(lady),215);
     DEV.applyPatch('kid:'+child.id,{portraitVariant:25});var babyFace=portraitCell(child);DEV.applyPatch('kid:'+child.id,{age:20});assert.notEqual(portraitCell(child),babyFace);assert.equal(portraitCell(child),239);
-    assert.throws(()=>DEV.applyPatch('kid:'+child.id,{portraitVariant:26}));assert.throws(()=>DEV.applyPatch('consort:'+lady.id,{portraitOverride:240}));
-    DEV.target='kid:'+child.id;DEV.draft=DEV.clone(child);DEV.gallery();assert.equal(($('#dev-gallery').innerHTML.match(/class="dev-face"/g)||[]).length,26);`);
+    assert.throws(()=>DEV.applyPatch('kid:'+child.id,{portraitVariant:30}));assert.throws(()=>DEV.applyPatch('consort:'+lady.id,{portraitOverride:PORTRAIT_COUNT}));
+    DEV.target='kid:'+child.id;DEV.draft=DEV.clone(child);DEV.gallery();assert.equal(($('#dev-gallery').innerHTML.match(/class="dev-face"/g)||[]).length,30);`);
+});
+test('age input previews the grown portrait and applies age without the distant confirmation button',()=>{
+  const {run}=boot();run(`var child=makeKid(harem()[0],'f','明昭');child.portraitVariant=26;child.portraitOverride=62;DEV.select('kid:'+child.id);var originalBorn=child.born;DEV.previewAge('20');assert.equal(child.born,originalBorn);assert.equal(portraitCell(DEV.draft),244);
+    $('#dev-fields').querySelector=()=>({value:'20'});DEV.saveAge();assert.equal(kidAge(child),20);assert.equal(portraitCell(child),244);assert.equal(child.portraitOverride,null);assert.match($('#dev-status').textContent,/年龄已保存/);`);
+});
+test('calendar jumps age all born-based relatives, save only the debug world and can be rolled back',()=>{
+  const {run,storage}=boot();run(`var child=makeKid(harem()[0],'f','明昭');child.portraitVariant=27;var turn=S.turn,month=S.month,age=E().age,ladyAge=harem()[0].age;localStorage.setItem('chengongji_v1_auto','production untouched');
+    DEV.jumpTime(20,'year');assert.equal(S.turn,turn+240);assert.equal(S.month,month);assert.equal(E().age,age+20);assert.equal(harem()[0].age,ladyAge+20);assert.equal(kidAge(child),20);assert.equal(portraitCell(child),245);assert.equal(modalOpen,false);
+    DEV.restore();assert.equal(S.turn,turn);assert.equal(kidAge(kidById(child.id)),0);DEV.jumpTime(13,'month');assert.equal(S.month,(month+12)%12+1);assert.equal(S.turn,turn+13);`);
+  assert.equal(storage.get('chengongji_v1_auto'),'production untouched');
+});
+test('invalid jumps and storage failures leave the original timeline unchanged',()=>{
+  const {run}=boot();run(`var before=JSON.stringify(S);for(var args of [[0,'month'],[-1,'year'],[1.5,'year'],[101,'year'],[1,'day']])assert.throws(()=>DEV.jumpTime(...args));assert.equal(JSON.stringify(S),before);
+    var writer=localStorage.setItem;localStorage.setItem=(k,v)=>{if(k===SKEY+'auto')throw Error('quota');writer(k,v);};assert.throws(()=>DEV.jumpTime(1,'year'));assert.equal(JSON.stringify(S),before);`);
+});
+test('young portrait alternatives have exactly one selected identity and keep the target in sync',()=>{
+  const {run}=boot();run(`var child=makeKid(harem()[0],'f','清嘉');child.portraitVariant=26;DEV.select('kid:'+child.id);
+    assert.equal($('#dev-target').value,'kid:'+child.id);assert.equal(($('#dev-gallery').innerHTML.match(/aria-pressed="true"/g)||[]).length,1);
+    assert.ok($('#dev-gallery').innerHTML.includes('aria-pressed="true" onclick="DEV.face(26)"'));`);
 });

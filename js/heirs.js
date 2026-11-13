@@ -28,13 +28,13 @@ function growKid(k){
   else if(k.policy==='放养'){k.hp+=.25;k.amb+=.1;k.love+=.05}else{k.lit+=g()*.65;k.mar+=g()*.65;k.vir+=g()*.65}
   {const fm=fosterOf(k);if(fm&&fm.alive){if(fm.virtue>65)k.vir+=.15;if(fm.talent>65)k.lit+=.15;if(fm.scheme>65)k.amb+=.12}}['lit','mar','vir','hp','amb','love'].forEach(s=>k[s]=clamp(k[s]));supTick(k);
 }
-A.kidVisit=function(id){const k=kidById(id);if(!useE())return;const a=kidAge(k);
+A.kidVisit=function(id){const k=kidById(id);if(modalOpen||!k?.alive||k.jailed||k.pendingName||!useE())return;
+  const voice=characterVoice(k,'talk'),away=childHasLeftPalace(k);
   k.love=clamp(k.love+10);const st=pick(['lit','mar','vir']);k[st]=clamp(k[st]+2);
-  const t=a<3?pick(['襁褓中的孩子攥住了你的手指，咿咿呀呀，不肯松开。','乳母说孩子近来能认人了，一见你便咯咯直笑。']):
-    a<8?pick(['孩子奶声奶气地背了一首诗，背到一半忘了词，急得直挠头。','孩子献宝似的捧出自己捏的泥人，说这是父皇。','孩子拉着你去看御花园里新孵的小鸭子。']):
-    pick(['你与孩子在上书房说了半日话，他的见识长进了不少。','孩子向你请教治国之道，你耐心作答。','你考校了几句功课，孩子对答如流。']);
-  kstory(k,`父皇来探望。${t}`);setScene('harem');
-  pushEv({title:'探望皇嗣',por:k,text:t+fx(`父爱+10　${({lit:'才学',mar:'武艺',vir:'品德'})[st]}+2`),choices:[{t:'好'}]})};
+  const t=voice.stage+(voice.text?`\n“${voice.text}”`:'')+`\n${away?'你写下回信，认真回答了孩子的话。':'你坐下来，陪孩子慢慢说完这一段。'}`;
+  kstory(k,`${away?'与父皇通信。':'父皇来探望。'}${voice.text||voice.stage}`);rememberConversation(k,voice,away?'家书':'宫中');setScene('harem');
+  pushEv({title:away?'皇嗣家书':'探望皇嗣',por:k,text:t+fx(`父爱+10　${({lit:'才学',mar:'武艺',vir:'品德'})[st]}+2`),choices:[{t:'记在心里'}]});save('auto');
+};
 A.kidPolicy=function(id,p){const k=kidById(id);k.policy=p;AU.sfx('click');render()};
 A.kidTutor=function(id){const k=kidById(id);k.tutor=!k.tutor;if(k.tutor){kstory(k,'陛下延请当世大儒为师。');toast('已延请太傅（每月5万两）')}render()};
 A.kidHeir=function(id){const k=kidById(id);const old=S.heir&&kidById(S.heir);
