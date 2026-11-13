@@ -629,3 +629,34 @@ button.family-room-person{cursor:pointer}button.family-room-person:hover{color:#
 .marriage-panel{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:16px 0;padding:16px 18px;background:#c6ab7014;border:1px solid #b99a6255;border-radius:10px}
 .marriage-panel strong{color:var(--ink);font-size:15px}.marriage-panel .hint{margin:6px 0 0}.marriage-panel .btn{flex-shrink:0}
 @media(max-width:600px){.map-guide-tools{align-items:flex-start}.map-guide-tools .hint{max-width:50%}.marriage-panel{align-items:flex-start;flex-direction:column;gap:10px;padding:13px}.marriage-panel .btn{align-self:flex-start}.map-tooltip{font-size:12px;padding:12px}}
+
+/* Keep the map as the main view, with the court briefing on demand. */
+#app[data-view="map"] #panel{margin:0;padding:8px 10px;container-type:size}
+#app[data-view="map"] .map-play{
+  width:min(100%,max(330px,calc((100cqh - 78px) * 1.5625)),1180px);
+  min-width:0;position:relative;align-self:safe center
+}
+.map-play #mapwrap{outline:1px solid #c5985766;outline-offset:-1px}
+.map-location{background:#33221de8}
+.map-dock{
+  display:flex;align-items:center;justify-content:flex-end;gap:8px;position:relative;
+  min-height:42px;padding:4px 8px;background:#33221df5;border-top:1px solid #bc935d75
+}
+.map-dock .map-lead{margin-right:auto;color:#ffedc7;background:#634132;border:1px solid #ad805e;font-size:12px}
+.map-brief>summary{
+  cursor:pointer;white-space:nowrap;color:#ffedc7;font-size:13px;padding:5px 7px
+}
+.map-brief>summary:focus-visible{outline:2px solid #eac481;outline-offset:2px}
+.map-brief-content{
+  position:absolute;z-index:3;left:0;right:0;bottom:100%;max-height:min(44dvh,360px);overflow:auto;
+  padding:10px 12px;background:#35251ff7;border:1px solid #ad805e;box-shadow:0 -10px 30px #27171188
+}
+.map-brief-content .map-activity-panel{margin:0 0 8px}
+.map-brief-content .map-quiet,.map-brief-content .map-legend{color:#f8e8cb;background:transparent}
+#app[data-layout="game"] #menu{background:#30201def}
+@media(max-width:600px){
+  #app[data-view="map"] #panel{padding-inline:5px}
+  .map-dock{gap:4px}
+  .map-dock .map-lead{min-width:0;white-space:normal;text-align:left;line-height:1.4}
+  .map-brief>summary{font-size:12px}
+}

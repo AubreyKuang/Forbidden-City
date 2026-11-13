@@ -335,8 +335,7 @@ function mapActivityLeads(){
 }
 function mapLeadAction(lead){return lead.place?`A.visitMapActivity('${lead.place}')`:`A.go('${lead.person.sex?'kid':'consort'}',${lead.person.id})`;}
 function mapLeadPlace(lead){return lead.place?PLACES.find(p=>p.id===lead.place).n:porName(lead.person);}
-function mapActivityPanel(){
-  const leads=mapActivityLeads();
+function mapActivityPanel(leads){
   if(!leads.length)return '<p class="hint map-quiet">宫中暂静，可以到各宫走走。</p>';
   const card=lead=>`<article class="map-activity-card"><div><strong>${esc(lead.title)}</strong><small>${lead.expires?'本月邀约':'本月动向'}</small><p>${esc(lead.text)}</p></div>
     ${activityPortraits(...lead.cast)}<button class="btn sm jade" onclick="${mapLeadAction(lead)}">${esc(lead.button||mapLeadPlace(lead)+' · '+lead.title)} →</button></article>`;
@@ -362,7 +361,26 @@ function mountMap(){const w=$('#mapwrap');if(!w)return;w.appendChild(MAPC);mount
     b.style.left=((x+ww/2)/MW*100)+'%';b.style.top=((y+(p.id==='yh'?h/2:h-2))/MH*100)+'%';
     bindMapGuide(b,p);w.appendChild(b)})}
 const backBtn=`<button class="btn sm" onclick="A.go('map')">◂ 返回宫城</button>`;
-function viewMap(){return `<section class="map-play" aria-label="宫城地图"><header class="map-location"><h2>宫城</h2><span class="hint">当前位置 · ${esc(nearestPlace())}</span></header><div class="map-guide-tools"><span class="hint">悬停宫名或建筑，查看用途与活动</span><button id="map-guide-toggle" class="btn sm" aria-pressed="false" onclick="A.toggleMapGuide()">地点用途与玩法</button></div><div id="mapwrap"></div><div id="map-guide-preview" aria-live="polite"></div><p class="map-legend">点宫殿名直达 · 点宫殿步行前往 · 点小人偶遇 · 绿点：有人活动 · 粉点：有孕 · 金点：选秀</p>${mourningNotice()}${mapActivityPanel()}${princessMapNotice()}${birthdayBanquetButtons()}${proudDemandNotice()}</section>`;}
+function viewMap(){
+  const leads=mapActivityLeads();
+  const first=leads[0];
+  return `<section class="map-play" aria-label="宫城地图">
+    <header class="map-location"><h2>宫城</h2><span class="hint">${esc(nearestPlace())}</span></header>
+    <div id="mapwrap"></div>
+    <div id="map-guide-preview" aria-live="polite"></div>
+    <div class="map-dock">
+      ${first?`<button class="btn map-lead" onclick="${mapLeadAction(first)}">${esc(mapLeadPlace(first))} · ${esc(first.title)} <span aria-hidden="true">›</span></button>`:''}
+      <button id="map-guide-toggle" class="btn sm" aria-pressed="false" onclick="A.toggleMapGuide()">地点用途与玩法</button>
+      <details class="map-brief" ${UI.mapBriefOpen?'open':''} ontoggle="UI.mapBriefOpen=this.open">
+        <summary>宫中动向</summary>
+        <div class="map-brief-content">
+          ${mourningNotice()}${mapActivityPanel(leads)}${princessMapNotice()}${birthdayBanquetButtons()}${proudDemandNotice()}
+          <p class="map-legend">点宫殿名直达 · 点宫殿步行前往 · 点小人偶遇 · 绿点：有人活动 · 粉点：有孕 · 金点：选秀</p>
+        </div>
+      </details>
+    </div>
+  </section>`;
+}
 function viewPalace(){const name=UI.sel,res=name==='冷宫'?alive().filter(c=>c.cold):harem().filter(c=>c.palace===name);
   const extra=name==='储秀宫'&&S.cands.length?`<div class="acts"><button class="btn gold" onclick="A.go('xx')">秀女正在候选（${S.cands.length}人）</button></div>`:'';
   const note=name==='冷宫'?'荒草萋萋，宫门深锁。':name==='坤宁宫'?'中宫所居，凤仪万方。':(PALACE_NOTES[name]||'宫门半掩，廊下挂着鸟笼。');

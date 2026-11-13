@@ -410,11 +410,11 @@ function viewSys(){
   return `<h2>存档</h2><p class="hint">存档保存在本浏览器中；每月结束时会自动存档。</p>
    ${['1','2','3'].map(s=>`<div class="acts" style="align-items:center"><b>存档${s}</b><span class="hint grow">${esc(slotInfo(s)||'空')}</span><button class="btn sm gold" onclick="A.save('${s}')">保存</button><button class="btn sm" onclick="A.load('${s}')">读取</button></div>`).join('')}
    <div class="acts" style="align-items:center"><b>自动</b><span class="hint grow">${esc(slotInfo('auto')||'空')}</span><button class="btn sm" onclick="A.load('auto')">读取</button></div>
-   <h3>存档码</h3><p class="hint">导出后复制这串字，可以换浏览器继续玩，也可以发给别人看你的进度。</p><textarea id="savecode" class="inp" aria-label="存档码"></textarea><div class="acts"><button class="btn sm gold" onclick="A.exportSave()">导出存档码</button><button class="btn sm" onclick="A.importSave()">导入存档码</button></div>
+   <h3>存档码</h3><p class="hint">导出后复制这串字，可以换浏览器继续玩，也可以发给别人看你的进度。</p><textarea id="savecode" class="inp" aria-label="存档码"></textarea><div class="acts"><button class="btn sm gold" onclick="A.exportSave()">导出存档码</button><button class="btn sm" onclick="A.importSave()">导入存档码</button>${palaceImportBackup()?'<button class="btn sm" onclick="A.undoImport()">恢复导入前的进度</button>':''}</div>
    ${rewindHTML()}
    <h3>其他</h3><div class="acts"><button class="btn sm" onclick="S=null;UI.view='title';render()">返回标题</button></div>`}
 function rewindHTML(){
-  const snaps=SaveManager.snapshots(localStorage,SKEY+'auto').sort((a,b)=>b.day-a.day);
+  const snaps=SaveManager.snapshots(SaveManager.getStorage(),SKEY+'auto').sort((a,b)=>b.day-a.day);
   if(!snaps.length)return '';
-  return `<h3>岁首快照</h3><p class="hint">每年正月自动留一份，最多四份。回到那年岁首，之后的事会重新发生。</p>${snaps.map(s=>`<div class="acts" style="align-items:center"><span class="grow">${esc(s.date||'')}</span><button class="btn sm" onclick="A.rewind(${s.index})">回到这里</button></div>`).join('')}`;
+  return `<h3>岁首快照</h3><p class="hint">每年正月自动留一份，最多四份。回到那年岁首，之后的事会重新发生。</p>${snaps.map(s=>`<div class="acts" style="align-items:center"><span class="grow">${esc(s.date||'')}</span><button class="btn sm" onclick="A.rewind(${s.index},${Number(s.savedAt)||0})">回到这里</button></div>`).join('')}`;
 }

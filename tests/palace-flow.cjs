@@ -15,7 +15,7 @@ math.random=()=>{
   if(forcedRoll!==undefined){const roll=forcedRoll;forcedRoll=undefined;return roll;}
   return ((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);
 };
-const ctx=vm.createContext({Math:math,forceRoll:roll=>{forcedRoll=roll;},document,localStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v)},requestAnimationFrame:noop,setTimeout:noop,setInterval:noop,getComputedStyle:()=>({getPropertyValue:()=>'sans-serif'}),console,assert});
+const ctx=vm.createContext({Math:math,btoa,atob,confirm:()=>true,forceRoll:roll=>{forcedRoll=roll;},document,localStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},requestAnimationFrame:noop,setTimeout:noop,setInterval:noop,getComputedStyle:()=>({getPropertyValue:()=>'sans-serif'}),console,assert});
 runGameScripts(ctx);
 vm.runInContext(`
 const drain = () => {
@@ -63,6 +63,25 @@ A.courtPolicy('army');assert.equal(E().energy,beforeCourt-1);
 assert.equal(save('3'),true);S.turn++;assert.equal(save('3'),true);
 localStorage.setItem(SKEY+'3','{invalid');A.load('3');assert.equal(S.turn,turn);
 assert.equal(S.courtPolicyTurn,turn);assert.equal(S.flags.lastMaidEncounter,firstEncounter+4);
+const importTarget = {...S, emp:{...S.emp, name:'和安'}};
+const encodeSave = value => btoa(unescape(encodeURIComponent(JSON.stringify(value))));
+const preImport = S.emp.name;
+const currentPalace = S;
+$('#savecode').value=encodeSave({emp:{name:'broken'}});
+A.importSave();assert.equal(S,currentPalace);
+$('#savecode').value=encodeSave(importTarget);
+const writeSave=localStorage.setItem;
+const previousAuto=localStorage.getItem(SKEY+'auto');
+const previousImportBackup=localStorage.getItem(PALACE_BEFORE_IMPORT);
+localStorage.setItem=(key,value)=>{if(key===SKEY+'auto')throw Error('quota');writeSave(key,value);};
+A.importSave();assert.equal(S,currentPalace);
+assert.equal(localStorage.getItem(SKEY+'auto'),previousAuto);
+assert.equal(localStorage.getItem(PALACE_BEFORE_IMPORT),previousImportBackup);
+localStorage.setItem=writeSave;
+A.importSave();assert.equal(S.emp.name,'和安');
+assert.equal(JSON.parse(localStorage.getItem(SKEY+'auto')).emp.name,'和安');
+A.undoImport();assert.equal(S.emp.name,preImport);
+assert.equal(JSON.parse(localStorage.getItem(SKEY+'auto')).emp.name,preImport);
 let lastMaid=S.flags.lastMaidEncounter;
 const ambientTurns=new Map();
 for(let i=0;i<60;i++){
