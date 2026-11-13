@@ -343,6 +343,33 @@ test('an autumn order can be delayed once and uses September allowances at the h
   `);
 });
 
+test('August cancellation refunds half the deposit once and preserves the monthly allowances',()=>{
+  boot().run(`
+    const option=label=>curEv.choices.findIndex(c=>c.t.includes(label));
+    const cancel=()=>option('退订秋粮');
+    const order={gen:S.gen,turn:7};
+    S.flags.autumnGrainOrder=order;
+    S.month=7;S.turn=6;E().treasury=0;E().energy=0;
+    A.grainReserve();assert.equal(cancel(),-1);choose(option('暂不购粮'));
+    S.month=8;S.turn=7;
+    const write=save,history=JSON.stringify(S.log);
+    save=()=>false;
+    A.grainReserve();choose(cancel());drain();
+    assert.equal(S.flags.autumnGrainOrder,order);
+    assert.equal(E().treasury,0);assert.equal(JSON.stringify(S.log),history);
+    save=write;
+    A.grainReserve();choose(cancel());drain();assert.equal(load('auto'),true);
+    assert.deepEqual([E().treasury,E().energy,autumnGrainOrderStatus(),S.flags.grainPurchaseTurn,S.flags.grainReliefTurn],
+      [10,0,'',undefined,undefined]);
+    A.grainReserve();assert.equal(cancel(),-1);choose(option('暂不购粮'));
+    S.flags.autumnGrainOrder=order;
+    A.grainReserve();choose(option('改到九月'));drain();
+    A.grainReserve();assert.equal(cancel(),-1);choose(option('暂不购粮'));
+    S.month=9;S.turn=8;
+    A.grainReserve();assert.equal(cancel(),-1);
+  `);
+});
+
 test('August grain delivery can bypass a full warehouse and spends both monthly allowances once',()=>{
   const {run}=boot();
   run(`

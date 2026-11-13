@@ -399,7 +399,7 @@ function viewMap(){
           ${mourningNotice()}${mapActivityPanel(leads)}${princessMapNotice()}${birthdayBanquetButtons()}${proudDemandNotice()}
           ${floodDikeReady()?'<p class="hint">黄河险堤已加固。日后一次直接赈济可少花 '+FLOOD_DIKE_SAVING+' 万两。</p>':''}
           <p class="hint">${grainReserveReady()?`常平仓有${grainReserveLabel()}备荒粮。遇到蝗灾月奏时可发放，免耗精力。`:'常平仓暂无备荒粮，可以向粮商买半批。'}</p>
-          ${autumnGrainOrderStatus()==='due'?'<p class="hint">预订的半批秋粮已到，须在本月领走。</p>':''}
+          ${autumnGrainOrderStatus()==='due'?`<p class="hint">预订的半批秋粮已到。${S.month===8?'本月可领粮、改期或退订。':'九月是最后的领取期限。'}</p>`:''}
           ${autumnGrainOrderStatus()==='delayed'?'<p class="hint">预订的半批秋粮已改到九月交付。</p>':''}
           <button class="btn sm" onclick="A.grainReserve()">查看常平仓</button>
           <p class="map-legend">点宫殿名直达 · 点宫殿步行前往 · 点小人偶遇 · 绿点：有人活动 · 粉点：有孕 · 金点：选秀</p>

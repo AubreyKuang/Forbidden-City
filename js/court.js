@@ -74,7 +74,7 @@ const LOCUST_LOCAL_PURCHASE_COST=125, LOCUST_LOCAL_PURCHASE_PEOPLE=6;
 const HALF_GRAIN_TOP_UP_REVENUE=120;
 const AUTUMN_GRAIN_PRICE=75, REGULAR_GRAIN_PRICE=110;
 const AUTUMN_GRAIN_DEPOSIT=20, AUTUMN_GRAIN_BALANCE=40;
-const AUTUMN_GRAIN_DELAY_FEE=10;
+const AUTUMN_GRAIN_DELAY_FEE=10, AUTUMN_GRAIN_REFUND=10;
 const AUTUMN_GRAIN_DELIVERY=25, AUTUMN_GRAIN_RELIEF_PEOPLE=4;
 const GRAIN_RELIEF_THRESHOLD=45, GRAIN_RELIEF_PEOPLE=2;
 const grainHarvestSeason=()=>S.month>=8&&S.month<=10;
@@ -140,7 +140,7 @@ function autumnGrainOrderStatus(){
 }
 function reserveAutumnGrainChoice(){
   return {t:'预订半批秋粮',
-    preview:`订金 ${AUTUMN_GRAIN_DEPOSIT} 万两 · 精力 −1 · 八月付尾款 ${AUTUMN_GRAIN_BALANCE} 万两领粮 · 可在八月改期 · 逾期不退订金`,
+    preview:`订金 ${AUTUMN_GRAIN_DEPOSIT} 万两 · 精力 −1 · 八月付尾款 ${AUTUMN_GRAIN_BALANCE} 万两领粮 · 可改期或退订 · 逾期不退订金`,
     cond:()=>S.month===7&&!autumnGrainOrderStatus()&&grainStorageHasRoom()&&
       E().treasury>=AUTUMN_GRAIN_DEPOSIT&&E().energy>0,
     why:`须有 ${AUTUMN_GRAIN_DEPOSIT} 万两和 1 点精力`,
@@ -148,17 +148,28 @@ function reserveAutumnGrainChoice(){
       S.flags.autumnGrainOrder={gen:S.gen,turn:S.turn+1};
       const result=chg({treasury:-AUTUMN_GRAIN_DEPOSIT});
       log(`户部付订金 ${AUTUMN_GRAIN_DEPOSIT} 万两，约定八月交付半批秋粮。`);
-      return `已预订半批秋粮。八月可付尾款入仓、直送救急，或改到九月。${fx(result)}`;
+      return `已预订半批秋粮。八月可入仓、直送救急、改期或退订。${fx(result)}`;
     })};
 }
 function delayAutumnGrainChoice(){
   return {t:'改到九月领秋粮',
-    preview:`今月不付银 · 免耗精力 · 九月尾款增至 ${AUTUMN_GRAIN_BALANCE+AUTUMN_GRAIN_DELAY_FEE} 万两`,
+    preview:`今月不付银 · 免耗精力 · 九月尾款增至 ${AUTUMN_GRAIN_BALANCE+AUTUMN_GRAIN_DELAY_FEE} 万两 · 改期后不能退订`,
     cond:()=>S.month===8&&autumnGrainOrderStatus()==='due',
     f:()=>saveGrainAction(()=>{
       S.flags.autumnGrainOrder={...S.flags.autumnGrainOrder,turn:S.turn+1,delayed:true};
       log(`户部将预订的秋粮改到九月交付，改期费 ${AUTUMN_GRAIN_DELAY_FEE} 万两随尾款一并结清。`);
       return '粮商会把半批秋粮留到九月。届时仍可入仓或直送救急，逾期不退订金。';
+    },false)};
+}
+function cancelAutumnGrainChoice(){
+  return {t:'退订秋粮，收回部分订金',
+    preview:`国库 +${AUTUMN_GRAIN_REFUND} 万两 · 免耗精力 · 放弃本次领粮`,
+    cond:()=>S.month===8&&autumnGrainOrderStatus()==='due',
+    f:()=>saveGrainAction(()=>{
+      delete S.flags.autumnGrainOrder;
+      const result=chg({treasury:AUTUMN_GRAIN_REFUND});
+      log(`户部退订半批秋粮，收回订金 ${AUTUMN_GRAIN_REFUND} 万两。`);
+      return `粮商已收回预留的半批粮，退还 ${AUTUMN_GRAIN_REFUND} 万两。余下订金由粮商留存。${fx(result)}`;
     },false)};
 }
 function collectAutumnGrainChoice(direct=false){
@@ -212,7 +223,7 @@ A.grainReserve=function(){
   const order=autumnGrainOrderStatus();
   const choices=[];
   if(order==='due')choices.push(collectAutumnGrainChoice(),collectAutumnGrainChoice(true));
-  if(order==='due'&&S.month===8)choices.push(delayAutumnGrainChoice());
+  if(order==='due'&&S.month===8)choices.push(delayAutumnGrainChoice(),cancelAutumnGrainChoice());
   if(stocked){
     choices.push(sellGrainChoice('售粮充库',half?HALF_GRAIN_SALE_REVENUE:GRAIN_SALE_REVENUE));
     if(!half)choices.push(sellGrainChoice('售半批，留半批备荒',HALF_GRAIN_SALE_REVENUE,true));
@@ -225,7 +236,7 @@ A.grainReserve=function(){
     (stocked||order==='due'?`当前民心 ${E().people}。`:'')+
     (order==='pending'?'\n已预订半批秋粮。八月可留出半批仓位领粮，民心低时也可加付运费直送救急。逾期不退订金。':'')+
     (order==='delayed'?'\n预订已改到九月，届时可领粮，逾期不退订金。':'')+
-    (order==='due'?`\n预订的半批秋粮已到。可领粮入仓，民心低时也可直送缺粮村落。${S.month===8?'若本月不领，可改到九月。':'九月是最后的领取期限。'}逾期不退订金。`:'')+
+    (order==='due'?`\n预订的半批秋粮已到。可领粮入仓，民心低时也可直送缺粮村落。${S.month===8?'若本月不领，可改到九月或退订。':'九月是最后的领取期限。'}逾期不退订金。`:'')+
     (!stocked||half?`\n${autumn?'秋粮上市，现为低价':'八月至十月是低价期'}。每月最多购半批。`:''),choices});
 };
 function monthlyGrainEvent(index){
