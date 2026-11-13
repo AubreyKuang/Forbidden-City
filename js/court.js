@@ -1,8 +1,9 @@
 /* ============ 朝堂事件 ============ */
+const FLOOD_DIRECT_COST=300, FLOOD_DIKE_COST=90, FLOOD_DIKE_SAVING=140;
 const officialC=(p=50)=>{const a=harem().filter(c=>c.fam.p>=p);return a.length?pick(a):null};
 const COURT=[
  brief=>{const off=brief?harem().find(c=>c.id===brief.person):officialC(50);const ch=[
-   {t:'拨银三百万两赈灾',f:()=>{log('黄河决堤，帝拨银三百万两赈灾。',1);return `赈灾粮银连夜出京，灾民感念皇恩。${fx(chg({treasury:-300,people:10,prestige:3}))}`}},
+   {t:'拨银三百万两赈灾',f:()=>{log('黄河决堤，帝拨银三百万两赈灾。',1);return `赈灾粮银连夜出京，灾民感念皇恩。${fx(chg({treasury:-FLOOD_DIRECT_COST,people:10,prestige:3}))}`}},
    {t:'令地方官府自行筹措',f:()=>{log('黄河决堤，帝令地方自筹，民怨沸腾。');return `地方层层摊派，民间怨声四起。${fx(chg({people:-8}))}`}}];
   if(off)ch.push({t:`命${cName(off)}之父（${off.fam.t}）督办`,f:()=>{if(chance(.6)){story(off,'其父奉旨督办黄河赈灾，颇有成效，她在宫中亦觉面上有光。');return `差事办得漂亮。${fx(chg({treasury:-150,people:6,prestige:2}),cchg(off,{aff:8,mood:10}))}`}
     story(off,'其父督办赈灾不力，遭御史弹劾，她日夜忧惧。');return `赈灾银两被层层克扣，灾情反而加重。${fx(chg({treasury:-200,people:-5}),cchg(off,{mood:-12}))}`}});
@@ -63,6 +64,7 @@ const COURT=[
 ];
 const SPONT=[0,1,5,10,11,14];
 const FLOOD_INDEX=0;
+function floodDikeReady(){return S.flags.floodDikeGen===S.gen;}
 const FLOOD_SUPERVISION={
   grain:{label:'调运赈粮',need:'粮道被冲断，灾区眼下最缺粮。',offices:['内阁首辅','吏部尚书','户部侍郎','皇商','知府','县令'],cost:150,people:6},
   shelter:{label:'安置灾民',need:'粮仓尚可支应，急需人手安置离家百姓。',offices:['镇国大将军','两江总督'],cost:215,people:9},
@@ -71,6 +73,17 @@ function monthlyFloodEvent(brief){
   const event=COURT[FLOOD_INDEX]({});
   const need=brief.floodNeed;
   event.text+='\n'+FLOOD_SUPERVISION[need].need;
+  if(floodDikeReady()){
+    const cost=FLOOD_DIRECT_COST-FLOOD_DIKE_SAVING;
+    event.text+='\n先前加固的河堤护住了粮道旁的几处村落，工部核减了本次直接赈济的所需银两。';
+    event.choices[0]={t:`拨银 ${cost} 万两赈灾`,
+      preview:`国库 −${cost} 万两 · 民心 +10 · 威望 +3 · 结清此段河堤的赈务账`,
+      f:()=>{
+        delete S.flags.floodDikeGen;
+        log(`黄河赈务结清，先前修堤省下 ${FLOOD_DIKE_SAVING} 万两。`,1);
+        return `工部按修堤后的灾情发放粮银，此段河堤的赈务账已结清。${fx(chg({treasury:-cost,people:10,prestige:3}))}`;
+      }};
+  }
   event.cast=[];
   for(const [specialty,terms] of Object.entries(FLOOD_SUPERVISION)){
     const consort=harem().find(c=>{
@@ -98,6 +111,17 @@ function monthlyFloodEvent(brief){
         return `${father.name}调度失当，赈济延误，只得另拨银两善后。${fx(chg({treasury:-failureCost,people:-5}),cchg(consort,{mood:-12}))}`;
       }
     });
+  }
+  if(!floodDikeReady()){
+    const cost=FLOOD_DIRECT_COST+FLOOD_DIKE_COST;
+    event.choices.push({t:'拨足赈款，并修复险堤',
+      preview:`国库 −${cost} 万两 · 民心 +10 · 威望 +3 · 日后一次直接赈济少花 ${FLOOD_DIKE_SAVING} 万两`,
+      cond:()=>E().treasury>=cost,why:`国库至少需 ${cost} 万两`,
+      f:()=>{
+        S.flags.floodDikeGen=S.gen;
+        log('赈粮已拨，工部另领修堤银，加固黄河险段。',1);
+        return `赈粮送抵灾区，工部随后加固险堤。日后一次黄河赈灾，直接拨款可少花 ${FLOOD_DIKE_SAVING} 万两。${fx(chg({treasury:-cost,people:10,prestige:3}))}`;
+      }});
   }
   return event;
 }

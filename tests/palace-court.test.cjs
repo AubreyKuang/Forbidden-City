@@ -101,6 +101,49 @@ test('a new reign previews the first flood memorial and keeps its result across 
   `);
 });
 
+test('repairing a dike costs extra now and discounts exactly one later direct flood payment',()=>{
+  const {run}=boot();
+  run(`
+    E().treasury=389;E().energy=1;E().people=50;E().prestige=50;
+    A.court();
+    const repair=()=>curEv.choices.findIndex(c=>c.t.includes('修复险堤'));
+    assert.equal(curEv.choices[repair()].cond(),false);
+    choose(repair());
+    assert.equal(floodDikeReady(),false);
+    choose(curEv.choices.length-1);
+    E().treasury=390;
+    A.court();choose(repair());
+    assert.equal(E().treasury,0);
+    assert.equal(E().energy,0);
+    assert.equal(E().people,60);
+    assert.equal(E().prestige,53);
+    drain();A.endMonth();drain();save('1');load('1');
+    assert.equal(floodDikeReady(),true);
+    assert.match(viewMap(),/黄河险堤已加固/);
+    const nextFlood=()=>{S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index:FLOOD_INDEX,floodNeed:'shelter'};};
+    nextFlood();
+    E().treasury=400;E().energy=1;
+    A.court();
+    assert.match(curEv.text,/先前加固的河堤/);
+    assert.match(curEv.choices[0].preview,/国库 −160 万两/);
+    assert.equal(repair(),-1);
+    choose(curEv.choices.findIndex(c=>c.t.includes('全权办理')));drain();
+    assert.equal(E().treasury,60);
+    assert.equal(floodDikeReady(),true);
+    A.endMonth();drain();nextFlood();
+    E().treasury=160;E().energy=1;
+    A.court();choose(0);drain();
+    assert.equal(E().treasury,0);
+    assert.equal(floodDikeReady(),false);
+    assert.ok(S.log.some(entry=>entry.t.includes('省下 140 万两')));
+    save('1');load('1');
+    A.endMonth();drain();nextFlood();
+    A.court();
+    assert.match(curEv.choices[0].preview,/国库 −300 万两/);
+    assert.ok(repair()>=0);
+  `);
+});
+
 test('delegating the exam resolves the memorial without spending the last energy point',()=>{
   const {run}=boot();
   run(`
