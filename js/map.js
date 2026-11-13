@@ -351,13 +351,15 @@ A.finishMonth=function(){
   if(pendingDelivery()){A.endMonth();return;}
   const invitations=mapActivityLeads().filter(lead=>lead.expires);
   const floodDue=floodReliefDue();
-  if(S.turn>0&&!invitations.length&&!floodDue){A.endMonth();return;}
+  const locustDue=locustReliefDue();
+  if(S.turn>0&&!invitations.length&&!floodDue&&!locustDue){A.endMonth();return;}
   const nextMonth=MONTHS[S.month%12];
   const detail=invitations.length?'换月后，这些邀约就散了：'+invitations.map(lead=>lead.title).join('、')+'。':'';
-  const floodDetail=floodDue?'\n本月尚未批复赈灾回奏。直接换月会停止续拨，民心 −3。':'';
+  const reliefDetail=locustDue?`\n本月尚未批复远村补粮回奏。直接换月将失约。 ${LOCUST_UNFUNDED_TEXT}`
+    :floodDue?'\n本月尚未批复赈灾回奏。直接换月会停止续拨，民心 −3。':'';
   const remaining=E().energy>0?`本月还可用 ${E().energy} 点精力。\n`:'';
   pushEv({title:invitations.length?'尚有本月邀约':`进入${nextMonth}？`,scene:'month-review',
-    cast:invitations.flatMap(lead=>lead.cast),text:`${remaining}进入${nextMonth}后会结算本月收支，补充精力，并可能发生新的宫中事件。${detail?'\n'+detail:''}${floodDetail}`,choices:[
+    cast:invitations.flatMap(lead=>lead.cast),text:`${remaining}进入${nextMonth}后会结算本月收支，补充精力，并可能发生新的宫中事件。${detail?'\n'+detail:''}${reliefDetail}`,choices:[
     ...invitations.map(lead=>({t:'先去'+lead.title,f:()=>{goDirect(PLACES.find(p=>p.id===lead.place));return null;}})),
     {t:'留在本月'},
     {t:invitations.length?`略过邀约，进入${nextMonth}`:`进入${nextMonth}`,primary:true,
@@ -378,7 +380,7 @@ function viewMap(){
   const pending=S.flags.impeachmentReview;
   const reviewReady=!done&&((pending?.turn===S.turn&&pending.gen===S.gen&&impeachmentSubject(pending.file?.person))||
     (S.flags.monthlyCourt?.turn===S.turn&&S.flags.monthlyCourt.gen===S.gen&&S.flags.monthlyCourt.review&&impeachmentSubject(S.flags.monthlyCourt.person)));
-  const report=reviewReady?'查账回奏':!done&&floodReliefDue()?'赈灾回奏':'';
+  const report=!done&&locustReliefDue()?'远村补粮回奏':reviewReady?'查账回奏':!done&&floodReliefDue()?'赈灾回奏':'';
   const host=S.turn===0&&done&&empress();
   return `<section class="map-play" aria-label="宫城地图">
     <header class="map-location"><h2>宫城</h2><span class="hint">${esc(nearestPlace())}</span></header>

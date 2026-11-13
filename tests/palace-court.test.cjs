@@ -627,7 +627,7 @@ test('a locust memorial saves the urgent village and prices the reversed grain r
     run(`
       A.court();
       assert.match(curEv.text,/${near?'近村':'远村'}已经断粮/);
-      const route=curEv.choices.findIndex(c=>c.t.includes('订粮先救近村'));
+      const route=curEv.choices.findIndex(c=>c.t.includes('仓粮运往远村'));
       const regular=curEv.choices.find(c=>c.t.includes('订粮直送远村'));
       assert.match(regular.preview,/65 万两 · 民心 \\+${near?7:9}/);
       if(${near}){
@@ -667,6 +667,45 @@ test('concentrating both half batches trades prestige for relief and saves all c
     assert.deepEqual([E().treasury,E().energy,E().people,E().prestige,grainReserveReady(),halfGrainReserve(),
       S.flags.monthlyCourt.done,S.flags.autumnGrainOrder,S.flags.grainPurchaseTurn,S.flags.grainReliefTurn],
       [0,0,${near?71:73},48,${near},${near},true,undefined,S.turn,S.turn]);
+  `);
+});
+
+test('promised locust grain can be delivered, cancelled, or missed exactly once',()=>{
+  for(const outcome of ['deliver','cancel','miss'])boot().run(`
+    S.month=8;S.turn=7;
+    Object.assign(S.flags,{monthlyCourt:{turn:7,gen:S.gen,index:LOCUST_INDEX,locustNeed:'near'},
+      autumnGrainOrder:{turn:7,gen:S.gen},grainReserveGen:S.gen,grainReserveHalf:true});
+    Object.assign(E(),{people:60,treasury:300,energy:1});
+    const option=text=>curEv.choices.findIndex(c=>c.t.includes(text));
+    A.court();choose(option('下月再补远村'));drain();
+    assert.deepEqual([E().treasury,E().energy,E().people,halfGrainReserve(),S.flags.locustRelief.turn],[235,0,66,true,8]);
+    assert.equal(load('auto'),true);
+    A.endMonth();while(modalOpen)nextEv();
+    assert.equal(locustReliefDue(),true);
+    const before=E().people;
+    if('${outcome}'==='miss'){
+      A.endMonth();while(modalOpen)nextEv();
+      assert.equal(E().people,before-4);
+      assert.equal(S.flags.lastMonthReview.court.choice,'未按期补粮');
+    }else{
+      A.court();assert.match(curEv.title,/远村补粮回奏/);
+      const ship=option('按约运半批');
+      delete S.flags.grainReserveGen;assert.equal(curEv.choices[ship].cond(),false);
+      S.flags.grainReserveGen=S.gen;
+      E().treasury=35;E().energy=1;
+      if('${outcome}'==='deliver'){
+        const write=save;save=()=>false;choose(ship);drain();
+        assert.deepEqual([E().treasury,E().energy,E().people,halfGrainReserve(),locustReliefDue()],[35,1,before,true,true]);
+        save=write;A.court();choose(option('按约运半批'));drain();
+        assert.deepEqual([E().treasury,E().energy,E().people,grainReserveReady()],[0,0,before+5,false]);
+      }else{
+        E().energy=0;choose(option('取消远村补粮'));drain();
+        assert.deepEqual([E().treasury,E().energy,E().people,halfGrainReserve()],[35,0,before-4,true]);
+      }
+      assert.equal(load('auto'),true);
+      A.court();assert.equal(modalOpen,false);
+    }
+    assert.equal(S.flags.locustRelief,undefined);
   `);
 });
 

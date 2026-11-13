@@ -178,7 +178,7 @@ const A={
     const ev=monthlyCourtEvent();
     if(!ev){toast(S.flags.monthlyCourt?.done?'本月奏折已批复。':'这份奏折已不适用。');return;}
     const brief=S.flags.monthlyCourt;
-    const delegation=brief.floodFollowup?null:reliefDelegation(brief.index);
+    const delegation=brief.floodFollowup||brief.locustFollowup?null:reliefDelegation(brief.index);
     const installment=brief.index===FLOOD_INDEX&&!brief.floodFollowup?stagedFloodRelief(brief):null;
     const freightBooking=installment&&brief.floodNeed==='grain'&&grainReserveReady()?stagedFloodRelief(brief,true):null;
     ev.scene='monthly-court';
@@ -261,6 +261,12 @@ A.endMonth=function(){
     chg(FLOOD_UNFUNDED);
     log(text);
     court={title:'黄河决堤 · 赈灾回奏',choice:'未续拨',text};
+  }
+  if(locustReliefDue()){
+    delete S.flags.locustRelief;
+    chg(LOCUST_UNFUNDED);
+    log(LOCUST_UNFUNDED_TEXT);
+    court={title:'蝗灾 · 远村补粮回奏',choice:'未按期补粮',text:LOCUST_UNFUNDED_TEXT};
   }
   const people=S.consorts.flatMap(c=>{
     const latest=c.story?.findLast(entry=>entry.d===monthDate);

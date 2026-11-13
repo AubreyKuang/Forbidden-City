@@ -72,6 +72,9 @@ const GRAIN_SALE_REVENUE=100, HALF_GRAIN_SALE_REVENUE=45;
 const GRAIN_TRANSPORT_COST=70;
 const LOCUST_LOCAL_PURCHASE_COST=125, LOCUST_LOCAL_PURCHASE_PEOPLE=6;
 const LOCUST_HALF_RESERVE_PEOPLE=3;
+const LOCUST_FOLLOWUP_COST=35, LOCUST_FOLLOWUP_PEOPLE=5;
+const LOCUST_UNFUNDED={people:-4};
+const LOCUST_UNFUNDED_TEXT='远村没等到承诺的粮食，民心 −4。';
 const HALF_GRAIN_TOP_UP_REVENUE=120;
 const AUTUMN_GRAIN_PRICE=75, REGULAR_GRAIN_PRICE=110;
 const AUTUMN_GRAIN_DEPOSIT=20, AUTUMN_GRAIN_BALANCE=40;
@@ -319,8 +322,15 @@ function monthlyGrainEvent(index,locustNeed){
       const half=halfGrainReserve(),total=people+LOCUST_HALF_RESERVE_PEOPLE;
       const nearUrgent=locustNeed==='near';
       event.text+=nearUrgent
-        ?'\n近村已经断粮，粮商比常平仓的车队更快到近村。远村尚有余粮，可另派仓车送去。'
+        ?'\n近村已经断粮，粮商比常平仓的车队更快到近村。远村尚能撑到下月，届时粮道修通，仓车运费可减半。'
         :'\n远村已经断粮，粮商能赶在常平仓的车队前送到远村。近村尚有余粮。';
+      if(nearUrgent)event.choices.push({t:'订粮先救近村，下月再补远村',grainTransaction:true,
+        preview:`国库 −${cost} 万两 · 民心 +${people} · 暂留仓粮 · 占本月购粮和救急粮名额 · 下月须出半批仓粮、${LOCUST_FOLLOWUP_COST} 万两和 1 点精力 · 失约民心 −${-LOCUST_UNFUNDED.people}`,
+        cond:()=>grainReserveReady()&&!autumnGrainReliefBlock(cost),why:autumnGrainReliefBlock(cost),
+        f:()=>{
+          S.flags.locustRelief={turn:S.turn+1,gen:S.gen};
+          return '粮商先往近村发粮。远村尚能支应到下月，户部可等粮道修通后再派仓车。'+settleAutumnGrainRelief(cost,people);
+        }});
       const routes=[
         {title:'仓粮就近发放，订粮直送远村',cost,people:nearUrgent?total-2:total,
           result:'仓粮已在附近发放，远村由粮商送粮。'},
@@ -348,6 +358,32 @@ function monthlyGrainEvent(index,locustNeed){
     }
   }
   return event;
+}
+function locustReliefDue(){
+  const relief=S.flags.locustRelief;
+  return relief?.turn===S.turn&&relief.gen===S.gen;
+}
+function locustReliefEvent(){
+  return {title:'蝗灾 · 远村补粮回奏',
+    text:`远村的粮道已经修通。拨半批仓粮和 ${LOCUST_FOLLOWUP_COST} 万两即可补齐。若本月失约，${LOCUST_UNFUNDED_TEXT}`,
+    choices:[
+      {t:'按约运半批仓粮到远村',grainTransaction:true,
+        preview:`国库 −${LOCUST_FOLLOWUP_COST} 万两 · 民心 +${LOCUST_FOLLOWUP_PEOPLE} · 发半批仓粮`,
+        cond:()=>locustReliefDue()&&grainReserveReady()&&E().treasury>=LOCUST_FOLLOWUP_COST,
+        why:`须有半批仓粮、${LOCUST_FOLLOWUP_COST} 万两和 1 点精力`,
+        f:()=>{
+          if(halfGrainReserve())clearGrainReserve();
+          else S.flags.grainReserveHalf=true;
+          delete S.flags.locustRelief;
+          return `仓车沿修通的粮道进了远村，补齐了上月许下的口粮。${fx(chg({treasury:-LOCUST_FOLLOWUP_COST,people:LOCUST_FOLLOWUP_PEOPLE}))}`;
+        }},
+      {t:'取消远村补粮',grainTransaction:true,delegated:true,
+        cond:locustReliefDue,preview:`保留仓粮 · 民心 −${-LOCUST_UNFUNDED.people}`,
+        f:()=>{
+          delete S.flags.locustRelief;
+          return `户部撤回了原先的运粮安排。${fx(chg(LOCUST_UNFUNDED))}`;
+        }},
+    ]};
 }
 function floodDikeReady(){return S.flags.floodDikeGen===S.gen;}
 const FLOOD_SUPERVISION={
@@ -614,6 +650,7 @@ function monthlyCourtEvent(){
   const brief=S.flags.monthlyCourt;
   if(brief?.turn===S.turn&&brief.gen===S.gen){
     if(brief.done)return null;
+    if(brief.locustFollowup)return locustReliefDue()?locustReliefEvent():null;
     if(brief.floodFollowup)return floodReliefEvent(brief);
     if(brief.index===LOCUST_INDEX||brief.index===HARVEST_INDEX){
       markGrainMemorialSeen(brief.index);
@@ -637,6 +674,11 @@ function monthlyCourtEvent(){
     if(event)return event;
     if(brief.review)log('涉案人已不符呈阅条件，查账回奏已归档。');
     delete S.flags.monthlyCourt;
+  }
+  if(locustReliefDue()){
+    S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index:LOCUST_INDEX,locustFollowup:true};
+    save('auto');
+    return locustReliefEvent();
   }
   const pending=S.flags.impeachmentReview;
   if(pending&&pending.turn<=S.turn){
