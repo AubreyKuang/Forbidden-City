@@ -158,7 +158,7 @@ function nightWith(c,fromEvent){
     {t:'就此作罢'}]});
 }
 const A={
-  go(v,id){UI.view=v;UI.sel=id;AU.sfx('click');render();if(v!=='title')$('#panel').scrollIntoView({block:'nearest',behavior:'smooth'})},
+  go(v,id){rememberPersonRoute(v,id);UI.view=v;UI.sel=id;AU.sfx('click');render();if(v!=='title')$('#panel').scrollIntoView({block:'nearest',behavior:'smooth'})},
   court(){ if(S.over) return; if(!useE()) return; setScene('court'); AU.sfx('gong'); pushEv(courtEvent()); },
   night(id){const c=byId(id);if(!c||c.preg||c.cold)return;nightWith(c)},
   promote(id){const c=byId(id),nr=c.rank+1;
@@ -274,7 +274,7 @@ function succeed(h){
   pushNow({title:'新君登基',por:h,text:`${h.name}即将即位。请为新朝拟定年号（二字）：`,input:{def:pick(ERAS.filter(x=>x!==old.era)),max:2},choices:[{t:'改元',f:v=>{
     S.emp={sur:old.sur,name:h.name,era:v,age:Math.max(a,14),health:clamp(h.hp+10),prestige:clamp(35+h.vir/3),people:old.people,treasury:old.treasury,energy:3,nightsMonth:0,
       style:h.mar>h.lit+15?'尚武':h.lit>h.mar+15?'文雅':'勤政',wen:rd(h.lit),wu:rd(h.mar),seed:h.seed,birthMonth:birthMonth(h)};
-    S.flags.dowager={name:mom?`${mom.sur}太后`:'太后',sur:mom?.sur,fam:mom?{...mom.fam}:undefined,clan:mom?clanKey(mom):undefined,lastOffer:null,cooldown:24,alive:!!(mom&&mom.alive)};
+    S.flags.dowager={name:mom?`${mom.sur}太后`:'太后',portrait:mom?{fam:{...mom.fam},seed:mom.seed,artPortrait:mom.artPortrait,trait:mom.trait,rank:8}:undefined,sur:mom?.sur,fam:mom?{...mom.fam}:undefined,clan:mom?clanKey(mom):undefined,lastOffer:null,cooldown:24,alive:!!(mom&&mom.alive)};
     archivePrincessEstates(h);
     S.consorts=[];S.children=[];S.rel={};S.courtPolicy={};S.courtPolicyTurn=null;S.heir=null;S.cands=[];S.gen++;S.year=1;S.over=false;S.genChar=GEN_CHARS[(GEN_CHARS.indexOf(S.genChar)+1)%GEN_CHARS.length];
     S.flags.lastXX=-99;delete S.flags.lastProudDemand;delete S.flags.scholarArc;delete S.flags.lastLiteraryGathering;delete S.lastGardenBanquet;S.gardenPlans=[];seasonalTick();S.emp.energy=maxEnergy();

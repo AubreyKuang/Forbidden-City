@@ -177,6 +177,7 @@ const isRival=(a,b)=>!!(a.kinRival&&a.kinRival[b.id]);
 function clanTick(){for(const [k,ms] of clans()){const p=Math.round(ms.reduce((s,c)=>s+c.fam.p,0)/ms.length);ms.forEach(c=>c.fam.p=p);
   for(let i=0;i<ms.length;i++)for(let j=i+1;j<ms.length;j++)relAdd(ms[i],ms[j],isRival(ms[i],ms[j])?-.5:.6)}}
 function makeKin(c,type){c.kin=c.kin||{};c.kinRival=c.kinRival||{};const g=makeGirl({sur:c.sur,fam:{t:c.fam.t,p:c.fam.p}});g.clan=clanKey(c);g.kin={};g.kinRival={};
+  if(type==='亲'){g.house=houseOf(c);g.fatherId=c.fatherId;}
   const older=g.age>c.age||(g.age===c.age&&chance(.5));c.kin[g.id]=type+(older?'姐':'妹');g.kin[c.id]=type+(older?'妹':'姐');
   if(chance(.35)){c.kinRival[g.id]=1;g.kinRival[c.id]=1}g.kinNote=`${cName(c)}的${KIN_TXT[c.kin[g.id]]}`;return g}
 function clanEcho(c,t){const ms=clanMembers(clanKey(c));ms.filter(o=>o!==c).forEach(o=>{const rv=isRival(o,c);
@@ -187,7 +188,7 @@ function clanLine(c){if(c.maid||!c.alive||c.gone)return '';if(!hasClan(c))return
   return `<div>家族：${esc(clanName(k))}　势力 ${rd(c.fam.p)}${ms.length?`　同族在宫：${ms.map(o=>`<span class="tag ${isRival(c,o)?'r':'g'}">${esc(cName(o))}·${kt(o)}${isRival(c,o)?'·不和':''}</span>`).join('')}`:''}</div>`}
 function clanEvent(){
   for(const [k,ms] of shuffle(clans())){const [a,b]=shuffle(ms),rv=isRival(a,b),kt=a.kin&&a.kin[b.id],r=R();
-    if(rv&&r<.5)return {title:'嫡庶',cast:[a,b],text:`${cName(a)}与${cName(b)}是${kt?'亲生':'同族'}姐妹，在娘家时一个是嫡出、一个是庶出，从小就不对付。今日请安，两人又为座次争了起来，家里的老夫人连夜递了牌子进宫。`,choices:[
+    if(rv&&r<.5)return {title:'嫡庶',cast:[a,b],text:`${cName(a)}与${cName(b)}是${kt?.startsWith('亲')?'亲生':kt?.startsWith('堂')?'堂房':'同族'}姐妹，在娘家时一个是嫡出、一个是庶出，从小就不对付。今日请安，两人又为座次争了起来，家里的老夫人连夜递了牌子进宫。`,choices:[
       {t:`偏向${cName(a)}`,person:a,f:()=>{relAdd(a,b,-10);setXin(b,'委屈','陛下偏向了姐妹');return fx(cchg(a,{mood:10}),cchg(b,{mood:-10}))}},
       {t:`偏向${cName(b)}`,person:b,f:()=>{relAdd(a,b,-10);setXin(a,'委屈','陛下偏向了姐妹');return fx(cchg(b,{mood:10}),cchg(a,{mood:-10}))}},
       {t:'让两人一同去见老夫人，把话说开',f:()=>{if(chance(.45)){delete a.kinRival[b.id];if(b.kinRival)delete b.kinRival[a.id];relAdd(a,b,25);story(a,`与${fullName(b)}在老夫人面前把多年心结说开了。`);story(b,`与${fullName(a)}在老夫人面前把多年心结说开了。`);return '姐妹俩抱头哭了一场。多年的心结，总算解开了。'}return '两人在老夫人面前忍着，一出门就各走各的。'}}]};

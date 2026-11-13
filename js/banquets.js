@@ -385,7 +385,7 @@ function gardenFamilyMoment() {
 
 function gardenFamilyNotice() {
   const meeting=showGardenReunion();
-  if(meeting)return `<p class="initiative-note">${esc(meeting.reunion.text)} <button class="btn sm jade" onclick="A.joinGardenReunion()">去御花园赴约</button></p>`;
+  if(meeting)return `<section class="initiative-note">${activityPortraits(meeting.first,meeting.second)}<p>${esc(meeting.reunion.text)}</p><button class="btn sm jade" onclick="A.joinGardenReunion()">去御花园赴约</button></section>`;
   const moment=gardenFamilyMoment();
-  return moment?`<p class="initiative-note">${esc(moment.text)} <button class="btn sm quiet" onclick="A.go('kid',${moment.child})">看看孩子</button></p>`:'';
+  return moment?`<section class="initiative-note">${activityPortraits(kidById(moment.child),byId(moment.mother))}<p>${esc(moment.text)}</p><button class="btn sm quiet" onclick="A.go('kid',${moment.child})">看看孩子</button></section>`:'';
 }

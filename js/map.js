@@ -89,7 +89,7 @@ function initiativeMapScenes() {
     const place=initiativePlace(scene?.rule,person,move);
     const venue=PLACES.find(p=>p.id===place);
     const spot=INITIATIVE_SPOTS[place]||venue?.d;
-    if(!spot||occupied.has(person.id))continue;
+    if(!scene||!spot||occupied.has(person.id))continue;
     const visitors=[person];
     if(scene.target&&!occupied.has(scene.target.id))visitors.push(scene.target);
     visitors.forEach(p=>occupied.add(p.id));
@@ -304,23 +304,73 @@ MAPC.addEventListener('mousemove',e=>{const r=MAPC.getBoundingClientRect(),mx=(e
   hoverP=PLACES.find(p=>mx>=p.r[0]&&mx<=p.r[0]+p.r[2]&&my>=p.r[1]&&my<=p.r[1]+p.r[3])||null});
 MAPC.addEventListener('mouseleave',()=>{hoverP=null});
 setInterval(mapTick,50);
+// Derive leads from live activities so expired or unavailable characters leave the map.
+function mapActivityLeads(){
+  if(!S||S.over)return [];
+  const leads=[],meeting=showGardenReunion(),stop=lanternStop(),work=duanwuWork();
+  if(meeting)leads.push({place:'yh',title:'御花园赴约',button:'去御花园赴约',text:meeting.reunion.text,cast:[meeting.first,meeting.second],expires:true});
+  if(stop)leads.push({place:stop.place,title:'上元寻灯 · '+stop.name,text:'正月灯会，带孩子走一走，猜一回灯谜。',cast:(activeLantern()?.ids||lanternChildren().map(k=>k.id)).map(kidById),expires:!!activeLantern()});
+  if(work?.stage==='review')leads.push({place:'yh',title:'查验端午筹备',text:'宴席与节礼已备好，两位主事等你来核对。',cast:duanwuOfficers(work)});
+  else if(work?.stage==='finished'&&work.year===S.year&&S.month===5&&!work.held)
+    leads.push({place:'yh',title:'安排端午宴',text:'筹备已查验，可以安排本年的端午宴。',cast:duanwuOfficers(work)});
+  else if(S.month===4&&work?.stage!=='preparing'&&harem().filter(canManageFeast).length>=2)
+    leads.push({place:'yh',title:'分派端午宫务',text:'选两位妃嫔分管宴席与节礼，下月查验。',cast:[]});
+  const flower=springFlower(),gift=seasonJournal().inkstone;
+  if(flower&&!flower.seen&&S.turn>=flower.due)leads.push({place:'yh',title:'花圃有消息',text:'去年栽下的花苗有了变化，去花圃看看。',cast:[]});
+  if(gift&&childInPalace(kidById(gift.young))&&S.turn>=gift.due)leads.push({place:'ss',title:'旧砚新文',text:'孩子已写好新作，等你来看。',cast:[kidById(gift.young)]});
+  for(const person of initiativePeople()){
+    for(const move of [currentInitiative(person),activeInitiativeEcho(person)]){
+      const scene=move&&initiativeParticipants(person,move);
+      if(!scene||move.response)continue;
+      const place=initiativePlace(scene.rule,person,move);
+      leads.push({place:PLACES.some(p=>p.id===place)?place:null,person,title:scene.rule.title+(move.delivered?' · 后续':''),text:move.text,cast:[person,scene.target].filter(Boolean)});
+    }
+  }
+  const moment=gardenFamilyMoment();
+  if(moment&&!meeting)leads.push({place:'yh',title:'母子相聚',text:moment.text,cast:[kidById(moment.child),byId(moment.mother)]});
+  return leads;
+}
+function mapLeadAction(lead){return lead.place?`A.visitMapActivity('${lead.place}')`:`A.go('${lead.person.sex?'kid':'consort'}',${lead.person.id})`;}
+function mapLeadPlace(lead){return lead.place?PLACES.find(p=>p.id===lead.place).n:porName(lead.person);}
+function mapActivityPanel(){
+  const leads=mapActivityLeads();
+  if(!leads.length)return '<p class="hint map-quiet">宫中暂静，可以到各宫走走。</p>';
+  const card=lead=>`<article class="map-activity-card"><div><strong>${esc(lead.title)}</strong><small>${lead.expires?'本月邀约':'本月动向'}</small><p>${esc(lead.text)}</p></div>
+    ${activityPortraits(...lead.cast)}<button class="btn sm jade" onclick="${mapLeadAction(lead)}">${esc(lead.button||mapLeadPlace(lead)+' · '+lead.title)} →</button></article>`;
+  return `<section class="map-activity-panel" aria-label="本月值得一看">${leads.slice(0,2).map(card).join('')}</section>${leads.length>2?`<div class="initiative-notices">${leads.slice(2).map(lead=>`<button class="btn sm" onclick="${mapLeadAction(lead)}">${esc(mapLeadPlace(lead))} · ${esc(lead.title)}</button>`).join('')}</div>`:''}`;
+}
+A.visitMapActivity=function(place){
+  if(!S||S.over||modalOpen)return;
+  const destination=PLACES.find(p=>p.id===place);
+  if(destination)goDirect(destination);
+};
+A.finishMonth=function(){
+  if(!S||S.over||modalOpen)return;
+  const invitations=mapActivityLeads().filter(lead=>lead.expires);
+  if(!invitations.length){A.endMonth();return;}
+  pushEv({title:'尚有本月邀约',cast:invitations.flatMap(lead=>lead.cast),text:'换月后，这些邀约就散了：'+invitations.map(lead=>lead.title).join('、')+'。',choices:[
+    ...invitations.map(lead=>({t:'先去'+lead.title,f:()=>{goDirect(PLACES.find(p=>p.id===lead.place));return null;}})),
+    {t:'本月不赴约，继续换月',f:()=>{setTimeout(()=>A.endMonth(),0);return null;}}
+  ]});
+};
 function mountMap(){const w=$('#mapwrap');if(!w)return;w.appendChild(MAPC);
-  PLACES.forEach(p=>{const b=document.createElement('button');b.className='mlab'+(['qq','kn','cj','yh','sw','wm'].includes(p.id)?' landmark':'');b.textContent=p.n;if(lanternStop()?.place===p.id){b.className+=' seasonal-lit';b.title='上元寻灯';}const [x,y,ww,h]=p.r;
+  const leads=mapActivityLeads();
+  PLACES.forEach(p=>{const b=document.createElement('button');b.className='mlab'+(['qq','kn','cj','yh','sw','wm'].includes(p.id)?' landmark':'');b.textContent=p.n;const here=leads.filter(lead=>lead.place===p.id);if(here.length){b.className+=' has-activity';b.setAttribute('data-activity',String(here.length));b.title=here.map(lead=>lead.title).join('、');b.setAttribute('aria-label',p.n+'，'+b.title);}if(lanternStop()?.place===p.id){b.className+=' seasonal-lit';b.title='上元寻灯';}const [x,y,ww,h]=p.r;
     b.style.left=((x+ww/2)/MW*100)+'%';b.style.top=((y+(p.id==='yh'?h/2:h-2))/MH*100)+'%';
     b.onclick=()=>goDirect(p);b.ondblclick=()=>goDirect(p);
     b.onmouseenter=()=>{hoverP=p};b.onmouseleave=()=>{hoverP=null};w.appendChild(b)})}
 const backBtn=`<button class="btn sm" onclick="A.go('map')">◂ 返回宫城</button>`;
-function viewMap(){return `<section class="map-play" aria-label="宫城地图"><header class="map-location"><h2>宫城</h2><span class="hint">当前位置 · ${esc(nearestPlace())}</span></header><div id="mapwrap"></div><p class="map-legend">点宫殿名直达 · 点宫殿步行前往 · 点小人偶遇 · 绿点：有人活动 · 粉点：有孕 · 金点：选秀</p>${seasonalMapNotices()}${princessMapNotice()}${duanwuNotice()}${initiativeNotices()}${birthdayBanquetButtons()}${proudDemandNotice()}${gardenFamilyNotice()}</section>`;}
+function viewMap(){return `<section class="map-play" aria-label="宫城地图"><header class="map-location"><h2>宫城</h2><span class="hint">当前位置 · ${esc(nearestPlace())}</span></header><div id="mapwrap"></div><p class="map-legend">点宫殿名直达 · 点宫殿步行前往 · 点小人偶遇 · 绿点：有人活动 · 粉点：有孕 · 金点：选秀</p>${mapActivityPanel()}${princessMapNotice()}${birthdayBanquetButtons()}${proudDemandNotice()}</section>`;}
 function viewPalace(){const name=UI.sel,res=name==='冷宫'?alive().filter(c=>c.cold):harem().filter(c=>c.palace===name);
   const extra=name==='储秀宫'&&S.cands.length?`<div class="acts"><button class="btn gold" onclick="A.go('xx')">秀女正在候选（${S.cands.length}人）</button></div>`:'';
   const note=name==='冷宫'?'荒草萋萋，宫门深锁。':name==='坤宁宫'?'中宫所居，凤仪万方。':(PALACE_NOTES[name]||'宫门半掩，廊下挂着鸟笼。');
   const count=res.length?(name==='冷宫'?`<p class="hint">冷宫里关着 ${res.length} 人。</p>`:`<p class="hint">住着 ${res.length} 位妃嫔。</p>`):'';
-  return `<h2>${esc(name)}${backBtn}</h2><p class="hint">${note}</p>${extra}${initiativesAt('p'+name)}${count}${res.length?`<div class="grid">${res.map(consortCard).join('')}</div>`:'<p class="hint">此处暂无人居住。</p>'}`}
+  return `<h2>${esc(name)}${backBtn}</h2><p class="hint">${note}</p>${extra}${initiativesAt(initiativePlace(null,null,{place:'p'+name}))}${count}${res.length?`<div class="grid">${res.map(consortCard).join('')}</div>`:'<p class="hint">此处暂无人居住。</p>'}`}
 function viewPlace(){const id=UI.sel;
   if(id==='cj')return `<h2>宸极殿${backBtn}</h2><p>文武百官已在丹墀下候着。</p><div class="acts"><button class="btn gold" onclick="A.court()">临朝听政<small>精力-1</small></button></div>`;
   if(id==='yh'){const here=[...NPC].filter(([i,n])=>n.where==='garden'&&!n.path.length).map(([i])=>byId(i)).filter(c=>inPalace(c)&&c.id!==gardenFamilyMoment()?.mother&&
       !initiativeMapScenes().some(scene=>scene.visitors.includes(c)));
-    return `<h2>御花园${backBtn}</h2><p>${['桃花开得正好，蜂蝶纷飞。','荷风送香，蝉鸣阵阵。','丹桂飘香，满地金黄。','红梅映雪，暗香浮动。'][season()]}</p><div class="acts"><button class="btn" onclick="A.out('garden')">园中漫步<small>精力-1</small></button>${banquetReady()?`<button class="btn gold" onclick="A.openBanquet()">筹办小宴</button>`:'<span class="hint">小宴每三个月可办一次</span>'}</div>${birthdayBanquetButtons()}${gardenFamilyNotice()}${seasonalPlacePanel('yh')}${duanwuPanel()}${initiativesAt('yh')}${here.length?`<h3>园中的人</h3><div class="grid">${here.map(c=>`<button class="card" onclick="meetConsort(byId(${c.id}))">${porImg(c,48)}<div class="grow"><div class="nm">${esc(cName(c))}</div><div>${esc(npcRoutineText(c,NPC.get(c.id)))}</div></div></button>`).join('')}</div>`:'<p class="hint">园中此刻没有旁人。</p>'}`}
+    return `<h2>御花园${backBtn}</h2><p>${['桃花开得正好，蜂蝶纷飞。','荷风送香，蝉鸣阵阵。','丹桂飘香，满地金黄。','红梅映雪，暗香浮动。'][season()]}</p><div class="acts"><button class="btn" onclick="A.out('garden')">园中漫步<small>精力-1</small></button>${banquetReady()?`<button class="btn gold" onclick="A.openBanquet()">筹办小宴</button>`:'<span class="hint">小宴每三个月可办一次</span>'}</div>${birthdayBanquetButtons()}${gardenFamilyNotice()}${seasonalPlacePanel('yh')}${duanwuPanel()}${initiativesAt('yh')}${here.length?`<h3>园中的人</h3><div class="grid">${here.map(c=>`<button class="card" onclick="meetConsort(byId(${c.id}))">${porImg(c,48)}<div class="grow"><div class="nm">${esc(cName(c))}</div><div>${esc(npcRoutineText(c,NPC.get(c.id)))}</div></div></button>`).join('')}</div>`:'<p class="hint">园中没有其他闲游的人。</p>'}`}
   if(id==='ss'||id==='wy'){
     const school=id==='ss';
     return `<h2>${school?'上书房':'文渊阁'}${backBtn}</h2>

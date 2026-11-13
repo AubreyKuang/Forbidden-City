@@ -112,14 +112,35 @@ const BROTHER_POSTS={civil:['翰林院编修','户部主事','监察御史','知
 const FRONTIERS=['雁门关','玉门关','居庸关','嘉峪关','山海关'];
 const blocName=id=>COURT_BLOCS.find(b=>b.id===id)?.name||'无所依附';
 const BLOC_COLOR={kin:'#b8742c',civil:'#3b5fa8',army:'#9a3b33',dowager:'#7a5a99',princes:'#2f7d62'};
+function paternalFamily(c){
+  const people=[...new Set([...(S?.consorts||[]),...(S?.cands||[]),c])].filter(p=>p&&!p.maid);
+  const relatives=new Set([c]);
+  let changed=true;
+  while(changed){
+    changed=false;
+    for(const person of people){
+      if(relatives.has(person))continue;
+      if([...relatives].some(other=>(person.fatherId!=null&&person.fatherId===other.fatherId)||
+        /^亲[姐妹]$/.test(person.kin?.[other.id]||'')||/^亲[姐妹]$/.test(other.kin?.[person.id]||''))){
+        relatives.add(person);changed=true;
+      }
+    }
+  }
+  return [...relatives].sort((a,b)=>a.id-b.id);
+}
 function houseOf(c){
   if(!c||c.maid)return null;
-  if(c.house)return c.house;
-  const seed=(c.seed||c.id*7919)>>>0,bloc=Object.hasOwn(OFFICE_BLOC,c.fam?.t)?OFFICE_BLOC[c.fam.t]:null;
+  const family=paternalFamily(c),root=family[0];
+  if(root.house){
+    family.forEach(p=>{p.house=root.house;p.fatherId=root.id;});
+    return root.house;
+  }
+  const seed=(root.seed||root.id*7919)>>>0,bloc=Object.hasOwn(OFFICE_BLOC,root.fam?.t)?OFFICE_BLOC[root.fam.t]:null;
   const posts=BROTHER_POSTS[bloc||'none'];
-  c.house={bloc,
-    father:{name:c.sur+FATHER_NAMES[seed%FATHER_NAMES.length],office:c.fam?.t||'寒门',age:42+seed%17,alive:true},
-    brother:{name:c.sur+BROTHER_NAMES[(seed>>>5)%BROTHER_NAMES.length],post:posts[(seed>>>9)%posts.length],merit:20+(seed>>>3)%30,away:false}};
+  root.house={bloc,
+    father:{name:root.sur+FATHER_NAMES[seed%FATHER_NAMES.length],office:root.fam?.t||'寒门',age:42+seed%17,alive:true},
+    brother:{name:root.sur+BROTHER_NAMES[(seed>>>5)%BROTHER_NAMES.length],post:posts[(seed>>>9)%posts.length],merit:20+(seed>>>3)%30,away:false}};
+  family.forEach(p=>{p.house=root.house;p.fatherId=root.id;});
   return c.house;
 }
 // 立场：父兄所在的集团；娘家势力大的妃嫔也会被看作外戚一派
@@ -144,11 +165,21 @@ function courtEcho(id){
 }
 // 每月：兄长攒军功或政绩，父亲渐老，偶有致仕或病故
 function courtTick(){
+  const seen=new Set();
   for(const c of harem()){
     const h=houseOf(c);if(!h)continue;
+    if(seen.has(h))continue;
+    seen.add(h);
     h.brother.merit=clamp(h.brother.merit+(h.bloc==='army'?(E().wu-50)/40:.3)+R()*.6);
     if(S.month===1&&h.father.alive){h.father.age++;
-      if(h.father.age>=66&&chance(.12)){h.father.alive=false;cchg(c,{mood:-15});setXin(c,'悲恸',`父亲${h.father.name}病故`);story(c,`父亲${h.father.name}在家中病故。`);log(`${cName(c)}之父${h.father.name}病故。`,1);c.fam.p=Math.max(5,c.fam.p-10);}}
+      if(h.father.age>=66&&chance(.12)){
+        h.father.alive=false;
+        for(const daughter of paternalFamily(c).filter(inPalace)){
+          cchg(daughter,{mood:-15});setXin(daughter,'悲恸',`父亲${h.father.name}病故`);
+          story(daughter,`父亲${h.father.name}在家中病故。`);daughter.fam.p=Math.max(5,daughter.fam.p-10);
+        }
+        log(`${cName(c)}之父${h.father.name}病故。`,1);
+      }}
   }
 }
 // 朝堂派系事件：都落在具体的父兄、妃嫔和皇子身上

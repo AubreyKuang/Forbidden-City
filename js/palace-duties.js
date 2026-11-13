@@ -59,11 +59,11 @@ function duanwuPanel(){
     return activityCard('端午宫务',`<p>${esc(work.result)}</p>${work.held?'<p>本年端午宴已办。</p>':seasonalButton('安排端午宴',"A.openBanquet('duanwu')")}`);
   }
   if(work?.stage==='review'){
-    return activityCard('端午宫务',`<p>宴席与节礼已经备好，可以核对功劳和份例。</p><div class="acts">${seasonalButton('查验筹备','A.reviewDuanwu()')}</div>`);
+    return activityCard('端午宫务',`${activityPortraits(...duanwuOfficers(work),byId(work.helper))}<p>宴席与节礼已经备好，可以核对功劳和份例。</p><div class="acts">${seasonalButton('查验筹备','A.reviewDuanwu()')}</div>`);
   }
   if(work?.stage==='preparing'){
     const [tables,gifts]=duanwuOfficers(work);
-    return activityCard('端午宫务',`<p>${esc(fullName(tables))}管宴席，${esc(fullName(gifts))}管节礼。下个月可到御花园查验。</p>`);
+    return activityCard('端午宫务',`${activityPortraits(tables,gifts)}<p>${esc(fullName(tables))}管宴席，${esc(fullName(gifts))}管节礼。下个月可到御花园查验。</p>`);
   }
   if(S.month!==4||harem().filter(canManageFeast).length<2)return '';
   return activityCard('端午宫务',`<p>选两位妃嫔分别料理宴席与节礼，五月查验。备办需二十万两。</p><div class="acts">${seasonalButton('分派端午宫务','A.assignDuanwu()')}</div>`);

@@ -249,7 +249,10 @@ const PALACE_INITIATIVES={
 };
 
 function consortPalaceVenue(c){return 'p'+c.palace;}
-const initiativePlace=(rule,person,move)=>move?.place??(typeof rule?.place==='function'?rule.place(person):rule?.place);
+const initiativePlace=(rule,person,move)=>{
+  const place=move?.place??(typeof rule?.place==='function'?rule.place(person):rule?.place);
+  return place==='p坤宁宫'?'kn':place==='p冷宫'?'lg':place;
+};
 
 function initiativeParticipants(person,move) {
   if (!(person.sex?childInPalace(person):inPalace(person))) return null;
@@ -322,18 +325,25 @@ function activeInitiativeEcho(person) {
   return echo?.delivered&&echo.turn===S.turn?echo:null;
 }
 
+// Use the same saved portrait as the character page, with a name for every participant.
+function activityPortraits(...people){
+  const cast=[...new Set(people.filter(Boolean))];
+  return cast.length?`<div class="activity-portraits">${cast.map(p=>`<button class="activity-person" onclick="A.go('${p.sex?'kid':'consort'}',${p.id})" aria-label="查看${esc(porName(p))}">${porImg(p,68)}<span>${esc(porName(p))}</span></button>`).join('')}</div>`:'';
+}
 function initiativeHTML(person,venue){
   const move=currentInitiative(person), rule=PALACE_INITIATIVES[move?.id];
   const echo=activeInitiativeEcho(person), echoRule=PALACE_INITIATIVES[echo?.id];
-  const followup=echoRule&&(!venue||initiativePlace(echoRule,person,echo)===venue)
-    ?`<section class="initiative-note"><strong>后来 · ${esc(echoRule.title)}</strong><p>${esc(echo.text)}</p></section>`:'';
+  const echoCast=echo&&initiativeParticipants(person,echo);
+  const followup=echoRule&&echoCast&&(!venue||initiativePlace(echoRule,person,echo)===venue)
+    ?`<section class="initiative-note">${venue?activityPortraits(person,echoCast.target):''}<strong>后来 · ${esc(echoRule.title)}</strong><p>${esc(echo.text)}</p></section>`:'';
   const placeId=initiativePlace(rule,person,move);
-  if(!rule||(venue&&placeId!==venue)||!initiativeParticipants(person,move))return followup;
+  const cast=move&&initiativeParticipants(person,move);
+  if(!rule||(venue&&placeId!==venue)||!cast)return followup;
   const place=PLACES.find(p=>p.id===placeId);
   const response=move.response
     ? `<small>你已回应 · ${esc(move.response)}</small>`
     : `<button class="btn sm" onclick="A.answerInitiative(${person.id},${!!person.sex})">${esc(rule.choices?'到场看看':rule.button)}<small>${rule.choices?'观看无需精力':'精力-1'}</small></button>`;
-  return `<section class="initiative-note"><strong>${esc(rule.title)}${place?' · '+place.n:''}${venue?` · ${esc(person.sex?kidName(person):cName(person))}`:''}</strong><p>${esc(move.text)}</p>
+  return `<section class="initiative-note">${venue?activityPortraits(person,cast.target):''}<strong>${esc(rule.title)}${place?' · '+place.n:''}${venue?` · ${esc(person.sex?kidName(person):cName(person))}`:''}</strong><p>${esc(move.text)}</p>
     ${move.effect?`<small>${esc(move.effect)}</small>`:''}${response}
     ${rule.ref?`<small class="initiative-ref">参考 <a href="${INITIATIVE_SOURCES[rule.source]}" target="_blank" rel="noopener noreferrer">${esc(rule.ref)}</a></small>`:''}</section>${followup}`;
 }
