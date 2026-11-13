@@ -219,6 +219,34 @@ test('selling stored grain takes one energy, saves the proceeds, and removes the
   `);
 });
 
+test('transporting stored grain requires silver and energy, extends relief, and spends the reserve once',()=>{
+  const {run}=boot();
+  run(`
+    S.flags.grainReserveGen=S.gen;
+    S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index:LOCUST_INDEX};
+    E().treasury=69;E().energy=1;E().people=50;
+    A.court();
+    const option=text=>curEv.choices.findIndex(c=>c.t.includes(text));
+    const transport=option('调储粮，拨银运送');
+    assert.equal(curEv.choices[transport].cond(),false);
+    choose(transport);
+    E().treasury=70;E().energy=0;
+    assert.equal(curEv.choices[transport].cond(),false);
+    assert.equal(curEv.choices[option('发放常平仓储粮')].cond(),true);
+    choose(option('稍后再议'));
+    assert.equal(grainReserveReady(),true);
+    E().energy=1;
+    A.court();choose(option('调储粮，拨银运送'));drain();
+    assert.equal(load('auto'),true);
+    assert.deepEqual([E().treasury,E().energy,E().people,grainReserveReady()],[0,0,60,false]);
+    S.turn++;
+    S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index:LOCUST_INDEX};
+    A.court();
+    assert.equal(option('调储粮，拨银运送'),-1);
+    assert.equal(option('发放常平仓储粮'),-1);
+  `);
+});
+
 test('delegating the exam resolves the memorial without spending the last energy point',()=>{
   const {run}=boot();
   run(`

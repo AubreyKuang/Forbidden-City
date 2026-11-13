@@ -66,6 +66,7 @@ const SPONT=[0,1,5,10,11,14];
 const FLOOD_INDEX=0;
 const LOCUST_INDEX=5, HARVEST_INDEX=11;
 const GRAIN_SALE_REVENUE=100;
+const GRAIN_TRANSPORT_COST=70;
 function grainReserveReady(){return S.flags.grainReserveGen===S.gen;}
 A.grainReserve=function(){
   if(!S||S.over||modalOpen||!grainReserveReady())return;
@@ -92,11 +93,18 @@ function monthlyGrainEvent(index){
         return `户部将部分秋粮存入常平仓，留待蝗灾时赈济。${fx(chg({treasury:60,people:2}))}`;
       }});
   }else if(grainReserveReady()){
-    event.text+='\n常平仓尚有丰年留下的粮食，可以直接发放。';
+    event.text+='\n常平仓尚有丰年留下的粮食。可就近发放，也可另拨运费，送到离粮仓较远的村落。';
     event.choices.push({t:'发放常平仓储粮',preview:'国库无支出 · 民心 +6 · 用完这一批储粮',delegated:true,
       f:()=>{
         delete S.flags.grainReserveGen;
         return `户部从常平仓调粮，灾民领到了救急口粮。${fx(chg({people:6}))}`;
+      }});
+    event.choices.push({t:'调储粮，拨银运送',
+      preview:`国库 −${GRAIN_TRANSPORT_COST} 万两 · 民心 +10 · 用完这一批储粮`,
+      cond:()=>E().treasury>=GRAIN_TRANSPORT_COST,why:`须有 ${GRAIN_TRANSPORT_COST} 万两和 1 点精力`,
+      f:()=>{
+        delete S.flags.grainReserveGen;
+        return `运粮车把常平仓的粮送进了偏远村落，乡民也领到了口粮。${fx(chg({treasury:-GRAIN_TRANSPORT_COST,people:10}))}`;
       }});
   }
   return event;
