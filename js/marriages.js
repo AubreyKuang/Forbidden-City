@@ -26,10 +26,10 @@ function marriageEmpress(k){
   em.age=Math.max(15,kidAge(spouse));return em;
 }
 function marriageStatus(k){
-  if(!k.alive)return '';
+  if(!k.alive||kidAge(k)<15||k.pendingName)return '';
   if(k.married)return k.spouse?`已赐婚 · ${k.spouse.name}`:'婚事已定';
   if(k.jailed)return '圈禁期间暂不议婚';
-  if(k.pendingName||kidAge(k)<15)return '满十五岁可议婚赐婚';
+
   if(S.turn<(k.marriageAfter??0))return `婚事暂缓 · 还需${k.marriageAfter-S.turn}个月`;
   return '已满十五岁 · 可以议婚';
 }
@@ -37,10 +37,10 @@ function marriageButton(k,small=false){
   return marriageEligible(k)?`<button class="btn ${small?'sm ':''}gold" onclick="A.kidMarriage(${k.id})" ${marriageReady(k)?'':'disabled'}>议婚 / 赐婚${marriageReady(k)?' →':`<small>还需${k.marriageAfter-S.turn}个月</small>`}</button>`:'';
 }
 function marriagePanel(k){
-  if(!k.alive)return '';
+  if(!k.alive||kidAge(k)<15||k.pendingName)return '';
   const spouse=k.spouse;
   return `<section class="marriage-panel" aria-label="皇嗣婚事">${spouse?.appearance?porImg(spouse,72):''}<div><strong>${esc(marriageStatus(k))}</strong><p class="hint">${spouse?esc(spouse.background||spouse.fatherName&&spouse.fatherName+'之子'||'双方心意已定'):
-    k.married?'这门婚事已经记入起居注。':kidAge(k)<15?'长成后可在这里查看人选，先问心意，再下赐婚诏。':'先看名帖、听本人意愿，再确认赐婚；也可以暂缓半年。'}</p>${Number.isFinite(spouse?.trust)?`<p class="hint">夫妻信任 ${rd(spouse.trust)} / 100${spouse.story?.length?' · '+esc(spouse.story[spouse.story.length-1].t):''}</p>`:''}</div>${marriageButton(k)}</section>`;
+    k.married?'这门婚事已经记入起居注。':'先看名帖、听本人意愿，再确认赐婚；也可以暂缓半年。'}</p>${Number.isFinite(spouse?.trust)?`<p class="hint">夫妻信任 ${rd(spouse.trust)} / 100${spouse.story?.length?' · '+esc(spouse.story[spouse.story.length-1].t):''}</p>`:''}</div>${marriageButton(k)}</section>`;
 }
 function princeMarriage(k){
   const order=k.lit>=k.mar&&k.lit>=k.vir?['scholar','household','martial']:k.mar>=k.vir?['martial','household','scholar']:['household','scholar','martial'];

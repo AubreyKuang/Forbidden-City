@@ -718,11 +718,11 @@ test('guest scenes disappear if a host is confined or custody changes and cannot
     S.turn++;assert.equal(youngGuestVisit('景仁宫'),null);`);
 });
 
-test('marriage entry opens at fifteen for both sexes and explains age, confinement and delay',()=>{
+test('marriage entry is hidden before fifteen for both sexes and explains confinement and delay',()=>{
   const {run}=boot();
   run(`var mother=harem()[0];var son=makeKid(mother,'m','承安'),daughter=makeKid(mother,'f','明昭');
     for(const k of [son,daughter]){
-      k.born=S.turn-179;assert.equal(marriageReady(k),false);assert.match(marriageStatus(k),/十五岁/);
+      k.born=S.turn-179;assert.equal(marriageReady(k),false);assert.equal(marriageStatus(k),'');assert.equal(marriagePanel(k),'');
       k.born--;assert.equal(marriageReady(k),true);assert.match(marriageButton(k),/A.kidMarriage/);
       k.jailed=true;assert.equal(marriageReady(k),false);assert.match(marriageStatus(k),/圈禁/);k.jailed=false;
       k.marriageAfter=S.turn+6;assert.equal(marriageReady(k),false);assert.match(marriageButton(k),/disabled/);assert.match(marriageStatus(k),/6个月/);

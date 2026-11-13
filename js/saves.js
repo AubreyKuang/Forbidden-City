@@ -151,8 +151,8 @@ const migratePalaceSave=s=>s;
 function palaceSaveError(slot){
   const status=SaveManager.status(SaveManager.getStorage(),SKEY+slot);
   if(status==='newer')return '此存档由新版游戏保存，请打开新版继续。';
-  if(status==='conflict')return '另一标签页已更新此存档。本页已暂停覆盖，可导出存档码后重新读取。';
-  return '无法写入存档，请检查浏览器存储或导出存档码。';
+  if(status==='conflict')return '另一标签页已更新此存档。本页已暂停覆盖，可下载备份文件后重新读取。';
+  return '无法写入存档，请检查浏览器存储或下载备份文件。';
 }
 let lastAutoSaveError='';
 function save(slot){
@@ -220,20 +220,43 @@ A.rewind=function(index, savedAt){
   }catch{toast('这份快照读不出来了');return;}
   resetMapPosition(S.pos);showRestoredPalace();toast(`回到了${dateStr()}`);
 };
-A.exportSave=function(){try{const t=btoa(unescape(encodeURIComponent(JSON.stringify({...S,saveVersion:SaveManager.version}))));const ta=$('#savecode');ta.value=t;ta.focus();ta.select();
-  if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast('存档码已复制'),()=>toast('已选中，请手动复制'));else toast('已选中，请手动复制')}catch(e){toast('导出失败')}};
-A.importSave=function(){
+// Backups are downloaded files: never place the world state in the page or clipboard.
+const PALACE_FILE_LIMIT=8*1024*1024;
+A.downloadSave=function(){
+  if(!S)return;
+  let url;
   try{
-    const text=$('#savecode').value.trim();
-    if(text.length>8*1024*1024)throw Error();
-    const raw=decodeURIComponent(escape(atob(text)));
+    const blob=new Blob([JSON.stringify({...S,saveVersion:SaveManager.version})],{type:'application/json'});
+    if(blob.size>PALACE_FILE_LIMIT){toast('备份超过八 MB，请先减少测试版中的额外数据');return;}
+    url=URL.createObjectURL(blob);
+    const link=document.createElement('a');link.href=url;
+    link.download=`宸宫纪-${S.year}年${S.month}月.json`;
+    document.body.appendChild(link);link.click();link.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);toast('已请求下载存档文件');
+  }catch{if(url)URL.revokeObjectURL(url);toast('下载失败，请保留此页面并检查浏览器下载权限');}
+};
+function importPalaceFileText(raw){
+  try{
+    if(typeof raw!=='string'||raw.length>PALACE_FILE_LIMIT)throw Error();
     const data=SaveManager.decode(raw,validPalaceSave,migratePalaceSave);
     if(!data)throw Error();
-    if(!confirm(`导入 ${data.emp.sur||''}${data.emp.name||''} 的存档？当前进度会先备份。`))return;
+    if(!confirm(`导入 ${data.emp.sur||''}${data.emp.name||''} 的存档文件？当前进度会先备份。`))return false;
     const alongside=S?[[PALACE_BEFORE_IMPORT,JSON.stringify({...S,saveVersion:SaveManager.version})]]:[];
-    if(!replacePalace(data,alongside)){toast(palaceSaveError('auto'));return;}
-  }catch{toast('存档码无效，请检查内容和游戏版本');return;}
-  resetMapPosition(S.pos);showRestoredPalace();toast('已导入并保存');
+    if(!replacePalace(data,alongside)){toast(palaceSaveError('auto'));return false;}
+  }catch{toast('存档文件无效，请选择本游戏下载的 JSON 备份');return false;}
+  resetMapPosition(S.pos);showRestoredPalace();toast('已导入并保存');return true;
+}
+let palaceFileReading=false;
+A.readSaveFile=async function(input){
+  const file=input?.files?.[0];if(!file||palaceFileReading)return;
+  if(file.size>PALACE_FILE_LIMIT){input.value='';toast('文件过大，最多支持八 MB 的游戏存档');return;}
+  const previous=S,turn=S?.turn;palaceFileReading=true;
+  try{
+    const raw=await file.text();
+    if(S!==previous||S?.turn!==turn){toast('进度已变化，请重新选择备份文件');return;}
+    importPalaceFileText(raw);
+  }catch{toast('文件读取失败，请重新选择');}
+  finally{input.value='';palaceFileReading=false;}
 };
 function palaceImportBackup(){
   try{return SaveManager.decode(localStorage.getItem(PALACE_BEFORE_IMPORT),validPalaceSave,migratePalaceSave);}

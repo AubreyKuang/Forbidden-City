@@ -410,7 +410,7 @@ function viewSys(){
   return `<h2>存档</h2><p class="hint">存档保存在本浏览器中；每月结束时会自动存档。</p>
    ${['1','2','3'].map(s=>`<div class="acts" style="align-items:center"><b>存档${s}</b><span class="hint grow">${esc(slotInfo(s)||'空')}</span><button class="btn sm gold" onclick="A.save('${s}')">保存</button><button class="btn sm" onclick="A.load('${s}')">读取</button></div>`).join('')}
    <div class="acts" style="align-items:center"><b>自动</b><span class="hint grow">${esc(slotInfo('auto')||'空')}</span><button class="btn sm" onclick="A.load('auto')">读取</button></div>
-   <h3>存档码</h3><p class="hint">导出后复制这串字，可以换浏览器继续玩，也可以发给别人看你的进度。</p><textarea id="savecode" class="inp" aria-label="存档码"></textarea><div class="acts"><button class="btn sm gold" onclick="A.exportSave()">导出存档码</button><button class="btn sm" onclick="A.importSave()">导入存档码</button>${palaceImportBackup()?'<button class="btn sm" onclick="A.undoImport()">恢复导入前的进度</button>':''}</div>
+   <h3>文件备份</h3><p class="hint">下载一个 JSON 文件留存；换浏览器时选择此文件恢复。备份不会复制到剪贴板。</p><div class="acts"><button class="btn sm gold" onclick="A.downloadSave()">下载备份文件</button><button class="btn sm" onclick="document.getElementById('save-file').click()">选择备份文件导入</button><input id="save-file" type="file" accept=".json,application/json" hidden onchange="A.readSaveFile(this)">${palaceImportBackup()?'<button class="btn sm" onclick="A.undoImport()">恢复导入前的进度</button>':''}</div>
    ${rewindHTML()}
    <h3>其他</h3><div class="acts"><button class="btn sm" onclick="S=null;UI.view='title';render()">返回标题</button></div>`}
 function rewindHTML(){
