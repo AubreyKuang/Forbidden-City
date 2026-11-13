@@ -251,7 +251,7 @@ A.grainReserve=function(){
     (order==='due'?`\n预订的半批秋粮已到。可领粮入仓，民心低时也可直送缺粮村落。${S.month===8?'若本月不领，可改到九月或退订。':'九月是最后的领取期限。'}逾期不退订金。`:'')+
     (!stocked||half?`\n${autumn?'秋粮上市，现为低价':'八月至十月是低价期'}。每月最多购半批。`:''),choices});
 };
-function monthlyGrainEvent(index){
+function monthlyGrainEvent(index,locustNeed){
   const event=COURT[index]();
   if(index===HARVEST_INDEX){
     if(halfGrainReserve()){
@@ -310,23 +310,35 @@ function monthlyGrainEvent(index){
   if(index===LOCUST_INDEX&&autumnGrainOrderStatus()==='due'){
     const cost=autumnGrainBalance()+AUTUMN_GRAIN_DELIVERY;
     const people=LOCUST_LOCAL_PURCHASE_PEOPLE;
-    event.text+='\n预订的半批秋粮已经到货。户部可令粮商直接送去蝗灾最重的村落。';
+    event.text+='\n预订的半批秋粮已经到货。户部可令粮商直接送去缺粮村落。';
     event.choices.push({t:'用预订秋粮赈济蝗灾',grainTransaction:true,
       preview:`国库 −${cost} 万两 · 民心 +${people} · 保留仓粮 · 用掉当月购粮和救急粮名额`,
       cond:()=>!autumnGrainReliefBlock(cost),why:autumnGrainReliefBlock(cost),
       f:()=>settleAutumnGrainRelief(cost,people)});
     if(grainReserveReady()){
       const half=halfGrainReserve(),total=people+LOCUST_HALF_RESERVE_PEOPLE;
-      const blocked=()=>!grainReserveReady()?'常平仓须有半批储粮':autumnGrainReliefBlock(cost);
-      event.choices.push({t:'仓粮就近发放，订粮直送远村',grainTransaction:true,
-        preview:`国库 −${cost} 万两 · 民心 +${total} · ${half?'用完仓粮':'留半批仓粮'} · 用掉当月购粮和救急粮名额`,
-        cond:()=>!blocked(),why:blocked(),
-        f:()=>{
-          if(halfGrainReserve())clearGrainReserve();
-          else S.flags.grainReserveHalf=true;
-          log('蝗灾，户部从常平仓就近发半批粮，另由粮商直送远村。');
-          return '仓粮已在附近发放，远村由粮商送粮。'+settleAutumnGrainRelief(cost,total);
-        }});
+      const nearUrgent=locustNeed==='near';
+      event.text+=nearUrgent
+        ?'\n近村已经断粮，粮商比常平仓的车队更快到近村。远村尚有余粮，可另派仓车送去。'
+        :'\n远村已经断粮，粮商能赶在常平仓的车队前送到远村。近村尚有余粮。';
+      const routes=[
+        {title:'仓粮就近发放，订粮直送远村',cost,people:nearUrgent?total-2:total,
+          result:'仓粮已在附近发放，远村由粮商送粮。'},
+      ];
+      if(nearUrgent)routes.push({title:'订粮先救近村，仓粮运往远村',cost:cost+GRAIN_TRANSPORT_COST,people:total+3,
+        result:'粮商先往近村发粮，常平仓另派车把半批粮运到远村。'});
+      for(const route of routes){
+        const blocked=()=>!grainReserveReady()?'常平仓须有半批储粮':autumnGrainReliefBlock(route.cost);
+        event.choices.push({t:route.title,grainTransaction:true,
+          preview:`国库 −${route.cost} 万两 · 民心 +${route.people} · ${half?'用完仓粮':'留半批仓粮'} · 用掉当月购粮和救急粮名额`,
+          cond:()=>!blocked(),why:blocked(),
+          f:()=>{
+            if(halfGrainReserve())clearGrainReserve();
+            else S.flags.grainReserveHalf=true;
+            log(`蝗灾，户部调粮分路赈济：${route.title}。`);
+            return route.result+settleAutumnGrainRelief(route.cost,route.people);
+          }});
+      }
     }
   }
   return event;
@@ -599,7 +611,7 @@ function monthlyCourtEvent(){
     if(brief.floodFollowup)return floodReliefEvent(brief);
     if(brief.index===LOCUST_INDEX||brief.index===HARVEST_INDEX){
       markGrainMemorialSeen(brief.index);
-      return monthlyGrainEvent(brief.index);
+      return monthlyGrainEvent(brief.index,brief.locustNeed);
     }
     if(brief.index===FLOOD_INDEX){
       if(!Object.hasOwn(FLOOD_SUPERVISION,brief.floodNeed)){
@@ -656,12 +668,14 @@ function monthlyCourtEvent(){
   for(const index of candidates){
     const impeachment=index===IMPEACHMENT_INDEX?newImpeachment():null;
     const floodNeed=index===FLOOD_INDEX?(S.turn===0||chance(.5)?'grain':'shelter'):null;
+    const locustNeed=index===LOCUST_INDEX?(chance(.5)?'near':'far'):null;
     const ev=floodNeed?monthlyFloodEvent({floodNeed}):index===LOCUST_INDEX||index===HARVEST_INDEX
-      ?monthlyGrainEvent(index):COURT[index](index===IMPEACHMENT_INDEX?{impeachment}:undefined);
+      ?monthlyGrainEvent(index,locustNeed):COURT[index](index===IMPEACHMENT_INDEX?{impeachment}:undefined);
     if(!ev)continue;
     S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index,person:ev.person,sons:ev.sons,
       ...(impeachment?{impeachment}:{}),
       ...(floodNeed?{floodNeed}:{}),
+      ...(locustNeed?{locustNeed}:{}),
       guest:ev.title==='西域使臣'?ev.por:undefined};
     if(impeachment)S.flags.impeachmentSeen=true;
     markGrainMemorialSeen(index);

@@ -606,6 +606,46 @@ test('splitting locust relief spends half a reserve and the grain order in one s
   `);
 });
 
+test('a locust memorial saves the urgent village and prices the reversed grain route',()=>{
+  for(const near of [true,false]){
+    const {run,setRoll}=boot();
+    setRoll(near ? .2 : .8);
+    run(`
+      S.month=8;S.turn=19;S.year=2;
+      Object.assign(S.flags,{monthlyCourt:null,impeachmentSeen:true,harvestSeenGen:S.gen,
+        autumnGrainOrder:{gen:S.gen,turn:S.turn},grainReserveGen:S.gen,grainReserveHalf:true});
+      // Place the locust memorial first while leaving its urgency to the real random roll.
+      const oldShuffle=shuffle;
+      shuffle=values=>[LOCUST_INDEX,...values.filter(index=>index!==LOCUST_INDEX)];
+      Object.assign(E(),{people:60,treasury:134,energy:1});
+      A.court();shuffle=oldShuffle;
+      assert.equal(S.flags.monthlyCourt.locustNeed,'${near?'near':'far'}');
+      choose(curEv.choices.length-1);
+      assert.equal(load('auto'),true);
+    `);
+    setRoll(near ? .8 : .2);
+    run(`
+      A.court();
+      assert.match(curEv.text,/${near?'近村':'远村'}已经断粮/);
+      const route=curEv.choices.findIndex(c=>c.t.includes('订粮先救近村'));
+      const regular=curEv.choices.find(c=>c.t.includes('订粮直送远村'));
+      assert.match(regular.preview,/65 万两 · 民心 \\+${near?7:9}/);
+      if(${near}){
+        assert.match(curEv.choices[route].preview,/135 万两 · 民心 \\+12/);
+        assert.equal(curEv.choices[route].cond(),false);
+        E().treasury=135;
+        assert.equal(curEv.choices[route].cond(),true);
+        choose(route);drain();assert.equal(load('auto'),true);
+        assert.deepEqual([E().treasury,E().energy,E().people,grainReserveReady(),S.flags.monthlyCourt.done,
+          S.flags.autumnGrainOrder,S.flags.grainPurchaseTurn,S.flags.grainReliefTurn],
+          [0,0,72,false,true,undefined,S.turn,S.turn]);
+      }else{
+        assert.equal(route,-1);
+      }
+    `);
+  }
+});
+
 test('delegating the exam resolves the memorial without spending the last energy point',()=>{
   const {run}=boot();
   run(`
