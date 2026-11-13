@@ -177,9 +177,9 @@ const EXISTING_PRINCE_VARIANTS=4;
 const EXTRA_PRINCE_VARIANTS=LEGACY_DESCENDANT_VARIANTS-EXISTING_PRINCE_VARIANTS;
 const BEAUTY_PORTRAIT_START=92, YOUNG_ROYAL_PORTRAIT_START=136, PORTRAIT_COUNT=240;
 const portraitSheets=[
-  {start:0,rows:7,src:'./palace-portraits-b.webp',image:portraitAtlas},
-  {start:FAMILY_PORTRAIT_START,rows:4,src:'./palace-family.webp',image:familyAtlas},
-  {start:DESCENDANT_PORTRAIT_START,rows:12,src:'./palace-descendants.webp?v=2',image:descendantAtlas},
+  {start:0,rows:7,scale:2,src:'./palace-portraits-b.webp?v=original-hd-1',image:portraitAtlas},
+  {start:FAMILY_PORTRAIT_START,rows:4,scale:2,src:'./palace-family.webp?v=original-hd-1',image:familyAtlas},
+  {start:DESCENDANT_PORTRAIT_START,rows:12,scale:2,src:'./palace-descendants.webp?v=original-hd-1',image:descendantAtlas},
   {start:BEAUTY_PORTRAIT_START,rows:11,scale:2,src:'./palace-beauties.webp?v=1',image:beautyAtlas},
   {start:YOUNG_ROYAL_PORTRAIT_START,rows:9,scale:2,src:'./palace-young-royals.webp?v=1',image:youngRoyalAtlas},
   {start:172,rows:9,scale:2,src:'./palace-young-royals-2.webp?v=1',image:document.createElement('img')},
@@ -282,17 +282,23 @@ function atlasPortrait(cell,rank){
   const [x,y]=portraitTile(cell,sheet);
   const scale=sheet.scale||1,w=PORTRAIT_WIDTH*scale,h=PORTRAIT_HEIGHT*scale;
   atlasCanvas.width=w;atlasCanvas.height=h;
-  atlasInk.clearRect(0,0,PORTRAIT_WIDTH,PORTRAIT_HEIGHT);
+  atlasInk.clearRect(0,0,w,h);
   atlasInk.imageSmoothingEnabled=false;
   atlasInk.drawImage(sheet.image,x*scale,y*scale,w,h,0,0,w,h);
   // Keep the same face on promotion. Add the ornaments above the existing hair.
-  if(rank===8)atlasInk.drawImage(portraitAtlas,26,702,60,30,26*scale,scale,60*scale,30*scale);
+  if(rank===8){
+    const crownScale=portraitSheets[0].scale||1;
+    atlasInk.drawImage(portraitAtlas,26*crownScale,702*crownScale,60*crownScale,30*crownScale,26*scale,scale,60*scale,30*scale);
+  }
   const src=atlasCanvas.toDataURL();
   ART_CACHE.set(key,src);
   return src;
 }
 
-const portraitAtlasReady=(cell,rank)=>portraitSheet(cell).image.naturalWidth&&(rank!==8||portraitAtlas.naturalWidth);
+// WebP dimensions can arrive before its pixels finish decoding. Do not cache
+// a blank canvas during that interval, especially for the larger source atlases.
+const portraitImageReady=image=>image.complete&&image.naturalWidth>0&&image.naturalHeight>0;
+const portraitAtlasReady=(cell,rank)=>portraitImageReady(portraitSheet(cell).image)&&(rank!==8||portraitImageReady(portraitAtlas));
 function refreshAtlasPortraits(){
   document.querySelectorAll('img[data-portrait-cell]').forEach(img=>{
     const cell=Number(img.dataset.portraitCell);
@@ -300,7 +306,11 @@ function refreshAtlasPortraits(){
     if(portraitAtlasReady(cell,rank))img.src=atlasPortrait(cell,rank);
   });
 }
-portraitSheets.forEach(sheet=>sheet.image.addEventListener('load',refreshAtlasPortraits));
+portraitSheets.forEach(sheet=>sheet.image.addEventListener('load',()=>{
+  // Also discard rendered images if an atlas is reloaded or replaced.
+  ART_CACHE.clear();
+  refreshAtlasPortraits();
+}));
 portraitAtlas.src=portraitSheets[0].src;
 familyAtlas.src=portraitSheets[1].src;
 

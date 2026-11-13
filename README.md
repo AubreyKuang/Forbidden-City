@@ -380,11 +380,15 @@ NPC 记忆区分客观事件与人物主观理解。同一场争执，受助者�
 
 皇子、公主各有 **26 套成长形象**，覆盖襁褓、孩童和长成后三阶段，共 **156 张**；包含清雅、英气、温润与礼服造型，公主包括披发、半披发、侧辫、双丫髻、珠冠与花冠。旧档原有形象保持不变，新出生皇嗣会使用扩充后的形象池。
 
-点进妃嫔或皇嗣详情后，主立绘在桌面以 224 × 280 显示，手机以 176 × 220 居中显示。新图集采用双倍像素尺寸并按需加载，详情、事件、家族与金手指使用同一人物形象。
+点进妃嫔或皇嗣详情后，主立绘在桌面以 224 × 280 显示，手机以 176 × 220 居中显示。所有人物图集均采用双倍像素尺寸并按需加载；旧图集中的 88 张人物立绘直接从**原始高清源图**重新裁切，以 224 × 280 像素打包，保留原来的面部结构、人物比例、衣饰纹样、线条和设色。显示尺寸与存档中的人物编号保持不变，详情、事件、家族与金手指使用同一人物形象。
 
 多人相遇、宴请、争执与议婚会并排展示相关人物。家族图、皇嗣列表与活动入口也使用对应头像，便于认出同一个人。
 
-<img src="docs/screenshots/showcase-large-portrait.jpg" alt="人物详情页的放大立绘、性情和操作区" width="860">
+<img src="docs/screenshots/showcase-original-princess.jpg" alt="原公主立绘从高清源图重新裁切，游戏内显示大小保持不变" width="860">
+
+下图每组左侧为旧版小图放大，右侧为同一原画重新裁切后的效果；两侧显示尺寸一致。
+
+<img src="docs/screenshots/showcase-original-resolution.png" alt="原立绘画质对比：保留原来的脸型、服饰和画风，提高图集分辨率" width="960">
 
 ### 古筝、琵琶与琴箫
 
@@ -467,6 +471,8 @@ node tests/palace-flow.cjs
 | `palace-beauties.webp`、`palace-regalia.webp` | 妃嫔与皇子选妃共用的佳人、盛装图集 |
 | `palace-young-royals*.webp`、`palace-royal-regalia.webp` | 皇子、公主的扩充成长与华服图集 |
 | `scripts/build-portrait-atlases.py` | 将批准的原图按固定编号打包，保留比例与透明通道 |
+| `scripts/rebuild-legacy-portraits.py` | 从原始高清源图恢复旧立绘的分辨率，保留原貌与存档编号 |
+| `docs/portrait-art-direction.md` | 人物美术参考与清晰度、材质、构图要求 |
 | `palace-buildings-b.webp` | 宫殿、宫门与水榭图集 |
 | `palace-coronation.webp`、`palace-selection.webp` | 登基与选秀场景素材 |
 | `docs/screenshots/` | 实机截图 |

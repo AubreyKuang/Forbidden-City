@@ -20,6 +20,22 @@ function boot(seedValue=4242){
   return {ctx,storage,force:(...values)=>rolls.push(...values),run:code=>vm.runInContext(code,ctx)};
 }
 
+test('partially loaded portrait atlases cannot leave permanently blank cached faces',()=>{
+  const {run}=boot();
+  run(`Object.assign(portraitAtlas,{naturalWidth:896,naturalHeight:1960,complete:false});
+    var cell=portraitCell('emp');ART_CACHE.clear();
+    assert.equal(portraitAtlasReady(cell,0),false);
+    porImg('emp');assert.equal(ART_CACHE.has(cell+':0'),false);
+    portraitAtlas.complete=true;assert.equal(portraitAtlasReady(cell,0),true);
+    porImg('emp');assert.equal(ART_CACHE.has(cell+':0'),true);
+    Object.assign(beautyAtlas,{naturalWidth:896,naturalHeight:3080,complete:true});
+    portraitAtlas.complete=false;
+    assert.equal(portraitAtlasReady(92,0),true);
+    assert.equal(portraitAtlasReady(92,8),false);
+    portraitAtlas.complete=true;assert.equal(portraitAtlasReady(92,8),true);
+    portraitAtlas.naturalHeight=0;assert.equal(portraitAtlasReady(cell,0),false);`);
+});
+
 test('scene activity cards show both saved portraits and omit unavailable participants',()=>{
   const {run}=boot();
   run(`var mother=harem()[0]; var child={id:9999,name:'景明',sex:'m',born:S.turn-96,alive:true,mom:mother.id,seed:123,lit:35,vir:40,hp:90};S.children.push(child);
