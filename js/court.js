@@ -68,46 +68,61 @@ const COURT=[
 const SPONT=[0,1,5,10,11,14];
 const FLOOD_INDEX=0;
 const LOCUST_INDEX=5, HARVEST_INDEX=11;
-const GRAIN_SALE_REVENUE=100;
+const GRAIN_SALE_REVENUE=100, HALF_GRAIN_SALE_REVENUE=45;
 const GRAIN_TRANSPORT_COST=70;
 function grainReserveReady(){return S.flags.grainReserveGen===S.gen;}
+function halfGrainReserve(){return grainReserveReady()&&S.flags.grainReserveHalf===true;}
+function grainReserveLabel(){return halfGrainReserve()?'半批':'一批';}
+function clearGrainReserve(){
+  delete S.flags.grainReserveGen;
+  delete S.flags.grainReserveHalf;
+}
+function sellGrainChoice(t,revenue,keepHalf=false){
+  return {t,preview:`国库 +${revenue} 万两 · 精力 −1 · ${keepHalf?'留半批备荒粮':'用完余粮'}`,
+    cond:()=>grainReserveReady()&&(!keepHalf||!halfGrainReserve())&&E().energy>0,why:'需要储粮和 1 点精力',
+    f:()=>{
+      if(!useE())return;
+      if(keepHalf)S.flags.grainReserveHalf=true;
+      else clearGrainReserve();
+      const result=chg({treasury:revenue});
+      log(`户部售出常平仓储粮，得银 ${revenue} 万两。`);
+      save('auto');
+      return `${keepHalf?'售粮所得已入国库，仓中还留有半批备荒粮。':'售粮所得已入国库，常平仓可在下次丰收时补粮。'}${fx(result)}`;
+    }};
+}
 A.grainReserve=function(){
   if(!S||S.over||modalOpen||!grainReserveReady())return;
-  pushEv({title:'常平仓',text:`现有一批备荒粮，国库有 ${E().treasury} 万两。可留粮应对蝗灾，也可售粮换银，应付眼前的开支。`,choices:[
-    {t:'售粮充库',preview:`国库 +${GRAIN_SALE_REVENUE} 万两 · 精力 −1 · 用完这一批储粮`,
-      cond:()=>grainReserveReady()&&E().energy>0,why:'精力不足',f:()=>{
-        if(!useE())return;
-        delete S.flags.grainReserveGen;
-        const result=chg({treasury:GRAIN_SALE_REVENUE});
-        log(`户部售出常平仓储粮，得银 ${GRAIN_SALE_REVENUE} 万两。`);
-        save('auto');
-        return `售粮所得已入国库，常平仓可在下次丰收时补粮。${fx(result)}`;
-      }},
-    {t:'留粮备荒',preview:'遇蝗灾月奏可发粮 · 国库无支出 · 免耗精力 · 民心 +6'}]});
+  const half=halfGrainReserve();
+  pushEv({title:'常平仓',text:`现有${grainReserveLabel()}备荒粮，国库有 ${E().treasury} 万两。可留粮应对蝗灾，也可售粮换银，应付眼前的开支。`,choices:[
+    sellGrainChoice('售粮充库',half?HALF_GRAIN_SALE_REVENUE:GRAIN_SALE_REVENUE),
+    ...(half?[]:[sellGrainChoice('售半批，留半批备荒',HALF_GRAIN_SALE_REVENUE,true)]),
+    {t:'留粮备荒',preview:`遇蝗灾月奏可发粮 · 国库无支出 · 免耗精力 · 民心 +${half?3:6}`}]});
 };
 function monthlyGrainEvent(index){
   const event=COURT[index]();
   if(index===HARVEST_INDEX){
-    if(grainReserveReady())event.text+='\n常平仓已有一批备荒粮，等用过再补。';
+    if(grainReserveReady())event.text+=`\n常平仓还有${grainReserveLabel()}备荒粮，等用过再补。`;
     else event.choices.push({t:'留粮入常平仓，以备蝗灾',
       preview:'国库 +60 万两 · 民心 +2 · 储粮可在日后一次蝗灾中免耗精力赈济',
       f:()=>{
         S.flags.grainReserveGen=S.gen;
+        delete S.flags.grainReserveHalf;
         return `户部将部分秋粮存入常平仓，留待蝗灾时赈济。${fx(chg({treasury:60,people:2}))}`;
       }});
   }else if(grainReserveReady()){
-    event.text+='\n常平仓尚有丰年留下的粮食。可就近发放，也可另拨运费，送到离粮仓较远的村落。';
-    event.choices.push({t:'发放常平仓储粮',preview:'国库无支出 · 民心 +6 · 用完这一批储粮',delegated:true,
+    const half=halfGrainReserve(), localPeople=half?3:6, remotePeople=half?5:10;
+    event.text+=`\n常平仓尚有${grainReserveLabel()}备荒粮。可就近发放，也可另拨运费，送到离粮仓较远的村落。`;
+    event.choices.push({t:'发放常平仓储粮',preview:`国库无支出 · 民心 +${localPeople} · 用完余粮`,delegated:true,
       f:()=>{
-        delete S.flags.grainReserveGen;
-        return `户部从常平仓调粮，灾民领到了救急口粮。${fx(chg({people:6}))}`;
+        clearGrainReserve();
+        return `户部从常平仓调粮，灾民领到了救急口粮。${fx(chg({people:localPeople}))}`;
       }});
     event.choices.push({t:'调储粮，拨银运送',
-      preview:`国库 −${GRAIN_TRANSPORT_COST} 万两 · 民心 +10 · 用完这一批储粮`,
+      preview:`国库 −${GRAIN_TRANSPORT_COST} 万两 · 民心 +${remotePeople} · 用完余粮`,
       cond:()=>E().treasury>=GRAIN_TRANSPORT_COST,why:`须有 ${GRAIN_TRANSPORT_COST} 万两和 1 点精力`,
       f:()=>{
-        delete S.flags.grainReserveGen;
-        return `运粮车把常平仓的粮送进了偏远村落，乡民也领到了口粮。${fx(chg({treasury:-GRAIN_TRANSPORT_COST,people:10}))}`;
+        clearGrainReserve();
+        return `运粮车把常平仓的粮送进了偏远村落，乡民也领到了口粮。${fx(chg({treasury:-GRAIN_TRANSPORT_COST,people:remotePeople}))}`;
       }});
   }
   return event;
@@ -345,14 +360,15 @@ function floodReliefEvent(brief){
   if(brief.floodNeed==='grain'){
     event.text+='\n灾区安置已稳，粮道仍未通。常平仓若有存粮，可以另拨运费调粮。';
     const freight=brief.freightBooked?FLOOD_FREIGHT_BALANCE:FLOOD_GRAIN_FREIGHT;
+    const people=halfGrainReserve()?2:4;
     if(brief.freightBooked)event.text+='\n运粮车只保留到本月，逾期或改用他法，订金不退。';
     if(grainReserveReady())event.choices.splice(1,0,{
       t:brief.freightBooked?'调常平仓粮，用已订运粮车收尾':'调常平仓粮，拨运费收尾',
-      preview:`国库 −${freight} 万两 · 民心 +4 · 用完本批储粮`,
+      preview:`国库 −${freight} 万两 · 民心 +${people} · 用完余粮`,
       cond:()=>grainReserveReady()&&E().treasury>=freight,why:`须有储粮、${freight} 万两和 1 点精力`,
       f:()=>{
-        delete S.flags.grainReserveGen;
-        return `户部绕开受损粮道，把常平仓的存粮送到了灾区。${fx(chg({treasury:-freight,people:4}))}`;
+        clearGrainReserve();
+        return `户部绕开受损粮道，把常平仓的存粮送到了灾区。${fx(chg({treasury:-freight,people}))}`;
       }});
   }
   if(!brief.extended)event.choices.push({

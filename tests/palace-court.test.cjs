@@ -195,10 +195,10 @@ test('selling stored grain takes one energy, saves the proceeds, and removes the
     assert.equal(curEv.choices[0].cond(),false);
     choose(0);
     assert.equal(E().treasury,60);
-    choose(1);
+    choose(curEv.choices.findIndex(c=>c.t==='留粮备荒'));
     assert.equal(grainReserveReady(),true);
     E().energy=2;
-    A.grainReserve();choose(1);
+    A.grainReserve();choose(curEv.choices.findIndex(c=>c.t==='留粮备荒'));
     assert.equal(E().energy,2);
     assert.equal(E().treasury,60);
     A.grainReserve();choose(0);
@@ -217,6 +217,37 @@ test('selling stored grain takes one energy, saves the proceeds, and removes the
     assert.equal(curEv.title,'蝗灾');
     assert.equal(curEv.choices.some(c=>c.t.includes('发放常平仓储粮')),false);
   `);
+});
+
+test('half-sale persists and leaves smaller relief rewards in either disaster',()=>{
+  for(const use of ['locust','freight','sale']){
+    const {run}=boot();
+    run(`
+      const option=label=>curEv.choices.findIndex(c=>c.t.includes(label));
+      S.flags.grainReserveGen=S.gen;
+      E().treasury=0;E().energy=1;E().people=50;
+      A.grainReserve();choose(option('售半批'));drain();assert.equal(load('auto'),true);
+      assert.deepEqual([E().treasury,E().energy,grainReserveReady(),halfGrainReserve()],[45,0,true,true]);
+      assert.match(viewMap(),/半批备荒粮/);
+      A.grainReserve();assert.equal(option('售半批'),-1);
+      if('${use}'==='sale'){
+        E().energy=1;choose(option('售粮充库'));drain();
+        assert.equal(E().treasury,90);
+      }else{
+        choose(option('留粮备荒'));
+        S.flags.monthlyCourt='${use}'==='locust'?{turn:S.turn,gen:S.gen,index:LOCUST_INDEX}:
+          {turn:S.turn,gen:S.gen,index:FLOOD_INDEX,floodFollowup:true,floodNeed:'grain',freightBooked:true};
+        if('${use}'==='freight')E().energy=1;
+        A.court();
+        const relief=option('${use==='locust'?'发放常平仓':'已订运粮车'}');
+        assert.match(curEv.choices[relief].preview,/民心 \\+${use==='locust'?3:2}/);
+        choose(relief);drain();
+        assert.deepEqual([E().treasury,E().energy,E().people],[${use==='locust'?45:35},0,${use==='locust'?53:52}]);
+      }
+      assert.equal(grainReserveReady(),false);
+      assert.equal(S.flags.grainReserveHalf,undefined);
+    `);
+  }
 });
 
 test('transporting stored grain requires silver and energy, extends relief, and spends the reserve once',()=>{
