@@ -717,3 +717,86 @@ test('guest scenes disappear if a host is confined or custody changes and cannot
     host.cold=false;k.foster=host.id;assert.equal(palaceLifeScene('景仁宫'),null);delete k.foster;
     S.turn++;assert.equal(youngGuestVisit('景仁宫'),null);`);
 });
+
+test('marriage entry opens at fifteen for both sexes and explains age, confinement and delay',()=>{
+  const {run}=boot();
+  run(`var mother=harem()[0];var son=makeKid(mother,'m','承安'),daughter=makeKid(mother,'f','明昭');
+    for(const k of [son,daughter]){
+      k.born=S.turn-179;assert.equal(marriageReady(k),false);assert.match(marriageStatus(k),/十五岁/);
+      k.born--;assert.equal(marriageReady(k),true);assert.match(marriageButton(k),/A.kidMarriage/);
+      k.jailed=true;assert.equal(marriageReady(k),false);assert.match(marriageStatus(k),/圈禁/);k.jailed=false;
+      k.marriageAfter=S.turn+6;assert.equal(marriageReady(k),false);assert.match(marriageButton(k),/disabled/);assert.match(marriageStatus(k),/6个月/);
+      delete k.marriageAfter;k.alive=false;assert.equal(marriageReady(k),false);k.alive=true;
+      k.married=true;assert.equal(marriageReady(k),false);k.married=false;
+    }
+    assert.ok(viewKids().includes('议婚 / 赐婚'));UI.sel=son.id;assert.match(viewKid(),/皇嗣婚事/);`);
+});
+
+test('prince marriage keeps fixed candidates across save/load and settles once without removing a resident prince',()=>{
+  const {run}=boot();
+  run(`var son=makeKid(harem()[0],'m','承安');son.born=S.turn-180;son.lit=80;son.mar=30;son.vir=40;E().treasury=200;
+    A.kidMarriage(son.id);var candidates=JSON.stringify(son.marriageCandidates);
+    assert.equal(Object.keys(son.marriageCandidates).length,3);
+    assert.equal(new Set(Object.values(son.marriageCandidates).map(p=>p.name)).size,3);
+    assert.ok(Object.values(son.marriageCandidates).every(p=>p.sex==='f'&&kidAge(p)>=15&&p.sur!==E().sur&&p.sur!==byId(son.mom).sur));
+    choose(3);drain();assert.equal(son.marriageAfter,S.turn+6);S.turn+=6;save('auto');var id=son.id;A.load('auto');drain();son=kidById(id);
+    assert.equal(JSON.stringify(son.marriageCandidates),candidates);
+    A.kidMarriage(id);choose(0);var confirmMarriage=curEv.choices[0].f;choose(0);drain();
+    assert.equal(son.married,true);assert.equal(son.spouse.name,son.marriageCandidates.scholar.name);
+    assert.equal(son.lit,85);assert.equal(E().treasury,150);assert.equal(childInPalace(son),true);
+    confirmMarriage();A.kidMarriage(id);assert.equal(modalOpen,false);assert.equal(E().treasury,150);assert.equal(son.lit,85);
+    save('auto');A.load('auto');drain();son=kidById(id);assert.match(marriagePanel(son),new RegExp(son.spouse.name));
+    son.away=true;assert.equal(childInPalace(son),false);`);
+});
+
+test('marriage requires the budget and rechecks confinement at confirmation',()=>{
+  const {run}=boot();
+  run(`var son=makeKid(harem()[0],'m','承安');son.born=S.turn-180;E().treasury=49;
+    A.kidMarriage(son.id);choose(0);assert.equal(curEv.choices[0].cond(),false);choose(0);assert.equal(son.married,false);
+    E().treasury=50;son.jailed=true;choose(0);assert.equal(son.married,false);assert.equal(E().treasury,50);assert.equal(modalOpen,false);`);
+});
+
+test('princess standard routes retain named spouses and the prominent action supports already opened estates',()=>{
+  const {run}=boot();
+  run(`var daughter=makeKid(harem()[0],'f','明昭');daughter.born=S.turn-180;daughter.lit=80;daughter.mar=20;daughter.estate={pursuit:'books',opened:S.turn,stage:'proposal'};
+    A.kidMarriage(daughter.id);assert.equal(curEv.title,'公主婚事');choose(0);
+    var candidate=curEv.cast[1];assert.ok(candidate.name);assert.equal(candidate.sex,'m');choose(0);drain();
+    assert.equal(daughter.spouse.name,candidate.name);assert.equal(daughter.princessMarriage,'scholar');assert.equal(daughter.estate.route,'scholar');
+    assert.equal(childInPalace(daughter),false);assert.equal(marriageButton(daughter),'');
+    var id=daughter.id;save('auto');A.load('auto');drain();assert.equal(kidById(id).spouse.name,candidate.name);`);
+});
+
+test('princess official route cannot spend an unavailable marriage budget',()=>{
+  const {run}=boot();
+  run(`var daughter=makeKid(harem()[0],'f','明昭');daughter.born=S.turn-180;E().treasury=49;
+    pushEv(princessMatchReview(daughter,'official'));assert.equal(curEv.choices[0].cond(),false);choose(0);
+    assert.equal(daughter.married,false);assert.equal(E().treasury,49);
+    E().treasury=50;choose(0);drain();assert.equal(daughter.married,true);assert.equal(E().treasury,0);`);
+});
+
+test('all map place guides are read only and show activities without drawing new palace events',()=>{
+  const {run}=boot();
+  run(`var before=JSON.stringify(S);for(const p of PLACES){var guide=placeGuide(p);assert.ok(guide.purpose);assert.ok(guide.activities.length);assert.match(placeGuideHTML(p),/可以做什么/);}
+    assert.equal(JSON.stringify(S),before);assert.equal(S.palaceLife?.checked?.['永和宫'],undefined);`);
+});
+
+test('map guides distinguish residents from active participants and follow cold-palace and dowager state',()=>{
+  const {run}=boot();
+  run(`var mother=harem()[0];mother.palace='永和宫';var child=makeKid(mother,'f','明昭');child.born=S.turn-36;
+    var place=PLACES.find(p=>p.p==='永和宫');assert.ok(placeGuide(place).residents.includes(fullName(mother)));
+    assert.ok(placeGuide(place).residents.some(n=>n.includes('明昭')));
+    mother.cold=true;mother.palace='冷宫';assert.equal(placeGuide(place).residents.length,0);
+    assert.ok(placeGuide(PLACES.find(p=>p.id==='lg')).residents.includes(fullName(mother)));
+    child.born=S.turn-84;assert.ok(placeGuide(PLACES.find(p=>p.id==='ss')).residents.some(n=>n.includes('明昭')));
+    S.flags.dowager.alive=false;assert.match(placeGuideHTML(PLACES.find(p=>p.id==='cn')),/添香追思/);
+    assert.doesNotMatch(placeGuideHTML(PLACES.find(p=>p.id==='cn')),/向太后请安/);`);
+});
+
+test('a married prince keeps his actual wife as empress when succeeding',()=>{
+  const {run}=boot();
+  run(`var son=makeKid(harem()[0],'m','承安');son.born=S.turn-192;E().treasury=200;
+    A.kidMarriage(son.id);choose(0);choose(0);drain();var wife=son.spouse,wifePortrait=portraitCell(wife.appearance);
+    succeed(son);choose(0);drain();var queen=harem().find(c=>c.rank===8);
+    assert.equal(fullName(queen),wife.name);assert.equal(queen.age,kidAge(wife));assert.equal(portraitCell(queen),wifePortrait);
+    assert.equal(queen.trait,wife.appearance.trait);assert.ok(queen.story.some(s=>s.t.includes('潜邸嫡妻')));`);
+});

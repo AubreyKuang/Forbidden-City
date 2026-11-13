@@ -258,6 +258,7 @@ portraitAtlas.src='./palace-portraits-b.webp';
 familyAtlas.src='./palace-family.webp';
 
 function porImg(x,size=64){
+  if(x?.appearance)x=x.appearance;
   const cold=x&&x.cold, dead=x&&x.alive===false;
   const cell=portraitCell(x),rank=x!=='emp'&&!x.sex&&!x.isMom&&!x.maid&&!cold&&x.rank===8?8:0;
   if(cell>=DESCENDANT_PORTRAIT_START&&!descendantAtlas.src)descendantAtlas.src='./palace-descendants.webp?v=2';

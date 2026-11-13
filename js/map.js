@@ -285,6 +285,7 @@ function meetConsort(c){if(!c||!c.alive||c.gone)return;setScene('harem');
     {t:'赏她一支簪子（国库-10万两）',f:()=>fx(chg({treasury:-10}),cchg(c,{mood:10,aff:3}))},
     {t:'点头作别'}]})}
 MAPC.addEventListener('click',e=>{if(!S)return;const r=MAPC.getBoundingClientRect(),mx=(e.clientX-r.left)/r.width*MW,my=(e.clientY-r.top)/r.height*MH;
+  if(mapGuideInspect){const place=PLACES.find(p=>mx>=p.r[0]&&mx<=p.r[0]+p.r[2]&&my>=p.r[1]&&my<=p.r[1]+p.r[3]);if(place)showMapGuide(place);return;}
   const family=gardenFamilyMoment();
   if(family&&Math.abs(mx-GARDEN_FAMILY_SPOT[0])<9&&Math.abs(my-GARDEN_FAMILY_SPOT[1]+3)<5){
     goPlace(gardenPlace());return;
@@ -301,8 +302,9 @@ MAPC.addEventListener('click',e=>{if(!S)return;const r=MAPC.getBoundingClientRec
     if(!emp.path.length)emp.arrive();return}
   const p=PLACES.find(p=>mx>=p.r[0]&&mx<=p.r[0]+p.r[2]&&my>=p.r[1]&&my<=p.r[1]+p.r[3]);if(p)goPlace(p)});
 MAPC.addEventListener('mousemove',e=>{const r=MAPC.getBoundingClientRect(),mx=(e.clientX-r.left)/r.width*MW,my=(e.clientY-r.top)/r.height*MH;
-  hoverP=PLACES.find(p=>mx>=p.r[0]&&mx<=p.r[0]+p.r[2]&&my>=p.r[1]&&my<=p.r[1]+p.r[3])||null});
-MAPC.addEventListener('mouseleave',()=>{hoverP=null});
+  const p=PLACES.find(p=>mx>=p.r[0]&&mx<=p.r[0]+p.r[2]&&my>=p.r[1]&&my<=p.r[1]+p.r[3]);
+  if(p)mapGuideEnter(p);else mapGuideLeave()});
+MAPC.addEventListener('mouseleave',()=>mapGuideLeave());
 setInterval(mapTick,50);
 // Derive leads from live activities so expired or unavailable characters leave the map.
 function mapActivityLeads(){
@@ -354,14 +356,13 @@ A.finishMonth=function(){
     {t:'本月不赴约，继续换月',f:()=>{setTimeout(()=>A.endMonth(),0);return null;}}
   ]});
 };
-function mountMap(){const w=$('#mapwrap');if(!w)return;w.appendChild(MAPC);
+function mountMap(){const w=$('#mapwrap');if(!w)return;w.appendChild(MAPC);mountMapGuide(w);
   const leads=mapActivityLeads();
-  PLACES.forEach(p=>{const b=document.createElement('button');b.className='mlab'+(['qq','kn','cj','yh','sw','wm'].includes(p.id)?' landmark':'');b.textContent=p.n;const here=leads.filter(lead=>lead.place===p.id);if(here.length){b.className+=' has-activity';b.setAttribute('data-activity',String(here.length));b.title=here.map(lead=>lead.title).join('、');b.setAttribute('aria-label',p.n+'，'+b.title);}if(lanternStop()?.place===p.id){b.className+=' seasonal-lit';b.title='上元寻灯';}const [x,y,ww,h]=p.r;
+  PLACES.forEach(p=>{const b=document.createElement('button');b.className='mlab'+(['qq','kn','cj','yh','sw','wm'].includes(p.id)?' landmark':'');b.textContent=p.n;const here=leads.filter(lead=>lead.place===p.id);if(here.length){b.className+=' has-activity';b.setAttribute('data-activity',String(here.length));b.setAttribute('aria-label',p.n+'，'+here.map(lead=>lead.title).join('、'));}if(lanternStop()?.place===p.id){b.className+=' seasonal-lit';}const [x,y,ww,h]=p.r;
     b.style.left=((x+ww/2)/MW*100)+'%';b.style.top=((y+(p.id==='yh'?h/2:h-2))/MH*100)+'%';
-    b.onclick=()=>goDirect(p);b.ondblclick=()=>goDirect(p);
-    b.onmouseenter=()=>{hoverP=p};b.onmouseleave=()=>{hoverP=null};w.appendChild(b)})}
+    bindMapGuide(b,p);w.appendChild(b)})}
 const backBtn=`<button class="btn sm" onclick="A.go('map')">◂ 返回宫城</button>`;
-function viewMap(){return `<section class="map-play" aria-label="宫城地图"><header class="map-location"><h2>宫城</h2><span class="hint">当前位置 · ${esc(nearestPlace())}</span></header><div id="mapwrap"></div><p class="map-legend">点宫殿名直达 · 点宫殿步行前往 · 点小人偶遇 · 绿点：有人活动 · 粉点：有孕 · 金点：选秀</p>${mourningNotice()}${mapActivityPanel()}${princessMapNotice()}${birthdayBanquetButtons()}${proudDemandNotice()}</section>`;}
+function viewMap(){return `<section class="map-play" aria-label="宫城地图"><header class="map-location"><h2>宫城</h2><span class="hint">当前位置 · ${esc(nearestPlace())}</span></header><div class="map-guide-tools"><span class="hint">悬停宫名或建筑，查看用途与活动</span><button id="map-guide-toggle" class="btn sm" aria-pressed="false" onclick="A.toggleMapGuide()">地点用途与玩法</button></div><div id="mapwrap"></div><div id="map-guide-preview" aria-live="polite"></div><p class="map-legend">点宫殿名直达 · 点宫殿步行前往 · 点小人偶遇 · 绿点：有人活动 · 粉点：有孕 · 金点：选秀</p>${mourningNotice()}${mapActivityPanel()}${princessMapNotice()}${birthdayBanquetButtons()}${proudDemandNotice()}</section>`;}
 function viewPalace(){const name=UI.sel,res=name==='冷宫'?alive().filter(c=>c.cold):harem().filter(c=>c.palace===name);
   const extra=name==='储秀宫'&&S.cands.length?`<div class="acts"><button class="btn gold" onclick="A.go('xx')">秀女正在候选（${S.cands.length}人）</button></div>`:'';
   const note=name==='冷宫'?'荒草萋萋，宫门深锁。':name==='坤宁宫'?'中宫所居，凤仪万方。':(PALACE_NOTES[name]||'宫门半掩，廊下挂着鸟笼。');

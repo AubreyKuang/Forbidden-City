@@ -615,3 +615,17 @@ button.portrait-card{align-items:center}
 button.family-room-person{cursor:pointer}button.family-room-person:hover{color:#9b482e;text-decoration:underline}button.family-room-person:focus-visible{outline:2px solid #507261;outline-offset:3px}
 .family-room-props{margin-top:12px;padding:7px 10px;text-align:center;background:#8d684b;color:#fff3dc;border-top:4px solid #745239;letter-spacing:.12em}.nursery-residents{margin:14px 0}.nursery-residents .activity-portraits{display:flex;flex-wrap:wrap;gap:10px}
 @media(max-width:600px){.family-room{padding:10px 8px 0}.family-room-people{gap:10px}.family-room .school-speech{padding:8px;font-size:12px;min-height:126px}.family-room-person .por{width:96px;height:120px}}
+
+/* Location guide and visible marriage actions */
+.map-guide-tools{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 10px}
+.map-guide-tools .hint{margin:0;font-size:12px;color:#fff0d4;text-shadow:0 1px 3px #30261d}
+.map-tooltip{position:absolute;z-index:12;width:272px;max-width:calc(100% - 8px);box-sizing:border-box;padding:14px 16px;background:#fff8e9;color:#493c2f;border:1px solid #bea077;border-radius:10px;box-shadow:0 8px 28px #21180d55;font:13px/1.55 var(--f-ui);pointer-events:none}
+.map-tooltip[hidden]{display:none}
+.map-tooltip p{margin:5px 0 9px}.map-tip-title{display:block;font-size:17px;color:#713e30;letter-spacing:.08em}
+.map-tip-label{font-size:11px;color:#796549}.map-tooltip ul{margin:3px 0 9px;padding-left:18px}.map-tooltip li{margin:2px 0}
+.map-tooltip .map-tip-live{color:#466853;border-top:1px solid #d9c8a9;padding-top:8px;font-weight:600}
+.map-tooltip .map-tip-people{font-size:12px;color:#74604b}.map-tooltip small{color:#8b765c;font-size:11px}
+#map-guide-preview .map-tooltip{position:relative;width:100%;max-width:none;margin-top:10px;pointer-events:auto;box-shadow:0 2px 8px #21180d20}
+.marriage-panel{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:16px 0;padding:16px 18px;background:#c6ab7014;border:1px solid #b99a6255;border-radius:10px}
+.marriage-panel strong{color:var(--ink);font-size:15px}.marriage-panel .hint{margin:6px 0 0}.marriage-panel .btn{flex-shrink:0}
+@media(max-width:600px){.map-guide-tools{align-items:flex-start}.map-guide-tools .hint{max-width:50%}.marriage-panel{align-items:flex-start;flex-direction:column;gap:10px;padding:13px}.marriage-panel .btn{align-self:flex-start}.map-tooltip{font-size:12px;padding:12px}}

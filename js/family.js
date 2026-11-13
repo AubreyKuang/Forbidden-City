@@ -1,6 +1,6 @@
 /* ============ 母子日常与御花园小宴 ============ */
 const inPalace = c => c?.alive && !c.gone && !c.cold;
-const childInPalace = k => k?.alive && !k.away && !k.jailed && !k.married && !k.estate;
+const childInPalace = k => k?.alive && !k.away && !k.jailed && !(k.sex==='f'&&k.married) && !k.estate;
 const familyName = person => person.sex ? kidName(person) : cName(person);
 const mothersOf = k => [...new Set([byId(k.mom), fosterOf(k)].filter(Boolean))];
 

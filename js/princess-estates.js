@@ -41,22 +41,22 @@ function princessOpening(k){
 function princessMarriage(k){
   const preference=k.estate?.pursuit||princessPursuit(k);
   const order=preference==='books'?['scholar','official','frontier']:preference==='archery'?['frontier','scholar','official']:['official','scholar','frontier'];
-  return {title:'公主婚事',por:k,text:`${kidName(k)}请你先看她写的笺子：「${PRINCESS_PURSUITS[preference].wish}」\n她愿意与你逐一谈谈求亲的人。`,choices:[
+  return {title:'公主婚事',por:k,valid:()=>marriageReady(k),text:`${kidName(k)}请你先看她写的笺子：「${PRINCESS_PURSUITS[preference].wish}」\n她愿意与你逐一谈谈求亲的人。`,choices:[
     ...(rememberedMatch(k)?[{t:'谈谈少年时相识的'+rememberedMatch(k).name,f:()=>{pushNow(rememberedMatchEvent(k));return null;}}]:[]),
     ...order.map(id=>({t:`听她谈谈${PRINCESS_MATCHES[id].name}`,f:()=>{pushNow(princessMatchReview(k,id));return null;}})),
     {t:'由她安排，半年后再谈',f:()=>{k.marriageAfter=S.turn+6;save('auto');return '她收起名帖，说等有了主意会来找你。';}}
   ]};
 }
 function princessMatchReview(k,id){
-  const match=PRINCESS_MATCHES[id];
-  return {title:'灯下谈婚事',por:k,text:`${match.note}\n她把名帖推过来，等你回答。`,choices:[
-    {t:id==='scholar'?'准她自择驸马':id==='frontier'?'允准和亲':'允准这门亲事',f:()=>{
-      if(k.married)return null;
-      k.married=true;
+  const match=PRINCESS_MATCHES[id],person=marriageCandidate(k,id);save('auto');
+  return {title:'灯下谈婚事',cast:[k,person],valid:()=>marriageReady(k),text:`${person.name} · ${kidAge(person)}岁 · ${match.name}\n${match.note}${id==='official'?'\n婚仪需国库五十万两。':''}\n她把名帖推过来，等你回答。`,choices:[
+    {t:id==='scholar'?'准她自择驸马':id==='frontier'?'允准和亲':'允准这门亲事',cond:()=>marriageReady(k)&&(id!=='official'||E().treasury>=50),f:()=>{
+      if(!marriageReady(k)||(id==='official'&&E().treasury<50))return null;
+      k.married=true;k.spouse={...person,marriedAt:S.turn};
       if(k.estate)k.estate.route=id;
       k.princessMarriage=id;
-      princessMemory(k,'princess_marriage',`婚事议定：${match.name}。`);
-      log(`${kidName(k)}议定婚事。`,1);
+      princessMemory(k,'princess_marriage',`婚事议定：${person.name}（${match.name}）。`);
+      log(`${kidName(k)}与${person.name}议定婚事。`,1);
       const mother=byId(k.mom);
       if(id==='frontier'&&mother?.alive)cchg(mother,{mood:-18,aff:-5});
       if(id==='scholar')k.love=clamp(k.love+15);
@@ -81,16 +81,16 @@ A.openPrincess=function(id){
 };
 A.princessMarriage=function(id){
   const k=kidById(id);
-  if(!S.over&&canOpenPrincess(k)&&!k.married&&!modalOpen&&S.turn>=(k.marriageAfter??0)){
+  if(canOpenPrincess(k)&&marriageReady(k)&&!modalOpen){
     pushEv({...princessMarriage(k),onShow:()=>{k.asked=true;delete k.marriageAfter;}});
   }
 };
 function princessActions(k,showEstate=true){
   if(!canOpenPrincess(k))return '';
-  const canRead=S.turn>=(k.estateDeferred??0), canDiscuss=S.turn>=(k.marriageAfter??0);
+  const canRead=S.turn>=(k.estateDeferred??0);
   return `<div class="acts">${k.estate?(showEstate?`<button class="btn jade" onclick="A.go('princess',${k.id})">公主府</button>`:''):
     `<button class="btn jade" onclick="A.openPrincess(${k.id})" ${canRead?'':'disabled'}>开府来信${canRead?'':'<small>她暂且搁下了此事</small>'}</button>`}
-    ${k.married?'':`<button class="btn" onclick="A.princessMarriage(${k.id})" ${canDiscuss?'':'disabled'}>谈婚事</button>`}</div>`;
+    ${showEstate?'':marriageButton(k)}</div>`;
 }
 
 function archivePrincessEstates(heir){

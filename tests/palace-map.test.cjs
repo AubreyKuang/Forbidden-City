@@ -124,3 +124,22 @@ test('coronation trait choice shows a check badge, not just a color change', () 
   assert.ok(css.includes('.coronation-styles .opt:has(input:checked){background:#754337;border-color:#e5b778;box-shadow:0 0 0 1px #e5b778}'),
     'selected option also gets a gold ring');
 });
+
+test('palace hover and keyboard focus expose the guide, Escape dismisses it, normal click still travels',()=>{
+  const {ctx,created}=setup();startGame(ctx);
+  const btn=mapButton(created,'御花园');btn.onmouseenter();
+  assert.equal(vm.runInContext('mapGuideTip.hidden',ctx),false);
+  assert.match(vm.runInContext('mapGuideTip.innerHTML',ctx),/园中漫步/);
+  btn.onmouseleave();assert.equal(vm.runInContext('mapGuideTip.hidden',ctx),true);
+  btn.onfocus();btn.onmouseleave();assert.equal(vm.runInContext('mapGuideTip.hidden',ctx),false);
+  vm.runInContext(`mapGuideWrap.onkeydown({key:'Escape'})`,ctx);assert.equal(vm.runInContext('mapGuideTip.hidden',ctx),true);
+  btn.onclick();assert.equal(vm.runInContext('UI.sel',ctx),'yh');assert.equal(vm.runInContext('UI.view',ctx),'place');
+});
+
+test('touch inspection previews a place without travelling until the explicit go action',()=>{
+  const {ctx,created}=setup();startGame(ctx);
+  vm.runInContext('A.toggleMapGuide()',ctx);mapButton(created,'上书房').onclick();
+  assert.equal(vm.runInContext('UI.view',ctx),'map');assert.match(vm.runInContext('mapGuideTip.innerHTML',ctx),/前往上书房/);
+  vm.runInContext(`A.visitMapActivity('ss')`,ctx);assert.equal(vm.runInContext('UI.sel',ctx),'ss');
+  vm.runInContext(`A.go('map')`,ctx);assert.equal(vm.runInContext('mapGuideInspect',ctx),false);
+});
