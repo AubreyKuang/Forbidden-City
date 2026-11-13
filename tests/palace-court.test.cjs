@@ -492,7 +492,7 @@ test('a sealed impeachment keeps the same evidence across months and saves, then
   `);
 });
 
-test('impeachment review offers two rulings that reflect the proven outcome',()=>{
+test('impeachment review offers rulings that reflect the proven outcome',()=>{
   for(const guilty of [true,false]){
     const {run}=boot();
     run(`
@@ -503,7 +503,7 @@ test('impeachment review offers two rulings that reflect the proven outcome',()=
       S.flags.impeachmentReview={turn:S.turn,gen:S.gen,file:{person:c.id,matching:false,guilty:${guilty}}};
       A.court();
       assert.match(curEv.title,/查账回奏/);
-      assert.equal(curEv.choices.length,3);
+      assert.equal(curEv.choices.length,${guilty?4:3});
       assert.equal(curEv.choices[0].t,'${guilty?'革职，追回赈银':'公布原簿，还其清白'}（精力 −1）');
       assert.equal(curEv.choices[1].t,'${guilty?'责令退银，留任察看':'私下告知查实结果，撤销弹劾'}（精力 −1）');
       choose(1);
@@ -517,6 +517,27 @@ test('impeachment review offers two rulings that reflect the proven outcome',()=
       assert.equal(S.flags.monthlyCourt.done,true);
     `);
   }
+});
+
+test('a proven case can direct fifty of the eighty recovered taels to relief and retain the official',()=>{
+  const {run}=boot();
+  run(`
+    const c=harem()[0], id=c.id, power=c.fam.p, title=c.fam.t;
+    c.mood=50;E().people=50;E().prestige=50;E().energy=0;E().treasury=0;
+    S.flags.impeachmentReview={turn:S.turn,gen:S.gen,file:{person:id,matching:true,guilty:true}};
+    A.court();
+    const order=curEv.choices.findIndex(choice=>choice.t.includes('退银直拨灾区'));
+    assert.equal(curEv.choices[order].cond(),false);
+    choose(order);
+    E().energy=1;
+    choose(order);drain();
+    assert.equal(load('auto'),true);
+    assert.deepEqual([E().treasury,E().people,E().prestige,E().energy],[30,55,51,0]);
+    assert.deepEqual([byId(id).fam.t,byId(id).fam.p,byId(id).mood],[title,power,38]);
+    assert.equal(S.flags.monthlyCourt.done,true);
+    A.court();
+    assert.equal(modalOpen,false);
+  `);
 });
 
 test('an ineligible impeachment subject frees the next month for a regular memorial',()=>{

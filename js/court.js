@@ -229,6 +229,14 @@ function impeachmentEvent(brief){
           return `刑部撤销弹劾，将查实结果告知${father}一家。${fx(cchg(consort,{aff:10,mood:6}))}`;
         }};
     choices=[verdict,alternative];
+    if(file.guilty)choices.push({
+      t:'退银直拨灾区，留任',
+      preview:'国库 +30 万两 · 民心 +5 · 威望 +1 · 她的心情 −12',
+      f:()=>{
+        story(consort,'其父退清赈银，暂留原任。户部将其中五十万两直接拨往灾区。');
+        log(`${father}退清截留的赈银，户部直拨五十万两赈灾。`,1);
+        return `${father}退还八十万两，暂留原任。户部直拨五十万两救急，余款入库。${fx(chg({treasury:30,people:5,prestige:1}),cchg(consort,{mood:-12}))}`;
+      }});
   }else choices.push({t:'封存账册，下月复审',preview:'下月的奏折改为查账回奏 · 届时仍须批复',
     f:()=>{
       S.flags.impeachmentReview={gen:S.gen,turn:S.turn+1,file};
