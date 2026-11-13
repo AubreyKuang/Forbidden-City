@@ -729,7 +729,7 @@ test('marriage entry opens at fifteen for both sexes and explains age, confineme
       delete k.marriageAfter;k.alive=false;assert.equal(marriageReady(k),false);k.alive=true;
       k.married=true;assert.equal(marriageReady(k),false);k.married=false;
     }
-    assert.ok(viewKids().includes('议婚 / 赐婚'));UI.sel=son.id;assert.match(viewKid(),/皇嗣婚事/);`);
+    assert.ok(!viewKids().includes('议婚 / 赐婚'));assert.ok(!viewKids().includes('可以议婚'));UI.sel=son.id;assert.match(viewKid(),/皇嗣婚事/);`);
 });
 
 test('prince marriage keeps fixed candidates across save/load and settles once without removing a resident prince',()=>{
