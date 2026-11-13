@@ -59,7 +59,7 @@ function rememberPersonRoute(view,id){
 function personBackButton(fallback){
   const source=personBackStack.at(-1);
   const view=source?.state===S?source.view:fallback;
-  const label={consort:'妃嫔详情',kid:'皇嗣详情',princess:'公主府',palace:UI.view==='consort'?'宫殿':'宫城',place:'上一地点'}[view]||
+  const label={consort:'妃嫔详情',kid:'皇嗣详情',princess:'公主府',palace:'宫殿',place:'上一地点'}[view]||
     MENU.find(([id])=>id===view)?.[1]||'上一页';
   return `<button class="btn quiet sm detail-back" onclick="A.backPerson('${fallback}')">← 返回${esc(label)}</button>`;
 }
@@ -360,7 +360,7 @@ function parentLink(id,name){
 }
 function viewKids(){
   const ks=S.children;
-  return `<h2>皇嗣</h2>${pendingBirthPanel()}<div class="acts"><button class="btn jade" onclick="A.visitMapActivity('ss')">去上书房看看 →</button></div>${ks.length?`<div class="grid portrait-grid">${ks.map(k=>`<article class="card portrait-card child-card"><button class="child-portrait" aria-label="查看${esc(kidName(k))}" onclick="A.go('kid',${k.id})">${porImg(k,72)}</button><div class="grow"><button class="person-link nm" onclick="A.go('kid',${k.id})">${esc(kidName(k))}</button><div>${k.alive?kidAge(k)+'岁':k.lost?'下落不明':'已夭折'} · 生母 ${parentLink(k.mom,k.momName)}${fosterOf(k)?` · 养母 ${parentLink(k.foster)}`:''}</div>${birthTags(k)}${bar('才学',k.lit,'#3b5fa8')}${bar('武艺',k.mar,'#a3262a')}${bar('品德',k.vir,'#4f9078')}</div></article>`).join('')}</div>`:'<p class="hint">膝下尚无子嗣。多召幸妃嫔，或去护国寺祈福。</p>'}`;
+  return `<h2>皇嗣</h2>${pendingBirthPanel()}<div class="acts"><button class="btn jade" onclick="A.visitMapActivity('ss')">去上书房看看 →</button></div>${ks.length?`<div class="grid portrait-grid">${ks.map(k=>`<article class="card portrait-card child-card"><button class="child-portrait" aria-label="查看${esc(kidName(k))}" onclick="A.go('kid',${k.id})">${porImg(k,72)}</button><div class="grow"><button class="person-link nm" onclick="A.go('kid',${k.id})">${esc(kidName(k))}</button><div>${k.alive?kidAge(k)+'岁':k.lost?'下落不明':'已夭折'} · 生母 ${parentLink(k.mom,k.momName)}${fosterOf(k)?` · 养母 ${parentLink(k.foster)}`:''}</div>${childResidence(k)?`<p class="hint">${esc(childResidence(k))}</p>`:''}${birthTags(k)}${bar('才学',k.lit,'#3b5fa8')}${bar('武艺',k.mar,'#a3262a')}${bar('品德',k.vir,'#4f9078')}</div></article>`).join('')}</div>`:'<p class="hint">膝下尚无子嗣。多召幸妃嫔，或去护国寺祈福。</p>'}`;
 }
 function viewKid(){
   const k=kidById(UI.sel);if(!k)return viewKids();const a=kidAge(k);
@@ -376,13 +376,14 @@ function viewKid(){
     ${a>=12?`<button class="btn" onclick="A.kidTitle(${k.id})">赐封号</button>`:''}`.trim():'';
   return `${personBackButton('kids')}
    <header class="detail-head">${porImg(k,112)}<div class="grow"><p>${status}</p><h2>${esc(kidName(k))}</h2>
-    <p>生母 ${parentLink(k.mom,k.momName)}${foster?` · 养母 ${parentLink(k.foster)}`:''}</p>${birthTags(k)}</div></header>
+    <p>生母 ${parentLink(k.mom,k.momName)}${foster?` · 养母 ${parentLink(k.foster)}`:''}</p>${childResidence(k)?`<p class="hint">${esc(childResidence(k))}</p><button class="btn sm jade" onclick="A.visitChildHome(${k.id})" ${youngChildMother(k)?'':'disabled'}>去宫里看看 →</button>`:''}${birthTags(k)}</div></header>
    ${k.pendingName?pendingBirthPanel():''}
    ${k.alive&&!k.estate?`<div class="detail-actions" role="group" aria-label="人物操作"><span class="detail-action-label" aria-hidden="true">人物操作</span><div class="acts"><button class="btn primary" onclick="A.kidVisit(${k.id})">探望<small>精力-1</small></button></div></div>`:''}
    <div class="detail-vitals">${bar('才学',k.lit,'#617991')}${bar('武艺',k.mar,'#92504a')}${bar('品德',k.vir,'#517369')}</div>
    <div class="detail-stack">
     ${k.alive?initiativeHTML(k):''}
     ${princessActions(k)}
+    ${detailSection('少年心事',youthPanel(k))}
     ${detailSection('出生禀赋',childBirthPanel(k))}
     ${k.alive?detailSection('与母亲的日常',kidFamilyPanel(k)):''}
     ${detailSection('教养与抚养',care)}

@@ -264,4 +264,4 @@ function porImg(x,size=64){
   const src=portraitAtlasReady(cell)?atlasPortrait(cell,rank):portrait(porSpec(x));
   return `<img class="px por palace-portrait${cold||dead?' cold':''}" alt="" src="${src}" data-portrait-cell="${cell}" data-portrait-rank="${rank}" width="${size}" height="${size*1.25}">`;
 }
-function porName(x){ if(x&&x.isMom) return x.name; if(x&&x.sur&&!x.sex&&S&&!S.consorts.includes(x)) return fullName(x); if(x==='emp') return `${E().sur}${E().name}`; if(x.sex) return kidName(x); return cName(x)}
+function porName(x){ if(x?.courtGuest)return x.name+' · '+kidAge(x)+'岁'; if(x&&x.isMom) return x.name; if(x&&x.sur&&!x.sex&&S&&!S.consorts.includes(x)) return fullName(x); if(x==='emp') return `${E().sur}${E().name}`; if(x.sex) return kidName(x); return cName(x)}

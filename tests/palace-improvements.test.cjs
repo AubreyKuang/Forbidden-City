@@ -622,3 +622,98 @@ test('historical audiences recheck their participants while Changmen letters rem
     var ev=histEvent();assert.equal(ev.title,'辞辇');a.cold=true;assert.equal(eventStillValid(ev),false);
     var letter=HIST.map(f=>f()).find(e=>e?.title==='长门赋');assert.ok(eventStillValid(letter));a.cold=false;assert.equal(eventStillValid(letter),false);`);
 });
+
+test('young children live with the current caregiver, not both mothers or a confined mother',()=>{
+  const {run}=boot();
+  run(`var [mother,foster]=harem(),k=makeKid(mother,'f','明昭');mother.palace='坤宁宫';foster.palace='景仁宫';k.born=S.turn-48;
+    assert.equal(youngChildMother(k),mother);assert.match(childResidence(k),/生母.*坤宁宫/);assert.ok(nurseryChildren('坤宁宫').includes(k));
+    A.visitChildHome(k.id);assert.equal(UI.sel,'坤宁宫');assert.equal(S.pos.x,PLACES.find(p=>p.id==='kn').d[0]);
+    doFoster(k,foster);assert.equal(youngChildMother(k),foster);assert.ok(!nurseryChildren('坤宁宫').includes(k));assert.match(childResidence(k),/养母.*景仁宫/);
+    foster.cold=true;assert.equal(youngChildMother(k),null);assert.match(childResidence(k),/乳母/);assert.equal(nurseryChildren('冷宫').length,0);
+    foster.cold=false;for(var flag of ['away','jailed','married','pendingName']){k[flag]=true;assert.equal(youngChildMother(k),null);k[flag]=false;}
+    k.born=S.turn-72;assert.equal(youngChildMother(k),null);assert.equal(childResidence(k),'');`);
+});
+
+test('palace visits roll once per month even after a failed roll, navigation and reload',()=>{
+  const {run,force}=boot();
+  run(`var mother=harem()[0],k=makeKid(mother,'m','承安');mother.palace='坤宁宫';S.turn=100;k.born=S.turn-48;`);
+  force(.99);
+  run(`A.go('palace','坤宁宫');assert.equal(palaceLifeScene('坤宁宫'),null);assert.match(viewPalace(),/随母同住/);`);
+  force(0,0);
+  run(`A.go('map');A.go('palace','坤宁宫');assert.equal(palaceLifeScene('坤宁宫'),null);save('1');load('1');migrate();
+    A.go('palace','坤宁宫');assert.equal(palaceLifeScene('坤宁宫'),null);S.turn++;A.go('palace','坤宁宫');
+    assert.ok(palaceLifeScene('坤宁宫'));assert.match(viewPalace(),/family-room/);`);
+});
+
+test('joining a nursery scene changes relationships once and persists the result',()=>{
+  const {run,force}=boot();
+  run(`var mother=harem()[0],k=makeKid(mother,'f','明昭');mother.palace='坤宁宫';k.born=S.turn-48;E().energy=3;`);
+  force(0,0);
+  run(`A.visitMapActivity('kn');var start=k.love,trust=childTrust(k,mother);assert.ok(palaceLifeScene('坤宁宫'));A.joinNursery('join');
+    assert.equal(E().energy,2);assert.equal(k.love,start+5);assert.ok(childTrust(k,mother)>trust);
+    assert.ok(NPCMemory.recall(S,k.id).some(m=>m.type==='family-time'));assert.match(viewPalace(),/role="status"/);
+    A.joinNursery('join');assert.equal(E().energy,2);save('1');load('1');migrate();A.joinNursery('watch');assert.equal(E().energy,2);
+    mother=byId(mother.id);k=kidById(k.id);mother.cold=true;assert.equal(palaceLifeScene('坤宁宫'),null);assert.ok(!viewPalace().includes('family-room'));
+    assert.equal(k.love,start+5);`);
+});
+
+test('nursery actions respect age, personality, energy and custody changes',()=>{
+  const {run,force}=boot();
+  run(`var [mother,foster]=harem(),k=makeKid(mother,'m','承安');mother.palace='坤宁宫';
+    assert.equal(nurseryActivity(k,mother).id,'cradle');k.born=S.turn-18;assert.equal(nurseryActivity(k,mother).id,'steps');
+    k.born=S.turn-48;mother.trait='将门';mother.mood=70;mother.talent=20;mother.like='骑射';assert.equal(nurseryActivity(k,mother).id,'play');
+    mother.trait='好学';assert.equal(nurseryActivity(k,mother).id,'letters');mother.mood=20;assert.equal(nurseryActivity(k,mother).id,'comfort');E().energy=0;`);
+  force(0,0);
+  run(`A.go('palace','坤宁宫');var love=k.love;A.joinNursery('join');assert.equal(k.love,love);assert.ok(!palaceLifeScene('坤宁宫').scene.result);
+    doFoster(k,foster);assert.equal(palaceLifeScene('坤宁宫'),null);A.joinNursery('watch');assert.equal(k.love,love);`);
+});
+
+test('adolescent quarrels require teenagers, change their actual ties and obey global and personal intervals',()=>{
+  const {run}=boot();
+  run(`var a=makeKid(harem()[0],'m','承安'),b=makeKid(harem()[1],'f','明昭');a.born=b.born=S.turn-144;
+    assert.equal(youthEvent(),null);a.born=b.born=S.turn-168;b.youthIdeal='books';a.amb=80;
+    var ev=youthEvent();assert.equal(ev.title,'少年意气');var before=relGet(a,b);pushEv(ev);choose(0);drain();assert.equal(relGet(a,b),before+10);
+    for(var k of [a,b])assert.ok(NPCMemory.recall(S,k.id).some(m=>m.type==='youth-talk'));
+    assert.equal(youthEvent(),null);S.turn+=4;assert.equal(youthEvent(),null);S.turn+=4;assert.ok(youthEvent());
+    b.jailed=true;assert.equal(youthEvent(),null);b.jailed=false;a.born=b.born=S.turn-192;assert.equal(youthEvent(),null);`);
+});
+
+test('a princess can discuss her ideals without becoming engaged or married',()=>{
+  const {run}=boot();
+  run(`var k=makeKid(harem()[0],'f','明昭');k.born=S.turn-168;k.mar=80;k.lit=30;
+    var ev=youthEvent();assert.equal(ev.title,'少女心事');assert.match(ev.text,/骑马/);pushEv(ev);choose(0);drain();
+    assert.equal(k.youthIdeal,'riding');assert.equal(k.married,false);assert.match(youthPanel(k),/自己拿主意/);
+    assert.ok(NPCMemory.recall(S,k.id).some(m=>m.type==='youth_ideal'));`);
+});
+
+const guestSetup=`S.consorts=[];S.children=[];S.turn=180;E().sur='赵';
+  var mother=makeGirl({sur:'林',age:32,fam:{t:'翰林学士',p:50}}),host=makeGirl({sur:'沈',age:30,fam:{t:'镇国大将军',p:60}});
+  addConsort(mother,4,'入宫');addConsort(host,4,'入宫');mother.palace='坤宁宫';host.palace='景仁宫';
+  var k=makeKid(mother,'f','明昭');k.born=S.turn-168;`;
+
+test('a named visitor is remembered across saves and can become the same grown princess marriage choice',()=>{
+  const {run,force}=boot();run(guestSetup);force(0,0);
+  run(`A.go('palace','景仁宫');var found=palaceLifeScene('景仁宫');assert.equal(found.scene.kind,'guest');var guest=found.guest;
+    assert.equal(guest.fatherName,houseOf(host).brother.name);assert.ok(!porName(guest).includes('皇'));assert.ok(!porName(guest).includes('undefined'));
+    A.answerYoungGuest('listen');var love=k.love;A.answerYoungGuest('listen');assert.equal(k.love,love);assert.equal(k.married,false);assert.equal(rememberedMatch(k),null);
+    var guestId=guest.id,guestName=guest.name;save('1');load('1');migrate();k=kidById(k.id);assert.equal(S.youngGuests[k.youngAdmiration.guestKey].id,guestId);
+    S.turn+=24;assert.equal(rememberedMatch(k).name,guestName);pushEv(princessMarriage(k));assert.ok(curEv.choices[0].t.includes(guestName));
+    choose(0);assert.equal(curEv.title,'再谈旧日相识');choose(0);drain();assert.equal(k.spouse.id,guestId);assert.equal(k.married,true);
+    assert.equal(S.youngGuests[k.youngAdmiration.guestKey].married,k.id);assert.equal(rememberedMatch(k),null);`);
+});
+
+test('guest acquaintance excludes maternal kin, foster kin, royal surname and unavailable guests',()=>{
+  const {run}=boot();run(guestSetup);
+  run(`var cousin=householdGuest(mother,k);assert.equal(youngGuestEligible(k,cousin),false);
+    var guest=householdGuest(host,k);assert.equal(youngGuestEligible(k,guest),true);k.foster=host.id;assert.equal(youngGuestEligible(k,guest),false);delete k.foster;
+    guest.sur=E().sur;assert.equal(youngGuestEligible(k,guest),false);guest.sur=host.sur;guest.alive=false;assert.equal(youngGuestEligible(k,guest),false);
+    guest.alive=true;guest.married=999;assert.equal(youngGuestEligible(k,guest),false);`);
+});
+
+test('guest scenes disappear if a host is confined or custody changes and cannot reward stale interactions',()=>{
+  const {run,force}=boot();run(guestSetup);force(0,0);
+  run(`A.go('palace','景仁宫');assert.ok(palaceLifeScene('景仁宫'));host.cold=true;var love=k.love;
+    assert.equal(palaceLifeScene('景仁宫'),null);A.answerYoungGuest('listen');assert.equal(k.love,love);assert.equal(k.youngAdmiration,undefined);
+    host.cold=false;k.foster=host.id;assert.equal(palaceLifeScene('景仁宫'),null);delete k.foster;
+    S.turn++;assert.equal(youngGuestVisit('景仁宫'),null);`);
+});

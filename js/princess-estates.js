@@ -16,10 +16,10 @@ const princessById=id=>kidById(id)||archivedPrincesses().find(k=>k.id===id);
 const canOpenPrincess=k=>k?.alive&&k.sex==='f'&&kidAge(k)>=15&&!k.jailed;
 const princessPursuit=k=>k.lit>=Math.max(45,k.mar+7)?'books':k.mar>=45?'archery':'near';
 
-function princessMemory(k,type,text,location='公主府'){
+function princessMemory(k,type,text,location='公主府',emotion=.7){
   kstory(k,text);
   NPCMemory.record(S,{type,time:S.turn,location,participants:[k.id],outcome:text},[
-    {person:k.id,subject:'emperor',interpretation:text,emotion:.7,impact:70}
+    {person:k.id,subject:'emperor',interpretation:text,emotion,impact:70}
   ]);
 }
 
@@ -42,6 +42,7 @@ function princessMarriage(k){
   const preference=k.estate?.pursuit||princessPursuit(k);
   const order=preference==='books'?['scholar','official','frontier']:preference==='archery'?['frontier','scholar','official']:['official','scholar','frontier'];
   return {title:'公主婚事',por:k,text:`${kidName(k)}请你先看她写的笺子：「${PRINCESS_PURSUITS[preference].wish}」\n她愿意与你逐一谈谈求亲的人。`,choices:[
+    ...(rememberedMatch(k)?[{t:'谈谈少年时相识的'+rememberedMatch(k).name,f:()=>{pushNow(rememberedMatchEvent(k));return null;}}]:[]),
     ...order.map(id=>({t:`听她谈谈${PRINCESS_MATCHES[id].name}`,f:()=>{pushNow(princessMatchReview(k,id));return null;}})),
     {t:'由她安排，半年后再谈',f:()=>{k.marriageAfter=S.turn+6;save('auto');return '她收起名帖，说等有了主意会来找你。';}}
   ]};

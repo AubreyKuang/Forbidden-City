@@ -607,3 +607,11 @@ button.portrait-card{align-items:center}
 #modal[data-scene="mourning"] .mtitle{color:#374b3e;border-bottom-color:#9ba594}
 #modal[data-scene="mourning"] .event-cast{background:#d6dace;filter:saturate(.45)}
 @media(max-width:480px){.mourning-scene{min-height:220px;padding:14px 10px 10px}.mourning-altar{gap:20px;padding:0 18px}.mourning-streamer{width:26px;height:150px}.mourning-streamer.left{left:4%}.mourning-streamer.right{right:4%}.mourning-tablet strong{font-size:18px}}
+
+/* Mother and child share an intimate room rather than a list-only interaction. */
+.family-room{margin:14px 0 10px;padding:12px 14px 0;overflow:hidden;border-radius:12px;border:1px solid #cbb493;background:linear-gradient(90deg,#b4816240 0 4%,transparent 4% 96%,#b4816240 96%),linear-gradient(#ede4d3 0 74%,#bda383 74%)}
+.family-room-people{display:flex;gap:18px;align-items:flex-end;justify-content:center}.family-room-people article{flex:1;max-width:270px;min-width:0;text-align:center}
+.family-room .school-speech{min-height:90px;text-align:left}.family-room-person{display:flex;flex-direction:column;align-items:center;gap:5px;margin:auto;border:0;background:transparent;color:#543b2b;font:inherit;font-size:13px}.family-room-person .por{width:112px;height:140px;margin:0;background:#fff5df70;border-radius:8px}
+button.family-room-person{cursor:pointer}button.family-room-person:hover{color:#9b482e;text-decoration:underline}button.family-room-person:focus-visible{outline:2px solid #507261;outline-offset:3px}
+.family-room-props{margin-top:12px;padding:7px 10px;text-align:center;background:#8d684b;color:#fff3dc;border-top:4px solid #745239;letter-spacing:.12em}.nursery-residents{margin:14px 0}.nursery-residents .activity-portraits{display:flex;flex-wrap:wrap;gap:10px}
+@media(max-width:600px){.family-room{padding:10px 8px 0}.family-room-people{gap:10px}.family-room .school-speech{padding:8px;font-size:12px;min-height:126px}.family-room-person .por{width:96px;height:120px}}
