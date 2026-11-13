@@ -62,6 +62,7 @@ const COURT=[
    {t:'挽留：“朝廷离不开您老。”',f:()=>`老臣又留任一年，朝政井井有条。${fx(chg({prestige:1,people:2}))}`}]}),
 ];
 const SPONT=[0,1,5,10,11,14];
+const FLOOD_INDEX=0;
 const IMPEACHMENT_INDEX=3;
 const FIRST_IMPEACHMENT_TURN=3;
 function impeachmentSubject(id){
@@ -161,6 +162,33 @@ function reliefDelegation(index){
     delegated:true,cond:()=>E().treasury>=cost,why:'国库银两不足',
     f:()=>`${office}按例调派人手，报来办理结果。${fx(chg({treasury:-cost,people}))}`};
 }
+const FLOOD_INSTALLMENT=150;
+const FLOOD_UNFUNDED={people:-3};
+function floodReliefDue(){
+  const flood=S.flags.floodRelief,brief=S.flags.monthlyCourt;
+  return (flood?.turn===S.turn&&flood.gen===S.gen)||
+    !!(brief?.turn===S.turn&&brief.gen===S.gen&&brief.floodFollowup&&!brief.done);
+}
+function stagedFloodRelief(){
+  return {t:'先拨急赈，留待下月续拨',
+    preview:'国库 −150 万两 · 民心 +4 · 下月奏折改为赈灾回奏',
+    cond:()=>E().treasury>=FLOOD_INSTALLMENT,why:'国库银两不足',
+    f:()=>{
+      S.flags.floodRelief={turn:S.turn+1,gen:S.gen};
+      return `第一批粮银已经发往灾区，先供灾民安置。下月还需拨一百五十万两收尾。${fx(chg({treasury:-FLOOD_INSTALLMENT,people:4}))}`;
+    }};
+}
+function floodReliefEvent(){
+  return {title:'黄河决堤 · 赈灾回奏',
+    text:'首批粮银已用于安置灾民。工部请续拨一百五十万两供赈粮发放。若本月不再拨款，赈济中断，民心 −3。',
+    choices:[
+      {t:'拨清余款，完成赈济',preview:'国库 −150 万两 · 民心 +5 · 威望 +2',
+        cond:()=>E().treasury>=FLOOD_INSTALLMENT,why:'国库银两不足',
+        f:()=>`余下粮银按期送达，灾民得到后续赈济。${fx(chg({treasury:-FLOOD_INSTALLMENT,people:5,prestige:2}))}`},
+      {t:'停止续拨',preview:'国库无支出 · 民心 −3',delegated:true,
+        f:()=>`赈款未能接续，灾区粮食供给中断。${fx(chg(FLOOD_UNFUNDED))}`},
+    ]};
+}
 function courtEvent(){
   const ev=COURT[pick(SPONT)]();
   ev.onQueue=()=>{S.flags.lastCourt=ev.title;};
@@ -171,6 +199,7 @@ function monthlyCourtEvent(){
   const brief=S.flags.monthlyCourt;
   if(brief?.turn===S.turn&&brief.gen===S.gen){
     if(brief.done)return null;
+    if(brief.floodFollowup)return floodReliefEvent();
     if(brief.index!==IMPEACHMENT_INDEX)return COURT[brief.index]?.(brief);
     // Old saves kept the subject but didn't pin the case or evidence.
     if(!brief.impeachment&&impeachmentSubject(brief.person)){
@@ -194,6 +223,13 @@ function monthlyCourtEvent(){
       return impeachmentEvent(review);
     }
     if(pending.gen===S.gen)log('弹劾案未再呈阅，已归档。');
+  }
+  const flood=S.flags.floodRelief;
+  if(flood?.turn===S.turn&&flood.gen===S.gen){
+    delete S.flags.floodRelief;
+    S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index:FLOOD_INDEX,floodFollowup:true};
+    save('auto');
+    return floodReliefEvent();
   }
   const firstCaseDue=S.turn>=FIRST_IMPEACHMENT_TURN&&!S.flags.impeachmentSeen&&!brief?.impeachment;
   const candidates=S.turn===0&&S.flags.openingCourt?[0]:shuffle(COURT.map((_,i)=>i));

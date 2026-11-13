@@ -140,6 +140,73 @@ test('relief delegation trades treasury and some relief for a free action, once 
   `);
 });
 
+test('flood installments postpone half the cost and consume the next monthly memorial once',()=>{
+  const {run}=boot();
+  run(`
+    const option=label=>curEv.choices.findIndex(c=>c.t.includes(label));
+    S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index:FLOOD_INDEX};
+    E().energy=1;E().treasury=149;E().people=50;
+    A.court();choose(option('先拨急赈'));
+    assert.equal(E().treasury,149);
+    assert.equal(S.flags.floodRelief,undefined);
+    choose(option('稍后再议'));
+    E().treasury=150;
+    A.court();choose(option('先拨急赈'));
+    assert.equal(E().treasury,0);
+    assert.equal(E().people,54);
+    assert.equal(E().energy,0);
+    drain();save('1');load('1');
+    assert.equal(S.flags.floodRelief.turn,S.turn+1);
+    assert.doesNotMatch(viewMap(),/赈灾回奏待阅/);
+    A.endMonth();drain();
+    assert.match(viewMap(),/查看赈灾回奏/);
+    A.finishMonth();
+    assert.match(curEv.text,/直接换月会停止续拨，民心 −3/);
+    choose(option('留在本月'));
+    E().treasury=149;E().people=50;E().prestige=50;E().energy=1;
+    A.court();assert.match(curEv.title,/赈灾回奏/);
+    assert.equal(option('全权办理'),-1);
+    choose(option('拨清余款'));
+    assert.equal(E().treasury,149);
+    assert.equal(E().energy,1);
+    choose(option('稍后再议'));save('1');load('1');
+    assert.match(viewMap(),/查看赈灾回奏/);
+    E().treasury=150;
+    A.court();choose(option('拨清余款'));
+    assert.equal(E().treasury,0);
+    assert.equal(E().energy,0);
+    assert.equal(E().people,55);
+    assert.equal(E().prestige,52);
+    drain();save('1');load('1');A.court();
+    assert.equal(modalOpen,false);
+    assert.equal(E().treasury,0);
+    assert.equal(S.flags.floodRelief,undefined);
+  `);
+});
+
+test('unfunded flood relief reduces public support once whether declined or left unread',()=>{
+  for(const action of ['stop','unread','defer']){
+    const {run}=boot();
+    run(`
+      const action='${action}';
+      S.flags.floodRelief={turn:S.turn,gen:S.gen};
+      E().treasury=500;E().people=50;E().energy=0;
+      if(action!=='unread'){
+        A.court();
+        choose(action==='stop'?1:curEv.choices.length-1);
+        assert.equal(E().people,action==='stop'?47:50);
+        assert.equal(E().energy,0);
+        assert.equal(E().treasury,500);
+      }
+      drain();save('1');load('1');A.endMonth();
+      assert.equal(E().people,47);
+      assert.match(S.flags.lastMonthReview.court.text,/民心\\s*[−-]\\s*3/);
+      assert.equal(S.flags.floodRelief,undefined);
+      drain();assert.doesNotMatch(viewMap(),/赈灾回奏待阅/);
+    `);
+  }
+});
+
 test('the first eligible impeachment is offered by the fourth month, while the opening flood stays in place',()=>{
   const {run}=boot();
   run(`

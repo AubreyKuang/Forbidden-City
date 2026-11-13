@@ -178,9 +178,10 @@ const A={
     const ev=monthlyCourtEvent();
     if(!ev){toast(S.flags.monthlyCourt?.done?'本月奏折已批复。':'这份奏折已不适用。');return;}
     const brief=S.flags.monthlyCourt;
-    const delegation=reliefDelegation(brief.index);
+    const delegation=brief.floodFollowup?null:reliefDelegation(brief.index);
+    const installment=brief.index===FLOOD_INDEX&&!brief.floodFollowup?stagedFloodRelief():null;
     ev.scene='monthly-court';
-    ev.choices=[...ev.choices,...(delegation?[delegation]:[])].map((choice,index)=>{
+    ev.choices=[...ev.choices,...[delegation,installment].filter(Boolean)].map((choice,index)=>{
       const cost=choice.delegated?0:1;
       return {...choice,t:`${choice.t}（${cost?'精力 −1':'免耗精力'}）`,
         preview:choice.preview||COURT_PREVIEWS[brief.index]?.[index],
@@ -246,7 +247,14 @@ A.endMonth=function(){
   const inc=rd(45+e.people*1.1+(S.flags.canal?25:0)),exp=alive().reduce((s,c)=>s+(c.cold?1:STIPEND[c.rank]),0)+kidsAlive().reduce((s,k)=>s+3+(k.tutor?5:0),0);
   e.treasury+=inc-exp;
   const monthDate=dateStr(), brief=S.flags.monthlyCourt;
-  const court=brief?.turn===S.turn&&brief.gen===S.gen?brief.result:null;
+  let court=brief?.turn===S.turn&&brief.gen===S.gen?brief.result:null;
+  if(floodReliefDue()){
+    delete S.flags.floodRelief;
+    const text='本月未续拨赈银，灾区粮食供给中断，民心 −3。';
+    chg(FLOOD_UNFUNDED);
+    log(text);
+    court={title:'黄河决堤 · 赈灾回奏',choice:'未续拨',text};
+  }
   const people=S.consorts.flatMap(c=>{
     const latest=c.story?.findLast(entry=>entry.d===monthDate);
     return latest&&!(S.turn===0&&latest===c.story[0])?[{id:c.id,text:latest.t}]:[];

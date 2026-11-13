@@ -350,12 +350,14 @@ A.finishMonth=function(){
   if(!S||S.over||modalOpen)return;
   if(pendingDelivery()){A.endMonth();return;}
   const invitations=mapActivityLeads().filter(lead=>lead.expires);
-  if(S.turn>0&&!invitations.length){A.endMonth();return;}
+  const floodDue=floodReliefDue();
+  if(S.turn>0&&!invitations.length&&!floodDue){A.endMonth();return;}
   const nextMonth=MONTHS[S.month%12];
   const detail=invitations.length?'换月后，这些邀约就散了：'+invitations.map(lead=>lead.title).join('、')+'。':'';
+  const floodDetail=floodDue?'\n本月尚未批复赈灾回奏。直接换月会停止续拨，民心 −3。':'';
   const remaining=E().energy>0?`本月还可用 ${E().energy} 点精力。\n`:'';
   pushEv({title:invitations.length?'尚有本月邀约':`进入${nextMonth}？`,scene:'month-review',
-    cast:invitations.flatMap(lead=>lead.cast),text:`${remaining}进入${nextMonth}后会结算本月收支，补充精力，并可能发生新的宫中事件。${detail?'\n'+detail:''}`,choices:[
+    cast:invitations.flatMap(lead=>lead.cast),text:`${remaining}进入${nextMonth}后会结算本月收支，补充精力，并可能发生新的宫中事件。${detail?'\n'+detail:''}${floodDetail}`,choices:[
     ...invitations.map(lead=>({t:'先去'+lead.title,f:()=>{goDirect(PLACES.find(p=>p.id===lead.place));return null;}})),
     {t:'留在本月'},
     {t:invitations.length?`略过邀约，进入${nextMonth}`:`进入${nextMonth}`,primary:true,
@@ -376,12 +378,13 @@ function viewMap(){
   const pending=S.flags.impeachmentReview;
   const reviewReady=!done&&((pending?.turn===S.turn&&pending.gen===S.gen&&impeachmentSubject(pending.file?.person))||
     (S.flags.monthlyCourt?.turn===S.turn&&S.flags.monthlyCourt.gen===S.gen&&S.flags.monthlyCourt.review&&impeachmentSubject(S.flags.monthlyCourt.person)));
+  const report=reviewReady?'查账回奏':!done&&floodReliefDue()?'赈灾回奏':'';
   const host=S.turn===0&&done&&empress();
   return `<section class="map-play" aria-label="宫城地图">
     <header class="map-location"><h2>宫城</h2><span class="hint">${esc(nearestPlace())}</span></header>
     <div class="map-first-month">
-      <span>${done?'奏折已批复':reviewReady?'查账回奏待阅':'奏折待批'} · 余 ${E().energy} 点精力</span>
-      ${!done?`<button class="btn sm" onclick="A.court()">${reviewReady?'查看查账回奏':'查看本月奏折'}</button>`:''}
+      <span>${done?'奏折已批复':report?report+'待阅':'奏折待批'} · 余 ${E().energy} 点精力</span>
+      ${!done?`<button class="btn sm" onclick="A.court()">查看${report||'本月奏折'}</button>`:''}
       ${host?`<button class="btn sm" onclick="A.visitMapActivity('kn')">去坤宁宫见${esc(fullName(host))}</button>`:''}
       ${S.flags.lastMonthReview?'<button class="btn sm" onclick="A.go(\'log\')">上月回顾</button>':''}
     </div>
