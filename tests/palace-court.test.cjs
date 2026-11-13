@@ -344,6 +344,7 @@ test('a flood relief follow-up remembers the district need and spends grain only
       A.court();
       assert.equal(S.flags.monthlyCourt.floodNeed,'${need}');
       if('${need}'==='grain'){
+        assert.equal(option('借驻军'),-1);
         const freight=option('调常平仓粮');
         assert.equal(curEv.choices[freight].cond(),false);
         choose(freight);
@@ -357,6 +358,17 @@ test('a flood relief follow-up remembers the district need and spends grain only
         assert.equal(option('调常平仓粮'),-1);
         assert.match(curEv.text,/仍缺人手/);
         assert.equal(grainReserveReady(),true);
+        const barracks=option('借驻军');
+        assert.equal(curEv.choices[barracks].cond(),false);
+        E().treasury=80;E().energy=0;
+        assert.equal(curEv.choices[barracks].cond(),false);
+        E().energy=1;
+        const armyBefore=S.courtPolicy?.army||0;
+        choose(barracks);drain();
+        assert.equal(load('auto'),true);
+        assert.deepEqual([E().treasury,E().energy,E().people,E().prestige,grainReserveReady()],[0,0,55,50,true]);
+        assert.equal(S.courtPolicy.army,Math.min(30,armyBefore+8));
+        assert.equal(S.flags.monthlyCourt.done,true);
       }
     `);
   }

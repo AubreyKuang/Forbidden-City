@@ -271,6 +271,7 @@ function reliefDelegation(index){
 }
 const FLOOD_INSTALLMENT=150;
 const FLOOD_GRAIN_FREIGHT=50;
+const FLOOD_ARMY_SHELTER_COST=80;
 const FLOOD_UNFUNDED={people:-3};
 function floodReliefDue(){
   const flood=S.flags.floodRelief,brief=S.flags.monthlyCourt;
@@ -287,16 +288,29 @@ function stagedFloodRelief(brief){
     }};
 }
 function floodReliefEvent(brief){
+  const shelter=brief.floodNeed==='shelter';
   const event={title:'黄河决堤 · 赈灾回奏',
-    text:'首批粮银已用于安置灾民。工部请续拨一百五十万两供赈粮发放。若本月不再拨款，赈济中断，民心 −3。',
+    text:(shelter?'首批粮银已供灾民暂住。工部请续拨一百五十万两雇工搭建住所。'
+      :'首批粮银已用于安置灾民。工部请续拨一百五十万两供赈粮发放。')+'若本月不再拨款，赈济中断，民心 −3。',
     choices:[
       {t:'拨清余款，完成赈济',preview:'国库 −150 万两 · 民心 +5 · 威望 +2',
         cond:()=>E().treasury>=FLOOD_INSTALLMENT,why:'国库银两不足',
         f:()=>`余下粮银按期送达，灾民得到后续赈济。${fx(chg({treasury:-FLOOD_INSTALLMENT,people:5,prestige:2}))}`},
       {t:'停止续拨',preview:'国库无支出 · 民心 −3',delegated:true,
-        f:()=>`赈款未能接续，灾区粮食供给中断。${fx(chg(FLOOD_UNFUNDED))}`},
+        f:()=>`${shelter?'赈款未能接续，临时安置无法维持。':'赈款未能接续，灾区粮食供给中断。'}${fx(chg(FLOOD_UNFUNDED))}`},
     ]};
-  if(brief.floodNeed==='shelter')event.text+='\n临时安置仍缺人手，续款要用于雇工和搭建住所。';
+  if(shelter){
+    event.text+='\n临时安置仍缺人手。附近驻军可以搭棚，但军方也会因此在朝中更有分量。';
+    event.choices.splice(1,0,{
+      t:'借驻军搭建临时住所',
+      preview:`国库 −${FLOOD_ARMY_SHELTER_COST} 万两 · 民心 +5 · 武将影响修正 +8（上限 30）`,
+      cond:()=>E().treasury>=FLOOD_ARMY_SHELTER_COST,why:`须有 ${FLOOD_ARMY_SHELTER_COST} 万两和 1 点精力`,
+      f:()=>{
+        policyNudge('army',8);
+        log('驻军奉旨安置灾民，武将在朝中更有分量。');
+        return `驻军搭好了棚屋，灾民有了落脚处。此番赈务办成，朝中也多了几分倚重武将的声音。${fx(chg({treasury:-FLOOD_ARMY_SHELTER_COST,people:5}))}`;
+      }});
+  }
   if(brief.floodNeed==='grain'){
     event.text+='\n灾区安置已稳，粮道仍未通。常平仓若有存粮，可以另拨运费调粮。';
     if(grainReserveReady())event.choices.splice(1,0,{
