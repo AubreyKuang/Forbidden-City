@@ -72,6 +72,7 @@ const GRAIN_SALE_REVENUE=100, HALF_GRAIN_SALE_REVENUE=45;
 const GRAIN_TRANSPORT_COST=70;
 const LOCUST_LOCAL_PURCHASE_COST=125, LOCUST_LOCAL_PURCHASE_PEOPLE=6;
 const LOCUST_LOCAL_DEPOSIT=60, LOCUST_LOCAL_BALANCE=80;
+const LOCUST_LOCAL_GRAIN_SETTLEMENT_COST=20;
 const LOCUST_HALF_RESERVE_PEOPLE=3;
 const LOCUST_FOLLOWUP_COST=35, LOCUST_FOLLOWUP_PEOPLE=5;
 const LOCUST_UNFUNDED={people:-4};
@@ -116,6 +117,19 @@ function sellGrainChoice(t,revenue,keepHalf=false){
       save('auto');
       return `${keepHalf?'售粮所得已入国库，仓中还留有半批备荒粮。':'售粮所得已入国库，常平仓可在下次丰收时补粮。'}${fx(result)}`;
     }};
+}
+function settleLocalGrainWithReserveChoice(half){
+  const cost=LOCUST_LOCAL_GRAIN_SETTLEMENT_COST;
+  return {t:'以半批仓粮抵赈粮尾款',
+    preview:`国库 −${cost} 万两 · 精力 −1 · ${half?'用完余粮':'留半批备荒粮'} · 月底不再扣尾款`,
+    cond:()=>localGrainPaymentDue()&&grainReserveReady()&&halfGrainReserve()===half&&E().treasury>=cost&&E().energy>0,
+    why:`须有半批储粮、${cost} 万两和 1 点精力`,
+    f:()=>saveGrainAction(()=>{
+      if(half)clearGrainReserve();else S.flags.grainReserveHalf=true;
+      delete S.flags.localGrainPaymentTurn;
+      log(`户部以半批常平仓粮加 ${cost} 万两结清赈粮尾款。`);
+      return `粮商已收粮银，赈粮尾款结清。${half?'仓中余粮已用完。':'仓中还留有半批备荒粮。'}${fx(chg({treasury:-cost}))}`;
+    })};
 }
 function grainStorageHasRoom(){return !grainReserveReady()||halfGrainReserve();}
 function storePurchasedGrain(){
@@ -240,7 +254,9 @@ A.grainReserve=function(){
   const stocked=grainReserveReady(),half=halfGrainReserve();
   const autumn=grainHarvestSeason(),cost=autumn?AUTUMN_GRAIN_PRICE:REGULAR_GRAIN_PRICE;
   const order=autumnGrainOrderStatus();
+  const paymentDue=localGrainPaymentDue();
   const choices=[];
+  if(paymentDue&&stocked)choices.push(settleLocalGrainWithReserveChoice(half));
   if(order==='due')choices.push(collectAutumnGrainChoice(),collectAutumnGrainChoice(true));
   if(order==='due'&&S.month===8)choices.push(delayAutumnGrainChoice(),cancelAutumnGrainChoice());
   if(stocked){
@@ -253,6 +269,7 @@ A.grainReserve=function(){
   choices.push(stocked?{t:'留粮备荒',preview:`遇蝗灾月奏可发粮 · 国库无支出 · 免耗精力 · 民心 +${half?3:6}`}:{t:'暂不购粮'});
   pushEv({title:'常平仓',text:`${stocked?'现有'+grainReserveLabel()+'备荒粮':'仓中暂无备荒粮'}，国库有 ${E().treasury} 万两。`+
     (stocked||order==='due'?`当前民心 ${E().people}。`:'')+
+    (paymentDue?`\n赈粮尾款 ${LOCUST_LOCAL_BALANCE} 万两将于月底扣除。${stocked?'粮商肯收半批仓粮抵掉一部分。':''}`:'')+
     (order==='pending'?'\n已预订半批秋粮。八月可留出半批仓位领粮，民心低时也可加付运费直送救急。逾期不退订金。':'')+
     (order==='delayed'?'\n预订已改到九月，届时可领粮，逾期不退订金。':'')+
     (order==='due'?`\n预订的半批秋粮已到。可领粮入仓，民心低时也可直送缺粮村落。${S.month===8?'若本月不领，可改到九月或退订。':'九月是最后的领取期限。'}逾期不退订金。`:'')+

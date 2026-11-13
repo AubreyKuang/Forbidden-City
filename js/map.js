@@ -359,7 +359,7 @@ A.finishMonth=function(){
   const reliefDetail=locustDue?`\n本月尚未批复远村补粮回奏。直接换月将失约。 ${LOCUST_UNFUNDED_TEXT}`
     :floodDue?'\n本月尚未批复赈灾回奏。直接换月会停止续拨，民心 −3。':'';
   const remaining=E().energy>0?`本月还可用 ${E().energy} 点精力。\n`:'';
-  const paymentDetail=paymentDue?`\n换月结算时将扣除赈粮尾款 ${LOCUST_LOCAL_BALANCE} 万两。`:'';
+  const paymentDetail=paymentDue?`\n换月结算时将扣除赈粮尾款 ${LOCUST_LOCAL_BALANCE} 万两。${grainReserveReady()?'可留在本月，到常平仓用半批粮抵一部分。':''}`:'';
   pushEv({title:invitations.length?'尚有本月邀约':`进入${nextMonth}？`,scene:'month-review',
     cast:invitations.flatMap(lead=>lead.cast),text:`${remaining}进入${nextMonth}后会结算本月收支，补充精力，并可能发生新的宫中事件。${detail?'\n'+detail:''}${reliefDetail}${paymentDetail}`,choices:[
     ...invitations.map(lead=>({t:'先去'+lead.title,f:()=>{goDirect(PLACES.find(p=>p.id===lead.place));return null;}})),
@@ -403,7 +403,7 @@ function viewMap(){
           ${mourningNotice()}${mapActivityPanel(leads)}${princessMapNotice()}${birthdayBanquetButtons()}${proudDemandNotice()}
           ${floodDikeReady()?'<p class="hint">黄河险堤已加固。日后一次直接赈济可少花 '+FLOOD_DIKE_SAVING+' 万两。</p>':''}
           <p class="hint">${grainReserveReady()?`常平仓有${grainReserveLabel()}备荒粮。遇到蝗灾月奏时可发放，免耗精力。`:'常平仓暂无备荒粮，可以向粮商买半批。'}</p>
-          ${Number.isInteger(S.flags.localGrainPaymentTurn)?`<p class="hint">赈粮尾款 ${LOCUST_LOCAL_BALANCE} 万两，将于${localGrainPaymentDue()?'本月底':'下月底'}结清。</p>`:''}
+          ${Number.isInteger(S.flags.localGrainPaymentTurn)?`<p class="hint">赈粮尾款 ${LOCUST_LOCAL_BALANCE} 万两，将于${localGrainPaymentDue()?`本月底结清。${grainReserveReady()?'可到常平仓以粮抵款。':''}`:'下月底结清。'}</p>`:''}
           ${autumnGrainOrderStatus()==='due'?`<p class="hint">预订的半批秋粮已到。${S.month===8?'本月可领粮、改期或退订。':'九月是最后的领取期限。'}</p>`:''}
           ${autumnGrainOrderStatus()==='delayed'?'<p class="hint">预订的半批秋粮已改到九月交付。</p>':''}
           <button class="btn sm" onclick="A.grainReserve()">查看常平仓</button>

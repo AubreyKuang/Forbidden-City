@@ -562,6 +562,46 @@ test('local grain credit delivers immediately and deducts its balance once after
   assert.equal(S.flags.lastMonthReview.localGrainPayment,undefined);
 `));
 
+test('paying a due local grain balance with stock consumes half a reserve and saves exactly once',()=>{
+  for(const half of [false,true])boot().run(`
+    S.turn=8;S.month=9;
+    S.flags.localGrainPaymentTurn=8;
+    Object.assign(E(),{treasury:19,energy:0,people:56});
+    const option=()=>curEv.choices.findIndex(c=>c.t.includes('以半批仓粮抵'));
+    const close=()=>choose(curEv.choices.length-1);
+    A.grainReserve();assert.equal(option(),-1);close();
+    S.flags.grainReserveGen=S.gen;
+    S.flags.grainReserveHalf=${half};
+    S.flags.localGrainPaymentTurn=9;
+    A.grainReserve();assert.equal(option(),-1);close();
+    S.flags.localGrainPaymentTurn=8;
+    assert.match(viewMap(),/可到常平仓以粮抵款/);
+    A.grainReserve();
+    const payment=option();
+    assert.match(curEv.choices[payment].preview,/20 万两.*月底不再扣尾款/);
+    E().energy=1;
+    assert.equal(curEv.choices[payment].cond(),false);
+    E().treasury=20;E().energy=0;
+    assert.equal(curEv.choices[payment].cond(),false);
+    E().energy=1;
+    const beforeLog=S.log.length;
+    const write=save;save=()=>false;
+    choose(payment);drain();
+    assert.deepEqual([E().treasury,E().energy,S.flags.localGrainPaymentTurn,halfGrainReserve(),S.log.length],
+      [20,1,8,${half},beforeLog]);
+    save=write;A.grainReserve();choose(option());drain();
+    assert.equal(load('auto'),true);
+    assert.deepEqual([E().treasury,E().energy,E().people,grainReserveReady(),halfGrainReserve(),localGrainPaymentDue()],
+      [0,0,56,${!half},${!half},false]);
+    assert.match(S.log.at(-1).t,/半批常平仓粮加 20 万两结清/);
+    A.grainReserve();assert.equal(option(),-1);close();
+    A.endMonth();while(modalOpen)nextEv();
+    const review=S.flags.lastMonthReview;
+    assert.equal(review.localGrainPayment,undefined);
+    assert.equal(E().treasury,review.inc-review.exp);
+  `);
+});
+
 test('transporting stored grain requires silver and energy, extends relief, and spends the reserve once',()=>{
   const {run}=boot();
   run(`
