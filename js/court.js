@@ -1,6 +1,7 @@
 /* ============ 朝堂事件 ============ */
 const FLOOD_DIRECT_COST=300, FLOOD_DIKE_COST=90, FLOOD_DIKE_SAVING=140;
 const RELIEF_SUSPENSION_MONTHS=3;
+const FLOOD_AUDIT_COST=30, FLOOD_AUDITED_ODDS=70;
 const reliefSuspended=father=>father?.reliefResumeTurn>S.turn;
 const officialC=(p=50)=>{const a=harem().filter(c=>c.fam.p>=p&&!reliefSuspended(houseOf(c)?.father));return a.length?pick(a):null};
 const COURT=[
@@ -134,29 +135,37 @@ function monthlyFloodEvent(brief){
   event.cast=[];
   const suspended=new Set();
   for(const [specialty,terms] of Object.entries(FLOOD_SUPERVISION)){
-    const consort=harem().find(c=>{
+    let supervised=null;
+    const available=harem().find(c=>{
       if(!hasClan(c)||c.fam.t.includes('（获罪）'))return false;
       const father=houseOf(c).father;
       if(!father.alive||!terms.offices.includes(father.office)||
         paternalFamily(c).some(relative=>relative.fam.t.includes('（获罪）')))return false;
       if(!reliefSuspended(father))return true;
       suspended.add(father.name);
+      if(specialty===need)supervised ||= c;
       return false;
     });
+    const consort=available||supervised;
     if(!consort)continue;
+    const audited=!available;
     const father=houseOf(consort).father;
     event.cast.push(consort);
-    const odds=specialty===need?80:55;
-    const failureCost=terms.cost+50;
+    const odds=audited?FLOOD_AUDITED_ODDS:specialty===need?80:55;
+    const cost=terms.cost+(audited?FLOOD_AUDIT_COST:0);
+    const failureCost=cost+50;
+    if(audited)event.text+=`\n本次暂无可直接督办的对口官员。可由户部监办，准${father.name}只办此案，原停办期限照旧。`;
     event.choices.push({
-      t:`命${father.name}督办 · ${terms.label}`,person:consort.id,
-      preview:`成功率 ${odds}% · 成功花 ${terms.cost} 万两，民心 +${terms.people}，威望 +2，家族势力 +5，家眷情分 +8、心情 +10 · 失利花 ${failureCost} 万两，民心 −5，家眷心情 −12`,
+      t:audited?`户部监办，准${father.name}协办 · ${terms.label}`:`命${father.name}督办 · ${terms.label}`,person:consort.id,
+      preview:`成功率 ${odds}% · 成功花 ${cost} 万两，民心 +${terms.people}，威望 +2，家族势力 +5，家眷情分 +8、心情 +10 · 失利花 ${failureCost} 万两，民心 −5，家眷心情 −12`+
+        (audited?` · 两种结果均含 ${FLOOD_AUDIT_COST} 万两核账费，原停办期限照旧`:''),
       cond:()=>E().treasury>=failureCost,why:`须有 ${failureCost} 万两备款`,
       f:()=>{
+        if(audited)log(`户部监办黄河赈务，准${father.name}协办本案，原停办期限照旧。`,1);
         if(chance(odds/100)){
           for(const member of clanMembers(clanKey(consort)))member.fam.p=clamp(member.fam.p+5,0,95);
           story(consort,`其父${father.name}奉旨${terms.label}，办妥赈务，家族在朝中更受倚重。`);
-          return `${father.name}办妥了赈务，其家族势力上升。${fx(chg({treasury:-terms.cost,people:terms.people,prestige:2}),cchg(consort,{aff:8,mood:10}))}`;
+          return `${audited?'户部核对了粮银账目。':''}${father.name}办妥了赈务，其家族势力上升。${fx(chg({treasury:-cost,people:terms.people,prestige:2}),cchg(consort,{aff:8,mood:10}))}`;
         }
         story(consort,`其父${father.name}督办赈灾失利，遭御史问责。`);
         return `${father.name}调度失当，赈济延误，只得另拨银两善后。${fx(chg({treasury:-failureCost,people:-5}),cchg(consort,{mood:-12}))}`;
@@ -238,7 +247,7 @@ function impeachmentEvent(brief){
     choices=[verdict,alternative];
     if(file.guilty)choices.push({
       t:'退银直拨灾区，留任',
-      preview:`国库 +30 万两 · 民心 +5 · 威望 +1 · 她的心情 −12 · 停办赈务 ${RELIEF_SUSPENSION_MONTHS} 个月`,
+      preview:`国库 +30 万两 · 民心 +5 · 威望 +1 · 她的心情 −12 · 停止独立督办赈务 ${RELIEF_SUSPENSION_MONTHS} 个月`,
       f:()=>{
         houseOf(consort).father.reliefResumeTurn=S.turn+RELIEF_SUSPENSION_MONTHS+1;
         story(consort,'其父退清赈银，留任但停办赈务三个月。户部将其中五十万两直接拨往灾区。');

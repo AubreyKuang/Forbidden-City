@@ -584,6 +584,48 @@ test('an ineligible impeachment subject frees the next month for a regular memor
   `);
 });
 
+test('emergency relief oversight is limited to a matching vacancy and charges for either result',()=>{
+  for(const {need,roll,spent,people,prestige} of [
+    {need:'grain',roll:.69,spent:180,people:56,prestige:52},
+    {need:'shelter',roll:.70,spent:295,people:45,prestige:50},
+  ]){
+    const {run,setRoll}=boot();
+    run(`
+      const [c,other]=harem(),id=c.id;
+      for(const member of harem())houseOf(member).father.office='太医院院判';
+      const father=houseOf(c).father,term=S.turn+3;
+      father.office='${need==='grain'?'户部侍郎':'两江总督'}';
+      father.reliefResumeTurn=term;
+      const plan=need=>{S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index:FLOOD_INDEX,floodNeed:need};};
+      const audited=()=>curEv.choices.findIndex(choice=>choice.t.includes('户部监办'));
+      const close=()=>choose(curEv.choices.length-1);
+      E().energy=1;E().treasury=${need==='grain'?229:294};E().people=50;E().prestige=50;
+      plan('${need==='grain'?'shelter':'grain'}');
+      A.court();assert.equal(audited(),-1);close();
+      houseOf(other).father.office=father.office;
+      plan('${need}');A.court();assert.equal(audited(),-1);close();
+      houseOf(other).father.office='太医院院判';
+      plan('${need}');A.court();
+      assert.match(curEv.choices[audited()].preview,/成功率 70%.*30 万两核账费/);
+      assert.equal(curEv.choices[audited()].cond(),false);
+      close();save('auto');assert.equal(load('auto'),true);
+      E().treasury++;
+      A.court();
+      assert.equal(curEv.choices[audited()].cond(),true);
+    `);
+    setRoll(roll);
+    run(`
+      const before=E().treasury;
+      choose(audited());drain();
+      assert.equal(load('auto'),true);
+      assert.deepEqual([E().treasury,E().people,E().prestige,E().energy],[before-${spent},${people},${prestige},0]);
+      assert.equal(houseOf(byId(id)).father.reliefResumeTurn,term);
+      assert.equal(S.flags.monthlyCourt.done,true);
+      A.court();assert.equal(modalOpen,false);
+    `);
+  }
+});
+
 test('ruling immediately on the same innocent case costs prestige and damages the relationship',()=>{
   const {run}=boot();
   run(`
