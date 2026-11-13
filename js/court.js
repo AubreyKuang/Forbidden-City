@@ -70,6 +70,7 @@ const FLOOD_INDEX=0;
 const LOCUST_INDEX=5, HARVEST_INDEX=11;
 const GRAIN_SALE_REVENUE=100, HALF_GRAIN_SALE_REVENUE=45;
 const GRAIN_TRANSPORT_COST=70;
+const LOCUST_LOCAL_PURCHASE_COST=125, LOCUST_LOCAL_PURCHASE_PEOPLE=6;
 const HALF_GRAIN_TOP_UP_REVENUE=120;
 const AUTUMN_GRAIN_PRICE=75, REGULAR_GRAIN_PRICE=110;
 const GRAIN_RELIEF_THRESHOLD=45, GRAIN_RELIEF_PEOPLE=2;
@@ -193,6 +194,17 @@ function monthlyGrainEvent(index){
       f:()=>{
         clearGrainReserve();
         return `运粮车把常平仓的粮送进了偏远村落，乡民也领到了口粮。${fx(chg({treasury:-GRAIN_TRANSPORT_COST,people:remotePeople}))}`;
+      }});
+  }
+  if(index===LOCUST_INDEX&&(!grainReserveReady()||halfGrainReserve())){
+    event.text+='\n灾区附近还有粮商可供购粮，可就地买来发放，把仓中余粮留作备用。';
+    event.choices.push({t:'在灾区就地买粮发放',
+      preview:`国库 −${LOCUST_LOCAL_PURCHASE_COST} 万两 · 民心 +${LOCUST_LOCAL_PURCHASE_PEOPLE} · 保留仓中余粮`,
+      cond:()=>E().treasury>=LOCUST_LOCAL_PURCHASE_COST,
+      why:`须有 ${LOCUST_LOCAL_PURCHASE_COST} 万两和 1 点精力`,
+      f:()=>{
+        log('蝗灾，户部从灾区附近购粮，当场发给灾民。');
+        return `粮商把粮直接送到赈济点，灾民当天就领到了口粮。${fx(chg({treasury:-LOCUST_LOCAL_PURCHASE_COST,people:LOCUST_LOCAL_PURCHASE_PEOPLE}))}`;
       }});
   }
   return event;

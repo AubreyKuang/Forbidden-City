@@ -366,6 +366,30 @@ test('locust relief can use half a full reserve for free and save the rest for a
   `);
 });
 
+test('locust relief can purchase locally at low stock without changing the warehouse or buying allowance',()=>{
+  for(const stock of ['empty','half','full']){
+    const {run}=boot();
+    run(`
+      const locust=()=>{S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index:LOCUST_INDEX};A.court();};
+      const option=text=>curEv.choices.findIndex(c=>c.t.includes(text));
+      if('${stock}'!=='empty')S.flags.grainReserveGen=S.gen;
+      if('${stock}'==='half')S.flags.grainReserveHalf=true;
+      E().treasury=124;E().energy=1;E().people=50;
+      locust();const buy=option('就地买粮');
+      if('${stock}'==='full'){assert.equal(buy,-1);choose(option('稍后再议'));}
+      else {
+        assert.match(curEv.choices[buy].preview,/125 万两.*民心 \\+6/);
+        choose(buy);assert.equal(E().treasury,124);assert.equal(E().energy,1);
+        E().treasury=125;E().energy=0;choose(buy);assert.equal(E().treasury,125);
+        E().energy=1;choose(buy);drain();assert.equal(load('auto'),true);
+        assert.deepEqual([E().treasury,E().energy,E().people,grainReserveReady(),halfGrainReserve(),S.flags.grainPurchaseTurn],
+          [0,0,56,'${stock}'==='half','${stock}'==='half',undefined]);
+        A.court();assert.equal(modalOpen,false);
+      }
+    `);
+  }
+});
+
 test('transporting stored grain requires silver and energy, extends relief, and spends the reserve once',()=>{
   const {run}=boot();
   run(`
