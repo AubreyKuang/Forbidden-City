@@ -210,7 +210,7 @@ function childPortraitCell(child){
   const age=kidAge(child);
   const stage=age<3?0:age<12?1:2;
   const ordinal=child.ord>0?child.ord:S.children.filter(k=>k.sex===child.sex).findIndex(k=>k.id===child.id)+1;
-  const variant=ordinal>0?(ordinal-1)%DESCENDANT_VARIANTS:Math.floor(mulberry32(child.seed||7)()*DESCENDANT_VARIANTS);
+  const variant=Number.isInteger(child.portraitVariant)&&child.portraitVariant>=0&&child.portraitVariant<DESCENDANT_VARIANTS?child.portraitVariant:ordinal>0?(ordinal-1)%DESCENDANT_VARIANTS:Math.floor(mulberry32(child.seed||7)()*DESCENDANT_VARIANTS);
   if(child.sex==='m'){
     if(variant<EXISTING_PRINCE_VARIANTS)return FAMILY_PORTRAIT_START+stage*EXISTING_PRINCE_VARIANTS+variant;
     return DESCENDANT_PORTRAIT_START+stage*EXTRA_PRINCE_VARIANTS+variant-EXISTING_PRINCE_VARIANTS;
@@ -219,6 +219,8 @@ function childPortraitCell(child){
 }
 
 function portraitCell(x){
+  const override=(x==='emp'?E():x)?.portraitOverride;
+  if(Number.isInteger(override)&&override>=0&&override<92)return override;
   if(x==='emp')return E().age>=40?13:12;
   if(x.official!==undefined)return FAMILY_PORTRAIT_START+12+x.official;
   if(x.isMom)return 9;

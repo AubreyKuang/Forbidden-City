@@ -800,3 +800,86 @@ test('a married prince keeps his actual wife as empress when succeeding',()=>{
     assert.equal(fullName(queen),wife.name);assert.equal(queen.age,kidAge(wife));assert.equal(portraitCell(queen),wifePortrait);
     assert.equal(queen.trait,wife.appearance.trait);assert.ok(queen.story.some(s=>s.t.includes('潜邸嫡妻')));`);
 });
+
+function romanceBoot(){
+  const game=boot();game.run(`E().sur='赵';var mother=harem()[0];mother.sur='林';
+    var prince=makeKid(mother,'m','承安');prince.born=S.turn-240;prince.lit=75;prince.vir=40;prince.love=35;
+    var lady=makeGirl({sur:'沈',given:'清和',age:22,trait:'好学'});addConsort(lady,3,'入宫');
+    lady.hobby='读书';lady.aff=10;lady.favor=10;lady.virtue=40;lady.preg=0;relAdd(prince,lady,30-relGet(prince,lady));`);return game;
+}
+test('palace romance requires adult, close-age, unrelated people who met after adulthood',()=>{
+  const {run}=romanceBoot();run(`assert.equal(romanceEligible(prince,lady),true);
+    const born=prince.born;prince.born=S.turn-215;assert.equal(romanceEligible(prince,lady),false);prince.born=born;
+    lady.age=17;assert.equal(romanceEligible(prince,lady),false);lady.age=29;assert.equal(romanceEligible(prince,lady),false);lady.age=22;
+    lady.enteredAt=prince.born+215;assert.equal(romanceEligible(prince,lady),false);lady.enteredAt=S.turn;
+    prince.mom=lady.id;assert.equal(romanceEligible(prince,lady),false);prince.mom=mother.id;
+    prince.foster=lady.id;assert.equal(romanceEligible(prince,lady),false);prince.foster=null;
+    prince.motherBonds={[lady.id]:{trust:60}};assert.equal(romanceEligible(prince,lady),false);delete prince.motherBonds;
+    lady.sur=mother.sur;assert.equal(romanceEligible(prince,lady),false);lady.sur='沈';
+    lady.kin={[mother.id]:'亲姐'};assert.equal(romanceEligible(prince,lady),false);delete lady.kin;`);
+});
+test('personality, trust and common interests govern attraction instead of age alone',()=>{
+  const {run}=romanceBoot();run(`assert.ok(romanceAffinity(prince,lady)>0);
+    for(const trait of ['痴情','持重']){lady.trait=trait;assert.equal(romanceAffinity(prince,lady),0)}lady.trait='好学';
+    lady.aff=70;assert.equal(romanceAffinity(prince,lady),0);lady.aff=10;
+    lady.favor=60;assert.equal(romanceAffinity(prince,lady),0);lady.favor=10;
+    lady.hobby='刺绣';assert.equal(romanceAffinity(prince,lady),0);lady.hobby='读书';
+    prince.vir=85;assert.equal(romanceAffinity(prince,lady),0);prince.vir=40;
+    relAdd(prince,lady,-100);assert.equal(romanceAffinity(prince,lady),0);`);
+});
+test('a failed monthly romance roll persists and cannot be refreshed by opening locations or loading',()=>{
+  const {run,force}=romanceBoot();force(.9);run(`palaceRomanceTick();assert.equal(Object.keys(S.palaceRomance.pairs).length,0);save('auto');A.load('auto');drain();`);
+  force(0,0);run(`palaceRomanceTick();assert.equal(Object.keys(S.palaceRomance.pairs).length,0);`);
+  run(`S.turn++`);force(0,0);run(`palaceRomanceTick();assert.equal(Object.keys(S.palaceRomance.pairs).length,1);var pair=Object.values(S.palaceRomance.pairs)[0];
+    assert.equal(pair.stage,1);assert.equal(pair.place,'wy');assert.equal(palaceRomanceLeads().length,1);assert.match(palaceRomanceAt('wy'),/走近过问/);`);
+});
+test('romance develops across months with two portraits, persistent memories and one-time consequences',()=>{
+  const {run,force}=romanceBoot();force(0,0);run(`palaceRomanceTick();var pair=Object.values(S.palaceRomance.pairs)[0];pushEv(palaceRomanceEvent(pair));
+    assert.equal(curEv.cast.length,2);assert.ok(curEv.text.includes('20岁'));choose(0);drain();assert.equal(pair.pending,false);var due=pair.due;
+    assert.ok(due-S.turn>=4);S.turn=due;`);
+  force(0);run(`palaceRomanceTick();assert.equal(pair.stage,2);pushEv(palaceRomanceEvent(pair));choose(0);drain();S.turn=pair.due;`);
+  force(0);run(`palaceRomanceTick();assert.equal(pair.stage,3);pushEv(palaceRomanceEvent(pair));assert.match(curEv.text,/轻轻回握/);assert.match(curEv.text,/短暂相拥/);
+    prince.spouse={name:'许静宜'};var decision=curEv.choices[2].f;var prestige=E().prestige;choose(2);drain();
+    assert.equal(pair.status,'exposed');assert.equal(prince.spouse.trust,35);assert.match(marriagePanel(prince),/夫妻信任/);assert.equal(E().prestige,prestige-3);
+    decision();assert.equal(E().prestige,prestige-3);assert.equal(palaceRomanceLeads().length,0);
+    assert.ok(prince.story.some(s=>s.t.includes('私情被随侍察觉')));assert.ok(lady.story.some(s=>s.t.includes('私情被随侍察觉')));
+    save('auto');var key=pair.key;A.load('auto');drain();assert.equal(S.palaceRomance.pairs[key].status,'exposed');`);
+});
+test('cold palace and departures invalidate queued romance and terminate the pending map clue',()=>{
+  const {run,force}=romanceBoot();force(0,0);run(`palaceRomanceTick();var pair=Object.values(S.palaceRomance.pairs)[0];
+    pushEv({title:'先行处理',choices:[{t:'送入冷宫',f:()=>{lady.cold=true;lady.palace='冷宫';}}]});pushEv(palaceRomanceEvent(pair));choose(0);drain();
+    assert.equal(pair.known,false);assert.equal(palaceRomanceLeads().length,0);reconcilePalaceRomance();assert.equal(pair.status,'ended');
+    lady.cold=false;lady.palace='景仁宫';for(const field of ['away','jailed']){prince[field]=true;assert.equal(romanceEligible(prince,lady),false);prince[field]=false;}`);
+});
+test('choosing a boundary closes the romance without relaunching it for the same people',()=>{
+  const {run,force}=romanceBoot();force(0,0);run(`palaceRomanceTick();var pair=Object.values(S.palaceRomance.pairs)[0];pushEv(palaceRomanceEvent(pair));choose(1);drain();
+    assert.equal(pair.status,'ended');assert.equal(pair.stage,1);S.turn+=24;lady.age+=2;`);
+  force(0,0);run(`palaceRomanceTick();assert.equal(Object.keys(S.palaceRomance.pairs).length,1);assert.equal(palaceRomanceEvent(),null);`);
+});
+
+test('a crowded palace still has one romance roll and at least eighteen months between new stories',()=>{
+  const {run,force}=romanceBoot();run(`for(let i=0;i<20;i++){
+    const c=makeGirl({sur:'沈',age:22,trait:'好学'});addConsort(c,2,'入宫');c.hobby='读书';c.aff=10;c.favor=10;c.virtue=40;
+    const k=makeKid(mother,'m','承'+i);k.born=S.turn-240;k.lit=75;k.vir=40;relAdd(k,c,30-relGet(k,c));}
+    var starts=[];`);
+  force(.99,...Array(100).fill(0));run(`palaceRomanceTick();assert.equal(Object.keys(S.palaceRomance.pairs).length,0);`);
+  for(let turn=1;turn<=72;turn++){
+    force(0,0);run(`S.turn=${turn};palaceRomanceTick();var current=Object.values(S.palaceRomance.pairs).find(p=>p.status==='active');if(current){starts.push(S.turn);closePalaceRomance(current,'测试收束');}`);
+  }
+  run(`assert.ok(starts.length>1);for(let i=1;i<starts.length;i++)assert.ok(starts[i]-starts[i-1]>=18);assert.ok(starts.length<=4);`);
+});
+test('mourning pauses romance clues and queued encounters without deleting their history',()=>{
+  const {run,force}=romanceBoot();force(0,0);run(`palaceRomanceTick();var pair=Object.values(S.palaceRomance.pairs)[0];S.flags.dowager.mourning={turn:S.turn,handled:true};
+    assert.equal(palaceRomanceEvent(),null);assert.equal(palaceRomanceLeads().length,0);assert.equal(pair.pending,true);
+    S.turn++;assert.ok(palaceRomanceEvent());`);
+});
+
+test('romance exile stops meetings while concealing keeps a memory without recurring scenes',()=>{
+  for(const mode of ['away','conceal']){
+    const {run,force}=romanceBoot();force(0,0);run(`palaceRomanceTick();var pair=Object.values(S.palaceRomance.pairs)[0];pair.stage=3;pushEv(palaceRomanceEvent(pair));
+      choose(${mode==='away'?1:3});drain();assert.equal(pair.status,'${mode==='away'?'ended':'concealed'}');assert.equal(pair.pending,false);assert.equal(palaceRomanceLeads().length,0);
+      assert.equal(prince.away===true,${mode==='away'});assert.ok(palaceRomancePanel(prince).includes('${mode==='away'?'往来已断':'未公开的私情'}'));
+      var saved=JSON.stringify(S.palaceRomance);S.turn++;palaceRomanceTick();assert.equal(pair.stage,3);
+      if('${mode}'==='conceal'){lady.cold=true;reconcilePalaceRomance();assert.equal(pair.status,'ended');}`);
+  }
+});

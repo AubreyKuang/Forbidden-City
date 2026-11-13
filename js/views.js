@@ -326,6 +326,7 @@ function viewConsort(){
    <div class="detail-vitals">${bar('恩宠',c.favor)}${bar('心情',c.mood,'#517369')}${bar('情分',c.aff,'#936375')}</div>
    <div class="detail-stack">
     ${act&&!c.cold?initiativeHTML(c):''}
+    ${detailSection('宫墙往事',palaceRomancePanel(c))}
     ${act&&c.rank===8?birthdayBanquetButtons():''}
     <div class="detail-columns">
      ${detailSection('近况与性情',`<p class="hint">${esc(TRAITS[c.trait].d)} · 侍寝 ${c.nights} 次</p>${act?xinDetail(c)+deepLine(c):''}<div class="stats">${st('容貌',c.looks)}${st('才情',c.talent)}${st('德行',c.virtue)}${st('心机',c.scheme,!c.known)}</div>`)}
@@ -385,6 +386,7 @@ function viewKid(){
     ${k.alive?initiativeHTML(k):''}
     ${princessActions(k)}
     ${detailSection('少年心事',youthPanel(k))}
+    ${detailSection('宫墙往事',palaceRomancePanel(k))}
     ${detailSection('出生禀赋',childBirthPanel(k))}
     ${k.alive?detailSection('与母亲的日常',kidFamilyPanel(k)):''}
     ${detailSection('教养与抚养',care)}
