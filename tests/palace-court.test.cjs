@@ -219,6 +219,29 @@ test('selling stored grain takes one energy, saves the proceeds, and removes the
   `);
 });
 
+test('a harvest tops up exactly half a reserve and restores full locust relief after reload',()=>{
+  const {run}=boot();
+  run(`
+    const option=label=>curEv.choices.findIndex(c=>c.t.includes(label));
+    const harvest=()=>{S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index:HARVEST_INDEX};A.court();};
+    E().treasury=0;E().energy=0;E().people=50;
+    harvest();assert.equal(option('补满常平仓'),-1);choose(option('稍后再议'));
+    S.flags.grainReserveGen=S.gen;
+    harvest();assert.equal(option('补满常平仓'),-1);choose(option('稍后再议'));
+    S.flags.grainReserveHalf=true;
+    harvest();const topup=option('补满常平仓');
+    assert.match(curEv.choices[topup].preview,/120 万两/);
+    assert.equal(curEv.choices[topup].cond(),false);
+    choose(topup);assert.equal(halfGrainReserve(),true);
+    E().energy=1;choose(topup);drain();assert.equal(load('auto'),true);
+    assert.deepEqual([E().treasury,E().energy,E().people,grainReserveReady(),halfGrainReserve()],[120,0,51,true,false]);
+    A.court();assert.equal(modalOpen,false);
+    S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index:LOCUST_INDEX};
+    A.court();choose(option('发放常平仓储粮'));drain();
+    assert.deepEqual([E().people,E().energy,grainReserveReady()],[57,0,false]);
+  `);
+});
+
 test('half-sale persists and leaves smaller relief rewards in either disaster',()=>{
   for(const use of ['locust','freight','sale']){
     const {run}=boot();

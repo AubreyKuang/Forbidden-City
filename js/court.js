@@ -70,6 +70,7 @@ const FLOOD_INDEX=0;
 const LOCUST_INDEX=5, HARVEST_INDEX=11;
 const GRAIN_SALE_REVENUE=100, HALF_GRAIN_SALE_REVENUE=45;
 const GRAIN_TRANSPORT_COST=70;
+const HALF_GRAIN_TOP_UP_REVENUE=120;
 function grainReserveReady(){return S.flags.grainReserveGen===S.gen;}
 function halfGrainReserve(){return grainReserveReady()&&S.flags.grainReserveHalf===true;}
 function grainReserveLabel(){return halfGrainReserve()?'半批':'一批';}
@@ -101,7 +102,17 @@ A.grainReserve=function(){
 function monthlyGrainEvent(index){
   const event=COURT[index]();
   if(index===HARVEST_INDEX){
-    if(grainReserveReady())event.text+=`\n常平仓还有${grainReserveLabel()}备荒粮，等用过再补。`;
+    if(halfGrainReserve()){
+      event.text+='\n常平仓还剩半批备荒粮。可拿一部分秋粮补满，也可照常征税或减免。';
+      event.choices.push({t:'留半批秋粮，补满常平仓',
+        preview:`国库 +${HALF_GRAIN_TOP_UP_REVENUE} 万两 · 民心 +1 · 储粮从半批补为一批`,
+        cond:()=>halfGrainReserve(),why:'常平仓须有半批余粮',
+        f:()=>{
+          delete S.flags.grainReserveHalf;
+          log('户部用半批秋粮补满常平仓。');
+          return `户部将半批秋粮入仓，原来的余粮已补成一整批。${fx(chg({treasury:HALF_GRAIN_TOP_UP_REVENUE,people:1}))}`;
+        }});
+    }else if(grainReserveReady())event.text+='\n常平仓已有一批备荒粮，等用过再补。';
     else event.choices.push({t:'留粮入常平仓，以备蝗灾',
       preview:'国库 +60 万两 · 民心 +2 · 储粮可在日后一次蝗灾中免耗精力赈济',
       f:()=>{
