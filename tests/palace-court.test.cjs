@@ -310,6 +310,39 @@ test('collecting autumn grain requires room, funds and the August purchase allow
   `);
 });
 
+test('an autumn order can be delayed once and uses September allowances at the higher price',()=>{
+  for(const direct of [false,true])boot().run(`
+    const option=label=>curEv.choices.findIndex(c=>c.t.includes(label));
+    S.month=8;S.turn=7;E().treasury=0;E().energy=0;E().people=40;
+    S.flags.autumnGrainOrder={gen:S.gen,turn:S.turn};
+    S.flags.grainPurchaseTurn=S.turn;
+    S.flags.grainReserveGen=S.gen;
+    const write=save;
+    save=()=>false;
+    A.grainReserve();choose(option('改到九月'));drain();
+    assert.equal(autumnGrainOrderStatus(),'due');
+    save=write;
+    A.grainReserve();choose(option('改到九月'));drain();assert.equal(load('auto'),true);
+    assert.deepEqual([autumnGrainOrderStatus(),E().treasury,E().energy],['delayed',0,0]);
+    A.grainReserve();assert.equal(option('领取半批秋粮'),-1);choose(option('留粮备荒'));
+    S.turn++;S.month=9;
+    const direct=${direct};
+    const cost=direct?75:50;
+    if(!direct)S.flags.grainReserveHalf=true;
+    E().treasury=cost-1;
+    A.grainReserve();assert.equal(option('改到九月'),-1);
+    const collect=option(direct?'直送秋粮':'领取半批秋粮');
+    assert.match(curEv.choices[collect].preview,/九月购粮/);
+    choose(collect);assert.equal(autumnGrainOrderStatus(),'due');
+    E().treasury=cost;choose(collect);drain();assert.equal(load('auto'),true);
+    assert.deepEqual([autumnGrainOrderStatus(),E().treasury,E().energy,E().people,S.flags.grainPurchaseTurn,
+      S.flags.grainReliefTurn,grainReserveReady(),halfGrainReserve()],
+      ['',0,0,direct?44:40,S.turn,direct?S.turn:undefined,true,false]);
+    S.flags.autumnGrainOrder={gen:S.gen,turn:S.turn,delayed:true};
+    S.turn++;S.month=10;assert.equal(autumnGrainOrderStatus(),'');
+  `);
+});
+
 test('August grain delivery can bypass a full warehouse and spends both monthly allowances once',()=>{
   const {run}=boot();
   run(`
