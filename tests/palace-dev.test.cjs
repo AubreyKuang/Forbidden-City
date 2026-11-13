@@ -48,3 +48,10 @@ test('full world edits accept nested flags and reject duplicate identities',()=>
     world=DEV.clone(S);world.consorts[1].id=world.consorts[0].id;assert.throws(()=>DEV.applyPatch('world',world));
     assert.equal(new Set(S.consorts.map(c=>c.id)).size,S.consorts.length);`);
 });
+test('new portrait ranges are selectable and reject cells beyond the final atlas',()=>{
+  const {run}=boot();run(`var lady=harem()[0],child=makeKid(lady,'f','明昭');
+    DEV.applyPatch('consort:'+lady.id,{portraitOverride:215});assert.equal(portraitCell(lady),215);
+    DEV.applyPatch('kid:'+child.id,{portraitVariant:25});var babyFace=portraitCell(child);DEV.applyPatch('kid:'+child.id,{age:20});assert.notEqual(portraitCell(child),babyFace);assert.equal(portraitCell(child),239);
+    assert.throws(()=>DEV.applyPatch('kid:'+child.id,{portraitVariant:26}));assert.throws(()=>DEV.applyPatch('consort:'+lady.id,{portraitOverride:240}));
+    DEV.target='kid:'+child.id;DEV.draft=DEV.clone(child);DEV.gallery();assert.equal(($('#dev-gallery').innerHTML.match(/class="dev-face"/g)||[]).length,26);`);
+});

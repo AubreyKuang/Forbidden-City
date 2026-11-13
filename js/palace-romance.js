@@ -1,4 +1,4 @@
-/* 宫墙私情：成年后相识、双方投契，少量且有后续的秘密往来。 */
+/* 宫墙私情：十五岁起投契、成年后亲密，少量且有后续的秘密往来。 */
 const ROMANCE_TITLES=['','花亭同话','夹在书中的笺子','回廊相依'];
 function palaceRomanceState(){
   if(S.palaceRomance?.gen!==S.gen)S.palaceRomance={gen:S.gen,pairs:{},lastStart:-999,lastScene:-999};
@@ -8,11 +8,12 @@ function romanceKin(k){
   return [...new Set([k.mom,k.foster,...Object.keys(k.motherBonds||{}).map(Number)].filter(Boolean))].map(byId).filter(Boolean);
 }
 function romanceEligible(k,c){
-  if(!childInPalace(k)||k.sex!=='m'||kidAge(k)<18||!inPalace(c)||c.maid||c.rank===8||c.age<18||Math.abs(kidAge(k)-c.age)>8)return false;
-  // A late entry establishes that this was an acquaintance formed in adulthood.
-  if(!Number.isFinite(c.enteredAt)||c.enteredAt<k.born+18*12)return false;
+  if(!childInPalace(k)||k.sex!=='m'||kidAge(k)<15||!inPalace(c)||c.maid||c.rank===8||c.age<15||Math.abs(kidAge(k)-c.age)>8)return false;
+  // Exclude people who entered while the prince was still a young child.
+  if(!Number.isFinite(c.enteredAt)||c.enteredAt<k.born+15*12)return false;
   return c.sur!==E().sur&&!romanceKin(k).some(m=>m.id===c.id||m.sur===c.sur||clanKey(m)===clanKey(c)||m.kin?.[c.id]||c.kin?.[m.id]);
 }
+const romanceAdults=(k,c)=>kidAge(k)>=18&&c.age>=18;
 function romanceAffinity(k,c){
   if(!romanceEligible(k,c)||c.preg||c.bond||['痴情','持重'].includes(c.trait)||c.aff>=50||c.favor>=40||c.virtue>=75||k.vir>=80||relGet(k,c)<18)return 0;
   const hobby=consortHobby(c);
@@ -50,6 +51,7 @@ function palaceRomanceTick(){
     if(active.pending||S.turn<active.due||S.turn-state.lastScene<4)return;
     const {prince:k,consort:c}=romancePeople(active);
     if(c.aff>=65||c.bond||relGet(k,c)<15){closePalaceRomance(active,'她收起了旧笺，两人决定止于礼节，不再私下相约。');return;}
+    if(active.stage>=2&&!romanceAdults(k,c))return;
     if(c.preg||!chance(.3))return;
     active.stage++;active.pending=true;active.place=active.stage===2?initiativePlace(null,null,{place:'p'+c.palace}):'yh';return;
   }
@@ -69,7 +71,7 @@ function palaceRomanceTick(){
 }
 function romancePending(pair){
   if(!pair||pair.status!=='active'||!pair.pending||mourningActive())return false;
-  const {prince:k,consort:c}=romancePeople(pair);return romanceEligible(k,c);
+  const {prince:k,consort:c}=romancePeople(pair);return romanceEligible(k,c)&&(pair.stage<3||romanceAdults(k,c));
 }
 function palaceRomanceEvent(pair){
   pair ||= Object.values(S.palaceRomance?.gen===S.gen?S.palaceRomance.pairs:{}).find(romancePending);
@@ -81,11 +83,11 @@ function palaceRomanceEvent(pair){
     `${opening}\n雨后的回廊没有旁人。他停在她身边，低声问可否握一握她的手。她犹豫片刻，轻轻回握。\n灯影里，两人短暂相拥；听见脚步，才各自退开。随侍亲眼看见这一幕，回来禀报。${k.married?'\n皇子已有嫡妻，这件事若传开，也会伤及她。':''}`;
   const option=(t,mode)=>({t,f:()=>resolvePalaceRomance(pair.key,stage,mode)});
   return {title:ROMANCE_TITLES[stage],cast:[k,c],present:[k,c],valid:()=>romancePending(pair)&&pair.stage===stage,
-    onShow:()=>{pair.known=true;if(pair.seenStage!==stage){pair.seenStage=stage;S.palaceRomance.lastScene=S.turn;romanceRecord(pair,stage===1?'成年后因趣味相投，开始留意彼此。':stage===2?'两人私下交换书笺，心意渐深。':'两人于回廊牵手相拥，私情被随侍察觉。');save('auto');}},text,
+    onShow:()=>{pair.known=true;if(pair.seenStage!==stage){pair.seenStage=stage;S.palaceRomance.lastScene=S.turn;romanceRecord(pair,stage===1?'因趣味相投，开始留意彼此。':stage===2?'两人私下交换书笺，心意渐深。':'两人于回廊牵手相拥，私情被随侍察觉。');save('auto');}},text,
     choices:stage<3?[
       option(stage===1?'先当寻常往来，暂不干预':'暂不声张，继续留意','watch'),
       option('分别提醒，两人往来止于礼节','boundary'),
-      option('让皇子赴封地历练，错开往来','away')
+      option(kidAge(k)<16?'另排课业，减少私下往来':'让皇子赴封地历练，错开往来','away')
     ]:[
       option('分别问清，令二人断了私下来往','boundary'),
       option('让皇子就藩，将此事留在家中','away'),
@@ -103,7 +105,7 @@ function resolvePalaceRomance(key,stage,mode){
     relAdd(k,c,stage===3?-18:-6);k.love=clamp(k.love-3);cchg(c,{mood:-6});
     result='你分别听过两人的话，令他们收起私笺，此后只在众人面前循礼相见。';closePalaceRomance(pair,result);
   }else if(mode==='away'){
-    result=`${k.name}奉旨赴封地历练，两人的私下来往至此中断。`;closePalaceRomance(pair,result);k.away=true;k.love=clamp(k.love-8);cchg(c,{mood:-10});
+    result=kidAge(k)<16?`${k.name}另排了课业，两人不再私下相约。`:`${k.name}奉旨赴封地历练，两人的私下来往至此中断。`;closePalaceRomance(pair,result);if(kidAge(k)>=16)k.away=true;k.love=clamp(k.love-8);cchg(c,{mood:-10});
   }else if(mode==='expose'&&stage===3){
     result='二人当众受了申斥，私下来往被禁止。消息传开，皇子的支持与皇家的威望也受到影响。';
     closePalaceRomance(pair,result,'exposed');relAdd(k,c,-25);k.sup=clamp((k.sup||0)-10);k.love=clamp(k.love-12);cchg(c,{favor:-15,mood:-15,aff:-10});chg({prestige:-3});

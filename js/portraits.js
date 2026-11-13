@@ -167,17 +167,27 @@ const PORTRAIT_WIDTH=112,PORTRAIT_HEIGHT=140,PORTRAIT_COLUMNS=4;
 const portraitAtlas=document.createElement('img');
 const familyAtlas=document.createElement('img');
 const descendantAtlas=document.createElement('img');
+const beautyAtlas=document.createElement('img');
+const youngRoyalAtlas=document.createElement('img');
 const FAMILY_PORTRAIT_START=28;
 const DESCENDANT_PORTRAIT_START=44;
-const DESCENDANT_VARIANTS=10;
+const LEGACY_DESCENDANT_VARIANTS=10;
+const DESCENDANT_VARIANTS=26;
 const EXISTING_PRINCE_VARIANTS=4;
-const EXTRA_PRINCE_VARIANTS=DESCENDANT_VARIANTS-EXISTING_PRINCE_VARIANTS;
+const EXTRA_PRINCE_VARIANTS=LEGACY_DESCENDANT_VARIANTS-EXISTING_PRINCE_VARIANTS;
+const BEAUTY_PORTRAIT_START=92, YOUNG_ROYAL_PORTRAIT_START=136, PORTRAIT_COUNT=240;
 const portraitSheets=[
   {start:0,rows:7,src:'./palace-portraits-b.webp',image:portraitAtlas},
   {start:FAMILY_PORTRAIT_START,rows:4,src:'./palace-family.webp',image:familyAtlas},
-  {start:DESCENDANT_PORTRAIT_START,rows:12,src:'./palace-descendants.webp?v=2',image:descendantAtlas}
+  {start:DESCENDANT_PORTRAIT_START,rows:12,src:'./palace-descendants.webp?v=2',image:descendantAtlas},
+  {start:BEAUTY_PORTRAIT_START,rows:11,scale:2,src:'./palace-beauties.webp?v=1',image:beautyAtlas},
+  {start:YOUNG_ROYAL_PORTRAIT_START,rows:9,scale:2,src:'./palace-young-royals.webp?v=1',image:youngRoyalAtlas},
+  {start:172,rows:9,scale:2,src:'./palace-young-royals-2.webp?v=1',image:document.createElement('img')},
+  {start:208,rows:2,scale:2,src:'./palace-regalia.webp?v=1',image:document.createElement('img')},
+  {start:216,rows:6,scale:2,src:'./palace-royal-regalia.webp?v=1',image:document.createElement('img')}
 ];
-const portraitSheet=cell=>cell>=DESCENDANT_PORTRAIT_START?portraitSheets[2]:cell>=FAMILY_PORTRAIT_START?portraitSheets[1]:portraitSheets[0];
+const portraitSheet=cell=>portraitSheets.slice().reverse().find(sheet=>cell>=sheet.start)||portraitSheets[0];
+function ensurePortraitSheet(cell){const sheet=portraitSheet(cell);if(!sheet.image.src)sheet.image.src=sheet.src;}
 function portraitTile(cell,sheet){
   const tile=cell-sheet.start;
   return [(tile%PORTRAIT_COLUMNS)*PORTRAIT_WIDTH,Math.floor(tile/PORTRAIT_COLUMNS)*PORTRAIT_HEIGHT];
@@ -187,27 +197,37 @@ atlasCanvas.width=PORTRAIT_WIDTH;atlasCanvas.height=PORTRAIT_HEIGHT;
 const atlasInk=atlasCanvas.getContext('2d');
 const ART_CACHE=new Map();
 
-const CONSORT_PORTRAITS=[1,2,3,4,5,6,7,21];
-const WESTERN_PORTRAITS=[22,23,24];
+const CONSORT_PORTRAITS=[1,2,3,4,5,6,7,21,...Array.from({length:44},(_,i)=>92+i).filter(cell=>![102,103,134,135].includes(cell)),...Array.from({length:8},(_,i)=>208+i)];
+const WESTERN_PORTRAITS=[22,23,24,102,103,134,135];
 const PORTRAIT_CLOTHES={
   1:'圆领袍',2:'齐胸襦裙',3:'宋式褙子',4:'窄袖骑装',5:'齐腰襦裙',
   6:'宋式褙子',7:'交领襦裙',10:'交领宫装',21:'宋式褙子',
   22:'西域舞衣',23:'西域舞衣',24:'西域舞衣'
 };
+// Row-major entries match scripts/build-portrait-atlases.py; IDs never move on expansion.
+[
+  '齐胸襦裙','宋式褙子','齐腰襦裙','圆领袍','交领襦裙','宋式褙子','齐胸襦裙','窄袖骑装','宋式褙子','交领襦裙','西域舞衣','西域舞衣',
+  '交领襦裙','华绣宫装','齐胸襦裙','宋式褙子','宋式褙子','华绣宫装','齐腰襦裙','交领襦裙',
+  '交领襦裙','宋式褙子','华绣宫装','交领襦裙','齐腰襦裙','交领襦裙','齐胸襦裙','宋式褙子','华绣宫装','宋式褙子','交领襦裙','齐腰襦裙',
+  '宋式褙子','齐胸襦裙','窄袖骑装','齐胸襦裙','交领襦裙','宋式褙子','宋式褙子','华绣宫装','齐腰襦裙','宋式褙子','西域舞衣','西域舞衣'
+].forEach((clothes,i)=>{PORTRAIT_CLOTHES[BEAUTY_PORTRAIT_START+i]=clothes;});
+for(let cell=208;cell<216;cell++)PORTRAIT_CLOTHES[cell]='盛装华服';
 const consortPortraits=c=>c.fam?.t==='西域贡女'?WESTERN_PORTRAITS:CONSORT_PORTRAITS;
 
 function assignConsortPortrait(c){
   const cells=consortPortraits(c);
   if(cells.includes(c.artPortrait))return;
   const usage=new Map(cells.map(cell=>[cell,0]));
-  for(const other of [...S.consorts,...(S.cands||[])]){
-    const cell=other.artPortrait;
+  const relatives=(S.children||[]).flatMap(k=>[k.spouse,...Object.values(k.marriageCandidates||{})]).filter(Boolean).map(p=>p.appearance).filter(Boolean);
+  const seen=new Set();
+  for(const other of [...S.consorts,...(S.cands||[]),...relatives]){
+    if(seen.has(other.id))continue;seen.add(other.id);
+    const cell=other.portraitOverride??other.artPortrait;
     if(other!==c&&other.alive&&!other.gone&&!other.maid&&usage.has(cell)){
       usage.set(cell,usage.get(cell)+1);
     }
   }
-  const favorite={骄纵:1,骄矜:1,温婉:2,才女:3,将门:4,活泼:5,淡泊:6}[c.trait];
-  const start=cells.includes(favorite)?cells.indexOf(favorite):Math.floor(mulberry32(c.seed||7)()*cells.length);
+  const start=Math.floor(mulberry32(c.seed||7)()*cells.length);
   let best=cells[start];
   for(let i=1;i<cells.length;i++){
     const cell=cells[(start+i)%cells.length];
@@ -215,21 +235,37 @@ function assignConsortPortrait(c){
   }
   c.artPortrait=best;
 }
-function childPortraitCell(child){
-  const age=kidAge(child);
-  const stage=age<3?0:age<12?1:2;
+function childPortraitVariant(child){
   const ordinal=child.ord>0?child.ord:S.children.filter(k=>k.sex===child.sex).findIndex(k=>k.id===child.id)+1;
-  const variant=Number.isInteger(child.portraitVariant)&&child.portraitVariant>=0&&child.portraitVariant<DESCENDANT_VARIANTS?child.portraitVariant:ordinal>0?(ordinal-1)%DESCENDANT_VARIANTS:Math.floor(mulberry32(child.seed||7)()*DESCENDANT_VARIANTS);
+  // Old saves derived identity from ten variants. Keep that fallback permanently stable.
+  return Number.isInteger(child.portraitVariant)&&child.portraitVariant>=0&&child.portraitVariant<DESCENDANT_VARIANTS?child.portraitVariant:ordinal>0?(ordinal-1)%LEGACY_DESCENDANT_VARIANTS:Math.floor(mulberry32(child.seed||7)()*LEGACY_DESCENDANT_VARIANTS);
+}
+function assignChildPortrait(child){
+  const usage=Array(DESCENDANT_VARIANTS).fill(0);
+  S.children.filter(k=>k.sex===child.sex).forEach(k=>usage[childPortraitVariant(k)]++);
+  const start=((child.ord||1)-1)%DESCENDANT_VARIANTS;
+  let best=start;
+  for(let i=1;i<DESCENDANT_VARIANTS;i++){const v=(start+i)%DESCENDANT_VARIANTS;if(usage[v]<usage[best])best=v;}
+  child.portraitVariant=best;
+}
+function childPortraitCell(child){
+  const age=kidAge(child),stage=age<3?0:age<12?1:2,variant=childPortraitVariant(child);
+  if(variant>=22)return 216+(child.sex==='m'?0:12)+stage*4+variant-22;
+  if(variant>=LEGACY_DESCENDANT_VARIANTS){
+    const extra=variant-LEGACY_DESCENDANT_VARIANTS;
+    return YOUNG_ROYAL_PORTRAIT_START+Math.floor(extra/6)*36+(child.sex==='m'?0:18)+stage*6+extra%6;
+  }
   if(child.sex==='m'){
     if(variant<EXISTING_PRINCE_VARIANTS)return FAMILY_PORTRAIT_START+stage*EXISTING_PRINCE_VARIANTS+variant;
     return DESCENDANT_PORTRAIT_START+stage*EXTRA_PRINCE_VARIANTS+variant-EXISTING_PRINCE_VARIANTS;
   }
-  return DESCENDANT_PORTRAIT_START+3*EXTRA_PRINCE_VARIANTS+stage*DESCENDANT_VARIANTS+variant;
+  return DESCENDANT_PORTRAIT_START+3*EXTRA_PRINCE_VARIANTS+stage*LEGACY_DESCENDANT_VARIANTS+variant;
 }
 
 function portraitCell(x){
+  if(x?.appearance)x=x.appearance;
   const override=(x==='emp'?E():x)?.portraitOverride;
-  if(Number.isInteger(override)&&override>=0&&override<92)return override;
+  if(Number.isInteger(override)&&override>=0&&override<PORTRAIT_COUNT)return override;
   if(x==='emp')return E().age>=40?13:12;
   if(x.official!==undefined)return FAMILY_PORTRAIT_START+12+x.official;
   if(x.isMom)return 9;
@@ -244,11 +280,13 @@ function atlasPortrait(cell,rank){
   if(ART_CACHE.has(key))return ART_CACHE.get(key);
   const sheet=portraitSheet(cell);
   const [x,y]=portraitTile(cell,sheet);
+  const scale=sheet.scale||1,w=PORTRAIT_WIDTH*scale,h=PORTRAIT_HEIGHT*scale;
+  atlasCanvas.width=w;atlasCanvas.height=h;
   atlasInk.clearRect(0,0,PORTRAIT_WIDTH,PORTRAIT_HEIGHT);
   atlasInk.imageSmoothingEnabled=false;
-  atlasInk.drawImage(sheet.image,x,y,PORTRAIT_WIDTH,PORTRAIT_HEIGHT,0,0,PORTRAIT_WIDTH,PORTRAIT_HEIGHT);
+  atlasInk.drawImage(sheet.image,x*scale,y*scale,w,h,0,0,w,h);
   // Keep the same face on promotion. Add the ornaments above the existing hair.
-  if(rank===8)atlasInk.drawImage(portraitAtlas,26,702,60,30,26,1,60,30);
+  if(rank===8)atlasInk.drawImage(portraitAtlas,26,702,60,30,26*scale,scale,60*scale,30*scale);
   const src=atlasCanvas.toDataURL();
   ART_CACHE.set(key,src);
   return src;
@@ -262,9 +300,7 @@ function refreshAtlasPortraits(){
     if(portraitAtlasReady(cell,rank))img.src=atlasPortrait(cell,rank);
   });
 }
-portraitAtlas.addEventListener('load',refreshAtlasPortraits);
-familyAtlas.addEventListener('load',refreshAtlasPortraits);
-descendantAtlas.addEventListener('load',refreshAtlasPortraits);
+portraitSheets.forEach(sheet=>sheet.image.addEventListener('load',refreshAtlasPortraits));
 portraitAtlas.src=portraitSheets[0].src;
 familyAtlas.src=portraitSheets[1].src;
 
@@ -284,7 +320,7 @@ function porImg(x,size=64){
   const cell=portraitCell(x),rank=x!=='emp'&&!x.sex&&!x.isMom&&!x.maid&&!cold&&x.rank===8?8:0;
   const attrs=`class="px por palace-portrait${cold||dead?' cold':''}" data-portrait-cell="${cell}" data-portrait-rank="${rank}" width="${size}" height="${size*1.25}"`;
   if(typeof location!=='undefined'&&location.protocol==='file:')return localPortrait(cell,rank,attrs);
-  if(cell>=DESCENDANT_PORTRAIT_START&&!descendantAtlas.src)descendantAtlas.src=portraitSheets[2].src;
+  ensurePortraitSheet(cell);
   const src=portraitAtlasReady(cell,rank)?atlasPortrait(cell,rank):portrait(porSpec(x));
   return `<img ${attrs} alt="" src="${src}">`;
 }

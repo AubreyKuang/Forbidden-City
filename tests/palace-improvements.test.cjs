@@ -807,11 +807,11 @@ function romanceBoot(){
     var lady=makeGirl({sur:'沈',given:'清和',age:22,trait:'好学'});addConsort(lady,3,'入宫');
     lady.hobby='读书';lady.aff=10;lady.favor=10;lady.virtue=40;lady.preg=0;relAdd(prince,lady,30-relGet(prince,lady));`);return game;
 }
-test('palace romance requires adult, close-age, unrelated people who met after adulthood',()=>{
+test('palace friendship begins at fifteen and still excludes family and former caregivers',()=>{
   const {run}=romanceBoot();run(`assert.equal(romanceEligible(prince,lady),true);
-    const born=prince.born;prince.born=S.turn-215;assert.equal(romanceEligible(prince,lady),false);prince.born=born;
-    lady.age=17;assert.equal(romanceEligible(prince,lady),false);lady.age=29;assert.equal(romanceEligible(prince,lady),false);lady.age=22;
-    lady.enteredAt=prince.born+215;assert.equal(romanceEligible(prince,lady),false);lady.enteredAt=S.turn;
+    const born=prince.born;prince.born=S.turn-179;assert.equal(romanceEligible(prince,lady),false);prince.born=born;
+    lady.age=14;assert.equal(romanceEligible(prince,lady),false);lady.age=29;assert.equal(romanceEligible(prince,lady),false);lady.age=22;
+    lady.enteredAt=prince.born+179;assert.equal(romanceEligible(prince,lady),false);lady.enteredAt=S.turn;
     prince.mom=lady.id;assert.equal(romanceEligible(prince,lady),false);prince.mom=mother.id;
     prince.foster=lady.id;assert.equal(romanceEligible(prince,lady),false);prince.foster=null;
     prince.motherBonds={[lady.id]:{trust:60}};assert.equal(romanceEligible(prince,lady),false);delete prince.motherBonds;
@@ -882,4 +882,71 @@ test('romance exile stops meetings while concealing keeps a memory without recur
       var saved=JSON.stringify(S.palaceRomance);S.turn++;palaceRomanceTick();assert.equal(pair.stage,3);
       if('${mode}'==='conceal'){lady.cold=true;reconcilePalaceRomance();assert.equal(pair.status,'ended');}`);
   }
+});
+
+test('expanded portrait atlases keep legacy identities, stable growth and every cell in bounds',()=>{
+  const {run}=boot();run(`var mother=harem()[0];S.children=[];
+    for(const sex of ['m','f'])for(let i=1;i<=32;i++){
+      const k={id:1000+S.children.length,sex,ord:i,seed:i,born:S.turn,alive:true};S.children.push(k);
+      for(const [age,stage] of [[0,0],[8,1],[18,2]]){k.born=S.turn-age*12;const v=(i-1)%10;
+        const old=sex==='m'?(v<4?28+stage*4+v:44+stage*6+v-4):62+stage*10+v;
+        assert.equal(portraitCell(k),old);}
+    }
+    var before=S.children.map(portraitCell);S=JSON.parse(JSON.stringify(S));assert.deepEqual(S.children.map(portraitCell),before);
+    for(let cell=0;cell<PORTRAIT_COUNT;cell++){const sheet=portraitSheet(cell),xy=portraitTile(cell,sheet);assert.ok(xy[0]>=0&&xy[0]<448);assert.ok(xy[1]>=0&&xy[1]<sheet.rows*140);}
+    assert.equal(CONSORT_PORTRAITS.length+WESTERN_PORTRAITS.length,63);
+    assert.equal(new Set([...CONSORT_PORTRAITS,...WESTERN_PORTRAITS]).size,63);
+    assert.equal(portraitSheet(239).src,'./palace-royal-regalia.webp?v=1');`);
+});
+test('prince brides share the expanded portrait pool without duplicate faces or changes after marriage and succession',()=>{
+  const {run}=boot(880);run(`var mother=harem()[0];S.children=[];var faces=[];
+    for(let i=0;i<12;i++){
+      const k=makeKid(mother,'m','承'+i);k.born=S.turn-240;
+      for(const route of Object.keys(PRINCE_MATCHES)){const p=marriageCandidate(k,route);faces.push(portraitCell(p));assert.ok(CONSORT_PORTRAITS.includes(portraitCell(p)));assert.equal(marriageCandidate(k,route),p);}
+    }
+    assert.equal(new Set(faces).size,36);assert.ok(faces.some(cell=>cell>=208));
+    var prince=S.children[0],bride=marriageCandidate(prince,'scholar'),face=portraitCell(bride);
+    E().treasury=500;pushEv(princeMatchReview(prince,'scholar'));choose(0);drain();
+    assert.equal(portraitCell(prince.spouse),face);assert.ok(marriagePanel(prince).includes('data-portrait-cell="'+face+'"'));
+    var id=prince.id;save('auto');A.load('auto');drain();prince=kidById(id);assert.equal(portraitCell(prince.spouse),face);
+    assert.equal(portraitCell(marriageEmpress(prince)),face);`);
+});
+test('fifteen-year-old correspondence waits for adulthood before intimate scenes, including after reload',()=>{
+  const {run,force}=romanceBoot();run(`prince.born=S.turn-180;lady.age=17;lady.enteredAt=S.turn;`);
+  force(0,0);run(`palaceRomanceTick();var pair=Object.values(S.palaceRomance.pairs)[0];assert.ok(pair);pushEv(palaceRomanceEvent(pair));choose(0);drain();S.turn=pair.due;`);
+  force(0);run(`palaceRomanceTick();assert.equal(pair.stage,2);pushEv(palaceRomanceEvent(pair));choose(0);drain();var key=pair.key;S.turn=pair.due;`);
+  force(0);run(`palaceRomanceTick();assert.equal(pair.stage,2);save('auto');A.load('auto');drain();pair=S.palaceRomance.pairs[key];
+    pair.stage=3;pair.pending=true;assert.equal(palaceRomanceEvent(pair),null);assert.equal(resolvePalaceRomance(key,3,'conceal'),null);
+    var prince=kidById(pair.prince),lady=byId(pair.consort);prince.born=S.turn-216;lady.age=18;assert.ok(palaceRomanceEvent(pair));`);
+});
+test('redirecting a fifteen-year-old changes lessons without falsely sending him to a fief',()=>{
+  const {run,force}=romanceBoot();run(`prince.born=S.turn-180;lady.age=18;lady.enteredAt=S.turn;`);force(0,0);
+  run(`palaceRomanceTick();var pair=Object.values(S.palaceRomance.pairs)[0];pushEv(palaceRomanceEvent(pair));assert.match(curEv.choices[2].t,/课业/);choose(2);drain();assert.equal(pair.status,'ended');assert.notEqual(prince.away,true);`);
+});
+test('ambient cooldown follows the event across different women, persists, and extends for the same participant',()=>{
+  const {run}=boot();run(`var [a,b]=harem(),first={title:'争执',cast:[a]},other={title:'争执',cast:[b]};
+    assert.equal(ambientEventReady(first),true);rememberAmbientEvent(first);assert.equal(ambientEventReady(other),false);
+    S.turn+=12;assert.equal(ambientEventReady(other),true);assert.equal(ambientEventReady(first),false);
+    save('auto');A.load('auto');drain();assert.equal(ambientEventReady({title:'争执',cast:[byId(a.id)]}),false);
+    S.turn+=6;assert.equal(ambientEventReady({title:'争执',cast:[byId(a.id)]}),true);
+    var grave={title:'香囊疑案',por:byId(a.id)};rememberAmbientEvent(grave);S.turn+=23;assert.equal(ambientEventReady({...grave,por:byId(b.id)}),false);S.turn++;assert.equal(ambientEventReady(grave),true);`);
+});
+test('new pastimes obey traits, season, attendance and actual choice consequences only once',()=>{
+  const {run}=boot();run(`var [a,b]=harem();a.trait='巧手';b.trait='好学';a.palace='景仁宫';a.talent=60;relAdd(a,b,30-relGet(a,b));
+    S.month=7;assert.equal(PALACE_INITIATIVES.needleMoon.match(a),true);S.month=8;assert.equal(PALACE_INITIATIVES.needleMoon.match(a),false);S.month=7;
+    a.initiative={id:'needleMoon',turn:S.turn,target:b.id,text:PALACE_INITIATIVES.needleMoon.text(a,b)};
+    E().energy=4;var before=relGet(a,b);A.answerInitiative(a.id,false);assert.equal(curEv.cast.length,2);var act=curEv.choices[1].f;choose(1);drain();
+    assert.equal(relGet(a,b),before+7);assert.equal(E().energy,3);assert.match(a.initiative.response,/德行/);assert.doesNotMatch(a.initiative.response,/undefined/);act();assert.equal(E().energy,3);assert.equal(relGet(a,b),before+7);
+    a.initiative={id:'paperMending',turn:S.turn,target:b.id,text:'修书'};b.cold=true;assert.equal(initiativeParticipants(a,a.initiative),null);A.answerInitiative(a.id,false);assert.equal(modalOpen,false);
+    b.cold=false;a.cold=true;assert.equal(initiativeParticipants(a,a.initiative),null);`);
+});
+test('grass play leaves a mother-child follow-up and initiative cooldown cannot rotate around the harem',()=>{
+  const {run}=boot();run(`var [a,b]=harem();a.trait='活泼';var k=makeKid(a,'f','明昭');k.born=S.turn-72;S.month=4;
+    var rule=PALACE_INITIATIVES.grassNames;assert.equal(rule.target(a).id,k.id);assert.equal(rule.match(a),true);
+    a.initiativeEcho={id:'grassNames',turn:S.turn+1,target:k.id,impact:'keep'};S.turn++;historicEchoTick(a);assert.equal(a.initiativeEcho.delivered,true);assert.ok(k.story.some(s=>s.t.includes('草木簿')));
+    var original=Object.fromEntries(Object.entries(PALACE_INITIATIVES).map(([id,r])=>[id,r.match]));
+    for(const [id,r] of Object.entries(PALACE_INITIATIVES))r.match=()=>id==='paperMending';
+    a.initiative=b.initiative=null;a.trait='巧手';b.trait='好学';a.hobby=b.hobby='读书';relAdd(a,b,30-relGet(a,b));S.flags.initiativeTurns={};
+    initiativeTick();assert.equal(S.flags.initiativeTurns.paperMending,S.turn);a.initiative=b.initiative=null;S.turn+=11;initiativeTick();assert.notEqual(a.initiative?.id,'paperMending');assert.notEqual(b.initiative?.id,'paperMending');
+    for(const [id,match] of Object.entries(original))PALACE_INITIATIVES[id].match=match;`);
 });

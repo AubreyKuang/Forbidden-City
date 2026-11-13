@@ -224,7 +224,7 @@ body{background:#f3eee4}
 .detail-head .grow{min-width:min(100%,155px)}
 .detail-head h2{margin:2px 0 6px!important}
 .detail-head p{margin:0;color:var(--ink2);line-height:1.65}
-.detail-head .por{width:112px;height:auto}
+.detail-head .por{width:224px;height:280px;object-fit:contain;flex-shrink:0}
 .detail-back{margin:0 0 10px}
 .detail-actions{margin:16px 0 22px;padding:12px 0 15px;border-bottom:1px solid #c5aa86}
 .detail-action-label{display:block;margin:0 0 8px;color:#6f4639;font-size:12px;font-weight:750;letter-spacing:.08em}
@@ -260,7 +260,7 @@ body{background:#f3eee4}
 .detail-content .stats{grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr))}
 .detail-content .story{max-height:none}
 @media(max-width:600px){.detail-columns{grid-template-columns:1fr;gap:14px}.detail-stack{gap:14px}}
-@media(max-width:480px){.detail-head{gap:12px;padding:14px}.detail-head .por{width:80px}.detail-vitals{grid-template-columns:repeat(3,minmax(0,1fr))}.detail-vitals .bar{padding:3px 2px 6px}.detail-actions .btn{min-height:44px}.detail-content{gap:8px}}
+@media(max-width:480px){.detail-head{gap:12px;padding:14px}.detail-head .por{width:176px;height:220px}.detail-vitals{grid-template-columns:repeat(3,minmax(0,1fr))}.detail-vitals .bar{padding:3px 2px 6px}.detail-actions .btn{min-height:44px}.detail-content{gap:8px}}
 
 /* Game viewport: scene layer, status HUD, and a fixed command dock. */
 body{background:#181b20;padding-block:14px;color:var(--ink)}
@@ -660,3 +660,6 @@ button.family-room-person{cursor:pointer}button.family-room-person:hover{color:#
   .map-dock .map-lead{min-width:0;white-space:normal;text-align:left;line-height:1.4}
   .map-brief>summary{font-size:12px}
 }
+
+/* Give the portrait its own space on narrow person-detail screens. */
+@media(max-width:600px){.detail-head{flex-direction:column;align-items:center;text-align:center}.detail-head .grow{width:100%;min-width:0}.detail-head .por{width:176px;height:220px}}

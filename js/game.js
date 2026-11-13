@@ -47,7 +47,7 @@ function chg(o){
   renderTop(); return p.join('　');
 }
 function cchg(c,o){
-  const lab={favor:'恩宠',mood:'心情',aff:'情分'};const p=[];
+  const lab={favor:'恩宠',mood:'心情',aff:'情分',talent:'才情',virtue:'德行',looks:'容貌',scheme:'心机'};const p=[];
   for(const k in o){let v=rd(o[k]); if(!v) continue; c[k]=clamp(c[k]+v); p.push(`${lab[k]}${v>0?'+':''}${v}`)}
   return p.length?`${cName(c)}：${p.join(' ')}`:'';
 }
@@ -238,20 +238,18 @@ A.endMonth=function(){
   const must=[passing?null:arcTick(),heirTick(),milestone()].filter(Boolean),opt=[];
   // 积压的奏折：离宫期间攒下的朝堂事务，月末一并呈上
   while((S.flags.memorials||0)>0){S.flags.memorials--;const memo=factionEvent();if(memo&&!must.some(e=>e.title===memo.title))must.push(memo)}
-  const add=(e,p)=>{if(e)opt.push([e,p+R()])};
+  const add=(e,p)=>{if(e&&ambientEventReady(e))opt.push([e,p+R()-ambientNovelty(e)])};
   if(!passing){
-  add(chance(.8)?festival():null,5);add(chance(.9)?haremEvent():null,6);add(chance(.5)?haremEvent():null,3);
+  add(chance(.8)?festival():null,5);add(chance(.75)?haremEvent():null,6);
   add(chance(.65)?quirkEvent():null,5);add(chance(.5)?histEvent():null,6);add(chance(.4)?courtEvent(true):null,4);add(palaceRomanceEvent(),8);add(courtFriendshipEvent(),9);add(motherAppealEvent(),9);
   add(chance(.3)?youthEvent():null,7);add(chance(.45)?kidEvent():null,4);add(chance(.55)?xinEvent():null,6);add(monthlyMaidEvent(),4);add(chance(.3)?fosterEvent():null,4);add(chance(.45)?relEvent():null,5);add(chance(.35)?clanEvent():null,5);add(chance(.45)?factionEvent():null,6);add(chance(.5)?visitorEvent():null,5);add(chance(.15)?dowagerEvent():null,3);
   }
   opt.sort((a,b)=>b[1]-a[1]);const seen=new Set();must.forEach(e=>{seen.add(e.title);pushEv(e)});
-  const recent=S.flags.ambientRecent ||= {};
-  for(const [title,turn] of Object.entries(recent))if(S.turn-turn>=4)delete recent[title];
-  const limit=Math.max(must.length,ri(2,4));
+  const limit=Math.max(must.length,ri(1,3));
   for(const [e] of opt){
     if(Q.length+(modalOpen?1:0)>=limit)break;
-    if(seen.has(e.title)||Object.hasOwn(recent,e.title))continue;
-    recent[e.title]=S.turn;seen.add(e.title);pushEv(e);
+    if(seen.has(e.title)||!ambientEventReady(e))continue;
+    seen.add(e.title);const queued=e.onQueue;e.onQueue=()=>{queued?.();rememberAmbientEvent(e);};pushEv(e);
   }
   log(`—— ${dateStr()} ——`);
   setScene(pick(['court','harem','garden']));

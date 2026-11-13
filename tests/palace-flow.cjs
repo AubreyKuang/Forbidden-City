@@ -115,7 +115,7 @@ const student=makeKid(reloaded,'m','承学');student.born=S.turn-8*12;student.li
 S.children=[student];initiativeTick();assert.equal(currentInitiative(student),null);
 A.kidPolicy(student.id,'读书');initiativeTick();assert.equal(student.initiative.id,'study');assert.equal(student.lit,36);
 A.go('kid',student.id);assert.match($('#panel').innerHTML,/主动校书/);
-reloaded.trait='才女';delete reloaded.initiative;S.month=4;
+reloaded.trait='才女';delete reloaded.initiative;delete reloaded.initiativeHistory;delete S.flags.initiativeTurns.fan;S.month=4;
 assert.equal(PALACE_INITIATIVES.fan.match(reloaded),false);
 S.month=5;initiativeTick();assert.equal(reloaded.initiative.id,'fan');
 A.go('consort',reloaded.id);assert.match($('#panel').innerHTML,/《东京梦华录》卷八·端午/);
@@ -351,7 +351,7 @@ assert.match($('#panel').innerHTML,/detail-vitals/);
   }
   save('1');load('1');migrate();
   const cells=west.map(id=>portraitCell(byId(id)));
-  assert.equal(new Set(cells).size,3,'distinct outfits for Western arrivals');
+  assert.equal(new Set(cells).size,WESTERN_PORTRAITS.length,'distinct outfits for Western arrivals');
   assert.ok(cells.every(cell=>PORTRAIT_CLOTHES[cell]==='西域舞衣'));
   assert.equal(portraitCell(byId(regular.id)),3);
   save('1');load('1');migrate();

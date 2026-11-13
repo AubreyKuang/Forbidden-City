@@ -226,7 +226,7 @@ const QEV={
  '记仇':c=>{const o=harem().find(x=>x!==c&&relGet(c,x)<=-40);if(!o)return null;return {title:'旧账',por:c,text:`${cName(c)}把${cName(o)}当年在请安时说过的一句酸话，一字不差地学给你听，末了说：“臣妾不是记仇，臣妾只是记性好。”`,choices:[
    {t:'笑着劝和',f:()=>{relAdd(c,o,5);return fx(cchg(c,{mood:3}))}},{t:'冷落那一位',f:()=>{relAdd(c,o,-5);return fx(cchg(c,{mood:8}),cchg(o,{favor:-8,mood:-8}))}}]}},
 };
-function quirkEvent(){for(const c of shuffle(harem())){deepen(c);if(S.turn-(c.qcd??-99)<10)continue;const ev=QEV[c.t2]?.(c);if(ev)return {...ev,present:ev.present||[c,...eventPortraits(ev)],onQueue:()=>{c.qcd=S.turn}};}return null}
+function quirkEvent(){for(const c of shuffle(harem())){deepen(c);if(S.turn-(c.qcd??-99)<10)continue;const ev=QEV[c.t2]?.(c);if(ev&&ambientEventReady(ev))return {...ev,present:ev.present||[c,...eventPortraits(ev)],onQueue:()=>{c.qcd=S.turn}};}return null}
 
 /* ============ 心境 ============ */
 const XIN={

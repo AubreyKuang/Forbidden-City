@@ -33,8 +33,8 @@ const DEV={
       if(Array.isArray(value)&&!Array.isArray(next[field]))throw Error(field+' 必须是数组');
     }
     for(const field of ['name','given','sur','era'])if(Object.hasOwn(next,field)&&(typeof next[field]!=='string'||!next[field].trim()))throw Error(field+' 不可为空');
-    if(next.portraitOverride!=null&&(!Number.isInteger(next.portraitOverride)||next.portraitOverride<0||next.portraitOverride>=92))throw Error('立绘编号不在图集范围内');
-    if(next.portraitVariant!=null&&(!Number.isInteger(next.portraitVariant)||next.portraitVariant<0||next.portraitVariant>=10))throw Error('皇嗣形象编号需为 0–9');
+    if(next.portraitOverride!=null&&(!Number.isInteger(next.portraitOverride)||next.portraitOverride<0||next.portraitOverride>=PORTRAIT_COUNT))throw Error('立绘编号不在图集范围内');
+    if(next.portraitVariant!=null&&(!Number.isInteger(next.portraitVariant)||next.portraitVariant<0||next.portraitVariant>=DESCENDANT_VARIANTS))throw Error('皇嗣形象编号需为 0–'+(DESCENDANT_VARIANTS-1));
     if(kind==='consort'){
       if(!Number.isInteger(next.rank)||next.rank<0||next.rank>8)throw Error('位分需在 0–8 之间');
       if(!TRAITS[next.trait])throw Error('请选择已有性情');
@@ -119,11 +119,11 @@ const DEV={
   gallery(){
     const kind=DEV.target.split(':')[0],p=DEV.draft;if(!p)return;
     let choices=[];
-    if(kind==='kid')choices=Array.from({length:10},(_,v)=>({value:v,cell:childPortraitCell({...p,portraitVariant:v}),label:'形象 '+(v+1)}));
+    if(kind==='kid')choices=Array.from({length:DESCENDANT_VARIANTS},(_,v)=>({value:v,cell:childPortraitCell({...p,portraitVariant:v}),label:'形象 '+(v+1)}));
     else if(kind==='emp')choices=[12,13].map(cell=>({cell,value:cell,label:cell===12?'青年':'壮年'}));
     else if(kind==='consort')choices=[...CONSORT_PORTRAITS,...WESTERN_PORTRAITS,8,9,10,11].map(cell=>({cell,value:cell,label:PORTRAIT_CLOTHES[cell]||'形象 '+cell}));
     $('#dev-gallery').innerHTML=choices.map(({cell,value,label})=>{
-      if(cell>=DESCENDANT_PORTRAIT_START&&!descendantAtlas.src)descendantAtlas.src='./palace-descendants.webp?v=2';
+      ensurePortraitSheet(cell);
       const current=kind==='kid'?childPortraitCell(p):p.portraitOverride??(kind==='emp'?(p.age>=40?13:12):portraitCell(p));
       const src=portraitAtlasReady(cell)?atlasPortrait(cell,0):'';
       return `<button type="button" class="dev-face" aria-pressed="${current===cell}" onclick="DEV.face(${value})">${src?`<img src="${src}" alt="">`:''}<span>${esc(label)}</span></button>`;
@@ -145,7 +145,7 @@ const DEV={
       for(const key of ['portraitOverride','portraitVariant'])if(Object.hasOwn(DEV.draft,key))patch[key]=DEV.draft[key];
     }
     const next=DEV.validate(DEV.target,patch),changes=Object.keys(next).filter(k=>JSON.stringify(original[k])!==JSON.stringify(next[k]));
-    const labels={lit:'才学',mar:'武艺',vir:'品德',hp:'体魄',amb:'野心',love:'父爱',sup:'支持',age:'年龄',treasury:'国库',health:'龙体',wen:'文才',wu:'武略',favor:'恩宠',mood:'心情',aff:'情分',talent:'才情',virtue:'德行',scheme:'心机',looks:'容貌',rank:'位分',palace:'宫殿',trait:'性情',preg:'孕月',portraitOverride:'立绘编号',portraitVariant:'皇嗣形象（0–9）'};
+    const labels={lit:'才学',mar:'武艺',vir:'品德',hp:'体魄',amb:'野心',love:'父爱',sup:'支持',age:'年龄',treasury:'国库',health:'龙体',wen:'文才',wu:'武略',favor:'恩宠',mood:'心情',aff:'情分',talent:'才情',virtue:'德行',scheme:'心机',looks:'容貌',rank:'位分',palace:'宫殿',trait:'性情',preg:'孕月',portraitOverride:'立绘编号',portraitVariant:'皇嗣形象（0–'+(DESCENDANT_VARIANTS-1)+'）'};
     DEV.patch=patch;$('#dev-preview').textContent=changes.length?changes.map(k=>k==='born'&&DEV.target.startsWith('kid:')?`年龄：${kidAge(original)} → ${Math.floor((S.turn-next.born)/12)} 岁`:`${labels[k]||k}：${JSON.stringify(original[k])??'未设置'} → ${JSON.stringify(next[k])}`).join('\n'):'没有发生修改';
     $('#dev-confirm').disabled=!changes.length;DEV.message('预览已生成，确认后写入测试存档。');
   },
@@ -165,6 +165,6 @@ function mountDevTools(){
     <pre id="dev-preview" aria-label="修改预览"></pre><button id="dev-confirm" class="btn gold" disabled onclick="DEV.safely(DEV.confirm)">确认并保存修改</button><p id="dev-status" role="status"></p>
   </section>`;document.body.appendChild(root);
   $('#dev-panel').addEventListener('input',()=>{DEV.patch=null;$('#dev-confirm').disabled=true;DEV.message('属性已改动，请重新预览。');});
-  [portraitAtlas,familyAtlas,descendantAtlas].forEach(atlas=>atlas.addEventListener('load',()=>{if(!$('#dev-panel').hidden&&DEV.draft)DEV.gallery()}));
+  portraitSheets.map(sheet=>sheet.image).forEach(atlas=>atlas.addEventListener('load',()=>{if(!$('#dev-panel').hidden&&DEV.draft)DEV.gallery()}));
 }
 mountDevTools();

@@ -298,7 +298,7 @@ function initiativeTick(){
     for(const seasonal of [true,false]){
       for(const person of ready){
         for(const [id,rule] of rules){
-          if(!!rule.seasonal!==seasonal||S.turn-(recent[id]??-Infinity)<7||!rule.match(person))continue;
+          if(!!rule.seasonal!==seasonal||S.turn-(recent[id]??-Infinity)<(rule.cooldown||12)||S.turn-(person.initiativeHistory?.[id]??-Infinity)<18||!rule.match(person))continue;
           const target=rule.target?.(person), memory=rule.memory?.(person);
           if((rule.target&&!target)||(rule.memory&&!memory))continue;
           const move={id,turn:S.turn,target:target?.id};
@@ -308,7 +308,7 @@ function initiativeTick(){
           move.effect=rule.start?.(person,target);
           person.initiative=move;
           if(rule.echo)person.initiativeEcho={id,turn:S.turn+1,target:target.id,impact:rule.child?'lead':'keep'};
-          recent[id]=S.turn;
+          recent[id]=S.turn;(person.initiativeHistory ||= {})[id]=S.turn;
           return;
         }
       }
@@ -392,17 +392,21 @@ A.answerInitiative=function(id,child){
   if(!scene){toast('这场相聚已经散了');return}
   const {target,rule}=scene;
   if(rule.choices){
-    const place=PLACES.find(p=>p.id===rule.place);
-    setScene(place.sc);
-    pushEv({title:rule.title,cast:[person,target],text:move.text,ref:rule.ref,refURL:INITIATIVE_SOURCES[rule.source],
+    const place=PLACES.find(p=>p.id===initiativePlace(rule,person,move));
+    setScene(place?.sc||'harem');
+    pushEv({title:rule.title,cast:[person,target].filter(Boolean),valid:()=>currentInitiative(person)===move&&!move.response&&!!initiativeParticipants(person,move),text:move.text,ref:rule.ref,refURL:INITIATIVE_SOURCES[rule.source],
       choices:[...rule.choices.map(choice=>({t:choice.label+'（精力-1）',cond:()=>E().energy>0,
         why:'精力不足',f:()=>{
           if(move.response||!initiativeParticipants(person,move)||!useE())return null;
           if(person.initiativeEcho?.id===move.id)person.initiativeEcho.impact=choice.impact;
-          move.response=choice.label;
-          remember(person,'care',`陛下到场。${choice.label}。`);
+          const outcome=choice.respond?.(person,target);
+          move.response=[choice.label,outcome].filter(Boolean).join(' · ');
+          for(const p of [person,target].filter(Boolean)){
+            const note=`「${rule.title}」陛下到场，${choice.label}。`;
+            if(p.sex)kstory(p,note);else story(p,note);remember(p,'care',note);
+          }
           save('auto');
-          return `${choice.label}。过一个月再看看他们做得怎样。`;
+          return outcome?`${choice.label}。${fx(outcome)}`:`${choice.label}。过一个月再看看他们做得怎样。`;
         }})),{t:'留他们继续，朕先走了'}]});
     return;
   }

@@ -98,7 +98,7 @@ const HAREM=[
    {t:'命人八百里快马送青梅',f:()=>{story(c,'孕中想吃家乡的青梅，陛下命人快马送来。');return fx(chg({treasury:-10,people:-1}),cchg(c,{mood:18,aff:10}))}},
    {t:'让御膳房想想办法',f:()=>fx(cchg(c,{mood:6}))}]}},
 ];
-function haremEvent(){for(const f of shuffle(HAREM)){const ev=f();if(ev)return {...ev,present:ev.present||eventPortraits(ev)}}return null}
+function haremEvent(){for(const f of shuffle(HAREM)){const ev=f();if(ev&&ambientEventReady(ev))return {...ev,present:ev.present||eventPortraits(ev)}}return null}
 function pregEvent(c){if(c.maid)return {title:'喜脉',por:c,sfx:'joy',text:`太医院来报：${c.near?'御前':'尚衣局'}的宫女${fullName(c)}已有两月身孕！`,choices:[
   {t:'册为答应，迁居别宫养胎',f:()=>{promoteMaid(c,1);c.prot=true;setXin(c,'欢喜','有孕后册为答应');return fx(cchg(c,{mood:25,aff:10}))}},
   {t:'仍留在身边，加派人手照料',f:()=>{c.prot=true;c.near=true;c.palace='乾清宫';story(c,'有孕后仍留在御前，加派人手照料。');return fx(cchg(c,{mood:10}))}},

@@ -39,7 +39,7 @@ function marriageButton(k,small=false){
 function marriagePanel(k){
   if(!k.alive)return '';
   const spouse=k.spouse;
-  return `<section class="marriage-panel" aria-label="皇嗣婚事"><div><strong>${esc(marriageStatus(k))}</strong><p class="hint">${spouse?esc(spouse.background||spouse.fatherName&&spouse.fatherName+'之子'||'双方心意已定'):
+  return `<section class="marriage-panel" aria-label="皇嗣婚事">${spouse?.appearance?porImg(spouse,72):''}<div><strong>${esc(marriageStatus(k))}</strong><p class="hint">${spouse?esc(spouse.background||spouse.fatherName&&spouse.fatherName+'之子'||'双方心意已定'):
     k.married?'这门婚事已经记入起居注。':kidAge(k)<15?'长成后可在这里查看人选，先问心意，再下赐婚诏。':'先看名帖、听本人意愿，再确认赐婚；也可以暂缓半年。'}</p>${Number.isFinite(spouse?.trust)?`<p class="hint">夫妻信任 ${rd(spouse.trust)} / 100${spouse.story?.length?' · '+esc(spouse.story[spouse.story.length-1].t):''}</p>`:''}</div>${marriageButton(k)}</section>`;
 }
 function princeMarriage(k){

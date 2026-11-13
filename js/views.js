@@ -316,7 +316,7 @@ function viewConsort(){
   }
   const family=act?visitorLine(c)+fosterLine(c)+clanLine(c)+houseLine(c)+conKidLine(c)+relLine(c):'';
   return `${personBackButton('harem')}
-   <header class="detail-head">${porImg(c,128)}<div class="grow">
+   <header class="detail-head">${porImg(c,224)}<div class="grow">
     <p>${esc(fullName(c))} · ${c.age}岁 · ${c.alive?c.gone?'已出宫':esc(c.palace):'已故'}</p>
     <h2>${esc(cName(c))}</h2>
     <p>${esc(c.fam.t)} · ${esc(c.trait)}${c.preg>=2?` <span class="tag r">有孕${c.preg}月</span>`:''}</p>
@@ -376,7 +376,7 @@ function viewKid(){
   const titles=k.alive?`${k.sex==='m'&&a>=5&&S.heir!==k.id?`<button class="btn" onclick="A.kidHeir(${k.id})">立为太子</button>`:''}
     ${a>=12?`<button class="btn" onclick="A.kidTitle(${k.id})">赐封号</button>`:''}`.trim():'';
   return `${personBackButton('kids')}
-   <header class="detail-head">${porImg(k,112)}<div class="grow"><p>${status}</p><h2>${esc(kidName(k))}</h2>
+   <header class="detail-head">${porImg(k,224)}<div class="grow"><p>${status}</p><h2>${esc(kidName(k))}</h2>
     <p>生母 ${parentLink(k.mom,k.momName)}${foster?` · 养母 ${parentLink(k.foster)}`:''}</p>${childResidence(k)?`<p class="hint">${esc(childResidence(k))}</p><button class="btn sm jade" onclick="A.visitChildHome(${k.id})" ${youngChildMother(k)?'':'disabled'}>去宫里看看 →</button>`:''}${birthTags(k)}</div></header>
    ${k.pendingName?pendingBirthPanel():''}
    ${k.alive&&!k.estate?`<div class="detail-actions" role="group" aria-label="人物操作"><span class="detail-action-label" aria-hidden="true">人物操作</span><div class="acts"><button class="btn primary" onclick="A.kidVisit(${k.id})">探望<small>精力-1</small></button></div></div>`:''}

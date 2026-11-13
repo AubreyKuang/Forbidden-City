@@ -233,12 +233,12 @@ test('shared hobbies outweigh a matching trait, and compatible visits persist ac
   `);
 });
 
-test('ten princes and ten princesses keep distinct faces as they age and after loading',()=>{
+test('twenty-six princes and twenty-six princesses keep distinct faces as they age and after loading',()=>{
   const {run}=boot(15);
   const cells=JSON.parse(run(`JSON.stringify((()=>{
     const [mother,other]=harem();
-    const sons=Array.from({length:10},(_,i)=>makeKid(mother,'m','皇子'+i));
-    const daughters=Array.from({length:10},(_,i)=>makeKid(mother,'f','公主'+i));
+    const sons=Array.from({length:26},(_,i)=>makeKid(mother,'m','皇子'+i));
+    const daughters=Array.from({length:26},(_,i)=>makeKid(mother,'f','公主'+i));
     const children=[...sons,...daughters];
     sons[0].foster=other.id;
     delete sons[7].ord;
@@ -255,7 +255,7 @@ test('ten princes and ten princesses keep distinct faces as they age and after l
     save('1');load('1');migrate();
     return {stages,loaded:S.children.map(portraitCell)};
   })())`));
-  assert.equal(new Set(cells.stages.flat()).size,60);
+  assert.equal(new Set(cells.stages.flat()).size,156);
   assert.deepEqual(cells.stages.map(stage=>stage.slice(0,4)),[[28,29,30,31],[32,33,34,35],[36,37,38,39]]);
   assert.deepEqual(cells.loaded,cells.stages[2]);
 });

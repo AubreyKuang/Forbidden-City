@@ -9,7 +9,7 @@ function makeKid(c,sex,name){
   // Birth traits are a game rule, separate from education and the current caregiver.
   k.birthTraits={mother:{id:c.id,name:fullName(c),talent:c.talent,virtue:c.virtue,scheme:c.scheme,trait:c.trait},
     father:{name:e.sur+e.name,wen:e.wen,wu:e.wu},initial:{lit:k.lit,mar:k.mar,vir:k.vir,hp:k.hp,amb:k.amb}};
-  S.children.push(k);S.ys.b++;initKidRel(k);return k;
+  assignChildPortrait(k);S.children.push(k);S.ys.b++;initKidRel(k);return k;
 }
 function childBirthPanel(k){
   const birth=k.birthTraits;if(!birth)return '';
