@@ -50,7 +50,7 @@ A.kidTitle=function(id){const k=kidById(id);pushEv({title:k.sex==='m'?'封王':'
 /* ============ 皇嗣事件 ============ */
 function kcd(k,t,n=24){k.cd=k.cd||{};if(S.turn-(k.cd[t]===undefined?-99:k.cd[t])<n)return false;k.cd[t]=S.turn;return true}
 function kidEvent(){
-  const ks=shuffle(kidsAlive().filter(k=>!k.estate));if(!ks.length)return null;
+  const ks=shuffle(kidsAlive().filter(childInPalace));if(!ks.length)return null;
   for(const k of ks){const a=kidAge(k);
     if(a<8&&S.turn-(k.sick===undefined?-99:k.sick)>=18&&chance(.3)){k.sick=S.turn;const ill=pick([['夜里发起高热，乳母急得团团转','一场高热'],['出了痘疹，浑身滚烫','出痘'],['贪凉吃多了冰酪，上吐下泻','积食腹泻'],['着了风寒，咳得小脸通红','风寒咳嗽']]); return {title:'皇嗣染恙',por:k,text:`${kidName(k)}${ill[0]}。`,choices:[
       {t:'宣太医',f:()=>{if(chance(.9)||k.hp>60){kstory(k,`${a}岁时${ill[1]}，所幸太医及时诊治。`);return '服了几剂药，烧退了。'}k.alive=false;kstory(k,'幼时染病夭折。');{const mm=byId(k.mom);if(mm&&mm.alive)setXin(mm,'悲恸',`${k.name}夭折`)}log(`${kidName(k)}夭折。`,1);AU.sfx('sad');return `太医尽力了……${kidName(k)}没能熬过去。`}},
@@ -75,7 +75,7 @@ function milestone(){
     if(k.sex==='f'){const event=princessMilestone(k);if(event)return event;}
     if(k.sex==='m'&&a>=16&&!k.adult){k.adult=true;if(S.heir===k.id)continue;return {title:'皇子成年',por:k,text:`${kidName(k)}年满十六，按祖制当封王开府。`,choices:[
       {t:'封亲王，留京辅政',f:()=>{A.kidTitle(k.id);k.amb=clamp(k.amb+10);return null}},
-      {t:'封王，就藩地方',f:()=>{k.title=pick(['晋','楚','燕','蜀','吴','齐'])+'王';k.amb=clamp(k.amb-10);kstory(k,`受封${k.title}，就藩地方。`);log(`封${k.name}为${k.title}，就藩。`);return `${k.name}辞别父皇，前往封地。`}}]}}
+      {t:'封王，就藩地方',f:()=>{k.away=true;k.title=pick(['晋','楚','燕','蜀','吴','齐'])+'王';k.amb=clamp(k.amb-10);kstory(k,`受封${k.title}，就藩地方。`);log(`封${k.name}为${k.title}，就藩。`);return `${k.name}辞别父皇，前往封地。`}}]}}
   }
   return null;
 }
@@ -132,7 +132,7 @@ A.unfoster=function(id){const k=kidById(id),c=fosterOf(k),m=byId(k.mom);if(!m||!
 function fosterOffer(k,why){return {title:'抚养',por:k,text:why+'\n按宫中旧例，可将孩子交给位分高的妃嫔抚养，将来也好有个倚仗。',choices:[{t:'挑一位妃嫔抚养',f:()=>{A.foster(k.id);return null}},{t:'不必',f:()=>'你没有把孩子交给旁人。'}]}}
 function fosterEvent(){const ks=kidsAlive().filter(k=>{const m=byId(k.mom),f=fosterOf(k);return !k.visitRule&&familyVisitAllowed(k,m)&&inPalace(f)&&kidAge(k)<14});if(!ks.length)return null;
   const k=pick(ks),m=byId(k.mom),f=fosterOf(k);
-  return {title:'生母',cast:[m,k,f],text:`${cName(m)}趁${cName(f)}去请安，偷偷去看了${k.name}。${childTrust(k,m)>=48?'孩子认得她，拉着她说了好一会儿话。':'孩子怯生生地往乳母身后躲。'}${cName(f)}回来撞见，两人在廊下僵持着。`,choices:[
+  return {title:'生母',present:[m,k,f],cast:[m,k,f],text:`${cName(m)}趁${cName(f)}去请安，偷偷去看了${k.name}。${childTrust(k,m)>=48?'孩子认得她，拉着她说了好一会儿话。':'孩子怯生生地往乳母身后躲。'}${cName(f)}回来撞见，两人在廊下僵持着。`,choices:[
    {t:`准${cName(m)}平日探望`,f:()=>{A.familyVisitRule(k.id,'open');relAdd(m,f,5);setXin(m,'感激','准她每月看望孩子');return fx(cchg(m,{mood:15,aff:6}),cchg(f,{mood:-5}))}},
    {t:'暂缓私下探望',f:()=>{A.familyVisitRule(k.id,'closed');relAdd(m,f,-15);setXin(m,'悲恸','不许她再见孩子');return fx(cchg(m,{mood:-20}),cchg(f,{aff:4}))}},
    {t:'把孩子还给生母',f:()=>{A.unfoster(k.id);return null}}]}}
@@ -164,27 +164,27 @@ function kidRelTick(){const ks=kidsAlive(),h=harem();
       if(o.sex==='m'&&k.sex==='m'&&kidAge(o)>=12&&kidAge(k)>=12)d-=(o.amb+k.amb)/200;
       if(S.heir&&(S.heir===o.id||S.heir===k.id)&&o.sex==='m'&&k.sex==='m')d-=.4;
       relAdd(o,k,d-relGet(o,k)*.01)}}}
-function relEvent(){const ks=shuffle(kidsAlive()),h=harem();if(!ks.length)return null;
+function relEvent(){const ks=shuffle(kidsAlive().filter(childInPalace)),h=harem();if(!ks.length)return null;
   const evs=[
    ()=>{for(const k of ks){if(kidAge(k)<3||kidAge(k)>12)continue;const c=h.find(c=>!raisers(k).includes(c)&&relGet(c,k)>=40);if(!c)continue;const m=byId(k.mom);
-     return {title:'别宫的娘娘',por:c,text:`${cName(c)}常把${kidName(k)}叫到${c.palace}，教${k.sex==='m'?'他':'她'}描红、给${k.sex==='m'?'他':'她'}做点心。孩子一去就是大半天，回来嘴里全是“${c.sur}娘娘说……”`,choices:[
+     return {title:'别宫的娘娘',present:[c,k],por:c,text:`${cName(c)}常把${kidName(k)}叫到${c.palace}，教${k.sex==='m'?'他':'她'}描红、给${k.sex==='m'?'他':'她'}做点心。孩子一去就是大半天，回来嘴里全是“${c.sur}娘娘说……”`,choices:[
        {t:`让${cName(c)}多照看这孩子`,f:()=>{relAdd(c,k,10);k.vir=clamp(k.vir+2);k.lit=clamp(k.lit+2);let s=cchg(c,{aff:4,mood:8});if(m&&m.alive&&m!==c&&relGet(m,c)<10){relAdd(m,c,-8);s+='　'+cchg(m,{mood:-8});}return fx(s)+'\n§孩子才学+2　品德+2'}},
-       {t:'孩子还是多陪陪自己的母亲',f:()=>{if(m&&m.alive)relAdd(m,k,5);return fx(cchg(c,{mood:-5}))}}]}}return null},
+       {t:'孩子还是多陪陪自己的母亲',cond:()=>familyVisitAllowed(k,m),why:'生母眼下无法自由与孩子相处',f:()=>{if(m&&m.alive)relAdd(m,k,5);return fx(cchg(c,{mood:-5}))}}]}}return null},
    ()=>{for(const k of ks){if(kidAge(k)<4||kidAge(k)>14)continue;const c=h.find(c=>!raisers(k).includes(c)&&relGet(c,k)<=-40);if(!c)continue;const m=byId(k.mom);const low=m&&(m.maid||m.rank<=1||m.fam.t==='宫女');
-     return {title:'奚落',por:k,text:`御花园里，${cName(c)}当着一众宫人的面对${kidName(k)}说：“${low?'宫女生的孩子，也配在这里放纸鸢？':'你母妃没教过你规矩么？'}”孩子红着眼眶跑开了。`,choices:[
+     return {title:'奚落',present:[c,k],por:k,text:`御花园里，${cName(c)}当着一众宫人的面对${kidName(k)}说：“${low?'宫女生的孩子，也配在这里放纸鸢？':'你母妃没教过你规矩么？'}”孩子红着眼眶跑开了。`,choices:[
        {t:`当众训斥${cName(c)}`,f:()=>{relAdd(c,k,-5);k.love=clamp(k.love+8);setXin(c,'委屈','因奚落皇嗣被训斥');if(m&&m.alive)relAdd(m,c,-10);return fx(cchg(c,{mood:-12,favor:-5}))+'\n§孩子父爱+8'}},
        {t:'把孩子叫来，好好安慰',f:()=>{k.love=clamp(k.love+10);k.vir=clamp(k.vir+2);return '§孩子父爱+10　品德+2'}},
        {t:'孩子之间的事，不必理会',f:()=>{k.amb=clamp(k.amb+5);k.vir=clamp(k.vir-3);kstory(k,`被${fullName(c)}当众奚落，父皇没有过问。`);return '§孩子野心+5　品德-3'}}]}}return null},
    ()=>{for(const a of ks)for(const b of ks){if(a===b||kidAge(a)<=kidAge(b)||kidAge(a)<6||relGet(a,b)<35)continue;
-     return {title:'手足',por:a,text:`${kidName(b)}在御花园摔破了膝盖，${kidName(a)}二话不说背起${b.sex==='m'?'弟弟':'妹妹'}，一路背回了宫。`,choices:[
+     return {title:'手足',present:[a,b],por:a,text:`${kidName(b)}在御花园摔破了膝盖，${kidName(a)}二话不说背起${b.sex==='m'?'弟弟':'妹妹'}，一路背回了宫。`,choices:[
        {t:'重赏，当众夸奖',f:()=>{relAdd(a,b,10);a.vir=clamp(a.vir+4);a.love=clamp(a.love+5);kstory(a,`背着摔伤的${b.name}走回了宫，父皇当众夸奖。`);kstory(b,`摔伤了腿，是${a.name}背回来的。`);return '§品德+4　父爱+5　兄弟姐妹更亲近了'}}]}}return null},
    ()=>{for(const a of ks)for(const b of ks){if(a.id>=b.id||kidAge(a)<5||kidAge(b)<5||relGet(a,b)>-25)continue;
-     return {title:'阋墙',por:a,text:`${kidName(a)}和${kidName(b)}为了${pick(['一匹西域进贡的小马','一方御赐的端砚','谁先给父皇请安','一只蝈蝈笼子'])}在上书房打了起来，太傅拉都拉不开。`,choices:[
+     return {title:'阋墙',present:[a,b],por:a,text:`${kidName(a)}和${kidName(b)}为了${pick(['一匹西域进贡的小马','一方御赐的端砚','谁先给父皇请安','一只蝈蝈笼子'])}在上书房打了起来，太傅拉都拉不开。`,choices:[
        {t:'两个都罚跪一个时辰',f:()=>{a.vir=clamp(a.vir+2);b.vir=clamp(b.vir+2);relAdd(a,b,-3);return '两个孩子跪在一起，谁也不看谁。'}},
        {t:'罚他们一起抄一卷《孝经》',f:()=>{if(chance(.55)){relAdd(a,b,18);kstory(a,`和${b.name}一起抄书，抄着抄着就和好了。`);return '抄到后半夜，两个孩子头靠着头睡着了。§关系缓和'}relAdd(a,b,-5);return '两人各抄各的，谁也不理谁。'}},
        {t:`偏向${a.name}`,f:()=>{relAdd(a,b,-12);b.love=clamp(b.love-8);a.amb=clamp(a.amb+3);const mb=byId(b.mom);if(mb&&mb.alive)setXin(mb,'委屈','陛下偏心');return `§${b.name}父爱-8，两人更不和了`}}]}}return null},
-   ()=>{for(const k of ks){if(kidAge(k)<4||kidAge(k)>10)continue;const m=byId(k.mom);if(!m||!m.alive||m.cold)continue;const c=h.find(c=>c!==m&&!raisers(k).includes(c)&&relGet(c,k)>=55);if(!c)continue;
-     return {title:'童言',por:k,text:`${kidName(k)}抱着你的腿说：“父皇，儿臣想去${c.sur}娘娘宫里住，${c.sur}娘娘做的糕最好吃，还从来不骂儿臣。”\n话传到${cName(m)}耳朵里，她一夜没睡。`,choices:[
+   ()=>{for(const k of ks){if(kidAge(k)<4||kidAge(k)>10)continue;const m=byId(k.mom);if(!inPalace(m))continue;const c=h.find(c=>c!==m&&!raisers(k).includes(c)&&relGet(c,k)>=55);if(!c)continue;
+     return {title:'童言',present:[k,c],por:k,text:`${kidName(k)}抱着你的腿说：“父皇，儿臣想去${c.sur}娘娘宫里住，${c.sur}娘娘做的糕最好吃，还从来不骂儿臣。”\n话传到${cName(m)}耳朵里，她一夜没睡。`,choices:[
        {t:'“你母妃最疼你。”',f:()=>{relAdd(m,k,5);return fx(cchg(m,{mood:5}))}},
        {t:'把孩子交给那位娘娘抚养',f:()=>{const r=doFoster(k,c);return r}},
        {t:'一笑置之',f:()=>{setXin(m,'委屈','孩子说更喜欢别宫的娘娘');relAdd(m,c,-10);return fx(cchg(m,{mood:-10}))}}]}}return null},

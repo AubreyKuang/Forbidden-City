@@ -22,7 +22,7 @@ A.xxEnd=function(){S.cands=[];log('选秀礼毕。');A.go('harem')};
 /* ============ 后宫事件 ============ */
 function punishEv(A_,B,crime){
   if(B)relAdd(A_,B,-40);
-  return {title:'真相大白',cast:[A_,B],sfx:'gong',text:`人证物证俱在，${crime}一事，竟是${cName(A_)}所为。\n她跪在殿中，钗环散乱：“臣妾……臣妾一时糊涂！”`,choices:[
+  return {title:'真相大白',cast:[A_,inPalace(B)?B:null],sfx:'gong',text:`人证物证俱在，${crime}一事，竟是${cName(A_)}所为。\n${A_.cold?'侍卫将她从冷宫押来问话，她跪倒在殿中：“民妇……民妇一时糊涂！”':'她跪在殿中，钗环散乱：“臣妾……臣妾一时糊涂！”'}`,choices:[
     {t:'打入冷宫',f:()=>{const s=A_.fam.p>=70?chg({prestige:-2}):'';A_.cold=true;A_.palace='冷宫';story(A_,`${crime}事发，被打入冷宫。`);clanEcho(A_,'down');setXin(A_,'怨恨',`${crime}事发，被打入冷宫`,B?B.id:'emp');log(`${fullName(A_)}因${crime}事发，打入冷宫。`,1);if(B){cchg(B,{aff:8,mood:15});story(B,`陛下查明${crime}真相，为她主持公道。`);setXin(B,'释然',`${crime}真相大白`)}AU.sfx('sad');return `${fx(s,cchg(A_,{mood:-50,aff:-30}))}`}},
     {t:'降位禁足',f:()=>{A_.rank=Math.max(0,A_.rank-2);if(A_.rank===8)A_.rank=5;story(A_,`${crime}事发，被降为${RANKS[A_.rank]}，禁足宫中。`);setXin(A_,'惶恐',`${crime}事发`);log(`${fullName(A_)}因${crime}事发，降为${RANKS[A_.rank]}。`,1);if(B)cchg(B,{aff:5,mood:8});return fx(cchg(A_,{mood:-30,aff:-15,favor:-20}))}},
     {t:'念其初犯，罚俸了事',f:()=>{story(A_,`${crime}事发，陛下网开一面，仅罚俸半年。`);if(B){cchg(B,{aff:-8,mood:-10});story(B,'陛下对害她之人从轻发落，她心中凉了半截。');setXin(B,'怨恨','害她的人只被罚了俸',A_.id)}A_.scheme=clamp(A_.scheme+5);return `${cName(A_)}叩头谢恩，眼底却闪过一丝庆幸。`}}]};
@@ -30,13 +30,13 @@ function punishEv(A_,B,crime){
 const HAREM=[
  function jealous(){const h=harem();if(h.length<2)return null;const top=h.slice().sort((a,b)=>b.favor-a.favor)[0];
   const cs=h.filter(c=>c!==top&&(TRAITS[c.trait].jealous||c.scheme>70)&&c.favor<top.favor-8);if(!cs.length)return null;const a=pick(cs);
-  return {title:'醋海生波',por:a,text:`${cName(a)}前来请安，言语间颇有怨怼：\n“陛下近日总往${top.palace}去，想来${cName(top)}那儿的茶，是比别处香些。”`,choices:[
+  return {title:'醋海生波',present:[a,top],por:a,text:`${cName(a)}前来请安，言语间颇有怨怼：\n“陛下近日总往${top.palace}去，想来${cName(top)}那儿的茶，是比别处香些。”`,choices:[
    {t:'温言安抚',f:()=>{story(a,'向陛下诉了几句委屈，陛下温言安抚，她心中稍霁。');return fx(cchg(a,{mood:12,aff:4}))}},
    {t:'今夜便宿在她宫里',cond:()=>E().energy>0&&!a.preg,why:'精力不足',f:()=>{nightWith(a);return null}},
    {t:'冷言训诫：“后宫当以和睦为先。”',f:()=>{story(a,'因妒生怨，遭陛下训诫，回宫后闭门不出。');a.scheme=clamp(a.scheme+3);return fx(cchg(a,{mood:-15,aff:-6,favor:-3}))}}]}},
  function musk(){const h=harem();const sc=h.filter(c=>c.scheme>=65&&(c.mood<70||c.scheme>=80));if(!sc.length)return null;const a=pick(sc);
   const ts=h.filter(c=>c!==a&&(c.favor>=a.favor||c.preg));if(!ts.length)return null;const b=ts.sort((x,y)=>relGet(a,x)-relGet(a,y))[0];
-  return {title:'香囊疑案',por:b,text:`${cName(b)}宫中的宫女整理衣物时，发现主子常佩的香囊里竟混了麝香。${cName(b)}面色惨白，跪在殿前请陛下做主。`,choices:[
+  return {title:'香囊疑案',present:[a,b],por:b,text:`${cName(b)}宫中的宫女整理衣物时，发现主子常佩的香囊里竟混了麝香。${cName(b)}面色惨白，跪在殿前请陛下做主。`,choices:[
    {t:'命慎刑司彻查',f:()=>{if(chance(.35+E().prestige/250+(a.known?.15:0)+allyBonus(b))){a.known=true;pushNow(punishEv(a,b,'香囊藏麝'));return `慎刑司连夜审讯，顺藤摸瓜，竟查到了${cName(a)}宫中……`}
      story(b,'香囊一案不了了之，她从此饮食起居分外小心。');return `线索断在一名投井的小太监身上，此案只得不了了之。${fx(cchg(b,{mood:-10}))}`}},
    {t:'加赏安抚，不予深究',f:()=>{story(b,'香囊一案，陛下并未深究。');a.scheme=clamp(a.scheme+3);return `${fx(chg({treasury:-20}),cchg(b,{mood:4,aff:-3}))}`}}]}},
@@ -44,11 +44,11 @@ const HAREM=[
   const lose=()=>{b.preg=0;story(b,'在御花园失足滑倒，腹中骨肉没能保住。');setXin(b,'悲恸','腹中骨肉没能保住');log(`${fullName(b)}失足小产。`,1);AU.sfx('sad');
     if(chance(.5+E().prestige/300)){a.known=true;pushNow(punishEv(a,b,'石阶泼油、致人小产'))}
     return `太医跪了一地：“臣等无能……”${fx(cchg(b,{mood:-40,aff:3}))}`};
-  return {title:'石阶惊变',por:b,sfx:'err',text:`${cName(b)}在御花园赏花时，石阶上不知被谁泼了桐油，失足滑倒，腹痛不止！`,choices:[
+  return {title:'石阶惊变',present:[a,b],por:b,sfx:'err',text:`${cName(b)}在御花园赏花时，石阶上不知被谁泼了桐油，失足滑倒，腹痛不止！`,choices:[
    {t:'急召太医',f:()=>chance(.6)?(story(b,'在御花园失足滑倒，所幸太医救治及时，母子平安。'),`太医施针用药，总算保住了胎儿。${fx(cchg(b,{mood:-5,aff:5}))}`):lose()},
    {t:'亲自赶去守着她（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{E().energy--;renderTop();return chance(.82)?(story(b,'失足滑倒，陛下亲自守了一夜，母子平安。'),`你守了她整整一夜，天亮时她终于安稳睡去。${fx(cchg(b,{mood:5,aff:15}))}`):lose()}}]}},
  function wugu(){const h=harem();if(h.length<3)return null;const a=h.find(c=>c.scheme>=72);if(!a)return null;const v=h.filter(c=>c!==a&&c.rank!==8).sort((x,y)=>relGet(a,x)-relGet(a,y))[0];if(!v)return null;
-  return {title:'巫蛊之祸',por:v,sfx:'gong',text:`宫人在${cName(v)}床下搜出一个布偶，背后写着陛下的生辰八字，扎满银针。\n${cName(v)}哭喊冤枉。`,choices:[
+  return {title:'巫蛊之祸',present:[a,v],por:v,sfx:'gong',text:`宫人在${cName(v)}床下搜出一个布偶，背后写着陛下的生辰八字，扎满银针。\n${cName(v)}哭喊冤枉。`,choices:[
    {t:'人赃并获，打入冷宫',f:()=>{v.cold=true;v.palace='冷宫';story(v,'被指行巫蛊之术，打入冷宫。她至死喊冤。');setXin(v,'怨恨','被诬行巫蛊','emp');log(`${fullName(v)}以巫蛊罪打入冷宫。`,1);S.flags.wronged={v:v.id,a:a.id};return fx(cchg(v,{mood:-50,aff:-20}))}},
    {t:'此事蹊跷，暗中彻查',f:()=>{if(chance(.4+E().prestige/250+allyBonus(v))){a.known=true;pushNow(punishEv(a,v,'栽赃巫蛊'));return '密查之下，发现布偶上的针脚与某宫绣娘如出一辙……'}story(v,'被卷入巫蛊疑案，虽未定罪，却也百口莫辩。');return `查不出头绪，${cName(v)}从此惶惶不可终日。${fx(cchg(v,{mood:-15}))}`}},
    {t:'当众焚毁布偶，严禁议论',f:()=>{story(v,'被卷入巫蛊疑案，陛下当众焚毁布偶，力保她清白。');return `${fx(cchg(v,{aff:12,mood:5}),chg({prestige:-1}))}`}}]}},
@@ -84,7 +84,7 @@ const HAREM=[
    {t:`判给${cName(b)}`,person:b,f:()=>{rememberQuarrel(a,b,b.id);return fx(cchg(b,{mood:10}),cchg(a,{mood:-10,aff:-3}))}},
    {t:'各赏一匹，息事宁人',f:()=>{rememberQuarrel(a,b);return fx(chg({treasury:-15}),cchg(a,{mood:4}),cchg(b,{mood:4}))}}]}},
  function coldPlea(){const cs=alive().filter(c=>c.cold);if(!cs.length)return null;const c=pick(cs);const w=S.flags.wronged&&S.flags.wronged.v===c.id;
-  return {title:'冷宫来信',por:c,text:w?`冷宫里的${fullName(c)}托一个老宫女捎来血书：“巫蛊一事，实乃有人栽赃。求陛下明察！”`:`冷宫里的${fullName(c)}托人送来一方旧帕，上面绣着当年你赐她的一句诗。`,choices:[
+  return {title:'冷宫来信',por:c,present:[],valid:()=>c.alive&&!c.gone&&c.cold,text:w?`冷宫里的${fullName(c)}托一个老宫女捎来血书：“巫蛊一事，实乃有人栽赃。求陛下明察！”`:`冷宫里的${fullName(c)}托人送来一方旧帕，上面绣着当年你赐她的一句诗。`,choices:[
    {t:'放她出冷宫',f:()=>{A.uncold(c.id);if(w){const a=byId(S.flags.wronged.a);S.flags.wronged=null;if(a&&a.alive&&!a.cold){a.known=true;pushNow(punishEv(a,c,'栽赃巫蛊'))}}return `${fullName(c)}出了冷宫，形容憔悴，却仍向你深深一拜。`}},
    {t:'置之不理',f:()=>fx(cchg(c,{mood:-10}))}]}},
  function ambition(){const cs=harem().filter(c=>c.favor>=60&&c.rank<7&&c.rank>=1);if(!cs.length)return null;const c=pick(cs);const nr=c.rank+1;
@@ -98,7 +98,7 @@ const HAREM=[
    {t:'命人八百里快马送青梅',f:()=>{story(c,'孕中想吃家乡的青梅，陛下命人快马送来。');return fx(chg({treasury:-10,people:-1}),cchg(c,{mood:18,aff:10}))}},
    {t:'让御膳房想想办法',f:()=>fx(cchg(c,{mood:6}))}]}},
 ];
-function haremEvent(){for(const f of shuffle(HAREM)){const ev=f();if(ev)return ev}return null}
+function haremEvent(){for(const f of shuffle(HAREM)){const ev=f();if(ev)return {...ev,present:ev.present||eventPortraits(ev)}}return null}
 function pregEvent(c){if(c.maid)return {title:'喜脉',por:c,sfx:'joy',text:`太医院来报：${c.near?'御前':'尚衣局'}的宫女${fullName(c)}已有两月身孕！`,choices:[
   {t:'册为答应，迁居别宫养胎',f:()=>{promoteMaid(c,1);c.prot=true;setXin(c,'欢喜','有孕后册为答应');return fx(cchg(c,{mood:25,aff:10}))}},
   {t:'仍留在身边，加派人手照料',f:()=>{c.prot=true;c.near=true;c.palace='乾清宫';story(c,'有孕后仍留在御前，加派人手照料。');return fx(cchg(c,{mood:10}))}},
@@ -172,7 +172,7 @@ function relLine(c){if(!c.alive||c.gone)return '';
 HAREM.push(
  function clash(){const f=factions();if(f.L.length<2)return null;const [a,b]=f.L,ma=f.map[a.id],mb=f.map[b.id];if(!ma.length&&!mb.length)return null;
   const side=(w,l,mw,ml)=>()=>{[w,...mw].forEach(c=>cchg(c,{mood:8}));[l,...ml].forEach(c=>{cchg(c,{mood:-8});relAdd(c,w,-6)});story(w,`派系相争，陛下站在了她这一边。`);return `${cName(w)}一派扬眉吐气，${cName(l)}一派面色难看。`};
-  return {title:'派系倾轧',cast:[a,b,ma[0],mb[0]],text:`晨昏定省时，${cName(a)}一派与${cName(b)}一派为${pick(['御花园赏花的座次','内务府分发的冰例','中秋宴上谁坐陛下左手边','新入宫的小主该住哪处偏殿'])}争执不下，两边都盯着你。\n${cName(a)}身边：${ma.map(cName).join('、')||'无人'}\n${cName(b)}身边：${mb.map(cName).join('、')||'无人'}`,choices:[
+  return {title:'派系倾轧',present:[a,b,...ma,...mb],cast:[a,b,ma[0],mb[0]],text:`晨昏定省时，${cName(a)}一派与${cName(b)}一派为${pick(['御花园赏花的座次','内务府分发的冰例','中秋宴上谁坐陛下左手边','新入宫的小主该住哪处偏殿'])}争执不下，两边都盯着你。\n${cName(a)}身边：${ma.map(cName).join('、')||'无人'}\n${cName(b)}身边：${mb.map(cName).join('、')||'无人'}`,choices:[
    {t:`偏向${cName(a)}`,person:a,f:side(a,b,ma,mb)},{t:`偏向${cName(b)}`,person:b,f:side(b,a,mb,ma)},
    {t:'各打五十大板：“都回去抄《女诫》。”',f:()=>{[a,b,...ma,...mb].forEach(c=>cchg(c,{mood:-4}));relAdd(a,b,4);return '两边都闭了嘴，表面上总算和气了几分。'}}]}},
  function sisters(){const h=harem();let best=null,bv=45;for(let i=0;i<h.length;i++)for(let j=i+1;j<h.length;j++){const v=relGet(h[i],h[j]);if(v>bv){bv=v;best=[h[i],h[j]]}}if(!best)return null;const [a,b]=best;
@@ -185,9 +185,9 @@ HAREM.push(
    {t:'由她去',f:()=>{relAdd(c,l,25);story(c,`投靠了${fullName(l)}。`);return `${cName(c)}从此成了${cName(l)}身边的人。`}},
    {t:'召她侍寝，让她不必依附旁人',cond:()=>E().energy>0&&!c.preg,why:'精力不足',f:()=>{nightWith(c);return null}},
    {t:`提点${cName(l)}：后宫不许结党`,f:()=>{relAdd(c,l,-10);return fx(cchg(l,{mood:-8,aff:-3}))}}]}},
- function poisonHeir(){if(!S.heir)return null;const h=kidById(S.heir);if(!h||!h.alive)return null;const hm=byId(h.mom);
+ function poisonHeir(){if(!S.heir)return null;const h=kidById(S.heir);if(!childInPalace(h))return null;const hm=byId(h.mom);
   const sus=harem().filter(c=>c.id!==h.mom&&c.scheme>=65&&S.children.some(k=>k.mom===c.id&&k.sex==='m'&&k.alive&&k.id!==h.id));if(!sus.length)return null;const a=pick(sus);
-  return {title:'东宫惊魂',por:h,sfx:'gong',text:`太子的晚膳里验出了砒霜，试菜的小太监当场毙命。${hm&&hm.alive?'\n'+cName(hm)+'哭着跪在殿外，求陛下做主。':''}`,choices:[
+  return {title:'东宫惊魂',por:h,present:[h,a,...(inPalace(hm)?[hm]:[])],sfx:'gong',text:`太子的晚膳里验出了砒霜，试菜的小太监当场毙命。${inPalace(hm)?'\n'+cName(hm)+'哭着跪在殿外，求陛下做主。':hm?.alive&&!hm.gone&&hm.cold?'\n消息传到冷宫，'+fullName(hm)+'托看守捎话，求陛下护住孩子。':''}`,choices:[
    {t:'封锁东宫，彻查到底',f:()=>{if(chance(.4+E().prestige/250+allyBonus(hm))){a.known=true;pushNow(punishEv(a,hm&&hm.alive?hm:null,'谋害储君'));return '御膳房的线索，一路指向了……'}return '下毒的厨子在狱中自尽，线索断了。太子从此每餐都要银针试毒。'}},
    {t:'加派侍卫，暗中提防',f:()=>{h.hp=clamp(h.hp-3);return '你没有声张，只是太子身边多了四个带刀侍卫。'}}]}}
 );

@@ -465,3 +465,160 @@ test('maternal full sisters with separately saved fathers share one parent in bo
     assert.ok(edges.includes('data-child-id="'+a.id+'"'));assert.ok(edges.includes('data-child-id="'+b.id+'"'));
     save('1');load('1');migrate();assert.equal(houseOf(byId(a.id)),houseOf(byId(b.id)));`);
 });
+
+test('succession audiences exclude confined or absent mothers and children without disinheriting their sons',()=>{
+  const {run}=boot();
+  run(`var [a,b]=harem(),ka=makeKid(a,'m','承安'),kb=makeKid(b,'m','承泽');ka.born=kb.born=S.turn-120;
+    assert.ok(successionRivalryEvent());
+    for(var state of ['cold','gone','dead']){
+      a.cold=state==='cold';a.gone=state==='gone';a.alive=state!=='dead';assert.equal(successionRivalryEvent(),null);
+    }
+    a.alive=true;a.gone=false;a.cold=false;
+    for(var state of ['away','jailed']){ka[state]=true;assert.equal(successionRivalryEvent(),null);ka[state]=false;}
+    ka.foster=b.id;ka.visitRule='closed';assert.equal(successionRivalryEvent(),null);ka.visitRule='open';assert.ok(successionRivalryEvent());
+    a.cold=true;A.kidHeir(ka.id);choose(0);drain();assert.equal(S.heir,ka.id);assert.equal(a.cold,true);
+    assert.equal(ka.mom,a.id);assert.equal(relWord(80,'ck',a,ka),'亲生皇子');`);
+});
+
+test('succession rivalries pick two different eligible mothers and never make a dead grandfather petition',()=>{
+  const {run}=boot();
+  run(`var [a,b]=harem(),ka=makeKid(a,'m','承安'),kb=makeKid(a,'m','承泽');ka.born=kb.born=S.turn-96;
+    assert.equal(successionRivalryEvent(),null);
+    var kc=makeKid(b,'m','承明');kc.born=S.turn-96;var c=makeGirl();addConsort(c,3,'入宫');var kd=makeKid(c,'m','承荣');kd.born=S.turn-96;c.cold=true;
+    houseOf(a).father.alive=false;var deadFather=houseOf(a).father.name;
+    for(var i=0;i<50;i++){var ev=successionRivalryEvent();assert.ok(ev);assert.equal(ev.cast.includes(c),false);assert.equal(ev.cast.includes(kd),false);
+      assert.equal(new Set(ev.cast.filter(p=>p.sex).map(p=>p.mom)).size,2);assert.ok(!ev.text.includes(deadFather+'领着'));}`);
+});
+
+test('a punishment cancels a queued audience and the queue continues to the next valid event',()=>{
+  const {run}=boot();
+  run(`var [a,b]=harem(),ka=makeKid(a,'m','承安'),kb=makeKid(b,'m','承泽');ka.born=kb.born=S.turn-96;
+    var audience=successionRivalryEvent(),shown=0;audience.onShow=()=>shown++;
+    pushEv(punishEv(a,null,'违例'));pushEv(audience);pushEv({title:'后续奏报',text:'奏报仍可处理。',choices:[{t:'知道了'}]});
+    choose(0);assert.equal(a.cold,true);nextEv();assert.equal(curEv.title,'后续奏报');assert.equal(shown,0);drain();assert.equal(modalOpen,false);
+    var queued=0;audience.onQueue=()=>queued++;pushEv(audience);pushNow(audience);assert.equal(queued,0);assert.equal(Q.length,0);assert.equal(modalOpen,false);
+    a.cold=false;var current=successionRivalryEvent();pushEv(current);var support=JSON.stringify(S.children.map(k=>k.sup));a.cold=true;choose(0);
+    assert.equal(JSON.stringify(S.children.map(k=>k.sup)),support);assert.equal(modalOpen,false);`);
+});
+
+test('same-clan audiences use free residents while confined sisters keep their family links',()=>{
+  const {run}=boot();
+  run(`var a=harem()[0],b=makeKin(a,'亲');addConsort(b,3,'亲妹入宫');S.consorts=[a,b];a.recommended=b.recommended=true;a.favor=b.favor=80;
+    b.cold=true;for(var i=0;i<30;i++)assert.equal(clanEvent(),null);assert.ok(clanMembers(clanKey(a)).includes(b));assert.equal(houseOf(a),houseOf(b));
+    var c=makeKin(a,'堂');addConsort(c,2,'堂妹入宫');c.recommended=true;c.favor=80;
+    var count=0;for(var i=0;i<60;i++){var ev=clanEvent();if(!ev)continue;count++;assert.ok(!eventPortraits(ev).includes(b));assert.ok(eventStillValid(ev));}
+    assert.ok(count>0);b.cold=false;assert.ok(eventStillValid({present:[a,b]}));`);
+});
+
+test('confined women cannot kneel at court or attend temple intrigues but can send letters and mourn',()=>{
+  const {run}=boot();
+  run(`var [a,b]=harem();a.cold=true;
+    assert.equal(XEV['惶恐'](a),null);assert.equal(XEV['怨恨'](a,{who:b.id}),null);assert.equal(XEV['嫉恨'](b,{who:a.id}),null);
+    var letter=HAREM.find(f=>f.name==='coldPlea')();assert.ok(eventStillValid(letter));pushEv(letter);choose(1);drain();assert.equal(a.cold,true);
+    setXin(a,'悲恸','亲人去世');S.consorts=[a];var grief=xinEvent();assert.equal(grief.title,'超度');assert.match(grief.text,/冷宫.*托看守/);assert.ok(eventStillValid(grief));
+    pushEv(grief);choose(0);drain();assert.equal(a.cold,true);
+    S.turn+=12;a.xin={k:'心如死灰',t:S.turn-8};var request=xinEvent();assert.equal(request.title,'青灯');assert.ok(eventStillValid(request));
+    a.gone=true;assert.equal(eventStillValid(request),false);`);
+});
+
+test('poisoned heirs receive a confined mother message without summoning her as a free court participant',()=>{
+  const {run,force}=boot();
+  run(`var [a,b]=harem();a.cold=true;b.scheme=90;var ka=makeKid(a,'m','承安'),kb=makeKid(b,'m','承泽');ka.born=kb.born=S.turn-96;S.heir=ka.id;
+    var ev=HAREM.find(f=>f.name==='poisonHeir')();assert.match(ev.text,/消息传到冷宫/);assert.doesNotMatch(ev.text,/哭着跪在殿外/);assert.ok(eventStillValid(ev));pushEv(ev);`);
+  force(0);run(`choose(0);nextEv();assert.equal(curEv.title,'真相大白');assert.equal(eventPortraits(curEv).includes(a),false);choose(2);drain();assert.equal(a.cold,true);`);
+});
+
+test('confined children cannot appear in school, garden or feast encounters',()=>{
+  const {run}=boot();
+  run(`var a=harem()[0],ka=makeKid(a,'m','承安'),kb=makeKid(a,'m','承泽');ka.born=S.turn-144;kb.born=S.turn-120;ka.away=true;kb.jailed=true;
+    assert.equal(kidEvent(),null);assert.equal(relEvent(),null);
+    var events=HIST.map(f=>f()).filter(Boolean);assert.ok(!events.some(e=>['七步诗','让梨','砸缸'].includes(e.title)));
+    ka.away=false;kb.jailed=false;ka.born=S.turn-84;kb.born=S.turn-72;S.flags.gang=0;
+    events=HIST.map(f=>f()).filter(Boolean);var garden=events.find(e=>e.title==='砸缸');assert.ok(garden);assert.ok(eventStillValid(garden));kb.jailed=true;assert.equal(eventStillValid(garden),false);`);
+});
+
+test('mother appeals still deliver because only the child must be physically present',()=>{
+  const {run,force}=boot();
+  run(`var a=harem()[0],k=makeKid(a,'m','承安');k.born=S.turn-96;a.cold=true;k.motherBonds={[a.id]:{trust:80}};childLifeTick();`);
+  force(0);run(`var plea=motherAppealEvent();assert.ok(plea);assert.ok(eventStillValid(plea));assert.ok(eventPortraits(plea).includes(a));pushEv(plea);choose(0);drain();assert.equal(a.cold,true);assert.equal(k.motherBonds[a.id].activity,'冷宫探望');`);
+});
+
+
+test('coming of age and leaving for a fief actually removes the prince from palace encounters',()=>{
+  const {run}=boot();
+  run(`var k=makeKid(harem()[0],'m','承安');k.born=S.turn-192;pushEv(milestone());assert.equal(curEv.title,'皇子成年');choose(1);drain();
+    assert.equal(k.away,true);assert.equal(childInPalace(k),false);assert.equal(relEvent(),null);save('1');load('1');migrate();assert.equal(kidById(k.id).away,true);`);
+});
+
+
+test('Ehuang and Nuying excludes a confined sister and cancels after a queued punishment',()=>{
+  const {run,force}=boot();
+  run(`var a=harem()[0],b=makeKin(a,'亲');addConsort(b,3,'亲妹入宫');S.consorts=[a,b];
+    a.kinRival={};b.kinRival={};a.recommended=b.recommended=true;a.favor=b.favor=80;`);
+  force(.99,.99);
+  run(`var ev=clanEvent();assert.equal(ev.title,'娥皇女英');assert.deepEqual(ev.present,[a,b]);
+    pushEv(punishEv(b,null,'违例'));pushEv(ev);choose(0);var aff=[a.aff,b.aff];nextEv();assert.equal(modalOpen,false);assert.deepEqual([a.aff,b.aff],aff);
+    for(var i=0;i<100;i++)assert.equal(clanEvent(),null);
+    for(var state of ['gone','alive']){b.cold=false;b[state]=state==='gone';assert.equal(clanEvent(),null);b[state]=state==='alive';}
+    b.cold=false;b.alive=true;`);
+  force(.99,.99);
+  run(`var restored=clanEvent();assert.equal(restored.title,'娥皇女英');pushEv(restored);choose(0);drain();assert.ok(a.aff>aff[0]);assert.ok(b.aff>aff[1]);`);
+});
+
+test('one-person reward choices omit duplicate portraits but retain the large portrait and working rewards',()=>{
+  const {run}=boot();
+  run(`var c=harem()[1];c.rank=3;E().treasury=100;pushEv(militaryMeritEvent(c,'雁门关','father'));
+    var html=$('#mbox').innerHTML;assert.equal((html.match(/class="mpor"/g)||[]).length,1);
+    assert.doesNotMatch(html,/event-person-choice|event-choices/);assert.equal(html.split('onclick="choose(').length-1,4);
+    choose(2);assert.equal(E().treasury,85);drain();`);
+});
+
+test('frontier reports share a yearly court limit and a two-year household limit across sisters and reloads',()=>{
+  const {run}=boot();
+  run(`var a=harem()[0],other=harem()[1],b=makeKin(a,'亲');addConsort(b,2,'亲妹入宫');S.turn=100;
+    var discarded=militaryMeritEvent(a,'雁门关');assert.equal(frontierReportReady(a),true);
+    pushEv(discarded);assert.equal(frontierReportReady(a),false);assert.equal(frontierReportReady(b),false);assert.equal(frontierReportReady(other),false);
+    choose(3);drain();assert.equal(S.flags.lastFrontierReport,100);assert.equal(houseOf(b).lastFrontierReport,100);
+    pushEv(militaryMeritEvent(other,'玉门关'));assert.equal(modalOpen,false);
+    S.turn=111;assert.equal(frontierReportReady(other),false);S.turn=112;assert.equal(frontierReportReady(other),true);assert.equal(frontierReportReady(b),false);
+    save('1');load('1');migrate();a=byId(a.id);b=byId(b.id);other=byId(other.id);
+    assert.equal(frontierReportReady(b),false);S.turn=123;assert.equal(frontierReportReady(b),false);S.turn=124;assert.equal(frontierReportReady(b),true);
+    delete S.flags.lastFrontierReport;S.flags.lastMilitaryMerit=120;S.turn=131;assert.equal(frontierReportReady(other),false);S.turn=132;assert.equal(frontierReportReady(other),true);`);
+});
+
+test('frontier defeats also start the shared cooldown and rejected candidates do not consume it',()=>{
+  const {run}=boot(805);
+  run(`S.turn=100;S.children=[];S.flags.dowager.alive=false;S.consorts=[harem()[0]];var c=harem()[0];
+    c.fam={t:'镇国大将军',p:60};delete c.house;houseOf(c).brother.merit=0;E().wu=0;var defeat;
+    for(var i=0;i<200&&!defeat;i++){var ev=factionEvent();if(ev?.title==='边关失利')defeat=ev;}
+    assert.ok(defeat);assert.equal(S.flags.lastFrontierReport,undefined);
+    c.cold=true;pushEv(defeat);assert.equal(S.flags.lastFrontierReport,undefined);assert.equal(modalOpen,false);c.cold=false;
+    pushEv(defeat);assert.equal(S.flags.lastFrontierReport,100);choose(1);drain();
+    for(var i=0;i<50;i++)assert.equal(factionEvent(),null);`);
+});
+
+test('many military families cannot multiply report frequency over sixty months',()=>{
+  const {run}=boot(901);
+  run(`S.consorts=[];S.children=[];S.flags.dowager.alive=false;
+    for(var i=0;i<30;i++){var c=makeGirl({fam:{t:'镇国大将军',p:60}});addConsort(c,2,'入宫');}
+    var turns=[],houseTurns={};
+    for(S.turn=100;S.turn<160;S.turn++){
+      // Include several pending memorials in addition to the ordinary monthly draw.
+      var candidates=Array.from({length:4},()=>factionEvent()).filter(Boolean);
+      for(var ev of candidates){if(!eventStillValid(ev))continue;
+        var key=houseOf(ev.por).father.id;
+        if(turns.length)assert.ok(S.turn-turns[turns.length-1]>=12);
+        if(houseTurns[key]!=null)assert.ok(S.turn-houseTurns[key]>=24);
+        pushEv(ev);assert.equal(modalOpen,true);turns.push(S.turn);houseTurns[key]=S.turn;choose(ev.choices.length-1);drain();
+      }
+    }
+    assert.ok(turns.length>0&&turns.length<=5);`);
+});
+
+test('historical audiences recheck their participants while Changmen letters remain possible',()=>{
+  const {run}=boot();
+  run(`var a=harem()[0];S.consorts=[a];a.virtue=80;a.rank=4;S.flags.hcd={};
+    var index=HIST.findIndex(f=>f()?.title==='辞辇');HIST.forEach((_,i)=>{if(i!==index)S.flags.hcd[i]=S.turn;});
+    var ev=histEvent();assert.equal(ev.title,'辞辇');a.cold=true;assert.equal(eventStillValid(ev),false);
+    var letter=HIST.map(f=>f()).find(e=>e?.title==='长门赋');assert.ok(eventStillValid(letter));a.cold=false;assert.equal(eventStillValid(letter),false);`);
+});

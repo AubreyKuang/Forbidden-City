@@ -81,8 +81,12 @@ function addConsort(c,rank,why){
 
 /* ============ 弹窗与事件队列 ============ */
 function fmt(t){return String(t).split('\n').map(l=>l.startsWith('§')?`<p class="fx">${esc(l.slice(1))}</p>`:l?`<p>${esc(l)}</p>`:'').join('')}
+// Portraits may show someone mentioned in a letter. Only `present` means physically here.
+function eventStillValid(ev){
+  return !!ev&&(!ev.valid||ev.valid())&&(ev.present||[]).every(p=>p?.sex?childInPalace(p):inPalace(p));
+}
 function pushEv(ev){
-  if(!ev)return;
+  if(!eventStillValid(ev))return;
   if(ev.maidEncounter){
     if(!maidEncounterReady())return;
     S.flags.lastMaidEncounter=S.turn;
@@ -90,9 +94,9 @@ function pushEv(ev){
   ev.onQueue?.();
   Q.push(ev);if(!modalOpen)nextEv();
 }
-function pushNow(ev){if(!ev)return;Q.unshift(ev);if(!modalOpen)nextEv()}
+function pushNow(ev){if(!eventStillValid(ev))return;Q.unshift(ev);if(!modalOpen)nextEv()}
 function nextEv(){
-  if(Q.length){openModal(Q.shift());return}
+  while(Q.length){const ev=Q.shift();if(eventStillValid(ev)){openModal(ev);return}}
   modalOpen=false;curEv=null;const modal=$('#modal');modal.hidden=true;modal.setAttribute('data-scene','');checkEnd();render();
 }
 function eventPortraits(ev){
@@ -112,20 +116,25 @@ function eventCast(people){
 function openModal(ev){
   modalOpen=true;curEv=ev;if(ev.onShow)ev.onShow();const b=$('#mbox');
   const people=eventPortraits(ev);
+  // Portrait buttons distinguish people, not several actions for the same person.
+  const choicePeople=new Set(ev.choices.filter(c=>c.person).map(c=>c.person.id??c.person));
+  const showChoicePortraits=choicePeople.size>1;
   let h=`<div class="mtitle">${esc(ev.title)}</div>${ev.scene==='mourning'?mourningScene():''}${eventCast(people)}<div class="mbody">`;
   if(people.length===1)h+=`<div class="mpor">${porImg(people[0],112)}<div>${esc(porName(people[0]))}</div></div>`;
-  h+=`<div class="mtext">${fmt(ev.text)}${ev.ref?`<p class="ref">典出 · ${ev.refURL?`<a href="${esc(ev.refURL)}" target="_blank" rel="noopener noreferrer">${esc(ev.ref)}</a>`:esc(ev.ref)}</p>`:''}${ev.input?`<input id="minput" class="inp" maxlength="${ev.input.max||4}" value="${esc(ev.input.def||'')}" aria-label="输入">`:''}</div></div><div class="mch${ev.choices.filter(c=>c.person).length>=2?' event-choices':''}">`;
+  h+=`<div class="mtext">${fmt(ev.text)}${ev.ref?`<p class="ref">典出 · ${ev.refURL?`<a href="${esc(ev.refURL)}" target="_blank" rel="noopener noreferrer">${esc(ev.ref)}</a>`:esc(ev.ref)}</p>`:''}${ev.input?`<input id="minput" class="inp" maxlength="${ev.input.max||4}" value="${esc(ev.input.def||'')}" aria-label="输入">`:''}</div></div><div class="mch${showChoicePortraits?' event-choices':''}">`;
   ev.choices.forEach((c,i)=>{
     const ok=!c.cond||c.cond();
     const style=ev.danger?(c.f?' danger':' quiet'):c.primary||ev.choices.length===1||(ev.input&&i===0)?' primary':'';
     const label=`${esc(c.t)}${!ok&&c.why?`<small>${esc(c.why)}</small>`:''}`;
-    h+=`<button class="btn${style}${c.person?' event-person-choice':''}" ${ok?'':'disabled'} onclick="choose(${i})">${c.person?`${porImg(c.person,60)}<span>${label}</span>`:label}</button>`;
+    const portrait=showChoicePortraits&&c.person;
+    h+=`<button class="btn${style}${portrait?' event-person-choice':''}" ${ok?'':'disabled'} onclick="choose(${i})">${portrait?`${porImg(c.person,60)}<span>${label}</span>`:label}</button>`;
   });
   b.innerHTML=h+'</div>';const modal=$('#modal');modal.setAttribute('data-scene',ev.scene||'');modal.hidden=false;b.scrollTop=0;
   if(ev.sfx) AU.sfx(ev.sfx); else AU.sfx('page');
   const inp=$('#minput'); if(inp) setTimeout(()=>inp.select(),30);
 }
 function choose(i){
+  if(!eventStillValid(curEv)){toast('人物处境已变，这件事已不再适用。');nextEv();return;}
   const c=curEv&&curEv.choices[i];if(!c)return;if(c.cond&&!c.cond())return;
   const val=curEv.input?(($('#minput').value||'').trim().slice(0,curEv.input.max||4)||curEv.input.def):undefined;
   AU.sfx('click');const res=c.f?c.f(val):null;

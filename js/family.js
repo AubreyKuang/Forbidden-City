@@ -187,18 +187,18 @@ function clanLine(c){if(c.maid||!c.alive||c.gone)return '';if(!hasClan(c))return
   const kt=o=>(c.kin&&c.kin[o.id])?KIN_TXT[c.kin[o.id]]:'同族';
   return `<div>家族：${esc(clanName(k))}　势力 ${rd(c.fam.p)}${ms.length?`　同族在宫：${ms.map(o=>`<span class="tag ${isRival(c,o)?'r':'g'}">${esc(cName(o))}·${kt(o)}${isRival(c,o)?'·不和':''}</span>`).join('')}`:''}</div>`}
 function clanEvent(){
-  for(const [k,ms] of shuffle(clans())){const [a,b]=shuffle(ms),rv=isRival(a,b),kt=a.kin&&a.kin[b.id],r=R();
-    if(rv&&r<.5)return {title:'嫡庶',cast:[a,b],text:`${cName(a)}与${cName(b)}是${kt?.startsWith('亲')?'亲生':kt?.startsWith('堂')?'堂房':'同族'}姐妹，在娘家时一个是嫡出、一个是庶出，从小就不对付。今日请安，两人又为座次争了起来，家里的老夫人连夜递了牌子进宫。`,choices:[
+  for(const [k,family] of shuffle(clans())){const ms=family.filter(inPalace);if(ms.length<2)continue;const [a,b]=shuffle(ms),rv=isRival(a,b),kt=a.kin&&a.kin[b.id],r=R();
+    if(rv&&r<.5)return {title:'嫡庶',present:[a,b],cast:[a,b],text:`${cName(a)}与${cName(b)}是${kt?.startsWith('亲')?'亲生':kt?.startsWith('堂')?'堂房':'同族'}姐妹，在娘家时一个是嫡出、一个是庶出，从小就不对付。今日请安，两人又为座次争了起来，家里的老夫人连夜递了牌子进宫。`,choices:[
       {t:`偏向${cName(a)}`,person:a,f:()=>{relAdd(a,b,-10);setXin(b,'委屈','陛下偏向了姐妹');return fx(cchg(a,{mood:10}),cchg(b,{mood:-10}))}},
       {t:`偏向${cName(b)}`,person:b,f:()=>{relAdd(a,b,-10);setXin(a,'委屈','陛下偏向了姐妹');return fx(cchg(b,{mood:10}),cchg(a,{mood:-10}))}},
       {t:'让两人一同去见老夫人，把话说开',f:()=>{if(chance(.45)){delete a.kinRival[b.id];if(b.kinRival)delete b.kinRival[a.id];relAdd(a,b,25);story(a,`与${fullName(b)}在老夫人面前把多年心结说开了。`);story(b,`与${fullName(a)}在老夫人面前把多年心结说开了。`);return '姐妹俩抱头哭了一场。多年的心结，总算解开了。'}return '两人在老夫人面前忍着，一出门就各走各的。'}}]};
-    if(!rv&&r<.4)return {title:'姐妹同心',cast:[a,b],text:`${cName(a)}与${cName(b)}是${kt?KIN_TXT[kt].replace('姐姐','姐妹').replace('妹妹','姐妹'):'同族姐妹'}，在宫里也常常同进同出。今日两人一同来求见，说娘家${pick(['被人参了一本','想为家中子弟求个差事','老父亲七十大寿'])}，想求陛下一个恩典。`,choices:[
+    if(!rv&&r<.4)return {title:'姐妹同心',present:[a,b],cast:[a,b],text:`${cName(a)}与${cName(b)}是${kt?KIN_TXT[kt].replace('姐姐','姐妹').replace('妹妹','姐妹'):'同族姐妹'}，在宫里也常常同进同出。今日两人一同来求见，说娘家${pick(['被人参了一本','想为家中子弟求个差事','老父亲七十大寿'])}，想求陛下一个恩典。`,choices:[
       {t:'准了',f:()=>{ms.forEach(o=>{o.fam.p=Math.min(95,o.fam.p+5);cchg(o,{mood:10,aff:4})});return fx(chg({prestige:-2}))+`\n§${clanName(k)}势力上升`}},
       {t:'“家事是家事，国事是国事。”',f:()=>{ms.forEach(o=>cchg(o,{mood:-6}));return fx(chg({prestige:1}))}}]};
     if(ms.length>=3&&ms[0].fam.p>=55&&r<.75)return {title:'外戚',ref:'外戚专权（汉·吕氏、霍氏）',por:a,text:`${clanName(k)}一门已有${ms.length}人在宫中，父兄子侄遍布六部。御史上疏：“昔吕氏、霍氏之祸，皆起于外戚。”`,choices:[
       {t:'削其兄弟官职，以安朝野',f:()=>{ms.forEach(o=>{o.fam.p=Math.max(5,o.fam.p-25);setXin(o,'惶恐','家族被削权')});log(`削${clanName(k)}外戚官职。`,1);return fx(chg({prestige:5,people:3}))}},
       {t:'倚重外戚，稳固朝局',f:()=>{ms.forEach(o=>{o.fam.p=Math.min(95,o.fam.p+10);setXin(o,'欢喜','家族更受倚重')});return fx(chg({prestige:-4}))}}]};
-    if(!rv&&a.favor>=50&&b.favor>=50)return {title:'娥皇女英',ref:'娥皇、女英姐妹同嫁舜（上古传说）',cast:[a,b],text:`宫宴上有人吟起娥皇女英的典故，满座都看向${cName(a)}与${cName(b)}这对姐妹。两人对视一眼，都红了脸。`,choices:[{t:'举杯：“朕之幸也。”',f:()=>{relAdd(a,b,8);return fx(cchg(a,{aff:5,mood:8}),cchg(b,{aff:5,mood:8}))}}]};
+    if(!rv&&a.favor>=50&&b.favor>=50)return {title:'娥皇女英',present:[a,b],ref:'娥皇、女英姐妹同嫁舜（上古传说）',cast:[a,b],text:`宫宴上有人吟起娥皇女英的典故，满座都看向${cName(a)}与${cName(b)}这对姐妹。两人对视一眼，都红了脸。`,choices:[{t:'举杯：“朕之幸也。”',f:()=>{relAdd(a,b,8);return fx(cchg(a,{aff:5,mood:8}),cchg(b,{aff:5,mood:8}))}}]};
   }
   const h=harem().filter(c=>c.favor>=60&&c.fam.p>=15&&hasClan(c)&&!c.recommended);
   if(h.length&&chance(.5)){const c=pick(h);c.recommended=1;const g=makeKin(c,chance(.5)?'亲':'堂');

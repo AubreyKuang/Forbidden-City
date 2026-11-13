@@ -195,10 +195,10 @@ const QEV={
    {t:'“朕也记得。”',f:()=>{remember(c,'bday','入宫的日子');return fx(cchg(c,{aff:10,mood:12}))}},{t:'没留意',f:()=>fx(cchg(c,{mood:-8}))}]}),
  '嘴硬心软':c=>({title:'参汤',por:c,text:'你批折子到三更，小太监端来一碗参汤，说是御膳房送的。你尝了一口，里面加了枸杞——御膳房从不这么做。',choices:[
    {t:`去${c.palace}道谢`,f:()=>`她扭过头：“谁送的谁知道，反正不是臣妾。”耳根却红了。${fx(cchg(c,{aff:8,mood:10}),chg({health:1}))}`},{t:'喝完便睡',f:()=>fx(chg({health:1}))}]}),
- '贪睡':c=>{const em=empress();if(!em||em===c)return null;return {title:'请安迟了',por:c,text:`${cName(c)}又睡过了头，晨昏定省迟了半个时辰。皇后罚她在坤宁宫外站了一炷香。`,choices:[
+ '贪睡':c=>{const em=empress();if(!em||em===c)return null;return {title:'请安迟了',present:[c,em],por:c,text:`${cName(c)}又睡过了头，晨昏定省迟了半个时辰。皇后罚她在坤宁宫外站了一炷香。`,choices:[
    {t:'后宫之事，皇后做主',f:()=>{relAdd(c,em,-6);return fx(cchg(c,{mood:-8}),cchg(em,{aff:3}))}},{t:'替她求个情',f:()=>{relAdd(c,em,-3);return fx(cchg(c,{aff:6}),cchg(em,{mood:-6}))}}]}},
  '护短':c=>{const ally=harem().find(o=>o!==c&&relGet(c,o)>=30);if(!ally)return null;const bully=harem().find(o=>o!==c&&o!==ally&&relGet(ally,o)<=-20);if(!bully)return null;
-   return {title:'护短',por:c,text:`${cName(bully)}在长街上训斥${cName(ally)}，${cName(c)}恰好路过，二话不说挡在前头：“要罚她，先罚我。”`,choices:[
+   return {title:'护短',present:[c,ally,bully],por:c,text:`${cName(bully)}在长街上训斥${cName(ally)}，${cName(c)}恰好路过，二话不说挡在前头：“要罚她，先罚我。”`,choices:[
    {t:`赞${cName(c)}仗义`,f:()=>{relAdd(c,ally,10);relAdd(c,bully,-15);return fx(cchg(c,{aff:4}),cchg(ally,{mood:8}),cchg(bully,{mood:-10}))}},
    {t:'三人都罚俸一月',f:()=>{[c,ally,bully].forEach(x=>cchg(x,{mood:-5}));return '三人都闭了嘴。'}}]}},
  '擅厨艺':c=>({title:'小厨房',por:c,text:`${cName(c)}亲手做了四样小菜，派人来问陛下今晚得不得空。`,choices:[
@@ -226,7 +226,7 @@ const QEV={
  '记仇':c=>{const o=harem().find(x=>x!==c&&relGet(c,x)<=-40);if(!o)return null;return {title:'旧账',por:c,text:`${cName(c)}把${cName(o)}当年在请安时说过的一句酸话，一字不差地学给你听，末了说：“臣妾不是记仇，臣妾只是记性好。”`,choices:[
    {t:'笑着劝和',f:()=>{relAdd(c,o,5);return fx(cchg(c,{mood:3}))}},{t:'冷落那一位',f:()=>{relAdd(c,o,-5);return fx(cchg(c,{mood:8}),cchg(o,{favor:-8,mood:-8}))}}]}},
 };
-function quirkEvent(){for(const c of shuffle(harem())){deepen(c);if(S.turn-(c.qcd??-99)<10)continue;const ev=QEV[c.t2]?.(c);if(ev)return {...ev,onQueue:()=>{c.qcd=S.turn}};}return null}
+function quirkEvent(){for(const c of shuffle(harem())){deepen(c);if(S.turn-(c.qcd??-99)<10)continue;const ev=QEV[c.t2]?.(c);if(ev)return {...ev,present:ev.present||[c,...eventPortraits(ev)],onQueue:()=>{c.qcd=S.turn}};}return null}
 
 /* ============ 心境 ============ */
 const XIN={
@@ -275,21 +275,21 @@ const XEV={
    {t:'去看她（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{E().energy--;renderTop();setXin(c,'释然','陛下来看她了');return fx(cchg(c,{mood:15,aff:6}))}},
    {t:'赏些东西过去',f:()=>fx(chg({treasury:-10}),cchg(c,{mood:5}))},
    {t:'“后宫谁没受过委屈。”',f:()=>{setXin(c,'怨恨','求陛下来看她，陛下没有来','emp');return '掌事姑姑磕了个头，退下了。'}}]},
- '惶恐':c=>({title:'惶恐',por:c,text:`${cName(c)}脱簪待罪，在乾清宫外跪了一夜：“臣妾不知做错了什么，求陛下明示。”`,choices:[
+ '惶恐':c=>c.cold?null:({title:'惶恐',por:c,text:`${cName(c)}脱簪待罪，在乾清宫外跪了一夜：“臣妾不知做错了什么，求陛下明示。”`,choices:[
    {t:'扶她起来：“朕没有怪你。”',f:()=>{setXin(c,'感激','陛下亲手扶她起来');return fx(cchg(c,{aff:8,mood:12}))}},
    {t:'让她跪着',f:()=>{setXin(c,'委屈','在乾清宫外跪了一夜');return fx(cchg(c,{mood:-10}),chg({prestige:1}))}}]}),
- '嫉恨':(c,x)=>{const w=x.who&&byId(x.who);if(!w||!w.alive||w.cold||c.cold)return null;return {title:'嫉恨',por:c,text:`宫宴上，${cName(c)}笑盈盈地给${cName(w)}敬酒，一失手，整杯葡萄酒泼在了${cName(w)}新做的衣裳上。满座都看见了，那一下不像是失手。`,choices:[
+ '嫉恨':(c,x)=>{const w=x.who&&byId(x.who);if(!inPalace(w)||!inPalace(c))return null;return {title:'嫉恨',por:c,present:[c,w],text:`宫宴上，${cName(c)}笑盈盈地给${cName(w)}敬酒，一失手，整杯葡萄酒泼在了${cName(w)}新做的衣裳上。满座都看见了，那一下不像是失手。`,choices:[
    {t:'当场斥责她',f:()=>{setXin(c,'惶恐','宴上当众被斥');relAdd(c,w,-10);return fx(cchg(c,{mood:-12,favor:-8}),cchg(w,{aff:5}))}},
    {t:'笑着替两人解围',f:()=>{relAdd(c,w,-5);return fx(cchg(w,{mood:-6}))}},
    {t:`赐${cName(w)}一身新衣，冷落那一位`,f:()=>{w.robeC=pick(RPAL[rTier(w.rank)]);relAdd(c,w,-12);return fx(chg({treasury:-10}),cchg(w,{mood:12}),cchg(c,{favor:-10}))}}]}},
  '怨恨':(c,x)=>{if(x.who==='emp')return c.cold?null:{title:'称病',por:c,text:`敬事房来报：今晚翻到了${cName(c)}的牌子，她却称病推了。太医去看，说脉象平和，并无病症。`,choices:[
      {t:'去她宫里（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{E().energy--;renderTop();if(chance(.35+c.aff/300)){setXin(c,'释然','陛下夜里亲自来了');return `她开门看见是你，愣了很久，眼泪一下子掉了下来。${fx(cchg(c,{aff:10,mood:15}))}`}return `她隔着门说：“臣妾病着，怕过了病气给陛下。”你在门外站了一会儿，走了。${fx(cchg(c,{aff:-2}))}`}},
      {t:'由她去',f:()=>fx(cchg(c,{favor:-10}))}]};
-   const w=byId(x.who);if(!w||!w.alive)return null;return {title:'怨毒',por:c,text:`有宫人密报：${cName(c)}最近常在小佛堂里待到深夜，佛龛下压着一张写了${cName(w)}生辰的黄纸。`,choices:[
+   const w=byId(x.who);if(c.cold||!w||!w.alive||w.gone)return null;return {title:'怨毒',por:c,text:`有宫人密报：${cName(c)}最近常在小佛堂里待到深夜，佛龛下压着一张写了${cName(w)}生辰的黄纸。`,choices:[
      {t:'召她来，把话说开',f:()=>{if(chance(.4)){setXin(c,'释然','陛下替她和旧怨做了了断');relAdd(c,w,15);return `她哭着说了很久，说完了，人也松了。${fx(cchg(c,{aff:6}))}`}return `她一句也不肯认。${fx(cchg(c,{mood:-5}))}`}},
      {t:'没收黄纸，罚她禁足',f:()=>{setXin(c,'惶恐','暗咒之事被发现');return fx(cchg(c,{mood:-10,favor:-10}))}},
      {t:'装作不知道',f:()=>{c.scheme=clamp(c.scheme+5);relAdd(c,w,-10);return '你什么也没说。'}}]}},
- '悲恸':c=>({title:'超度',por:c,text:`${cName(c)}求陛下准她请护国寺的僧人进宫，做七天法事。“臣妾只想让……走得安心些。”`,choices:[
+ '悲恸':c=>({title:'超度',por:c,text:`${c.cold?'冷宫里的'+fullName(c)+'托看守递来请求：':cName(c)+'求陛下'}准她请护国寺的僧人到${c.cold?'冷宫':'宫中'}，做七天法事。“臣妾只想让……走得安心些。”`,choices:[
    {t:'准（国库-20万两）',f:()=>{setXin(c,'释然','七天法事做完');return fx(chg({treasury:-20}),cchg(c,{aff:8,mood:10}))}},
    {t:'宫中不宜大做法事',f:()=>{setXin(c,'心如死灰','连一场法事也求不来');return fx(cchg(c,{mood:-10}))}}]}),
  '心如死灰':(c,x)=>S.turn-x.t<6?null:({title:'青灯',por:c,text:`${c.cold?'冷宫里':''}的${fullName(c)}托人递来一句话：求陛下准她剪发出家，从此青灯古佛，不再惹陛下心烦。`,choices:[
@@ -314,7 +314,7 @@ function xinEvent(){
     // The whole court shares a cooldown; changing the speaker cannot bypass it.
     const last=pace.byTitle[ev.title]??S.flags.ambientRecent?.[ev.title]??-99;
     if(S.turn-last<(ev.title==='新衣'||ev.title==='寝衣'?12:8))continue;
-    return {...ev,onQueue:()=>{c.xcd=S.turn;x.eventTurn=S.turn;pace.last=S.turn;pace.byTitle[ev.title]=S.turn;}};
+    return {...ev,present:ev.present||(['青灯','超度'].includes(ev.title)?[]:[c]),valid:()=>c.alive&&!c.gone,onQueue:()=>{c.xcd=S.turn;x.eventTurn=S.turn;pace.last=S.turn;pace.byTitle[ev.title]=S.turn;}};
   }
   return null;
 }

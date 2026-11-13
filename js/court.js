@@ -212,12 +212,23 @@ function courtTick(){
       }}
   }
 }
+// Wins and defeats share a court-wide interval; sisters share their household's interval.
+function frontierReportReady(c){
+  return S.turn-(S.flags.lastFrontierReport??S.flags.lastMilitaryMerit??-99)>=12&&
+    S.turn-(houseOf(c)?.lastFrontierReport??-99)>=24;
+}
+function frontierReport(c,officer,event){
+  let queued=false;
+  return {...event,present:[c],
+    valid:()=>officer.alive!==false&&(queued||frontierReportReady(c)),
+    onQueue:()=>{queued=true;S.flags.lastFrontierReport=S.turn;houseOf(c).lastFrontierReport=S.turn;
+      if(event.title==='边关捷报')S.flags.lastMilitaryMerit=S.turn;}};
+}
 function militaryMeritEvent(c,place,relative='brother'){
   const h=houseOf(c),officer=h[relative],kin=relative==='father'?'父亲':'兄长';
   const mark=()=>{officer.merit=clamp((officer.merit||0)+15);policyNudge('army',5);};
   const next=c.rank+1,promotable=()=>c.alive&&!c.cold&&!c.gone&&next<8&&c.rank+1===next&&rankCount(next)<RANK_CAP[next];
-  return {title:'边关捷报',por:c,
-    onQueue:()=>{S.flags.lastMilitaryMerit=S.turn;},
+  return frontierReport(c,officer,{title:'边关捷报',por:c,
     text:`传旨公公捧着${place}八百里捷报进殿：${officer.name}率部夜袭敌营，斩获颇丰。${relative==='father'?`其子${h.brother.name}也随军效力。`:''}\n${cName(c)}听见${kin}的名字，忙起身听旨，眼中难掩喜色。`,choices:[
       {t:`厚赏，加封其${relative==='father'?'父':'兄'}（国库-20）`,cond:()=>E().treasury>=20,why:'国库银两不足',f:()=>{
         mark();if(relative==='brother')h.brother.post='总兵';else h.father.honor='护国功臣';
@@ -236,7 +247,20 @@ function militaryMeritEvent(c,place,relative='brother'){
         return fx(chg({treasury:-15,prestige:1}),cchg(c,{mood:15,aff:6,favor:3}));
       }},
       {t:'记功，暂不封赏',f:()=>{officer.merit=clamp((officer.merit||0)+8);story(c,`${kin}${officer.name}在${place}立功，已记入功册，暂未封赏。`);return fx(cchg(c,{mood:-4}));}}
-    ]};
+    ]});
+}
+// An audience with two mothers requires two distinct households able to attend.
+// A mother's confinement does not remove her child's independent succession rights.
+function successionRivalryEvent(){
+  if(S.heir)return null;
+  const sons=shuffle(kidsAlive().filter(k=>k.sex==='m'&&kidAge(k)>=6&&
+    familyVisitAllowed(k,byId(k.mom))&&!byId(k.mom).maid));
+  const a=sons[0],b=a&&sons.find(k=>k.mom!==a.mom);if(!b)return null;
+  const ma=byId(a.mom),mb=byId(b.mom),fa=houseOf(ma)?.father,fb=houseOf(mb)?.father;
+  return {title:'国本之争',ref:'明·万历国本之争',cast:[ma,a,mb,b],present:[ma,a,mb,b],valid:()=>!S.heir&&familyVisitAllowed(a,ma)&&familyVisitAllowed(b,mb),text:`${fa?.alive?fa.name:fullName(ma)+'母家的支持者'}领着一班人上疏，请早立${kidName(a)}为储；${fb?.alive?fb.name:fullName(mb)+'母家的支持者'}的人则推${kidName(b)}。两位皇子的生母在御花园碰见，谁也没有先开口。`,choices:[
+      {t:`暗示倾向${kidName(a)}`,person:a,f:()=>{a.sup=clamp((a.sup||0)+10);policyNudge('princes',3);setXin(mb,'嫉恨','陛下倾向别家皇子',ma.id);relAdd(ma,mb,-12);return fx(cchg(ma,{mood:8}),cchg(mb,{mood:-8}))}},
+      {t:`暗示倾向${kidName(b)}`,person:b,f:()=>{b.sup=clamp((b.sup||0)+10);policyNudge('princes',3);setXin(ma,'嫉恨','陛下倾向别家皇子',mb.id);relAdd(ma,mb,-12);return fx(cchg(mb,{mood:8}),cchg(ma,{mood:-8}))}},
+      {t:'“储位之事，谁再提，罚俸。”',f:()=>{policyNudge('princes',-5);return fx(chg({prestige:2,people:-1}))}}]};
 }
 // 朝堂派系事件：都落在具体的父兄、妃嫔和皇子身上
 function factionEvent(){
@@ -253,24 +277,20 @@ function factionEvent(){
     {t:`看在${cName(c)}面上，从轻发落`,f:()=>{policyNudge('civil',-5);return fx(cchg(c,{mood:6,aff:4}),chg({people:-3,prestige:-2}))}},
     {t:'交三司会审，查清再说',f:()=>{if(chance(.55)){story(c,`三司会审还了父亲${h.father.name}清白。`);policyNudge('civil',2);return '三司会审，门生确有舞弊，却与'+h.father.name+'无关。'+fx(cchg(c,{mood:8}),chg({people:2}))}
       c.fam.p=Math.max(5,c.fam.p-8);setXin(c,'惶恐','父亲被查出失察之责');return h.father.name+'失察，罚俸一年。'+fx(cchg(c,{mood:-6}),chg({people:2}))}}]});}
-  const army=withHouse.filter(c=>stanceOf(c)==='army');
-  if(army.length&&S.turn-(S.flags.lastMilitaryMerit??-99)>=6){const c=pick(army),h=houseOf(c),place=pick(FRONTIERS),win=chance(.35+E().wu/200+h.brother.merit/300);
+  const army=withHouse.filter(c=>stanceOf(c)==='army'&&frontierReportReady(c));
+  if(army.length&&chance(.35)){const c=pick(army),h=houseOf(c),place=pick(FRONTIERS),win=chance(.35+E().wu/200+h.brother.merit/300);
     pool.push(win?militaryMeritEvent(c,place,chance(.35)?'father':'brother')
-    :{title:'边关失利',por:c,text:`${place}急报：${h.brother.name}中了埋伏，折损了三百骑。武将们说胜败乃兵家常事，御史却要问罪。${cName(c)}已经两天没吃下饭。`,choices:[
+    :frontierReport(c,h.brother,{title:'边关失利',por:c,text:`${place}急报：${h.brother.name}中了埋伏，折损了三百骑。武将们说胜败乃兵家常事，御史却要问罪。${cName(c)}已经两天没吃下饭。`,choices:[
       {t:'依律问责',f:()=>{h.brother.merit=Math.max(0,h.brother.merit-15);policyNudge('army',-2);policyNudge('civil',2);setXin(c,'惶恐','兄长兵败受责');return fx(cchg(c,{mood:-12}),chg({people:1}))}},
-      {t:'宽宥，许他戴罪立功',f:()=>{policyNudge('army',4);return fx(cchg(c,{mood:6,aff:5}),chg({prestige:-1}))}}]});}
+      {t:'宽宥，许他戴罪立功',f:()=>{policyNudge('army',4);return fx(cchg(c,{mood:6,aff:5}),chg({prestige:-1}))}}]}));}
   const dw=S.flags.dowager;
   if(dw?.alive){const pref=harem().filter(c=>c.rank<8&&(stanceOf(c)==='dowager'||c.virtue>=70)).sort((a,b)=>b.virtue-a.virtue)[0];
     if(pref)pool.push({title:'慈宁宫',por:pref,text:`${dw.name}召陛下用膳，席间夸${cName(pref)}温良贤淑，又叹皇家子嗣单薄，“哀家看着她就喜欢”。话没说透，意思谁都明白。`,choices:[
       {t:'遵太后之意，多去她宫里',f:()=>{policyNudge('dowager',5);const em=empress();if(em&&em!==pref)cchg(em,{mood:-3});return fx(cchg(pref,{favor:8,mood:8}),chg({prestige:1}))}},
       {t:'“儿臣心里有数。”',f:()=>{policyNudge('dowager',-4);return fx(chg({prestige:1}))}}]});}
-  const sons=kidsAlive().filter(k=>k.sex==='m'&&kidAge(k)>=6&&byId(k.mom));
-  if(sons.length>=2&&!S.heir){const [a,b]=shuffle(sons).slice(0,2),ma=byId(a.mom),mb=byId(b.mom),fa=houseOf(ma)?.father,fb=houseOf(mb)?.father;
-    pool.push({title:'国本之争',ref:'明·万历国本之争',cast:[ma,a,mb,b],text:`${fa?fa.name:'朝臣'}领着一班人上疏，请早立${kidName(a)}为储；${fb?fb.name:'另一派'}的人则推${kidName(b)}。两位皇子的生母在御花园碰见，谁也没有先开口。`,choices:[
-      {t:`暗示倾向${kidName(a)}`,person:a,f:()=>{a.sup=clamp((a.sup||0)+10);policyNudge('princes',3);setXin(mb,'嫉恨','陛下倾向别家皇子',ma.id);relAdd(ma,mb,-12);return fx(cchg(ma,{mood:8}),cchg(mb,{mood:-8}))}},
-      {t:`暗示倾向${kidName(b)}`,person:b,f:()=>{b.sup=clamp((b.sup||0)+10);policyNudge('princes',3);setXin(ma,'嫉恨','陛下倾向别家皇子',mb.id);relAdd(ma,mb,-12);return fx(cchg(mb,{mood:8}),cchg(ma,{mood:-8}))}},
-      {t:'“储位之事，谁再提，罚俸。”',f:()=>{policyNudge('princes',-5);return fx(chg({prestige:2,people:-1}))}}]});}
-  return pool.length?pick(pool):null;
+  const rivalry=successionRivalryEvent();if(rivalry)pool.push(rivalry);
+  const ev=pool.length?pick(pool):null;
+  return ev?{...ev,present:ev.present||eventPortraits(ev)}:null;
 }
 // 离开太久，御案上会积下奏折；下个月末一并呈上
 function offlineMemorials(){

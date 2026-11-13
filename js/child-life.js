@@ -35,7 +35,7 @@ function motherAppealEvent(){
         {person:mother.id,subject:k.id,interpretation:`${k.name}还记得我，来替我求情。${line}`,emotion:.7,impact:80}]);
       return line;
     };
-    return {title:'为母求情',cast:[k,mother],text:`${kidName(k)}${plea}`,
+    return {title:'为母求情',cast:[k,mother],present:[k],valid:()=>mother.alive&&!mother.gone&&mother.cold,text:`${kidName(k)}${plea}`,
       onQueue:()=>{episode.asked=true;S.flags.lastChildAppeal=S.turn;},choices:[
         {t:'准探望，送些衣食，原罚不改',f:()=>{
           mother.mood=clamp(mother.mood+8);relAdd(k,mother,8);

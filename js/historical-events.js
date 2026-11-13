@@ -47,7 +47,7 @@ const HIST=[
  ()=>{const c=harem().find(c=>c.favor>=70&&c.mood<45);if(!c)return null;return {title:'烽火',ref:'周幽王烽火戏诸侯（西周）',por:c,text:`${cName(c)}已经很久没笑过了。一个近臣献计：“骊山的烽火台若点起来，诸侯兵马齐至，那场面，娘娘看了必笑。”`,choices:[
    {t:'点烽火',f:()=>{S.flags.wolf=S.turn;story(c,'陛下为博她一笑，点燃了骊山烽火。她笑了。');log('帝为博宠妃一笑，举烽火戏诸侯。',1);return `诸侯们披甲带兵赶来，却发现什么也没有。她终于笑了。诸侯们没有笑。${fx(cchg(c,{mood:40}),chg({prestige:-15}))}`}},
    {t:'把那近臣赶出去',f:()=>fx(chg({prestige:2}))}]}},
- ()=>{const c=alive().find(c=>c.cold);if(!c)return null;return {title:'长门赋',ref:'陈皇后千金买《长门赋》（西汉·汉武帝）',por:c,text:`冷宫里的${fullName(c)}拿出最后一点体己，托人求当世第一才子写了一篇赋，辗转送到你案头。\n“夫何一佳人兮，步逍遥以自虞……”`,choices:[
+ ()=>{const c=alive().find(c=>c.cold);if(!c)return null;return {title:'长门赋',present:[],valid:()=>c.alive&&!c.gone&&c.cold,ref:'陈皇后千金买《长门赋》（西汉·汉武帝）',por:c,text:`冷宫里的${fullName(c)}拿出最后一点体己，托人求当世第一才子写了一篇赋，辗转送到你案头。\n“夫何一佳人兮，步逍遥以自虞……”`,choices:[
    {t:'读完，去冷宫看她',f:()=>{A.uncold(c.id);story(c,'一篇赋，换回了陛下的一次探望。');return '你去了冷宫。她瘦得几乎认不出来。'}},
    {t:'赋是好赋',f:()=>fx(cchg(c,{mood:-10}))}]}},
  ()=>{const c=harem().filter(c=>c.aff>=40).sort((a,b)=>b.aff-a.aff)[0];if(!c)return null;return {title:'当熊',ref:'冯媛挡熊（西汉·汉元帝）',por:c,text:`南苑观兽，一头黑熊忽然冲出栅栏，直扑御座。左右嫔妃尖叫四散，只有${cName(c)}一步挡在你身前。`,choices:[
@@ -56,7 +56,7 @@ const HIST=[
    {t:'“记得。”',f:()=>{c.goldAsked=true;remember(c,'care','金屋之约');return fx(cchg(c,{aff:12,mood:15}))}},
    {t:'真给她修一座金屋（国库-200万两）',f:()=>{c.goldAsked=true;log('帝为皇后修金屋。',1);return fx(chg({treasury:-200,people:-4}),cchg(c,{aff:20,mood:30}))}},
    {t:'“小孩子的话，哪能当真。”',f:()=>{c.goldAsked=true;remember(c,'hurt','金屋之约不作数');return fx(cchg(c,{mood:-15,aff:-6}))}}]}},
- ()=>{const em=empress();if(!em)return null;const c=harem().filter(c=>c!==em&&c.favor>em.favor+20).sort((a,b)=>b.favor-a.favor)[0];if(!c)return null;return {title:'却坐',ref:'袁盎却坐（西汉·汉文帝与慎夫人）',por:c,text:`御花园设宴，内侍照例把${cName(c)}的席位与皇后并排摆着。一位老臣上前，把她的席子往下挪了一格：“尊卑有序。陛下宠她，才更不能害她——陛下没听说过‘人彘’吗？”`,choices:[
+ ()=>{const em=empress();if(!em)return null;const c=harem().filter(c=>c!==em&&c.favor>em.favor+20).sort((a,b)=>b.favor-a.favor)[0];if(!c)return null;return {title:'却坐',present:[em,c],ref:'袁盎却坐（西汉·汉文帝与慎夫人）',por:c,text:`御花园设宴，内侍照例把${cName(c)}的席位与皇后并排摆着。一位老臣上前，把她的席子往下挪了一格：“尊卑有序。陛下宠她，才更不能害她——陛下没听说过‘人彘’吗？”`,choices:[
    {t:'“爱卿说得对。”',f:()=>{relAdd(c,em,-6);return fx(cchg(em,{aff:8}),cchg(c,{mood:-12}),chg({prestige:3}))}},
    {t:'“朕的家事。”把席子挪回去',f:()=>{relAdd(c,em,-10);return fx(cchg(c,{mood:10}),cchg(em,{mood:-15,aff:-5}),chg({prestige:-3}))}}]}},
  ()=>{if(!S.flags.bless||S.turn-S.flags.bless>1||S.flags.ganye)return null;const g=makeGirl({fam:{t:'先帝才人',p:20},trait:'城府',age:ri(22,25)});g.scheme=88;g.looks=clamp(g.looks+10);g.talent=clamp(g.talent+10);
@@ -72,29 +72,29 @@ const HIST=[
    {t:'召来一看，画师下狱',f:()=>{S.cands.push(g);log('宫廷画师索贿篡改秀女画像，下狱问罪。',1);return `她走进殿来，满殿生光。${fx(chg({people:2}))}\n§她已加入本次选秀`}},
    {t:'“画像就是画像。”',f:()=>'你翻过了那一页。'}]}},
  ()=>{const c=harem().find(c=>c.preg>=8&&!c.prot&&!c.swapAsked);if(!c)return null;const a=harem().find(x=>x!==c&&x.scheme>=70);if(!a)return null;
-   return {title:'产房',ref:'狸猫换太子（宋·民间传说）',por:c,text:`${cName(c)}临盆在即。一个小宫女半夜偷偷来报：她看见${cName(a)}宫里的掌事太监和稳婆说了很久的话，还塞了一包东西。`,choices:[
+   return {title:'产房',present:[c,a],ref:'狸猫换太子（宋·民间传说）',por:c,text:`${cName(c)}临盆在即。一个小宫女半夜偷偷来报：她看见${cName(a)}宫里的掌事太监和稳婆说了很久的话，还塞了一包东西。`,choices:[
    {t:'换上心腹稳婆，加派人手守产房',f:()=>{c.swapAsked=true;c.prot=true;return '产房外多了八个带刀的侍卫。'}},
    {t:'小宫女胡言乱语',f:()=>{c.swapAsked=true;c.swapRisk=true;return '你没放在心上。'}}]}},
  ()=>{const lost=S.children.find(k=>k.lost&&S.turn-k.born>=60);if(!lost||!chance(.25))return null;return {title:'陈州少年',ref:'狸猫换太子·认母（宋·民间传说）',text:`开封府送来一个少年，说他是当年产房里被宫女寇珠藏在妆盒里、偷偷送出宫的那个孩子，在陈州一户人家长大。他手里有一块刻着生辰的玉锁。`,choices:[
    {t:'认回皇子',f:()=>{lost.lost=false;lost.alive=true;kstory(lost,'流落民间多年，终于被认回宫中。');log(`流落民间的${kidName(lost)}被认回宫中。`,1);const m=byId(lost.mom);if(m&&m.alive){if(m.cold){m.cold=false;assignPalace(m)}cchg(m,{mood:50,aff:20});story(m,'失散多年的孩子回来了。她抱着孩子，哭得说不出话。')}AU.sfx('joy');return fx(chg({people:5}))}},
    {t:'恐是冒认，赏他银两打发走',f:()=>{lost.lost=false;return '少年走了。后来再也没有人提起他。'}}]}},
- ()=>{if(chance(.85))return null;const last=byId(S.flags.lastNight);return {title:'宫变',ref:'壬寅宫变（明·嘉靖）',sfx:'gong',text:`深夜，十几个宫女趁你熟睡，用黄绫勒住了你的脖子。绳结打成了死扣，没能勒紧。一个胆小的宫女跑去坤宁宫报了信。${last&&last.alive?`\n那夜，你宿在${cName(last)}宫里。`:''}`,choices:[
+ ()=>{if(chance(.85))return null;const previous=byId(S.flags.lastNight),last=inPalace(previous)?previous:null;return {title:'宫变',ref:'壬寅宫变（明·嘉靖）',sfx:'gong',text:`深夜，十几个宫女趁你熟睡，用黄绫勒住了你的脖子。绳结打成了死扣，没能勒紧。一个胆小的宫女跑去坤宁宫报了信。${last&&last.alive?`\n那夜，你宿在${cName(last)}宫里。`:''}`,choices:[
    {t:'彻查主谋',f:()=>{log('宫女十余人夜谋弑君，事败伏诛。',1);return `她们说，是受不了宫里动辄打死人的日子。${fx(chg({health:-12,prestige:-4}))}\n§你下令宫中不得再虐打宫人`}},
    ...(last&&last.alive&&!last.cold?[{t:`迁怒${cName(last)}：她宫里出的事`,f:()=>{last.alive=false;story(last,'宫变那夜陛下宿在她宫中，事后被以“知情不报”赐死。她至死喊冤。');log(`${fullName(last)}因宫变牵连被赐死。`,1);AU.sfx('sad');return `后来查明，她毫不知情。${fx(chg({health:-12,people:-6}))}`}}]:[])]}},
- ()=>{const h=S.heir&&kidById(S.heir);if(!h||!h.alive||kidAge(h)<8||S.flags.ting)return null;S.flags.ting=1;const rv=kidsAlive().find(k=>k.sex==='m'&&k!==h&&(k.sup||0)>20);const m=rv&&byId(rv.mom);
+ ()=>{const h=S.heir&&kidById(S.heir);if(!childInPalace(h)||kidAge(h)<8||S.flags.ting)return null;S.flags.ting=1;const rv=kidsAlive().find(k=>k.sex==='m'&&k!==h&&(k.sup||0)>20);const m=rv&&byId(rv.mom);
    return {title:'梃击案',ref:'梃击案（明·万历）',por:h,sfx:'gong',text:`一个手持枣木棍的汉子闯进东宫，打伤了守门太监，被侍卫拿下。他一口咬定是有人许他“打进去，有吃有穿”。${m&&m.alive?`\n有人说，他进宫前去过${cName(m)}娘家的庄子。`:''}`,choices:[
    ...(m&&m.alive?[{t:`顺藤摸瓜，查到${cName(m)}`,f:()=>{relAdd(m,byId(h.mom),-30);pushNow(punishEv(m,byId(h.mom),'谋害储君'));return '口供一层层往上，查到了一个你不想查到的地方……'}}]:[]),
    {t:'以“疯癫”结案',f:()=>`那汉子被斩了。朝中议论了很久。${fx(chg({prestige:-2}))}`}]}},
- ()=>{const ks=kidsAlive().filter(k=>k.sex==='m'&&kidAge(k)>=10&&kidAge(k)<=20);if(ks.length<2||S.flags.qibu)return null;S.flags.qibu=1;const [a,b]=ks;
-   return {title:'七步诗',ref:'曹植七步诗（三国·魏）',por:b,text:`${kidName(a)}与${kidName(b)}在家宴上争执起来。${a.name}冷笑：“你不是自诩才子么？七步之内作一首诗，作不出来，就别在父皇面前显摆。”`,choices:[
+ ()=>{const ks=kidsAlive().filter(k=>childInPalace(k)&&k.sex==='m'&&kidAge(k)>=10&&kidAge(k)<=20);if(ks.length<2||S.flags.qibu)return null;S.flags.qibu=1;const [a,b]=ks;
+   return {title:'七步诗',present:[a,b],ref:'曹植七步诗（三国·魏）',por:b,text:`${kidName(a)}与${kidName(b)}在家宴上争执起来。${a.name}冷笑：“你不是自诩才子么？七步之内作一首诗，作不出来，就别在父皇面前显摆。”`,choices:[
    {t:`让${b.name}作诗`,f:()=>{b.lit=clamp(b.lit+5);a.vir=clamp(a.vir-3);kstory(b,'家宴上七步成诗：“本是同根生，相煎何太急。”');return `${b.name}走了七步，开口道：“煮豆燃豆萁，豆在釜中泣。本是同根生，相煎何太急。”满座无声。${a.name}的脸一阵红一阵白。`}},
    {t:'“兄弟之间，作什么诗。”',f:()=>{a.vir=clamp(a.vir+3);b.vir=clamp(b.vir+3);return '两人低下了头。'}}]}},
- ()=>{const ks=kidsAlive().filter(k=>kidAge(k)>=4&&kidAge(k)<=8);if(!ks.length||S.flags.lizi)return null;S.flags.lizi=1;const k=pick(ks);
-   return {title:'让梨',ref:'孔融让梨（东汉）',por:k,text:`中秋家宴，宫人端上一盘梨。${kidName(k)}挑了一个最小的。你问为什么，孩子说：“我小，应该吃小的。”`,choices:[
+ ()=>{const ks=kidsAlive().filter(k=>childInPalace(k)&&kidAge(k)>=4&&kidAge(k)<=8);if(!ks.length||S.flags.lizi)return null;S.flags.lizi=1;const k=pick(ks);
+   return {title:'让梨',present:[k],ref:'孔融让梨（东汉）',por:k,text:`中秋家宴，宫人端上一盘梨。${kidName(k)}挑了一个最小的。你问为什么，孩子说：“我小，应该吃小的。”`,choices:[
    {t:'当众夸奖',f:()=>{k.vir=clamp(k.vir+6);k.love=clamp(k.love+6);kstory(k,`${kidAge(k)}岁时家宴让梨，父皇当众夸奖。`);return '§品德+6　父爱+6'}}]}},
- ()=>{const ks=kidsAlive().filter(k=>kidAge(k)>=6&&kidAge(k)<=10);if(ks.length<2||S.flags.gang)return null;S.flags.gang=1;const [a,b]=shuffle(ks);
-   return {title:'砸缸',ref:'司马光砸缸（北宋）',por:a,text:`御花园里，${b.name}爬上太平缸玩耍，一失足掉进了缸里。旁的孩子都吓跑了，${kidName(a)}搬起一块石头，把缸砸破了。`,choices:[
+ ()=>{const ks=kidsAlive().filter(k=>childInPalace(k)&&kidAge(k)>=6&&kidAge(k)<=10);if(ks.length<2||S.flags.gang)return null;S.flags.gang=1;const [a,b]=shuffle(ks);
+   return {title:'砸缸',present:[a,b],ref:'司马光砸缸（北宋）',por:a,text:`御花园里，${b.name}爬上太平缸玩耍，一失足掉进了缸里。旁的孩子都吓跑了，${kidName(a)}搬起一块石头，把缸砸破了。`,choices:[
    {t:'重赏',f:()=>{a.lit=clamp(a.lit+5);a.vir=clamp(a.vir+3);kstory(a,`${kidAge(a)}岁时砸缸救了${b.name}。`);kstory(b,`${kidAge(b)}岁时掉进太平缸，被${a.name}砸缸救起。`);return '§才学+5　品德+3'}}]}},
 ];
 function histEvent(){if(S.flags.dan&&S.turn-S.flags.dan>=8&&!S.flags.danBad){S.flags.danBad=1;return {title:'丹毒',ref:'历代帝王服丹中毒',sfx:'gong',text:'你近来口渴心燥，夜不能寐，背上生了毒疮。太医战战兢兢地说，是丹药里的铅汞积在了体内。',choices:[{t:'把方士抓来',f:()=>{log('帝服丹中毒，诛方士。',1);return fx(chg({health:-20}))}}]}}
-  S.flags.hcd=S.flags.hcd||{};for(const i of shuffle(HIST.map((_,i)=>i))){if(S.turn-(S.flags.hcd[i]===undefined?-999:S.flags.hcd[i])<48)continue;const ev=HIST[i]();if(ev){S.flags.hcd[i]=S.turn;return ev}}return null}
+  S.flags.hcd=S.flags.hcd||{};for(const i of shuffle(HIST.map((_,i)=>i))){if(S.turn-(S.flags.hcd[i]===undefined?-999:S.flags.hcd[i])<48)continue;const ev=HIST[i]();if(ev){S.flags.hcd[i]=S.turn;return {...ev,present:ev.present||eventPortraits(ev)}}}return null}
