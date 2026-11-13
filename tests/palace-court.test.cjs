@@ -562,6 +562,48 @@ test('local grain credit delivers immediately and deducts its balance once after
   assert.equal(S.flags.lastMonthReview.localGrainPayment,undefined);
 `));
 
+test('local grain credit can extend once and retains the fee for either settlement route',()=>{
+  for(const grain of [false,true])boot().run(`
+    S.turn=8;S.month=9;
+    S.flags.localGrainPaymentTurn=8;
+    Object.assign(E(),{treasury:0,energy:0,people:56});
+    const option=text=>curEv.choices.findIndex(c=>c.t.includes(text));
+    const close=()=>choose(curEv.choices.length-1);
+    A.grainReserve();
+    const extend=option('展期一月');
+    assert.match(curEv.choices[extend].preview,/下月底扣 100 万两/);
+    assert.equal(curEv.choices[extend].cond(),false);
+    E().energy=1;
+    const write=save;save=()=>false;choose(extend);drain();
+    assert.deepEqual([E().energy,S.flags.localGrainPaymentTurn,localGrainBalance()],[1,8,80]);
+    save=write;A.grainReserve();choose(option('展期一月'));drain();assert.equal(load('auto'),true);
+    assert.deepEqual([E().energy,E().treasury,S.flags.localGrainPaymentTurn,localGrainBalance()],[0,0,9,100]);
+    assert.match(viewMap(),/尾款 100 万两，将于下月底结清/);
+    A.endMonth();while(modalOpen)nextEv();
+    assert.equal(S.flags.lastMonthReview.localGrainPayment,undefined);
+    assert.equal(localGrainPaymentDue(),true);
+    A.grainReserve();assert.equal(option('展期一月'),-1);close();
+    if(${grain}){
+      S.flags.grainReserveGen=S.gen;
+      S.flags.grainReserveHalf=true;
+      E().treasury=40;E().energy=1;
+      A.grainReserve();const pay=option('以半批仓粮抵');
+      assert.match(curEv.choices[pay].preview,/国库 −40 万两/);
+      choose(pay);drain();assert.equal(load('auto'),true);
+      assert.deepEqual([E().treasury,E().energy,grainReserveReady(),S.flags.localGrainPaymentTurn,S.flags.localGrainPaymentExtended],
+        [0,0,false,undefined,undefined]);
+    }
+    const treasury=E().treasury;
+    A.endMonth();while(modalOpen)nextEv();
+    const review=S.flags.lastMonthReview;
+    assert.equal(review.localGrainPayment,${grain} ? undefined : 100);
+    assert.equal(E().treasury,treasury+review.inc-review.exp);
+    assert.equal(load('auto'),true);
+    assert.equal(S.flags.localGrainPaymentExtended,undefined);
+    assert.equal(S.flags.localGrainPaymentTurn,undefined);
+  `);
+});
+
 test('paying a due local grain balance with stock consumes half a reserve and saves exactly once',()=>{
   for(const half of [false,true])boot().run(`
     S.turn=8;S.month=9;

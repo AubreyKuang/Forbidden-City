@@ -263,11 +263,11 @@ A.endMonth=function(){
   if(!S||S.over||modalOpen)return;const e=E();
   const delivery=pendingDelivery();if(delivery){A.resumeBirth(delivery.id);return;}
   // 财政
-  const localGrainPayment=localGrainPaymentDue()?LOCUST_LOCAL_BALANCE:0;
+  const localGrainPayment=localGrainPaymentDue()?localGrainBalance():0;
   const inc=rd(45+e.people*1.1+(S.flags.canal?25:0)),exp=alive().reduce((s,c)=>s+(c.cold?1:STIPEND[c.rank]),0)+kidsAlive().reduce((s,k)=>s+3+(k.tutor?5:0),0)+localGrainPayment;
   e.treasury+=inc-exp;
   if(localGrainPayment){
-    delete S.flags.localGrainPaymentTurn;
+    clearLocalGrainPayment();
     log(`户部结清灾区粮商的赈粮尾款 ${localGrainPayment} 万两。`);
   }
   const monthDate=dateStr(), brief=S.flags.monthlyCourt;

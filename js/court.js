@@ -72,6 +72,7 @@ const GRAIN_SALE_REVENUE=100, HALF_GRAIN_SALE_REVENUE=45;
 const GRAIN_TRANSPORT_COST=70;
 const LOCUST_LOCAL_PURCHASE_COST=125, LOCUST_LOCAL_PURCHASE_PEOPLE=6;
 const LOCUST_LOCAL_DEPOSIT=60, LOCUST_LOCAL_BALANCE=80;
+const LOCUST_LOCAL_EXTENSION_FEE=20;
 const LOCUST_LOCAL_GRAIN_SETTLEMENT_COST=20;
 const LOCUST_HALF_RESERVE_PEOPLE=3;
 const LOCUST_FOLLOWUP_COST=35, LOCUST_FOLLOWUP_PEOPLE=5;
@@ -93,6 +94,25 @@ function clearGrainReserve(){
 }
 function localGrainPaymentDue(){
   return Number.isInteger(S.flags.localGrainPaymentTurn)&&S.flags.localGrainPaymentTurn<=S.turn;
+}
+function localGrainPaymentFee(){return S.flags.localGrainPaymentExtended===true?LOCUST_LOCAL_EXTENSION_FEE:0;}
+function localGrainBalance(){return LOCUST_LOCAL_BALANCE+localGrainPaymentFee();}
+function clearLocalGrainPayment(){
+  delete S.flags.localGrainPaymentTurn;
+  delete S.flags.localGrainPaymentExtended;
+}
+function localGrainExtensionAvailable(){return localGrainPaymentDue()&&!localGrainPaymentFee();}
+function extendLocalGrainChoice(){
+  const balance=LOCUST_LOCAL_BALANCE+LOCUST_LOCAL_EXTENSION_FEE;
+  return {t:'赈粮尾款展期一月',
+    preview:`本月底暂缓扣款 · 下月底扣 ${balance} 万两 · 精力 −1 · 仅可展期一次`,
+    cond:()=>localGrainExtensionAvailable()&&E().energy>0,why:'须有 1 点精力',
+    f:()=>saveGrainAction(()=>{
+      S.flags.localGrainPaymentTurn=S.turn+1;
+      S.flags.localGrainPaymentExtended=true;
+      log(`户部与粮商议定展期，下月底结清赈粮尾款 ${balance} 万两。`);
+      return `粮商同意展期一月。另计 ${LOCUST_LOCAL_EXTENSION_FEE} 万两展期费，下月底共付 ${balance} 万两。`;
+    })};
 }
 function saveGrainAction(settle,spendEnergy=true){
   const e=E(),before={energy:e.energy,treasury:e.treasury,people:e.people,prestige:e.prestige};
@@ -119,14 +139,14 @@ function sellGrainChoice(t,revenue,keepHalf=false){
     }};
 }
 function settleLocalGrainWithReserveChoice(half){
-  const cost=LOCUST_LOCAL_GRAIN_SETTLEMENT_COST;
+  const cost=LOCUST_LOCAL_GRAIN_SETTLEMENT_COST+localGrainPaymentFee();
   return {t:'以半批仓粮抵赈粮尾款',
     preview:`国库 −${cost} 万两 · 精力 −1 · ${half?'用完余粮':'留半批备荒粮'} · 月底不再扣尾款`,
     cond:()=>localGrainPaymentDue()&&grainReserveReady()&&halfGrainReserve()===half&&E().treasury>=cost&&E().energy>0,
     why:`须有半批储粮、${cost} 万两和 1 点精力`,
     f:()=>saveGrainAction(()=>{
       if(half)clearGrainReserve();else S.flags.grainReserveHalf=true;
-      delete S.flags.localGrainPaymentTurn;
+      clearLocalGrainPayment();
       log(`户部以半批常平仓粮加 ${cost} 万两结清赈粮尾款。`);
       return `粮商已收粮银，赈粮尾款结清。${half?'仓中余粮已用完。':'仓中还留有半批备荒粮。'}${fx(chg({treasury:-cost}))}`;
     })};
@@ -259,6 +279,7 @@ A.grainReserve=function(){
   const paymentDue=localGrainPaymentDue();
   const choices=[];
   if(paymentDue&&stocked)choices.push(settleLocalGrainWithReserveChoice(half));
+  if(localGrainExtensionAvailable())choices.push(extendLocalGrainChoice());
   if(order==='due')choices.push(collectAutumnGrainChoice(),collectAutumnGrainChoice(true));
   if(order==='due'&&S.month===8)choices.push(delayAutumnGrainChoice(),cancelAutumnGrainChoice());
   if(stocked){
@@ -271,7 +292,7 @@ A.grainReserve=function(){
   choices.push(stocked?{t:'留粮备荒',preview:`遇蝗灾月奏可发粮 · 国库无支出 · 免耗精力 · 民心 +${half?3:6}`}:{t:'暂不购粮'});
   pushEv({title:'常平仓',text:`${stocked?'现有'+grainReserveLabel()+'备荒粮':'仓中暂无备荒粮'}，国库有 ${E().treasury} 万两。`+
     (stocked||order==='due'?`当前民心 ${E().people}。`:'')+
-    (paymentDue?`\n赈粮尾款 ${LOCUST_LOCAL_BALANCE} 万两将于月底扣除。${stocked?'粮商肯收半批仓粮抵掉一部分。':''}`:'')+
+    (paymentDue?`\n赈粮尾款 ${localGrainBalance()} 万两将于月底扣除。${stocked?'粮商肯收半批仓粮抵掉一部分。':''}${localGrainPaymentFee()?'这笔尾款已展期。':''}`:'')+
     (order==='pending'?'\n已预订半批秋粮。八月可留出半批仓位领粮，民心低时也可加付运费直送救急。逾期不退订金。':'')+
     (order==='delayed'?'\n预订已改到九月，届时可领粮，逾期不退订金。':'')+
     (order==='due'?`\n预订的半批秋粮已到。可领粮入仓，民心低时也可直送缺粮村落。${S.month===8?'若本月不领，可改到九月或退订。':'九月是最后的领取期限。'}逾期不退订金。`:'')+
