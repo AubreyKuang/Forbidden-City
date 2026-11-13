@@ -297,6 +297,7 @@ function reliefDelegation(index){
 const FLOOD_INSTALLMENT=150;
 const FLOOD_GRAIN_FREIGHT=50;
 const FLOOD_ARMY_SHELTER_COST=80;
+const FLOOD_BRIDGE_COST=35;
 const FLOOD_UNFUNDED={people:-3};
 function floodReliefDue(){
   const flood=S.flags.floodRelief,brief=S.flags.monthlyCourt;
@@ -315,7 +316,8 @@ function stagedFloodRelief(brief){
 function floodReliefEvent(brief){
   const shelter=brief.floodNeed==='shelter';
   const event={title:'黄河决堤 · 赈灾回奏',
-    text:(shelter?'首批粮银已供灾民暂住。工部请续拨一百五十万两雇工搭建住所。'
+    text:(brief.extended?'上月拨的周转银已用完，工部再请续拨一百五十万两收尾。'
+      :shelter?'首批粮银已供灾民暂住。工部请续拨一百五十万两雇工搭建住所。'
       :'首批粮银已用于安置灾民。工部请续拨一百五十万两供赈粮发放。')+'若本月不再拨款，赈济中断，民心 −3。',
     choices:[
       {t:'拨清余款，完成赈济',preview:'国库 −150 万两 · 民心 +5 · 威望 +2',
@@ -347,6 +349,14 @@ function floodReliefEvent(brief){
         return `户部绕开受损粮道，把常平仓的存粮送到了灾区。${fx(chg({treasury:-FLOOD_GRAIN_FREIGHT,people:4}))}`;
       }});
   }
+  if(!brief.extended)event.choices.push({
+    t:'拨周转银，延一月收尾',
+    preview:`国库 −${FLOOD_BRIDGE_COST} 万两 · 民心 −1 · 下月再呈赈灾回奏 · 仅可延期一次`,
+    delegated:true,cond:()=>E().treasury>=FLOOD_BRIDGE_COST,why:`国库至少需 ${FLOOD_BRIDGE_COST} 万两`,
+    f:()=>{
+      S.flags.floodRelief={turn:S.turn+1,gen:S.gen,floodNeed:brief.floodNeed,extended:true};
+      return `户部先拨周转银维持赈济。灾民还要再等一个月，下月须批复收尾。${fx(chg({treasury:-FLOOD_BRIDGE_COST,people:-1}))}`;
+    }});
   return event;
 }
 function courtEvent(){
@@ -398,7 +408,8 @@ function monthlyCourtEvent(){
   const flood=S.flags.floodRelief;
   if(flood?.turn===S.turn&&flood.gen===S.gen){
     delete S.flags.floodRelief;
-    S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index:FLOOD_INDEX,floodFollowup:true,floodNeed:flood.floodNeed};
+    S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index:FLOOD_INDEX,floodFollowup:true,floodNeed:flood.floodNeed,
+      ...(flood.extended===true?{extended:true}:{})};
     save('auto');
     return floodReliefEvent(S.flags.monthlyCourt);
   }
