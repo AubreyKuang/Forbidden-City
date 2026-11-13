@@ -12,6 +12,8 @@ function cnNum(n){const d='零一二三四五六七八九';if(n<=10)return n===1
 
 /* ============ 状态 ============ */
 let S=null; const Q=[]; let modalOpen=false, curEv=null;
+let modalInvoker;
+$('#modal').addEventListener('cancel',event=>event.preventDefault());
 const UI={view:'title',sel:null,logF:'all'};
 const E=()=>S.emp;
 const alive=()=>S.consorts.filter(c=>c.alive&&!c.gone);
@@ -97,10 +99,15 @@ function pushEv(ev){
 function pushNow(ev){if(!eventStillValid(ev))return;Q.unshift(ev);if(!modalOpen)nextEv()}
 function nextEv(){
   while(Q.length){const ev=Q.shift();if(eventStillValid(ev)){openModal(ev);return}}
-  const returningFromMonthReview=curEv?.scene==='month-review';
-  if(returningFromMonthReview) $('#app').inert=false;
-  modalOpen=false;curEv=null;const modal=$('#modal');modal.hidden=true;modal.setAttribute('data-scene','');checkEnd();render();
-  if(returningFromMonthReview&&!modalOpen) $('#finish-month')?.focus?.({preventScroll:true});
+  const invoker=modalInvoker;
+  modalInvoker=null;
+  modalOpen=false;curEv=null;const modal=$('#modal');modal.close?.();modal.hidden=true;modal.setAttribute('data-scene','');checkEnd();render();
+  if(!modalOpen&&invoker){
+    const replacement=invoker.id?document.getElementById(invoker.id):
+      [...$('#app').querySelectorAll('button')].find(button=>button.getAttribute('onclick')===invoker.getAttribute('onclick'));
+    const target=replacement||$('#panel');
+    target.focus?.({preventScroll:true});
+  }
 }
 function eventPortraits(ev){
   const seen=new Set();
@@ -117,13 +124,13 @@ function eventCast(people){
     `<figure>${porImg(person,104)}<figcaption>${esc(porName(person))}</figcaption></figure>`).join('')}</div>`:'';
 }
 function openModal(ev){
-  if(ev.scene==='month-review'||curEv?.scene==='month-review') $('#app').inert=ev.scene==='month-review';
+  if(!modalOpen&&document.activeElement?.matches('button,input,select')) modalInvoker=document.activeElement;
   modalOpen=true;curEv=ev;if(ev.onShow)ev.onShow();const b=$('#mbox');
   const people=eventPortraits(ev);
   // Portrait buttons distinguish people, not several actions for the same person.
   const choicePeople=new Set(ev.choices.filter(c=>c.person).map(c=>c.person.id??c.person));
   const showChoicePortraits=choicePeople.size>1;
-  let h=`<div class="mtitle" id="event-title">${esc(ev.title)}</div>${ev.scene==='mourning'?mourningScene():''}${eventCast(people)}<div class="mbody">`;
+  let h=`<h2 class="mtitle" id="event-title" tabindex="-1">${esc(ev.title)}</h2>${ev.scene==='mourning'?mourningScene():''}${eventCast(people)}<div class="mbody">`;
   if(people.length===1)h+=`<div class="mpor">${porImg(people[0],112)}<div>${esc(porName(people[0]))}</div></div>`;
   h+=`<div class="mtext">${fmt(ev.text)}${ev.ref?`<p class="ref">典出 · ${ev.refURL?`<a href="${esc(ev.refURL)}" target="_blank" rel="noopener noreferrer">${esc(ev.ref)}</a>`:esc(ev.ref)}</p>`:''}${ev.input?`<input id="minput" class="inp" maxlength="${ev.input.max||4}" value="${esc(ev.input.def||'')}" aria-label="输入">`:''}</div></div><div class="mch${showChoicePortraits?' event-choices':''}">`;
   ev.choices.forEach((c,i)=>{
@@ -134,9 +141,11 @@ function openModal(ev){
     h+=`<button class="btn${style}${portrait?' event-person-choice':''}" ${ok?'':'disabled'} onclick="choose(${i})">${portrait?`${porImg(c.person,60)}<span>${label}</span>`:label}</button>`;
   });
   b.innerHTML=h+'</div>';const modal=$('#modal');modal.setAttribute('data-scene',ev.scene||'');modal.hidden=false;b.scrollTop=0;
+  if(!modal.open) modal.showModal?.();
   if(ev.sfx) AU.sfx(ev.sfx); else AU.sfx('page');
-  const inp=$('#minput'); if(inp) setTimeout(()=>inp.select(),30);
-  if(ev.scene==='monthly-court') $('#mbox .mch button:not(:disabled)')?.focus?.({preventScroll:true});
+  const inp=ev.input&&$('#minput');
+  (inp||$(ev.scene==='monthly-court'?'#mbox .mch button:not(:disabled)':'#event-title'))?.focus?.({preventScroll:true});
+  inp?.select?.();
 }
 function choose(i){
   if(!eventStillValid(curEv)){toast('人物处境已变，这件事已不再适用。');nextEv();return;}
@@ -149,8 +158,9 @@ function showRes(res){
   if(typeof res==='string') res={text:res};
   const b=$('#mbox');
   const cast=res.por?'':eventCast(eventPortraits(curEv));
-  b.innerHTML=`<div class="mtitle" id="event-title">${esc(res.title||curEv.title)}</div>${curEv.scene==='mourning'?mourningScene():''}${cast}<div class="mbody">${res.por?`<div class="mpor">${porImg(res.por,96)}</div>`:''}<div class="mtext">${fmt(res.text)}</div></div><div class="mch"><button class="btn gold" onclick="nextEv()">继续</button></div>`;
+  b.innerHTML=`<h2 class="mtitle" id="event-title">${esc(res.title||curEv.title)}</h2>${curEv.scene==='mourning'?mourningScene():''}${cast}<div class="mbody">${res.por?`<div class="mpor">${porImg(res.por,96)}</div>`:''}<div class="mtext">${fmt(res.text)}</div></div><div class="mch"><button class="btn gold" onclick="nextEv()">继续</button></div>`;
   b.scrollTop=0;renderTop();
+  $('#mbox .mch button')?.focus?.({preventScroll:true});
 }
 
 /* ============ 侍寝与互动 ============ */
@@ -172,7 +182,15 @@ function nightWith(c,fromEvent){
     {t:'就此作罢'}]});
 }
 const A={
-  go(v,id){rememberPersonRoute(v,id);UI.view=v;UI.sel=id;if(v==='palace')preparePalaceLife(id);AU.sfx('click');render();if(v!=='title')$('#panel').scrollIntoView({block:'nearest',behavior:'smooth'})},
+  go(v,id){
+    rememberPersonRoute(v,id);UI.view=v;UI.sel=id;
+    if(v==='palace')preparePalaceLife(id);
+    if(v==='consort'&&S?.turn===0&&!S.flags.firstEmpressVisit&&id===empress()?.id){
+      S.flags.firstEmpressVisit=true;save('auto');
+    }
+    AU.sfx('click');render();
+    if(v!=='title')$('#panel').scrollIntoView({block:'nearest',behavior:'smooth'});
+  },
   court(){
     if(!S||S.over||modalOpen)return;
     const ev=monthlyCourtEvent();
@@ -304,6 +322,7 @@ A.endMonth=function(){
   alive().forEach(c=>{xinTick(c);visitorTick(c)});kidsAlive().forEach(growKid);
   // 时间
   S.turn++;S.month++;let newYear=false;
+  UI.view='map';UI.sel=null;
   if(S.flags.impeachmentReview?.turn<S.turn||
       (brief?.review&&!brief.done&&brief.turn===S.turn-1&&brief.gen===S.gen)){
     delete S.flags.impeachmentReview;

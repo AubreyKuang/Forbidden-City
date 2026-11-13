@@ -182,6 +182,8 @@ function slotInfo(slot){
 }
 function showRestoredPalace(){
   Q.length=0;curEv=null;modalOpen=false;
+  modalInvoker=null;
+  $('#modal').close?.();
   $('#modal').hidden=true;
   UI.view='map';UI.banquet=null;setScene('court');render();
 }

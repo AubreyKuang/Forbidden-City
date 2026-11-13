@@ -353,16 +353,22 @@ A.finishMonth=function(){
   const floodDue=floodReliefDue();
   const locustDue=locustReliefDue();
   const paymentDue=localGrainPaymentDue();
-  if(S.turn>0&&!invitations.length&&!floodDue&&!locustDue&&!paymentDue){A.endMonth();return;}
+  const auditDue=mapMemorial().name==='查账回奏';
+  const openingMemorial=S.turn===0&&!mapMemorial().done;
+  if(S.turn>0&&!invitations.length&&!floodDue&&!locustDue&&!paymentDue&&!auditDue){A.endMonth();return;}
   const nextMonth=MONTHS[S.month%12];
   const detail=invitations.length?'换月后，这些邀约就散了：'+invitations.map(lead=>lead.title).join('、')+'。':'';
   const reliefDetail=locustDue?`\n本月尚未批复远村补粮回奏。直接换月将失约。 ${LOCUST_UNFUNDED_TEXT}`
-    :floodDue?'\n本月尚未批复赈灾回奏。直接换月会停止续拨，民心 −3。':'';
+    :floodDue?'\n本月尚未批复赈灾回奏。直接换月会停止续拨，民心 −3。'
+    :auditDue?'\n查账回奏尚未批复，换月后此案将归档。'
+    :openingMemorial?'\n首月奏折尚未批复，可以先查看奏折。':'';
   const remaining=E().energy>0?`本月还可用 ${E().energy} 点精力。\n`:'';
   const paymentDetail=paymentDue?`\n换月结算时将扣除赈粮尾款 ${localGrainBalance()} 万两。${grainReserveReady()?'可留在本月，到常平仓用半批粮抵一部分。':''}${localGrainExtensionAvailable()?'留在本月也可到常平仓展期，或查看本月奏折能否改批免息宽限。':''}`:'';
   pushEv({title:invitations.length?'尚有本月邀约':`进入${nextMonth}？`,scene:'month-review',
     cast:invitations.flatMap(lead=>lead.cast),text:`${remaining}进入${nextMonth}后会结算本月收支，补充精力，并可能发生新的宫中事件。${detail?'\n'+detail:''}${reliefDetail}${paymentDetail}`,choices:[
     ...invitations.map(lead=>({t:'先去'+lead.title,f:()=>{goDirect(PLACES.find(p=>p.id===lead.place));return null;}})),
+    ...(openingMemorial||floodDue||locustDue||auditDue?[{t:'查看'+mapMemorial().name,f:()=>{setTimeout(()=>A.court(),0);}}]:[]),
+    ...(paymentDue?[{t:'去常平仓',f:()=>{setTimeout(()=>A.grainReserve(),0);}}]:[]),
     {t:'留在本月'},
     {t:invitations.length?`略过邀约，进入${nextMonth}`:`进入${nextMonth}`,primary:true,
       f:()=>{setTimeout(()=>A.endMonth(),0);return null;}}
@@ -375,27 +381,31 @@ function mountMap(){const w=$('#mapwrap');if(!w)return;w.appendChild(MAPC);mount
     b.style.left=((x+ww/2)/MW*100)+'%';b.style.top=((y+(p.id==='yh'?h/2:h-2))/MH*100)+'%';
     bindMapGuide(b,p);w.appendChild(b)})}
 const backBtn=`<button class="btn sm" onclick="A.go('map')">◂ 返回宫城</button>`;
-function viewMap(){
-  const leads=mapActivityLeads();
-  const first=leads.find(lead=>lead.expires)||leads[0];
+function mapMemorial(){
   const done=S.flags.monthlyCourt?.turn===S.turn&&S.flags.monthlyCourt.gen===S.gen&&S.flags.monthlyCourt.done;
   const pending=S.flags.impeachmentReview;
   const reviewReady=!done&&((pending?.turn===S.turn&&pending.gen===S.gen&&impeachmentSubject(pending.file?.person))||
     (S.flags.monthlyCourt?.turn===S.turn&&S.flags.monthlyCourt.gen===S.gen&&S.flags.monthlyCourt.review&&impeachmentSubject(S.flags.monthlyCourt.person)));
-  const report=!done&&locustReliefDue()?'远村补粮回奏':reviewReady?'查账回奏':!done&&floodReliefDue()?'赈灾回奏':'';
-  const host=S.turn===0&&done&&empress();
+  return {done,name:!done&&locustReliefDue()?'远村补粮回奏':reviewReady?'查账回奏':!done&&floodReliefDue()?'赈灾回奏':'本月奏折'};
+}
+function viewMap(){
+  const leads=mapActivityLeads();
+  const first=leads.find(lead=>lead.expires)||leads[0];
+  const {done,name:report}=mapMemorial();
+  const host=S.turn===0&&done&&!S.flags.firstEmpressVisit&&empress();
+  const next=!done?`<button id="map-next" class="btn sm jade" onclick="A.court()">查看${report}</button>`
+    :host?`<button id="map-next" class="btn sm jade" onclick="A.go('consort',${host.id})">去坤宁宫见${esc(fullName(host))}</button>`
+    :first?`<button id="map-next" class="btn sm jade" onclick="${mapLeadAction(first)}">${esc(mapLeadPlace(first))} · ${esc(first.title)} →</button>`:'';
   return `<section class="map-play" aria-label="宫城地图">
     <header class="map-location"><h2>宫城</h2><span class="hint">${esc(nearestPlace())}</span></header>
     <div class="map-first-month">
-      <span>${done?'奏折已批复':report?report+'待阅':'奏折待批'} · 余 ${E().energy} 点精力</span>
-      ${!done?`<button class="btn sm" onclick="A.court()">查看${report||'本月奏折'}</button>`:''}
-      ${host?`<button class="btn sm" onclick="A.visitMapActivity('kn')">去坤宁宫见${esc(fullName(host))}</button>`:''}
+      <span>${done?'奏折已批复':report==='本月奏折'?'奏折待批':report+'待阅'} · 余 ${E().energy} 点精力</span>
+      ${next}
       ${S.flags.lastMonthReview?'<button class="btn sm" onclick="A.go(\'log\')">上月回顾</button>':''}
     </div>
     <div id="mapwrap"></div>
     <div id="map-guide-preview" aria-live="polite"></div>
     <div class="map-dock">
-      ${first?`<button class="btn map-lead" onclick="${mapLeadAction(first)}">${esc(mapLeadPlace(first))} · ${esc(first.title)} <span aria-hidden="true">›</span></button>`:''}
       <button id="map-guide-toggle" class="btn sm" aria-pressed="false" onclick="A.toggleMapGuide()">地点用途与玩法</button>
       <details class="map-brief" ${UI.mapBriefOpen?'open':''} ontoggle="UI.mapBriefOpen=this.open">
         <summary>宫中动向</summary>

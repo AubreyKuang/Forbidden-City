@@ -141,7 +141,18 @@ test('first month review can be canceled without spending energy or advancing ti
   assert.ok(callback);
   callback();
   assert.equal(run(`S.turn`),1);
+  assert.equal(run(`UI.view`),'map');
   assert.equal(run(`E().energy`),run(`maxEnergy()`));
+});
+
+test('opening court and the empress are reachable from first month guidance',()=>{
+  const {run}=boot();
+  run(`A.finishMonth()`);
+  assert.equal(run(`curEv.choices.some(choice=>choice.t==='查看本月奏折')`),true);
+  run(`choose(curEv.choices.findIndex(choice=>choice.t==='留在本月'));A.court();choose(0);drain()`);
+  assert.match(run(`viewMap()`),/A\.go\('consort',\d+\)">去坤宁宫见/);
+  run(`A.go('consort',empress().id);A.go('map')`);
+  assert.doesNotMatch(run(`viewMap()`),/去坤宁宫见/);
 });
 
 test('all music scores play bounded pentatonic notes and preserve independent selection',()=>{
