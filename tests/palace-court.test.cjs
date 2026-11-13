@@ -262,6 +262,54 @@ test('a failed grain purchase restores funds, energy, stock, monthly eligibility
   `);
 });
 
+test('July grain orders survive reload and can be collected in August without energy',()=>{
+  const {run}=boot();
+  run(`
+    const option=label=>curEv.choices.findIndex(c=>c.t.includes(label));
+    S.month=7;S.turn=6;E().treasury=100;E().energy=1;
+    A.grainReserve();choose(option('预订半批秋粮'));drain();
+    assert.equal(load('auto'),true);
+    assert.deepEqual([autumnGrainOrderStatus(),E().treasury,E().energy,grainReserveReady()],['pending',80,0,false]);
+    A.grainReserve();assert.equal(option('预订半批秋粮'),-1);choose(option('暂不购粮'));
+    S.turn++;S.month=8;
+    A.grainReserve();
+    const write=save;
+    save=()=>false;choose(option('付尾款'));drain();
+    assert.deepEqual([autumnGrainOrderStatus(),E().treasury,grainReserveReady(),S.flags.grainPurchaseTurn],['due',80,false,undefined]);
+    save=write;
+    A.grainReserve();choose(option('付尾款'));drain();
+    assert.equal(load('auto'),true);
+    assert.deepEqual([autumnGrainOrderStatus(),E().treasury,E().energy,halfGrainReserve(),S.flags.grainPurchaseTurn],['',40,0,true,S.turn]);
+    E().treasury=150;E().energy=1;
+    A.grainReserve();assert.equal(option('付尾款'),-1);
+    assert.equal(curEv.choices[option('买半批粮')].cond(),false);
+  `);
+});
+
+test('collecting autumn grain requires room, funds and the August purchase allowance',()=>{
+  const {run}=boot();
+  run(`
+    const option=label=>curEv.choices.findIndex(c=>c.t.includes(label));
+    S.month=7;S.turn=6;E().treasury=300;E().energy=2;
+    S.flags.grainReserveGen=S.gen;S.flags.grainReserveHalf=true;
+    A.grainReserve();choose(option('预订半批秋粮'));drain();
+    A.grainReserve();choose(option('买半批粮'));drain();
+    S.turn++;S.month=8;E().energy=3;
+    A.grainReserve();assert.match(curEv.choices[option('付尾款')].why,/已满/);
+    choose(option('售粮充库'));drain();
+    E().treasury=39;
+    A.grainReserve();assert.match(curEv.choices[option('付尾款')].why,/40 万两尾款/);
+    choose(option('暂不购粮'));
+    E().treasury=195;
+    A.grainReserve();choose(option('买半批粮'));drain();
+    A.grainReserve();assert.match(curEv.choices[option('付尾款')].why,/本月已购粮/);
+    choose(option('留粮备荒'));
+    S.turn++;S.month=9;
+    A.grainReserve();assert.equal(option('付尾款'),-1);
+    assert.deepEqual([autumnGrainOrderStatus(),E().treasury,halfGrainReserve()],['',120,true]);
+  `);
+});
+
 test('early grain relief spends half a reserve and can be used once per month without consuming the memorial',()=>{
   const {run}=boot();
   run(`
