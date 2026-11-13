@@ -182,6 +182,43 @@ test('the first seasonal harvest and later locust memorial connect through a sin
   `);
 });
 
+test('selling stored grain takes one energy, saves the proceeds, and removes the free locust option',()=>{
+  const {run}=boot();
+  run(`
+    S.flags.grainReserveGen=S.gen;
+    S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index:LOCUST_INDEX};
+    E().treasury=60;E().energy=0;
+    assert.match(viewMap(),/查看常平仓/);
+    A.grainReserve();
+    assert.equal(curEv.title,'常平仓');
+    assert.match(curEv.choices[0].preview,/国库 \\+100 万两/);
+    assert.equal(curEv.choices[0].cond(),false);
+    choose(0);
+    assert.equal(E().treasury,60);
+    choose(1);
+    assert.equal(grainReserveReady(),true);
+    E().energy=2;
+    A.grainReserve();choose(1);
+    assert.equal(E().energy,2);
+    assert.equal(E().treasury,60);
+    A.grainReserve();choose(0);
+    assert.equal(E().treasury,160);
+    assert.equal(E().energy,1);
+    assert.match(S.log.at(-1).t,/售出常平仓储粮/);
+    drain();
+    assert.equal(load('auto'),true);
+    assert.equal(E().treasury,160);
+    assert.equal(E().energy,1);
+    assert.equal(grainReserveReady(),false);
+    assert.doesNotMatch(viewMap(),/查看常平仓/);
+    A.grainReserve();
+    assert.equal(modalOpen,false);
+    A.court();
+    assert.equal(curEv.title,'蝗灾');
+    assert.equal(curEv.choices.some(c=>c.t.includes('发放常平仓储粮')),false);
+  `);
+});
+
 test('delegating the exam resolves the memorial without spending the last energy point',()=>{
   const {run}=boot();
   run(`

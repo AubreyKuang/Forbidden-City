@@ -65,7 +65,22 @@ const COURT=[
 const SPONT=[0,1,5,10,11,14];
 const FLOOD_INDEX=0;
 const LOCUST_INDEX=5, HARVEST_INDEX=11;
+const GRAIN_SALE_REVENUE=100;
 function grainReserveReady(){return S.flags.grainReserveGen===S.gen;}
+A.grainReserve=function(){
+  if(!S||S.over||modalOpen||!grainReserveReady())return;
+  pushEv({title:'常平仓',text:`现有一批备荒粮，国库有 ${E().treasury} 万两。可留粮应对蝗灾，也可售粮换银，应付眼前的开支。`,choices:[
+    {t:'售粮充库',preview:`国库 +${GRAIN_SALE_REVENUE} 万两 · 精力 −1 · 用完这一批储粮`,
+      cond:()=>grainReserveReady()&&E().energy>0,why:'精力不足',f:()=>{
+        if(!useE())return;
+        delete S.flags.grainReserveGen;
+        const result=chg({treasury:GRAIN_SALE_REVENUE});
+        log(`户部售出常平仓储粮，得银 ${GRAIN_SALE_REVENUE} 万两。`);
+        save('auto');
+        return `售粮所得已入国库，常平仓可在下次丰收时补粮。${fx(result)}`;
+      }},
+    {t:'留粮备荒',preview:'遇蝗灾月奏可发粮 · 国库无支出 · 免耗精力 · 民心 +6'}]});
+};
 function monthlyGrainEvent(index){
   const event=COURT[index]();
   if(index===HARVEST_INDEX){
