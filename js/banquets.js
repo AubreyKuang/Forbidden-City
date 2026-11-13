@@ -347,7 +347,7 @@ function proudDemandEvent(c,guests) {
     log(`${name}因${atBanquet?'席次':'分例'}请旨。 ${result}`);
     return result;
   };
-  return {title:atBanquet?'席间争座':pregnancy?'恃宠争例':'内务府争执',por:c,text,choices:[
+  return {title:atBanquet?'席间争座':pregnancy?'恃宠争例':'内务府争执',cast:[c,witness],text,choices:[
     {t:'这回依她',f:()=>settle('yield')},
     {t:pregnancy?'照顾身孕，席次和分例照旧':'另给她一份，其他人照旧',f:()=>settle('care')},
     {t:'按宫规办',f:()=>settle('rules')}

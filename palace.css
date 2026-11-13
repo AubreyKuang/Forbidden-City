@@ -246,7 +246,7 @@ body{background:#f3eee4}
 .detail-vitals .bar{display:grid;grid-template-columns:1fr auto;gap:5px;padding:3px 2px 6px;background:transparent;border-radius:0;margin:0;font-size:13px}
 .detail-vitals .bar i{grid-row:2;grid-column:1/-1;min-width:0;background:#e8dfd0}
 .detail-vitals .bar em{grid-row:1;grid-column:2;width:auto;font-weight:650}
-.family-time-row{display:flex;flex-wrap:wrap;align-items:start;justify-content:space-between;gap:6px 12px;padding:8px 0;border-bottom:1px solid #dac8aa}.family-time-row p{margin:4px 0}.banquet-cast{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin:0 0 12px}.banquet-cast figure{margin:0;text-align:center}.banquet-cast figcaption{font-size:.85em}.banquet-seats{padding-left:24px}.banquet-seats li{padding:5px}.banquet-seats .acts{display:inline-flex;margin:0 0 0 8px}.initiative-note{padding:12px 14px;background:#efe5d1;border-radius:8px}.initiative-note p{margin:4px 0}.initiative-note small{color:var(--ink2)}.initiative-note>small{display:block;margin-top:3px}.initiative-note>.btn{margin-top:8px}.initiative-note .btn small{color:inherit}.initiative-notices{display:flex;flex-wrap:wrap;gap:6px;padding:6px 0}.initiative-notices .btn{background:#4b2a24;color:#fff0d1}
+.family-time-row{display:flex;flex-wrap:wrap;align-items:start;justify-content:space-between;gap:6px 12px;padding:8px 0;border-bottom:1px solid #dac8aa}.family-time-row p{margin:4px 0}.banquet-seats{padding-left:24px}.banquet-seats li{padding:5px}.banquet-seats .acts{display:inline-flex;margin:0 0 0 8px}.initiative-note{padding:12px 14px;background:#efe5d1;border-radius:8px}.initiative-note p{margin:4px 0}.initiative-note small{color:var(--ink2)}.initiative-note>small{display:block;margin-top:3px}.initiative-note>.btn{margin-top:8px}.initiative-note .btn small{color:inherit}.initiative-notices{display:flex;flex-wrap:wrap;gap:6px;padding:6px 0}.initiative-notices .btn{background:#4b2a24;color:#fff0d1}
 .graph-wrap{overflow-x:auto;border:1px solid var(--paper2);border-radius:8px;background:#fffaf0;margin-top:8px}.family-graph{display:block;font-family:var(--f-ui)}.family-graph .node:hover rect{filter:brightness(.94)}.graph-legend{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}.graph-legend .tag{background:#fff}
 .family-branch{border-bottom:1px solid var(--paper2);padding:7px 0}.family-branch summary{cursor:pointer;padding:4px 0}.family-branch summary .hint{margin-inline-start:8px}.family-branch ul{margin:2px 0 5px;padding-inline-start:20px}.family-branch li::marker{color:#ae8565}.family-branch li .hint{margin-inline-start:4px}
 .detail-stack{display:grid;gap:18px;margin-top:16px}
@@ -510,3 +510,27 @@ button.portrait-card{align-items:center}
 .family-person{display:inline-flex;align-items:center;gap:10px;text-align:left;max-width:100%;padding:4px 8px}
 .family-person span{min-width:0;overflow-wrap:anywhere}
 .family-branch .family-person small{display:block;margin-inline-start:0}
+
+/* Keep the cast visible through the decision and its outcome. */
+.event-cast{
+  display:flex;justify-content:center;align-items:stretch;flex-wrap:wrap;gap:10px;
+  padding:12px 8px 8px;margin:0 0 16px;border-radius:8px;
+  background:radial-gradient(ellipse at top,#f6ead1,#e8d9bc);border-bottom:2px solid #b19467;
+}
+.event-cast figure{flex:0 1 104px;min-width:0;max-width:calc((100% - 30px)/4);margin:0;text-align:center}
+.event-cast .por{display:block;width:100%;height:auto;margin:0 auto;background:#fff6df86}
+.event-cast figcaption{margin-top:5px;color:#624435;font-size:12px;line-height:1.4;overflow-wrap:anywhere}
+.mch.event-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin-top:16px}
+.mch.event-choices>.btn:not(.event-person-choice){grid-column:1/-1}
+.mch .btn.event-person-choice{display:flex;align-items:center;gap:10px;padding:8px 10px}
+.event-person-choice .por{flex:none;width:52px;height:auto}
+.event-person-choice span{min-width:0;overflow-wrap:anywhere}
+.event-person-choice small{display:block}
+@media(max-width:460px){
+  .event-cast{gap:6px;padding-inline:6px}
+  .event-cast figure{flex-basis:86px;max-width:calc((100% - 18px)/4)}
+  .event-cast:has(figure:nth-child(2):last-child) figure{max-width:40%}
+  .mch.event-choices{gap:6px}
+  .mch .btn.event-person-choice{gap:6px;padding:7px}
+  .event-person-choice .por{width:36px}
+}

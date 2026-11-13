@@ -86,7 +86,11 @@ test('Duanwu assignments survive a reload, credit the helper and open a prepaid 
     const before=E().treasury;
     A.openDuanwuGarden();
     assert.match($('#panel').innerHTML,/分派端午宫务/);
-    A.assignDuanwu(); choose(0); choose(0); drain();
+    A.assignDuanwu();
+    assert.equal(($('#mbox').innerHTML.match(/event-person-choice/g)||[]).length,3);
+    choose(0);
+    assert.equal(($('#mbox').innerHTML.match(/event-person-choice/g)||[]).length,2);
+    choose(0); drain();
     assert.equal(E().treasury,before-20);
     assert.equal(duanwuWork().stage,'preparing');
     assert.equal(duanwuWork().tables,tables.id);
@@ -96,9 +100,12 @@ test('Duanwu assignments survive a reload, credit the helper and open a prepaid 
     assert.equal(duanwuWork().helper,helper.id);
     assert.equal(duanwuWork().issue,'漏记帮手');
     A.reviewDuanwu();
+    assert.equal(($('#mbox').innerHTML.match(/<figure>/g)||[]).length,3);
     assert.match(curEv.text,/先列清了宴席.*开支/);
     assert.match(curEv.text,/节礼的花样/);
-    choose(0); drain();
+    choose(0);
+    assert.equal(($('#mbox').innerHTML.match(/<figure>/g)||[]).length,3);
+    drain();
     assert.equal(duanwuWork().stage,'finished');
     assert.ok(NPCMemory.recall(S,helper.id).some(entry=>entry.type==='duanwu_help'&&entry.interpretation.includes('我的名字')));
     assert.equal(banquetKind('duanwu').ready,true);
@@ -108,6 +115,29 @@ test('Duanwu assignments survive a reload, credit the helper and open a prepaid 
     assert.equal(banquetKind('duanwu').ready,false);
     assert.ok(load('auto')); migrate();
     assert.equal(banquetKind('duanwu').ready,false);
+  `);
+});
+
+test('a two-consort ruling shows both portraits and the matching choice throughout the event',()=>{
+  const {run}=boot(919);
+  run(`
+    const [,a]=harem();
+    const b=makeGirl({trait:'好学'});
+    addConsort(b,2,'选秀入宫');
+    S.consorts=S.consorts.filter(c=>c===empress()||c===a||c===b);
+    const event=HAREM.find(make=>make.name==='quarrel')();
+    assert.equal(event.cast.length,2);
+    pushEv({...event,por:event.cast[0]});
+    const markup=$('#mbox').innerHTML;
+    assert.equal((markup.match(/<figure>/g)||[]).length,2);
+    assert.doesNotMatch(markup,/class="mpor"/);
+    assert.equal((markup.match(/event-person-choice/g)||[]).length,2);
+    assert.equal(event.choices[1].person,event.cast[1]);
+    const selected=event.choices[1].person, mood=selected.mood;
+    choose(1);
+    assert.ok(selected.mood>mood);
+    assert.equal(($('#mbox').innerHTML.match(/<figure>/g)||[]).length,2);
+    drain();
   `);
 });
 

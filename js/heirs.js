@@ -107,7 +107,7 @@ A.foster=function(id){const k=kidById(id);const m=byId(k.mom);
   const cands=harem().filter(c=>c.id!==k.mom&&c.id!==k.foster&&c.rank>=2).sort((a,b)=>b.rank-a.rank||b.virtue-a.virtue).slice(0,6);
   if(!cands.length){toast('眼下没有合适的妃嫔（需贵人及以上）');return}
   pushEv({title:'抚养',por:k,text:`把${kidName(k)}交给谁抚养？\n${m&&m.alive?`生母${cName(m)}会很难过。`:'孩子的生母已经不在了。'}养母的德行、才情、心机会影响孩子的成长，她的家世也会成为孩子将来的倚仗。`,
-    choices:[...cands.map(c=>({t:`${cName(c)}（德${rd(c.virtue)} 才${rd(c.talent)}${c.known?' 心机'+rd(c.scheme):''}，${c.fam.t}，${raisesKid(c)?'已有孩子':'膝下无子'}）`,f:()=>doFoster(k,c)})),{t:'再想想'}]})};
+    choices:[...cands.map(c=>({t:`${cName(c)}（德${rd(c.virtue)} 才${rd(c.talent)}${c.known?' 心机'+rd(c.scheme):''}，${c.fam.t}，${raisesKid(c)?'已有孩子':'膝下无子'}）`,person:c,f:()=>doFoster(k,c)})),{t:'再想想'}]})};
 function doFoster(k,c){const m=byId(k.mom),old=fosterOf(k),childless=!raisesKid(c);if(m&&m.alive&&m!==c&&!k.motherBonds?.[m.id]){(k.motherBonds ||= {})[m.id]={trust:childTrust(k,m)}}
   if(old&&old!==c&&!k.motherBonds?.[old.id]){(k.motherBonds ||= {})[old.id]={trust:childTrust(k,old)}}
   k.foster=c.id;k.fosterT=S.turn;relAdd(c,k,Math.max(0,50-relGet(c,k)));
@@ -123,7 +123,7 @@ A.unfoster=function(id){const k=kidById(id),c=fosterOf(k),m=byId(k.mom);if(!m||!
 function fosterOffer(k,why){return {title:'抚养',por:k,text:why+'\n按宫中旧例，可将孩子交给位分高的妃嫔抚养，将来也好有个倚仗。',choices:[{t:'挑一位妃嫔抚养',f:()=>{A.foster(k.id);return null}},{t:'不必',f:()=>'你没有把孩子交给旁人。'}]}}
 function fosterEvent(){const ks=kidsAlive().filter(k=>{const m=byId(k.mom),f=fosterOf(k);return !k.visitRule&&familyVisitAllowed(k,m)&&inPalace(f)&&kidAge(k)<14});if(!ks.length)return null;
   const k=pick(ks),m=byId(k.mom),f=fosterOf(k);
-  return {title:'生母',por:m,text:`${cName(m)}趁${cName(f)}去请安，偷偷去看了${k.name}。${childTrust(k,m)>=48?'孩子认得她，拉着她说了好一会儿话。':'孩子怯生生地往乳母身后躲。'}${cName(f)}回来撞见，两人在廊下僵持着。`,choices:[
+  return {title:'生母',cast:[m,k,f],text:`${cName(m)}趁${cName(f)}去请安，偷偷去看了${k.name}。${childTrust(k,m)>=48?'孩子认得她，拉着她说了好一会儿话。':'孩子怯生生地往乳母身后躲。'}${cName(f)}回来撞见，两人在廊下僵持着。`,choices:[
    {t:`准${cName(m)}平日探望`,f:()=>{A.familyVisitRule(k.id,'open');relAdd(m,f,5);setXin(m,'感激','准她每月看望孩子');return fx(cchg(m,{mood:15,aff:6}),cchg(f,{mood:-5}))}},
    {t:'暂缓私下探望',f:()=>{A.familyVisitRule(k.id,'closed');relAdd(m,f,-15);setXin(m,'悲恸','不许她再见孩子');return fx(cchg(m,{mood:-20}),cchg(f,{aff:4}))}},
    {t:'把孩子还给生母',f:()=>{A.unfoster(k.id);return null}}]}}

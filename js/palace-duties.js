@@ -33,7 +33,7 @@ function courtFriendshipEvent(){
       palaceSupportMemory(c,friend,'palace_support',c.palace,mode,aView,bView,aEmotion,bEmotion);
       return aView+'\n'+fx(cchg(c,{mood}),cchg(friend,{mood:mode==='公开'&&cautious?-5:3}));
     };
-    return {title:'旧友来访',por:c,cast:[c,friend],onShow:()=>{c.lastFriendshipTest=S.turn;},
+    return {title:'旧友来访',cast:[c,friend],onShow:()=>{c.lastFriendshipTest=S.turn;},
       text:`${name}近来闭门少见人，${ally}还是带了她爱吃的点心来。${cautious?'她愿意私下照顾旧友，提到是否在众人面前开口，却沉默了。':'她愿在下回请安时说明自己所知，也等着陛下拿主意。'}`,
       choices:[
         {t:'准她们私下照应',f:finish('私下',7,8,`${ally}来陪我，她仍肯在这时登门。`,`悄悄去看了${name}，免得她独自捱着。`,.7,.55)},
@@ -83,9 +83,9 @@ A.assignDuanwu=function(){
   const options=harem().filter(canManageFeast);
   if(options.length<2)return;
   pushEv({title:'分派端午宫务',text:'先定一位主理宴席，再选一位筹备节礼。两人可请相熟的妃嫔帮忙。',
-    choices:[...options.map(lead=>({t:`请${fullName(lead)}主理宴席 · ${lead.trait} · ${consortHobby(lead)}`,f:()=>{
+    choices:[...options.map(lead=>({t:`请${fullName(lead)}主理宴席 · ${lead.trait} · ${consortHobby(lead)}`,person:lead,f:()=>{
       pushNow({title:'谁来筹备节礼',por:lead,text:`暂拟由${fullName(lead)}料理宴席，再选一位妃嫔准备节礼。`,
-        choices:[...options.filter(c=>c!==lead).map(gifts=>({t:`请${fullName(gifts)}筹备节礼 · ${gifts.trait} · ${consortHobby(gifts)}`,
+        choices:[...options.filter(c=>c!==lead).map(gifts=>({t:`请${fullName(gifts)}筹备节礼 · ${gifts.trait} · ${consortHobby(gifts)}`,person:gifts,
           cond:()=>E().treasury>=20,why:'需二十万两',f:()=>{
             if(!canManageFeast(lead)||!canManageFeast(gifts)||S.month!==4||duanwuWork()?.stage==='preparing'||E().treasury<20)return null;
             chg({treasury:-20});

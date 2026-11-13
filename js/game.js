@@ -95,16 +95,31 @@ function nextEv(){
   if(Q.length){openModal(Q.shift());return}
   modalOpen=false;curEv=null;const modal=$('#modal');modal.hidden=true;modal.setAttribute('data-scene','');checkEnd();render();
 }
+function eventPortraits(ev){
+  const seen=new Set();
+  return [ev.por,...(ev.cast||[])].filter(person=>{
+    if(!person)return false;
+    const key=person.id??person;
+    if(seen.has(key))return false;
+    seen.add(key);
+    return true;
+  });
+}
+function eventCast(people){
+  return people.length>1?`<div class="event-cast" aria-label="事件在场人物">${people.map(person=>
+    `<figure>${porImg(person,104)}<figcaption>${esc(porName(person))}</figcaption></figure>`).join('')}</div>`:'';
+}
 function openModal(ev){
   modalOpen=true;curEv=ev;if(ev.onShow)ev.onShow();const b=$('#mbox');
-  const cast=ev.cast?.length?`<div class="banquet-cast" aria-label="小宴宾客">${ev.cast.map(p=>`<figure>${porImg(p,56)}<figcaption>${esc(porName(p))}</figcaption></figure>`).join('')}</div>`:'';
-  let h=`<div class="mtitle">${esc(ev.title)}</div>${cast}<div class="mbody">`;
-  if(ev.por) h+=`<div class="mpor">${porImg(ev.por,112)}<div>${esc(porName(ev.por))}</div></div>`;
-  h+=`<div class="mtext">${fmt(ev.text)}${ev.ref?`<p class="ref">典出 · ${ev.refURL?`<a href="${esc(ev.refURL)}" target="_blank" rel="noopener noreferrer">${esc(ev.ref)}</a>`:esc(ev.ref)}</p>`:''}${ev.input?`<input id="minput" class="inp" maxlength="${ev.input.max||4}" value="${esc(ev.input.def||'')}" aria-label="输入">`:''}</div></div><div class="mch">`;
+  const people=eventPortraits(ev);
+  let h=`<div class="mtitle">${esc(ev.title)}</div>${eventCast(people)}<div class="mbody">`;
+  if(people.length===1)h+=`<div class="mpor">${porImg(people[0],112)}<div>${esc(porName(people[0]))}</div></div>`;
+  h+=`<div class="mtext">${fmt(ev.text)}${ev.ref?`<p class="ref">典出 · ${ev.refURL?`<a href="${esc(ev.refURL)}" target="_blank" rel="noopener noreferrer">${esc(ev.ref)}</a>`:esc(ev.ref)}</p>`:''}${ev.input?`<input id="minput" class="inp" maxlength="${ev.input.max||4}" value="${esc(ev.input.def||'')}" aria-label="输入">`:''}</div></div><div class="mch${ev.choices.filter(c=>c.person).length>=2?' event-choices':''}">`;
   ev.choices.forEach((c,i)=>{
     const ok=!c.cond||c.cond();
     const style=ev.danger?(c.f?' danger':' quiet'):c.primary||ev.choices.length===1||(ev.input&&i===0)?' primary':'';
-    h+=`<button class="btn${style}" ${ok?'':'disabled'} onclick="choose(${i})">${esc(c.t)}${!ok&&c.why?`<small>${esc(c.why)}</small>`:''}</button>`;
+    const label=`${esc(c.t)}${!ok&&c.why?`<small>${esc(c.why)}</small>`:''}`;
+    h+=`<button class="btn${style}${c.person?' event-person-choice':''}" ${ok?'':'disabled'} onclick="choose(${i})">${c.person?`${porImg(c.person,60)}<span>${label}</span>`:label}</button>`;
   });
   b.innerHTML=h+'</div>';const modal=$('#modal');modal.setAttribute('data-scene',ev.scene||'');modal.hidden=false;b.scrollTop=0;
   if(ev.sfx) AU.sfx(ev.sfx); else AU.sfx('page');
@@ -119,7 +134,8 @@ function choose(i){
 function showRes(res){
   if(typeof res==='string') res={text:res};
   const b=$('#mbox');
-  b.innerHTML=`<div class="mtitle">${esc(res.title||curEv.title)}</div><div class="mbody">${res.por?`<div class="mpor">${porImg(res.por,96)}</div>`:''}<div class="mtext">${fmt(res.text)}</div></div><div class="mch"><button class="btn gold" onclick="nextEv()">继续</button></div>`;
+  const cast=res.por?'':eventCast(eventPortraits(curEv));
+  b.innerHTML=`<div class="mtitle">${esc(res.title||curEv.title)}</div>${cast}<div class="mbody">${res.por?`<div class="mpor">${porImg(res.por,96)}</div>`:''}<div class="mtext">${fmt(res.text)}</div></div><div class="mch"><button class="btn gold" onclick="nextEv()">继续</button></div>`;
   b.scrollTop=0;renderTop();
 }
 

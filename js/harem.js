@@ -22,7 +22,7 @@ A.xxEnd=function(){S.cands=[];log('选秀礼毕。');A.go('harem')};
 /* ============ 后宫事件 ============ */
 function punishEv(A_,B,crime){
   if(B)relAdd(A_,B,-40);
-  return {title:'真相大白',por:A_,sfx:'gong',text:`人证物证俱在，${crime}一事，竟是${cName(A_)}所为。\n她跪在殿中，钗环散乱：“臣妾……臣妾一时糊涂！”`,choices:[
+  return {title:'真相大白',cast:[A_,B],sfx:'gong',text:`人证物证俱在，${crime}一事，竟是${cName(A_)}所为。\n她跪在殿中，钗环散乱：“臣妾……臣妾一时糊涂！”`,choices:[
     {t:'打入冷宫',f:()=>{const s=A_.fam.p>=70?chg({prestige:-2}):'';A_.cold=true;A_.palace='冷宫';story(A_,`${crime}事发，被打入冷宫。`);clanEcho(A_,'down');setXin(A_,'怨恨',`${crime}事发，被打入冷宫`,B?B.id:'emp');log(`${fullName(A_)}因${crime}事发，打入冷宫。`,1);if(B){cchg(B,{aff:8,mood:15});story(B,`陛下查明${crime}真相，为她主持公道。`);setXin(B,'释然',`${crime}真相大白`)}AU.sfx('sad');return `${fx(s,cchg(A_,{mood:-50,aff:-30}))}`}},
     {t:'降位禁足',f:()=>{A_.rank=Math.max(0,A_.rank-2);if(A_.rank===8)A_.rank=5;story(A_,`${crime}事发，被降为${RANKS[A_.rank]}，禁足宫中。`);setXin(A_,'惶恐',`${crime}事发`);log(`${fullName(A_)}因${crime}事发，降为${RANKS[A_.rank]}。`,1);if(B)cchg(B,{aff:5,mood:8});return fx(cchg(A_,{mood:-30,aff:-15,favor:-20}))}},
     {t:'念其初犯，罚俸了事',f:()=>{story(A_,`${crime}事发，陛下网开一面，仅罚俸半年。`);if(B){cchg(B,{aff:-8,mood:-10});story(B,'陛下对害她之人从轻发落，她心中凉了半截。');setXin(B,'怨恨','害她的人只被罚了俸',A_.id)}A_.scheme=clamp(A_.scheme+5);return `${cName(A_)}叩头谢恩，眼底却闪过一丝庆幸。`}}]};
@@ -75,13 +75,13 @@ const HAREM=[
    {t:'准奏，皇后贤德',f:()=>{story(em,'率六宫节俭用度，陛下赞其贤德。');harem().forEach(c=>{if(c!==em)c.mood=clamp(c.mood-3)});return fx(chg({treasury:60,prestige:2}),cchg(em,{aff:6}))}},
    {t:'不必委屈了六宫',f:()=>fx(cchg(em,{aff:2}))}]};
   const tgt=harem().filter(c=>c!==em).sort((a,b)=>b.favor-a.favor)[0];if(!tgt)return null;
-  return {title:'中宫奏事',por:em,text:`皇后奏道：“${cName(tgt)}恃宠而骄，屡次请安迟到，臣妾请陛下准许依宫规罚她抄经百遍。”`,choices:[
-   {t:'后宫之事，皇后做主',f:()=>{story(tgt,'被皇后以宫规责罚，抄经百遍。');return fx(cchg(em,{aff:6,mood:8}),cchg(tgt,{mood:-15}))}},
-   {t:'替她说两句好话',f:()=>{story(em,`陛下袒护${fullName(tgt)}，她面上不显，心里却记下了。`);em.scheme=clamp(em.scheme+3);return fx(cchg(em,{mood:-12,aff:-4}),cchg(tgt,{aff:5}))}}]}},
+  return {title:'中宫奏事',cast:[em,tgt],text:`皇后奏道：“${cName(tgt)}恃宠而骄，屡次请安迟到，臣妾请陛下准许依宫规罚她抄经百遍。”`,choices:[
+   {t:'后宫之事，皇后做主',person:em,f:()=>{story(tgt,'被皇后以宫规责罚，抄经百遍。');return fx(cchg(em,{aff:6,mood:8}),cchg(tgt,{mood:-15}))}},
+   {t:'替她说两句好话',person:tgt,f:()=>{story(em,`陛下袒护${fullName(tgt)}，她面上不显，心里却记下了。`);em.scheme=clamp(em.scheme+3);return fx(cchg(em,{mood:-12,aff:-4}),cchg(tgt,{aff:5}))}}]}},
  function quarrel(){const h=harem().filter(c=>c.rank<8);if(h.length<2)return null;const [a,b]=shuffle(h);
-  return {title:'争执',text:`晨起请安时，${cName(a)}与${cName(b)}为一匹蜀锦的归属起了争执，闹到了御前。`,choices:[
-   {t:`判给${cName(a)}`,f:()=>{rememberQuarrel(a,b,a.id);return fx(cchg(a,{mood:10}),cchg(b,{mood:-10,aff:-3}))}},
-   {t:`判给${cName(b)}`,f:()=>{rememberQuarrel(a,b,b.id);return fx(cchg(b,{mood:10}),cchg(a,{mood:-10,aff:-3}))}},
+  return {title:'争执',cast:[a,b],text:`晨起请安时，${cName(a)}与${cName(b)}为一匹蜀锦的归属起了争执，闹到了御前。`,choices:[
+   {t:`判给${cName(a)}`,person:a,f:()=>{rememberQuarrel(a,b,a.id);return fx(cchg(a,{mood:10}),cchg(b,{mood:-10,aff:-3}))}},
+   {t:`判给${cName(b)}`,person:b,f:()=>{rememberQuarrel(a,b,b.id);return fx(cchg(b,{mood:10}),cchg(a,{mood:-10,aff:-3}))}},
    {t:'各赏一匹，息事宁人',f:()=>{rememberQuarrel(a,b);return fx(chg({treasury:-15}),cchg(a,{mood:4}),cchg(b,{mood:4}))}}]}},
  function coldPlea(){const cs=alive().filter(c=>c.cold);if(!cs.length)return null;const c=pick(cs);const w=S.flags.wronged&&S.flags.wronged.v===c.id;
   return {title:'冷宫来信',por:c,text:w?`冷宫里的${fullName(c)}托一个老宫女捎来血书：“巫蛊一事，实乃有人栽赃。求陛下明察！”`:`冷宫里的${fullName(c)}托人送来一方旧帕，上面绣着当年你赐她的一句诗。`,choices:[
@@ -189,16 +189,16 @@ function relLine(c){if(!c.alive||c.gone)return '';
 HAREM.push(
  function clash(){const f=factions();if(f.L.length<2)return null;const [a,b]=f.L,ma=f.map[a.id],mb=f.map[b.id];if(!ma.length&&!mb.length)return null;
   const side=(w,l,mw,ml)=>()=>{[w,...mw].forEach(c=>cchg(c,{mood:8}));[l,...ml].forEach(c=>{cchg(c,{mood:-8});relAdd(c,w,-6)});story(w,`派系相争，陛下站在了她这一边。`);return `${cName(w)}一派扬眉吐气，${cName(l)}一派面色难看。`};
-  return {title:'派系倾轧',text:`晨昏定省时，${cName(a)}一派与${cName(b)}一派为${pick(['御花园赏花的座次','内务府分发的冰例','中秋宴上谁坐陛下左手边','新入宫的小主该住哪处偏殿'])}争执不下，两边都盯着你。\n${cName(a)}身边：${ma.map(cName).join('、')||'无人'}\n${cName(b)}身边：${mb.map(cName).join('、')||'无人'}`,choices:[
-   {t:`偏向${cName(a)}`,f:side(a,b,ma,mb)},{t:`偏向${cName(b)}`,f:side(b,a,mb,ma)},
+  return {title:'派系倾轧',cast:[a,b,ma[0],mb[0]],text:`晨昏定省时，${cName(a)}一派与${cName(b)}一派为${pick(['御花园赏花的座次','内务府分发的冰例','中秋宴上谁坐陛下左手边','新入宫的小主该住哪处偏殿'])}争执不下，两边都盯着你。\n${cName(a)}身边：${ma.map(cName).join('、')||'无人'}\n${cName(b)}身边：${mb.map(cName).join('、')||'无人'}`,choices:[
+   {t:`偏向${cName(a)}`,person:a,f:side(a,b,ma,mb)},{t:`偏向${cName(b)}`,person:b,f:side(b,a,mb,ma)},
    {t:'各打五十大板：“都回去抄《女诫》。”',f:()=>{[a,b,...ma,...mb].forEach(c=>cchg(c,{mood:-4}));relAdd(a,b,4);return '两边都闭了嘴，表面上总算和气了几分。'}}]}},
  function sisters(){const h=harem();let best=null,bv=45;for(let i=0;i<h.length;i++)for(let j=i+1;j<h.length;j++){const v=relGet(h[i],h[j]);if(v>bv){bv=v;best=[h[i],h[j]]}}if(!best)return null;const [a,b]=best;
   const pastime=CONSORT_HOBBIES[sharedConsortHobby(a,b)],place=pastime?.place==='本宫'?a.palace:pastime?.place||a.palace;
-  return {title:'姐妹情深',por:a,text:`${cName(a)}与${cName(b)}约在${place}${pastime?.activity||'小聚'}，派人来请陛下。`,choices:[
+  return {title:'姐妹情深',cast:[a,b],text:`${cName(a)}与${cName(b)}约在${place}${pastime?.activity||'小聚'}，派人来请陛下。`,choices:[
    {t:'前往（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{E().energy--;renderTop();story(a,`与${fullName(b)}一同宴请陛下，三人说笑到月上中天。`);story(b,`与${fullName(a)}一同宴请陛下。`);relAdd(a,b,6);return fx(cchg(a,{aff:6,mood:8}),cchg(b,{aff:6,mood:8}))}},
    {t:'赏她们一桌御膳',f:()=>{relAdd(a,b,3);return fx(chg({treasury:-5}),cchg(a,{mood:5}),cchg(b,{mood:5}))}}]}},
  function defect(){const f=factions();if(!f.L.length)return null;const pool=f.neutral.filter(c=>c.rank<=3&&c.favor<35);if(!pool.length)return null;const c=pick(pool),l=pick(f.L);
-  return {title:'投靠',por:c,text:`有宫人看见，${cName(c)}近来常往${l.palace}跑，给${cName(l)}送这送那。看样子是想找个靠山。`,choices:[
+  return {title:'投靠',cast:[c,l],text:`有宫人看见，${cName(c)}近来常往${l.palace}跑，给${cName(l)}送这送那。看样子是想找个靠山。`,choices:[
    {t:'由她去',f:()=>{relAdd(c,l,25);story(c,`投靠了${fullName(l)}。`);return `${cName(c)}从此成了${cName(l)}身边的人。`}},
    {t:'召她侍寝，让她不必依附旁人',cond:()=>E().energy>0&&!c.preg,why:'精力不足',f:()=>{nightWith(c);return null}},
    {t:`提点${cName(l)}：后宫不许结党`,f:()=>{relAdd(c,l,-10);return fx(cchg(l,{mood:-8,aff:-3}))}}]}},

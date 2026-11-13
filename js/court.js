@@ -181,9 +181,9 @@ function factionEvent(){
       {t:'“儿臣心里有数。”',f:()=>{policyNudge('dowager',-4);return fx(chg({prestige:1}))}}]});}
   const sons=kidsAlive().filter(k=>k.sex==='m'&&kidAge(k)>=6&&byId(k.mom));
   if(sons.length>=2&&!S.heir){const [a,b]=shuffle(sons).slice(0,2),ma=byId(a.mom),mb=byId(b.mom),fa=houseOf(ma)?.father,fb=houseOf(mb)?.father;
-    pool.push({title:'国本之争',ref:'明·万历国本之争',por:ma,text:`${fa?fa.name:'朝臣'}领着一班人上疏，请早立${kidName(a)}为储；${fb?fb.name:'另一派'}的人则推${kidName(b)}。两位皇子的生母在御花园碰见，谁也没有先开口。`,choices:[
-      {t:`暗示倾向${kidName(a)}`,f:()=>{a.sup=clamp((a.sup||0)+10);policyNudge('princes',3);setXin(mb,'嫉恨','陛下倾向别家皇子',ma.id);relAdd(ma,mb,-12);return fx(cchg(ma,{mood:8}),cchg(mb,{mood:-8}))}},
-      {t:`暗示倾向${kidName(b)}`,f:()=>{b.sup=clamp((b.sup||0)+10);policyNudge('princes',3);setXin(ma,'嫉恨','陛下倾向别家皇子',mb.id);relAdd(ma,mb,-12);return fx(cchg(mb,{mood:8}),cchg(ma,{mood:-8}))}},
+    pool.push({title:'国本之争',ref:'明·万历国本之争',cast:[ma,a,mb,b],text:`${fa?fa.name:'朝臣'}领着一班人上疏，请早立${kidName(a)}为储；${fb?fb.name:'另一派'}的人则推${kidName(b)}。两位皇子的生母在御花园碰见，谁也没有先开口。`,choices:[
+      {t:`暗示倾向${kidName(a)}`,person:a,f:()=>{a.sup=clamp((a.sup||0)+10);policyNudge('princes',3);setXin(mb,'嫉恨','陛下倾向别家皇子',ma.id);relAdd(ma,mb,-12);return fx(cchg(ma,{mood:8}),cchg(mb,{mood:-8}))}},
+      {t:`暗示倾向${kidName(b)}`,person:b,f:()=>{b.sup=clamp((b.sup||0)+10);policyNudge('princes',3);setXin(ma,'嫉恨','陛下倾向别家皇子',mb.id);relAdd(ma,mb,-12);return fx(cchg(mb,{mood:8}),cchg(ma,{mood:-8}))}},
       {t:'“储位之事，谁再提，罚俸。”',f:()=>{policyNudge('princes',-5);return fx(chg({prestige:2,people:-1}))}}]});}
   return pool.length?pick(pool):null;
 }
