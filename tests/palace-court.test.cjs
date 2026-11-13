@@ -646,6 +646,30 @@ test('a locust memorial saves the urgent village and prices the reversed grain r
   }
 });
 
+test('concentrating both half batches trades prestige for relief and saves all costs together',()=>{
+  for(const near of [true,false])boot().run(`
+    S.month=${near?8:9};S.turn=S.month-1;
+    const order={gen:S.gen,turn:S.turn,delayed:${!near}};
+    const brief={turn:S.turn,gen:S.gen,index:LOCUST_INDEX,locustNeed:'${near?'near':'far'}'};
+    Object.assign(S.flags,{autumnGrainOrder:order,monthlyCourt:brief,grainReserveGen:S.gen,grainReserveHalf:${!near}});
+    const cost=${near?65:145};
+    Object.assign(E(),{people:60,prestige:50,treasury:cost-1,energy:1});
+    const choice=()=>curEv.choices.findIndex(c=>c.t.includes('集中订粮和仓粮救${near?'近村':'远村'}'));
+    A.court();
+    assert.match(curEv.choices[choice()].preview,/${near?65:145} 万两 · 民心 \\+${near?11:13} · 威望 −2 · ${near?'远村':'近村'}未获粮/);
+    assert.equal(curEv.choices[choice()].cond(),false);
+    E().treasury=cost;
+    const write=save;
+    save=()=>false;choose(choice());drain();
+    assert.deepEqual([E().treasury,E().energy,E().people,E().prestige,halfGrainReserve(),
+      S.flags.monthlyCourt,S.flags.autumnGrainOrder],[cost,1,60,50,${!near},brief,order]);
+    save=write;A.court();choose(choice());drain();assert.equal(load('auto'),true);
+    assert.deepEqual([E().treasury,E().energy,E().people,E().prestige,grainReserveReady(),halfGrainReserve(),
+      S.flags.monthlyCourt.done,S.flags.autumnGrainOrder,S.flags.grainPurchaseTurn,S.flags.grainReliefTurn],
+      [0,0,${near?71:73},48,${near},${near},true,undefined,S.turn,S.turn]);
+  `);
+});
+
 test('delegating the exam resolves the memorial without spending the last energy point',()=>{
   const {run}=boot();
   run(`

@@ -87,7 +87,7 @@ function clearGrainReserve(){
   delete S.flags.grainReserveHalf;
 }
 function saveGrainAction(settle,spendEnergy=true){
-  const e=E(),before={energy:e.energy,treasury:e.treasury,people:e.people};
+  const e=E(),before={energy:e.energy,treasury:e.treasury,people:e.people,prestige:e.prestige};
   const previousFlags={...S.flags},previousLog=S.log.slice();
   if(spendEnergy&&!useE())return;
   const result=settle();
@@ -176,12 +176,12 @@ function cancelAutumnGrainChoice(){
 function autumnGrainBalance(){
   return AUTUMN_GRAIN_BALANCE+(S.flags.autumnGrainOrder?.delayed===true?AUTUMN_GRAIN_DELAY_FEE:0);
 }
-function settleAutumnGrainRelief(cost,people){
+function settleAutumnGrainRelief(cost,people,prestige=0){
   delete S.flags.autumnGrainOrder;
   S.flags.grainPurchaseTurn=S.turn;
   S.flags.grainReliefTurn=S.turn;
   log(`户部付尾款和运费共 ${cost} 万两，将预订的半批秋粮直接送往缺粮村落。`);
-  return `粮商已将预订的半批秋粮送到村里，百姓当天就领到了口粮。${fx(chg({treasury:-cost,people}))}`;
+  return `粮商已将预订的半批秋粮送到村里，百姓当天就领到了口粮。${fx(chg({treasury:-cost,people,...(prestige?{prestige}:{})}))}`;
 }
 function autumnGrainReliefBlock(cost){
   if(autumnGrainOrderStatus()!=='due')return '须到约定月份方可领取秋粮';
@@ -327,16 +327,22 @@ function monthlyGrainEvent(index,locustNeed){
       ];
       if(nearUrgent)routes.push({title:'订粮先救近村，仓粮运往远村',cost:cost+GRAIN_TRANSPORT_COST,people:total+3,
         result:'粮商先往近村发粮，常平仓另派车把半批粮运到远村。'});
+      const urgent=nearUrgent?'近村':'远村', waiting=nearUrgent?'远村':'近村';
+      routes.push({title:`集中订粮和仓粮救${urgent}`,cost:cost+(nearUrgent?0:GRAIN_TRANSPORT_COST),
+        people:nearUrgent?total+2:total+4,prestige:-2,
+        result:`两份半批粮都拨给了${urgent}。${waiting}没领到这批赈粮，地方官对此颇有怨言。`});
       for(const route of routes){
         const blocked=()=>!grainReserveReady()?'常平仓须有半批储粮':autumnGrainReliefBlock(route.cost);
         event.choices.push({t:route.title,grainTransaction:true,
-          preview:`国库 −${route.cost} 万两 · 民心 +${route.people} · ${half?'用完仓粮':'留半批仓粮'} · 用掉当月购粮和救急粮名额`,
+          preview:`国库 −${route.cost} 万两 · 民心 +${route.people}`+
+            (route.prestige?` · 威望 −${-route.prestige} · ${waiting}未获粮`:'')+
+            ` · ${half?'用完仓粮':'留半批仓粮'} · 用掉当月购粮和救急粮名额`,
           cond:()=>!blocked(),why:blocked(),
           f:()=>{
             if(halfGrainReserve())clearGrainReserve();
             else S.flags.grainReserveHalf=true;
-            log(`蝗灾，户部调粮分路赈济：${route.title}。`);
-            return route.result+settleAutumnGrainRelief(route.cost,route.people);
+            log(`蝗灾，户部调粮赈济：${route.title}。`);
+            return route.result+settleAutumnGrainRelief(route.cost,route.people,route.prestige);
           }});
       }
     }
