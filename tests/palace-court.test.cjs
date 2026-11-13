@@ -256,7 +256,7 @@ test('twenty-six princes and twenty-six princesses keep distinct faces as they a
     return {stages,loaded:S.children.map(portraitCell)};
   })())`));
   assert.equal(new Set(cells.stages.flat()).size,156);
-  assert.deepEqual(cells.stages.map(stage=>stage.slice(0,4)),[[28,29,30,31],[32,33,34,35],[36,37,38,39]]);
+  assert.ok(cells.stages[0].slice(0,10).some(cell=>cell>=136),'newborns can use expanded art from the first births');
   assert.deepEqual(cells.loaded,cells.stages[2]);
 });
 

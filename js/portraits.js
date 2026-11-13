@@ -243,7 +243,7 @@ function childPortraitVariant(child){
 function assignChildPortrait(child){
   const usage=Array(DESCENDANT_VARIANTS).fill(0);
   S.children.filter(k=>k.sex===child.sex).forEach(k=>usage[childPortraitVariant(k)]++);
-  const start=((child.ord||1)-1)%DESCENDANT_VARIANTS;
+  const start=Math.floor(mulberry32(child.seed||7)()*DESCENDANT_VARIANTS);
   let best=start;
   for(let i=1;i<DESCENDANT_VARIANTS;i++){const v=(start+i)%DESCENDANT_VARIANTS;if(usage[v]<usage[best])best=v;}
   child.portraitVariant=best;
