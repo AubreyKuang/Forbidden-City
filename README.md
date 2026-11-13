@@ -45,6 +45,22 @@
 
 妃嫔的「再见母亲一面」心愿可得到回应，也可在人物详情每两年安排一次母亲入宫，不限位分。母亲会住两三个月，带来心情改善、谢恩与母女夜话；详情中能看到母亲立绘与剩余居留时间。「接母亲入宫」入口会显示剩余等待月份、母亲在宫状态或国库不足的原因。
 
+### 内库珍饰与御赐装扮
+
+御书房的「内库珍藏」收存 **九凤点翠冠、花树珠翠冠、金凤衔珠冠、牡丹花簪、孔雀步摇、白玉流苏步摇**。可以从内库选人赏赐，也可以在妃嫔详情的「赏赐」中挑选。旧藏先有牡丹花簪与白玉流苏步摇，其余由岁首、端午、中秋或地方进献逐渐添入。
+
+| 内库与赏赐入口 | 六种珍饰实际叠戴 |
+|:---:|:---:|
+| <a href="docs/screenshots/showcase-jewelry-vault.jpg"><img src="docs/screenshots/showcase-jewelry-vault.jpg" alt="内库局部：凤冠库存与选人赏赐按钮；右图展示全部六种珍饰" width="400"></a> | <a href="docs/screenshots/showcase-jewelry-worn.jpg"><img src="docs/screenshots/showcase-jewelry-worn.jpg" alt="同一原立绘分别佩戴六件透明首饰，人物面容、衣服与原有发饰保持不变" width="400"></a> |
+
+赐出后扣除一件库存，归受赏者所有并立即戴上；人物详情可以换戴或收起。首饰以透明图层叠在原画上，保留原有面容、服装与发饰。皇后的默认凤冠也使用细绘的九凤点翠冠；已有自选珍饰时显示所选装扮。库存、归属、佩戴与赏赐日期都随存档保存。
+
+| 节庆进献 | 得宠孕妃讨赏 |
+|:---:|:---:|
+| <a href="docs/screenshots/showcase-jewelry-tribute.jpg"><img src="docs/screenshots/showcase-jewelry-tribute.jpg" alt="端午进献珍饰，可收入内库或当场选人赏赐" width="400"></a> | <a href="docs/screenshots/showcase-jewelry-request.jpg"><img src="docs/screenshots/showcase-jewelry-request.jpg" alt="性情张扬且得宠的孕妃主动讨要首饰，玩家可答应、缓议或劝节俭" width="400"></a> |
+
+骄纵、骄矜、贪财的妃嫔，在得宠且心情好时可能小概率讨赏，身孕会影响请求条件与说辞。可以允准、缓议或劝她节俭，并留下纪事与不同心情。进献、讨赏都有全宫间隔，讨赏另有个人间隔；冷宫、离宫和已故人物不会来讨赏。
+
 ## 人物性情与记忆
 
 ### 同一种性情，也会有不同的人
@@ -70,7 +86,13 @@
 
 进入妃嫔、皇嗣详情即可看到人物心声，不必等随机事件。主性情、小性子、喜好、年龄、身孕、恩宠、婚后处境和过去的相处都会影响说话内容；同月反复打开不会刷新抽签。闲话、探望则有更具体的回应，并留下记忆。离宫皇嗣通过家书表达近况。
 
-<img src="docs/screenshots/showcase-personal-voice.jpg" alt="好学的林妃在人物详情主动谈起自己的疑问，下面可继续闲话和回应个人经历" width="860">
+说话方式还会随 **初见、渐熟、亲近、相伴多年与疏远** 改变：初来会斟酌礼数，相熟后才敢提出自己的要求，十年旧人可能省去客套；恩宠低落或情分疏远时，话里也会多一道隔阂。时间与实际往来共同影响亲近程度，并非入宫久了就自动知心。六类性情口吻对应五个阶段，共有 90 句阶段对白，另与个人性情、兴趣、孕育、孩子、赠礼和近期经历配合。
+
+| 初次相见 | 十年知心 | 相识已久却疏远 |
+|:---:|:---:|:---:|
+| <a href="docs/screenshots/showcase-voice-first.jpg"><img src="docs/screenshots/showcase-voice-first.jpg" alt="骄矜的妃嫔初见时仍试探自己的衣着是否合适" width="275"></a> | <a href="docs/screenshots/showcase-voice-years.jpg"><img src="docs/screenshots/showcase-voice-years.jpg" alt="相伴多年后敢直接表达希望皇帝留下的心意" width="275"></a> | <a href="docs/screenshots/showcase-voice-distant.jpg"><img src="docs/screenshots/showcase-voice-distant.jpg" alt="同一性情在疏远时改为克制而带着距离的言辞" width="275"></a> |
+
+刚入宫时不会一见面就倾诉深藏往事、心愿或私议他人。实际闲谈会记下最近说过的话，优先避开重复；同月只打开详情不会消耗随机数或刷出另一段人生。悲恸、病弱、冷宫与寺居等处境仍优先于日常亲昵。
 
 ### 交好、争执与心境
 
@@ -130,13 +152,15 @@
 
 ### 身世疑云与孩子安置
 
-双方成年、私情仍在延续时，极少数往来可能带来身孕。生父在受孕时固定记录，多胎共用同一生父；调查前显示「待查证」，查明后可从孩子详情查看、跳转到生父。
+双方成年、私情仍在延续时，极少数往来可能带来身孕。生父在受孕时固定记录，多胎共用同一生父；未露线索前保持原有身份，出现疑云后显示「待查证」；查明生父为皇子后，可以从孩子详情查看、跳转到生父。
+
+疑云也可能由早产、晚产与起居时日不合、宫人的窃语，或有嫌隙妃嫔的告密引起。新孕程记录真实时日，旧档不凭空补造起居记录；同一孩子只揭起一次此类疑云，全宫至少间隔三年，另有低概率门槛。**早晚产与流言并不等于私情**，帝王亲生的孩子可以在调查后澄清，身份不变，也不会出现按私情定罪的处置选项。
 
 可以调阅起居簿、书笺并分别问询，次月听取回奏。「滴血验亲」作为剧情中的旧说出现，太医会提醒不能以血滴是否相融判定亲缘，查证仍须依凭记录与证词。
 
-| 查验身世 | 查明生父与处置 |
-|:---:|:---:|
-| <a href="docs/screenshots/showcase-parentage-inquiry.jpg"><img src="docs/screenshots/showcase-parentage-inquiry.jpg" alt="滴血验亲之议：太医提出异议，玩家可命人调卷查证" width="400"></a> | <a href="docs/screenshots/showcase-parentage-verdict.jpg"><img src="docs/screenshots/showcase-parentage-verdict.jpg" alt="查明生父后，可继续抚养、送回生父皇子府、送护国寺或复核赐死" width="400"></a> |
+| 查验身世 | 查明生父与处置 | 传闻不实，疑云已释 |
+|:---:|:---:|:---:|
+| <a href="docs/screenshots/showcase-parentage-inquiry.jpg"><img src="docs/screenshots/showcase-parentage-inquiry.jpg" alt="滴血验亲之议：太医提出异议，玩家可命人调卷查证" width="275"></a> | <a href="docs/screenshots/showcase-parentage-verdict.jpg"><img src="docs/screenshots/showcase-parentage-verdict.jpg" alt="查明生父后，可继续抚养、送回生父皇子府、送护国寺或复核赐死" width="275"></a> | <a href="docs/screenshots/showcase-parentage-cleared.jpg"><img src="docs/screenshots/showcase-parentage-cleared.jpg" alt="早产疑云经查证澄清，亲生孩子身份不变，安抚母子" width="275"></a> |
 
 查明后可压下身世、仍作皇嗣抚养，或送回生父皇子府、改入其家谱；也可让孩子在护国寺养护、生母留宫。赐死生母与孩子须再过一次明确的复核界面。安置会改变居处、皇嗣身份与储位资格，生母牵挂、生父纪事及嫡妻信任也会留下后果；反复打开或读档不会重抽生父。
 
@@ -181,6 +205,18 @@ NPC 记忆区分客观事件与人物主观理解。同一场争执，受助者�
 皇嗣可交给贵人及以上的妃嫔抚养，挑选时能看她的才情、德行和膝下子女。养母会影响教养与争储所依靠的家族，生母可能伤心、怨恨或私下探望；也可以让孩子回到生母身边。
 
 生母或养母被打入冷宫后，与她亲近、满四岁的在宫孩子可能来求情。你可以准探望送衣食、减罚放出、解释缘由或斥退。处罚、解释与陪伴都会改变孩子的感受。
+
+### 请养孩子与姐妹续缘
+
+年长、膝下无子且有足够位分、恩宠与供养条件的妃嫔，可能主动请求抚养六岁前的孩子。孩子须因生母去世、冷宫或离宫而缺少母亲的长期照护，且没有合适养母；已有乳母的日常照料不会被写成无人照顾。普通请养排除皇后与妃位及以上生母的孩子，也不会由出身低微又不得宠者贸然提出。
+
+| 无子妃嫔主动请养 | 新人初见，先问姐姐的孩子 |
+|:---:|:---:|
+| <a href="docs/screenshots/showcase-foster-petition.jpg"><img src="docs/screenshots/showcase-foster-petition.jpg" alt="三十九岁的陆妃请求抚养失去生母的幼女，玩家可以允准、暂缓或婉拒" width="400"></a> | <a href="docs/screenshots/showcase-kin-arrival.jpg"><img src="docs/screenshots/showcase-kin-arrival.jpg" alt="高位妃嫔去世后，其妹妹入宫的初次问安便提到姐姐和孩子，请求亲族照护" width="400"></a> |
+
+高位妃嫔去世、入冷宫或离宫后，家中成年亲妹妹或堂妹也可能来信请入宫，希望续住家门旧缘。准入后，**第一次问安便提到姐姐**；若姐姐留下需要照护的幼儿，新人会当面请求抚养，而不是说一段与身世无关的通用欢迎词。
+
+亲族照护是独立条件，允许照看高位姐妹的孩子，但仍保护已有养母与现有居处；不会自动抱走孩子，是否允准由玩家决定。生母身份保留，养母与孩子分别留下记忆；冷宫中的生母若得知姐妹代为照料，也可能稍感宽慰。亲姐妹共用同一个父亲节点，堂姐妹保留不同父系，不会为同一父亲重复画两棵树。请养与家门续缘都有较长间隔，读档后未说完的入宫问安可继续。
 
 ### 护国寺祈福与远方牵挂
 
@@ -542,7 +578,7 @@ node tests/palace-flow.cjs
 
 页面使用 `defer` 按 `index.html` 的顺序执行脚本，最后由 `main.js` 启动。各玩法模块共用 `game.js` 中的状态与操作入口；`dev.html` 在相同游戏模块后额外加载金手指。
 
-WebP 素材统一放在 [`assets/images/`](assets/images/)：人物立绘、宫城建筑、登基与选秀场景都从此目录加载，旧版图集也保留在这里。素材打包脚本默认输出到同一目录；实机截图仍放在 `docs/screenshots/`。
+美术素材统一放在 [`assets/images/`](assets/images/)：人物立绘、宫城建筑、登基与选秀场景都从此目录加载，旧版图集也保留在这里。素材打包脚本默认输出到同一目录；实机截图仍放在 `docs/screenshots/`。
 
 | 文件或目录 | 职责 |
 |---|---|
@@ -550,6 +586,7 @@ WebP 素材统一放在 [`assets/images/`](assets/images/)：人物立绘、宫�
 | `dev.html`、`dev.css` | 测试入口、金手指表单、立绘预览与手机布局 |
 | `palace.css` | 游戏界面、宫城、人物、场景与移动端样式 |
 | `scripts/build-dev.py` | 从正式入口生成测试入口 |
+| `assets/images/palace-headpieces.png` | 六种透明首饰图集，供库存展示与立绘实时叠戴 |
 | `assets/images/palace-portraits-b.webp` | 妃嫔、帝王等人物与凤冠图集 |
 | `assets/images/palace-family.webp`、`assets/images/palace-descendants.webp` | 保留原有编号的父兄、皇子公主与成长图集 |
 | `assets/images/palace-beauties.webp`、`assets/images/palace-regalia.webp` | 妃嫔与皇子选妃共用的佳人、盛装图集 |
@@ -584,15 +621,17 @@ WebP 素材统一放在 [`assets/images/`](assets/images/)：人物立绘、宫�
 | `js/court.js` | 朝政、父系身份、势力、军情与积压奏折 |
 | `js/harem.js` | 选秀、后宫事件、派系与宫女承恩 |
 | `js/personality.js` | 性情、心境、心愿、闲聊、赏赐与记忆入口 |
-| `js/character-voice.js` | 见面心声、个性化闲谈、孩子话语与家书 |
+| `js/character-voice.js` | 随相处阶段变化的对白、近期说话去重、孩子话语与家书 |
 | `js/personal-experiences-data.js` | 64 个个人经历的题目、分支文本与原典来源 |
 | `js/personal-experiences.js` | 经历筛选、邀约、后话、间隔、人物记忆与结果 |
 | `js/consort-stories.js` | 妃嫔个人经历、才艺与剧情迁移 |
 | `js/visits.js` | 出巡、太后荐人、节令与母亲入宫 |
 | `js/child-temple.js` | 皇子开府居处、护国寺的皇嗣祈福与妃嫔清修、接回与母亲牵挂 |
-| `js/parentage.js` | 成年私情的生父记录、身世调查、身份与安置后果 |
+| `js/parentage.js` | 受孕与起居记录、早晚产及告密疑云、查证澄清、身份与安置后果 |
 | `js/family.js` | 母子日常、探望规则与宗族关系 |
 | `js/mourning.js` | 太后讣告、慈宁宫丧仪、族女哀悼与追思 |
+| `js/jewelry.js` | 内库、珍饰归属与佩戴、节庆进献和得宠讨赏 |
+| `js/family-petitions.js` | 无子妃嫔请养、姐妹续缘、初见问安与亲族抚养条件 |
 | `js/heirs.js` | 禀赋、成长、抚养、册封与夺嫡 |
 | `js/births.js` | 单胎、多胎、赐名、异象与生产读档恢复 |
 | `js/child-life.js` | 同窗场景、孩子求情、关系变化与记忆 |
@@ -620,6 +659,7 @@ WebP 素材统一放在 [`assets/images/`](assets/images/)：人物立绘、宫�
 | `tests/palace-improvements.test.cjs` | 家谱、出生、孩子互动、婚事、冷却、配乐等回归 |
 | `tests/palace-dev.test.cjs` | 入口一致性、存档隔离、属性立绘与回退 |
 | `tests/palace-family-care.test.cjs` | 探亲间隔、寺居与牵挂、生父调查、开府分栏及同月孕程 |
+| `tests/palace-living-court.test.cjs` | 珍饰库存与持久化、阶段对白、请养与亲族关系、出生疑云及澄清分支 |
 | `tests/npc-memory.test.cjs` | 主观视角、去重、归纳、容量与序列化 |
 | `tests/palace-regressions.test.cjs` | 太后荐人、亲子标签与旧档兼容 |
 | `tests/palace-court.test.cjs` | 朝堂势力、人物家世与存档相关回归 |

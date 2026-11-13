@@ -40,19 +40,74 @@ function voicePick(p,values,key,mode){
   return values[(offset+S.turn+(p.voiceVisits||0))%values.length];
 }
 const voiceLine=(key,stage,lines)=>({key,stage,lines:Array.isArray(lines)?lines:[lines]});
+/* Intimacy develops through time AND contact; years alone never imply affection. */
+const VOICE_YEARS={
+ gentle:{
+  first:['臣妾初来，尚不知陛下惯用怎样的茶。若有不周之处，还请容臣妾慢慢学。','方才想问一句，又怕冒失。陛下平日忙完，可也会出来走走？','入宫前想过许多应答，如今见了陛下，倒只记得请安了。'],
+  settling:['这里的路渐渐认得了，只是见着陛下，话仍要在心里想一遍才敢说。','臣妾今日试着按自己的心意摆了花。陛下若得闲，可愿看一眼？','不知陛下愿不愿听这些小事。臣妾今日过得还算欢喜。'],
+  familiar:['从前怕说错话，如今倒盼陛下听见实话。今日有些疲倦，陪臣妾坐一坐罢。','臣妾想留陛下用茶。这回不是客气，是真想多说一会儿。','有句话搁了半日。陛下若肯听，臣妾便不藏着了。'],
+  years:['这些年过去，迎驾的话倒说得生疏了。来，坐近些，让臣妾好好看看。','初来时，连留陛下喝盏茶也要斟酌。如今这一点私心，总算敢说出口了。','旧日怕沉默失礼，如今才知，相对坐着不说话，也是难得的安稳。'],
+  distant:['相识这些年，臣妾仍不知哪句话可以说，哪句话该咽下去。','茶还是那一盏。只是今日见了陛下，竟要先想想该怎样开口。','陛下若有吩咐，臣妾听着。其余的话……容臣妾再想想。']},
+ proud:{
+  first:['臣妾也想应答得从容些，偏偏礼数学了一路，此刻倒乱了。','这身衣裳是臣妾自己挑的。不知在宫里，会不会显得太招眼？','臣妾原以为自己胆子不小，见了陛下，才知不是那么回事。'],
+  settling:['宫里的规矩，臣妾记着呢。只是偶尔也想问一句：这样便不能改么？','臣妾喜欢的东西，未必人人都爱。陛下若问，臣妾倒愿说个明白。','有个小小的请求，臣妾想了几回，今日总算敢开口。'],
+  familiar:['往日不敢留人，今日可要留了。陛下若忙，须亲口同臣妾说。','既肯听臣妾说话，就不许只应一声“好”。臣妾要听陛下自己的意思。','臣妾是有些任性，可也知道分寸。今日这一点私心，愿只说给陛下听。'],
+  years:['初来时藏着的那点骄气，陛下如今早看透了。臣妾也不装了，今日就想留你。','这些年，夸臣妾的话听了许多，敷衍的话也听得出来。陛下可别拿好话搪塞。','年轻时怕不够出挑，如今倒觉得，能自在说一句心里话，比什么都难得。'],
+  distant:['旧日敢开口讨的，如今倒要掂量了。陛下看，人也是会学乖的。','臣妾不是没有话，只是不愿再拿几句玩笑，装作什么也没有变。','若是宫里的礼数，臣妾自然周全。若问心意，今日还答不上来。']},
+ reserved:{
+  first:['臣妾言语少些，并非怠慢。初来此处，总想先听明白，再开口。','这几日尚在认人认路。陛下垂问，臣妾不敢以不知作知。','臣妾还未想好怎样回答，可否容臣妾想一想？'],
+  settling:['从前凡事只听着，如今也渐渐有了自己的想法，只怕说得不周全。','宫中日日有新消息。臣妾宁愿慢一点，等看清楚了再同陛下说。','有些规矩已经懂了，有些人却还没有懂。人心比规矩难记。'],
+  familiar:['这话不便在人前说。陛下若肯听，臣妾便把缘由从头讲明。','从前怕多言，今日怕不说。臣妾有一点不同的看法。','话说得直些，也许不好听。可既然信得过，便不该只挑好听的说。'],
+  years:['年轻时总想把话说圆满，如今只愿说得诚实。陛下可愿听？','这些年见过许多变迁，倒越发觉得，肯相互听完一句话，不是小事。','从前一句话要藏三分，如今在陛下面前，愿少藏一分。其余的，容臣妾慢慢说。'],
+  distant:['许多话，早年不敢说，后来不愿说。今日还要再想一想。','臣妾可以把事情讲明白。至于心里怎样想，暂且留给自己罢。','相识已久，不等于事事知心。陛下若真想知道，便请慢些问。']},
+ bright:{
+  first:['臣妾方才险些说错了话。陛下莫笑，臣妾已在心里练了几遍呢。','宫里这样大，臣妾想问的也多，可又怕一下问得太多。','臣妾平日不是这样安静的。只是今日……有一点紧张。'],
+  settling:['今日认得一条新路，总算不用回回问人了。陛下要听臣妾怎样认错的么？','原先怕笑得太响，如今觉得，开心的事憋着不说，怪可惜的。','臣妾有个主意，先听完再说好不好？不成也不要紧。'],
+  familiar:['这主意旁人都说胡闹，臣妾偏想先说给你听。先别皱眉呀。','陛下一来，臣妾就有话了。今日先说自己的事，正经话待会儿再讲。','从前怕问得多，如今倒要问个明白。你可不许只拿“依你”打发。'],
+  years:['刚入宫时装了几日安静，后来到底藏不住。如今陛下可还嫌臣妾话多？','这些年过去，臣妾的主意倒没少。只是如今做事，也肯多想一步了。','今日没有什么新鲜事，可看见你，还是想说些无关紧要的话。'],
+  distant:['从前见了陛下，总有说不完的话。今日竟一时寻不出话头。','臣妾也不是时时都能说笑。今日想安静些，陛下莫怪。','想了一个主意，后来又收起来了。也许改日，再说给陛下听。']},
+ wistful:{
+  first:['臣妾还不敢问陛下喜欢什么，只盼今日没有说错话。','听见传报时，心便乱了。陛下可否容臣妾缓一缓？','进宫前听了许多叮嘱，可此刻想说的，竟一句也不在其中。'],
+  settling:['臣妾想问，陛下下回可还愿来？若这话不合礼数，便当臣妾没有问。','有时想留一盏灯，又怕显得太殷勤。陛下会不会笑臣妾？','今日的话是想了许久的，临到跟前，仍怕说得太重。'],
+  familiar:['臣妾有时也会不安。如今肯说出来，是盼你听见，不是想与你争。','想念便想念了，这一回不拿旁的话遮着。陛下可愿多留片刻？','有些事明知不该计较，心里仍放不下。与其猜，臣妾想亲口问你。'],
+  years:['这些年，渐渐敢问一句：你今日肯来，是想起臣妾了么？','初见时只敢谢恩，如今还想听一句真话。相处久了，心愿反倒简单。','人说旧情无需多言，臣妾却觉得，越是旧人，越不该只凭猜。'],
+  distant:['旧日等着见你，如今听见脚步，却先不知该欢喜还是难过。','臣妾没有忘，只是不愿再一遍遍问。若陛下有话，今日便说罢。','窗前的花换过几季了。臣妾有些话，也已错过了最想说的时候。']},
+ independent:{
+  first:['臣妾还不熟宫里的日子，若举止生疏，还请容我慢慢适应。','若陛下愿听，臣妾也有自己的见解。只是初来，尚不敢贸然开口。','臣妾喜欢的东西，或许与这里不同。往后有机会，再说给陛下听。'],
+  settling:['渐渐安顿下来了，臣妾想给自己留一点工夫，做些喜欢的事。','这件事臣妾想自己试试。倘若不成，再来请教也不迟。','从前不敢问，今日想问一句：臣妾可否依自己的意思办？'],
+  familiar:['你若问臣妾的意思，臣妾便直说；若只要一句顺从的话，那可说不来。','今日有件事想与你商量。臣妾已想过一遍，也想听听另一种看法。','不必事事替臣妾安排。肯听臣妾自己拿主意，便很好。'],
+  years:['这些年相处，想必知道臣妾不善奉承。今日仍说实话，可好？','年轻时只想证明自己，如今更愿把日子过稳。自己的主意，却仍是要留的。','从前请示一句要踌躇许久，如今想同你商量，而不只是等你吩咐。'],
+  distant:['陛下肯来，礼数自然不会少。只是臣妾也有自己的日子要过。','这些年教会臣妾的，是有些心事不必逢人便说。','臣妾的想法未变。只是如今，不再急着求陛下认同了。']}
+};
+function consortVoicePhase(c){
+  const months=Math.max(0,S.turn-(c.enteredAt??0)),visits=c.voiceVisits||0;
+  if(months<6&&visits<3)return 'first';
+  if(months>=24&&(c.aff<35||c.favor<20||['怨恨','惶恐'].includes(xinOf(c))))return 'distant';
+  if(months>=120&&c.aff>=55&&(visits>=3||c.nights>=3||c.bond))return 'years';
+  if(months>=12&&c.aff>=55&&(visits>=3||c.nights>=3||c.bond))return 'familiar';
+  return 'settling';
+}
+function consortYearsVoice(c){
+  const phase=consortVoicePhase(c),group=['骄纵','骄矜','贪财'].includes(c.trait)?'proud':['沉静','城府','持重','聪慧'].includes(c.trait)?'reserved':c.trait==='活泼'||c.trait==='好客'?'bright':['痴情','善妒'].includes(c.trait)?'wistful':['将门','爽直','淡泊','好学'].includes(c.trait)?'independent':'gentle';
+  const stage={first:'初见时，她的话里还留着几分拘谨。',settling:'渐渐熟悉宫中日子，她试着多说一点自己的心意。',familiar:'私下相处渐多，她说话也不再句句斟酌。',years:'相伴多年，她省去了几句客套。',distant:'相识虽久，今日的话却隔着一层。'}[phase];
+  return voiceLine('years-'+phase,stage,VOICE_YEARS[group][phase]);
+}
 function consortVoicePool(c){
   const x=xinOf(c),close=c.aff>=55;
   if(c.templeStay)return [voiceLine('temple-retreat','护国寺来信里，她说起清修的日子。',distantChildren(c).length?'晨钟响过，便想起孩子此时也该起了。臣妾在这里平安，还望宫中代问一声，孩子可曾添衣。':c.trait==='好学'?'寺中旧藏颇多，午后可以静坐校书。臣妾抄了几行喜欢的句子，夹在信里。':'晨起听钟，入夜收灯，日子过得慢些。臣妾在这里平安，请陛下放心。')];
   if(c.cold)return [voiceLine('cold','隔着门扉，她只说了几句。',['臣妾知道这里清冷。若还有一句话能递出去，便请陛下认真听完。','门外的声响听得分明，日子却记得模糊了。陛下可还愿听臣妾一言？'])];
   if(['悲恸','心如死灰'].includes(x))return [voiceLine('grief','她停了许久，才抬眼看你。',['有些话臣妾今日还说不出来。陛下坐一会儿就好。','不必劝臣妾快些好起来。今日能把这一盏茶喝完，也算往前走了一点。'])];
   const concern=motherConcernVoice(c);if(concern&&(c.childConcern?.value??35)>=30)return [concern];
-  if(['怨恨','惶恐'].includes(x)||c.aff<20)return [voiceLine('distance','她行过礼，仍立在一步之外。',['臣妾听着。只是有些话，还不知该从哪里说起。','陛下肯来，臣妾领情。只是心里的结，不是一句话就能解开的。'])];
+  if(['怨恨','惶恐'].includes(x)||(c.aff<20&&consortVoicePhase(c)!=='first'))return [voiceLine('distance','她行过礼，仍立在一步之外。',['臣妾听着。只是有些话，还不知该从哪里说起。','陛下肯来，臣妾领情。只是心里的结，不是一句话就能解开的。'])];
   if(c.hp<40)return [voiceLine('ill','她将话说得很慢。',['今日精神短些，陛下别怪臣妾招呼不周。','臣妾想歇一歇。等好些了，再把没说完的话接上。'])];
-  const pool=[voiceLine('trait',close?'见你坐下，她也放松了些。':'她抬起眼，先开了口。',CONSORT_VOICES[c.trait]||CONSORT_VOICES.温婉)];
+  const years=consortYearsVoice(c),phase=consortVoicePhase(c);
+  if(phase==='distant')return [years];
+  const pool=[years];
+  if(phase!=='first')pool.push(voiceLine('trait',phase==='years'?'说着说着，她又露出你熟悉的性情。':'她试着把自己的意思说得更明白。',CONSORT_VOICES[c.trait]||CONSORT_VOICES.温婉));
   if(c.preg>=2)pool.push(voiceLine('pregnant','她轻拢衣襟，话里多了一分牵挂。',c.trait==='骄纵'&&c.favor>=65?['如今走得慢，陛下便也慢些。臣妾想要的照应，可不只是送几碟点心。','臣妾知道该惜身，可也不想日日闷着。陛下陪臣妾走到廊下，好不好？']:['小衣裳不用添得太急。臣妾盼的，只是平平安安等到那一日。','近来总会多想些。陛下坐在这里，臣妾便觉得心里稳妥。']));
   if(c.mood<35)pool.push(voiceLine('low','她望了一眼窗外，收回了目光。',['今日没什么精神，倒也不是要紧的事。陛下陪臣妾坐坐便好。','有时想说几句，又怕扫人的兴。陛下今日，可愿耐心听听？']));
   if(c.favor<25&&close)pool.push(voiceLine('miss','听见你的声音，她先是一怔。',['这院子里的花，开过一茬又一茬。臣妾也不催，只想知道陛下过得可好。','原来想说一句不曾想念，可一见陛下，便说不出口了。']));
-  const memory=NPCMemory.recall(S,c.id).find(m=>m.subject==='emperor'&&m.type==='gift'&&m.emotion>0&&S.turn-m.time>=0&&S.turn-m.time<=2);
+  const memory=NPCMemory.recall(S,c.id).find(m=>m.subject==='emperor'&&['gift','jewelry-gift'].includes(m.type)&&m.emotion>0&&S.turn-m.time>=0&&S.turn-m.time<=2);
   if(memory)pool.push(voiceLine('gift','她想起近来的赏赐，微微一笑。',['那份赏赐臣妾收好了。可让臣妾高兴的，是陛下记得臣妾喜欢什么。','臣妾还记得收到赏赐时的欢喜。今日想当面再谢陛下一回。']));
   const motherChild=S.children.find(k=>k.alive&&(k.foster||k.mom)===c.id&&!k.pendingName);
   if(motherChild){const a=kidAge(motherChild),name=motherChild.name;
@@ -60,9 +115,9 @@ function consortVoicePool(c){
   }
   const lived=c.personalExperiences?.history?.at(-1);if(lived&&S.turn-lived.turn<=6)pool.push(voiceLine('experience','她又说起前些日子那件事。',`「${lived.title}」的事，臣妾还记着。那时候的心情，与今日又不一样了。`));
   // Personal interests supplement, rather than replace, her principal temperament.
-  const hobby=consortHobby(c);if(HOBBY_VOICES[hobby])pool.push(voiceLine('hobby','她把手边的东西挪近，让你也看一看。',HOBBY_VOICES[hobby]));
-  if(QUIRK_VOICES[c.t2])pool.push(voiceLine('quirk','说着家常，她露出一点平日的小性子。',QUIRK_VOICES[c.t2]));
-  if(close)pool.push(voiceLine('season','她望向窗边，随口与你说道。',[
+  const hobby=consortHobby(c);if(phase!=='first'&&HOBBY_VOICES[hobby])pool.push(voiceLine('hobby','她把手边的东西挪近，让你也看一看。',HOBBY_VOICES[hobby]));
+  if(phase!=='first'&&QUIRK_VOICES[c.t2])pool.push(voiceLine('quirk','说着家常，她露出一点平日的小性子。',QUIRK_VOICES[c.t2]));
+  if(close&&phase!=='first')pool.push(voiceLine('season','她望向窗边，随口与你说道。',[
     '春天的光来得早。臣妾想留半扇窗，不把这一点暖意都挡在外头。',
     '天热了，茶不必沏得太浓。陛下来了，坐到阴凉处说话。',
     '叶子落下来，倒把远处的天显出来了。臣妾想同陛下多看一会儿。',
@@ -101,8 +156,12 @@ function childVoicePool(k){
 function characterVoice(person,mode='greeting'){
   if(!person?.alive||person.gone||person.pendingName)return null;
   const pool=person.sex?childVoicePool(person):consortVoicePool(person);
-  const item=voicePick(person,pool,'topic',mode);
-  return {key:item.key,stage:item.stage,text:item.lines.length?voicePick(person,item.lines,item.key,mode):'',letter:!!(person.sex&&childHasLeftPalace(person))};
+  const preferYears=!person.sex&&pool.some(v=>v.key.startsWith('years-'))&&((person.voiceVisits||0)%2===0||person.voicePhase!==consortVoicePhase(person));
+  const candidates=preferYears?pool.filter(v=>v.key.startsWith('years-')):pool;
+  const options=candidates.flatMap(item=>item.lines.length?item.lines.map(text=>({item,text})):[{item,text:''}]);
+  const fresh=options.filter(v=>!(person.voiceRecent||[]).includes(v.text));
+  const {item,text}=voicePick(person,fresh.length?fresh:options,'topic',mode);
+  return {key:item.key,stage:item.stage,text,letter:!!(person.sex&&childHasLeftPalace(person))};
 }
 function characterVoiceHTML(person){
   const v=characterVoice(person);if(!v)return '';
@@ -110,6 +169,8 @@ function characterVoiceHTML(person){
 }
 function rememberConversation(person,voice,location){
   person.voiceVisits=(person.voiceVisits||0)+1;
+  person.voiceRecent=[...(person.voiceRecent||[]),voice.text].slice(-8);
+  if(!person.sex)person.voicePhase=consortVoicePhase(person);
   NPCMemory.record(S,{type:'personal-conversation',time:S.turn,location,participants:[person.id],outcome:voice.text||voice.stage},[
     {person:person.id,subject:'emperor',interpretation:`${voice.letter?'父皇回信':'陛下听我说话'}：${voice.text||voice.stage}`,emotion:.5,impact:40}
   ]);

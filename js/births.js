@@ -20,11 +20,11 @@ function deliveryKids(c){return (c.delivery?.children||[]).map(kidById).filter(B
 function pendingDelivery(){return S.consorts.find(c=>c.delivery&&!c.delivery.settled&&deliveryKids(c).some(k=>k.pendingName))}
 function birthEvent(c){
   if(c.delivery&&!c.delivery.settled)return birthNamingEvent(c);
-  if(c.preg<10)return null;
+  if(c.preg<(c.pregnancyCalendar?.term||10))return null;
   const count=rollBirthCount(),sexes=Array.from({length:count},()=>chance(.5)?'m':'f');
   const kind=birthType(sexes),omen=chance(.03)?pick(Object.keys(BIRTH_OMENS)):null;
   const children=sexes.map(sex=>makeKid(c,sex,suggestName(sex)));
-  delete c.pregnancyFather;
+  delete c.pregnancyFather;delete c.pregnancyCalendar;
   c.delivery={children:children.map(k=>k.id),kind,omen,settled:false,
     difficult:chance(c.trait==='体弱'?.12:.03),swap:!!c.swapRisk&&chance(.7),templeAdvice:rollBirthTempleAdvice(children,omen)};
   c.preg=0;c.prot=false;c.swapRisk=false;c.lastBirth=S.turn+1;

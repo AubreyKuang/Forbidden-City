@@ -7,7 +7,7 @@ function makeKid(c,sex,name){
     vir:clamp(c.virtue*.7+ri(0,12)),hp:clamp(55+ri(0,35)-(c.trait==='体弱'?15:0)),amb:clamp(c.scheme*.65+ri(0,18)),
     love:50,sup:0,policy:'均衡',tutor:false,title:'',alive:true,married:false,adult:false,story:[],seed:ri(1,2e9)};
   // Birth traits are a game rule, separate from education and the current caregiver.
-  k.birthTraits={mother:{id:c.id,name:fullName(c),talent:c.talent,virtue:c.virtue,scheme:c.scheme,trait:c.trait},
+  k.birthTraits={mother:{id:c.id,name:fullName(c),talent:c.talent,virtue:c.virtue,scheme:c.scheme,trait:c.trait,rank:c.rank},
     father,initial:{lit:k.lit,mar:k.mar,vir:k.vir,hp:k.hp,amb:k.amb}};
   attachChildParentage(k,father);assignChildPortrait(k);S.children.push(k);S.ys.b++;initKidRel(k);return k;
 }
@@ -117,12 +117,13 @@ A.foster=function(id){const k=kidById(id);const m=byId(k.mom);
   if(!cands.length){toast('眼下没有合适的妃嫔（需贵人及以上）');return}
   pushEv({title:'抚养',por:k,text:`把${kidName(k)}交给谁抚养？\n${m&&m.alive?`生母${cName(m)}会很难过。`:'孩子的生母已经不在了。'}养母的德行、才情、心机会影响孩子的成长，她的家世也会成为孩子将来的倚仗。`,
     choices:[...cands.map(c=>({t:`${cName(c)}（德${rd(c.virtue)} 才${rd(c.talent)}${c.known?' 心机'+rd(c.scheme):''}，${c.fam.t}，${raisesKid(c)?'已有孩子':'膝下无子'}）`,person:c,f:()=>doFoster(k,c)})),{t:'再想想'}]})};
-function doFoster(k,c){const m=byId(k.mom),old=fosterOf(k),childless=!raisesKid(c);if(m&&m.alive&&m!==c&&!k.motherBonds?.[m.id]){(k.motherBonds ||= {})[m.id]={trust:childTrust(k,m)}}
+function doFoster(k,c,options={}){const m=byId(k.mom),old=fosterOf(k),childless=!raisesKid(c);if(m&&m.alive&&m!==c&&!k.motherBonds?.[m.id]){(k.motherBonds ||= {})[m.id]={trust:childTrust(k,m)}}
   if(old&&old!==c&&!k.motherBonds?.[old.id]){(k.motherBonds ||= {})[old.id]={trust:childTrust(k,old)}}
   k.foster=c.id;k.fosterT=S.turn;relAdd(c,k,Math.max(0,50-relGet(c,k)));
   kstory(k,`交由${fullName(c)}抚养。`);story(c,`陛下将${kidName(k)}交给她抚养。`);log(`${kidName(k)}交由${fullName(c)}抚养。`,1);
   setXin(c,'欢喜',`得以抚养${k.name}`);let s=cchg(c,{aff:childless?12:6,mood:childless?20:8});
-  if(m&&m.alive&&m!==c){relAdd(m,c,-25);const hate=m.scheme>=60||m.t2==='记仇';setXin(m,hate?'怨恨':'悲恸',`亲生的${k.name}被抱给了${fullName(c)}`,hate?c.id:null);s+='　'+cchg(m,{mood:-30,aff:-8});story(m,`亲生的${k.name}被抱去给${fullName(c)}抚养。`)}
+  if(m&&m.alive&&m!==c&&options.maternalKin){relAdd(m,c,12);cchg(m,{mood:8});setXin(m,'释然',`姐妹代为照料${k.name}`);story(m,`得知姐妹${fullName(c)}获准照料${k.name}，心中稍安。`)}
+  else if(m&&m.alive&&m!==c){relAdd(m,c,-25);const hate=m.scheme>=60||m.t2==='记仇';setXin(m,hate?'怨恨':'悲恸',`亲生的${k.name}被抱给了${fullName(c)}`,hate?c.id:null);s+='　'+cchg(m,{mood:-30,aff:-8});story(m,`亲生的${k.name}被抱去给${fullName(c)}抚养。`)}
   if(old&&old.alive&&old!==c){setXin(old,'委屈',`养了多年的${k.name}被抱走`);cchg(old,{mood:-15})}
   return `${fullName(c)}接过孩子，抱得很紧。${fx(s)}`}
 A.unfoster=function(id){const k=kidById(id),c=fosterOf(k),m=byId(k.mom);if(!m||!m.alive){toast('生母已不在');return}

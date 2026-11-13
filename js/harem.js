@@ -41,7 +41,7 @@ const HAREM=[
      story(b,'香囊一案不了了之，她从此饮食起居分外小心。');return `线索断在一名投井的小太监身上，此案只得不了了之。${fx(cchg(b,{mood:-10}))}`}},
    {t:'加赏安抚，不予深究',f:()=>{story(b,'香囊一案，陛下并未深究。');a.scheme=clamp(a.scheme+3);return `${fx(chg({treasury:-20}),cchg(b,{mood:4,aff:-3}))}`}}]}},
  function slip(){const h=harem();const b=h.find(c=>c.preg>=3&&!c.prot);if(!b)return null;const a=h.find(c=>c!==b&&c.scheme>=60);if(!a)return null;
-  const lose=()=>{b.preg=0;delete b.pregnancyFather;story(b,'在御花园失足滑倒，腹中骨肉没能保住。');setXin(b,'悲恸','腹中骨肉没能保住');log(`${fullName(b)}失足小产。`,1);AU.sfx('sad');
+  const lose=()=>{b.preg=0;delete b.pregnancyFather;delete b.pregnancyCalendar;story(b,'在御花园失足滑倒，腹中骨肉没能保住。');setXin(b,'悲恸','腹中骨肉没能保住');log(`${fullName(b)}失足小产。`,1);AU.sfx('sad');
     if(chance(.5+E().prestige/300)){a.known=true;pushNow(punishEv(a,b,'石阶泼油、致人小产'))}
     return `太医跪了一地：“臣等无能……”${fx(cchg(b,{mood:-40,aff:3}))}`};
   return {title:'石阶惊变',present:[a,b],por:b,sfx:'err',text:`${cName(b)}在御花园赏花时，石阶上不知被谁泼了桐油，失足滑倒，腹痛不止！`,choices:[

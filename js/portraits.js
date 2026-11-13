@@ -284,8 +284,11 @@ function portraitCell(x){
   return cells.includes(x.artPortrait)?x.artPortrait:cells[Math.floor(mulberry32(x.seed||7)()*cells.length)];
 }
 
-function atlasPortrait(cell,rank){
-  const key=cell+':'+rank;
+const jewelryAtlas=document.createElement('img');
+function ensureJewelryAtlas(){if(!jewelryAtlas.src)jewelryAtlas.src=JEWELRY_ART;}
+function portraitJewelry(rank,id){return JEWELRY[id]|| (rank===8?JEWELRY.phoenix:null);}
+function atlasPortrait(cell,rank,jewelry=''){
+  const key=cell+':'+rank+(jewelry?':'+jewelry:'');
   if(ART_CACHE.has(key))return ART_CACHE.get(key);
   const sheet=portraitSheet(cell);
   const [x,y]=portraitTile(cell,sheet);
@@ -295,7 +298,11 @@ function atlasPortrait(cell,rank){
   atlasInk.imageSmoothingEnabled=false;
   atlasInk.drawImage(sheet.image,x*scale,y*scale,w,h,0,0,w,h);
   // Keep the same face on promotion. Add the ornaments above the existing hair.
-  if(rank===8){
+  const ornament=portraitJewelry(rank,jewelry);
+  if(ornament&&portraitImageReady(jewelryAtlas)){
+    const [dx,dy,dw,dh]=ornament.box;
+    atlasInk.drawImage(jewelryAtlas,ornament.cell%3*512,Math.floor(ornament.cell/3)*512,512,512,dx*scale,dy*scale,dw*scale,dh*scale);
+  }else if(rank===8){
     const crownScale=portraitSheets[0].scale||1;
     atlasInk.drawImage(portraitAtlas,26*crownScale,702*crownScale,60*crownScale,30*crownScale,26*scale,scale,60*scale,30*scale);
   }
@@ -307,12 +314,13 @@ function atlasPortrait(cell,rank){
 // WebP dimensions can arrive before its pixels finish decoding. Do not cache
 // a blank canvas during that interval, especially for the larger source atlases.
 const portraitImageReady=image=>image.complete&&image.naturalWidth>0&&image.naturalHeight>0;
-const portraitAtlasReady=(cell,rank)=>portraitImageReady(portraitSheet(cell).image)&&(rank!==8||portraitImageReady(portraitAtlas));
+const portraitAtlasReady=(cell,rank,jewelry='')=>portraitImageReady(portraitSheet(cell).image)&&(!jewelry||portraitImageReady(jewelryAtlas))&&(rank!==8||portraitImageReady(jewelryAtlas)||portraitImageReady(portraitAtlas));
 function refreshAtlasPortraits(){
   document.querySelectorAll('img[data-portrait-cell]').forEach(img=>{
     const cell=Number(img.dataset.portraitCell);
     const rank=Number(img.dataset.portraitRank);
-    if(portraitAtlasReady(cell,rank))img.src=atlasPortrait(cell,rank);
+    const jewelry=img.dataset.portraitJewelry||'';
+    if(portraitAtlasReady(cell,rank,jewelry))img.src=atlasPortrait(cell,rank,jewelry);
   });
 }
 portraitSheets.forEach(sheet=>sheet.image.addEventListener('load',()=>{
@@ -322,13 +330,15 @@ portraitSheets.forEach(sheet=>sheet.image.addEventListener('load',()=>{
 }));
 portraitAtlas.src=portraitSheets[0].src;
 familyAtlas.src=portraitSheets[1].src;
+jewelryAtlas.addEventListener('load',()=>{ART_CACHE.clear();refreshAtlasPortraits();});
 
 // Local images can be displayed directly. Reading their canvas pixels is restricted on file URLs.
-function localPortrait(cell,rank,attrs){
+function localPortrait(cell,rank,attrs,jewelry=''){
   const sheet=portraitSheet(cell);
   const [x,y]=portraitTile(cell,sheet);
   const image=source=>`<image href="${source.src}" width="${PORTRAIT_COLUMNS*PORTRAIT_WIDTH}" height="${source.rows*PORTRAIT_HEIGHT}"/>`;
-  const crown=rank===8?`<svg x="26" y="1" width="60" height="30" viewBox="26 702 60 30" overflow="hidden">${image(portraitSheets[0])}</svg>`:'';
+  const ornament=portraitJewelry(rank,jewelry),box=ornament?.box;
+  const crown=ornament?`<svg x="${box[0]}" y="${box[1]}" width="${box[2]}" height="${box[3]}" viewBox="${ornament.cell%3*512} ${Math.floor(ornament.cell/3)*512} 512 512" overflow="hidden"><image href="${JEWELRY_ART}" width="1536" height="1024"/></svg>`:'';
   return `<svg ${attrs} aria-hidden="true" viewBox="0 0 ${PORTRAIT_WIDTH} ${PORTRAIT_HEIGHT}">
     <svg width="${PORTRAIT_WIDTH}" height="${PORTRAIT_HEIGHT}" viewBox="${x} ${y} ${PORTRAIT_WIDTH} ${PORTRAIT_HEIGHT}" overflow="hidden">${image(sheet)}</svg>${crown}</svg>`;
 }
@@ -337,10 +347,12 @@ function porImg(x,size=64){
   if(x?.appearance)x=x.appearance;
   const cold=x&&x.cold, dead=x&&x.alive===false;
   const cell=portraitCell(x),rank=x!=='emp'&&!x.sex&&!x.isMom&&!x.maid&&!cold&&x.rank===8?8:0;
-  const attrs=`class="px por palace-portrait${cold||dead?' cold':''}" data-portrait-cell="${cell}" data-portrait-rank="${rank}" width="${size}" height="${size*1.25}"`;
-  if(typeof location!=='undefined'&&location.protocol==='file:')return localPortrait(cell,rank,attrs);
+  const jewelry=!cold?jewelryWorn(x):'';
+  const attrs=`class="px por palace-portrait${cold||dead?' cold':''}" data-portrait-cell="${cell}" data-portrait-rank="${rank}" data-portrait-jewelry="${jewelry}" width="${size}" height="${size*1.25}"`;
+  if(typeof location!=='undefined'&&location.protocol==='file:')return localPortrait(cell,rank,attrs,jewelry);
   ensurePortraitSheet(cell);
-  const src=portraitAtlasReady(cell,rank)?atlasPortrait(cell,rank):portrait(porSpec(x));
+  if(rank===8||jewelry)ensureJewelryAtlas();
+  const src=portraitAtlasReady(cell,rank,jewelry)?atlasPortrait(cell,rank,jewelry):portraitAtlasReady(cell,rank)?atlasPortrait(cell,rank):portrait(porSpec(x));
   return `<img ${attrs} alt="" src="${src}">`;
 }
 function porName(x){ if(x?.courtGuest)return x.name+' · '+kidAge(x)+'岁'; if(x&&x.isMom) return x.name; if(x&&x.sur&&!x.sex&&S&&!S.consorts.includes(x)) return fullName(x); if(x==='emp') return `${E().sur}${E().name}`; if(x.sex) return kidName(x); return cName(x)}

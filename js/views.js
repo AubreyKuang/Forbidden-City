@@ -41,7 +41,7 @@ function dockIcon(key){
   return `<img class="dock-icon px" src="${dockImages.get(key)}" alt="" aria-hidden="true">`;
 }
 function renderMenu(){const m=$('#menu');if(!S){m.innerHTML='';m.hidden=true;return}m.hidden=false;
-  const current={relative:'family',palace:'map',place:'map',banquet:'map',consort:'harem',kid:'kids',princess:'out'}[UI.view]||UI.view;
+  const current={jewelry:'home',relative:'family',palace:'map',place:'map',banquet:'map',consort:'harem',kid:'kids',princess:'out'}[UI.view]||UI.view;
   m.innerHTML=MENU.map(([k,l])=>`<button class="btn${current===k?' on':''}" ${current===k?'aria-current="page"':''} onclick="${k==='court'?'A.court()':`A.go('${k}')`}">${dockIcon(k)}<span>${l}</span></button>`).join('');
 }
 let panelRoute;
@@ -76,7 +76,7 @@ function renderPanel(){
   const p=$('#panel'),v=UI.view;
   const route=JSON.stringify([v,UI.sel]);
   if(!S)p.innerHTML=v==='new'?viewNew():viewTitle();
-  else p.innerHTML=({relative:viewRoyalRelative,family:viewFamily,map:viewMap,palace:viewPalace,place:viewPlace,banquet:viewBanquet,home:viewHome,harem:viewHarem,consort:viewConsort,cards:viewCards,xx:viewXX,kids:viewKids,kid:viewKid,princess:viewPrincessEstate,out:viewOut,log:viewLog,sys:viewSys}[v]||viewHome)();
+  else p.innerHTML=({jewelry:viewJewelryVault,relative:viewRoyalRelative,family:viewFamily,map:viewMap,palace:viewPalace,place:viewPlace,banquet:viewBanquet,home:viewHome,harem:viewHarem,consort:viewConsort,cards:viewCards,xx:viewXX,kids:viewKids,kid:viewKid,princess:viewPrincessEstate,out:viewOut,log:viewLog,sys:viewSys}[v]||viewHome)();
   if(route!==panelRoute){p.scrollTop=0;panelRoute=route;}
 }
 function render(){
@@ -269,6 +269,7 @@ function viewHome(){
    <div style="margin-top:6px">后宫 ${h.length} 人${alive().some(c=>c.cold)?`（冷宫 ${alive().filter(c=>c.cold).length}）`:''}　皇嗣 ${k.length} 位　储君：${heir?esc(heir.name):'未立'}　${S.flags.dowager&&S.flags.dowager.alive?esc(S.flags.dowager.name)+'健在':''}</div>
    </div></div>
    <p class="hint">每月有${maxEnergy()}点精力。上朝可先免费查看本月奏折，亲自批复通常花 1 点；召幸、闲谈、探望皇嗣、出巡也要花精力。赏赐、晋封、选秀不花精力。用完后点「结束本月」，宫中会发生新的事。侍寝后若怀上龙胎，要到下个月末太医才诊得出喜脉。每位妃嫔都有一段专属故事，情分越深越容易推进。</p>
+   <div class="acts"><button class="btn jade" onclick="A.go('jewelry')">内库珍藏<small>查看珍饰 · 选人赏赐</small></button></div>
    ${birthdayBanquetButtons()}${proudDemandNotice()}${courtBlocHTML()}<h3>近事</h3><ul class="story">${recent.map(l=>`<li class="${l.b?'big':''}"><time>${esc(l.d)}</time>${esc(l.t)}</li>`).join('')||'<li>尚无记载</li>'}</ul>`}
 function viewHarem(){
   const all=alive().filter(c=>!c.maid);const g=r=>all.filter(c=>!c.cold&&!c.templeStay&&r(c)).sort((a,b)=>b.rank-a.rank||b.favor-a.favor);
@@ -306,7 +307,7 @@ function viewConsort(){
   } else if(act&&!c.cold){
     acts+=`<button class="btn" onclick="A.night(${c.id})" ${c.preg?'disabled':''}>召幸侍寝<small>${c.preg?'有孕在身':'精力-1'}</small></button>`;
     acts+=`<button class="btn primary" onclick="A.chat(${c.id})">闲话家常<small>精力-1</small></button>`;
-    acts+=`<button class="btn jade" onclick="A.gift(${c.id})">赏赐<small>国库-20</small></button>`;
+    acts+=`<button class="btn jade" onclick="A.gift(${c.id})">赏赐<small>礼物 · 内库珍饰</small></button>`;
     management+=momVisitButton(c);
     if(c.rank<7)management+=`<button class="btn" onclick="A.promote(${c.id})">晋封<small>→${RANKS[c.rank+1]}</small></button>`;
     if(c.rank>0&&c.rank<8)penalties+=`<button class="btn danger" onclick="A.demote(${c.id})">降位</button>`;
@@ -330,6 +331,7 @@ function viewConsort(){
    <div class="detail-vitals">${bar('恩宠',c.favor)}${bar('心情',c.mood,'#517369')}${bar('情分',c.aff,'#936375')}</div>
    <div class="detail-stack">
     ${detailSection('寺中清修',consortTemplePanel(c))}
+    ${detailSection('御赐珍饰',jewelryPanel(c))}
     ${act&&!c.cold?initiativeHTML(c):''}
     ${detailSection('宫墙往事',palaceRomancePanel(c))}
     ${act&&c.rank===8?birthdayBanquetButtons():''}

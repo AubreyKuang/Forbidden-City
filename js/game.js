@@ -133,7 +133,7 @@ function openModal(ev){
   const showChoicePortraits=choicePeople.size>1;
   let h=`<h2 class="mtitle" id="event-title" tabindex="-1">${esc(ev.title)}</h2>${ev.scene==='mourning'?mourningScene():''}${eventCast(people)}<div class="mbody">`;
   if(people.length===1)h+=`<div class="mpor">${porImg(people[0],112)}<div>${esc(porName(people[0]))}</div></div>`;
-  h+=`<div class="mtext">${fmt(ev.text)}${ev.ref?`<p class="ref">典出 · ${ev.refURL?`<a href="${esc(ev.refURL)}" target="_blank" rel="noopener noreferrer">${esc(ev.ref)}</a>`:esc(ev.ref)}</p>`:''}${ev.input?`<input id="minput" class="inp" maxlength="${ev.input.max||4}" value="${esc(ev.input.def||'')}" aria-label="输入">`:''}</div></div><div class="mch${showChoicePortraits?' event-choices':''}">`;
+  h+=`<div class="mtext">${ev.jewelry?`<figure class="event-jewelry">${jewelryImage(ev.jewelry,88)}<figcaption>${esc(JEWELRY[ev.jewelry]?.name||'')}</figcaption></figure>`:''}${fmt(ev.text)}${ev.ref?`<p class="ref">典出 · ${ev.refURL?`<a href="${esc(ev.refURL)}" target="_blank" rel="noopener noreferrer">${esc(ev.ref)}</a>`:esc(ev.ref)}</p>`:''}${ev.input?`<input id="minput" class="inp" maxlength="${ev.input.max||4}" value="${esc(ev.input.def||'')}" aria-label="输入">`:''}</div></div><div class="mch${showChoicePortraits?' event-choices':''}">`;
   ev.choices.forEach((c,i)=>{
     const ok=!c.cond||c.cond();
     const style=ev.danger?(c.f?' danger':' quiet'):c.primary||ev.choices.length===1||(ev.input&&i===0)?' primary':'';
@@ -172,9 +172,9 @@ function nightWith(c,fromEvent){
   const lines=(NIGHT[c.trait]||[]).concat(NIGHT._),line=pick(lines);
   const fm=e.style==='风流'?1.5:1;
   const s=cchg(c,{favor:10*fm*(XIN[xinOf(c)].favorMul||1),mood:10,aff:(c.trait==='痴情'?9:6)});
-  c.nights++;S.flags.lastNight=c.id;if(c.nights===1)remember(c,'first','第一次侍寝');
+  c.nights++;recordImperialNight(c);S.flags.lastNight=c.id;if(c.nights===1)remember(c,'first','第一次侍寝');
   let p=.18+(e.style==='风流'?.06:0)+(S.flags.bless===S.turn?.1:0)-(c.trait==='体弱'?.05:0)-(e.age>50?.07:0)+(e.health>80?.03:0);
-  if(!c.preg&&(!c.delivery||c.delivery.settled)&&S.turn-c.lastBirth>=3&&chance(p)){c.preg=1;delete c.pregnancyFather;}
+  if(!c.preg&&(!c.delivery||c.delivery.settled)&&S.turn-c.lastBirth>=3&&chance(p)){c.preg=1;c.pregnancyFather={kind:'emperor',gen:S.gen,mother:c.id,name:e.sur+e.name,wen:e.wen,wu:e.wu,conceived:S.turn};beginPregnancyCalendar(c);}
   harem().forEach(o=>{if(o!==c&&TRAITS[o.trait].jealous){o.mood=clamp(o.mood-2);relAdd(o,c,-3)}});
   story(c,`奉召侍寝。${line}`);
   log(`召${cName(c)}侍寝。`);
@@ -319,7 +319,7 @@ A.endMonth=function(){
   // 后宫
   for(const c of alive()){
     if(!c.cold){c.favor=clamp(c.favor-(c.bond?0:c.trait==='淡泊'?1:2));if(c.favor<25)c.mood=clamp(c.mood-3);else if(c.favor>60)c.mood=clamp(c.mood+1)}else c.mood=clamp(c.mood-3);
-    if(c.preg>0){c.preg++;if(c.preg===2)pushEv(pregEvent(c));if(c.preg>=10)pushEv(birthEvent(c))}
+    if(c.preg>0){c.preg++;if(c.preg===2)pushEv(pregEvent(c));if(c.preg>=(c.pregnancyCalendar?.term||10))pushEv(birthEvent(c))}
   }
   alive().forEach(c=>{xinTick(c);visitorTick(c)});kidsAlive().forEach(growKid);
   // 时间
@@ -343,11 +343,13 @@ A.endMonth=function(){
   if(S.month===2&&S.turn-S.flags.lastXX>=34) pushEv({title:'三年大选',sfx:'chime',text:'又到三年一度的大选之期，各地秀女已候于储秀宫。',choices:[{t:'前去看看',f:()=>{genCands();UI.view='xx';return null}},{t:'今年免了',f:()=>{S.flags.lastXX=S.turn;return fx(chg({people:2}))}}]});
   childTempleTick();relTick();consortSocialTick();kidRelTick();clanTick();dowagerTick();initiativeTick();familyLifeTick();childLifeTick();courtTick();seasonalTick();palaceDutiesTick();palaceRomanceTick();palaceParentageTick();marriedLifeTick();personalExperienceTick();
   const passing=dowagerPassingEvent();if(passing)pushEv(passing);
-  const must=[passing?null:arcTick(),heirTick(),milestone(),parentageReportEvent()].filter(Boolean),opt=[];
+  const must=[passing?null:arcTick(),heirTick(),milestone(),parentageReportEvent(),pendingKinGreeting()].filter(Boolean),opt=[];
   // 积压的奏折：离宫期间攒下的朝堂事务，月末一并呈上
   while((S.flags.memorials||0)>0){S.flags.memorials--;const memo=factionEvent();if(memo&&!must.some(e=>e.title===memo.title))must.push(memo)}
   const add=(e,p)=>{if(e&&ambientEventReady(e))opt.push([e,p+R()-ambientNovelty(e)])};
   if(!passing){
+  add(fosterPetitionEvent(),8);add(kinSuccessionEvent(),8);add(parentageClueEvent(),8);
+  add(jewelryTributeEvent(),7);add(jewelryRequestEvent(),7);
   add(chance(.8)?festival():null,5);add(chance(.75)?haremEvent():null,6);
   add(chance(.65)?quirkEvent():null,5);add(chance(.5)?histEvent():null,6);add(chance(.4)?courtEvent():null,4);add(palaceRomanceEvent(),8);add(courtFriendshipEvent(),9);add(motherAppealEvent(),9);
   add(chance(.3)?youthEvent():null,7);add(chance(.45)?kidEvent():null,4);add(chance(.55)?xinEvent():null,6);add(monthlyMaidEvent(),4);add(chance(.3)?fosterEvent():null,4);add(chance(.45)?relEvent():null,5);add(chance(.35)?clanEvent():null,5);add(chance(.45)?factionEvent():null,6);add(chance(.5)?visitorEvent():null,5);add(chance(.15)?dowagerEvent():null,3);
