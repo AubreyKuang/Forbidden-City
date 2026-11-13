@@ -95,7 +95,7 @@ test('the dowager and maternal clan are visible in both tree modes without inven
   assert.match(run(`dowagerFamilyPanel()`),/已故/);
 });
 
-test('map leads point at playable scenes, disappear after response and warn only on invitations',()=>{
+test('map leads point at playable scenes and warn before invitations expire',()=>{
   const {run,ctx}=boot();
   run(`var a=harem()[0],b=harem()[1];S.banquetReunion={turn:S.turn,guest:a.id,partner:b.id,activity:'投壶',text:'两位妃嫔在亭中等你。'};`);
   assert.equal(run(`mapActivityLeads()[0].expires`),true);
@@ -110,6 +110,22 @@ test('map leads point at playable scenes, disappear after response and warn only
   assert.ok(callback);callback();run(`drain()`);
   assert.equal(run(`S.turn`),turn+1);
   assert.equal(run(`mapActivityLeads().some(l=>l.title==='御花园赴约')`),false);
+});
+
+test('first month review can be canceled without spending energy or advancing time',()=>{
+  const {run,ctx}=boot();
+  run(`mapActivityLeads=()=>[];E().energy=2;A.finishMonth();`);
+  assert.match(run(`curEv.text`),/2 点精力.*[\s\S]*结算本月收支/);
+  run(`choose(curEv.choices.findIndex(choice=>choice.t==='留在本月'))`);
+  assert.equal(run(`S.turn`),0);
+  assert.equal(run(`E().energy`),2);
+  let callback;
+  ctx.setTimeout=f=>{callback=f;};
+  run(`A.finishMonth();choose(curEv.choices.length-1);`);
+  assert.ok(callback);
+  callback();
+  assert.equal(run(`S.turn`),1);
+  assert.equal(run(`E().energy`),run(`maxEnergy()`));
 });
 
 test('all music scores play bounded pentatonic notes and preserve independent selection',()=>{

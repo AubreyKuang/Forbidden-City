@@ -10,8 +10,8 @@ function renderTop(){
   const hd=e.health>=80?'康健':e.health>=55?'安好':e.health>=30?'欠安':'病笃';
   t.innerHTML=`<div class="hud-identity">${porImg('emp',38)}<div class="hud-name"><span class="date">${esc(dateStr())}</span><span class="hud-person">${esc(e.sur+e.name)} · ${e.age}岁</span></div></div>
    <div class="hud-stats"><span class="st" title="${hd}">龙体 <b>${rd(e.health)}</b></span><span class="st">威望 <b>${rd(e.prestige)}</b></span><span class="st">民心 <b>${rd(e.people)}</b></span>
-   <span class="st">国库 <b>${e.treasury}</b>万两</span><span class="st" aria-label="精力 ${e.energy}／${mx}">精力 ${pips}</span></div>
-   <div class="hud-controls">${sound}<button class="btn gold sm hud-next" onclick="A.finishMonth()" ${S.over?'disabled':''}>结束本月 ▸</button></div>`;
+   <span class="st">国库 <b>${e.treasury}</b>万两</span><span class="st">精力 <b>${e.energy}／${mx}</b><span aria-hidden="true">${pips}</span></span></div>
+   <div class="hud-controls">${sound}<button id="finish-month" class="btn gold sm hud-next" onclick="A.finishMonth()" ${S.over?'disabled':''}>结束本月 ▸</button></div>`;
 }
 const MENU=[['map','宫城'],['home','御书房'],['court','上朝'],['harem','后宫'],['cards','翻牌子'],['xx','选秀'],['kids','皇嗣'],['family','家族'],['out','出巡'],['log','起居注'],['sys','存档']];
 const DOCK_ART={
@@ -42,7 +42,7 @@ function dockIcon(key){
 }
 function renderMenu(){const m=$('#menu');if(!S){m.innerHTML='';m.hidden=true;return}m.hidden=false;
   const current={palace:'map',place:'map',banquet:'map',consort:'harem',kid:'kids',princess:'out'}[UI.view]||UI.view;
-  m.innerHTML=MENU.map(([k,l])=>`<button class="btn${current===k?' on':''}" ${current===k?'aria-current="page"':''} ${k==='court'?'title="精力-1"':''} onclick="${k==='court'?'A.court()':`A.go('${k}')`}">${dockIcon(k)}<span>${l}</span></button>`).join('');
+  m.innerHTML=MENU.map(([k,l])=>`<button class="btn${current===k?' on':''}" ${current===k?'aria-current="page"':''} onclick="${k==='court'?'A.court()':`A.go('${k}')`}">${dockIcon(k)}<span>${l}</span>${k==='court'?'<small>查看奏折</small>':''}</button>`).join('');
 }
 let panelRoute;
 let personBackStack=[];
@@ -267,7 +267,7 @@ function viewHome(){
    <div class="stats" style="margin-top:6px">${bar('龙体',e.health,'#4f9078')}${bar('威望',e.prestige,'#a87a26')}${bar('民心',e.people,'#3b5fa8')}${bar('文才',e.wen)}${bar('武略',e.wu)}</div>
    <div style="margin-top:6px">后宫 ${h.length} 人${alive().some(c=>c.cold)?`（冷宫 ${alive().filter(c=>c.cold).length}）`:''}　皇嗣 ${k.length} 位　储君：${heir?esc(heir.name):'未立'}　${S.flags.dowager&&S.flags.dowager.alive?esc(S.flags.dowager.name)+'健在':''}</div>
    </div></div>
-   <p class="hint">每月有${maxEnergy()}点精力：上朝、召幸、闲谈、探望皇嗣、出巡都要花费精力；赏赐、晋封、选秀不花精力。用完后点「结束本月」，宫中会发生新的事。侍寝后若怀上龙胎，要到下个月末太医才诊得出喜脉。每位妃嫔都有一段专属故事，情分越深越容易推进。</p>
+   <p class="hint">每月有${maxEnergy()}点精力。上朝可先免费查看本月奏折，亲自批复通常花 1 点；召幸、闲谈、探望皇嗣、出巡也要花精力。赏赐、晋封、选秀不花精力。用完后点「结束本月」，宫中会发生新的事。侍寝后若怀上龙胎，要到下个月末太医才诊得出喜脉。每位妃嫔都有一段专属故事，情分越深越容易推进。</p>
    ${birthdayBanquetButtons()}${proudDemandNotice()}${courtBlocHTML()}<h3>近事</h3><ul class="story">${recent.map(l=>`<li class="${l.b?'big':''}"><time>${esc(l.d)}</time>${esc(l.t)}</li>`).join('')||'<li>尚无记载</li>'}</ul>`}
 function viewHarem(){
   const all=alive().filter(c=>!c.maid);const g=r=>all.filter(c=>!c.cold&&r(c)).sort((a,b)=>b.rank-a.rank||b.favor-a.favor);

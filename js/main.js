@@ -1,3 +1,13 @@
 /* ============ 启动 ============ */
 setScene('court');render();requestAnimationFrame(loop);
-document.addEventListener('keydown',e=>{if(e.key==='Enter'&&modalOpen&&document.activeElement&&document.activeElement.id==='minput'){choose(0)}});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&modalOpen&&curEv?.scene==='month-review'){
+    e.preventDefault();
+    choose(curEv.choices.length-2);
+    return;
+  }
+  if(e.key==='Enter'&&modalOpen&&e.target.id==='minput'&&!e.isComposing&&e.keyCode!==229){
+    e.preventDefault();
+    choose(0);
+  }
+});

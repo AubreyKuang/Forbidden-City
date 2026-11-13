@@ -97,7 +97,10 @@ function pushEv(ev){
 function pushNow(ev){if(!eventStillValid(ev))return;Q.unshift(ev);if(!modalOpen)nextEv()}
 function nextEv(){
   while(Q.length){const ev=Q.shift();if(eventStillValid(ev)){openModal(ev);return}}
+  const returningFromMonthReview=curEv?.scene==='month-review';
+  if(returningFromMonthReview) $('#app').inert=false;
   modalOpen=false;curEv=null;const modal=$('#modal');modal.hidden=true;modal.setAttribute('data-scene','');checkEnd();render();
+  if(returningFromMonthReview&&!modalOpen) $('#finish-month')?.focus?.({preventScroll:true});
 }
 function eventPortraits(ev){
   const seen=new Set();
@@ -114,12 +117,13 @@ function eventCast(people){
     `<figure>${porImg(person,104)}<figcaption>${esc(porName(person))}</figcaption></figure>`).join('')}</div>`:'';
 }
 function openModal(ev){
+  if(ev.scene==='month-review'||curEv?.scene==='month-review') $('#app').inert=ev.scene==='month-review';
   modalOpen=true;curEv=ev;if(ev.onShow)ev.onShow();const b=$('#mbox');
   const people=eventPortraits(ev);
   // Portrait buttons distinguish people, not several actions for the same person.
   const choicePeople=new Set(ev.choices.filter(c=>c.person).map(c=>c.person.id??c.person));
   const showChoicePortraits=choicePeople.size>1;
-  let h=`<div class="mtitle">${esc(ev.title)}</div>${ev.scene==='mourning'?mourningScene():''}${eventCast(people)}<div class="mbody">`;
+  let h=`<div class="mtitle" id="event-title">${esc(ev.title)}</div>${ev.scene==='mourning'?mourningScene():''}${eventCast(people)}<div class="mbody">`;
   if(people.length===1)h+=`<div class="mpor">${porImg(people[0],112)}<div>${esc(porName(people[0]))}</div></div>`;
   h+=`<div class="mtext">${fmt(ev.text)}${ev.ref?`<p class="ref">典出 · ${ev.refURL?`<a href="${esc(ev.refURL)}" target="_blank" rel="noopener noreferrer">${esc(ev.ref)}</a>`:esc(ev.ref)}</p>`:''}${ev.input?`<input id="minput" class="inp" maxlength="${ev.input.max||4}" value="${esc(ev.input.def||'')}" aria-label="输入">`:''}</div></div><div class="mch${showChoicePortraits?' event-choices':''}">`;
   ev.choices.forEach((c,i)=>{
@@ -144,7 +148,7 @@ function showRes(res){
   if(typeof res==='string') res={text:res};
   const b=$('#mbox');
   const cast=res.por?'':eventCast(eventPortraits(curEv));
-  b.innerHTML=`<div class="mtitle">${esc(res.title||curEv.title)}</div>${curEv.scene==='mourning'?mourningScene():''}${cast}<div class="mbody">${res.por?`<div class="mpor">${porImg(res.por,96)}</div>`:''}<div class="mtext">${fmt(res.text)}</div></div><div class="mch"><button class="btn gold" onclick="nextEv()">继续</button></div>`;
+  b.innerHTML=`<div class="mtitle" id="event-title">${esc(res.title||curEv.title)}</div>${curEv.scene==='mourning'?mourningScene():''}${cast}<div class="mbody">${res.por?`<div class="mpor">${porImg(res.por,96)}</div>`:''}<div class="mtext">${fmt(res.text)}</div></div><div class="mch"><button class="btn gold" onclick="nextEv()">继续</button></div>`;
   b.scrollTop=0;renderTop();
 }
 
@@ -168,7 +172,28 @@ function nightWith(c,fromEvent){
 }
 const A={
   go(v,id){rememberPersonRoute(v,id);UI.view=v;UI.sel=id;if(v==='palace')preparePalaceLife(id);AU.sfx('click');render();if(v!=='title')$('#panel').scrollIntoView({block:'nearest',behavior:'smooth'})},
-  court(){ if(S.over) return; if(!useE()) return; setScene('court'); AU.sfx('gong'); pushEv(courtEvent()); },
+  court(){
+    if(!S||S.over||modalOpen)return;
+    const ev=monthlyCourtEvent();
+    if(!ev){toast(S.flags.monthlyCourt?.done?'本月奏折已批复。':'这份奏折已不适用。');return;}
+    const brief=S.flags.monthlyCourt;
+    ev.choices=ev.choices.map(choice=>{
+      const cost=choice.delegated?0:1;
+      return {...choice,t:`${choice.t}（${cost?'精力 −1':'免耗精力'}）`,
+        cond:()=>!brief.done&&(!cost||E().energy>0),why:'精力不足',
+        f:()=>{
+          if(brief.done||(cost&&!useE()))return;
+          brief.done=true;
+          S.flags.lastCourt=ev.title;
+          log(`批复奏折「${ev.title}」，${choice.t}。`);
+          const result=choice.f?.();
+          save('auto');
+          return result;
+        }};
+    });
+    ev.choices.push({t:'稍后再议'});
+    setScene('court');pushEv(ev);
+  },
   night(id){const c=byId(id);if(!c||c.preg||c.cold)return;nightWith(c)},
   promote(id){const c=byId(id),nr=c.rank+1;
     if(nr>=8){toast('立后请用「册立皇后」');return}
@@ -241,7 +266,7 @@ A.endMonth=function(){
   const add=(e,p)=>{if(e&&ambientEventReady(e))opt.push([e,p+R()-ambientNovelty(e)])};
   if(!passing){
   add(chance(.8)?festival():null,5);add(chance(.75)?haremEvent():null,6);
-  add(chance(.65)?quirkEvent():null,5);add(chance(.5)?histEvent():null,6);add(chance(.4)?courtEvent(true):null,4);add(palaceRomanceEvent(),8);add(courtFriendshipEvent(),9);add(motherAppealEvent(),9);
+  add(chance(.65)?quirkEvent():null,5);add(chance(.5)?histEvent():null,6);add(chance(.4)?courtEvent():null,4);add(palaceRomanceEvent(),8);add(courtFriendshipEvent(),9);add(motherAppealEvent(),9);
   add(chance(.3)?youthEvent():null,7);add(chance(.45)?kidEvent():null,4);add(chance(.55)?xinEvent():null,6);add(monthlyMaidEvent(),4);add(chance(.3)?fosterEvent():null,4);add(chance(.45)?relEvent():null,5);add(chance(.35)?clanEvent():null,5);add(chance(.45)?factionEvent():null,6);add(chance(.5)?visitorEvent():null,5);add(chance(.15)?dowagerEvent():null,3);
   }
   opt.sort((a,b)=>b[1]-a[1]);const seen=new Set();must.forEach(e=>{seen.add(e.title);pushEv(e)});

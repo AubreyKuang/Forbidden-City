@@ -1,24 +1,24 @@
 /* ============ 朝堂事件 ============ */
 const officialC=(p=50)=>{const a=harem().filter(c=>c.fam.p>=p);return a.length?pick(a):null};
 const COURT=[
- ()=>{const off=officialC(50);const ch=[
+ brief=>{const off=brief?harem().find(c=>c.id===brief.person):officialC(50);const ch=[
    {t:'拨银三百万两赈灾',f:()=>{log('黄河决堤，帝拨银三百万两赈灾。',1);return `赈灾粮银连夜出京，灾民感念皇恩。${fx(chg({treasury:-300,people:10,prestige:3}))}`}},
    {t:'令地方官府自行筹措',f:()=>{log('黄河决堤，帝令地方自筹，民怨沸腾。');return `地方层层摊派，民间怨声四起。${fx(chg({people:-8}))}`}}];
   if(off)ch.push({t:`命${cName(off)}之父（${off.fam.t}）督办`,f:()=>{if(chance(.6)){story(off,'其父奉旨督办黄河赈灾，颇有成效，她在宫中亦觉面上有光。');return `差事办得漂亮。${fx(chg({treasury:-150,people:6,prestige:2}),cchg(off,{aff:8,mood:10}))}`}
     story(off,'其父督办赈灾不力，遭御史弹劾，她日夜忧惧。');return `赈灾银两被层层克扣，灾情反而加重。${fx(chg({treasury:-200,people:-5}),cchg(off,{mood:-12}))}`}});
-  return {title:'黄河决堤',text:'工部急奏：入夏以来暴雨连绵，黄河于开封段决口，良田万顷尽成泽国，灾民流离失所。',choices:ch}},
- ()=>{const e=E();const gen=harem().find(c=>c.trait==='将门');const ch=[
+  return {title:'黄河决堤',person:off?.id,text:'工部急奏：入夏以来暴雨连绵，黄河于开封段决口，良田万顷尽成泽国，灾民流离失所。',choices:ch}},
+ brief=>{const e=E();const gen=harem().find(c=>brief?c.id===brief.person:c.trait==='将门');const ch=[
    {t:'遣大将出征',f:()=>{if(chance(S.flags.wolf?.35:.6)){log('北狄犯边，王师击退之。');return `王师告捷。${fx(chg({treasury:-300,prestige:5}))}`}return `前线失利，丢了两座城池。${fx(chg({treasury:-300,prestige:-5,people:-5}))}`}},
    {t:'御驾亲征',f:()=>{const p=.35+e.wu/180;if(chance(p)){log('北狄犯边，帝御驾亲征，大破敌军。',1);return `你身先士卒，三战三捷，狄戎远遁漠北。${fx(chg({prestige:12,people:5,treasury:-300}))}`}
      log('帝亲征北狄失利，负伤而还。',1);return `大军中伏，你虽突围而出，却身负箭伤。${fx(chg({prestige:-10,health:-10,treasury:-400}))}`}},
    {t:'遣使议和，岁赐金帛',f:()=>{log('与北狄议和，岁赐金帛。');return `边境暂安，朝中却有人暗讽软弱。${fx(chg({treasury:-150,prestige:-6}))}`}}];
   if(gen)ch.push({t:`命${cName(gen)}的父兄领兵`,f:()=>{if(chance(.75)){story(gen,'父兄领兵出征北境，大胜而归。');log(`${fullName(gen)}之父兄领兵击退北狄。`,1);return `将门虎子，果然不凡。${fx(chg({treasury:-250,prestige:8}),cchg(gen,{aff:12,mood:15}))}`}
     story(gen,'父兄出征失利，兄长战死沙场。她哭了整整三日。');return `兵败。她的兄长战死沙场。${fx(chg({treasury:-300,prestige:-6}),cchg(gen,{mood:-30}))}`}});
-  return {title:'北境告急',sfx:'gong',text:'八百里加急：北狄铁骑南下，连破两道关隘，边民死伤无数。'+(S.flags.wolf?'\n各路诸侯想起骊山那场烽火，援军来得很慢。':''),choices:ch}},
+  return {title:'北境告急',person:gen?.id,sfx:'gong',text:'八百里加急：北狄铁骑南下，连破两道关隘，边民死伤无数。'+(S.flags.wolf?'\n各路诸侯想起骊山那场烽火，援军来得很慢。':''),choices:ch}},
  ()=>({title:'殿试',text:'三年一度的殿试之期已到，三百贡士候于殿外。',choices:[
    {t:'亲自出题考校',f:()=>{E().wen=clamp(E().wen+2);log('帝亲临殿试，钦点状元。');return `你出了一道“论民本”的策问，钦点一位寒门士子为状元，天下读书人称颂。${fx(chg({prestige:4,people:2}))}`}},
-   {t:'交由礼部操办',f:()=>`殿试循例而行。${fx(chg({prestige:1}))}`}]}),
- ()=>{const c=officialC(35);if(!c)return null;return {title:'御史弹劾',por:c,text:`御史台上折，弹劾${cName(c)}之父（${c.fam.t}）贪墨枉法，证据凿凿。`,choices:[
+   {t:'交由礼部操办',delegated:true,f:()=>`殿试循例而行。${fx(chg({prestige:1}))}`}]}),
+ brief=>{const c=brief?harem().find(c=>c.id===brief.person):officialC(35);if(!c)return null;return {title:'御史弹劾',person:c.id,por:c,text:`御史台上折，弹劾${cName(c)}之父（${c.fam.t}）贪墨枉法，证据凿凿。`,choices:[
    {t:'严查到底',f:()=>{if(chance(.6)){c.fam={t:c.fam.t+'（获罪）',p:Math.max(0,c.fam.p-30)};story(c,'其父贪墨案发，被革职查办。她在宫中脱簪待罪。');log(`${fullName(c)}之父贪墨案发，革职查办。`,1);return `查实其父贪墨百万两。${fx(chg({people:6,prestige:4,treasury:80}),cchg(c,{mood:-30,aff:-12}))}`}
      story(c,'其父遭弹劾，查无实据，得还清白。');return `查无实据，乃政敌构陷。${fx(chg({prestige:-2}),cchg(c,{aff:6}))}`}},
    {t:'留中不发',f:()=>{story(c,'其父遭弹劾，陛下将奏折压下。她心中感念。');return `你把奏折压下了。${fx(chg({people:-5}),cchg(c,{aff:10}))}`}},
@@ -37,13 +37,13 @@ const COURT=[
    {t:'分赏六宫',f:()=>{harem().forEach(c=>{c.mood=clamp(c.mood+8)});return '六宫欢喜，争相裁制新衣。\n§后宫众人心情+8'}},
    {t:'变卖充入国库',f:()=>`${fx(chg({treasury:120}))}`},
    {t:'下旨减免织造之役',f:()=>`江南织工感激涕零。${fx(chg({people:5}))}`}]}),
- ()=>{const g=makeGirl({fam:{t:'西域贡女',p:10},trait:pick(['活泼','骄矜','聪慧','痴情'])});g.looks=clamp(g.looks+12);g.sur='阿';g.given=pick(['依娜','古丽','月儿','米娅']);
+ brief=>{const g=brief?.guest||makeGirl({fam:{t:'西域贡女',p:10},trait:pick(['活泼','骄矜','聪慧','痴情'])});if(!brief?.guest){g.looks=clamp(g.looks+12);g.sur='阿';g.given=pick(['依娜','古丽','月儿','米娅']);}
   return {title:'西域使臣',por:g,text:`西域诸国遣使朝贡，献上美人${fullName(g)}，碧眼雪肤，能歌善舞。`,choices:[
    {t:'纳入后宫，封为常在',f:()=>{addConsort(g,2,'西域进献');return `她用生涩的汉话向你行礼。${fx(chg({prestige:2}))}`}},
    {t:'婉拒，厚赐使臣',f:()=>`使臣叹服天朝气度。${fx(chg({prestige:3,people:2,treasury:-30}))}`}]}},
- ()=>{const sons=kidsAlive().filter(k=>k.sex==='m'&&kidAge(k)>=6);if(!sons.length||S.heir)return null;
-  return {title:'请立储君',text:`以内阁首辅为首，群臣联名上书：“国本未定，人心不安，伏请陛下早立储君。”`,choices:[
-   ...sons.slice(0,4).map(k=>({t:`立${kidName(k)}（${kidAge(k)}岁）`,f:()=>{S.heir=k.id;kstory(k,'群臣请立储君，被册为皇太子。');log(`立${k.name}为皇太子。`,1);const m=byId(k.mom);if(m)cchg(m,{mood:25});return `${fx(chg({prestige:6}))}`}})),
+ brief=>{const sons=kidsAlive().filter(k=>k.sex==='m'&&kidAge(k)>=6&&(!brief||brief.sons?.includes(k.id))).slice(0,4);if(!sons.length||S.heir)return null;
+  return {title:'请立储君',sons:sons.map(k=>k.id),text:`以内阁首辅为首，群臣联名上书：“国本未定，人心不安，伏请陛下早立储君。”`,choices:[
+   ...sons.map(k=>({t:`立${kidName(k)}（${kidAge(k)}岁）`,f:()=>{S.heir=k.id;kstory(k,'群臣请立储君，被册为皇太子。');log(`立${k.name}为皇太子。`,1);const m=byId(k.mom);if(m)cchg(m,{mood:25});return `${fx(chg({prestige:6}))}`}})),
    {t:'朕春秋正盛，此事容后再议',f:()=>`${fx(chg({prestige:-3}))}`}]}},
  ()=>({title:'京畿疫病',text:'京畿一带爆发时疫，染病者日增。',choices:[
    {t:'命太医院全力救治（国库-150万两）',f:()=>{log('京畿时疫，太医院救治有方。');return `${fx(chg({treasury:-150,people:6}))}`}},
@@ -66,10 +66,25 @@ const COURT=[
    {t:'挽留：“朝廷离不开您老。”',f:()=>`老臣又留任一年，朝政井井有条。${fx(chg({prestige:1,people:2}))}`}]}),
 ];
 const SPONT=[0,1,5,10,11,14];
-function courtEvent(spont){
-  const idx=spont?shuffle(SPONT):shuffle(COURT.map((_,i)=>i));
-  for(const i of idx){const ev=COURT[i]();if(ev){S.flags.lastCourt=ev.title;if(!spont)log(`临朝听政，议「${ev.title}」。`);return ev}}
-  return {title:'早朝',text:'今日朝中无大事，百官奏对如常。',choices:[{t:'退朝',f:()=>`${fx(chg({prestige:1}))}`}]};
+function courtEvent(){
+  const ev=COURT[pick(SPONT)]();
+  ev.onQueue=()=>{S.flags.lastCourt=ev.title;};
+  return ev;
+}
+
+function monthlyCourtEvent(){
+  const brief=S.flags.monthlyCourt;
+  if(brief?.turn===S.turn&&brief.gen===S.gen){
+    return brief.done?null:COURT[brief.index]?.(brief);
+  }
+  for(const index of shuffle(COURT.map((_,i)=>i))){
+    const ev=COURT[index]();
+    if(!ev)continue;
+    S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index,person:ev.person,sons:ev.sons,
+      guest:ev.title==='西域使臣'?ev.por:undefined};
+    save('auto');
+    return ev;
+  }
 }
 
 const COURT_BLOCS=[

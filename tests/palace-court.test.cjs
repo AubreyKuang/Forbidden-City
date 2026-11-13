@@ -59,6 +59,47 @@ test('adopting one bloc pleases consorts of that stance and stings its rival blo
   assert.equal(run(`harem()[1].mood`),47);
 });
 
+test('monthly court can be previewed repeatedly, including after loading, and resolved once',()=>{
+  const {run}=boot();
+  run(`
+    E().energy=1;
+    A.court();
+    const preview=curEv.title, brief=JSON.stringify(S.flags.monthlyCourt);
+    assert.equal(E().energy,1);
+    choose(curEv.choices.length-1);
+    save('1');load('1');
+    A.court();
+    assert.equal(curEv.title,preview);
+    assert.equal(JSON.stringify(S.flags.monthlyCourt),brief);
+    assert.equal(E().energy,1);
+    choose(0);
+    assert.equal(E().energy,0);
+    assert.equal(S.flags.monthlyCourt.done,true);
+    drain();A.court();
+    assert.equal(modalOpen,false);
+    S.turn++;
+    A.court();
+    assert.equal(S.flags.monthlyCourt.turn,S.turn);
+  `);
+});
+
+test('delegating the exam resolves the memorial without spending the last energy point',()=>{
+  const {run}=boot();
+  run(`
+    S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index:2};
+    E().energy=0;
+    const prestige=E().prestige;
+    A.court();
+    assert.equal(curEv.title,'殿试');
+    choose(0);
+    assert.equal(S.flags.monthlyCourt.done,undefined);
+    choose(1);
+    assert.equal(E().energy,0);
+    assert.equal(E().prestige,prestige+1);
+    assert.equal(S.flags.monthlyCourt.done,true);
+  `);
+});
+
 test('the relationship graph shows fathers, consorts and close or hostile ties',()=>{
   const {run}=boot(13);
   run(`const [a,b]=harem();relAdd(a,b,-60);`);
