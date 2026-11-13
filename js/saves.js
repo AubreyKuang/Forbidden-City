@@ -93,5 +93,5 @@ A.exportSave=function(){try{const t=btoa(unescape(encodeURIComponent(JSON.string
   if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast('存档码已复制'),()=>toast('已选中，请手动复制'));else toast('已选中，请手动复制')}catch(e){toast('导出失败')}};
 A.importSave=function(){try{const t=$('#savecode').value.trim();const s=JSON.parse(decodeURIComponent(escape(atob(t))));if(!s.emp)throw 0;S=s;Q.length=0;migrate();UI.view='map';toast('已导入存档');render()}catch(e){toast('存档码无效，请检查是否复制完整')}};
 function migrate(){if(!S)return;ensureDowager();S.rel=S.rel||{};S.pos=S.pos||{x:100,y:82};reconcileScholarArcs();reconcileRareArcs();[...S.consorts,...(S.cands||[])].forEach(assignConsortPortrait);(S.cands||[]).forEach(deepen);alive().forEach(c=>{if(!c.arc)assignArc(c);deepen(c);clanKey(c)});S.children.forEach(k=>{if(k.sup===undefined)k.sup=0});
-  alive().forEach(houseOf);S.flags.memorials ??= 0;childLifeTick();
+  alive().forEach(houseOf);S.flags.memorials ??= 0;childLifeTick();migrateMourning();
   resetMapPosition(S.pos)}

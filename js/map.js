@@ -361,7 +361,7 @@ function mountMap(){const w=$('#mapwrap');if(!w)return;w.appendChild(MAPC);
     b.onclick=()=>goDirect(p);b.ondblclick=()=>goDirect(p);
     b.onmouseenter=()=>{hoverP=p};b.onmouseleave=()=>{hoverP=null};w.appendChild(b)})}
 const backBtn=`<button class="btn sm" onclick="A.go('map')">◂ 返回宫城</button>`;
-function viewMap(){return `<section class="map-play" aria-label="宫城地图"><header class="map-location"><h2>宫城</h2><span class="hint">当前位置 · ${esc(nearestPlace())}</span></header><div id="mapwrap"></div><p class="map-legend">点宫殿名直达 · 点宫殿步行前往 · 点小人偶遇 · 绿点：有人活动 · 粉点：有孕 · 金点：选秀</p>${mapActivityPanel()}${princessMapNotice()}${birthdayBanquetButtons()}${proudDemandNotice()}</section>`;}
+function viewMap(){return `<section class="map-play" aria-label="宫城地图"><header class="map-location"><h2>宫城</h2><span class="hint">当前位置 · ${esc(nearestPlace())}</span></header><div id="mapwrap"></div><p class="map-legend">点宫殿名直达 · 点宫殿步行前往 · 点小人偶遇 · 绿点：有人活动 · 粉点：有孕 · 金点：选秀</p>${mourningNotice()}${mapActivityPanel()}${princessMapNotice()}${birthdayBanquetButtons()}${proudDemandNotice()}</section>`;}
 function viewPalace(){const name=UI.sel,res=name==='冷宫'?alive().filter(c=>c.cold):harem().filter(c=>c.palace===name);
   const extra=name==='储秀宫'&&S.cands.length?`<div class="acts"><button class="btn gold" onclick="A.go('xx')">秀女正在候选（${S.cands.length}人）</button></div>`:'';
   const note=name==='冷宫'?'荒草萋萋，宫门深锁。':name==='坤宁宫'?'中宫所居，凤仪万方。':(PALACE_NOTES[name]||'宫门半掩，廊下挂着鸟笼。');
@@ -379,5 +379,5 @@ function viewPlace(){const id=UI.sel;
       ${initiativesAt(id)||(school?'':'<p class="hint">此刻只有当值宫人在这里。</p>')}
       <button class="btn" onclick="A.go('${school?'kids':'log'}')">${school?'查看皇嗣':'翻阅起居注'}</button>`;
   }
-  if(id==='cn'){const d=S.flags.dowager;return `<h2>慈宁宫${backBtn}</h2>${d&&d.alive?`<p>${esc(d.name)}正在佛堂诵经。</p><div class="acts"><button class="btn" onclick="A.greet()">请安<small>精力-1</small></button></div>`:'<p class="hint">慈宁宫已经空了，只有佛前的长明灯还亮着。</p>'}${initiativesAt('cn')}`}
+  if(id==='cn'){const d=S.flags.dowager;return `<h2>慈宁宫${backBtn}</h2>${d&&d.alive?`<p>${esc(d.name)}正在佛堂诵经。</p><div class="acts"><button class="btn" onclick="A.greet()">请安<small>精力-1</small></button></div>`:mourningPlacePanel()}${initiativesAt('cn')}`}
   return viewMap()}

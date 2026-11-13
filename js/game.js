@@ -112,7 +112,7 @@ function eventCast(people){
 function openModal(ev){
   modalOpen=true;curEv=ev;if(ev.onShow)ev.onShow();const b=$('#mbox');
   const people=eventPortraits(ev);
-  let h=`<div class="mtitle">${esc(ev.title)}</div>${eventCast(people)}<div class="mbody">`;
+  let h=`<div class="mtitle">${esc(ev.title)}</div>${ev.scene==='mourning'?mourningScene():''}${eventCast(people)}<div class="mbody">`;
   if(people.length===1)h+=`<div class="mpor">${porImg(people[0],112)}<div>${esc(porName(people[0]))}</div></div>`;
   h+=`<div class="mtext">${fmt(ev.text)}${ev.ref?`<p class="ref">典出 · ${ev.refURL?`<a href="${esc(ev.refURL)}" target="_blank" rel="noopener noreferrer">${esc(ev.ref)}</a>`:esc(ev.ref)}</p>`:''}${ev.input?`<input id="minput" class="inp" maxlength="${ev.input.max||4}" value="${esc(ev.input.def||'')}" aria-label="输入">`:''}</div></div><div class="mch${ev.choices.filter(c=>c.person).length>=2?' event-choices':''}">`;
   ev.choices.forEach((c,i)=>{
@@ -135,7 +135,7 @@ function showRes(res){
   if(typeof res==='string') res={text:res};
   const b=$('#mbox');
   const cast=res.por?'':eventCast(eventPortraits(curEv));
-  b.innerHTML=`<div class="mtitle">${esc(res.title||curEv.title)}</div>${cast}<div class="mbody">${res.por?`<div class="mpor">${porImg(res.por,96)}</div>`:''}<div class="mtext">${fmt(res.text)}</div></div><div class="mch"><button class="btn gold" onclick="nextEv()">继续</button></div>`;
+  b.innerHTML=`<div class="mtitle">${esc(res.title||curEv.title)}</div>${curEv.scene==='mourning'?mourningScene():''}${cast}<div class="mbody">${res.por?`<div class="mpor">${porImg(res.por,96)}</div>`:''}<div class="mtext">${fmt(res.text)}</div></div><div class="mch"><button class="btn gold" onclick="nextEv()">继续</button></div>`;
   b.scrollTop=0;renderTop();
 }
 
@@ -225,13 +225,16 @@ A.endMonth=function(){
   // 事件
   if(S.month===2&&S.turn-S.flags.lastXX>=34) pushEv({title:'三年大选',sfx:'chime',text:'又到三年一度的大选之期，各地秀女已候于储秀宫。',choices:[{t:'前去看看',f:()=>{genCands();UI.view='xx';return null}},{t:'今年免了',f:()=>{S.flags.lastXX=S.turn;return fx(chg({people:2}))}}]});
   relTick();consortSocialTick();kidRelTick();clanTick();dowagerTick();initiativeTick();familyLifeTick();childLifeTick();courtTick();seasonalTick();palaceDutiesTick();
-  const must=[arcTick(),heirTick(),milestone()].filter(Boolean),opt=[];
+  const passing=dowagerPassingEvent();if(passing)pushEv(passing);
+  const must=[passing?null:arcTick(),heirTick(),milestone()].filter(Boolean),opt=[];
   // 积压的奏折：离宫期间攒下的朝堂事务，月末一并呈上
   while((S.flags.memorials||0)>0){S.flags.memorials--;const memo=factionEvent();if(memo&&!must.some(e=>e.title===memo.title))must.push(memo)}
   const add=(e,p)=>{if(e)opt.push([e,p+R()])};
+  if(!passing){
   add(chance(.8)?festival():null,5);add(chance(.9)?haremEvent():null,6);add(chance(.5)?haremEvent():null,3);
   add(chance(.65)?quirkEvent():null,5);add(chance(.5)?histEvent():null,6);add(chance(.4)?courtEvent(true):null,4);add(courtFriendshipEvent(),9);add(motherAppealEvent(),9);
   add(chance(.45)?kidEvent():null,4);add(chance(.55)?xinEvent():null,6);add(monthlyMaidEvent(),4);add(chance(.3)?fosterEvent():null,4);add(chance(.45)?relEvent():null,5);add(chance(.35)?clanEvent():null,5);add(chance(.45)?factionEvent():null,6);add(chance(.5)?visitorEvent():null,5);add(chance(.15)?dowagerEvent():null,3);
+  }
   opt.sort((a,b)=>b[1]-a[1]);const seen=new Set();must.forEach(e=>{seen.add(e.title);pushEv(e)});
   const recent=S.flags.ambientRecent ||= {};
   for(const [title,turn] of Object.entries(recent))if(S.turn-turn>=4)delete recent[title];

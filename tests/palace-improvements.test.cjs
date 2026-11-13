@@ -394,3 +394,74 @@ test('a large harem cannot make new-clothes invitations occur more than once per
     var turns=[];for(var t=0;t<60;t++){S.turn=t;S.consorts.forEach(c=>c.xin={k:'欢喜',t});var ev=xinEvent();if(ev){turns.push(t);pushEv(ev);choose(1);drain();}}
     assert.ok(turns.length>0&&turns.length<=5);for(var i=1;i<turns.length;i++)assert.ok(turns[i]-turns[i-1]>=12);`);
 });
+test('a discarded dowager death candidate cannot silently kill her or change character moods',()=>{
+  const {run,force}=boot();
+  run(`S.turn=50;var d=ensureDowager(),moods=JSON.stringify(S.consorts.map(c=>c.mood));`);
+  force(0);run(`var announcement=dowagerPassingEvent();assert.ok(announcement);assert.equal(d.alive,true);assert.equal(d.mourning,undefined);
+    assert.equal(JSON.stringify(S.consorts.map(c=>c.mood)),moods);
+    pushEv(announcement);assert.equal(d.alive,false);assert.equal(d.mourning.handled,false);assert.equal(curEv.scene,'mourning');
+    assert.match($('#mbox').innerHTML,/慈宁宫丧仪画面/);assert.match(mourningNotice(),/丧仪尚待/);`);
+});
+
+test('dowager death is delivered outside the monthly random budget and relatives grieve once',()=>{
+  const {run}=boot();
+  run(`var d=ensureDowager(),c=harem()[0];c.clan=d.clan;c.trait='骄纵';c.mood=90;S.turn=50;
+    var original=dowagerPassingEvent;dowagerPassingEvent=()=>dowagerFuneralEvent(d);A.endMonth();dowagerPassingEvent=original;
+    assert.equal(d.alive,false);assert.ok([curEv,...Q].some(e=>e.scene==='mourning'));
+    assert.equal(xinOf(c),'悲恸');assert.match(d.mourning.reactions[c.id],/哭得直不起身/);
+    var mood=c.mood;beginDowagerMourning(d);assert.equal(c.mood,mood);
+    assert.equal(S.log.filter(l=>l.t.includes('宫门悬素')).length,1);
+    assert.ok(NPCMemory.recall(S,c.id).some(m=>JSON.stringify(m).includes('去世')));drain();`);
+});
+
+test('an unfinished funeral survives reload, charges once and resumes from Cining palace',()=>{
+  const {run}=boot();
+  run(`var d=ensureDowager();pushEv(dowagerFuneralEvent(d));var turn=S.turn;save('1');Q.length=0;modalOpen=false;curEv=null;
+    load('1');migrate();d=ensureDowager();assert.equal(d.mourning.handled,false);assert.ok(dowagerPassingEvent());
+    A.go('place','cn');assert.match(viewPlace(),/料理太后丧仪/);var money=E().treasury;
+    A.openMourning();var action=curEv.choices[0];choose(0);assert.equal(E().treasury,money-80);assert.equal(d.mourning.handled,true);
+    action.f();assert.equal(E().treasury,money-80);drain();assert.equal(dowagerPassingEvent(),null);
+    assert.equal(banquetKind('garden').ready,false);S.turn++;assert.equal(banquetKind('garden').ready,true);`);
+});
+
+test('old deceased dowagers get a memorial without a new death, bill or repeated grief',()=>{
+  const {run}=boot();
+  run(`var d=ensureDowager();d.alive=false;delete d.mourning;var money=E().treasury,moods=JSON.stringify(S.consorts.map(c=>c.mood));migrate();
+    assert.equal(d.mourning.legacy,true);assert.match(mourningNotice(),/追思/);assert.equal(dowagerPassingEvent(),null);assert.equal(E().treasury,money);
+    assert.equal(JSON.stringify(S.consorts.map(c=>c.mood)),moods);A.openMourning();assert.equal(curEv.title,'慈宁宫 · 追思');
+    assert.doesNotMatch(curEv.text,/传来长长的哭声/);drain();assert.equal(E().treasury,money);assert.equal(mourningNotice(),'');`);
+});
+
+test('cold-palace relatives mourn in their own room, and follow-up comfort is not farmable',()=>{
+  const {run}=boot();
+  run(`var d=ensureDowager(),[a,b]=harem();a.clan=b.clan=d.clan;b.cold=true;pushEv(dowagerFuneralEvent(d));
+    assert.match(d.mourning.reactions[b.id],/消息传到冷宫/);assert.equal(eventPortraits(curEv).includes(b),false);
+    assert.match(d.mourning.reactions[a.id],/眼泪|泪人|泪水|哭/);drain();S.turn+=2;
+    var before=a.aff;A.openMourning();choose(0);drain();assert.equal(a.aff,clamp(before+3));var after=a.aff;
+    A.openMourning();choose(0);drain();assert.equal(a.aff,after);save('1');load('1');migrate();A.openMourning();choose(0);drain();assert.equal(byId(a.id).aff,after);`);
+});
+
+test('funeral has an affordable option and greeting a deceased dowager never invents a live conversation',()=>{
+  const {run}=boot();
+  run(`var d=ensureDowager();E().treasury=0;pushEv(dowagerFuneralEvent(d));assert.equal(curEv.choices[0].cond(),false);
+    choose(1);drain();assert.equal(E().treasury,0);assert.equal(d.mourning.handled,true);
+    var energy=E().energy;A.greet();assert.equal(E().energy,energy);assert.equal(modalOpen,false);assert.equal(UI.sel,'cn');`);
+});
+
+
+test('maternal full sisters with separately saved fathers share one parent in both views and after reload',()=>{
+  const {run}=boot();
+  run(`var d=ensureDowager(),a=makeGirl({sur:d.sur,fam:{...d.fam}}),b=makeGirl({sur:d.sur,fam:{...d.fam}});
+    a.clan=b.clan=d.clan;addConsort(a,3,'太后荐入');addConsort(b,2,'亲妹入宫');
+    houseOf(a);b.house=JSON.parse(JSON.stringify(a.house));b.house.father.id='legacy-father-'+b.id;b.fatherId=b.id;
+    a.age=26;b.age=22;a.kin={[b.id]:'亲妹'};delete b.kin;
+    var cousin=makeKin(a,'堂');addConsort(cousin,1,'堂妹入宫');houseOf(cousin);
+    S=JSON.parse(JSON.stringify(S));migrate();a=byId(a.id);b=byId(b.id);cousin=byId(cousin.id);
+    assert.equal(a.house,b.house);assert.equal(b.kin[a.id],'亲姐');assert.notEqual(a.house,cousin.house);
+    var name=a.house.father.name,id=a.house.father.id;
+    UI.familyMode='list';var list=viewFamily();assert.equal(list.split('父亲 · '+name).length-1,1);
+    UI.familyMode='graph';var graph=viewFamily();assert.equal(graph.split('data-person-id="'+id+'"').length-1,1);
+    var edges=graph.split('<g class="paternal-links" data-parent-id="'+id+'">')[1].split('</g>')[0];
+    assert.ok(edges.includes('data-child-id="'+a.id+'"'));assert.ok(edges.includes('data-child-id="'+b.id+'"'));
+    save('1');load('1');migrate();assert.equal(houseOf(byId(a.id)),houseOf(byId(b.id)));`);
+});

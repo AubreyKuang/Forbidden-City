@@ -16,16 +16,16 @@ const birthMonth = person => person.birthMonth ?? (Math.abs(person.seed || 0)%12
 
 function banquetKind(kind) {
   if (kind === 'garden') return { title:'御花园小宴', cost:15,
-    ready:!S.over && S.turn-(S.lastGardenBanquet ?? -3)>=3 };
+    ready:!S.over && !mourningActive() && S.turn-(S.lastGardenBanquet ?? -3)>=3 };
   if (kind === 'duanwu') {
     const work=duanwuWork();
-    return {title:'端午宴',cost:0,ready:!S.over&&S.month===5&&work?.year===S.year&&work.stage==='finished'&&!work.held};
+    return {title:'端午宴',cost:0,ready:!S.over&&!mourningActive()&&S.month===5&&work?.year===S.year&&work.stage==='finished'&&!work.held};
   }
   if (!['emperor','empress'].includes(kind)) return null;
   const host = kind === 'emperor' ? E() : empress();
   if (!host) return null;
   const title = kind === 'emperor' ? '皇帝万寿宴' : '皇后千秋宴';
-  return { title, host, cost:30, ready:!S.over && birthMonth(host)===S.month && host.birthFeastYear!==S.year };
+  return { title, host, cost:30, ready:!S.over && !mourningActive() && birthMonth(host)===S.month && host.birthFeastYear!==S.year };
 }
 
 function birthdayBanquetButtons() {
@@ -42,6 +42,7 @@ const banquetDraft = () => UI.view==='banquet' ? UI.banquet : null;
 
 A.openBanquet = function(kind='garden') {
   if(modalOpen){toast('请先处理眼前的事件。');return;}
+  if(mourningActive()){toast('太后新丧，本月宫中暂缓宴饮。');return;}
   const feast=banquetKind(kind);
   if(!feast?.ready){toast(feast?.host?`${feast.title}在${MONTHS[birthMonth(feast.host)-1]}举办${feast.host.birthFeastYear===S.year?'，本年已办过':''}。`:'眼下还不能筹办这场宴会。');return;}
   UI.banquet = { kind, activity:'toss', all:kind!=='garden', seats:[] };
@@ -90,6 +91,7 @@ function banquetAttendees(draft, feast) {
 }
 
 function banquetProblem(draft, feast, people) {
+  if(mourningActive())return '太后新丧，本月宫中暂缓宴饮。';
   if (!feast?.ready) return '这场宴会目前不能举办。';
   if (people.length<(feast.host?1:2)||people.every(p=>p.sex)) return '还需选足宾客，并至少有一位妃嫔或宫人在席。';
   if (E().energy<=0) return '本月精力已尽。';
