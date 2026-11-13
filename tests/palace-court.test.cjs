@@ -144,6 +144,44 @@ test('repairing a dike costs extra now and discounts exactly one later direct fl
   `);
 });
 
+test('the first seasonal harvest and later locust memorial connect through a single saved grain reserve',()=>{
+  const {run}=boot();
+  run(`
+    S.turn=5;S.month=8;S.flags.impeachmentSeen=true;
+    E().treasury=100;E().people=50;E().energy=1;
+    A.court();
+    assert.equal(curEv.title,'五谷丰登');
+    const option=text=>curEv.choices.findIndex(c=>c.t.includes(text));
+    choose(option('留粮入常平仓'));drain();
+    assert.equal(E().treasury,160);
+    assert.equal(E().people,52);
+    assert.equal(E().energy,0);
+    assert.match(viewMap(),/常平仓有一批备荒粮/);
+    save('1');load('1');
+    assert.equal(grainReserveReady(),true);
+    S.turn++;S.month=9;
+    S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index:HARVEST_INDEX};
+    A.court();
+    assert.equal(option('留粮入常平仓'),-1);
+    choose(option('稍后再议'));
+    S.turn=12;S.year=2;S.month=3;
+    E().energy=0;
+    A.court();
+    assert.equal(curEv.title,'蝗灾');
+    assert.equal(curEv.choices[option('开仓放粮')].cond(),false);
+    choose(option('发放常平仓储粮'));drain();
+    assert.equal(E().treasury,160);
+    assert.equal(E().people,58);
+    assert.equal(E().energy,0);
+    assert.equal(grainReserveReady(),false);
+    save('1');load('1');
+    S.turn++;
+    S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index:LOCUST_INDEX};
+    A.court();
+    assert.equal(option('发放常平仓储粮'),-1);
+  `);
+});
+
 test('delegating the exam resolves the memorial without spending the last energy point',()=>{
   const {run}=boot();
   run(`

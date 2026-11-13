@@ -64,6 +64,28 @@ const COURT=[
 ];
 const SPONT=[0,1,5,10,11,14];
 const FLOOD_INDEX=0;
+const LOCUST_INDEX=5, HARVEST_INDEX=11;
+function grainReserveReady(){return S.flags.grainReserveGen===S.gen;}
+function monthlyGrainEvent(index){
+  const event=COURT[index]();
+  if(index===HARVEST_INDEX){
+    if(grainReserveReady())event.text+='\n常平仓已有一批备荒粮，等用过再补。';
+    else event.choices.push({t:'留粮入常平仓，以备蝗灾',
+      preview:'国库 +60 万两 · 民心 +2 · 储粮可在日后一次蝗灾中免耗精力赈济',
+      f:()=>{
+        S.flags.grainReserveGen=S.gen;
+        return `户部将部分秋粮存入常平仓，留待蝗灾时赈济。${fx(chg({treasury:60,people:2}))}`;
+      }});
+  }else if(grainReserveReady()){
+    event.text+='\n常平仓尚有丰年留下的粮食，可以直接发放。';
+    event.choices.push({t:'发放常平仓储粮',preview:'国库无支出 · 民心 +6 · 用完这一批储粮',delegated:true,
+      f:()=>{
+        delete S.flags.grainReserveGen;
+        return `户部从常平仓调粮，灾民领到了救急口粮。${fx(chg({people:6}))}`;
+      }});
+  }
+  return event;
+}
 function floodDikeReady(){return S.flags.floodDikeGen===S.gen;}
 const FLOOD_SUPERVISION={
   grain:{label:'调运赈粮',need:'粮道被冲断，灾区眼下最缺粮。',offices:['内阁首辅','吏部尚书','户部侍郎','皇商','知府','县令'],cost:150,people:6},
@@ -262,6 +284,10 @@ function monthlyCourtEvent(){
   if(brief?.turn===S.turn&&brief.gen===S.gen){
     if(brief.done)return null;
     if(brief.floodFollowup)return floodReliefEvent();
+    if(brief.index===LOCUST_INDEX||brief.index===HARVEST_INDEX){
+      markGrainMemorialSeen(brief.index);
+      return monthlyGrainEvent(brief.index);
+    }
     if(brief.index===FLOOD_INDEX){
       if(!Object.hasOwn(FLOOD_SUPERVISION,brief.floodNeed)){
         brief.floodNeed='grain';
@@ -302,6 +328,13 @@ function monthlyCourtEvent(){
   }
   const firstCaseDue=S.turn>=FIRST_IMPEACHMENT_TURN&&!S.flags.impeachmentSeen&&!brief?.impeachment;
   const candidates=S.turn===0&&S.flags.openingCourt?[0]:shuffle(COURT.map((_,i)=>i));
+  const firstHarvest=S.month>=8&&S.month<=10&&S.flags.harvestSeenGen!==S.gen;
+  const firstLocust=S.year>=2&&S.month>=3&&S.month<=5&&S.flags.harvestSeenGen===S.gen&&S.flags.locustSeenGen!==S.gen;
+  if(firstHarvest||firstLocust){
+    const index=firstHarvest?HARVEST_INDEX:LOCUST_INDEX;
+    candidates.splice(candidates.indexOf(index),1);
+    candidates.unshift(index);
+  }
   if(firstCaseDue) {
     candidates.splice(candidates.indexOf(IMPEACHMENT_INDEX),1);
     candidates.unshift(IMPEACHMENT_INDEX);
@@ -309,16 +342,22 @@ function monthlyCourtEvent(){
   for(const index of candidates){
     const impeachment=index===IMPEACHMENT_INDEX?newImpeachment():null;
     const floodNeed=index===FLOOD_INDEX?(S.turn===0||chance(.5)?'grain':'shelter'):null;
-    const ev=floodNeed?monthlyFloodEvent({floodNeed}):COURT[index](index===IMPEACHMENT_INDEX?{impeachment}:undefined);
+    const ev=floodNeed?monthlyFloodEvent({floodNeed}):index===LOCUST_INDEX||index===HARVEST_INDEX
+      ?monthlyGrainEvent(index):COURT[index](index===IMPEACHMENT_INDEX?{impeachment}:undefined);
     if(!ev)continue;
     S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index,person:ev.person,sons:ev.sons,
       ...(impeachment?{impeachment}:{}),
       ...(floodNeed?{floodNeed}:{}),
       guest:ev.title==='西域使臣'?ev.por:undefined};
     if(impeachment)S.flags.impeachmentSeen=true;
+    markGrainMemorialSeen(index);
     save('auto');
     return ev;
   }
+}
+function markGrainMemorialSeen(index){
+  if(index===HARVEST_INDEX)S.flags.harvestSeenGen=S.gen;
+  if(index===LOCUST_INDEX&&S.flags.harvestSeenGen===S.gen)S.flags.locustSeenGen=S.gen;
 }
 
 const COURT_BLOCS=[
