@@ -1,8 +1,9 @@
 /* ============ 母子日常与御花园小宴 ============ */
-const inPalace = c => c?.alive && !c.gone && !c.cold;
+const inPalace = c => c?.alive && !c.gone && !c.cold && !c.templeStay;
 // Marriage alone does not move a child: a local couple may still await an estate.
-const childHasLeftPalace = k => !!(k?.away || k?.estate || k?.jailed || k?.princessMarriage==='frontier');
+const childHasLeftPalace = k => !!(k?.away || k?.estate || k?.princeEstate || k?.jailed || k?.templeStay || k?.removedFromRoyal || k?.princessMarriage==='frontier');
 const childInPalace = k => !!k?.alive && !childHasLeftPalace(k);
+const childCanVisitCourt = k => !!k?.alive&&!k.templeStay&&!k.removedFromRoyal&&!k.jailed&&!k.away&&(childInPalace(k)||!!k.princeEstate);
 const familyName = person => person.sex ? kidName(person) : cName(person);
 const mothersOf = k => [...new Set([byId(k.mom), fosterOf(k)].filter(Boolean))];
 

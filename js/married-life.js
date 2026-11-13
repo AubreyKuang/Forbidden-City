@@ -45,6 +45,10 @@ function ensureMarriedLife(k){
   p.trust ??= clamp(marriageFit(k,p).score+(p.marriageTalk?.trust||0));
   k.household ||= {version:1,started:p.marriedAt,children:[],concubines:[],pregnancies:[],history:[],seen:{},lastTick:S.turn,lastBirth:-99,lastEvent:S.turn,nextNews:S.turn+4,lastNewsKind:null};
   k.household.nextNews ??= S.turn+4;
+  if(!k.household.lastBirthByMother){
+    k.household.lastBirthByMother={};
+    for(const baby of k.household.children)if(Number.isFinite(baby.born))k.household.lastBirthByMother[baby.mother]=Math.max(k.household.lastBirthByMother[baby.mother]??-999,baby.born);
+  }
   return k.household;
 }
 function householdMother(k){
@@ -52,7 +56,8 @@ function householdMother(k){
   if(d)return {...d.portrait,alive:d.alive};
   return byId(id)||(S.previousCourts||[]).slice().reverse().flatMap(c=>c.consorts).find(c=>c.id===id);
 }
-function householdActive(k){return !!(k?.alive&&k.married&&k.spouse?.alive!==false&&!k.jailed&&!k.gone&&!S.over);}
+function householdLiving(k){return !!(k?.alive&&!k.removedFromRoyal&&k.married&&k.spouse?.alive!==false&&!k.jailed&&!k.gone&&!S.over);}
+function householdActive(k){return householdLiving(k)&&!k.templeStay;}
 function householdRecord(k,type,text){
   const h=ensureMarriedLife(k);if(!h)return;
   h.history.push({d:dateStr(),turn:S.turn,type,t:text});if(h.history.length>60)h.history.shift();
@@ -61,25 +66,27 @@ function householdRecord(k,type,text){
 function householdPeople(k){return [k.spouse,...(ensureMarriedLife(k)?.concubines||[])].filter(Boolean);}
 function householdSummary(k){
   const h=k.household;if(!h||kidAge(k)<18||!k.married)return '';
-  const children=h.children.filter(c=>c.alive!==false),sons=children.filter(c=>c.sex==='m').length;
+  const children=[...h.children,...(k.recognizedChildren||[]).map(kidById).filter(Boolean)].filter(c=>c.alive!==false),sons=children.filter(c=>c.sex==='m').length;
   return `${sons}子${children.length-sons}女${h.pregnancies.length?' · 有喜':''}${h.concubines.length?' · 妾室'+h.concubines.length+'人':''}`;
 }
 function householdCanConceive(k,p){
   const woman=k.sex==='f'?k:p,h=ensureMarriedLife(k);
   return householdActive(k)&&p?.alive!==false&&kidAge(k)>=18&&kidAge(p)>=18&&kidAge(woman)<=45&&
-    !p.away&&!p.jailed&&!p.gone&&!p.cold&&h.children.length<8&&h.pregnancies.length===0&&
-    S.turn-h.lastBirth>=18&&S.turn-h.started>=3&&(p.trust??k.spouse.trust)>=40;
+    !p.away&&!p.jailed&&!p.gone&&!p.cold&&h.children.length+h.pregnancies.length<8&&!h.pregnancies.some(g=>g.mother===woman.id)&&
+    S.turn-(h.lastBirthByMother[woman.id]??-99)>=18&&S.turn-(p.joinedAt??h.started)>=3&&(p.trust??k.spouse.trust)>=40;
 }
+function householdMotherName(k,p){return k.sex==='f'?k.name:(p.id===k.spouse.id?'正妻':'妾室')+p.name;}
 function startHouseholdPregnancy(k,p){
   if(!householdCanConceive(k,p))return false;
   const h=ensureMarriedLife(k),woman=k.sex==='f'?k:p;
-  h.pregnancies.push({mother:woman.id,father:k.sex==='m'?k.id:p.id,partner:p.id,conceived:S.turn,due:S.turn+9});
-  householdRecord(k,'household_pregnancy',`${woman.name}有喜，府中已安排照护，预期九个月后添丁。`);
-  log(`${kidName(k)}府上报喜：${woman.name}有孕。`,1);return true;
+  const together=h.pregnancies.some(g=>g.conceived===S.turn),name=householdMotherName(k,p);
+  h.pregnancies.push({mother:woman.id,father:k.sex==='m'?k.id:p.id,partner:p.id,conceived:S.turn,conceivedDate:dateStr(),due:S.turn+9});
+  householdRecord(k,'household_pregnancy',`${together?'同月，':''}${name}${together?'亦':''}有喜，已分别安排照护，预期九个月后添丁。${together?'同一月里两处院落都传来喜讯，府中添了几分忙碌。':''}`);
+  log(`${kidName(k)}府上报喜：${name}有孕。`,1);return true;
 }
 function deliverHouseholdChild(k,pregnancy){
   const h=ensureMarriedLife(k),p=householdPeople(k).find(p=>p.id===pregnancy.partner);
-  if(!householdActive(k)||!h.pregnancies.includes(pregnancy)||S.turn<pregnancy.due)return null;
+  if(!householdLiving(k)||!h.pregnancies.includes(pregnancy)||S.turn<pregnancy.due)return null;
   h.pregnancies=h.pregnancies.filter(x=>x!==pregnancy);
   const woman=k.sex==='f'?k:p;
   if(!woman||woman.alive===false||!p||p.alive===false||kidAge(k)<18||kidAge(p)<18)return null;
@@ -91,8 +98,8 @@ function deliverHouseholdChild(k,pregnancy){
     born:S.turn,alive:true,seed:ri(1,2e9),portraitVariant:ri(0,DESCENDANT_VARIANTS-1),
     mother:pregnancy.mother,motherName:woman.name,father:pregnancy.father,fatherName:k.sex==='m'?k.name:p.name,
     lit:clamp(k.lit*.5+(p.appearance?.talent||50)*.35+ri(0,10)),vir:clamp(k.vir*.5+(p.appearance?.virtue||50)*.35+ri(0,10)),mar:clamp(k.mar*.55+ri(4,20)),hp:ri(65,95),amb:ri(15,50)};
-  h.children.push(baby);h.lastBirth=S.turn;
-  householdRecord(k,'household_birth',`${woman.name}平安诞下${sex==='m'?'一子':'一女'}，取名${baby.name}。现有${householdSummary(k)}。`);
+  h.children.push(baby);h.lastBirth=S.turn;h.lastBirthByMother[woman.id]=S.turn;
+  householdRecord(k,'household_birth',`${householdMotherName(k,p)}平安诞下${sex==='m'?'一子':'一女'}，取名${baby.name}。现有${householdSummary(k)}。`);
   log(`${kidName(k)}府中添丁，${baby.name}降生。`,1);return baby;
 }
 const HOUSEHOLD_SCENES={
@@ -163,14 +170,19 @@ function marriedLifeTick(){
   if(S.over)return;
   for(const k of royalHouseholds()){
     const h=ensureMarriedLife(k);if(!h||h.lastTick===S.turn)continue;h.lastTick=S.turn;
-    if(!householdActive(k)){h.pending=null;h.pregnancies=[];continue;}
+    if(!householdLiving(k)){h.pending=null;h.pregnancies=[];continue;}
     for(const p of [...h.pregnancies])if(S.turn>=p.due)deliverHouseholdChild(k,p);
+    if(!householdActive(k)){h.pending=null;continue;}
     if(h.echo&&S.turn>=h.echo.due){k.spouse.trust=clamp(k.spouse.trust+h.echo.trust);householdRecord(k,'household_echo','两个月后，府中回信：'+h.echo.text);delete h.echo;}
     if(h.project&&S.turn>=h.project.due){const project=h.project;delete h.project;k[project.stat]=clamp(k[project.stat]+4);k.spouse.trust=clamp(k.spouse.trust+5);householdRecord(k,'household_project',project.title+'办成，两人各自做了擅长的一部分。');}
     if(S.turn>=h.nextNews){recordHouseholdNews(k);h.nextNews=S.turn+ri(4,7);}
-    // One conception roll per household, regardless of how many partners are present.
+    // Keep the household roll rare; a second eligible partner can conceive in the same month.
     const partners=householdPeople(k).filter(p=>householdCanConceive(k,p));
-    if(partners.length&&chance(.045))startHouseholdPregnancy(k,pick(partners));
+    if(partners.length&&chance(.045)){
+      const first=pick(partners);startHouseholdPregnancy(k,first);
+      const others=partners.filter(p=>p!==first&&householdCanConceive(k,p));
+      if(others.length&&chance(.15))startHouseholdPregnancy(k,pick(others));
+    }
   }
   if(S.turn-(S.flags.lastHouseholdScene??-99)<4)return;
   const options=royalHouseholds().filter(k=>householdActive(k)&&!ensureMarriedLife(k).pending&&S.turn-k.household.lastEvent>=6);
@@ -179,7 +191,7 @@ function marriedLifeTick(){
 function householdPanel(k){
   const h=ensureMarriedLife(k);if(!h||kidAge(k)<15)return '';
   const p=k.spouse,fit=marriageFit(k,p),adult=kidAge(k)>=18&&kidAge(p)>=18;
-  const pregnant=adult?h.pregnancies.map(g=>{const person=g.mother===k.id?k:householdPeople(k).find(p=>p.id===g.mother);return person?`${esc(person.name)}有孕 · ${Math.min(10,S.turn-g.conceived+1)}个月`:'';}).filter(Boolean):[];
+  const pregnant=adult?h.pregnancies.map(g=>{const person=g.mother===k.id?k:householdPeople(k).find(p=>p.id===g.mother);return person?`${esc(k.sex==='f'?k.name:householdMotherName(k,person))}有孕 · ${Math.min(10,S.turn-g.conceived+1)}个月${g.conceivedDate?' · '+esc(g.conceivedDate)+'报喜':''}`:'';}).filter(Boolean):[];
   return `<section class="household-panel"><h3>婚后家事</h3><p>${esc(p.name)} · ${esc(marriageNature(p).temperament)} · ${esc(COUPLE_HOBBIES[marriageNature(p).hobby])} · ${esc(marriageNature(p).spending)}</p>
     <p class="hint">${esc(fit.common.join('、')||'各有所长')}；${esc(fit.different.join('；')||'相处习惯较为接近')}。</p>
     ${bar('夫妻信任',p.trust,'#936375')}${bar('府中和睦',h.harmony??60,'#517369')}
@@ -215,7 +227,7 @@ A.householdConcubine=function(id){
   }
   const p=h.concubineCandidate,nature=marriageNature(k.spouse),loss=['好胜','敏感'].includes(nature.temperament)?20:10;
   pushEv({title:'府中纳妾之议',cast:[k,k.spouse,p],valid,text:`${k.name}提起${p.name}，对方已成年，自愿入府。\n嫡妻${k.spouse.name}${loss===20?'直言不愿，问旧日约定是否还算数。':'虽愿听完安排，仍盼自己的处境不被轻轻带过。'}\n纳妾需国库二十万两，嫡妻信任将下降${loss}。`,choices:[
-    {t:'准其纳妾 · 国库−20',cond:()=>valid()&&E().treasury>=20,f:()=>{if(!valid()||E().treasury<20)return null;E().treasury-=20;h.concubines.push(p);delete h.concubineCandidate;h.lastConcubine=S.turn;k.spouse.trust=clamp(k.spouse.trust-loss);h.harmony=clamp((h.harmony??60)-12);householdRecord(k,'household_concubine',`纳${p.name}入府为妾；嫡妻${k.spouse.name}心有不快，信任下降${loss}。`);save('auto');return '人已入府，夫妻之间的分歧也留了下来。';}},
+    {t:'准其纳妾 · 国库−20',cond:()=>valid()&&E().treasury>=20,f:()=>{if(!valid()||E().treasury<20)return null;E().treasury-=20;p.joinedAt=S.turn;h.concubines.push(p);delete h.concubineCandidate;h.lastConcubine=S.turn;k.spouse.trust=clamp(k.spouse.trust-loss);h.harmony=clamp((h.harmony??60)-12);householdRecord(k,'household_concubine',`纳${p.name}入府为妾；嫡妻${k.spouse.name}心有不快，信任下降${loss}。`);save('auto');return '人已入府，夫妻之间的分歧也留了下来。';}},
     {t:'暂缓，先由夫妻把话说清楚',f:()=>{if(!valid())return null;h.lastConcubine=S.turn;k.spouse.trust=clamp(k.spouse.trust+4);householdRecord(k,'household_concubine','纳妾之议暂缓，先与嫡妻谈清彼此的想法。');save('auto');return '名帖暂且收起，府中没有添人。';}}
   ]});
 };

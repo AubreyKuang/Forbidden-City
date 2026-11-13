@@ -8,7 +8,7 @@ function romanceKin(k){
   return [...new Set([k.mom,k.foster,...Object.keys(k.motherBonds||{}).map(Number)].filter(Boolean))].map(byId).filter(Boolean);
 }
 function romanceEligible(k,c){
-  if(!childInPalace(k)||k.sex!=='m'||kidAge(k)<15||!inPalace(c)||c.maid||c.rank===8||c.age<15||Math.abs(kidAge(k)-c.age)>8)return false;
+  if(!childCanVisitCourt(k)||k.sex!=='m'||kidAge(k)<15||!inPalace(c)||c.maid||c.rank===8||c.age<15||Math.abs(kidAge(k)-c.age)>8)return false;
   // Exclude people who entered while the prince was still a young child.
   if(!Number.isFinite(c.enteredAt)||c.enteredAt<k.born+15*12)return false;
   return c.sur!==E().sur&&!romanceKin(k).some(m=>m.id===c.id||m.sur===c.sur||clanKey(m)===clanKey(c)||m.kin?.[c.id]||c.kin?.[m.id]);
@@ -82,7 +82,7 @@ function palaceRomanceEvent(pair){
     stage===2?`${opening}\n宫人送还书册时，一张写着小字的笺子滑了出来：她记得他上回未说完的话，也回赠了亲手结的书签。\n他将笺子仔细收起。她曾悄声叮嘱：“往后若要来，也先问问我愿不愿见。”`:
     `${opening}\n雨后的回廊没有旁人。他停在她身边，低声问可否握一握她的手。她犹豫片刻，轻轻回握。\n灯影里，两人短暂相拥；听见脚步，才各自退开。随侍亲眼看见这一幕，回来禀报。${k.married?'\n皇子已有嫡妻，这件事若传开，也会伤及她。':''}`;
   const option=(t,mode)=>({t,f:()=>resolvePalaceRomance(pair.key,stage,mode)});
-  return {title:ROMANCE_TITLES[stage],cast:[k,c],present:[k,c],valid:()=>romancePending(pair)&&pair.stage===stage,
+  return {title:ROMANCE_TITLES[stage],cast:[k,c],present:[c],valid:()=>romancePending(pair)&&pair.stage===stage,
     onShow:()=>{pair.known=true;if(pair.seenStage!==stage){pair.seenStage=stage;S.palaceRomance.lastScene=S.turn;romanceRecord(pair,stage===1?'因趣味相投，开始留意彼此。':stage===2?'两人私下交换书笺，心意渐深。':'两人于回廊牵手相拥，私情被随侍察觉。');save('auto');}},text,
     choices:stage<3?[
       option(stage===1?'先当寻常往来，暂不干预':'暂不声张，继续留意','watch'),

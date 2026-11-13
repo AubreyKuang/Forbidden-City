@@ -42,8 +42,10 @@ function voicePick(p,values,key,mode){
 const voiceLine=(key,stage,lines)=>({key,stage,lines:Array.isArray(lines)?lines:[lines]});
 function consortVoicePool(c){
   const x=xinOf(c),close=c.aff>=55;
+  if(c.templeStay)return [voiceLine('temple-retreat','护国寺来信里，她说起清修的日子。',distantChildren(c).length?'晨钟响过，便想起孩子此时也该起了。臣妾在这里平安，还望宫中代问一声，孩子可曾添衣。':c.trait==='好学'?'寺中旧藏颇多，午后可以静坐校书。臣妾抄了几行喜欢的句子，夹在信里。':'晨起听钟，入夜收灯，日子过得慢些。臣妾在这里平安，请陛下放心。')];
   if(c.cold)return [voiceLine('cold','隔着门扉，她只说了几句。',['臣妾知道这里清冷。若还有一句话能递出去，便请陛下认真听完。','门外的声响听得分明，日子却记得模糊了。陛下可还愿听臣妾一言？'])];
   if(['悲恸','心如死灰'].includes(x))return [voiceLine('grief','她停了许久，才抬眼看你。',['有些话臣妾今日还说不出来。陛下坐一会儿就好。','不必劝臣妾快些好起来。今日能把这一盏茶喝完，也算往前走了一点。'])];
+  const concern=motherConcernVoice(c);if(concern&&(c.childConcern?.value??35)>=30)return [concern];
   if(['怨恨','惶恐'].includes(x)||c.aff<20)return [voiceLine('distance','她行过礼，仍立在一步之外。',['臣妾听着。只是有些话，还不知该从哪里说起。','陛下肯来，臣妾领情。只是心里的结，不是一句话就能解开的。'])];
   if(c.hp<40)return [voiceLine('ill','她将话说得很慢。',['今日精神短些，陛下别怪臣妾招呼不周。','臣妾想歇一歇。等好些了，再把没说完的话接上。'])];
   const pool=[voiceLine('trait',close?'见你坐下，她也放松了些。':'她抬起眼，先开了口。',CONSORT_VOICES[c.trait]||CONSORT_VOICES.温婉)];
@@ -70,6 +72,8 @@ function consortVoicePool(c){
 }
 function childVoicePool(k){
   const a=kidAge(k),who=k.sex==='f'?'她':'他',self=k.sex==='f'?'女儿':'儿臣';
+  if(k.templeStay)return [voiceLine('temple-letter',a<6?'乳母从护国寺寄来起居簿。':'护国寺送来的信笺上，还带着淡淡的檀香。',a<6?'孩子饮食安稳，夜里由乳母轮值照护。请宫中亲人宽心。':`寺里的钟声晨昏都听得见。我把今日的字课夹在信里，也想问问，母亲可安好。`)];
+  if(k.removedFromRoyal)return [voiceLine('new-home','府中送来了孩子的近况。',a<6?'孩子由府中乳母照护，已慢慢习惯新的住处。':'在这里也有自己的书案和灯。惦记宫中的母亲，想托人带一声问候。')];
   if(a<3)return [voiceLine('baby',a<1?'孩子在襁褓里轻轻动了动。':'孩子伸出小手，想够你的衣袖。',[])];
   if(k.jailed)return [voiceLine('confined','宗人府递来一张字笺。',`父皇，${self}在这里静思。若肯听一言，盼能容我把心里的话说完。`)];
   const mother=byId(k.foster||k.mom);

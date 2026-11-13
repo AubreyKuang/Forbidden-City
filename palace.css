@@ -685,6 +685,7 @@ button.family-room-person{cursor:pointer}button.family-room-person:hover{color:#
 .spouse-portrait figcaption{font-size:12px;line-height:1.6;margin-top:6px}
 .household-panel{padding:18px;margin:18px 0;background:#f4ecdd;border-radius:12px}
 .household-panel>h3{margin-top:0}.household-panel>.bar{max-width:450px}
+.household-panel>.bar>span{width:4.5em;flex-shrink:0;white-space:nowrap}
 .household-children{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0}
 .household-children article{display:flex;align-items:center;gap:8px;padding:8px;background:#fffcf37a;border-radius:8px}.household-children small{display:block;line-height:1.7}
 @media(max-width:600px){.marriage-panel{flex-direction:row;flex-wrap:wrap}.marriage-panel>.grow{flex:1;min-width:130px}.household-panel{padding:14px}.character-voice{padding:10px 12px}}

@@ -23,6 +23,7 @@ const DEV={
       const remainder=((S.turn-original.born)%12+12)%12;next.born=S.turn-patch.age*12-remainder;delete next.age;
     }
     if(Object.hasOwn(next,'age')&&(!Number.isInteger(next.age)||next.age<0||next.age>130))throw Error('年龄需为 0–130 的整数');
+    if(kind==='kid'&&!Object.hasOwn(patch,'sup')&&next.sup==null)next.sup=0;
     const stats=kind==='emp'?['health','prestige','people','wen','wu']:kind==='kid'?['lit','mar','vir','hp','amb','love','sup']:kind==='consort'?['looks','talent','virtue','scheme','favor','mood','aff']:[];
     for(const field of stats)if(next[field]!==undefined&&(!Number.isFinite(next[field])||next[field]<0||next[field]>100))throw Error(field+' 需在 0–100 之间');
     for(const [field,value] of Object.entries(original)){
@@ -88,6 +89,7 @@ const DEV={
     try{
       S.turn+=months;S.year+=years;S.month=(S.month-1+months)%12+1;
       for(const p of [E(),...S.consorts,...S.cands])if(p.alive!==false)p.age+=years;
+      S.children.forEach(reconcilePrinceResidence);alive().forEach(reconcileMotherConcern);
       // born-based children, spouses and descendants age automatically with S.turn.
       // This is a debug calendar/age jump; it never chooses story outcomes for the user.
       POR.clear();ART_CACHE.clear();resetMapPosition(S.pos||{x:100,y:82});
@@ -101,6 +103,8 @@ const DEV={
     localStorage.setItem(SKEY+'dev-backup',JSON.stringify(before));
     try{
       if(key==='world')S=next;else Object.assign(DEV.record(key),next);
+      if(key.startsWith('kid:')&&Object.hasOwn(patch,'age')&&kidAge(DEV.record(key))<16)delete DEV.record(key).princeEstate;
+      S.children.forEach(reconcilePrinceResidence);alive().forEach(reconcileMotherConcern);
       reconcilePalaceRomance();POR.clear();ART_CACHE.clear();resetMapPosition(S.pos||{x:100,y:82});
       if(!save('auto'))throw Error('自动存档失败，修改已撤回');
       render();return next;
@@ -138,9 +142,10 @@ const DEV={
     const kind=key.split(':')[0],stats={emp:[['sur','国姓'],['name','名讳'],['era','年号'],['age','年龄'],['health','龙体'],['wen','文才'],['wu','武略'],['treasury','国库'],['prestige','威望'],['people','民心'],['energy','精力']],consort:[['sur','姓氏'],['given','名字'],['age','年龄'],['rank','位分'],['palace','宫殿'],['trait','性情'],['looks','容貌'],['talent','才情'],['virtue','德行'],['scheme','心机'],['favor','恩宠'],['mood','心情'],['aff','情分'],['preg','孕月'],['alive','在世'],['cold','冷宫'],['gone','出宫']],kid:[['name','名字'],['age','年龄'],['lit','才学'],['mar','武艺'],['vir','品德'],['hp','体魄'],['amb','野心'],['love','父爱'],['sup','支持'],['title','封号'],['mom','生母编号'],['foster','养母编号（可留空）'],['alive','在世'],['away','就藩'],['jailed','圈禁'],['married','婚事已定'],['tutor','太傅']],dowager:[['name','称谓'],['alive','在世']],world:[]}[kind]||[];
     $('#dev-fields').innerHTML=stats.map(([field,label])=>{
       let value=kind==='kid'&&field==='age'?kidAge(record):record[field];
+      if(kind==='kid'&&field==='sup'&&value==null)value=0;
       const options=field==='trait'?Object.keys(TRAITS):field==='palace'?['坤宁宫',...PALACES,'冷宫']:field==='rank'?RANKS:null;
       if(options)return `<label>${label}<select data-dev-field="${field}" data-dev-type="${field==='rank'?'number':'string'}">${options.map((o,i)=>`<option value="${esc(field==='rank'?i:o)}" ${(field==='rank'?i:o)===value?'selected':''}>${esc(o)}</option>`).join('')}</select></label>`;
-      const bool=['alive','cold','gone','away','jailed','married','tutor'].includes(field),number=typeof value==='number'||['age','foster'].includes(field);
+      const bool=['alive','cold','gone','away','jailed','married','tutor'].includes(field),number=typeof value==='number'||['age','foster','sup','mom'].includes(field);
       return `<label>${label}<input data-dev-field="${field}" data-dev-type="${bool?'boolean':number?'number':'string'}" type="${bool?'checkbox':number?'number':'text'}" ${field==='age'?'min="0" max="130" step="1" oninput="DEV.previewAge(this.value)"':''} ${bool?(value?'checked':''):`value="${esc(value??'')}"`}>${field==='age'?'<button type="button" class="btn sm jade" onclick="DEV.safely(DEV.saveAge)">应用年龄</button>':''}</label>`;
     }).join('');
     $('#dev-advanced').open=kind==='world';DEV.gallery();DEV.message('已读取当前属性。');

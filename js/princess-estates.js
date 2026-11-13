@@ -13,7 +13,7 @@ const PRINCESS_MATCHES = {
 const archivedPrincesses=()=>S.princessRelatives||[];
 const estatePrincesses=()=>[...kidsAlive().filter(k=>k.estate),...archivedPrincesses()];
 const princessById=id=>kidById(id)||archivedPrincesses().find(k=>k.id===id);
-const canOpenPrincess=k=>k?.alive&&k.sex==='f'&&kidAge(k)>=15&&!k.jailed;
+const canOpenPrincess=k=>k?.alive&&!k.templeStay&&!k.removedFromRoyal&&k.sex==='f'&&kidAge(k)>=15&&!k.jailed;
 const princessPursuit=k=>k.lit>=Math.max(45,k.mar+7)?'books':k.mar>=45?'archery':'near';
 
 function princessMemory(k,type,text,location='公主府',emotion=.7){

@@ -74,3 +74,12 @@ test('young portrait alternatives have exactly one selected identity and keep th
     assert.equal($('#dev-target').value,'kid:'+child.id);assert.equal(($('#dev-gallery').innerHTML.match(/aria-pressed="true"/g)||[]).length,1);
     assert.ok($('#dev-gallery').innerHTML.includes('aria-pressed="true" onclick="DEV.face(26)"'));`);
 });
+test('portrait preview through the real form handles newborn and legacy missing support as a number',()=>{
+  const {run}=boot();run(`for(var sex of ['m','f'])for(var age of [0,8,20]){
+    var child=makeKid(harem()[0],sex,'测试'+age);child.born=S.turn-age*12;var oldVariant=child.portraitVariant;assert.equal(child.sup,0);delete child.sup;
+    DEV.select('kid:'+child.id);var html=$('#dev-fields').innerHTML;assert.match(html,/data-dev-field="sup" data-dev-type="number" type="number"[^>]*value="0"/);
+    var inputs=[...html.matchAll(/<input ([^>]+)>/g)].map(([,attributes])=>({dataset:{devField:attributes.match(/data-dev-field="([^"]+)"/)[1],devType:attributes.match(/data-dev-type="([^"]+)"/)[1]},value:attributes.match(/value="([^"]*)"/)?.[1]??'',checked:attributes.includes('checked')}));
+    $('#dev-fields').querySelectorAll=()=>inputs;DEV.face(2);DEV.preview();assert.ok(!$('#dev-confirm').disabled);DEV.confirm();
+    assert.equal(child.portraitVariant,2);assert.equal(child.sup,0);var id=child.id;load('auto');assert.equal(kidById(id).portraitVariant,2);DEV.restore();assert.equal(kidById(id).portraitVariant,oldVariant);
+  }`);
+});

@@ -23,7 +23,7 @@ function banquetKind(kind) {
   }
   if (!['emperor','empress'].includes(kind)) return null;
   const host = kind === 'emperor' ? E() : empress();
-  if (!host) return null;
+  if (!host || (kind === 'empress' && !inPalace(host))) return null;
   const title = kind === 'emperor' ? '皇帝万寿宴' : '皇后千秋宴';
   return { title, host, cost:30, ready:!S.over && !mourningActive() && birthMonth(host)===S.month && host.birthFeastYear!==S.year };
 }

@@ -14,7 +14,7 @@ function applyBirthOmen(k,id){
 }
 function birthTags(k){
   const omen=BIRTH_OMENS[k.birthOmen];
-  return `${k.birthType?`<span class="tag">${esc(k.birthType)} · 第${cnNum(k.birthOrder)}个出生</span>`:''}${omen?`<span class="tag y" title="出生时${omen.label}+${omen.bonus}">${omen.name} · ${omen.label}+${omen.bonus}</span>`:''}`;
+  return `${k.birthType?`<span class="tag">${esc(k.birthType)} · 第${cnNum(k.birthOrder)}个出生</span>`:''}${omen?`<span class="tag y" title="出生时${omen.label}+${omen.bonus}">${omen.name} · ${omen.label}+${omen.bonus}</span>`:''}${k.birthTrouble?`<span class="tag">${esc({frail:'初生体弱',quake:'出生时地动',drought:'出生逢旱'}[k.birthTrouble])}</span>`:''}`;
 }
 function deliveryKids(c){return (c.delivery?.children||[]).map(kidById).filter(Boolean)}
 function pendingDelivery(){return S.consorts.find(c=>c.delivery&&!c.delivery.settled&&deliveryKids(c).some(k=>k.pendingName))}
@@ -24,8 +24,9 @@ function birthEvent(c){
   const count=rollBirthCount(),sexes=Array.from({length:count},()=>chance(.5)?'m':'f');
   const kind=birthType(sexes),omen=chance(.03)?pick(Object.keys(BIRTH_OMENS)):null;
   const children=sexes.map(sex=>makeKid(c,sex,suggestName(sex)));
+  delete c.pregnancyFather;
   c.delivery={children:children.map(k=>k.id),kind,omen,settled:false,
-    difficult:chance(c.trait==='体弱'?.12:.03),swap:!!c.swapRisk&&chance(.7)};
+    difficult:chance(c.trait==='体弱'?.12:.03),swap:!!c.swapRisk&&chance(.7),templeAdvice:rollBirthTempleAdvice(children,omen)};
   c.preg=0;c.prot=false;c.swapRisk=false;c.lastBirth=S.turn+1;
   children.forEach((k,i)=>{
     k.pendingName=true;k.birthOrder=i+1;
@@ -77,8 +78,37 @@ function finishDelivery(c){
     if(!k.alive)continue;
     if(!c.alive)follow.push(fosterOffer(k,'孩子的生母已经不在了。'));
     else if(c.maid||c.rank<=1)follow.push(fosterOffer(k,`${kidName(k)}的生母只是${c.maid?'宫女':RANKS[c.rank]}。`));
+    if(k.parentage)follow.push(parentageInquiryEvent(k));
   }
+  if(delivery.templeAdvice){const advice=birthTempleAdviceEvent(kidById(delivery.templeAdvice));if(advice)follow.push(advice);}
   Q.unshift(...follow);return text+fx(effect);
+}
+function rollBirthTempleAdvice(children,omen){
+  if(omen||S.turn-(S.flags.lastBirthTempleAdvice??-99)<36)return null;
+  const frail=children.find(k=>k.hp<=60),kind=frail&&chance(.3)?'frail':chance(.01)?pick(['quake','drought']):null;
+  if(!kind)return null;
+  const k=frail&&kind==='frail'?frail:children[0];k.birthTrouble=kind;S.flags.lastBirthTempleAdvice=S.turn;
+  const text={frail:'初生体弱，太医叮嘱仔细养护。',quake:'出生当夜京畿地动，宫人议论纷纷。',drought:'出生时京畿久旱，宫中有人将灾异附会于新生儿。'}[kind];
+  kstory(k,text);return k.id;
+}
+function birthTempleAdviceEvent(k){
+  if(!k?.alive||!k.birthTrouble||k.templeAdviceHandled)return null;
+  const mother=byId(k.mom),valid=()=>k.alive&&!k.templeAdviceHandled;
+  const settle=text=>{k.templeAdviceHandled=true;kstory(k,text);if(mother?.alive)story(mother,text);log(text);save('auto');return text;};
+  return {title:'国师请祈福',cast:[mother,k],valid,
+    text:`${k.birthTrouble==='frail'?`${k.name}初生体弱，太医正在照料。`:`${k.name}出生${k.birthTrouble==='quake'?'当夜京畿地动':'时恰逢京畿久旱'}，国师将灾异与孩子的降生相提并论。`}\n国师请将孩子送到护国寺祈福。太医则说，调养与照护不可中断；灾异之说也不能当作孩子有罪的凭据。\n若送寺，乳母与太医随行，住寺旁客舍，不作剃度。生母会惦念远方的孩子。`,choices:[
+      {t:'送护国寺养护半年，乳母与太医同往 · 国库−10',cond:()=>E().treasury>=10&&templeEligible(k),f:()=>{
+        if(!valid()||E().treasury<10||!sendChildToTemple(k,{months:6}))return null;chg({treasury:-10});
+        return settle(`${k.name}赴护国寺养护半年，乳母与太医随行。生母留宫，心中牵挂。`);
+      }},
+      {t:'留在母亲身边，另请太医照料 · 国库−10',cond:()=>E().treasury>=10,f:()=>{
+        if(!valid()||E().treasury<10)return null;chg({treasury:-10});k.hp=clamp(k.hp+4);if(mother?.alive)cchg(mother,{mood:8});
+        return settle(`${k.name}留在宫中，太医增派照护；陛下未因灾异责罚孩子。`);
+      }},
+      {t:'不以灾异罪婴儿，按原安排照料',f:()=>{
+        if(!valid())return null;chg({prestige:1});if(mother?.alive)cchg(mother,{mood:5,aff:3});
+        return settle(`陛下驳回灾异之说，${k.name}仍按原安排照料。`);
+      }}]};
 }
 A.resumeBirth=function(id){const c=byId(id);if(c?.delivery&&!c.delivery.settled)pushEv(birthNamingEvent(c));};
 function pendingBirthPanel(){

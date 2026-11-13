@@ -1,19 +1,19 @@
 /* ============ 皇嗣 ============ */
 function suggestName(sex){const used=new Set(S.children.map(k=>k.name));let n,t=0;do{n=sex==='m'?S.genChar+pick(BOYC):pick(GIRLA)+pick(GIRLB)}while(used.has(n)&&++t<40);return n}
 function makeKid(c,sex,name){
-  const e=E();const ord=S.children.filter(k=>k.sex===sex).length+1;
+  const e=E(),father=conceptionFather(c);const ord=S.children.filter(k=>k.sex===sex).length+1;
   const k={id:S.nid++,name,sex,mom:c.id,momName:fullName(c),born:S.turn,birthMonth:S.month,ord,
-    lit:clamp(c.talent*.6+e.wen*.25+ri(-6,6)+(e.style==='文雅'?4:0)),mar:clamp(e.wu*.3+(c.trait==='将门'?18:0)+ri(0,15)+(e.style==='尚武'?8:0)),
+    lit:clamp(c.talent*.6+father.wen*.25+ri(-6,6)+(e.style==='文雅'?4:0)),mar:clamp(father.wu*.3+(c.trait==='将门'?18:0)+ri(0,15)+(e.style==='尚武'?8:0)),
     vir:clamp(c.virtue*.7+ri(0,12)),hp:clamp(55+ri(0,35)-(c.trait==='体弱'?15:0)),amb:clamp(c.scheme*.65+ri(0,18)),
-    love:50,policy:'均衡',tutor:false,title:'',alive:true,married:false,adult:false,story:[],seed:ri(1,2e9)};
+    love:50,sup:0,policy:'均衡',tutor:false,title:'',alive:true,married:false,adult:false,story:[],seed:ri(1,2e9)};
   // Birth traits are a game rule, separate from education and the current caregiver.
   k.birthTraits={mother:{id:c.id,name:fullName(c),talent:c.talent,virtue:c.virtue,scheme:c.scheme,trait:c.trait},
-    father:{name:e.sur+e.name,wen:e.wen,wu:e.wu},initial:{lit:k.lit,mar:k.mar,vir:k.vir,hp:k.hp,amb:k.amb}};
-  assignChildPortrait(k);S.children.push(k);S.ys.b++;initKidRel(k);return k;
+    father,initial:{lit:k.lit,mar:k.mar,vir:k.vir,hp:k.hp,amb:k.amb}};
+  attachChildParentage(k,father);assignChildPortrait(k);S.children.push(k);S.ys.b++;initKidRel(k);return k;
 }
 function childBirthPanel(k){
   const birth=k.birthTraits;if(!birth)return '';
-  return `<p>生母 ${parentLink(birth.mother.id,birth.mother.name)} · 生父 ${esc(birth.father.name)}</p>
+  return `<p>生母 ${parentLink(birth.mother.id,birth.mother.name)} · 生父 ${childFatherHTML(k)}</p>
     <p class="hint">才学起点受生母才情与生父文才影响。生母德行、心机分别影响品德与野心起点；将门出身影响武艺，体弱影响体魄。教养、太傅与日常活动会继续改变属性。</p>
     <div class="stats">${bar('初始才学',birth.initial.lit,'#617991')}${bar('初始品德',birth.initial.vir,'#517369')}${bar('初始武艺',birth.initial.mar,'#92504a')}</div>`;
 }
@@ -28,7 +28,7 @@ function growKid(k){
   else if(k.policy==='放养'){k.hp+=.25;k.amb+=.1;k.love+=.05}else{k.lit+=g()*.65;k.mar+=g()*.65;k.vir+=g()*.65}
   {const fm=fosterOf(k);if(fm&&fm.alive){if(fm.virtue>65)k.vir+=.15;if(fm.talent>65)k.lit+=.15;if(fm.scheme>65)k.amb+=.12}}['lit','mar','vir','hp','amb','love'].forEach(s=>k[s]=clamp(k[s]));supTick(k);
 }
-A.kidVisit=function(id){const k=kidById(id);if(modalOpen||!k?.alive||k.jailed||k.pendingName||!useE())return;
+A.kidVisit=function(id){const k=kidById(id);if(modalOpen||!k?.alive||k.removedFromRoyal||k.jailed||k.pendingName||!useE())return;
   const voice=characterVoice(k,'talk'),away=childHasLeftPalace(k);
   k.love=clamp(k.love+10);const st=pick(['lit','mar','vir']);k[st]=clamp(k[st]+2);
   const t=voice.stage+(voice.text?`\n“${voice.text}”`:'')+`\n${away?'你写下回信，认真回答了孩子的话。':'你坐下来，陪孩子慢慢说完这一段。'}`;
@@ -37,15 +37,15 @@ A.kidVisit=function(id){const k=kidById(id);if(modalOpen||!k?.alive||k.jailed||k
 };
 A.kidPolicy=function(id,p){const k=kidById(id);k.policy=p;AU.sfx('click');render()};
 A.kidTutor=function(id){const k=kidById(id);k.tutor=!k.tutor;if(k.tutor){kstory(k,'陛下延请当世大儒为师。');toast('已延请太傅（每月5万两）')}render()};
-A.kidHeir=function(id){const k=kidById(id);const old=S.heir&&kidById(S.heir);
+A.kidHeir=function(id){const k=kidById(id);if(!k?.alive||k.removedFromRoyal||k.templeStay||k.sex!=='m'||kidAge(k)<5)return;const old=S.heir&&kidById(S.heir);
   pushEv({title:'册立太子',por:k,text:old?`太子${old.name}尚在。改立${k.name}为太子，必将引起朝野震动（威望-6）。`:`立${kidName(k)}为皇太子，昭告天下？`,choices:[
     {t:'册立太子',f:()=>{let s='';if(old){s=chg({prestige:-6});kstory(old,'被废去太子之位。');old.amb=clamp(old.amb+20)}else s=chg({prestige:5});
-      S.heir=k.id;kstory(k,'被册立为皇太子，入主东宫。');{const mm=byId(k.foster||k.mom);if(mm&&mm.alive)setXin(mm,mm.scheme>=55?'野心':'欢喜',`${k.name}被立为太子`)}log(`立${k.name}为皇太子。`,1);
+      S.heir=k.id;delete k.princeEstate;k.away=false;kstory(k,'被册立为皇太子，入主东宫。');{const mm=byId(k.foster||k.mom);if(mm&&mm.alive)setXin(mm,mm.scheme>=55?'野心':'欢喜',`${k.name}被立为太子`)}log(`立${k.name}为皇太子。`,1);
       const m=byId(k.mom);if(m&&m.alive){cchg(m,{mood:25,aff:10});story(m,`其子${k.name}被立为太子。`)}
       harem().forEach(o=>{if(o.id!==k.mom&&o.scheme>60)o.mood=clamp(o.mood-12)});AU.sfx('gong');
       return `东宫大典，百官朝贺。${fx(s)}`}},{t:'再想想'}]})};
 A.kidTitle=function(id){const k=kidById(id);pushEv({title:k.sex==='m'?'封王':'公主封号',por:k,text:k.sex==='m'?'请拟王号（一至二字）：':'请为公主拟封号（二字）：',input:{def:k.sex==='m'?pick(['睿','恭','诚','和','裕','庆','端','宁'])+'亲王':pick(['昭阳','长乐','永安','和静','宁华','嘉柔']),max:4},
-  choices:[{t:'赐封',f:v=>{k.title=v+(k.sex==='f'&&!v.endsWith('公主')?'公主':'');kstory(k,`受封为${k.title}。`);log(`封${k.name}为${k.title}。`);return `${k.name}叩谢父皇恩典，自此称${k.title}。`}},{t:'作罢'}]})};
+  choices:[{t:'赐封',f:v=>{k.title=v+(k.sex==='f'&&!v.endsWith('公主')?'公主':'');if(k.sex==='m'&&kidAge(k)>=16)openPrinceEstate(k);kstory(k,`受封为${k.title}。`);log(`封${k.name}为${k.title}。`);return `${k.name}叩谢父皇恩典，自此称${k.title}。`}},{t:'作罢'}]})};
 
 /* ============ 皇嗣事件 ============ */
 function kcd(k,t,n=24){k.cd=k.cd||{};if(S.turn-(k.cd[t]===undefined?-99:k.cd[t])<n)return false;k.cd[t]=S.turn;return true}
@@ -71,21 +71,21 @@ function kidEvent(){
   return null;
 }
 function milestone(){
-  for(const k of kidsAlive()){const a=kidAge(k);
+  for(const k of kidsAlive()){if(k.templeStay)continue;const a=kidAge(k);
     if(k.sex==='f'){const event=princessMilestone(k);if(event)return event;}
     if(k.sex==='m'&&a>=16&&!k.adult){k.adult=true;if(S.heir===k.id)continue;return {title:'皇子成年',por:k,text:`${kidName(k)}年满十六，按祖制当封王开府。`,choices:[
-      {t:'封亲王，留京辅政',f:()=>{A.kidTitle(k.id);k.amb=clamp(k.amb+10);return null}},
+      {t:'封亲王，留京辅政',f:()=>{openPrinceEstate(k);A.kidTitle(k.id);k.amb=clamp(k.amb+10);return null}},
       {t:'封王，就藩地方',f:()=>{k.away=true;k.title=pick(['晋','楚','燕','蜀','吴','齐'])+'王';k.amb=clamp(k.amb-10);kstory(k,`受封${k.title}，就藩地方。`);log(`封${k.name}为${k.title}，就藩。`);return `${k.name}辞别父皇，前往封地。`}}]}}
   }
   return null;
 }
 
 /* ============ 夺嫡 ============ */
-function supTick(k){if(k.sex!=='m'||!k.alive||k.away||k.jailed)return;if(kidAge(k)<10)return;const m=byId(k.foster||k.mom);
+function supTick(k){if(k.sex!=='m'||!k.alive||k.templeStay||k.removedFromRoyal||k.away||k.jailed)return;if(kidAge(k)<10)return;const m=byId(k.foster||k.mom);
   const d=k.amb/140+(m&&m.alive&&!m.cold?m.fam.p/220+(m.rank>=6?.25:0):0)+(S.heir===k.id?.5:0)+(k.lit+k.vir)/400-(k.amb<30?.4:0);
   k.sup=clamp((k.sup||0)+d-.25)}
 function heirTick(){
-  const sons=kidsAlive().filter(k=>k.sex==='m'&&!k.away&&!k.jailed);if(!sons.length)return null;
+  const sons=kidsAlive().filter(k=>k.sex==='m'&&!k.templeStay&&!k.away&&!k.jailed);if(!sons.length)return null;
   const heir=S.heir&&kidById(S.heir);
   const reb=sons.find(k=>k.id!==S.heir&&kidAge(k)>=16&&k.amb>=78&&(k.sup||0)>=65&&(E().prestige<60||E().health<45));
   if(reb&&chance(.3))return coupEvent(reb);

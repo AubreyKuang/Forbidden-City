@@ -137,7 +137,7 @@ function rememberQuarrel(a,b,winner){
 function deepLine(c){deepen(c);if(c.wish==='title'&&c.title&&!c.wishDone){c.wishDone=true}const w=WISHES[c.wish];
   return `<div style="margin-top:4px">小性子：<span class="tag">${c.t2}</span>　喜好：${c.kl?`<span class="tag g">${c.like}</span>不喜<span class="tag r">${c.hate}</span>`:'<span class="hint">多闲谈才知道</span>'}</div>
   <div>平日消遣：<span class="tag">${esc(c.hobby)}</span></div>
-  <div>心愿：${c.wishKnown?`${esc(w.t)}${c.wishDone?' <span class="tag y">已成全</span>':w.btn?` <button class="btn sm jade" onclick="A.wish(${c.id})">${esc(w.btn)}</button>`:' <span class="hint">（生下孩子便成全了）</span>'}`:'<span class="hint">情分到 50 以后，闲谈时她也许会说</span>'}</div>
+  <div>心愿：${c.wishKnown?`${esc(w.t)}${c.wishDone?' <span class="tag y">已成全</span>':w.btn?` <button class="btn sm jade" onclick="A.wish(${c.id})" ${inPalace(c)?'':'disabled'}>${esc(w.btn)}</button>`:' <span class="hint">（生下孩子便成全了）</span>'}`:'<span class="hint">情分到 50 以后，闲谈时她也许会说</span>'}</div>
   ${c.woundKnown?`<div>往事：${esc(WOUNDS[c.wound])}</div>`:'<div class="hint">往事：情分到 65 以后，她也许会对你说起</div>'}`}
 A.chat=function(id,fromEvent=false){const c=byId(id);if((modalOpen&&!fromEvent)||!inPalace(c)||!useE())return;deepen(c);const L=[];const xk=xinOf(c);
   const voice=characterVoice(c,'talk');L.push(voice.stage);L.push(`“${voice.text}”`);
@@ -169,7 +169,7 @@ function giveGift(c,g){chg({treasury:-20});AU.sfx('coin');if(g==='绸缎')c.robe
   if(g===c.like){c.kl=true;remember(c,'gift',GIFTN[g]);setXin(c,'欢喜',`得了心爱的${g}`);story(c,`陛下赏了${GIFTN[g]}，正是她心头所好。`);return `她眼睛一亮，捧在手里看了又看。${fx(cchg(c,{mood:25,aff:8}))}\n§你记住了：她喜欢${g}`}
   if(g===c.hate)return `她谢了恩，笑容却有些勉强。宫女悄悄说，主子向来不喜${g}。${fx(cchg(c,{mood:-5}))}`;
   const big=c.trait==='贪财'&&(g==='珠翠'||g==='绸缎');story(c,`陛下赏了${GIFTN[g]}。`);return `她欢欢喜喜地谢了恩。${fx(cchg(c,{mood:big?20:10,aff:3}))}`}
-A.wish=function(id){const c=byId(id),w=WISHES[c.wish];if(!w||!w.btn||c.wishDone)return;if(w.cond&&!w.cond(c)){toast('眼下还办不到');return}
+A.wish=function(id){const c=byId(id);if(!inPalace(c))return;const w=WISHES[c.wish];if(!w||!w.btn||c.wishDone)return;if(w.cond&&!w.cond(c)){toast('眼下还办不到');return}
   const t=w.f(c);c.wishDone=true;setXin(c,NEGX.includes(xinOf(c))?'释然':'欢喜',`心愿「${w.t}」得偿`);remember(c,'wish',w.t);story(c,`陛下成全了她的心愿：${w.t}。`);log(`帝成全${fullName(c)}的心愿：${w.t}。`);
   pushEv({title:'成全',por:c,sfx:'joy',text:t+fx(cchg(c,{aff:22,mood:30})),choices:[ok1]})};
 

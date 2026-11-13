@@ -29,7 +29,9 @@ A.out=function(kind){ if(!useE())return; const e=E();
     else if(chance(.3)){const s=chg({health:-10});pushEv({title:'南苑围猎',sfx:'err',text:`马匹受惊，你从马背上摔下，扭伤了腰。${fx(s)}`,choices:[{t:'回宫养伤'}]})}
     else{const s=chg({prestige:2});pushEv({title:'南苑围猎',text:`收获平平，猎得几只野兔獐子。${fx(s)}`,choices:[{t:'回宫'}]})}}
   else if(kind==='temple'){setScene('garden');S.flags.bless=S.turn;const s=chg({people:2,health:2,treasury:-20});log('帝往护国寺进香祈福。');
-    pushEv({title:'护国寺祈福',sfx:'chime',text:`你在护国寺上香，为国祚、为子嗣祈福。方丈说：“陛下仁心，必有福报。”\n（本月宠幸妃嫔更易得子）${fx(s)}`,choices:[{t:'回宫'}]})}
+    pushEv({title:'护国寺祈福',sfx:'chime',text:`你在护国寺上香，为国祚、为子嗣祈福。方丈说：“陛下仁心，必有福报。”\n也可在这里安排皇子公主祈福，或妃嫔入寺清修。\n（本月宠幸妃嫔更易得子）${fx(s)}`,choices:[
+      {t:'安排皇子公主来祈福',f:()=>{pushNow(templeRosterEvent('kids'));return null;}},
+      {t:'安排妃嫔来祈福或清修',f:()=>{pushNow(templeRosterEvent('consorts'));return null;}},{t:'回宫'}]})}
   else if(kind==='spa'){setScene('garden');const s=chg({health:5,treasury:-60});log('帝往西山温泉行宫休养。');
     pushEv({title:'温泉行宫',text:`西山温泉氤氲，你静养了几日，精神好了许多。${fx(s)}`,choices:[{t:'回宫'}]})}
 };
@@ -114,14 +116,26 @@ A.greet=function(){if(!S.flags.dowager?.alive){A.go('place','cn');return;}if(!us
   pushEv({title:'请安',por:dowagerPerson(S.flags.dowager),text:`${S.flags.dowager.name}${pick(['拉着你的手问长问短，叮嘱你夜里早些歇息。','说起你小时候爬树摔破了膝盖，笑出了眼泪。','让你尝了尝她亲手做的素点心。'])}${fx(chg({prestige:1,health:1}))}`,choices:[ok1]})};
 
 /* ============ 母亲入宫小住 ============ */
+function momVisitState(c){
+  if(!inPalace(c)||c.maid)return {ready:false,hint:'眼下不能安排家眷入宫'};
+  if(c.visitor){const left=Math.max(0,Math.ceil(c.visitor.until-S.turn)||0);return {ready:false,hint:left?`母亲在宫 · 还住${left}个月`:'母亲在宫 · 本月出宫'};}
+  const last=c.lastVisit==null?null:Number(c.lastVisit);
+  const wait=Number.isFinite(last)&&last<=S.turn?Math.max(0,24-(S.turn-last)):0;
+  if(wait)return {ready:false,hint:`距上次探亲未满两年 · 还需${Math.ceil(wait)}个月`};
+  return {ready:E().treasury>=15,hint:E().treasury>=15?'国库-15万两 · 小住两三个月':'国库不足 · 需15万两'};
+}
+function momVisitButton(c){
+  const state=momVisitState(c);
+  return `<button class="btn" onclick="A.momIn(${c.id})" ${state.ready?'':'disabled'}>接母亲入宫<small>${esc(state.hint)}</small></button>`;
+}
 const momObj=c=>c.visitor?{isMom:true,seed:c.visitor.seed,name:c.visitor.name,alive:true}:null;
 function momVisit(c,months){const v=c.visitor;if(v){v.until=Math.max(v.until,S.turn+months);return}
   c.visitor={name:`${c.sur}夫人`,full:`${c.sur}门${pick(SUR.filter(x=>x!==c.sur))}氏`,from:S.turn,until:S.turn+months,seed:(c.seed%999983)*7+13};c.lastVisit=S.turn;
   story(c,`母亲${c.visitor.name}奉旨入宫，在${c.palace}小住${cnNum(months)}个月。`);log(`准${fullName(c)}之母入宫小住。`)}
-function visitorTick(c){const v=c.visitor;if(!v)return;if(c.cold||!c.alive||c.gone){delete c.visitor;return}
+function visitorTick(c){const v=c.visitor;if(!v)return;if(!inPalace(c)){delete c.visitor;return}
   c.mood=clamp(c.mood+3);
   if(S.turn>=v.until){story(c,`母亲${v.name}出宫回家了，临走前拉着她的手说了很久的话。`);toast(`${cName(c)}的母亲出宫回家了`);delete c.visitor;if(chance(.4))setXin(c,'思念','母亲出宫回家')}}
-function visitorEvent(){const vs=alive().filter(c=>c.visitor&&!c.cold&&S.turn-(c.visitor.ev===undefined?-9:c.visitor.ev)>=2);if(!vs.length)return null;const c=pick(vs),v=c.visitor,m=momObj(c);v.ev=S.turn;deepen(c);
+function visitorEvent(){const vs=alive().filter(c=>c.visitor&&inPalace(c)&&S.turn-(c.visitor.ev===undefined?-9:c.visitor.ev)>=2);if(!vs.length)return null;const c=pick(vs),v=c.visitor,m=momObj(c);v.ev=S.turn;deepen(c);
   if(!c.woundKnown&&chance(.5))return {title:'母女夜话',por:m,text:`你路过${c.palace}，听见${v.name}在屋里低声叮嘱女儿：“……娘知道你心里苦。可这宫里不比家里，凡事要忍。”\n后来你才知道，${cName(c)}${WOUNDS[c.wound].replace(/^。/,'')}`,choices:[
     {t:'进去坐坐',f:()=>{c.woundKnown=true;remember(c,'care','母亲在宫时陛下来坐');story(c,'母亲在宫时，陛下进来坐了坐，第一次听她说起从前的事。');return fx(cchg(c,{aff:8,mood:8}))}},
     {t:'悄悄走开',f:()=>{c.woundKnown=true;return '你没有进去。'}}]};
@@ -131,5 +145,5 @@ function visitorEvent(){const vs=alive().filter(c=>c.visitor&&!c.cold&&S.turn-(c
     {t:'“夫人不必多礼。”',f:()=>fx(cchg(c,{mood:3}))}]}}
 function visitorLine(c){const v=c.visitor;if(!v)return '';const left=v.until-S.turn;
   return `<div class="row" style="gap:10px;align-items:center;margin-top:6px;background:#fff3cf;border:2px solid var(--gold2);padding:6px 10px">${porImg(momObj(c),44)}<div class="grow">母亲 <b>${esc(v.name)}</b>（${esc(v.full)}）正在${esc(c.palace)}小住，${left>0?`还有 ${left} 个月出宫`:'本月出宫'}。<div class="hint">母亲在宫的日子，她每月心情都会好一些。</div></div></div>`}
-A.momIn=function(id){const c=byId(id);if(c.visitor)return;if(E().treasury<15){toast('国库不足');return}chg({treasury:-15});momVisit(c,ri(2,3));setXin(c,'欢喜','母亲进宫来了');AU.sfx('joy');
-  pushEv({title:'母亲入宫',por:momObj(c),text:`${c.visitor.name}进宫来了，要在${c.palace}住上几个月。母女俩一见面就抱头哭了。`+fx(cchg(c,{mood:20,aff:8})),choices:[ok1]})};
+A.momIn=function(id){if(!S||S.over||modalOpen)return;const c=byId(id),state=momVisitState(c);if(!state.ready){toast(state.hint);return}chg({treasury:-15});momVisit(c,ri(2,3));setXin(c,'欢喜','母亲进宫来了');AU.sfx('joy');
+  pushEv({title:'母亲入宫',por:momObj(c),text:`${c.visitor.name}进宫来了，要在${c.palace}住上几个月。母女俩一见面就抱头哭了。`+fx(cchg(c,{mood:20,aff:8})),choices:[ok1]});save('auto')};
