@@ -70,6 +70,7 @@ const FLOOD_INDEX=0;
 const LOCUST_INDEX=5, HARVEST_INDEX=11;
 const GRAIN_SALE_REVENUE=100, HALF_GRAIN_SALE_REVENUE=45;
 const GRAIN_TRANSPORT_COST=70;
+const LOCUST_FREIGHT_DEPOSIT=20, LOCUST_BOOKED_FREIGHT_BALANCE=35;
 const LOCUST_LOCAL_PURCHASE_COST=125, LOCUST_LOCAL_PURCHASE_PEOPLE=6;
 const LOCUST_LOCAL_DEPOSIT=60, LOCUST_LOCAL_BALANCE=80;
 const LOCUST_LOCAL_EXTENSION_FEE=20;
@@ -396,12 +397,19 @@ function monthlyGrainEvent(index,brief={}){
       const nearUrgent=brief.locustNeed==='near';
       const uncertain=Boolean(brief.locustAuditNeed&&!brief.locustAudited);
       const village=nearUrgent?'近村':'远村';
+      const booked=brief.locustFreightBooked===true;
+      const freight=booked?LOCUST_BOOKED_FREIGHT_BALANCE:GRAIN_TRANSPORT_COST;
       event.text+=uncertain?`\n两村的急报说法不一。户部暂估${village}先断粮。按估报分路或集中发粮，若估错会少得 4 点民心。也可先核实。`
         :nearUrgent
         ?'\n近村已经断粮，粮商比常平仓的车队更快到近村。远村尚能撑到下月，届时粮道修通，仓车运费可减半。'
         :'\n远村已经断粮，粮商能赶在常平仓的车队前送到远村。近村尚有余粮。';
+      if(booked)event.text+=`\n远村仓车已付订金，使用时另付 ${freight} 万两运费。改走别的方案或换月，订金不退。`;
       if(uncertain)event.choices.push({t:'先核实两村粮情',inspectLocust:true,
         preview:'核实哪一村先断粮 · 正式发粮仍须另花精力'});
+      if(uncertain)event.choices.push({t:'先订远村仓车，再核实粮情',inspectLocust:true,locustFreightBooking:true,
+        preview:`国库 −${LOCUST_FREIGHT_DEPOSIT} 万两 · 用车再付 ${LOCUST_BOOKED_FREIGHT_BALANCE} 万两 · 不用不退 · 奏折仍待批`,
+        cond:()=>grainReserveReady()&&autumnGrainOrderStatus()==='due'&&E().treasury>=LOCUST_FREIGHT_DEPOSIT,
+        why:`须有 ${LOCUST_FREIGHT_DEPOSIT} 万两和 1 点精力`});
       if(uncertain)event.choices.push({t:'先发半批仓粮救近村，再核实',inspectLocust:true,
         preview:`发半批仓粮 · 民心 +${LOCUST_HALF_RESERVE_PEOPLE} · 保留订粮，奏折仍待批 · 后续只调订粮`,
         cond:grainReserveReady,why:'须有半批仓粮和 1 点精力',
@@ -420,16 +428,17 @@ function monthlyGrainEvent(index,brief={}){
         {title:'仓粮就近发放，订粮直送远村',cost,people:nearUrgent?total-2:total,
           result:'仓粮已在附近发放，远村由粮商送粮。'},
       ];
-      if(nearUrgent)routes.push({title:'订粮先救近村，仓粮运往远村',cost:cost+GRAIN_TRANSPORT_COST,people:total+3,
+      if(nearUrgent)routes.push({title:'订粮先救近村，仓粮运往远村',cost:cost+freight,people:total+3,usesFreight:true,
         result:'粮商先往近村发粮，常平仓另派车把半批粮运到远村。'});
       const urgent=nearUrgent?'近村':'远村', waiting=nearUrgent?'远村':'近村';
-      routes.push({title:`集中订粮和仓粮救${urgent}`,cost:cost+(nearUrgent?0:GRAIN_TRANSPORT_COST),
+      routes.push({title:`集中订粮和仓粮救${urgent}`,cost:cost+(nearUrgent?0:freight),usesFreight:!nearUrgent,
         people:nearUrgent?total+2:total+4,prestige:-2,
         result:`两份半批粮都拨给了${urgent}。${waiting}没领到这批赈粮，地方官对此颇有怨言。`});
       for(const route of routes){
         const blocked=()=>!grainReserveReady()?'常平仓须有半批储粮':autumnGrainReliefBlock(route.cost);
         event.choices.push({t:route.title,grainTransaction:true,
           preview:`国库 −${route.cost} 万两 · ${uncertain?'估计':''}民心 +${route.people}`+
+            (booked&&route.usesFreight?' · 使用已订仓车':'')+
             (route.prestige?` · 威望 −${-route.prestige} · ${waiting}未获粮`:'')+
             ` · ${half?'用完仓粮':'留半批仓粮'} · 用掉当月购粮和救急粮名额`,
           cond:()=>!blocked(),why:blocked(),

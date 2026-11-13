@@ -194,6 +194,11 @@ const A={
             S.flags.monthlyCourt=record;
             log('户部核实了蝗灾粮情，奏折仍待批复。');
             const result=`户部核实：${brief.locustAuditNeed==='near'?'近村':'远村'}先断粮。可重新打开本月奏折调粮。`;
+            if(choice.locustFreightBooking){
+              record.locustFreightBooked=true;
+              log('蝗灾，户部付订金预订本月远村仓车。');
+              return `${result}\n远村仓车已订好。${fx(chg({treasury:-LOCUST_FREIGHT_DEPOSIT}))}`;
+            }
             if(!choice.f)return result;
             const relief=choice.f();
             record.locustDispatched=true;

@@ -789,6 +789,34 @@ test('conflicting locust reports can be acted on immediately or verified before 
   `);
 });
 
+test('booking locust freight before an audit discounts only the reserved shipment',()=>{
+  for(const scenario of ['near','far','unused'])boot().run(`
+    S.month=8;S.turn=7;
+    const scenario='${scenario}', need=scenario==='far'?'far':'near';
+    const brief={turn:7,gen:S.gen,index:LOCUST_INDEX,locustNeed:need==='near'?'far':'near',locustAuditNeed:need};
+    Object.assign(S.flags,{monthlyCourt:brief,autumnGrainOrder:{turn:7,gen:S.gen},grainReserveGen:S.gen});
+    Object.assign(E(),{people:60,treasury:19,energy:2});
+    const option=text=>curEv.choices.findIndex(c=>c.t.includes(text));
+    A.court();const booking=option('先订远村仓车');
+    assert.equal(curEv.choices[booking].cond(),false);
+    E().treasury=120;
+    const write=save;save=()=>false;choose(booking);drain();
+    assert.deepEqual([E().treasury,E().energy,S.flags.monthlyCourt],[120,2,brief]);
+    save=write;A.court();choose(option('先订远村仓车'));drain();assert.equal(load('auto'),true);
+    assert.deepEqual([E().treasury,E().energy,autumnGrainOrderStatus(),grainReserveReady(),S.flags.monthlyCourt.locustNeed],[100,1,'due',true,need]);
+    A.court();assert.match(curEv.text,/使用时另付 35 万两/);
+    assert.equal(option('先订远村仓车'),-1);
+    const route=option(need==='near'?'仓粮运往远村':'集中订粮和仓粮救远村');
+    assert.match(curEv.choices[route].preview,/100 万两.*使用已订仓车/);
+    assert.equal(curEv.choices[route].cond(),true);
+    const unused=option('仓粮就近发放');
+    assert.match(curEv.choices[unused].preview,/65 万两/);
+    choose(scenario==='unused'?unused:route);drain();assert.equal(load('auto'),true);
+    assert.deepEqual([E().treasury,E().energy,E().people,halfGrainReserve(),S.flags.monthlyCourt.done],
+      [scenario==='unused'?35:0,0,scenario==='unused'?67:need==='near'?72:73,true,true]);
+  `);
+});
+
 test('dispatching half a reserve before an audit saves independently of the final locust route',()=>{
   for(const result of ['near','far','reserve'])boot().run(`
     S.month=8;S.turn=7;
