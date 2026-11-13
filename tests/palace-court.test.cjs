@@ -100,6 +100,28 @@ test('delegating the exam resolves the memorial without spending the last energy
   `);
 });
 
+test('relief delegation trades treasury and some relief for a free action, once across reloads',()=>{
+  const {run}=boot();
+  run(`
+    S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index:0};
+    E().energy=1;E().treasury=339;E().people=50;
+    A.court();
+    let delegate=curEv.choices.findIndex(c=>c.t.includes('全权办理'));
+    assert.equal(curEv.choices[delegate].cond(),false);
+    choose(delegate);
+    assert.equal(S.flags.monthlyCourt.done,undefined);
+    choose(curEv.choices.length-1);
+    E().treasury=340;
+    A.court();choose(curEv.choices.findIndex(c=>c.t.includes('全权办理')));
+    assert.equal(E().energy,1);
+    assert.equal(E().treasury,0);
+    assert.equal(E().people,56);
+    drain();save('1');load('1');A.court();
+    assert.equal(modalOpen,false);
+    assert.equal(E().treasury,0);
+  `);
+});
+
 test('the relationship graph shows fathers, consorts and close or hostile ties',()=>{
   const {run}=boot(13);
   run(`const [a,b]=harem();relAdd(a,b,-60);`);

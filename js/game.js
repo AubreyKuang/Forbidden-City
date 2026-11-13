@@ -177,10 +177,11 @@ const A={
     const ev=monthlyCourtEvent();
     if(!ev){toast(S.flags.monthlyCourt?.done?'本月奏折已批复。':'这份奏折已不适用。');return;}
     const brief=S.flags.monthlyCourt;
-    ev.choices=ev.choices.map(choice=>{
+    const delegation=reliefDelegation(brief.index);
+    ev.choices=[...ev.choices,...(delegation?[delegation]:[])].map(choice=>{
       const cost=choice.delegated?0:1;
       return {...choice,t:`${choice.t}（${cost?'精力 −1':'免耗精力'}）`,
-        cond:()=>!brief.done&&(!cost||E().energy>0),why:'精力不足',
+        cond:()=>!brief.done&&(!cost||E().energy>0)&&(!choice.cond||choice.cond()),why:choice.why||'精力不足',
         f:()=>{
           if(brief.done||(cost&&!useE()))return;
           brief.done=true;

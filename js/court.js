@@ -66,6 +66,19 @@ const COURT=[
    {t:'挽留：“朝廷离不开您老。”',f:()=>`老臣又留任一年，朝政井井有条。${fx(chg({prestige:1,people:2}))}`}]}),
 ];
 const SPONT=[0,1,5,10,11,14];
+const COURT_RELIEF={
+  0:{office:'工部',cost:340,people:6},
+  5:{office:'户部',cost:230,people:5},
+  10:{office:'太医院',cost:180,people:4},
+};
+function reliefDelegation(index){
+  const relief=COURT_RELIEF[index];
+  if(!relief)return null;
+  const {office,cost,people}=relief;
+  return {t:`由${office}全权办理 · 国库 −${cost}万两 · 民心 +${people}`,
+    delegated:true,cond:()=>E().treasury>=cost,why:'国库银两不足',
+    f:()=>`${office}按例调派人手，报来办理结果。${fx(chg({treasury:-cost,people}))}`};
+}
 function courtEvent(){
   const ev=COURT[pick(SPONT)]();
   ev.onQueue=()=>{S.flags.lastCourt=ev.title;};
