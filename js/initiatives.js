@@ -13,6 +13,46 @@ const INITIATIVE_SOURCES={
   school:'https://www.dpm.org.cn/court/culture/157157.html'
 };
 const PALACE_INITIATIVES={
+  springPetals:{
+    title:'拾花伤春', place:'yh', seasonal:true,
+    match:c=>season()===0&&['思念','委屈'].includes(xinOf(c))&&(['沉静','痴情','淡泊'].includes(c.trait)||c.t2==='念旧'),
+    text:()=> '昨夜一阵雨打落了海棠。她挑出一瓣尚完整的夹进书里，说去年还有人陪她在这里等花开。',
+    button:'陪她沿花径走一段', respond:c=>cchg(c,{mood:7,aff:3})
+  },
+  autumnLamp:{
+    title:'秋夜听雨', seasonal:true, place:consortPalaceVenue,
+    match:c=>season()===2&&['思念','委屈'].includes(xinOf(c))&&(['沉静','痴情','体弱'].includes(c.trait)||c.t2==='念旧'),
+    text:()=> '她把家里寄来的信读了两遍，搁在窗下听雨。宫人来添灯，她说留一盏便够了。',
+    button:'陪她坐一会儿', respond:c=>cchg(c,{mood:7,aff:3})
+  },
+  winterTea:{
+    title:'暖阁分茶', seasonal:true, place:consortPalaceVenue,
+    match:c=>season()===3&&['好客','温婉'].includes(c.trait)&&consortHobby(c)==='品茶'&&c.mood>=40,
+    target:initiativeAlly,
+    text:(c,o)=>`她温了两只茶盏，替${cName(o)}把靠门的坐垫挪到火盆边，才喊宫人端茶。`,
+    start:(c,o)=>{relAdd(c,o,3);return '两人围炉叙话';},
+    button:'留下尝一盏茶', respond:(c,o)=>cchg(c,{aff:3})+' · '+cchg(o,{mood:4})
+  },
+  ciNingCopy:{
+    title:'佛堂抄经', place:'cn',
+    match:c=>c.t2==='信佛'&&S.flags.dowager?.alive&&(NEGX.includes(xinOf(c))||c.mood<45),
+    text:()=> '她在慈宁宫佛堂誊完半卷经，把写坏的几页叠在一旁，说手有事做，心便慢慢静下来。',
+    button:'替她续一盏灯', respond:c=>cchg(c,{mood:6})
+  },
+  kunNingAccounts:{
+    title:'中宫核账', place:'p坤宁宫',
+    match:c=>['持重','聪慧'].includes(c.trait)&&empress()&&E().treasury<600,
+    text:()=> '她带着各宫领用簿来坤宁宫，发现两处炭例数目相同，便请掌事姑姑找来原单核对。',
+    button:'让内务府按原单更正', respond:()=>chg({treasury:6})
+  },
+  gardenPractice:{
+    title:'花亭试投', place:'yh',
+    match:c=>!c.preg&&c.mood>=40&&(['爽直','将门'].includes(c.trait)||consortHobby(c)==='投壶'),
+    target:c=>harem().find(o=>o!==c&&!o.preg&&relGet(c,o)>=0&&consortHobby(o)==='投壶'),
+    text:(c,o)=>`她和${cName(o)}在花亭前试投，输了便把离壶最近的一支箭捡回来，拉对方再比一轮。`,
+    start:(c,o)=>{relAdd(c,o,2);return '两人约好下次再比';},
+    button:'给她们换一只远壶', respond:(c,o)=>{relAdd(c,o,4);return cchg(c,{mood:4});}
+  },
   silkCharm:{
     title:'端午结百索', seasonal:true, place:'yh', source:'charms', ref:'故宫博物院·端午服饰与佩饰',
     match:c=>S.month===5 && (['温婉','骄纵'].includes(c.trait)||c.t2==='护短'),
@@ -208,6 +248,9 @@ const PALACE_INITIATIVES={
   }
 };
 
+function consortPalaceVenue(c){return 'p'+c.palace;}
+const initiativePlace=(rule,person,move)=>move?.place??(typeof rule?.place==='function'?rule.place(person):rule?.place);
+
 function initiativeParticipants(person,move) {
   if (!(person.sex?childInPalace(person):inPalace(person))) return null;
   const target=move.target==null?null:kidById(move.target)||byId(move.target);
@@ -256,6 +299,7 @@ function initiativeTick(){
           const target=rule.target?.(person), memory=rule.memory?.(person);
           if((rule.target&&!target)||(rule.memory&&!memory))continue;
           const move={id,turn:S.turn,target:target?.id};
+          if(typeof rule.place==='function')move.place=rule.place(person);
           if(!initiativeParticipants(person,move))continue;
           move.text=rule.text(person,target,memory);
           move.effect=rule.start?.(person,target);
@@ -281,14 +325,15 @@ function activeInitiativeEcho(person) {
 function initiativeHTML(person,venue){
   const move=currentInitiative(person), rule=PALACE_INITIATIVES[move?.id];
   const echo=activeInitiativeEcho(person), echoRule=PALACE_INITIATIVES[echo?.id];
-  const followup=echoRule&&(!venue||echoRule.place===venue)
+  const followup=echoRule&&(!venue||initiativePlace(echoRule,person,echo)===venue)
     ?`<section class="initiative-note"><strong>后来 · ${esc(echoRule.title)}</strong><p>${esc(echo.text)}</p></section>`:'';
-  if(!rule||(venue&&rule.place!==venue))return followup;
-  const place=PLACES.find(p=>p.id===rule.place);
+  const placeId=initiativePlace(rule,person,move);
+  if(!rule||(venue&&placeId!==venue)||!initiativeParticipants(person,move))return followup;
+  const place=PLACES.find(p=>p.id===placeId);
   const response=move.response
     ? `<small>你已回应 · ${esc(move.response)}</small>`
     : `<button class="btn sm" onclick="A.answerInitiative(${person.id},${!!person.sex})">${esc(rule.choices?'到场看看':rule.button)}<small>${rule.choices?'观看无需精力':'精力-1'}</small></button>`;
-  return `<section class="initiative-note"><strong>${esc(rule.title)}${place?' · '+place.n:''}</strong><p>${esc(move.text)}</p>
+  return `<section class="initiative-note"><strong>${esc(rule.title)}${place?' · '+place.n:''}${venue?` · ${esc(person.sex?kidName(person):cName(person))}`:''}</strong><p>${esc(move.text)}</p>
     ${move.effect?`<small>${esc(move.effect)}</small>`:''}${response}
     ${rule.ref?`<small class="initiative-ref">参考 <a href="${INITIATIVE_SOURCES[rule.source]}" target="_blank" rel="noopener noreferrer">${esc(rule.ref)}</a></small>`:''}</section>${followup}`;
 }
@@ -304,14 +349,14 @@ function initiativeNotices(){
     const move=currentInitiative(p)||activeInitiativeEcho(p);
     const rule=PALACE_INITIATIVES[move.id];
     if(!rule)return '';
-    const place=PLACES.find(q=>q.id===rule.place);
+    const place=PLACES.find(q=>q.id===initiativePlace(rule,p,move));
     return `<button class="btn sm" onclick="A.seeInitiative(${p.id},${!!p.sex})">${place?place.n+' · ':''}${esc(p.sex?kidName(p):cName(p))} · ${esc(rule.title)}${move.delivered?'后续':''}</button>`;
   }).join('')}</div>`;
 }
 
 function initiativesAt(place) {
   return initiativePeople().filter(p=>[currentInitiative(p),activeInitiativeEcho(p)]
-    .some(move=>PALACE_INITIATIVES[move?.id]?.place===place))
+    .some(move=>initiativePlace(PALACE_INITIATIVES[move?.id],p,move)===place))
     .map(p=>initiativeHTML(p,place)).join('');
 }
 
@@ -322,6 +367,10 @@ A.seeInitiative=function(id,child){
     A.answerInitiative(id,child);
     return;
   }
+  const echo=activeInitiativeEcho(person);
+  const placeId=initiativePlace(PALACE_INITIATIVES[(move||echo)?.id],person,move||echo);
+  const place=PLACES.find(p=>p.id===placeId);
+  if(place&&place.k!=='view'){goDirect(place);return;}
   A.go(child?'kid':'consort',id);
 };
 

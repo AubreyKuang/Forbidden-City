@@ -17,6 +17,10 @@ const birthMonth = person => person.birthMonth ?? (Math.abs(person.seed || 0)%12
 function banquetKind(kind) {
   if (kind === 'garden') return { title:'御花园小宴', cost:15,
     ready:!S.over && S.turn-(S.lastGardenBanquet ?? -3)>=3 };
+  if (kind === 'duanwu') {
+    const work=duanwuWork();
+    return {title:'端午宴',cost:0,ready:!S.over&&S.month===5&&work?.year===S.year&&work.stage==='finished'&&!work.held};
+  }
   if (!['emperor','empress'].includes(kind)) return null;
   const host = kind === 'emperor' ? E() : empress();
   if (!host) return null;
@@ -85,9 +89,9 @@ function banquetAttendees(draft, feast) {
 
 function banquetProblem(draft, feast, people) {
   if (!feast?.ready) return '这场宴会目前不能举办。';
-  if (people.length<(draft.kind==='garden'?2:1)||people.every(p=>p.sex)) return '还需选足宾客，并至少有一位妃嫔或宫人在席。';
+  if (people.length<(feast.host?1:2)||people.every(p=>p.sex)) return '还需选足宾客，并至少有一位妃嫔或宫人在席。';
   if (E().energy<=0) return '本月精力已尽。';
-  if (E().treasury<feast.cost) return '国库银两不足。';
+  if (feast.cost>0&&E().treasury<feast.cost) return '国库银两不足。';
   return '';
 }
 
@@ -135,7 +139,7 @@ function viewBanquet() {
         }).join('')}</ol><div class="grid">${guestCards}</div>`}
     <h3>席间活动</h3><div class="acts">${Object.entries(GARDEN_ACTIVITIES).map(([key,act])=>
       `<button class="btn sm" aria-pressed="${draft.activity===key}" onclick="A.banquetActivity('${key}')">${act.label}</button>`).join('')}</div>
-    <div class="acts"><button class="btn gold" ${problem?'disabled':''} onclick="A.holdBanquet()">开宴<small>精力-1 · 国库-${feast.cost}万两</small></button></div>
+    <div class="acts"><button class="btn gold" ${problem?'disabled':''} onclick="A.holdBanquet()">开宴<small>精力-1 · ${feast.cost?`国库-${feast.cost}万两`:'筹备时已拨款'}</small></button></div>
     ${problem?`<p class="hint">${problem}</p>`:''}`;
 }
 
@@ -187,6 +191,7 @@ function playBanquet(draft,feast,people,tables,move) {
   if (!useE()) return;
   E().treasury-=feast.cost;
   if (feast.host) feast.host.birthFeastYear=S.year;
+  else if (draft.kind==='duanwu') duanwuWork().held=true;
   else S.lastGardenBanquet=S.turn;
   const label=GARDEN_ACTIVITIES[draft.activity].label, toss=draft.activity==='toss';
   const lines=[];
@@ -238,6 +243,7 @@ function playBanquet(draft,feast,people,tables,move) {
   const promise=follow? `\n§${familyName(kidById(follow.child)||byId(follow.guest))}约好两个月后再来御花园。`:'';
   const result=toss?`${successes} 人投中，共 ${entries} 人试投`:`${successes} 人完成画作，共 ${entries} 人执笔`;
   log(`${feast.title}，${people.length} 位宾客同席${label}。 ${result}。`);
+  if(draft.kind==='duanwu')save('auto');
   UI.banquet=null;
   arrive(gardenPlace());
   const demand=proudBanquetGuest(people);

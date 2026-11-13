@@ -74,6 +74,90 @@ test('the relationship graph shows fathers, consorts and close or hostile ties',
   assert.match(run(`$('#panel').innerHTML`),/关系图/);
 });
 
+test('Duanwu assignments survive a reload, credit the helper and open a prepaid banquet once',()=>{
+  const {run}=boot(888);
+  run(`
+    const [tables,gifts]=harem();
+    const helper=makeGirl({trait:'温婉'});
+    addConsort(helper,2,'选秀入宫');
+    tables.trait='持重'; gifts.trait='巧手';
+    relAdd(gifts,helper,40);
+    S.month=4;
+    const before=E().treasury;
+    A.openDuanwuGarden();
+    assert.match($('#panel').innerHTML,/分派端午宫务/);
+    A.assignDuanwu(); choose(0); choose(0); drain();
+    assert.equal(E().treasury,before-20);
+    assert.equal(duanwuWork().stage,'preparing');
+    assert.equal(duanwuWork().tables,tables.id);
+    assert.equal(duanwuWork().gifts,gifts.id);
+    assert.ok(save('1')); assert.ok(load('1')); migrate();
+    S.month=5; S.turn++; palaceDutiesTick();
+    assert.equal(duanwuWork().helper,helper.id);
+    assert.equal(duanwuWork().issue,'漏记帮手');
+    A.reviewDuanwu();
+    assert.match(curEv.text,/先列清了宴席.*开支/);
+    assert.match(curEv.text,/节礼的花样/);
+    choose(0); drain();
+    assert.equal(duanwuWork().stage,'finished');
+    assert.ok(NPCMemory.recall(S,helper.id).some(entry=>entry.type==='duanwu_help'&&entry.interpretation.includes('我的名字')));
+    assert.equal(banquetKind('duanwu').ready,true);
+    A.openBanquet('duanwu'); A.holdBanquet(); choose(0); drain();
+    assert.equal(duanwuWork().held,true);
+    assert.equal(E().treasury,before-20);
+    assert.equal(banquetKind('duanwu').ready,false);
+    assert.ok(load('auto')); migrate();
+    assert.equal(banquetKind('duanwu').ready,false);
+  `);
+});
+
+test('private support and public testimony produce different memories, and events have a cooldown',()=>{
+  const {run}=boot(98);
+  run(`
+    const [friend,subject]=harem();
+    Object.assign(friend,{trait:'持重',favor:58});
+    Object.assign(subject,{favor:15,xin:{k:'委屈',t:S.turn,why:'被冷落'}});
+    relAdd(subject,friend,45);
+    const before=relGet(subject,friend);
+    const event=courtFriendshipEvent();
+    assert.match(event.text,/却沉默了/);
+    pushEv(event); choose(1); drain();
+    assert.ok(relGet(subject,friend)<before);
+    const first=NPCMemory.recall(S,subject.id).find(m=>m.type==='palace_support');
+    const second=NPCMemory.recall(S,friend.id).find(m=>m.type==='palace_support');
+    assert.notEqual(first.interpretation,second.interpretation);
+    assert.equal(first.sources[0],second.sources[0]);
+    assert.equal(courtFriendshipEvent(),null);
+  `);
+});
+
+test('seasonal activities require the matching personality and mood and appear in the actual palace',()=>{
+  const {run}=boot(316);
+  run(`
+    const c=harem()[1], autumn=PALACE_INITIATIVES.autumnLamp;
+    Object.assign(c,{trait:'沉静',t2:'念旧',xin:{k:'思念',t:S.turn,why:'思亲'}});
+    S.month=3;
+    assert.equal(autumn.match(c),false);
+    assert.equal(PALACE_INITIATIVES.springPetals.match(c),true);
+    S.month=9;
+    assert.equal(autumn.match(c),true);
+    c.xin.k='平和';
+    assert.equal(autumn.match(c),false);
+    c.xin.k='思念';
+    const palace=c.palace;
+    c.initiative={id:'autumnLamp',turn:S.turn,place:'p'+palace,text:autumn.text(c)};
+    assert.match(initiativeNotices(),/秋夜听雨/);
+    assert.ok(initiativeMapScenes().some(scene=>scene.person===c));
+    A.seeInitiative(c.id,false);
+    assert.equal(UI.sel,palace);
+    assert.match($('#panel').innerHTML,/秋夜听雨/);
+    const energy=E().energy;
+    A.answerInitiative(c.id,false);
+    assert.equal(E().energy,energy-1);
+    assert.match($('#panel').innerHTML,/你已回应/);
+  `);
+});
+
 test('shared hobbies outweigh a matching trait, and compatible visits persist across saves',()=>{
   const {run}=boot(413);
   run(`
