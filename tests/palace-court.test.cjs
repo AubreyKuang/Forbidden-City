@@ -646,6 +646,35 @@ test('a locust memorial saves the urgent village and prices the reversed grain r
   }
 });
 
+test('conflicting locust reports can be acted on immediately or verified before settling',()=>{
+  for(const audit of [false,true])boot().run(`
+    S.month=8;S.turn=7;
+    const brief={turn:7,gen:S.gen,index:LOCUST_INDEX,locustNeed:'far',locustAuditNeed:'near'};
+    Object.assign(S.flags,{monthlyCourt:brief,autumnGrainOrder:{turn:7,gen:S.gen},grainReserveGen:S.gen});
+    Object.assign(E(),{people:60,treasury:200,energy:2});
+    const option=text=>curEv.choices.findIndex(c=>c.t.includes(text));
+    A.court();assert.match(curEv.text,/暂估远村先断粮/);
+    if(${audit}){
+      const write=save;
+      save=()=>false;choose(option('先核实'));drain();
+      assert.deepEqual([E().energy,S.flags.monthlyCourt],[2,brief]);
+      save=write;A.court();choose(option('先核实'));drain();
+      assert.equal(load('auto'),true);
+      assert.deepEqual([E().energy,S.flags.monthlyCourt.done,S.flags.monthlyCourt.locustNeed],[1,undefined,'near']);
+      A.court();assert.equal(option('先核实'),-1);
+      assert.match(curEv.text,/近村已经断粮/);
+      assert.notEqual(option('下月再补远村'),-1);
+      choose(option('集中订粮和仓粮救近村'));drain();
+      assert.deepEqual([E().energy,E().treasury,E().people],[0,135,71]);
+    }else{
+      choose(option('集中订粮和仓粮救远村'));drain();
+      assert.deepEqual([E().energy,E().treasury,E().people],[1,65,69]);
+    }
+    assert.equal(S.flags.monthlyCourt.done,true);
+    assert.equal(halfGrainReserve(),true);
+  `);
+});
+
 test('concentrating both half batches trades prestige for relief and saves all costs together',()=>{
   for(const near of [true,false])boot().run(`
     S.month=${near?8:9};S.turn=S.month-1;

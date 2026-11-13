@@ -189,6 +189,11 @@ const A={
         cond:()=>!brief.done&&(!cost||E().energy>0)&&(!choice.cond||choice.cond()),why:choice.why||'精力不足',
         f:()=>{
           if(brief.done)return;
+          if(choice.inspectLocust)return saveGrainAction(()=>{
+            S.flags.monthlyCourt={...brief,locustNeed:brief.locustAuditNeed,locustAudited:true};
+            log('户部核实了蝗灾粮情，奏折仍待批复。');
+            return `户部核实：${brief.locustAuditNeed==='near'?'近村':'远村'}先断粮。可重新打开本月奏折调粮。`;
+          });
           const settle=record=>{
             record.done=true;
             S.flags.lastCourt=ev.title;
