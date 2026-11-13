@@ -747,6 +747,37 @@ test('conflicting locust reports can be acted on immediately or verified before 
   `);
 });
 
+test('dispatching half a reserve before an audit saves independently of the final locust route',()=>{
+  for(const result of ['near','far','reserve'])boot().run(`
+    S.month=8;S.turn=7;
+    const result='${result}', need=result==='near'?'near':'far';
+    const brief={turn:7,gen:S.gen,index:LOCUST_INDEX,locustNeed:need==='near'?'far':'near',locustAuditNeed:need};
+    const order={turn:7,gen:S.gen};
+    Object.assign(S.flags,{monthlyCourt:brief,autumnGrainOrder:order,grainReserveGen:S.gen,grainReserveHalf:result==='near'});
+    Object.assign(E(),{people:60,treasury:65,energy:result==='reserve'?1:2});
+    const option=text=>curEv.choices.findIndex(c=>c.t.includes(text));
+    const write=save;
+    A.court();save=()=>false;choose(option('先发半批仓粮'));drain();
+    assert.deepEqual([E().people,E().energy,halfGrainReserve(),S.flags.monthlyCourt,S.flags.autumnGrainOrder],
+      [60,result==='reserve'?1:2,result==='near',brief,order]);
+    save=write;A.court();choose(option('先发半批仓粮'));drain();assert.equal(load('auto'),true);
+    assert.deepEqual([E().people,E().energy,E().treasury,grainReserveReady(),halfGrainReserve(),autumnGrainOrderStatus(),S.flags.monthlyCourt.done],
+      [63,result==='reserve'?0:1,65,result!=='near',result!=='near','due',undefined]);
+    assert.match(S.flags.monthlyCourt.result.text,/近村已领到半批仓粮/);
+    A.court();assert.match(curEv.text,new RegExp(need==='near'?'近村先断粮':'远村先断粮'));
+    assert.equal(option('先发半批仓粮'),-1);
+    assert.equal(option('集中订粮'),-1);
+    const near=option('让近村就近领取订粮'), far=option('将订粮直送远村');
+    assert.match(curEv.choices[near].preview,new RegExp('40 万两.*民心 \\\\+'+(need==='near'?7:4)));
+    assert.match(curEv.choices[far].preview,new RegExp('65 万两.*民心 \\\\+'+(need==='far'?7:4)));
+    if(result==='reserve')assert.equal(curEv.choices[far].cond(),false);
+    choose(result==='near'?near:result==='far'?far:option('结束赈济'));drain();
+    assert.equal(load('auto'),true);
+    assert.deepEqual([E().people,E().energy,E().treasury,autumnGrainOrderStatus(),S.flags.monthlyCourt.done],
+      [result==='reserve'?63:70,0,result==='near'?25:result==='far'?0:65,result==='reserve'?'due':'',true]);
+  `);
+});
+
 test('concentrating both half batches trades prestige for relief and saves all costs together',()=>{
   for(const near of [true,false])boot().run(`
     S.month=${near?8:9};S.turn=S.month-1;

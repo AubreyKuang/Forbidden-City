@@ -178,7 +178,7 @@ const A={
     const ev=monthlyCourtEvent();
     if(!ev){toast(S.flags.monthlyCourt?.done?'本月奏折已批复。':'这份奏折已不适用。');return;}
     const brief=S.flags.monthlyCourt;
-    const delegation=brief.floodFollowup||brief.locustFollowup?null:reliefDelegation(brief.index);
+    const delegation=brief.floodFollowup||brief.locustFollowup||brief.locustDispatched?null:reliefDelegation(brief.index);
     const installment=brief.index===FLOOD_INDEX&&!brief.floodFollowup?stagedFloodRelief(brief):null;
     const freightBooking=installment&&brief.floodNeed==='grain'&&grainReserveReady()?stagedFloodRelief(brief,true):null;
     ev.scene='monthly-court';
@@ -188,11 +188,18 @@ const A={
         preview:choice.preview||COURT_PREVIEWS[brief.index]?.[index],
         cond:()=>!brief.done&&(!cost||E().energy>0)&&(!choice.cond||choice.cond()),why:choice.why||'精力不足',
         f:()=>{
-          if(brief.done)return;
+          if(brief.done||S.flags.monthlyCourt!==brief)return;
           if(choice.inspectLocust)return saveGrainAction(()=>{
-            S.flags.monthlyCourt={...brief,locustNeed:brief.locustAuditNeed,locustAudited:true};
+            const record={...brief,locustNeed:brief.locustAuditNeed,locustAudited:true};
+            S.flags.monthlyCourt=record;
             log('户部核实了蝗灾粮情，奏折仍待批复。');
-            return `户部核实：${brief.locustAuditNeed==='near'?'近村':'远村'}先断粮。可重新打开本月奏折调粮。`;
+            const result=`户部核实：${brief.locustAuditNeed==='near'?'近村':'远村'}先断粮。可重新打开本月奏折调粮。`;
+            if(!choice.f)return result;
+            const relief=choice.f();
+            record.locustDispatched=true;
+            log('蝗灾，户部先发半批仓粮救济近村。');
+            record.result={title:ev.title,choice:choice.t,text:`${relief.replace(/§/g,'')}\n${result}`};
+            return `${result}\n${relief}`;
           });
           const settle=record=>{
             record.done=true;

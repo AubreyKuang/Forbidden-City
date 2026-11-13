@@ -197,12 +197,14 @@ function cancelAutumnGrainChoice(){
 function autumnGrainBalance(){
   return AUTUMN_GRAIN_BALANCE+(S.flags.autumnGrainOrder?.delayed===true?AUTUMN_GRAIN_DELAY_FEE:0);
 }
-function settleAutumnGrainRelief(cost,people,prestige=0){
+function settleAutumnGrainRelief(cost,people,prestige=0,local=false){
   delete S.flags.autumnGrainOrder;
   S.flags.grainPurchaseTurn=S.turn;
   S.flags.grainReliefTurn=S.turn;
-  log(`户部付尾款和运费共 ${cost} 万两，将预订的半批秋粮直接送往缺粮村落。`);
-  return `粮商已将预订的半批秋粮送到村里，百姓当天就领到了口粮。${fx(chg({treasury:-cost,people,...(prestige?{prestige}:{})}))}`;
+  log(local?`户部付尾款 ${cost} 万两，令近村灾民到粮商处领粮。`:
+    `户部付尾款和运费共 ${cost} 万两，将预订的半批秋粮直接送往缺粮村落。`);
+  return (local?'近村百姓就近领到了粮商备好的口粮。':'粮商已将预订的半批秋粮送到村里，百姓当天就领到了口粮。')+
+    fx(chg({treasury:-cost,people,...(prestige?{prestige}:{})}));
 }
 function autumnGrainReliefBlock(cost){
   if(autumnGrainOrderStatus()!=='due')return '须到约定月份方可领取秋粮';
@@ -275,7 +277,27 @@ A.grainReserve=function(){
     (order==='due'?`\n预订的半批秋粮已到。可领粮入仓，民心低时也可直送缺粮村落。${S.month===8?'若本月不领，可改到九月或退订。':'九月是最后的领取期限。'}逾期不退订金。`:'')+
     (!stocked||half?`\n${autumn?'秋粮上市，现为低价':'八月至十月是低价期'}。每月最多购半批。`:''),choices});
 };
+function locustAfterDispatchEvent(brief){
+  const near=brief.locustNeed==='near';
+  const choices=[];
+  if(autumnGrainOrderStatus()==='due'){
+    for(const local of [true,false]){
+      const cost=autumnGrainBalance()+(local?0:AUTUMN_GRAIN_DELIVERY);
+      const people=local===near?7:4;
+      choices.push({t:local?'让近村就近领取订粮':'将订粮直送远村',grainTransaction:true,
+        preview:`国库 −${cost} 万两 · 民心 +${people} · 占本月购粮和救急粮名额`,
+        cond:()=>!autumnGrainReliefBlock(cost),why:autumnGrainReliefBlock(cost),
+        f:()=>settleAutumnGrainRelief(cost,people,0,local)});
+    }
+  }
+  choices.push({t:'结束赈济，订粮另议',delegated:true,grainTransaction:true,
+    preview:'保留已发仓粮的收益 · 订粮可在常平仓处置',
+    f:()=> '近村已领到半批仓粮。户部结案，尚未领取的订粮仍按原期限办理。'});
+  return {title:'蝗灾 · 订粮调拨',text:`近村已领到半批仓粮。复核确认${near?'近村':'远村'}先断粮。`+
+    (autumnGrainOrderStatus()==='due'?'预订的半批秋粮还可就近发放或直送远村。':'这笔订粮已另行处置。'),choices};
+}
 function monthlyGrainEvent(index,brief={}){
+  if(index===LOCUST_INDEX&&brief.locustDispatched)return locustAfterDispatchEvent(brief);
   const event=COURT[index]();
   if(index===HARVEST_INDEX){
     if(halfGrainReserve()){
@@ -359,6 +381,13 @@ function monthlyGrainEvent(index,brief={}){
         :'\n远村已经断粮，粮商能赶在常平仓的车队前送到远村。近村尚有余粮。';
       if(uncertain)event.choices.push({t:'先核实两村粮情',inspectLocust:true,
         preview:'核实哪一村先断粮 · 正式发粮仍须另花精力'});
+      if(uncertain)event.choices.push({t:'先发半批仓粮救近村，再核实',inspectLocust:true,
+        preview:`发半批仓粮 · 民心 +${LOCUST_HALF_RESERVE_PEOPLE} · 保留订粮，奏折仍待批 · 后续只调订粮`,
+        cond:grainReserveReady,why:'须有半批仓粮和 1 点精力',
+        f:()=>{
+          if(halfGrainReserve())clearGrainReserve();else S.flags.grainReserveHalf=true;
+          return `近村已领到半批仓粮。${fx(chg({people:LOCUST_HALF_RESERVE_PEOPLE}))}`;
+        }});
       if(nearUrgent&&!uncertain)event.choices.push({t:'订粮先救近村，下月再补远村',grainTransaction:true,
         preview:`国库 −${cost} 万两 · 民心 +${people} · 暂留仓粮 · 占本月购粮和救急粮名额 · 下月须出半批仓粮、${LOCUST_FOLLOWUP_COST} 万两和 1 点精力 · 失约民心 −${-LOCUST_UNFUNDED.people}`,
         cond:()=>grainReserveReady()&&!autumnGrainReliefBlock(cost),why:autumnGrainReliefBlock(cost),
