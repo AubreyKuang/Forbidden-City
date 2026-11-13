@@ -310,6 +310,38 @@ test('collecting autumn grain requires room, funds and the August purchase allow
   `);
 });
 
+test('August grain delivery can bypass a full warehouse and spends both monthly allowances once',()=>{
+  const {run}=boot();
+  run(`
+    const option=label=>curEv.choices.findIndex(c=>c.t.includes(label));
+    const delivery=()=>option('直送秋粮');
+    S.month=7;S.turn=6;E().treasury=200;E().energy=2;
+    S.flags.grainReserveGen=S.gen;S.flags.grainReserveHalf=true;
+    A.grainReserve();choose(option('预订半批秋粮'));drain();
+    A.grainReserve();choose(option('买半批粮'));drain();
+    S.turn++;S.month=8;E().people=46;
+    A.grainReserve();choose(delivery());assert.equal(E().treasury,70);
+    E().people=45;E().treasury=64;
+    choose(delivery());assert.equal(E().people,45);
+    E().treasury=70;S.flags.grainReliefTurn=S.turn;
+    choose(delivery());assert.equal(autumnGrainOrderStatus(),'due');
+    delete S.flags.grainReliefTurn;S.flags.grainPurchaseTurn=S.turn;
+    choose(delivery());assert.equal(autumnGrainOrderStatus(),'due');
+    delete S.flags.grainPurchaseTurn;
+    const write=save;
+    save=()=>false;choose(delivery());drain();
+    assert.deepEqual([E().treasury,E().people,E().energy,autumnGrainOrderStatus(),S.flags.grainPurchaseTurn,S.flags.grainReliefTurn],
+      [70,45,0,'due',undefined,undefined]);
+    save=write;
+    A.grainReserve();choose(delivery());drain();assert.equal(load('auto'),true);
+    assert.deepEqual([E().treasury,E().people,E().energy,grainReserveReady(),halfGrainReserve(),autumnGrainOrderStatus(),
+      S.flags.grainPurchaseTurn,S.flags.grainReliefTurn,S.flags.monthlyCourt?.done],[5,49,0,true,false,'',S.turn,S.turn,undefined]);
+    E().people=41;E().energy=1;
+    A.grainReserve();assert.equal(delivery(),-1);
+    assert.match(curEv.choices[option('先发半批粮')].why,/本月已发/);
+  `);
+});
+
 test('early grain relief spends half a reserve and can be used once per month without consuming the memorial',()=>{
   const {run}=boot();
   run(`
