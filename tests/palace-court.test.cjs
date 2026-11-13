@@ -262,6 +262,35 @@ test('a failed grain purchase restores funds, energy, stock, monthly eligibility
   `);
 });
 
+test('early grain relief spends half a reserve and can be used once per month without consuming the memorial',()=>{
+  const {run}=boot();
+  run(`
+    const option=label=>curEv.choices.findIndex(c=>c.t.includes(label));
+    const relief=()=>option('先发半批粮');
+    S.flags.grainReserveGen=S.gen;
+    S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index:LOCUST_INDEX};
+    E().energy=2;E().people=46;E().treasury=100;
+    A.grainReserve();choose(relief());assert.equal(E().people,46);assert.equal(halfGrainReserve(),false);
+    E().people=45;E().energy=0;
+    choose(relief());assert.equal(halfGrainReserve(),false);
+    E().energy=2;
+    const write=save,history=JSON.stringify(S.log);
+    save=()=>false;choose(relief());drain();
+    assert.deepEqual([E().people,E().energy,halfGrainReserve(),S.flags.grainReliefTurn],[45,2,false,undefined]);
+    assert.equal(JSON.stringify(S.log),history);
+    save=write;A.grainReserve();choose(relief());drain();assert.equal(load('auto'),true);
+    assert.deepEqual([E().people,E().energy,E().treasury,halfGrainReserve(),S.flags.monthlyCourt.done],[47,1,100,true,undefined]);
+    E().people=42;
+    A.grainReserve();assert.match(curEv.choices[relief()].why,/本月已发/);
+    choose(relief());assert.equal(E().people,42);choose(option('留粮备荒'));
+    A.court();assert.equal(curEv.title,'蝗灾');choose(option('发放常平仓储粮'));drain();
+    assert.deepEqual([E().people,E().energy,grainReserveReady()],[45,1,false]);
+    S.turn++;S.flags.grainReserveGen=S.gen;S.flags.grainReserveHalf=true;
+    A.grainReserve();choose(relief());drain();assert.equal(load('auto'),true);
+    assert.deepEqual([E().people,E().energy,E().treasury,grainReserveReady()],[47,0,100,false]);
+  `);
+});
+
 test('a harvest tops up exactly half a reserve and restores full locust relief after reload',()=>{
   const {run}=boot();
   run(`
