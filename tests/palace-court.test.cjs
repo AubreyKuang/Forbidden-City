@@ -530,6 +530,38 @@ test('locust relief can purchase locally at low stock without changing the wareh
   }
 });
 
+test('local grain credit delivers immediately and deducts its balance once after the next month',()=>boot().run(`
+  S.turn=7;S.month=8;
+  const brief={turn:S.turn,gen:S.gen,index:LOCUST_INDEX};
+  Object.assign(S.flags,{monthlyCourt:brief,grainReserveGen:S.gen,grainReserveHalf:true});
+  Object.assign(E(),{treasury:59,energy:1,people:50});
+  const option=text=>curEv.choices.findIndex(c=>c.t.includes(text));
+  A.court();
+  const credit=option('就地赊购');
+  assert.match(curEv.choices[credit].preview,/60 万两.*下月底扣 80 万两/);
+  assert.equal(curEv.choices[credit].cond(),false);
+  E().treasury=60;
+  const write=save;save=()=>false;choose(credit);drain();
+  assert.deepEqual([E().treasury,E().energy,E().people,S.flags.localGrainPaymentTurn,S.flags.monthlyCourt],[60,1,50,undefined,brief]);
+  save=write;A.court();choose(option('就地赊购'));drain();assert.equal(load('auto'),true);
+  assert.deepEqual([E().treasury,E().energy,E().people,S.flags.localGrainPaymentTurn,halfGrainReserve()],[0,0,56,8,true]);
+  A.endMonth();while(modalOpen)nextEv();
+  assert.equal(S.flags.lastMonthReview.localGrainPayment,undefined);
+  assert.equal(localGrainPaymentDue(),true);
+  S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index:LOCUST_INDEX};
+  A.court();assert.equal(option('就地赊购'),-1);choose(option('稍后再议'));
+  const treasury=E().treasury;
+  A.endMonth();while(modalOpen)nextEv();
+  const review=S.flags.lastMonthReview;
+  assert.equal(review.localGrainPayment,80);
+  assert.equal(E().treasury,treasury+review.inc-review.exp);
+  assert.equal(load('auto'),true);
+  assert.equal(S.flags.localGrainPaymentTurn,undefined);
+  assert.equal(localGrainPaymentDue(),false);
+  A.endMonth();while(modalOpen)nextEv();
+  assert.equal(S.flags.lastMonthReview.localGrainPayment,undefined);
+`));
+
 test('transporting stored grain requires silver and energy, extends relief, and spends the reserve once',()=>{
   const {run}=boot();
   run(`

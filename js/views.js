@@ -411,6 +411,7 @@ function viewLog(){
   return `<h2>起居注</h2><div class="log-filter"><button class="btn sm ${UI.logF==='all'?'on':''}" onclick="UI.logF='all';render()">全部</button><button class="btn sm ${UI.logF==='big'?'on':''}" onclick="UI.logF='big';render()">只看大事</button><button class="btn sm" onclick="A.logCard()">保存上月纪念卡</button></div>
    ${month?`<section class="month-record"><h3>${esc(month.date)}回顾</h3>
     <p>月入 ${esc(month.inc)} 万两 · 支出 ${esc(month.exp)} 万两</p>
+    ${month.localGrainPayment?`<p>支出含赈粮尾款 ${esc(month.localGrainPayment)} 万两。</p>`:''}
     ${month.court?`<p><strong>${esc(month.court.title)}</strong> · ${esc(month.court.choice)}</p>${fmt(month.court.text)}${month.court.child?link(month.court.child,true):link(month.court.person)}`:''}
     ${month.people.map(person=>`<p>${esc(person.text)} ${link(person.id)}</p>`).join('')}
    </section>`:''}

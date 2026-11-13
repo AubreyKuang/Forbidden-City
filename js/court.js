@@ -71,6 +71,7 @@ const LOCUST_INDEX=5, HARVEST_INDEX=11;
 const GRAIN_SALE_REVENUE=100, HALF_GRAIN_SALE_REVENUE=45;
 const GRAIN_TRANSPORT_COST=70;
 const LOCUST_LOCAL_PURCHASE_COST=125, LOCUST_LOCAL_PURCHASE_PEOPLE=6;
+const LOCUST_LOCAL_DEPOSIT=60, LOCUST_LOCAL_BALANCE=80;
 const LOCUST_HALF_RESERVE_PEOPLE=3;
 const LOCUST_FOLLOWUP_COST=35, LOCUST_FOLLOWUP_PEOPLE=5;
 const LOCUST_UNFUNDED={people:-4};
@@ -88,6 +89,9 @@ function grainReserveLabel(){return halfGrainReserve()?'半批':'一批';}
 function clearGrainReserve(){
   delete S.flags.grainReserveGen;
   delete S.flags.grainReserveHalf;
+}
+function localGrainPaymentDue(){
+  return Number.isInteger(S.flags.localGrainPaymentTurn)&&S.flags.localGrainPaymentTurn<=S.turn;
 }
 function saveGrainAction(settle,spendEnergy=true){
   const e=E(),before={energy:e.energy,treasury:e.treasury,people:e.people,prestige:e.prestige};
@@ -308,6 +312,15 @@ function monthlyGrainEvent(index,brief={}){
       f:()=>{
         log('蝗灾，户部从灾区附近购粮，当场发给灾民。');
         return `粮商把粮直接送到赈济点，灾民当天就领到了口粮。${fx(chg({treasury:-LOCUST_LOCAL_PURCHASE_COST,people:LOCUST_LOCAL_PURCHASE_PEOPLE}))}`;
+      }});
+    if(S.flags.localGrainPaymentTurn===undefined)event.choices.push({t:'就地赊购赈粮',grainTransaction:true,
+      preview:`本月国库 −${LOCUST_LOCAL_DEPOSIT} 万两 · 下月底扣 ${LOCUST_LOCAL_BALANCE} 万两 · 民心 +${LOCUST_LOCAL_PURCHASE_PEOPLE} · 保留仓粮`,
+      cond:()=>E().treasury>=LOCUST_LOCAL_DEPOSIT&&S.flags.localGrainPaymentTurn===undefined,
+      why:`须有 ${LOCUST_LOCAL_DEPOSIT} 万两和 1 点精力，且无未结赊账`,
+      f:()=>{
+        S.flags.localGrainPaymentTurn=S.turn+1;
+        log(`蝗灾，户部就地赊购赈粮，下月底结清 ${LOCUST_LOCAL_BALANCE} 万两。`);
+        return `粮商已经发粮。尾款会在下月底从国库扣除。${fx(chg({treasury:-LOCUST_LOCAL_DEPOSIT,people:LOCUST_LOCAL_PURCHASE_PEOPLE}))}`;
       }});
   }
   if(index===LOCUST_INDEX&&autumnGrainOrderStatus()==='due'){

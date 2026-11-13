@@ -256,8 +256,13 @@ A.endMonth=function(){
   if(!S||S.over||modalOpen)return;const e=E();
   const delivery=pendingDelivery();if(delivery){A.resumeBirth(delivery.id);return;}
   // 财政
-  const inc=rd(45+e.people*1.1+(S.flags.canal?25:0)),exp=alive().reduce((s,c)=>s+(c.cold?1:STIPEND[c.rank]),0)+kidsAlive().reduce((s,k)=>s+3+(k.tutor?5:0),0);
+  const localGrainPayment=localGrainPaymentDue()?LOCUST_LOCAL_BALANCE:0;
+  const inc=rd(45+e.people*1.1+(S.flags.canal?25:0)),exp=alive().reduce((s,c)=>s+(c.cold?1:STIPEND[c.rank]),0)+kidsAlive().reduce((s,k)=>s+3+(k.tutor?5:0),0)+localGrainPayment;
   e.treasury+=inc-exp;
+  if(localGrainPayment){
+    delete S.flags.localGrainPaymentTurn;
+    log(`户部结清灾区粮商的赈粮尾款 ${localGrainPayment} 万两。`);
+  }
   const monthDate=dateStr(), brief=S.flags.monthlyCourt;
   let court=brief?.turn===S.turn&&brief.gen===S.gen?brief.result:null;
   if(floodReliefDue()){
@@ -277,7 +282,7 @@ A.endMonth=function(){
     const latest=c.story?.findLast(entry=>entry.d===monthDate);
     return latest&&!(S.turn===0&&latest===c.story[0])?[{id:c.id,text:latest.t}]:[];
   });
-  S.flags.lastMonthReview={date:monthDate,inc,exp,court,people:people.slice(-2)};
+  S.flags.lastMonthReview={date:monthDate,inc,exp,court,people:people.slice(-2),...(localGrainPayment?{localGrainPayment}:{})};
   // 后宫
   for(const c of alive()){
     if(!c.cold){c.favor=clamp(c.favor-(c.bond?0:c.trait==='淡泊'?1:2));if(c.favor<25)c.mood=clamp(c.mood-3);else if(c.favor>60)c.mood=clamp(c.mood+1)}else c.mood=clamp(c.mood-3);
