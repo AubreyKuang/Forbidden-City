@@ -33,15 +33,17 @@ function npcHome(c){const pl=PLACES.find(p=>p.k==='palace'&&p.p===c.palace);retu
 function npcSync(){const ids=new Set();alive().filter(c=>!c.maid).forEach(c=>{ids.add(c.id);if(!NPC.has(c.id)){const h=c.cold?[23,46]:npcHome(c);NPC.set(c.id,{x:h[0],y:h[1],path:[],wait:ri(5,60),ox:ri(-3,3),where:'home'})}});[...NPC.keys()].forEach(id=>{if(!ids.has(id))NPC.delete(id)})}
 function npcRoutine(c,roll) {
   const home=npcHome(c);
-  const gardenBias=['活泼','淡泊'].includes(c.trait)||c.t2==='爱猫';
-  const studyBias=c.trait==='才女'||c.t2==='好读史';
+  const hobby=consortHobby(c);
+  const gardenBias=['活泼','淡泊'].includes(c.trait)||c.t2==='爱猫'||CONSORT_HOBBIES[hobby].place==='御花园';
+  const studyBias=['才女','好学'].includes(c.trait)||c.t2==='好读史'||hobby==='读书';
   const friends=harem().filter(o=>o!==c&&relGet(c,o)>=25)
     .sort((a,b)=>relGet(c,b)-relGet(c,a)+
+      3*(consortCompatibility(c,b)-consortCompatibility(c,a))+
       8*(NPCMemory.influence(S,c.id,b.id)-NPCMemory.influence(S,c.id,a.id)));
   if (c.preg>=2||c.mood<30||roll<.32) return {where:'home',dest:home};
-  if (roll<(gardenBias?.76:.54)) return {where:'garden',dest:[100,46]};
+  if (roll<(studyBias?.54:gardenBias?.76:.54)) return {where:'garden',dest:[100,46]};
   if (studyBias&&roll<.8) return {where:'library',dest:[177,46]};
-  if (friends.length && (roll<.9 || c.trait==='温婉')) {
+  if (friends.length && (roll<.9 || ['温婉','好客'].includes(c.trait))) {
     const guest=friends[0];
     return {where:'visit',dest:npcHome(guest),guest:guest.id};
   }
@@ -63,7 +65,10 @@ function npcRoutineText(c,n) {
   if(n.where==='library')return n.path.length?'抱着旧抄本，正往文渊阁去':'在文渊阁门前等宫人取来借阅的书';
   if(n.where==='visit'){
     const friend=byId(n.guest);
-    if(inPalace(friend))return n.path.length?`提着礼盒，正要去探望${cName(friend)}`:`刚从${cName(friend)}那里出来，两人还约好改日再坐坐`;
+    if(inPalace(friend)){
+      const hobby=sharedConsortHobby(c,friend);
+      return n.path.length?`正要去探望${cName(friend)}${hobby?`，约了${CONSORT_HOBBIES[hobby].activity}`:''}`:`刚从${cName(friend)}那里出来，两人还约好改日再坐坐`;
+    }
   }
   if(n.where==='garden')return n.path.length?'沿长街往御花园走':c.like==='花草'?'在亭边辨认刚开的花':'在花亭边慢慢散步';
   if(n.where==='kn')return n.path.length?'正往坤宁宫请安':'刚从坤宁宫请安出来';

@@ -20,6 +20,48 @@ const QUIRKS={
  '擅骑射':['她说宫里最闷的就是不能骑马，南苑那几匹马她都偷偷喂过。'],
 };
 const LIKES=['诗书','琴谱','字画','珠翠','绸缎','花草','点心','香料','佛经','弓马'];
+const CONSORT_HOBBIES={
+  '读书':{place:'文渊阁',activity:'一起校读旧抄本'},
+  '抚琴':{place:'本宫',activity:'轮流试弹一段琴谱'},
+  '刺绣':{place:'本宫',activity:'交换新描的绣样'},
+  '侍花':{place:'御花园',activity:'一起照看花圃'},
+  '做点心':{place:'本宫',activity:'试做一碟时令点心'},
+  '投壶':{place:'御花园',activity:'轮流试投新摆的铜壶'},
+  '骑射':{place:'御花园',activity:'一同练习弓法'},
+  '对弈':{place:'本宫',activity:'摆开棋盘复盘旧局'},
+  '品茶':{place:'本宫',activity:'分尝两盏新茶'}
+};
+const QUIRK_HOBBIES={'好读史':'读书','擅厨艺':'做点心','擅骑射':'骑射','好胜':'投壶','嗜甜':'做点心'};
+const GIFT_HOBBIES={'诗书':'读书','琴谱':'抚琴','绸缎':'刺绣','花草':'侍花','点心':'做点心','弓马':'骑射'};
+const TRAIT_HOBBIES={'才女':['抚琴','读书','刺绣'],'将门':['骑射','投壶'],'活泼':['投壶','做点心'],'淡泊':['侍花','品茶'],'聪慧':['对弈','读书']};
+const COMPATIBLE_TRAITS=[
+  ['沉静','好学'],['爽直','活泼'],['持重','聪慧'],['好客','沉静'],['巧手','好学'],
+  ['温婉','体弱'],['淡泊','沉静'],['将门','爽直']
+];
+
+function pickConsortTrait(){
+  const counts={};
+  for(const person of [...harem(),...(S.cands||[])])counts[person.trait]=(counts[person.trait]||0)+1;
+  return pickW(Object.keys(TRAITS).map(trait=>({trait,w:1/(1+2*(counts[trait]||0))}))).trait;
+}
+function consortHobby(c){
+  if(CONSORT_HOBBIES[c.hobby])return c.hobby;
+  const interests=TRAITS[c.trait]?.hobbies||TRAIT_HOBBIES[c.trait]||[];
+  const preferred=[...new Set([QUIRK_HOBBIES[c.t2],GIFT_HOBBIES[c.like],...interests].filter(Boolean))];
+  const random=mulberry32((c.seed||c.id||1)^0x564c21c3);
+  const pool=preferred.length&&random()<.7?preferred:Object.keys(CONSORT_HOBBIES);
+  return pool[Math.floor(random()*pool.length)];
+}
+function sharedConsortHobby(a,b){
+  const hobby=consortHobby(a);
+  return hobby===consortHobby(b)?hobby:null;
+}
+function consortCompatibility(a,b){
+  const shared=sharedConsortHobby(a,b);
+  const complementary=COMPATIBLE_TRAITS.some(([x,y])=>(a.trait===x&&b.trait===y)||(a.trait===y&&b.trait===x));
+  return (shared?5:0)+(complementary?3:0)+(a.t2&&a.t2===b.t2?1:0)+
+    (a.like&&a.like===b.like?1:0)-(a.hate&&a.hate===b.like?1:0)-(b.hate&&b.hate===a.like?1:0);
+}
 const GIFTN={'诗书':'一套宋版诗集','琴谱':'一卷失传的古琴谱','字画':'一幅前朝名家山水','珠翠':'一匣东珠点翠头面','绸缎':'十匹江南云锦','花草':'一盆十八学士茶花','点心':'御膳房新制的八珍糕','香料':'一盒南海龙涎香','佛经':'一部泥金《法华经》','弓马':'一匹西域小红马'};
 const WISHES={
  mother:{t:'想再见母亲一面',btn:'接她母亲入宫小住（国库-15万两）',f:c=>{chg({treasury:-15});momVisit(c,ri(2,3));return '她母亲进宫来了，要在宫里住上几个月。母女俩一见面就抱头哭了。'}},
@@ -74,6 +116,7 @@ function deepen(c){if(!c)return;
     c.wish=pick(Object.keys(WISHES).filter(w=>wishOK(c,w)));c.wishKnown=false;c.wishDone=false;c.wound=pick(Object.keys(WOUNDS).filter(w=>woundOK(c,w)));c.woundKnown=false;c.mem=c.mem||[]}
   if(!woundOK(c,c.wound))c.wound=pick(Object.keys(WOUNDS).filter(w=>woundOK(c,w)));
   if(!c.wishDone&&!wishOK(c,c.wish))c.wish=pick(Object.keys(WISHES).filter(w=>wishOK(c,w)));
+  c.hobby=consortHobby(c);
   if(c.wish==='title'&&c.title)c.wishDone=true}
 function remember(c,k,t){
   if(!c)return;
@@ -93,6 +136,7 @@ function rememberQuarrel(a,b,winner){
 }
 function deepLine(c){deepen(c);if(c.wish==='title'&&c.title&&!c.wishDone){c.wishDone=true}const w=WISHES[c.wish];
   return `<div style="margin-top:4px">小性子：<span class="tag">${c.t2}</span>　喜好：${c.kl?`<span class="tag g">${c.like}</span>不喜<span class="tag r">${c.hate}</span>`:'<span class="hint">多闲谈才知道</span>'}</div>
+  <div>平日消遣：<span class="tag">${esc(c.hobby)}</span></div>
   <div>心愿：${c.wishKnown?`${esc(w.t)}${c.wishDone?' <span class="tag y">已成全</span>':w.btn?` <button class="btn sm jade" onclick="A.wish(${c.id})">${esc(w.btn)}</button>`:' <span class="hint">（生下孩子便成全了）</span>'}`:'<span class="hint">情分到 50 以后，闲谈时她也许会说</span>'}</div>
   ${c.woundKnown?`<div>往事：${esc(WOUNDS[c.wound])}</div>`:'<div class="hint">往事：情分到 65 以后，她也许会对你说起</div>'}`}
 A.chat=function(id){const c=byId(id);if(!c||!useE())return;deepen(c);const L=[];const xk=xinOf(c);
@@ -100,7 +144,7 @@ A.chat=function(id){const c=byId(id);if(!c||!useE())return;deepen(c);const L=[];
   L.push(chance(.45)?pick(QUIRKS[c.t2]):pick(CHAT[c.trait]||CHAT['温婉']));
   if(S.flags.lastCourt&&(c.t2==='好读史'||c.t2==='直言')&&chance(.6))L.push(c.t2==='好读史'?`她听说了「${S.flags.lastCourt}」的事。${HISTC[S.flags.lastCourt]||'她说：“以史为镜，可以知兴替。”'}`:`她听说了「${S.flags.lastCourt}」的事，直截了当地说：“陛下那样处置，${pick(['臣妾觉得不妥。','臣妾觉得极好。','怕是要挨骂的。'])}”`);
   const others=harem().filter(o=>o!==c).map(o=>[o,relGet(c,o)]),fr=others.filter(x=>x[1]>=30),en=others.filter(x=>x[1]<=-30);
-  if(fr.length&&chance(.35)){const o=pick(fr)[0];L.push(`说起${cName(o)}，她眉眼都软了：“${pick(['她前儿送了我一盒胭脂，颜色正好。','我们约好了，开春一起去放纸鸢。','她做的梅花糕，比御膳房的还好吃。','她病的那几天，是我守着的。'])}”`)}
+  if(fr.length&&chance(.35)){const o=pick(fr)[0],hobby=sharedConsortHobby(c,o);L.push(`说起${cName(o)}，她眉眼都软了：“${hobby?`下回得了闲，臣妾想约她${CONSORT_HOBBIES[hobby].activity}。`:pick(['她前儿送了我一盒胭脂，颜色正好。','我们约好了，开春一起去放纸鸢。','她做的梅花糕，比御膳房的还好吃。','她病的那几天，是我守着的。'])}”`)}
   else if(en.length&&chance(.4)){const o=pick(en)[0];L.push(`提到${cName(o)}，她的脸色淡了下来：“${pick(['她那张嘴，臣妾不想提。','前儿请安，她当着众人的面给臣妾难堪。','陛下还是少去她那儿吧——臣妾随口一说。'])}”${c.t2==='记仇'?'她顿了顿：“这笔账臣妾记着。”':''}`)}
   const kid=S.children.filter(k=>(k.mom===c.id||k.foster===c.id)&&k.alive);
   if(kid.length&&chance(.4)){const k=pick(kid),a=kidAge(k),bond=k.motherBonds?.[c.id];

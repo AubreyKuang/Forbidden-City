@@ -74,6 +74,51 @@ test('the relationship graph shows fathers, consorts and close or hostile ties',
   assert.match(run(`$('#panel').innerHTML`),/关系图/);
 });
 
+test('shared hobbies outweigh a matching trait, and compatible visits persist across saves',()=>{
+  const {run}=boot(413);
+  run(`
+    const [reader,otherQuiet]=harem();
+    const learner=makeGirl({trait:'好学'});
+    addConsort(learner,2,'选秀入宫');
+    S.consorts=[reader,otherQuiet,learner];
+    Object.assign(reader,{trait:'沉静',hobby:'读书',t2:'好读史',like:'诗书',hate:'绸缎'});
+    Object.assign(otherQuiet,{trait:'沉静',hobby:'投壶',t2:'好胜',like:'弓马',hate:'点心'});
+    Object.assign(learner,{hobby:'读书',t2:'念旧',like:'字画',hate:'花草'});
+    const quieterPastimes=new Set(Array.from({length:24},(_,index)=>
+      consortHobby({trait:'沉静',t2:'好读史',like:'诗书',seed:index+1})));
+    assert.ok(quieterPastimes.size>=3,'the same personality can yield different hobbies');
+    S.rel={};
+    assert.ok(consortCompatibility(reader,learner)>consortCompatibility(reader,otherQuiet));
+    relAdd(reader,otherQuiet,-40);
+    relAdd(learner,otherQuiet,-40);
+    relTick();
+    for(let attempt=0;!reader.lastSocial&&attempt<30;attempt++)consortSocialTick();
+    assert.ok(reader.lastSocial,'the eligible pair met');
+    assert.equal(reader.lastSocial.other,learner.id);
+    assert.equal(learner.lastSocial.other,reader.id);
+    assert.equal(otherQuiet.lastSocial,undefined);
+    assert.ok(relGet(reader,learner)>0);
+    const firstMemory=NPCMemory.recall(S,reader.id).find(entry=>entry.type==='consort_social');
+    const secondMemory=NPCMemory.recall(S,learner.id).find(entry=>entry.type==='consort_social');
+    assert.equal(firstMemory.sources[0],secondMemory.sources[0]);
+    assert.notEqual(firstMemory.interpretation,secondMemory.interpretation);
+    const score=relGet(reader,learner);
+    consortSocialTick();
+    assert.equal(relGet(reader,learner),score);
+    delete otherQuiet.hobby;
+    const legacyHobby=consortHobby(otherQuiet);
+    assert.ok(save('1'));
+    assert.ok(load('1'));
+    migrate();
+    assert.equal(byId(reader.id).hobby,'读书');
+    assert.equal(byId(otherQuiet.id).hobby,legacyHobby);
+    assert.equal(relGet(byId(reader.id),byId(learner.id)),score);
+    assert.match(relLine(byId(reader.id)),/文渊阁.*旧抄本/);
+    assert.match(deepLine(byId(reader.id)),/平日消遣.*读书/);
+    assert.equal(PALACE_INITIATIVES.compareCopies.target(byId(learner.id)).id,reader.id);
+  `);
+});
+
 test('ten princes and ten princesses keep distinct faces as they age and after loading',()=>{
   const {run}=boot(15);
   const cells=JSON.parse(run(`JSON.stringify((()=>{

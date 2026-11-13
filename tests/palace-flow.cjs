@@ -243,7 +243,7 @@ assert.equal(banquetKind('emperor').ready,true);
 // A seasonal scene outranks a routine, and resolves differently after a player choice.
 A.start();drain();
 const primary=empress(), friend=S.consorts[1];
-primary.trait='骄纵';primary.favor=70;primary.t2='护短';
+primary.trait='骄纵';primary.favor=70;primary.t2='护短';primary.like='点心';
 friend.trait='温婉';friend.t2='擅厨艺';friend.mood=70;
 const pupil=makeKid(primary,'f','明仪');pupil.born-=9*12;pupil.lit=42;pupil.policy='读书';
 S.turn=30;S.month=5;E().health=70;
@@ -292,12 +292,12 @@ assert.match($('#panel').innerHTML,/上书房备笔砚/);
 assert.match($('#panel').innerHTML,/查看皇嗣/);
 // Several talented consorts must not receive the same scholar storyline.
 A.start();drain();
-const poet=makeGirl({trait:'才女'});
+const poet=makeGirl({trait:'才女',fam:FAMS[5]});
 addConsort(poet,3,'入宫');
-const musician=makeGirl({trait:'才女'});
+const musician=makeGirl({trait:'才女',fam:FAMS[5]});
 addConsort(musician,3,'入宫');
 musician.like='琴谱';
-const painter=makeGirl({trait:'才女'});
+const painter=makeGirl({trait:'才女',fam:FAMS[5]});
 addConsort(painter,3,'入宫');
 painter.like='花草';
 assert.equal(poet.arc.id,'scholar');

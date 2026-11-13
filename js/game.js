@@ -58,7 +58,7 @@ function useE(){ if(!S||S.over) return false; if(E().energy<=0){toast('本月精
 
 /* ============ 人物生成 ============ */
 function makeGirl(o={}){
-  const trait=o.trait||pick(Object.keys(TRAITS)), T=TRAITS[trait], fam=o.fam||pickW(FAMS);
+  const trait=o.trait||pickConsortTrait(), T=TRAITS[trait], fam=o.fam||pickW(FAMS);
   let g1=pick(GIV),g2=pick(GIV); while(g2===g1) g2=pick(GIV);
   const sur=o.sur||pick(SUR.filter(x=>!S||x!==S.emp.sur));
   const girl={id:S.nid++, sur, given:o.given||(chance(.45)?g1:g1+g2), age:o.age||ri(16,19), trait, fam,
@@ -74,7 +74,7 @@ function assignPalace(c){
   const min=Math.min(...Object.values(cnt));c.palace=pick(PALACES.filter(p=>cnt[p]===min));
 }
 function addConsort(c,rank,why){
-  c.rank=rank; c.enteredAt=S.turn; S.consorts.push(c); assignPalace(c); S.ys.c++; initRel(c); assignArc(c); deepen(c); clanKey(c); if(c.kin)for(const id in c.kin){const o=byId(+id);if(o&&o.alive)relAdd(c,o,(isRival(c,o)?-30:45)-relGet(c,o))}
+  c.rank=rank; c.enteredAt=S.turn; S.consorts.push(c); assignPalace(c); S.ys.c++; deepen(c); initRel(c); assignArc(c); clanKey(c); if(c.kin)for(const id in c.kin){const o=byId(+id);if(o&&o.alive)relAdd(c,o,(isRival(c,o)?-30:45)-relGet(c,o))}
   story(c,`${why}，封为${RANKS[rank]}，赐居${c.palace}。`);
   log(`${fullName(c)}（${c.fam.t}之女）${why}，封${RANKS[rank]}。`);
 }
@@ -207,7 +207,7 @@ A.endMonth=function(){
   if(newYear){const y=S.ys;pushEv({title:'岁首',sfx:'chime',text:`爆竹声中一岁除。${dateStr()}，陛下${e.age}岁。\n去岁：新入宫${y.c}人，皇嗣降生${y.b}位，侍寝${y.n}次。\n国库${e.treasury}万两，威望${rd(e.prestige)}，民心${rd(e.people)}。`,choices:[{t:'新岁新气象'}]});S.ys={c:0,b:0,n:0}}
   // 事件
   if(S.month===2&&S.turn-S.flags.lastXX>=34) pushEv({title:'三年大选',sfx:'chime',text:'又到三年一度的大选之期，各地秀女已候于储秀宫。',choices:[{t:'前去看看',f:()=>{genCands();UI.view='xx';return null}},{t:'今年免了',f:()=>{S.flags.lastXX=S.turn;return fx(chg({people:2}))}}]});
-  relTick();kidRelTick();clanTick();dowagerTick();initiativeTick();familyLifeTick();courtTick();seasonalTick();
+  relTick();consortSocialTick();kidRelTick();clanTick();dowagerTick();initiativeTick();familyLifeTick();courtTick();seasonalTick();
   const must=[arcTick(),heirTick(),milestone()].filter(Boolean),opt=[];
   // 积压的奏折：离宫期间攒下的朝堂事务，月末一并呈上
   while((S.flags.memorials||0)>0){S.flags.memorials--;const memo=factionEvent();if(memo&&!must.some(e=>e.title===memo.title))must.push(memo)}

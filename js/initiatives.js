@@ -1,5 +1,6 @@
 /* ============ 人物主动行动 ============ */
-const initiativeAlly=c=>harem().find(o=>o!==c&&relGet(c,o)>=15);
+const initiativeAlly=c=>harem().filter(o=>o!==c&&relGet(c,o)>=15)
+  .sort((a,b)=>relGet(c,b)-relGet(c,a)+3*(consortCompatibility(c,b)-consortCompatibility(c,a)))[0];
 const initiativeChild=(c,minAge)=>kidsAlive().find(k=>
   kidAge(k)>=minAge&&childInPalace(k)&&(k.foster===c.id||(!k.foster&&k.mom===c.id)));
 const skillGain=(k,key,amount)=>{k[key]=clamp(k[key]+amount)};
@@ -131,15 +132,29 @@ const PALACE_INITIATIVES={
     start:(c,o)=>{relAdd(c,o,-2);return '两宫关系稍显紧张';}, button:'亲自主持，按成绩定名次', respond:(c,o)=>{relAdd(c,o,7);return '两宫关系改善 · '+cchg(c,{mood:5})}
   },
   ledger:{
-    title:'重算账目', match:c=>(c.trait==='聪慧'||c.t2==='好读史')&&(E().treasury<450||S.flags.lastCourt),
+    title:'重算账目', match:c=>(['聪慧','持重'].includes(c.trait)||c.t2==='好读史')&&(E().treasury<450||S.flags.lastCourt),
     text:()=> '她核对了本宫的领用簿，找出两笔重记的支出，把原簿和自己算的数一并送来。',
     start:()=>chg({treasury:4}), button:'请她教各宫核账', respond:c=>chg({treasury:12})+' · '+cchg(c,{aff:4})
   },
   gardenWalk:{
-    title:'邀友赏花', place:'yh', match:c=>!c.preg&&(c.trait==='淡泊'||c.trait==='活泼'||c.t2==='爱猫'),
+    title:'邀友赏花', place:'yh', match:c=>!c.preg&&(['淡泊','活泼','好客'].includes(c.trait)||c.t2==='爱猫'||consortHobby(c)==='侍花'),
     target:initiativeAlly,
     text:(c,o)=>'她请'+cName(o)+'到御花园散步。两人绕过热闹的亭子，坐在树荫下聊了半日。',
     start:(c,o)=>{relAdd(c,o,4);return cchg(c,{mood:3})}, button:'把水榭留给她们', respond:(c,o)=>cchg(o,{mood:6})+' · '+cchg(c,{aff:3})
+  },
+  swapPatterns:{
+    title:'交换绣样', match:c=>c.trait==='巧手'||consortHobby(c)==='刺绣',
+    target:c=>harem().find(o=>o!==c&&relGet(c,o)>=0&&sharedConsortHobby(c,o)==='刺绣'),
+    text:(c,o)=>'她拿自己画的团花样去找'+cName(o)+'，两人把各自最难的一针做在了同一块绢上。',
+    start:(c,o)=>{relAdd(c,o,3);return '两人更熟悉了';},
+    button:'请她们各留一份绣样', respond:(c,o)=>{relAdd(c,o,4);return cchg(c,{mood:4});}
+  },
+  compareCopies:{
+    title:'合校旧抄本', place:'wy', match:c=>c.trait==='好学'||consortHobby(c)==='读书',
+    target:c=>harem().find(o=>o!==c&&relGet(c,o)>=0&&consortHobby(o)==='读书'),
+    text:(c,o)=>'她和'+cName(o)+'各从文渊阁借了一册旧抄本，把两处互不相同的字夹上了纸条。',
+    start:(c,o)=>{relAdd(c,o,3);return '两人更熟悉了';},
+    button:'请文渊阁取来另一版本', respond:(c,o)=>{relAdd(c,o,4);return cchg(c,{aff:3});}
   },
   tutorVisit:{
     title:'拜访太傅', place:'ss', match:c=>c.trait==='城府'||c.t2==='护短', target:c=>initiativeChild(c,6),

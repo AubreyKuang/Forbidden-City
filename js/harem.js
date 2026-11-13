@@ -1,5 +1,5 @@
 /* ============ 选秀 ============ */
-function genCands(n=6){S.cands=[];for(let i=0;i<n;i++)S.cands.push(makeGirl());{const kc=harem().filter(c=>c.fam.p>=15&&hasClan(c));if(kc.length&&chance(.4))S.cands[0]=makeKin(pick(kc),chance(.6)?'堂':'亲')}S.flags.peek=3;S.flags.lastXX=S.turn;log(`${dateStr()}，开选秀，各地秀女入宫待选。`,1)}
+function genCands(n=6){S.cands=[];for(let i=0;i<n;i++)S.cands.push(makeGirl());{const kc=harem().filter(c=>c.fam.p>=15&&hasClan(c));if(kc.length&&chance(.4))S.cands[0]=makeKin(pick(kc),chance(.6)?'堂':'亲')}S.cands.forEach(deepen);S.flags.peek=3;S.flags.lastXX=S.turn;log(`${dateStr()}，开选秀，各地秀女入宫待选。`,1)}
 A.xxDecree=function(){
   const since=S.turn-S.flags.lastXX;
   if(since>=36){genCands();AU.sfx('chime');A.go('xx');return}
@@ -127,7 +127,7 @@ function birthEvent(c){const sex=chance(.5)?'m':'f';
 const rk=(a,b)=>a.id<b.id?a.id+'_'+b.id:b.id+'_'+a.id;
 function relGet(a,b){if(!a||!b||a===b||!S.rel)return 0;return S.rel[rk(a,b)]||0}
 function relAdd(a,b,v){if(!a||!b||a===b)return;S.rel=S.rel||{};const k=rk(a,b);S.rel[k]=clamp((S.rel[k]||0)+v,-100,100)}
-function initRel(c){harem().forEach(o=>{if(o===c)return;let v=ri(-8,12);if(o.trait===c.trait)v+=6;if(TRAITS[c.trait].jealous&&o.favor>40)v-=8;if(Math.abs(o.fam.p-c.fam.p)<15)v+=4;relAdd(c,o,v)})}
+function initRel(c){harem().forEach(o=>{if(o===c)return;let v=ri(-8,12)+consortCompatibility(c,o);if(TRAITS[c.trait].jealous&&o.favor>40)v-=8;if(Math.abs(o.fam.p-c.fam.p)<15)v+=4;relAdd(c,o,v)})}
 function leaders(){const h=harem(),L=[],em=empress();if(em)L.push(em);
   const others=h.filter(c=>c.rank>=5&&c.rank<8).sort((a,b)=>(b.rank*20+b.favor+b.scheme*.5)-(a.rank*20+a.favor+a.scheme*.5));
   for(const o of others){if(L.length>=2)break;L.push(o)}
@@ -145,14 +145,47 @@ function relTick(){const h=harem(),f=factions(),fid={};
     if(fid[a.id]&&fid[a.id]===fid[b.id])d+=1.5;else if(fid[a.id]&&fid[b.id])d-=1.2;
     if(TRAITS[a.trait].jealous&&b.favor>a.favor+15)d-=2;if(TRAITS[b.trait].jealous&&a.favor>b.favor+15)d-=2;
     if(a.trait==='温婉'||b.trait==='温婉')d+=.5;
+    if(relGet(a,b)>-15&&!isRival(a,b))d+=Math.max(0,consortCompatibility(a,b))*.12;
     const k=rk(a,b);S.rel[k]=clamp((S.rel[k]||0)*.985+d,-100,100)}}
+
+function consortSocialTick(){
+  const available=harem().filter(c=>c.preg<2&&c.mood>=30&&S.turn-(c.lastSocial?.turn??-Infinity)>=3);
+  const pairs=[];
+  for(let i=0;i<available.length;i++)for(let j=i+1;j<available.length;j++){
+    const a=available[i],b=available[j],relationship=relGet(a,b);
+    const compatibility=consortCompatibility(a,b);
+    if(relationship<-15||isRival(a,b)||(compatibility<3&&relationship<20))continue;
+    pairs.push({a,b,w:1+Math.max(0,compatibility)+Math.min(4,Math.max(0,relationship)/10)});
+  }
+  if(!pairs.length||!chance(.65))return;
+  const {a,b}=pickW(pairs);
+  const hobby=sharedConsortHobby(a,b), pastime=CONSORT_HOBBIES[hobby];
+  const place=pastime?.place==='本宫'?a.palace:pastime?.place||'御花园';
+  const activity=pastime?.activity||'坐下来聊了半晌';
+  relAdd(a,b,5);
+  for(const [person,other] of [[a,b],[b,a]]){
+    person.lastSocial={turn:S.turn,other:other.id,place,activity};
+    person.mood=clamp(person.mood+2);
+  }
+  NPCMemory.record(S,{type:'consort_social',time:S.turn,location:place,
+    participants:[a.id,b.id],outcome:activity},[[a,b],[b,a]].map(([person,other])=>({
+      person:person.id,subject:other.id,emotion:.65,impact:62,
+      interpretation:`与${fullName(other)}在${place}${activity}。`
+    })));
+}
+
+function consortSocialLine(c){
+  const note=c.lastSocial,other=note&&byId(note.other);
+  if(!other||S.turn-note.turn>=3)return '';
+  return `<div>近来往来 · 与 <button class="btn quiet sm" onclick="A.go('consort',${other.id})">${esc(fullName(other))}</button> 在${esc(note.place)}${esc(note.activity)}。</div>`;
+}
 function facHTML(){const f=factions();if(!f.L.length)return '';
   const box=(t,arr)=>`<div class="card" style="cursor:default;flex-direction:column"><div class="nm">${t}</div><div>${arr.length?arr.map(c=>`<span class="tag">${esc(cName(c))}</span>`).join(''):'<span class="hint">尚无依附者</span>'}</div></div>`;
   return `<h3>派系</h3><div class="grid">${f.L.map(l=>box(esc(cName(l))+'一派',f.map[l.id])).join('')}${f.neutral.length?box('中立',f.neutral):''}</div>`}
 function relLine(c){if(!c.alive||c.gone)return '';
   const h=harem().filter(o=>o!==c).map(o=>[o,relGet(c,o)]).sort((a,b)=>b[1]-a[1]);
   const good=h.filter(x=>x[1]>=30).slice(0,4),bad=h.filter(x=>x[1]<=-30).slice(-4),fac=c.cold?null:facOf(c);
-  return `<div>派系：${fac?(fac===c?'一派之首':esc(cName(fac))+'一派'):'中立'}${good.length?`　交好：${good.map(([o])=>`<span class="tag g">${esc(cName(o))}</span>`).join('')}`:''}${bad.length?`　交恶：${bad.map(([o])=>`<span class="tag r">${esc(cName(o))}</span>`).join('')}`:''}</div>`}
+  return `<div>派系：${fac?(fac===c?'一派之首':esc(cName(fac))+'一派'):'中立'}${good.length?`　交好：${good.map(([o])=>`<span class="tag g">${esc(cName(o))}</span>`).join('')}`:''}${bad.length?`　交恶：${bad.map(([o])=>`<span class="tag r">${esc(cName(o))}</span>`).join('')}`:''}</div>${consortSocialLine(c)}`}
 HAREM.push(
  function clash(){const f=factions();if(f.L.length<2)return null;const [a,b]=f.L,ma=f.map[a.id],mb=f.map[b.id];if(!ma.length&&!mb.length)return null;
   const side=(w,l,mw,ml)=>()=>{[w,...mw].forEach(c=>cchg(c,{mood:8}));[l,...ml].forEach(c=>{cchg(c,{mood:-8});relAdd(c,w,-6)});story(w,`派系相争，陛下站在了她这一边。`);return `${cName(w)}一派扬眉吐气，${cName(l)}一派面色难看。`};
@@ -160,7 +193,8 @@ HAREM.push(
    {t:`偏向${cName(a)}`,f:side(a,b,ma,mb)},{t:`偏向${cName(b)}`,f:side(b,a,mb,ma)},
    {t:'各打五十大板：“都回去抄《女诫》。”',f:()=>{[a,b,...ma,...mb].forEach(c=>cchg(c,{mood:-4}));relAdd(a,b,4);return '两边都闭了嘴，表面上总算和气了几分。'}}]}},
  function sisters(){const h=harem();let best=null,bv=45;for(let i=0;i<h.length;i++)for(let j=i+1;j<h.length;j++){const v=relGet(h[i],h[j]);if(v>bv){bv=v;best=[h[i],h[j]]}}if(!best)return null;const [a,b]=best;
-  return {title:'姐妹情深',por:a,text:`${cName(a)}与${cName(b)}在${a.palace}一同做了一桌江南点心，派人来请陛下。`,choices:[
+  const pastime=CONSORT_HOBBIES[sharedConsortHobby(a,b)],place=pastime?.place==='本宫'?a.palace:pastime?.place||a.palace;
+  return {title:'姐妹情深',por:a,text:`${cName(a)}与${cName(b)}约在${place}${pastime?.activity||'小聚'}，派人来请陛下。`,choices:[
    {t:'前往（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{E().energy--;renderTop();story(a,`与${fullName(b)}一同宴请陛下，三人说笑到月上中天。`);story(b,`与${fullName(a)}一同宴请陛下。`);relAdd(a,b,6);return fx(cchg(a,{aff:6,mood:8}),cchg(b,{aff:6,mood:8}))}},
    {t:'赏她们一桌御膳',f:()=>{relAdd(a,b,3);return fx(chg({treasury:-5}),cchg(a,{mood:5}),cchg(b,{mood:5}))}}]}},
  function defect(){const f=factions();if(!f.L.length)return null;const pool=f.neutral.filter(c=>c.rank<=3&&c.favor<35);if(!pool.length)return null;const c=pick(pool),l=pick(f.L);
@@ -178,7 +212,7 @@ HAREM.push(
 /* ============ 宫女承恩 ============ */
 const maids=()=>alive().filter(c=>c.maid);
 function newMaid(where){const g=makeGirl({fam:{t:'宫女',p:3},age:ri(16,20)});g.maid=true;g.near=false;g.palace='尚衣局';g.favor=20;g.aff=20;S.consorts.push(g);deepen(g);story(g,`本是${where}的宫女，被陛下看中。`);return g}
-function promoteMaid(g,rank){g.maid=false;g.near=false;g.rank=rank;assignPalace(g);initRel(g);assignArc(g);deepen(g);S.ys.c++;
+function promoteMaid(g,rank){g.maid=false;g.near=false;g.rank=rank;assignPalace(g);deepen(g);initRel(g);assignArc(g);S.ys.c++;
   story(g,`由宫女册封为${RANKS[rank]}，赐居${g.palace}。`);log(`宫女${fullName(g)}册封为${RANKS[rank]}。`,1)}
 function maidNight(g){if(E().energy<=0){toast('本月精力已尽');return}nightWith(g);Q.splice(1,0,afterMaidNight(g))}
 function afterMaidNight(g){return {title:'天明',por:g,text:`天快亮时，${g.given}已经起身，跪在床边替你理好朝服，低着头不敢看你。\n她只是个宫女，往后如何，全凭陛下一句话。`,choices:[
