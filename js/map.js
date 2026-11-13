@@ -359,7 +359,7 @@ A.finishMonth=function(){
   const reliefDetail=locustDue?`\n本月尚未批复远村补粮回奏。直接换月将失约。 ${LOCUST_UNFUNDED_TEXT}`
     :floodDue?'\n本月尚未批复赈灾回奏。直接换月会停止续拨，民心 −3。':'';
   const remaining=E().energy>0?`本月还可用 ${E().energy} 点精力。\n`:'';
-  const paymentDetail=paymentDue?`\n换月结算时将扣除赈粮尾款 ${localGrainBalance()} 万两。${grainReserveReady()?'可留在本月，到常平仓用半批粮抵一部分。':''}${localGrainExtensionAvailable()?'留在本月也可到常平仓展期一次。':''}`:'';
+  const paymentDetail=paymentDue?`\n换月结算时将扣除赈粮尾款 ${localGrainBalance()} 万两。${grainReserveReady()?'可留在本月，到常平仓用半批粮抵一部分。':''}${localGrainExtensionAvailable()?'留在本月也可到常平仓展期，或查看本月奏折能否改批免息宽限。':''}`:'';
   pushEv({title:invitations.length?'尚有本月邀约':`进入${nextMonth}？`,scene:'month-review',
     cast:invitations.flatMap(lead=>lead.cast),text:`${remaining}进入${nextMonth}后会结算本月收支，补充精力，并可能发生新的宫中事件。${detail?'\n'+detail:''}${reliefDetail}${paymentDetail}`,choices:[
     ...invitations.map(lead=>({t:'先去'+lead.title,f:()=>{goDirect(PLACES.find(p=>p.id===lead.place));return null;}})),

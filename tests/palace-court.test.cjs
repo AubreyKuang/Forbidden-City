@@ -604,6 +604,35 @@ test('local grain credit can extend once and retains the fee for either settleme
   `);
 });
 
+test('an interest-free grain grace period consumes the memorial and cannot be extended again',()=>boot().run(`
+  S.turn=8;S.month=9;
+  const brief={turn:8,gen:S.gen,index:HARVEST_INDEX};
+  Object.assign(S.flags,{localGrainPaymentTurn:8,monthlyCourt:brief});
+  Object.assign(E(),{treasury:0,energy:1,people:56});
+  const option=text=>curEv.choices.findIndex(c=>c.t.includes(text));
+  assert.equal(grainPaymentWaiverChoice({...brief,review:true}),null);
+  assert.equal(grainPaymentWaiverChoice({...brief,locustDispatched:true}),null);
+  S.flags.locustRelief={turn:S.turn,gen:S.gen};
+  assert.equal(grainPaymentWaiverChoice(brief),null);
+  delete S.flags.locustRelief;
+  A.court();const choice=option('改批粮商免息宽限');
+  assert.match(curEv.choices[choice].preview,/80 万两.*占用本月奏折/);
+  const write=save;save=()=>false;choose(choice);drain();
+  assert.deepEqual([E().energy,S.flags.monthlyCourt,S.flags.localGrainPaymentTurn],[1,brief,8]);
+  save=write;A.court();choose(option('改批粮商免息宽限'));drain();assert.equal(load('auto'),true);
+  assert.deepEqual([E().energy,E().treasury,S.flags.monthlyCourt.done,S.flags.localGrainPaymentTurn,localGrainBalance()],[0,0,true,9,80]);
+  A.court();assert.equal(modalOpen,false);
+  A.endMonth();while(modalOpen)nextEv();
+  assert.match(S.flags.lastMonthReview.court.choice,/免息宽限/);
+  assert.equal(S.flags.lastMonthReview.localGrainPayment,undefined);
+  A.grainReserve();assert.equal(option('展期一月'),-1);choose(option('暂不购粮'));
+  A.court();assert.equal(option('改批粮商免息宽限'),-1);choose(option('稍后再议'));
+  A.endMonth();while(modalOpen)nextEv();assert.equal(load('auto'),true);
+  assert.equal(S.flags.lastMonthReview.localGrainPayment,80);
+  assert.equal(S.flags.localGrainPaymentWaived,undefined);
+  assert.equal(S.flags.localGrainPaymentTurn,undefined);
+`));
+
 test('paying a due local grain balance with stock consumes half a reserve and saves exactly once',()=>{
   for(const half of [false,true])boot().run(`
     S.turn=8;S.month=9;

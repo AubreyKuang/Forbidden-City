@@ -101,8 +101,23 @@ function localGrainBalance(){return LOCUST_LOCAL_BALANCE+localGrainPaymentFee();
 function clearLocalGrainPayment(){
   delete S.flags.localGrainPaymentTurn;
   delete S.flags.localGrainPaymentExtended;
+  delete S.flags.localGrainPaymentWaived;
 }
-function localGrainExtensionAvailable(){return localGrainPaymentDue()&&!localGrainPaymentFee();}
+function localGrainExtensionAvailable(){
+  return localGrainPaymentDue()&&!S.flags.localGrainPaymentExtended&&!S.flags.localGrainPaymentWaived;
+}
+function grainPaymentWaiverChoice(brief){
+  if(!localGrainExtensionAvailable()||brief.floodFollowup||brief.locustFollowup||brief.locustDispatched||
+    brief.review||floodReliefDue()||locustReliefDue())return null;
+  return {t:'改批粮商免息宽限',grainTransaction:true,
+    preview:`本月底暂缓扣款 · 下月底仍付 ${LOCUST_LOCAL_BALANCE} 万两 · 占用本月奏折 · 仅可宽限一次`,
+    cond:localGrainExtensionAvailable,
+    f:()=>{
+      S.flags.localGrainPaymentTurn=S.turn+1;
+      S.flags.localGrainPaymentWaived=true;
+      return `户部奉旨与粮商议定免息宽限。本月原奏不再办理，下月底仍付 ${LOCUST_LOCAL_BALANCE} 万两。`;
+    }};
+}
 function extendLocalGrainChoice(){
   const balance=LOCUST_LOCAL_BALANCE+LOCUST_LOCAL_EXTENSION_FEE;
   return {t:'赈粮尾款展期一月',
@@ -293,7 +308,7 @@ A.grainReserve=function(){
   choices.push(stocked?{t:'留粮备荒',preview:`遇蝗灾月奏可发粮 · 国库无支出 · 免耗精力 · 民心 +${half?3:6}`}:{t:'暂不购粮'});
   pushEv({title:'常平仓',text:`${stocked?'现有'+grainReserveLabel()+'备荒粮':'仓中暂无备荒粮'}，国库有 ${E().treasury} 万两。`+
     (stocked||order==='due'?`当前民心 ${E().people}。`:'')+
-    (paymentDue?`\n赈粮尾款 ${localGrainBalance()} 万两将于月底扣除。${stocked?'粮商肯收半批仓粮抵掉一部分。':''}${localGrainPaymentFee()?'这笔尾款已展期。':''}`:'')+
+    (paymentDue?`\n赈粮尾款 ${localGrainBalance()} 万两将于月底扣除。${stocked?'粮商肯收半批仓粮抵掉一部分。':''}${S.flags.localGrainPaymentWaived?'这笔尾款已获宽限。':localGrainPaymentFee()?'这笔尾款已展期。':''}`:'')+
     (order==='pending'?'\n已预订半批秋粮。八月可留出半批仓位领粮，民心低时也可加付运费直送救急。逾期不退订金。':'')+
     (order==='delayed'?'\n预订已改到九月，届时可领粮，逾期不退订金。':'')+
     (order==='due'?`\n预订的半批秋粮已到。可领粮入仓，民心低时也可直送缺粮村落。${S.month===8?'若本月不领，可改到九月或退订。':'九月是最后的领取期限。'}逾期不退订金。`:'')+
