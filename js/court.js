@@ -179,6 +179,14 @@ function monthlyGrainEvent(index){
         clearGrainReserve();
         return `户部从常平仓调粮，灾民领到了救急口粮。${fx(chg({people:localPeople}))}`;
       }});
+    if(!half)event.choices.push({t:'就近发半批，留半批备荒',
+      preview:'国库无支出 · 民心 +3 · 留半批备荒粮',delegated:true,
+      cond:()=>grainReserveReady()&&!halfGrainReserve(),why:'须有一整批储粮',
+      f:()=>{
+        S.flags.grainReserveHalf=true;
+        log('蝗灾，户部就近发放半批常平仓粮，余粮留仓。');
+        return `粮仓周边的灾民领到了口粮，余下半批仍在仓中。${fx(chg({people:3}))}`;
+      }});
     event.choices.push({t:'调储粮，拨银运送',
       preview:`国库 −${GRAIN_TRANSPORT_COST} 万两 · 民心 +${remotePeople} · 用完余粮`,
       cond:()=>E().treasury>=GRAIN_TRANSPORT_COST,why:`须有 ${GRAIN_TRANSPORT_COST} 万两和 1 点精力`,

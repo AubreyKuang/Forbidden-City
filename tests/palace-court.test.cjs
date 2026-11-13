@@ -345,6 +345,27 @@ test('half-sale persists and leaves smaller relief rewards in either disaster',(
   }
 });
 
+test('locust relief can use half a full reserve for free and save the rest for a later memorial',()=>{
+  const {run}=boot();
+  run(`
+    const locust=()=>{S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index:LOCUST_INDEX};A.court();};
+    const option=text=>curEv.choices.findIndex(c=>c.t.includes(text));
+    S.flags.grainReserveGen=S.gen;
+    E().treasury=0;E().energy=0;E().people=50;
+    locust();
+    const split=option('就近发半批');
+    assert.match(curEv.choices[split].t,/免耗精力/);
+    assert.match(curEv.choices[split].preview,/民心 \\+3.*留半批/);
+    choose(split);drain();assert.equal(load('auto'),true);
+    assert.deepEqual([E().people,E().treasury,E().energy,halfGrainReserve(),S.flags.monthlyCourt.done],[53,0,0,true,true]);
+    A.court();assert.equal(modalOpen,false);
+    S.turn++;
+    locust();assert.equal(option('就近发半批'),-1);
+    choose(option('发放常平仓储粮'));drain();assert.equal(load('auto'),true);
+    assert.deepEqual([E().people,E().treasury,E().energy,grainReserveReady()],[56,0,0,false]);
+  `);
+});
+
 test('transporting stored grain requires silver and energy, extends relief, and spends the reserve once',()=>{
   const {run}=boot();
   run(`
