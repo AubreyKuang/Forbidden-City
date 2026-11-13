@@ -18,11 +18,7 @@ const COURT=[
  ()=>({title:'殿试',text:'三年一度的殿试之期已到，三百贡士候于殿外。',choices:[
    {t:'亲自出题考校',f:()=>{E().wen=clamp(E().wen+2);log('帝亲临殿试，钦点状元。');return `你出了一道“论民本”的策问，钦点一位寒门士子为状元，天下读书人称颂。${fx(chg({prestige:4,people:2}))}`}},
    {t:'交由礼部操办',delegated:true,f:()=>`殿试循例而行。${fx(chg({prestige:1}))}`}]}),
- brief=>{const c=brief?harem().find(c=>c.id===brief.person):officialC(35);if(!c)return null;return {title:'御史弹劾',person:c.id,por:c,text:`御史台上折，弹劾${cName(c)}之父（${c.fam.t}）贪墨枉法，证据凿凿。`,choices:[
-   {t:'严查到底',f:()=>{if(chance(.6)){c.fam={t:c.fam.t+'（获罪）',p:Math.max(0,c.fam.p-30)};story(c,'其父贪墨案发，被革职查办。她在宫中脱簪待罪。');log(`${fullName(c)}之父贪墨案发，革职查办。`,1);return `查实其父贪墨百万两。${fx(chg({people:6,prestige:4,treasury:80}),cchg(c,{mood:-30,aff:-12}))}`}
-     story(c,'其父遭弹劾，查无实据，得还清白。');return `查无实据，乃政敌构陷。${fx(chg({prestige:-2}),cchg(c,{aff:6}))}`}},
-   {t:'留中不发',f:()=>{story(c,'其父遭弹劾，陛下将奏折压下。她心中感念。');return `你把奏折压下了。${fx(chg({people:-5}),cchg(c,{aff:10}))}`}},
-   {t:'罚俸一年，以儆效尤',f:()=>`${fx(chg({people:2}),cchg(c,{mood:-8}))}`}]}},
+ impeachmentEvent,
  ()=>({title:'祥瑞',text:'礼部奏报：终南山猎户献上一头白鹿，称是天降祥瑞，颂陛下圣德。',choices:[
    {t:'大赦庆贺',f:()=>{log('终南山献白鹿，帝大赦天下。');return `举国同庆。${fx(chg({prestige:5,people:3,treasury:-80}))}`}},
    {t:'斥其谄媚，放鹿归山',f:()=>`你命人将白鹿放归山林。朝臣暗暗称是。${fx(chg({people:4,prestige:2}))}`}]}),
@@ -43,8 +39,8 @@ const COURT=[
    {t:'婉拒，厚赐使臣',f:()=>`使臣叹服天朝气度。${fx(chg({prestige:3,people:2,treasury:-30}))}`}]}},
  brief=>{const sons=kidsAlive().filter(k=>k.sex==='m'&&kidAge(k)>=6&&(!brief||brief.sons?.includes(k.id))).slice(0,4);if(!sons.length||S.heir)return null;
   return {title:'请立储君',sons:sons.map(k=>k.id),text:`以内阁首辅为首，群臣联名上书：“国本未定，人心不安，伏请陛下早立储君。”`,choices:[
-   ...sons.map(k=>({t:`立${kidName(k)}（${kidAge(k)}岁）`,f:()=>{S.heir=k.id;kstory(k,'群臣请立储君，被册为皇太子。');log(`立${k.name}为皇太子。`,1);const m=byId(k.mom);if(m)cchg(m,{mood:25});return `${fx(chg({prestige:6}))}`}})),
-   {t:'朕春秋正盛，此事容后再议',f:()=>`${fx(chg({prestige:-3}))}`}]}},
+   ...sons.map(k=>({t:`立${kidName(k)}（${kidAge(k)}岁）`,preview:'册立储君 · 威望 +6 · 生母心情 +25',f:()=>{S.heir=k.id;kstory(k,'群臣请立储君，被册为皇太子。');log(`立${k.name}为皇太子。`,1);const m=byId(k.mom);if(m)cchg(m,{mood:25});return `${fx(chg({prestige:6}))}`}})),
+   {t:'朕春秋正盛，此事容后再议',preview:'威望 −3',f:()=>`${fx(chg({prestige:-3}))}`}]}},
  ()=>({title:'京畿疫病',text:'京畿一带爆发时疫，染病者日增。',choices:[
    {t:'命太医院全力救治（国库-150万两）',f:()=>{log('京畿时疫，太医院救治有方。');return `${fx(chg({treasury:-150,people:6}))}`}},
    {t:'封锁疫区',f:()=>`疫情被控制住了，但疫区百姓死伤惨重。${fx(chg({people:-6,prestige:1}))}`}]}),
@@ -66,6 +62,92 @@ const COURT=[
    {t:'挽留：“朝廷离不开您老。”',f:()=>`老臣又留任一年，朝政井井有条。${fx(chg({prestige:1,people:2}))}`}]}),
 ];
 const SPONT=[0,1,5,10,11,14];
+const IMPEACHMENT_INDEX=3;
+const FIRST_IMPEACHMENT_TURN=3;
+function impeachmentSubject(id){
+  return harem().find(c=>c.id===id&&houseOf(c)?.father.alive&&!c.fam.t.includes('（获罪）'));
+}
+function pinImpeachment(person){
+  const matching=chance(.5);
+  return {person,matching,guilty:chance(matching ? .85 : .45)};
+}
+function newImpeachment(){
+  const eligible=harem().filter(c=>c.fam.p>=35&&houseOf(c)?.father.alive&&!c.fam.t.includes('（获罪）'));
+  return eligible.length?pinImpeachment(pick(eligible).id):null;
+}
+function impeachmentEvent(brief){
+  const file=brief?.impeachment;
+  if(!file)return null;
+  const consort=impeachmentSubject(file.person);
+  if(!consort)return null;
+  const review=brief.review===true;
+  const father=houseOf(consort).father.name;
+  const report=`御史弹劾${father}截留赈银八十万两，呈上的抄账记着只入库二十万两。库房摘要记着入库${file.matching?'二十':'一百'}万两。`;
+  const evidence=file.matching?'两份账目相符。原始签押尚未调来。':'两份账目不合。若即日下旨，只能先采信御史的抄账。';
+  const finding=file.guilty?'查得原始签押，一百万两赈银中仅二十万两入库，余款流入私账。':'查得原始签押，赈银已全数入库。御史所呈抄账有误。';
+  const verdict={t:review?(file.guilty?'革职，追回赈银':'公布原簿，还其清白'):'按御史所奏，即日革职',
+      preview:review?(file.guilty?'国库 +80 万两 · 民心 +6 · 威望 +4 · 她的情分 −12、心情 −30':'威望 +1 · 她的情分 +6'):undefined,
+      f:()=>{
+        if(file.guilty){
+          consort.fam={t:consort.fam.t+'（获罪）',p:Math.max(0,consort.fam.p-30)};
+          story(consort,'其父贪墨案发，被革职查办。她在宫中脱簪待罪。');
+          log(`${father}贪墨案发，革职查办。`,1);
+          return `查实赈银遭截留，追回八十万两。${fx(chg({people:6,prestige:4,treasury:80}),cchg(consort,{mood:-30,aff:-12}))}`;
+        }
+        if(!review){
+          story(consort,'其父被误革，原始账目呈上后才复职。她仍记得那道急旨。');
+          return `革职的旨意已经下达，原簿随后证实赈银全数入库。你只得收回成命。${fx(chg({prestige:-5}),cchg(consort,{mood:-12,aff:-8}))}`;
+        }
+        story(consort,'其父遭弹劾，查无实据，得还清白。');
+        return `赈银已全数入库，${father}得还清白。${fx(chg({prestige:1}),cchg(consort,{aff:6}))}`;
+      }};
+  let choices=[verdict,
+    {t:'留中不发',f:()=>{
+      story(consort,'其父遭弹劾，陛下将奏折压下。她心中感念。');
+      return `你把奏折压下了。${fx(chg({people:-5}),cchg(consort,{aff:10}))}`;
+    }},
+    {t:'罚俸一年，以儆效尤',f:()=>`${fx(chg({people:2}),cchg(consort,{mood:-8}))}`},
+  ];
+  if(review){
+    const alternative=file.guilty
+      ? {t:'责令退银，留任察看',preview:'国库 +80 万两 · 民心 +2 · 威望 −2 · 她的心情 −8',
+        f:()=>{
+          story(consort,'其父退清截留的赈银，仍留任察看。她松了口气。');
+          return `${father}如数退还八十万两，暂留原任。朝中仍有人质疑量罚过轻。${fx(chg({treasury:80,people:2,prestige:-2}),cchg(consort,{mood:-8}))}`;
+        }}
+      : {t:'私下告知查实结果，撤销弹劾',preview:'她的情分 +10、心情 +6',
+        f:()=>{
+          story(consort,'陛下查清父亲的案子，私下让她知道父亲已无事。');
+          return `刑部撤销弹劾，将查实结果告知${father}一家。${fx(cchg(consort,{aff:10,mood:6}))}`;
+        }};
+    choices=[verdict,alternative];
+  }else choices.push({t:'封存账册，下月复审',preview:'下月的奏折改为查账回奏 · 届时仍须批复',
+    f:()=>{
+      S.flags.impeachmentReview={gen:S.gen,turn:S.turn+1,file};
+      return '账册已封存。下月可在月度奏折查看查账回奏。';
+    }});
+  return {title:review?'御史弹劾 · 查账回奏':'御史弹劾',person:consort.id,por:consort,
+    valid:()=>!!impeachmentSubject(file.person),text:report+'\n'+(review?finding:evidence),choices};
+}
+
+const COURT_PREVIEWS=[
+  ['国库 −300 万两 · 民心 +10 · 威望 +3','国库无支出 · 民心 −8','国库 −150 至 −200 万两 · 办妥可得民心与威望，办砸会失民心'],
+  ['国库 −300 万两 · 战果影响威望，失利伤民心','国库 −300 至 −400 万两 · 战果影响威望，败阵会受伤','国库 −150 万两 · 威望 −6','国库 −250 至 −300 万两 · 战果影响威望和家眷'],
+  ['文略 +2 · 威望 +4 · 民心 +2','威望 +1'],
+  ['指控属实可追缴 80 万两 · 误革会失威望并伤及家眷','民心 −5 · 她对你的情分 +10','民心 +2 · 她的心情 −8'],
+  ['国库 −80 万两 · 威望 +5 · 民心 +3','民心 +4 · 威望 +2'],
+  ['国库 −200 万两 · 民心 +8','若降雨可得威望，灾情持续则失民心','国库 −80 万两 · 民心 +4'],
+  ['国库 +250 万两 · 威望 +2 · 民心 −3','威望 −1'],
+  ['后宫众人心情 +8','国库 +120 万两','民心 +5'],
+  ['册封常在 · 威望 +2','国库 −30 万两 · 威望 +3 · 民心 +2'],
+  [],
+  ['国库 −150 万两 · 民心 +6','民心 −6 · 威望 +1'],
+  ['国库 −100 万两 · 民心 +9','国库 +180 万两'],
+  ['国库 −300 万两 · 民心 −4 · 后宫众人心情 +10','民心 +3 · 威望 +2'],
+  ['国库 −100 万两 · 民心 +6 · 威望 −1 · 将门妃嫔心情 −10','国库 −150 万两 · 威望 +5 · 民心 −2','威望 +2'],
+  ['威望 −3 · 民心 +8','国库 −200 万两 · 民心 +5'],
+  ['国库 −30 万两 · 威望 +3','民心 +2 · 威望 +1'],
+];
 const COURT_RELIEF={
   0:{office:'工部',cost:340,people:6},
   5:{office:'户部',cost:230,people:5},
@@ -75,7 +157,7 @@ function reliefDelegation(index){
   const relief=COURT_RELIEF[index];
   if(!relief)return null;
   const {office,cost,people}=relief;
-  return {t:`由${office}全权办理 · 国库 −${cost}万两 · 民心 +${people}`,
+  return {t:`由${office}全权办理`,preview:`国库 −${cost} 万两 · 民心 +${people}`,
     delegated:true,cond:()=>E().treasury>=cost,why:'国库银两不足',
     f:()=>`${office}按例调派人手，报来办理结果。${fx(chg({treasury:-cost,people}))}`};
 }
@@ -88,13 +170,45 @@ function courtEvent(){
 function monthlyCourtEvent(){
   const brief=S.flags.monthlyCourt;
   if(brief?.turn===S.turn&&brief.gen===S.gen){
-    return brief.done?null:COURT[brief.index]?.(brief);
+    if(brief.done)return null;
+    if(brief.index!==IMPEACHMENT_INDEX)return COURT[brief.index]?.(brief);
+    // Old saves kept the subject but didn't pin the case or evidence.
+    if(!brief.impeachment&&impeachmentSubject(brief.person)){
+      brief.impeachment=pinImpeachment(brief.person);
+      S.flags.impeachmentSeen=true;
+      save('auto');
+    }
+    const event=impeachmentEvent(brief);
+    if(event)return event;
+    if(brief.review)log('涉案人已不符呈阅条件，查账回奏已归档。');
+    delete S.flags.monthlyCourt;
   }
-  for(const index of shuffle(COURT.map((_,i)=>i))){
-    const ev=COURT[index]();
+  const pending=S.flags.impeachmentReview;
+  if(pending&&pending.turn<=S.turn){
+    delete S.flags.impeachmentReview;
+    if(pending.gen===S.gen&&pending.turn===S.turn&&impeachmentSubject(pending.file?.person)){
+      const review={turn:S.turn,gen:S.gen,index:IMPEACHMENT_INDEX,person:pending.file.person,
+        impeachment:pending.file,review:true};
+      S.flags.monthlyCourt=review;
+      save('auto');
+      return impeachmentEvent(review);
+    }
+    if(pending.gen===S.gen)log('弹劾案未再呈阅，已归档。');
+  }
+  const firstCaseDue=S.turn>=FIRST_IMPEACHMENT_TURN&&!S.flags.impeachmentSeen&&!brief?.impeachment;
+  const candidates=S.turn===0&&S.flags.openingCourt?[0]:shuffle(COURT.map((_,i)=>i));
+  if(firstCaseDue) {
+    candidates.splice(candidates.indexOf(IMPEACHMENT_INDEX),1);
+    candidates.unshift(IMPEACHMENT_INDEX);
+  }
+  for(const index of candidates){
+    const impeachment=index===IMPEACHMENT_INDEX?newImpeachment():null;
+    const ev=COURT[index](index===IMPEACHMENT_INDEX?{impeachment}:undefined);
     if(!ev)continue;
     S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index,person:ev.person,sons:ev.sons,
+      ...(impeachment?{impeachment}:{}),
       guest:ev.title==='西域使臣'?ev.por:undefined};
+    if(impeachment)S.flags.impeachmentSeen=true;
     save('auto');
     return ev;
   }

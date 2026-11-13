@@ -83,6 +83,24 @@ test('monthly court can be previewed repeatedly, including after loading, and re
   `);
 });
 
+test('a new reign previews the first flood memorial and keeps its result across the month',()=>{
+  const {run}=boot();
+  run(`
+    A.court();
+    assert.equal(curEv.title,'黄河决堤');
+    assert.ok(curEv.choices[0].preview.includes('国库 −300 万两 · 民心 +10'));
+    choose(0);drain();
+    const host=empress();
+    story(host,'陛下驾临闲话。');
+    A.endMonth();
+    assert.equal(S.flags.lastMonthReview.court.title,'黄河决堤');
+    assert.ok(S.flags.lastMonthReview.people.some(person=>person.id===host.id));
+    save('1');load('1');
+    assert.match(viewLog(),/黄河决堤/);
+    assert.match(viewLog(),/陛下驾临闲话/);
+  `);
+});
+
 test('delegating the exam resolves the memorial without spending the last energy point',()=>{
   const {run}=boot();
   run(`
@@ -119,6 +137,113 @@ test('relief delegation trades treasury and some relief for a free action, once 
     drain();save('1');load('1');A.court();
     assert.equal(modalOpen,false);
     assert.equal(E().treasury,0);
+  `);
+});
+
+test('the first eligible impeachment is offered by the fourth month, while the opening flood stays in place',()=>{
+  const {run}=boot();
+  run(`
+    A.court();
+    assert.equal(curEv.title,'黄河决堤');
+    choose(curEv.choices.length-1);
+    for(let i=0;i<3;i++){A.endMonth();drain();}
+    assert.equal(S.turn,3);
+    A.court();
+    assert.equal(curEv.title,'御史弹劾');
+    assert.match(curEv.text,/两份账目[相不]/);
+    assert.equal(S.flags.impeachmentSeen,true);
+    const file=JSON.stringify(S.flags.monthlyCourt.impeachment);
+    choose(curEv.choices.length-1);
+    save('1');load('1');A.court();
+    assert.equal(JSON.stringify(S.flags.monthlyCourt.impeachment),file);
+    assert.equal(S.flags.impeachmentSeen,true);
+  `);
+});
+
+test('a sealed impeachment keeps the same evidence across months and saves, then resolves once',()=>{
+  const {run}=boot();
+  run(`
+    const person=harem()[0].id;
+    S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index:IMPEACHMENT_INDEX,person,
+      impeachment:{person,matching:false,guilty:false}};
+    E().energy=1;
+    A.court();
+    assert.match(curEv.text,/抄账记着只入库二十万两.*库房摘要记着入库一百万两/);
+    assert.doesNotMatch(curEv.text,/已全数入库/);
+    choose(curEv.choices.findIndex(c=>c.t.includes('封存账册')));
+    assert.equal(E().energy,0);
+    assert.equal(S.flags.monthlyCourt.done,true);
+    assert.equal(S.flags.impeachmentReview.turn,S.turn+1);
+    drain();A.endMonth();drain();save('1');load('1');
+    assert.match(viewMap(),/查账回奏待阅/);
+    A.court();
+    assert.match(curEv.text,/查得原始签押，赈银已全数入库/);
+    assert.equal(curEv.choices.some(c=>c.t.includes('封存账册')),false);
+    assert.equal(S.flags.impeachmentReview,undefined);
+    choose(curEv.choices.length-1);
+    save('1');load('1');A.court();
+    const before=E().prestige;
+    choose(0);
+    assert.equal(E().prestige,before+1);
+    assert.equal(S.flags.monthlyCourt.done,true);
+    drain();A.court();
+    assert.equal(modalOpen,false);
+  `);
+});
+
+test('impeachment review offers two rulings that reflect the proven outcome',()=>{
+  for(const guilty of [true,false]){
+    const {run}=boot();
+    run(`
+      const c=harem()[0];
+      c.mood=50;c.aff=50;
+      E().people=50;E().prestige=50;E().energy=1;
+      const treasury=E().treasury,familyPower=c.fam.p;
+      S.flags.impeachmentReview={turn:S.turn,gen:S.gen,file:{person:c.id,matching:false,guilty:${guilty}}};
+      A.court();
+      assert.match(curEv.title,/查账回奏/);
+      assert.equal(curEv.choices.length,3);
+      assert.equal(curEv.choices[0].t,'${guilty?'革职，追回赈银':'公布原簿，还其清白'}（精力 −1）');
+      assert.equal(curEv.choices[1].t,'${guilty?'责令退银，留任察看':'私下告知查实结果，撤销弹劾'}（精力 −1）');
+      choose(1);
+      assert.equal(E().energy,0);
+      assert.equal(E().treasury,treasury+${guilty?80:0});
+      assert.equal(E().people,${guilty?52:50});
+      assert.equal(E().prestige,${guilty?48:50});
+      assert.equal(c.aff,${guilty?50:60});
+      assert.equal(c.mood,${guilty?42:56});
+      assert.equal(c.fam.p,familyPower);
+      assert.equal(S.flags.monthlyCourt.done,true);
+    `);
+  }
+});
+
+test('an ineligible impeachment subject frees the next month for a regular memorial',()=>{
+  const {run}=boot();
+  run(`
+    const c=harem()[0];
+    S.flags.impeachmentReview={turn:S.turn,gen:S.gen,file:{person:c.id,matching:true,guilty:true}};
+    houseOf(c).father.alive=false;
+    assert.doesNotMatch(viewMap(),/查账回奏待阅/);
+    A.court();
+    assert.doesNotMatch(curEv.title,/查账回奏/);
+    assert.equal(S.flags.impeachmentReview,undefined);
+    assert.ok(S.log.some(entry=>entry.t.includes('已归档')));
+  `);
+});
+
+test('ruling immediately on the same innocent case costs prestige and damages the relationship',()=>{
+  const {run}=boot();
+  run(`
+    const c=harem()[0];
+    S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index:IMPEACHMENT_INDEX,person:c.id,
+      impeachment:{person:c.id,matching:false,guilty:false}};
+    const prestige=E().prestige,aff=c.aff;
+    A.court();choose(0);
+    assert.match($('#mbox').innerHTML,/收回成命/);
+    assert.equal(E().prestige,prestige-5);
+    assert.equal(c.aff,aff-8);
+    assert.equal(S.flags.impeachmentReview,undefined);
   `);
 });
 

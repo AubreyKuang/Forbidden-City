@@ -371,10 +371,20 @@ function mountMap(){const w=$('#mapwrap');if(!w)return;w.appendChild(MAPC);mount
 const backBtn=`<button class="btn sm" onclick="A.go('map')">◂ 返回宫城</button>`;
 function viewMap(){
   const leads=mapActivityLeads();
-  const first=leads[0];
+  const first=leads.find(lead=>lead.expires)||leads[0];
+  const done=S.flags.monthlyCourt?.turn===S.turn&&S.flags.monthlyCourt.gen===S.gen&&S.flags.monthlyCourt.done;
+  const pending=S.flags.impeachmentReview;
+  const reviewReady=!done&&((pending?.turn===S.turn&&pending.gen===S.gen&&impeachmentSubject(pending.file?.person))||
+    (S.flags.monthlyCourt?.turn===S.turn&&S.flags.monthlyCourt.gen===S.gen&&S.flags.monthlyCourt.review&&impeachmentSubject(S.flags.monthlyCourt.person)));
+  const host=S.turn===0&&done&&empress();
   return `<section class="map-play" aria-label="宫城地图">
     <header class="map-location"><h2>宫城</h2><span class="hint">${esc(nearestPlace())}</span></header>
-    ${S.turn===0?`<div class="map-first-month"><span>本月可上朝听政，也可走访宫中人物。</span><button class="btn sm" onclick="A.court()">查看本月奏折</button></div>`:''}
+    <div class="map-first-month">
+      <span>${done?'奏折已批复':reviewReady?'查账回奏待阅':'奏折待批'} · 余 ${E().energy} 点精力</span>
+      ${!done?`<button class="btn sm" onclick="A.court()">${reviewReady?'查看查账回奏':'查看本月奏折'}</button>`:''}
+      ${host?`<button class="btn sm" onclick="A.visitMapActivity('kn')">去坤宁宫见${esc(fullName(host))}</button>`:''}
+      ${S.flags.lastMonthReview?'<button class="btn sm" onclick="A.go(\'log\')">上月回顾</button>':''}
+    </div>
     <div id="mapwrap"></div>
     <div id="map-guide-preview" aria-live="polite"></div>
     <div class="map-dock">

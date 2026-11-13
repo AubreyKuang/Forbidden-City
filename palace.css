@@ -310,6 +310,9 @@ body{background:#181b20;padding-block:14px;color:var(--ink)}
 .map-location .hint,.map-legend{color:#f3e1c7;font-size:12px}
 .map-first-month{display:flex;align-items:center;justify-content:space-between;gap:6px 12px;flex-wrap:wrap;padding:6px 12px;background:#402522f5;color:#fff0d7;font-size:12px}
 .map-first-month .btn{min-height:36px}
+.mch .choice-preview{display:block;margin-top:4px;font-size:.82em;font-weight:400}
+.month-record{margin:12px 0;padding:12px;border:1px solid var(--line,#b69475);border-radius:8px}
+.month-record h3{margin-top:0}
 #menu .btn small{font-size:10px;line-height:1;white-space:nowrap}
 @media(pointer:coarse){.map-first-month .btn,#top .hud-next{min-height:44px}}
 .map-legend{margin:0;background:#19252df2;padding:5px 12px;border-radius:0 0 9px 9px;line-height:1.5}

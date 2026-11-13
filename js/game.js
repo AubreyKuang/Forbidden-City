@@ -129,13 +129,14 @@ function openModal(ev){
   ev.choices.forEach((c,i)=>{
     const ok=!c.cond||c.cond();
     const style=ev.danger?(c.f?' danger':' quiet'):c.primary||ev.choices.length===1||(ev.input&&i===0)?' primary':'';
-    const label=`${esc(c.t)}${!ok&&c.why?`<small>${esc(c.why)}</small>`:''}`;
+    const label=`${esc(c.t)}${c.preview?`<small class="choice-preview">${esc(c.preview)}</small>`:''}${!ok&&c.why?`<small>${esc(c.why)}</small>`:''}`;
     const portrait=showChoicePortraits&&c.person;
     h+=`<button class="btn${style}${portrait?' event-person-choice':''}" ${ok?'':'disabled'} onclick="choose(${i})">${portrait?`${porImg(c.person,60)}<span>${label}</span>`:label}</button>`;
   });
   b.innerHTML=h+'</div>';const modal=$('#modal');modal.setAttribute('data-scene',ev.scene||'');modal.hidden=false;b.scrollTop=0;
   if(ev.sfx) AU.sfx(ev.sfx); else AU.sfx('page');
   const inp=$('#minput'); if(inp) setTimeout(()=>inp.select(),30);
+  if(ev.scene==='monthly-court') $('#mbox .mch button:not(:disabled)')?.focus?.({preventScroll:true});
 }
 function choose(i){
   if(!eventStillValid(curEv)){toast('人物处境已变，这件事已不再适用。');nextEv();return;}
@@ -178,9 +179,11 @@ const A={
     if(!ev){toast(S.flags.monthlyCourt?.done?'本月奏折已批复。':'这份奏折已不适用。');return;}
     const brief=S.flags.monthlyCourt;
     const delegation=reliefDelegation(brief.index);
-    ev.choices=[...ev.choices,...(delegation?[delegation]:[])].map(choice=>{
+    ev.scene='monthly-court';
+    ev.choices=[...ev.choices,...(delegation?[delegation]:[])].map((choice,index)=>{
       const cost=choice.delegated?0:1;
       return {...choice,t:`${choice.t}（${cost?'精力 −1':'免耗精力'}）`,
+        preview:choice.preview||COURT_PREVIEWS[brief.index]?.[index],
         cond:()=>!brief.done&&(!cost||E().energy>0)&&(!choice.cond||choice.cond()),why:choice.why||'精力不足',
         f:()=>{
           if(brief.done||(cost&&!useE()))return;
@@ -188,6 +191,8 @@ const A={
           S.flags.lastCourt=ev.title;
           log(`批复奏折「${ev.title}」，${choice.t}。`);
           const result=choice.f?.();
+          brief.result={title:ev.title,choice:choice.t,text:(typeof result==='string'?result:result?.text||'').replace(/§/g,''),
+            person:ev.person,child:ev.sons?.[index]};
           save('auto');
           return result;
         }};
@@ -240,6 +245,13 @@ A.endMonth=function(){
   // 财政
   const inc=rd(45+e.people*1.1+(S.flags.canal?25:0)),exp=alive().reduce((s,c)=>s+(c.cold?1:STIPEND[c.rank]),0)+kidsAlive().reduce((s,k)=>s+3+(k.tutor?5:0),0);
   e.treasury+=inc-exp;
+  const monthDate=dateStr(), brief=S.flags.monthlyCourt;
+  const court=brief?.turn===S.turn&&brief.gen===S.gen?brief.result:null;
+  const people=S.consorts.flatMap(c=>{
+    const latest=c.story?.findLast(entry=>entry.d===monthDate);
+    return latest&&!(S.turn===0&&latest===c.story[0])?[{id:c.id,text:latest.t}]:[];
+  });
+  S.flags.lastMonthReview={date:monthDate,inc,exp,court,people:people.slice(-2)};
   // 后宫
   for(const c of alive()){
     if(!c.cold){c.favor=clamp(c.favor-(c.bond?0:c.trait==='淡泊'?1:2));if(c.favor<25)c.mood=clamp(c.mood-3);else if(c.favor>60)c.mood=clamp(c.mood+1)}else c.mood=clamp(c.mood-3);
@@ -248,12 +260,17 @@ A.endMonth=function(){
   alive().forEach(c=>{xinTick(c);visitorTick(c)});kidsAlive().forEach(growKid);
   // 时间
   S.turn++;S.month++;let newYear=false;
+  if(S.flags.impeachmentReview?.turn<S.turn||
+      (brief?.review&&!brief.done&&brief.turn===S.turn-1&&brief.gen===S.gen)){
+    delete S.flags.impeachmentReview;
+    log('查账回奏未获批复，弹劾案已归档。');
+  }
   if(S.month>12){S.month=1;S.year++;e.age++;newYear=true;alive().forEach(c=>c.age++)}
   let dh=-.17-(e.age>40?(e.age-40)*.05:0)-Math.max(0,(e.nightsMonth||0)-3)*1.2-(e.style==='风流'?.05:0);
   e.health=clamp(e.health+dh);e.nightsMonth=0;e.energy=maxEnergy();
   if(e.treasury<0){const d=Math.min(8,Math.ceil(-e.treasury/400));chg({people:-1-d,prestige:-1});log(`国库亏空${-e.treasury}万两，百官俸禄迟发，民间加征赋税。`)}
   if(S.cands.length){S.cands=[];log('选秀礼毕。')}
-  toast(`${dateStr()}　岁入${inc}　支出${exp}`);
+  toast(`${monthDate}　月入${inc}　支出${exp}`);
   // 岁末总结
   if(newYear)snapshotYear();
   if(newYear){const y=S.ys;pushEv({title:'岁首',sfx:'chime',text:`爆竹声中一岁除。${dateStr()}，陛下${e.age}岁。\n去岁：新入宫${y.c}人，皇嗣降生${y.b}位，侍寝${y.n}次。\n国库${e.treasury}万两，威望${rd(e.prestige)}，民心${rd(e.people)}。`,choices:[{t:'新岁新气象'}]});S.ys={c:0,b:0,n:0}}
@@ -329,7 +346,7 @@ A.start=function(){
   const style=(document.querySelector('input[name=f-style]:checked')||{}).value||'勤政';
   S={v:1,emp:{sur,name,era,age:18,birthMonth:3,health:90,prestige:50,people:60,treasury:800,energy:3,nightsMonth:0,style,wen:50,wu:50,seed:ri(1,2e9)},
     year:1,month:3,turn:0,consorts:[],children:[],cands:[],log:[],nid:1,gen:1,heir:null,genChar:pick(GEN_CHARS),
-    flags:{lastXX:-99,dowager:{name:'太后',alive:true},peek:0},history:[],ys:{c:0,b:0,n:0},over:false};
+    flags:{lastXX:-99,dowager:{name:'太后',alive:true},peek:0,openingCourt:true},history:[],ys:{c:0,b:0,n:0},over:false};
   const e=S.emp;
   if(style==='勤政'){e.prestige=58;e.people=65}if(style==='风流')e.health=84;if(style==='尚武'){e.wu=80;e.prestige=55}if(style==='文雅')e.wen=80;
   e.energy=maxEnergy();
@@ -340,5 +357,5 @@ A.start=function(){
   log(`册嫡妻${fullName(em)}为皇后，潜邸旧人${fullName(old)}为贵人。`);
   migrate();UI.view='map';setScene('court');AU.sfx('gong');render();
   pushEv({title:'登基',scene:'coronation',por:'emp',text:`${era}元年三月，先帝龙驭上宾，你在太和钟声中登上了宸极殿的御座。\n嫡妻${fullName(em)}册为皇后，潜邸旧人${fullName(old)}册为贵人。\n礼部奏请：新帝登基，当广选秀女，以充后宫、绵延皇嗣。`,choices:[
-    {t:'准奏，即刻选秀',primary:true,f:()=>{genCands(7);UI.view='xx';return null}},{t:'暂缓，先理朝政',f:()=>'你把选秀之事暂且搁下。三年大选之期一到，礼部自会再奏。'}]});
+    {t:'进入宫城',primary:true},{t:'准奏，即刻选秀',f:()=>{genCands(7);UI.view='xx';return null}}]});
 };

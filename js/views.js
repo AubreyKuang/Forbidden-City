@@ -403,7 +403,17 @@ function viewOut(){
   return `<h2>出巡</h2><p class="hint">每次出巡花费1点精力。</p><div class="grid">${o.map(([k,n,d])=>`<button class="card" onclick="A.out('${k}')"><div class="grow"><div class="nm">${n}</div><div>${d}</div></div></button>`).join('')}</div>${princessEstatePanel()}`}
 function viewLog(){
   const L=S.log.filter(l=>UI.logF==='all'?true:l.b).slice().reverse();
+  const month=S.flags.lastMonthReview;
+  const link=(id,child=false)=>{
+    const person=child?kidById(id):byId(id);
+    return person?`<button class="btn sm" onclick="A.go('${child?'kid':'consort'}',${person.id})">查看${esc(child?kidName(person):fullName(person))}</button>`:'';
+  };
   return `<h2>起居注</h2><div class="log-filter"><button class="btn sm ${UI.logF==='all'?'on':''}" onclick="UI.logF='all';render()">全部</button><button class="btn sm ${UI.logF==='big'?'on':''}" onclick="UI.logF='big';render()">只看大事</button><button class="btn sm" onclick="A.logCard()">保存上月纪念卡</button></div>
+   ${month?`<section class="month-record"><h3>${esc(month.date)}回顾</h3>
+    <p>月入 ${esc(month.inc)} 万两 · 支出 ${esc(month.exp)} 万两</p>
+    ${month.court?`<p><strong>${esc(month.court.title)}</strong> · ${esc(month.court.choice)}</p>${fmt(month.court.text)}${month.court.child?link(month.court.child,true):link(month.court.person)}`:''}
+    ${month.people.map(person=>`<p>${esc(person.text)} ${link(person.id)}</p>`).join('')}
+   </section>`:''}
    ${S.history.length?`<p class="hint">历代：${S.history.map(h=>esc(`${h.shi?h.miao+h.shi+'皇帝':h.miao} ${h.sur}${h.name}（${h.era}，在位${h.yrs}年）`)).join('；')}</p>`:''}
    <ul class="story" style="max-height:560px">${L.map(l=>`<li class="${l.b?'big':''}"><time>${esc(l.d)}</time>${esc(l.t)}</li>`).join('')}</ul>`}
 function viewSys(){
