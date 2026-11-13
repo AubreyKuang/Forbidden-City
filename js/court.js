@@ -270,23 +270,24 @@ function reliefDelegation(index){
     f:()=>`${office}按例调派人手，报来办理结果。${fx(chg({treasury:-cost,people}))}`};
 }
 const FLOOD_INSTALLMENT=150;
+const FLOOD_GRAIN_FREIGHT=50;
 const FLOOD_UNFUNDED={people:-3};
 function floodReliefDue(){
   const flood=S.flags.floodRelief,brief=S.flags.monthlyCourt;
   return (flood?.turn===S.turn&&flood.gen===S.gen)||
     !!(brief?.turn===S.turn&&brief.gen===S.gen&&brief.floodFollowup&&!brief.done);
 }
-function stagedFloodRelief(){
+function stagedFloodRelief(brief){
   return {t:'先拨急赈，留待下月续拨',
     preview:'国库 −150 万两 · 民心 +4 · 下月奏折改为赈灾回奏',
     cond:()=>E().treasury>=FLOOD_INSTALLMENT,why:'国库银两不足',
     f:()=>{
-      S.flags.floodRelief={turn:S.turn+1,gen:S.gen};
+      S.flags.floodRelief={turn:S.turn+1,gen:S.gen,floodNeed:brief.floodNeed};
       return `第一批粮银已经发往灾区，先供灾民安置。下月还需拨一百五十万两收尾。${fx(chg({treasury:-FLOOD_INSTALLMENT,people:4}))}`;
     }};
 }
-function floodReliefEvent(){
-  return {title:'黄河决堤 · 赈灾回奏',
+function floodReliefEvent(brief){
+  const event={title:'黄河决堤 · 赈灾回奏',
     text:'首批粮银已用于安置灾民。工部请续拨一百五十万两供赈粮发放。若本月不再拨款，赈济中断，民心 −3。',
     choices:[
       {t:'拨清余款，完成赈济',preview:'国库 −150 万两 · 民心 +5 · 威望 +2',
@@ -295,6 +296,19 @@ function floodReliefEvent(){
       {t:'停止续拨',preview:'国库无支出 · 民心 −3',delegated:true,
         f:()=>`赈款未能接续，灾区粮食供给中断。${fx(chg(FLOOD_UNFUNDED))}`},
     ]};
+  if(brief.floodNeed==='shelter')event.text+='\n临时安置仍缺人手，续款要用于雇工和搭建住所。';
+  if(brief.floodNeed==='grain'){
+    event.text+='\n灾区安置已稳，粮道仍未通。常平仓若有存粮，可以另拨运费调粮。';
+    if(grainReserveReady())event.choices.splice(1,0,{
+      t:'调常平仓粮，拨运费收尾',
+      preview:`国库 −${FLOOD_GRAIN_FREIGHT} 万两 · 民心 +4 · 用完本批储粮`,
+      cond:()=>E().treasury>=FLOOD_GRAIN_FREIGHT,why:`须有 ${FLOOD_GRAIN_FREIGHT} 万两和 1 点精力`,
+      f:()=>{
+        delete S.flags.grainReserveGen;
+        return `户部绕开受损粮道，把常平仓的存粮送到了灾区。${fx(chg({treasury:-FLOOD_GRAIN_FREIGHT,people:4}))}`;
+      }});
+  }
+  return event;
 }
 function courtEvent(){
   const ev=COURT[pick(SPONT)]();
@@ -306,7 +320,7 @@ function monthlyCourtEvent(){
   const brief=S.flags.monthlyCourt;
   if(brief?.turn===S.turn&&brief.gen===S.gen){
     if(brief.done)return null;
-    if(brief.floodFollowup)return floodReliefEvent();
+    if(brief.floodFollowup)return floodReliefEvent(brief);
     if(brief.index===LOCUST_INDEX||brief.index===HARVEST_INDEX){
       markGrainMemorialSeen(brief.index);
       return monthlyGrainEvent(brief.index);
@@ -345,9 +359,9 @@ function monthlyCourtEvent(){
   const flood=S.flags.floodRelief;
   if(flood?.turn===S.turn&&flood.gen===S.gen){
     delete S.flags.floodRelief;
-    S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index:FLOOD_INDEX,floodFollowup:true};
+    S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index:FLOOD_INDEX,floodFollowup:true,floodNeed:flood.floodNeed};
     save('auto');
-    return floodReliefEvent();
+    return floodReliefEvent(S.flags.monthlyCourt);
   }
   const firstCaseDue=S.turn>=FIRST_IMPEACHMENT_TURN&&!S.flags.impeachmentSeen&&!brief?.impeachment;
   const candidates=S.turn===0&&S.flags.openingCourt?[0]:shuffle(COURT.map((_,i)=>i));

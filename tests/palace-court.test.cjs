@@ -329,6 +329,39 @@ test('monthly flood names both specialists and persists the need that determines
   }
 });
 
+test('a flood relief follow-up remembers the district need and spends grain only if it fits',()=>{
+  for(const need of ['grain','shelter']){
+    const {run}=boot();
+    run(`
+      S.flags.grainReserveGen=S.gen;
+      S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index:FLOOD_INDEX,floodNeed:'${need}'};
+      E().treasury=200;E().energy=1;
+      const option=label=>curEv.choices.findIndex(c=>c.t.includes(label));
+      A.court();choose(option('先拨急赈'));drain();
+      assert.equal(load('auto'),true);
+      A.endMonth();drain();
+      E().treasury=49;E().energy=1;E().people=50;E().prestige=50;
+      A.court();
+      assert.equal(S.flags.monthlyCourt.floodNeed,'${need}');
+      if('${need}'==='grain'){
+        const freight=option('调常平仓粮');
+        assert.equal(curEv.choices[freight].cond(),false);
+        choose(freight);
+        E().treasury=50;
+        assert.equal(curEv.choices[freight].cond(),true);
+        choose(freight);drain();
+        assert.equal(load('auto'),true);
+        assert.deepEqual([E().treasury,E().energy,E().people,E().prestige,grainReserveReady()],[0,0,54,50,false]);
+        assert.equal(S.flags.monthlyCourt.done,true);
+      }else{
+        assert.equal(option('调常平仓粮'),-1);
+        assert.match(curEv.text,/仍缺人手/);
+        assert.equal(grainReserveReady(),true);
+      }
+    `);
+  }
+});
+
 test('flood installments postpone half the cost and consume the next monthly memorial once',()=>{
   const {run}=boot();
   run(`

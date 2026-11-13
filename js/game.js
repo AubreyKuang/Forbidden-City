@@ -179,7 +179,7 @@ const A={
     if(!ev){toast(S.flags.monthlyCourt?.done?'本月奏折已批复。':'这份奏折已不适用。');return;}
     const brief=S.flags.monthlyCourt;
     const delegation=brief.floodFollowup?null:reliefDelegation(brief.index);
-    const installment=brief.index===FLOOD_INDEX&&!brief.floodFollowup?stagedFloodRelief():null;
+    const installment=brief.index===FLOOD_INDEX&&!brief.floodFollowup?stagedFloodRelief(brief):null;
     ev.scene='monthly-court';
     ev.choices=[...ev.choices,...[delegation,installment].filter(Boolean)].map((choice,index)=>{
       const cost=choice.delegated?0:1;
