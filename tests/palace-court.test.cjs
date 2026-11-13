@@ -10,14 +10,14 @@ function boot(seedValue=4242){
   const el=()=>({hidden:false,innerHTML:'',value:'',style:{},getContext:()=>canvas,toDataURL:()=>'',setAttribute:noop,addEventListener:noop,appendChild:noop,scrollIntoView:noop,remove:noop});
   const elements=new Map(),storage=new Map();
   const document={querySelector:key=>{if(!elements.has(key))elements.set(key,el());return elements.get(key)},createElement:el,addEventListener:noop};
-  const math=Object.create(Math);let seed=seedValue;
-  math.random=()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);
+  const math=Object.create(Math);let seed=seedValue,roll;
+  math.random=()=>roll??((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);
   const ctx=vm.createContext({Math:math,document,localStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v)},
     requestAnimationFrame:noop,setTimeout:noop,setInterval:noop,getComputedStyle:()=>({getPropertyValue:()=>'sans-serif'}),console,assert,confirm:()=>true,Date});
   runGameScripts(ctx);
   vm.runInContext(`var drain=()=>{for(let i=0;modalOpen&&i<150;i++){if($('#mbox').innerHTML.includes('onclick="nextEv()"'))nextEv();else choose(curEv.choices.findIndex(c=>!c.cond||c.cond()));}};
     A.newGame();A.start();drain();`,ctx);
-  return {ctx,storage,run:code=>vm.runInContext(code,ctx)};
+  return {ctx,storage,setRoll:value=>{roll=value;},run:code=>vm.runInContext(code,ctx)};
 }
 
 test('every consort gets a named father and brother whose office decides her stance, and they persist',()=>{
@@ -138,6 +138,49 @@ test('relief delegation trades treasury and some relief for a free action, once 
     assert.equal(modalOpen,false);
     assert.equal(E().treasury,0);
   `);
+});
+
+test('monthly flood names both specialists and persists the need that determines their odds',()=>{
+  for(const need of ['grain','shelter']){
+    const {run,setRoll}=boot();
+    run(`
+      const [grain,shelter]=harem();
+      houseOf(grain).father.office='户部侍郎';
+      houseOf(shelter).father.office='两江总督';
+      const shelterId=shelter.id,grainId=grain.id;
+      S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index:FLOOD_INDEX,floodNeed:'${need}'};
+      E().treasury=264;E().energy=1;
+      A.court();
+      assert.match(curEv.text,/${need==='grain'?'最缺粮':'急需人手'}/);
+      const find=label=>curEv.choices.find(c=>c.t.includes(label));
+      assert.match(find('调运赈粮').preview,/成功率 ${need==='grain'?80:55}%/);
+      assert.match(find('安置灾民').preview,/成功率 ${need==='shelter'?80:55}%/);
+      assert.equal(find('安置灾民').cond(),false);
+      choose(curEv.choices.length-1);save('1');load('1');
+      E().treasury=265;E().people=50;E().prestige=50;
+      const c=byId(shelterId);
+      c.mood=50;c.aff=50;c.fam.p=60;
+      const otherPower=byId(grainId).fam.p;
+      A.court();
+      assert.match(curEv.text,/${need==='grain'?'最缺粮':'急需人手'}/);
+      assert.equal(find('安置灾民').cond(),true);
+    `);
+    setRoll(.60);
+    run(`
+      choose(curEv.choices.indexOf(find('安置灾民')));
+      assert.equal(E().treasury,${need==='shelter'?50:0});
+      assert.equal(E().people,${need==='shelter'?59:45});
+      assert.equal(E().prestige,${need==='shelter'?52:50});
+      assert.equal(E().energy,0);
+      assert.equal(c.mood,${need==='shelter'?60:38});
+      assert.equal(c.aff,${need==='shelter'?58:50});
+      assert.equal(c.fam.p,${need==='shelter'?65:60});
+      assert.equal(byId(grainId).fam.p,otherPower);
+      assert.equal(S.flags.monthlyCourt.result.person,shelterId);
+      drain();save('1');load('1');A.court();
+      assert.equal(modalOpen,false);
+    `);
+  }
 });
 
 test('flood installments postpone half the cost and consume the next monthly memorial once',()=>{

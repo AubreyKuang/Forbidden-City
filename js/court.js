@@ -63,6 +63,44 @@ const COURT=[
 ];
 const SPONT=[0,1,5,10,11,14];
 const FLOOD_INDEX=0;
+const FLOOD_SUPERVISION={
+  grain:{label:'调运赈粮',need:'粮道被冲断，灾区眼下最缺粮。',offices:['内阁首辅','吏部尚书','户部侍郎','皇商','知府','县令'],cost:150,people:6},
+  shelter:{label:'安置灾民',need:'粮仓尚可支应，急需人手安置离家百姓。',offices:['镇国大将军','两江总督'],cost:215,people:9},
+};
+function monthlyFloodEvent(brief){
+  const event=COURT[FLOOD_INDEX]({});
+  const need=brief.floodNeed;
+  event.text+='\n'+FLOOD_SUPERVISION[need].need;
+  event.cast=[];
+  for(const [specialty,terms] of Object.entries(FLOOD_SUPERVISION)){
+    const consort=harem().find(c=>{
+      if(!hasClan(c)||c.fam.t.includes('（获罪）'))return false;
+      const father=houseOf(c).father;
+      return father.alive&&terms.offices.includes(father.office)&&
+        !paternalFamily(c).some(relative=>relative.fam.t.includes('（获罪）'));
+    });
+    if(!consort)continue;
+    const father=houseOf(consort).father;
+    event.cast.push(consort);
+    const odds=specialty===need?80:55;
+    const failureCost=terms.cost+50;
+    event.choices.push({
+      t:`命${father.name}督办 · ${terms.label}`,person:consort.id,
+      preview:`成功率 ${odds}% · 成功花 ${terms.cost} 万两，民心 +${terms.people}，威望 +2，家族势力 +5，家眷情分 +8、心情 +10 · 失利花 ${failureCost} 万两，民心 −5，家眷心情 −12`,
+      cond:()=>E().treasury>=failureCost,why:`须有 ${failureCost} 万两备款`,
+      f:()=>{
+        if(chance(odds/100)){
+          for(const member of clanMembers(clanKey(consort)))member.fam.p=clamp(member.fam.p+5,0,95);
+          story(consort,`其父${father.name}奉旨${terms.label}，办妥赈务，家族在朝中更受倚重。`);
+          return `${father.name}办妥了赈务，其家族势力上升。${fx(chg({treasury:-terms.cost,people:terms.people,prestige:2}),cchg(consort,{aff:8,mood:10}))}`;
+        }
+        story(consort,`其父${father.name}督办赈灾失利，遭御史问责。`);
+        return `${father.name}调度失当，赈济延误，只得另拨银两善后。${fx(chg({treasury:-failureCost,people:-5}),cchg(consort,{mood:-12}))}`;
+      }
+    });
+  }
+  return event;
+}
 const IMPEACHMENT_INDEX=3;
 const FIRST_IMPEACHMENT_TURN=3;
 function impeachmentSubject(id){
@@ -200,6 +238,13 @@ function monthlyCourtEvent(){
   if(brief?.turn===S.turn&&brief.gen===S.gen){
     if(brief.done)return null;
     if(brief.floodFollowup)return floodReliefEvent();
+    if(brief.index===FLOOD_INDEX){
+      if(!Object.hasOwn(FLOOD_SUPERVISION,brief.floodNeed)){
+        brief.floodNeed='grain';
+        save('auto');
+      }
+      return monthlyFloodEvent(brief);
+    }
     if(brief.index!==IMPEACHMENT_INDEX)return COURT[brief.index]?.(brief);
     // Old saves kept the subject but didn't pin the case or evidence.
     if(!brief.impeachment&&impeachmentSubject(brief.person)){
@@ -239,10 +284,12 @@ function monthlyCourtEvent(){
   }
   for(const index of candidates){
     const impeachment=index===IMPEACHMENT_INDEX?newImpeachment():null;
-    const ev=COURT[index](index===IMPEACHMENT_INDEX?{impeachment}:undefined);
+    const floodNeed=index===FLOOD_INDEX?(S.turn===0||chance(.5)?'grain':'shelter'):null;
+    const ev=floodNeed?monthlyFloodEvent({floodNeed}):COURT[index](index===IMPEACHMENT_INDEX?{impeachment}:undefined);
     if(!ev)continue;
     S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index,person:ev.person,sons:ev.sons,
       ...(impeachment?{impeachment}:{}),
+      ...(floodNeed?{floodNeed}:{}),
       guest:ev.title==='西域使臣'?ev.por:undefined};
     if(impeachment)S.flags.impeachmentSeen=true;
     save('auto');

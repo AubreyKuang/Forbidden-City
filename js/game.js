@@ -193,7 +193,7 @@ const A={
           log(`批复奏折「${ev.title}」，${choice.t}。`);
           const result=choice.f?.();
           brief.result={title:ev.title,choice:choice.t,text:(typeof result==='string'?result:result?.text||'').replace(/§/g,''),
-            person:ev.person,child:ev.sons?.[index]};
+            person:choice.person??ev.person,child:ev.sons?.[index]};
           save('auto');
           return result;
         }};
