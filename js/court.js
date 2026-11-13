@@ -71,6 +71,7 @@ const LOCUST_INDEX=5, HARVEST_INDEX=11;
 const GRAIN_SALE_REVENUE=100, HALF_GRAIN_SALE_REVENUE=45;
 const GRAIN_TRANSPORT_COST=70;
 const LOCUST_LOCAL_PURCHASE_COST=125, LOCUST_LOCAL_PURCHASE_PEOPLE=6;
+const LOCUST_HALF_RESERVE_PEOPLE=3;
 const HALF_GRAIN_TOP_UP_REVENUE=120;
 const AUTUMN_GRAIN_PRICE=75, REGULAR_GRAIN_PRICE=110;
 const AUTUMN_GRAIN_DEPOSIT=20, AUTUMN_GRAIN_BALANCE=40;
@@ -280,12 +281,12 @@ function monthlyGrainEvent(index){
         return `户部从常平仓调粮，灾民领到了救急口粮。${fx(chg({people:localPeople}))}`;
       }});
     if(!half)event.choices.push({t:'就近发半批，留半批备荒',
-      preview:'国库无支出 · 民心 +3 · 留半批备荒粮',delegated:true,
+      preview:`国库无支出 · 民心 +${LOCUST_HALF_RESERVE_PEOPLE} · 留半批备荒粮`,delegated:true,
       cond:()=>grainReserveReady()&&!halfGrainReserve(),why:'须有一整批储粮',
       f:()=>{
         S.flags.grainReserveHalf=true;
         log('蝗灾，户部就近发放半批常平仓粮，余粮留仓。');
-        return `粮仓周边的灾民领到了口粮，余下半批仍在仓中。${fx(chg({people:3}))}`;
+        return `粮仓周边的灾民领到了口粮，余下半批仍在仓中。${fx(chg({people:LOCUST_HALF_RESERVE_PEOPLE}))}`;
       }});
     event.choices.push({t:'调储粮，拨银运送',
       preview:`国库 −${GRAIN_TRANSPORT_COST} 万两 · 民心 +${remotePeople} · 用完余粮`,
@@ -314,6 +315,19 @@ function monthlyGrainEvent(index){
       preview:`国库 −${cost} 万两 · 民心 +${people} · 保留仓粮 · 用掉当月购粮和救急粮名额`,
       cond:()=>!autumnGrainReliefBlock(cost),why:autumnGrainReliefBlock(cost),
       f:()=>settleAutumnGrainRelief(cost,people)});
+    if(grainReserveReady()){
+      const half=halfGrainReserve(),total=people+LOCUST_HALF_RESERVE_PEOPLE;
+      const blocked=()=>!grainReserveReady()?'常平仓须有半批储粮':autumnGrainReliefBlock(cost);
+      event.choices.push({t:'仓粮就近发放，订粮直送远村',grainTransaction:true,
+        preview:`国库 −${cost} 万两 · 民心 +${total} · ${half?'用完仓粮':'留半批仓粮'} · 用掉当月购粮和救急粮名额`,
+        cond:()=>!blocked(),why:blocked(),
+        f:()=>{
+          if(halfGrainReserve())clearGrainReserve();
+          else S.flags.grainReserveHalf=true;
+          log('蝗灾，户部从常平仓就近发半批粮，另由粮商直送远村。');
+          return '仓粮已在附近发放，远村由粮商送粮。'+settleAutumnGrainRelief(cost,total);
+        }});
+    }
   }
   return event;
 }

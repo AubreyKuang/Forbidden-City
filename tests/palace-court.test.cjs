@@ -584,6 +584,28 @@ test('a locust memorial can consume the arriving grain order and leaves full sto
   `);
 });
 
+test('splitting locust relief spends half a reserve and the grain order in one saved decision',()=>{
+  for(const half of [false,true])boot().run(`
+    S.month=8;S.turn=7;
+    const order={gen:S.gen,turn:S.turn};
+    const brief={turn:S.turn,gen:S.gen,index:LOCUST_INDEX};
+    Object.assign(S.flags,{autumnGrainOrder:order,monthlyCourt:brief,grainReserveGen:S.gen,grainReserveHalf:${half}});
+    Object.assign(E(),{people:60,treasury:64,energy:1});
+    const option=()=>curEv.choices.findIndex(c=>c.t.includes('订粮直送远村'));
+    A.court();assert.equal(curEv.choices[option()].cond(),false);
+    E().treasury=65;
+    assert.match(curEv.choices[option()].preview,/民心 \\+9/);
+    const write=save,history=JSON.stringify(S.log);
+    save=()=>false;choose(option());drain();
+    assert.deepEqual([E().treasury,E().energy,E().people,halfGrainReserve(),S.flags.monthlyCourt,S.flags.autumnGrainOrder,JSON.stringify(S.log)],
+      [65,1,60,${half},brief,order,history]);
+    save=write;A.court();choose(option());drain();assert.equal(load('auto'),true);
+    assert.deepEqual([E().treasury,E().energy,E().people,grainReserveReady(),halfGrainReserve(),S.flags.monthlyCourt.done,
+      S.flags.autumnGrainOrder,S.flags.grainPurchaseTurn,S.flags.grainReliefTurn],[0,0,69,${!half},${!half},true,undefined,S.turn,S.turn]);
+    A.court();assert.equal(modalOpen,false);
+  `);
+});
+
 test('delegating the exam resolves the memorial without spending the last energy point',()=>{
   const {run}=boot();
   run(`
