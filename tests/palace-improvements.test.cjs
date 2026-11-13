@@ -939,7 +939,7 @@ test('expanded portrait atlases keep legacy identities, stable growth and every 
     for(let cell=0;cell<PORTRAIT_COUNT;cell++){const sheet=portraitSheet(cell),xy=portraitTile(cell,sheet);assert.ok(xy[0]>=0&&xy[0]<448);assert.ok(xy[1]>=0&&xy[1]<sheet.rows*140);}
     assert.equal(CONSORT_PORTRAITS.length+WESTERN_PORTRAITS.length,67);
     assert.equal(new Set([...CONSORT_PORTRAITS,...WESTERN_PORTRAITS]).size,67);
-    assert.equal(portraitSheet(239).src,'./palace-royal-regalia.webp?v=1');`);
+    assert.equal(portraitSheet(239).src,'./assets/images/palace-royal-regalia.webp?v=1');`);
 });
 test('prince brides share the expanded portrait pool without duplicate faces or changes after marriage and succession',()=>{
   const {run}=boot(880);run(`var mother=harem()[0];S.children=[];var faces=[];
@@ -1077,7 +1077,7 @@ test('residential palace guides show actual names or an empty residence instead 
 test('new portrait sheet appends only, keeps four princess options and shared consort choices',()=>{
   const {run}=boot();run(`assert.equal(PORTRAIT_COUNT,248);assert.equal(portraitSheet(240).scale,4);for(var cell=240;cell<244;cell++)assert.ok(CONSORT_PORTRAITS.includes(cell));
     var k=makeKid(harem()[0],'f','明昭');for(var v=26;v<30;v++){k.portraitVariant=v;k.born=S.turn-216;assert.equal(portraitCell(k),244+v-26);k.born=S.turn-72;assert.ok(portraitCell(k)<240);}
-    assert.equal(portraitSheet(239).src,'./palace-royal-regalia.webp?v=1');`);
+    assert.equal(portraitSheet(239).src,'./assets/images/palace-royal-regalia.webp?v=1');`);
 });
 
 test('all 64 personal episodes have unique authored entries, valid sources and matching conditions',()=>{

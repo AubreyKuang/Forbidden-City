@@ -124,7 +124,7 @@ terrainInk.imageSmoothingEnabled=false;
 const buildingAtlas=document.createElement('img');
 let terrainSeason=-1;
 buildingAtlas.addEventListener('load',()=>{terrainSeason=-1});
-buildingAtlas.src='./palace-buildings-b.webp';
+buildingAtlas.src='./assets/images/palace-buildings-b.webp';
 let mapInk=mg;
 function M(x,y,w,h,c){mapInk.fillStyle=c;mapInk.fillRect(Math.round(x*MAP_SCALE)/MAP_SCALE,Math.round(y*MAP_SCALE)/MAP_SCALE,w,h)}
 

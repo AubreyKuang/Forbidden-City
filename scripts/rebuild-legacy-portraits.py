@@ -11,6 +11,7 @@ import argparse
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
+ASSET_DIR = ROOT / 'assets' / 'images'
 LADIES = 'exec-b6452db6-c6ae-4d08-bef4-b7c4c80d5982.png'
 COURT = 'exec-d16946bf-617e-48a9-a8f7-798fe998019a.png'
 FAMILY = 'exec-e61e9dcb-d018-4697-b3be-808a2286862e.png'
@@ -95,7 +96,7 @@ def atlas(tiles, rows, scale):
     return result
 
 
-def build(folder, output=ROOT, scale=2):
+def build(folder, output=ASSET_DIR, scale=2):
     ladies = court_tiles(folder/LADIES, [0, 315, 630, 946, 1261], [0, 312, 624, 936, 1247])
     court = court_tiles(folder/COURT, [0, 444, 887, 1331, 1774], [0, 444, 887])
     portraits = atlas(ladies[:12] + court + [None] + ladies[12:], 7, scale)
@@ -124,7 +125,7 @@ def build(folder, output=ROOT, scale=2):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('source_folder', type=Path)
-    parser.add_argument('--output', type=Path, default=ROOT)
+    parser.add_argument('--output', type=Path, default=ASSET_DIR)
     parser.add_argument('--scale', type=int, choices=[1, 2], default=2,
                         help='1 reproduces legacy packing for identity verification; game uses 2')
     args = parser.parse_args()

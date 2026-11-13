@@ -10,6 +10,7 @@ import argparse
 from PIL import Image, ImageOps
 
 ROOT = Path(__file__).resolve().parent.parent
+ASSET_DIR = ROOT / 'assets' / 'images'
 SHEETS = [
     ('exec-2bc5533a-3894-4550-ac0d-36ee12b875c6.png', 4, 3),
     ('exec-41a70740-8c99-47aa-8eae-d5ce91d198cf.png', 4, 2),
@@ -44,7 +45,8 @@ def pack(folder, specs, output, count):
     atlas = Image.new('RGBA', (896, count // 4 * 280))
     for index, frame in enumerate(frames):
         atlas.paste(frame, ((index % 4) * 224, (index // 4) * 280))
-    dest = ROOT / output
+    dest = ASSET_DIR / output
+    dest.parent.mkdir(parents=True, exist_ok=True)
     atlas.save(dest, 'WEBP', quality=95, method=6, exact=True)
     print(f'{output}: {count} portraits, {atlas.width}×{atlas.height}, {dest.stat().st_size:,} bytes')
 

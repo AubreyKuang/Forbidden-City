@@ -404,7 +404,7 @@ body{background:#241917}
 }
 
 /* Illustrated opening scenes */
-:root{--coronation-art:url("./palace-coronation.webp");--selection-art:url("./palace-selection.webp")}
+:root{--coronation-art:url("./assets/images/palace-coronation.webp");--selection-art:url("./assets/images/palace-selection.webp")}
 #app[data-layout="setup"] #panel{
   width:100%;margin:0;padding:0;border-radius:0;background:#3d251e;box-shadow:none;
 }

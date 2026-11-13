@@ -179,15 +179,15 @@ const BEAUTY_PORTRAIT_START=92, YOUNG_ROYAL_PORTRAIT_START=136, PORTRAIT_COUNT=2
 const PRINCESS_VARIANTS=30;
 const portraitVariantCount=child=>child.sex==='f'?PRINCESS_VARIANTS:DESCENDANT_VARIANTS;
 const portraitSheets=[
-  {start:0,rows:7,scale:2,src:'./palace-portraits-b.webp?v=original-hd-1',image:portraitAtlas},
-  {start:FAMILY_PORTRAIT_START,rows:4,scale:2,src:'./palace-family.webp?v=original-hd-1',image:familyAtlas},
-  {start:DESCENDANT_PORTRAIT_START,rows:12,scale:2,src:'./palace-descendants.webp?v=original-hd-1',image:descendantAtlas},
-  {start:BEAUTY_PORTRAIT_START,rows:11,scale:2,src:'./palace-beauties.webp?v=1',image:beautyAtlas},
-  {start:YOUNG_ROYAL_PORTRAIT_START,rows:9,scale:2,src:'./palace-young-royals.webp?v=1',image:youngRoyalAtlas},
-  {start:172,rows:9,scale:2,src:'./palace-young-royals-2.webp?v=1',image:document.createElement('img')},
-  {start:208,rows:2,scale:2,src:'./palace-regalia.webp?v=1',image:document.createElement('img')},
-  {start:216,rows:6,scale:2,src:'./palace-royal-regalia.webp?v=1',image:document.createElement('img')},
-  {start:240,rows:2,scale:4,src:'./palace-gentle-portraits.webp?v=1',image:document.createElement('img')}
+  {start:0,rows:7,scale:2,src:'./assets/images/palace-portraits-b.webp?v=original-hd-1',image:portraitAtlas},
+  {start:FAMILY_PORTRAIT_START,rows:4,scale:2,src:'./assets/images/palace-family.webp?v=original-hd-1',image:familyAtlas},
+  {start:DESCENDANT_PORTRAIT_START,rows:12,scale:2,src:'./assets/images/palace-descendants.webp?v=original-hd-1',image:descendantAtlas},
+  {start:BEAUTY_PORTRAIT_START,rows:11,scale:2,src:'./assets/images/palace-beauties.webp?v=1',image:beautyAtlas},
+  {start:YOUNG_ROYAL_PORTRAIT_START,rows:9,scale:2,src:'./assets/images/palace-young-royals.webp?v=1',image:youngRoyalAtlas},
+  {start:172,rows:9,scale:2,src:'./assets/images/palace-young-royals-2.webp?v=1',image:document.createElement('img')},
+  {start:208,rows:2,scale:2,src:'./assets/images/palace-regalia.webp?v=1',image:document.createElement('img')},
+  {start:216,rows:6,scale:2,src:'./assets/images/palace-royal-regalia.webp?v=1',image:document.createElement('img')},
+  {start:240,rows:2,scale:4,src:'./assets/images/palace-gentle-portraits.webp?v=1',image:document.createElement('img')}
 ];
 const portraitSheet=cell=>portraitSheets.slice().reverse().find(sheet=>cell>=sheet.start)||portraitSheets[0];
 function ensurePortraitSheet(cell){const sheet=portraitSheet(cell);if(!sheet.image.src)sheet.image.src=sheet.src;}

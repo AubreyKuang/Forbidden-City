@@ -144,7 +144,11 @@
 
 NPC 记忆区分客观事件与人物主观理解。同一场争执，受助者与被责罚者会留下不同感受；记忆包含来源事件、情绪、确信程度与获知方式，影响后续闲谈和人际判断。
 
-这套记忆由本地 JavaScript 规则生成，**不需要大模型服务或 API 密钥**。人物状态承担当前情境，短期经历可归纳为长期印象与人生摘要，并随存档保存。每人最多保留 32 条短期、50 条长期记忆和 8 条摘要；它不是无限保存的完整人生录像，也不支持世界事件重放。
+这套记忆由本地 JavaScript 规则生成，**不需要大模型服务或 API 密钥**。每人最多保留 **96 条短期记忆、160 条长期记忆与 24 条旧事摘要**，随存档保存，旧档自动衔接。
+
+不同的经历会分别留下细节；只有对象、内容、情绪方向和获知方式一致的重复日常才会合并，并记录累计次数、最早与最近的时间。心愿、受罚、母子离别等重要经历优先保留；退出日常记忆的代表性旧事进入摘要，仍可用于闲谈检索与人际判断。亲历与传闻不会混并，重复听见也不会自动变成确信。
+
+重复日常保留最多六条代表性事件来源，并清理无记忆引用的旧事件，控制存档体积。记忆仍有容量上限，不能恢复旧版已经遗忘的内容，也不提供完整人生录像或世界事件重放。
 
 ## 生育与皇嗣
 
@@ -538,25 +542,27 @@ node tests/palace-flow.cjs
 
 页面使用 `defer` 按 `index.html` 的顺序执行脚本，最后由 `main.js` 启动。各玩法模块共用 `game.js` 中的状态与操作入口；`dev.html` 在相同游戏模块后额外加载金手指。
 
+WebP 素材统一放在 [`assets/images/`](assets/images/)：人物立绘、宫城建筑、登基与选秀场景都从此目录加载，旧版图集也保留在这里。素材打包脚本默认输出到同一目录；实机截图仍放在 `docs/screenshots/`。
+
 | 文件或目录 | 职责 |
 |---|---|
 | `index.html` | 正式版页面骨架与脚本顺序 |
 | `dev.html`、`dev.css` | 测试入口、金手指表单、立绘预览与手机布局 |
 | `palace.css` | 游戏界面、宫城、人物、场景与移动端样式 |
 | `scripts/build-dev.py` | 从正式入口生成测试入口 |
-| `palace-portraits-b.webp` | 妃嫔、帝王等人物与凤冠图集 |
-| `palace-family.webp`、`palace-descendants.webp` | 保留原有编号的父兄、皇子公主与成长图集 |
-| `palace-beauties.webp`、`palace-regalia.webp` | 妃嫔与皇子选妃共用的佳人、盛装图集 |
-| `palace-young-royals*.webp`、`palace-royal-regalia.webp` | 皇子、公主的扩充成长与华服图集 |
+| `assets/images/palace-portraits-b.webp` | 妃嫔、帝王等人物与凤冠图集 |
+| `assets/images/palace-family.webp`、`assets/images/palace-descendants.webp` | 保留原有编号的父兄、皇子公主与成长图集 |
+| `assets/images/palace-beauties.webp`、`assets/images/palace-regalia.webp` | 妃嫔与皇子选妃共用的佳人、盛装图集 |
+| `assets/images/palace-young-royals*.webp`、`assets/images/palace-royal-regalia.webp` | 皇子、公主的扩充成长与华服图集 |
 | `scripts/build-portrait-atlases.py` | 将批准的原图按固定编号打包，保留比例与透明通道 |
 | `scripts/rebuild-legacy-portraits.py` | 从原始高清源图恢复旧立绘的分辨率，保留原貌与存档编号 |
 | `docs/portrait-art-direction.md` | 人物美术参考与清晰度、材质、构图要求 |
-| `palace-gentle-portraits.webp` | 四张妃嫔、四张成年公主的透明高清图集 |
+| `assets/images/palace-gentle-portraits.webp` | 四张妃嫔、四张成年公主的透明高清图集 |
 | `scripts/build-gentle-portraits.py` | 将批准的新立绘打包为独立图集 |
 | `scripts/build-experience-catalog.cjs` | 从游戏定义生成个人经历完整图鉴 |
 | `docs/character-experiences/README.md` | 已实现经历、条件、分支、结果与原典索引 |
-| `palace-buildings-b.webp` | 宫殿、宫门与水榭图集 |
-| `palace-coronation.webp`、`palace-selection.webp` | 登基与选秀场景素材 |
+| `assets/images/palace-buildings-b.webp` | 宫殿、宫门与水榭图集 |
+| `assets/images/palace-coronation.webp`、`assets/images/palace-selection.webp` | 登基与选秀场景素材 |
 | `docs/screenshots/` | 实机截图 |
 | `tests/` | 模块回归与完整流程验证 |
 

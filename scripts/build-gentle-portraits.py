@@ -5,6 +5,7 @@ Cells 240–243: consorts. Cells 244–247: adult princesses. 448×560 per cell.
 from pathlib import Path
 import argparse
 from PIL import Image, ImageOps
+ASSET_DIR = Path(__file__).resolve().parent.parent / 'assets' / 'images'
 SOURCES = [
     'exec-4b5c3ed3-b6e8-4ad1-92ce-2246a4210d1f.png',
     'exec-3a1b979d-eb63-4840-8378-dafb57681d13.png',
@@ -26,6 +27,7 @@ if __name__ == '__main__':
             # Asset packing only; background extraction was done by the image editor.
             frame=ImageOps.contain(original,(448,560),Image.Resampling.LANCZOS)
             atlas.paste(frame,((i%4)*448+(448-frame.width)//2,(i//4)*560+560-frame.height))
-    output=Path(__file__).resolve().parent.parent/'palace-gentle-portraits.webp'
+    output=ASSET_DIR/'palace-gentle-portraits.webp'
+    output.parent.mkdir(parents=True,exist_ok=True)
     atlas.save(output,'WEBP',quality=96,method=6,exact=True)
     print(f'{output.name}: {atlas.width}×{atlas.height}; eight transparent portraits; {output.stat().st_size:,} bytes')
