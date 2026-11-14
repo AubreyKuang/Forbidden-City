@@ -26,8 +26,9 @@ function birthEvent(c){
   const kind=birthType(sexes),omen=chance(.03)?pick(Object.keys(BIRTH_OMENS)):null;
   const children=sexes.map(sex=>makeKid(c,sex,suggestName(sex)));
   registerMultipleBirth(children);
+  const prayerKey=currentPregnancyPrayer(c)?.key;
   delete c.pregnancyFather;delete c.pregnancyCalendar;
-  c.delivery={children:children.map(k=>k.id),kind,omen,settled:false,
+  c.delivery={children:children.map(k=>k.id),kind,omen,...(prayerKey?{prayerKey}:{}),settled:false,
     difficult:chance(c.trait==='体弱'?.12:.03),originalLoss:count===1&&!!c.swapPlot&&!c.swapPlot.settled&&chance(.02),swap:false,templeAdvice:rollBirthTempleAdvice(children,omen)};
   c.preg=0;c.prot=false;c.swapRisk=false;c.lastBirth=S.turn+1;
   children.forEach((k,i)=>{
@@ -99,6 +100,7 @@ function finishDelivery(c){
     if(k.parentage)follow.push(parentageInquiryEvent(k));
   }
   if(delivery.templeAdvice){const advice=birthTempleAdviceEvent(kidById(delivery.templeAdvice));if(advice)follow.push(advice);}
+  text+=pregnancyPrayerBirthEcho(c,children);
   Q.unshift(...follow);return text+(delivery.kind?'\n孩子们的档案中已记下同生手足，可听国师贺生，日后也能看他们一起长大的故事。':'')+fx(effect);
 }
 function rollBirthTempleAdvice(children,omen){
