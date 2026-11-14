@@ -14,7 +14,7 @@ function applyBirthOmen(k,id){
 }
 function birthTags(k){
   const omen=BIRTH_OMENS[k.birthOmen];
-  return `${k.birthType?`<span class="tag">${esc(k.birthType)} · 第${cnNum(k.birthOrder)}个出生</span>`:''}${omen?`<span class="tag y" title="出生时${omen.label}+${omen.bonus}">${omen.name} · ${omen.label}+${omen.bonus}</span>`:''}${k.birthTrouble?`<span class="tag">${esc({frail:'初生体弱',quake:'出生时地动',drought:'出生逢旱'}[k.birthTrouble])}</span>`:''}`;
+  return `${multipleBadge(k)}${omen?`<span class="tag y" title="出生时${omen.label}+${omen.bonus}">${omen.name} · ${omen.label}+${omen.bonus}</span>`:''}${k.birthTrouble?`<span class="tag">${esc({frail:'初生体弱',quake:'出生时地动',drought:'出生逢旱'}[k.birthTrouble])}</span>`:''}`;
 }
 function deliveryKids(c){return (c.delivery?.children||[]).map(kidById).filter(Boolean)}
 function pendingDelivery(){return S.consorts.find(c=>c.delivery&&!c.delivery.settled&&deliveryKids(c).some(k=>k.pendingName))}
@@ -24,6 +24,7 @@ function birthEvent(c){
   const count=rollBirthCount(),sexes=Array.from({length:count},()=>chance(.5)?'m':'f');
   const kind=birthType(sexes),omen=chance(.03)?pick(Object.keys(BIRTH_OMENS)):null;
   const children=sexes.map(sex=>makeKid(c,sex,suggestName(sex)));
+  registerMultipleBirth(children);
   delete c.pregnancyFather;delete c.pregnancyCalendar;
   c.delivery={children:children.map(k=>k.id),kind,omen,settled:false,
     difficult:chance(c.trait==='体弱'?.12:.03),swap:!!c.swapRisk&&!c.swapPlot&&chance(.7),templeAdvice:rollBirthTempleAdvice(children,omen)};
@@ -31,7 +32,7 @@ function birthEvent(c){
   children.forEach((k,i)=>{
     k.pendingName=true;k.birthOrder=i+1;
     if(kind){k.birthType=kind;k.birthGroup=children[0].id;}
-    kstory(k,`降生于${c.palace}，生母${k.momName}${kind?`，为${kind}中第${cnNum(i+1)}个出生的孩子`:''}。`);
+    kstory(k,`降生于${c.palace}，生母${k.momName}${kind?`，${multipleIdentity(k).name}，${['先降生','随后降生','最后降生'][i]}`:''}。`);
     if(omen)applyBirthOmen(k,omen);
   });
   settleBirthSwap(c,children[0]);
@@ -39,11 +40,11 @@ function birthEvent(c){
 }
 function birthNamingEvent(c){
   const children=deliveryKids(c),k=children.find(k=>k.pendingName);if(!k)return null;
-  const kind=c.delivery.kind,omen=BIRTH_OMENS[c.delivery.omen];
-  const report=kind?`${cName(c)}于${c.palace}诞下${kind}，共${cnNum(children.length)}位皇嗣。`:
+  const kind=c.delivery.kind,identity=multipleIdentity(k),omen=BIRTH_OMENS[c.delivery.omen];
+  const report=kind?`${cName(c)}于${c.palace}诞下${cnNum(children.length)}位皇嗣，${identity?.detail||kind}，宫人贺作“${identity?.name||kind}”。`:
     `${cName(c)}于${c.palace}临盆，阵痛一日一夜，诞下一位${k.sex==='m'?'小皇子':'小公主'}。`;
-  return {title:kind||'弄璋弄瓦',por:c,cast:children,sfx:'joy',
-    text:`${report}${omen?`\n${omen.text}\n§${omen.name}：本胎皇嗣出生时${omen.label}+${omen.bonus}`:''}\n${kind?`请为第${cnNum(k.birthOrder)}位${k.sex==='m'?'小皇子':'小公主'}赐名`:'请陛下赐名'}（不含姓氏）：`,
+  return {title:identity?.name||kind||'弄璋弄瓦',por:c,cast:children,sfx:'joy',
+    text:`${report}${omen?`\n${omen.text}\n§${omen.name}：本胎皇嗣出生时${omen.label}+${omen.bonus}`:''}\n${kind?`请为${['先降生','随后降生','最后降生'][k.birthOrder-1]||'这位'}的${k.sex==='m'?'小皇子':'小公主'}赐名`:'请陛下赐名'}（不含姓氏）：`,
     input:{def:k.name,max:3},choices:[{t:'赐名',f:value=>{
       if(!k.pendingName)return null;
       const name=(value||k.name).trim().slice(0,3)||k.name;
@@ -82,7 +83,7 @@ function finishDelivery(c){
     if(k.parentage)follow.push(parentageInquiryEvent(k));
   }
   if(delivery.templeAdvice){const advice=birthTempleAdviceEvent(kidById(delivery.templeAdvice));if(advice)follow.push(advice);}
-  Q.unshift(...follow);return text+fx(effect);
+  Q.unshift(...follow);return text+(delivery.kind?'\n孩子们的档案中已记下同生手足，可听国师贺生，日后也能看他们一起长大的故事。':'')+fx(effect);
 }
 function rollBirthTempleAdvice(children,omen){
   if(omen||S.turn-(S.flags.lastBirthTempleAdvice??-99)<36)return null;

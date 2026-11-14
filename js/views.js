@@ -241,7 +241,7 @@ function viewFamily(){
   const childLine=k=>{
     const foster=k.foster!==k.mom&&fosterOf(k);
     return `<li><button class="btn quiet family-person" onclick="A.go('kid',${k.id})">${porImg(k,52)}
-      <span><strong>${esc(kidName(k))}</strong>${foster?`<small class="hint">由${esc(fullName(foster))}抚养</small>`:''}</span></button></li>`;
+      <span><strong>${esc(kidName(k))}</strong>${foster?`<small class="hint">由${esc(fullName(foster))}抚养</small>`:''}${multipleIdentity(k)?`<small class="hint">${esc(multipleIdentity(k).name)}</small>`:''}</span></button></li>`;
   };
   const member=c=>`<li><button class="btn quiet family-person" onclick="A.go('consort',${c.id})">${porImg(c,60)}
     <span><strong>${esc(fullName(c))}</strong><small class="hint">${esc(!c.alive?'已故':c.gone?'已出宫':cName(c))}</small></span></button>
@@ -409,7 +409,7 @@ function viewKid(){
    ${householdPanel(k)}
    <div class="detail-vitals">${bar('才学',k.lit,'#617991')}${bar('武艺',k.mar,'#92504a')}${bar('品德',k.vir,'#517369')}</div>
    <div class="detail-stack">
-    ${childDispositionPanel(k)}${historyPanel(k)}
+    ${childDispositionPanel(k)}${multipleBirthPanel(k)}${historyPanel(k)}
     ${k.alive?initiativeHTML(k):''}
     ${princessActions(k)}
     ${detailSection('少年心事',youthPanel(k))}

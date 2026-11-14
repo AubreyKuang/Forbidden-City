@@ -331,12 +331,12 @@ test('twins are registered together, resume after a partial naming reload and se
   const {run,force}=boot();
   run(`var mother=harem()[0];mother.trait='温婉';mother.preg=10;mother.mood=20;mother.aff=20;mother.favor=20;mother.rank=4;mother.swapRisk=false;var before=S.children.length;`);
   force(.01,.1,.9,.01,.1); // twins, boy/girl, omen, red skies
-  run(`var ev=birthEvent(mother);mother.delivery.difficult=false;assert.equal(ev.title,'龙凤胎');assert.equal(S.children.length,before+2);
+  run(`var ev=birthEvent(mother);mother.delivery.difficult=false;assert.equal(ev.title,'龙凤呈祥');assert.equal(S.children.length,before+2);
     var kids=deliveryKids(mother),ids=kids.map(k=>k.id);assert.equal(kids[0].birthGroup,kids[1].birthGroup);
     assert.equal(kids[0].born,kids[1].born);assert.ok(kids.every(k=>k.birthOmen==='red'));assert.equal(mother.preg,0);
     pushEv(ev);$('#minput').value='承双';choose(0);assert.equal(kids[0].pendingName,false);assert.equal(kids[1].pendingName,true);
     var motherId=mother.id;save('1');Q.length=0;modalOpen=false;curEv=null;load('1');migrate();mother=byId(motherId);
-    var turn=S.turn;A.endMonth();assert.equal(S.turn,turn);assert.equal(curEv.title,'龙凤胎');
+    var turn=S.turn;A.endMonth();assert.equal(S.turn,turn);assert.equal(curEv.title,'龙凤呈祥');
     $('#minput').value='明双';choose(0);drain();
     assert.equal(S.children.length,before+2);assert.ok(deliveryKids(mother).every(k=>!k.pendingName));assert.equal(mother.delivery.settled,true);
     assert.equal(mother.aff,30);assert.equal(mother.favor,28);var prestige=E().prestige;finishDelivery(mother);assert.equal(E().prestige,prestige);

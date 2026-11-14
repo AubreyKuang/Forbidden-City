@@ -137,11 +137,12 @@ function childVoicePool(k){
   const mother=byId(k.foster||k.mom);
   if(mother?.alive&&(mother.cold||mother.gone))return [voiceLine('mother-away',`${who}迟疑片刻，才提起母亲。`,a<8?'父皇，我想娘了。能不能替我问问，她有没有好好吃饭？':`父皇，${self}知道母亲的处境。别的事不敢擅求，只想问一声她可安好。`)];
   if(k.hp<40)return [voiceLine('ill',`${who}说得很轻，仍想把话说完。`,a<8?'父皇，我今天没力气了。等好了再陪我玩，好不好？':`父皇，今日精神尚短，${self}想先养好身子，再来请教。`)];
+  const siblingMemory=multipleVoice(k);if(siblingMemory?.key==='multiple-memory')return [siblingMemory];
   if(childHasLeftPalace(k))return [voiceLine('letter','家书里，有一段是专门写给你的。',k.married?[
     `父皇，${self}也渐渐懂得了，过日子有许多细处要学。得空还想同您说说。`,
     `离宫以后，才发觉许多事要自己商量着办。${self}会认真过日子，也盼宫中安好。`
   ]:[`父皇，外头的事与书上所读颇有不同。${self}想把见闻记下来，日后亲口说给您听。`,`宫门虽远，请安的话不敢忘。${self}在此努力，也盼父皇顾惜身子。`])];
-  if(a<6)return [childDispositionVoice(k),historyVoice(k)].filter(Boolean);
+  if(a<6)return [childDispositionVoice(k),historyVoice(k),multipleVoice(k)].filter(Boolean);
   if(k.love<25)return [voiceLine('distant',`${who}行了礼，仍有些拘谨。`,a<12?'父皇想听功课，还是……我自己的事？':`${self}不知父皇今日想问什么。若肯听，也有几句自己的话想说。`)];
   const stat=k.mar>k.lit&&k.mar>k.vir?'mar':k.lit>=k.vir?'lit':'vir';
   const spiritual=daoLifeVoice(k);if(spiritual)return [spiritual];
@@ -155,7 +156,7 @@ function childVoicePool(k){
     lit:[`书中有一句，${self}近来总想不透。能说出道理，是否就一定做得到？`,`父皇，${self}想留一点自己的见解。即使不尽对，也请容我先讲完。`],
     vir:[`小时候只盼着长大，如今才知道，有些事没人替自己拿主意。${self}还想听听父皇当年怎样过来的。`,`父皇，${self}想把答应过的事做好。别人未必记得，自己却不该忘。`]
   };
-  return [childDispositionVoice(k),voiceLine(`study-${stat}`,`${who}放下手边的事，主动与你攀谈。`,a<12?young[stat]:older[stat]),historyVoice(k)].filter(Boolean);
+  return [childDispositionVoice(k),voiceLine(`study-${stat}`,`${who}放下手边的事，主动与你攀谈。`,a<12?young[stat]:older[stat]),historyVoice(k),multipleVoice(k)].filter(Boolean);
 }
 function characterVoice(person,mode='greeting'){
   if(!person?.alive||person.gone||person.pendingName)return null;
