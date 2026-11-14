@@ -343,7 +343,7 @@ function viewConsort(){
     ${act?detailSection('牵挂远方的孩子',motherConcernPanel(c)):''}
     ${detailSection('孩子的身世',consortParentagePanel(c))}
     ${detailSection('册封与宫务',management?`<div class="acts">${management}</div>`:'')}
-    ${personalExperiencePanel(c)}${historyPanel(c)}
+    ${timeTravelerPanel(c)}${personalExperiencePanel(c)}${historyPanel(c)}
     ${detailSection('她的故事',arcLine(c)+detailStory(c))}
     ${detailFold('处置',penalties?`<div class="acts">${penalties}</div>`:'')}
    </div>`;

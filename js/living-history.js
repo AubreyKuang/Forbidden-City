@@ -8,6 +8,9 @@ const historyPerson=id=>byId(id)||kidById(id);
 const historyAge=p=>p.sex?kidAge(p):p.age;
 const historyName=p=>p.sex?kidName(p):cName(p);
 const historyState=p=>p?.livingHistory;
+// Discovery has its own deterministic ordering, so adding quiet stories does
+// not consume the RNG used by childbirth, disasters or mandatory monthly events.
+const historyOrder=(items,salt)=>items.map(item=>({item,order:voiceHash(`${S.gen}:${S.turn}:${salt}:${item.id}`)})).sort((a,b)=>a.order-b.order).map(x=>x.item);
 function historyFits(p,role){
   return historyPresent(p)&&!!p.sex===(role.kind==='child')&&
     p.hp>=(role.minHp??40)&&
@@ -124,11 +127,11 @@ function historyTick(){
   if(pace?.gen===S.gen&&S.turn-pace.last<3)return;
   if(people.filter(p=>!!historyScene(p)).length>=3)return;
   const busy=new Set(people.flatMap(p=>{const c=historyState(p)?.current;return c?[p.id,c.other]:[]}).filter(id=>id!=null));
-  const candidates=shuffle(people.filter(p=>historyPresent(p)&&!busy.has(p.id)&&!p.personalExperiences?.current&&
-    S.turn-(historyState(p)?.lastEnd??-99)>=12&&(p.sex||!['悲恸','心如死灰','惶恐'].includes(xinOf(p)))));
+  const candidates=historyOrder(people.filter(p=>historyPresent(p)&&!busy.has(p.id)&&!p.personalExperiences?.current&&
+    S.turn-(historyState(p)?.lastEnd??-99)>=12&&(p.sex||!['悲恸','心如死灰','惶恐'].includes(xinOf(p)))),'people');
   for(const p of candidates){
-    const rules=shuffle(LIVING_STORIES.filter(r=>historyEligible(p,r)&&historyState(p)?.seen?.[r.id]===undefined&&
-      (pace?.gen!==S.gen||S.turn-(pace.topics[r.id]??-99)>=36)));
+    const rules=historyOrder(LIVING_STORIES.filter(r=>historyEligible(p,r)&&historyState(p)?.seen?.[r.id]===undefined&&
+      (pace?.gen!==S.gen||S.turn-(pace.topics[r.id]??-99)>=36)),p.id);
     for(const rule of rules){
       const other=rule.other?historyOthers(p,rule).find(o=>!busy.has(o.id)&&!o.personalExperiences?.current):null;
       if(rule.other&&!other)continue;
