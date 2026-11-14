@@ -110,7 +110,7 @@ test('school event prose fits young pupils and quiet children do not become gene
 });
 
 test('monthly discovery is paced, optional, and shared participants never get double-booked',()=>{
- const {run}=boot();run(fixture);run(`historyFixture('boat-weight');var beforeQueue=Q.length;historyTick();
+ const {run,force}=boot();run(fixture);force(.314);run(`historyFixture('boat-weight');`);force(.2718);run(`var beforeQueue=Q.length;historyTick();assert.equal(R(),.2718);
   assert.equal(historyPeople().filter(p=>p.livingHistory?.current).length,1);assert.equal(Q.length,beforeQueue);
   assert.equal(S.flags.livingHistoryPace.last,S.turn);var first=JSON.stringify(S.flags.livingHistoryPace);historyTick();assert.equal(JSON.stringify(S.flags.livingHistoryPace),first);
   S.turn+=2;historyTick();assert.equal(historyPeople().filter(p=>p.livingHistory?.current).length,1);
