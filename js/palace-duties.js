@@ -12,7 +12,7 @@ function palaceSupportMemory(a,b,type,place,outcome,aView,bView,aEmotion,bEmotio
 }
 
 function palaceAllyScore(a,b){
-  return relGet(a,b)+consortCompatibility(a,b)*3+NPCMemory.influence(S,a.id,b.id)*6;
+  return relGet(a,b)+consortCompatibility(a,b)*3+NPCMemory.influence(S,a.id,b.id)*6+continuityPartnership(a,b);
 }
 
 function courtFriendshipEvent(){
@@ -50,7 +50,7 @@ function duanwuWork(){return S.duanwuWork?.gen===S.gen?S.duanwuWork:null;}
 function duanwuOfficers(work){return [byId(work.tables),byId(work.gifts)];}
 function duanwuHelper(lead,other){
   return harem().filter(c=>c!==lead&&c!==other&&canManageFeast(c)&&relGet(lead,c)>=12&&!isRival(lead,c)&&
-      NPCMemory.influence(S,c.id,lead.id)>-.65)
+      NPCMemory.influence(S,c.id,lead.id)>-.65&&continuityPartnership(c,lead)>-10)
     .sort((a,b)=>palaceAllyScore(lead,b)-palaceAllyScore(lead,a))[0];
 }
 function duanwuPanel(){
@@ -125,6 +125,7 @@ function finishDuanwu(work,mode){
         .65,countCredit?.85:work.issue==='漏记帮手'&&mode!=='私下协调'?-.7:.45);
     }
     cchg(tables,{mood:gain});cchg(gifts,{mood:gain});
+    startDutyContinuity(work,mode);
   }
   Object.assign(work,{stage:'finished',result});
   log(`端午宫务办结。${result}`,1);

@@ -60,6 +60,7 @@ function palaceArrivalEvent(name,id){
       }
     },choices:[
       {t:'坐下陪她说话 · 精力−1',primary:true,cond:()=>E().energy>0,why:'本月精力不足，仍可查看宫中近况',f:()=>{if(valid())A.chat(c.id,true);return null;}},
+      ...(continuityReady(c)?[{t:'接着谈她近来牵挂的事',f:()=>{const t=continuityReady(c);if(t)A.continuePersonal(t.id,true);return null;}}]:[]),
       ...(atHome?[{t:`看看${scene.child.name}与母亲`,f:()=>{UI.view='palace';UI.sel=name;return null;}}]:[]),
       {t:'看看宫中近况',f:()=>{UI.view='palace';UI.sel=name;return null;}},
       {t:'查看她的详细信息',f:()=>{if(valid())A.go('consort',c.id);return null;}},

@@ -313,7 +313,7 @@ setInterval(mapTick,50);
 // Derive leads from live activities so expired or unavailable characters leave the map.
 function mapActivityLeads(){
   if(!S||S.over)return [];
-  const leads=[...palaceRomanceLeads(),...personalExperienceLeads(),...historyLeads(),...multipleLeads()],meeting=showGardenReunion(),stop=lanternStop(),work=duanwuWork();
+  const leads=[...continuityLeads(),...palaceRomanceLeads(),...personalExperienceLeads(),...historyLeads(),...multipleLeads()],meeting=showGardenReunion(),stop=lanternStop(),work=duanwuWork();
   const school=schoolScene();if(school&&!school.scene.result)leads.push({place:'ss',title:SCHOOL_TITLES[school.scene.kind],text:school.cast.map(k=>k.name).join('与')+'正在窗下说话。',cast:school.cast});
   if(meeting)leads.push({place:'yh',title:'御花园赴约',button:'去御花园赴约',text:meeting.reunion.text,cast:[meeting.first,meeting.second],expires:true});
   if(stop)leads.push({place:stop.place,title:'上元寻灯 · '+stop.name,text:'正月灯会，带孩子走一走，猜一回灯谜。',cast:(activeLantern()?.ids||lanternChildren().map(k=>k.id)).map(kidById),expires:!!activeLantern()});
@@ -335,13 +335,13 @@ function mapActivityLeads(){
   }
   const moment=gardenFamilyMoment();
   if(moment&&!meeting)leads.push({place:'yh',title:'母子相聚',text:moment.text,cast:[kidById(moment.child),byId(moment.mother)]});
-  return leads;
+  return leads.sort((a,b)=>continuityLeadScore(b)-continuityLeadScore(a));
 }
-function mapLeadAction(lead){return lead.place?`A.visitMapActivity('${lead.place}')`:`A.go('${lead.person.sex?'kid':'consort'}',${lead.person.id})`;}
+function mapLeadAction(lead){if(lead.action)return lead.action;return lead.place?`A.visitMapActivity('${lead.place}')`:`A.go('${lead.person.sex?'kid':'consort'}',${lead.person.id})`;}
 function mapLeadPlace(lead){return lead.place?PLACES.find(p=>p.id===lead.place).n:porName(lead.person);}
 function mapActivityPanel(leads){
   if(!leads.length)return '<p class="hint map-quiet">宫中暂静，可以到各宫走走。</p>';
-  const card=lead=>`<article class="map-activity-card"><div><strong>${esc(lead.title)}</strong><small>${lead.expires?'本月邀约':'本月动向'}</small><p>${esc(lead.text)}</p></div>
+  const card=lead=>`<article class="map-activity-card"><div><strong>${esc(lead.title)}</strong><small>${lead.continuity?'前事有后话':lead.expires?'本月邀约':'本月动向'}</small><p>${esc(lead.text)}</p></div>
     ${activityPortraits(...lead.cast)}<button class="btn sm jade" onclick="${mapLeadAction(lead)}">${esc(lead.button||mapLeadPlace(lead)+' · '+lead.title)} →</button></article>`;
   return `<section class="map-activity-panel" aria-label="本月值得一看">${leads.slice(0,2).map(card).join('')}</section>${leads.length>2?`<div class="initiative-notices">${leads.slice(2).map(lead=>`<button class="btn sm" onclick="${mapLeadAction(lead)}">${esc(mapLeadPlace(lead))} · ${esc(lead.title)}</button>`).join('')}</div>`:''}`;
 }

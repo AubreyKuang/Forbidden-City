@@ -332,6 +332,7 @@ function viewConsort(){
    ${acts?`<div class="detail-actions" role="group" aria-label="人物操作"><span class="detail-action-label" aria-hidden="true">人物操作</span><div class="acts">${acts}</div></div>`:''}
    <div class="detail-vitals">${bar('恩宠',c.favor)}${bar('心情',c.mood,'#517369')}${bar('情分',c.aff,'#936375')}</div>
    <div class="detail-stack">
+    ${continuityPanel(c)}
     ${detailSection('寺中清修',consortTemplePanel(c))}
     ${detailSection('御赐珍饰',jewelryPanel(c))}
     ${act&&!c.cold?initiativeHTML(c):''}
@@ -410,7 +411,7 @@ function viewKid(){
    ${householdPanel(k)}
    <div class="detail-vitals">${bar('才学',k.lit,'#617991')}${bar('武艺',k.mar,'#92504a')}${bar('品德',k.vir,'#517369')}</div>
    <div class="detail-stack">
-    ${childDispositionPanel(k)}${multipleBirthPanel(k)}${historyPanel(k)}
+    ${childDispositionPanel(k)}${continuityPanel(k)}${multipleBirthPanel(k)}${historyPanel(k)}
     ${k.alive?initiativeHTML(k):''}
     ${princessActions(k)}
     ${detailSection('少年心事',youthPanel(k))}

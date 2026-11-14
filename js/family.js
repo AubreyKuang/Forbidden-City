@@ -34,6 +34,7 @@ function recordFamilyTime(k, mother, activity, childView, motherView, { gain = 8
     { person: k.id, subject: mother.id, interpretation: childView, emotion: .75, impact: 75 },
     { person: mother.id, subject: k.id, interpretation: motherView, emotion: .8, impact: 78 }
   ]);
+  startChildContinuity(k,mother,activity);
 }
 
 const FAMILY_ACTIVITIES = {
@@ -49,6 +50,7 @@ const FAMILY_ACTIVITIES = {
 function familyActivity(k, mother, seeking) {
   if (kidAge(k) < 3) return FAMILY_ACTIVITIES.cradle;
   if (seeking) return FAMILY_ACTIVITIES.listen;
+  const continued=continuityPractice(k,mother);if(continued)return continued;
   const activities = [];
   if (mother.trait === '才女' || mother.like === '字画') activities.push('paint');
   if (kidAge(k) >= 6 && (mother.trait === '将门' || mother.t2 === '擅骑射')) activities.push('archery');

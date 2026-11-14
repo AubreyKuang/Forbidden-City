@@ -143,8 +143,11 @@ A.chat=function(id,fromEvent=false){const c=byId(id);if((modalOpen&&!fromEvent)|
   const voice=characterVoice(c,'talk');L.push(voice.stage);L.push(`“${voice.text}”`);
   if(!opening&&S.flags.lastCourt&&(c.t2==='好读史'||c.t2==='直言')&&chance(.6))L.push(c.t2==='好读史'?`她听说了「${S.flags.lastCourt}」的事。${HISTC[S.flags.lastCourt]||'她说：“以史为镜，可以知兴替。”'}`:`她听说了「${S.flags.lastCourt}」的事，直截了当地说：“陛下那样处置，${pick(['臣妾觉得不妥。','臣妾觉得极好。','怕是要挨骂的。'])}”`);
   const others=harem().filter(o=>o!==c).map(o=>[o,relGet(c,o)]),fr=others.filter(x=>x[1]>=30),en=others.filter(x=>x[1]<=-30);
-  if(!opening&&fr.length&&chance(.35)){const o=pick(fr)[0],hobby=sharedConsortHobby(c,o);L.push(`说起${cName(o)}，她眉眼都软了：“${hobby?`下回得了闲，臣妾想约她${CONSORT_HOBBIES[hobby].activity}。`:pick(['她前儿送了我一盒胭脂，颜色正好。','我们约好了，开春一起去放纸鸢。','她做的梅花糕，比御膳房的还好吃。','她病的那几天，是我守着的。'])}”`)}
-  else if(!opening&&en.length&&chance(.4)){const o=pick(en)[0];L.push(`提到${cName(o)}，她的脸色淡了下来：“${pick(['她那张嘴，臣妾不想提。','前儿请安，她当着众人的面给臣妾难堪。','陛下还是少去她那儿吧——臣妾随口一说。'])}”${c.t2==='记仇'?'她顿了顿：“这笔账臣妾记着。”':''}`)}
+  if(!opening&&fr.length&&chance(.35)){const o=pick(fr)[0],hobby=sharedConsortHobby(c,o),memory=genuineSocialMemory(c,o);L.push(memory||`说起${fullName(o)}，她眉眼都软了：“${hobby?`下回得了闲，臣妾想约她${CONSORT_HOBBIES[hobby].activity}。`:'与她说话，臣妾觉得自在。'}”`)}
+  else if(!opening&&en.length&&chance(.4)){const o=pick(en)[0],memory=genuineSocialMemory(c,o);L.push(memory||`提到${fullName(o)}，她停了停：“我与她还不投契，有些事想法不同。”`)}
+  const ongoing=continuityThreads(c).filter(continuityOpen).at(-1);
+  if(ongoing&&continuityAvailable(ongoing))L.push(ongoing.history.at(-1)?.text||continuityDesire(ongoing));
+  const concern=continuityConcern(c);if(concern)L.push(`她仍有一件事想说清：${concern.text}`);
   const kid=S.children.filter(k=>(k.mom===c.id||k.foster===c.id)&&k.alive);
   if(kid.length&&chance(.4)){const k=pick(kid),a=kidAge(k),bond=k.motherBonds?.[c.id];
     L.push(bond?.motherView&&S.turn-bond.turn<=6?`说起${k.name}，她想起近来的一件事。 ${bond.motherView}`:
@@ -158,8 +161,8 @@ A.chat=function(id,fromEvent=false){const c=byId(id);if((modalOpen&&!fromEvent)|
   else if(!opening&&c.aff>=65&&!c.woundKnown&&chance(.5)){c.woundKnown=true;rev+=`\n夜深了，她第一次说起从前的事：${WOUNDS[c.wound]}`;story(c,'第一次对陛下说起入宫前的往事。')}
   const sch=harem().filter(x=>x!==c&&x.scheme>=65&&!x.known);
   if(!opening&&c.aff>=50&&sch.length&&chance(.25)){const x=pick(sch);x.known=true;rev+=`\n她压低声音：“${cName(x)}那边，陛下还是留个心眼好。”（${cName(x)}的心机已显露：${rd(x.scheme)}）`}
-  if(NEGX.includes(xk)){const p={'思念':.8,'委屈':.6,'惶恐':.55,'嫉恨':.25,'悲恸':.3,'怨恨':.12,'心如死灰':.1}[xk]+c.aff/400;if(chance(p)){const nk=xk==='思念'?'欢喜':'释然';setXin(c,nk,'陛下陪她说了许久的话');rev+=`\n§心境：${xk} → ${nk}`}else rev+=`\n§她的心境仍是「${xk}」`}
-  const s=cchg(c,{aff:c.trait==='痴情'?8:5,mood:8,favor:2});
+  if(NEGX.includes(xk)&&!continuityBlocksSoothing(c,xk)){const p={'思念':.8,'委屈':.6,'惶恐':.55,'嫉恨':.25,'悲恸':.3,'怨恨':.12,'心如死灰':.1}[xk]+c.aff/400;if(chance(p)){const nk=xk==='思念'?'欢喜':'释然';setXin(c,nk,'陛下陪她说了许久的话');rev+=`\n§心境：${xk} → ${nk}`}else rev+=`\n§她的心境仍是「${xk}」`}
+  const s=cchg(c,{aff:routineAffection(c,c.trait==='痴情'?8:5),mood:8,favor:2});
   const moment=recordSharedMoment(c,xk);if(moment)L.push(moment);
   story(c,`陛下驾临闲话。${L[1]}`);rememberConversation(c,voice,c.palace);setScene('harem');
   pushEv({title:'闲话家常',por:c,text:L.join('\n')+rev+fx(s),choices:[ok1]})};
@@ -167,9 +170,9 @@ A.gift=function(id){const c=byId(id);if(modalOpen||S.over||!inPalace(c))return;d
   let opts=shuffle(LIKES).slice(0,4);if(c.kl&&!opts.includes(c.like))opts[0]=c.like;
   pushEv({title:'赏赐',por:c,text:`赏${cName(c)}些什么好？日常礼物每样国库-20万两${c.maid?'':'，也可挑选内库已有的珍饰'}。${c.kl?`\n你记得她喜欢${c.like}，不喜${c.hate}。`:'\n你还不知道她喜欢什么。'}`,choices:[...opts.map(g=>({t:GIFTN[g],cond:()=>E().treasury>=20,f:()=>giveGift(c,g)})),...(!c.maid?[{t:'选一件内库首饰',f:()=>{A.jewelryChoose(c.id);return null;}}]:[]),{t:'算了'}]})};
 function giveGift(c,g){if(S.over||!inPalace(c)||E().treasury<20)return null;chg({treasury:-20});AU.sfx('coin');if(g==='绸缎')c.robeC=pick(RPAL[rTier(c.rank)]);
-  if(g===c.like){c.kl=true;remember(c,'gift',GIFTN[g]);setXin(c,'欢喜',`得了心爱的${g}`);story(c,`陛下赏了${GIFTN[g]}，正是她心头所好。`);return `她眼睛一亮，捧在手里看了又看。${fx(cchg(c,{mood:25,aff:8}))}\n§你记住了：她喜欢${g}`}
+  if(g===c.like){c.kl=true;remember(c,'gift',GIFTN[g]);if(!continuityBlocksSoothing(c,xinOf(c)))setXin(c,'欢喜',`得了心爱的${g}`);story(c,`陛下赏了${GIFTN[g]}，正是她心头所好。`);return `她眼睛一亮，捧在手里看了又看。${fx(cchg(c,{mood:25,aff:routineAffection(c,8)}))}\n§你记住了：她喜欢${g}`}
   if(g===c.hate)return `她谢了恩，笑容却有些勉强。宫女悄悄说，主子向来不喜${g}。${fx(cchg(c,{mood:-5}))}`;
-  const big=c.trait==='贪财'&&(g==='珠翠'||g==='绸缎');story(c,`陛下赏了${GIFTN[g]}。`);return `她欢欢喜喜地谢了恩。${fx(cchg(c,{mood:big?20:10,aff:3}))}`}
+  const big=c.trait==='贪财'&&(g==='珠翠'||g==='绸缎');story(c,`陛下赏了${GIFTN[g]}。`);return `她欢欢喜喜地谢了恩。${fx(cchg(c,{mood:big?20:10,aff:routineAffection(c,3)}))}`}
 A.wish=function(id){const c=byId(id);if(!inPalace(c))return;const w=WISHES[c.wish];if(!w||!w.btn||c.wishDone)return;if(w.cond&&!w.cond(c)){toast('眼下还办不到');return}
   const t=w.f(c);c.wishDone=true;setXin(c,NEGX.includes(xinOf(c))?'释然':'欢喜',`心愿「${w.t}」得偿`);remember(c,'wish',w.t);story(c,`陛下成全了她的心愿：${w.t}。`);log(`帝成全${fullName(c)}的心愿：${w.t}。`);
   pushEv({title:'成全',por:c,sfx:'joy',text:t+fx(cchg(c,{aff:22,mood:30})),choices:[ok1]})};

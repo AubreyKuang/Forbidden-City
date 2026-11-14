@@ -767,3 +767,5 @@ button.family-room-person{cursor:pointer}button.family-room-person:hover{color:#
 .residence-palace h3{margin-top:0}.residence-palace .acts{margin-bottom:0}.residence-occupants{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
 .residence-person{display:flex;align-items:center;gap:8px;padding:5px 9px;border:0;border-radius:8px;background:rgba(137,108,66,.06);color:inherit;font:inherit;cursor:pointer;text-align:left}
 .residence-person small{display:block;opacity:.75;margin-top:4px}.residence-person:hover{background:rgba(137,108,66,.15)}
+
+.personal-continuity{border:1px solid #a88c5a66;background:#eee0bd66;padding:18px 20px;border-radius:8px;margin-bottom:16px}.personal-continuity h3{margin-top:0;color:#704b32}.personal-continuity article+article{border-top:1px solid #a88c5a55;margin-top:14px;padding-top:14px}.personal-continuity p{line-height:1.8}.continuity-kept{font-size:.9em;color:#5b6256;border-top:1px solid #a88c5a55;padding-top:12px}.continuity-kept span{color:#755336;font-weight:600}.personal-continuity .btn{white-space:normal}

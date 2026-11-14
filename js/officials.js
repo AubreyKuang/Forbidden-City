@@ -67,6 +67,7 @@ function officialDeath(c,role,reason,kind='illness'){
     cchg(member,{mood:kind==='battle'?-25:-15});setXin(member,'悲恸',`${role==='father'?'父亲':'兄长'}${p.name}${kind==='battle'?'阵亡':'去世'}`);
     member.fam.p=Math.max(5,member.fam.p-6);
   }
+  startOfficialContinuity({c,p,role},'death',p.death.reason);
   return true;
 }
 function officialLink(c,role,label){
@@ -112,6 +113,7 @@ function officialConversation(e,topic){
     const relatives=paternalFamily(c).filter(x=>S.consorts.includes(x));
     if(relatives.some(x=>!x.alive))return '“家中还留着她旧时的书信。有些话，当年只当来日方长，如今再无机会问了。”';
     if(relatives.some(x=>x.cold))return '“臣不敢以家事乱国法，只求她在冷宫有衣御寒，有药可医。”';
+    const letter=c.familyVoice;if(letter?.gen===S.gen&&letter.officialId===p.id&&letter.heard&&letter.delivered)return `“${fullName(c)}在信里把自己的判断写得很明白。臣已认真读过，也会把实情回信说明。”`;
     if(role==='father'&&h.brother?.alive===false)return '“儿子留下的弓还挂在堂上。家里人经过，谁也不肯先抬头。”';
     return `“${kin}入宫前${p.temperament==='谨慎'?'总怕行差踏错':'也会在家中檐下听雨'}。臣只盼她记得本心，不因一时荣辱忘了从前。”`;
   }
@@ -147,19 +149,21 @@ function assignOfficialTask(e,id){
   const task=OFFICIAL_TASKS[id];if(!task||!officialActionReady(e,'commission')||task.army!==(e.h.bloc==='army')||E().treasury<task.cost||!useE())return null;
   const p=e.p;chg({treasury:-task.cost});p.lastCommission=S.turn;
   const roll=R(),success=.35+p.ability/200+p.trust/500;
-  p.commission={id,title:task.title,due:S.turn+task.months,started:S.turn,wasAway:!!p.away,outcome:roll<task.risk?'death':roll<success?'success':'setback'};
+  p.commission={id,title:task.title,due:S.turn+task.months,started:S.turn,contact:e.c.id,wasAway:!!p.away,outcome:roll<task.risk?'death':roll<success?'success':'setback'};
   officialRecord(e.c,e.role,`奉旨${task.title}，约${task.months}个月后回奏。`);save('auto');return `${p.name}领命。进展将记入其履历，并向家眷通报。`;
 }
 function officialTaskTick(){
   for(const e of officialEntries()){
     const {p,c,role}=e,j=p.commission;if(!j||!officialAlive(p)||S.turn<j.due)continue;
+    const contact=byId(j.contact),familyContact=contact?.house?.[role]?.id===p.id?{...e,c:contact}:e;
     delete p.commission;p.away=j.wasAway;let text;
-    if(j.outcome==='death'){text=`奉差${j.title}途中遇伏，率部断后，力战身亡。`;officialDeath(c,role,text,'battle');}
+    if(j.outcome==='death'){text=`奉差${j.title}途中遇伏，率部断后，力战身亡。`;officialDeath(familyContact.c,role,text,'battle');}
     else{
       text=j.outcome==='success'?`${j.title}已办结，簿册与实地核验相符，相关善后也已安排。`:`${j.title}未尽如期，回奏列明了调度疏漏，并请朝廷复核善后。`;
       p.merit=clamp(p.merit+(j.outcome==='success'?12:-6));chg({people:j.outcome==='success'?3:-1});officialRecord(c,role,text,{emotion:j.outcome==='success'?.5:-.3});
     }
     p.report={text,outcome:j.outcome,title:j.title,turn:S.turn};
+    startOfficialContinuity(familyContact,j.outcome,j.title);
   }
 }
 function officialReportEvent(e){

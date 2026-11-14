@@ -42,7 +42,18 @@ function boot(seed,mode){
     for(let n=0;n<8&&E().energy>0&&!S.over;n++){
      const before=E().energy,hs=harem(),cs=hs.filter(c=>!c.preg),kids=kidsAlive().filter(k=>!k.pendingName&&!k.jailed),c=hs[Math.floor(prng()*hs.length)];
      if(mode==='explorer')call('out',()=>A.out(['garden','city','hunt','temple','spa'][Math.floor(prng()*5)]));
-     else if(mode==='affection'){
+     else if(mode==='relationships'){
+      const continuation=continuityReady(),work=duanwuWork(),kid=kids.find(k=>kidAge(k)>=6&&kidAge(k)<16&&mothersOf(k).some(m=>familyVisitAllowed(k,m)&&k.motherBonds?.[m.id]?.turn!==S.turn));
+      const official=officialEntries().find(e=>officialActionReady(e,'commission')&&!continuityThreads().some(t=>continuityOpen(t)&&t.officialId===e.p.id));
+      if(continuation)call('personalContinuation',()=>A.continuePersonal(continuation.id));
+      else if(work?.stage==='review')call('duanwuReview',()=>A.reviewDuanwu());
+      else if(S.month===4&&work?.year!==S.year&&E().treasury>=20)call('duanwuAssign',()=>A.assignDuanwu());
+      else if(E().health<65)call('spa',()=>A.out('spa'));
+      else if(n===0&&official&&E().treasury>100)call('officialCommission',()=>A.officialAct(official.key,'commission'));
+      else if(kid&&n===1)call('familyTime',()=>A.familyTime(kid.id,mothersOf(kid).find(m=>familyVisitAllowed(kid,m)).id));
+      else if(cs.length&&n===1)call('night',()=>A.night(cs[0].id));
+      else if(c)call('chat',()=>A.chat(c.id));
+     }else if(mode==='affection'){
       const target=hs.find(c=>c.id===2)||hs[0];
       if(!target)call('garden',()=>A.out('garden'));
       else if(n===0&&!target.preg)call('night',()=>A.night(target.id));
@@ -67,17 +78,17 @@ function boot(seed,mode){
    if(S.turn!==began+1&&!S.over)throw Error('turn did not advance');
    for(const [k,v] of Object.entries(E()))if(typeof v==='number'&&!Number.isFinite(v))throw Error('nonfinite emperor '+k);
   }catch(e){errors.push({turn:S.turn,act,message:e.message,stack:e.stack});break;}
- }return {seed,mode,initial,months,events,actions,errors,over:S.over,turn:S.turn,finalEmp:E(),finalRoster:roster(),finalLog:S.log};}
+ }return {seed,mode,initial,months,events,actions,errors,over:S.over,turn:S.turn,finalEmp:E(),finalRoster:roster(),finalLog:S.log,continuity:continuityState()};}
  `,ctx);
  return ctx;
 }
 if(require.main===module){
  const summaries=[];
- for(const mode of ['balanced','affection','explorer','skip','random'])for(const seed of [101,202,303,404]){
+ for(const mode of (process.env.PALACE_MODES?process.env.PALACE_MODES.split(','):['balanced','affection','explorer','skip','random']))for(const seed of [101,202,303,404]){
   const ctx=boot(seed,mode);const r=vm.runInContext(`play(${Number(process.env.PALACE_MONTHS)||120})`,ctx,{timeout:120000});
   fs.writeFileSync(root+'/runs/'+mode+'-'+seed+'.json',JSON.stringify(r,null,2));
   const m=r.months,ev=r.events.filter(e=>e.phase==='monthly'),counts={};for(const e of ev)counts[e.title]=(counts[e.title]||0)+1;
-  const summary={mode,seed,months:m.length,turn:r.turn,over:r.over,errors:r.errors,events:ev.length,unique:new Set(ev.map(e=>e.title)).size,mean:m.reduce((s,x)=>s+x.events,0)/(m.length||1),zero:m.filter(x=>!x.events).length,max:Math.max(...m.map(x=>x.events)),choiceEvents:m.reduce((s,x)=>s+x.choiceEvents,0),treasury:r.finalEmp.treasury,health:r.finalEmp.health,people:r.finalEmp.people,consorts:r.finalRoster.length,children:m.at(-1)?.children.length,top:Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,8)};
+  const summary={mode,seed,months:m.length,turn:r.turn,over:r.over,errors:r.errors,events:ev.length,unique:new Set(ev.map(e=>e.title)).size,mean:m.reduce((s,x)=>s+x.events,0)/(m.length||1),zero:m.filter(x=>!x.events).length,max:Math.max(...m.map(x=>x.events)),choiceEvents:m.reduce((s,x)=>s+x.choiceEvents,0),treasury:r.finalEmp.treasury,health:r.finalEmp.health,people:r.finalEmp.people,continuity:r.continuity?.threads.map(t=>({id:t.id,kind:t.kind,owner:t.owner,other:t.other,stage:t.stage,choice:t.choice,followup:t.followup,history:t.history.length}))||[],consorts:r.finalRoster.length,children:m.at(-1)?.children.length,top:Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,8)};
   summaries.push(summary);console.log(JSON.stringify(summary));fs.writeFileSync(root+'/summary.json',JSON.stringify(summaries,null,2));
  }
 }
