@@ -752,3 +752,11 @@ button.family-room-person{cursor:pointer}button.family-room-person:hover{color:#
 .official-family-links{display:grid;gap:7px;margin:8px 0}
 .official-death{border-left:3px solid #86766e;padding:8px 12px;background:#eee5d7}
 .official-card small{display:block;line-height:1.6}
+/* 同生手足：保留每个人的名字与去处。 */
+.multiple-birth-panel{padding:18px;border:1px solid #c9ac79;border-radius:10px;background:linear-gradient(115deg,#f6edda,#f5f0e4);margin:14px 0}
+.multiple-birth-tag{background:#eee1c7;color:#77512f;border-color:#c9ac79;white-space:normal}
+.multiple-siblings{display:flex;flex-wrap:wrap;gap:8px}
+.multiple-sibling{display:flex;align-items:center;gap:10px;text-align:left;min-width:0;max-width:100%}
+.multiple-sibling small{display:block;color:#736452;margin-top:4px;white-space:normal}
+.multiple-birth-panel .acts{flex-wrap:wrap}
+.multiple-birth-panel .btn{white-space:normal;overflow-wrap:anywhere}
