@@ -119,7 +119,7 @@ const ARCS={
   (c,f)=>{if(empress()&&empress()!==c){aEnd(c,'蛰伏','她没能更进一步，却也没有露出破绽，依旧温婉得体地站在众人之中。');return {text:`${cName(c)}近来安静了许多。`,choices:[ok1]}}
     if(c.rank===8){aEnd(c,'凤仪','步步为营，终登后位。');return {text:`${cName(c)}如今已是中宫。`,choices:[ok1]}}
     return {text:`中宫空悬。${cName(c)}一身素服跪在乾清宫外：“臣妾愿为陛下打理六宫。”`,choices:[
-      {t:'立她为后',cond:()=>c.rank>=5,why:'位分不足（需妃位以上）',f:()=>{c.rank=8;c.palace='坤宁宫';aEnd(c,'凤仪','步步为营，终登后位。');log(`册${fullName(c)}为皇后。`,1);return fx(chg({prestige:2}),cchg(c,{aff:15,mood:30}))}},
+      {t:'立她为后',cond:()=>c.rank>=5,why:'位分不足（需妃位以上）',f:()=>{c.rank=8;assignPalace(c);aEnd(c,'凤仪','步步为营，终登后位。');log(`册${fullName(c)}为皇后。`,1);return fx(chg({prestige:2}),cchg(c,{aff:15,mood:30}))}},
       {t:'晋她为皇贵妃，代掌凤印',cond:()=>rankCount(7)<1&&c.rank<7,why:'皇贵妃位已满',f:()=>{c.rank=7;if(!c.title)c.title=pick(TITLES);aEnd(c,'摄六宫','以皇贵妃之尊代掌凤印，离后位只差一步。');return fx(cchg(c,{aff:8,mood:15}))}},
       {t:'拒绝',f:()=>{c.scheme=clamp(c.scheme+10);aEnd(c,'怨怼','求后位不得，她心中的怨恨越积越深。');return fx(cchg(c,{aff:-15,mood:-20}))}}]}}]},
  greed:{name:'金玉其外',fit:c=>c.trait==='贪财',stages:[

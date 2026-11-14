@@ -3,13 +3,22 @@ function birthSwapCase(k){return !!(k?.birthSwap?.occurred&&k.birthSwap.confirme
 function birthSwapOriginalText(k){
   const s=k.birthSwap,original=s.original,m=byId(s.claimedMother),father=original?.birthTraits?.father;
   const mother=m?fullName(m):s.claimedMotherName;
-  const birth=original?`接生记录与当值医官、稳婆的证词一致：${mother}当夜确曾分娩，产下${original.sex==='m'?'一名男婴':'一名女婴'}。`:'旧案的分娩记录尚不完整，不能凭空补出一名亲生孩子。';
+  if(s.originalStatus==='miscarried')return miscarriageCaseText(s)+'\n原来的胎儿未能存活，没有另一个足月出生的亲生孩子可追访。'+(s.loss?.father?.name?`\n早先胎儿的生父记录为${s.loss.father.name}，与冒报男婴的生父母分别记载。`:'');
+  const birth=original?`接生记录与当值医官、稳婆的证词一致：${mother}当夜确曾分娩，产下${original.sex==='m'?'一名男婴':'一名女婴'}${s.originalStatus==='stillborn'?'，出生时已无生息，殓葬记录亦已核实':''}。`:'旧案的分娩记录尚不完整，不能凭空补出一名亲生孩子。';
   const kin=!father?'旧档没有留下可核实的生父记录，暂不能断定为皇帝亲生。':father.kind==='emperor'?`再与起居记录核对，原来孩子的生父为${father.name}，确为皇帝亲生。`:`核对起居、书笺与证词，原来孩子的生父为${father.name}，并非因生在宫中就能认作皇帝亲生。`;
   const found=s.recovered&&kidById(s.recovered);
-  return `${birth}\n${kin}\n${found?`孩子已寻回，现名${found.name}。${found.alive?'出生年月与亲缘另立入册。':'其后身故的经过仍见个人纪事。'}`:s.search?.status==='searching'?`已派人沿送养文契追访，${Math.max(0,s.search.due-S.turn)}个月后回奏。`:'原来的孩子仍未寻到。安置换入的孩子、问罪主使，都不会结束寻亲。'}`;
+  return `${birth}\n${kin}\n${s.originalStatus==='stillborn'?'亲生孩子的夭折已经查实，家族与生母纪事留有记录，不再安排寻亲。':found?`孩子已寻回，现名${found.name}。${found.alive?'出生年月与亲缘另立入册。':'其后身故的经过仍见个人纪事。'}`:s.search?.status==='searching'?`已派人沿送养文契追访，${Math.max(0,s.search.due-S.turn)}个月后回奏。`:'原来的孩子仍未寻到。安置换入的孩子、问罪主使，都不会结束寻亲。'}`;
+}
+function recordSwapStillbirth(k){
+  const s=k.birthSwap;if(s.originalStatus!=='stillborn'||!s.original||s.memorialChild)return;
+  const child=JSON.parse(JSON.stringify(s.original));child.id=S.nid++;child.name='未命名';child.ord=S.children.filter(x=>x.sex===child.sex).length+1;
+  child.alive=false;child.pendingName=false;child.deathReason='出生时已无生息';child.story||=[];
+  kstory(child,'换婴案中核实：出生时已无生息，接生与殓葬记录相合，亲缘按原记录入册。');
+  S.children.push(child);s.memorialChild=child.id;delete s.search;
+  const m=byId(s.claimedMother);if(m){story(m,'换婴案核实了当夜死胎与殓葬记录，亲生孩子另立悼念记录。');if(m.alive)setXin(m,'悲恸','亲生孩子出生时已夭折');}
 }
 function recoverOriginalChild(k,reason){
-  const s=k.birthSwap;if(!s.original||s.recovered)return s.recovered&&kidById(s.recovered);
+  const s=k.birthSwap;if(['stillborn','miscarried'].includes(s.originalStatus)||!s.original||s.recovered)return s.recovered&&kidById(s.recovered);
   const original=JSON.parse(JSON.stringify(s.original));
   original.id=S.nid++;original.name=suggestName(original.sex);original.ord=S.children.filter(c=>c.sex===original.sex).length+1;
   original.pendingName=false;original.alive=true;original.recoveredFromSwap=true;original.story||=[];
@@ -24,7 +33,7 @@ function recoverOriginalChild(k,reason){
   return original;
 }
 function beginBirthSwapSearch(k){
-  if(!birthSwapCase(k)||!k.birthSwap.original||k.birthSwap.recovered||k.birthSwap.search?.status==='searching'||E().treasury<15||E().energy<1)return null;
+  if(!birthSwapCase(k)||['stillborn','miscarried'].includes(k.birthSwap.originalStatus)||!k.birthSwap.original||k.birthSwap.recovered||k.birthSwap.search?.status==='searching'||E().treasury<15||E().energy<1)return null;
   if(!useE())return null;chg({treasury:-15});const s=k.birthSwap;
   const attempt=(s.search?.attempt||0)+1;
   // Route length is stable even in old saves; repeating a load cannot reroll a search.
@@ -36,11 +45,11 @@ function birthSwapOriginalEvent(k){
   if(!birthSwapCase(k))return null;const s=k.birthSwap;
   return {title:'换婴案 · 原来的孩子',cast:[byId(s.claimedMother),s.recovered&&kidById(s.recovered)],valid:()=>birthSwapCase(k),
     text:birthSwapOriginalText(k),choices:[
-      ...(!s.recovered&&s.original?[{t:'另派人手追查 · 精力−1 · 国库−15',cond:()=>s.search?.status!=='searching'&&E().energy>=1&&E().treasury>=15,why:s.search?.status==='searching'?'追访尚在途中':'精力或国库不足',f:()=>beginBirthSwapSearch(k)}]:[]),
+      ...(!s.recovered&&s.original&&!['stillborn','miscarried'].includes(s.originalStatus)?[{t:'另派人手追查 · 精力−1 · 国库−15',cond:()=>s.search?.status!=='searching'&&E().energy>=1&&E().treasury>=15,why:s.search?.status==='searching'?'追访尚在途中':'精力或国库不足',f:()=>beginBirthSwapSearch(k)}]:[]),
       {t:'记下调查结论'}]};
 }
 function birthSwapSearchReport(){
-  const k=S.children.find(k=>birthSwapCase(k)&&!k.birthSwap.recovered&&k.birthSwap.search?.status==='searching'&&S.turn>=k.birthSwap.search.due);
+  const k=S.children.find(k=>birthSwapCase(k)&&!['stillborn','miscarried'].includes(k.birthSwap.originalStatus)&&!k.birthSwap.recovered&&k.birthSwap.search?.status==='searching'&&S.turn>=k.birthSwap.search.due);
   if(!k)return null;const s=k.birthSwap,search=s.search;
   return {title:'换婴案 · 寻亲回奏',cast:[byId(s.claimedMother)],valid:()=>birthSwapCase(k)&&!s.recovered&&search.status==='searching',
     text:search.finds?'送养文契、关津记录与照护人家的证词已逐一核对。随行医官找到了当年被带走的孩子，正在等旨护送回宫。':'追访查到了当年的转送人家，但照护人家后来搬离。文契上另有一处去向，可以继续追查；不能只因尚未找到就断言孩子已死。',choices:[
@@ -56,7 +65,7 @@ function birthSwapJusticeEvent(k){
   const valid=()=>birthSwapCase(k)&&!s.justice?.decision;
   return {title:'换婴案 · 问罪主使',cast:[a,a!==m?m:null],valid,danger:true,
     onShow:()=>{s.justice||={};s.justice.pending=true;save('auto');},
-    text:`稳婆供词、出入簿与交付财物的记录已经相互印证。${a?fullName(a):'当年的主使'}指使调换孩子。${a===m?'产妇本人参与了此事，应与经手人分别问罪。':`${m?fullName(m):s.claimedMotherName}确曾分娩，孩子被人带走，属于受害者。`}\n${a?.alive?(a.cold?'主使已在冷宫，仍须为此案另行定责。':a.gone?'已命人向其离宫居所传旨，离宫不免此案责任。':'主使已被传来听审。'):'主使已经身故，可追记罪责，继续查办当年经手人。'}\n孩子的安置与寻亲另案继续，不因成人获罪而中止。`,
+    text:`稳婆供词、出入簿与交付财物的记录已经相互印证。${a?fullName(a):'当年的主使'}指使调换孩子。${a===m?'产妇本人参与了此事，应与经手人分别问罪。':`${m?fullName(m):s.claimedMotherName}确曾分娩，孩子被人带走，属于受害者。`}\n${a?.alive?(a.cold?'主使已在冷宫，仍须为此案另行定责。':a.gone?'已命人向其离宫居所传旨，离宫不免此案责任。':'主使已被传来听审。'):'主使已经身故，可追记罪责，继续查办当年经手人。'}\n${['stillborn','miscarried'].includes(s.originalStatus)?'孩子的安置、亲生孩子的夭折记录与成人责任分别处理。':'孩子的安置与寻亲另案继续，不因成人获罪而中止。'}`,
     choices:a?.alive?[
       {t:'废为庶人，押入冷宫',f:()=>resolveBirthSwapJustice(k,'cold')},
       {t:a.cold||a.gone?'削去两级位分，原处所留置':'削去两级位分，留宫察看',f:()=>resolveBirthSwapJustice(k,'demote')},
@@ -75,10 +84,10 @@ function resolveBirthSwapJustice(k,decision,confirmed=false){
     line=`${name}因主使换婴被废为庶人，押入冷宫，案卷记明罪责。`;
   }else if(decision==='demote'){
     a.rank=Math.max(0,a.rank-2);if(a.palace==='坤宁宫'&&a.rank<8&&!a.cold&&!a.gone)assignPalace(a);
-    cchg(a,{mood:-25,aff:-15,favor:-25});clanEcho(a,'down');line=`${name}因主使换婴被削去两级位分，既有禁闭或离宫状态不因此解除。`;
+    reconcileResidences();cchg(a,{mood:-25,aff:-15,favor:-25});clanEcho(a,'down');line=`${name}因主使换婴被削去两级位分，既有禁闭或离宫状态不因此解除。`;
   }else if(decision==='execute'){
     a.alive=false;a.preg=0;delete a.pregnancyFather;delete a.pregnancyCalendar;delete a.templeStay;delete a.visitor;
-    a.deathReason='因主使换婴奉旨赐死';clanEcho(a,'down');chg({prestige:-5});line=`${name}因主使换婴被赐死；两名孩子与无辜生母不连坐。`;
+    a.deathReason='因主使换婴奉旨赐死';clanEcho(a,'down');chg({prestige:-5});line=`${name}因主使换婴被赐死；无辜孩子与未参与的生母不连坐。`;
   }else line=`${name}的换婴罪责追记入案，经手宫人与稳婆另行查办。`;
   s.justice={decision,pending:false,turn:S.turn,result:line};
   if(a){story(a,line);remember(a,'hurt',line);}
@@ -88,14 +97,14 @@ function resolveBirthSwapJustice(k,decision,confirmed=false){
 function birthSwapExecutionEvent(k){
   const a=byId(k.birthSwap?.plotter);if(!birthSwapCase(k)||!a?.alive||k.birthSwap.justice?.decision)return null;
   return {title:'换婴案 · 赐死前复核',cast:[a],danger:true,valid:()=>birthSwapCase(k)&&a.alive&&!k.birthSwap.justice?.decision,
-    text:`是否下诏赐死主使${fullName(a)}？这会永久结束她的人生，但不会杀害换入的孩子，也不会停止寻找被带走的孩子。`,choices:[
+    text:`是否下诏赐死主使${fullName(a)}？这会永久结束她的人生，但不会杀害换入的孩子。${['stillborn','miscarried'].includes(k.birthSwap.originalStatus)?'原来胎儿或孩子的亡故已核实，相关记录继续保留。':'寻找被带走孩子的安排也会继续。'}`,choices:[
       {t:'确认赐死主使',f:()=>resolveBirthSwapJustice(k,'execute',true)},
       {t:'收回旨意，另议处罚',f:()=>{pushNow(birthSwapJusticeEvent(k));return null;}}]};
 }
 function pendingBirthSwapJustice(){return birthSwapJusticeEvent(S.children.find(k=>birthSwapCase(k)&&k.birthSwap.justice?.pending&&!k.birthSwap.justice.decision));}
 function birthSwapCasePanel(k){
   if(!birthSwapCase(k))return '';const s=k.birthSwap,a=byId(s.plotter);
-  return `<section class="swap-case"><p><strong>换婴案卷</strong> · ${s.justice?.decision?'成人已定罚':'成人问罪待办'}</p><p class="hint">${esc(s.justice?.result||`主使：${a?fullName(a):'当年的涉案人'}。孩子安置后，仍可另行问罪。`)}</p><p class="hint">${esc(s.recovered?'原来的孩子已寻回。':s.search?.status==='searching'?'寻亲进行中，等待回奏。':'原来的孩子尚未寻到，线索仍在追查。')}</p><div class="acts"><button class="btn" onclick="A.swapOriginal(${k.id})">核对亲生孩子与寻亲</button>${!s.justice?.decision?`<button class="btn" onclick="A.swapJustice(${k.id})">审理换婴主使</button>`:''}</div></section>`;
+  return `<section class="swap-case"><p><strong>换婴案卷</strong> · ${s.justice?.decision?'成人已定罚':'成人问罪待办'}</p><p class="hint">${esc(s.justice?.result||`主使：${a?fullName(a):'当年的涉案人'}。孩子安置后，仍可另行问罪。`)}</p><p class="hint">${esc(s.originalStatus==='miscarried'?'早先小产已核实，无另一个足月亲生孩子可寻。':s.originalStatus==='stillborn'?'亲生孩子夭折已核实，殓葬与亲缘另立记录。':s.recovered?'原来的孩子已寻回。':s.search?.status==='searching'?'寻亲进行中，等待回奏。':'原来的孩子尚未寻到，线索仍在追查。')}</p><div class="acts"><button class="btn" onclick="A.swapOriginal(${k.id})">核对亲生孩子与寻亲</button>${!s.justice?.decision?`<button class="btn" onclick="A.swapJustice(${k.id})">审理换婴主使</button>`:''}</div></section>`;
 }
 A.swapOriginal=function(id){if(!modalOpen)pushEv(birthSwapOriginalEvent(kidById(id)));};
 A.swapJustice=function(id){if(!modalOpen)pushEv(birthSwapJusticeEvent(kidById(id)));};

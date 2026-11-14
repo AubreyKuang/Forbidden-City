@@ -25,7 +25,7 @@ function punishEv(A_,B,crime){
   if(B)relAdd(A_,B,-40);
   return {title:'真相大白',cast:[A_,inPalace(B)?B:null],sfx:'gong',text:`人证物证俱在，${crime}一事，竟是${cName(A_)}所为。\n${A_.cold?'侍卫将她从冷宫押来问话，她跪倒在殿中：“民妇……民妇一时糊涂！”':'她跪在殿中，钗环散乱：“臣妾……臣妾一时糊涂！”'}`,choices:[
     {t:'打入冷宫',f:()=>{const s=A_.fam.p>=70?chg({prestige:-2}):'';A_.cold=true;A_.palace='冷宫';story(A_,`${crime}事发，被打入冷宫。`);clanEcho(A_,'down');setXin(A_,'怨恨',`${crime}事发，被打入冷宫`,B?B.id:'emp');log(`${fullName(A_)}因${crime}事发，打入冷宫。`,1);if(B){cchg(B,{aff:8,mood:15});story(B,`陛下查明${crime}真相，为她主持公道。`);setXin(B,'释然',`${crime}真相大白`)}AU.sfx('sad');return `${fx(s,cchg(A_,{mood:-50,aff:-30}))}`}},
-    {t:'降位禁足',f:()=>{A_.rank=Math.max(0,A_.rank-2);if(A_.rank===8)A_.rank=5;story(A_,`${crime}事发，被降为${RANKS[A_.rank]}，禁足宫中。`);setXin(A_,'惶恐',`${crime}事发`);log(`${fullName(A_)}因${crime}事发，降为${RANKS[A_.rank]}。`,1);if(B)cchg(B,{aff:5,mood:8});return fx(cchg(A_,{mood:-30,aff:-15,favor:-20}))}},
+    {t:'降位禁足',f:()=>{A_.rank=Math.max(0,A_.rank-2);if(A_.rank===8)A_.rank=5;reconcileResidences();story(A_,`${crime}事发，被降为${RANKS[A_.rank]}，禁足宫中。`);setXin(A_,'惶恐',`${crime}事发`);log(`${fullName(A_)}因${crime}事发，降为${RANKS[A_.rank]}。`,1);if(B)cchg(B,{aff:5,mood:8});return fx(cchg(A_,{mood:-30,aff:-15,favor:-20}))}},
     {t:'念其初犯，罚俸了事',f:()=>{story(A_,`${crime}事发，陛下网开一面，仅罚俸半年。`);if(B){cchg(B,{aff:-8,mood:-10});story(B,'陛下对害她之人从轻发落，她心中凉了半截。');setXin(B,'怨恨','害她的人只被罚了俸',A_.id)}A_.scheme=clamp(A_.scheme+5);return `${cName(A_)}叩头谢恩，眼底却闪过一丝庆幸。`}}]};
 }
 const HAREM=[
@@ -41,7 +41,7 @@ const HAREM=[
    {t:'命慎刑司彻查',f:()=>{if(chance(.35+E().prestige/250+(a.known?.15:0)+allyBonus(b))){a.known=true;pushNow(punishEv(a,b,'香囊藏麝'));return `慎刑司连夜审讯，顺藤摸瓜，竟查到了${cName(a)}宫中……`}
      story(b,'香囊一案不了了之，她从此饮食起居分外小心。');return `线索断在一名投井的小太监身上，此案只得不了了之。${fx(cchg(b,{mood:-10}))}`}},
    {t:'加赏安抚，不予深究',f:()=>{story(b,'香囊一案，陛下并未深究。');a.scheme=clamp(a.scheme+3);return `${fx(chg({treasury:-20}),cchg(b,{mood:4,aff:-3}))}`}}]}},
- function slip(){const h=harem();const b=h.find(c=>c.preg>=3&&!c.prot);if(!b)return null;const a=h.find(c=>c!==b&&c.scheme>=60);if(!a)return null;
+ function slip(){const h=harem();const b=h.find(c=>c.preg>=3&&!c.prot&&!concealedPregnancy(c));if(!b)return null;const a=h.find(c=>c!==b&&c.scheme>=60);if(!a)return null;
   const lose=()=>{b.preg=0;delete b.pregnancyFather;delete b.pregnancyCalendar;story(b,'在御花园失足滑倒，腹中骨肉没能保住。');setXin(b,'悲恸','腹中骨肉没能保住');log(`${fullName(b)}失足小产。`,1);AU.sfx('sad');
     if(chance(.5+E().prestige/300)){a.known=true;pushNow(punishEv(a,b,'石阶泼油、致人小产'))}
     return `太医跪了一地：“臣等无能……”${fx(cchg(b,{mood:-40,aff:3}))}`};
@@ -95,7 +95,7 @@ const HAREM=[
  function family(){const c=officialC(20);if(!c)return null;return {title:'外戚请托',por:c,text:`${cName(c)}小心翼翼地开口：家中幼弟今年中了举，不知陛下可否赏个差事？`,choices:[
    {t:'准，授七品官',f:()=>{c.fam.p=Math.min(95,c.fam.p+8);story(c,'陛下恩准，她的幼弟入朝为官。');return fx(chg({prestige:-2}),cchg(c,{aff:10,mood:12}))}},
    {t:'朝廷选官自有法度',f:()=>fx(cchg(c,{mood:-6}),chg({people:1}))}]}},
- function crave(){const c=harem().find(c=>c.preg>=2);if(!c)return null;return {title:'害喜',por:c,text:`${cName(c)}害喜得厉害，什么都吃不下，只念叨着家乡的青梅。`,choices:[
+ function crave(){const c=harem().find(c=>c.preg>=2&&!concealedPregnancy(c));if(!c)return null;return {title:'害喜',por:c,text:`${cName(c)}害喜得厉害，什么都吃不下，只念叨着家乡的青梅。`,choices:[
    {t:'命人八百里快马送青梅',f:()=>{story(c,'孕中想吃家乡的青梅，陛下命人快马送来。');return fx(chg({treasury:-10,people:-1}),cchg(c,{mood:18,aff:10}))}},
    {t:'让御膳房想想办法',f:()=>fx(cchg(c,{mood:6}))}]}},
 ];

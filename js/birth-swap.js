@@ -2,28 +2,39 @@
 function planBirthSwap(mother,plotter,guarded){
   if(!inPalace(mother)||!inPalace(plotter)||mother.preg<8||mother.swapAsked)return null;
   mother.swapAsked=true;mother.prot=guarded;mother.swapRisk=!guarded;
-  mother.swapPlot={turn:S.turn,plotter:plotter.id,guarded,settled:false};save('auto');
+  mother.swapPlot={version:2,turn:S.turn,plotter:plotter.id,guarded,settled:false};save('auto');
   return guarded?'稳婆已换为心腹，产房出入皆记名，八名侍卫守在门外。':'你未采信宫女的话。产房照旧安排，这场疑云是否有实情，要待日后查证。';
 }
 function settleBirthSwap(c,k){
   const plot=c.swapPlot;if(!plot||plot.settled)return false;
   plot.settled=true;
-  const occurred=!plot.guarded&&inPalace(byId(plot.plotter))&&chance(.35);
+  const stillborn=!!c.delivery?.originalLoss;
+  const eligible=(c.delivery?.children?.length||1)===1&&(stillborn||k.sex==='f');
+  const occurred=eligible&&!plot.guarded&&inPalace(byId(plot.plotter))&&chance(.35);
   k.birthSwap={occurred,plotter:plot.plotter,claimedMother:c.id,claimedMotherName:fullName(c),turn:S.turn,
+    version:2,originalStatus:stillborn?'stillborn':'alive',motive:stillborn?'conceal-stillbirth':k.sex==='f'?'son-for-daughter':'none',
     guarded:plot.guarded,clueDue:S.turn+ri(2,5),clueShown:false,confirmed:false};
   if(occurred){
     const s=k.birthSwap;
     s.original=JSON.parse(JSON.stringify({...k,birthSwap:undefined}));
+    if(stillborn){s.original.alive=false;s.original.pendingName=false;s.original.deathReason='出生时已无生息';}
+    s.originalSafe=!stillborn&&chance(.85);
+    applySwapOutsideParents(k,s);
+  }
+  return true;
+}
+function applySwapOutsideParents(k,s){
     s.externalMother={id:'outside-mother-'+k.id,name:pick(SUR)+'氏',talent:ri(25,75),virtue:ri(30,80),scheme:ri(15,55)};
     s.externalFather={kind:'outsider',name:pick(SUR)+pick(['明','怀','仲','修','景'])+pick(BOYC),wen:ri(25,75),wu:ri(20,65)};
-    s.originalSafe=chance(.85);
+    // The child presented to the court is always a boy; the original girl's biology stays in the sealed case.
+    if(k.sex!=='m'){k.sex='m';k.ord=S.children.filter(x=>x!==k&&x.sex==='m').length+1;k.name=suggestName('m');delete k.portraitVariant;assignChildPortrait(k);}
+    k.alive=true;delete k.birthOmen;delete k.birthTrouble;
+    k.story=[{d:dateStr(),t:`产房报称${s.claimedMotherName}诞下一名男婴，按皇子入册，亲缘待后续查证。`}];
     k.lit=clamp(s.externalMother.talent*.6+s.externalFather.wen*.25);k.mar=clamp(s.externalFather.wu*.3+ri(0,15));
     k.vir=clamp(s.externalMother.virtue*.7+ri(0,12));k.amb=clamp(s.externalMother.scheme*.65+ri(0,18));
     // The public register remains a claim until the inquiry. No secret parent is leaked by the UI.
     s.externalTraits={mother:s.externalMother,father:s.externalFather,initial:{lit:k.lit,mar:k.mar,vir:k.vir,hp:k.hp,amb:k.amb}};
     delete k.parentage;
-  }
-  return true;
 }
 function birthSwapClueEvent(){
   const k=S.children.find(k=>k.alive&&!k.pendingName&&k.birthSwap&&!k.birthSwap.clueShown&&S.turn>=k.birthSwap.clueDue);
@@ -43,18 +54,22 @@ function confirmBirthSwap(k){
   const caregiver=byId(s.claimedMother);
   if(inPalace(caregiver)&&caregiver.id!==s.plotter&&!k.foster){k.foster=caregiver.id;k.fosterT=S.turn;}
   p.father=s.externalFather;
-  if(s.originalSafe&&!s.recovered){
+  if(s.originalStatus==='miscarried'){
+    const line=miscarriageCaseText(s);if(caregiver){story(caregiver,line);remember(caregiver,'hurt','隐瞒小产、冒报皇子一案查明');if(caregiver.concealedLoss)caregiver.concealedLoss.revealed=true;}
+  }else if(s.originalStatus==='stillborn')recordSwapStillbirth(k);
+  else if(s.originalSafe&&!s.recovered){
     recoverOriginalChild(k,'换婴案查明，循乳母证词从宫外照护人家寻回');
   }
   kstory(k,`查明自己被带入产房顶替，生母为${s.externalMother.name}，生父为${s.externalFather.name}，二人均为宫外平民。`);
-  if(caregiver?.alive&&!s.originalSafe){story(caregiver,'换婴案查明，亲生孩子仍然下落不明，已命人继续寻找。');setXin(caregiver,'悲恸','亲生孩子下落不明');}
+  if(caregiver?.alive&&!s.originalSafe&&!['stillborn','miscarried'].includes(s.originalStatus)){story(caregiver,'换婴案查明，亲生孩子仍然下落不明，已命人继续寻找。');setXin(caregiver,'悲恸','亲生孩子下落不明');}
   save('auto');
 }
 function birthSwapVerdictEvent(k){
   const s=k.birthSwap,p=k.parentage;if(!s||!parentageReady(k)||!['investigating','confirmed'].includes(p.status)||S.turn<(p.due||0))return null;
   const m=byId(s.claimedMother),a=byId(s.plotter);
-  const truth=s.occurred?`接生稳婆与门房供词相互印证，又循包被与出入记录找到了宫外人家。\n${k.name}确被带入产房顶替，生母为${s.externalMother.name}，生父为${s.externalFather.name}，均为宫外平民。${m?fullName(m):s.claimedMotherName}并非这名孩子的生母。${s.plotter===s.claimedMother?'产妇本人参与了调换，须与经手人分别问罪。':'产妇的孩子被人带走，她并未参与换婴。'}\n${s.originalSafe?'原来的亲生孩子已寻到，由随行医官验看照护后接回。':'原来的亲生孩子仍下落不明，追查不会因这次定案而停止。'}\n幕后指使者为${a?fullName(a):'当年的宫中主使'}，其责任与孩子的安置分开处理。`:
-    `逐一问询稳婆、乳母与门房后，产房出入记录能够相互印证。${s.guarded?'心腹稳婆接管后，没有陌生人靠近婴儿。':'有人试探过稳婆，却未能将宫外婴儿带入。'}\n${k.name}并未被调换，原来的亲缘记录不变，不能据此责罚母子。`;
+  const motive=s.motive==='conceal-miscarriage'?miscarriageCaseText(s):s.motive==='conceal-stillbirth'?'产下的亲生孩子出生时已无生息，主使隐瞒死胎，抱来宫外男婴冒报皇子。':s.motive==='son-for-daughter'?'产下的原是女婴，主使为冒报皇子，将亲生女儿送出，换入宫外男婴。':'';
+  const truth=s.occurred?`接生稳婆与门房供词相互印证，又循包被与出入记录找到了宫外人家。\n${motive}\n${k.name}确被带入产房顶替，生母为${s.externalMother.name}，生父为${s.externalFather.name}，均为宫外平民。${m?fullName(m):s.claimedMotherName}并非这名孩子的生母。${s.plotter===s.claimedMother?'报喜的妃嫔本人参与了冒报，须与经手人分别问罪。':'产妇并未参与换婴，应另查主使与经手人的责任。'}\n${s.originalStatus==='miscarried'?'早先小产已经查实，没有另一个足月出生的亲生孩子可寻，不能凭空认回一个皇嗣。':s.originalStatus==='stillborn'?'医官、稳婆与殓葬记录已核实亲生孩子夭折，另立悼念记录，不再按失踪孩子寻访。':s.originalSafe?'原来的亲生孩子已寻到，由随行医官验看照护后接回。':'原来的亲生孩子仍下落不明，追查不会因这次定案而停止。'}\n幕后指使者为${a?fullName(a):'当年的宫中主使'}，其责任与孩子的安置分开处理。`:
+    `逐一问询稳婆、乳母与门房后，产房出入记录能够相互印证。${s.guarded?'心腹稳婆接管后，没有陌生人靠近婴儿。':s.motive==='none'?'当夜本已生下健康皇子，传言中的调换没有发生。':'传言中的调换没有发生。'}\n${k.name}并未被调换，原来的亲缘记录不变，不能据此责罚母子。`;
   return {title:s.occurred?'换婴案 · 真相':'换婴疑云已释',cast:[m,k],valid:()=>k.alive&&!p.decision,
     onShow:()=>confirmBirthSwap(k),text:truth,choices:s.occurred?[
       {t:'仍留宫抚养，不罪无辜孩子',f:()=>resolveBirthSwap(k,'keep')},
@@ -76,7 +91,7 @@ function resolveBirthSwap(k,decision){
   save('auto');return line;
 }
 function recoveredSwapEvent(){
-  const k=S.children.find(k=>k.birthSwap?.confirmed&&k.birthSwap.occurred&&!k.birthSwap.originalSafe&&!k.birthSwap.recovered&&k.birthSwap.search?.status!=='searching'&&S.turn-k.birthSwap.turn>=12);
+  const k=S.children.find(k=>k.birthSwap?.confirmed&&k.birthSwap.occurred&&k.birthSwap.original&&!['stillborn','miscarried'].includes(k.birthSwap.originalStatus)&&!k.birthSwap.originalSafe&&!k.birthSwap.recovered&&k.birthSwap.search?.status!=='searching'&&S.turn-k.birthSwap.turn>=12);
   if(!k||!chance(.08))return null;const s=k.birthSwap,m=byId(s.claimedMother);
   return {title:'海内寻亲',cast:[m],text:'地方官循乳母的亲眷访得一户人家，旧物、送养文契与当年证词相合，找到了换婴案中失散的亲生孩子。',valid:()=>!s.recovered,choices:[{t:'接回宫中，安排照护',f:()=>{if(s.recovered)return null;const original=recoverOriginalChild(k,'换婴后流落宫外，循文契与证词寻回');save('auto');return `${original.name}已接回宫中，亲缘与纪事一并补入。`;}}]};
 }
