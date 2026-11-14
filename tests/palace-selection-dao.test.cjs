@@ -32,7 +32,13 @@ test('old selection saves and candidate removal remain navigable without a sessi
  const {run}=boot();run(`genCands(2);delete S.selection;assert.ok(selectionCurrent());var id=selectionCurrent().id;A.xxNext(id);A.xxDrop(selectionCurrent().id);assert.ok(selectionCurrent());A.xxEnd();assert.equal(S.cands.length,0);assert.equal(S.selection,undefined);assert.match(viewXX(),/下旨选秀/);`);
 });
 test('Qinan Hall is a real hit target with guide, walk route and fixed male or female portrait',()=>{
- const {run}=boot();run(`var p=PLACES.find(p=>p.id==='qa');assert.equal(PLACES.find(x=>100>=x.r[0]&&100<=x.r[0]+x.r[2]&&18>=x.r[1]&&18<=x.r[1]+x.r[3]),p);assert.match(placeGuideHTML(p),/拜见国师/);for(let i=0;i<4;i++){S.flags.daoMaster=i;assert.equal(daoMaster().gender,i%2?'女':'男');assert.match(porImg(daoMaster(),190),/palace-daoist-portraits/);}save('1');load('1');assert.equal(daoMaster().cell,3);`);
+ const {run}=boot();run(`var p=PLACES.find(p=>p.id==='qa'),wy=PLACES.find(p=>p.id==='wy'),mx=p.r[0]+p.r[2]/2,my=p.r[1]+p.r[3]/2;
+    assert.ok(p.r[1]>wy.r[1]+wy.r[3]);assert.equal(p.r[0],wy.r[0]);
+    assert.equal(PLACES.find(x=>mx>=x.r[0]&&mx<=x.r[0]+x.r[2]&&my>=x.r[1]&&my<=x.r[1]+x.r[3]),p);
+    for(const other of PLACES.filter(x=>x!==p))assert.ok(p.r[0]>=other.r[0]+other.r[2]||other.r[0]>=p.r[0]+p.r[2]||p.r[1]>=other.r[1]+other.r[3]||other.r[1]>=p.r[1]+p.r[3],other.id);
+    goPlace(p);for(let n=0;n<500&&emp.path.length;n++)mapTick();assert.equal(UI.view,'place');assert.equal(UI.sel,'qa');assert.equal(emp.x,p.d[0]);assert.equal(emp.y,p.d[1]);
+    var guest=harem()[0];guest.t2='念旧';guest.like='诗书';guest.daoPractice={path:'dao',visits:6};for(let seed=1;seed<1000;seed++){guest.seed=seed;if(daoVisitors().includes(guest))break;}assert.deepEqual(npcRoutine(guest,.5).dest,p.d);
+    assert.match(placeGuideHTML(p),/拜见国师/);for(let i=0;i<4;i++){S.flags.daoMaster=i;assert.equal(daoMaster().gender,i%2?'女':'男');assert.match(porImg(daoMaster(),190),/palace-daoist-portraits/);}save('1');load('1');assert.equal(daoMaster().cell,3);`);
 });
 test('visitors respect age, religion, confinement, absence, illness and pregnancy',()=>{
  const {run}=boot();run(`var c=harem()[0];c.trait='淡泊';c.t2='信佛';assert.equal(daoInterest(c),0);c.t2='直言';c.like='诗书';assert.equal(daoInterest(c),2);for(const field of ['cold','gone','templeStay']){c[field]=true;assert.equal(daoEligible(c),false);delete c[field];}c.preg=2;assert.equal(daoEligible(c),false);c.preg=0;c.hp=39;assert.equal(daoEligible(c),false);c.hp=70;var k=makeKid(c,'f','清和');k.born=S.turn-132;assert.equal(daoEligible(k),false);k.born=S.turn-156;assert.equal(daoEligible(k),true);k.princeEstate=true;assert.equal(daoEligible(k),true);delete k.princeEstate;for(const field of ['jailed','away','templeStay']){k[field]=true;assert.equal(daoEligible(k),false);delete k[field];}`);

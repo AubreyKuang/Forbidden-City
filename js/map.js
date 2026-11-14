@@ -6,7 +6,7 @@ const PLACES=[
  {id:'qq',n:'乾清宫',r:[80,68,40,11],d:[100,82],k:'view',v:'home',sc:'court'},
  {id:'kn',n:'坤宁宫',r:[82,50,36,11],d:[100,64],k:'palace',p:'坤宁宫',sc:'harem'},
  {id:'cj',n:'宸极殿',r:[78,86,44,12],d:[100,100],k:'place',sc:'court'},
- {id:'qa',n:'钦安殿',r:[91,12,18,11],d:[100,24],k:'place',sc:'garden'},
+ {id:'qa',n:'钦安殿',r:[164,33,26,10],d:[177,46],k:'place',sc:'garden'},
  {id:'yh',n:'御花园',r:[58,12,84,30],d:[100,46],k:'place',sc:'garden'},
  {id:'sw',n:'神武门',r:[90,2,20,6],d:[100,9],k:'view',v:'out',sc:'city'},
  {id:'wm',n:'午门',r:[90,119,20,7],d:[100,117],k:'view',v:'out',sc:'court'},
@@ -34,7 +34,7 @@ function npcHome(c){const pl=PLACES.find(p=>p.k==='palace'&&p.p===c.palace);retu
 function npcSync(){const ids=new Set();alive().filter(c=>!c.maid&&(inPalace(c)||c.cold)).forEach(c=>{ids.add(c.id);if(!NPC.has(c.id)){const h=c.cold?[23,46]:npcHome(c);NPC.set(c.id,{x:h[0],y:h[1],path:[],wait:ri(5,60),ox:ri(-3,3),where:'home'})}});[...NPC.keys()].forEach(id=>{if(!ids.has(id))NPC.delete(id)})}
 function npcRoutine(c,roll) {
   const home=npcHome(c);
-  if(daoVisitors().includes(c))return {where:'dao',dest:[100,24]};
+  if(daoVisitors().includes(c))return {where:'dao',dest:PLACES.find(p=>p.id==='qa').d};
   const hobby=consortHobby(c);
   const gardenBias=['活泼','淡泊'].includes(c.trait)||c.t2==='爱猫'||CONSORT_HOBBIES[hobby].place==='御花园';
   const studyBias=['才女','好学'].includes(c.trait)||c.t2==='好读史'||hobby==='读书';
@@ -64,7 +64,7 @@ function npcStep(){npcSync();for(const [id,n] of NPC){const c=byId(id);if(!c)con
 
 function npcRoutineText(c,n) {
   if(!n)return '在宫道上停下脚步，向你行了一礼';
-  if(n.where==='dao')return n.path.length?'沿花园小径，往钦安殿听讲去':'在钦安殿廊下翻阅经卷';
+  if(n.where==='dao')return n.path.length?'沿东侧宫道，往钦安殿听讲去':'在钦安殿廊下翻阅经卷';
   if(n.where==='library')return n.path.length?'抱着旧抄本，正往文渊阁去':'在文渊阁门前等宫人取来借阅的书';
   if(n.where==='visit'){
     const friend=byId(n.guest);
