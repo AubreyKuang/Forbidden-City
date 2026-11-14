@@ -38,6 +38,13 @@ function offerPersonalExperience(c,episode){
 }
 function personalExperienceTick(){
   if(S.over)return;
+  for(const c of harem()){
+    const current=experienceState(c)?.current,episode=experienceRule(c);
+    if(current?.stage==='offered'&&episode&&S.turn-current.offered>=12){
+      const valid=episode.group!=='mother'||experienceParticipants(c,episode,current).length>=(episode.id==='life51'?2:1);
+      endPersonalExperience(c,episode,valid?episode.privateResult:'时移事易，她把这件事收进了旧册，留待往后。',valid?'自行完成':'暂存旧册');
+    }
+  }
   const pace=S.flags.personalExperiencePace||={last:-99,topics:{},lastGroup:null};
   if(S.turn-pace.last<3||harem().filter(c=>experienceState(c)?.current).length>=3)return;
   const people=harem().filter(c=>!c.maid&&!experienceState(c)?.current&&S.turn-(c.enteredAt??0)>=6&&S.turn-(experienceState(c)?.lastEnd??-99)>=12);

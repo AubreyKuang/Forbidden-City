@@ -160,6 +160,7 @@ A.chat=function(id,fromEvent=false){const c=byId(id);if((modalOpen&&!fromEvent)|
   if(!opening&&c.aff>=50&&sch.length&&chance(.25)){const x=pick(sch);x.known=true;rev+=`\n她压低声音：“${cName(x)}那边，陛下还是留个心眼好。”（${cName(x)}的心机已显露：${rd(x.scheme)}）`}
   if(NEGX.includes(xk)){const p={'思念':.8,'委屈':.6,'惶恐':.55,'嫉恨':.25,'悲恸':.3,'怨恨':.12,'心如死灰':.1}[xk]+c.aff/400;if(chance(p)){const nk=xk==='思念'?'欢喜':'释然';setXin(c,nk,'陛下陪她说了许久的话');rev+=`\n§心境：${xk} → ${nk}`}else rev+=`\n§她的心境仍是「${xk}」`}
   const s=cchg(c,{aff:c.trait==='痴情'?8:5,mood:8,favor:2});
+  const moment=recordSharedMoment(c,xk);if(moment)L.push(moment);
   story(c,`陛下驾临闲话。${L[1]}`);rememberConversation(c,voice,c.palace);setScene('harem');
   pushEv({title:'闲话家常',por:c,text:L.join('\n')+rev+fx(s),choices:[ok1]})};
 A.gift=function(id){const c=byId(id);if(modalOpen||S.over||!inPalace(c))return;deepen(c);
@@ -190,8 +191,7 @@ const QEV={
    {t:`判${cName(c)}胜`,f:()=>{relAdd(c,o,-3);return fx(cchg(c,{mood:15}),cchg(o,{mood:-6}))}},
    {t:'判和局',f:()=>{relAdd(c,o,4);return '两人对视一眼，都笑了。'}},
    {t:'亲自下场，各杀一盘（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{E().energy--;renderTop();return `你连赢两盘，${cName(c)}不服气，缠着你又下到三更。${fx(cchg(c,{aff:6}),cchg(o,{aff:4}))}`}}]}},
- '念旧':c=>({title:'旧物',por:c,text:`今天是${cName(c)}入宫的日子。她不提，却在桌上摆了一碟你们第一次见面时吃过的点心。`,choices:[
-   {t:'“朕也记得。”',f:()=>{remember(c,'bday','入宫的日子');return fx(cchg(c,{aff:10,mood:12}))}},{t:'没留意',f:()=>fx(cchg(c,{mood:-8}))}]}),
+ '念旧':c=>oldKeepsakeEvent(c),
  '嘴硬心软':c=>({title:'参汤',por:c,text:'你批折子到三更，小太监端来一碗参汤，说是御膳房送的。你尝了一口，里面加了枸杞——御膳房从不这么做。',choices:[
    {t:`去${c.palace}道谢`,f:()=>`她扭过头：“谁送的谁知道，反正不是臣妾。”耳根却红了。${fx(cchg(c,{aff:8,mood:10}),chg({health:1}))}`},{t:'喝完便睡',f:()=>fx(chg({health:1}))}]}),
  '贪睡':c=>{const em=empress();if(!em||em===c)return null;return {title:'请安迟了',present:[c,em],por:c,text:`${cName(c)}又睡过了头，晨昏定省迟了半个时辰。皇后罚她在坤宁宫外站了一炷香。`,choices:[

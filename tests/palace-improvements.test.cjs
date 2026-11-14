@@ -1014,7 +1014,7 @@ test('husband portraits survive ordinary and acquaintance marriages and incomple
 
 test('personal speech is stable, side-effect free, and every temperament has its own lines',()=>{
   const {run,force}=boot();run(`var c=harem()[0];c.aff=60;c.mood=70;var before=JSON.stringify(S),first=characterVoiceHTML(c);for(var i=0;i<6;i++)assert.equal(characterVoiceHTML(c),first);assert.equal(JSON.stringify(S),before);
-    for(var trait of Object.keys(TRAITS)){assert.ok(CONSORT_VOICES[trait].length>=3);c.trait=trait;assert.equal(consortVoicePool(c)[0].key,'years-first');assert.ok(consortVoicePool(c)[0].lines.length>=3);}
+    for(var trait of Object.keys(TRAITS)){assert.ok(CONSORT_VOICES[trait].length>=3);c.trait=trait;assert.equal(consortVoicePool(c)[0].key,'years-familiar');assert.ok(consortVoicePool(c)[0].lines.length>=3);}
     var all=new Set(Object.values(CONSORT_VOICES).flat());assert.equal(all.size,Object.values(CONSORT_VOICES).flat().length);`);
   force(.314);run(`characterVoiceHTML(c);assert.equal(R(),.314);`);
 });

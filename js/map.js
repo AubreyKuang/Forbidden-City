@@ -107,7 +107,8 @@ function goPlace(p){AU.sfx('click');if(Math.round(emp.x)===p.d[0]&&Math.round(em
   emp.path=planPath(Math.round(emp.x),Math.round(emp.y),p.d[0],p.d[1]);emp.arrive=()=>arrive(p)}
 // 宫名按钮是直达：点一下就到，不必等皇帝慢慢走过去（走路仍可点地图上的宫殿本身）。
 function goDirect(p){emp.path=[];emp.arrive=null;emp.x=p.d[0];emp.y=p.d[1];arrive(p)}
-function arrive(p){S.pos={x:p.d[0],y:p.d[1]};setScene(p.sc);AU.sfx('page');
+A.arrivePlace=function(id){const p=PLACES.find(p=>p.id===id);if(p)arrive(p);};
+function arrive(p){if(typeof PalaceActions!=='undefined'&&!PalaceActions.busy)return A.arrivePlace(p.id);S.pos={x:p.d[0],y:p.d[1]};setScene(p.sc);AU.sfx('page');
   if(p.k==='view')UI.view=p.v;else if(p.k==='palace'){UI.view='palace';UI.sel=p.p;preparePalaceLife(p.p)}else{UI.view='place';UI.sel=p.id}
   render();if(p.k==='palace')pushEv(palaceArrivalEvent(p.p))}
 function nearestPlace(){const p=PLACES.find(p=>S.pos&&p.d[0]===S.pos.x&&p.d[1]===S.pos.y);return p?p.n+'门前':'宫道上'}
@@ -370,11 +371,11 @@ A.finishMonth=function(){
   pushEv({title:invitations.length?'尚有本月邀约':`进入${nextMonth}？`,scene:'month-review',
     cast:invitations.flatMap(lead=>lead.cast),text:`${remaining}进入${nextMonth}后会结算本月收支，补充精力，并可能发生新的宫中事件。${detail?'\n'+detail:''}${reliefDetail}${paymentDetail}`,choices:[
     ...invitations.map(lead=>({t:'先去'+lead.title,f:()=>{goDirect(PLACES.find(p=>p.id===lead.place));return null;}})),
-    ...(openingMemorial||floodDue||locustDue||auditDue?[{t:'查看'+mapMemorial().name,f:()=>{setTimeout(()=>A.court(),0);}}]:[]),
-    ...(paymentDue?[{t:'去常平仓',f:()=>{setTimeout(()=>A.grainReserve(),0);}}]:[]),
+    ...(openingMemorial||floodDue||locustDue||auditDue?[{t:'查看'+mapMemorial().name,f:()=>{if(!PalaceActions.replaying)setTimeout(()=>A.court(),0);}}]:[]),
+    ...(paymentDue?[{t:'去常平仓',f:()=>{if(!PalaceActions.replaying)setTimeout(()=>A.grainReserve(),0);}}]:[]),
     {t:'留在本月'},
     {t:invitations.length?`略过邀约，进入${nextMonth}`:`进入${nextMonth}`,primary:true,
-      f:()=>{setTimeout(()=>A.endMonth(),0);return null;}}
+      f:()=>{if(!PalaceActions.replaying)setTimeout(()=>A.endMonth(),0);return null;}}
   ]});
   $('#mbox .mch button:nth-last-child(2)')?.focus?.();
 };

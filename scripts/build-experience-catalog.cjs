@@ -1,7 +1,7 @@
 /* Keep the standalone content index synchronized with the shipped definitions. */
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const root=path.resolve(__dirname,'..'),context=vm.createContext({A:{}});
-for(const name of ['personal-experiences-data','personal-experiences','consort-stories','married-life','time-travelers'])vm.runInContext(fs.readFileSync(path.join(root,'js',name+'.js'),'utf8'),context);
+for(const name of ['personal-experiences-data','personal-experiences','consort-stories','married-life','time-travelers','companion-life'])vm.runInContext(fs.readFileSync(path.join(root,'js',name+'.js'),'utf8'),context);
 const data=JSON.parse(vm.runInContext(`JSON.stringify({travelerPasts:TRAVELER_PASTS,episodes:PERSONAL_EPISODES,sources:EXPERIENCE_SOURCES,groups:Object.fromEntries(Object.entries(EXPERIENCE_GROUPS).map(([id,g])=>[id,{name:g.name,stat:g.stat}])),arcs:Object.entries(ARCS).map(([id,a])=>({id,name:a.name,stages:a.stages.length,outcomes:[...new Set(a.stages.flatMap(f=>[...f.toString().matchAll(/aEnd\\(c,'([^']+)'/g)].map(m=>m[1])))]})),households:Object.entries(HOUSEHOLD_SCENES).map(([id,s])=>({id,title:s.title,choices:s.choices.map(x=>x[0])}))})`,context));
 const conditions={ink:'才女／好学／聪慧，或喜欢读书',craft:'巧手／才女，或喜欢刺绣、抚琴',garden:'淡泊／沉静／活泼／体弱／痴情，或喜欢侍花',home:'至少十八岁，情分至少三十五',agency:'贵人及以上，且持重／聪慧／城府／爽直／骄矜／好客',growth:'才情不足七十，或好学／体弱／将门／温婉',mother:'确有在宫、当前由她抚养的孩子；各题另限年龄或人数',fate:'失宠、低落，或思念／委屈／悲恸／释然／怨恨'};
 const arcConditions={general:'将门；罕见独占',scholar:'才女；每朝只保留一位主要承接者',craft:'才女或才情至少八十',secret:'宫女出身，或有心机的寒门；罕见独占',ill:'体弱',envoy:'西域贡女；罕见独占',ambition:'非皇后，城府或高心机',greed:'贪财；罕见独占',kite:'活泼／骄矜／淡泊／善妒',love:'通用，分段要求情分'};

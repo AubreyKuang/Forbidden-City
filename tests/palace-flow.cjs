@@ -301,6 +301,8 @@ assert.equal(npcRoutine(companion,.86).guest,afterPrimary.id);
 S.turn++;S.month++;initiativeTick();
 assert.match(activeInitiativeEcho(afterPrimary).text,/合画的泥兔/);
 S.turn+=12;S.month=11;afterPrimary.trait='淡泊';
+// Both winter chart and tea tasting fit this person; isolate the chart under test.
+S.flags.initiativeTurns.clearTeaTasting=S.turn;
 delete afterPrimary.initiative;
 initiativeTick();assert.equal(afterPrimary.initiative.id,'winterChart');
 arrive(PLACES.find(p=>p.id==='wy'));

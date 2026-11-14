@@ -143,18 +143,8 @@ const ARCS={
     {t:'宫规不许',f:()=>{aNext(c,2,4,8);return fx(cchg(c,{mood:-10}))}}]},
   (c,f)=>{if(c.aff>=65){c.bond=true;aEnd(c,'知己',f.out?'那盏兔子灯一直挂在她的床头。她说，陛下是这宫里唯一懂她的人。':'她说，陛下是这宫里唯一懂她的人。');return {text:`${cName(c)}亲手扎了一只新纸鸢送你，上面画着两个牵手的小人。${'\n'}§她的恩宠从此不再衰减`,choices:[ok1]}}
     aEnd(c,'少年游','那些放纸鸢的春天，渐渐成了她回忆里最轻快的日子。');return {text:`${cName(c)}把旧纸鸢收进了箱底。她长大了些，也安静了些。`,choices:[ok1]}}]},
- love:{name:'鸳鸯帕',fit:()=>true,stages:[
-  (c,f)=>c.aff<40?null:{text:`你去${c.palace}时没让人通报。${cName(c)}正低头绣一方帕子，见你进来，慌忙往身后藏。`,choices:[
-    {t:'假装没看见',f:()=>{aNext(c,1,2,5);return '她松了一口气，脸却还是红的。'}},
-    {t:'一把抢过来看',f:()=>{aNext(c,1,2,5);story(c,'绣了一方鸳鸯帕，被陛下抢去看了，羞得三天不敢抬头。');return `是一对鸳鸯，绣得歪歪扭扭的。${fx(cchg(c,{aff:6,mood:10}))}`}}]},
-  (c,f)=>c.aff<55?null:{text:`你染了风寒，高烧三日。${cName(c)}衣不解带地守在榻前，药都是她亲口试过温才喂你。`,choices:[
-    {t:'醒来时握住她的手',f:()=>{aNext(c,2,3,6);story(c,'陛下染病，她守了三天三夜。陛下醒来时握住了她的手。');return fx(cchg(c,{aff:12,favor:8}))}},
-    {t:'厚赏她',f:()=>{aNext(c,2,3,6);return fx(chg({treasury:-20}),cchg(c,{mood:10,aff:4}))}}]},
-  (c,f)=>{if(c.aff<70){if(!f.wait){f.wait=1;c.arc.t=S.turn+6;return null}aEnd(c,'相敬如宾','岁月流转，两人之间少了些心动，多了些安稳。');return {text:`${cName(c)}依旧温和，只是不再像从前那样盼着你来。`,choices:[{t:'……'}]}}
-    const sc=c.id%3;f.sc=sc;
-    return {text:sc===0?`那夜宫中走水，火从${c.palace}的偏殿烧起来。你赶到时，${cName(c)}正从火里往外跑，怀里紧紧抱着那方鸳鸯帕——她是回去拿它的。`:sc===1?`太液池上泛舟，船身忽然一歪，${cName(c)}落进了水里。她被捞上来时冻得发抖，手里还攥着那方鸳鸯帕。`:`围猎时一头受惊的野猪冲向御帐，${cName(c)}想也没想，扑过来挡在了你身前。她袖中掉出那方鸳鸯帕。`,choices:[
-      {t:sc===0?'冲进去把她拉出来':sc===1?'亲手为她裹上大氅，守她一夜':'抱起她，亲自送回营帐',f:()=>{const s=chg({health:-1});c.bond=true;aEnd(c,'同心',['那夜陛下冲进火场把她拉了出来。','太液池落水，陛下守了她一夜。','围猎遇险，她以身护驾。'][sc]+'从此她的恩宠再不会淡去。');return `${['你们都被烟熏得满脸乌黑，她却笑出了眼泪。','她烧了一夜，醒来第一句话是问你有没有着凉。','她只擦破了手臂，却被你抱了一路，羞得把脸埋进你怀里。'][sc]}${fx(s,cchg(c,{aff:25,favor:20}))}\n§她的恩宠从此不再衰减`}},
-      {t:'命人好生照料她',f:()=>{c.bond=true;aEnd(c,'同心','危急之时，她心里想的是那方鸳鸯帕，和绣它时想着的人。');return fx(cchg(c,{aff:15}))+'\n§她的恩宠从此不再衰减'}}]}}]}
+ love:{name:'相伴有凭',fit:()=>true,stages:[]} // Personality-specific stages are installed by companion-life.js.
+
 };
 const CONSORT_CRAFTS=[
   {title:'校补旧卷',begin:'在文渊阁借到半卷残书，想请掌事姑姑找出其余的散页。',share:'准她召几个识字的宫人一起校书',

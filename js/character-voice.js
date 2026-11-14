@@ -80,7 +80,8 @@ const VOICE_YEARS={
   distant:['陛下肯来，礼数自然不会少。只是臣妾也有自己的日子要过。','这些年教会臣妾的，是有些心事不必逢人便说。','臣妾的想法未变。只是如今，不再急着求陛下认同了。']}
 };
 function consortVoicePhase(c){
-  const months=Math.max(0,S.turn-(c.enteredAt??0)),visits=c.voiceVisits||0;
+  const old=c.knownBeforeAccession||(c.story||[]).some(e=>/潜邸旧人|潜邸时奉先帝/.test(e.t));
+  const months=Math.max(old?24:0,S.turn-(c.enteredAt??0)),visits=(c.voiceVisits||0)+(old?3:0);
   if(months<6&&visits<3)return 'first';
   if(months>=24&&(c.aff<35||c.favor<20||['怨恨','惶恐'].includes(xinOf(c))))return 'distant';
   if(months>=120&&c.aff>=55&&(visits>=3||c.nights>=3||c.bond))return 'years';
@@ -96,10 +97,10 @@ function consortVoicePool(c){
   const x=xinOf(c),close=c.aff>=55;
   if(c.templeStay)return [voiceLine('temple-retreat','护国寺来信里，她说起清修的日子。',distantChildren(c).length?'晨钟响过，便想起孩子此时也该起了。臣妾在这里平安，还望宫中代问一声，孩子可曾添衣。':c.trait==='好学'?'寺中旧藏颇多，午后可以静坐校书。臣妾抄了几行喜欢的句子，夹在信里。':'晨起听钟，入夜收灯，日子过得慢些。臣妾在这里平安，请陛下放心。')];
   if(c.cold)return [voiceLine('cold','隔着门扉，她只说了几句。',['臣妾知道这里清冷。若还有一句话能递出去，便请陛下认真听完。','门外的声响听得分明，日子却记得模糊了。陛下可还愿听臣妾一言？'])];
-  if(['悲恸','心如死灰'].includes(x))return [voiceLine('grief','她停了许久，才抬眼看你。',['有些话臣妾今日还说不出来。陛下坐一会儿就好。','不必劝臣妾快些好起来。今日能把这一盏茶喝完，也算往前走了一点。'])];
+  if(['悲恸','心如死灰','怨恨','惶恐'].includes(x)||c.hp<40)return [consortEmotionalVoice(c,x)];
   const concern=motherConcernVoice(c);if(concern&&(c.childConcern?.value??35)>=30)return [concern];
   if(['怨恨','惶恐'].includes(x)||(c.aff<20&&consortVoicePhase(c)!=='first'))return [voiceLine('distance','她行过礼，仍立在一步之外。',['臣妾听着。只是有些话，还不知该从哪里说起。','陛下肯来，臣妾领情。只是心里的结，不是一句话就能解开的。'])];
-  if(c.hp<40)return [voiceLine('ill','她将话说得很慢。',['今日精神短些，陛下别怪臣妾招呼不周。','臣妾想歇一歇。等好些了，再把没说完的话接上。'])];
+
   const years=newcomerVoice(c)||consortYearsVoice(c),phase=consortVoicePhase(c);
   if(phase==='distant')return [years];
   const pool=[years];const traveler=timeTravelerVoice(c);if(traveler)pool.push(traveler);const spiritual=daoLifeVoice(c);if(spiritual)pool.push(spiritual);
@@ -114,6 +115,7 @@ function consortVoicePool(c){
     pool.push(voiceLine('mother','说到孩子，她的语气不自觉地轻下来。',childHasLeftPalace(motherChild)?`${name}有了自己的日子，臣妾替孩子高兴，也难免牵挂。闲时若能带封信回来就好了。`:a<3?`${name}还这么小，日子倒像过得格外快。臣妾想把这一点一滴都记住。`:a<12?`${name}一天比一天有主意。臣妾也学着先听孩子说完，再讲自己的道理。`:`${name}渐渐长大，臣妾也不能事事替孩子拿主意。只盼有难处时，还肯回来同臣妾说。`));
   }
   const past=historyVoice(c);if(past)pool.push(past);
+  const shared=sharedMomentVoice(c);if(shared)pool.push(shared);
   const lived=c.personalExperiences?.history?.at(-1);if(lived&&S.turn-lived.turn<=6)pool.push(voiceLine('experience','她又说起前些日子那件事。',`「${lived.title}」的事，臣妾还记着。那时候的心情，与今日又不一样了。`));
   // Personal interests supplement, rather than replace, her principal temperament.
   const hobby=consortHobby(c);if(phase!=='first'&&HOBBY_VOICES[hobby])pool.push(voiceLine('hobby','她把手边的东西挪近，让你也看一看。',HOBBY_VOICES[hobby]));

@@ -157,7 +157,8 @@ function palaceSaveError(slot){
 let lastAutoSaveError='';
 function save(slot){
   if(!S)return false;
-  const ok=SaveManager.save(SaveManager.getStorage(),SKEY+slot,{...S,savedAt:Date.now()},validPalaceSave);
+  if(typeof PalaceActions!=='undefined'){if(PalaceActions.blocked)return false;if(PalaceActions.busy)return true;}
+  const ok=SaveManager.save(SaveManager.getStorage(),SKEY+slot,{...PalaceActions.payload(),savedAt:Date.now()},validPalaceSave);
   if(slot==='auto'){
     const error=ok?'':palaceSaveError(slot);
     if(error&&error!==lastAutoSaveError)toast(error);
@@ -170,7 +171,7 @@ function load(slot){
   if(!data)return false;
   const previous=S;
   S=data;
-  try { migrate(); }
+  try { if(!data.pendingActions)migrate(); }
   catch { S=previous;return false; }
   return true;
 }
@@ -181,30 +182,36 @@ function slotInfo(slot){
   return s?`${s.emp.sur}${s.emp.name}·${dateStr(s)}·后妃${s.consorts.filter(c=>c.alive&&!c.gone).length}`:null;
 }
 function showRestoredPalace(){
-  Q.length=0;curEv=null;modalOpen=false;
+  Q.length=0;curEv=null;modalOpen=false;modalResult=null;
   modalInvoker=null;
   $('#modal').close?.();
   $('#modal').hidden=true;
-  UI.view='map';UI.banquet=null;setScene('court');render();
+  UI.view='map';UI.banquet=null;setScene('court');
+  const pending=S.pendingActions;delete S.pendingActions;
+  if(PalaceActions.restore(pending)){resetMapPosition(S.pos);render();return;}
+  render();
+  if(!PalaceActions.blocked)A.resumePendingScenes();
+}
+A.resumePendingScenes=function(){
   const voyage=pendingDaoVoyage();if(voyage)pushEv(voyage);
   const traveler=pendingTravelerEvent();if(traveler)pushEv(traveler);
   const swap=birthSwapSearchReport()||pendingBirthSwapJustice();if(swap)pushEv(swap);
-}
+};
 A.save=function(slot){if(save(slot)){toast('已存档');AU.sfx('chime')}else toast(palaceSaveError(slot));render()};
 A.load=function(slot){
   if(!load(slot)){
     toast(SaveManager.status(SaveManager.getStorage(),SKEY+slot)==='newer'?palaceSaveError(slot):'此存档为空或无法读取');
     return;
   }
-  offlineMemorials();showRestoredPalace();
+  showRestoredPalace();if(!modalOpen)offlineMemorials();
 };
 
-function snapshotYear(){try{SaveManager.snapshot(SaveManager.getStorage(),SKEY+'auto',S,validPalaceSave,{label:'y-'+S.gen+'-'+S.year,day:S.turn,date:dateStr()})}catch(e){}}
+function snapshotYear(){if(typeof PalaceActions!=='undefined'){if(PalaceActions.replaying)return;if(PalaceActions.busy){PalaceActions.requestSnapshot();return;}}try{SaveManager.snapshot(SaveManager.getStorage(),SKEY+'auto',PalaceActions.payload(),validPalaceSave,{label:'y-'+S.gen+'-'+S.year,day:S.turn,date:dateStr()})}catch(e){}}
 function replacePalace(data, alongside=[]){
   const previous=S;
   S=data;
   try {
-    migrate(false);
+    if(!data.pendingActions)migrate(false);
     if(SaveManager.save(SaveManager.getStorage(),SKEY+'auto',{...S,savedAt:Date.now()},validPalaceSave,{touch:true,alongside}))return true;
   } catch {
     S=previous;
@@ -231,7 +238,7 @@ A.downloadSave=function(){
   if(!S)return;
   let url;
   try{
-    const blob=new Blob([JSON.stringify({...S,saveVersion:SaveManager.version})],{type:'application/json'});
+    const blob=new Blob([JSON.stringify({...PalaceActions.payload(),saveVersion:SaveManager.version})],{type:'application/json'});
     if(blob.size>PALACE_FILE_LIMIT){toast('备份超过八 MB，请先减少测试版中的额外数据');return;}
     url=URL.createObjectURL(blob);
     const link=document.createElement('a');link.href=url;
@@ -246,7 +253,7 @@ function importPalaceFileText(raw){
     const data=SaveManager.decode(raw,validPalaceSave,migratePalaceSave);
     if(!data)throw Error();
     if(!confirm(`导入 ${data.emp.sur||''}${data.emp.name||''} 的存档文件？当前进度会先备份。`))return false;
-    const alongside=S?[[PALACE_BEFORE_IMPORT,JSON.stringify({...S,saveVersion:SaveManager.version})]]:[];
+    const alongside=S?[[PALACE_BEFORE_IMPORT,JSON.stringify({...PalaceActions.payload(),saveVersion:SaveManager.version})]]:[];
     if(!replacePalace(data,alongside)){toast(palaceSaveError('auto'));return false;}
   }catch{toast('存档文件无效，请选择本游戏下载的 JSON 备份');return false;}
   resetMapPosition(S.pos);showRestoredPalace();toast('已导入并保存');return true;

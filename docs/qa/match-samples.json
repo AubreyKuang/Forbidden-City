@@ -1,0 +1,543 @@
+[
+  {
+    "mode": "balanced",
+    "seed": 202,
+    "months": 109,
+    "endTurn": 109,
+    "over": true,
+    "errors": [],
+    "sampleEvents": [
+      {
+        "turn": 0,
+        "date": "永宁元年三月",
+        "phase": "setup",
+        "act": "setup",
+        "title": "登基",
+        "text": "永宁元年三月，先帝龙驭上宾，你在太和钟声中登上了宸极殿的御座。\n嫡妻秦婉柔册为皇后，潜邸旧人顾念册为贵人。\n礼部奏请：新帝登基，当广选秀女，以充后宫、绵延皇嗣。",
+        "choices": [
+          "进入宫城",
+          "准奏，即刻选秀"
+        ],
+        "actors": [],
+        "choice": "准奏，即刻选秀"
+      },
+      {
+        "turn": 35,
+        "date": "永宁四年二月",
+        "phase": "monthly",
+        "act": "endMonth",
+        "title": "三年大选",
+        "text": "又到三年一度的大选之期，各地秀女已候于储秀宫。",
+        "choices": [
+          "前去看看",
+          "今年免了"
+        ],
+        "actors": [],
+        "choice": "今年免了",
+        "result": "\n§民心+2"
+      },
+      {
+        "turn": 72,
+        "date": "永宁七年三月",
+        "phase": "active",
+        "act": "night",
+        "title": "春宵",
+        "text": "是夜，敬事房传傅答应侍寝。\n她温柔小意，滴水不漏，你却总觉得看不透她眼底的心思。\n§傅答应：恩宠+10 心情+10 情分+6",
+        "choices": [
+          "翌日赏赐（国库-10万两）",
+          "就此作罢"
+        ],
+        "actors": [
+          {
+            "id": 21,
+            "name": "傅芷",
+            "trait": "城府",
+            "t2": "爱猫",
+            "age": 24,
+            "aff": 97,
+            "favor": 10,
+            "mood": 100,
+            "xin": "平和",
+            "alive": true,
+            "gone": false,
+            "cold": false,
+            "temple": false,
+            "rank": 1
+          }
+        ],
+        "choice": "翌日赏赐（国库-10万两）",
+        "result": "你命人送去一对白玉镯子。\n§国库-10万两　傅答应：心情+8 情分+2"
+      },
+      {
+        "turn": 109,
+        "date": "永宁十年四月",
+        "phase": "monthly",
+        "act": "endMonth",
+        "title": "国破",
+        "text": "流民四起，叛军攻破京城。永宁十年，萧彻自缢于宫中，享年27岁。\n庙号太祖，谥曰「恭皇帝」。\n一生册封后妃23人，育皇子8人、公主8人。\n社稷倾覆，国祚至此而终。",
+        "choices": [
+          "重新开局",
+          "翻阅起居注"
+        ],
+        "actors": [],
+        "choice": "翻阅起居注"
+      }
+    ]
+  },
+  {
+    "mode": "affection",
+    "seed": 202,
+    "months": 120,
+    "endTurn": 120,
+    "over": false,
+    "errors": [],
+    "sampleEvents": [
+      {
+        "turn": 0,
+        "date": "永宁元年三月",
+        "phase": "setup",
+        "act": "setup",
+        "title": "登基",
+        "text": "永宁元年三月，先帝龙驭上宾，你在太和钟声中登上了宸极殿的御座。\n嫡妻秦婉柔册为皇后，潜邸旧人顾念册为贵人。\n礼部奏请：新帝登基，当广选秀女，以充后宫、绵延皇嗣。",
+        "choices": [
+          "进入宫城",
+          "准奏，即刻选秀"
+        ],
+        "actors": [],
+        "choice": "准奏，即刻选秀"
+      },
+      {
+        "turn": 40,
+        "date": "永宁四年七月",
+        "phase": "monthly",
+        "act": "endMonth",
+        "title": "派系倾轧",
+        "text": "晨昏定省时，皇后一派与颖妃一派为内务府分发的冰例争执不下，两边都盯着你。\n皇后身边：苏卿贵人、傅贵人、苏芙贵人、阿常在\n颖妃身边：无人",
+        "choices": [
+          "偏向皇后",
+          "偏向颖妃",
+          "各打五十大板：“都回去抄《女诫》。”"
+        ],
+        "actors": [
+          {
+            "id": 1,
+            "name": "秦婉柔",
+            "trait": "温婉",
+            "t2": "擅舞",
+            "age": 21,
+            "aff": 100,
+            "favor": 0,
+            "mood": 92,
+            "xin": "平和",
+            "alive": true,
+            "gone": false,
+            "cold": false,
+            "temple": false,
+            "rank": 8
+          },
+          {
+            "id": 2,
+            "name": "顾念",
+            "trait": "贪财",
+            "t2": "路痴",
+            "age": 22,
+            "aff": 100,
+            "favor": 100,
+            "mood": 100,
+            "xin": "平和",
+            "alive": true,
+            "gone": false,
+            "cold": false,
+            "temple": false,
+            "rank": 5
+          },
+          {
+            "id": 3,
+            "name": "苏卿澜",
+            "trait": "好学",
+            "t2": "嗜甜",
+            "age": 22,
+            "aff": 31,
+            "favor": 0,
+            "mood": 9,
+            "xin": "平和",
+            "alive": true,
+            "gone": false,
+            "cold": false,
+            "temple": false,
+            "rank": 3
+          }
+        ],
+        "choice": "偏向皇后",
+        "result": "皇后一派扬眉吐气，颖妃一派面色难看。"
+      },
+      {
+        "turn": 79,
+        "date": "永宁七年十月",
+        "phase": "monthly",
+        "act": "endMonth",
+        "title": "喜脉",
+        "text": "太医院来报：颖贵妃已有两月身孕！",
+        "choices": [
+          "加派人手悉心照料（国库-20万两）",
+          "晋她一级位分",
+          "赏"
+        ],
+        "actors": [
+          {
+            "id": 2,
+            "name": "顾念",
+            "trait": "贪财",
+            "t2": "路痴",
+            "age": 25,
+            "aff": 100,
+            "favor": 100,
+            "mood": 100,
+            "xin": "平和",
+            "alive": true,
+            "gone": false,
+            "cold": false,
+            "temple": false,
+            "rank": 6
+          }
+        ],
+        "choice": "加派人手悉心照料（国库-20万两）",
+        "result": "\n§国库-20万两　威望+2　颖贵妃：心情+20 情分+8"
+      },
+      {
+        "turn": 120,
+        "date": "永宁十一年三月",
+        "phase": "monthly",
+        "act": "endMonth",
+        "title": "梃击案",
+        "text": "一个手持枣木棍的汉子闯进东宫，打伤了守门太监，被侍卫拿下。他一口咬定是有人许他“打进去，有吃有穿”。",
+        "choices": [
+          "以“疯癫”结案"
+        ],
+        "actors": [
+          {
+            "id": 11,
+            "name": "嗣瑞",
+            "age": 8,
+            "xin": null,
+            "alive": true,
+            "temple": false
+          }
+        ],
+        "choice": "以“疯癫”结案",
+        "result": "那汉子被斩了。朝中议论了很久。\n§威望-2"
+      }
+    ]
+  },
+  {
+    "mode": "explorer",
+    "seed": 202,
+    "months": 79,
+    "endTurn": 79,
+    "over": true,
+    "errors": [],
+    "sampleEvents": [
+      {
+        "turn": 0,
+        "date": "永宁元年三月",
+        "phase": "setup",
+        "act": "setup",
+        "title": "登基",
+        "text": "永宁元年三月，先帝龙驭上宾，你在太和钟声中登上了宸极殿的御座。\n嫡妻秦婉柔册为皇后，潜邸旧人顾念册为贵人。\n礼部奏请：新帝登基，当广选秀女，以充后宫、绵延皇嗣。",
+        "choices": [
+          "进入宫城",
+          "准奏，即刻选秀"
+        ],
+        "actors": [],
+        "choice": "准奏，即刻选秀"
+      },
+      {
+        "turn": 25,
+        "date": "永宁三年四月",
+        "phase": "active",
+        "act": "out",
+        "title": "护国寺清修",
+        "text": "安排傅安到护国寺祈福或清修。宫女随行，原宫室与位分保留；寺居期间不参与宫内宴请、召幸与日常活动。\n可约定归期，也可日后迎回。",
+        "choices": [
+          "祈福三个月 · 国库−10万两",
+          "清修半年 · 国库−10万两",
+          "留寺清修，暂不定归期 · 国库−10万两",
+          "暂不安排"
+        ],
+        "actors": [
+          {
+            "id": 4,
+            "name": "傅安",
+            "trait": "持重",
+            "t2": "嘴硬心软",
+            "age": 18,
+            "aff": 50,
+            "favor": 0,
+            "mood": 14,
+            "xin": "平和",
+            "alive": true,
+            "gone": false,
+            "cold": false,
+            "temple": false,
+            "rank": 3
+          }
+        ],
+        "choice": "暂不安排"
+      },
+      {
+        "turn": 53,
+        "date": "永宁五年八月",
+        "phase": "active",
+        "act": "out",
+        "title": "御花园偶遇",
+        "text": "细雨忽至，你与江答应在回廊下躲雨，说了许多话。\n§江答应：恩宠+6 情分+6 心情+10",
+        "choices": [
+          "今夜便召她侍寝",
+          "与她作别"
+        ],
+        "actors": [
+          {
+            "id": 31,
+            "name": "江蘅蓉",
+            "trait": "贪财",
+            "t2": "信佛",
+            "age": 21,
+            "aff": 52,
+            "favor": 6,
+            "mood": 46,
+            "xin": "平和",
+            "alive": true,
+            "gone": false,
+            "cold": false,
+            "temple": false,
+            "rank": 1
+          }
+        ],
+        "choice": "与她作别"
+      },
+      {
+        "turn": 79,
+        "date": "永宁七年十月",
+        "phase": "monthly",
+        "act": "endMonth",
+        "title": "国破",
+        "text": "流民四起，叛军攻破京城。永宁七年，萧彻自缢于宫中，享年24岁。\n庙号太祖，谥曰「恭皇帝」。\n一生册封后妃21人，育皇子0人、公主1人。\n社稷倾覆，国祚至此而终。",
+        "choices": [
+          "重新开局",
+          "翻阅起居注"
+        ],
+        "actors": [],
+        "choice": "翻阅起居注"
+      }
+    ]
+  },
+  {
+    "mode": "skip",
+    "seed": 202,
+    "months": 120,
+    "endTurn": 120,
+    "over": false,
+    "errors": [],
+    "sampleEvents": [
+      {
+        "turn": 0,
+        "date": "永宁元年三月",
+        "phase": "setup",
+        "act": "setup",
+        "title": "登基",
+        "text": "永宁元年三月，先帝龙驭上宾，你在太和钟声中登上了宸极殿的御座。\n嫡妻秦婉柔册为皇后，潜邸旧人顾念册为贵人。\n礼部奏请：新帝登基，当广选秀女，以充后宫、绵延皇嗣。",
+        "choices": [
+          "进入宫城",
+          "准奏，即刻选秀"
+        ],
+        "actors": [],
+        "choice": "准奏，即刻选秀"
+      },
+      {
+        "turn": 36,
+        "date": "永宁四年三月",
+        "phase": "monthly",
+        "act": "endMonth",
+        "title": "牙疼",
+        "text": "苏卿贵人偷吃松子糖吃坏了牙，半边脸肿得老高，还嘴硬说是被蚊子咬的。",
+        "choices": [
+          "笑着让太医去瞧",
+          "下令她宫里禁糖一月"
+        ],
+        "actors": [
+          {
+            "id": 3,
+            "name": "苏卿澜",
+            "trait": "好学",
+            "t2": "嗜甜",
+            "age": 22,
+            "aff": 33,
+            "favor": 0,
+            "mood": 4,
+            "xin": "释然",
+            "alive": true,
+            "gone": false,
+            "cold": false,
+            "temple": false,
+            "rank": 3
+          }
+        ],
+        "choice": "笑着让太医去瞧",
+        "result": "\n§苏卿贵人：心情+5 情分+3"
+      },
+      {
+        "turn": 76,
+        "date": "永宁七年七月",
+        "phase": "monthly",
+        "act": "endMonth",
+        "title": "京畿疫病",
+        "text": "京畿一带爆发时疫，染病者日增。",
+        "choices": [
+          "命太医院全力救治（国库-150万两）",
+          "封锁疫区"
+        ],
+        "actors": [],
+        "choice": "命太医院全力救治（国库-150万两）",
+        "result": "\n§国库-150万两　民心+6"
+      },
+      {
+        "turn": 120,
+        "date": "永宁十一年三月",
+        "phase": "monthly",
+        "act": "endMonth",
+        "title": "绿腰",
+        "text": "宫宴上，秦官女子一曲《绿腰》，满座皆惊。有老臣低声说：“颇有汉时赵飞燕之风。”",
+        "choices": [
+          "重赏",
+          "“舞是好舞，只是宫宴不宜太过。”"
+        ],
+        "actors": [
+          {
+            "id": 1,
+            "name": "秦婉柔",
+            "trait": "温婉",
+            "t2": "擅舞",
+            "age": 28,
+            "aff": 61,
+            "favor": 10,
+            "mood": 0,
+            "xin": "思念",
+            "alive": true,
+            "gone": false,
+            "cold": false,
+            "temple": false,
+            "rank": 0
+          }
+        ],
+        "choice": "重赏",
+        "result": "\n§国库-10万两　秦官女子：恩宠+10 心情+15"
+      }
+    ]
+  },
+  {
+    "mode": "random",
+    "seed": 202,
+    "months": 120,
+    "endTurn": 120,
+    "over": false,
+    "errors": [],
+    "sampleEvents": [
+      {
+        "turn": 0,
+        "date": "永宁元年三月",
+        "phase": "setup",
+        "act": "setup",
+        "title": "登基",
+        "text": "永宁元年三月，先帝龙驭上宾，你在太和钟声中登上了宸极殿的御座。\n嫡妻秦婉柔册为皇后，潜邸旧人顾念册为贵人。\n礼部奏请：新帝登基，当广选秀女，以充后宫、绵延皇嗣。",
+        "choices": [
+          "进入宫城",
+          "准奏，即刻选秀"
+        ],
+        "actors": [],
+        "choice": "准奏，即刻选秀"
+      },
+      {
+        "turn": 34,
+        "date": "永宁四年正月",
+        "phase": "monthly",
+        "act": "endMonth",
+        "title": "喜脉",
+        "text": "太医院来报：顾贵人已有两月身孕！",
+        "choices": [
+          "加派人手悉心照料（国库-20万两）",
+          "晋她一级位分",
+          "赏"
+        ],
+        "actors": [
+          {
+            "id": 2,
+            "name": "顾念",
+            "trait": "贪财",
+            "t2": "路痴",
+            "age": 22,
+            "aff": 100,
+            "favor": 98,
+            "mood": 100,
+            "xin": "平和",
+            "alive": true,
+            "gone": false,
+            "cold": false,
+            "temple": false,
+            "rank": 3
+          }
+        ],
+        "choice": "加派人手悉心照料（国库-20万两）",
+        "result": "\n§国库-20万两　威望+2　顾贵人：心情+20 情分+8"
+      },
+      {
+        "turn": 76,
+        "date": "永宁七年七月",
+        "phase": "monthly",
+        "act": "endMonth",
+        "title": "奚落",
+        "text": "御花园里，贤嫔当着一众宫人的面对皇长子 嗣珏说：“你母妃没教过你规矩么？”孩子红着眼眶跑开了。",
+        "choices": [
+          "当众训斥贤嫔",
+          "把孩子叫来，好好安慰",
+          "孩子之间的事，不必理会"
+        ],
+        "actors": [
+          {
+            "id": 16,
+            "name": "嗣珏",
+            "age": 5,
+            "xin": null,
+            "alive": true,
+            "temple": false
+          }
+        ],
+        "choice": "把孩子叫来，好好安慰",
+        "result": "§孩子父爱+10　品德+2"
+      },
+      {
+        "turn": 120,
+        "date": "永宁十一年三月",
+        "phase": "monthly",
+        "act": "endMonth",
+        "title": "皇嗣染恙",
+        "text": "皇四子 嗣衡夜里发起高热，乳母急得团团转。",
+        "choices": [
+          "宣太医",
+          "亲自守夜（精力-1）"
+        ],
+        "actors": [
+          {
+            "id": 45,
+            "name": "嗣衡",
+            "age": 3,
+            "xin": null,
+            "alive": true,
+            "temple": false
+          }
+        ],
+        "choice": "宣太医",
+        "result": "服了几剂药，烧退了。"
+      }
+    ]
+  }
+]

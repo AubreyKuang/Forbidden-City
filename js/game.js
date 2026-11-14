@@ -1,6 +1,6 @@
 /* ============ 工具 ============ */
 const $=s=>document.querySelector(s);
-const R=Math.random, ri=(a,b)=>a+Math.floor(R()*(b-a+1)), pick=a=>a[Math.floor(R()*a.length)], chance=p=>R()<p;
+const R=()=>typeof PalaceActions==='undefined'?Math.random():PalaceActions.random(), ri=(a,b)=>a+Math.floor(R()*(b-a+1)), pick=a=>a[Math.floor(R()*a.length)], chance=p=>R()<p;
 const clamp=(v,a=0,b=100)=>Math.max(a,Math.min(b,v));
 const rd=v=>Math.round(v);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -12,7 +12,7 @@ function cnNum(n){const d='零一二三四五六七八九';if(n<=10)return n===1
 
 /* ============ 状态 ============ */
 let S=null; const Q=[]; let modalOpen=false, curEv=null;
-let modalInvoker;
+let modalInvoker, modalResult=null;
 $('#modal').addEventListener('cancel',event=>event.preventDefault());
 const UI={view:'title',sel:null,logF:'all'};
 const E=()=>S.emp;
@@ -77,9 +77,9 @@ function assignPalace(c){
   const min=Math.min(...Object.values(cnt));c.palace=pick(PALACES.filter(p=>cnt[p]===min));
 }
 function addConsort(c,rank,why){
-  c.rank=rank; c.enteredAt=S.turn; S.consorts.push(c); assignPalace(c); S.ys.c++; deepen(c); initRel(c); assignArc(c); initTimeTraveler(c); clanKey(c); if(c.kin)for(const id in c.kin){const o=byId(+id);if(o&&o.alive)relAdd(c,o,(isRival(c,o)?-30:45)-relGet(c,o))}
+  c.rank=rank; c.enteredAt=S.turn; c.enteredMonth=S.month; S.consorts.push(c); assignPalace(c); S.ys.c++; deepen(c); initRel(c); assignArc(c); initTimeTraveler(c); clanKey(c); if(c.kin)for(const id in c.kin){const o=byId(+id);if(o&&o.alive)relAdd(c,o,(isRival(c,o)?-30:45)-relGet(c,o))}
   story(c,`${why}，封为${RANKS[rank]}，赐居${c.palace}。`);
-  log(`${fullName(c)}（${c.fam.t}之女）${why}，封${RANKS[rank]}。`);
+  log(`${fullName(c)}（${c.fam.t}之女）${why}，封${RANKS[rank]}。`);houseOf(c);
 }
 
 /* ============ 弹窗与事件队列 ============ */
@@ -99,6 +99,8 @@ function pushEv(ev){
 }
 function pushNow(ev){if(!eventStillValid(ev))return;Q.unshift(ev);if(!modalOpen)nextEv()}
 function nextEv(){
+  if(typeof PalaceActions!=='undefined'&&!PalaceActions.busy)return PalaceActions.run('next',[],()=>nextEv());
+  modalResult=null;
   while(Q.length){const ev=Q.shift();if(eventStillValid(ev)){openModal(ev);return}}
   const invoker=modalInvoker;
   modalInvoker=null;
@@ -126,7 +128,7 @@ function eventCast(people){
 }
 function openModal(ev){
   if(!modalOpen&&document.activeElement?.matches('button,input,select')) modalInvoker=document.activeElement;
-  modalOpen=true;curEv=ev;if(ev.onShow)ev.onShow();const b=$('#mbox');
+  modalOpen=true;curEv=ev;modalResult=null;if(ev.onShow)ev.onShow();const b=$('#mbox');
   const people=eventPortraits(ev);
   // Portrait buttons distinguish people, not several actions for the same person.
   const choicePeople=new Set(ev.choices.filter(c=>c.person).map(c=>c.person.id??c.person));
@@ -149,15 +151,19 @@ function openModal(ev){
   (inp||$(ev.scene==='monthly-court'?'#mbox .mch button:not(:disabled)':'#event-title'))?.focus?.({preventScroll:true});
   inp?.select?.();
 }
-function choose(i){
+function choose(i,inputValue){
+  const entered=inputValue!==undefined?inputValue:curEv?.input?($('#minput').value||''):null;
+  if(typeof PalaceActions!=='undefined'&&!PalaceActions.busy)return PalaceActions.run('choose',[i,entered],()=>choose(i,entered));
+  if(modalResult)return;
   if(!eventStillValid(curEv)){toast('人物处境已变，这件事已不再适用。');nextEv();return;}
   const c=curEv&&curEv.choices[i];if(!c)return;if(c.cond&&!c.cond())return;
-  const val=curEv.input?(($('#minput').value||'').trim().slice(0,curEv.input.max||4)||curEv.input.def):undefined;
+  const val=curEv.input?((entered||'').trim().slice(0,curEv.input.max||4)||curEv.input.def):undefined;
   AU.sfx('click');const res=c.f?c.f(val):null;
   if(res) showRes(res); else nextEv();
 }
 function showRes(res){
   if(typeof res==='string') res={text:res};
+  modalResult=res;
   const b=$('#mbox');
   const cast=res.por?'':eventCast(eventPortraits(curEv));
   b.innerHTML=`<h2 class="mtitle" id="event-title">${esc(res.title||curEv.title)}</h2>${curEv.scene==='mourning'?mourningScene():''}${cast}<div class="mbody">${res.por?`<div class="mpor">${porImg(res.por,96)}</div>`:''}<div class="mtext">${fmt(res.text)}</div></div><div class="mch"><button class="btn gold" onclick="nextEv()">继续</button></div>`;
@@ -410,18 +416,18 @@ function succeed(h){
 /* ============ 开局 ============ */
 A.newGame=function(){UI.view='new';render()};
 A.start=function(){
-  const fv=id=>{const el=$(id);return el?el.value:''};
+  const fv=id=>typeof PalaceActions==='undefined'?$(id)?.value:PalaceActions.input(id);
   const sur=(fv('#f-sur')||'萧').trim().slice(0,2),name=(fv('#f-name')||'彻').trim().slice(0,2),era=(fv('#f-era')||'永宁').trim().slice(0,2);
-  const style=(document.querySelector('input[name=f-style]:checked')||{}).value||'勤政';
+  const style=fv('input[name=f-style]:checked')||'勤政';
   S={v:1,emp:{sur,name,era,age:18,birthMonth:3,health:90,prestige:50,people:60,treasury:800,energy:3,nightsMonth:0,style,wen:50,wu:50,seed:ri(1,2e9)},
     year:1,month:3,turn:0,consorts:[],children:[],cands:[],log:[],nid:1,gen:1,heir:null,genChar:pick(GEN_CHARS),
     flags:{lastXX:-99,dowager:{name:'太后',alive:true},peek:0,openingCourt:true},history:[],ys:{c:0,b:0,n:0},over:false};
   const e=S.emp;
   if(style==='勤政'){e.prestige=58;e.people=65}if(style==='风流')e.health=84;if(style==='尚武'){e.wu=80;e.prestige=55}if(style==='文雅')e.wen=80;
   e.energy=maxEnergy();
-  const em=makeGirl({fam:pick(FAMS.slice(0,3)),trait:pick(['温婉','聪慧','城府','骄矜'])});em.favor=40;em.aff=40;em.age=18;
+  const em=makeGirl({fam:pick(FAMS.slice(0,3)),trait:pick(['温婉','聪慧','城府','骄矜'])});em.favor=40;em.aff=40;em.age=18;em.knownBeforeAccession=true;
   S.consorts.push(em);em.rank=8;em.palace='坤宁宫';story(em,'潜邸时奉先帝之命嫁与陛下为嫡妻。新帝登基，册为皇后，入主坤宁宫。');
-  const old=makeGirl({});old.favor=55;old.aff=60;old.rank=3;S.consorts.push(old);assignPalace(old);story(old,'潜邸旧人，陪伴陛下多年。新帝登基，册为贵人。');
+  const old=makeGirl({});old.favor=55;old.aff=60;old.knownBeforeAccession=true;old.rank=3;S.consorts.push(old);assignPalace(old);story(old,'潜邸旧人，陪伴陛下多年。新帝登基，册为贵人。');
   log(`${era}元年三月，新帝${sur}${name}登基，改元${era}，大赦天下。`,1);
   log(`册嫡妻${fullName(em)}为皇后，潜邸旧人${fullName(old)}为贵人。`);
   migrate();UI.view='map';setScene('court');AU.sfx('gong');render();

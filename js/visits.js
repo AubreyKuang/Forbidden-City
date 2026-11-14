@@ -1,4 +1,5 @@
 /* ============ 出巡 ============ */
+const SPA_COST=60;
 A.out=function(kind){ if(!useE())return; const e=E();
   if(kind==='garden'){setScene('garden');
     const h=harem();
@@ -8,7 +9,7 @@ A.out=function(kind){ if(!useE())return; const e=E();
     else {
       const encounter=roll>=.5&&roll<.6?maidEvent('御花园'):null;
       if(encounter){pushEv(encounter);return;}
-      const s=chg({health:2});pushEv({title:'御花园',text:`${pick(['春日融融，百花争艳。','荷风送香，蝉鸣阵阵。','丹桂飘香，层林尽染。','红梅映雪，暗香浮动。'][season()])}你独自走了一圈，心旷神怡。${fx(s)}`,choices:[{t:'回宫'}]});
+      const s=chg({health:2});pushEv({title:'御花园',text:`${['春日融融，百花争艳。','荷风送香，蝉鸣阵阵。','丹桂飘香，层林尽染。','红梅映雪，暗香浮动。'][season()]}你独自走了一圈，心旷神怡。${fx(s)}`,choices:[{t:'回宫'}]});
     }
   }
   else if(kind==='city'){setScene('city');
@@ -32,7 +33,7 @@ A.out=function(kind){ if(!useE())return; const e=E();
     pushEv({title:'护国寺祈福',sfx:'chime',text:`你在护国寺上香，为国祚、为子嗣祈福。方丈说：“陛下仁心，必有福报。”\n也可在这里安排皇子公主祈福，或妃嫔入寺清修。\n（本月宠幸妃嫔更易得子）${fx(s)}`,choices:[
       {t:'安排皇子公主来祈福',f:()=>{pushNow(templeRosterEvent('kids'));return null;}},
       {t:'安排妃嫔来祈福或清修',f:()=>{pushNow(templeRosterEvent('consorts'));return null;}},{t:'回宫'}]})}
-  else if(kind==='spa'){setScene('garden');const s=chg({health:5,treasury:-60});log('帝往西山温泉行宫休养。');
+  else if(kind==='spa'){setScene('garden');const s=chg({health:5,treasury:-SPA_COST});log('帝往西山温泉行宫休养。');
     pushEv({title:'温泉行宫',text:`西山温泉氤氲，你静养了几日，精神好了许多。${fx(s)}`,choices:[{t:'回宫'}]})}
 };
 function maidEncounterReady(){return S.turn-(S.flags.lastMaidEncounter??-Infinity)>=4;}

@@ -45,14 +45,14 @@ test('tribute receives stock once and requests honor palace and person intervals
  var c=harem()[1];Object.assign(c,{trait:'骄纵',mood:80,favor:80});`);force(0,0,0);run(`ev=jewelryRequestEvent();assert.ok(ev);ev.onQueue();assert.equal(jewelryRequestEvent(),null);ev.choices[0].f();assert.equal(c.jewelry.length,1);S.turn+=12;assert.equal(jewelryRequestEvent(),null);`);
 });
 test('speech changes with acquaintance and years, without treating age as trust',()=>{
- const {run,force}=boot();run(`var c=harem()[1];Object.assign(c,{enteredAt:0,aff:70,favor:70,voiceVisits:0,xin:{k:'平和'}});S.turn=0;var first=characterVoice(c);assert.equal(first.key,'years-first');S.turn=12;assert.equal(consortVoicePhase(c),'settling');c.voiceVisits=4;assert.equal(consortVoicePhase(c),'familiar');var close=characterVoice(c);assert.equal(close.key,'years-familiar');assert.notEqual(close.text,first.text);S.turn=120;assert.equal(characterVoice(c).key,'years-years');c.aff=25;assert.equal(consortVoicePhase(c),'distant');assert.equal(characterVoice(c).key,'years-distant');c.aff=75;c.favor=10;assert.equal(consortVoicePhase(c),'distant');
+ const {run,force}=boot();run(`var c=makeGirl();addConsort(c,1,'入宫');Object.assign(c,{enteredAt:0,aff:70,favor:70,voiceVisits:0,xin:{k:'平和'}});S.turn=0;var first=characterVoice(c);assert.equal(first.key,'years-first');S.turn=12;assert.equal(consortVoicePhase(c),'settling');c.voiceVisits=4;assert.equal(consortVoicePhase(c),'familiar');var close=characterVoice(c);assert.equal(close.key,'years-familiar');assert.notEqual(close.text,first.text);S.turn=120;assert.equal(characterVoice(c).key,'years-years');c.aff=25;assert.equal(consortVoicePhase(c),'distant');assert.equal(characterVoice(c).key,'years-distant');c.aff=75;c.favor=10;assert.equal(consortVoicePhase(c),'distant');
  var snapshot=JSON.stringify(S),speech=characterVoiceHTML(c);for(var i=0;i<10;i++)assert.equal(characterVoiceHTML(c),speech);assert.equal(JSON.stringify(S),snapshot);`);force(.314);run(`characterVoice(c);assert.equal(R(),.314);`);
 });
 test('conversation history prevents immediate repeated opening lines and remains after reload',()=>{
  const {run}=boot();run(`var c=harem()[1];Object.assign(c,{enteredAt:0,aff:70,favor:70,voiceVisits:0,xin:{k:'平和'}});S.turn=0;var heard=[];for(var i=0;i<3;i++){var v=characterVoice(c,'talk');heard.push(v.text);rememberConversation(c,v,c.palace);}assert.equal(new Set(heard).size,3);save('1');load('1');c=byId(c.id);assert.deepEqual(c.voiceRecent,heard);assert.equal(c.voiceVisits,3);`);
 });
 test('newcomers do not disclose deep wounds and wishes even with high initial affection',()=>{
- const {run,force}=boot();run(`var c=harem()[1];Object.assign(c,{aff:90,voiceVisits:0,enteredAt:S.turn,wishKnown:false,woundKnown:false,xin:{k:'平和'}});E().energy=4;`);force(...Array(30).fill(0));run(`A.chat(c.id);assert.equal(c.wishKnown,false);assert.equal(c.woundKnown,false);assert.match(curEv.text,/初见/);`);
+ const {run,force}=boot();run(`var c=makeGirl();addConsort(c,1,'入宫');Object.assign(c,{aff:90,voiceVisits:0,enteredAt:S.turn,wishKnown:false,woundKnown:false,xin:{k:'平和'}});E().energy=4;`);force(...Array(30).fill(0));run(`A.chat(c.id);assert.equal(c.wishKnown,false);assert.equal(c.woundKnown,false);assert.match(curEv.text,/初见/);`);
 });
 test('life stage never overrides acute grief, cold confinement or a temple stay',()=>{
  const {run}=boot();run(`var c=harem()[1];S.turn=180;c.enteredAt=0;c.aff=80;c.favor=80;c.xin={k:'悲恸'};assert.equal(characterVoice(c).key,'grief');c.cold=true;assert.equal(characterVoice(c).key,'cold');c.cold=false;c.templeStay={due:200};assert.equal(characterVoice(c).key,'temple-retreat');`);
@@ -104,5 +104,5 @@ test('resuming a newcomer conversation delivers the unfinished family greeting b
  const {run}=boot();run(careSetup);run(`mother.rank=6;var sister=makeKin(mother,'亲');addConsort(sister,3,'续缘');sister.kinArrival={mother:mother.id,pending:true};save('1');load('1');E().energy=4;A.chat(sister.id);assert.equal(curEv.title,'初入宫 · 姐妹旧缘');assert.equal(E().energy,4);`);
 });
 test('a decade without contact is not automatically a decade of intimacy',()=>{
- const {run}=boot();run(`var c=harem()[1];Object.assign(c,{enteredAt:0,aff:80,favor:80,voiceVisits:0,nights:0,bond:false,xin:{k:'平和'}});S.turn=120;assert.equal(consortVoicePhase(c),'settling');`);
+ const {run}=boot();run(`var c=makeGirl();addConsort(c,1,'入宫');Object.assign(c,{enteredAt:0,aff:80,favor:80,voiceVisits:0,nights:0,bond:false,xin:{k:'平和'}});S.turn=120;assert.equal(consortVoicePhase(c),'settling');`);
 });

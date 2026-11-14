@@ -11,3 +11,5 @@ document.addEventListener('keydown',e=>{
     choose(0);
   }
 });
+
+document.addEventListener('input',event=>{if(event.target.id==='minput')PalaceActions.keepInput(event.target.value);});
