@@ -11,12 +11,12 @@ const COURT=[
   if(off)ch.push({t:`命${cName(off)}之父（${off.fam.t}）督办`,cond:()=>officialServing(houseOf(off)?.father),why:'已不在任或另有差事',f:()=>{if(chance(.6)){officialRecord(off,'father','奉旨督办黄河赈灾，颇有成效。',{emotion:.6});return `差事办得漂亮。${fx(chg({treasury:-150,people:6,prestige:2}),cchg(off,{aff:8,mood:10}))}`}
     officialRecord(off,'father','督办赈灾不力，遭御史弹劾。',{emotion:-.5});return `赈灾银两被层层克扣，灾情反而加重。${fx(chg({treasury:-200,people:-5}),cchg(off,{mood:-12}))}`}});
   return {title:'黄河决堤',person:off?.id,text:'工部急奏：入夏以来暴雨连绵，黄河于开封段决口，良田万顷尽成泽国，灾民流离失所。',choices:ch}},
- brief=>{const e=E();const gen=harem().find(c=>(brief?c.id===brief.person:c.trait==='将门')&&['father','brother'].some(role=>officialServing(houseOf(c)?.[role])&&houseOf(c).bloc==='army'));const ch=[
+ brief=>{const e=E();const gen=harem().find(c=>(brief?c.id===brief.person:c.trait==='将门')&&officialRoles(houseOf(c)).some(role=>officialServing(houseOf(c)?.[role])&&houseOf(c).bloc==='army'));const ch=[
    {t:'遣大将出征',f:()=>{if(chance(S.flags.wolf?.35:.6)){log('北狄犯边，王师击退之。');return `王师告捷。${fx(chg({treasury:-300,prestige:5}))}`}return `前线失利，丢了两座城池。${fx(chg({treasury:-300,prestige:-5,people:-5}))}`}},
    {t:'御驾亲征',f:()=>{const p=.35+e.wu/180;if(chance(p)){log('北狄犯边，帝御驾亲征，大破敌军。',1);return `你身先士卒，三战三捷，狄戎远遁漠北。${fx(chg({prestige:12,people:5,treasury:-300}))}`}
      log('帝亲征北狄失利，负伤而还。',1);return `大军中伏，你虽突围而出，却身负箭伤。${fx(chg({prestige:-10,health:-10,treasury:-400}))}`}},
    {t:'遣使议和，岁赐金帛',f:()=>{log('与北狄议和，岁赐金帛。');return `边境暂安，朝中却有人暗讽软弱。${fx(chg({treasury:-150,prestige:-6}))}`}}];
-  if(gen){const h=houseOf(gen),role=officialServing(h.brother)?'brother':'father',p=h[role];ch.push({t:`命${cName(gen)}之${role==='brother'?'兄':'父'}${p.name}领兵`,cond:()=>officialServing(p),why:'已不在任或另有差事',f:()=>{if(!officialServing(p))return null;if(chance(.75)){p.merit=clamp(p.merit+15);officialRecord(gen,role,'领兵出征北境，大胜而归。',{emotion:.7});return `军报送达，${p.name}得胜归来。${fx(chg({treasury:-250,prestige:8}),cchg(gen,{aff:12,mood:15}))}`}
+  if(gen){const h=houseOf(gen),role=brotherRole(h,officialServing)||'father',p=h[role];ch.push({t:`命${cName(gen)}之${role==='father'?'父':'兄'}${p.name}领兵`,cond:()=>officialServing(p),why:'已不在任或另有差事',f:()=>{if(!officialServing(p))return null;if(chance(.75)){p.merit=clamp(p.merit+15);officialRecord(gen,role,'领兵出征北境，大胜而归。',{emotion:.7});return `军报送达，${p.name}得胜归来。${fx(chg({treasury:-250,prestige:8}),cchg(gen,{aff:12,mood:15}))}`}
     officialDeath(gen,role,'领兵出征北境，中伏战死沙场。','battle');return `兵败。${p.name}战死沙场，讣报已送达家中。${fx(chg({treasury:-300,prestige:-6}))}`}});}
   return {title:'北境告急',person:gen?.id,sfx:'gong',text:'八百里加急：北狄铁骑南下，连破两道关隘，边民死伤无数。'+(S.flags.wolf?'\n各路诸侯想起骊山那场烽火，援军来得很慢。':''),choices:ch}},
  ()=>({title:'殿试',text:'三年一度的殿试之期已到，三百贡士候于殿外。',choices:[
@@ -947,9 +947,16 @@ function houseOf(c){
   if(existing)return identifyFather(family,existing);
   const seed=(root.seed||root.id*7919)>>>0,bloc=Object.hasOwn(OFFICE_BLOC,root.fam?.t)?OFFICE_BLOC[root.fam.t]:null;
   const posts=BROTHER_POSTS[bloc||'none'];
-  root.house={bloc,
-    father:{name:root.sur+FATHER_NAMES[seed%FATHER_NAMES.length],office:root.fam?.t||'寒门',age:42+seed%17,alive:true},
-    brother:{name:root.sur+BROTHER_NAMES[(seed>>>5)%BROTHER_NAMES.length],post:posts[(seed>>>9)%posts.length],merit:20+(seed>>>3)%30,away:false}};
+  root.house={bloc,familyVersion:2,
+    father:{name:root.sur+FATHER_NAMES[seed%FATHER_NAMES.length],office:root.fam?.t||'寒门',age:42+seed%17,alive:true},brother:null};
+  const roll=voiceHash('siblings:'+seed)%100,count=roll<30?0:roll<75?1:roll<93?2:roll<98?3:roll<99?4:5;
+  const youngest=Math.max(...family.map(p=>p.age||18))+2;
+  for(let i=0;i<count;i++){
+    const role=i?'brother'+(i+1):'brother',age=youngest+(count-i-1)*2;
+    root.house[role]={name:root.sur+BROTHER_NAMES[((seed>>>5)+i)%BROTHER_NAMES.length],post:posts[((seed>>>9)+i)%posts.length],age,merit:20+((seed>>>3)+i*7)%30,away:false};
+    root.house.father.age=Math.max(root.house.father.age,age+18);
+  }
+  if(count===5)root.house.fiveBrothers={sister:root.id,birthOrder:6};
   return identifyFather(family,root.house);
 }
 // 立场：父兄所在的集团；娘家势力大的妃嫔也会被看作外戚一派
@@ -980,8 +987,10 @@ function courtTick(){
     const h=houseOf(c);if(!h)continue;
     if(seen.has(h))continue;
     seen.add(h);
-    if(officialServing(h.brother))h.brother.merit=clamp(h.brother.merit+(h.bloc==='army'?(E().wu-50)/40:.3)+R()*.6);
-    if(S.month===1&&officialAlive(h.brother))h.brother.age++;
+    for(const role of brotherRoles(h)){const p=h[role];
+      if(officialServing(p))p.merit=clamp(p.merit+(h.bloc==='army'?(E().wu-50)/40:.3)+R()*.6);
+      if(S.month===1&&officialAlive(p))p.age++;
+    }
     if(S.month===1&&h.father.alive){h.father.age++;
       if(h.father.age>=66&&chance(.12)){
         officialDeath(c,'father',h.father.commission?'奉差途中病故。':'在家中病故。');
@@ -1009,7 +1018,7 @@ function militaryMeritEvent(c,place,relative='brother'){
   return frontierReport(c,officer,{title:'边关捷报',por:c,
     text:`传旨公公捧着${place}八百里捷报进殿：${officer.name}率部夜袭敌营，斩获颇丰。\n${cName(c)}听见${kin}的名字，忙起身听旨，眼中难掩喜色。`,choices:[
       {t:`厚赏，加封其${relative==='father'?'父':'兄'}（国库-20）`,cond:()=>E().treasury>=20,why:'国库银两不足',f:()=>{
-        mark();if(relative==='brother')h.brother.post='总兵';else h.father.honor='护国功臣';
+        mark();if(relative==='father')officer.honor='护国功臣';else officer.post='总兵';
         officialRecord(c,relative,`在${place}立功受封，朝廷加封厚赏。`,{emotion:.7});
         return fx(cchg(c,{mood:10,aff:3}),chg({treasury:-20,prestige:3}));
       }},
@@ -1044,23 +1053,23 @@ function successionRivalryEvent(){
 function factionEvent(){
   const pool=[];
   const withHouse=harem().filter(c=>officialServing(houseOf(c)?.father));
-  const kin=withHouse.filter(c=>stanceOf(c)==='kin'&&c.favor>=45&&officialServing(houseOf(c)?.brother));
-  if(kin.length){const c=pick(kin),h=houseOf(c);pool.push({title:'外戚请封',por:c,valid:()=>officialServing(h.father)&&officialServing(h.brother),text:`${h.father.name}递了折子，请擢其子${h.brother.name}为京官。朝中都知道，这是${cName(c)}的娘家。文官们已经在私下议论“恩出于内”。`,choices:[
-    {t:'准了',f:()=>{h.brother.post='通政司参议';h.brother.merit+=8;c.fam.p=Math.min(95,c.fam.p+6);policyNudge('kin',5);policyNudge('civil',-4);officialRecord(c,'brother','奉准入京为官，授通政司参议。',{emotion:.5});return fx(cchg(c,{mood:8,aff:3}),chg({prestige:-2}))}},
+  const kin=withHouse.filter(c=>stanceOf(c)==='kin'&&c.favor>=45&&brotherRole(houseOf(c),officialServing));
+  if(kin.length){const c=pick(kin),h=houseOf(c),role=pick(brotherRoles(h).filter(r=>officialServing(h[r]))),brother=h[role];pool.push({title:'外戚请封',por:c,valid:()=>officialServing(h.father)&&officialServing(brother),text:`${h.father.name}递了折子，请擢其子${brother.name}为京官。朝中都知道，这是${cName(c)}的娘家。文官们已经在私下议论“恩出于内”。`,choices:[
+    {t:'准了',f:()=>{brother.post='通政司参议';brother.merit+=8;c.fam.p=Math.min(95,c.fam.p+6);policyNudge('kin',5);policyNudge('civil',-4);officialRecord(c,role,'奉准入京为官，授通政司参议。',{emotion:.5});return fx(cchg(c,{mood:8,aff:3}),chg({prestige:-2}))}},
     {t:'驳回：“官职是朝廷的，不是谁家的。”',f:()=>{policyNudge('civil',3);setXin(c,'委屈','娘家请封被驳');return fx(cchg(c,{mood:-8}),chg({prestige:2}))}},
-    {t:'外放历练，三年后再议',f:()=>{h.brother.away=true;h.brother.post='外放'+pick(['知州','同知','通判']);h.brother.merit+=4;policyNudge('civil',1);officialRecord(c,'brother',`外放历练，授${h.brother.post}。`);return fx(cchg(c,{mood:-2}))+`\n§${h.brother.name}出京赴任`}}]});}
+    {t:'外放历练，三年后再议',f:()=>{brother.away=true;brother.post='外放'+pick(['知州','同知','通判']);brother.merit+=4;policyNudge('civil',1);officialRecord(c,role,`外放历练，授${brother.post}。`);return fx(cchg(c,{mood:-2}))+`\n§${brother.name}出京赴任`}}]});}
   const civil=withHouse.filter(c=>stanceOf(c)==='civil');
   if(civil.length){const c=pick(civil),h=houseOf(c);pool.push({title:'科场案',valid:()=>officialServing(h.father),ref:'科场舞弊（明·弘治己未科场案）',por:c,text:`今科会试有舞弊传闻，御史顺藤摸瓜，查到${h.father.name}的门生头上。${cName(c)}一早就跪在殿外，说父亲为官清白。`,choices:[
     {t:'严查到底',f:()=>{c.fam.p=Math.max(5,c.fam.p-12);policyNudge('civil',4);setXin(c,'惶恐','父亲牵涉科场案');officialRecord(c,'father','因科场案受审。',{emotion:-.4});return fx(cchg(c,{mood:-10}),chg({people:4,prestige:2}))}},
     {t:`看在${cName(c)}面上，从轻发落`,f:()=>{policyNudge('civil',-5);return fx(cchg(c,{mood:6,aff:4}),chg({people:-3,prestige:-2}))}},
     {t:'交三司会审，查清再说',f:()=>{if(chance(.55)){officialRecord(c,'father','经三司会审，查明门生舞弊与本人无关，还其清白。',{emotion:.5});policyNudge('civil',2);return '三司会审，门生确有舞弊，却与'+h.father.name+'无关。'+fx(cchg(c,{mood:8}),chg({people:2}))}
       c.fam.p=Math.max(5,c.fam.p-8);setXin(c,'惶恐','父亲被查出失察之责');officialRecord(c,'father','科场案查明失察之责，罚俸一年。',{emotion:-.4});return h.father.name+'失察，罚俸一年。'+fx(cchg(c,{mood:-6}),chg({people:2}))}}]});}
-  const army=harem().filter(c=>stanceOf(c)==='army'&&officialServing(houseOf(c)?.brother)&&frontierReportReady(c));
-  if(army.length&&chance(.35)){const c=pick(army),h=houseOf(c),place=pick(FRONTIERS),win=chance(.35+E().wu/200+h.brother.merit/300);
-    pool.push(win?militaryMeritEvent(c,place,officialServing(h.father)&&chance(.35)?'father':'brother')
-    :frontierReport(c,h.brother,{title:'边关失利',por:c,text:`${place}急报：${h.brother.name}中了埋伏，折损了三百骑。武将们说胜败乃兵家常事，御史却要问罪。${cName(c)}已经两天没吃下饭。`,choices:[
-      {t:'依律问责',f:()=>{h.brother.merit=Math.max(0,h.brother.merit-15);policyNudge('army',-2);policyNudge('civil',2);setXin(c,'惶恐','兄长兵败受责');officialRecord(c,'brother',`在${place}兵败，依律问责。`,{emotion:-.5});return fx(cchg(c,{mood:-12}),chg({people:1}))}},
-      {t:'宽宥，许他戴罪立功',f:()=>{policyNudge('army',4);officialRecord(c,'brother',`在${place}兵败，获准戴罪立功。`);return fx(cchg(c,{mood:6,aff:5}),chg({prestige:-1}))}}]}));}
+  const army=harem().filter(c=>stanceOf(c)==='army'&&brotherRole(houseOf(c),officialServing)&&frontierReportReady(c));
+  if(army.length&&chance(.35)){const c=pick(army),h=houseOf(c),role=pick(brotherRoles(h).filter(r=>officialServing(h[r]))),brother=h[role],place=pick(FRONTIERS),win=chance(.35+E().wu/200+brother.merit/300);
+    pool.push(win?militaryMeritEvent(c,place,officialServing(h.father)&&chance(.35)?'father':role)
+    :frontierReport(c,brother,{title:'边关失利',por:c,text:`${place}急报：${brother.name}中了埋伏，折损了三百骑。武将们说胜败乃兵家常事，御史却要问罪。${cName(c)}已经两天没吃下饭。`,choices:[
+      {t:'依律问责',f:()=>{brother.merit=Math.max(0,brother.merit-15);policyNudge('army',-2);policyNudge('civil',2);setXin(c,'惶恐','兄长兵败受责');officialRecord(c,role,`在${place}兵败，依律问责。`,{emotion:-.5});return fx(cchg(c,{mood:-12}),chg({people:1}))}},
+      {t:'宽宥，许他戴罪立功',f:()=>{policyNudge('army',4);officialRecord(c,role,`在${place}兵败，获准戴罪立功。`);return fx(cchg(c,{mood:6,aff:5}),chg({prestige:-1}))}}]}));}
   const dw=S.flags.dowager;
   if(dw?.alive){const pref=harem().filter(c=>c.rank<8&&(stanceOf(c)==='dowager'||c.virtue>=70)).sort((a,b)=>b.virtue-a.virtue)[0];
     if(pref)pool.push({title:'慈宁宫',por:pref,text:`${dw.name}召陛下用膳，席间夸${cName(pref)}温良贤淑，又叹皇家子嗣单薄，“哀家看着她就喜欢”。话没说透，意思谁都明白。`,choices:[

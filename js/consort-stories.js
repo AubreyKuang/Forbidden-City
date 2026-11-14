@@ -122,13 +122,13 @@ const ARCS={
       {t:'立她为后',cond:()=>c.rank>=5,why:'位分不足（需妃位以上）',f:()=>{c.rank=8;assignPalace(c);aEnd(c,'凤仪','步步为营，终登后位。');log(`册${fullName(c)}为皇后。`,1);return fx(chg({prestige:2}),cchg(c,{aff:15,mood:30}))}},
       {t:'晋她为皇贵妃，代掌凤印',cond:()=>rankCount(7)<1&&c.rank<7,why:'皇贵妃位已满',f:()=>{c.rank=7;if(!c.title)c.title=pick(TITLES);aEnd(c,'摄六宫','以皇贵妃之尊代掌凤印，离后位只差一步。');return fx(cchg(c,{aff:8,mood:15}))}},
       {t:'拒绝',f:()=>{c.scheme=clamp(c.scheme+10);aEnd(c,'怨怼','求后位不得，她心中的怨恨越积越深。');return fx(cchg(c,{aff:-15,mood:-20}))}}]}}]},
- greed:{name:'金玉其外',fit:c=>c.trait==='贪财',stages:[
-  (c,f)=>({text:`京城里有传言：${cName(c)}的兄长打着“国舅爷”的旗号，在外收受贿赂、包揽词讼。`,choices:[
+ greed:{name:'金玉其外',fit:c=>c.trait==='贪财'&&!!brotherRole(houseOf(c),p=>officialAlive(p)&&!p.exiled&&!p.dismissed),stages:[
+  (c,f)=>({text:`京城里有传言：${cName(c)}的兄长${greedBrother(c)?.name||''}打着“国舅爷”的旗号，在外收受贿赂、包揽词讼。`,choices:[
     {t:'让她自己去管教兄长',f:()=>{f.v='self';aNext(c,1,2,4);return '她连声保证，会写信骂醒兄长。'}},
     {t:'派人去查',f:()=>{aNext(c,1,1,3);return '都察院领了旨。'}},
     {t:'小事，不必理会',f:()=>{aNext(c,1,3,5);return fx(chg({people:-2}))}}]}),
   (c,f)=>{if(f.v==='self'&&chance(.5+c.aff/200)){c.trait='温婉';aEnd(c,'回头','兄长收了手，她也把攒下的私房钱捐了一半给善堂。');return {text:`${cName(c)}拿出一半的私房钱捐给了京城的善堂。“臣妾不想让陛下为难。”`,choices:[{t:'好',f:()=>fx(chg({people:4}),cchg(c,{aff:12}))}]}}
-    return {text:`都察院查实：${cName(c)}的兄长贪墨受贿，数额高达二百万两，其中不少进了她宫里的库房。`,choices:[
+    return {text:`都察院查实：${cName(c)}的兄长${greedBrother(c)?.name||''}贪墨受贿，数额高达二百万两，其中不少进了她宫里的库房。`,choices:[
       {t:'抄没充公，流放其兄',f:()=>{aEnd(c,'抄家','兄长被流放，她宫里的珠宝被抄没了一大半。');return fx(chg({treasury:200,people:6}),cchg(c,{mood:-35,aff:-15}))}},
       {t:'令其退赃，不再追究',f:()=>{aEnd(c,'退赃','兄长退还了赃款，此事不了了之。');return fx(chg({treasury:100,people:-2}),cchg(c,{mood:-10,aff:5}))}},
       {t:'压下此案',f:()=>{c.fam.p=Math.min(95,c.fam.p+15);aEnd(c,'外戚','此案被压下，她的娘家越发骄横。');return fx(chg({people:-8,prestige:-3}),cchg(c,{aff:15,mood:10}))}}]}}]},
@@ -195,18 +195,30 @@ function reconcileRareArcs(){
 
 function reconcileScholarArcs(){
   const scholars=S.consorts.filter(c=>c.arc?.id==='scholar');
-  if(!scholars.length)return;
-  const progressed=scholars.filter(c=>!c.arc.done&&c.alive&&!c.gone&&(c.arc.st>0||c.arc.f?.poem));
-  progressed.sort((a,b)=>b.arc.st-a.arc.st||a.arc.t-b.arc.t);
-  const owner=progressed[0]||scholars.find(c=>c.id===S.flags.scholarArc)||
-    scholars.find(c=>c.arc.done)||scholars.find(c=>c.trait==='才女');
-  if(owner)S.flags.scholarArc=owner.id;
   for(const c of scholars){
-    if(!c.arc.done&&c!==owner)c.arc=makeArc('craft',5+c.id%6);
+    if(c.arc.done)continue;
+    if(!c.alive||c.gone){
+      if(arcStarted(c))aEnd(c,c.alive?'音信渐远':'诗笺未竟',c.alive?'她离开宫廷，这段诗书旧事止于已记下的篇章。':'她已经离世，未完的诗笺收进旧匣，这段往事随她止笔。');
+      else {delete c.arc;if(S.flags.scholarArc===c.id)delete S.flags.scholarArc;}
+    }
+  }
+  const remaining=scholars.filter(c=>c.arc?.id==='scholar');
+  // Recorded history belongs to its person, even in old saves with more than one started arc.
+  const recorded=remaining.filter(c=>c.arc.done||arcStarted(c));
+  const owner=recorded.find(c=>c.id===S.flags.scholarArc)||recorded[0]||
+    remaining.find(c=>c.id===S.flags.scholarArc)||remaining.find(c=>c.alive&&!c.gone);
+  if(owner)S.flags.scholarArc=owner.id;else delete S.flags.scholarArc;
+  for(const c of remaining)if(c!==owner&&!c.arc.done&&!arcStarted(c))c.arc=makeArc('craft',5+c.id%6);
+  // Only replace a reservation that never reached a scene; never transplant old choices.
+  if(!owner&&scholars.length){
+    const next=harem().filter(c=>c.trait==='才女'&&(!c.arc||c.arc.id==='craft'&&!c.arc.done&&!arcStarted(c)))
+      .sort((a,b)=>b.aff-a.aff||a.id-b.id)[0];
+    if(next){next.arc=makeArc('scholar',8+next.id%5);S.flags.scholarArc=next.id;}
   }
 }
 
 function assignArc(c){
+  reconcileScholarArcs();
   if(c.arc)return;
   const owners=S.flags.rareArcOwners ||= {};
   for(const id of ['secret','envoy','general','ill','scholar','greed','ambition','craft','kite','love']){
@@ -220,9 +232,10 @@ function assignArc(c){
 }
 
 function arcTick(){
+  reconcileScholarArcs();
   const pace=S.flags.arcPacing ||= {byType:{}};
   if(S.turn-(pace.last??-99)<2)return null;
-  const due=alive().filter(c=>c.arc&&!c.arc.done&&!c.cold&&S.turn>=c.arc.t).sort((a,b)=>a.arc.t-b.arc.t);
+  const due=harem().filter(c=>c.arc&&!c.arc.done&&S.turn>=c.arc.t).sort((a,b)=>a.arc.t-b.arc.t);
   for(const c of due){if(!officialArcEligible(c))continue;const st=ARCS[c.arc.id].stages[c.arc.st];if(!st){c.arc.done=true;continue}
     const id=c.arc.id,last=pace.byType[id];
     if(RARE_ARCS[id]&&S.turn-(pace.investigation??-99)<4)continue;
@@ -230,7 +243,7 @@ function arcTick(){
     const ev=st(c,c.arc.f);if(ev){
       if(!c.arc.done&&c.arc.t<=S.turn)c.arc.t=S.turn+99;
       ev.title=ev.title||ARCS[id].name;ev.por=ev.por||c;
-      const valid=ev.valid;ev.valid=()=>officialArcEligible(c)&&(!valid||valid());
+      const valid=ev.valid;ev.valid=()=>inPalace(c)&&officialArcEligible(c)&&(!valid||valid());
       const queued=ev.onQueue;
       ev.onQueue=()=>{queued?.();c.arc.startedAt??=S.turn;pace.last=S.turn;pace.byType[id]={turn:S.turn,person:c.id};if(RARE_ARCS[id])pace.investigation=S.turn;};
       return ev;

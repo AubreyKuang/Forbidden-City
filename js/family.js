@@ -182,8 +182,11 @@ const isRival=(a,b)=>!!(a.kinRival&&a.kinRival[b.id]);
 function clanTick(){for(const [k,ms] of clans()){const p=Math.round(ms.reduce((s,c)=>s+c.fam.p,0)/ms.length);ms.forEach(c=>c.fam.p=p);
   for(let i=0;i<ms.length;i++)for(let j=i+1;j<ms.length;j++)relAdd(ms[i],ms[j],isRival(ms[i],ms[j])?-.5:.6)}}
 function makeKin(c,type){c.kin=c.kin||{};c.kinRival=c.kinRival||{};const g=makeGirl({sur:c.sur,fam:{t:c.fam.t,p:c.fam.p}});g.clan=clanKey(c);g.kin={};g.kinRival={};
-  if(type==='亲'){g.house=houseOf(c);g.fatherId=c.fatherId;}
-  const older=g.age>c.age||(g.age===c.age&&chance(.5));c.kin[g.id]=type+(older?'姐':'妹');g.kin[c.id]=type+(older?'妹':'姐');
+  if(type==='亲'){g.house=houseOf(c);g.fatherId=c.fatherId;
+    const currentAge=p=>p.age+(!officialAlive(p)&&Number.isFinite(p.death?.turn)?Math.max(0,Math.floor((S.turn-p.death.turn)/12)):0);
+    g.age=Math.min(g.age,g.house.fiveBrothers?Math.max(16,(byId(g.house.fiveBrothers.sister)||c).age-1):Infinity,currentAge(g.house.father)-18,...brotherRoles(g.house).map(role=>currentAge(g.house[role])-1));
+  }
+  const older=type==='亲'&&g.house?.fiveBrothers?false:g.age>c.age||(g.age===c.age&&chance(.5));c.kin[g.id]=type+(older?'姐':'妹');g.kin[c.id]=type+(older?'妹':'姐');
   if(chance(.35)){c.kinRival[g.id]=1;g.kinRival[c.id]=1}g.kinNote=`${cName(c)}的${KIN_TXT[c.kin[g.id]]}`;return g}
 function clanEcho(c,t){const ms=clanMembers(clanKey(c));ms.filter(o=>o!==c).forEach(o=>{const rv=isRival(o,c);
   if(t==='up'){if(rv)setXin(o,'嫉恨',`${fullName(c)}晋了位分`,c.id);else cchg(o,{mood:6})}else{if(rv)cchg(o,{mood:5});else setXin(o,'惶恐',`同族的${fullName(c)}获罪`)}});
