@@ -632,7 +632,7 @@ test('frontier reports share a yearly court limit and a two-year household limit
 test('frontier defeats also start the shared cooldown and rejected candidates do not consume it',()=>{
   const {run}=boot(805);
   run(`S.turn=100;S.children=[];S.flags.dowager.alive=false;S.consorts=[harem()[0]];var c=harem()[0];
-    c.fam={t:'镇国大将军',p:60};delete c.house;houseOf(c).brother.merit=0;E().wu=0;var defeat;
+    c.fam={t:'镇国大将军',p:60};delete c.house;houseOf(c).brother||={name:c.sur+'怀远',post:'参将',age:36};houseOf(c);for(var role of brotherRoles(c.house))c.house[role].merit=0;E().wu=0;var defeat;
     for(var i=0;i<200&&!defeat;i++){var ev=factionEvent();if(ev?.title==='边关失利')defeat=ev;}
     assert.ok(defeat);assert.equal(S.flags.lastFrontierReport,undefined);
     c.cold=true;pushEv(defeat);assert.equal(S.flags.lastFrontierReport,undefined);assert.equal(modalOpen,false);c.cold=false;
@@ -731,7 +731,7 @@ test('a princess can discuss her ideals without becoming engaged or married',()=
 
 const guestSetup=`S.consorts=[];S.children=[];S.turn=180;E().sur='赵';
   var mother=makeGirl({sur:'林',age:32,fam:{t:'翰林学士',p:50}}),host=makeGirl({sur:'沈',age:30,fam:{t:'镇国大将军',p:60}});
-  addConsort(mother,4,'入宫');addConsort(host,4,'入宫');mother.palace='坤宁宫';host.palace='景仁宫';
+  addConsort(mother,4,'入宫');addConsort(host,4,'入宫');for(var woman of [mother,host]){var house=houseOf(woman);house.brother||={name:woman.sur+'怀远',post:'参将',age:38};house.brother.age=38;houseOf(woman);}mother.palace='坤宁宫';host.palace='景仁宫';
   var k=makeKid(mother,'f','明昭');k.born=S.turn-168;`;
 
 test('a named visitor is remembered across saves and can become the same grown princess marriage choice',()=>{

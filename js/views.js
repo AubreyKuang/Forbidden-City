@@ -149,8 +149,8 @@ function familyGraphSVG(){
     group.fathers.get(id).indices.push(index);
   });
   const col=190,cardWidth=168,W=people.length*col+24;
-  const clanY=12,clanHeight=54,houseY=98,houseHeight=100,consortY=236,consortHeight=82;
-  const childY=364,childHeight=66,childStep=childHeight+12;
+  const clanY=12,clanHeight=54,houseY=98,houseHeight=56+44*Math.max(1,...people.map(c=>brotherRoles(houseOf(c)).length)),consortY=houseY+houseHeight+38,consortHeight=82;
+  const childY=consortY+128,childHeight=66,childStep=childHeight+12;
   const H=childY+Math.max(0,...people.map(c=>kids.get(c.id)?.length||0))*childStep+12;
   const x=i=>12+col*(i+.5),blood='#996a48',consortBottom=consortY+consortHeight;
   const line=(x1,y1,x2,y2,color)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="1.8"/>`;
@@ -170,12 +170,12 @@ function familyGraphSVG(){
       wires+=`<path d="M${cx} 80 V${houseY}" stroke="#a68b68" stroke-dasharray="4 3"/>`;
       if(h){
         const military=stance==='army'?1:0;
-        const kin=(person,role,office)=>person?`<button class="graph-kin-person${!person.alive?' deceased':''}" onclick="A.go('official','${c.id}:${role}')" aria-label="查看${esc(person.name)}">${porImg(person,34)}${label(person.name,`${role==='father'?(indices.length>1?'父亲 · 亲姐妹同父':'父亲'):'兄长'} · ${officialStatus(person)} · ${office}`)}</button>`:'';
+        const kin=(person,role,office)=>person?`<button class="graph-kin-person${!person.alive?' deceased':''}" onclick="A.go('official','${c.id}:${role}')" aria-label="查看${esc(person.name)}">${porImg(person,34)}${label(person.name,`${role==='father'?(indices.length>1?'父亲 · 亲姐妹同父':'父亲'):officialKinLabel(h,role)} · ${officialStatus(person)} · ${office}`)}</button>`:'';
         cards+=`<div class="graph-card graph-house" data-father-id="${c.fatherId}" data-person-id="${esc(father.id)}" style="${at(cx,houseY,houseHeight)};--house-color:${color}">
-          ${kin(father,'father',father.office)}${kin(h.brother,'brother',h.brother?.post)}</div>`;
+          ${kin(father,'father',father.office)}${brotherRoles(h).map(role=>kin(h[role],role,h[role].post)).join('')}${brotherRoles(h).length?'':'<small>无兄长</small>'}</div>`;
         // One shared trunk and sibling rail; every daughter connects directly below her father.
-        wires+=`<g class="paternal-links" data-parent-id="${esc(father.id)}">${line(cx,houseY+houseHeight,cx,217,blood)}${line(x(indices[0]),217,x(indices.at(-1)),217,blood)}
-          ${indices.map(index=>`<path data-child-id="${people[index].id}" d="M${x(index)} 217 V${consortY}" stroke="${blood}" stroke-width="1.8"><title>${esc(father.name)}之女 ${esc(fullName(people[index]))}</title></path>`).join('')}</g>`;
+        wires+=`<g class="paternal-links" data-parent-id="${esc(father.id)}">${line(cx,houseY+houseHeight,cx,consortY-19,blood)}${line(x(indices[0]),consortY-19,x(indices.at(-1)),consortY-19,blood)}
+          ${indices.map(index=>`<path data-child-id="${people[index].id}" d="M${x(index)} ${consortY-19} V${consortY}" stroke="${blood}" stroke-width="1.8"><title>${esc(father.name)}之女 ${esc(fullName(people[index]))}</title></path>`).join('')}</g>`;
       }
     }
   }
@@ -320,7 +320,7 @@ function viewConsort(){
     acts+=`<button class="btn primary" onclick="A.uncold(${c.id})">放出冷宫</button>`;
     penalties+=`<button class="btn danger" onclick="A.away(${c.id})">遣出宫</button>`;
   }
-  const family=(act?visitorLine(c)+fosterLine(c)+clanLine(c)+conKidLine(c)+relLine(c):'')+houseLine(c);
+  const family=(act?visitorLine(c)+fosterLine(c)+clanLine(c)+conKidLine(c)+relLine(c):'')+houseLine(c)+fiveBrotherPanel(c);
   return `${personBackButton('harem')}
    <header class="detail-head">${porImg(c,224)}<div class="grow">
     <p>${esc(fullName(c))} · ${c.age}岁 · ${c.alive?c.gone?'已出宫':c.templeStay?'护国寺':esc(residenceLabel(c)):'已故'}</p>

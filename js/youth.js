@@ -41,17 +41,24 @@ function youngGuestEligible(k,g){
   if(!k?.alive||k.sex!=='f'||k.married||k.jailed||!g?.alive||g.married||g.sur===E().sur)return false;
   return !mothersOf(k).some(m=>clanKey(m)===g.clan||houseOf(m)?.father.id===g.houseId);
 }
+function guestFather(h,guest){
+  if(!h||!guest)return null;
+  return brotherRoles(h).map(role=>h[role]).find(p=>p&&(guest.fatherId?p.id===guest.fatherId:p.name===guest.fatherName))||null;
+}
+function guestFatherPresent(p){return officialAlive(p)&&!p.commission&&!p.away&&!p.exiled&&!p.dismissed;}
 function householdGuest(host,princess){
-  const h=houseOf(host);if(!h||!officialAlive(h.brother)||h.brother.commission||h.brother.away||h.brother.exiled||h.brother.dismissed)return null;
-  const guests=S.youngGuests ||= {},key=h.father.id;
-  if(!guests[key]){
-    const seed=ri(1,2e9),given=pick(['清衍','景初','明珩','知衡','怀瑾','长宁','允和','景川']);
-    guests[key]={id:'guest-'+key,courtGuest:true,sex:'m',name:host.sur+given,sur:host.sur,clan:clanKey(host),houseId:key,
-      fatherName:h.brother.name,host:host.id,born:S.turn-(kidAge(princess)+ri(0,1))*12,seed,alive:true,
-      quality:pick(h.bloc==='army'?['riding','kindness']:['books','kindness'])};
-  }
+  const h=houseOf(host);if(!h)return null;
+  const guests=S.youngGuests ||= {},key=h.father.id,existing=guests[key];
+  if(existing)return guestFatherPresent(guestFather(h,existing))?existing:null;
+  const age=kidAge(princess),role=brotherRole(h,p=>guestFatherPresent(p)&&p.age>=age+17);
+  if(!role)return null;
+  const father=h[role],seed=ri(1,2e9),given=pick(['清衍','景初','明珩','知衡','怀瑾','长宁','允和','景川']);
+  guests[key]={id:'guest-'+key,courtGuest:true,sex:'m',name:host.sur+given,sur:host.sur,clan:clanKey(host),houseId:key,
+    fatherId:father.id,fatherName:father.name,host:host.id,born:S.turn-(age+ri(0,1))*12,seed,alive:true,
+    quality:pick(h.bloc==='army'?['riding','kindness']:['books','kindness'])};
   return guests[key];
 }
+
 function youngGuestVisit(name){
   if(S.turn-(S.flags.lastYoungGuest??-99)<6)return null;
   const girls=teenageChildren().filter(k=>k.sex==='f'&&!k.youngAdmiration&&S.turn-(k.lastYoungGuest??-99)>=12&&inPalace(byId(k.foster||k.mom)));
@@ -69,7 +76,7 @@ function youngGuestVisit(name){
 }
 function youngGuestScene(scene,name){
   const child=kidById(scene.child),host=byId(scene.host),mother=byId(scene.mother),guest=S.youngGuests?.[scene.guestKey];
-  return teenageChildren().includes(child)&&inPalace(host)&&host.palace===name&&officialAlive(houseOf(host)?.brother)&&!houseOf(host).brother.commission&&!houseOf(host).brother.away&&!houseOf(host).brother.exiled&&!houseOf(host).brother.dismissed&&inPalace(mother)&&
+  return teenageChildren().includes(child)&&inPalace(host)&&host.palace===name&&guestFatherPresent(guestFather(houseOf(host),guest))&&inPalace(mother)&&
     mother.id===(child.foster||child.mom)&&youngGuestEligible(child,guest)?{scene,child,host,mother,guest}:null;
 }
 function youngGuestPanel({scene,child:k,host,mother,guest},name){

@@ -20,13 +20,13 @@ function boot(seedValue=4242){
   return {ctx,storage,setRoll:value=>{roll=value;},run:code=>vm.runInContext(code,ctx)};
 }
 
-test('every consort gets a named father and brother whose office decides her stance, and they persist',()=>{
+test('consorts get persistent fathers and varied named brothers whose offices decide their stance',()=>{
   const {run}=boot();
   const info=JSON.parse(run(`JSON.stringify(harem().map(c=>({sur:c.sur,office:c.fam.t,house:houseOf(c),stance:stanceOf(c),p:c.fam.p})))`));
   assert.ok(info.length>0);
   for(const c of info){
     assert.ok(c.house.father.name.startsWith(c.sur));
-    assert.ok(c.house.brother.name.startsWith(c.sur));
+    for(const [role,p] of Object.entries(c.house))if(/^brother/.test(role)&&p)assert.ok(p.name.startsWith(c.sur));
     assert.equal(c.house.father.office,c.office);
     const expected={'内阁首辅':'civil','镇国大将军':'army','皇商':'kin','太医院院判':'dowager'}[c.office];
     if(expected)assert.equal(c.stance,expected);
@@ -34,16 +34,16 @@ test('every consort gets a named father and brother whose office decides her sta
   const before=run(`JSON.stringify(houseOf(harem()[0]))`);
   run(`save('1');load('1');migrate();`);
   assert.equal(run(`JSON.stringify(houseOf(harem()[0]))`),before);
-  assert.match(run(`houseLine(harem()[0])`),/父亲：.*兄长：.*立场：/);
+  assert.match(run(`houseLine(harem()[0])`),/父亲：.*(?:兄长：|长兄：|无兄长).*立场：/);
 });
 
 test('faction events name the real father or brother and their choices move the court and the consort',()=>{
   const {run}=boot(7);
-  run(`const c=harem()[0];c.fam={t:'镇国大将军',p:70};delete c.house;c.favor=60;c.mood=50;S.courtPolicy={};`);
+  run(`const c=harem()[0];c.fam={t:'镇国大将军',p:70};delete c.house;houseOf(c).brother||={name:c.sur+'怀远',post:'参将',age:36};houseOf(c);c.favor=60;c.mood=50;S.courtPolicy={};`);
   let ev=null;
   for(let i=0;i<40&&!ev;i++){const e=run(`(()=>{const e=factionEvent();return e&&['边关捷报','边关失利'].includes(e.title)?e:null})()`);if(e)ev=e;}
   assert.ok(ev,'an army event for the general\'s daughter');
-  const names=run(`[houseOf(harem()[0]).brother.name,houseOf(harem()[0]).father.name]`);
+  const names=run(`officialRoles(houseOf(harem()[0])).map(role=>houseOf(harem()[0])[role].name)`);
   assert.ok(names.some(name=>ev.text.includes(name)));
   const army=run(`S.courtPolicy.army||0`),mood=run(`harem()[0].mood`);
   ev.choices[0].f();
@@ -1206,8 +1206,8 @@ test('bridge funding buys one extra month without using energy and preserves the
         assert.equal(grainReserveReady(),false);
         assert.equal(floodReliefDue(),false);
       }else{
-        A.endMonth();drain();
-        assert.equal(E().people,46);
+        A.endMonth();
+        assert.equal(E().people,46);drain();
         assert.equal(S.flags.lastMonthReview.court.choice,'未续拨');
         assert.equal(floodReliefDue(),false);
       }
