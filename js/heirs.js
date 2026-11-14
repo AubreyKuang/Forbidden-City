@@ -9,7 +9,7 @@ function makeKid(c,sex,name){
   // Birth traits are a game rule, separate from education and the current caregiver.
   k.birthTraits={mother:{id:c.id,name:fullName(c),talent:c.talent,virtue:c.virtue,scheme:c.scheme,trait:c.trait,rank:c.rank},
     father,initial:{lit:k.lit,mar:k.mar,vir:k.vir,hp:k.hp,amb:k.amb}};
-  attachChildParentage(k,father);assignChildPortrait(k);S.children.push(k);S.ys.b++;initKidRel(k);return k;
+  ensureChildDisposition(k);attachChildParentage(k,father);assignChildPortrait(k);S.children.push(k);S.ys.b++;initKidRel(k);return k;
 }
 function childBirthPanel(k){
   const birth=k.birthTraits;if(!birth)return '';
@@ -52,14 +52,14 @@ function kcd(k,t,n=24){k.cd=k.cd||{};if(S.turn-(k.cd[t]===undefined?-99:k.cd[t])
 function kidEvent(){
   const ks=shuffle(kidsAlive().filter(childInPalace));if(!ks.length)return null;
   for(const k of ks){const a=kidAge(k);
-    if(a<8&&S.turn-(k.sick===undefined?-99:k.sick)>=18&&chance(.3)){k.sick=S.turn;const ill=pick([['夜里发起高热，乳母急得团团转','一场高热'],['出了痘疹，浑身滚烫','出痘'],['贪凉吃多了冰酪，上吐下泻','积食腹泻'],['着了风寒，咳得小脸通红','风寒咳嗽']]); return {title:'皇嗣染恙',por:k,text:`${kidName(k)}${ill[0]}。`,choices:[
+    if(a<8&&S.turn-(k.sick===undefined?-99:k.sick)>=18&&chance(.3)){k.sick=S.turn;const ill=pick([['夜里发起高热，乳母急得团团转','一场高热'],['出了痘疹，浑身滚烫','出痘'],...(a>=3?[[ '贪凉吃多了冰酪，上吐下泻','积食腹泻']]:[]),['着了风寒，咳得小脸通红','风寒咳嗽']]); return {title:'皇嗣染恙',por:k,text:`${kidName(k)}${ill[0]}。`,choices:[
       {t:'宣太医',f:()=>{if(chance(.9)||k.hp>60){kstory(k,`${a}岁时${ill[1]}，所幸太医及时诊治。`);return '服了几剂药，烧退了。'}k.alive=false;kstory(k,'幼时染病夭折。');{const mm=byId(k.mom);if(mm&&mm.alive)setXin(mm,'悲恸',`${k.name}夭折`)}log(`${kidName(k)}夭折。`,1);AU.sfx('sad');return `太医尽力了……${kidName(k)}没能熬过去。`}},
       {t:'亲自守夜（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{E().energy--;k.love=clamp(k.love+15);k.hp=clamp(k.hp+5);kstory(k,`${a}岁时${ill[1]}，父皇亲自守了一夜。`);return '你守在床边，替孩子换了一夜的帕子。天亮时，孩子睡安稳了。'}}]}}
-    if(a>=6&&k.lit>=45&&chance(.5)&&kcd(k,'bright')){const w=pick([['近日所作策论颇有见地','策论得太傅夸赞'],['能把《资治通鉴》的汉纪一卷背得一字不差','背书一字不差'],['替太傅算清了上书房一年的笔墨账','算清笔墨账'],['画了一幅京城九门图，连城墙的垛口都没漏','画京城九门图']]);
+    if(a>=6&&k.lit>=45&&chance(.5)&&kcd(k,'bright')){const w=pick(a<12?[[ '将一篇短文讲成自己的话，还记得问不懂的字','认真讲解短文'],['核对本月纸笔领用，找到漏记的一笔','核对纸笔小账'],['画清了从住处到上书房的路','画出上学路线']]:[['近日所作策论颇有见地','策论得太傅夸赞'],['能把《资治通鉴》的汉纪一卷背得一字不差','背书一字不差'],['替太傅算清了上书房一年的笔墨账','算清笔墨账'],['画了一幅京城九门图，连城墙的垛口都没漏','画京城九门图']]);
       return {title:'上书房',por:k,text:`太傅奏报：${kidName(k)}${w[0]}。`,choices:[
       {t:'赏文房四宝',f:()=>{k.lit=clamp(k.lit+3);k.love=clamp(k.love+5);kstory(k,`${a}岁，${w[1]}，父皇赏了文房四宝。`);return '§才学+3　父爱+5'}},
-      {t:'勉励几句，戒骄戒躁',f:()=>{k.vir=clamp(k.vir+3);kstory(k,`${a}岁，${w[1]}，父皇勉励他戒骄戒躁。`);return '§品德+3'}}]}}
-    if(a>=5&&a<=13&&chance(.4)&&kcd(k,'mis')){const w=pick([['在上书房顽皮，打碎了太傅心爱的端砚','打碎太傅的端砚'],['偷偷爬上御花园的假山掏鸟窝，被侍卫抱了下来','爬假山掏鸟窝'],['把太傅的胡子画进了课业里','把太傅画进课业'],['偷溜出宫门，在护城河边钓了一下午鱼','偷溜出宫钓鱼'],['在御膳房偷吃，把一屉点心都吃光了','偷吃御膳房点心']]);
+      {t:'勉励几句，戒骄戒躁',f:()=>{k.vir=clamp(k.vir+3);kstory(k,`${a}岁，${w[1]}，父皇勉励其戒骄戒躁。`);return '§品德+3'}}]}}
+    if(a>=6&&a<=13&&['灵动','好胜','爽直'].includes(childDisposition(k))&&chance(.4)&&kcd(k,'mis')){const w=pick([['在上书房顽皮，打碎了太傅心爱的端砚','打碎太傅的端砚'],['偷偷爬上御花园的假山掏鸟窝，被侍卫抱了下来','爬假山掏鸟窝'],['把太傅的胡子画进了课业里','把太傅画进课业'],['绕到园中池边看鱼，误了回书房的时辰','看鱼误了课时'],['在御膳房偷吃，把一屉点心都吃光了','偷吃御膳房点心']]);
       return {title:'顽童',por:k,text:`${kidName(k)}${w[0]}。`,choices:[
       {t:'罚跪一个时辰',f:()=>{k.vir=clamp(k.vir+4);k.love=clamp(k.love-5);kstory(k,`${a}岁，${w[1]}，被罚跪一个时辰。`);return '§品德+4　父爱-5'}},
       {t:'一笑置之',f:()=>{k.amb=clamp(k.amb+3);k.love=clamp(k.love+3);kstory(k,`${a}岁，${w[1]}，父皇一笑置之。`);return '§父爱+3'}}]}}

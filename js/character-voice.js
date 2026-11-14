@@ -113,6 +113,7 @@ function consortVoicePool(c){
   if(motherChild){const a=kidAge(motherChild),name=motherChild.name;
     pool.push(voiceLine('mother','说到孩子，她的语气不自觉地轻下来。',childHasLeftPalace(motherChild)?`${name}有了自己的日子，臣妾替孩子高兴，也难免牵挂。闲时若能带封信回来就好了。`:a<3?`${name}还这么小，日子倒像过得格外快。臣妾想把这一点一滴都记住。`:a<12?`${name}一天比一天有主意。臣妾也学着先听孩子说完，再讲自己的道理。`:`${name}渐渐长大，臣妾也不能事事替孩子拿主意。只盼有难处时，还肯回来同臣妾说。`));
   }
+  const past=historyVoice(c);if(past)pool.push(past);
   const lived=c.personalExperiences?.history?.at(-1);if(lived&&S.turn-lived.turn<=6)pool.push(voiceLine('experience','她又说起前些日子那件事。',`「${lived.title}」的事，臣妾还记着。那时候的心情，与今日又不一样了。`));
   // Personal interests supplement, rather than replace, her principal temperament.
   const hobby=consortHobby(c);if(phase!=='first'&&HOBBY_VOICES[hobby])pool.push(voiceLine('hobby','她把手边的东西挪近，让你也看一看。',HOBBY_VOICES[hobby]));
@@ -138,7 +139,7 @@ function childVoicePool(k){
     `父皇，${self}也渐渐懂得了，过日子有许多细处要学。得空还想同您说说。`,
     `离宫以后，才发觉许多事要自己商量着办。${self}会认真过日子，也盼宫中安好。`
   ]:[`父皇，外头的事与书上所读颇有不同。${self}想把见闻记下来，日后亲口说给您听。`,`宫门虽远，请安的话不敢忘。${self}在此努力，也盼父皇顾惜身子。`])];
-  if(a<6)return [voiceLine('little',`${who}仰起脸，话说得很认真。`,['父皇，你蹲下来一点，我有个秘密要说。','这片叶子像小船。我想留着，你别叫人扫走。','我会自己做了。你先看着，等我说帮忙再帮，好不好？'])];
+  if(a<6)return [childDispositionVoice(k),historyVoice(k)].filter(Boolean);
   if(k.love<25)return [voiceLine('distant',`${who}行了礼，仍有些拘谨。`,a<12?'父皇想听功课，还是……我自己的事？':`${self}不知父皇今日想问什么。若肯听，也有几句自己的话想说。`)];
   const stat=k.mar>k.lit&&k.mar>k.vir?'mar':k.lit>=k.vir?'lit':'vir';
   const spiritual=daoLifeVoice(k);if(spiritual)return [spiritual];
@@ -152,7 +153,7 @@ function childVoicePool(k){
     lit:[`书中有一句，${self}近来总想不透。能说出道理，是否就一定做得到？`,`父皇，${self}想留一点自己的见解。即使不尽对，也请容我先讲完。`],
     vir:[`小时候只盼着长大，如今才知道，有些事没人替自己拿主意。${self}还想听听父皇当年怎样过来的。`,`父皇，${self}想把答应过的事做好。别人未必记得，自己却不该忘。`]
   };
-  return [voiceLine(`study-${stat}`,`${who}放下手边的事，主动与你攀谈。`,a<12?young[stat]:older[stat])];
+  return [childDispositionVoice(k),voiceLine(`study-${stat}`,`${who}放下手边的事，主动与你攀谈。`,a<12?young[stat]:older[stat]),historyVoice(k)].filter(Boolean);
 }
 function characterVoice(person,mode='greeting'){
   if(!person?.alive||person.gone||person.pendingName)return null;

@@ -343,7 +343,7 @@ function viewConsort(){
     ${act?detailSection('牵挂远方的孩子',motherConcernPanel(c)):''}
     ${detailSection('孩子的身世',consortParentagePanel(c))}
     ${detailSection('册封与宫务',management?`<div class="acts">${management}</div>`:'')}
-    ${timeTravelerPanel(c)}${personalExperiencePanel(c)}
+    ${timeTravelerPanel(c)}${personalExperiencePanel(c)}${historyPanel(c)}
     ${detailSection('她的故事',arcLine(c)+detailStory(c))}
     ${detailFold('处置',penalties?`<div class="acts">${penalties}</div>`:'')}
    </div>`;
@@ -408,6 +408,7 @@ function viewKid(){
    ${householdPanel(k)}
    <div class="detail-vitals">${bar('才学',k.lit,'#617991')}${bar('武艺',k.mar,'#92504a')}${bar('品德',k.vir,'#517369')}</div>
    <div class="detail-stack">
+    ${childDispositionPanel(k)}${historyPanel(k)}
     ${k.alive?initiativeHTML(k):''}
     ${princessActions(k)}
     ${detailSection('少年心事',youthPanel(k))}
