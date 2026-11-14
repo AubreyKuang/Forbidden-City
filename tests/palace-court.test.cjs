@@ -1424,7 +1424,8 @@ test('the relationship graph shows fathers, consorts and close or hostile ties',
   assert.ok(svg.includes(father));
   assert.match(svg,/stroke="#b8473c"/);
   assert.match(svg,/A\.go\('consort'/);
-  assert.match(svg,/graph-kin-person[\s\S]*data-portrait-cell="4[0-3]"/);
+  for(const cell of JSON.parse(run('JSON.stringify(officialEntries().map(e=>portraitCell(e.p)))')))
+    assert.ok(svg.includes('data-portrait-cell="'+cell+'"'),'family graph uses the actual relative portrait');
   assert.match(svg,/graph-consort[\s\S]*data-portrait-cell=/);
   run(`A.go('family')`);
   assert.match(run(`$('#panel').innerHTML`),/关系图/);

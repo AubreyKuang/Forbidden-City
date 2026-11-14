@@ -1,0 +1,825 @@
+{
+  "frame": [
+    448,
+    560
+  ],
+  "columns": 4,
+  "portraits": [
+    {
+      "id": 248,
+      "atlas": "palace-consorts-expanded.webp",
+      "source": "exec-7f368ff0-d865-4621-bb4a-44080e601092.png",
+      "cell": 0,
+      "crop": [
+        0,
+        0,
+        443,
+        443
+      ]
+    },
+    {
+      "id": 249,
+      "atlas": "palace-consorts-expanded.webp",
+      "source": "exec-7f368ff0-d865-4621-bb4a-44080e601092.png",
+      "cell": 1,
+      "crop": [
+        443,
+        0,
+        887,
+        443
+      ]
+    },
+    {
+      "id": 250,
+      "atlas": "palace-consorts-expanded.webp",
+      "source": "exec-7f368ff0-d865-4621-bb4a-44080e601092.png",
+      "cell": 2,
+      "crop": [
+        887,
+        0,
+        1330,
+        443
+      ]
+    },
+    {
+      "id": 251,
+      "atlas": "palace-consorts-expanded.webp",
+      "source": "exec-7f368ff0-d865-4621-bb4a-44080e601092.png",
+      "cell": 3,
+      "crop": [
+        1330,
+        0,
+        1774,
+        443
+      ]
+    },
+    {
+      "id": 252,
+      "atlas": "palace-consorts-expanded.webp",
+      "source": "exec-7f368ff0-d865-4621-bb4a-44080e601092.png",
+      "cell": 4,
+      "crop": [
+        0,
+        443,
+        443,
+        887
+      ]
+    },
+    {
+      "id": 253,
+      "atlas": "palace-consorts-expanded.webp",
+      "source": "exec-7f368ff0-d865-4621-bb4a-44080e601092.png",
+      "cell": 5,
+      "crop": [
+        443,
+        443,
+        887,
+        887
+      ]
+    },
+    {
+      "id": 254,
+      "atlas": "palace-consorts-expanded.webp",
+      "source": "exec-7f368ff0-d865-4621-bb4a-44080e601092.png",
+      "cell": 6,
+      "crop": [
+        887,
+        443,
+        1330,
+        887
+      ]
+    },
+    {
+      "id": 255,
+      "atlas": "palace-consorts-expanded.webp",
+      "source": "exec-7f368ff0-d865-4621-bb4a-44080e601092.png",
+      "cell": 7,
+      "crop": [
+        1330,
+        443,
+        1774,
+        887
+      ]
+    },
+    {
+      "id": 256,
+      "atlas": "palace-consorts-expanded.webp",
+      "source": "exec-79fe2255-8432-4d68-ae94-3d7b2fc4f76d.png",
+      "cell": 0,
+      "crop": [
+        0,
+        0,
+        379,
+        665
+      ]
+    },
+    {
+      "id": 257,
+      "atlas": "palace-consorts-expanded.webp",
+      "source": "exec-79fe2255-8432-4d68-ae94-3d7b2fc4f76d.png",
+      "cell": 1,
+      "crop": [
+        390,
+        0,
+        816,
+        665
+      ]
+    },
+    {
+      "id": 258,
+      "atlas": "palace-consorts-expanded.webp",
+      "source": "exec-79fe2255-8432-4d68-ae94-3d7b2fc4f76d.png",
+      "cell": 2,
+      "crop": [
+        816,
+        0,
+        1190,
+        665
+      ]
+    },
+    {
+      "id": 259,
+      "atlas": "palace-consorts-expanded.webp",
+      "source": "exec-79fe2255-8432-4d68-ae94-3d7b2fc4f76d.png",
+      "cell": 3,
+      "crop": [
+        0,
+        674,
+        389,
+        1322
+      ]
+    },
+    {
+      "id": 260,
+      "atlas": "palace-consorts-expanded.webp",
+      "source": "exec-79fe2255-8432-4d68-ae94-3d7b2fc4f76d.png",
+      "cell": 4,
+      "crop": [
+        389,
+        665,
+        825,
+        1322
+      ]
+    },
+    {
+      "id": 261,
+      "atlas": "palace-consorts-expanded.webp",
+      "source": "exec-79fe2255-8432-4d68-ae94-3d7b2fc4f76d.png",
+      "cell": 5,
+      "crop": [
+        843,
+        665,
+        1190,
+        1322
+      ]
+    },
+    {
+      "id": 262,
+      "atlas": "palace-consorts-expanded.webp",
+      "source": "exec-327d7436-8f65-437c-9f5b-7f200f36c8cb.png",
+      "cell": 0,
+      "crop": [
+        0,
+        0,
+        397,
+        661
+      ]
+    },
+    {
+      "id": 263,
+      "atlas": "palace-consorts-expanded.webp",
+      "source": "exec-327d7436-8f65-437c-9f5b-7f200f36c8cb.png",
+      "cell": 1,
+      "crop": [
+        397,
+        0,
+        798,
+        661
+      ]
+    },
+    {
+      "id": 264,
+      "atlas": "palace-consorts-expanded.webp",
+      "source": "exec-327d7436-8f65-437c-9f5b-7f200f36c8cb.png",
+      "cell": 2,
+      "crop": [
+        798,
+        0,
+        1190,
+        661
+      ]
+    },
+    {
+      "id": 265,
+      "atlas": "palace-consorts-expanded.webp",
+      "source": "exec-327d7436-8f65-437c-9f5b-7f200f36c8cb.png",
+      "cell": 3,
+      "crop": [
+        0,
+        661,
+        380,
+        1322
+      ]
+    },
+    {
+      "id": 266,
+      "atlas": "palace-consorts-expanded.webp",
+      "source": "exec-327d7436-8f65-437c-9f5b-7f200f36c8cb.png",
+      "cell": 4,
+      "crop": [
+        380,
+        661,
+        801,
+        1322
+      ]
+    },
+    {
+      "id": 267,
+      "atlas": "palace-consorts-expanded.webp",
+      "source": "exec-327d7436-8f65-437c-9f5b-7f200f36c8cb.png",
+      "cell": 5,
+      "crop": [
+        801,
+        661,
+        1190,
+        1322
+      ]
+    },
+    {
+      "id": 268,
+      "atlas": "palace-relatives-expanded.webp",
+      "source": "exec-289b78a1-0a99-486a-90f3-4e2eba7d0620.png",
+      "cell": 0,
+      "crop": [
+        0,
+        0,
+        383,
+        512
+      ]
+    },
+    {
+      "id": 269,
+      "atlas": "palace-relatives-expanded.webp",
+      "source": "exec-289b78a1-0a99-486a-90f3-4e2eba7d0620.png",
+      "cell": 1,
+      "crop": [
+        383,
+        0,
+        768,
+        512
+      ]
+    },
+    {
+      "id": 270,
+      "atlas": "palace-relatives-expanded.webp",
+      "source": "exec-289b78a1-0a99-486a-90f3-4e2eba7d0620.png",
+      "cell": 2,
+      "crop": [
+        768,
+        0,
+        1152,
+        512
+      ]
+    },
+    {
+      "id": 271,
+      "atlas": "palace-relatives-expanded.webp",
+      "source": "exec-289b78a1-0a99-486a-90f3-4e2eba7d0620.png",
+      "cell": 3,
+      "crop": [
+        1152,
+        0,
+        1536,
+        512
+      ]
+    },
+    {
+      "id": 272,
+      "atlas": "palace-relatives-expanded.webp",
+      "source": "exec-289b78a1-0a99-486a-90f3-4e2eba7d0620.png",
+      "cell": 4,
+      "crop": [
+        0,
+        512,
+        383,
+        1024
+      ]
+    },
+    {
+      "id": 273,
+      "atlas": "palace-relatives-expanded.webp",
+      "source": "exec-289b78a1-0a99-486a-90f3-4e2eba7d0620.png",
+      "cell": 5,
+      "crop": [
+        383,
+        512,
+        768,
+        1024
+      ]
+    },
+    {
+      "id": 274,
+      "atlas": "palace-relatives-expanded.webp",
+      "source": "exec-289b78a1-0a99-486a-90f3-4e2eba7d0620.png",
+      "cell": 6,
+      "crop": [
+        768,
+        512,
+        1152,
+        1024
+      ]
+    },
+    {
+      "id": 275,
+      "atlas": "palace-relatives-expanded.webp",
+      "source": "exec-289b78a1-0a99-486a-90f3-4e2eba7d0620.png",
+      "cell": 7,
+      "crop": [
+        1152,
+        512,
+        1536,
+        1024
+      ]
+    },
+    {
+      "id": 276,
+      "atlas": "palace-relatives-expanded.webp",
+      "source": "exec-e25c4541-2da7-42ad-aa3b-ff21ccb70a83.png",
+      "cell": 0,
+      "crop": [
+        0,
+        0,
+        395,
+        664
+      ]
+    },
+    {
+      "id": 277,
+      "atlas": "palace-relatives-expanded.webp",
+      "source": "exec-e25c4541-2da7-42ad-aa3b-ff21ccb70a83.png",
+      "cell": 1,
+      "crop": [
+        395,
+        0,
+        789,
+        664
+      ]
+    },
+    {
+      "id": 278,
+      "atlas": "palace-relatives-expanded.webp",
+      "source": "exec-e25c4541-2da7-42ad-aa3b-ff21ccb70a83.png",
+      "cell": 2,
+      "crop": [
+        789,
+        0,
+        1184,
+        664
+      ]
+    },
+    {
+      "id": 279,
+      "atlas": "palace-relatives-expanded.webp",
+      "source": "exec-e25c4541-2da7-42ad-aa3b-ff21ccb70a83.png",
+      "cell": 3,
+      "crop": [
+        0,
+        664,
+        395,
+        1328
+      ]
+    },
+    {
+      "id": 280,
+      "atlas": "palace-relatives-expanded.webp",
+      "source": "exec-e25c4541-2da7-42ad-aa3b-ff21ccb70a83.png",
+      "cell": 4,
+      "crop": [
+        395,
+        664,
+        789,
+        1328
+      ]
+    },
+    {
+      "id": 281,
+      "atlas": "palace-relatives-expanded.webp",
+      "source": "exec-e25c4541-2da7-42ad-aa3b-ff21ccb70a83.png",
+      "cell": 5,
+      "crop": [
+        789,
+        664,
+        1184,
+        1328
+      ]
+    },
+    {
+      "id": 282,
+      "atlas": "palace-relatives-expanded.webp",
+      "source": "exec-311e84f0-e17d-4677-8146-4a47aa918726.png",
+      "cell": 0,
+      "crop": [
+        0,
+        0,
+        397,
+        660
+      ]
+    },
+    {
+      "id": 283,
+      "atlas": "palace-relatives-expanded.webp",
+      "source": "exec-311e84f0-e17d-4677-8146-4a47aa918726.png",
+      "cell": 1,
+      "crop": [
+        397,
+        0,
+        793,
+        660
+      ]
+    },
+    {
+      "id": 284,
+      "atlas": "palace-relatives-expanded.webp",
+      "source": "exec-311e84f0-e17d-4677-8146-4a47aa918726.png",
+      "cell": 2,
+      "crop": [
+        793,
+        0,
+        1190,
+        660
+      ]
+    },
+    {
+      "id": 285,
+      "atlas": "palace-relatives-expanded.webp",
+      "source": "exec-311e84f0-e17d-4677-8146-4a47aa918726.png",
+      "cell": 3,
+      "crop": [
+        0,
+        660,
+        398,
+        1322
+      ]
+    },
+    {
+      "id": 286,
+      "atlas": "palace-relatives-expanded.webp",
+      "source": "exec-311e84f0-e17d-4677-8146-4a47aa918726.png",
+      "cell": 4,
+      "crop": [
+        398,
+        660,
+        795,
+        1322
+      ]
+    },
+    {
+      "id": 287,
+      "atlas": "palace-relatives-expanded.webp",
+      "source": "exec-311e84f0-e17d-4677-8146-4a47aa918726.png",
+      "cell": 5,
+      "crop": [
+        795,
+        660,
+        1190,
+        1322
+      ]
+    },
+    {
+      "id": 288,
+      "atlas": "palace-relatives-expanded.webp",
+      "source": "exec-fe5bf13e-f878-4025-a98b-0bc2525de12e.png",
+      "cell": 0,
+      "crop": [
+        0,
+        0,
+        362,
+        724
+      ]
+    },
+    {
+      "id": 289,
+      "atlas": "palace-relatives-expanded.webp",
+      "source": "exec-fe5bf13e-f878-4025-a98b-0bc2525de12e.png",
+      "cell": 1,
+      "crop": [
+        362,
+        0,
+        724,
+        724
+      ]
+    },
+    {
+      "id": 290,
+      "atlas": "palace-relatives-expanded.webp",
+      "source": "exec-fe5bf13e-f878-4025-a98b-0bc2525de12e.png",
+      "cell": 2,
+      "crop": [
+        724,
+        0,
+        1086,
+        724
+      ]
+    },
+    {
+      "id": 291,
+      "atlas": "palace-relatives-expanded.webp",
+      "source": "exec-fe5bf13e-f878-4025-a98b-0bc2525de12e.png",
+      "cell": 3,
+      "crop": [
+        0,
+        724,
+        362,
+        1448
+      ]
+    },
+    {
+      "id": 292,
+      "atlas": "palace-relatives-expanded.webp",
+      "source": "exec-fe5bf13e-f878-4025-a98b-0bc2525de12e.png",
+      "cell": 4,
+      "crop": [
+        362,
+        724,
+        724,
+        1448
+      ]
+    },
+    {
+      "id": 293,
+      "atlas": "palace-relatives-expanded.webp",
+      "source": "exec-fe5bf13e-f878-4025-a98b-0bc2525de12e.png",
+      "cell": 5,
+      "crop": [
+        724,
+        724,
+        1086,
+        1448
+      ]
+    },
+    {
+      "id": 294,
+      "atlas": "palace-royals-expanded.webp",
+      "source": "exec-15265987-6376-4e82-976b-fbb0838b0091.png",
+      "cell": 0,
+      "crop": [
+        0,
+        0,
+        512,
+        512
+      ]
+    },
+    {
+      "id": 295,
+      "atlas": "palace-royals-expanded.webp",
+      "source": "exec-15265987-6376-4e82-976b-fbb0838b0091.png",
+      "cell": 1,
+      "crop": [
+        512,
+        0,
+        1024,
+        512
+      ]
+    },
+    {
+      "id": 296,
+      "atlas": "palace-royals-expanded.webp",
+      "source": "exec-15265987-6376-4e82-976b-fbb0838b0091.png",
+      "cell": 2,
+      "crop": [
+        1024,
+        0,
+        1536,
+        512
+      ]
+    },
+    {
+      "id": 297,
+      "atlas": "palace-royals-expanded.webp",
+      "source": "exec-a3ecdf04-b824-43d5-8d8b-030ac3f7b268.png",
+      "cell": 0,
+      "crop": [
+        0,
+        0,
+        512,
+        479
+      ]
+    },
+    {
+      "id": 298,
+      "atlas": "palace-royals-expanded.webp",
+      "source": "exec-a3ecdf04-b824-43d5-8d8b-030ac3f7b268.png",
+      "cell": 1,
+      "crop": [
+        512,
+        0,
+        1024,
+        479
+      ]
+    },
+    {
+      "id": 299,
+      "atlas": "palace-royals-expanded.webp",
+      "source": "exec-a3ecdf04-b824-43d5-8d8b-030ac3f7b268.png",
+      "cell": 2,
+      "crop": [
+        1024,
+        0,
+        1536,
+        479
+      ]
+    },
+    {
+      "id": 300,
+      "atlas": "palace-royals-expanded.webp",
+      "source": "exec-a3ecdf04-b824-43d5-8d8b-030ac3f7b268.png",
+      "cell": 3,
+      "crop": [
+        0,
+        479,
+        512,
+        1024
+      ]
+    },
+    {
+      "id": 301,
+      "atlas": "palace-royals-expanded.webp",
+      "source": "exec-a3ecdf04-b824-43d5-8d8b-030ac3f7b268.png",
+      "cell": 4,
+      "crop": [
+        512,
+        479,
+        1024,
+        1024
+      ]
+    },
+    {
+      "id": 302,
+      "atlas": "palace-royals-expanded.webp",
+      "source": "exec-a3ecdf04-b824-43d5-8d8b-030ac3f7b268.png",
+      "cell": 5,
+      "crop": [
+        1024,
+        479,
+        1536,
+        1024
+      ]
+    },
+    {
+      "id": 303,
+      "atlas": "palace-royals-expanded.webp",
+      "source": "exec-15265987-6376-4e82-976b-fbb0838b0091.png",
+      "cell": 3,
+      "crop": [
+        0,
+        512,
+        512,
+        1024
+      ]
+    },
+    {
+      "id": 304,
+      "atlas": "palace-royals-expanded.webp",
+      "source": "exec-15265987-6376-4e82-976b-fbb0838b0091.png",
+      "cell": 4,
+      "crop": [
+        512,
+        512,
+        1024,
+        1024
+      ]
+    },
+    {
+      "id": 305,
+      "atlas": "palace-royals-expanded.webp",
+      "source": "exec-15265987-6376-4e82-976b-fbb0838b0091.png",
+      "cell": 5,
+      "crop": [
+        1024,
+        512,
+        1536,
+        1024
+      ]
+    },
+    {
+      "id": 306,
+      "atlas": "palace-royals-expanded.webp",
+      "source": "exec-5986af5a-ed05-4f47-82d3-621b09a6f266.png",
+      "cell": 0,
+      "crop": [
+        0,
+        0,
+        512,
+        449
+      ]
+    },
+    {
+      "id": 307,
+      "atlas": "palace-royals-expanded.webp",
+      "source": "exec-5986af5a-ed05-4f47-82d3-621b09a6f266.png",
+      "cell": 1,
+      "crop": [
+        512,
+        0,
+        1024,
+        449
+      ]
+    },
+    {
+      "id": 308,
+      "atlas": "palace-royals-expanded.webp",
+      "source": "exec-5986af5a-ed05-4f47-82d3-621b09a6f266.png",
+      "cell": 2,
+      "crop": [
+        1024,
+        0,
+        1536,
+        449
+      ]
+    },
+    {
+      "id": 309,
+      "atlas": "palace-royals-expanded.webp",
+      "source": "exec-5986af5a-ed05-4f47-82d3-621b09a6f266.png",
+      "cell": 3,
+      "crop": [
+        0,
+        449,
+        512,
+        1024
+      ]
+    },
+    {
+      "id": 310,
+      "atlas": "palace-royals-expanded.webp",
+      "source": "exec-5986af5a-ed05-4f47-82d3-621b09a6f266.png",
+      "cell": 4,
+      "crop": [
+        512,
+        449,
+        1024,
+        1024
+      ]
+    },
+    {
+      "id": 311,
+      "atlas": "palace-royals-expanded.webp",
+      "source": "exec-5986af5a-ed05-4f47-82d3-621b09a6f266.png",
+      "cell": 5,
+      "crop": [
+        1024,
+        449,
+        1536,
+        1024
+      ]
+    },
+    {
+      "id": 312,
+      "atlas": "palace-emperors-expanded.webp",
+      "source": "exec-68e4b348-a012-4b90-a5a4-a06231db9363.png",
+      "cell": 0,
+      "crop": [
+        0,
+        0,
+        571,
+        669
+      ]
+    },
+    {
+      "id": 313,
+      "atlas": "palace-emperors-expanded.webp",
+      "source": "exec-68e4b348-a012-4b90-a5a4-a06231db9363.png",
+      "cell": 1,
+      "crop": [
+        571,
+        0,
+        1146,
+        669
+      ]
+    },
+    {
+      "id": 314,
+      "atlas": "palace-emperors-expanded.webp",
+      "source": "exec-68e4b348-a012-4b90-a5a4-a06231db9363.png",
+      "cell": 2,
+      "crop": [
+        0,
+        669,
+        595,
+        1372
+      ]
+    },
+    {
+      "id": 315,
+      "atlas": "palace-emperors-expanded.webp",
+      "source": "exec-68e4b348-a012-4b90-a5a4-a06231db9363.png",
+      "cell": 3,
+      "crop": [
+        595,
+        669,
+        1146,
+        1372
+      ]
+    }
+  ]
+}

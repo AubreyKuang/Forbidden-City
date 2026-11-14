@@ -423,6 +423,7 @@ A.start=function(){
     year:1,month:3,turn:0,consorts:[],children:[],cands:[],log:[],nid:1,gen:1,heir:null,genChar:pick(GEN_CHARS),
     flags:{lastXX:-99,dowager:{name:'太后',alive:true},peek:0,openingCourt:true},history:[],ys:{c:0,b:0,n:0},over:false};
   const e=S.emp;
+  e.imperialPortrait=style==='尚武'?1:style==='文雅'?0:e.seed%2;
   if(style==='勤政'){e.prestige=58;e.people=65}if(style==='风流')e.health=84;if(style==='尚武'){e.wu=80;e.prestige=55}if(style==='文雅')e.wen=80;
   e.energy=maxEnergy();
   const em=makeGirl({fam:pick(FAMS.slice(0,3)),trait:pick(['温婉','聪慧','城府','骄矜'])});em.favor=40;em.aff=40;em.age=18;em.knownBeforeAccession=true;
