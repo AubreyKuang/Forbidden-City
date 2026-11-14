@@ -1062,6 +1062,19 @@ test('household projects and concubines retain identities, costs, limits and rel
     S.turn+=24;son.amb=80;var trust=son.spouse.trust;A.householdConcubine(son.id);var face=portraitCell(son.household.concubineCandidate);choose(0);drain();assert.equal(son.household.concubines.length,1);assert.equal(portraitCell(son.household.concubines[0]),face);assert.ok(son.spouse.trust<trust);assert.equal(E().treasury,70);A.householdConcubine(son.id);assert.equal(modalOpen,false);`);
 });
 
+test('concubine inquiry explains the disabled state and opens at the exact cooldown boundary',()=>{
+  const {run}=boot();run(marriedFixture);run(`son.amb=80;S.turn+=23;
+    assert.match(householdPanel(son),/新婚安顿中 · 还需1个月/);A.householdConcubine(son.id);assert.equal(modalOpen,false);
+    S.turn++;assert.equal(householdConcubineReason(son),'');E().treasury=0;A.householdConcubine(son.id);
+    assert.equal(curEv.title,'府中纳妾之议');assert.equal(curEv.choices[0].cond(),false);choose(1);drain();assert.equal(son.household.concubines.length,0);
+    assert.match(householdPanel(son),/距上次商议未满两年 · 还需24个月/);var id=son.id;save('1');load('1');son=kidById(id);
+    S.turn+=23;A.householdConcubine(id);assert.equal(modalOpen,false);assert.match(householdConcubineReason(son),/还需1个月/);
+    S.turn++;E().treasury=100;A.householdConcubine(id);choose(0);drain();assert.equal(son.household.concubines.length,1);assert.equal(E().treasury,80);
+    S.turn+=24;son.household.concubines.push({...marriageCandidate(son,'household'),id:'second-partner'});
+    assert.equal(householdConcubineReason(son),'已有两位妾室');assert.match(householdPanel(son),/已有两位妾室/);A.householdConcubine(id);assert.equal(modalOpen,false);
+    A.householdConcubine(-1);assert.equal(modalOpen,false);`);
+});
+
 test('succession preserves the previous empress and birth mother portraits and inherits the new emperor family',()=>{
   const {run}=boot();run(`var queen=empress(),mother=harem().find(c=>c!==queen);queen.portraitOverride=242;mother.portraitOverride=243;var son=makeKid(mother,'m','承宁'),sister=makeKid(mother,'f','清嘉');son.born=sister.born=S.turn-240;son.married=true;son.spouse={...marriageCandidate(son,'scholar'),marriedAt:S.turn-24};ensureMarriedLife(son);S.turn+=3;startHouseholdPregnancy(son,son.spouse);S.turn+=9;deliverHouseholdChild(son,son.household.pregnancies[0]);var baby=son.household.children[0],wifeFace=portraitCell(son.spouse),queenId=queen.id,motherId=mother.id;
     succeed(son);choose(0);drain();assert.equal(S.flags.dowager.personId,queenId);assert.equal(S.flags.birthDowager.personId,motherId);assert.equal(portraitCell(dowagerPerson(S.flags.dowager)),242);assert.equal(portraitCell(dowagerPerson(S.flags.birthDowager)),243);assert.equal(portraitCell(empress()),wifeFace);

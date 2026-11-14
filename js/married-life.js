@@ -188,9 +188,17 @@ function marriedLifeTick(){
   const options=royalHouseholds().filter(k=>householdActive(k)&&!ensureMarriedLife(k).pending&&S.turn-k.household.lastEvent>=6);
   if(options.length&&chance(.35)){const k=pick(options);if(makeHouseholdScene(k))S.flags.lastHouseholdScene=S.turn;}
 }
+function householdConcubineReason(k){
+  if(!householdActive(k)||k.sex!=='m')return '当前不能商议纳妾';
+  if(kidAge(k)<18||kidAge(k.spouse)<18)return '皇子与正妻均满十八岁后可商议';
+  const h=ensureMarriedLife(k);
+  if(h.concubines.length>=2)return '已有两位妾室';
+  const last=h.lastConcubine,remaining=Math.max(0,24-(S.turn-(last??h.started??k.spouse.marriedAt)));
+  return remaining?(last==null?'新婚安顿中':'距上次商议未满两年')+' · 还需'+remaining+'个月':'';
+}
 function householdPanel(k){
   const h=ensureMarriedLife(k);if(!h||kidAge(k)<15)return '';
-  const p=k.spouse,fit=marriageFit(k,p),adult=kidAge(k)>=18&&kidAge(p)>=18;
+  const p=k.spouse,fit=marriageFit(k,p),adult=kidAge(k)>=18&&kidAge(p)>=18,concubineReason=householdConcubineReason(k);
   const pregnant=adult?h.pregnancies.map(g=>{const person=g.mother===k.id?k:householdPeople(k).find(p=>p.id===g.mother);return person?`${esc(k.sex==='f'?k.name:householdMotherName(k,person))}有孕 · ${Math.min(10,S.turn-g.conceived+1)}个月`:'';}).filter(Boolean):[];
   return `<section class="household-panel"><h3>婚后家事</h3><p>${esc(p.name)} · ${esc(marriageNature(p).temperament)} · ${esc(COUPLE_HOBBIES[marriageNature(p).hobby])} · ${esc(marriageNature(p).spending)}</p>
     <p class="hint">${esc(fit.common.join('、')||'各有所长')}；${esc(fit.different.join('；')||'相处习惯较为接近')}。</p>
@@ -199,7 +207,7 @@ function householdPanel(k){
     ${h.concubines.length?`<p>妾室：${h.concubines.map(p=>esc(p.name)+'（'+esc(marriageNature(p).temperament)+'）').join('、')}</p>`:''}
     ${h.project?`<p class="hint">${esc(h.project.title)} · 预计${Math.max(0,h.project.due-S.turn)}个月后有回音</p>`:''}
     ${h.pending?`<p class="initiative-note">府中近况：${esc(HOUSEHOLD_SCENES[h.pending.id]?.title||'待询问')}</p>`:''}
-    ${householdActive(k)?`<div class="acts"><button class="btn jade" onclick="A.householdVisit(${k.id})">${k.away||k.princessMarriage==='frontier'?'读府中来信':'探望小家'} →</button><button class="btn" onclick="A.householdProject(${k.id})" ${h.project||S.turn-(h.lastProject??-99)<12?'disabled':''}>帮两人办件事</button>${adult&&k.sex==='m'?`<button class="btn" onclick="A.householdConcubine(${k.id})" ${h.concubines.length>=2||S.turn-(h.lastConcubine??h.started)<24?'disabled':''}>问起纳妾之意</button>`:''}</div>`:''}
+    ${householdActive(k)?`<div class="acts"><button class="btn jade" onclick="A.householdVisit(${k.id})">${k.away||k.princessMarriage==='frontier'?'读府中来信':'探望小家'} →</button><button class="btn" onclick="A.householdProject(${k.id})" ${h.project||S.turn-(h.lastProject??-99)<12?'disabled':''}>帮两人办件事</button>${adult&&k.sex==='m'?`<button class="btn" onclick="A.householdConcubine(${k.id})" title="${esc(concubineReason||'先听皇子的想法，再决定是否准许纳妾')}" ${concubineReason?'disabled':''}>询问皇子纳妾意愿${concubineReason?`<small>${esc(concubineReason)}</small>`:''}</button>`:''}</div>`:''}
     ${adult&&h.children.length?`<div class="household-children">${h.children.map(c=>`<article>${porImg(c,56)}<div><strong>${esc(c.name)}</strong><small>${kidAge(c)}岁 · ${c.sex==='m'?'子':'女'} · 生母${esc(c.motherName)}</small></div></article>`).join('')}</div>`:''}
     ${h.history.length?`<ul class="story">${h.history.slice(-5).reverse().map(e=>`<li><time>${esc(e.d)}</time>${esc(e.t)}</li>`).join('')}</ul>`:''}</section>`;
 }
@@ -218,7 +226,7 @@ A.householdProject=function(id){
 };
 A.householdConcubine=function(id){
   const k=royalById(id),h=ensureMarriedLife(k);
-  const valid=()=>householdActive(k)&&k.sex==='m'&&kidAge(k)>=18&&kidAge(k.spouse)>=18&&h.concubines.length<2&&S.turn-(h.lastConcubine??h.started)>=24;
+  const valid=()=>!householdConcubineReason(k);
   if(modalOpen||!h||!valid())return;
   const wishes=marriageNature(k),will=k.amb>=55||wishes.temperament==='好胜'||wishes.temperament==='爽朗';
   if(!will){pushEv({title:'府中纳妾之议',cast:[k,k.spouse],text:`${k.name}说，眼下更愿与${k.spouse.name}安稳度日，并无纳妾之意。`,choices:[{t:'尊重他的意思',f:()=>{h.lastConcubine=S.turn;householdRecord(k,'household_concubine','谈起纳妾，自己表示无意，陛下未加催促。');save('auto');}}]});return;}
