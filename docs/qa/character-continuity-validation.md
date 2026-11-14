@@ -61,4 +61,8 @@ PALACE_MODES=relationships PALACE_PLAYTEST_DIR=/tmp/palace-relationships-release
 
 ## 发布核验
 
-待推送后核验 GitHub Pages 部署、线上脚本版本与浏览器入口。
+- 游戏代码提交：`95aedd4a0d562d876d9062c581cb185615a73956`，已推送 `main`。
+- [GitHub Pages 部署](https://github.com/AubreyKuang/Forbidden-City/actions/runs/43549271839)与[在线入口](https://aubreykuang.github.io/Forbidden-City/)。
+- 逐字节核对线上正式页、测试页、样式和十个相关脚本，共 13 个文件，HTTP 均为 200，SHA-256 全部与本地受测文件一致。
+- Chrome 打开正式入口，标题、开局按钮和原有自动存档入口正常；DOM 中确认人物后话、宫室和孕事模块均为发布版本，未捕获控制台错误或警告。此次线上检查未推进原有存档；完整人物流程和刷新恢复使用上文的独立本地存档验证。
+- README 按功能组织，保留宫室、家族、同生手足等全面说明与实机截图；逐局测试与发布证据独立放在本目录。
