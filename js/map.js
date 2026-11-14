@@ -34,6 +34,7 @@ function npcHome(c){const pl=PLACES.find(p=>p.k==='palace'&&p.p===c.palace);retu
 function npcSync(){const ids=new Set();alive().filter(c=>!c.maid&&(inPalace(c)||c.cold)).forEach(c=>{ids.add(c.id);if(!NPC.has(c.id)){const h=c.cold?[23,46]:npcHome(c);NPC.set(c.id,{x:h[0],y:h[1],path:[],wait:ri(5,60),ox:ri(-3,3),where:'home'})}});[...NPC.keys()].forEach(id=>{if(!ids.has(id))NPC.delete(id)})}
 function npcRoutine(c,roll) {
   const home=npcHome(c);
+  if(pregnancyPrayerVisitors().includes(c))return {where:'dao-pregnancy',dest:PLACES.find(p=>p.id==='qa').d};
   if(daoVisitors().includes(c))return {where:'dao',dest:PLACES.find(p=>p.id==='qa').d};
   const hobby=consortHobby(c);
   const gardenBias=['活泼','淡泊'].includes(c.trait)||c.t2==='爱猫'||CONSORT_HOBBIES[hobby].place==='御花园';
@@ -64,6 +65,7 @@ function npcStep(){npcSync();for(const [id,n] of NPC){const c=byId(id);if(!c)con
 
 function npcRoutineText(c,n) {
   if(!n)return '在宫道上停下脚步，向你行了一礼';
+  if(n.where==='dao-pregnancy')return n.path.length?'由宫人陪着，慢慢往钦安殿祈愿去':'在钦安殿廊下候见国师，想问问这一胎男女';
   if(n.where==='dao')return n.path.length?'沿东侧宫道，往钦安殿听讲去':'在钦安殿廊下翻阅经卷';
   if(n.where==='library')return n.path.length?'抱着旧抄本，正往文渊阁去':'在文渊阁门前等宫人取来借阅的书';
   if(n.where==='visit'){

@@ -333,6 +333,7 @@ function viewConsort(){
    <div class="detail-vitals">${bar('恩宠',c.favor)}${bar('心情',c.mood,'#517369')}${bar('情分',c.aff,'#936375')}</div>
    <div class="detail-stack">
     ${continuityPanel(c)}
+    ${detailSection('孕中祈愿',pregnancyPrayerPanel(c))}
     ${detailSection('寺中清修',consortTemplePanel(c))}
     ${detailSection('御赐珍饰',jewelryPanel(c))}
     ${act&&!c.cold?initiativeHTML(c):''}

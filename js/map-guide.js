@@ -1,6 +1,6 @@
 /* 宫城地点指引：只读取现况，悬浮不会抽取或结算事件。 */
 const PLACE_GUIDES={
-  qa:['宫内问道、讲经与祈福之所。',['拜见国师、听讲道经','遇见来此清修的妃嫔与皇嗣','诗中问仙、相约游东海']],
+  qa:['宫内问道、讲经与祈福之所。',['拜见国师、听讲道经','孕妃问男女、解签留平安灯','遇见来此清修的妃嫔与皇嗣','诗中问仙、相约游东海']],
   qq:['皇帝起居与理政之所。',['查看国库与朝堂势力','采纳议政建议','查看本月要事']],
   cj:['百官奏事的朝会正殿。',['查看本月奏折']],
   yh:['赏花游园、亲友相聚的地方。',['园中漫步 · 精力−1','小宴与生辰宴','时令活动与人物邀约']],
@@ -30,7 +30,7 @@ function placeGuide(p){
     purpose=residents.length?'居住：'+residents.join('、'):'暂时无人居住';
     activities=[];
   }else if(p.id==='qa'){
-    residents=[daoMaster().name+'国师',...daoVisitors().map(porName)];
+    residents=[daoMaster().name+'国师',...daoVisitors().map(porName),...pregnancyPrayerVisitors().map(porName)];
   }else if(p.id==='cn'){
     if(S.flags.dowager?.alive)residents=[S.flags.dowager.name];
     else{purpose='太后旧居，设有追思之所。';activities=['添香追思','陪母族亲眷追忆'];}
