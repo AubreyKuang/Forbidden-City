@@ -22,18 +22,21 @@ function boot(seedValue=4242){
 
 test('partially loaded portrait atlases cannot leave permanently blank cached faces',()=>{
   const {run}=boot();
-  run(`Object.assign(portraitAtlas,{naturalWidth:896,naturalHeight:1960,complete:false});
-    var cell=portraitCell('emp');ART_CACHE.clear();
+  run(`for(var cell of [12,312,313]){
+    E().portraitOverride=cell;var atlas=portraitSheet(cell).image;
+    Object.assign(atlas,{naturalWidth:896,naturalHeight:560,complete:false});ART_CACHE.clear();
     assert.equal(portraitAtlasReady(cell,0),false);
     porImg('emp');assert.equal(ART_CACHE.has(cell+':0'),false);
-    portraitAtlas.complete=true;assert.equal(portraitAtlasReady(cell,0),true);
+    atlas.complete=true;assert.equal(portraitAtlasReady(cell,0),true);
     porImg('emp');assert.equal(ART_CACHE.has(cell+':0'),true);
+    atlas.naturalHeight=0;assert.equal(portraitAtlasReady(cell,0),false);
+    }
+    delete E().portraitOverride;portraitAtlas.naturalHeight=1960;
     Object.assign(beautyAtlas,{naturalWidth:896,naturalHeight:3080,complete:true});
     portraitAtlas.complete=false;
     assert.equal(portraitAtlasReady(92,0),true);
     assert.equal(portraitAtlasReady(92,8),false);
-    portraitAtlas.complete=true;assert.equal(portraitAtlasReady(92,8),true);
-    portraitAtlas.naturalHeight=0;assert.equal(portraitAtlasReady(cell,0),false);`);
+    portraitAtlas.complete=true;assert.equal(portraitAtlasReady(92,8),true);`);
 });
 
 test('scene activity cards show both saved portraits and omit unavailable participants',()=>{
@@ -937,8 +940,8 @@ test('expanded portrait atlases keep legacy identities, stable growth and every 
     }
     var before=S.children.map(portraitCell);S=JSON.parse(JSON.stringify(S));assert.deepEqual(S.children.map(portraitCell),before);
     for(let cell=0;cell<PORTRAIT_COUNT;cell++){const sheet=portraitSheet(cell),xy=portraitTile(cell,sheet);assert.ok(xy[0]>=0&&xy[0]<448);assert.ok(xy[1]>=0&&xy[1]<sheet.rows*140);}
-    assert.equal(CONSORT_PORTRAITS.length+WESTERN_PORTRAITS.length,67);
-    assert.equal(new Set([...CONSORT_PORTRAITS,...WESTERN_PORTRAITS]).size,67);
+    assert.equal(CONSORT_PORTRAITS.length+WESTERN_PORTRAITS.length,87);
+    assert.equal(new Set([...CONSORT_PORTRAITS,...WESTERN_PORTRAITS]).size,87);
     assert.equal(portraitSheet(239).src,'./assets/images/palace-royal-regalia.webp?v=1');`);
 });
 test('prince brides share the expanded portrait pool without duplicate faces or changes after marriage and succession',()=>{
@@ -1088,7 +1091,7 @@ test('residential palace guides show actual names or an empty residence instead 
 });
 
 test('new portrait sheet appends only, keeps four princess options and shared consort choices',()=>{
-  const {run}=boot();run(`assert.equal(PORTRAIT_COUNT,248);assert.equal(portraitSheet(240).scale,4);for(var cell=240;cell<244;cell++)assert.ok(CONSORT_PORTRAITS.includes(cell));
+  const {run}=boot();run(`assert.equal(PORTRAIT_COUNT,316);assert.equal(portraitSheet(240).scale,4);for(var cell=240;cell<244;cell++)assert.ok(CONSORT_PORTRAITS.includes(cell));
     var k=makeKid(harem()[0],'f','明昭');for(var v=26;v<30;v++){k.portraitVariant=v;k.born=S.turn-216;assert.equal(portraitCell(k),244+v-26);k.born=S.turn-72;assert.ok(portraitCell(k)<240);}
     assert.equal(portraitSheet(239).src,'./assets/images/palace-royal-regalia.webp?v=1');`);
 });
