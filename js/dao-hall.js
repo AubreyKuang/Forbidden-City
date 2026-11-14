@@ -76,7 +76,7 @@ function viewDaoHall(){
   return `<section class="dao-hall"><header><p>文渊阁南 · 松风入殿</p><h2>钦安殿${backBtn}</h2></header><div class="dao-master">${porImg(master,190)}<div><span class="tag">${master.gender}国师 · ${master.temper}</span><h3>${master.name}国师</h3><blockquote>“${master.line}”</blockquote><p class="hint">讲读道经、静坐问道与宫中祈福之所。</p><div class="acts"><button class="btn gold" onclick="A.daoTeach()">请国师讲道<small>精力−1</small></button><button class="btn" onclick="A.daoRite()">为众人祈福<small>国库−20 · 精力−1</small></button></div></div></div></section>
     ${promises.map(k=>`<div class="card"><div class="grow"><strong>与${esc(k.name)}的东海之约</strong><p>已经答应带孩子去看海，可沿岸观潮、访舟人。</p><button class="btn jade" onclick="A.daoSea(${k.id})">相携赴东海<small>国库−50 · 精力−2 · 每年一次</small></button></div></div>`).join('')}
     ${pregnancyPrayerHall()}
-    <h3>此刻在殿中</h3>${visitors.length?`<div class="grid">${visitors.map(p=>`<button class="card portrait-card" onclick="A.daoTalk(${p.id})">${porImg(p,92)}<div class="grow"><strong>${esc(porName(p))}</strong><p>${esc(daoReading(p).title)} · ${p.daoPractice?.visits>=6?'常来听讲':'临窗读书'}</p><span class="person-link">听听心中所想 →</span></div></button>`).join('')}</div>`:'<p class="hint">此刻只有国师在整理经卷。不同性情的人会在往后的日子来访。</p>'}`;
+    <h3>此刻在殿中听讲</h3>${visitors.length?`<div class="grid">${visitors.map(p=>`<button class="card portrait-card" onclick="A.daoTalk(${p.id})">${porImg(p,92)}<div class="grow"><strong>${esc(porName(p))}</strong><p>${esc(daoReading(p).title)} · ${p.daoPractice?.visits>=6?'常来听讲':'临窗读书'}</p><span class="person-link">听听心中所想 →</span></div></button>`).join('')}</div>`:'<p class="hint">此刻没有常规听讲的来客，不同性情的人会在往后的日子来访。</p>'}`;
 }
 A.daoTeach=function(){
   if(modalOpen||S.over)return;const ready=S.turn-(S.flags.daoTeaching??-99)>=3;
