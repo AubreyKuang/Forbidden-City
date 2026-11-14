@@ -63,7 +63,7 @@ function familyActivity(k, mother, seeking) {
 
 function spendFamilyTime(k, mother, seeking) {
   const act = familyActivity(k, mother, seeking);
-  const childView = `与${cName(mother)}${act.title === '哄睡' ? '相处' : '相聚'}。${act.child}`;
+  const childView = act.title==='哄睡'?`在${fullName(mother)}身边听着熟悉的声音。${act.child}`:act.title==='听孩子说心事'?`向${fullName(mother)}说起心事。${act.child}`:`与${fullName(mother)}${act.title}。${act.child}`;
   recordFamilyTime(k, mother, act.title, childView, `${k.name}在身边。${act.mother}`, {
     place: act.place, stat: act.stat, gain: seeking ? 9 : 7
   });

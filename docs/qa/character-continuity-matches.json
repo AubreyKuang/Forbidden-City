@@ -1,0 +1,3207 @@
+{
+  "date": "2026-11-14",
+  "groups": {
+    "standard": {
+      "runs": 20,
+      "months": 2170,
+      "monthlyEvents": 4497,
+      "mean": 2.072,
+      "median": 2.0,
+      "p95": 4,
+      "max": 10,
+      "zero": 19,
+      "errors": 0,
+      "storyKinds": {
+        "child": 38,
+        "family": 5
+      },
+      "completedWithChoices": 6,
+      "stages": {
+        "ended": 19,
+        "invitation": 17,
+        "working": 5,
+        "settled": 2
+      },
+      "matches": [
+        {
+          "mode": "balanced",
+          "seed": 101,
+          "months": 120,
+          "turn": 120,
+          "over": false,
+          "errors": [],
+          "events": 263,
+          "unique": 83,
+          "mean": 2.191666666666667,
+          "zero": 0,
+          "max": 5,
+          "choiceEvents": 226,
+          "treasury": -438,
+          "health": 99.49,
+          "people": 97,
+          "continuity": [
+            {
+              "id": 1,
+              "kind": "child",
+              "owner": 10,
+              "other": 15,
+              "stage": "ended",
+              "choice": "child",
+              "followup": "listen",
+              "history": 3
+            },
+            {
+              "id": 2,
+              "kind": "child",
+              "owner": 4,
+              "other": 18,
+              "stage": "ended",
+              "history": 1
+            },
+            {
+              "id": 3,
+              "kind": "child",
+              "owner": 12,
+              "other": 17,
+              "stage": "ended",
+              "history": 1
+            },
+            {
+              "id": 4,
+              "kind": "child",
+              "owner": 5,
+              "other": 16,
+              "stage": "ended",
+              "history": 1
+            },
+            {
+              "id": 5,
+              "kind": "child",
+              "owner": 1,
+              "other": 20,
+              "stage": "ended",
+              "history": 1
+            },
+            {
+              "id": 6,
+              "kind": "child",
+              "owner": 12,
+              "other": 24,
+              "stage": "working",
+              "choice": "child",
+              "history": 1
+            },
+            {
+              "id": 7,
+              "kind": "child",
+              "owner": 4,
+              "other": 18,
+              "stage": "ended",
+              "history": 1
+            },
+            {
+              "id": 8,
+              "kind": "child",
+              "owner": 5,
+              "other": 16,
+              "stage": "ended",
+              "history": 1
+            },
+            {
+              "id": 9,
+              "kind": "child",
+              "owner": 1,
+              "other": 20,
+              "stage": "invitation",
+              "history": 0
+            }
+          ],
+          "consorts": 19,
+          "children": 15,
+          "top": [
+            [
+              "相伴有凭",
+              18
+            ],
+            [
+              "喜脉",
+              16
+            ],
+            [
+              "弄璋弄瓦",
+              15
+            ],
+            [
+              "岁首",
+              10
+            ],
+            [
+              "旧友来访",
+              9
+            ],
+            [
+              "纸鸢",
+              9
+            ],
+            [
+              "请安迟了",
+              6
+            ],
+            [
+              "争执",
+              5
+            ]
+          ]
+        },
+        {
+          "mode": "balanced",
+          "seed": 202,
+          "months": 68,
+          "turn": 68,
+          "over": true,
+          "errors": [],
+          "events": 151,
+          "unique": 64,
+          "mean": 2.2205882352941178,
+          "zero": 1,
+          "max": 5,
+          "choiceEvents": 126,
+          "treasury": -2762,
+          "health": 91.34999999999992,
+          "people": 0,
+          "continuity": [],
+          "consorts": 14,
+          "children": 11,
+          "top": [
+            [
+              "喜脉",
+              11
+            ],
+            [
+              "弄璋弄瓦",
+              11
+            ],
+            [
+              "相伴有凭",
+              10
+            ],
+            [
+              "岁首",
+              5
+            ],
+            [
+              "旧友来访",
+              4
+            ],
+            [
+              "真相大白",
+              4
+            ],
+            [
+              "科场案",
+              4
+            ],
+            [
+              "春宵",
+              4
+            ]
+          ]
+        },
+        {
+          "mode": "balanced",
+          "seed": 303,
+          "months": 106,
+          "turn": 106,
+          "over": true,
+          "errors": [],
+          "events": 242,
+          "unique": 78,
+          "mean": 2.2830188679245285,
+          "zero": 2,
+          "max": 10,
+          "choiceEvents": 194,
+          "treasury": -3170,
+          "health": 91.87999999999994,
+          "people": 0,
+          "continuity": [
+            {
+              "id": 1,
+              "kind": "child",
+              "owner": 1,
+              "other": 14,
+              "stage": "settled",
+              "choice": "child",
+              "followup": "listen",
+              "history": 2
+            },
+            {
+              "id": 2,
+              "kind": "child",
+              "owner": 11,
+              "other": 21,
+              "stage": "invitation",
+              "history": 0
+            },
+            {
+              "id": 3,
+              "kind": "child",
+              "owner": 16,
+              "other": 23,
+              "stage": "invitation",
+              "history": 0
+            }
+          ],
+          "consorts": 19,
+          "children": 23,
+          "top": [
+            [
+              "喜脉",
+              24
+            ],
+            [
+              "弄璋弄瓦",
+              20
+            ],
+            [
+              "纸鸢",
+              14
+            ],
+            [
+              "抚养",
+              14
+            ],
+            [
+              "岁首",
+              9
+            ],
+            [
+              "相伴有凭",
+              9
+            ],
+            [
+              "续命汤",
+              6
+            ],
+            [
+              "旧友来访",
+              6
+            ]
+          ]
+        },
+        {
+          "mode": "balanced",
+          "seed": 404,
+          "months": 53,
+          "turn": 53,
+          "over": true,
+          "errors": [],
+          "events": 106,
+          "unique": 55,
+          "mean": 2,
+          "zero": 0,
+          "max": 4,
+          "choiceEvents": 94,
+          "treasury": -2425,
+          "health": 97.32,
+          "people": 0,
+          "continuity": [],
+          "consorts": 12,
+          "children": 2,
+          "top": [
+            [
+              "相伴有凭",
+              6
+            ],
+            [
+              "芳辰",
+              4
+            ],
+            [
+              "岁首",
+              4
+            ],
+            [
+              "香囊",
+              4
+            ],
+            [
+              "春宵",
+              4
+            ],
+            [
+              "外戚请托",
+              3
+            ],
+            [
+              "病榻",
+              3
+            ],
+            [
+              "纸鸢",
+              3
+            ]
+          ]
+        },
+        {
+          "mode": "affection",
+          "seed": 101,
+          "months": 74,
+          "turn": 74,
+          "over": true,
+          "errors": [],
+          "events": 159,
+          "unique": 68,
+          "mean": 2.1486486486486487,
+          "zero": 1,
+          "max": 5,
+          "choiceEvents": 143,
+          "treasury": -2490,
+          "health": 67.41999999999987,
+          "people": 0,
+          "continuity": [],
+          "consorts": 11,
+          "children": 4,
+          "top": [
+            [
+              "相伴有凭",
+              10
+            ],
+            [
+              "春宵",
+              6
+            ],
+            [
+              "芳辰",
+              6
+            ],
+            [
+              "岁首",
+              6
+            ],
+            [
+              "旧友来访",
+              5
+            ],
+            [
+              "对弈",
+              4
+            ],
+            [
+              "科场案",
+              4
+            ],
+            [
+              "喜脉",
+              4
+            ]
+          ]
+        },
+        {
+          "mode": "affection",
+          "seed": 202,
+          "months": 120,
+          "turn": 120,
+          "over": false,
+          "errors": [],
+          "events": 245,
+          "unique": 76,
+          "mean": 2.0416666666666665,
+          "zero": 2,
+          "max": 5,
+          "choiceEvents": 218,
+          "treasury": 870,
+          "health": 68.5999999999998,
+          "people": 93,
+          "continuity": [
+            {
+              "id": 1,
+              "kind": "child",
+              "owner": 43,
+              "other": 17,
+              "stage": "ended",
+              "choice": "child",
+              "followup": "listen",
+              "history": 3
+            },
+            {
+              "id": 2,
+              "kind": "family",
+              "owner": 5,
+              "other": null,
+              "stage": "ended",
+              "history": 1
+            }
+          ],
+          "consorts": 20,
+          "children": 6,
+          "top": [
+            [
+              "相伴有凭",
+              11
+            ],
+            [
+              "芳辰",
+              11
+            ],
+            [
+              "岁首",
+              10
+            ],
+            [
+              "旧友来访",
+              9
+            ],
+            [
+              "春宵",
+              8
+            ],
+            [
+              "抚养",
+              8
+            ],
+            [
+              "真相大白",
+              7
+            ],
+            [
+              "喜脉",
+              6
+            ]
+          ]
+        },
+        {
+          "mode": "affection",
+          "seed": 303,
+          "months": 120,
+          "turn": 120,
+          "over": false,
+          "errors": [],
+          "events": 236,
+          "unique": 74,
+          "mean": 1.9666666666666666,
+          "zero": 1,
+          "max": 5,
+          "choiceEvents": 205,
+          "treasury": 2173,
+          "health": 69.5999999999998,
+          "people": 91,
+          "continuity": [
+            {
+              "id": 1,
+              "kind": "child",
+              "owner": 2,
+              "other": 16,
+              "stage": "ended",
+              "choice": "child",
+              "followup": "listen",
+              "history": 3
+            },
+            {
+              "id": 2,
+              "kind": "child",
+              "owner": 2,
+              "other": 23,
+              "stage": "invitation",
+              "history": 0
+            }
+          ],
+          "consorts": 11,
+          "children": 9,
+          "top": [
+            [
+              "相伴有凭",
+              11
+            ],
+            [
+              "岁首",
+              10
+            ],
+            [
+              "喜脉",
+              9
+            ],
+            [
+              "弄璋弄瓦",
+              8
+            ],
+            [
+              "纸鸢",
+              7
+            ],
+            [
+              "猫祸",
+              7
+            ],
+            [
+              "争执",
+              6
+            ],
+            [
+              "科场案",
+              6
+            ]
+          ]
+        },
+        {
+          "mode": "affection",
+          "seed": 404,
+          "months": 120,
+          "turn": 120,
+          "over": false,
+          "errors": [],
+          "events": 235,
+          "unique": 71,
+          "mean": 1.9583333333333333,
+          "zero": 0,
+          "max": 5,
+          "choiceEvents": 208,
+          "treasury": 904,
+          "health": 81.5999999999998,
+          "people": 83,
+          "continuity": [
+            {
+              "id": 1,
+              "kind": "child",
+              "owner": 2,
+              "other": 17,
+              "stage": "ended",
+              "choice": "child",
+              "followup": "listen",
+              "history": 3
+            },
+            {
+              "id": 2,
+              "kind": "child",
+              "owner": 2,
+              "other": 17,
+              "stage": "invitation",
+              "history": 0
+            }
+          ],
+          "consorts": 10,
+          "children": 6,
+          "top": [
+            [
+              "芳辰",
+              12
+            ],
+            [
+              "岁首",
+              10
+            ],
+            [
+              "相伴有凭",
+              9
+            ],
+            [
+              "纸鸢",
+              7
+            ],
+            [
+              "旧友来访",
+              7
+            ],
+            [
+              "科场案",
+              6
+            ],
+            [
+              "中宫奏事",
+              6
+            ],
+            [
+              "喜脉",
+              6
+            ]
+          ]
+        },
+        {
+          "mode": "explorer",
+          "seed": 101,
+          "months": 69,
+          "turn": 69,
+          "over": true,
+          "errors": [],
+          "events": 152,
+          "unique": 75,
+          "mean": 2.2028985507246377,
+          "zero": 2,
+          "max": 5,
+          "choiceEvents": 137,
+          "treasury": -1916,
+          "health": 99.83,
+          "people": 0,
+          "continuity": [],
+          "consorts": 17,
+          "children": 2,
+          "top": [
+            [
+              "相伴有凭",
+              6
+            ],
+            [
+              "科场案",
+              5
+            ],
+            [
+              "岁首",
+              5
+            ],
+            [
+              "旧友来访",
+              5
+            ],
+            [
+              "委屈",
+              4
+            ],
+            [
+              "嫡庶",
+              4
+            ],
+            [
+              "争执",
+              4
+            ],
+            [
+              "纸鸢",
+              4
+            ]
+          ]
+        },
+        {
+          "mode": "explorer",
+          "seed": 202,
+          "months": 120,
+          "turn": 120,
+          "over": false,
+          "errors": [],
+          "events": 231,
+          "unique": 82,
+          "mean": 1.925,
+          "zero": 0,
+          "max": 5,
+          "choiceEvents": 211,
+          "treasury": -368,
+          "health": 99.83,
+          "people": 69,
+          "continuity": [
+            {
+              "id": 1,
+              "kind": "child",
+              "owner": 11,
+              "other": 26,
+              "stage": "ended",
+              "history": 1
+            }
+          ],
+          "consorts": 30,
+          "children": 2,
+          "top": [
+            [
+              "相伴有凭",
+              17
+            ],
+            [
+              "岁首",
+              10
+            ],
+            [
+              "病榻",
+              7
+            ],
+            [
+              "科场案",
+              6
+            ],
+            [
+              "芳辰",
+              6
+            ],
+            [
+              "纸鸢",
+              6
+            ],
+            [
+              "香囊",
+              6
+            ],
+            [
+              "旧友来访",
+              6
+            ]
+          ]
+        },
+        {
+          "mode": "explorer",
+          "seed": 303,
+          "months": 120,
+          "turn": 120,
+          "over": false,
+          "errors": [],
+          "events": 240,
+          "unique": 84,
+          "mean": 2,
+          "zero": 3,
+          "max": 6,
+          "choiceEvents": 210,
+          "treasury": -3049,
+          "health": 99.83,
+          "people": 39,
+          "continuity": [
+            {
+              "id": 1,
+              "kind": "family",
+              "owner": 5,
+              "other": null,
+              "stage": "invitation",
+              "history": 0
+            },
+            {
+              "id": 2,
+              "kind": "child",
+              "owner": 3,
+              "other": 37,
+              "stage": "invitation",
+              "history": 0
+            }
+          ],
+          "consorts": 31,
+          "children": 7,
+          "top": [
+            [
+              "纸鸢",
+              15
+            ],
+            [
+              "相伴有凭",
+              11
+            ],
+            [
+              "岁首",
+              10
+            ],
+            [
+              "喜脉",
+              8
+            ],
+            [
+              "春宵",
+              8
+            ],
+            [
+              "续命汤",
+              8
+            ],
+            [
+              "弄璋弄瓦",
+              7
+            ],
+            [
+              "旧友来访",
+              7
+            ]
+          ]
+        },
+        {
+          "mode": "explorer",
+          "seed": 404,
+          "months": 120,
+          "turn": 120,
+          "over": false,
+          "errors": [],
+          "events": 264,
+          "unique": 99,
+          "mean": 2.2,
+          "zero": 0,
+          "max": 5,
+          "choiceEvents": 241,
+          "treasury": 1115,
+          "health": 90.32,
+          "people": 100,
+          "continuity": [
+            {
+              "id": 1,
+              "kind": "child",
+              "owner": 1,
+              "other": 23,
+              "stage": "settled",
+              "choice": "parent",
+              "followup": "listen",
+              "history": 2
+            }
+          ],
+          "consorts": 30,
+          "children": 4,
+          "top": [
+            [
+              "相伴有凭",
+              14
+            ],
+            [
+              "纸鸢",
+              10
+            ],
+            [
+              "岁首",
+              10
+            ],
+            [
+              "续命汤",
+              9
+            ],
+            [
+              "科场案",
+              7
+            ],
+            [
+              "春宵",
+              7
+            ],
+            [
+              "中宫奏事",
+              6
+            ],
+            [
+              "旧友来访",
+              6
+            ]
+          ]
+        },
+        {
+          "mode": "skip",
+          "seed": 101,
+          "months": 120,
+          "turn": 120,
+          "over": false,
+          "errors": [],
+          "events": 228,
+          "unique": 65,
+          "mean": 1.9,
+          "zero": 3,
+          "max": 4,
+          "choiceEvents": 211,
+          "treasury": 10423,
+          "health": 73.5999999999998,
+          "people": 99,
+          "continuity": [],
+          "consorts": 11,
+          "children": 1,
+          "top": [
+            [
+              "芳辰",
+              16
+            ],
+            [
+              "相伴有凭",
+              16
+            ],
+            [
+              "旧友来访",
+              11
+            ],
+            [
+              "岁首",
+              10
+            ],
+            [
+              "春宵",
+              10
+            ],
+            [
+              "病榻",
+              7
+            ],
+            [
+              "香囊",
+              7
+            ],
+            [
+              "慈宁宫",
+              7
+            ]
+          ]
+        },
+        {
+          "mode": "skip",
+          "seed": 202,
+          "months": 120,
+          "turn": 120,
+          "over": false,
+          "errors": [],
+          "events": 236,
+          "unique": 63,
+          "mean": 1.9666666666666666,
+          "zero": 3,
+          "max": 4,
+          "choiceEvents": 218,
+          "treasury": 10429,
+          "health": 59.599999999999795,
+          "people": 100,
+          "continuity": [
+            {
+              "id": 1,
+              "kind": "family",
+              "owner": 2,
+              "other": null,
+              "stage": "invitation",
+              "history": 0
+            },
+            {
+              "id": 2,
+              "kind": "family",
+              "owner": 5,
+              "other": null,
+              "stage": "working",
+              "choice": "letters",
+              "history": 1
+            }
+          ],
+          "consorts": 8,
+          "children": 1,
+          "top": [
+            [
+              "相伴有凭",
+              14
+            ],
+            [
+              "芳辰",
+              11
+            ],
+            [
+              "岁首",
+              10
+            ],
+            [
+              "春宵",
+              8
+            ],
+            [
+              "醋海生波",
+              7
+            ],
+            [
+              "旧友来访",
+              6
+            ],
+            [
+              "慈宁宫",
+              6
+            ],
+            [
+              "科场案",
+              6
+            ]
+          ]
+        },
+        {
+          "mode": "skip",
+          "seed": 303,
+          "months": 120,
+          "turn": 120,
+          "over": false,
+          "errors": [],
+          "events": 246,
+          "unique": 64,
+          "mean": 2.05,
+          "zero": 1,
+          "max": 5,
+          "choiceEvents": 229,
+          "treasury": 7657,
+          "health": 70.5999999999998,
+          "people": 100,
+          "continuity": [],
+          "consorts": 13,
+          "children": 0,
+          "top": [
+            [
+              "相伴有凭",
+              12
+            ],
+            [
+              "岁首",
+              10
+            ],
+            [
+              "春宵",
+              10
+            ],
+            [
+              "科场案",
+              8
+            ],
+            [
+              "猫祸",
+              8
+            ],
+            [
+              "纸鸢",
+              7
+            ],
+            [
+              "嫉恨",
+              7
+            ],
+            [
+              "醋海生波",
+              7
+            ]
+          ]
+        },
+        {
+          "mode": "skip",
+          "seed": 404,
+          "months": 120,
+          "turn": 120,
+          "over": false,
+          "errors": [],
+          "events": 232,
+          "unique": 73,
+          "mean": 1.9333333333333333,
+          "zero": 0,
+          "max": 5,
+          "choiceEvents": 211,
+          "treasury": 7728,
+          "health": 76.5999999999998,
+          "people": 100,
+          "continuity": [],
+          "consorts": 10,
+          "children": 2,
+          "top": [
+            [
+              "相伴有凭",
+              10
+            ],
+            [
+              "岁首",
+              10
+            ],
+            [
+              "旧友来访",
+              8
+            ],
+            [
+              "春宵",
+              8
+            ],
+            [
+              "芳辰",
+              7
+            ],
+            [
+              "争执",
+              6
+            ],
+            [
+              "慈宁宫",
+              5
+            ],
+            [
+              "绿腰",
+              5
+            ]
+          ]
+        },
+        {
+          "mode": "random",
+          "seed": 101,
+          "months": 120,
+          "turn": 120,
+          "over": false,
+          "errors": [],
+          "events": 258,
+          "unique": 86,
+          "mean": 2.15,
+          "zero": 0,
+          "max": 6,
+          "choiceEvents": 217,
+          "treasury": 1376,
+          "health": 99.66,
+          "people": 97,
+          "continuity": [
+            {
+              "id": 1,
+              "kind": "child",
+              "owner": 4,
+              "other": 19,
+              "stage": "working",
+              "choice": "together",
+              "history": 1
+            },
+            {
+              "id": 2,
+              "kind": "child",
+              "owner": 1,
+              "other": 30,
+              "stage": "ended",
+              "history": 1
+            }
+          ],
+          "consorts": 13,
+          "children": 22,
+          "top": [
+            [
+              "喜脉",
+              25
+            ],
+            [
+              "抚养",
+              21
+            ],
+            [
+              "弄璋弄瓦",
+              20
+            ],
+            [
+              "相伴有凭",
+              15
+            ],
+            [
+              "岁首",
+              10
+            ],
+            [
+              "纸鸢",
+              6
+            ],
+            [
+              "求晋位分",
+              5
+            ],
+            [
+              "对弈",
+              5
+            ]
+          ]
+        },
+        {
+          "mode": "random",
+          "seed": 202,
+          "months": 120,
+          "turn": 120,
+          "over": false,
+          "errors": [],
+          "events": 245,
+          "unique": 79,
+          "mean": 2.0416666666666665,
+          "zero": 0,
+          "max": 5,
+          "choiceEvents": 204,
+          "treasury": 1844,
+          "health": 96.27999999999997,
+          "people": 100,
+          "continuity": [
+            {
+              "id": 1,
+              "kind": "child",
+              "owner": 5,
+              "other": 13,
+              "stage": "ended",
+              "choice": "together",
+              "followup": "guide",
+              "history": 3
+            },
+            {
+              "id": 2,
+              "kind": "child",
+              "owner": 4,
+              "other": 14,
+              "stage": "working",
+              "choice": "child",
+              "history": 1
+            },
+            {
+              "id": 3,
+              "kind": "child",
+              "owner": 3,
+              "other": 24,
+              "stage": "ended",
+              "history": 1
+            },
+            {
+              "id": 4,
+              "kind": "child",
+              "owner": 5,
+              "other": 13,
+              "stage": "invitation",
+              "history": 0
+            },
+            {
+              "id": 5,
+              "kind": "family",
+              "owner": 2,
+              "other": null,
+              "stage": "invitation",
+              "history": 0
+            },
+            {
+              "id": 6,
+              "kind": "child",
+              "owner": 1,
+              "other": 15,
+              "stage": "invitation",
+              "history": 0
+            }
+          ],
+          "consorts": 12,
+          "children": 21,
+          "top": [
+            [
+              "喜脉",
+              23
+            ],
+            [
+              "弄璋弄瓦",
+              21
+            ],
+            [
+              "相伴有凭",
+              18
+            ],
+            [
+              "岁首",
+              10
+            ],
+            [
+              "纸鸢",
+              9
+            ],
+            [
+              "真相大白",
+              6
+            ],
+            [
+              "科场案",
+              5
+            ],
+            [
+              "香囊疑案",
+              5
+            ]
+          ]
+        },
+        {
+          "mode": "random",
+          "seed": 303,
+          "months": 120,
+          "turn": 120,
+          "over": false,
+          "errors": [],
+          "events": 266,
+          "unique": 86,
+          "mean": 2.216666666666667,
+          "zero": 0,
+          "max": 5,
+          "choiceEvents": 234,
+          "treasury": 6736,
+          "health": 99.66,
+          "people": 98,
+          "continuity": [
+            {
+              "id": 1,
+              "kind": "child",
+              "owner": 2,
+              "other": 19,
+              "stage": "working",
+              "choice": "child",
+              "history": 1
+            },
+            {
+              "id": 2,
+              "kind": "child",
+              "owner": 14,
+              "other": 22,
+              "stage": "ended",
+              "history": 1
+            },
+            {
+              "id": 3,
+              "kind": "child",
+              "owner": 3,
+              "other": 29,
+              "stage": "invitation",
+              "history": 0
+            }
+          ],
+          "consorts": 14,
+          "children": 14,
+          "top": [
+            [
+              "喜脉",
+              18
+            ],
+            [
+              "弄璋弄瓦",
+              14
+            ],
+            [
+              "相伴有凭",
+              11
+            ],
+            [
+              "岁首",
+              10
+            ],
+            [
+              "抚养",
+              7
+            ],
+            [
+              "南苑跑马",
+              6
+            ],
+            [
+              "争执",
+              6
+            ],
+            [
+              "害喜",
+              6
+            ]
+          ]
+        },
+        {
+          "mode": "random",
+          "seed": 404,
+          "months": 120,
+          "turn": 120,
+          "over": false,
+          "errors": [],
+          "events": 262,
+          "unique": 85,
+          "mean": 2.183333333333333,
+          "zero": 0,
+          "max": 5,
+          "choiceEvents": 230,
+          "treasury": 1152,
+          "health": 99.49,
+          "people": 100,
+          "continuity": [
+            {
+              "id": 1,
+              "kind": "child",
+              "owner": 11,
+              "other": 17,
+              "stage": "ended",
+              "choice": "together",
+              "followup": "listen",
+              "history": 3
+            },
+            {
+              "id": 2,
+              "kind": "child",
+              "owner": 1,
+              "other": 18,
+              "stage": "ended",
+              "history": 1
+            },
+            {
+              "id": 3,
+              "kind": "child",
+              "owner": 2,
+              "other": 19,
+              "stage": "ended",
+              "history": 1
+            },
+            {
+              "id": 4,
+              "kind": "child",
+              "owner": 1,
+              "other": 18,
+              "stage": "invitation",
+              "history": 0
+            },
+            {
+              "id": 5,
+              "kind": "child",
+              "owner": 10,
+              "other": 28,
+              "stage": "invitation",
+              "history": 0
+            },
+            {
+              "id": 6,
+              "kind": "child",
+              "owner": 13,
+              "other": 26,
+              "stage": "invitation",
+              "history": 0
+            },
+            {
+              "id": 7,
+              "kind": "child",
+              "owner": 11,
+              "other": 17,
+              "stage": "invitation",
+              "history": 0
+            },
+            {
+              "id": 8,
+              "kind": "child",
+              "owner": 2,
+              "other": 19,
+              "stage": "invitation",
+              "history": 0
+            }
+          ],
+          "consorts": 14,
+          "children": 17,
+          "top": [
+            [
+              "喜脉",
+              19
+            ],
+            [
+              "相伴有凭",
+              17
+            ],
+            [
+              "弄璋弄瓦",
+              17
+            ],
+            [
+              "岁首",
+              10
+            ],
+            [
+              "芳辰",
+              7
+            ],
+            [
+              "抚养",
+              7
+            ],
+            [
+              "科场案",
+              6
+            ],
+            [
+              "迷路",
+              5
+            ]
+          ]
+        }
+      ]
+    },
+    "relationships": {
+      "runs": 4,
+      "months": 434,
+      "monthlyEvents": 937,
+      "mean": 2.159,
+      "median": 2.0,
+      "p95": 3,
+      "max": 6,
+      "zero": 0,
+      "errors": 0,
+      "storyKinds": {
+        "family": 69,
+        "duty": 19,
+        "child": 21
+      },
+      "completedWithChoices": 100,
+      "stages": {
+        "ended": 100,
+        "working": 2,
+        "invitation": 5,
+        "settled": 2
+      },
+      "matches": [
+        {
+          "mode": "relationships",
+          "seed": 101,
+          "months": 120,
+          "turn": 120,
+          "over": false,
+          "errors": [],
+          "events": 259,
+          "unique": 74,
+          "mean": 2.158333333333333,
+          "zero": 0,
+          "max": 6,
+          "choiceEvents": 228,
+          "treasury": 1472,
+          "health": 77.5999999999998,
+          "people": 96,
+          "continuity": [
+            {
+              "id": 1,
+              "kind": "family",
+              "owner": 1,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 2,
+              "kind": "duty",
+              "owner": 5,
+              "other": 2,
+              "stage": "ended",
+              "choice": "credit",
+              "followup": "respect",
+              "history": 3
+            },
+            {
+              "id": 3,
+              "kind": "family",
+              "owner": 2,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 4,
+              "kind": "family",
+              "owner": 10,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 5,
+              "kind": "duty",
+              "owner": 10,
+              "other": 1,
+              "stage": "ended",
+              "choice": "credit",
+              "followup": "respect",
+              "history": 3
+            },
+            {
+              "id": 6,
+              "kind": "family",
+              "owner": 1,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 7,
+              "kind": "family",
+              "owner": 2,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 8,
+              "kind": "family",
+              "owner": 10,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 9,
+              "kind": "family",
+              "owner": 10,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 10,
+              "kind": "family",
+              "owner": 2,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 11,
+              "kind": "duty",
+              "owner": 5,
+              "other": 2,
+              "stage": "ended",
+              "choice": "credit",
+              "followup": "respect",
+              "history": 3
+            },
+            {
+              "id": 12,
+              "kind": "family",
+              "owner": 1,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 13,
+              "kind": "family",
+              "owner": 10,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 14,
+              "kind": "family",
+              "owner": 1,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 15,
+              "kind": "family",
+              "owner": 2,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 16,
+              "kind": "duty",
+              "owner": 5,
+              "other": 2,
+              "stage": "ended",
+              "choice": "credit",
+              "followup": "respect",
+              "history": 3
+            },
+            {
+              "id": 17,
+              "kind": "family",
+              "owner": 1,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 18,
+              "kind": "family",
+              "owner": 2,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 19,
+              "kind": "family",
+              "owner": 10,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 20,
+              "kind": "family",
+              "owner": 1,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 21,
+              "kind": "family",
+              "owner": 2,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 22,
+              "kind": "child",
+              "owner": 1,
+              "other": 12,
+              "stage": "ended",
+              "choice": "child",
+              "followup": "listen",
+              "history": 3
+            },
+            {
+              "id": 23,
+              "kind": "family",
+              "owner": 10,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 24,
+              "kind": "duty",
+              "owner": 5,
+              "other": 2,
+              "stage": "ended",
+              "choice": "credit",
+              "followup": "respect",
+              "history": 3
+            },
+            {
+              "id": 25,
+              "kind": "child",
+              "owner": 2,
+              "other": 14,
+              "stage": "ended",
+              "choice": "child",
+              "followup": "listen",
+              "history": 3
+            },
+            {
+              "id": 26,
+              "kind": "family",
+              "owner": 1,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 27,
+              "kind": "family",
+              "owner": 10,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 28,
+              "kind": "child",
+              "owner": 1,
+              "other": 12,
+              "stage": "ended",
+              "choice": "child",
+              "followup": "listen",
+              "history": 3
+            },
+            {
+              "id": 29,
+              "kind": "family",
+              "owner": 2,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 30,
+              "kind": "child",
+              "owner": 10,
+              "other": 24,
+              "stage": "ended",
+              "choice": "child",
+              "followup": "listen",
+              "history": 3
+            },
+            {
+              "id": 31,
+              "kind": "family",
+              "owner": 10,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 32,
+              "kind": "child",
+              "owner": 4,
+              "other": 25,
+              "stage": "ended",
+              "choice": "child",
+              "followup": "listen",
+              "history": 3
+            },
+            {
+              "id": 33,
+              "kind": "child",
+              "owner": 1,
+              "other": 20,
+              "stage": "ended",
+              "choice": "child",
+              "followup": "listen",
+              "history": 3
+            },
+            {
+              "id": 34,
+              "kind": "child",
+              "owner": 5,
+              "other": 27,
+              "stage": "ended",
+              "choice": "child",
+              "followup": "listen",
+              "history": 3
+            },
+            {
+              "id": 35,
+              "kind": "child",
+              "owner": 2,
+              "other": 14,
+              "stage": "ended",
+              "choice": "child",
+              "followup": "listen",
+              "history": 3
+            },
+            {
+              "id": 36,
+              "kind": "duty",
+              "owner": 5,
+              "other": 2,
+              "stage": "ended",
+              "choice": "credit",
+              "followup": "respect",
+              "history": 3
+            },
+            {
+              "id": 37,
+              "kind": "child",
+              "owner": 1,
+              "other": 12,
+              "stage": "working",
+              "choice": "child",
+              "history": 1
+            },
+            {
+              "id": 38,
+              "kind": "family",
+              "owner": 1,
+              "other": null,
+              "stage": "invitation",
+              "history": 0
+            },
+            {
+              "id": 39,
+              "kind": "family",
+              "owner": 2,
+              "other": null,
+              "stage": "invitation",
+              "history": 0
+            }
+          ],
+          "consorts": 12,
+          "children": 14,
+          "top": [
+            [
+              "外臣回奏 · 核查地方钱粮",
+              65
+            ],
+            [
+              "相伴有凭",
+              15
+            ],
+            [
+              "喜脉",
+              14
+            ],
+            [
+              "弄璋弄瓦",
+              14
+            ],
+            [
+              "岁首",
+              10
+            ],
+            [
+              "科场案",
+              5
+            ],
+            [
+              "中宫奏事",
+              4
+            ],
+            [
+              "对弈",
+              4
+            ]
+          ]
+        },
+        {
+          "mode": "relationships",
+          "seed": 202,
+          "months": 120,
+          "turn": 120,
+          "over": false,
+          "errors": [],
+          "events": 248,
+          "unique": 70,
+          "mean": 2.066666666666667,
+          "zero": 0,
+          "max": 5,
+          "choiceEvents": 221,
+          "treasury": 267,
+          "health": 81.5999999999998,
+          "people": 100,
+          "continuity": [
+            {
+              "id": 1,
+              "kind": "family",
+              "owner": 1,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 2,
+              "kind": "duty",
+              "owner": 5,
+              "other": 1,
+              "stage": "ended",
+              "choice": "credit",
+              "followup": "respect",
+              "history": 3
+            },
+            {
+              "id": 3,
+              "kind": "family",
+              "owner": 2,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 4,
+              "kind": "family",
+              "owner": 3,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 5,
+              "kind": "family",
+              "owner": 1,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 6,
+              "kind": "family",
+              "owner": 1,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 7,
+              "kind": "family",
+              "owner": 2,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 8,
+              "kind": "family",
+              "owner": 1,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 9,
+              "kind": "family",
+              "owner": 2,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 10,
+              "kind": "family",
+              "owner": 3,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 11,
+              "kind": "duty",
+              "owner": 5,
+              "other": 1,
+              "stage": "ended",
+              "choice": "credit",
+              "followup": "respect",
+              "history": 3
+            },
+            {
+              "id": 12,
+              "kind": "family",
+              "owner": 1,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 13,
+              "kind": "family",
+              "owner": 2,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 14,
+              "kind": "family",
+              "owner": 3,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 15,
+              "kind": "family",
+              "owner": 1,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 16,
+              "kind": "family",
+              "owner": 3,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 17,
+              "kind": "duty",
+              "owner": 13,
+              "other": 2,
+              "stage": "ended",
+              "choice": "credit",
+              "followup": "respect",
+              "history": 3
+            },
+            {
+              "id": 18,
+              "kind": "child",
+              "owner": 1,
+              "other": 16,
+              "stage": "ended",
+              "choice": "child",
+              "followup": "listen",
+              "history": 3
+            },
+            {
+              "id": 19,
+              "kind": "child",
+              "owner": 2,
+              "other": 17,
+              "stage": "ended",
+              "choice": "child",
+              "followup": "listen",
+              "history": 3
+            },
+            {
+              "id": 20,
+              "kind": "family",
+              "owner": 10,
+              "other": null,
+              "stage": "ended",
+              "choice": "letters",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 21,
+              "kind": "child",
+              "owner": 1,
+              "other": 19,
+              "stage": "ended",
+              "choice": "child",
+              "followup": "listen",
+              "history": 3
+            },
+            {
+              "id": 22,
+              "kind": "duty",
+              "owner": 5,
+              "other": 1,
+              "stage": "ended",
+              "choice": "credit",
+              "followup": "respect",
+              "history": 3
+            },
+            {
+              "id": 23,
+              "kind": "child",
+              "owner": 2,
+              "other": 20,
+              "stage": "ended",
+              "choice": "child",
+              "followup": "listen",
+              "history": 3
+            },
+            {
+              "id": 24,
+              "kind": "child",
+              "owner": 3,
+              "other": 23,
+              "stage": "settled",
+              "choice": "child",
+              "followup": "listen",
+              "history": 2
+            },
+            {
+              "id": 25,
+              "kind": "family",
+              "owner": 2,
+              "other": null,
+              "stage": "invitation",
+              "history": 0
+            },
+            {
+              "id": 26,
+              "kind": "family",
+              "owner": 1,
+              "other": null,
+              "stage": "invitation",
+              "history": 0
+            },
+            {
+              "id": 27,
+              "kind": "child",
+              "owner": 1,
+              "other": 16,
+              "stage": "invitation",
+              "history": 0
+            }
+          ],
+          "consorts": 15,
+          "children": 10,
+          "top": [
+            [
+              "外臣回奏 · 核查地方钱粮",
+              59
+            ],
+            [
+              "相伴有凭",
+              15
+            ],
+            [
+              "纸鸢",
+              14
+            ],
+            [
+              "岁首",
+              10
+            ],
+            [
+              "喜脉",
+              10
+            ],
+            [
+              "弄璋弄瓦",
+              10
+            ],
+            [
+              "旧友来访",
+              7
+            ],
+            [
+              "争执",
+              4
+            ]
+          ]
+        },
+        {
+          "mode": "relationships",
+          "seed": 303,
+          "months": 120,
+          "turn": 120,
+          "over": false,
+          "errors": [],
+          "events": 260,
+          "unique": 74,
+          "mean": 2.1666666666666665,
+          "zero": 0,
+          "max": 4,
+          "choiceEvents": 229,
+          "treasury": 222,
+          "health": 68.5999999999998,
+          "people": 100,
+          "continuity": [
+            {
+              "id": 1,
+              "kind": "family",
+              "owner": 1,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 2,
+              "kind": "duty",
+              "owner": 2,
+              "other": 1,
+              "stage": "ended",
+              "choice": "credit",
+              "followup": "respect",
+              "history": 3
+            },
+            {
+              "id": 3,
+              "kind": "family",
+              "owner": 2,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 4,
+              "kind": "family",
+              "owner": 3,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 5,
+              "kind": "family",
+              "owner": 1,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 6,
+              "kind": "family",
+              "owner": 2,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 7,
+              "kind": "duty",
+              "owner": 3,
+              "other": 2,
+              "stage": "ended",
+              "choice": "credit",
+              "followup": "respect",
+              "history": 3
+            },
+            {
+              "id": 8,
+              "kind": "family",
+              "owner": 2,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 9,
+              "kind": "family",
+              "owner": 1,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 10,
+              "kind": "family",
+              "owner": 3,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 11,
+              "kind": "duty",
+              "owner": 29,
+              "other": 3,
+              "stage": "ended",
+              "choice": "credit",
+              "followup": "respect",
+              "history": 3
+            },
+            {
+              "id": 12,
+              "kind": "family",
+              "owner": 2,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 13,
+              "kind": "family",
+              "owner": 1,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 14,
+              "kind": "duty",
+              "owner": 23,
+              "other": 1,
+              "stage": "ended",
+              "choice": "credit",
+              "followup": "respect",
+              "history": 3
+            },
+            {
+              "id": 15,
+              "kind": "family",
+              "owner": 1,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 16,
+              "kind": "family",
+              "owner": 2,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 17,
+              "kind": "family",
+              "owner": 3,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 2
+            },
+            {
+              "id": 18,
+              "kind": "family",
+              "owner": 1,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 19,
+              "kind": "child",
+              "owner": 1,
+              "other": 16,
+              "stage": "ended",
+              "choice": "child",
+              "followup": "listen",
+              "history": 3
+            },
+            {
+              "id": 20,
+              "kind": "child",
+              "owner": 2,
+              "other": 18,
+              "stage": "ended",
+              "choice": "child",
+              "followup": "listen",
+              "history": 3
+            },
+            {
+              "id": 21,
+              "kind": "family",
+              "owner": 2,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 22,
+              "kind": "family",
+              "owner": 1,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 23,
+              "kind": "duty",
+              "owner": 23,
+              "other": 1,
+              "stage": "ended",
+              "choice": "credit",
+              "followup": "respect",
+              "history": 3
+            },
+            {
+              "id": 24,
+              "kind": "child",
+              "owner": 1,
+              "other": 16,
+              "stage": "ended",
+              "choice": "child",
+              "followup": "listen",
+              "history": 3
+            },
+            {
+              "id": 25,
+              "kind": "family",
+              "owner": 1,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 26,
+              "kind": "child",
+              "owner": 2,
+              "other": 24,
+              "stage": "ended",
+              "choice": "child",
+              "followup": "listen",
+              "history": 3
+            },
+            {
+              "id": 27,
+              "kind": "family",
+              "owner": 2,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 28,
+              "kind": "child",
+              "owner": 1,
+              "other": 27,
+              "stage": "ended",
+              "choice": "child",
+              "followup": "listen",
+              "history": 3
+            },
+            {
+              "id": 29,
+              "kind": "family",
+              "owner": 1,
+              "other": null,
+              "stage": "settled",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 2
+            },
+            {
+              "id": 30,
+              "kind": "child",
+              "owner": 2,
+              "other": 18,
+              "stage": "working",
+              "choice": "child",
+              "history": 1
+            }
+          ],
+          "consorts": 21,
+          "children": 13,
+          "top": [
+            [
+              "外臣回奏 · 核查地方钱粮",
+              66
+            ],
+            [
+              "喜脉",
+              13
+            ],
+            [
+              "弄璋弄瓦",
+              13
+            ],
+            [
+              "相伴有凭",
+              11
+            ],
+            [
+              "纸鸢",
+              10
+            ],
+            [
+              "岁首",
+              10
+            ],
+            [
+              "旧友来访",
+              7
+            ],
+            [
+              "醋海生波",
+              5
+            ]
+          ]
+        },
+        {
+          "mode": "relationships",
+          "seed": 404,
+          "months": 74,
+          "turn": 74,
+          "over": true,
+          "errors": [],
+          "events": 170,
+          "unique": 62,
+          "mean": 2.2972972972972974,
+          "zero": 0,
+          "max": 5,
+          "choiceEvents": 146,
+          "treasury": -2616,
+          "health": 92.41999999999987,
+          "people": 0,
+          "continuity": [
+            {
+              "id": 1,
+              "kind": "duty",
+              "owner": 4,
+              "other": 2,
+              "stage": "ended",
+              "choice": "credit",
+              "followup": "respect",
+              "history": 3
+            },
+            {
+              "id": 2,
+              "kind": "family",
+              "owner": 1,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 3,
+              "kind": "family",
+              "owner": 2,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 4,
+              "kind": "family",
+              "owner": 1,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 5,
+              "kind": "family",
+              "owner": 4,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 6,
+              "kind": "duty",
+              "owner": 1,
+              "other": 4,
+              "stage": "ended",
+              "choice": "credit",
+              "followup": "respect",
+              "history": 3
+            },
+            {
+              "id": 7,
+              "kind": "family",
+              "owner": 2,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 8,
+              "kind": "family",
+              "owner": 1,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 9,
+              "kind": "duty",
+              "owner": 27,
+              "other": 5,
+              "stage": "ended",
+              "choice": "credit",
+              "followup": "respect",
+              "history": 3
+            },
+            {
+              "id": 10,
+              "kind": "family",
+              "owner": 2,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 11,
+              "kind": "duty",
+              "owner": 11,
+              "other": 1,
+              "stage": "ended",
+              "choice": "credit",
+              "followup": "respect",
+              "history": 3
+            },
+            {
+              "id": 12,
+              "kind": "family",
+              "owner": 1,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            },
+            {
+              "id": 13,
+              "kind": "family",
+              "owner": 2,
+              "other": null,
+              "stage": "ended",
+              "choice": "facts",
+              "followup": "voice",
+              "history": 3
+            }
+          ],
+          "consorts": 13,
+          "children": 13,
+          "top": [
+            [
+              "外臣回奏 · 巡边整饬军备",
+              16
+            ],
+            [
+              "外臣回奏 · 核查地方钱粮",
+              14
+            ],
+            [
+              "喜脉",
+              13
+            ],
+            [
+              "弄璋弄瓦",
+              11
+            ],
+            [
+              "相伴有凭",
+              10
+            ],
+            [
+              "纸鸢",
+              7
+            ],
+            [
+              "岁首",
+              6
+            ],
+            [
+              "科场案",
+              4
+            ]
+          ]
+        }
+      ]
+    }
+  },
+  "samples": [
+    {
+      "mode": "relationships",
+      "seed": 101,
+      "thread": {
+        "id": 2,
+        "key": "duty:1:1:2",
+        "kind": "duty",
+        "owner": 5,
+        "other": 2,
+        "gen": 1,
+        "origin": 2,
+        "date": "永宁元年五月",
+        "stage": "ended",
+        "due": 10,
+        "history": [
+          {
+            "turn": 4,
+            "d": "永宁元年七月",
+            "text": "乔雪兰与姜意当面列清各自做过和准备做的事。两人商量着再备一套节礼花样。"
+          },
+          {
+            "turn": 6,
+            "d": "永宁元年九月",
+            "text": "乔雪兰与姜意把新做好的花样并排收进册中，各自署名；两人约好下次有合适的活计还一起做。"
+          },
+          {
+            "turn": 10,
+            "d": "永宁二年正月",
+            "text": "乔雪兰又请姜意一起核对花样册。两人沿用上回说好的分工，不必等你重新撮合。"
+          }
+        ],
+        "mode": "公开署名",
+        "overlooked": false,
+        "cause": "永宁元年五月，乔雪兰与姜意一起备办端午。各人所做的事都按实署了名。",
+        "choice": "credit",
+        "updated": 10,
+        "followup": "respect",
+        "ended": 10
+      },
+      "events": [
+        {
+          "turn": 4,
+          "date": "永宁元年七月",
+          "phase": "active",
+          "act": "personalContinuation",
+          "title": "还想和她一起做 · 乔雪兰",
+          "text": "永宁元年五月，乔雪兰与姜意一起备办端午。各人所做的事都按实署了名。\n乔雪兰想与姜意再做一件有始有终的小事。\n“又有一点新主意，这回可得认真听。”",
+          "choices": [
+            "请两人共同定分工，各自署名 · 精力−1",
+            "请两人私下说清，再自行决定是否合作 · 精力−1",
+            "让乔雪兰独立做一回，由她自己署名 · 精力−1",
+            "改日再来接着谈"
+          ],
+          "actors": [
+            {
+              "id": 5,
+              "name": "乔雪兰",
+              "trait": "好客",
+              "t2": "贪睡",
+              "age": 18,
+              "aff": 22,
+              "favor": 7,
+              "mood": 54,
+              "xin": "惶恐",
+              "alive": true,
+              "gone": false,
+              "cold": false,
+              "temple": false,
+              "rank": 3
+            },
+            {
+              "id": 2,
+              "name": "姜意",
+              "trait": "聪慧",
+              "t2": "嘴硬心软",
+              "age": 16,
+              "aff": 70,
+              "favor": 59,
+              "mood": 100,
+              "xin": "平和",
+              "alive": true,
+              "gone": false,
+              "cold": false,
+              "temple": false,
+              "rank": 3
+            }
+          ],
+          "choice": "请两人共同定分工，各自署名 · 精力−1",
+          "result": "乔雪兰与姜意当面列清各自做过和准备做的事。两人商量着再备一套节礼花样。\n过些时日再来，事情会接着往下走。"
+        },
+        {
+          "turn": 6,
+          "date": "永宁元年九月",
+          "phase": "active",
+          "act": "personalContinuation",
+          "title": "还想和她一起做 · 乔雪兰",
+          "text": "永宁元年五月，乔雪兰与姜意一起备办端午。各人所做的事都按实署了名。\n乔雪兰与姜意带来共同做好的新花样。分工的小字仍夹在册中，署名的地方也留好了。",
+          "choices": [
+            "按商定的分工记功，让两人自行接续 · 精力−1",
+            "仍由姜意统筹，明确记下各人的工作 · 精力−1",
+            "改日再来接着谈"
+          ],
+          "actors": [
+            {
+              "id": 5,
+              "name": "乔雪兰",
+              "trait": "好客",
+              "t2": "贪睡",
+              "age": 18,
+              "aff": 30,
+              "favor": 3,
+              "mood": 64,
+              "xin": "感激",
+              "alive": true,
+              "gone": false,
+              "cold": false,
+              "temple": false,
+              "rank": 3
+            },
+            {
+              "id": 2,
+              "name": "姜意",
+              "trait": "聪慧",
+              "t2": "嘴硬心软",
+              "age": 16,
+              "aff": 88,
+              "favor": 75,
+              "mood": 100,
+              "xin": "平和",
+              "alive": true,
+              "gone": false,
+              "cold": false,
+              "temple": false,
+              "rank": 3
+            }
+          ],
+          "choice": "按商定的分工记功，让两人自行接续 · 精力−1",
+          "result": "乔雪兰与姜意把新做好的花样并排收进册中，各自署名；两人约好下次有合适的活计还一起做。\n过些时日再来，事情会接着往下走。"
+        }
+      ]
+    },
+    {
+      "mode": "relationships",
+      "seed": 101,
+      "thread": {
+        "id": 1,
+        "key": "family:father-1-1:2:success",
+        "kind": "family",
+        "owner": 1,
+        "other": null,
+        "gen": 1,
+        "origin": 2,
+        "date": "永宁元年五月",
+        "stage": "ended",
+        "due": 10,
+        "history": [
+          {
+            "turn": 4,
+            "d": "永宁元年七月",
+            "text": "纪念谈起纪修远的「核查地方钱粮」。她愿意整理家书，也希望朝堂继续看实绩用人。"
+          },
+          {
+            "turn": 6,
+            "d": "永宁元年九月",
+            "text": "纪念把自己的意见写进给纪修远的家书。她记得这回你愿意先听她说完。"
+          },
+          {
+            "turn": 10,
+            "d": "永宁二年正月",
+            "text": "纪念把关于纪修远的那封家书妥善收起。纪修远已收到寄出的信，也回了平安。她遇到家中有事时，更愿意先把自己的判断说给你听。"
+          }
+        ],
+        "officialId": "father-1-1",
+        "role": "father",
+        "outcome": "success",
+        "task": "核查地方钱粮",
+        "cause": "永宁元年五月，父亲纪修远奉差「核查地方钱粮」办结。",
+        "lastShown": 4,
+        "choice": "facts",
+        "updated": 10,
+        "followup": "voice",
+        "delivered": true,
+        "ended": 10
+      },
+      "events": [
+        {
+          "turn": 4,
+          "date": "永宁元年七月",
+          "phase": "monthly",
+          "act": "endMonth",
+          "title": "功劳之外的一封家书 · 纪念",
+          "text": "永宁元年五月，父亲纪修远奉差「核查地方钱粮」办结。\n纪念惦记纪修远的回奏，也想让自己的意见被听见。\n“先前的事，我又想了几遍。想听听陛下的意思。”",
+          "choices": [
+            "听她谈实绩，以本人功劳评价父兄 · 精力−1",
+            "先照应家中近况，公事仍按原有处置 · 精力−1",
+            "改日再来接着谈"
+          ],
+          "actors": [
+            {
+              "id": 1,
+              "name": "纪念",
+              "trait": "聪慧",
+              "t2": "好读史",
+              "age": 18,
+              "aff": 70,
+              "favor": 44,
+              "mood": 78,
+              "xin": "平和",
+              "alive": true,
+              "gone": false,
+              "cold": false,
+              "temple": false,
+              "rank": 8
+            },
+            {
+              "id": "father-1-1",
+              "name": null,
+              "age": 50,
+              "xin": "平和",
+              "alive": true,
+              "temple": false
+            }
+          ],
+          "choice": "听她谈实绩，以本人功劳评价父兄 · 精力−1",
+          "result": "纪念谈起纪修远的「核查地方钱粮」。她愿意整理家书，也希望朝堂继续看实绩用人。\n过些时日再来，事情会接着往下走。"
+        },
+        {
+          "turn": 6,
+          "date": "永宁元年九月",
+          "phase": "active",
+          "act": "personalContinuation",
+          "title": "功劳之外的一封家书 · 纪念",
+          "text": "永宁元年五月，父亲纪修远奉差「核查地方钱粮」办结。\n纪念带来给纪修远的家书草稿。她分开写了家中牵挂与公事善后，不愿混为一次求情。她想亲口说说自己为何这样写。",
+          "choices": [
+            "听她亲自说完这封家书 · 精力−1",
+            "先替她安排妥当，把书信留给她 · 精力−1",
+            "改日再来接着谈"
+          ],
+          "actors": [
+            {
+              "id": 1,
+              "name": "纪念",
+              "trait": "聪慧",
+              "t2": "好读史",
+              "age": 18,
+              "aff": 78,
+              "favor": 40,
+              "mood": 86,
+              "xin": "平和",
+              "alive": true,
+              "gone": false,
+              "cold": false,
+              "temple": false,
+              "rank": 8
+            },
+            {
+              "id": "father-1-1",
+              "name": null,
+              "age": 50,
+              "xin": "平和",
+              "alive": true,
+              "temple": false
+            }
+          ],
+          "choice": "听她亲自说完这封家书 · 精力−1",
+          "result": "纪念把自己的意见写进给纪修远的家书。她记得这回你愿意先听她说完。\n过些时日再来，事情会接着往下走。"
+        }
+      ]
+    },
+    {
+      "mode": "relationships",
+      "seed": 101,
+      "thread": {
+        "id": 22,
+        "key": "child:12:80",
+        "kind": "child",
+        "owner": 1,
+        "other": 12,
+        "gen": 1,
+        "origin": 80,
+        "date": "永宁七年冬月",
+        "stage": "ended",
+        "due": 88,
+        "history": [
+          {
+            "turn": 82,
+            "d": "永宁八年正月",
+            "text": "长公主 婉瑶把自己的办法说完，纪念答应先看孩子试做，遇到难处再帮忙。"
+          },
+          {
+            "turn": 84,
+            "d": "永宁八年三月",
+            "text": "长公主 婉瑶讲了做成与做坏的地方。纪念听完才提建议，下一回仍给孩子留了选择的余地。"
+          },
+          {
+            "turn": 88,
+            "d": "永宁八年七月",
+            "text": "长公主 婉瑶又来找纪念一起读书。这次先说了想改的地方，母亲没有急着接过手。"
+          }
+        ],
+        "activity": "一起读书",
+        "project": "reading",
+        "parentProject": "reading",
+        "cause": "永宁七年冬月，纪念与长公主 婉瑶一起一起读书。孩子想把下一回怎样做说给她听。",
+        "choice": "child",
+        "updated": 88,
+        "followup": "listen",
+        "ended": 88
+      },
+      "events": [
+        {
+          "turn": 82,
+          "date": "永宁八年正月",
+          "phase": "active",
+          "act": "personalContinuation",
+          "title": "孩子自己的打算 · 纪念",
+          "text": "永宁七年冬月，纪念与长公主 婉瑶一起一起读书。孩子想把下一回怎样做说给她听。\n长公主 婉瑶想试试一起读书；纪念原想安排一起读书。\n“先前的事，我又想了几遍。想听听陛下的意思。”",
+          "choices": [
+            "让长公主 婉瑶先试自己的一起读书 · 精力−1",
+            "母子各提一个办法，一起商量着完成 · 精力−1",
+            "先按母亲的安排一起读书，再听孩子复盘 · 精力−1",
+            "改日再来接着谈"
+          ],
+          "actors": [
+            {
+              "id": 1,
+              "name": "纪念",
+              "trait": "聪慧",
+              "t2": "好读史",
+              "age": 25,
+              "aff": 100,
+              "favor": 100,
+              "mood": 100,
+              "xin": "平和",
+              "alive": true,
+              "gone": false,
+              "cold": false,
+              "temple": false,
+              "rank": 8
+            },
+            {
+              "id": 12,
+              "name": "婉瑶",
+              "age": 6,
+              "xin": null,
+              "alive": true,
+              "temple": false
+            }
+          ],
+          "choice": "让长公主 婉瑶先试自己的一起读书 · 精力−1",
+          "result": "长公主 婉瑶把自己的办法说完，纪念答应先看孩子试做，遇到难处再帮忙。\n过些时日再来，事情会接着往下走。"
+        },
+        {
+          "turn": 84,
+          "date": "永宁八年三月",
+          "phase": "active",
+          "act": "personalContinuation",
+          "title": "孩子自己的打算 · 纪念",
+          "text": "永宁七年冬月，纪念与长公主 婉瑶一起一起读书。孩子想把下一回怎样做说给她听。\n长公主 婉瑶拿来这几个月一起读书的成果。孩子先讲自己的尝试，母亲在一旁听。",
+          "choices": [
+            "让孩子讲哪里顺利、哪里想改变 · 精力−1",
+            "由母亲指出不足，再一起练习 · 精力−1",
+            "改日再来接着谈"
+          ],
+          "actors": [
+            {
+              "id": 1,
+              "name": "纪念",
+              "trait": "聪慧",
+              "t2": "好读史",
+              "age": 25,
+              "aff": 100,
+              "favor": 100,
+              "mood": 100,
+              "xin": "平和",
+              "alive": true,
+              "gone": false,
+              "cold": false,
+              "temple": false,
+              "rank": 8
+            },
+            {
+              "id": 12,
+              "name": "婉瑶",
+              "age": 6,
+              "xin": null,
+              "alive": true,
+              "temple": false
+            }
+          ],
+          "choice": "让孩子讲哪里顺利、哪里想改变 · 精力−1",
+          "result": "长公主 婉瑶讲了做成与做坏的地方。纪念听完才提建议，下一回仍给孩子留了选择的余地。\n过些时日再来，事情会接着往下走。"
+        }
+      ]
+    }
+  ]
+}

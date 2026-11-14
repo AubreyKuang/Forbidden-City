@@ -18,10 +18,10 @@ const ARCS={
   (c,f)=>{const facts=generalCaseFacts(c,f);if(f.act==='recall')return {text:`将军接旨后迟迟不动身，只上折称旧伤复发。朝中议论纷纷：将军这是不敢回京。\n${cName(c)}跪在乾清宫外，求你再给父亲一次机会。`,choices:[
       {t:'亲赴居庸关相迎，以示信任',f:()=>{if(!facts.guilty){aEnd(c,'君臣相得','陛下亲赴关外相迎，将军当场交出兵符，痛哭流涕。');return fx(chg({prestige:8,people:3}),cchg(c,{aff:25,mood:20}))}aNext(c,3,0,1);return '将军没有来。来的是一封战书。'}},
       {t:'下旨削爵，夺其兵权',f:()=>{aEnd(c,'削爵','父亲被夺去兵权、削去爵位，回京后郁郁而终。');return fx(chg({prestige:4}),cchg(c,{mood:-40,aff:-25}))}}]};
-    if(f.act==='spy'){if(!facts.guilty)return {text:'监军回报：将军扩饷，是因朝廷拖欠边军粮饷已有两年；与北狄互市，换的是过冬的棉衣。将军是清白的。',choices:[
+    if(f.act==='spy'){if(!facts.guilty)return {text:'监军回报：将军扩饷，是为补足边仓转运受阻后的急需；与北狄互市，换的是过冬的棉衣。将军是清白的。',choices:[
         {t:'补发欠饷，嘉奖将军',f:()=>{aEnd(c,'清白','监军查明父亲清白，陛下补发边军欠饷。她跪谢天恩。');return fx(chg({treasury:-120,prestige:4}),cchg(c,{aff:18,mood:15}))}}]};
       return {text:'监军回报：将军确有不臣之心，已暗中联络北狄，约定秋后起事。',choices:[{t:'先下手为强，调兵北上',f:()=>{aNext(c,3,0,0);return '大军北上。'}}]}}
-    if(!facts.guilty){aEnd(c,'相安','此后数年，北境平静无事，父亲再未让她忧心。');return {text:'北境这几年出奇地安静。',choices:[ok1]}}
+    if(!facts.guilty){aEnd(c,'相安','这次边关往来暂告平静，父亲依例报明军需。');return {text:'随后送来的边报暂告平安，将军列明军需，依例听候调遣。',choices:[ok1]}}
     return {text:`北境急报：${cName(c)}之父以“清君侧”为名起兵南下！`,choices:[{t:'调兵平叛',f:()=>{aNext(c,3,0,0);return fx(chg({prestige:-6,people:-4}))}}]}},
   (c,f)=>({text:`叛军已至宣府。${cName(c)}脱簪跪在雪地里：“家父罪该万死。臣妾愿替父受死，只求陛下饶过我母亲和幼弟。”`,choices:[
     {t:'让她修书劝降',cond:()=>c.aff>=55,why:'情分不足（需55）',f:()=>{aEnd(c,'大义','她写了一封血书。三日后，父亲单骑入营请罪，叛乱不战而平。');c.mood=clamp(c.mood-20);return fx(chg({prestige:8,people:4}),cchg(c,{aff:15}))}},
