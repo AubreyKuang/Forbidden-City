@@ -697,3 +697,25 @@ button.family-room-person{cursor:pointer}button.family-room-person:hover{color:#
 @media(max-width:600px){.marriage-panel{flex-direction:row;flex-wrap:wrap}.marriage-panel>.grow{flex:1;min-width:130px}.household-panel{padding:14px}.character-voice{padding:10px 12px}}
 
 .event-jewelry{float:right;margin:0 0 10px 16px;text-align:center;font-size:12px;color:var(--muted)}
+
+/* Visual-novel selection and the quiet court at Qin'an Hall. */
+.selection-audience{padding:20px;color:#fff1d8;background-size:cover;overflow:hidden}
+.selection-audience header,.selection-audience footer{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.selection-audience header p{margin:2px 0;color:#e9d6b9}
+.audience-body{display:grid;grid-template-columns:minmax(140px,210px) 1fr;gap:18px;align-items:end;margin-top:14px}
+.audience-portrait .por{width:100%;height:auto;display:block;background:none;border:0;border-radius:0}
+.audience-dialogue{background:#271f1bdd;border:1px solid #b7996b77;border-radius:8px;padding:16px;line-height:1.9;align-self:center}
+.audience-dialogue blockquote,.dao-master blockquote{margin:12px 0;border-left:2px solid #b59c73;padding-left:14px;font-size:17px}
+.selection-audience .hint{color:#dfccad}
+.selection-audience footer{border-top:1px solid #d2b68b66;margin-top:16px;padding-top:10px}
+.selection-audience .btn.gold{background:#eac080;color:#35261b}
+.dao-hall{padding:18px;border-radius:10px;background:linear-gradient(120deg,#e6e9df,#d9e1da 55%,#c7d3cc);color:#2b433d}
+.dao-hall header>p{letter-spacing:3px;color:#62766d}
+.dao-master{display:grid;grid-template-columns:minmax(140px,190px) 1fr;gap:20px;align-items:center}
+.court-special-portrait{background:none!important;border:0!important;border-radius:0!important;image-rendering:auto!important;flex:none}
+.dao-master .por{width:100%;height:auto;max-width:190px}
+.dao-master .hint{color:#52675c}
+#modal[data-scene="dao-coast"]{background:linear-gradient(#adcbd8dd,#e3e8dfdd 48%,#608f9fe8 49%,#335d76e8)}
+@media(max-width:600px){.selection-audience{padding:12px}.audience-body{grid-template-columns:110px 1fr;gap:10px}.audience-dialogue{padding:11px;font-size:13px}.audience-dialogue blockquote{font-size:15px}.selection-audience footer{align-items:flex-start;flex-direction:column}.dao-master{grid-template-columns:100px 1fr;gap:12px}.dao-master blockquote{font-size:15px}.dao-hall{padding:12px}}
+
+#panel .selection-audience h2{color:#ffedc9;text-shadow:0 2px 9px #241c15;margin:6px 0 14px}

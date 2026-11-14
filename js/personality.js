@@ -139,7 +139,7 @@ function deepLine(c){deepen(c);if(c.wish==='title'&&c.title&&!c.wishDone){c.wish
   <div>平日消遣：<span class="tag">${esc(c.hobby)}</span></div>
   <div>心愿：${c.wishKnown?`${esc(w.t)}${c.wishDone?' <span class="tag y">已成全</span>':w.btn?` <button class="btn sm jade" onclick="A.wish(${c.id})" ${inPalace(c)?'':'disabled'}>${esc(w.btn)}</button>`:' <span class="hint">（生下孩子便成全了）</span>'}`:'<span class="hint">情分到 50 以后，闲谈时她也许会说</span>'}</div>
   ${c.woundKnown?`<div>往事：${esc(WOUNDS[c.wound])}</div>`:'<div class="hint">往事：情分到 65 以后，她也许会对你说起</div>'}`}
-A.chat=function(id,fromEvent=false){const c=byId(id);if((modalOpen&&!fromEvent)||!inPalace(c))return;const arrival=kinArrivalGreeting(c);if(arrival){(fromEvent?pushNow:pushEv)(arrival);return;}if(!useE())return;deepen(c);const L=[];const xk=xinOf(c),opening=consortVoicePhase(c)==='first';
+A.chat=function(id,fromEvent=false){const c=byId(id);if((modalOpen&&!fromEvent)||!inPalace(c))return;const arrival=kinArrivalGreeting(c)||newcomerWelcomeEvent(c);if(arrival){(fromEvent?pushNow:pushEv)(arrival);return;}if(!useE())return;deepen(c);const L=[];const xk=xinOf(c),opening=consortVoicePhase(c)==='first';
   const voice=characterVoice(c,'talk');L.push(voice.stage);L.push(`“${voice.text}”`);
   if(!opening&&S.flags.lastCourt&&(c.t2==='好读史'||c.t2==='直言')&&chance(.6))L.push(c.t2==='好读史'?`她听说了「${S.flags.lastCourt}」的事。${HISTC[S.flags.lastCourt]||'她说：“以史为镜，可以知兴替。”'}`:`她听说了「${S.flags.lastCourt}」的事，直截了当地说：“陛下那样处置，${pick(['臣妾觉得不妥。','臣妾觉得极好。','怕是要挨骂的。'])}”`);
   const others=harem().filter(o=>o!==c).map(o=>[o,relGet(c,o)]),fr=others.filter(x=>x[1]>=30),en=others.filter(x=>x[1]<=-30);

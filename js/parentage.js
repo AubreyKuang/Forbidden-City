@@ -35,7 +35,7 @@ function parentageReady(k){
 function knownBiologicalFather(k){return !!(k.parentage&&['confirmed','resolved'].includes(k.parentage.status));}
 function childFatherHTML(k){
   const f=k.birthTraits?.father;if(!f)return '未记载';
-  if(!k.parentage)return esc(f.name);
+  if(!k.parentage||k.parentage.decision==='cleared')return esc(f.name);
   if(k.parentage.status==='hidden')return esc(k.parentage.claimedFather||E().sur+E().name);
   if(!knownBiologicalFather(k))return '待查证';
   const father=kidById(k.parentage.father.id);
@@ -50,7 +50,7 @@ function parentagePanel(k){
     ${parentageReady(k)?`<button class="btn jade" onclick="A.parentageInquiry(${k.id})" ${wait?'disabled':''}>${p.status==='suspected'?'查验身世':p.status==='investigating'?'听取查证回奏':'决定如何安置'}</button>`:''}`;
 }
 function consortParentagePanel(c){
-  const children=S.children.filter(k=>k.mom===c.id&&k.parentage&&k.parentage.status!=='hidden');
+  const children=S.children.filter(k=>(k.mom===c.id||k.foster===c.id||k.birthSwap?.claimedMother===c.id)&&k.parentage&&k.parentage.status!=='hidden');
   return children.map(k=>`<div><button class="person-link" onclick="A.go('kid',${k.id})">${esc(k.name)}</button>${parentagePanel(k)}</div>`).join('');
 }
 function beginParentageInquiry(k){
@@ -77,6 +77,7 @@ function parentageInquiryEvent(k){
 }
 function parentageVerdictEvent(k){
   if(!parentageReady(k)||!['investigating','confirmed'].includes(k.parentage.status)||S.turn<(k.parentage.due??0))return null;
+  if(k.birthSwap)return birthSwapVerdictEvent(k);
   const p=k.parentage,m=byId(k.mom),father=kidById(p.father.id);
   if(p.father.kind==='emperor')return parentageClearEvent(k);
   return {title:'身世查证',cast:[m,father,k],valid:()=>parentageReady(k)&&!p.decision,
@@ -156,7 +157,7 @@ function captureBirthCalendar(k){
   k.birthCalendar={...calendar,nights:[...calendar.nights],born:S.turn,term:c.preg};
 }
 function parentageClueCandidates(){
-  return S.children.filter(k=>k.alive&&!k.pendingName&&kidAge(k)<6&&!k.removedFromRoyal&&!k.jailed&&!k.parentageClueSeen&&
+  return S.children.filter(k=>k.alive&&!k.birthSwap&&!k.pendingName&&kidAge(k)<6&&!k.removedFromRoyal&&!k.jailed&&!k.parentageClueSeen&&
     (!k.parentage||k.parentage.status==='hidden')&&k.birthTraits?.father&&inPalace(byId(k.mom)));
 }
 function parentageClueEvent(){

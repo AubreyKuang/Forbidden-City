@@ -1,5 +1,5 @@
 /* ============ 选秀 ============ */
-function genCands(n=6){S.cands=[];for(let i=0;i<n;i++)S.cands.push(makeGirl());{const kc=harem().filter(c=>c.fam.p>=15&&hasClan(c));if(kc.length&&chance(.4))S.cands[0]=makeKin(pick(kc),chance(.6)?'堂':'亲')}S.cands.forEach(deepen);S.flags.peek=3;S.flags.lastXX=S.turn;log(`${dateStr()}，开选秀，各地秀女入宫待选。`,1)}
+function genCands(n=6){S.cands=[];for(let i=0;i<n;i++)S.cands.push(makeGirl());{const kc=harem().filter(c=>c.fam.p>=15&&hasClan(c));if(kc.length&&chance(.4))S.cands[0]=makeKin(pick(kc),chance(.6)?'堂':'亲')}S.cands.forEach(deepen);S.selection={phase:'audience',current:S.cands[0]?.id,performed:[]};S.flags.peek=3;S.flags.lastXX=S.turn;log(`${dateStr()}，开选秀，各地秀女入宫待选。`,1)}
 A.xxDecree=function(){
   const since=S.turn-S.flags.lastXX;
   if(since>=36){genCands();AU.sfx('chime');A.go('xx');return}
@@ -11,13 +11,14 @@ A.xxDrop=function(id){S.cands=S.cands.filter(x=>x.id!==id);AU.sfx('click');rende
 A.xxTake=function(id){const c=S.cands.find(x=>x.id===id);if(!c)return;
   const ch=[0,1,2,3].map(r=>({t:`封为${RANKS[r]}`,f:()=>take(r)}));
   if(c.fam.p>=70) ch.push({t:'封为嫔（世家之女，可破格）',cond:()=>rankCount(4)<RANK_CAP[4],why:'嫔位已满',f:()=>take(4)});
-  function take(r){S.cands=S.cands.filter(x=>x!==c);addConsort(c,r,`${dateStr()}选秀入宫`);let s='';
+  function take(r){if(!S.cands.some(x=>x.id===c.id)||S.consorts.some(x=>x.id===c.id)||rankCount(r)>=RANK_CAP[r])return null;S.cands=S.cands.filter(x=>x!==c);addConsort(c,r,`${dateStr()}选秀入宫`);let s='';
     if(r>=3&&c.fam.p>=60)s=chg({prestige:2});
     if(r>=4&&!c.title)c.title=pick(TITLES.filter(t=>!harem().some(x=>x.title===t)));
-    AU.sfx('joy');return `${fullName(c)}叩首谢恩，入住${c.palace}。${fx(s)}`}
+    c.entryAdjustment={turn:S.turn,manner:entryManner(c),settled:false};pushNow(newcomerWelcomeEvent(c));save('auto');
+ AU.sfx('joy');return `${fullName(c)}叩首谢恩，入住${c.palace}。${fx(s)}`}
   pushEv({title:'留牌子',por:c,text:`${fullName(c)}，年方${c.age}，${c.fam.t}之女。\n陛下欲赐何等位分？`,choices:[...ch,{t:'再想想'}]});
 };
-A.xxEnd=function(){S.cands=[];log('选秀礼毕。');A.go('harem')};
+A.xxEnd=function(){S.cands=[];delete S.selection;log('选秀礼毕。');A.go('harem')};
 
 /* ============ 后宫事件 ============ */
 function punishEv(A_,B,crime){

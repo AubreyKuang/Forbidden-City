@@ -73,8 +73,8 @@ const HIST=[
    {t:'“画像就是画像。”',f:()=>'你翻过了那一页。'}]}},
  ()=>{const c=harem().find(c=>c.preg>=8&&!c.prot&&!c.swapAsked);if(!c)return null;const a=harem().find(x=>x!==c&&x.scheme>=70);if(!a)return null;
    return {title:'产房',present:[c,a],ref:'狸猫换太子（宋·民间传说）',por:c,text:`${cName(c)}临盆在即。一个小宫女半夜偷偷来报：她看见${cName(a)}宫里的掌事太监和稳婆说了很久的话，还塞了一包东西。`,choices:[
-   {t:'换上心腹稳婆，加派人手守产房',f:()=>{c.swapAsked=true;c.prot=true;return '产房外多了八个带刀的侍卫。'}},
-   {t:'小宫女胡言乱语',f:()=>{c.swapAsked=true;c.swapRisk=true;return '你没放在心上。'}}]}},
+   {t:'换上心腹稳婆，加派人手守产房',f:()=>{return planBirthSwap(c,a,true)}},
+   {t:'小宫女胡言乱语',f:()=>{return planBirthSwap(c,a,false)}}]}},
  ()=>{const lost=S.children.find(k=>k.lost&&S.turn-k.born>=60);if(!lost||!chance(.25))return null;return {title:'陈州少年',ref:'狸猫换太子·认母（宋·民间传说）',text:`开封府送来一个少年，说他是当年产房里被宫女寇珠藏在妆盒里、偷偷送出宫的那个孩子，在陈州一户人家长大。他手里有一块刻着生辰的玉锁。`,choices:[
    {t:'认回皇子',f:()=>{lost.lost=false;lost.alive=true;kstory(lost,'流落民间多年，终于被认回宫中。');log(`流落民间的${kidName(lost)}被认回宫中。`,1);const m=byId(lost.mom);if(m&&m.alive){if(m.cold){m.cold=false;assignPalace(m)}cchg(m,{mood:50,aff:20});story(m,'失散多年的孩子回来了。她抱着孩子，哭得说不出话。')}AU.sfx('joy');return fx(chg({people:5}))}},
    {t:'恐是冒认，赏他银两打发走',f:()=>{lost.lost=false;return '少年走了。后来再也没有人提起他。'}}]}},

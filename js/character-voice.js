@@ -100,9 +100,9 @@ function consortVoicePool(c){
   const concern=motherConcernVoice(c);if(concern&&(c.childConcern?.value??35)>=30)return [concern];
   if(['怨恨','惶恐'].includes(x)||(c.aff<20&&consortVoicePhase(c)!=='first'))return [voiceLine('distance','她行过礼，仍立在一步之外。',['臣妾听着。只是有些话，还不知该从哪里说起。','陛下肯来，臣妾领情。只是心里的结，不是一句话就能解开的。'])];
   if(c.hp<40)return [voiceLine('ill','她将话说得很慢。',['今日精神短些，陛下别怪臣妾招呼不周。','臣妾想歇一歇。等好些了，再把没说完的话接上。'])];
-  const years=consortYearsVoice(c),phase=consortVoicePhase(c);
+  const years=newcomerVoice(c)||consortYearsVoice(c),phase=consortVoicePhase(c);
   if(phase==='distant')return [years];
-  const pool=[years];
+  const pool=[years];const spiritual=daoLifeVoice(c);if(spiritual)pool.push(spiritual);
   if(phase!=='first')pool.push(voiceLine('trait',phase==='years'?'说着说着，她又露出你熟悉的性情。':'她试着把自己的意思说得更明白。',CONSORT_VOICES[c.trait]||CONSORT_VOICES.温婉));
   if(c.preg>=2)pool.push(voiceLine('pregnant','她轻拢衣襟，话里多了一分牵挂。',c.trait==='骄纵'&&c.favor>=65?['如今走得慢，陛下便也慢些。臣妾想要的照应，可不只是送几碟点心。','臣妾知道该惜身，可也不想日日闷着。陛下陪臣妾走到廊下，好不好？']:['小衣裳不用添得太急。臣妾盼的，只是平平安安等到那一日。','近来总会多想些。陛下坐在这里，臣妾便觉得心里稳妥。']));
   if(c.mood<35)pool.push(voiceLine('low','她望了一眼窗外，收回了目光。',['今日没什么精神，倒也不是要紧的事。陛下陪臣妾坐坐便好。','有时想说几句，又怕扫人的兴。陛下今日，可愿耐心听听？']));
@@ -141,6 +141,7 @@ function childVoicePool(k){
   if(a<6)return [voiceLine('little',`${who}仰起脸，话说得很认真。`,['父皇，你蹲下来一点，我有个秘密要说。','这片叶子像小船。我想留着，你别叫人扫走。','我会自己做了。你先看着，等我说帮忙再帮，好不好？'])];
   if(k.love<25)return [voiceLine('distant',`${who}行了礼，仍有些拘谨。`,a<12?'父皇想听功课，还是……我自己的事？':`${self}不知父皇今日想问什么。若肯听，也有几句自己的话想说。`)];
   const stat=k.mar>k.lit&&k.mar>k.vir?'mar':k.lit>=k.vir?'lit':'vir';
+  const spiritual=daoLifeVoice(k);if(spiritual)return [spiritual];
   const young={
     mar:['父皇，我想再试一次。这回不比谁赢，只看看自己能不能做得好些。','总叫我坐端正，可我一想到外头的马，脚就想动。'],
     lit:['父皇，书上的人怎么知道自己做的是对的？他们也会拿不定主意吗？','这个字我会写了，可意思还不大懂。你能慢慢说给我听吗？'],

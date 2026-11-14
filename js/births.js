@@ -26,7 +26,7 @@ function birthEvent(c){
   const children=sexes.map(sex=>makeKid(c,sex,suggestName(sex)));
   delete c.pregnancyFather;delete c.pregnancyCalendar;
   c.delivery={children:children.map(k=>k.id),kind,omen,settled:false,
-    difficult:chance(c.trait==='体弱'?.12:.03),swap:!!c.swapRisk&&chance(.7),templeAdvice:rollBirthTempleAdvice(children,omen)};
+    difficult:chance(c.trait==='体弱'?.12:.03),swap:!!c.swapRisk&&!c.swapPlot&&chance(.7),templeAdvice:rollBirthTempleAdvice(children,omen)};
   c.preg=0;c.prot=false;c.swapRisk=false;c.lastBirth=S.turn+1;
   children.forEach((k,i)=>{
     k.pendingName=true;k.birthOrder=i+1;
@@ -34,6 +34,7 @@ function birthEvent(c){
     kstory(k,`降生于${c.palace}，生母${k.momName}${kind?`，为${kind}中第${cnNum(i+1)}个出生的孩子`:''}。`);
     if(omen)applyBirthOmen(k,omen);
   });
+  settleBirthSwap(c,children[0]);
   return birthNamingEvent(c);
 }
 function birthNamingEvent(c){

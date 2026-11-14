@@ -1,6 +1,7 @@
 /* Saved journeys, care arrangements and mothers' concern for children living away. */
 function childWhereabouts(k){
   if(k.templeStay)return '护国寺';
+  if(k.birthSwap?.occurred&&k.parentage?.decision==='family')return '宫外亲生父母家';
   if(k.parentage?.decision==='household')return '生父皇子府';
   if(k.jailed)return '宗人府';
   if(k.princessMarriage==='frontier')return '北境';

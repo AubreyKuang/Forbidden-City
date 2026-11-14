@@ -6,6 +6,7 @@ const PLACES=[
  {id:'qq',n:'乾清宫',r:[80,68,40,11],d:[100,82],k:'view',v:'home',sc:'court'},
  {id:'kn',n:'坤宁宫',r:[82,50,36,11],d:[100,64],k:'palace',p:'坤宁宫',sc:'harem'},
  {id:'cj',n:'宸极殿',r:[78,86,44,12],d:[100,100],k:'place',sc:'court'},
+ {id:'qa',n:'钦安殿',r:[91,12,18,11],d:[100,24],k:'place',sc:'garden'},
  {id:'yh',n:'御花园',r:[58,12,84,30],d:[100,46],k:'place',sc:'garden'},
  {id:'sw',n:'神武门',r:[90,2,20,6],d:[100,9],k:'view',v:'out',sc:'city'},
  {id:'wm',n:'午门',r:[90,119,20,7],d:[100,117],k:'view',v:'out',sc:'court'},
@@ -30,9 +31,10 @@ function planPath(sx,sy,tx,ty){const pts=[];let x=sx,y=sy;
   pts.push([vx,y],[vx,ty],[tx,ty]);return pts}
 function stepTo(n,sp){const [tx,ty]=n.path[0],dx=tx-n.x,dy=ty-n.y,d=Math.hypot(dx,dy);if(d<=sp){n.x=tx;n.y=ty;n.path.shift();return !n.path.length}n.x+=dx/d*sp;n.y+=dy/d*sp;return false}
 function npcHome(c){const pl=PLACES.find(p=>p.k==='palace'&&p.p===c.palace);return pl?pl.d:[100,64]}
-function npcSync(){const ids=new Set();alive().filter(c=>!c.maid).forEach(c=>{ids.add(c.id);if(!NPC.has(c.id)){const h=c.cold?[23,46]:npcHome(c);NPC.set(c.id,{x:h[0],y:h[1],path:[],wait:ri(5,60),ox:ri(-3,3),where:'home'})}});[...NPC.keys()].forEach(id=>{if(!ids.has(id))NPC.delete(id)})}
+function npcSync(){const ids=new Set();alive().filter(c=>!c.maid&&(inPalace(c)||c.cold)).forEach(c=>{ids.add(c.id);if(!NPC.has(c.id)){const h=c.cold?[23,46]:npcHome(c);NPC.set(c.id,{x:h[0],y:h[1],path:[],wait:ri(5,60),ox:ri(-3,3),where:'home'})}});[...NPC.keys()].forEach(id=>{if(!ids.has(id))NPC.delete(id)})}
 function npcRoutine(c,roll) {
   const home=npcHome(c);
+  if(daoVisitors().includes(c))return {where:'dao',dest:[100,24]};
   const hobby=consortHobby(c);
   const gardenBias=['活泼','淡泊'].includes(c.trait)||c.t2==='爱猫'||CONSORT_HOBBIES[hobby].place==='御花园';
   const studyBias=['才女','好学'].includes(c.trait)||c.t2==='好读史'||hobby==='读书';
@@ -62,6 +64,7 @@ function npcStep(){npcSync();for(const [id,n] of NPC){const c=byId(id);if(!c)con
 
 function npcRoutineText(c,n) {
   if(!n)return '在宫道上停下脚步，向你行了一礼';
+  if(n.where==='dao')return n.path.length?'沿花园小径，往钦安殿听讲去':'在钦安殿廊下翻阅经卷';
   if(n.where==='library')return n.path.length?'抱着旧抄本，正往文渊阁去':'在文渊阁门前等宫人取来借阅的书';
   if(n.where==='visit'){
     const friend=byId(n.guest);
@@ -224,7 +227,7 @@ function drawMapTerrain(s){
     if(p.id==='yh')continue;
     const [x,y,w,h]=p.r;
     const cell=p.id==='cj'?0:p.id==='qq'||p.id==='kn'||p.id==='cn'?1:
-      ['wy','ss'].includes(p.id)?2:['sw','wm'].includes(p.id)?4:3;
+      ['wy','ss','qa'].includes(p.id)?2:['sw','wm'].includes(p.id)?4:3;
     if(cell!==4){
       M(x-.5,y+.5,w+1,h+1,'#60493644');
       mapPaving(x,y+h-2,w,3,paving);
@@ -429,10 +432,11 @@ function viewPalace(){const name=UI.sel,res=name==='冷宫'?alive().filter(c=>c.
   const count=res.length?(name==='冷宫'?`<p class="hint">冷宫里关着 ${res.length} 人。</p>`:`<p class="hint">住着 ${res.length} 位妃嫔。</p>`):'';
   return `<h2>${esc(name)}${backBtn}</h2><p class="hint">${note}</p>${extra}${palaceRomanceAt(initiativePlace(null,null,{place:'p'+name}))}${palaceLifePanel(name)}${initiativesAt(initiativePlace(null,null,{place:'p'+name}))}${count}${res.length?`<div class="grid">${res.map(consortCard).join('')}</div>`:'<p class="hint">此处暂无人居住。</p>'}`}
 function viewPlace(){const id=UI.sel;
+  if(id==='qa')return viewDaoHall();
   if(id==='cj')return `<h2>宸极殿${backBtn}</h2><p>文武百官已在丹墀下候着。</p><div class="acts"><button class="btn gold" onclick="A.court()">查看本月奏折</button></div>`;
   if(id==='yh'){const here=[...NPC].filter(([i,n])=>n.where==='garden'&&!n.path.length).map(([i])=>byId(i)).filter(c=>inPalace(c)&&c.id!==gardenFamilyMoment()?.mother&&
       !initiativeMapScenes().some(scene=>scene.visitors.includes(c))&&!palaceRomanceLeads().some(lead=>lead.place==='yh'&&lead.cast.includes(c)));
-    return `<h2>御花园${backBtn}</h2><p>${['桃花开得正好，蜂蝶纷飞。','荷风送香，蝉鸣阵阵。','丹桂飘香，满地金黄。','红梅映雪，暗香浮动。'][season()]}</p><div class="acts"><button class="btn" onclick="A.out('garden')">园中漫步<small>精力-1</small></button>${banquetReady()?`<button class="btn gold" onclick="A.openBanquet()">筹办小宴</button>`:'<span class="hint">小宴每三个月可办一次</span>'}</div>${birthdayBanquetButtons()}${gardenFamilyNotice()}${palaceRomanceAt('yh')}${seasonalPlacePanel('yh')}${duanwuPanel()}${initiativesAt('yh')}${here.length?`<h3>园中的人</h3><div class="grid">${here.map(c=>`<button class="card" onclick="meetConsort(byId(${c.id}))">${porImg(c,48)}<div class="grow"><div class="nm">${esc(cName(c))}</div><div>${esc(npcRoutineText(c,NPC.get(c.id)))}</div></div></button>`).join('')}</div>`:'<p class="hint">园中没有其他闲游的人。</p>'}`}
+    return `<h2>御花园${backBtn}</h2><p>${['桃花开得正好，蜂蝶纷飞。','荷风送香，蝉鸣阵阵。','丹桂飘香，满地金黄。','红梅映雪，暗香浮动。'][season()]}</p><div class="acts"><button class="btn jade" onclick="A.go('place','qa')">钦安殿问道</button><button class="btn" onclick="A.out('garden')">园中漫步<small>精力-1</small></button>${banquetReady()?`<button class="btn gold" onclick="A.openBanquet()">筹办小宴</button>`:'<span class="hint">小宴每三个月可办一次</span>'}</div>${birthdayBanquetButtons()}${gardenFamilyNotice()}${palaceRomanceAt('yh')}${seasonalPlacePanel('yh')}${duanwuPanel()}${initiativesAt('yh')}${here.length?`<h3>园中的人</h3><div class="grid">${here.map(c=>`<button class="card" onclick="meetConsort(byId(${c.id}))">${porImg(c,48)}<div class="grow"><div class="nm">${esc(cName(c))}</div><div>${esc(npcRoutineText(c,NPC.get(c.id)))}</div></div></button>`).join('')}</div>`:'<p class="hint">园中没有其他闲游的人。</p>'}`}
   if(id==='ss'||id==='wy'){
     const school=id==='ss';
     return `<h2>${school?'上书房':'文渊阁'}${backBtn}</h2>

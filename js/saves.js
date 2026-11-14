@@ -186,6 +186,7 @@ function showRestoredPalace(){
   $('#modal').close?.();
   $('#modal').hidden=true;
   UI.view='map';UI.banquet=null;setScene('court');render();
+  const voyage=pendingDaoVoyage();if(voyage)pushEv(voyage);
 }
 A.save=function(slot){if(save(slot)){toast('已存档');AU.sfx('chime')}else toast(palaceSaveError(slot));render()};
 A.load=function(slot){

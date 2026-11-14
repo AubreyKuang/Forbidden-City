@@ -344,7 +344,9 @@ function localPortrait(cell,rank,attrs,jewelry=''){
 }
 
 function porImg(x,size=64){
+  if(Number.isInteger(x?.courtCraneCell))return courtSpecialPortrait(x,size);
   if(x?.appearance)x=x.appearance;
+  if(x?.daoMaster||Number.isInteger(x?.courtCraneCell))return courtSpecialPortrait(x,size);
   const cold=x&&x.cold, dead=x&&x.alive===false;
   const cell=portraitCell(x),rank=x!=='emp'&&!x.sex&&!x.isMom&&!x.maid&&!cold&&x.rank===8?8:0;
   const jewelry=!cold?jewelryWorn(x):'';
@@ -355,4 +357,11 @@ function porImg(x,size=64){
   const src=portraitAtlasReady(cell,rank,jewelry)?atlasPortrait(cell,rank,jewelry):portraitAtlasReady(cell,rank)?atlasPortrait(cell,rank):portrait(porSpec(x));
   return `<img ${attrs} alt="" src="${src}">`;
 }
-function porName(x){ if(x?.courtGuest)return x.name+' · '+kidAge(x)+'岁'; if(x&&x.isMom) return x.name; if(x&&x.sur&&!x.sex&&S&&!S.consorts.includes(x)) return fullName(x); if(x==='emp') return `${E().sur}${E().name}`; if(x.sex) return kidName(x); return cName(x)}
+function porName(x){ if(Number.isInteger(x?.courtCraneCell))return x.name; if(x?.daoMaster)return x.name+'国师'; if(x?.courtGuest)return x.name+' · '+kidAge(x)+'岁'; if(x&&x.isMom) return x.name; if(x&&x.sur&&!x.sex&&S&&!S.consorts.includes(x)) return fullName(x); if(x==='emp') return `${E().sur}${E().name}`; if(x.sex) return kidName(x); return cName(x)}
+
+function courtSpecialPortrait(person,size=64){
+  const master=!!person.daoMaster,cell=master?person.cell:person.courtCraneCell;
+  const name=master?person.name+'国师':person.name||'宫中来客';
+  const src='./assets/images/'+(master?'palace-daoist-portraits.png':'palace-court-crane-portraits.png');
+  return `<svg class="por palace-portrait court-special-portrait" role="img" aria-label="${esc(name)}" width="${size}" height="${size*1.25}" viewBox="${cell%2*561} ${Math.floor(cell/2)*701} 561 701" overflow="hidden"><image href="${src}" width="1122" height="1402"/></svg>`;
+}
