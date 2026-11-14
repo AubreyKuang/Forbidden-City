@@ -5,7 +5,7 @@ Object.assign(INITIATIVE_SOURCES,{
   grass:'https://www.dpm.org.cn/collection/paint/232619.html',
   clearTea:'https://www.dpm.org.cn/lemmas/241642.html'
 });
-const pastimePartner=(c,test=()=>true)=>harem().filter(o=>o!==c&&relGet(c,o)>=0&&test(o)).sort((a,b)=>relGet(c,b)-relGet(c,a))[0];
+const pastimePartner=(c,test=()=>true)=>harem().filter(o=>o!==c&&socialPair(c,o)&&relGet(c,o)>=0&&test(o)).sort((a,b)=>relGet(c,b)-relGet(c,a))[0];
 Object.assign(PALACE_INITIATIVES,{
   silkwormLessons:{
     title:'春蚕试养',place:'kn',seasonal:true,source:'sericulture',ref:'取意皇后亲蚕礼；此处为日常试养的游戏改编',

@@ -1,5 +1,6 @@
 /* Personality stays visible under strain; ordinary time also leaves shared memories. */
 function companionStyle(c){
+  if(isSolitary(c))return 'reserved';
   if(['骄纵','骄矜','善妒'].includes(c.trait))return 'proud';
   if(['城府','聪慧','持重'].includes(c.trait))return 'reserved';
   if(['将门','爽直'].includes(c.trait))return 'direct';

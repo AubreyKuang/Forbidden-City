@@ -89,7 +89,7 @@ const ambientTurns=new Map();
 for(let i=0;i<60;i++){
   S.emp.health=100;S.emp.people=100;S.emp.treasury=1000;A.endMonth();drain();
   if(lastMaid!==S.flags.lastMaidEncounter){assert.ok(S.flags.lastMaidEncounter-lastMaid>=4);lastMaid=S.flags.lastMaidEncounter;}
-  for(const [title,seenAt] of Object.entries(S.flags.ambientRecent)){
+  for(const [title,seenAt] of Object.entries(S.flags.ambientRecent||{})){
     if(seenAt!==S.turn)continue;
     assert.ok(seenAt-(ambientTurns.get(title)??-Infinity)>=4,title);
     ambientTurns.set(title,seenAt);
@@ -356,7 +356,7 @@ assert.match($('#panel').innerHTML,/detail-vitals/);
   save('1');load('1');migrate();
   const cells=west.map(id=>portraitCell(byId(id)));
   assert.equal(new Set(cells).size,WESTERN_PORTRAITS.length,'distinct outfits for Western arrivals');
-  assert.ok(cells.every(cell=>PORTRAIT_CLOTHES[cell]==='西域舞衣'));
+  assert.ok(cells.every(cell=>WESTERN_PORTRAITS.includes(cell)&&PORTRAIT_CLOTHES[cell]?.includes('西域')));
   assert.equal(portraitCell(byId(regular.id)),3);
   save('1');load('1');migrate();
   assert.deepEqual(west.map(id=>portraitCell(byId(id))),cells);

@@ -27,7 +27,7 @@ const ARCS={
     {t:'让她修书劝降',cond:()=>c.aff>=55,why:'情分不足（需55）',f:()=>{aEnd(c,'大义','她写了一封血书。三日后，父亲单骑入营请罪，叛乱不战而平。');c.mood=clamp(c.mood-20);return fx(chg({prestige:8,people:4}),cchg(c,{aff:15}))}},
     {t:'平叛，只罪其父，不株连她',f:()=>{aEnd(c,'孤女','叛乱平定，父亲伏诛。她保住了位分，却再也没有笑过。');return fx(chg({prestige:4,treasury:-200}),cchg(c,{mood:-50,aff:5}))}},
     {t:'平叛，将她废入冷宫',f:()=>{c.cold=true;c.palace='冷宫';aEnd(c,'连坐','叛乱平定，她以罪臣之女的身份被打入冷宫。');return fx(chg({prestige:5,treasury:-200}),cchg(c,{mood:-60,aff:-30}))}}]})]},
- scholar:{name:'故人诗',fit:c=>c.trait==='才女',stages:[
+ scholar:{name:'故人诗',fit:c=>c.trait==='才女'&&!isSolitary(c),stages:[
   (c,f)=>c.aff<45?null:{text:`今科状元的殿试文章里，引了一句诗：“${f.poem=pick(POEMS)}”\n你记得，这句诗曾写在${cName(c)}送你的花笺上。`,choices:[
     {t:'召她来问个明白',f:()=>{f.asked=1;aNext(c,1,4,7);story(c,'陛下问起她与新科状元的旧事。她坦白入宫前曾与他有过诗书往来。');return `她跪下，坦白入宫前曾与他在诗社相识，有过几回诗书往来。“发乎情，止乎礼，此后再无联系。”${fx(cchg(c,{aff:3}))}`}},
     {t:'不动声色',f:()=>{aNext(c,1,4,7);return '你把那篇文章放在了一边。'}}]},
@@ -103,7 +103,7 @@ const ARCS={
   (c,f)=>({text:'慎刑司审了三天。她承认布防图是她画的——使臣扣着她的母亲，她别无选择。\n“臣妾死不足惜，只求陛下……别杀我娘。”',choices:[
     {t:'饶恕她，出兵救其母（国库-300万两）',f:()=>{aEnd(c,'赎罪','陛下饶恕了她，还派兵救回了她的母亲。她从此死心塌地。');return fx(chg({treasury:-300,prestige:4}),cchg(c,{aff:45,mood:30}))}},
     {t:'打入冷宫',f:()=>{c.cold=true;c.palace='冷宫';aEnd(c,'沙尽','她被打入冷宫。听说她的母亲死在了那年冬天。');return fx(chg({prestige:3}),cchg(c,{mood:-60,aff:-30}))}}]})]},
- ambition:{name:'凤位',fit:c=>c.rank!==8&&(c.trait==='城府'||c.scheme>=78),stages:[
+ ambition:{name:'凤位',fit:c=>!isSolitary(c)&&c.rank!==8&&(c.trait==='城府'||c.scheme>=78),stages:[
   (c,f)=>c.rank===8?(aEnd(c,'凤仪','她已登上后位，母仪天下。'),{text:`${cName(c)}如今已是中宫。`,choices:[ok1]}):c.rank<3?null:{text:`你注意到，内务府总管与坤宁宫的掌事姑姑近来常常出入${c.palace}。`,choices:[
     {t:'敲打她几句',f:()=>{f.w=1;c.scheme=clamp(c.scheme-8);aNext(c,1,4,8);return fx(cchg(c,{mood:-10}))}},
     {t:'静观其变',f:()=>{aNext(c,1,3,6);return '你什么也没说。'}},
@@ -120,7 +120,7 @@ const ARCS={
     if(c.rank===8){aEnd(c,'凤仪','步步为营，终登后位。');return {text:`${cName(c)}如今已是中宫。`,choices:[ok1]}}
     return {text:`中宫空悬。${cName(c)}一身素服跪在乾清宫外：“臣妾愿为陛下打理六宫。”`,choices:[
       {t:'立她为后',cond:()=>c.rank>=5,why:'位分不足（需妃位以上）',f:()=>{c.rank=8;assignPalace(c);aEnd(c,'凤仪','步步为营，终登后位。');log(`册${fullName(c)}为皇后。`,1);return fx(chg({prestige:2}),cchg(c,{aff:15,mood:30}))}},
-      {t:'晋她为皇贵妃，代掌凤印',cond:()=>rankCount(7)<1&&c.rank<7,why:'皇贵妃位已满',f:()=>{c.rank=7;if(!c.title)c.title=pick(TITLES);aEnd(c,'摄六宫','以皇贵妃之尊代掌凤印，离后位只差一步。');return fx(cchg(c,{aff:8,mood:15}))}},
+      {t:'晋她为皇贵妃，代掌凤印',cond:()=>rankCount(7)<1&&c.rank<7,why:'皇贵妃位已满',f:()=>{c.rank=7;if(!c.title)grantConsortTitle(c,pick(TITLES));aEnd(c,'摄六宫','以皇贵妃之尊代掌凤印，离后位只差一步。');return fx(cchg(c,{aff:8,mood:15}))}},
       {t:'拒绝',f:()=>{c.scheme=clamp(c.scheme+10);aEnd(c,'怨怼','求后位不得，她心中的怨恨越积越深。');return fx(cchg(c,{aff:-15,mood:-20}))}}]}}]},
  greed:{name:'金玉其外',fit:c=>c.trait==='贪财'&&!!brotherRole(houseOf(c),p=>officialAlive(p)&&!p.exiled&&!p.dismissed),stages:[
   (c,f)=>({text:`京城里有传言：${cName(c)}的兄长${greedBrother(c)?.name||''}打着“国舅爷”的旗号，在外收受贿赂、包揽词讼。`,choices:[
@@ -132,7 +132,7 @@ const ARCS={
       {t:'抄没充公，流放其兄',f:()=>{aEnd(c,'抄家','兄长被流放，她宫里的珠宝被抄没了一大半。');return fx(chg({treasury:200,people:6}),cchg(c,{mood:-35,aff:-15}))}},
       {t:'令其退赃，不再追究',f:()=>{aEnd(c,'退赃','兄长退还了赃款，此事不了了之。');return fx(chg({treasury:100,people:-2}),cchg(c,{mood:-10,aff:5}))}},
       {t:'压下此案',f:()=>{c.fam.p=Math.min(95,c.fam.p+15);aEnd(c,'外戚','此案被压下，她的娘家越发骄横。');return fx(chg({people:-8,prestige:-3}),cchg(c,{aff:15,mood:10}))}}]}}]},
- kite:{name:'纸鸢',fit:c=>['活泼','骄矜','淡泊','善妒'].includes(c.trait),stages:[
+ kite:{name:'纸鸢',fit:c=>!isSolitary(c)&&['活泼','骄矜','淡泊','善妒'].includes(c.trait),stages:[
   (c,f)=>c.aff<30?null:{text:`御花园里，${cName(c)}放的纸鸢断了线，晃晃悠悠落在了乾清宫的屋脊上。她站在宫墙下，急得直跺脚。`,choices:[
     {t:'命小太监爬上去取',f:()=>{aNext(c,1,2,5);return fx(cchg(c,{mood:8}))}},
     {t:'亲自搭梯子去取',f:()=>{aNext(c,1,2,5);story(c,'纸鸢落在乾清宫屋脊上，陛下亲自搭梯子替她取了下来。');return `御前的太监吓得跪了一地。你把纸鸢递给她时，她笑得比春光还亮。${fx(cchg(c,{aff:10,mood:15}),chg({prestige:-1}))}`}},
@@ -211,7 +211,7 @@ function reconcileScholarArcs(){
   for(const c of remaining)if(c!==owner&&!c.arc.done&&!arcStarted(c))c.arc=makeArc('craft',5+c.id%6);
   // Only replace a reservation that never reached a scene; never transplant old choices.
   if(!owner&&scholars.length){
-    const next=harem().filter(c=>c.trait==='才女'&&(!c.arc||c.arc.id==='craft'&&!c.arc.done&&!arcStarted(c)))
+    const next=harem().filter(c=>ARCS.scholar.fit(c)&&(!c.arc||c.arc.id==='craft'&&!c.arc.done&&!arcStarted(c)))
       .sort((a,b)=>b.aff-a.aff||a.id-b.id)[0];
     if(next){next.arc=makeArc('scholar',8+next.id%5);S.flags.scholarArc=next.id;}
   }

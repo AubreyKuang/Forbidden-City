@@ -1025,7 +1025,7 @@ function militaryMeritEvent(c,place,relative='brother'){
       {t:next<8?`以军功加恩，晋${cName(c)}为${RANKS[next]}`:'位分已不能再晋，改行赏赐',person:c,cond:promotable,
         why:next>=8?'中宫需另行册立，不能因军功直接升后':'该位分名额已满或人物已不在宫',f:()=>{
           if(!promotable())return '眼下不合晋封条件，仍请按原位分论赏。';
-          mark();c.rank=next;if(next>=4&&!c.title)c.title=pick(TITLES.filter(t=>!harem().some(x=>x.title===t)))||'昭';assignPalace(c);
+          mark();c.rank=next;if(next>=4&&!c.title)grantConsortTitle(c,pick(TITLES.filter(t=>!harem().some(x=>x.title===t)))||'昭');assignPalace(c);
           officialRecord(c,relative,`在${place}立功，陛下当场加恩，晋${fullName(c)}为${cName(c)}。`,{emotion:.7});remember(c,'promo',`因${kin}军功晋封`);setXin(c,'欢喜','父兄立功，当场获晋封');clanEcho(c,'up');
           log(`以${officer.name}军功，加恩晋${fullName(c)}为${cName(c)}。`,1);return fx(cchg(c,{mood:20,aff:8,favor:5}),chg({prestige:2}));
         }},

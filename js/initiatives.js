@@ -1,5 +1,5 @@
 /* ============ 人物主动行动 ============ */
-const initiativeAlly=c=>harem().filter(o=>o!==c&&relGet(c,o)>=15)
+const initiativeAlly=c=>harem().filter(o=>o!==c&&socialPair(c,o)&&relGet(c,o)>=15)
   .sort((a,b)=>relGet(c,b)-relGet(c,a)+3*(consortCompatibility(c,b)-consortCompatibility(c,a)))[0];
 const initiativeChild=(c,minAge)=>kidsAlive().find(k=>
   kidAge(k)>=minAge&&childInPalace(k)&&(k.foster===c.id||(!k.foster&&k.mom===c.id)));
@@ -260,6 +260,7 @@ function initiativeParticipants(person,move) {
   if (move.target!=null && !(target?.sex?childInPalace(target):inPalace(target))) return null;
   const rule=PALACE_INITIATIVES[move.id];
   if (!rule) return null;
+  if(target&&!person.sex&&!target.sex&&!socialPair(person,target))return null;
   if (rule.echo && !familyVisitAllowed(person.sex?person:target,person.sex?target:person)) return null;
   return {person,target,rule};
 }

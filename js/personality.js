@@ -68,7 +68,7 @@ const WISHES={
  father:{t:'想为父亲求一个清白名声',btn:'下旨褒奖她父亲（威望-2）',f:c=>{chg({prestige:-2});c.fam.p=Math.min(95,c.fam.p+8);return '圣旨送到她老家，她父亲跪在门口，哭得像个孩子。'}},
  child:{t:'想要一个孩子',btn:null},
  south:{t:'想去江南看一眼',btn:'带她南巡（国库-150万两，龙体-2）',f:c=>{chg({treasury:-150,health:-2,people:2});return '烟雨江南，画舫笙歌。她靠在船舷上说，这辈子值了。'}},
- title:{t:'想要一个属于自己的封号',btn:'赐她封号',cond:c=>!c.title,f:c=>{c.title=pick(TITLES.filter(t=>!harem().some(x=>x.title===t)));return `你赐她「${c.title}」字为号。她把那个字写了一遍又一遍。`}},
+ title:{t:'想要一个属于自己的封号',btn:'赐她封号',cond:c=>!c.title,f:c=>{grantConsortTitle(c,pick(TITLES.filter(t=>!harem().some(x=>x.title===t))));return `你赐她「${c.title}」字为号。她把那个字写了一遍又一遍。`}},
  ride:{t:'想学骑马',btn:'亲自教她骑马（精力-1）',cond:()=>E().energy>0,f:c=>{E().energy--;c.t2='擅骑射';return '她在南苑摔了三回，第四回终于稳稳地跑完一圈，回头冲你笑。'}},
  cat:{t:'想养一只猫',btn:'送她一只狮子猫（国库-2万两）',f:c=>{chg({treasury:-2});c.t2='爱猫';return '雪白的狮子猫一进门就钻进了她怀里。她给它起名叫“团圆”。'}},
  fire:{t:'想看一场烟火',btn:'上元夜放烟火（国库-40万两）',f:c=>{chg({treasury:-40});harem().forEach(o=>o.mood=clamp(o.mood+5));return '火树银花不夜天。她仰着头，烟火映在她眼睛里。'}},
@@ -76,6 +76,7 @@ const WISHES={
  brother:{t:'想为早夭的弟弟立个牌位',btn:'准她在宫中设牌位（国库-5万两）',f:c=>{chg({treasury:-5});return '她在小佛堂里给弟弟上了一炷香，说：“他要是活着，今年该十五了。”'}},
 };
 const WOUNDS={
+ quiet:'从小便习惯独自读书想事。并非受了谁的冷遇，只是觉得一段无人催促的时光，也很值得珍重。',
  mom:'幼年丧母，是继母带大的。她说从那以后，就学会了看人脸色。',
  sister:'在家时处处被嫡姐压一头，连入宫都是替嫡姐来的。',
  engaged:'入宫前曾许过人家，那家公子在她入宫前一个月病死了。',
@@ -109,11 +110,13 @@ const HISTC={
  '开凿运河':'她说隋炀帝开运河，骂名背了千年，可那条河如今还在走船。',
  '文字狱':'她说：“清风不识字，何故乱翻书——为一句诗杀人，诗没了，人心也没了。”',
 };
-const woundOK=(c,w)=>!((w==='scorn'&&c.fam.p>=30)||(w==='fall'&&c.fam.p>=55));
+const woundOK=(c,w)=>w==='quiet'?isSolitary(c):!isSolitary(c)&&!((w==='scorn'&&c.fam.p>=30)||(w==='fall'&&c.fam.p>=55));
 const wishOK=(c,w)=>!(w==='father'&&c.fam.p>=60);
+function grantConsortTitle(c,title){c.title=title;if(title&&c.wish==='title')c.wishDone=true;}
 function deepen(c){if(!c)return;
   if(c.t2===undefined){c.t2=pick(Object.keys(QUIRKS));c.like=pick(LIKES);let h=pick(LIKES);while(h===c.like)h=pick(LIKES);c.hate=h;c.kl=false;
-    c.wish=pick(Object.keys(WISHES).filter(w=>wishOK(c,w)));c.wishKnown=false;c.wishDone=false;c.wound=pick(Object.keys(WOUNDS).filter(w=>woundOK(c,w)));c.woundKnown=false;c.mem=c.mem||[]}
+    c.wish=pick(Object.keys(WISHES).filter(w=>wishOK(c,w)));c.wishKnown=false;c.wishDone=false;c.wound=pick(Object.keys(WOUNDS).filter(w=>woundOK(c,w)));c.woundKnown=false;c.mem=c.mem||[];
+    if(isSolitary(c)){const quirks=['畏寒','念旧','爱猫','好读史','贪睡','直言','怕雷'];c.t2=quirks[(c.seed>>>0)%quirks.length];if(solitaryDao(c)&&c.like==='佛经')c.like='诗书';if(c.hate===c.like)c.hate='珠翠';}}
   if(!woundOK(c,c.wound))c.wound=pick(Object.keys(WOUNDS).filter(w=>woundOK(c,w)));
   if(!c.wishDone&&!wishOK(c,c.wish))c.wish=pick(Object.keys(WISHES).filter(w=>wishOK(c,w)));
   c.hobby=consortHobby(c);
@@ -139,11 +142,11 @@ function deepLine(c){deepen(c);if(c.wish==='title'&&c.title&&!c.wishDone){c.wish
   <div>平日消遣：<span class="tag">${esc(c.hobby)}</span></div>
   <div>心愿：${c.wishKnown?`${esc(w.t)}${c.wishDone?' <span class="tag y">已成全</span>':w.btn?` <button class="btn sm jade" onclick="A.wish(${c.id})" ${inPalace(c)?'':'disabled'}>${esc(w.btn)}</button>`:' <span class="hint">（生下孩子便成全了）</span>'}`:'<span class="hint">情分到 50 以后，闲谈时她也许会说</span>'}</div>
   ${c.woundKnown?`<div>往事：${esc(WOUNDS[c.wound])}</div>`:'<div class="hint">往事：情分到 65 以后，她也许会对你说起</div>'}`}
-A.chat=function(id,fromEvent=false){const c=byId(id);if((modalOpen&&!fromEvent)||!inPalace(c))return;const arrival=kinArrivalGreeting(c)||newcomerWelcomeEvent(c);if(arrival){(fromEvent?pushNow:pushEv)(arrival);return;}const past=pastLifeEvent(c);if(past){(fromEvent?pushNow:pushEv)(past);return;}initTimeTraveler(c);const oldWorld=travelerConfessionEvent(c);if(oldWorld){if(useE())(fromEvent?pushNow:pushEv)(oldWorld);return;}if(!useE())return;deepen(c);const L=[];const xk=xinOf(c),opening=consortVoicePhase(c)==='first';
+A.chat=function(id,fromEvent=false){const c=byId(id);if((modalOpen&&!fromEvent)||!inPalace(c))return;const arrival=kinArrivalGreeting(c)||newcomerWelcomeEvent(c);if(arrival){(fromEvent?pushNow:pushEv)(arrival);return;}const past=pastLifeEvent(c);if(past){(fromEvent?pushNow:pushEv)(past);return;}initTimeTraveler(c);const quiet=solitaryEvent(c);if(quiet){(fromEvent?pushNow:pushEv)(quiet);return;}const oldWorld=travelerConfessionEvent(c);if(oldWorld){if(useE())(fromEvent?pushNow:pushEv)(oldWorld);return;}if(!useE())return;deepen(c);const L=[];const xk=xinOf(c),opening=consortVoicePhase(c)==='first';
   const voice=characterVoice(c,'talk');L.push(voice.stage);L.push(`“${voice.text}”`);
   const familyTalk=fiveBrotherChat(c);if(familyTalk)L.push(familyTalk);
   if(!opening&&S.flags.lastCourt&&(c.t2==='好读史'||c.t2==='直言')&&chance(.6))L.push(c.t2==='好读史'?`她听说了「${S.flags.lastCourt}」的事。${HISTC[S.flags.lastCourt]||'她说：“以史为镜，可以知兴替。”'}`:`她听说了「${S.flags.lastCourt}」的事，直截了当地说：“陛下那样处置，${pick(['臣妾觉得不妥。','臣妾觉得极好。','怕是要挨骂的。'])}”`);
-  const others=harem().filter(o=>o!==c).map(o=>[o,relGet(c,o)]),fr=others.filter(x=>x[1]>=30),en=others.filter(x=>x[1]<=-30);
+  const others=harem().filter(o=>o!==c).map(o=>[o,relGet(c,o)]),fr=others.filter(x=>x[1]>=30&&socialPair(c,x[0])),en=others.filter(x=>x[1]<=-30);
   if(!opening&&fr.length&&chance(.35)){const o=pick(fr)[0],hobby=sharedConsortHobby(c,o),memory=genuineSocialMemory(c,o);L.push(memory||`说起${fullName(o)}，她眉眼都软了：“${hobby?`下回得了闲，臣妾想约她${CONSORT_HOBBIES[hobby].activity}。`:'与她说话，臣妾觉得自在。'}”`)}
   else if(!opening&&en.length&&chance(.4)){const o=pick(en)[0],memory=genuineSocialMemory(c,o);L.push(memory||`提到${fullName(o)}，她停了停：“我与她还不投契，有些事想法不同。”`)}
   const ongoing=continuityThreads(c).filter(continuityOpen).at(-1);
@@ -266,8 +269,8 @@ function xinTick(c){if(!c.alive||c.gone)return;
   const k2=xinOf(c);
   if(c.cold&&!['心如死灰','怨恨'].includes(k2)&&S.turn-c.coldT>=3)setXin(c,'心如死灰','冷宫的日子一天比一天长');
   if(c.cold)return;
-  if(k2==='平和'&&c.aff>=50&&c.favor<15&&chance(.15))setXin(c,'思念','陛下许久未来');
-  else if(k2==='平和'&&c.aff<35&&c.favor<10&&chance(.2))setXin(c,'委屈','备受冷落');
+  if(!isSolitary(c)&&k2==='平和'&&c.aff>=50&&c.favor<15&&chance(.15))setXin(c,'思念','陛下许久未来');
+  else if(!isSolitary(c)&&k2==='平和'&&c.aff<35&&c.favor<10&&chance(.2))setXin(c,'委屈','备受冷落');
   if(TRAITS[c.trait].jealous&&['平和','委屈'].includes(xinOf(c))){const top=harem().filter(o=>o!==c).sort((a,b)=>b.favor-a.favor)[0];if(top&&top.favor>c.favor+40&&chance(.3))setXin(c,'嫉恨',`${fullName(top)}独得圣宠`,top.id)}}
 const XEV={
  '思念':c=>c.cold?null:{title:'香囊',por:c,text:`${cName(c)}托人送来一只香囊，里面没有香料，只有一张折得很小的纸条：“${pick(['庭前的海棠开了，陛下何时来看？','近来夜长，数着更漏到天明。','一日不见，如三秋兮。'])}”`,choices:[

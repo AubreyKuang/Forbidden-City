@@ -16,6 +16,7 @@ function daoEligible(p){
 function daoInterest(p){
   if(p.t2==='信佛'||p.like==='佛经')return 0;
   if(p.daoPractice?.path==='dao')return 3;
+  if(solitaryDao(p))return 2;
   return p.sex?(p.amb<=30?2:p.lit>=70?1:0):['淡泊','沉静'].includes(p.trait)?2:['好学','聪慧'].includes(p.trait)||p.mood<35?1:0;
 }
 function daoVisitors(){
@@ -65,7 +66,7 @@ function daoConversation(p){
     daoRemember(p,line+(kind==='sea'?'又答应日后同游东海。':''));save('auto');
     return kind==='sea'?'这句话被认真记下了。钦安殿会保留这份出游之约，待精力与国库宽裕时可启程。':`${line}${p.sex?'才学+2，亲近+4。':'心情+6，情分+4。'}`;
   };
-  return {title:topic.title,por:p,valid:()=>daoEligible(p)&&daoVisitors().includes(p),text:`${porName(p)}在廊下展开书页，指给你看：\n“${topic.quote}”\n——${topic.source}\n“${topic.line(p)}”${ready?'':'\n前次的话还在心头，过些日子再续谈。'}`,choices:[
+  return {title:topic.title,por:p,valid:()=>daoEligible(p)&&daoVisitors().includes(p),text:`${porName(p)}在廊下展开书页，指给你看：\n“${topic.quote}”\n——${topic.source}\n“${isSolitary(p)?'臣妾另有一处想不明白，不想随众点头。'+topic.line(p):topic.line(p)}”${ready?'':'\n前次的话还在心头，过些日子再续谈。'}`,choices:[
     {t:'陪着读下去 · 精力−1',cond:()=>ready&&E().energy>0,f:()=>settle('read')},
     {t:'许留一隅清静，不强求争胜 · 精力−1',cond:()=>ready&&E().energy>0,f:()=>settle('quiet')},
     ...(topic===DAO_READINGS[3]&&p.sex?[{t:'答应日后一起去东海 · 精力−1',cond:()=>ready&&E().energy>0,f:()=>settle('sea')}]:[]),{t:'让其安心读书'}]};
