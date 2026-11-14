@@ -502,7 +502,7 @@ test('maternal full sisters with separately saved fathers share one parent in bo
     S=JSON.parse(JSON.stringify(S));migrate();a=byId(a.id);b=byId(b.id);cousin=byId(cousin.id);
     assert.equal(a.house,b.house);assert.equal(b.kin[a.id],'亲姐');assert.notEqual(a.house,cousin.house);
     var name=a.house.father.name,id=a.house.father.id;
-    UI.familyMode='list';var list=viewFamily();assert.equal(list.split('父亲 · '+name).length-1,1);
+    UI.familyMode='list';var list=viewFamily();assert.equal(list.split("A.go('official','"+a.id+":father')").length-1,1);
     UI.familyMode='graph';var graph=viewFamily();assert.equal(graph.split('data-person-id="'+id+'"').length-1,1);
     var edges=graph.split('<g class="paternal-links" data-parent-id="'+id+'">')[1].split('</g>')[0];
     assert.ok(edges.includes('data-child-id="'+a.id+'"'));assert.ok(edges.includes('data-child-id="'+b.id+'"'));

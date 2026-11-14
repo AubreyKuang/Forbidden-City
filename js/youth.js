@@ -42,7 +42,7 @@ function youngGuestEligible(k,g){
   return !mothersOf(k).some(m=>clanKey(m)===g.clan||houseOf(m)?.father.id===g.houseId);
 }
 function householdGuest(host,princess){
-  const h=houseOf(host);if(!h||h.brother.alive===false)return null;
+  const h=houseOf(host);if(!h||!officialAlive(h.brother)||h.brother.commission||h.brother.away||h.brother.exiled||h.brother.dismissed)return null;
   const guests=S.youngGuests ||= {},key=h.father.id;
   if(!guests[key]){
     const seed=ri(1,2e9),given=pick(['清衍','景初','明珩','知衡','怀瑾','长宁','允和','景川']);
@@ -69,7 +69,7 @@ function youngGuestVisit(name){
 }
 function youngGuestScene(scene,name){
   const child=kidById(scene.child),host=byId(scene.host),mother=byId(scene.mother),guest=S.youngGuests?.[scene.guestKey];
-  return teenageChildren().includes(child)&&inPalace(host)&&host.palace===name&&inPalace(mother)&&
+  return teenageChildren().includes(child)&&inPalace(host)&&host.palace===name&&officialAlive(houseOf(host)?.brother)&&!houseOf(host).brother.commission&&!houseOf(host).brother.away&&!houseOf(host).brother.exiled&&!houseOf(host).brother.dismissed&&inPalace(mother)&&
     mother.id===(child.foster||child.mom)&&youngGuestEligible(child,guest)?{scene,child,host,mother,guest}:null;
 }
 function youngGuestPanel({scene,child:k,host,mother,guest},name){

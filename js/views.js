@@ -41,12 +41,12 @@ function dockIcon(key){
   return `<img class="dock-icon px" src="${dockImages.get(key)}" alt="" aria-hidden="true">`;
 }
 function renderMenu(){const m=$('#menu');if(!S){m.innerHTML='';m.hidden=true;return}m.hidden=false;
-  const current={jewelry:'home',relative:'family',palace:'map',place:'map',banquet:'map',consort:'harem',kid:'kids',princess:'out'}[UI.view]||UI.view;
+  const current={officials:'home',official:'home',jewelry:'home',relative:'family',palace:'map',place:'map',banquet:'map',consort:'harem',kid:'kids',princess:'out'}[UI.view]||UI.view;
   m.innerHTML=MENU.map(([k,l])=>`<button class="btn${current===k?' on':''}" ${current===k?'aria-current="page"':''} onclick="${k==='court'?'A.court()':`A.go('${k}')`}">${dockIcon(k)}<span>${l}</span></button>`).join('');
 }
 let panelRoute;
 let personBackStack=[];
-const PERSON_DETAIL_VIEWS=['consort','kid','relative'];
+const PERSON_DETAIL_VIEWS=['consort','kid','relative','official'];
 function rememberPersonRoute(view,id){
   if(!PERSON_DETAIL_VIEWS.includes(view)){personBackStack=[];return;}
   if(!PERSON_DETAIL_VIEWS.includes(UI.view)||personBackStack.at(-1)?.state!==S)personBackStack=[];
@@ -59,7 +59,7 @@ function rememberPersonRoute(view,id){
 function personBackButton(fallback){
   const source=personBackStack.at(-1);
   const view=source?.state===S?source.view:fallback;
-  const label={consort:'妃嫔详情',kid:'皇嗣详情',princess:'公主府',palace:'宫殿',place:'上一地点'}[view]||
+  const label={officials:'朝臣名录',official:'父兄详情',consort:'妃嫔详情',kid:'皇嗣详情',princess:'公主府',palace:'宫殿',place:'上一地点'}[view]||
     MENU.find(([id])=>id===view)?.[1]||'上一页';
   return `<button class="btn quiet sm detail-back" onclick="A.backPerson('${fallback}')">← 返回${esc(label)}</button>`;
 }
@@ -76,7 +76,7 @@ function renderPanel(){
   const p=$('#panel'),v=UI.view;
   const route=JSON.stringify([v,UI.sel]);
   if(!S)p.innerHTML=v==='new'?viewNew():viewTitle();
-  else p.innerHTML=({jewelry:viewJewelryVault,relative:viewRoyalRelative,family:viewFamily,map:viewMap,palace:viewPalace,place:viewPlace,banquet:viewBanquet,home:viewHome,harem:viewHarem,consort:viewConsort,cards:viewCards,xx:viewXX,kids:viewKids,kid:viewKid,princess:viewPrincessEstate,out:viewOut,log:viewLog,sys:viewSys}[v]||viewHome)();
+  else p.innerHTML=({officials:officialsRoster,official:viewOfficial,jewelry:viewJewelryVault,relative:viewRoyalRelative,family:viewFamily,map:viewMap,palace:viewPalace,place:viewPlace,banquet:viewBanquet,home:viewHome,harem:viewHarem,consort:viewConsort,cards:viewCards,xx:viewXX,kids:viewKids,kid:viewKid,princess:viewPrincessEstate,out:viewOut,log:viewLog,sys:viewSys}[v]||viewHome)();
   if(S&&v==='xx')rememberSelectionBlurt(selectionCurrent());
   if(route!==panelRoute){p.scrollTop=0;panelRoute=route;}
 }
@@ -170,9 +170,9 @@ function familyGraphSVG(){
       wires+=`<path d="M${cx} 80 V${houseY}" stroke="#a68b68" stroke-dasharray="4 3"/>`;
       if(h){
         const military=stance==='army'?1:0;
-        const kin=(person,role,tile,office)=>`<div class="graph-kin-person">${porImg({official:tile,seed:String(father.id).length+tile,alive:person.alive},34)}${label(person.name+(person.alive===false?' †':''),role+' · '+office)}</div>`;
+        const kin=(person,role,office)=>person?`<button class="graph-kin-person${!person.alive?' deceased':''}" onclick="A.go('official','${c.id}:${role}')" aria-label="查看${esc(person.name)}">${porImg(person,34)}${label(person.name,`${role==='father'?(indices.length>1?'父亲 · 亲姐妹同父':'父亲'):'兄长'} · ${officialStatus(person)} · ${office}`)}</button>`:'';
         cards+=`<div class="graph-card graph-house" data-father-id="${c.fatherId}" data-person-id="${esc(father.id)}" style="${at(cx,houseY,houseHeight)};--house-color:${color}">
-          ${kin(father,indices.length>1?'父亲 · 亲姐妹同父':'父亲',military,father.office)}${kin(h.brother,'兄长',2+military,h.brother.post)}</div>`;
+          ${kin(father,'father',father.office)}${kin(h.brother,'brother',h.brother?.post)}</div>`;
         // One shared trunk and sibling rail; every daughter connects directly below her father.
         wires+=`<g class="paternal-links" data-parent-id="${esc(father.id)}">${line(cx,houseY+houseHeight,cx,217,blood)}${line(x(indices[0]),217,x(indices.at(-1)),217,blood)}
           ${indices.map(index=>`<path data-child-id="${people[index].id}" d="M${x(index)} 217 V${consortY}" stroke="${blood}" stroke-width="1.8"><title>${esc(father.name)}之女 ${esc(fullName(people[index]))}</title></path>`).join('')}</g>`;
@@ -251,7 +251,7 @@ function viewFamily(){
     for(const c of people){const house=houseOf(c);const key=house?.father.id??c.id;if(!fathers.has(key))fathers.set(key,[]);fathers.get(key).push(c);}
     return `<details class="family-branch"><summary><strong>${esc(label)}</strong><span class="hint">${people.length} 人 · ${childCount} 位皇嗣${force}</span></summary>
       ${[...fathers.values()].map(sisters=>{const father=houseOf(sisters[0])?.father;
-        return `<section class="paternal-branch">${father?`<p><strong>父亲 · ${esc(father.name)}</strong> <small>${esc(father.office)}${father.alive?'':' · 已故'}${sisters.length>1?' · 亲姐妹同父':''}</small></p>`:''}<ul>${sisters.map(member).join('')}</ul></section>`;
+        return `<section class="paternal-branch">${father?officialFamilyLine(sisters[0])+(sisters.length>1?'<p class="hint">亲姐妹同父，共用父兄履历。</p>':''):''}<ul>${sisters.map(member).join('')}</ul></section>`;
       }).join('')}</details>`;
   };
   const branches=[...byClan].sort(([a],[b])=>Number(a==null)-Number(b==null)).map(([key,people])=>
@@ -319,7 +319,7 @@ function viewConsort(){
     acts+=`<button class="btn primary" onclick="A.uncold(${c.id})">放出冷宫</button>`;
     penalties+=`<button class="btn danger" onclick="A.away(${c.id})">遣出宫</button>`;
   }
-  const family=act?visitorLine(c)+fosterLine(c)+clanLine(c)+houseLine(c)+conKidLine(c)+relLine(c):'';
+  const family=(act?visitorLine(c)+fosterLine(c)+clanLine(c)+conKidLine(c)+relLine(c):'')+houseLine(c);
   return `${personBackButton('harem')}
    <header class="detail-head">${porImg(c,224)}<div class="grow">
     <p>${esc(fullName(c))} · ${c.age}岁 · ${c.alive?c.gone?'已出宫':c.templeStay?'护国寺':esc(c.palace):'已故'}</p>

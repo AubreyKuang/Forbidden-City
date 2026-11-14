@@ -1,6 +1,6 @@
 /* ============ 妃嫔个人经历 ============ */
 function aNext(c,st,a,b){c.arc.st=st;c.arc.t=S.turn+ri(a,b)}
-function aEnd(c,title,text){c.arc.done=true;c.arc.end=title;c.arc.t=1e9;if(ARCX[title])setXin(c,ARCX[title],`「${ARCS[c.arc.id].name}」${title}`,ARCX[title]==='怨恨'?'emp':null);story(c,`【${ARCS[c.arc.id].name}·${title}】${text}`);log(`${fullName(c)}「${ARCS[c.arc.id].name}」——${title}。`,1)}
+function aEnd(c,title,text){c.arc.done=true;c.arc.end=title;c.arc.t=1e9;if(ARCX[title])setXin(c,ARCX[title],`「${ARCS[c.arc.id].name}」${title}`,ARCX[title]==='怨恨'?'emp':null);syncOfficialArcOutcome(c,title,text);story(c,`【${ARCS[c.arc.id].name}·${title}】${text}`);log(`${fullName(c)}「${ARCS[c.arc.id].name}」——${title}。`,1)}
 const ok1={t:'好'};
 const ARCS={
  general:{name:'边关烽火',fit:c=>c.trait==='将门',stages:[
@@ -223,13 +223,14 @@ function arcTick(){
   const pace=S.flags.arcPacing ||= {byType:{}};
   if(S.turn-(pace.last??-99)<2)return null;
   const due=alive().filter(c=>c.arc&&!c.arc.done&&!c.cold&&S.turn>=c.arc.t).sort((a,b)=>a.arc.t-b.arc.t);
-  for(const c of due){const st=ARCS[c.arc.id].stages[c.arc.st];if(!st){c.arc.done=true;continue}
+  for(const c of due){if(!officialArcEligible(c))continue;const st=ARCS[c.arc.id].stages[c.arc.st];if(!st){c.arc.done=true;continue}
     const id=c.arc.id,last=pace.byType[id];
     if(RARE_ARCS[id]&&S.turn-(pace.investigation??-99)<4)continue;
     if(last&&last.person!==c.id&&S.turn-last.turn<12)continue;
     const ev=st(c,c.arc.f);if(ev){
       if(!c.arc.done&&c.arc.t<=S.turn)c.arc.t=S.turn+99;
       ev.title=ev.title||ARCS[id].name;ev.por=ev.por||c;
+      const valid=ev.valid;ev.valid=()=>officialArcEligible(c)&&(!valid||valid());
       const queued=ev.onQueue;
       ev.onQueue=()=>{queued?.();c.arc.startedAt??=S.turn;pace.last=S.turn;pace.byType[id]={turn:S.turn,person:c.id};if(RARE_ARCS[id])pace.investigation=S.turn;};
       return ev;

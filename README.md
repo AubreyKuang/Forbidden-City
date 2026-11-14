@@ -484,6 +484,21 @@ NPC 记忆区分客观事件与人物主观理解。同一场争执，受助者�
 
 父兄有姓名、官职、年龄和功绩，会随岁月变化。军情对全宫和同一家族分别设置间隔，亲姐妹共享父兄记录。晋封遵守位分名额；一份奏折的处置会留在人物故事和起居注中。
 
+### 可以往来的父兄
+
+在**家族树点父亲或兄长的头像、妃嫔详情点父兄姓名**，即可打开个人档案；御书房和宸极殿也有「朝臣与外家」入口。同父姐妹共用同一份父兄履历，从详情返回时会回到原来的家族页或人物页。
+
+| 父兄详情与往来 | 差事回奏 | 家谱中的故人 |
+|:---:|:---:|:---:|
+| <a href="docs/screenshots/showcase-official-profile.jpg"><img src="docs/screenshots/showcase-official-profile.jpg" alt="顾敬之详情，显示官职、性情、才干功绩信任及召见、委派、赏赐、致仕操作" width="270"></a> | <a href="docs/screenshots/showcase-official-report.jpg"><img src="docs/screenshots/showcase-official-report.jpg" alt="巡边差事数月后回奏，可嘉奖实绩或依例办理" width="270"></a> | <a href="docs/screenshots/showcase-official-family.jpg"><img src="docs/screenshots/showcase-official-family.jpg" alt="同父姐妹共享顾敬之分支，兄长顾长风阵亡后头像变灰并显示阵亡状态" width="270"></a> |
+
+- **召见与书信**：可问任上见闻、家中近况，或谈公私与用人。持正、谨慎、进取、圆融四种处事风格有不同回答；家人离世、女儿入冷宫、奉差在外、致仕归乡也会改变对白。每三个月可深入交谈一次，增加信任。
+- **委派与回奏**：武职可巡边整饬军备、护送粮道，其他外家人物可核查钱粮、巡察民情；领差花精力与国库，约两至三个月后回奏。才干与信任影响办差结果，边关任务有低概率遇伏身亡。进展与结果随存档保存。
+- **赏赐与致仕**：新增功绩达到条件后可论功赏赐，避免反复点取收益；年长者可准予致仕，符合年龄和间隔条件时再征召。故人可以赐祭抚恤，生前的履历继续保留。
+- **纪事互相对应**：军功、差事、赏罚和死讯写入本人履历、相关姐妹纪事与起居注。阵亡、病故、伏诛、流放会影响档案与后续资格；不会一面写着阵亡，一面又领兵、受封或带儿子入宫。
+
+旧存档中明确写下的「兄长战死」、父亲病故，以及「边关烽火」「金玉其外」的相关结局，会补入家族状态；没有记载的具体日期或死因不会凭空编造。[查看阵亡人物档案示例](docs/screenshots/showcase-official-memorial.jpg)。
+
 离开游戏一段时间后再读档，御案上可能出现积压奏折。民心归零会走向亡国；龙体归零则进入驾崩与传承。
 
 ## 传承与记录
@@ -764,6 +779,7 @@ node tests/palace-flow.cjs
 | `js/saves.js` | 本地存档、导入导出、迁移、回退与岁首快照 |
 | `js/npc-memory.js` | 主观记忆写入、检索、合并与长期归纳 |
 | `js/court.js` | 朝政、父系身份、势力、军情与积压奏折 |
+| `js/officials.js` | 父兄个人档案、召见与书信、差事回奏、赏赐致仕、身故迁移与家族纪事同步 |
 | `js/time-travelers.js` | 稀有异世背景、信任与缄口、同类相认、寺居与国师回应 |
 | `js/palace-arrivals.js` | 地图到访迎驾、性情与近况对白、同宫人物切换、到访记忆 |
 | `js/birth-swap-justice.js` | 换婴案成人问罪、原生亲缘核对、分段寻亲与持续案卷 |
@@ -820,6 +836,7 @@ node tests/palace-flow.cjs
 | `tests/npc-memory.test.cjs` | 主观视角、去重、归纳、容量与序列化 |
 | `tests/palace-regressions.test.cjs` | 太后荐人、亲子标签与旧档兼容 |
 | `tests/palace-court.test.cjs` | 朝堂势力、人物家世与存档相关回归 |
+| `tests/palace-officials.test.cjs` | 父兄共用档案、旧死讯迁移、战死与流放、互动冷却、差事回奏、存档续接和赏赐防重复 |
 | `tests/palace-map.test.cjs` | 地图与人物活动相关回归 |
 | `tests/palace-history.test.cjs` | 全部 54 条故事分支、性情、资格、读档、到期后话与防重复 |
 | `docs/living-history.md` | 故事清单、人物条件、设计约束与史料出处 |

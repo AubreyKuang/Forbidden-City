@@ -43,8 +43,8 @@ test('faction events name the real father or brother and their choices move the 
   let ev=null;
   for(let i=0;i<40&&!ev;i++){const e=run(`(()=>{const e=factionEvent();return e&&['边关捷报','边关失利'].includes(e.title)?e:null})()`);if(e)ev=e;}
   assert.ok(ev,'an army event for the general\'s daughter');
-  const brother=run(`houseOf(harem()[0]).brother.name`);
-  assert.ok(ev.text.includes(brother));
+  const names=run(`[houseOf(harem()[0]).brother.name,houseOf(harem()[0]).father.name]`);
+  assert.ok(names.some(name=>ev.text.includes(name)));
   const army=run(`S.courtPolicy.army||0`),mood=run(`harem()[0].mood`);
   ev.choices[0].f();
   assert.notEqual(run(`S.courtPolicy.army||0`),army);
