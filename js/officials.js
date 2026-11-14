@@ -19,6 +19,8 @@ function initializeOfficialHouse(c,h,family){
     }
     const seed=voiceHash(h.father.id+':'+role);
     p.id||=role==='father'?h.father.id:h.father.id+':'+role;p.seed??=seed;
+    // Existing relatives retain their original face; new people use the expanded cast.
+    if(p.official===undefined&&p.artPortrait===undefined)assignOfficialPortrait(p,h,role);
     p.official=(role==='father'?0:2)+(h.bloc==='army'?1:0);
     p.alive??=true;p.story||=[];p.temperament||=OFFICIAL_TEMPERAMENTS[seed%4];
     p.ability??=35+seed%51;p.trust??=35+(seed>>>6)%21;p.merit??=20+(seed>>>3)%30;

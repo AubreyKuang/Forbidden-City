@@ -155,11 +155,11 @@ const DEV={
     const kind=DEV.target.split(':')[0],p=DEV.draft;if(!p)return;
     let choices=[];
     if(kind==='kid')choices=Array.from({length:portraitVariantCount(p)},(_,v)=>({value:v,cell:childPortraitCell({...p,portraitVariant:v}),label:'形象 '+(v+1)}));
-    else if(kind==='emp')choices=[12,13].map(cell=>({cell,value:cell,label:cell===12?'青年':'壮年'}));
+    else if(kind==='emp')choices=EMPEROR_PORTRAITS.map(cell=>({cell,value:cell,label:EMPEROR_PORTRAIT_LABELS[cell]}));
     else if(kind==='consort')choices=[...CONSORT_PORTRAITS,...WESTERN_PORTRAITS,8,9,10,11].map(cell=>({cell,value:cell,label:PORTRAIT_CLOTHES[cell]||'形象 '+cell}));
     $('#dev-gallery').innerHTML=choices.map(({cell,value,label})=>{
       ensurePortraitSheet(cell);
-      const current=kind==='kid'?childPortraitCell(p):p.portraitOverride??(kind==='emp'?(p.age>=40?13:12):portraitCell(p));
+      const current=kind==='kid'?childPortraitCell(p):p.portraitOverride??(kind==='emp'?emperorPortraitCell(p):portraitCell(p));
       const src=portraitAtlasReady(cell)?atlasPortrait(cell,0):'';
       const selected=kind==='kid'&&p.portraitOverride==null?childPortraitVariant(p)===value:current===cell;
       return `<button type="button" class="dev-face" aria-pressed="${selected}" onclick="DEV.face(${value})">${src?`<img src="${src}" alt="">`:''}<span>${esc(label)}</span></button>`;

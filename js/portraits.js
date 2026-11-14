@@ -172,11 +172,14 @@ const youngRoyalAtlas=document.createElement('img');
 const FAMILY_PORTRAIT_START=28;
 const DESCENDANT_PORTRAIT_START=44;
 const LEGACY_DESCENDANT_VARIANTS=10;
-const DESCENDANT_VARIANTS=26;
+const DESCENDANT_VARIANTS=29;
 const EXISTING_PRINCE_VARIANTS=4;
 const EXTRA_PRINCE_VARIANTS=LEGACY_DESCENDANT_VARIANTS-EXISTING_PRINCE_VARIANTS;
-const BEAUTY_PORTRAIT_START=92, YOUNG_ROYAL_PORTRAIT_START=136, PORTRAIT_COUNT=248;
-const PRINCESS_VARIANTS=30;
+const BEAUTY_PORTRAIT_START=92, YOUNG_ROYAL_PORTRAIT_START=136, PORTRAIT_COUNT=316;
+const PRINCESS_VARIANTS=33;
+const EXPANDED_ROYAL_START=294;
+const EMPEROR_PORTRAITS=[12,13,312,313,314,315];
+const EMPEROR_PORTRAIT_LABELS={12:'原版青年',13:'原版壮年',312:'温润青年',313:'英武青年',314:'威严壮年',315:'儒雅长者'};
 const portraitVariantCount=child=>child.sex==='f'?PRINCESS_VARIANTS:DESCENDANT_VARIANTS;
 const portraitSheets=[
   {start:0,rows:7,scale:2,src:'./assets/images/palace-portraits-b.webp?v=original-hd-1',image:portraitAtlas},
@@ -187,7 +190,11 @@ const portraitSheets=[
   {start:172,rows:9,scale:2,src:'./assets/images/palace-young-royals-2.webp?v=1',image:document.createElement('img')},
   {start:208,rows:2,scale:2,src:'./assets/images/palace-regalia.webp?v=1',image:document.createElement('img')},
   {start:216,rows:6,scale:2,src:'./assets/images/palace-royal-regalia.webp?v=1',image:document.createElement('img')},
-  {start:240,rows:2,scale:4,src:'./assets/images/palace-gentle-portraits.webp?v=1',image:document.createElement('img')}
+  {start:240,rows:2,scale:4,src:'./assets/images/palace-gentle-portraits.webp?v=1',image:document.createElement('img')},
+  {start:248,rows:5,scale:4,src:'./assets/images/palace-consorts-expanded.webp?v=1',image:document.createElement('img')},
+  {start:268,rows:7,scale:4,src:'./assets/images/palace-relatives-expanded.webp?v=1',image:document.createElement('img')},
+  {start:294,rows:5,scale:4,src:'./assets/images/palace-royals-expanded.webp?v=1',image:document.createElement('img')},
+  {start:312,rows:1,scale:4,src:'./assets/images/palace-emperors-expanded.webp?v=1',image:document.createElement('img')}
 ];
 const portraitSheet=cell=>portraitSheets.slice().reverse().find(sheet=>cell>=sheet.start)||portraitSheets[0];
 function ensurePortraitSheet(cell){const sheet=portraitSheet(cell);if(!sheet.image.src)sheet.image.src=sheet.src;}
@@ -200,8 +207,8 @@ atlasCanvas.width=PORTRAIT_WIDTH;atlasCanvas.height=PORTRAIT_HEIGHT;
 const atlasInk=atlasCanvas.getContext('2d');
 const ART_CACHE=new Map();
 
-const CONSORT_PORTRAITS=[1,2,3,4,5,6,7,21,...Array.from({length:44},(_,i)=>92+i).filter(cell=>![102,103,134,135].includes(cell)),...Array.from({length:8},(_,i)=>208+i),240,241,242,243];
-const WESTERN_PORTRAITS=[22,23,24,102,103,134,135];
+const CONSORT_PORTRAITS=[1,2,3,4,5,6,7,21,...Array.from({length:44},(_,i)=>92+i).filter(cell=>![102,103,134,135].includes(cell)),...Array.from({length:8},(_,i)=>208+i),240,241,242,243,...Array.from({length:20},(_,i)=>248+i).filter(cell=>cell!==263)];
+const WESTERN_PORTRAITS=[22,23,24,102,103,134,135,263];
 const PORTRAIT_CLOTHES={
   1:'圆领袍',2:'齐胸襦裙',3:'宋式褙子',4:'窄袖骑装',5:'齐腰襦裙',
   6:'宋式褙子',7:'交领襦裙',10:'交领宫装',21:'宋式褙子',
@@ -216,7 +223,43 @@ const PORTRAIT_CLOTHES={
 ].forEach((clothes,i)=>{PORTRAIT_CLOTHES[BEAUTY_PORTRAIT_START+i]=clothes;});
 for(let cell=208;cell<216;cell++)PORTRAIT_CLOTHES[cell]='盛装华服';
 ['华绣宫装','宋式褙子','交领襦裙','齐腰襦裙'].forEach((name,i)=>{PORTRAIT_CLOTHES[240+i]=name;});
+['交领襦裙','华绣宫装','齐胸襦裙','宋式褙子','窄袖骑装','交领襦裙','华绣宫装','交领襦裙',
+ '披帛襦裙','宽袖交领袍','圆领骑装','冬日披风','短袄襦裙','立领长衫',
+ '宋式褙子','西域锦衣','长褙甲','短衫襦裙','披帛襦裙','鹤纹圆领袍'].forEach((name,i)=>{PORTRAIT_CLOTHES[248+i]=name;});
 const consortPortraits=c=>c.fam?.t==='西域贡女'?WESTERN_PORTRAITS:CONSORT_PORTRAITS;
+
+const FATHER_PORTRAITS=[268,269,270,271,276,277,278,282,283,284,288,289,290];
+const BROTHER_PORTRAITS=[272,273,274,275,279,280,281,285,286,287,291,292,293];
+function assignOfficialPortrait(person,house,role){
+  const father=role==='father',cells=father?FATHER_PORTRAITS:BROTHER_PORTRAITS;
+  if(cells.includes(person.artPortrait))return;
+  const preferred=house.bloc==='army'?(father?[269,282,283,284]:[273,285,286,287]):
+    house.bloc==='civil'?(father?[268,270,276,277,278]:[272,274,279,280,281]):
+    house.bloc==='kin'?(father?[271,288]:[275,291]):
+    house.bloc==='dowager'?(father?[289,277]:[292,272]):(father?[290,289,277]:[293,292,280]);
+  // Read already-created households directly: calling houseOf here would recurse.
+  const usage=new Map(cells.map(cell=>[cell,0])),seen=new Set();
+  for(const c of [...(S?.consorts||[]),...(S?.cands||[])])for(const p of Object.values(c.house||{})){
+    if(!p||typeof p!=='object'||p===person||!p.id||seen.has(p.id))continue;
+    seen.add(p.id);const cell=p.portraitOverride??p.artPortrait;
+    if(usage.has(cell))usage.set(cell,usage.get(cell)+1);
+  }
+  // Include a household being constructed before it is added to the roster.
+  for(const p of Object.values(house))if(p&&typeof p==='object'&&p!==person&&!seen.has(p.id)){
+    seen.add(p.id);const cell=p.portraitOverride??p.artPortrait;
+    if(usage.has(cell))usage.set(cell,usage.get(cell)+1);
+  }
+  const start=Math.floor(mulberry32(person.seed||7)()*cells.length);
+  const score=cell=>usage.get(cell)*(cells.length+1)+(preferred.includes(cell)?0:1);
+  let best=cells[start];
+  for(let i=1;i<cells.length;i++){const cell=cells[(start+i)%cells.length];if(score(cell)<score(best))best=cell;}
+  person.artPortrait=best;
+}
+function emperorPortraitCell(e){
+  if(e.imperialPortrait===0)return e.age>=40?315:312;
+  if(e.imperialPortrait===1)return e.age>=40?314:313;
+  return e.age>=40?13:12;
+}
 
 function assignConsortPortrait(c){
   const cells=consortPortraits(c);
@@ -248,7 +291,7 @@ function assignChildPortrait(child){
   // New adult faces share four childhood sets; keep young siblings distinct too.
   const existing=S.children.filter(k=>k.sex===child.sex);
   const count=portraitVariantCount(child),usage=Array(count).fill(0),youngUsage=Array(DESCENDANT_VARIANTS).fill(0);
-  const young=v=>child.sex==='f'&&v>=26?v-26:v;
+  const young=v=>child.sex==='f'?(v>=30?v-4:v>=26?v-26:v):v;
   existing.forEach(k=>{const v=childPortraitVariant(k);if(v<count){usage[v]++;youngUsage[young(v)]++;}});
   const score=v=>usage[v]+(existing.length<DESCENDANT_VARIANTS?youngUsage[young(v)]*(existing.length+1):0);
   const start=Math.floor(mulberry32(child.seed||7)()*count);
@@ -258,6 +301,8 @@ function assignChildPortrait(child){
 }
 function childPortraitCell(child){
   const age=kidAge(child),stage=age<3?0:age<12?1:2;let variant=childPortraitVariant(child);
+  const expandedVariant=variant-(child.sex==='f'?30:26);
+  if(expandedVariant>=0)return EXPANDED_ROYAL_START+(child.sex==='f'?9:0)+stage*3+expandedVariant;
   if(child.sex==='f'&&variant>=26){if(age>=18)return 244+variant-26;variant-=26;}
   if(variant>=22)return 216+(child.sex==='m'?0:12)+stage*4+variant-22;
   if(variant>=LEGACY_DESCENDANT_VARIANTS){
@@ -275,8 +320,8 @@ function portraitCell(x){
   if(x?.appearance)x=x.appearance;
   const override=(x==='emp'?E():x)?.portraitOverride;
   if(Number.isInteger(override)&&override>=0&&override<PORTRAIT_COUNT)return override;
-  if(x==='emp')return E().age>=40?13:12;
-  if(x.official!==undefined)return FAMILY_PORTRAIT_START+12+x.official;
+  if(x==='emp')return emperorPortraitCell(E());
+  if(x.official!==undefined)return [...FATHER_PORTRAITS,...BROTHER_PORTRAITS].includes(x.artPortrait)?x.artPortrait:FAMILY_PORTRAIT_START+12+x.official;
   if(x.isMom)return 9;
   if(x.maid)return 10;
   if(x.sex)return childPortraitCell(x);
