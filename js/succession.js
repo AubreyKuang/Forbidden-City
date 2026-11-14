@@ -7,6 +7,8 @@ function makeDowager(c,relation){
     alive:!!(c?.alive&&!c.gone&&!c.cold)};
 }
 function inheritDowager(h){
+  const past=archivePastLives();
+  for(const id of [h.mom,empress()?.id])if(id!=null&&!past.excluded.includes(id))past.excluded.push(id);
   const mother=byId(h.mom),queen=empress();
   const main=queen||mother;
   S.flags.dowager=makeDowager(main,main?.id===h.mom?'生母 · 先帝皇后':queen?'嫡母 · 先帝皇后':'生母');

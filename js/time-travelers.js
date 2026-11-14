@@ -8,7 +8,7 @@ const TRAVELER_PASTS=[
   ['归途断讯','我坐的车不需人驾。半途时间像折了一下，联络家人的讯息从此没有回声。']
 ];
 function initTimeTraveler(c,force=false){
-  if(!c||c.maid||c.sex||c.age<16)return null;
+  if(!c||c.maid||c.sex||c.age<16||c.pastLife)return null;
   if(c.timeTraveler)return c.timeTraveler;
   if(c.travelerChecked&&!force)return null;
   c.travelerChecked=true;
