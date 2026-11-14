@@ -183,6 +183,20 @@
 
 换来的孩子可留宫收养、护送归还亲生父母并给养育银，或暂在护国寺养护。孩子被换走的妃嫔属于受害者，幕后主使另行问罪；家谱、照护关系和个人纪事随真相更新。
 
+### 异世旧梦：来自未来的她
+
+少数妃嫔带有「异世来客」背景，可与原有性情、家世、心愿组合。她可能自述来自二十一或二十二世纪，因时空乱流失去归路，记得地铁、手机、星港或人造城；也会怀疑眼前的世界是否出自 AI。**这是人物的自述与猜想，属于原创架空支线**，不会改成所有人必须经历的主线。
+
+| 信任后的坦白 | 同类逐步相认 | 国师问来处 |
+|:---:|:---:|:---:|
+| <a href="docs/screenshots/showcase-traveler-confession.jpg"><img src="docs/screenshots/showcase-traveler-confession.jpg" alt="谨慎的异世来客在熟悉与高情分后私下坦白，可相信、倾听或拒绝" width="270"></a> | <a href="docs/screenshots/showcase-traveler-peers.jpg"><img src="docs/screenshots/showcase-traveler-peers.jpg" alt="两位来客分次核对旧日细节，逐步相认并留下关系与记忆" width="270"></a> | <a href="docs/screenshots/showcase-traveler-ritual.jpg"><img src="docs/screenshots/showcase-traveler-ritual.jpg" alt="国师听取自述，可行禳解祈安之仪，也可劝她安心安居" width="270"></a> |
+
+才情与处事心机都较低时，她容易急于自证、说漏陌生词语，隔一段时间又想解释；聪慧、持重或善于藏言者，会等相处满一年、情分至少 75 才私下开口。后续从来处转向生活细节与思亲，不每次重讲同一段。把她的过往当作梦、或斥为胡言后，她会永久收起对皇帝的倾诉；即使后来情分升高，也记得那次伤害。
+
+可以相信、静听、拒绝，也可经复核押入冷宫，安排护国寺祈福三个月，或请国师禳解。寺居沿用照护、孕期限制与回宫规则；国师不会因几句异言就断定附邪，仪式也不会抹去她的记忆。
+
+两位来客若同住、兴趣相投或已有交情，可能从一个陌生词试探彼此，再隔数月核对生活细节。来自不同世纪也能相认，但不会一见面便自动成为知己；不再向皇帝开口的人，仍可能向同类说起乡愁。事件、情分、两人关系、冷却与未完成选择随存档保存。详见 [六种来处、条件与全部分支](docs/character-experiences/time-travelers.md)。
+
 ### 记忆如何保留
 
 NPC 记忆区分客观事件与人物主观理解。同一场争执，受助者与被责罚者会留下不同感受；记忆包含来源事件、情绪、确信程度与获知方式，影响后续闲谈和人际判断。
@@ -662,6 +676,7 @@ node tests/palace-flow.cjs
 | `js/saves.js` | 本地存档、导入导出、迁移、回退与岁首快照 |
 | `js/npc-memory.js` | 主观记忆写入、检索、合并与长期归纳 |
 | `js/court.js` | 朝政、父系身份、势力、军情与积压奏折 |
+| `js/time-travelers.js` | 稀有异世背景、信任与缄口、同类相认、寺居与国师回应 |
 | `js/selection.js` | 逐人觐见、才艺对白、入宫反应与头几个月的闲谈 |
 | `js/dao-hall.js` | 钦安殿、固定国师、人物问道、祈愿与东海出游 |
 | `js/birth-swap.js` | 换婴结果、调查真相、亲缘纠正与寻亲安置 |
@@ -705,6 +720,7 @@ node tests/palace-flow.cjs
 | `tests/palace-improvements.test.cjs` | 家谱、出生、孩子互动、婚事、冷却、配乐等回归 |
 | `tests/palace-dev.test.cjs` | 入口一致性、存档隔离、属性立绘与回退 |
 | `tests/palace-family-care.test.cjs` | 探亲间隔、寺居与牵挂、生父调查、开府分栏及同月孕程 |
+| `tests/palace-time-travelers.test.cjs` | 来处持久化、坦白与缄口、收押与寺居、相认阶段、出席与冷却 |
 | `tests/palace-selection-dao.test.cjs` | 觐见与入宫、问道出席与冷却、出游续档、换婴真相及三种安置 |
 | `tests/palace-living-court.test.cjs` | 珍饰库存与持久化、阶段对白、请养与亲族关系、出生疑云及澄清分支 |
 | `tests/npc-memory.test.cjs` | 主观视角、去重、归纳、容量与序列化 |
