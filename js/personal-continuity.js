@@ -291,7 +291,9 @@ function routineAffection(c,base){
 function genuineSocialMemory(c,o){
   const memories=NPCMemory.recall(S,c.id).filter(m=>m.subject===String(o.id)&&typeof m.interpretation==='string');
   const memory=memories[0];
-  return memory?`她说起${fullName(o)}，记得一件亲历的事：“${memory.interpretation}”`:'';
+  if(!memory)return '';
+  const source=memory.channel==='hearsay'?'提起听来的消息':memory.confidence<.5?'想起一段记不真切的旧事':'想起一段旧事';
+  return `她说起${fullName(o)}，${source}：“${memory.interpretation}”`;
 }
 function generalCaseFacts(c,f){
   if(f.caseFacts)return f.caseFacts;

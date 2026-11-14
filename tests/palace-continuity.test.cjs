@@ -105,7 +105,9 @@ test('social recollection uses the newest real relationship memory and never inv
  const b=game();b.run(`assert.equal(genuineSocialMemory(helper,a),'');
  palaceSupportMemory(helper,a,'duanwu_work','御花园','署名','她替我记下了名字。','我补记了她的名字。',.5,.5);
  palaceSupportMemory(helper,a,'palace_support','宫中','探望','她今日来问我花样的进展。','我问了她的花样。',.5,.5);
- assert.match(genuineSocialMemory(helper,a),/今日来问我花样/);assert.doesNotMatch(genuineSocialMemory(helper,a),/替我记下了名字/);`);
+ assert.match(genuineSocialMemory(helper,a),/今日来问我花样/);assert.doesNotMatch(genuineSocialMemory(helper,a),/替我记下了名字/);
+ NPCMemory.record(S,{type:'palace_support',time:S.turn},[{person:helper.id,subject:a.id,interpretation:'听说她替我说情。',channel:'hearsay',confidence:.3}]);
+ assert.match(genuineSocialMemory(helper,a),/听来的消息/);assert.doesNotMatch(genuineSocialMemory(helper,a),/亲历/);`);
  const source=require('node:fs').readFileSync(require('node:path').join(__dirname,'../js/personality.js'),'utf8');
  assert.ok(!source.includes('她病的那几天，是我守着的'));assert.ok(!source.includes('前儿请安，她当着众人的面给臣妾难堪'));
 });
