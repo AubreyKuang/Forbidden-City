@@ -287,5 +287,5 @@ function migrate(resetPosition=true){if(!S)return;royalHouseholds().forEach(ensu
   S.consorts.forEach(houseOf);S.flags.memorials ??= 0;childLifeTick();migrateMourning();reconcilePalaceRomance();
   S.children.forEach(k=>{if(!Number.isFinite(k.sup))k.sup=0;reconcilePrinceResidence(k);});alive().forEach(reconcileMotherConcern);
   NPCMemory.upgrade(S);
-  ensureJewelry();
+  ensureJewelry();reconcileMultipleBirths();
   if(resetPosition)resetMapPosition(S.pos)}
