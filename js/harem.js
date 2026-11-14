@@ -1,5 +1,5 @@
 /* ============ 选秀 ============ */
-function genCands(n=6){S.cands=[];for(let i=0;i<n;i++)S.cands.push(makeGirl());{const kc=harem().filter(c=>c.fam.p>=15&&hasClan(c));if(kc.length&&chance(.4))S.cands[0]=makeKin(pick(kc),chance(.6)?'堂':'亲')}S.cands.forEach(deepen);S.selection={phase:'audience',current:S.cands[0]?.id,performed:[]};S.flags.peek=3;S.flags.lastXX=S.turn;log(`${dateStr()}，开选秀，各地秀女入宫待选。`,1)}
+function genCands(n=6){S.cands=[];for(let i=0;i<n;i++)S.cands.push(makeGirl());{const kc=harem().filter(c=>c.fam.p>=15&&hasClan(c));if(kc.length&&chance(.4))S.cands[0]=makeKin(pick(kc),chance(.6)?'堂':'亲')}S.cands.forEach(c=>{deepen(c);initTimeTraveler(c);});S.selection={phase:'audience',current:S.cands[0]?.id,performed:[]};S.flags.peek=3;S.flags.lastXX=S.turn;log(`${dateStr()}，开选秀，各地秀女入宫待选。`,1)}
 A.xxDecree=function(){
   const since=S.turn-S.flags.lastXX;
   if(since>=36){genCands();AU.sfx('chime');A.go('xx');return}

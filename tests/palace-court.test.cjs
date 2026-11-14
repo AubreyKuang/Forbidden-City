@@ -1535,6 +1535,8 @@ test('seasonal activities require the matching personality and mood and appear i
     A.seeInitiative(c.id,false);
     assert.equal(UI.sel,palace);
     assert.match($('#panel').innerHTML,/秋夜听雨/);
+    assert.equal(curEv.scene,'palace-arrival');
+    choose(curEv.choices.findIndex(c=>c.t==='看看宫中近况'));
     const energy=E().energy;
     A.answerInitiative(c.id,false);
     assert.equal(E().energy,energy-1);

@@ -727,3 +727,21 @@ button.family-room-person{cursor:pointer}button.family-room-person:hover{color:#
 .living-history-note summary{cursor:pointer;color:#566b56}
 .child-disposition strong{color:#556751}
 @media(max-width:560px){.living-history-note,.child-disposition{padding:13px}.living-history-note .btn{white-space:normal;text-align:left}}
+
+/* Walking into a residence opens a portrait-led audience, rather than a dossier. */
+#modal[data-scene="palace-arrival"] #mbox{max-width:850px;padding:24px;background:#f8efdc}
+#modal[data-scene="palace-arrival"] .mbody[hidden]{display:none}
+.palace-arrival-scene{padding:18px 20px 0;border-radius:9px;overflow:hidden;background:linear-gradient(110deg,#ede0c0ed,#f8efdfe8),var(--selection-art) center/cover}
+.arrival-path{margin:0;color:#776143;letter-spacing:.22em;font-size:12px}
+.arrival-body{display:grid;grid-template-columns:210px 1fr;gap:24px;align-items:center;margin-top:12px}
+.arrival-portrait{margin:0;align-self:end}.arrival-portrait .por{width:100%;height:auto;border:0;border-radius:0;background:none}
+.arrival-portrait figcaption{padding:8px 0;text-align:center;font-size:13px;color:#684b36}
+.arrival-dialogue{padding:20px;background:#fffaf0dc;border:1px solid #d8c7a97d;border-radius:10px}
+.arrival-dialogue p{color:#7a6a56;font-size:13px;line-height:1.8}
+.arrival-dialogue blockquote{margin:14px 0 4px;color:#49372c;font-size:19px;line-height:1.9}
+.arrival-residents{display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-top:1px solid #b6a08666;padding:12px 0;font-size:12px;color:#776143}
+.arrival-residents .btn{display:flex;gap:8px;align-items:center;padding:5px 9px;background:#fff6e5}
+.arrival-residents .por{width:36px;height:45px;border:0}
+#modal[data-scene="palace-arrival"] .mch{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#modal[data-scene="palace-arrival"] .mch .primary{grid-column:1/-1}
+@media(max-width:600px){#modal[data-scene="palace-arrival"] #mbox{padding:15px}.palace-arrival-scene{padding:12px 12px 0}.arrival-body{grid-template-columns:110px 1fr;gap:9px}.arrival-dialogue{padding:10px}.arrival-dialogue blockquote{font-size:16px}.arrival-portrait figcaption{font-size:11px}.arrival-path{letter-spacing:.08em}#modal[data-scene="palace-arrival"] .mch .btn{font-size:13px;padding:10px}}

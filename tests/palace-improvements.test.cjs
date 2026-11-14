@@ -150,8 +150,8 @@ test('opening court and the empress are reachable from first month guidance',()=
   run(`A.finishMonth()`);
   assert.equal(run(`curEv.choices.some(choice=>choice.t==='查看本月奏折')`),true);
   run(`choose(curEv.choices.findIndex(choice=>choice.t==='留在本月'));A.court();choose(0);drain()`);
-  assert.match(run(`viewMap()`),/A\.go\('consort',\d+\)">去坤宁宫见/);
-  run(`A.go('consort',empress().id);A.go('map')`);
+  assert.match(run(`viewMap()`),/A\.visitMapActivity\('kn'\)">去坤宁宫见/);
+  run(`A.visitMapActivity('kn');assert.equal(curEv.scene,'palace-arrival');choose(curEv.choices.findIndex(c=>c.t==='改日再来，返回宫城'));`);
   assert.doesNotMatch(run(`viewMap()`),/去坤宁宫见/);
 });
 
@@ -692,7 +692,7 @@ test('joining a nursery scene changes relationships once and persists the result
   const {run,force}=boot();
   run(`var mother=harem()[0],k=makeKid(mother,'f','明昭');mother.palace='坤宁宫';k.born=S.turn-48;E().energy=3;`);
   force(0,0);
-  run(`A.visitMapActivity('kn');var start=k.love,trust=childTrust(k,mother);assert.ok(palaceLifeScene('坤宁宫'));A.joinNursery('join');
+  run(`A.visitMapActivity('kn');var start=k.love,trust=childTrust(k,mother);assert.ok(palaceLifeScene('坤宁宫'));assert.equal(curEv.scene,'palace-arrival');choose(curEv.choices.findIndex(c=>c.t.includes('与母亲')));A.joinNursery('join');
     assert.equal(E().energy,2);assert.equal(k.love,start+5);assert.ok(childTrust(k,mother)>trust);
     assert.ok(NPCMemory.recall(S,k.id).some(m=>m.type==='family-time'));assert.match(viewPalace(),/role="status"/);
     A.joinNursery('join');assert.equal(E().energy,2);save('1');load('1');migrate();A.joinNursery('watch');assert.equal(E().energy,2);

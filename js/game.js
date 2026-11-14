@@ -131,7 +131,8 @@ function openModal(ev){
   // Portrait buttons distinguish people, not several actions for the same person.
   const choicePeople=new Set(ev.choices.filter(c=>c.person).map(c=>c.person.id??c.person));
   const showChoicePortraits=choicePeople.size>1;
-  let h=`<h2 class="mtitle" id="event-title" tabindex="-1">${esc(ev.title)}</h2>${ev.scene==='mourning'?mourningScene():''}${eventCast(people)}<div class="mbody">`;
+  const arrival=ev.scene==='palace-arrival';
+  let h=`<h2 class="mtitle" id="event-title" tabindex="-1">${esc(ev.title)}</h2>${ev.scene==='mourning'?mourningScene():''}${arrival?palaceArrivalHTML(ev):eventCast(people)}<div class="mbody"${arrival?' hidden':''}>`;
   if(people.length===1)h+=`<div class="mpor">${porImg(people[0],112)}<div>${esc(porName(people[0]))}</div></div>`;
   h+=`<div class="mtext">${ev.jewelry?`<figure class="event-jewelry">${jewelryImage(ev.jewelry,88)}<figcaption>${esc(JEWELRY[ev.jewelry]?.name||'')}</figcaption></figure>`:''}${fmt(ev.text)}${ev.ref?`<p class="ref">典出 · ${ev.refURL?`<a href="${esc(ev.refURL)}" target="_blank" rel="noopener noreferrer">${esc(ev.ref)}</a>`:esc(ev.ref)}</p>`:''}${ev.input?`<input id="minput" class="inp" maxlength="${ev.input.max||4}" value="${esc(ev.input.def||'')}" aria-label="输入">`:''}</div></div><div class="mch${showChoicePortraits?' event-choices':''}">`;
   ev.choices.forEach((c,i)=>{
@@ -343,7 +344,7 @@ A.endMonth=function(){
   if(S.month===2&&S.turn-S.flags.lastXX>=34) pushEv({title:'三年大选',sfx:'chime',text:'又到三年一度的大选之期，各地秀女已候于储秀宫。',choices:[{t:'前去看看',f:()=>{genCands();UI.view='xx';return null}},{t:'今年免了',f:()=>{S.flags.lastXX=S.turn;return fx(chg({people:2}))}}]});
   travelerLifeTick();daoLifeTick();childTempleTick();relTick();consortSocialTick();kidRelTick();clanTick();dowagerTick();initiativeTick();familyLifeTick();childLifeTick();courtTick();seasonalTick();palaceDutiesTick();palaceRomanceTick();palaceParentageTick();marriedLifeTick();personalExperienceTick();historyTick();
   const passing=dowagerPassingEvent();if(passing)pushEv(passing);
-  const must=[passing?null:arcTick(),heirTick(),milestone(),parentageReportEvent(),birthSwapClueEvent(),pendingKinGreeting(),pendingDaoVoyage(),pendingTravelerEvent()].filter(Boolean),opt=[];
+  const must=[passing?null:arcTick(),heirTick(),milestone(),parentageReportEvent(),birthSwapClueEvent(),birthSwapSearchReport(),pendingBirthSwapJustice(),pendingKinGreeting(),pendingDaoVoyage(),pendingTravelerEvent()].filter(Boolean),opt=[];
   // 积压的奏折：离宫期间攒下的朝堂事务，月末一并呈上
   while((S.flags.memorials||0)>0){S.flags.memorials--;const memo=factionEvent();if(memo&&!must.some(e=>e.title===memo.title))must.push(memo)}
   const add=(e,p)=>{if(e&&ambientEventReady(e))opt.push([e,p+R()-ambientNovelty(e)])};

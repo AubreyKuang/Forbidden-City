@@ -109,7 +109,7 @@ function goPlace(p){AU.sfx('click');if(Math.round(emp.x)===p.d[0]&&Math.round(em
 function goDirect(p){emp.path=[];emp.arrive=null;emp.x=p.d[0];emp.y=p.d[1];arrive(p)}
 function arrive(p){S.pos={x:p.d[0],y:p.d[1]};setScene(p.sc);AU.sfx('page');
   if(p.k==='view')UI.view=p.v;else if(p.k==='palace'){UI.view='palace';UI.sel=p.p;preparePalaceLife(p.p)}else{UI.view='place';UI.sel=p.id}
-  render()}
+  render();if(p.k==='palace')pushEv(palaceArrivalEvent(p.p))}
 function nearestPlace(){const p=PLACES.find(p=>S.pos&&p.d[0]===S.pos.x&&p.d[1]===S.pos.y);return p?p.n+'门前':'宫道上'}
 function mapTick(){if(!S||UI.view!=='map'||modalOpen)return;
   if(emp.path.length){const done=stepTo(emp,3.5);emp.trail.push([emp.x,emp.y]);if(emp.trail.length>5)emp.trail.shift();
@@ -397,7 +397,7 @@ function viewMap(){
   const {done,name:report}=mapMemorial();
   const host=S.turn===0&&done&&!S.flags.firstEmpressVisit&&empress();
   const next=!done?`<button id="map-next" class="btn sm jade" onclick="A.court()">查看${report}</button>`
-    :host?`<button id="map-next" class="btn sm jade" onclick="A.go('consort',${host.id})">去坤宁宫见${esc(fullName(host))}</button>`
+    :host?`<button id="map-next" class="btn sm jade" onclick="A.visitMapActivity('kn')">去坤宁宫见${esc(fullName(host))}</button>`
     :first?`<button id="map-next" class="btn sm jade" onclick="${mapLeadAction(first)}">${esc(mapLeadPlace(first))} · ${esc(first.title)} →</button>`:'';
   return `<section class="map-play" aria-label="宫城地图">
     <header class="map-location"><h2>宫城</h2><span class="hint">${esc(nearestPlace())}</span></header>

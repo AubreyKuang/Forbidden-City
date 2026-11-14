@@ -20,6 +20,19 @@ function initTimeTraveler(c,force=false){
 }
 function travelerEligible(c){return !!(inPalace(c)&&!c.maid&&c.age>=16&&(c.hp??100)>=40&&!S.over&&c.timeTraveler);}
 function travelerRash(c){return !['聪慧','持重','城府'].includes(c.trait)&&(c.talent+c.scheme)/2<45;}
+function travelerSelectionBlurt(c){
+  if(!c?.timeTraveler||!travelerRash(c)||c.talent>40||c.scheme>=30)return null;
+  const century=c.timeTraveler.century===21?'二十一':'二十二';
+  return {stage:'嬷嬷才报完名字，她便顾不得行礼，急急向前一步。宫人要提醒，她反倒把声音抬得更高。',
+    line:`我不是这里的人！我来自公元${century}世纪，是时空乱流把我带来的。你们这里……是不是 AI、人工智能造出来的世界？有人能送我回去吗？`};
+}
+function rememberSelectionBlurt(c){
+  const speech=travelerSelectionBlurt(c);if(!speech||c.timeTraveler.selectionBlurted)return;
+  c.timeTraveler.selectionBlurted=true;c.timeTraveler.known=true;
+  c.timeTraveler.history.push({turn:S.turn,d:dateStr(),text:'选秀觐见时急于自证，当众说出来自未来的身份。'});
+  // Selection is a witnessed introduction, not a trust-building conversation.
+  save('auto');
+}
 function travelerReady(c){
   if(!travelerEligible(c)||c.timeTraveler.closed)return false;
   const t=c.timeTraveler;if(t.pending)return t.pending==='confession';
@@ -42,7 +55,7 @@ function travelerConfessionText(c){
     '我还记得家里窗外的声音。有时怕的不是回不去，是哪一天连母亲的声音也忘了。'];
   const claim=t.spoken===0?`我来自公元${century}世纪。那场变故，我们那里或许会叫它时空乱流。`:rash?`我真的记得公元${century}世纪的日子，不是把听来的故事当作自己。`:'上回还有一些很小的事，臣妾没有来得及说。';
   const theory=t.spoken===0?'我们那个年代，有一种东西叫 AI，也叫人工智能，能够造出很像真的世界。我有时会想，这里会不会也是它造出来的？可这只是我的猜想，我没有证据。':t.spoken%3===0?'我还会想起人工智能造出的世界，可到今日，也不能拿猜想当作证据。':'说起这些，并非样样都要陛下明白。只是有人肯听，就不觉得自己全被过去遗忘了。';
-  return `${lead}\n“${claim}”\n“${fragments[t.spoken%fragments.length]}”\n“${theory}”\n${rash?'她忽然对着空处喊了一声“有人在听吗”，又因无人回应而慌了神。':'她将声音压得更低：“您若不信，也请别在旁人面前取笑我。”'}`;
+  return `${t.selectionBlurted&&t.spoken===0?'她记得选秀时那场失言，一见你便又急着解释：“那天殿上说的话，我没有编。可他们都叫我闭嘴。”':lead}\n“${claim}”\n“${fragments[t.spoken%fragments.length]}”\n“${theory}”\n${rash?'她忽然对着空处喊了一声“有人在听吗”，又因无人回应而慌了神。':'她将声音压得更低：“您若不信，也请别在旁人面前取笑我。”'}`;
 }
 function finishTravelerReply(c,kind){
   const t=c?.timeTraveler;if(!travelerEligible(c)||t.pending!=='confession')return null;

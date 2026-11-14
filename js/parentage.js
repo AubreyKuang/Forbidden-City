@@ -47,17 +47,17 @@ function parentagePanel(k){
   const wait=p.status==='investigating'&&S.turn<p.due;
   return `<p><strong>${label}</strong>${knownBiologicalFather(k)?` · 生父 ${childFatherHTML(k)}`:''}</p>
     <p class="hint">${esc(p.result||(wait?`正在核对起居记录与证词，${p.due-S.turn}个月后回奏。`:'身世不会因反复查验而改变；调查前不会仅凭流言定罪。'))}</p>
-    ${parentageReady(k)?`<button class="btn jade" onclick="A.parentageInquiry(${k.id})" ${wait?'disabled':''}>${p.status==='suspected'?'查验身世':p.status==='investigating'?'听取查证回奏':'决定如何安置'}</button>`:''}`;
+    ${parentageReady(k)?`<button class="btn jade" onclick="A.parentageInquiry(${k.id})" ${wait?'disabled':''}>${p.status==='suspected'?'查验身世':p.status==='investigating'?'听取查证回奏':'决定如何安置'}</button>`:''}${birthSwapCasePanel(k)}`;
 }
 function consortParentagePanel(c){
-  const children=S.children.filter(k=>(k.mom===c.id||k.foster===c.id||k.birthSwap?.claimedMother===c.id)&&k.parentage&&k.parentage.status!=='hidden');
+  const children=S.children.filter(k=>(k.mom===c.id||k.foster===c.id||k.birthSwap?.claimedMother===c.id||k.birthSwap?.confirmed&&k.birthSwap?.plotter===c.id)&&k.parentage&&k.parentage.status!=='hidden');
   return children.map(k=>`<div><button class="person-link" onclick="A.go('kid',${k.id})">${esc(k.name)}</button>${parentagePanel(k)}</div>`).join('');
 }
 function beginParentageInquiry(k){
   if(!parentageReady(k)||k.parentage.status!=='suspected'||!useE())return null;
   k.parentage.status='investigating';k.parentage.due=S.turn+1;
   kstory(k,'奉旨核查身世，调阅起居记录并分别问询随侍。');save('auto');
-  return '起居簿、宫门值簿与随侍证词分别封存，次月回奏。调查期间不改孩子身份，也可先安排去护国寺静养。';
+  return k.birthSwap?'接生与产房记录、起居簿、宫门值簿及稳婆证词分别封存。将核实产妇是否实际分娩、原来孩子的生父和去向，以及谁主使、谁知情；次月回奏。':'起居簿、宫门值簿与随侍证词分别封存，次月回奏。调查期间不改孩子身份，也可先安排去护国寺静养。';
 }
 function bloodRitualEvent(k){
   return {title:'滴血验亲之议',por:k,valid:()=>parentageReady(k)&&k.parentage.status==='suspected',

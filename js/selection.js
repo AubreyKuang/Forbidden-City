@@ -15,7 +15,8 @@ function selectionSpeech(c){
   };
   const acts={读书:'她翻开随身小册，讲起自己对书中一段话的理解。',抚琴:'她试过琴弦，才缓缓弹出一段小曲。',刺绣:'她展开自己绣的小屏，细说针脚与配色。',侍花:'她拈起一枝花，说起怎样养护才不伤根。',做点心:'她呈上家中学做的花糕，讲起火候。',投壶:'她拣起一支箭，向铜壶试投。',骑射:'她取来未上弦的弓，示范执弓与站姿。',对弈:'她在棋盘上摆出一局残棋，说起自己的解法。',品茶:'她温杯分茶，先将一盏清茶奉到案前。'};
   const skill=c.talent>=70?'举止渐渐舒展，讲到熟悉之处，眼中有了光。':c.talent<40?'中途出了个小差错，她停下来重新试过，没有勉强夸口。':'虽不算出众，倒看得出平日用过心。';
-  return {manner,stage:lines[manner][0],line:lines[manner][1],talent:(acts[hobby]||acts.读书)+skill,
+  const blurt=travelerSelectionBlurt(c);
+  return {manner,stage:blurt?.stage||lines[manner][0],line:blurt?.line||lines[manner][1],talent:(acts[hobby]||acts.读书)+skill,
     reply:c.talent<40?'臣女还没学得很好。若有机会，想把这一处再练明白。':manner==='bold'?'这才是臣女平日最拿手的。陛下可愿再看一回？':'在家练时不觉得，今日才知道，心定下来，手才能稳。'};
 }
 function selectionCurrent(){

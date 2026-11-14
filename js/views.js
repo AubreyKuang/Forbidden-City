@@ -77,6 +77,7 @@ function renderPanel(){
   const route=JSON.stringify([v,UI.sel]);
   if(!S)p.innerHTML=v==='new'?viewNew():viewTitle();
   else p.innerHTML=({jewelry:viewJewelryVault,relative:viewRoyalRelative,family:viewFamily,map:viewMap,palace:viewPalace,place:viewPlace,banquet:viewBanquet,home:viewHome,harem:viewHarem,consort:viewConsort,cards:viewCards,xx:viewXX,kids:viewKids,kid:viewKid,princess:viewPrincessEstate,out:viewOut,log:viewLog,sys:viewSys}[v]||viewHome)();
+  if(S&&v==='xx')rememberSelectionBlurt(selectionCurrent());
   if(route!==panelRoute){p.scrollTop=0;panelRoute=route;}
 }
 function render(){
