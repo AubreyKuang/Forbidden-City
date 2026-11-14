@@ -109,7 +109,7 @@ function viewNew(){
   </form>`}
 function consortCard(c){
   const tags=[xinTag(c),c.visitor?'<span class="tag y">母亲在宫</span>':'',c.preg>=2?'<span class="tag r">有孕</span>':'',c.cold?'<span class="tag k">冷宫</span>':'',c.rank===8?'<span class="tag y">中宫</span>':''].join('');
-  return `<button class="card portrait-card" onclick="A.go('consort',${c.id})">${porImg(c,84)}<div class="grow"><div class="nm">${esc(cName(c))}</div><div>${esc(fullName(c))} · ${c.age}岁 · ${c.templeStay?'护国寺':esc(c.palace)}</div><div>${tags}<span class="tag">${c.trait}</span></div>${bar('恩宠',c.favor)}${bar('心情',c.mood,'#4f9078')}</div></button>`}
+  return `<button class="card portrait-card" onclick="A.go('consort',${c.id})">${porImg(c,84)}<div class="grow"><div class="nm">${esc(cName(c))}</div><div>${esc(fullName(c))} · ${c.age}岁 · ${c.templeStay?'护国寺':esc(c.palace)}</div><div>${tags}<span class="tag">${c.trait}</span>${solitaryTag(c)}</div>${bar('恩宠',c.favor)}${bar('心情',c.mood,'#4f9078')}</div></button>`}
 
 function dowagerFamilyPanel(){
   const d=ensureDowager();
@@ -183,7 +183,7 @@ function familyGraphSVG(){
     const a=people[i],b=people[j],v=relGet(a,b);
     if(Math.abs(v)<30)continue;
     const x1=x(i),x2=x(j),lift=consortBottom+21+Math.min(34,(x2-x1)/12);
-    wires+=`<path d="M${x1} ${consortBottom} Q${(x1+x2)/2} ${lift} ${x2} ${consortBottom}" fill="none" stroke="${v>0?'#4f9078':'#b8473c'}" stroke-width="${1+Math.abs(v)/40}" ${v>0?'':'stroke-dasharray="4 3"'}><title>${esc(fullName(a))} 与 ${esc(fullName(b))}：${v>0?'亲近':'不和'}</title></path>`;
+    wires+=`<path d="M${x1} ${consortBottom} Q${(x1+x2)/2} ${lift} ${x2} ${consortBottom}" fill="none" stroke="${v>0?'#4f9078':'#b8473c'}" stroke-width="${1+Math.abs(v)/40}" ${v>0?'':'stroke-dasharray="4 3"'}><title>${esc(fullName(a))} 与 ${esc(fullName(b))}：${v>0?(socialPair(a,b)?'亲近':'敬重'):'不和'}</title></path>`;
   }
   people.forEach((c,i)=>{
     const cx=x(i),children=kids.get(c.id)||[],rail=cx-col/2+8;
@@ -325,7 +325,7 @@ function viewConsort(){
    <header class="detail-head">${porImg(c,224)}<div class="grow">
     <p>${esc(fullName(c))} · ${c.age}岁 · ${c.alive?c.gone?'已出宫':c.templeStay?'护国寺':esc(residenceLabel(c)):'已故'}</p>
     <h2>${esc(cName(c))}</h2>
-    <p>${esc(c.fam.t)} · ${esc(c.trait)}${c.preg>=2?` <span class="tag r">有孕${c.preg}月</span>`:''}</p>
+    <p>${esc(c.fam.t)} · ${esc(c.trait)} ${solitaryTag(c)}${c.preg>=2?` <span class="tag r">有孕${c.preg}月</span>`:''}</p>
     ${PORTRAIT_CLOTHES[portraitCell(c)]?`<p>衣着 · ${PORTRAIT_CLOTHES[portraitCell(c)]}</p>`:''}
     ${characterVoiceHTML(c)}${daoPracticePanel(c)}
    </div></header>
@@ -347,7 +347,7 @@ function viewConsort(){
     ${act?detailSection('牵挂远方的孩子',motherConcernPanel(c)):''}
     ${detailSection('孩子的身世',consortParentagePanel(c))}
     ${detailSection('册封与宫务',management?`<div class="acts">${management}</div>`:'')}
-    ${pastLifePanel(c)}${timeTravelerPanel(c)}${personalExperiencePanel(c)}${historyPanel(c)}
+    ${solitaryPanel(c)}${pastLifePanel(c)}${timeTravelerPanel(c)}${personalExperiencePanel(c)}${historyPanel(c)}
     ${detailSection('她的故事',arcLine(c)+detailStory(c))}
     ${detailFold('处置',penalties?`<div class="acts">${penalties}</div>`:'')}
    </div>`;
@@ -368,7 +368,7 @@ function viewXX(){
    </section>
    <p class="hint">容貌、才情一望便知；德行、心机需要暗访（剩余 ${S.flags.peek} 次）。本月结束时未选的秀女会遣返回家。</p>
    <div class="grid portrait-grid">${S.cands.map(c=>`<div class="card portrait-card" style="cursor:default;flex-direction:column">
-     <div class="row" style="gap:8px">${porImg(c,76)}<div class="grow"><div class="nm">${esc(fullName(c))}</div><div>${c.age}岁 · ${esc(c.fam.t)}之女</div>${c.kinNote?`<div><span class="tag y">${esc(c.kinNote)}</span></div>`:''}<div><span class="tag">${c.trait}</span> <span class="tag">${esc(consortHobby(c))}</span></div></div></div>
+     <div class="row" style="gap:8px">${porImg(c,76)}<div class="grow"><div class="nm">${esc(fullName(c))}</div><div>${c.age}岁 · ${esc(c.fam.t)}之女</div>${c.kinNote?`<div><span class="tag y">${esc(c.kinNote)}</span></div>`:''}<div><span class="tag">${c.trait}</span>${solitaryTag(c)} <span class="tag">${esc(consortHobby(c))}</span></div></div></div>
      ${c.pastLife?`<p class="hint">${esc(pastLifeSelectionHint(c))}</p>`:''}${bar('容貌',c.looks,'#8e6f57')}${bar('才情',c.talent,'#8e6f57')}${c.known?bar('德行',c.virtue,'#8e6f57')+bar('心机',c.scheme,'#8e6f57'):'<div class="bar"><span>德行</span><i></i><em>??</em></div><div class="bar"><span>心机</span><i></i><em>??</em></div>'}
      <div class="acts" style="margin:4px 0 0"><button class="btn sm" onclick="A.xxMeet(${c.id})">再见一面</button><button class="btn sm gold" onclick="A.xxTake(${c.id})">留牌子</button><button class="btn sm" onclick="A.xxDrop(${c.id})">撂牌子</button>${c.known?'':`<button class="btn sm jade" onclick="A.xxPeek(${c.id})">暗访</button>`}</div></div>`).join('')}</div>`}
 function parentLink(id,name){

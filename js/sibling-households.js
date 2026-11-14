@@ -51,7 +51,7 @@ function fiveBrotherEvent(c,peer=null){
 function fiveBrotherMonthlyEvent(){
   if(S.turn-(S.flags.lastFiveBrotherTalk??-99)<12)return null;
   const c=harem().find(fiveBrotherReady);if(!c||!chance(.12))return null;
-  const peer=harem().find(p=>p!==c&&p.age>=16&&(p.palace===c.palace||relGet(c,p)>=30));
+  const peer=harem().find(p=>p!==c&&socialPair(c,p)&&p.age>=16&&(p.palace===c.palace||relGet(c,p)>=30));
   return fiveBrotherEvent(c,peer);
 }
 function fiveBrotherPanel(c){

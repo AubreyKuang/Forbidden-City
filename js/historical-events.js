@@ -71,7 +71,7 @@ const HIST=[
    return {title:'画师',ref:'毛延寿索贿，误画王昭君（西汉·汉元帝）',por:g,text:`选秀的画像呈上来，你翻到一张平平无奇的脸。一个老嬷嬷忍不住说：“陛下，这位姑娘本人，比画上好看十倍——她不肯给画师送银子。”`,choices:[
    {t:'召来一看，画师下狱',f:()=>{S.cands.push(g);log('宫廷画师索贿篡改秀女画像，下狱问罪。',1);return `她走进殿来，满殿生光。${fx(chg({people:2}))}\n§她已加入本次选秀`}},
    {t:'“画像就是画像。”',f:()=>'你翻过了那一页。'}]}},
- ()=>{const c=harem().find(c=>c.preg>=8&&!c.prot&&!c.swapAsked&&c.scheme>=65&&c.virtue<=45&&!S.children.some(k=>k.alive&&k.mom===c.id&&k.sex==='m'&&!k.removedFromRoyal));if(!c)return null;const a=c;
+ ()=>{const c=harem().find(c=>!isSolitary(c)&&c.preg>=8&&!c.prot&&!c.swapAsked&&c.scheme>=65&&c.virtue<=45&&!S.children.some(k=>k.alive&&k.mom===c.id&&k.sex==='m'&&!k.removedFromRoyal));if(!c)return null;const a=c;
    return {title:'产房',present:[c],ref:'换婴母题衍生 · 游戏原创',por:c,text:`${cName(c)}临盆在即，膝下尚无皇子。一个小宫女悄悄来报：她宫里的掌事人与稳婆私议，若生下的是女儿，或孩子未能活下来，便抱来宫外男婴冒报皇子。\n这只是偷听来的传言，不能据此定罪；可先换上可靠的接生人，核对产房出入。`,choices:[
    {t:'换上心腹稳婆，加派人手守产房',f:()=>{return planBirthSwap(c,a,true)}},
    {t:'小宫女胡言乱语',f:()=>{return planBirthSwap(c,a,false)}}]}},

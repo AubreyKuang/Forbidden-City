@@ -16,7 +16,7 @@ function palaceAllyScore(a,b){
 }
 
 function courtFriendshipEvent(){
-  const people=harem(), factionsNow=factions();
+  const people=harem().filter(c=>!isSolitary(c)), factionsNow=factions();
   for(const c of people){
     if(!['委屈','惶恐','思念'].includes(xinOf(c))||c.favor>32||S.turn-(c.xin?.t??-Infinity)>2||
         S.turn-(c.lastFriendshipTest??-Infinity)<12)continue;

@@ -113,10 +113,10 @@ function viewResidences(){
 function residencePetitionFor(c){
   if(!inPalace(c)||c.rank===8||S.turn-(c.lastResidenceRequest??-99)<36||S.turn-(c.lastResidenceMove??-99)<6)return null;
   const choices=[];
-  const friend=harem().filter(x=>x!==c&&x.rank!==8&&x.palace!==c.palace&&relGet(c,x)>=35).sort((a,b)=>relGet(c,b)-relGet(c,a))[0];
+  const friend=harem().filter(x=>x!==c&&socialPair(c,x)&&x.rank!==8&&x.palace!==c.palace&&relGet(c,x)>=35).sort((a,b)=>relGet(c,b)-relGet(c,a))[0];
   if(friend){const plan=residenceMovePlan(c,friend.palace,'side');if(plan)choices.push({plan,peer:friend,reason:`“${fullName(friend)}与臣妾一向说得来。若能同住，闲时也好相伴。”`});}
   const proud=['骄纵','骄矜','善妒'].includes(c.trait)&&c.favor>=65&&(c.rank>=4||c.preg>0);
-  const quiet=['淡泊','沉静','体弱'].includes(c.trait);
+  const quiet=isSolitary(c)||['淡泊','沉静','体弱'].includes(c.trait);
   const garden=proud||c.trait==='活泼'||c.hobby==='侍花';
   const room=c.residenceRoom==='main'?'main':'side';
   if(quiet||garden){

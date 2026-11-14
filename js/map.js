@@ -39,7 +39,7 @@ function npcRoutine(c,roll) {
   const hobby=consortHobby(c);
   const gardenBias=['活泼','淡泊'].includes(c.trait)||c.t2==='爱猫'||CONSORT_HOBBIES[hobby].place==='御花园';
   const studyBias=['才女','好学'].includes(c.trait)||c.t2==='好读史'||hobby==='读书';
-  const friends=harem().filter(o=>o!==c&&relGet(c,o)>=25)
+  const friends=harem().filter(o=>o!==c&&socialPair(c,o)&&relGet(c,o)>=25)
     .sort((a,b)=>relGet(c,b)-relGet(c,a)+
       3*(consortCompatibility(c,b)-consortCompatibility(c,a))+
       8*(NPCMemory.influence(S,c.id,b.id)-NPCMemory.influence(S,c.id,a.id)));
@@ -66,6 +66,7 @@ function npcStep(){npcSync();for(const [id,n] of NPC){const c=byId(id);if(!c)con
 function npcRoutineText(c,n) {
   if(!n)return '在宫道上停下脚步，向你行了一礼';
   if(n.where==='dao-pregnancy')return n.path.length?'由宫人陪着，慢慢往钦安殿祈愿去':'在钦安殿廊下候见国师，想问问这一胎男女';
+  if(isSolitary(c)&&['garden','library','dao'].includes(n.where))return n.path.length?'独自沿宫道而行，遇人仍依礼致意':n.where==='dao'?'独坐殿侧读道书，有疑处便写在页边':n.where==='library'?'在廊下独读，合上书后才与你说话':'独自在花亭看水，向路过的人微微颔首';
   if(n.where==='dao')return n.path.length?'沿东侧宫道，往钦安殿听讲去':'在钦安殿廊下翻阅经卷';
   if(n.where==='library')return n.path.length?'抱着旧抄本，正往文渊阁去':'在文渊阁门前等宫人取来借阅的书';
   if(n.where==='visit'){

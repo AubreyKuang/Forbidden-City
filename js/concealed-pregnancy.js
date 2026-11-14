@@ -2,7 +2,7 @@
 function concealedPregnancy(c){return !!(c?.concealedLoss&&!c.concealedLoss.revealed&&!c.concealedLoss.settled);}
 function concealedLossEligible(c){
   return inPalace(c)&&!c.maid&&c.preg>=3&&c.preg<=7&&!c.prot&&!c.swapAsked&&!c.concealedLoss&&
-    c.scheme>=70&&c.virtue<=40&&(c.favor>=45||c.rank>=4)&&
+    !isSolitary(c)&&c.scheme>=70&&c.virtue<=40&&(c.favor>=45||c.rank>=4)&&
     !S.children.some(k=>k.alive&&k.mom===c.id&&k.sex==='m'&&!k.removedFromRoyal)&&
     S.turn-(S.flags.lastConcealedLoss??-99)>=36;
 }
