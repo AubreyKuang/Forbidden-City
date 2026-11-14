@@ -43,6 +43,7 @@ const DEV={
       if(next.cold)next.palace='冷宫';else if(!['坤宁宫',...PALACES].includes(next.palace))throw Error('请选择有效宫殿，解除冷宫时也需更换住处');
       if(next.rank===8&&!next.cold&&S.consorts.some(c=>c.id!==next.id&&inPalace(c)&&c.rank===8))throw Error('已有皇后，请先调整原皇后的位分');
       if(next.rank===8&&!next.cold)next.palace='坤宁宫';
+      else if(!next.cold&&next.palace==='坤宁宫')throw Error('坤宁宫仅供皇后居住，请选择东西六宫');
     }
     if(kind==='kid'){
       if(!Number.isFinite(next.born)||next.born>S.turn)throw Error('出生时间不能在未来');
@@ -105,7 +106,7 @@ const DEV={
       if(key==='world')S=next;else Object.assign(DEV.record(key),next);
       if(key.startsWith('kid:')&&Object.hasOwn(patch,'age')&&kidAge(DEV.record(key))<16)delete DEV.record(key).princeEstate;
       S.children.forEach(reconcilePrinceResidence);alive().forEach(reconcileMotherConcern);
-      reconcilePalaceRomance();POR.clear();ART_CACHE.clear();resetMapPosition(S.pos||{x:100,y:82});
+      reconcileResidences();reconcilePalaceRomance();POR.clear();ART_CACHE.clear();resetMapPosition(S.pos||{x:100,y:82});
       if(!save('auto'))throw Error('自动存档失败，修改已撤回');
       render();return next;
     }catch(error){S=before;render();throw error;}

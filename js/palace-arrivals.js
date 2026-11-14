@@ -20,7 +20,7 @@ const PALACE_WELCOMES={
   巧手:['还差最后几针，容臣妾把线收好。陛下先看，认得这是什么花么？','手边都是针线，迎驾也迎得匆忙。陛下若不嫌，便陪臣妾坐一会儿。'],
   好学:['陛下来了，臣妾正有一处不明白。先请您坐，再慢慢问。','今日读的几页，越想越有意思。能当面说给陛下听，倒是意外之喜。']
 };
-function palaceResidents(name){return harem().filter(c=>inPalace(c)&&c.palace===name).sort((a,b)=>b.rank-a.rank||a.id-b.id);}
+function palaceResidents(name){return harem().filter(c=>inPalace(c)&&c.palace===name&&(name!=='坤宁宫'||c.rank===8)).sort((a,b)=>(b.residenceRoom==='main')-(a.residenceRoom==='main')||b.rank-a.rank||a.id-b.id);}
 function palaceWelcome(c){
   const phase=consortVoicePhase(c),x=xinOf(c),seen=c.palaceWelcome,repeat=seen?.turn===S.turn;
   const voice=consortVoicePool(c)[0];

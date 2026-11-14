@@ -197,6 +197,7 @@ A.resumePendingScenes=function(){
   const traveler=pendingTravelerEvent();if(traveler)pushEv(traveler);
   const swap=birthSwapSearchReport()||pendingBirthSwapJustice();if(swap)pushEv(swap);
   const official=pendingOfficialReport();if(official)pushEv(official);
+  const loss=pendingConcealedLoss();if(loss)pushEv(loss);
 };
 A.save=function(slot){if(save(slot)){toast('已存档');AU.sfx('chime')}else toast(palaceSaveError(slot));render()};
 A.load=function(slot){
@@ -284,7 +285,7 @@ A.undoImport=function(){
   resetMapPosition(S.pos);showRestoredPalace();toast('已恢复导入前的进度');
 };
 function migrate(resetPosition=true){if(!S)return;royalHouseholds().forEach(ensureMarriedLife);ensureDowager();S.rel=S.rel||{};S.pos=S.pos||{x:100,y:82};reconcileScholarArcs();reconcileRareArcs();[...S.consorts,...(S.cands||[])].forEach(assignConsortPortrait);(S.cands||[]).forEach(deepen);alive().forEach(c=>{if(!c.arc)assignArc(c);deepen(c);clanKey(c)});S.children.forEach(k=>{if(k.sup===undefined)k.sup=0;ensureChildDisposition(k)});
-  S.consorts.forEach(houseOf);S.flags.memorials ??= 0;childLifeTick();migrateMourning();reconcilePalaceRomance();
+  reconcileResidences();S.consorts.forEach(houseOf);S.flags.memorials ??= 0;childLifeTick();migrateMourning();reconcilePalaceRomance();
   S.children.forEach(k=>{if(!Number.isFinite(k.sup))k.sup=0;reconcilePrinceResidence(k);});alive().forEach(reconcileMotherConcern);
   NPCMemory.upgrade(S);
   ensureJewelry();reconcileMultipleBirths();

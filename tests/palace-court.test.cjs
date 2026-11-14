@@ -666,6 +666,8 @@ test('paying a due local grain balance with stock consumes half a reserve and sa
       [0,0,56,${!half},${!half},false]);
     assert.match(S.log.at(-1).t,/半批常平仓粮加 20 万两结清/);
     A.grainReserve();assert.equal(option(),-1);close();
+    // Isolate the grain balance from unrelated palace initiative income.
+    initiativeTick=()=>{};
     A.endMonth();while(modalOpen)nextEv();
     const review=S.flags.lastMonthReview;
     assert.equal(review.localGrainPayment,undefined);

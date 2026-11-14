@@ -72,9 +72,7 @@ function makeGirl(o={}){
   return girl;
 }
 function assignPalace(c){
-  if(c.rank===8){c.palace='坤宁宫';return}
-  const cnt={};PALACES.forEach(p=>cnt[p]=0);harem().forEach(x=>{if(cnt[x.palace]!==undefined)cnt[x.palace]++});
-  const min=Math.min(...Object.values(cnt));c.palace=pick(PALACES.filter(p=>cnt[p]===min));
+  autoResidence(c);reconcileResidences();
 }
 function addConsort(c,rank,why){
   c.rank=rank; c.enteredAt=S.turn; c.enteredMonth=S.month; S.consorts.push(c); assignPalace(c); S.ys.c++; deepen(c); initRel(c); assignArc(c); initTimeTraveler(c); clanKey(c); if(c.kin)for(const id in c.kin){const o=byId(+id);if(o&&o.alive)relAdd(c,o,(isRival(c,o)?-30:45)-relGet(c,o))}
@@ -270,11 +268,11 @@ const A={
         choices:[{t:'就用这个封号',f:v=>doIt(v)},...opts.slice(1).map(o=>({t:`「${o}」`,f:()=>doIt(o)}))]});
     } else pushEv({title:'晋封',por:c,text:`晋${fullName(c)}为${RANKS[nr]}？`,choices:[{t:'准',f:()=>doIt()},{t:'再想想'}]});},
   demote(id){const c=byId(id);if(c.rank<=0||c.rank===8)return;
-    pushEv({title:'降位',danger:true,por:c,text:`降${cName(c)}为${RANKS[c.rank-1]}？`,choices:[{t:'降位',f:()=>{c.rank--;const s=cchg(c,{mood:-25,aff:-10,favor:-5});story(c,`被降为${RANKS[c.rank]}。`);remember(c,'hurt','被降位');setXin(c,(c.t2==='记仇'||c.scheme>60)?'怨恨':'委屈','被降了位分','emp');log(`降${fullName(c)}为${RANKS[c.rank]}。`);AU.sfx('sad');return `${fullName(c)}跪地谢恩，泪落无声。${fx(s)}`}},{t:'作罢'}]})},
+    pushEv({title:'降位',danger:true,por:c,text:`降${cName(c)}为${RANKS[c.rank-1]}？`,choices:[{t:'降位',f:()=>{c.rank--;reconcileResidences();const s=cchg(c,{mood:-25,aff:-10,favor:-5});story(c,`被降为${RANKS[c.rank]}。`);remember(c,'hurt','被降位');setXin(c,(c.t2==='记仇'||c.scheme>60)?'怨恨':'委屈','被降了位分','emp');log(`降${fullName(c)}为${RANKS[c.rank]}。`);AU.sfx('sad');return `${fullName(c)}跪地谢恩，泪落无声。${fx(s)}`}},{t:'作罢'}]})},
   rename(id){const c=byId(id);pushEv({title:'更改封号',por:c,text:'请为她拟一个新的封号：',input:{def:c.title||pick(TITLES),max:2},choices:[{t:'赐此封号',f:v=>{c.title=v;story(c,`陛下赐封号「${v}」。`);return `自今日起，她便是${cName(c)}。${fx(cchg(c,{mood:10,aff:4}))}`}},{t:'作罢'}]})},
   crown(id){const c=byId(id);if(empress()){toast('中宫已有皇后');return}
     pushEv({title:'册立皇后',por:c,text:`册${fullName(c)}为皇后，入主坤宁宫？\n册封大典需耗费国库一百万两。`,choices:[
-      {t:'择吉日行册封礼',f:()=>{c.rank=8;c.palace='坤宁宫';AU.sfx('gong');
+      {t:'择吉日行册封礼',f:()=>{c.rank=8;assignPalace(c);AU.sfx('gong');
         let s=chg({treasury:-100,prestige:c.fam.p>=50?6:2});
         if(c.virtue<40) s+='　'+chg({people:-3});
         story(c,'钦天监择吉日，行册后大典，入主坤宁宫，母仪天下。');log(`册${fullName(c)}为皇后。`,1);
@@ -326,7 +324,7 @@ A.endMonth=function(){
   // 后宫
   for(const c of alive()){
     if(!c.cold){c.favor=clamp(c.favor-(c.bond?0:c.trait==='淡泊'?1:2));if(c.favor<25)c.mood=clamp(c.mood-3);else if(c.favor>60)c.mood=clamp(c.mood+1)}else c.mood=clamp(c.mood-3);
-    if(c.preg>0){c.preg++;if(c.preg===2)pushEv(pregEvent(c));if(c.preg>=(c.pregnancyCalendar?.term||10))pushEv(birthEvent(c))}
+    if(c.preg>0){concealedLossTick(c);c.preg++;if(c.preg===2)pushEv(pregEvent(c));if(c.preg>=(c.pregnancyCalendar?.term||10))pushEv(birthEvent(c))}
   }
   alive().forEach(c=>{xinTick(c);visitorTick(c)});kidsAlive().forEach(growKid);
   // 时间
@@ -348,14 +346,14 @@ A.endMonth=function(){
   if(newYear){const y=S.ys;pushEv({title:'岁首',sfx:'chime',text:`爆竹声中一岁除。${dateStr()}，陛下${e.age}岁。\n去岁：新入宫${y.c}人，皇嗣降生${y.b}位，侍寝${y.n}次。\n国库${e.treasury}万两，威望${rd(e.prestige)}，民心${rd(e.people)}。`,choices:[{t:'新岁新气象'}]});S.ys={c:0,b:0,n:0}}
   // 事件
   if(S.month===2&&S.turn-S.flags.lastXX>=34) pushEv({title:'三年大选',sfx:'chime',text:'又到三年一度的大选之期，各地秀女已候于储秀宫。',choices:[{t:'前去看看',f:()=>{genCands();UI.view='xx';return null}},{t:'今年免了',f:()=>{S.flags.lastXX=S.turn;return fx(chg({people:2}))}}]});
-  travelerLifeTick();daoLifeTick();childTempleTick();relTick();consortSocialTick();kidRelTick();clanTick();dowagerTick();initiativeTick();familyLifeTick();childLifeTick();courtTick();seasonalTick();palaceDutiesTick();palaceRomanceTick();palaceParentageTick();marriedLifeTick();personalExperienceTick();historyTick();
+  reconcileResidences();travelerLifeTick();daoLifeTick();childTempleTick();relTick();consortSocialTick();kidRelTick();clanTick();dowagerTick();initiativeTick();familyLifeTick();childLifeTick();courtTick();seasonalTick();palaceDutiesTick();palaceRomanceTick();palaceParentageTick();marriedLifeTick();personalExperienceTick();historyTick();
   const passing=dowagerPassingEvent();if(passing)pushEv(passing);
-  const must=[passing?null:arcTick(),heirTick(),milestone(),parentageReportEvent(),birthSwapClueEvent(),birthSwapSearchReport(),pendingBirthSwapJustice(),pendingKinGreeting(),pendingDaoVoyage(),pendingTravelerEvent(),pendingOfficialReport()].filter(Boolean),opt=[];
+  const must=[passing?null:arcTick(),heirTick(),milestone(),parentageReportEvent(),birthSwapClueEvent(),birthSwapSearchReport(),pendingBirthSwapJustice(),pendingKinGreeting(),pendingDaoVoyage(),pendingTravelerEvent(),pendingOfficialReport(),pendingConcealedLoss()].filter(Boolean),opt=[];
   // 积压的奏折：离宫期间攒下的朝堂事务，月末一并呈上
   while((S.flags.memorials||0)>0){S.flags.memorials--;const memo=factionEvent();if(memo&&!must.some(e=>e.title===memo.title))must.push(memo)}
   const add=(e,p)=>{if(e&&ambientEventReady(e))opt.push([e,p+R()-ambientNovelty(e)])};
   if(!passing){
-  add(travelerMonthlyEvent(),8);add(recoveredSwapEvent(),8);add(fosterPetitionEvent(),8);add(kinSuccessionEvent(),8);add(parentageClueEvent(),8);
+  add(residencePetitionEvent(),8);add(travelerMonthlyEvent(),8);add(recoveredSwapEvent(),8);add(fosterPetitionEvent(),8);add(kinSuccessionEvent(),8);add(parentageClueEvent(),8);
   add(jewelryTributeEvent(),7);add(jewelryRequestEvent(),7);
   add(chance(.8)?festival():null,5);add(chance(.75)?haremEvent():null,6);
   add(chance(.65)?quirkEvent():null,5);add(chance(.5)?histEvent():null,6);add(chance(.4)?courtEvent():null,4);add(palaceRomanceEvent(),8);add(courtFriendshipEvent(),9);add(motherAppealEvent(),9);
@@ -426,7 +424,7 @@ A.start=function(){
   if(style==='勤政'){e.prestige=58;e.people=65}if(style==='风流')e.health=84;if(style==='尚武'){e.wu=80;e.prestige=55}if(style==='文雅')e.wen=80;
   e.energy=maxEnergy();
   const em=makeGirl({fam:pick(FAMS.slice(0,3)),trait:pick(['温婉','聪慧','城府','骄矜'])});em.favor=40;em.aff=40;em.age=18;em.knownBeforeAccession=true;
-  S.consorts.push(em);em.rank=8;em.palace='坤宁宫';story(em,'潜邸时奉先帝之命嫁与陛下为嫡妻。新帝登基，册为皇后，入主坤宁宫。');
+  S.consorts.push(em);em.rank=8;assignPalace(em);story(em,'潜邸时奉先帝之命嫁与陛下为嫡妻。新帝登基，册为皇后，入主坤宁宫。');
   const old=makeGirl({});old.favor=55;old.aff=60;old.knownBeforeAccession=true;old.rank=3;S.consorts.push(old);assignPalace(old);story(old,'潜邸旧人，陪伴陛下多年。新帝登基，册为贵人。');
   log(`${era}元年三月，新帝${sur}${name}登基，改元${era}，大赦天下。`,1);
   log(`册嫡妻${fullName(em)}为皇后，潜邸旧人${fullName(old)}为贵人。`);

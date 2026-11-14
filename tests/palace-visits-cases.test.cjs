@@ -63,7 +63,7 @@ test('the selection disclosure threshold is reachable by ordinary generated cand
  const {run}=boot(713);run(`var found=false;for(var i=0;i<5000&&!found;i++){var c=makeGirl();initTimeTraveler(c);found=!!travelerSelectionBlurt(c);}assert.ok(found,'natural generation can produce an indiscreet traveler');`);
 });
 function swapCase(run,force){
- run(`S.turn=60;E().energy=10;E().treasury=500;var [m,a]=harem();m.preg=8;m.swapAsked=false;planBirthSwap(m,a,false);var k=makeKid(m,'m','承宁');`);
+ run(`S.turn=60;E().energy=10;E().treasury=500;var [m,a]=harem();m.preg=8;m.swapAsked=false;planBirthSwap(m,a,false);var k=makeKid(m,'f','明宁');`);
  force(0,0,0,0,0,0,0,0,0,0,0,0);
  run(`settleBirthSwap(m,k);k.birthSwap.originalSafe=false;S.turn=k.birthSwap.clueDue;birthSwapClueEvent().onQueue();beginParentageInquiry(k);S.turn++;confirmBirthSwap(k);`);
 }

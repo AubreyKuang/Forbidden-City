@@ -17,17 +17,18 @@ function birthTags(k){
   return `${multipleBadge(k)}${omen?`<span class="tag y" title="出生时${omen.label}+${omen.bonus}">${omen.name} · ${omen.label}+${omen.bonus}</span>`:''}${k.birthTrouble?`<span class="tag">${esc({frail:'初生体弱',quake:'出生时地动',drought:'出生逢旱'}[k.birthTrouble])}</span>`:''}`;
 }
 function deliveryKids(c){return (c.delivery?.children||[]).map(kidById).filter(Boolean)}
-function pendingDelivery(){return S.consorts.find(c=>c.delivery&&!c.delivery.settled&&deliveryKids(c).some(k=>k.pendingName))}
+function pendingDelivery(){return S.consorts.find(c=>c.delivery&&!c.delivery.settled&&(c.delivery.lossPending||deliveryKids(c).some(k=>k.pendingName)))}
 function birthEvent(c){
   if(c.delivery&&!c.delivery.settled)return birthNamingEvent(c);
   if(c.preg<(c.pregnancyCalendar?.term||10))return null;
+  if(concealedPregnancy(c))return concealedDeliveryEvent(c);
   const count=rollBirthCount(),sexes=Array.from({length:count},()=>chance(.5)?'m':'f');
   const kind=birthType(sexes),omen=chance(.03)?pick(Object.keys(BIRTH_OMENS)):null;
   const children=sexes.map(sex=>makeKid(c,sex,suggestName(sex)));
   registerMultipleBirth(children);
   delete c.pregnancyFather;delete c.pregnancyCalendar;
   c.delivery={children:children.map(k=>k.id),kind,omen,settled:false,
-    difficult:chance(c.trait==='体弱'?.12:.03),swap:!!c.swapRisk&&!c.swapPlot&&chance(.7),templeAdvice:rollBirthTempleAdvice(children,omen)};
+    difficult:chance(c.trait==='体弱'?.12:.03),originalLoss:count===1&&!!c.swapPlot&&!c.swapPlot.settled&&chance(.02),swap:false,templeAdvice:rollBirthTempleAdvice(children,omen)};
   c.preg=0;c.prot=false;c.swapRisk=false;c.lastBirth=S.turn+1;
   children.forEach((k,i)=>{
     k.pendingName=true;k.birthOrder=i+1;
@@ -36,13 +37,19 @@ function birthEvent(c){
     if(omen)applyBirthOmen(k,omen);
   });
   settleBirthSwap(c,children[0]);
+  if(children[0].birthSwap?.occurred)c.delivery.omen=null;
+  if(c.delivery.originalLoss&&!children[0].birthSwap?.occurred){
+    const k=children[0];k.alive=false;k.pendingName=false;k.name='未命名';k.deathReason='出生时已无生息';delete k.birthOmen;delete k.birthTrouble;
+    c.delivery.lossPending=true;c.delivery.omen=null;c.delivery.templeAdvice=null;
+  }
   return birthNamingEvent(c);
 }
 function birthNamingEvent(c){
+  if(c.delivery?.lossPending)return birthLossEvent(c);
   const children=deliveryKids(c),k=children.find(k=>k.pendingName);if(!k)return null;
   const kind=c.delivery.kind,identity=multipleIdentity(k),omen=BIRTH_OMENS[c.delivery.omen];
   const report=kind?`${cName(c)}于${c.palace}诞下${cnNum(children.length)}位皇嗣，${identity?.detail||kind}，宫人贺作“${identity?.name||kind}”。`:
-    `${cName(c)}于${c.palace}临盆，阵痛一日一夜，诞下一位${k.sex==='m'?'小皇子':'小公主'}。`;
+    c.delivery.concealedLoss?`${c.palace}报来喜讯，称${cName(c)}诞下一位小皇子，请陛下赐名。`:`${cName(c)}于${c.palace}临盆，阵痛一日一夜，诞下一位${k.sex==='m'?'小皇子':'小公主'}。`;
   return {title:identity?.name||kind||'弄璋弄瓦',por:c,cast:children,sfx:'joy',
     text:`${report}${omen?`\n${omen.text}\n§${omen.name}：本胎皇嗣出生时${omen.label}+${omen.bonus}`:''}\n${kind?`请为${['先降生','随后降生','最后降生'][k.birthOrder-1]||'这位'}的${k.sex==='m'?'小皇子':'小公主'}赐名`:'请陛下赐名'}（不含姓氏）：`,
     input:{def:k.name,max:3},choices:[{t:'赐名',f:value=>{
@@ -59,19 +66,28 @@ function birthNamingEvent(c){
       const result=finishDelivery(c);save('auto');return {text:result,por:children.length===1?k:undefined};
     }}]};
 }
+function birthLossEvent(c){
+  if(!c.delivery?.lossPending||c.delivery.settled)return null;
+  const k=deliveryKids(c)[0];return {title:'产房哀讯',por:c,sfx:'sad',valid:()=>!!c.delivery?.lossPending&&!c.delivery.settled,
+    text:`医官回报，${fullName(c)}产下的孩子出生时已无生息。${c.delivery.difficult?'产妇又因血崩未能挺过，太医回天乏术。':''}接生与出入记录已经核对，此事并非她的过错。`,choices:[{t:c.delivery.difficult?'按礼安葬母子':'妥善安葬，命太医照看她',f:()=>{
+      if(c.delivery.settled)return null;c.delivery.settled=true;c.delivery.lossPending=false;
+      const line=c.delivery.difficult?'亲生孩子出生时已无生息，产妇又因血崩薨逝，母子按礼安葬。':'亲生孩子出生时已无生息，按礼安葬，命太医照看产妇。';kstory(k,line);story(c,line);log(`${fullName(c)}产房传来哀讯，孩子未能存活。`,1);
+      if(c.delivery.difficult){c.alive=false;c.deathReason='产后血崩';log(`${fullName(c)}因产后血崩薨逝。`,1);}else{setXin(c,'悲恸','初生孩子夭折');cchg(c,{mood:-25});}save('auto');return line;
+    }}]};
+}
 function finishDelivery(c){
   const delivery=c.delivery;if(!delivery||delivery.settled)return '';
   const children=deliveryKids(c);if(children.some(k=>k.pendingName))return '';
   delivery.settled=true;deepen(c);
   if(c.wish==='child'&&!c.wishDone){c.wishDone=true;c.wishKnown=true;}
-  remember(c,'child',delivery.kind?`诞下${delivery.kind}`:'生下孩子');
+  remember(c,'child',delivery.concealedLoss?'报来的孩子获赐名入册':delivery.kind?`诞下${delivery.kind}`:'生下孩子');
   const names=children.map(k=>kidName(k)).join('、');
   let effect=chg({prestige:children.some(k=>k.sex==='m')?4:2}),text=`${names}，均已赐名。`;
   if(delivery.difficult){
     c.alive=false;story(c,`诞下${names}后血崩，撒手人寰。`);log(`${fullName(c)}诞下${names}后薨逝。`,1);AU.sfx('sad');
     children.forEach(k=>kstory(k,`生母${k.momName}因难产薨逝。`));text+=`\n然而产后血崩，${fullName(c)}没能挺过那个夜晚。`;
   }else{
-    setXin(c,'欢喜','诞下皇嗣');story(c,`诞下${names}，陛下分别赐名。`);log(`${fullName(c)}诞下${names}${delivery.kind?`（${delivery.kind}）`:''}。`,1);
+    setXin(c,'欢喜',delivery.concealedLoss?'报喜获赐名':'诞下皇嗣');story(c,`${delivery.concealedLoss?'宫中报称诞下':'诞下'}${names}，陛下分别赐名。`);log(`${delivery.concealedLoss?'宫中报称':''}${fullName(c)}诞下${names}${delivery.kind?`（${delivery.kind}）`:''}。`,1);
     effect+='　'+cchg(c,{mood:25,aff:10,favor:8});
   }
   const follow=[];
@@ -114,5 +130,5 @@ function birthTempleAdviceEvent(k){
 }
 A.resumeBirth=function(id){const c=byId(id);if(c?.delivery&&!c.delivery.settled)pushEv(birthNamingEvent(c));};
 function pendingBirthPanel(){
-  const c=pendingDelivery();return c?`<p class="hint">${esc(fullName(c))}新生的皇嗣尚待赐名。</p><button class="btn gold" onclick="A.resumeBirth(${c.id})">继续赐名</button>`:'';
+  const c=pendingDelivery();return c?`<p class="hint">${esc(fullName(c))}${c.delivery.lossPending?'的产房消息尚待处理':'新生的皇嗣尚待赐名'}。</p><button class="btn gold" onclick="A.resumeBirth(${c.id})">${c.delivery.lossPending?'处理产房消息':'继续赐名'}</button>`:'';
 }
