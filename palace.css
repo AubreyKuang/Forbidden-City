@@ -719,3 +719,11 @@ button.family-room-person{cursor:pointer}button.family-room-person:hover{color:#
 @media(max-width:600px){.selection-audience{padding:12px}.audience-body{grid-template-columns:110px 1fr;gap:10px}.audience-dialogue{padding:11px;font-size:13px}.audience-dialogue blockquote{font-size:15px}.selection-audience footer{align-items:flex-start;flex-direction:column}.dao-master{grid-template-columns:100px 1fr;gap:12px}.dao-master blockquote{font-size:15px}.dao-hall{padding:12px}}
 
 #panel .selection-audience h2{color:#ffedc9;text-shadow:0 2px 9px #241c15;margin:6px 0 14px}
+.living-history-note,.child-disposition{margin:14px 0;padding:16px 18px;border:1px solid #b4a08266;border-left:3px solid #7e916e;border-radius:8px;background:#f5efdf}
+.living-history-note h3{margin:6px 0 10px;color:#3d5544}
+.living-history-note p,.child-disposition p{line-height:1.85;margin:8px 0;overflow-wrap:anywhere}
+.living-history-note .history-eyebrow{color:#766b54;letter-spacing:.08em}
+.living-history-note details{margin-top:12px;padding-top:10px;border-top:1px solid #b4a08244}
+.living-history-note summary{cursor:pointer;color:#566b56}
+.child-disposition strong{color:#556751}
+@media(max-width:560px){.living-history-note,.child-disposition{padding:13px}.living-history-note .btn{white-space:normal;text-align:left}}
