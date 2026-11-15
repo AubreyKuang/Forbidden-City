@@ -146,6 +146,7 @@ function consortSocialTick(){
   relAdd(a,b,5);
   for(const [person,other] of [[a,b],[b,a]]){
     person.lastSocial={turn:S.turn,other:other.id,place,activity};
+    story(person,`【日常往来】与${fullName(other)}在${place}${activity}，相处之后比从前更亲近些。`);
     person.mood=clamp(person.mood+2);
   }
   NPCMemory.record(S,{type:'consort_social',time:S.turn,location:place,

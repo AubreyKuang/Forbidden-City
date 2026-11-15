@@ -1,13 +1,13 @@
 /* Children meet in the school and respond to changes in their mothers' lives. */
 const schoolChildren=()=>kidsAlive().filter(k=>childInPalace(k)&&kidAge(k)>=6&&kidAge(k)<16&&!k.pendingName);
-function childLifeTick(){
+function syncChildDisgrace(){
   for(const c of S.consorts){
     if(c.cold&&c.alive&&!c.gone){
       if(!c.childDisgrace?.active)c.childDisgrace={active:true,turn:S.turn,asked:false};
     }else if(c.childDisgrace)c.childDisgrace.active=false;
   }
-  ensureSchoolScene();
 }
+function childLifeTick(){syncChildDisgrace();ensureSchoolScene();}
 function motherAppealEvent(){
   if(S.turn-(S.flags.lastChildAppeal??-99)<6)return null;
   for(const mother of S.consorts){

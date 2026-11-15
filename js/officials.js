@@ -66,6 +66,33 @@ function officialRecord(c,role,text,{family=true,emotion=0}={}){
   }
   log(`${p.name}：${text}`,1);
 }
+function officialFamilyReaction(e,kind,task){
+ const {c,p,role,h}=e;
+ for(const member of paternalFamily(c).filter(x=>S.consorts.includes(x)&&x.alive)){
+  const kin=officialKinLabel(h,role),who=kin+p.name,formal=isSolitary(member)||['持重','聪慧','城府','将门','爽直'].includes(member.trait);
+  const lines={
+   assigned:[`${who}奉命「${task}」，她知道家人得到施展本领的机会，感激之余也惦记能否不负所托。`,formal?`陛下肯用${who}，臣妾记着。只愿他凭本事把「${task}」办好，不负这一份托付。`:`听说${who}领了「${task}」，臣妾很感激。高兴之外，也盼他一路妥当、把事情办好。`,'感激',2,3],
+   success:[`${who}办结「${task}」，她读过回奏，先前悬着的心放下些，也为家人做成实事而自豪。`,formal?`「${task}」办结了。臣妾替${who}高兴，功劳仍请凭实绩论，不必因臣妾多算一分。`:`${who}终于把「${task}」办妥了。臣妾先前还担心，如今才敢好好高兴一回。`,'释然',0,5],
+   setback:[`${who}的「${task}」未尽如期，她心里担忧，想先弄清疏漏与补救，不敢只凭亲情替他开脱。`,`${who}这回「${task}」没有办好，臣妾心里不安。想先知道哪里失了当、还能怎样补救，不敢先替他喊冤。`,'忧心',0,-4],
+   accountable:[`${who}因「${task}」的疏漏被责令说明，差务另派人接手。她听后惶恐，担心家人前程，也明白问责不能由宫中亲情代替。`,formal?`${who}被责令说明「${task}」的疏漏，臣妾难免惶恐。该担的责任请依法查清，只盼听到的是实情。`:`听说「${task}」另派人接手，臣妾一直悬着心。${who}究竟失在哪里，还请陛下查明。`,'惶恐',0,-5],
+   reward:[`${who}因「${task}」获赏，她记得这份肯定，也把家人受赏时的欢喜留在心里。`,formal?`${who}凭「${task}」的实绩受赏，臣妾感激陛下明辨功过，也会劝家人珍惜声名。`:`${who}得了「${task}」的嘉奖，臣妾想当面谢一声。这份欢喜，会写进给家里的信。`,'感激',4,5],
+   death:[`${who}去世，听到讣报后的悲伤一直压在心上；家中旧物与未说完的话都还在。`,`${who}不在了。家里还有他的旧信，臣妾总想起从前以为不急着说的那些话。`,'悲恸',0,0],
+   honor:[`${who}身后获赐祭抚恤，她感激家人没有被遗忘，悲伤却不能由恩赏抵消。`,`${who}身后得到照拂，臣妾记着。只是祭文读过，还是会想，若他还能亲自读到，该多好。`,'感激',3,2],
+   retire:[`${who}获准致仕归乡，她挂念家人今后的起居，也稍松了口气。`,`${who}卸了差务，臣妾盼他在家好好歇息。家里的日子，也该有人问一问。`,'释然',1,3],
+   recall:[`${who}奉诏复出，她感激朝廷仍记得家人的才干，也担心操劳。`,`${who}重受任用，臣妾感激，也盼他量力而行，不要连自己的身体都忘了。`,'感激',2,2]
+  };
+  const a=lines[kind];if(!a)continue;
+  member.familyDuty={relativeId:p.id,role,name:p.name,kin,kind,task,turn:S.turn,text:a[0],quote:a[1]};
+  if(!['悲恸','心如死灰','怨恨'].includes(xinOf(member)))setXin(member,a[2],`${who}：${task||kind}`);
+  cchg(member,{aff:a[3],mood:a[4]});story(member,`【外家差事·${who}】${a[0]}她说：“${a[1]}”`);
+  NPCMemory.record(S,{type:'official-family-reaction',time:S.turn,participants:[member.id,p.id],outcome:a[0]},[{person:member.id,subject:p.id,interpretation:a[0],emotion:['setback','accountable','death'].includes(kind)?-.6:.5,impact:75}]);
+ }
+}
+function officialFamilyVoice(c){
+ const r=c?.familyDuty;if(!r||!inPalace(c)||S.turn-r.turn>6)return null;
+ const p=c.house?.[r.role];if(!p||p.id!==r.relativeId||!officialAlive(p)&&!['death','honor'].includes(r.kind))return null;
+ return voiceLine('official-family-'+r.kind,`说起${r.kin}${r.name}，她想起「${r.task||'家中往事'}」。`,r.quote);
+}
 function officialDeath(c,role,reason,kind='illness'){
   const h=houseOf(c),p=h?.[role];if(!officialAlive(p))return false;
   p.alive=false;p.death={kind,reason,d:dateStr(),turn:S.turn};p.away=false;delete p.commission;
@@ -76,6 +103,7 @@ function officialDeath(c,role,reason,kind='illness'){
     member.fam.p=Math.max(5,member.fam.p-6);
   }
   startOfficialContinuity({c,p,role},'death',p.death.reason);
+  officialFamilyReaction({c,p,role,h},'death',reason);
   return true;
 }
 function officialLink(c,role,label){
@@ -164,7 +192,7 @@ function assignOfficialTask(e,id){
   const p=e.p;chg({treasury:-task.cost});p.lastCommission=S.turn;
   const roll=R(),success=.35+p.ability/200+p.trust/500;
   p.commission={id,title:task.title,due:S.turn+task.months,started:S.turn,contact:e.c.id,wasAway:!!p.away,outcome:roll<task.risk?'death':roll<success?'success':'setback'};
-  officialRecord(e.c,e.role,`奉旨${task.title}，约${task.months}个月后回奏。`);save('auto');return `${p.name}领命。进展将记入其履历，并向家眷通报。`;
+  officialRecord(e.c,e.role,`奉旨${task.title}，约${task.months}个月后回奏。`);officialFamilyReaction(e,'assigned',task.title);save('auto');return `${p.name}领命。进展将记入其履历，并向家眷通报。`;
 }
 function officialTaskTick(){
   for(const e of officialEntries()){
@@ -175,6 +203,7 @@ function officialTaskTick(){
     else{
       text=j.outcome==='success'?`${j.title}已办结，簿册与实地核验相符，相关善后也已安排。`:`${j.title}未尽如期，回奏列明了调度疏漏，并请朝廷复核善后。`;
       p.merit=clamp(p.merit+(j.outcome==='success'?12:-6));chg({people:j.outcome==='success'?3:-1});officialRecord(c,role,text,{emotion:j.outcome==='success'?.5:-.3});
+      officialFamilyReaction(familyContact,j.outcome,j.title);
     }
     p.report={text,outcome:j.outcome,title:j.title,turn:S.turn};
     startOfficialContinuity(familyContact,j.outcome,j.title);
@@ -189,7 +218,7 @@ function officialReportEvent(e){
     if(kind==='honor')p.memorialHonor=true;
     if(kind==='reward'){p.lastReward=S.turn;p.rewardedMerit=p.merit;p.trust=clamp(p.trust+5);}
     if(kind==='accountable')p.trust=clamp(p.trust-5);
-    officialRecord(c,role,text,{emotion:kind==='honor'||kind==='reward'?.5:0});save('auto');return text;
+    officialRecord(c,role,text,{emotion:kind==='honor'||kind==='reward'?.5:0});if(kind!=='record')officialFamilyReaction(e,kind,report.title);save('auto');return text;
   };
   return {title:report.outcome==='death'?'边关讣报':'外臣回奏 · '+report.title,por:p,valid,text:`${p.name}：${report.text}\n${report.outcome==='death'?'讣报已经送达家中，相关姐妹的纪事与家谱也已记明。':'差事的结果已记入个人履历，可据此决定赏罚。'}`,choices:[
     ...(report.outcome==='death'?[{t:'厚加抚恤，赐祭其家 · 国库−20',cond:()=>!p.memorialHonor&&E().treasury>=20,why:p.memorialHonor?'已办理抚恤':'国库不足',f:()=>finish('honor',20)}]:report.outcome==='success'?[{t:'嘉奖实绩，赐银帛 · 国库−15',cond:()=>E().treasury>=15,why:'国库不足',f:()=>finish('reward',15)}]:[{t:'责令说明疏漏，另派人善后',f:()=>finish('accountable')}]),
@@ -215,6 +244,6 @@ A.officialAct=function(key,action){
       if(action==='reward'){p.lastReward=S.turn;p.rewardedMerit=p.merit;p.trust=clamp(p.trust+6);}
       if(action==='retire'){p.retired=true;p.retiredAt=S.turn;}
       if(action==='recall'){p.retired=false;p.away=false;}
-      const line={honor:'奉旨赐祭抚恤，家中收到祭文与抚恤银。',reward:'因新增功绩获赏银帛。',retire:'奉准致仕归乡，卸下差务。',recall:'奉诏复出，恢复原职。'}[action];officialRecord(c,role,line,{emotion:.5});save('auto');return line;
+      const line={honor:'奉旨赐祭抚恤，家中收到祭文与抚恤银。',reward:'因新增功绩获赏银帛。',retire:'奉准致仕归乡，卸下差务。',recall:'奉诏复出，恢复原职。'}[action];officialRecord(c,role,line,{emotion:.5});officialFamilyReaction(e,action,action==='reward'?'任上新增功绩':line);save('auto');return line;
     }},{t:'暂缓'}]});
 };

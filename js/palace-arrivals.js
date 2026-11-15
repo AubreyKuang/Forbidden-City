@@ -26,7 +26,7 @@ function palaceWelcome(c){
   const voice=consortVoicePool(c)[0];
   let stage='宫人挑起帘子，她放下手边的事，迎到屏风前。',lines=PALACE_WELCOMES[c.trait]||PALACE_WELCOMES.温婉,key='trait';
   // A difficult circumstance takes precedence over cheerful or intimate greetings.
-  if(['grief','distant-child','distance','ill'].includes(voice.key)||['悲恸','心如死灰','怨恨','惶恐'].includes(x)||c.aff<20){
+  if(['grief','distant-child','distance','ill'].includes(voice.key)||voice.key.startsWith('home-')||voice.key.startsWith('official-family-')||['悲恸','心如死灰','怨恨','惶恐','忧心'].includes(x)||c.aff<20){
     stage=voice.stage;lines=voice.lines;key=voice.key;
   }else if(isSolitary(c)){
     const quiet=maternalVoice(c)||solitaryVoice(c);stage=quiet.stage;lines=quiet.lines;key=quiet.key;
@@ -45,13 +45,15 @@ function palaceWelcome(c){
 function palaceArrivalEvent(name,id){
   if(!S||S.over||name==='冷宫')return null;
   const residents=palaceResidents(name),c=residents.find(p=>p.id===id)||residents[0];if(!c)return null;
-  const valid=()=>inPalace(c)&&c.palace===name&&!S.over;
+  const together=id==null?cohabScene(name,c):null;
+  const valid=()=>inPalace(c)&&c.palace===name&&!S.over&&(!together||cohabSceneValid(together));
   const welcome=palaceWelcome(c);
   const scene=palaceLifeScene(name);
   const atHome=scene?.mother===c&&scene.child;
-  const ev={title:`驾临${name}`,scene:'palace-arrival',por:c,present:[c],valid,arrival:{name,c,welcome},
-    text:`你穿过宫门，沿回廊来到${name}。\n${welcome.stage}\n“${welcome.text}”`,
+  const ev={title:`驾临${name}`,scene:'palace-arrival',por:c,present:together?[together.a,together.b]:[c],valid,arrival:{name,c,welcome,together},
+    text:`你穿过宫门，沿回廊来到${name}。\n${together?together.text+'\n':''}${welcome.stage}\n“${welcome.text}”`,
     onShow:()=>{
+      if(together)recordCohab(together);
       // Greetings cost nothing and cannot farm affection or paid-conversation milestones.
       if(c.palaceWelcome?.turn!==S.turn){
         c.palaceWelcome={turn:S.turn,text:welcome.text};
@@ -62,6 +64,7 @@ function palaceArrivalEvent(name,id){
       }
     },choices:[
       {t:'坐下陪她说话 · 精力−1',primary:true,cond:()=>E().energy>0,why:'本月精力不足，仍可查看宫中近况',f:()=>{if(valid())A.chat(c.id,true);return null;}},
+      ...(together&&!S.flags.cohabRecent?.[together.key]?.responded?[{t:together.kind==='argument'?'听听她们为何拌嘴':'原来你们都在，听听这件事',f:()=>{const scene=cohabResponseEvent(together);if(scene)pushNow(scene);return null;}}]:[]),
       ...(continuityReady(c)?[{t:'接着谈她近来牵挂的事',f:()=>{const t=continuityReady(c);if(t)A.continuePersonal(t.id,true);return null;}}]:[]),
       ...(atHome?[{t:`看看${scene.child.name}与母亲`,f:()=>{UI.view='palace';UI.sel=name;return null;}}]:[]),
       {t:'看看宫中近况',f:()=>{UI.view='palace';UI.sel=name;return null;}},
@@ -70,8 +73,8 @@ function palaceArrivalEvent(name,id){
     ]};return ev;
 }
 function palaceArrivalHTML(ev){
-  const {name,c,welcome}=ev.arrival,others=palaceResidents(name).filter(p=>p.id!==c.id);
-  return `<section class="palace-arrival-scene" aria-label="宫殿迎驾"><p class="arrival-path">宫门 · 回廊 · ${esc(name)}</p><div class="arrival-body"><figure class="arrival-portrait">${porImg(c,210)}<figcaption>${esc(cName(c))} · ${esc(fullName(c))}</figcaption></figure><div class="arrival-dialogue"><p>${esc(welcome.stage)}</p><blockquote>“${esc(welcome.text)}”</blockquote></div></div>${others.length?`<nav class="arrival-residents" aria-label="拜访同宫其他人"><span>同住此宫</span>${others.map(p=>`<button class="btn" onclick="A.greetPalaceResident(${p.id})">${porImg(p,44)}<span>去见${esc(cName(p))} →</span></button>`).join('')}</nav>`:''}</section>`;
+  const {name,c,welcome,together}=ev.arrival,others=palaceResidents(name).filter(p=>p.id!==c.id);
+  return `<section class="palace-arrival-scene" aria-label="宫殿迎驾"><p class="arrival-path">宫门 · 回廊 · ${esc(name)}</p>${together?`<section aria-label="同宫在场"><h3>${esc(together.title)}</h3><p>${esc(together.text)}</p><p>${porImg(together.b,76)} ${esc(fullName(together.b))}也在这里</p></section>`:''}<div class="arrival-body"><figure class="arrival-portrait">${porImg(c,210)}<figcaption>${esc(cName(c))} · ${esc(fullName(c))}</figcaption></figure><div class="arrival-dialogue"><p>${esc(welcome.stage)}</p><blockquote>“${esc(welcome.text)}”</blockquote></div></div>${others.length?`<nav class="arrival-residents" aria-label="拜访同宫其他人"><span>同住此宫</span>${others.map(p=>`<button class="btn" onclick="A.greetPalaceResident(${p.id})">${porImg(p,44)}<span>去见${esc(cName(p))} →</span></button>`).join('')}</nav>`:''}</section>`;
 }
 A.greetPalaceResident=function(id){
   if(!modalOpen||curEv?.scene!=='palace-arrival')return;

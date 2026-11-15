@@ -64,7 +64,7 @@ function consortCompatibility(a,b){
 }
 const GIFTN={'诗书':'一套宋版诗集','琴谱':'一卷失传的古琴谱','字画':'一幅前朝名家山水','珠翠':'一匣东珠点翠头面','绸缎':'十匹江南云锦','花草':'一盆十八学士茶花','点心':'御膳房新制的八珍糕','香料':'一盒南海龙涎香','佛经':'一部泥金《法华经》','弓马':'一匹西域小红马'};
 const WISHES={
- mother:{t:'想再见母亲一面',btn:'接她母亲入宫小住（国库-15万两）',f:c=>{chg({treasury:-15});momVisit(c,ri(2,3));return '她母亲进宫来了，要在宫里住上几个月。母女俩一见面就抱头哭了。'}},
+ mother:{t:'想再见母亲一面',btn:'接她母亲入宫小住（国库-15万两）',cond:c=>momVisitState(c).ready,f:c=>{chg({treasury:-15});momVisit(c,ri(2,3));return '她母亲进宫来了，要在宫里住上几个月。母女俩一见面就抱头哭了。'}},
  father:{t:'想为父亲求一个清白名声',btn:'下旨褒奖她父亲（威望-2）',f:c=>{chg({prestige:-2});c.fam.p=Math.min(95,c.fam.p+8);return '圣旨送到她老家，她父亲跪在门口，哭得像个孩子。'}},
  child:{t:'想要一个孩子',btn:null},
  south:{t:'想去江南看一眼',btn:'带她南巡（国库-150万两，龙体-2）',f:c=>{chg({treasury:-150,health:-2,people:2});return '烟雨江南，画舫笙歌。她靠在船舷上说，这辈子值了。'}},
@@ -142,7 +142,7 @@ function deepLine(c){deepen(c);if(c.wish==='title'&&c.title&&!c.wishDone){c.wish
   <div>平日消遣：<span class="tag">${esc(c.hobby)}</span></div>
   <div>心愿：${c.wishKnown?`${esc(w.t)}${c.wishDone?' <span class="tag y">已成全</span>':w.btn?` <button class="btn sm jade" onclick="A.wish(${c.id})" ${inPalace(c)?'':'disabled'}>${esc(w.btn)}</button>`:' <span class="hint">（生下孩子便成全了）</span>'}`:'<span class="hint">情分到 50 以后，闲谈时她也许会说</span>'}</div>
   ${c.woundKnown?`<div>往事：${esc(WOUNDS[c.wound])}</div>`:'<div class="hint">往事：情分到 65 以后，她也许会对你说起</div>'}`}
-A.chat=function(id,fromEvent=false){const c=byId(id);if((modalOpen&&!fromEvent)||!inPalace(c))return;const arrival=kinArrivalGreeting(c)||newcomerWelcomeEvent(c);if(arrival){(fromEvent?pushNow:pushEv)(arrival);return;}const past=pastLifeEvent(c);if(past){(fromEvent?pushNow:pushEv)(past);return;}initTimeTraveler(c);const quiet=solitaryEvent(c);if(quiet){(fromEvent?pushNow:pushEv)(quiet);return;}const oldWorld=travelerConfessionEvent(c);if(oldWorld){if(useE())(fromEvent?pushNow:pushEv)(oldWorld);return;}if(!useE())return;deepen(c);const L=[];const xk=xinOf(c),opening=consortVoicePhase(c)==='first';
+A.chat=function(id,fromEvent=false){const c=byId(id);if((modalOpen&&!fromEvent)||!inPalace(c))return;const home=homeCareEvent(c)||solitaryQuietEvent(c);if(home){(fromEvent?pushNow:pushEv)(home);return;}const arrival=kinArrivalGreeting(c)||newcomerWelcomeEvent(c);if(arrival){(fromEvent?pushNow:pushEv)(arrival);return;}const past=pastLifeEvent(c);if(past){(fromEvent?pushNow:pushEv)(past);return;}initTimeTraveler(c);const quiet=solitaryEvent(c);if(quiet){(fromEvent?pushNow:pushEv)(quiet);return;}const oldWorld=travelerConfessionEvent(c);if(oldWorld){if(useE())(fromEvent?pushNow:pushEv)(oldWorld);return;}if(!useE())return;deepen(c);const L=[];const xk=xinOf(c),opening=consortVoicePhase(c)==='first';
   const voice=characterVoice(c,'talk');L.push(voice.stage);L.push(`“${voice.text}”`);
   const familyTalk=fiveBrotherChat(c);if(familyTalk)L.push(familyTalk);
   if(!opening&&S.flags.lastCourt&&(c.t2==='好读史'||c.t2==='直言')&&chance(.6))L.push(c.t2==='好读史'?`她听说了「${S.flags.lastCourt}」的事。${HISTC[S.flags.lastCourt]||'她说：“以史为镜，可以知兴替。”'}`:`她听说了「${S.flags.lastCourt}」的事，直截了当地说：“陛下那样处置，${pick(['臣妾觉得不妥。','臣妾觉得极好。','怕是要挨骂的。'])}”`);
@@ -165,7 +165,7 @@ A.chat=function(id,fromEvent=false){const c=byId(id);if((modalOpen&&!fromEvent)|
   else if(!opening&&c.aff>=65&&!c.woundKnown&&chance(.5)){c.woundKnown=true;rev+=`\n夜深了，她第一次说起从前的事：${WOUNDS[c.wound]}`;story(c,'第一次对陛下说起入宫前的往事。')}
   const sch=harem().filter(x=>x!==c&&x.scheme>=65&&!x.known);
   if(!opening&&c.aff>=50&&sch.length&&chance(.25)){const x=pick(sch);x.known=true;rev+=`\n她压低声音：“${cName(x)}那边，陛下还是留个心眼好。”（${cName(x)}的心机已显露：${rd(x.scheme)}）`}
-  if(NEGX.includes(xk)&&!continuityBlocksSoothing(c,xk)){const p={'思念':.8,'委屈':.6,'惶恐':.55,'嫉恨':.25,'悲恸':.3,'怨恨':.12,'心如死灰':.1}[xk]+c.aff/400;if(chance(p)){const nk=xk==='思念'?'欢喜':'释然';setXin(c,nk,'陛下陪她说了许久的话');rev+=`\n§心境：${xk} → ${nk}`}else rev+=`\n§她的心境仍是「${xk}」`}
+  if(NEGX.includes(xk)&&!continuityBlocksSoothing(c,xk)){const p=({'思念':.8,'委屈':.6,'惶恐':.55,'嫉恨':.25,'悲恸':.3,'怨恨':.12,'心如死灰':.1,'忧心':.2}[xk]||0)+c.aff/400;if(chance(p)){const nk=xk==='思念'?'欢喜':'释然';setXin(c,nk,'陛下陪她说了许久的话');rev+=xinOf(c)!==xk?`\n§心境：${xk} → ${xinOf(c)}`:`\n§她的心境仍是「${xk}」`}else rev+=`\n§她的心境仍是「${xk}」`}
   const s=cchg(c,{aff:routineAffection(c,c.trait==='痴情'?8:5),mood:8,favor:2});
   const moment=recordSharedMoment(c,xk);if(moment)L.push(moment);
   story(c,`陛下驾临闲话。${L[1]}`);rememberConversation(c,voice,c.palace);setScene('harem');
@@ -237,6 +237,8 @@ function quirkEvent(){for(const c of shuffle(harem())){deepen(c);if(S.turn-(c.qc
 /* ============ 心境 ============ */
 const XIN={
  '平和':{c:'',d:0,expr:'',mood:0,lines:['']},
+ '清静被扰':{c:'y',d:3,expr:'worry',mood:-1,lines:['廊下人声接连不断，她数次掩卷，只想留一段不必应门的时辰。']},
+ '忧心':{c:'y',d:4,expr:'worry',mood:-1,lines:['她将家信读了又读，心里仍有未解的牵挂。','有人传信进来，她便先抬头，盼是家里的回音。']},
  '欢喜':{c:'g',d:3,expr:'smile',mood:2,lines:['眉梢眼角都是笑意，连说话的声音都轻快了几分。','一边说话一边忍不住地笑，像心里揣着一罐蜜。']},
  '感激':{c:'g',d:6,expr:'smile',mood:1,lines:['看你的眼神里满是感激，给你斟茶时手都有些抖。','把你的话一句一句都记着，生怕漏了哪个字。']},
  '释然':{c:'g',d:4,expr:'',mood:2,lines:['整个人松快了许多，说起从前的事，也能淡淡一笑了。']},
@@ -249,10 +251,12 @@ const XIN={
  '心如死灰':{c:'k',d:18,expr:'blank',mood:-3,favorMul:.5,lines:['不哭也不闹，只是安安静静地坐着，像一盏快燃尽的灯。','你跟她说了很多话，她只是“嗯”了几声。']},
  '野心':{c:'r',d:8,expr:'',mood:1,scheme:1,lines:['说话比从前多了几分底气，偶尔会提起朝中某位大人的名字。']},
 };
-const NEGX=['思念','委屈','惶恐','嫉恨','怨恨','悲恸','心如死灰'];
+const NEGX=['思念','委屈','惶恐','嫉恨','怨恨','悲恸','心如死灰','忧心'];
 const ARCX={'孤女':'心如死灰','诗绝':'心如死灰','沙尽':'心如死灰','冷月':'心如死灰','囚鸟':'怨恨','怨怼':'怨恨','削爵':'怨恨','连坐':'怨恨','心冷':'委屈','心结':'委屈','抄家':'委屈','昭雪':'释然','尘封':'释然','回头':'释然','知音':'欢喜','此心已许':'欢喜','同心':'欢喜','知己':'欢喜','回春':'欢喜','江南春':'欢喜','君臣相得':'感激','赎罪':'感激','驼铃归':'感激','将相和':'感激','清白':'感激','凤仪':'野心','摄六宫':'野心','败露':'惶恐'};
 function xinOf(c){return (c&&c.xin&&c.xin.k)||'平和'}
 function setXin(c,k,why,who){if(!c||!c.alive||!XIN[k])return;const cur=xinOf(c);
+  if(cur==='清静被扰'&&solitaryNoiseActive(c)&&['欢喜','释然','感激','平和'].includes(k))return;
+  if(homeWorryActive(c)&&cur==='忧心'&&['欢喜','释然','感激','平和'].includes(k))return;
   if(maternalUnsettled(c)&&['悲恸','心如死灰'].includes(cur)&&['欢喜','释然','感激','平和'].includes(k))return;
   if(cur==='心如死灰'&&!['释然','感激','悲恸'].includes(k))return;
   if(cur==='怨恨'&&['欢喜','委屈','思念','惶恐','嫉恨','野心'].includes(k))return;
@@ -266,7 +270,7 @@ function xinTick(c){if(!c.alive||c.gone)return;
   if(c.cold){if(c.coldT===undefined)c.coldT=S.turn}else delete c.coldT;
   const x=c.xin,k=xinOf(c);
   if(k!=='平和'){const X=XIN[k];c.mood=clamp(c.mood+X.mood);if(X.scheme)c.scheme=clamp(c.scheme+X.scheme*.3);
-    if(S.turn-x.t>=X.d&&!maternalUnsettled(c)){if(k==='怨恨'||k==='心如死灰'){if(chance(.2))c.xin={k:'平和',t:S.turn}}else if(k==='悲恸'&&chance(.3))setXin(c,'心如死灰','悲伤久久不散');else c.xin={k:'平和',t:S.turn}}}
+    if(S.turn-x.t>=X.d&&!maternalUnsettled(c)&&!homeWorryActive(c)&&!(k==='清静被扰'&&solitaryNoiseActive(c))){if(k==='怨恨'||k==='心如死灰'){if(chance(.2))c.xin={k:'平和',t:S.turn}}else if(k==='悲恸'&&chance(.3))setXin(c,'心如死灰','悲伤久久不散');else c.xin={k:'平和',t:S.turn}}}
   const k2=xinOf(c);
   if(c.cold&&!['心如死灰','怨恨'].includes(k2)&&S.turn-c.coldT>=3)setXin(c,'心如死灰','冷宫的日子一天比一天长');
   if(c.cold)return;
@@ -316,7 +320,7 @@ function xinEvent(){
   if(S.turn-(pace.last??-99)<2)return null;
   for(const c of shuffle(alive())){
     const k=xinOf(c),x=c.xin;
-    if(c.homeLeave)continue;
+    if(c.homeLeave||homeLifeVoice(c)||officialFamilyVoice(c))continue;
     if(k==='平和'||x?.eventTurn!=null||S.turn-(c.xcd??-99)<6)continue;
     if(maternalConcern(c)&&['悲恸','心如死灰','思念'].includes(k))continue;
     const ev=XEV[k]?.(c,x);if(!ev)continue;
