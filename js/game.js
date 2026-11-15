@@ -130,7 +130,11 @@ function eventCast(people,event){
 const EVENT_ILLUSTRATIONS={
   'spring-garden':'几瓣海棠落进池里，贴着水纹慢慢打转。你沿回廊走过去，隔着花枝看见一个熟悉的身影。',
   'mother-window':'竹影在窗纸上轻轻摇。你正要让人通传，忽听里面有人低低唤了一声她的乳名。',
-  'lantern-street':'沿街的灯一盏盏亮起。桥头人潮一挤，你伸手去牵她，掌心只擦过一点衣袖。'
+  'lantern-street':'沿街的灯一盏盏亮起。桥头人潮一挤，你伸手去牵她，掌心只擦过一点衣袖。',
+  'east-sea':'船身轻轻一晃，栏外的礁石白了一瞬。再抬眼，日光已沿着浪尖，一路照到雾里的岛影。',
+  'snow-painting':'画卷暂搁在廊栏上。檐外雪还在落，隔着一方院子，连脚步声都轻了。',
+  'school-window':'私塾的窗半开着。站在墙外看不见书上写些什么，先生每念一句，却都能听得真切。',
+  'dream-corridor':'“每回都走到那处拐角。廊外天已经亮了，臣妾还是想不起自己在等谁。”'
 };
 function eventIllustration(key){
   if(!Object.hasOwn(EVENT_ILLUSTRATIONS,key))return '';

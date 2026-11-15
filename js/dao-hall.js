@@ -100,7 +100,7 @@ A.daoSea=function(id){
 function daoCoastEvent(k){
   const valid=()=>k?.alive&&k.daoPractice?.seaWish?.status==='travelling';
   const end=(kind)=>{if(!valid())return null;const line={tide:'父皇陪自己看了一日海潮。未见仙山，却听见舟人讲星路与潮汐，才知书外天地辽阔。',boat:'父皇请老舟人讲海上的传闻。远处雾影散后只是岛山，仙人未得见，心中仍留一片远方。',shore:'父皇陪自己沿岸访人家，将余下物资赠给风灾后的村落。原想寻仙，却先看见了人间。'}[kind];k.daoPractice.seaWish={status:'fulfilled',turn:S.turn,ending:kind};k.lit=clamp(k.lit+3);k.love=clamp(k.love+8);if(kind==='shore')k.vir=clamp(k.vir+3);daoRemember(k,line);log(`${kidName(k)}随帝游东海，${line}`,1);save('auto');return `${line}\n才学+3，亲近+8${kind==='shore'?'，品德+3':''}。`;};
-  return {title:'烟涛微茫',scene:'dao-coast',por:k,valid,text:`海天相接，潮声一阵阵卷过礁石。${k.name}扶着栏杆，许久没有说话。\n“在宫里读诗时，以为瀛洲只隔着几页纸。原来真正的海，这样远。”\n老舟人指向烟霭中的岛影，笑说海客的故事多，能证实的却少。`,choices:[
+  return {title:'烟涛微茫',scene:'dao-coast',illustration:'east-sea',por:k,valid,text:`海天相接，潮声一阵阵卷过礁石。${k.name}扶着栏杆，许久没有说话。\n“在宫里读诗时，以为瀛洲只隔着几页纸。原来真正的海，这样远。”\n老舟人指向烟霭中的岛影，笑说海客的故事多，能证实的却少。`,choices:[
     {t:'一起观潮，听舟人讲星路',f:()=>end('tide')},{t:'问问那些仙人的传说',f:()=>end('boat')},{t:'往沿海村落走一走',f:()=>end('shore')}]};
 }
 function pendingDaoVoyage(){const k=S.children.find(k=>k.alive&&k.daoPractice?.seaWish?.status==='travelling');return k?daoCoastEvent(k):null;}

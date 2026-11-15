@@ -95,7 +95,7 @@ function historyEvent(p){
   const valid=()=>historyScene(p)?.current===current&&current.stage===stage&&!S.over;
   const common={cast:[p,other].filter(Boolean),present:rule.remoteOther?[p]:[p,other].filter(Boolean),valid,
     ref:source.name+' · '+source.kind+(rule.source==='original'?'':'，剧情改编'),refURL:source.url};
-  if(current.stage==='offered')return {...common,title:rule.title,
+  if(current.stage==='offered')return {...common,title:rule.title,illustration:rule.illustration,
     text:historyText(rule.begin,p,other)+'\n\n'+source.note,
     choices:[...rule.choices.map((choice,index)=>({t:choice.label+'（精力−1'+(choice.cost?'，国库−'+choice.cost+'万两':'')+'）',
       preview:choice.preview,cond:()=>valid()&&E().energy>0&&E().treasury>=(choice.cost||0),why:'精力或国库不足',f:()=>chooseHistory(p,index)})),

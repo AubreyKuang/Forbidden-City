@@ -56,7 +56,7 @@ const LIVING_STORIES=[
     choices:[
       {label:'补齐当值饭食，写明轮班时辰',cost:4,stats:{virtue:3,aff:3},result:'她让人按班次送饭，没有让一排宫人跪在席前谢恩。',later:'下一回晚席结束，值夜与用饭的时辰已错开。她没收到夸张的谢辞，只看见门边那盏灯依旧稳稳亮着。',memory:'照应一个人容易，让每个当值的人都有饭吃才算办妥。'},
       {label:'先温好这一餐，请她听听缺在哪',stats:{aff:3,talent:2},result:'她听宫人说起换班太迟、食盒不够，记下了几件能改的小事。',later:'食盒没有变精美，饭却能趁热吃了。她说自己起初以为只缺一碗饭，原来缺的是有人肯问。',memory:'没有急着替别人决定缺什么，听完才知道该补哪里。'}]},
-  {id:'snow-friend',title:'雪停以前',kind:'consort',place:'wy',source:'snow',months:[11,12,1],fit:c=>historyTrait(c,'淡泊','沉静')&&!c.preg,
+  {id:'snow-friend',title:'雪停以前',illustration:'snow-painting',kind:'consort',place:'wy',source:'snow',months:[11,12,1],fit:c=>historyTrait(c,'淡泊','沉静')&&!c.preg,
     other:{kind:'consort',min:18,fit:o=>!o.preg,with:(o,c)=>relGet(o,c)>=25},
     begin:(c,o)=>`${cName(c)}想趁雪景送一卷画给${cName(o)}，走到廊边又停住：“若她正在安睡，留画便好，不必非见着。”随侍怕这样的拜访显得失礼。`,
     choices:[
