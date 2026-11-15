@@ -37,3 +37,7 @@ PALACE_CASE=gouyi PALACE_QA_URL=http://127.0.0.1:8767/dev.html \
 ```
 
 浏览器脚本通过界面导入存档、点击选择、打开人物页与重新读取存档；截图及刷新对比仅在真正执行后产生。
+
+## 发布核验
+
+游戏提交 `bff2a17` 已推送 main。正式入口、测试入口、事务日志、两份钩弋脚本和 422 号图集共六项线上资源均返回 HTTP 200，且与本次提交逐字节一致。[资源核验明细](gouyi-production-results.json) · [Pages 部署](https://github.com/AubreyKuang/Forbidden-City/actions/runs/43771801669)。这是发布与资源核验，浏览器交互仍为上文所列待验收项。
