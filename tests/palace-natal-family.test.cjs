@@ -76,3 +76,7 @@ test('frail childbirth retains a higher risk without making every pregnancy fata
 test('sibling ages remain whole years between birthdays and family rendering does not consume identities',()=>{
  const w=world();w.run(`var id=S.nid,age=natalAge(p);S.turn+=5;houseOf(c);familyGraphSVG();assert.equal(S.nid,id);assert.equal(natalAge(p),age);assert.equal(Number.isInteger(natalAge(p)),true);`);
 });
+test('a relatives old link follows the same person after adulthood and palace admission',()=>{
+ const w=world();w.run(`var brother=addNatalPerson(c,h,'m',18,704,false);UI.view='natal';UI.sel=c.id+':'+brother.id;viewNatalRelative();assert.equal(UI.view,'official');assert.equal(officialEntry(UI.sel).p.id,brother.id);
+ p.visit={host:c.id,until:99};admitNatalSister(c,p);UI.view='natal';UI.sel=c.id+':'+p.id;viewNatalRelative();assert.equal(UI.view,'consort');assert.equal(UI.sel,p.id);render();assert.match(viewConsort(),new RegExp(p.name));`);
+});
