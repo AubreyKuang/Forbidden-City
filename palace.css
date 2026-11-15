@@ -801,3 +801,8 @@ button.family-room-person{cursor:pointer}button.family-room-person:hover{color:#
   #app[data-layout="landing"] #panel{justify-self:stretch;align-self:stretch;width:100%;max-height:none;margin:0;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;backdrop-filter:none}
   #app[data-layout="landing"] .title-wrap{margin-top:56.28vw;padding:24px 24px max(24px,env(safe-area-inset-bottom));gap:14px;background:linear-gradient(#213e46ee,#213e46)}
 }
+
+/* Current-month leads remain visible without opening the stores panel. */
+.map-month-notices{padding:8px 12px;background:#f8ecd6;color:#4a3025;border-bottom:1px solid #c7a675}
+.map-month-notices .map-activity-panel{margin:0}
+.map-month-notices .map-quiet{color:#725642}
