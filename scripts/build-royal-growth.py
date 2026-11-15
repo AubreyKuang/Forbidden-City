@@ -1,6 +1,7 @@
 """Pack approved princess and prince sets, preserving all three growth stages.
 
 Usage: python3 scripts/build-royal-growth.py /path/to/generated_images
+Use --petite to pack the two additional small-face princess growth sets.
 Each source row is one identity: infant, child, grown. Only crop extraction,
 proportional resizing and transparent packing are used.
 """
@@ -17,10 +18,15 @@ SOURCES = [
 ATLAS = 'palace-royal-growth.webp'
 
 
-def build(folder):
-    atlas = Image.new('RGBA', (1792, 1680))
+def build(folder, petite=False):
+    sources = [('exec-d4760c48-4151-4559-ab2b-d3ca403bce86.png', 'f', 35)] if petite else SOURCES
+    atlas_name = 'palace-princess-petite-growth.webp' if petite else ATLAS
+    manifest_name = 'princess-petite-growth-sources.json' if petite else 'royal-growth-sources.json'
+    first_id = 392 if petite else 380
+    count = len(sources) * 6
+    atlas = Image.new('RGBA', (1792, ((count + 3) // 4) * 560))
     manifest = {'frame': [448, 560], 'columns': 4, 'portraits': []}
-    for filename, sex, first_variant in SOURCES:
+    for filename, sex, first_variant in sources:
         with Image.open(folder / filename) as source:
             assert source.mode == 'RGBA' and source.size == (1536, 1024)
             assert source.getchannel('A').getextrema()[0] == 0
@@ -34,17 +40,19 @@ def build(folder):
                     index = len(manifest['portraits'])
                     atlas.paste(tile, (index % 4 * 448 + (448 - tile.width) // 2,
                                        (index // 4 + 1) * 560 - tile.height))
-                    manifest['portraits'].append({'id': 380 + index, 'atlas': ATLAS,
+                    manifest['portraits'].append({'id': first_id + index, 'atlas': atlas_name,
                         'source': filename, 'cell': row * 3 + stage, 'crop': list(box),
                         'sex': sex, 'variant': first_variant + row, 'stage': stage})
-    assert len(manifest['portraits']) == 12
-    path = ROOT / 'assets/images' / ATLAS
+    assert len(manifest['portraits']) == count
+    path = ROOT / 'assets/images' / atlas_name
     atlas.save(path, 'WEBP', quality=96, method=6, exact=True)
-    (ROOT / 'docs/royal-growth-sources.json').write_text(json.dumps(manifest, indent=2) + '\n')
-    print(f'{ATLAS}: 12 portraits in four growth sets, {path.stat().st_size:,} bytes')
+    (ROOT / 'docs' / manifest_name).write_text(json.dumps(manifest, indent=2) + '\n')
+    print(f'{atlas_name}: {count} portraits in {count // 3} growth sets, {path.stat().st_size:,} bytes')
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('source_folder', type=Path)
-    build(parser.parse_args().source_folder)
+    parser.add_argument('--petite', action='store_true')
+    args = parser.parse_args()
+    build(args.source_folder, petite=args.petite)

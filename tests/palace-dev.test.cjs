@@ -52,8 +52,8 @@ test('new portrait ranges are selectable and reject cells beyond the final atlas
   const {run}=boot();run(`var lady=harem()[0],child=makeKid(lady,'f','明昭');
     DEV.applyPatch('consort:'+lady.id,{portraitOverride:215});assert.equal(portraitCell(lady),215);
     DEV.applyPatch('kid:'+child.id,{portraitVariant:25});var babyFace=portraitCell(child);DEV.applyPatch('kid:'+child.id,{age:20});assert.notEqual(portraitCell(child),babyFace);assert.equal(portraitCell(child),239);
-    assert.throws(()=>DEV.applyPatch('kid:'+child.id,{portraitVariant:35}));assert.throws(()=>DEV.applyPatch('consort:'+lady.id,{portraitOverride:PORTRAIT_COUNT}));
-    DEV.target='kid:'+child.id;DEV.draft=DEV.clone(child);DEV.gallery();assert.equal(($('#dev-gallery').innerHTML.match(/class="dev-face"/g)||[]).length,35);`);
+    assert.throws(()=>DEV.applyPatch('kid:'+child.id,{portraitVariant:37}));assert.throws(()=>DEV.applyPatch('consort:'+lady.id,{portraitOverride:PORTRAIT_COUNT}));
+    DEV.target='kid:'+child.id;DEV.draft=DEV.clone(child);DEV.gallery();assert.equal(($('#dev-gallery').innerHTML.match(/class="dev-face"/g)||[]).length,37);`);
 });
 test('age input previews the grown portrait and applies age without the distant confirmation button',()=>{
   const {run}=boot();run(`var child=makeKid(harem()[0],'f','明昭');child.portraitVariant=26;child.portraitOverride=62;DEV.select('kid:'+child.id);var originalBorn=child.born;DEV.previewAge('20');assert.equal(child.born,originalBorn);assert.equal(portraitCell(DEV.draft),244);
