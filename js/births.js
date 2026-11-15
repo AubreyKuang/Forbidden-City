@@ -95,10 +95,12 @@ function finishDelivery(c){
   const follow=[],kinCare=!c.alive?maternalKinCareEvent(c):null;
   if(kinCare)follow.push(kinCare);
   if(delivery.swap)follow.push(swapEvent(c,children[0]));
+  const batchCare=children.filter(k=>k.alive).length>1&&!kinCare&&(!c.alive||c.maid||c.rank<=1);
+  if(batchCare){delivery.carePlan={created:S.turn,closed:false};follow.push(birthCareEvent(c));}
   for(const k of children){
     if(!k.alive)continue;
-    if(!c.alive&&!kinCare)follow.push(fosterOffer(k,'孩子的生母已经不在了。'));
-    else if(c.alive&&(c.maid||c.rank<=1))follow.push(fosterOffer(k,`${kidName(k)}的生母只是${c.maid?'宫女':RANKS[c.rank]}。`));
+    if(!batchCare&&!c.alive&&!kinCare)follow.push(fosterOffer(k,'孩子的生母已经不在了。'));
+    else if(!batchCare&&c.alive&&(c.maid||c.rank<=1))follow.push(fosterOffer(k,`${kidName(k)}的生母只是${c.maid?'宫女':RANKS[c.rank]}。`));
     if(k.parentage)follow.push(parentageInquiryEvent(k));
   }
   if(delivery.templeAdvice){const advice=birthTempleAdviceEvent(kidById(delivery.templeAdvice));if(advice)follow.push(advice);}

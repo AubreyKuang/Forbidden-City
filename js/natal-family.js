@@ -43,6 +43,7 @@ function addNatalPerson(c,h,sex,age,seed,birth=true){
   return p;
 }
 function natalLabel(c,p){
+  if(p.parentRelativeId){const parent=c.house?.relatives?.find(x=>x.id===p.parentRelativeId);return parent?.sex==='f'?(p.sex==='m'?'外甥':'外甥女'):(p.sex==='m'?'侄子':'侄女');}
   const born=c.house?.natal?.memberBorn?.[c.id]??S.turn-c.age*12;
   return p.sex==='m'?(p.born<born?'兄长':'弟弟'):(p.born<born?'姐姐':'妹妹');
 }
@@ -66,7 +67,7 @@ function natalFamilyLinks(c){
 function natalVisitReady(c,p){return inPalace(c)&&!c.maid&&p.alive&&!p.consortId&&!p.visit&&(p.sex==='f'||natalAge(p)<13)&&
   S.turn-(p.lastVisit??-99)>=12&&!mourningActive()&&!natalPeople(c.house).some(x=>x.visit);}
 function natalInPalace(c,p){return !!p.visit&&p.visit.host===c.id&&S.turn<p.visit.until&&p.alive&&inPalace(c)&&!p.consortId;}
-function natalRomanceReady(c,p){return natalInPalace(c,p)&&p.sex==='f'&&natalAge(p)>=18&&!p.married&&!p.declined;}
+function natalRomanceReady(c,p){return !p.parentRelativeId&&natalInPalace(c,p)&&p.sex==='f'&&natalAge(p)>=18&&!p.married&&!p.declined;}
 function natalVisitEvent(c,p){
   if(!natalVisitReady(c,p))return null;
   const response=sisterArrivalFeeling(c,p,false);
@@ -120,8 +121,8 @@ function viewNatalRelative(){
   return `${personBackButton('family')}<header class="detail-head">${porImg(natalPortrait(p),224)}<div class="grow"><h2>${esc(p.name)}</h2><p>${esc(fullName(c))}的${natalLabel(c,p)} · ${age}岁 · ${natalStatus(p)}</p><p>${age<6?'尚在幼年':esc(p.trait)}</p></div></header>
     <div class="acts">${living?`<button class="btn" onclick="A.natalLetter(${c.id},${p.id})" ${S.turn-(p.lastLetter??-99)>=3&&E().energy>0?'':'disabled'}>${age<3?'赐衣问安':'赐书问候'}<small>精力−1 · 每三个月一次</small></button>`:''}
     ${natalVisitReady(c,p)?`<button class="btn" onclick="A.natalVisit(${c.id},${p.id})">准入宫探亲</button>`:''}${visited?`<button class="btn primary" onclick="A.natalMeet(${c.id},${p.id})">探亲相见</button><span>约${p.visit.until-S.turn}个月后归家</span>`:''}</div>
-    ${detailSection('家族往来',`<p>父亲：${officialLink(c,'father')}</p><button class="btn quiet" onclick="A.go('consort',${c.id})">${esc(fullName(c))}</button>`+natalFamilyLinks(c))}
-    ${detailSection('人物纪事',detailStory(p))}`;
+    ${detailSection('家族往来',`<p>${p.parentRelativeId?'母亲':'父亲'}：${p.parentRelativeId?`<button class="btn quiet" onclick="A.go('natal','${c.id}:${p.parentRelativeId}')">${esc(h.relatives.find(x=>x.id===p.parentRelativeId)?.name||'家中长辈')}</button>`:officialLink(c,'father')}</p><button class="btn quiet" onclick="A.go('consort',${c.id})">${esc(fullName(c))}</button>`+natalFamilyLinks(c))}
+    ${natalLifePanel(c,p)}${detailSection('人物纪事',detailStory(p))}`;
 }
 A.natalVisit=function(id,relative){if(modalOpen)return;const e=natalEntry(id,relative);if(e)pushEv(natalVisitEvent(e.c,e.p));};
 A.natalMeet=function(id,relative){if(modalOpen)return;const e=natalEntry(id,relative);if(e)pushEv(natalMeetingEvent(e.c,e.p));};

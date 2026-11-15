@@ -99,7 +99,7 @@ function consortVoicePool(c){
   if(c.templeStay)return [voiceLine('temple-retreat','护国寺来信里，她说起清修的日子。',distantChildren(c).length?'晨钟响过，便想起孩子此时也该起了。臣妾在这里平安，还望宫中代问一声，孩子可曾添衣。':c.trait==='好学'?'寺中旧藏颇多，午后可以静坐校书。臣妾抄了几行喜欢的句子，夹在信里。':'晨起听钟，入夜收灯，日子过得慢些。臣妾在这里平安，请陛下放心。')];
   if(c.cold)return [voiceLine('cold','隔着门扉，她只说了几句。',['臣妾知道这里清冷。若还有一句话能递出去，便请陛下认真听完。','门外的声响听得分明，日子却记得模糊了。陛下可还愿听臣妾一言？'])];
   const maternal=maternalVoice(c);
-  if(maternalConcern(c)&&maternal)return [maternal];
+  if(maternal&&maternalVoiceUrgent(c))return [maternal];
   const home=homeLifeVoice(c);if(home&&!['悲恸','心如死灰','怨恨'].includes(x))return [home];
   const frail=frailFosterVoice(c);if(frail&&!['悲恸','心如死灰','怨恨'].includes(x))return [frail];
   const duty=officialFamilyVoice(c);if(duty)return [duty];
@@ -107,14 +107,14 @@ function consortVoicePool(c){
   const concern=motherConcernVoice(c);if(concern&&(c.childConcern?.value??35)>=30)return [concern];
   if(['怨恨','惶恐'].includes(x)||(c.aff<20&&!isSolitary(c)&&consortVoicePhase(c)!=='first'))return [voiceLine('distance','她行过礼，仍立在一步之外。',['臣妾听着。只是有些话，还不知该从哪里说起。','陛下肯来，臣妾领情。只是心里的结，不是一句话就能解开的。'])];
 
-  const personal=lifeVoice(c);if(personal)return [personal];
+  const personal=lifeVoice(c);if(personal&&lifeBoundary(c))return [personal];
   const quietHome=solitaryHouseholdVoice(c);if(quietHome)return [quietHome];
   const sister=sisterArrivalVoice(c);if(sister)return [sister];
   const waiting=awaitingNoticeVoice(c);if(waiting&&!maternal)return [waiting];
-  if(isSolitary(c))return [maternal,solitaryVoice(c),cohabVoice(c),resemblanceVoice(c),pastLifeVoice(c),timeTravelerVoice(c),concern].filter(Boolean);
+  if(isSolitary(c))return [personal,maternal,solitaryVoice(c),cohabVoice(c),resemblanceVoice(c),pastLifeVoice(c),timeTravelerVoice(c),concern].filter(Boolean);
   const years=newcomerVoice(c)||consortYearsVoice(c),phase=consortVoicePhase(c);
   if(phase==='distant')return [years];
-  const pool=[years,maternal,rescueVoice(c),journeyVoice(c),cohabVoice(c),resemblanceVoice(c)].filter(Boolean);const soul=pastLifeVoice(c);if(soul)pool.push(soul);const traveler=timeTravelerVoice(c);if(traveler)pool.push(traveler);const spiritual=daoLifeVoice(c);if(spiritual)pool.push(spiritual);
+  const pool=[years,personal,maternal,rescueVoice(c),journeyVoice(c),cohabVoice(c),resemblanceVoice(c)].filter(Boolean);const soul=pastLifeVoice(c);if(soul)pool.push(soul);const traveler=timeTravelerVoice(c);if(traveler)pool.push(traveler);const spiritual=daoLifeVoice(c);if(spiritual)pool.push(spiritual);
   if(phase!=='first')pool.push(voiceLine('trait',phase==='years'?'说着说着，她又露出你熟悉的性情。':'她试着把自己的意思说得更明白。',CONSORT_VOICES[c.trait]||CONSORT_VOICES.温婉));
   if(c.preg>=2)pool.push(voiceLine('pregnant','她轻拢衣襟，话里多了一分牵挂。',c.trait==='骄纵'&&c.favor>=65?['如今走得慢，陛下便也慢些。臣妾想要的照应，可不只是送几碟点心。','臣妾知道该惜身，可也不想日日闷着。陛下陪臣妾走到廊下，好不好？']:['小衣裳不用添得太急。臣妾盼的，只是平平安安等到那一日。','近来总会多想些。陛下坐在这里，臣妾便觉得心里稳妥。']));
   if(c.mood<35)pool.push(voiceLine('low','她望了一眼窗外，收回了目光。',['今日没什么精神，倒也不是要紧的事。陛下陪臣妾坐坐便好。','有时想说几句，又怕扫人的兴。陛下今日，可愿耐心听听？']));

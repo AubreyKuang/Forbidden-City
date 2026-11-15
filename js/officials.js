@@ -3,7 +3,7 @@
 const brotherRoles=h=>Object.keys(h||{}).filter(k=>/^brother(?:[2-9]\d*)?$/.test(k)&&h[k]).sort((a,b)=>(Number(a.slice(7))||1)-(Number(b.slice(7))||1));
 const officialRoles=h=>['father',...brotherRoles(h),...natalPeople(h).filter(p=>p.sex==='m'&&natalAge(p)>=18).map(p=>'relative'+p.id)];
 const brotherRole=(h,predicate=()=>true)=>brotherRoles(h).find(role=>predicate(h[role]));
-const officialKinLabel=(h,role)=>role==='father'?'父亲':role.startsWith('relative')?(officialPerson(h,role).born<Math.min(...Object.values(h.natal.memberBorn))?'兄长':'弟弟'):brotherRoles(h).length<2?'兄长':({brother:'长兄',brother2:'二兄',brother3:'三兄',brother4:'四兄',brother5:'五兄'}[role]||'兄长');
+const officialKinLabel=(h,role,member)=>role==='father'?'父亲':role.startsWith('relative')?(member?natalLabel(member,officialPerson(h,role)):officialPerson(h,role).parentRelativeId?(officialPerson(h,role).sex==='m'?'外甥':'外甥女'):officialPerson(h,role).born<Math.min(...Object.values(h.natal.memberBorn))?'兄长':'弟弟'):brotherRoles(h).length<2?'兄长':({brother:'长兄',brother2:'二兄',brother3:'三兄',brother4:'四兄',brother5:'五兄'}[role]||'兄长');
 const OFFICIAL_TEMPERAMENTS=['持正','谨慎','进取','圆融'];
 const officialAlive=p=>!!p&&p.alive!==false;
 const officialServing=p=>officialAlive(p)&&p.career!=='student'&&!p.retired&&!p.commission&&!p.exiled&&!p.dismissed;
@@ -62,7 +62,7 @@ function officialRecord(c,role,text,{family=true,emotion=0}={}){
   const h=houseOf(c),p=officialPerson(h,role);if(!p)return;
   story(p,text);
   if(family)for(const member of paternalFamily(c).filter(x=>S.consorts.includes(x)&&x.alive)){
-    story(member,`${officialKinLabel(h,role)}${p.name}：${text}`);
+    story(member,`${officialKinLabel(h,role,member)}${p.name}：${text}`);
     NPCMemory.record(S,{type:'maternal-house',time:S.turn,participants:[member.id,p.id],object:text},[
       {person:member.id,subject:p.id,interpretation:text,emotion,impact:65}]);
   }
@@ -71,7 +71,7 @@ function officialRecord(c,role,text,{family=true,emotion=0}={}){
 function officialFamilyReaction(e,kind,task){
  const {c,p,role,h}=e;
  for(const member of paternalFamily(c).filter(x=>S.consorts.includes(x)&&x.alive)){
-  const kin=officialKinLabel(h,role),who=kin+p.name,formal=isSolitary(member)||['持重','聪慧','城府','将门','爽直'].includes(member.trait);
+  const kin=officialKinLabel(h,role,member),who=kin+p.name,formal=isSolitary(member)||['持重','聪慧','城府','将门','爽直'].includes(member.trait);
   const lines={
    assigned:[`${who}奉命「${task}」，她知道家人得到施展本领的机会，感激之余也惦记能否不负所托。`,formal?`陛下肯用${who}，臣妾记着。只愿他凭本事把「${task}」办好，不负这一份托付。`:`听说${who}领了「${task}」，臣妾很感激。高兴之外，也盼他一路妥当、把事情办好。`,'感激',2,3],
    success:[`${who}办结「${task}」，她读过回奏，先前悬着的心放下些，也为家人做成实事而自豪。`,formal?`「${task}」办结了。臣妾替${who}高兴，功劳仍请凭实绩论，不必因臣妾多算一分。`:`${who}终于把「${task}」办妥了。臣妾先前还担心，如今才敢好好高兴一回。`,'释然',0,5],
@@ -101,7 +101,7 @@ function officialDeath(c,role,reason,kind='illness'){
   if(p.report)p.report={text:reason,outcome:'death',title:'身故讣报',turn:S.turn};
   officialRecord(c,role,reason,{emotion:-.9});
   for(const member of paternalFamily(c).filter(x=>S.consorts.includes(x)&&x.alive)){
-    cchg(member,{mood:kind==='battle'?-25:-15});setXin(member,'悲恸',`${officialKinLabel(h,role)}${p.name}${kind==='battle'?'阵亡':'去世'}`);
+    cchg(member,{mood:kind==='battle'?-25:-15});setXin(member,'悲恸',`${officialKinLabel(h,role,member)}${p.name}${kind==='battle'?'阵亡':'去世'}`);
     member.fam.p=Math.max(5,member.fam.p-6);
   }
   startOfficialContinuity({c,p,role},'death',p.death.reason);
@@ -144,10 +144,10 @@ function viewOfficial(){
     ${p.report?`<section class="detail-section"><h3>待阅回奏</h3><p>${esc(p.report.text)}</p><button class="btn jade" onclick="A.officialReport('${key}')">阅看回奏</button></section>`:''}
     ${p.commission?detailSection('当前差事',`<p>${esc(p.commission.title)} · ${Math.max(0,p.commission.due-S.turn)}个月后回奏</p>`):''}
     ${detailSection('家族往来',kin.map(x=>`<button class="btn quiet sm" onclick="A.go('consort',${x.id})">${esc(fullName(x))} · ${role==='father'?'女儿':'姐妹'}${x.alive?'':' · 已故'}</button>`).join(' ')+otherRoles.map(r=>`<p>${r==='father'?'父亲':role==='father'?'儿子':'兄弟'}：${officialLink(c,r)} · ${officialStatus(officialPerson(h,r))}</p>`).join(''))}
-    ${detailSection('娘家手足',natalFamilyLinks(c))}${detailSection('个人履历与纪事',detailStory(p))}`;
+    ${detailSection('娘家手足',natalFamilyLinks(c))}${h.relatives?.includes(p)?natalLifePanel(c,p):''}${detailSection('个人履历与纪事',detailStory(p))}`;
 }
 function officialConversation(e,topic){
-  const {c,p,role,h}=e,kin=role==='father'?'女儿':officialKinLabel(h,role)==='弟弟'?'姐姐':'妹妹';
+  const {c,p,role,h}=e,kin=p.parentRelativeId?'姨母':role==='father'?'女儿':officialKinLabel(h,role)==='弟弟'?'姐姐':'妹妹';
   if(topic==='family'){
     const relatives=paternalFamily(c).filter(x=>S.consorts.includes(x));
     if(relatives.some(x=>!x.alive))return '“家中还留着她旧时的书信。有些话，当年只当来日方长，如今再无机会问了。”';

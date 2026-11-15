@@ -34,6 +34,11 @@ function selectionBatch(){
   s.accepted||=[];
   return s;
 }
+function reconcileSelection(){
+ const s=S.selection;if(!s)return;
+ const gen=Number(s.batch?.split(':')[0]);
+ if(Number.isFinite(gen)&&gen!==S.gen){delete S.selection;S.cands=[];}
+}
 function sameSelectionCohort(a,b){return !!(a!==b&&a?.selectionCohort?.id&&a.selectionCohort.id===b?.selectionCohort?.id);}
 function cohortAffinity(a,b){
   return sameSelectionCohort(a,b)&&socialPair(a,b)&&!isRival(a,b)&&!isRival(b,a)&&relGet(a,b)>=0&&consortCompatibility(a,b)>=0;
