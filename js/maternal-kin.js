@@ -6,7 +6,7 @@ function kinCareChildren(m){return S.children.filter(k=>k.mom===m?.id&&childInPa
 function maternalCaregiver(k){const f=k&&fosterOf(k);return f?.alive&&!f.cold&&!f.gone?f:null;}
 function maternalKinCanAsk(c,k){
  const m=k&&byId(k.mom);
- return !!(!S.over&&inPalace(c)&&!c.maid&&c.age>=16&&!(c.hp<40)&&!(c.delivery&&!c.delivery.settled)&&
+ return !!(!S.over&&inPalace(c)&&(!familyScenesEnabled()||c.rank>=3)&&!c.maid&&c.age>=16&&!(c.hp<40)&&!(c.delivery&&!c.delivery.settled)&&
   m&&(!m.alive||m.cold||m.gone)&&(KIN_TXT[c.kin?.[m.id]]||KIN_TXT[m.kin?.[c.id]])&&
   childInPalace(k)&&!k.pendingName&&kidAge(k)<18&&k.foster!==c.id);
 }
@@ -43,11 +43,12 @@ function maternalCareDiscussion(c,m,children){
 
 function careVisitorAllowed(k,c){
  const f=maternalCaregiver(k);
- return !!(!S.over&&childInPalace(k)&&!k.pendingName&&inPalace(c)&&k.careVisitors?.[c.id]&&c.id!==(k.foster||k.mom)&&(!f||inPalace(f)));
+ return !!(!S.over&&childInPalace(k)&&!k.pendingName&&inPalace(c)&&k.careVisitors?.[c.id]&&!k.careVisitors[c.id].blocked&&c.id!==(k.foster||k.mom)&&(!f||inPalace(f)));
 }
 A.kinCareTime=function(childId,consortId){
  const k=kidById(childId),c=byId(consortId),v=k?.careVisitors?.[consortId];
  if(modalOpen||!careVisitorAllowed(k,c)||v.last===S.turn||!useE())return;
+ if(familyScenesEnabled()&&v.role==='原养母'){const text=formerCareVisit(k,c);pushEv({title:'旧情仍在',por:c,cast:[k],text,choices:[ok1]});return;}
  v.last=S.turn;const small=kidAge(k)<3,f=maternalCaregiver(k);
  const activity=small?'在乳母身旁轻声哄睡':['才女','聪慧','好学'].includes(c.trait)?(v.role==='姨母'?'一起读书，讲起生母小时候的家中旧事':'一起读书，谈起从前相伴的日子'):['将门','爽直','活泼'].includes(c.trait)?'在廊下玩了一会儿投壶':'坐在窗边，听孩子说近来的小事';
  const text=`${v.role}${fullName(c)}来看${k.name}，${activity}。${f?`养母${fullName(f)}仍照原来的起居安排照看孩子。`:'乳母仍在旁照护。'}`;
@@ -56,7 +57,7 @@ A.kinCareTime=function(childId,consortId){
 function careVisitorPanel(k,only=null){
  return Object.entries(k.careVisitors||{}).map(([id,v])=>{const c=byId(+id);if(!c||only&&c!==only||c.id===(k.foster||k.mom))return '';
   const ready=careVisitorAllowed(k,c)&&v.last!==S.turn;
-  return `<article class="family-time-row"><div><strong>${esc(v.role)} · ${parentLink(c.id)}</strong><p class="hint">${esc(k.name)}的亲人往来 · 保留现有抚养</p>${v.text?`<p>${esc(v.text)}</p>`:''}</div>${ready?`<button class="btn sm jade" onclick="A.kinCareTime(${k.id},${c.id})">陪${esc(k.name)}一会儿<small>精力−1</small></button>`:'<span class="hint">'+(v.last===S.turn?'本月已相伴':'眼下无法相见')+'</span>'}</article>`;
+  return `<article class="family-time-row"><div><strong>${esc(v.role)} · ${parentLink(c.id)}</strong><p class="hint">${esc(k.name)}的亲人往来 · 保留现有抚养</p>${v.text?`<p>${esc(v.text)}</p>`:''}${v.role==='原养母'&&familyScenesEnabled()&&c.alive&&childInPalace(k)?`<button class="btn quiet sm" onclick="A.formerCareRule(${k.id},${c.id})">${v.blocked?'恢复探视':'暂停探视'}</button>`:''}</div>${ready?`<button class="btn sm jade" onclick="A.kinCareTime(${k.id},${c.id})">陪${esc(k.name)}一会儿<small>精力−1</small></button>`:'<span class="hint">'+(v.last===S.turn?'本月已相伴':'眼下无法相见')+'</span>'}</article>`;
  }).join('');
 }
 

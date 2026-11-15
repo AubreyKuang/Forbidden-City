@@ -8,6 +8,7 @@ function childNeedsMother(k){
 }
 function motherOriginalRank(k){const m=byId(k.mom);return Math.max(m?.rank??0,k.birthTraits?.mother?.rank??0);}
 function fosterPetitionReason(c){
+  if(familyScenesEnabled()&&(!c||c.rank<3))return null;
   if(!inPalace(c)||c.maid||c.age<20||c.preg||(c.delivery&&!c.delivery.settled)||c.hp<20||
     S.children.some(k=>k.alive&&(k.mom===c.id||k.foster===c.id)))return null;
   const years=Number.isFinite(c.enteredAt)?S.turn-c.enteredAt:0;

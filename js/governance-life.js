@@ -1,12 +1,53 @@
 /* Treasury receipts, named appointments and the life of a working court. */
 function legacyPendingAction(){return typeof PalaceActions!=='undefined'&&PalaceActions.legacy;}
+let exhaustedMonthNotice=null;
+const EXHAUSTED_MONTH_DELAY=1500;
+function exhaustedMonthReady(){
+  return !!(S&&!S.over&&E().energy<=0&&S.flags.exhaustedTurn===S.turn&&!modalOpen&&!Q.length);
+}
+function clearExhaustedMonthNotice(){
+  if(exhaustedMonthNotice&&typeof clearTimeout==='function')clearTimeout(exhaustedMonthNotice.timer);
+  exhaustedMonthNotice=null;
+  const notice=$('#month-notice');if(notice)notice.hidden=true;
+  const app=$('#app');if(app)app.inert=false;
+}
+// Start the visual pause only after the action and its pending scene are saved.
+// The timer is UI state, never part of a save or its deterministic replay.
+function syncExhaustedMonthNotice(){
+  if(!exhaustedMonthReady()||PalaceActions.replaying||PalaceActions.blocked){clearExhaustedMonthNotice();return;}
+  if(exhaustedMonthNotice?.state===S&&exhaustedMonthNotice.turn===S.turn)return;
+  clearExhaustedMonthNotice();
+  const next={...S,month:S.month%12+1,year:S.year+(S.month===12?1:0)};
+  const notice=$('#month-notice');
+  if(notice){
+    $('#month-notice-date').textContent='即将进入'+(S.month===12?dateStr(next):MONTHS[next.month-1]);
+    notice.hidden=false;
+  }
+  const app=$('#app');if(app)app.inert=true;
+  const pending={state:S,turn:S.turn,gen:S.gen};
+  exhaustedMonthNotice=pending;
+  pending.timer=setTimeout(()=>{
+    if(exhaustedMonthNotice!==pending)return;
+    clearExhaustedMonthNotice();
+    if(S===pending.state)A.completeExhaustedMonth(pending.gen,pending.turn);
+  },EXHAUSTED_MONTH_DELAY);
+}
+A.completeExhaustedMonth=function(gen,turn){
+  if(!exhaustedMonthReady()||S.gen!==gen||S.turn!==turn)return;
+  A.endMonth();
+  if(S.turn!==turn)delete S.flags.exhaustedTurn;
+};
 function settleExhaustedMonth(previous){
   if(!S||S.over)return;
   if(previous?.gen===S.gen&&previous.turn===S.turn&&previous.emp.energy>0&&E().energy<=0)S.flags.exhaustedTurn=S.turn;
   if(E().energy>0){delete S.flags.exhaustedTurn;return;}
   if(S.flags.exhaustedTurn!==S.turn||modalOpen||Q.length)return;
-  const turn=S.turn;A.endMonth();
-  if(S.turn!==turn)delete S.flags.exhaustedTurn;
+  // Old transcripts include the month inside the original action. Keep that
+  // behavior until their pending scene ends so existing saves still replay.
+  if(PalaceActions.immediateMonth){
+    const turn=S.turn;A.endMonth();
+    if(S.turn!==turn)delete S.flags.exhaustedTurn;
+  }else if(pendingDelivery())A.resumeBirth(pendingDelivery().id);
 }
 function governance(){
   S.governance||={receipts:[],visits:[],seenVisits:[]};

@@ -14,32 +14,21 @@ function renderTop(){
    <div class="hud-controls">${lastAutoSaveError?`<button class="btn sm hud-unsaved" title="${esc(lastAutoSaveError)}" onclick="A.downloadSave()">未能存档 · 下载备份</button>`:''}${sound}<button id="finish-month" class="btn gold sm hud-next" onclick="A.finishMonth()" ${S.over?'disabled':''}>结束本月 ▸</button></div>`;
 }
 const MENU=[['map','宫城'],['home','御书房'],['court','理政'],['harem','后宫'],['cards','翻牌子'],['xx','选秀'],['kids','皇嗣'],['family','家族'],['out','出巡'],['log','起居注'],['sys','存档']];
+// One restrained gold-line family, with distinct silhouettes at mobile sizes.
 const DOCK_ART={
-  map:['....g....','..ggggg..','ggggggggg','.rr...rr.','.rg...gr.','.rg...gr.','ggggggggg'],
-  home:['.ggggggg.','.g.....g.','.ggggggg.','.g.r.r.g.','.g.r.r.g.','.ggggggg.','...ggg...'],
-  court:['.gggggg..','.g...ggg.','.g.g.gg..','.g...g...','.g.g.g...','gg...g...','.ggggg...'],
-  harem:['..g.g.g..','.ggggggg.','...ggg...','..rrrrr..','...rrr...','..rrrrr..','.rrrrrrr.'],
-  cards:['...jjj...','..jjjjj..','..jgggj..','..jgjgj..','..jgggj..','..jjjjj..','..jjjjj..'],
-  xx:['...rrr...','..rgrgr..','.rrgggrr.','..rrgrr..','...rrr...','....j....','...jjj...'],
-  kids:['..g.g.g..','..ggggg..','..rrrrr..','..rgrgr..','..rrrrr..','...rrr...','..rrrrr..'],
-  family:['..gg.gg..','.gjjgjjg.','.gjjjjjg.','..gjjjg..','...gjg...','....g....','....g....'],
-  out:['....g....','..ggggg..','.ggggggg.','ggggggggg','..r.r.r..','..r.r.r..','....r....'],
-  log:['.ggggggg.','.grrrrgg.','.grggrgg.','.grrrrgg.','.grggrgg.','.grrrrgg.','.ggggggg.'],
-  sys:['...ggg...','...ggg...','....g....','..rrrrr..','..rgrgr..','..rgrgr..','..rrrrr..']
+  map:'M3 20h26M5 18h22M7 18v-6m6 6v-6m6 6v-6m6 6v-6M3 11h26L25 8H7zM8 7h16l-3-3H11zM16 2v2M12 24h8v-4',
+  home:'M16 7C12 4 7 4 3 5v19c5-1 9 0 13 3 4-3 8-4 13-3V5c-4-1-9-1-13 2v20M7 10h5m-5 4h5m8-4h5m-5 4h5',
+  court:'M7 4h18v23H7M4 4h6M4 27h6M22 4h6m-6 23h6M12 10h8m-8 5h8m-8 5h5',
+  harem:'M16 25C6 24 3 18 3 13c5 0 9 3 13 12 4-9 8-12 13-12 0 5-3 11-13 12zM16 22C9 17 10 9 16 4c6 5 7 13 0 18zM7 9c-1 6 1 10 5 13M25 9c1 6-1 10-5 13M6 28h20',
+  cards:'M12 6V3h8v3M10 6h12l2 4v18H8V10zM16 11v10m-3-7h6m-6 4h6M14 24h4',
+  xx:'M16 21c-7-1-11-5-9-9 3-1 6 1 9 5-2-6-2-10 1-13 4 2 5 6 3 11 4-3 7-4 10-2 0 5-5 8-11 9M16 21v8m0-3-6-3m6 2 6-2M4 8l2-2',
+  kids:'M5 10l5 5 6-9 6 9 5-5-3 14H8zM8 27h16M11 20h10M16 3v1M3 7l1 1m24 0 1-1',
+  family:'M16 28V16M16 21l-8-5m8 5 8-5M16 15C7 16 3 12 5 7c4-2 8 0 11 5 3-5 7-7 11-5 2 5-2 9-11 8zM16 12V3M12 28h8',
+  out:'M5 13h22l-2 13H7zM2 12l6-7h16l6 7M10 5v8m12-8v8M12 18h8v8M3 28h26M16 2v3',
+  log:'M4 5h10l2 3 2-3h10v22H18l-2 2-2-2H4zM16 8v21M8 11h4m-4 5h4m-4 5h4m8-10h4m-4 5h4m-4 5h4',
+  sys:'M6 4h17l4 4v20H5V4zM11 4v8h10V4M10 28V18h12v10M18 7v2'
 };
-const dockImages=new Map();
-function dockIcon(key){
-  if(!dockImages.has(key)){
-    const canvas=document.createElement('canvas');canvas.width=9;canvas.height=9;
-    const pen=canvas.getContext('2d'),colors={g:'#eeca8a',r:'#ce7754',j:'#93bd9b'};
-    DOCK_ART[key].forEach((row,y)=>[...row].forEach((dot,x)=>{
-      if(!colors[dot])return;
-      pen.fillStyle=colors[dot];pen.fillRect(x,y+1,1,1);
-    }));
-    dockImages.set(key,canvas.toDataURL());
-  }
-  return `<img class="dock-icon px" src="${dockImages.get(key)}" alt="" aria-hidden="true">`;
-}
+function dockIcon(key){return `<svg class="dock-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${DOCK_ART[key]}"></path></svg>`;}
 function renderMenu(){const m=$('#menu');if(!S){m.innerHTML='';m.hidden=true;return}m.hidden=false;
   const current={government:'court',residences:'harem',officials:'home',official:'home',jewelry:'home',natal:'family',relative:'family',palace:'map',place:'map',banquet:'map',consort:'harem',kid:'kids',princess:'out'}[UI.view]||UI.view;
   m.innerHTML=MENU.map(([k,l])=>`<button class="btn${current===k?' on':''}" ${current===k?'aria-current="page"':''} onclick="${k==='court'?"A.go('government')":`A.go('${k}')`}">${dockIcon(k)}<span>${l}</span></button>`).join('');
@@ -81,6 +70,7 @@ function renderPanel(){
   if(route!==panelRoute){p.scrollTop=0;panelRoute=route;}
 }
 function render(){
+  if(exhaustedMonthNotice&&!exhaustedMonthReady())clearExhaustedMonthNotice();
   const app=$('#app');
   app.setAttribute('data-layout',S?'game':UI.view==='new'?'setup':'landing');
   app.setAttribute('data-view',UI.view);
@@ -277,9 +267,9 @@ function viewHarem(){
   const all=alive().filter(c=>!c.maid);const g=r=>all.filter(c=>!c.cold&&!c.templeStay&&!c.homeLeave&&r(c)).sort((a,b)=>b.rank-a.rank||b.favor-a.favor);
   const sec=(t,arr)=>arr.length?`<h3>${t}（${arr.length}）</h3><div class="grid portrait-grid">${arr.map(consortCard).join('')}</div>`:'';
   const dead=S.consorts.filter(c=>!c.alive||c.gone);
-  return `<h2>后宫</h2><p class="hint">点击妃嫔查看详情、互动与她的故事。各位分名额：嫔6、妃4、贵妃2、皇贵妃1、皇后1。</p><div class="acts"><button class="btn jade" onclick="A.openResidence()">宫室分配 · 主位与同住</button></div>${facHTML()}
+  return `<h2>后宫</h2><p class="hint">点击妃嫔查看详情、互动与她的故事。各位分名额：嫔6、妃4、贵妃2、皇贵妃1、皇后1。</p><div class="acts"><button class="btn jade" onclick="A.openResidence()">宫室分配 · 主位与同住</button></div>
    ${sec('中宫',g(c=>c.rank===8))}${sec('妃位',g(c=>c.rank>=5&&c.rank<8))}${sec('嫔位',g(c=>c.rank===4))}${sec('小主',g(c=>c.rank<4))}${sec('回家省亲',all.filter(c=>c.homeLeave&&!c.cold))}${sec('寺中修行',all.filter(c=>c.templeStay&&!c.cold))}${sec('冷宫',all.filter(c=>c.cold))}${sec('贴身宫女',maids().filter(m=>m.near))}
-   ${dead.length?`<h3>故人</h3><div class="hint">${dead.map(c=>`<button class="btn sm" onclick="A.go('consort',${c.id})">${esc(fullName(c))}${c.gone?'（出宫）':'（已故）'}</button>`).join(' ')}</div>`:''}`}
+   ${facHTML()}${dead.length?`<h3>故人</h3><div class="hint">${dead.map(c=>`<button class="btn sm" onclick="A.go('consort',${c.id})">${esc(fullName(c))}${c.gone?'（出宫）':'（已故）'}</button>`).join(' ')}</div>`:''}`}
 function detailSection(title,content){
   return content?`<section class="detail-section"><h3>${title}</h3><div class="detail-content">${content}</div></section>`:'';
 }

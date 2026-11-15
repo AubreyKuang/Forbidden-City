@@ -354,6 +354,36 @@ function portraitCell(x){
 const jewelryAtlas=document.createElement('img');
 function ensureJewelryAtlas(){if(!jewelryAtlas.src)jewelryAtlas.src=JEWELRY_ART;}
 function portraitJewelry(rank,id){return JEWELRY[id]|| (rank===8?JEWELRY.phoenix:null);}
+// Coordinates are in the stable 112 × 140 portrait tile: brow centre and head width.
+// Half-length paintings need much smaller ornaments than the original close-ups.
+const PORTRAIT_HEADS={
+  248:[47,39,34],249:[59,40,34],250:[65,39,32],251:[66,38,32],252:[60,39,34],253:[54,39,34],254:[59,38,34],255:[59,39,34],
+  256:[57,28,23],257:[50,31,27],258:[60,31,27],259:[56,31,27],260:[62,29,27],261:[65,30,25],262:[58,30,27],263:[59,31,27],264:[56,28,25],265:[60,28,26],266:[61,27,26],267:[50,29,27],
+  316:[56,24,24],317:[56,24,24],318:[58,25,24],319:[60,25,24],320:[54,37,25],321:[60,24,23],322:[58,22,23],323:[53,24,23],324:[56,24,24],325:[58,26,24],
+  326:[54,25,24],327:[57,24,24],328:[60,25,24],329:[62,24,24],330:[56,24,24],331:[59,27,24],332:[56,25,24],333:[50,24,24],334:[55,25,24],335:[56,24,24],
+  336:[54,25,24],337:[63,25,24],338:[57,25,24],339:[60,23,24],340:[55,24,24],341:[57,23,24],342:[54,25,24],343:[57,25,24],344:[61,25,24],345:[56,25,24],
+  346:[56,28,23],347:[58,29,23],348:[58,25,23],349:[59,26,23],350:[56,28,23],351:[60,25,23],352:[57,26,23],353:[57,27,23],354:[62,27,23],355:[62,25,23],356:[56,26,23],357:[60,26,23],
+  363:[53,29,27],364:[59,29,27],365:[52,30,27],366:[53,31,27],371:[55,29,27],372:[50,31,27],373:[56,30,27],377:[59,29,27],379:[54,28,27]
+};
+const PAINTED_CROWNS=new Set([98,105,109,114,120,130,131,208,209,210,211,212,213,214,215,256,346,347,349,350,351,353,355,358,359,360,361,362,371,376,378,379]);
+function portraitHead(cell){return PORTRAIT_HEADS[cell]||[56,42,38];}
+function portraitFrame(cell,bust=false){
+  if(!bust)return [0,0,PORTRAIT_WIDTH,PORTRAIT_HEIGHT];
+  const [cx,,headWidth]=portraitHead(cell),w=Math.min(112,Math.max(62,headWidth*2.4));
+  return [Math.max(0,Math.min(112-w,cx-w/2)),0,w,w*1.25];
+}
+function fittedPortraitJewelry(cell,rank,id=''){
+  const ornament=portraitJewelry(rank,id);if(!ornament)return null;
+  const full=ornament.cell<3;
+  if(full&&PAINTED_CROWNS.has(cell)){
+    // The painting already has a complete headdress. A bestowed crown is shown
+    // as a small gift medallion instead of covering it with a second crown.
+    return id?{ornament,badge:true,box:[79,106,29,29]}:null;
+  }
+  const [cx,brow,headWidth]=portraitHead(cell),w=headWidth*(full?1.85:1.12);
+  const box=full?[cx-w/2,Math.max(-2,brow-w*.42-3),w,w]:[cx-headWidth*.83-w*.5,Math.max(0,brow-w*.55),w,w];
+  return {ornament,box};
+}
 function atlasPortrait(cell,rank,jewelry=''){
   const key=cell+':'+rank+(jewelry?':'+jewelry:'');
   if(ART_CACHE.has(key))return ART_CACHE.get(key);
@@ -362,14 +392,14 @@ function atlasPortrait(cell,rank,jewelry=''){
   const scale=sheet.scale||1,w=PORTRAIT_WIDTH*scale,h=PORTRAIT_HEIGHT*scale;
   atlasCanvas.width=w;atlasCanvas.height=h;
   atlasInk.clearRect(0,0,w,h);
-  atlasInk.imageSmoothingEnabled=false;
+  atlasInk.imageSmoothingEnabled=true;atlasInk.imageSmoothingQuality='high';
   atlasInk.drawImage(sheet.image,x*scale,y*scale,w,h,0,0,w,h);
   // Keep the same face on promotion. Add the ornaments above the existing hair.
-  const ornament=portraitJewelry(rank,jewelry);
+  const fit=fittedPortraitJewelry(cell,rank,jewelry),ornament=fit?.ornament;
   if(ornament&&portraitImageReady(jewelryAtlas)){
-    const [dx,dy,dw,dh]=ornament.box;
+    const [dx,dy,dw,dh]=fit.box;
     atlasInk.drawImage(jewelryAtlas,ornament.cell%3*512,Math.floor(ornament.cell/3)*512,512,512,dx*scale,dy*scale,dw*scale,dh*scale);
-  }else if(rank===8){
+  }else if(rank===8&&!PAINTED_CROWNS.has(cell)){
     const crownScale=portraitSheets[0].scale||1;
     atlasInk.drawImage(portraitAtlas,26*crownScale,702*crownScale,60*crownScale,30*crownScale,26*scale,scale,60*scale,30*scale);
   }
@@ -400,29 +430,31 @@ familyAtlas.src=portraitSheets[1].src;
 jewelryAtlas.addEventListener('load',()=>{ART_CACHE.clear();refreshAtlasPortraits();});
 
 // Local images can be displayed directly. Reading their canvas pixels is restricted on file URLs.
-function localPortrait(cell,rank,attrs,jewelry=''){
-  const sheet=portraitSheet(cell);
-  const [x,y]=portraitTile(cell,sheet);
-  const image=source=>`<image href="${source.src}" width="${PORTRAIT_COLUMNS*PORTRAIT_WIDTH}" height="${source.rows*PORTRAIT_HEIGHT}"/>`;
-  const ornament=portraitJewelry(rank,jewelry),box=ornament?.box;
-  const crown=ornament?`<svg x="${box[0]}" y="${box[1]}" width="${box[2]}" height="${box[3]}" viewBox="${ornament.cell%3*512} ${Math.floor(ornament.cell/3)*512} 512 512" overflow="hidden"><image href="${JEWELRY_ART}" width="1536" height="1024"/></svg>`:'';
-  return `<svg ${attrs} aria-hidden="true" viewBox="0 0 ${PORTRAIT_WIDTH} ${PORTRAIT_HEIGHT}">
-    <svg width="${PORTRAIT_WIDTH}" height="${PORTRAIT_HEIGHT}" viewBox="${x} ${y} ${PORTRAIT_WIDTH} ${PORTRAIT_HEIGHT}" overflow="hidden">${image(sheet)}</svg>${crown}</svg>`;
+function localPortrait(cell,rank,attrs,jewelry='',bust=false){
+  const sheet=portraitSheet(cell),[x,y]=portraitTile(cell,sheet),frame=portraitFrame(cell,bust);
+  const fit=fittedPortraitJewelry(cell,rank,jewelry),ornament=fit?.ornament;
+  let crown='';
+  if(ornament){
+    // Place the gift medallion within the selected framing, away from the face.
+    const box=fit.badge?[frame[0]+frame[2]*.7,frame[1]+frame[3]*.73,frame[2]*.27,frame[2]*.27]:fit.box;
+    const badge=fit.badge?`<circle cx="${box[0]+box[2]/2}" cy="${box[1]+box[3]/2}" r="${box[2]/2}" fill="#fff0d5" stroke="#bc9256" stroke-width=".5"/>`:'';
+    crown=badge+`<svg x="${box[0]}" y="${box[1]}" width="${box[2]}" height="${box[3]}" viewBox="${ornament.cell%3*512} ${Math.floor(ornament.cell/3)*512} 512 512" overflow="hidden"><image href="${JEWELRY_ART}" width="1536" height="1024"/></svg>`;
+  }
+  return `<svg ${attrs} aria-hidden="true" viewBox="${frame.join(' ')}" overflow="hidden">
+    <svg width="${PORTRAIT_WIDTH}" height="${PORTRAIT_HEIGHT}" viewBox="${x} ${y} ${PORTRAIT_WIDTH} ${PORTRAIT_HEIGHT}" overflow="hidden"><image href="${sheet.src}" width="${PORTRAIT_COLUMNS*PORTRAIT_WIDTH}" height="${sheet.rows*PORTRAIT_HEIGHT}"/></svg>${crown}</svg>`;
 }
 
 function porImg(x,size=64){
   if(Number.isInteger(x?.courtCraneCell))return courtSpecialPortrait(x,size);
   if(x?.appearance)x=x.appearance;
   if(x?.daoMaster||Number.isInteger(x?.courtCraneCell))return courtSpecialPortrait(x,size);
-  const cold=x&&x.cold, dead=x&&x.alive===false;
+  const cold=x&&x.cold,dead=x&&x.alive===false;
   const cell=portraitCell(x),rank=x!=='emp'&&!x.sex&&!x.isMom&&!x.maid&&!cold&&x.rank===8?8:0;
-  const jewelry=!cold?jewelryWorn(x):'';
-  const attrs=`class="px por palace-portrait${cold||dead?' cold':''}" data-portrait-cell="${cell}" data-portrait-rank="${rank}" data-portrait-jewelry="${jewelry}" width="${size}" height="${size*1.25}"`;
-  if(typeof location!=='undefined'&&location.protocol==='file:')return localPortrait(cell,rank,attrs,jewelry);
-  ensurePortraitSheet(cell);
-  if(rank===8||jewelry)ensureJewelryAtlas();
-  const src=portraitAtlasReady(cell,rank,jewelry)?atlasPortrait(cell,rank,jewelry):portraitAtlasReady(cell,rank)?atlasPortrait(cell,rank):portrait(porSpec(x));
-  return `<img ${attrs} alt="" src="${src}">`;
+  const jewelry=!cold?jewelryWorn(x):'',bust=size<=84;
+  const attrs=`class="por palace-portrait${cold||dead?' cold':''}" data-portrait-cell="${cell}" data-portrait-rank="${rank}" data-portrait-jewelry="${jewelry}" data-portrait-framing="${bust?'bust':'full'}" width="${size}" height="${size*1.25}"`;
+  // SVG crops reuse the original atlas directly: no pixel-placeholder flash,
+  // canvas readback, or duplicate base64 paintings for every thumbnail size.
+  return localPortrait(cell,rank,attrs,jewelry,bust);
 }
 function porName(x){ if(x?.dowagerName)return x.dowagerName; if(x?.official!==undefined)return x.name; if(Number.isInteger(x?.courtCraneCell))return x.name; if(x?.daoMaster)return x.name+'国师'; if(x?.courtGuest)return x.name+' · '+kidAge(x)+'岁'; if(x&&x.isMom) return x.name; if(x&&x.sur&&!x.sex&&S&&!S.consorts.includes(x)) return fullName(x); if(x==='emp') return `${E().sur}${E().name}`; if(x.sex) return kidName(x); return cName(x)}
 
