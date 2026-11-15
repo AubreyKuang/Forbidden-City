@@ -303,6 +303,7 @@ function officialRowFamily(c){
 function consortStatusTag(x){return !x.alive?'已故':x.gone?'出宫':x.cold?'冷宫':x.templeStay?'寺中':x.homeLeave?'省亲':'';}
 const OFFICIAL_FILTERS=[['serving','在朝'],['all','全部'],['away','外任与奉差'],['gone','故去与获罪']];
 function officialFilterMatch(p,filter){
+  if(p.career==='student'||p.career==='commoner')return false;
   if(filter==='all')return true;
   if(filter==='gone')return !officialAlive(p)||p.exiled||p.dismissed;
   if(filter==='away')return officialAlive(p)&&!p.exiled&&!p.dismissed&&(p.away||p.commission||p.incognitoCase);
@@ -311,7 +312,7 @@ function officialFilterMatch(p,filter){
 function officialsTable(){
   const filter=OFFICIAL_FILTERS.some(([id])=>id===UI.officialsFilter)?UI.officialsFilter:'serving';
   const bloc=UI.officialsBloc||'all';
-  const entries=officialEntries().filter(e=>e.p.career!=='commoner'),scholars=typeof scholarList==='function'?scholarList():[],blocs=[...new Set([...entries.map(e=>e.h.bloc||'none'),...(scholars.length?['civil']:[])])];
+  const entries=officialEntries().filter(e=>!['student','commoner'].includes(e.p.career)),scholars=(typeof scholarList==='function'?scholarList():[]).filter(p=>!['student','commoner'].includes(p.career)),blocs=[...new Set([...entries.map(e=>e.h.bloc||'none'),...(scholars.length?['civil']:[])])];
   const rows=entries.filter(e=>officialFilterMatch(e.p,filter)&&(bloc==='all'||(e.h.bloc||'none')===bloc))
     .sort((a,b)=>(officialAlive(b.p)-officialAlive(a.p))||((b.role==='father')-(a.role==='father'))||(b.p.merit-a.p.merit));
   const row=e=>{
@@ -321,7 +322,8 @@ function officialsTable(){
     const deed=last?`${last.d} · ${last.t}`:'尚无记载';
     const cell=(label,html,cls='')=>`<td data-label="${label}"${cls?` class="${cls}"`:''}><div>${html}</div></td>`;
     return `<tr class="${officialAlive(p)?'':'deceased'}">${[
-      cell('姓名',`<button class="person-link official-name" onclick="A.go('official','${key}')">${porImg(p,36)}<span>${esc(p.name)}</span></button><small>${p.age}岁 · ${esc(p.temperament||'')}</small>`),
+      cell('姓名',`<button class="person-link official-name" onclick="A.go('official','${key}')">${porImg(p,36)}<span>${esc(p.name)}</span></button>`),
+      cell('年龄',`${p.age}岁`),cell('性格',esc(p.temperament||'未详')),
       cell('官职',`${esc(p.office||p.post||'')}${p.honor?`<small>${esc(p.honor)}</small>`:''}`),
       cell('家族 · 宫中',`${esc(c.sur)}氏 · ${role==='father'?'家主':esc(officialKinLabel(h,role))}<div class="official-kin">${consorts||'<span class="hint">宫中无人</span>'}</div>`),
       cell('派系',`<span class="tag" style="border-color:${BLOC_COLOR[h.bloc]||'#999'}">${esc(blocName(h.bloc))}</span>`),
@@ -333,17 +335,17 @@ function officialsTable(){
   const chip=(id,label,current,action)=>`<button class="btn sm${current===id?' on':''}" aria-pressed="${current===id}" onclick="A.${action}('${id}')">${label}</button>`;
   // 科举出身的朝臣没有宫中亲眷，同表另列。
   const scholarRow=p=>{const cell=(label,html,cls='')=>`<td data-label="${label}"${cls?` class="${cls}"`:''}><div>${html}</div></td>`,last=(p.story||[]).at(-1),deed=last?`${last.d} · ${last.t}`:'尚无记载';
-    return `<tr class="${officialAlive(p)?'':'deceased'}">${[cell('姓名',`<button class="person-link official-name" onclick="A.go('scholar','${p.id}')">${porImg(p,36)}<span>${esc(p.name)}</span></button><small>${p.age}岁 · ${esc(p.temperament||'')}</small>`),
+    return `<tr class="${officialAlive(p)?'':'deceased'}">${[cell('姓名',`<button class="person-link official-name" onclick="A.go('scholar','${p.id}')">${porImg(p,36)}<span>${esc(p.name)}</span></button>`),cell('年龄',`${p.age}岁`),cell('性格',esc(p.temperament||'未详')),
       cell('官职',esc(p.office||'')),cell('家族 · 宫中',`${esc(p.origin||'')} · ${esc(p.examRank||'进士')}出身<div class="official-kin"><span class="hint">宫中无亲眷</span></div>`),
       cell('派系',`<span class="tag" style="border-color:${BLOC_COLOR.civil}">${blocName('civil')}</span>`),cell('状态',officialStatus(p)),
       cell('才干/信任/功绩',`${rd(p.ability??0)} / ${rd(p.trust??0)} / ${rd(p.merit??0)}`,'official-nums'),cell('皇嗣','<span class="hint">—</span>'),
       cell('近期事迹',`${esc(deed.slice(0,64))}${deed.length>64?'…':''}`,'official-deed')].join('')}</tr>`;};
   const scholarRows=scholars.filter(p=>officialFilterMatch(p,filter)&&(bloc==='all'||bloc==='civil'));
   const counts={serving:entries.filter(e=>officialFilterMatch(e.p,'serving')).length+scholars.filter(p=>officialFilterMatch(p,'serving')).length,gone:entries.filter(e=>officialFilterMatch(e.p,'gone')).length+scholars.filter(p=>officialFilterMatch(p,'gone')).length};
-  return `${pageBackButton('officials','home')}<h2>官员表</h2><p class="hint">在朝官员出自妃嫔娘家或科举。同父姐妹共用父兄履历。点姓名看履历，点妃嫔或皇嗣可直接跳转。在朝 ${counts.serving} 人，故去与获罪 ${counts.gone} 人。</p>
+  return `${pageBackButton('officials','home')}<h2>官员表</h2><p class="hint">在朝官员出自妃嫔娘家或科举。同父姐妹共用父兄履历。尚未授官的读书人可在家族页查看。点姓名看履历，点妃嫔或皇嗣可直接跳转。在朝 ${counts.serving} 人，故去与获罪 ${counts.gone} 人。</p>
     <div class="acts official-filters">${OFFICIAL_FILTERS.map(([id,l])=>chip(id,l,filter,'officialsFilter')).join('')}</div>
     <div class="acts official-filters">${chip('all','全部派系',bloc,'officialsBloc')}${blocs.map(id=>chip(id,id==='none'?'无所依附':blocName(id),bloc,'officialsBloc')).join('')}</div>
-    ${rows.length+scholarRows.length?`<div class="official-table-wrap"><table class="official-table"><thead><tr><th>姓名</th><th>官职</th><th>家族 · 宫中</th><th>派系</th><th>状态</th><th>才干/信任/功绩</th><th>皇嗣</th><th>近期事迹</th></tr></thead><tbody>${rows.map(row).join('')}${scholarRows.map(scholarRow).join('')}</tbody></table></div>`:'<p class="hint">没有符合条件的官员。</p>'}`;
+    ${rows.length+scholarRows.length?`<div class="official-table-wrap"><table class="official-table"><thead><tr><th>姓名</th><th>年龄</th><th>性格</th><th>官职</th><th>家族 · 宫中</th><th>派系</th><th>状态</th><th>才干/信任/功绩</th><th>皇嗣</th><th>近期事迹</th></tr></thead><tbody>${rows.map(row).join('')}${scholarRows.map(scholarRow).join('')}</tbody></table></div>`:'<p class="hint">没有符合条件的官员。</p>'}`;
 }
 A.officialsFilter=function(id){if(!OFFICIAL_FILTERS.some(([x])=>x===id))return;UI.officialsFilter=id;render();};
 A.officialsBloc=function(id){UI.officialsBloc=String(id||'all');render();};

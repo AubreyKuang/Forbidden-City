@@ -260,14 +260,15 @@ const OFFICIAL_PORTRAITS={
 };
 const FATHER_PORTRAITS=[...LEGACY_FATHER_PORTRAITS,401,403,407,409];
 const BROTHER_PORTRAITS=[...LEGACY_BROTHER_PORTRAITS,398,399,400,402,404,405,406,408,410,411,412,413,414,415,416,417,418,419,420,421];
-function expandedOfficialPortraitsActive(){return journalContentVersion()>=12;}
+function expandedOfficialPortraitsActive(){return journalContentVersion()>=14;}
 // One pool for court officers and consorts' relatives. Identity is assigned once,
 // using local seeded randomness so adding artwork never shifts gameplay rolls.
 function assignCourtOfficialPortrait(person,bloc,{mature=person.age>=40,house={},peers=[]}={}){
   if([...FATHER_PORTRAITS,...BROTHER_PORTRAITS].includes(person.artPortrait))return;
   const cells=OFFICIAL_PORTRAITS[bloc==='army'?'army':'civil'][mature?'mature':'young'];
   const usage=new Map(cells.map(cell=>[cell,0])),seen=new Set();
-  const people=[...(S?.consorts||[]),...(S?.cands||[])].flatMap(c=>Object.values(c.house||{}));
+  const families=[...(S?.consorts||[]),...(S?.cands||[]),...(S?.flags?.frontierHouses||[]).map(x=>x.guest)].filter(Boolean);
+  const people=families.flatMap(c=>Object.values(c.house||{}));
   people.push(...Object.values(house),...(S?.scholars||[]),S?.jinyiwei?.commander,...peers);
   for(const p of people){
     if(!p||typeof p!=='object'||p===person||!p.id||seen.has(p.id))continue;
@@ -282,7 +283,7 @@ function assignCourtOfficialPortrait(person,bloc,{mature=person.age>=40,house={}
 function assignOfficialPortrait(person,house,role){
   const father=role==='father';
   if(expandedOfficialPortraitsActive())return assignCourtOfficialPortrait(person,house.bloc,{mature:father,house});
-  // A saved version 11 (or earlier) pending scene must recreate its original faces.
+  // A saved version 13 (or earlier) pending scene must recreate its original faces.
   const cells=father?LEGACY_FATHER_PORTRAITS:LEGACY_BROTHER_PORTRAITS;
   if(cells.includes(person.artPortrait))return;
   const preferred=house.bloc==='army'?(father?[269,282,283,284]:[273,285,286,287]):
@@ -401,7 +402,6 @@ const PORTRAIT_HEADS={
   346:[56,28,23],347:[58,29,23],348:[58,25,23],349:[59,26,23],350:[56,28,23],351:[60,25,23],352:[57,26,23],353:[57,27,23],354:[62,27,23],355:[62,25,23],356:[56,26,23],357:[60,26,23],
   363:[53,29,27],364:[59,29,27],365:[52,30,27],366:[53,31,27],371:[55,29,27],372:[50,31,27],373:[56,30,27],377:[59,29,27],379:[54,28,27]
 };
-const PAINTED_CROWNS=new Set([98,105,109,114,120,130,131,208,209,210,211,212,213,214,215,256,346,347,349,350,351,353,355,358,359,360,361,362,371,376,378,379,422]);
 function portraitHead(cell){return PORTRAIT_HEADS[cell]||[56,42,38];}
 function portraitFrame(cell,bust=false){
   if(!bust)return [0,0,PORTRAIT_WIDTH,PORTRAIT_HEIGHT];
@@ -411,13 +411,8 @@ function portraitFrame(cell,bust=false){
 function fittedPortraitJewelry(cell,rank,id=''){
   const ornament=portraitJewelry(rank,id);if(!ornament)return null;
   const full=ornament.cell<3;
-  if(full&&PAINTED_CROWNS.has(cell)){
-    // The painting already has a complete headdress. A bestowed crown is shown
-    // as a small gift medallion instead of covering it with a second crown.
-    return id?{ornament,badge:true,box:[79,106,29,29]}:null;
-  }
   const [cx,brow,headWidth]=portraitHead(cell),w=headWidth*(full?1.85:1.12);
-  const box=full?[cx-w/2,Math.max(-2,brow-w*.42-3),w,w]:[cx-headWidth*.83-w*.5,Math.max(0,brow-w*.55),w,w];
+  const box=full?[cx-w/2,Math.max(-2,brow-w*.42-6),w,w]:[cx-headWidth*.83-w*.5,Math.max(0,brow-w*.55),w,w];
   return {ornament,box};
 }
 function atlasPortrait(cell,rank,jewelry=''){
@@ -435,7 +430,7 @@ function atlasPortrait(cell,rank,jewelry=''){
   if(ornament&&portraitImageReady(jewelryAtlas)){
     const [dx,dy,dw,dh]=fit.box;
     atlasInk.drawImage(jewelryAtlas,ornament.cell%3*512,Math.floor(ornament.cell/3)*512,512,512,dx*scale,dy*scale,dw*scale,dh*scale);
-  }else if(rank===8&&!PAINTED_CROWNS.has(cell)){
+  }else if(rank===8){
     const crownScale=portraitSheets[0].scale||1;
     atlasInk.drawImage(portraitAtlas,26*crownScale,702*crownScale,60*crownScale,30*crownScale,26*scale,scale,60*scale,30*scale);
   }
@@ -471,10 +466,8 @@ function localPortrait(cell,rank,attrs,jewelry='',bust=false){
   const fit=fittedPortraitJewelry(cell,rank,jewelry),ornament=fit?.ornament;
   let crown='';
   if(ornament){
-    // Place the gift medallion within the selected framing, away from the face.
-    const box=fit.badge?[frame[0]+frame[2]*.7,frame[1]+frame[3]*.73,frame[2]*.27,frame[2]*.27]:fit.box;
-    const badge=fit.badge?`<circle cx="${box[0]+box[2]/2}" cy="${box[1]+box[3]/2}" r="${box[2]/2}" fill="#fff0d5" stroke="#bc9256" stroke-width=".5"/>`:'';
-    crown=badge+`<svg x="${box[0]}" y="${box[1]}" width="${box[2]}" height="${box[3]}" viewBox="${ornament.cell%3*512} ${Math.floor(ornament.cell/3)*512} 512 512" overflow="hidden"><image href="${JEWELRY_ART}" width="1536" height="1024"/></svg>`;
+    const box=fit.box;
+    crown=`<svg data-headpiece="${ornament.cell}" x="${box[0]}" y="${box[1]}" width="${box[2]}" height="${box[3]}" viewBox="${ornament.cell%3*512} ${Math.floor(ornament.cell/3)*512} 512 512" overflow="hidden"><image href="${JEWELRY_ART}" width="1536" height="1024"/></svg>`;
   }
   return `<svg ${attrs} aria-hidden="true" viewBox="${frame.join(' ')}" overflow="hidden">
     <svg width="${PORTRAIT_WIDTH}" height="${PORTRAIT_HEIGHT}" viewBox="${x} ${y} ${PORTRAIT_WIDTH} ${PORTRAIT_HEIGHT}" overflow="hidden"><image href="${sheet.src}" width="${PORTRAIT_COLUMNS*PORTRAIT_WIDTH}" height="${sheet.rows*PORTRAIT_HEIGHT}"/></svg>${crown}</svg>`;

@@ -16,7 +16,10 @@ natalMeetingEvent=function(c,p){
     delete p.betrothal;p.marriageChecked=S.turn;
     natalRecord(c,p,`${p.name}探亲时收到家中回信：原议亲对象${m.name}${reason}，原亲事作罢，婚事需另议。`,0);
   }
-  const ev=kinVisitsMeeting(c,p);if(!ev||!visitingMarriageReady(c,p))return ev;
+  const ev=kinVisitsMeeting(c,p);
+  if(ev&&journalContentVersion()>=12&&p.sex==='f'&&!p.parentRelativeId&&natalAge(p)>=18&&!natalRomanceReady(c,p))
+    ev.choices.splice(ev.choices.length-1,0,{t:'询问留宫意愿',cond:()=>false,why:natalAdmissionReason(c,p),f:()=>null});
+  if(!ev||!visitingMarriageReady(c,p))return ev;
   const b=p.betrothal;
   ev.text+=b?`\n临到告退，${p.name}说起自己的婚事：“家中正与${b.match.desc}${b.match.name}议亲，尚未成婚。民女想请陛下听听这门亲事，也请${natalLabel(c,p)==='妹妹'?'姐姐':'妹妹'}替我参详。”`:
     `\n说完家常，${p.name}提起家中还在为她择亲：“此来还有一事，想请陛下为民女的婚事作主。”`;
@@ -27,6 +30,42 @@ natalMeetingEvent=function(c,p){
   }});
   return ev;
 };
+
+// A household may be reached through either sister's family tree. A visit belongs
+// to its actual host; opening another sister's branch must not hide the actions.
+const kinVisitEntry=natalEntry;
+natalEntry=function(id,relative){
+  const e=kinVisitEntry(id,relative);if(!e||journalContentVersion()<12)return e;
+  const host=byId(e.p.visit?.host);
+  if(host&&houseOf(host)===e.h&&natalInPalace(host,e.p))return {...e,c:host};
+  return e;
+};
+function natalAdmissionReason(c,p){
+  if(!p.alive)return '她已去世';
+  if(p.consortId)return '她已经入宫受封';
+  if(p.sex!=='f'||p.parentRelativeId)return '只有本家的成年姐妹可以商议留宫';
+  if(natalAge(p)<18)return '尚未成年';
+  if(p.married||p.spouse)return '她已婚，此次只作亲眷探访';
+  if(p.betrothal?.arranged)return '她已有赐婚安排';
+  if(p.declined)return '她已明确选择宫外的生活';
+  if(!natalInPalace(c,p))return '需在她入宫探亲期间商议';
+  if(rankCount(2)>=RANK_CAP[2])return '常在位分已满';
+  return '';
+}
+function natalAdmissionPanel(c,p){
+  if(p.sex!=='f'||p.parentRelativeId||natalAge(p)<18||!p.alive||p.consortId)return '';
+  const reason=natalAdmissionReason(c,p);
+  return `<div class="acts"><button class="btn gold" onclick="A.natalCourtship(${c.id},${p.id})" ${reason?'disabled':''}>询问留宫意愿<small>可纳为常在</small></button>${reason?`<span class="hint">暂不能纳妃：${esc(reason)}。</span>`:'<span class="hint">正在议亲也可询问；正式册封时才了结原亲事。</span>'}</div>`;
+}
+A.natalCourtship=function(id,relative){
+  if(modalOpen)return;const e=natalEntry(id,relative);if(!e)return;
+  const reason=natalAdmissionReason(e.c,e.p);if(reason){toast(reason);return;}
+  natalMeetingEvent(e.c,e.p); // Reconcile any marriage that lapsed during the visit.
+  pushEv(natalCourtshipEvent(e.c,e.p));
+};
+const kinVisitStatus=natalStatus;
+natalStatus=function(p){const text=kinVisitStatus(p);return p.visit&&!p.consortId?
+  text+(p.married||p.spouse?' · 已婚':p.betrothal?' · 议亲中':natalAge(p)>=18?' · 未婚':''):text;};
 function visitingMarriageEvent(c,p){
   const b=p.betrothal,m=b?.match;if(!visitingMarriageReady(c,p)||!m||!matchStillOpen(m))return null;
   const valid=()=>visitingMarriageReady(c,p)&&p.betrothal===b&&matchStillOpen(m);

@@ -193,8 +193,27 @@ function parentageClearEvent(k){
       {t:'澄清传闻，安抚母子',f:()=>{
         if(!parentageReady(k)||p.father.kind!=='emperor')return null;
         p.status='resolved';p.decision='cleared';p.resolvedAt=S.turn;p.result='核实后疑云已释，亲生关系与原有身份不变。';
-        kstory(k,p.result);if(m?.alive){cchg(m,{mood:10,aff:4});story(m,`关于${k.name}的身世疑云得以澄清。`);remember(m,'saved','身世流言经核查澄清，未凭猜测定罪。');}
+        kstory(k,p.result);let feeling='';if(m?.alive){if(journalContentVersion()>=13)feeling=recordParentageHurt(m,k);else{cchg(m,{mood:10,aff:4});story(m,`关于${k.name}的身世疑云得以澄清。`);remember(m,'saved','身世流言经核查澄清，未凭猜测定罪。');}}
         if(k.templeStay?.reason==='parentage'){k.templeStay.reason='prayer';k.templeStay.due=S.turn+1;}
-        log(`【身世查证】${k.name}疑云已释。`,1);save('auto');return '澄清的回奏已记入起居注。告密与传闻不等于事实，也不因未查实便自动认定告密者蓄意诬陷。';
+        log(`【身世查证】${k.name}疑云已释。`,1);save('auto');return '澄清的回奏已记入起居注。告密与传闻不等于事实，也不因未查实便自动认定告密者蓄意诬陷。'+(feeling?'\n\n'+feeling:'');
       }}]};
+}
+function recordParentageHurt(c,k){
+ const proud=['骄纵','骄矜','善妒','城府'].includes(c.trait),quiet=isSolitary(c)||['淡泊','沉静','持重'].includes(c.trait);
+ const line=proud?`如今虽还了清白，可${k.name}与我受过的疑心，岂是一句无事就能抹去的？`:
+  quiet?`查清了就好，莫让${k.name}再听这些话。只是这份委屈，我还要慢慢放下。`:
+  ['爽直','将门','活泼'].includes(c.trait)?`我没有做过的事，却要连着${k.name}一起受疑。我会委屈，也盼陛下记得今日查明的结果。`:
+  `我知道${k.name}是陛下的骨肉。如今终于查明，可想到连孩子也被怀疑，心里还是委屈。`;
+ const text=`【身世昭雪后的委屈】${k.name}曾因身世传闻受疑，核对起居、接生记录与证词后，确认为皇帝亲生，关于生母私情的指控未成立。${fullName(c)}松了一口气，却仍为母子受冤而委屈，心情低落。她说：“${line}”`;
+ const thread=`parentage-clear:${S.gen}:${k.id}`;
+ c.parentageHurt={child:k.id,turn:S.turn,line};
+ cchg(c,{mood:proud?-12:quiet?-6:-9,aff:proud?-5:-2});
+ setXin(c,'委屈',`${k.name}身世查明为亲生，母子受疑的委屈仍未消散`);
+ story(c,text);Object.assign(c.story.at(-1),{thread,life:{kind:'family',title:'身世昭雪后的委屈',turn:S.turn,gen:S.gen,people:[{id:c.id,name:fullName(c)},{id:k.id,name:k.name}]}});
+ remember(c,'hurt',`${k.name}身世查明为皇帝亲生，自己虽获昭雪，仍记得母子受疑的委屈。`);
+ NPCMemory.record(S,{type:'parentage-cleared',time:S.turn,participants:[c.id,k.id],object:'身世昭雪后的委屈',outcome:text},
+  [{person:c.id,subject:k.id,interpretation:text,emotion:-.6,impact:85,channel:'participant'}]);
+ kstory(k,`身世经记录与证词核实，确为皇帝亲生；生母${fullName(c)}的相关私情指控未成立，母子名分不变。`);
+ Object.assign(k.story.at(-1),{thread,life:{kind:'family',title:'身世疑云澄清',turn:S.turn,gen:S.gen,people:[{id:c.id,name:fullName(c)},{id:k.id,name:k.name}]}});
+ return `${fullName(c)}说：“${line}”\n疑云虽释，受冤的委屈仍在。`;
 }
