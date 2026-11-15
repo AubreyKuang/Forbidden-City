@@ -1,5 +1,5 @@
 /* Keep identities, families and portraits when the point of view changes reign. */
-function dowagerPerson(d){return {...(d?.portrait||{isMom:true,seed:91}),alive:!!d?.alive};}
+function dowagerPerson(d){return {...(d?.portrait||{isMom:true,seed:91}),dowagerName:d?.name||'太后',alive:!!d?.alive};}
 function makeDowager(c,relation){
   return {name:c?`${c.sur}太后`:'太后',fullName:c?fullName(c):'',personId:c?.id,relation,
     age:c?.age,atTurn:S.turn,portrait:c?{...JSON.parse(JSON.stringify(c)),portraitOverride:portraitCell(c),rank:8}:undefined,
