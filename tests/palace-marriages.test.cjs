@@ -92,3 +92,10 @@ for(const fixture of legacy.cases)test('version 7 month-end transcript still rep
  const relabelled=JSON.parse(JSON.stringify(fixture.save));relabelled.pendingActions.version=8;
  b=game(relabelled);b.run("A.load('auto');assert.equal(PalaceActions.blocked,true);");
 });
+
+test('every answer to a match leaves a note in the consort\'s own chronicle',()=>{
+ const b=world();
+ b.run(`var poor=addGirl('农家');for(const x of S.consorts)if(x!==poor)for(const p of natalPeople(houseOf(x)))delete p.betrothal;
+ for(const i of [0,1]){var q=sister(poor,21,900+i);q.married=false;delete q.spouse;q.marriageChecked=S.turn-12;startBetrothal(poor,q);
+  var ev=null;for(let k=0;k<20&&!ev;k++){ev=betrothalEvent();if(ev&&!ev.text.includes(q.name))ev=null;}var n=poor.story.length;ev.choices[i].f();assert.ok(poor.story.length>n);assert.ok(poor.story.at(-1).t.includes(q.name));}`);
+});

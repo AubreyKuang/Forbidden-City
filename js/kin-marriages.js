@@ -162,16 +162,16 @@ function betrothalEvent(){
     {t:'赐婚成全 · 国库−10',cond:()=>E().treasury>=10,why:'国库不足',f:once(()=>{
       chg({treasury:-10});b.arranged=true;marrySister(c,p,m,{source:'奉旨赐婚'});
       return `${p.name}与${m.name}奉旨成婚。${fx(cchg(c,{mood:8,aff:5}),...(e&&inPalace(e.o)?[cchg(e.o,{mood:5,aff:3})]:[]))}`;})},
-    {t:'由两家自行商议',f:once(()=>{b.seen=true;story(p,'宫中知道了这门亲事，未加干预，由两家自行商议。');return '两家仍在商议，婚期由家中定。';})},
+    {t:'由两家自行商议',f:once(()=>{b.seen=true;natalRecord(c,p,`与${m.name}议亲一事，陛下未加干预，由两家自行商议。`,.2);return '两家仍在商议，婚期由家中定。';})},
     {t:alliance?'不准两家结亲，以防结党':'这门亲事不妥，让家里另议',f:once(()=>{
-      delete p.betrothal;p.marriageChecked=S.turn;story(p,`与${m.name}的亲事奉旨作罢。`);
+      delete p.betrothal;p.marriageChecked=S.turn;natalRecord(c,p,`与${m.name}的亲事奉旨作罢。`,-.3);
       if(e&&inPalace(e.o)&&socialPair(c,e.o))relAdd(c,e.o,-3);if(alliance)policyNudge('civil',1);
       return `亲事作罢。${fx(cchg(c,{mood:-6}))}`;})}]
   :[
     {t:'赏一份嫁妆 · 国库−5',cond:()=>E().treasury>=5,why:'国库不足',f:once(()=>{
-      chg({treasury:-5});b.seen=true;b.dowry=true;story(p,`宫中赏了一份嫁妆，${fullName(c)}托人一并捎去。`);
+      chg({treasury:-5});b.seen=true;b.dowry=true;natalRecord(c,p,`将与${m.name}成亲，宫中赏了一份嫁妆，${fullName(c)}托人一并捎去。`,.5);
       return `嫁妆随家书送去了。${fx(cchg(c,{mood:6,aff:4}))}`;})},
-    {t:'由她家里做主',f:once(()=>{b.seen=true;story(p,'宫中知道了这门亲事，由家里做主。');return '这是她家里的事，由家里做主。';})}];
+    {t:'由她家里做主',f:once(()=>{b.seen=true;natalRecord(c,p,`与${m.name}议亲一事，由家里做主。`,.2);return '这是她家里的事，由家里做主。';})}];
   return {title:discovered?'相看':'议亲',kinMarriage:true,por:c,present:[c],cooldown:10,valid,text:opening+note,choices};
 }
 
