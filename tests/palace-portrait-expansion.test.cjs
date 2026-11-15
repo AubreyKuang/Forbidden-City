@@ -2,6 +2,7 @@ const assert=require('node:assert/strict');
 const {test}=require('node:test');
 const {boot}=require('./playtest-harness.cjs');
 const manifest=require('../docs/expanded-portrait-sources.json');
+const growthManifest=require('../docs/royal-growth-sources.json');
 function game(){const g=boot();g.ctx.assert=assert;g.run('A.newGame();A.start();drain();');return g;}
 
 test('each new royal identity has its own infant, child and grown portrait and survives reload',()=>{
@@ -22,6 +23,29 @@ test('each new royal identity has its own infant, child and grown portrait and s
     assert.notEqual(frames[0].source,frames[1].source);
     assert.equal(frames[1].source,frames[2].source);
     assert.equal(frames[2].cell,frames[1].cell+3,sex+' keeps its approved child/adult column');
+  }
+});
+
+test('approved close-up royal sets keep the correct identity at age boundaries and after reload',()=>{
+  const {run}=game();run(`
+    for(var [sex,variant,cells] of [
+      ['f',33,[380,381,382]],['f',34,[383,384,385]],
+      ['m',29,[386,387,388]],['m',30,[389,390,391]]
+    ]){
+      var child=makeKid(harem()[0],sex,'成长套图');child.portraitVariant=variant;var id=child.id;
+      for(var [age,stage] of [[0,0],[2,0],[3,1],[11,1],[12,2],[18,2]]){
+        child.born=S.turn-age*12;assert.equal(portraitCell(child),cells[stage]);
+        save('1');assert.ok(load('1'));child=kidById(id);
+        assert.equal(child.portraitVariant,variant);assert.equal(portraitCell(child),cells[stage]);
+      }
+    }
+  `);
+  assert.deepEqual(growthManifest.portraits.map(p=>p.id),Array.from({length:12},(_,i)=>380+i));
+  for(let offset=0;offset<12;offset+=3){
+    const frames=growthManifest.portraits.slice(offset,offset+3);
+    assert.equal(new Set(frames.map(p=>p.source+':'+p.sex+':'+p.variant)).size,1);
+    assert.deepEqual(frames.map(p=>p.stage),[0,1,2]);
+    assert.deepEqual(frames.map(p=>p.cell%3),[0,1,2]);
   }
 });
 
@@ -59,8 +83,8 @@ test('new allocation does not repaint existing consorts, legacy relatives or suc
 test('royal allocation keeps infant and child faces distinct before repeating a growth set',()=>{
   const {run}=game();run(`
     for(var sex of ['m','f']){
-      S.children=[];var kids=Array.from({length:29},(_,i)=>makeKid(harem()[0],sex,'皇嗣'+i));
-      for(var age of [0,8,20]){kids.forEach(k=>k.born=S.turn-age*12);assert.equal(new Set(kids.map(portraitCell)).size,29);}
+      S.children=[];var kids=Array.from({length:31},(_,i)=>makeKid(harem()[0],sex,'皇嗣'+i));
+      for(var age of [0,8,20]){kids.forEach(k=>k.born=S.turn-age*12);assert.equal(new Set(kids.map(portraitCell)).size,31);}
     }
   `);
 });
