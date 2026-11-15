@@ -125,6 +125,7 @@ function deepen(c){if(!c)return;
 function remember(c,k,t){
   if(!c)return;
   const negative=k==='hurt'||k==='neglect';
+  if(k==='hurt'&&typeof lifeHurt==='function')lifeHurt(c,t);
   NPCMemory.record(S,{type:k,time:S.turn,location:c.palace,participants:[c.id],outcome:t},[
     {person:c.id,subject:'emperor',interpretation:t,emotion:negative?-.9:.85,impact:85}
   ]);

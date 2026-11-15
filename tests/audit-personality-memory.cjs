@@ -27,7 +27,7 @@ for(const mode of modes)for(const seed of seeds){
   auditChoices.push(item);return ret;
  };`,ctx);
  const run=vm.runInContext(`play(${months})`,ctx,{timeout:240000});
- const evidence=vm.runInContext(`({choices:auditChoices,people:[...S.consorts,...S.children].map(p=>({id:p.id,name:p.sex?p.name:fullName(p),trait:p.trait,t2:p.t2,alive:p.alive,story:p.story,memories:NPCMemory.recall(S,p.id)}))})`,ctx);
+ const evidence=vm.runInContext(`({choices:auditChoices,people:[...S.consorts,...S.children].map(p=>({id:p.id,name:p.sex?p.name:fullName(p),trait:p.trait,t2:p.t2,alive:p.alive,personalLife:p.personalLife,keepsakes:p.keepsakes,story:p.story,memories:NPCMemory.recall(S,p.id)}))})`,ctx);
  const summary={mode,seed,months:run.months.length,over:run.over||false,errors:run.errors,choices:evidence.choices.length,decisions:evidence.choices.filter(e=>e.hasEffect).length,eventTitles:[...new Set(evidence.choices.map(e=>e.title))],withActors:evidence.choices.filter(e=>e.actors.length).length,gapCandidates:evidence.choices.filter(e=>e.unrecorded.length).length,personalityChanges:evidence.choices.flatMap(e=>e.personalityChanges.map(p=>({title:e.title,...p}))),stateBytes:Buffer.byteLength(vm.runInContext('JSON.stringify(S)',ctx)),monthlyEvents:run.months.reduce((n,m)=>n+m.events,0),monthsWithoutEvents:run.months.filter(m=>!m.events).length};
  fs.writeFileSync(path.join(out,'runs',`${mode}-${seed}.json`),JSON.stringify({summary,...evidence},null,2));summaries.push(summary);
  fs.writeFileSync(path.join(out,'summary.json'),JSON.stringify(summaries,null,2));console.log(JSON.stringify({mode,seed,months:summary.months,errors:summary.errors,choices:summary.choices,gapCandidates:summary.gapCandidates}));

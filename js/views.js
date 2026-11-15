@@ -271,7 +271,7 @@ function viewHome(){
    </div></div>
    <p class="hint">每月有${maxEnergy()}点精力。上朝可先免费查看本月奏折，亲自批复通常花 1 点；召幸、闲谈、探望皇嗣、出巡也要花精力。赏赐、晋封、选秀不花精力。用完后点「结束本月」，宫中会发生新的事。侍寝后若怀上龙胎，要到下个月末太医才诊得出喜脉。每位妃嫔都有一段专属故事，情分越深越容易推进。</p>
    <div class="acts"><button class="btn jade" onclick="A.go('jewelry')">内库珍藏<small>查看珍饰 · 选人赏赐</small></button></div>
-   ${birthdayBanquetButtons()}${proudDemandNotice()}${courtBlocHTML()}<h3>近事</h3><ul class="story">${recent.map(l=>`<li class="${l.b?'big':''}"><time>${esc(l.d)}</time>${esc(l.t)}</li>`).join('')||'<li>尚无记载</li>'}</ul>`}
+   ${detailSection('从旧朝带来的家书与手稿',lifeWorksPanel(e))}${birthdayBanquetButtons()}${proudDemandNotice()}${courtBlocHTML()}<h3>近事</h3><ul class="story">${recent.map(l=>`<li class="${l.b?'big':''}"><time>${esc(l.d)}</time>${esc(l.t)}</li>`).join('')||'<li>尚无记载</li>'}</ul>`}
 function viewHarem(){
   const all=alive().filter(c=>!c.maid);const g=r=>all.filter(c=>!c.cold&&!c.templeStay&&!c.homeLeave&&r(c)).sort((a,b)=>b.rank-a.rank||b.favor-a.favor);
   const sec=(t,arr)=>arr.length?`<h3>${t}（${arr.length}）</h3><div class="grid portrait-grid">${arr.map(consortCard).join('')}</div>`:'';
@@ -333,8 +333,8 @@ function viewConsort(){
   const family=(act?visitorLine(c)+fosterLine(c)+clanLine(c)+conKidLine(c)+relLine(c):'')+houseLine(c)+fiveBrotherPanel(c);
   return `${personBackButton('harem')}
    <header class="detail-head">${porImg(c,224)}<div class="grow">
-    <p>${esc(fullName(c))} · ${c.age}岁 · ${c.alive?c.gone?'已出宫':c.homeLeave?'娘家 · 暂离宫中':c.templeStay?'护国寺':esc(residenceLabel(c)):'已故'}</p>
-    <h2>${esc(cName(c))}</h2>
+    <p>${esc(fullName(c))} · ${c.age}岁 · ${c.alive?c.gone?'已出宫':c.homeLeave?'娘家 · 暂离宫中':c.templeStay?'护国寺':esc(residenceLabel(c)):esc(c.deathReason||'已故')}</p>
+    <h2>${esc(cName(c))}</h2>${consortHomePlace(c)?`<button class="btn sm jade" onclick="A.visitConsortHome(${c.id})">去宫里看看 →</button>`:''}
     <p>${esc(c.fam.t)} · ${esc(c.trait)} ${solitaryTag(c)}${c.preg>=2?` <span class="tag r">有孕${c.preg}月</span>`:''}</p>
     ${PORTRAIT_CLOTHES[portraitCell(c)]?`<p>衣着 · ${PORTRAIT_CLOTHES[portraitCell(c)]}</p>`:''}
     ${characterVoiceHTML(c)}${daoPracticePanel(c)}
@@ -342,7 +342,7 @@ function viewConsort(){
    ${acts?`<div class="detail-actions" role="group" aria-label="人物操作"><span class="detail-action-label" aria-hidden="true">人物操作</span><div class="acts">${acts}</div></div>`:''}
    <div class="detail-vitals">${bar('恩宠',c.favor)}${bar('心情',c.mood,'#517369')}${bar('情分',c.aff,'#936375')}</div>
    <div class="detail-stack">
-    ${continuityPanel(c)}
+    ${deliveryMemorialPanel(c)}${continuityPanel(c)}${personalLifePanel(c)}
     ${detailSection('孕中祈愿',pregnancyPrayerPanel(c))}
     ${detailSection('寺中清修',consortTemplePanel(c))}
     ${detailSection('御赐珍饰',jewelryPanel(c))}
@@ -358,7 +358,7 @@ function viewConsort(){
     ${detailSection('孩子的身世',consortParentagePanel(c))}
     ${detailSection('册封与宫务',management?`<div class="acts">${management}</div>`:'')}
     ${fosterWishButton(c)}${homeLeavePanel(c)}${homeFamilyPanel(c)}${maternalPanel(c)}${journeyPanel(c)}${solitaryPanel(c)}${pastLifePanel(c)}${timeTravelerPanel(c)}${personalExperiencePanel(c)}${historyPanel(c)}
-    ${detailSection('人物纪事',arcLine(c)+detailStory(c))}
+    ${lifeBiography(c)}${detailSection('人物纪事',(act?arcLine(c):'')+detailStory(c))}
     ${detailFold('处置',penalties?`<div class="acts">${penalties}</div>`:'')}
    </div>`;
 }
@@ -438,7 +438,7 @@ function viewKid(){
      ${detailSection('宫中关系',k.alive?kidRelLine(k):'')}
     </div>
     ${detailSection('封号与储位',titles?`<div class="acts">${titles}</div>`:'')}
-    ${detailSection('人物纪事',detailStory(k))}
+    ${detailSection('随身旧物',lifeWorksPanel(k))}${lifeBiography(k)}${detailSection('人物纪事',detailStory(k))}
    </div>`;
 }
 function viewOut(){

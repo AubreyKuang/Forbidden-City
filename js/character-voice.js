@@ -106,6 +106,7 @@ function consortVoicePool(c){
   const concern=motherConcernVoice(c);if(concern&&(c.childConcern?.value??35)>=30)return [concern];
   if(['怨恨','惶恐'].includes(x)||(c.aff<20&&!isSolitary(c)&&consortVoicePhase(c)!=='first'))return [voiceLine('distance','她行过礼，仍立在一步之外。',['臣妾听着。只是有些话，还不知该从哪里说起。','陛下肯来，臣妾领情。只是心里的结，不是一句话就能解开的。'])];
 
+  const personal=lifeVoice(c);if(personal)return [personal];
   const quietHome=solitaryHouseholdVoice(c);if(quietHome)return [quietHome];
   if(isSolitary(c))return [maternal,solitaryVoice(c),cohabVoice(c),resemblanceVoice(c),pastLifeVoice(c),timeTravelerVoice(c),concern].filter(Boolean);
   const years=newcomerVoice(c)||consortYearsVoice(c),phase=consortVoicePhase(c);

@@ -1,0 +1,32 @@
+const {test}=require('node:test'),assert=require('node:assert/strict');
+const {boot}=require('./playtest-harness.cjs');
+function game(){const b=boot(202);b.ctx.assert=assert;b.run(`A.start();drain();S.turn=36;S.year=4;S.month=6;
+ var c=harem()[0];c.trait='体弱';c.preg=10;c.story=[];delete c.swapPlot;
+ var prepare=count=>{var oldCount=rollBirthCount;rollBirthCount=()=>count;birthEvent(c);rollBirthCount=oldCount;c.delivery.difficult=true;c.delivery.templeAdvice=null;for(var k of deliveryKids(c))k.pendingName=false;};`);return b;}
+test('a frail mother has an explicit delivery and fatal haemorrhage record in her own chronicle',()=>{const b=game();b.run(`prepare(1);var k=deliveryKids(c)[0];finishDelivery(c);
+ assert.equal(c.alive,false);assert.equal(c.deathReason,'产后血崩');assert.equal(c.deathRecord.children[0].id,k.id);
+ var entry=c.story.find(s=>s.birthOutcome);assert.ok(entry);assert.match(entry.t,/临盆/);assert.match(entry.t,/诞下/);assert.match(entry.t,/血崩.*薨逝/);assert.ok(entry.t.includes(k.name));
+ assert.match(k.story.at(-1).t,/生母.*血崩薨逝/);UI.sel=c.id;assert.match(viewConsort(),/终事 · 生产与离世/);assert.match(detailStory(c),/血崩/);assert.match(lifeBiography(c),/血崩/);`);});
+test('twins and triplets retain all actual child names with one maternal death record',()=>{for(const count of [2,3]){const b=game();b.run(`prepare(${count});finishDelivery(c);var entry=c.story.filter(s=>s.birthOutcome);assert.equal(entry.length,1);
+ assert.equal(c.deathRecord.children.length,${count});for(var k of deliveryKids(c))assert.ok(entry[0].t.includes(k.name));
+ var n=c.story.length;finishDelivery(c);repairDeliveryChronicle(c);assert.equal(c.story.length,n);`);}});
+test('unresolved naming does not create a premature death and the real UI action commits once',()=>{const b=game();b.run(`prepare(1);var k=deliveryKids(c)[0];k.pendingName=true;var id=c.id;
+ A.resumeBirth(id);assert.equal(c.alive,true);assert.equal(c.deathRecord,undefined);choose(0);assert.equal(c.alive,false);var n=c.story.length;
+ save('auto');A.load('auto');c=byId(id);assert.equal(PalaceActions.blocked,false);assert.equal(c.story.length,n);assert.equal(c.deathReason,'产后血崩');
+ choose(0);assert.equal(c.story.length,n);drain();assert.equal(c.story.filter(s=>s.birthOutcome).length,1);`);});
+test('a stillbirth and maternal death are both recorded, without calling the child alive',()=>{const b=game();b.run(`prepare(1);var k=deliveryKids(c)[0];k.alive=false;k.name='未命名';k.deathReason='出生时已无生息';c.delivery.originalLoss=true;c.delivery.lossPending=true;
+ var ev=birthLossEvent(c);ev.choices[0].f();assert.equal(c.alive,false);assert.match(c.story.at(-1).t,/出生时已无生息/);assert.match(c.story.at(-1).t,/产后血崩薨逝/);assert.equal(c.deathRecord.children[0].id,k.id);
+ var n=c.story.length;ev.choices[0].f();assert.equal(c.story.length,n);`);});
+test('survival after a stillbirth and uncomplicated live birth do not invent maternal deaths',()=>{for(const loss of [false,true]){const b=game();b.run(`prepare(1);c.delivery.difficult=false;var k=deliveryKids(c)[0];
+ ${loss?`k.alive=false;k.name='未命名';c.delivery.lossPending=true;birthLossEvent(c).choices[0].f();`:'finishDelivery(c);'}
+ assert.equal(c.alive,true);assert.equal(c.deathRecord,undefined);assert.equal(c.delivery.outcome.fatal,false);assert.doesNotMatch(c.story.find(s=>s.birthOutcome).t,/血崩|撒手|薨逝/);`);}});
+test('legacy missing maternal chronicle is repaired from the settled delivery and original date once',()=>{const b=game();b.run(`prepare(1);var k=deliveryKids(c)[0];c.alive=false;c.delivery.settled=true;delete c.delivery.date;delete c.deathReason;
+ var date=k.story.find(s=>s.t.includes('降生于')).d;S.year+=5;S.turn+=60;migrate();assert.equal(c.deathRecord.date,date);assert.equal(c.deathReason,'产后血崩');assert.match(c.story.at(-1).t,/血崩/);
+ var before=JSON.stringify(c.story);migrate();assert.equal(JSON.stringify(c.story),before);save('1');var id=c.id;A.load('1');assert.equal(byId(id).deathRecord.date,date);`);});
+test('legacy shorter death entry is enriched in place without duplicating the death or changing its date',()=>{const b=game();b.run(`prepare(1);c.alive=false;c.delivery.settled=true;c.story=[{d:'永宁四年六月',t:'诞下孩子后血崩，撒手人寰。'},{d:'永宁四年七月',t:'身后按礼料理。'}];
+ repairDeliveryChronicle(c);assert.equal(c.story.length,2);assert.equal(c.story[0].d,'永宁四年六月');assert.ok(c.story[0].birthOutcome);assert.equal(c.story[1].t,'身后按礼料理。');`);});
+test('legacy migration does not guess haemorrhage from frail personality or a dead mother alone',()=>{const b=game();b.run(`prepare(1);c.alive=false;c.delivery.difficult=false;c.delivery.settled=true;c.deathReason='病故';var before=JSON.stringify(c);
+ repairDeliveryChronicle(c);assert.equal(JSON.stringify(c),before);c.delivery.difficult=true;c.delivery.settled=false;repairDeliveryChronicle(c);assert.equal(c.deathRecord,undefined);`);});
+test('a later month cannot bury the death notice behind other chronicles or rewrite memories for the dead',()=>{const b=game();b.run(`prepare(1);finishDelivery(c);var memories=NPCMemory.recall(S,c.id).length;
+ for(var i=0;i<12;i++)story(c,'身后宫务记录'+i);var before=JSON.stringify(S);UI.sel=c.id;var html=viewConsort();assert.ok(html.indexOf('终事 · 生产与离世')<html.indexOf('人物纪事'));
+ assert.match(deliveryMemorialPanel(c),/查看.*的经历/);assert.equal(NPCMemory.recall(S,c.id).length,memories);assert.equal(JSON.stringify(S),before);`);});

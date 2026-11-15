@@ -267,7 +267,7 @@ function continuityLeads(){
   return continuityThreads().filter(t=>continuityAvailable(t)&&t.stage!=='settled'&&S.turn>=t.due).map(t=>({
     person:byId(t.owner),title:continuityTitle(t)+' · '+fullName(byId(t.owner)),text:t.history.at(-1)?.text||t.cause,
     cast:continuityCast(t).filter(p=>p.alive!==false),action:`A.continuePersonal(${t.id})`,continuity:true,priority:t.stage==='working'?30:20,
-    button:'接着谈这件事'}));
+    button:'接着谈这件事'})).concat(lifeLeads());
 }
 function continuityLeadScore(lead){return (lead.priority||0)+Math.max(0,...(lead.cast||[]).map(continuityFocus))+(lead.expires?15:0);}
 function continuityEventScore(ev){return ev?Math.max(0,...(ev.cast||ev.present||[ev.por]).filter(p=>p&&typeof p==='object').map(continuityFocus))/6:0;}

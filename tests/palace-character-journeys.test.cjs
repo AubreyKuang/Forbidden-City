@@ -77,7 +77,7 @@ test('prejudice has named actors, differentiated temperaments, persistent conseq
 });
 test('married events append once to the same newest-first character chronicle',()=>{
  const {run}=boot();run(`var k=makeKid(c,'m','承晏');k.born=S.turn-216;k.married=true;k.spouse={name:'许清',born:S.turn-216,alive:true,seed:999};ensureMarriedLife(k);kstory(k,'幼时读书');householdRecord(k,'test','夫妻共写一封信');var n=k.story.filter(e=>e.t==='夫妻共写一封信').length;assert.equal(n,1);
- UI.view='kid';UI.sel=k.id;var html=viewKid();assert.match(html,/人物纪事/);assert.doesNotMatch(html,/成长记|婚后家事/);assert.equal(html.split('夫妻共写一封信').length-1,1);assert.ok(detailStory(k).indexOf('夫妻共写一封信')<detailStory(k).indexOf('幼时读书'));`);
+ UI.view='kid';UI.sel=k.id;var html=viewKid();assert.match(html,/人物纪事/);assert.doesNotMatch(html,/成长记|婚后家事/);assert.match(html,/人生篇章/);assert.equal(detailStory(k).split('夫妻共写一封信').length-1,1);assert.equal(k.story.filter(e=>e.t==='夫妻共写一封信').length,1);assert.ok(detailStory(k).indexOf('夫妻共写一封信')<detailStory(k).indexOf('幼时读书'));`);
 });
 test('refresh restores pending journey choices and settled results without charging twice',()=>{
  const {run}=boot();run(`setupJourney('quietChild');A.journeyBegin(c.id,'quietChild');assert.ok(modalOpen);var energy=E().energy;assert.ok(save('1'));A.load('1');c=byId(c.id);assert.match(curEv.title,/被弄皱的书/);choose(0);assert.equal(E().energy,energy-1);assert.ok(save('1'));A.load('1');c=byId(c.id);assert.equal(PalaceActions.blocked,false);assert.equal(E().energy,energy-1);assert.equal(c.journeys.current.stage,1);assert.equal(c.journeys.history.length,1);drain();`);

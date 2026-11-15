@@ -41,9 +41,38 @@ function fosterPetitionText(c,k){
   return `${opening}\n“${fosterWishWords(c,k)}”\n${relGet(c,k)>=25?`她也记得与${k.name}已有的来往，并非随意指一个孩子。\n`:''}${care}`;
 }
 function maternalKinMatch(c,k){
-  const m=byId(k.mom);
-  return inPalace(c)&&!c.maid&&childNeedsMother(k)&&m&&c.kinArrival?.mother===m.id&&
-    !!c.kin?.[m.id]&&c.clan===m.clan;
+  const m=k&&byId(k.mom),f=k&&fosterOf(k);
+  // Existing sisters and the dowager's nieces need no special arrival story.
+  const sister=m&&(KIN_TXT[c?.kin?.[m.id]]||KIN_TXT[m.kin?.[c?.id]]);
+  return !!(inPalace(c)&&!c.maid&&c.age>=16&&!(c.hp<40)&&!(c.delivery&&!c.delivery.settled)&&
+    childInPalace(k)&&!k.pendingName&&kidAge(k)<14&&m&&(!m.alive||m.cold||m.gone)&&sister&&
+    (!f||!f.alive||f.cold||f.gone));
+}
+function maternalKinCareEvent(m,only=null,manual=false){
+ if(!m||m.alive||S.over||!manual&&S.children.filter(k=>k.mom===m.id&&k.alive).every(k=>k.maternalKinAsked))return null;
+ const candidates=harem().filter(c=>(!only||c===only)&&S.children.some(k=>k.mom===m.id&&maternalKinMatch(c,k))&&
+   (!c.maternalKinRequests?.[m.id]||manual&&['deferred','pending'].includes(c.maternalKinRequests[m.id].status)))
+   .sort((a,b)=>Number(b.kin?.[m.id]?.startsWith('亲'))-Number(a.kin?.[m.id]?.startsWith('亲'))||relGet(b,m)-relGet(a,m)||a.id-b.id);
+ const c=candidates[0];if(!c)return null;
+ const children=S.children.filter(k=>k.mom===m.id&&maternalKinMatch(c,k)),names=children.map(k=>k.name).join('、');let done=false;
+ const valid=()=>!done&&inPalace(c)&&children.every(k=>maternalKinMatch(c,k));
+ const record=text=>{story(c,text);children.filter(k=>k.alive).forEach(k=>kstory(k,text));story(m,text);};
+ const setStatus=status=>{(c.maternalKinRequests||={})[m.id]={status,turn:S.turn,children:children.map(k=>k.id)};};
+ return {title:'姐妹留下的孩子',por:c,cast:children,present:[c],valid,
+  onShow:()=>{if(c.maternalKinRequests?.[m.id]?.status==='pending')return;setStatus('pending');children.forEach(k=>{k.maternalKinAsked=true;});record(`${fullName(c)}听闻姐妹${fullName(m)}去世，主动请求照看${names}，保留孩子的生母身份与原有亲缘。`);},
+  text:`${fullName(m)}去世后，${fullName(c)}特地来谈${names}的安置。\n${c.clan===S.flags.dowager?.clan?'她们同出太后母家，这份姐妹亲缘并没有因入宫而断。\n':''}“${isRival(c,m)?'我与她生前有过不和，但孩子不该独自受这些事。':''}她留下的孩子，臣妾想亲自照看。乳母与太医仍照常留着；臣妾${raisesKid(c)?'已有抚养孩子的日子，也会把他们的起居一同安排妥当':'愿从每日的起居慢慢学起'}。宗谱上仍记她是生母。”`,
+  choices:[{t:`准她照料${names}`,f:()=>{if(!valid())return null;
+   const results=children.map(k=>petitionFoster(k,c,true)).filter(Boolean);if(!results.length)return null;done=true;setStatus('accepted');
+   const t=`${fullName(c)}获准照料${fullName(m)}留下的${names}；生母身份保留，乳母与太医协助起居。`;record(t);save('auto');return t+'\n'+results.join('\n');}},
+  {t:'暂由乳母照看，改日再谈',f:()=>{if(!valid())return null;done=true;setStatus('deferred');const t=`${fullName(c)}请求照看${names}，陛下暂缓定夺；孩子仍由乳母照料，可到她的档案继续商议。`;record(t);save('auto');return t;}},
+  {t:'另择抚养人选',f:()=>{if(!valid())return null;done=true;setStatus('declined');const t=`陛下听取${fullName(c)}照看${names}的请求，决定另择抚养人；此时尚未更换养母。`;record(t);save('auto');pushNow(fosterOffer(children.find(k=>maternalKinMatch(c,k)),t));return null;}}]};
+}
+function pendingMaternalKinCare(){
+ return S.consorts.filter(m=>!m.alive).map(m=>maternalKinCareEvent(m)).find(Boolean)||null;
+}
+A.maternalKinCare=function(id,mother){if(modalOpen)return;const c=byId(id),m=byId(mother);if(!c||!m)return;const ev=maternalKinCareEvent(m,c,true);if(ev)pushEv(ev);};
+function maternalKinCareButton(c){
+ return S.consorts.filter(m=>!m.alive&&maternalKinCareEvent(m,c,true)).map(m=>`<button class="btn sm jade" onclick="A.maternalKinCare(${c.id},${m.id})">谈谈照看${esc(fullName(m))}的孩子</button>`).join('');
 }
 function petitionFoster(k,c,kin=false,consensual=false){
   if(S.over||!(kin?maternalKinMatch(c,k):fosterPetitionMatch(c,k)))return null;
@@ -90,7 +119,7 @@ function fosterMotherDiscussion(c,k){
       {t:'暂缓定夺',f:()=>{if(!valid())return null;story(c,`听取${fullName(m)}的意思后，抚养${k.name}之议暂缓。`);save('auto');return '原有照护安排不变。';}}]};
 }
 A.fosterWish=function(id){if(modalOpen)return;const c=byId(id),ev=c&&fosterPetitionEvent(c);if(ev)pushEv(ev);};
-function fosterWishButton(c){return fosterPetitionPairs(c).length?`<button class="btn sm" onclick="A.fosterWish(${c.id})">听她谈抚养孩子</button>`:'';}
+function fosterWishButton(c){return maternalKinCareButton(c)+(fosterPetitionPairs(c).length?`<button class="btn sm" onclick="A.fosterWish(${c.id})">听她谈抚养孩子</button>`:'');}
 function kinSuccessionSource(c){
   return c&&!c.maid&&c.rank>=5&&c.age>=20&&hasClan(c)&&(!c.alive||c.cold||c.gone)&&!c.kinSuccessor;
 }

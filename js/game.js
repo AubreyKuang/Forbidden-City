@@ -351,9 +351,9 @@ A.endMonth=function(){
   if(newYear){const y=S.ys;pushEv({title:'岁首',sfx:'chime',text:`爆竹声中一岁除。${dateStr()}，陛下${e.age}岁。\n去岁：新入宫${y.c}人，皇嗣降生${y.b}位，侍寝${y.n}次。\n国库${e.treasury}万两，威望${rd(e.prestige)}，民心${rd(e.people)}。`,choices:[{t:'新岁新气象'}]});S.ys={c:0,b:0,n:0}}
   // 事件
   if(S.month===2&&S.turn-S.flags.lastXX>=34) pushEv({title:'三年大选',sfx:'chime',text:'又到三年一度的大选之期，各地秀女已候于储秀宫。',choices:[{t:'前去看看',f:()=>{genCands();UI.view='xx';return null}},{t:'今年免了',f:()=>{S.flags.lastXX=S.turn;return fx(chg({people:2}))}}]});
-  reconcileResidences();archivePastLives();travelerLifeTick();daoLifeTick();childTempleTick();relTick();consortSocialTick();kidRelTick();clanTick();dowagerTick();initiativeTick();familyLifeTick();childLifeTick();courtTick();seasonalTick();palaceDutiesTick();palaceRomanceTick();palaceParentageTick();marriedLifeTick();personalExperienceTick();journeyTick();maternalTick();historyTick();continuityTick();
+  reconcileResidences();archivePastLives();travelerLifeTick();daoLifeTick();childTempleTick();relTick();consortSocialTick();kidRelTick();clanTick();dowagerTick();initiativeTick();familyLifeTick();childLifeTick();courtTick();seasonalTick();palaceDutiesTick();palaceRomanceTick();palaceParentageTick();marriedLifeTick();personalExperienceTick();journeyTick();maternalTick();historyTick();continuityTick();personalLifeTick();
   const passing=dowagerPassingEvent();if(passing)pushEv(passing);
-  const must=[passing?null:arcTick(),heirTick(),milestone(),parentageReportEvent(),birthSwapClueEvent(),birthSwapSearchReport(),pendingBirthSwapJustice(),pendingKinGreeting(),pendingDaoVoyage(),pendingTravelerEvent(),pendingOfficialReport(),pendingConcealedLoss()].filter(Boolean),opt=[];
+  const must=[passing?null:arcTick(),heirTick(),milestone(),parentageReportEvent(),birthSwapClueEvent(),birthSwapSearchReport(),pendingBirthSwapJustice(),pendingKinGreeting(),pendingMaternalKinCare(),pendingDaoVoyage(),pendingTravelerEvent(),pendingOfficialReport(),pendingConcealedLoss()].filter(Boolean),opt=[];
   // 积压的奏折：离宫期间攒下的朝堂事务，月末一并呈上
   while((S.flags.memorials||0)>0){S.flags.memorials--;const memo=factionEvent();if(memo&&!must.some(e=>e.title===memo.title))must.push(memo)}
   const add=(e,p)=>{if(e&&ambientEventReady(e))opt.push([e,p+R()-ambientNovelty(e)+continuityEventScore(e)])};
@@ -413,7 +413,7 @@ function succeed(h){
     S.flags.lastXX=-99;delete S.flags.lastProudDemand;delete S.flags.scholarArc;delete S.flags.rareArcOwners;delete S.flags.arcPacing;delete S.flags.xinPacing;delete S.flags.lastLiteraryGathering;delete S.lastGardenBanquet;S.gardenPlans=[];seasonalTick();S.emp.energy=maxEnergy();
     log(`━━ 第${cnNum(S.gen)}代 ━━ ${v}元年，新帝${S.emp.sur}${h.name}登基，尊${S.flags.dowager.fullName||S.flags.dowager.name}为${S.flags.dowager.name}${S.flags.birthDowager?.alive?`，另尊生母${S.flags.birthDowager.fullName}为皇太后`:""}。`,1);
     if(S.emp.age>=15){const em=marriageEmpress(h)||makeGirl({fam:pick(FAMS.slice(0,4)),trait:pick(['温婉','聪慧','城府','骄矜'])});em.favor=35;em.aff=30;addConsort(em,8,h.spouse?'潜邸嫡妻，随新帝登基册立':'新帝登基，奉遗诏册立');}
-    inheritHousehold(h,empress());S.ys={c:0,b:0,n:0};UI.kidsResidence='palace';
+    inheritHousehold(h,empress());inheritLifeKeepsakes(h);S.ys={c:0,b:0,n:0};UI.kidsResidence='palace';
     migrate();UI.view='map';AU.sfx('gong');
     return {title:'新朝家人',por:dowagerPerson(S.flags.dowager),text:`${v}元年，新帝登基，大赦天下。\n${S.flags.dowager.fullName||S.flags.dowager.name}${S.flags.dowager.alive?'尊为'+S.flags.dowager.name+'，居慈宁宫。':'已故，尊谥存于宗谱。'}${S.flags.birthDowager?.alive?'\n生母'+S.flags.birthDowager.fullName+'亦尊为皇太后。':''}\n潜邸妻儿与亲族的往来，由此接入新朝。`}}}]});
 }

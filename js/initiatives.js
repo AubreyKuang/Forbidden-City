@@ -1,6 +1,6 @@
 /* ============ 人物主动行动 ============ */
 const initiativeAlly=c=>harem().filter(o=>o!==c&&socialPair(c,o)&&relGet(c,o)>=15)
-  .sort((a,b)=>relGet(c,b)-relGet(c,a)+3*(consortCompatibility(c,b)-consortCompatibility(c,a)))[0];
+  .sort((a,b)=>lifeFriendScore(c,b)-lifeFriendScore(c,a)+relGet(c,b)-relGet(c,a)+3*(consortCompatibility(c,b)-consortCompatibility(c,a)))[0];
 const initiativeChild=(c,minAge)=>kidsAlive().find(k=>
   kidAge(k)>=minAge&&childInPalace(k)&&(k.foster===c.id||(!k.foster&&k.mom===c.id)));
 const skillGain=(k,key,amount)=>{k[key]=clamp(k[key]+amount)};

@@ -25,6 +25,7 @@ function boot(seed,mode){
    else if(S.over)chosen=opts.find(x=>/翻阅起居注/.test(x.c.t))||opts.at(-1);
    else if(curEv.title==='三年大选')chosen=opts.find(x=>/今年免了/.test(x.c.t));
    else if(curEv.title==='留牌子')chosen=opts.find(x=>x.c.t==='封为贵人')||opts[0];
+   else if(mode==='lives'&&['她想留下的东西','一册做成之后'].includes(curEv.title))chosen=opts[Math.floor(prng()*opts.length)];
    else if(mode==='random'||mode==='explorer')chosen=opts[Math.floor(prng()*opts.length)];
    else chosen=opts.find(x=>!(/处死|赐死|打入冷宫|废为|杖毙|重杖|斩|不必|训斥|重新开局|稍后再议|自尽/.test(x.c.t)))||opts.at(-1);
    currentRecord.choice=chosen.c.t;if(curEv.input)$('#minput').value=curEv.input.def||'安';choose(chosen.i);
@@ -42,7 +43,19 @@ function boot(seed,mode){
     for(let n=0;n<8&&E().energy>0&&!S.over;n++){
      const before=E().energy,hs=harem(),cs=hs.filter(c=>!c.preg),kids=kidsAlive().filter(k=>!k.pendingName&&!k.jailed),c=hs[Math.floor(prng()*hs.length)];
      if(mode==='explorer')call('out',()=>A.out(['garden','city','hunt','temple','spa'][Math.floor(prng()*5)]));
-     else if(mode==='relationships'){
+     else if(mode==='lives'){
+      const finished=hs.find(p=>p.personalLife?.project?.progress>=3&&lifeProjectReady(p)),boundary=hs.find(p=>lifeBoundary(p)&&!lifeBoundary(p).acknowledged),ritual=hs.find(p=>lifeRitualReady(p)&&!lifeBoundary(p));
+      const giver=hs.find(p=>(p.personalLife?.works||[]).some(w=>kids.some(k=>lifeGiftReady(p,k,w)))),starter=c&&lifeProposal(c)?c:null;
+      if(E().health<60)call('spa',()=>A.out('spa'));
+      else if(boundary&&n===0)call('lifeReconcile',()=>A.lifeReconcile(boundary.id));
+      else if(finished)call('lifeFinish',()=>A.lifePlan(finished.id));
+      else if(ritual)call('lifeRitual',()=>A.lifeRitual(ritual.id));
+      else if(giver&&n===1){const w=giver.personalLife.works.find(w=>kids.some(k=>lifeGiftReady(giver,k,w))),kid=kids.find(k=>lifeGiftReady(giver,k,w));call('lifePass',()=>A.lifePass(giver.id,kid.id,w.id));}
+      else if(starter&&n===0)call('lifeStart',()=>A.lifePlan(starter.id));
+      else if(c?.personalLife?.works.length&&!c.personalLife.ritual&&c.aff>=40&&!lifeBoundary(c)&&n===1)call('lifeRitualStart',()=>A.lifeRitual(c.id));
+      else if(cs.length&&n===1)call('night',()=>A.night(cs[0].id));
+      else if(c)call('chat',()=>A.chat(c.id));
+     }else if(mode==='relationships'){
       const continuation=continuityReady(),work=duanwuWork(),kid=kids.find(k=>kidAge(k)>=6&&kidAge(k)<16&&mothersOf(k).some(m=>familyVisitAllowed(k,m)&&k.motherBonds?.[m.id]?.turn!==S.turn));
       const official=officialEntries().find(e=>officialActionReady(e,'commission')&&!continuityThreads().some(t=>continuityOpen(t)&&t.officialId===e.p.id));
       if(continuation)call('personalContinuation',()=>A.continuePersonal(continuation.id));

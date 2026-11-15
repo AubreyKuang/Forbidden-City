@@ -14,6 +14,11 @@ A.visitChildHome=function(id){
   const mother=youngChildMother(kidById(id)),destination=mother&&PLACES.find(p=>p.k==='palace'&&p.p===mother.palace);
   if(destination)A.visitMapActivity(destination.id);
 };
+function consortHomePlace(c){return inPalace(c)&&!c.maid?PLACES.find(p=>p.k==='palace'&&p.p===c.palace):null;}
+A.visitConsortHome=function(id){
+  if(!S||S.over||modalOpen)return;
+  const destination=consortHomePlace(byId(id));if(destination)A.visitMapActivity(destination.id);
+};
 const nurseryChildren=name=>kidsAlive().filter(k=>youngChildMother(k)?.palace===name);
 function nurseryActivity(k,m){
   const age=kidAge(k),strict=['城府','骄矜','骄纵'].includes(m.trait),last=k.nurseryLastKind;
