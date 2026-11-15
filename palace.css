@@ -887,3 +887,9 @@ button.family-room-person{cursor:pointer}button.family-room-person:hover{color:#
   .official-table td{border:0;padding:4px 0;display:grid;grid-template-columns:7.5em 1fr;gap:8px;max-width:none;min-width:0}
   .official-table td::before{content:attr(data-label);color:var(--ink2);font-size:11px;padding-top:2px}
 }
+/* Six ministries */
+.ministry-grid{grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.ministry-card{display:block;cursor:default}
+.ministry-head{display:flex;gap:10px;align-items:center}
+.ministry-head h3{margin:0}.ministry-head h3 small{font-weight:400;color:var(--ink2);font-size:12px}
+.ministry-head .por{flex:none;width:56px;height:auto}

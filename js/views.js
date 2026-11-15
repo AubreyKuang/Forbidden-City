@@ -30,7 +30,7 @@ const DOCK_ART={
 };
 function dockIcon(key){return `<svg class="dock-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${DOCK_ART[key]}"></path></svg>`;}
 function renderMenu(){const m=$('#menu');if(!S){m.innerHTML='';m.hidden=true;return}m.hidden=false;
-  const current={government:'court',residences:'harem',officials:'home',official:'home',jewelry:'home',natal:'family',relative:'family',palace:'map',place:'map',banquet:'map',consort:'harem',kid:'kids',princess:'out'}[UI.view]||UI.view;
+  const current={government:'court',ministries:'court',scholar:'court',jinyiwei:'court',residences:'harem',officials:'home',official:'home',jewelry:'home',natal:'family',relative:'family',palace:'map',place:'map',banquet:'map',consort:'harem',kid:'kids',princess:'out'}[UI.view]||UI.view;
   m.innerHTML=MENU.map(([k,l])=>`<button class="btn${current===k?' on':''}" ${current===k?'aria-current="page"':''} onclick="${k==='court'?"A.go('government')":`A.go('${k}')`}">${dockIcon(k)}<span>${l}</span></button>`).join('');
 }
 let panelRoute;
@@ -48,7 +48,7 @@ function rememberPersonRoute(view,id){
 function personBackButton(fallback){
   const source=personBackStack.at(-1);
   const view=source?.state===S?source.view:fallback;
-  const label={residences:'宫室分配',officials:'官员表',official:'父兄详情',consort:'妃嫔详情',kid:'皇嗣详情',princess:'公主府',palace:'宫殿',place:'上一地点'}[view]||
+  const label={residences:'宫室分配',officials:'官员表',official:'父兄详情',ministries:'六部',scholar:'朝臣详情',consort:'妃嫔详情',kid:'皇嗣详情',princess:'公主府',palace:'宫殿',place:'上一地点'}[view]||
     MENU.find(([id])=>id===view)?.[1]||'上一页';
   return `<button class="btn quiet sm detail-back" onclick="A.backPerson('${fallback}')">← 返回${esc(label)}</button>`;
 }
@@ -72,7 +72,7 @@ function renderPanel(){
   const p=$('#panel'),v=UI.view;
   const route=JSON.stringify([v,UI.sel]);
   if(!S)p.innerHTML=v==='new'?viewNew():viewTitle();
-  else p.innerHTML=({government:viewGovernment,residences:viewResidences,officials:officialsRoster,official:viewOfficial,jewelry:viewJewelryVault,natal:viewNatalRelative,relative:viewRoyalRelative,family:viewFamily,map:viewMap,palace:viewPalace,place:viewPlace,banquet:viewBanquet,home:viewHome,harem:viewHarem,consort:viewConsort,cards:viewCards,xx:viewXX,kids:viewKids,kid:viewKid,princess:viewPrincessEstate,out:viewOut,log:viewLog,sys:viewSys}[v]||viewHome)();
+  else p.innerHTML=({government:viewGovernment,residences:viewResidences,officials:officialsRoster,official:viewOfficial,ministries:typeof viewMinistries==='function'?viewMinistries:viewGovernment,scholar:typeof viewScholar==='function'?viewScholar:viewGovernment,jinyiwei:typeof viewJinyiwei==='function'?viewJinyiwei:viewGovernment,jewelry:viewJewelryVault,natal:viewNatalRelative,relative:viewRoyalRelative,family:viewFamily,map:viewMap,palace:viewPalace,place:viewPlace,banquet:viewBanquet,home:viewHome,harem:viewHarem,consort:viewConsort,cards:viewCards,xx:viewXX,kids:viewKids,kid:viewKid,princess:viewPrincessEstate,out:viewOut,log:viewLog,sys:viewSys}[v]||viewHome)();
   if(S&&v==='xx')rememberSelectionBlurt(selectionCurrent());
   if(route!==panelRoute){p.scrollTop=0;panelRoute=route;}
 }
