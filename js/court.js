@@ -590,7 +590,7 @@ function pinImpeachment(person){
   return {person,matching,guilty:chance(matching ? .85 : .45)};
 }
 function newImpeachment(){
-  const eligible=harem().filter(c=>c.fam.p>=35&&houseOf(c)?.father.alive&&!c.fam.t.includes('（获罪）'));
+  const eligible=harem().filter(c=>c.fam.p>=35&&houseOf(c)?.father.alive&&!c.fam.t.includes('（获罪）')&&(typeof kinMarriageActive!=='function'||!kinMarriageActive()||houseOf(c).father.career!=='commoner'));
   return eligible.length?pinImpeachment(pick(eligible).id):null;
 }
 function impeachmentEvent(brief){
