@@ -1,0 +1,5485 @@
+{
+  "sourceCommit": "737857f4cd34c7d8115fb160fd13c6583e36bcdd",
+  "pages": [
+    {
+      "name": "home",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.go('government')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('jewelry')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('officials')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.courtPolicy('kin')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.courtPolicy('civil')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.courtPolicy('army')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.courtPolicy('dowager')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.courtPolicy('princes')",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "御书房",
+        "萧彻",
+        "年号永宁 勤政之君",
+        "龙体",
+        "90",
+        "威望",
+        "58",
+        "民心",
+        "65",
+        "文才",
+        "50",
+        "武略",
+        "50",
+        "后宫 2 人 皇嗣 2 位 储君：未立 太后健在",
+        "每月有4点精力。上朝可先免费查看本月奏折，亲自批复通常花 1 点；召幸、闲谈、探望皇嗣、出巡也要花精力。赏赐、晋封、选秀不花精力。精力用完后，处理完当前事件及后续便会自动转月；也可提前点「结束本月」。侍寝后若怀上龙胎，要到下个月末太医才诊得出喜脉。每位妃嫔都有一段专属故事，情分越深越容易推进。",
+        "治国理政",
+        "岁入 · 官员调度 · 民情回访",
+        "内库珍藏",
+        "查看珍饰 · 选人赏赐",
+        "皇帝万寿宴 · 三月",
+        "皇后千秋宴 · 腊月",
+        "朝堂势力",
+        "官员表 · 父兄与外家 →",
+        "外戚",
+        "家族地位与官职",
+        "影响力",
+        "90",
+        "采纳建议 · 国库 -12",
+        "文官",
+        "科举、财政与民政",
+        "影响力",
+        "65",
+        "采纳建议 · 国库 -10",
+        "武将",
+        "军功与边防",
+        "影响力",
+        "50",
+        "采纳建议 · 国库 -16",
+        "太后",
+        "宗室血脉与宫廷稳定",
+        "影响力",
+        "65",
+        "采纳建议 · 国库 -8",
+        "皇子",
+        "储位与继承",
+        "影响力",
+        "0",
+        "采纳建议 · 国库 -12",
+        "近事",
+        "永宁元年三月",
+        "册嫡妻崔绾清为皇后，潜邸旧人楚怜为贵人。",
+        "永宁元年三月",
+        "永宁元年三月，新帝萧彻登基，改元永宁，大赦天下。"
+      ]
+    },
+    {
+      "name": "government",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.court()",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('officials')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('ministries')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('jinyiwei')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('out')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.taxPlan('regular')",
+          "disabled": true,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.taxPlan('light')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.postCandidates('jiangnan')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.postCandidates('river')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.postCandidates('revenue')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.postCandidates('frontier')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.postCandidates('guard')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.governmentTask('border')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.governmentTask('escort')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.governmentTask('accounts')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.governmentTask('public')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.governmentTask('dikes')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.governmentTask('granaries')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.governmentTask('schools')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.governmentTask('water')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.governmentTask('pay')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.governmentTask('drills')",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "治国理政",
+        "用人、钱粮、民间见闻，都须有去处，也有回音。",
+        "本月奏折",
+        "官员表",
+        "六部",
+        "锦衣卫",
+        "微服问民情",
+        "户部岁入",
+        "每年十月结算秋税，正月收取岁贡银 120 万两与珍饰一件。月常入与俸禄仍逐月结算。",
+        "今年采用「依定额征收」，按当前民心估计秋税 575 万两。",
+        "依定额征收 · 精力−1",
+        "减免三成秋税 · 精力−1 · 秋税入库时民心+5",
+        "尚未到年度入库时节。",
+        "吏部调度",
+        "调任需精力 1、交接银 20 万两。同一官员半年内不再调任，在途差务、致仕或获罪期间不可调动。",
+        "江南知府",
+        "查验田亩、安顿流民，离京赴任。",
+        "择人调任",
+        "河道总督",
+        "统筹河工与漕粮，需熟练调度。",
+        "择人调任",
+        "户部侍郎",
+        "入京掌钱粮核销，担负岁入审核。",
+        "择人调任",
+        "北境守备",
+        "驻守边关，照料军粮与军户。",
+        "择人调任",
+        "京营统领",
+        "回京整训禁军，不再兼领边镇。",
+        "择人调任",
+        "治事与回奏",
+        "巡边整饬军备",
+        "择人领差，期满回奏。",
+        "3个月 · 国库 30 · 武职",
+        "护送边关粮道",
+        "择人领差，期满回奏。",
+        "2个月 · 国库 20 · 武职",
+        "核查地方钱粮",
+        "择人领差，期满回奏。",
+        "2个月 · 国库 15 · 文职",
+        "巡察民间疾苦",
+        "择人领差，期满回奏。",
+        "3个月 · 国库 15 · 文职",
+        "岁修河堤",
+        "勘验险段，完工后可抵御一次黄河决口的赈济开支。",
+        "4个月 · 国库 90 · 文职",
+        "整修常平仓",
+        "修仓补粮，完工后留一批备荒粮。",
+        "3个月 · 国库 100 · 文职",
+        "清查学田与乡学",
+        "核清学田租入，让乡学恢复授课。",
+        "3个月 · 国库 45 · 文职",
+        "疏通农渠",
+        "按农时修渠，引水入田，减少争水。",
+        "4个月 · 国库 60 · 文职",
+        "清核军饷与抚恤",
+        "核对军籍，补发欠饷，不以空名冒领。",
+        "2个月 · 国库 45 · 武职",
+        "轮训边镇守军",
+        "轮换疲军、修整烽燧，兼顾驻地百姓。",
+        "3个月 · 国库 55 · 武职",
+        "微服见闻与回访",
+        "微服走访所得，将记明地点、承办人和后续结果。"
+      ]
+    },
+    {
+      "name": "harem",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.openResidence()",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',1)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "后宫",
+        "点击妃嫔查看详情、互动与她的故事。各位分名额：嫔6、妃4、贵妃2、皇贵妃1、皇后1。",
+        "宫室分配 · 主位与同住",
+        "中宫（1）",
+        "皇后",
+        "崔绾清 · 18岁 · 坤宁宫",
+        "中宫",
+        "城府",
+        "恩宠",
+        "40",
+        "心情",
+        "65",
+        "妃位（1）",
+        "楚妃",
+        "楚怜 · 18岁 · 景仁宫",
+        "好学",
+        "恩宠",
+        "55",
+        "心情",
+        "65",
+        "派系",
+        "随实际交情形成，可有多派，也可不入任何派系。各派并非天然互为仇敌。",
+        "无派系",
+        "皇后",
+        "楚妃"
+      ]
+    },
+    {
+      "name": "family-graph",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.familyMode('list')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('home')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','2:father')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','2:brother')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','1:father')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','1:brother')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('natal','1:-2638131742')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('natal','1:-2621354123')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('natal','1:-2604576504')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',4)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',1)",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "家族关系树",
+        "关系图",
+        "家族列表",
+        "纪太后",
+        "慈宁宫",
+        "母子 →",
+        "萧彻",
+        "皇帝",
+        "母家同族 ↳",
+        "纪氏（太后母家）",
+        "尚无母家族女入宫",
+        "下方按父亲分支，同父姐妹共用一个父亲节点。",
+        "外戚",
+        "文官",
+        "武将",
+        "太后",
+        "皇子",
+        "棕实线：父女与母子 浅虚线：同族 绿线：亲近 红虚线：不和。皇嗣按生母分支。",
+        "楚伯庸之女 楚怜",
+        "崔鸿儒之女 崔绾清",
+        "楚氏（两江总督家）",
+        "父系家谱",
+        "楚伯庸",
+        "父亲 · 在任 · 两江总督",
+        "楚仲安",
+        "兄长 · 在家读书 · 书生",
+        "崔氏（内阁首辅家）",
+        "父系家谱",
+        "崔鸿儒",
+        "父亲 · 在任 · 内阁首辅",
+        "崔仲安",
+        "兄长 · 在家读书 · 书生",
+        "崔柔珠",
+        "姐姐 · 41岁 · 居于娘家",
+        "崔伯言",
+        "弟弟 · 33岁 · 居于娘家",
+        "崔子期",
+        "弟弟 · 30岁 · 居于娘家",
+        "楚怜",
+        "楚妃",
+        "承安",
+        "皇子",
+        "昭宁",
+        "公主",
+        "崔绾清",
+        "皇后"
+      ]
+    },
+    {
+      "name": "family-list",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.familyMode('graph')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('home')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','1:father')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','1:brother')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('natal','1:-2638131742')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','1:relative-2621354123')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','1:relative-2604576504')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',1)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','2:father')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','2:brother')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',4)",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "家族关系树",
+        "关系图",
+        "家族列表",
+        "皇嗣列在生母名下，另标养母。点名字可查看人物。",
+        "纪太后",
+        "慈宁宫",
+        "母子 →",
+        "萧彻",
+        "皇帝",
+        "母家同族 ↳",
+        "纪氏（太后母家）",
+        "尚无母家族女入宫",
+        "下方按父亲分支，同父姐妹共用一个父亲节点。",
+        "崔氏（内阁首辅家）",
+        "1 人 · 0 位皇嗣 · 势力 90",
+        "父亲：",
+        "崔鸿儒 ↗",
+        "内阁首辅 · 在任",
+        "兄长：",
+        "崔仲安 ↗",
+        "书生 · 在家读书",
+        "姐姐：",
+        "崔柔珠 ↗",
+        "41岁 · 居于娘家",
+        "弟弟：",
+        "崔伯言 ↗",
+        "33岁 · 书生 · 居于娘家",
+        "弟弟：",
+        "崔子期 ↗",
+        "30岁 · 书生 · 居于娘家",
+        "崔绾清",
+        "皇后",
+        "楚氏（两江总督家）",
+        "1 人 · 2 位皇嗣 · 势力 70",
+        "父亲：",
+        "楚伯庸 ↗",
+        "两江总督 · 在任",
+        "兄长：",
+        "楚仲安 ↗",
+        "书生 · 在家读书",
+        "楚怜",
+        "楚妃",
+        "皇长子 承安",
+        "长公主 昭宁"
+      ]
+    },
+    {
+      "name": "residences",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.go('map')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.openResidence(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "← 返回宫城",
+        "宫室分配",
+        "坤宁宫为皇后独居。十二宫各设一名主位（嫔位及以上）和三处侧殿。晋位不等于另获一宫，主位满额时可暂居侧殿。迁居需精力1。",
+        "主位 0/12 · 侧殿 1/36 · 待安置 0 人。空主位须嫔位及以上才能入住；无合适余位时暂居掖庭，身份不变。",
+        "楚怜 · 楚妃",
+        "先选择要安排住处的人，再选择正殿或侧殿。",
+        "坤宁宫 · 皇后专居",
+        "中宫独居，不安排其他妃嫔同住；随皇后养育的幼儿不受此限。",
+        "崔绾清",
+        "景仁宫",
+        "近御花园 · 主位 空缺（嫔位及以上可任） · 侧殿 1/3",
+        "东六宫之一，庭前老槐成荫，夏日最是凉爽。",
+        "楚怜",
+        "侧殿 · 楚妃",
+        "承乾宫",
+        "近御花园 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "东六宫之一，窗下摆着棋枰，时闻落子声。",
+        "暂时无人居住",
+        "钟粹宫",
+        "宫苑中段 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "东六宫之一，院里种满了秋菊。",
+        "暂时无人居住",
+        "延禧宫",
+        "宫苑中段 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "东六宫之一，偏僻清静，少有人来。",
+        "暂时无人居住",
+        "永和宫",
+        "南隅清静 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "东六宫之一，檐下挂着风铃，风过叮咚。",
+        "暂时无人居住",
+        "景阳宫",
+        "南隅清静 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "东六宫之一，藏书最多，满室书香。",
+        "暂时无人居住",
+        "永寿宫",
+        "近御花园 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "西六宫之一，庭中一池睡莲，夏夜蛙鸣。",
+        "暂时无人居住",
+        "翊坤宫",
+        "近御花园 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "西六宫之一，院墙高高，里头常飘出琴声。",
+        "暂时无人居住",
+        "储秀宫",
+        "宫苑中段 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "西六宫之一，秀女初入宫时，多半先住这里。",
+        "暂时无人居住",
+        "启祥宫",
+        "宫苑中段 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "西六宫之一，廊柱新漆，颜色格外鲜亮。",
+        "暂时无人居住",
+        "长春宫",
+        "南隅清静 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "西六宫之一，四季常青，冬日也有绿意。",
+        "暂时无人居住",
+        "咸福宫",
+        "南隅清静 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "西六宫之一，地方宽敞，宫人进出不断。",
+        "暂时无人居住"
+      ]
+    },
+    {
+      "name": "residence-selected",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.go('map')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "true",
+          "onclick": "A.openResidence(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.moveResidence(2,'景仁宫','main')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.moveResidence(2,'景仁宫','side')",
+          "disabled": true,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.moveResidence(2,'承乾宫','main')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.moveResidence(2,'承乾宫','side')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.moveResidence(2,'钟粹宫','main')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.moveResidence(2,'钟粹宫','side')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.moveResidence(2,'延禧宫','main')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.moveResidence(2,'延禧宫','side')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.moveResidence(2,'永和宫','main')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.moveResidence(2,'永和宫','side')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.moveResidence(2,'景阳宫','main')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.moveResidence(2,'景阳宫','side')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.moveResidence(2,'永寿宫','main')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.moveResidence(2,'永寿宫','side')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.moveResidence(2,'翊坤宫','main')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.moveResidence(2,'翊坤宫','side')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.moveResidence(2,'储秀宫','main')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.moveResidence(2,'储秀宫','side')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.moveResidence(2,'启祥宫','main')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.moveResidence(2,'启祥宫','side')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.moveResidence(2,'长春宫','main')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.moveResidence(2,'长春宫','side')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.moveResidence(2,'咸福宫','main')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.moveResidence(2,'咸福宫','side')",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "← 返回宫城",
+        "宫室分配",
+        "坤宁宫为皇后独居。十二宫各设一名主位（嫔位及以上）和三处侧殿。晋位不等于另获一宫，主位满额时可暂居侧殿。迁居需精力1。",
+        "主位 0/12 · 侧殿 1/36 · 待安置 0 人。空主位须嫔位及以上才能入住；无合适余位时暂居掖庭，身份不变。",
+        "楚怜 · 楚妃",
+        "为楚怜安排住处",
+        "景仁宫 · 侧殿",
+        "查看人物 →",
+        "坤宁宫 · 皇后专居",
+        "中宫独居，不安排其他妃嫔同住；随皇后养育的幼儿不受此限。",
+        "崔绾清",
+        "景仁宫",
+        "近御花园 · 主位 空缺（嫔位及以上可任） · 侧殿 1/3",
+        "东六宫之一，庭前老槐成荫，夏日最是凉爽。",
+        "楚怜",
+        "侧殿 · 楚妃",
+        "安排为主位",
+        "现居侧殿",
+        "承乾宫",
+        "近御花园 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "东六宫之一，窗下摆着棋枰，时闻落子声。",
+        "暂时无人居住",
+        "安排为主位",
+        "安排侧殿",
+        "钟粹宫",
+        "宫苑中段 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "东六宫之一，院里种满了秋菊。",
+        "暂时无人居住",
+        "安排为主位",
+        "安排侧殿",
+        "延禧宫",
+        "宫苑中段 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "东六宫之一，偏僻清静，少有人来。",
+        "暂时无人居住",
+        "安排为主位",
+        "安排侧殿",
+        "永和宫",
+        "南隅清静 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "东六宫之一，檐下挂着风铃，风过叮咚。",
+        "暂时无人居住",
+        "安排为主位",
+        "安排侧殿",
+        "景阳宫",
+        "南隅清静 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "东六宫之一，藏书最多，满室书香。",
+        "暂时无人居住",
+        "安排为主位",
+        "安排侧殿",
+        "永寿宫",
+        "近御花园 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "西六宫之一，庭中一池睡莲，夏夜蛙鸣。",
+        "暂时无人居住",
+        "安排为主位",
+        "安排侧殿",
+        "翊坤宫",
+        "近御花园 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "西六宫之一，院墙高高，里头常飘出琴声。",
+        "暂时无人居住",
+        "安排为主位",
+        "安排侧殿",
+        "储秀宫",
+        "宫苑中段 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "西六宫之一，秀女初入宫时，多半先住这里。",
+        "暂时无人居住",
+        "安排为主位",
+        "安排侧殿",
+        "启祥宫",
+        "宫苑中段 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "西六宫之一，廊柱新漆，颜色格外鲜亮。",
+        "暂时无人居住",
+        "安排为主位",
+        "安排侧殿",
+        "长春宫",
+        "南隅清静 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "西六宫之一，四季常青，冬日也有绿意。",
+        "暂时无人居住",
+        "安排为主位",
+        "安排侧殿",
+        "咸福宫",
+        "南隅清静 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "西六宫之一，地方宽敞，宫人进出不断。",
+        "暂时无人居住",
+        "安排为主位",
+        "安排侧殿"
+      ]
+    },
+    {
+      "name": "officials",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.go('home')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "true",
+          "onclick": "A.officialsFilter('serving')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsFilter('all')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsFilter('away')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsFilter('gone')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "true",
+          "onclick": "A.officialsBloc('all')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsBloc('civil')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsBloc('army')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','1:father')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',1)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','2:father')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',4)",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "← 返回御书房",
+        "官员表",
+        "在朝官员出自妃嫔娘家或科举。同父姐妹共用父兄履历。点姓名看履历，点妃嫔或皇嗣可直接跳转。在朝 2 人，故去与获罪 0 人。",
+        "在朝",
+        "全部",
+        "外任与奉差",
+        "故去与获罪",
+        "全部派系",
+        "文官",
+        "武将",
+        "姓名",
+        "官职",
+        "家族 · 宫中",
+        "派系",
+        "状态",
+        "才干/信任/功绩",
+        "皇嗣",
+        "近期事迹",
+        "崔鸿儒",
+        "55岁 · 持正",
+        "内阁首辅",
+        "崔氏 · 家主",
+        "皇后的父亲",
+        "文官",
+        "在任",
+        "58 / 37 / 42",
+        "—",
+        "尚无记载",
+        "楚伯庸",
+        "45岁 · 圆融",
+        "两江总督",
+        "楚氏 · 家主",
+        "楚妃的父亲",
+        "武将",
+        "在任",
+        "40 / 55 / 21",
+        "皇长子 承安",
+        "长公主 昭宁",
+        "尚无记载"
+      ]
+    },
+    {
+      "name": "official",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.backPerson('officials')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.officialAct('2:father','talk')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.officialAct('2:father','commission')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.officialAct('2:father','reward')",
+          "disabled": true,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','2:brother')",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "← 返回官员表",
+        "外家长辈 · 武将",
+        "楚伯庸",
+        "两江总督",
+        "45岁 ·",
+        "在任",
+        "· 圆融",
+        "才干",
+        "40",
+        "功绩",
+        "21",
+        "信任",
+        "55",
+        "召见议事",
+        "精力 −1",
+        "委派差事",
+        "选择差事与所需银两",
+        "论功赏赐",
+        "精力 −1 · 国库 −20",
+        "问候每三个月一次；差事有回奏与冷却；赏赐须有新增功绩且间隔一年。致仕须满五十五岁，复出须未满七十岁且致仕满一年。",
+        "家族往来",
+        "楚怜 · 女儿",
+        "儿子：",
+        "楚仲安 ↗",
+        "· 在家读书",
+        "个人履历与纪事",
+        "尚无记载。"
+      ]
+    },
+    {
+      "name": "officials-all",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.go('home')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsFilter('serving')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "true",
+          "onclick": "A.officialsFilter('all')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsFilter('away')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsFilter('gone')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "true",
+          "onclick": "A.officialsBloc('all')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsBloc('civil')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsBloc('army')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','1:father')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',1)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','2:father')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',4)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','1:brother')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',1)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','1:relative-2621354123')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',1)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','1:relative-2604576504')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',1)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','2:brother')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',4)",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "← 返回御书房",
+        "官员表",
+        "在朝官员出自妃嫔娘家或科举。同父姐妹共用父兄履历。点姓名看履历，点妃嫔或皇嗣可直接跳转。在朝 2 人，故去与获罪 0 人。",
+        "在朝",
+        "全部",
+        "外任与奉差",
+        "故去与获罪",
+        "全部派系",
+        "文官",
+        "武将",
+        "姓名",
+        "官职",
+        "家族 · 宫中",
+        "派系",
+        "状态",
+        "才干/信任/功绩",
+        "皇嗣",
+        "近期事迹",
+        "崔鸿儒",
+        "55岁 · 持正",
+        "内阁首辅",
+        "崔氏 · 家主",
+        "皇后的父亲",
+        "文官",
+        "在任",
+        "58 / 37 / 42",
+        "—",
+        "尚无记载",
+        "楚伯庸",
+        "45岁 · 圆融",
+        "两江总督",
+        "楚氏 · 家主",
+        "楚妃的父亲",
+        "武将",
+        "在任",
+        "40 / 55 / 21",
+        "皇长子 承安",
+        "长公主 昭宁",
+        "尚无记载",
+        "崔仲安",
+        "20岁 · 持正",
+        "书生",
+        "崔氏 · 兄长",
+        "皇后的兄长",
+        "文官",
+        "在家读书",
+        "79 / 42 / 0",
+        "—",
+        "尚无记载",
+        "崔伯言",
+        "33岁 · 持正",
+        "书生",
+        "崔氏 · 弟弟",
+        "皇后的弟弟",
+        "文官",
+        "在家读书",
+        "58 / 53 / 0",
+        "—",
+        "尚无记载",
+        "崔子期",
+        "30岁 · 持正",
+        "书生",
+        "崔氏 · 弟弟",
+        "皇后的弟弟",
+        "文官",
+        "在家读书",
+        "59 / 45 / 0",
+        "—",
+        "尚无记载",
+        "楚仲安",
+        "20岁 · 谨慎",
+        "书生",
+        "楚氏 · 兄长",
+        "楚妃的兄长",
+        "武将",
+        "在家读书",
+        "83 / 36 / 0",
+        "皇长子 承安",
+        "长公主 昭宁",
+        "尚无记载"
+      ]
+    },
+    {
+      "name": "officials-away",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.go('home')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsFilter('serving')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsFilter('all')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "true",
+          "onclick": "A.officialsFilter('away')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsFilter('gone')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "true",
+          "onclick": "A.officialsBloc('all')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsBloc('civil')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsBloc('army')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','2:father')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',4)",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "← 返回御书房",
+        "官员表",
+        "在朝官员出自妃嫔娘家或科举。同父姐妹共用父兄履历。点姓名看履历，点妃嫔或皇嗣可直接跳转。在朝 2 人，故去与获罪 0 人。",
+        "在朝",
+        "全部",
+        "外任与奉差",
+        "故去与获罪",
+        "全部派系",
+        "文官",
+        "武将",
+        "姓名",
+        "官职",
+        "家族 · 宫中",
+        "派系",
+        "状态",
+        "才干/信任/功绩",
+        "皇嗣",
+        "近期事迹",
+        "楚伯庸",
+        "45岁 · 圆融",
+        "两江总督",
+        "楚氏 · 家主",
+        "楚妃的父亲",
+        "武将",
+        "外任",
+        "40 / 55 / 21",
+        "皇长子 承安",
+        "长公主 昭宁",
+        "尚无记载"
+      ]
+    },
+    {
+      "name": "officials-gone",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.go('home')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsFilter('serving')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsFilter('all')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsFilter('away')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "true",
+          "onclick": "A.officialsFilter('gone')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "true",
+          "onclick": "A.officialsBloc('all')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsBloc('civil')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsBloc('army')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','2:father')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',4)",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "← 返回御书房",
+        "官员表",
+        "在朝官员出自妃嫔娘家或科举。同父姐妹共用父兄履历。点姓名看履历，点妃嫔或皇嗣可直接跳转。在朝 1 人，故去与获罪 1 人。",
+        "在朝",
+        "全部",
+        "外任与奉差",
+        "故去与获罪",
+        "全部派系",
+        "文官",
+        "武将",
+        "姓名",
+        "官职",
+        "家族 · 宫中",
+        "派系",
+        "状态",
+        "才干/信任/功绩",
+        "皇嗣",
+        "近期事迹",
+        "楚伯庸",
+        "45岁 · 圆融",
+        "两江总督",
+        "楚氏 · 家主",
+        "楚妃的父亲",
+        "武将",
+        "已故",
+        "40 / 55 / 21",
+        "皇长子 承安",
+        "长公主 昭宁",
+        "尚无记载"
+      ]
+    },
+    {
+      "name": "officials-from-government",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.go('government')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "true",
+          "onclick": "A.officialsFilter('serving')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsFilter('all')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsFilter('away')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsFilter('gone')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "true",
+          "onclick": "A.officialsBloc('all')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsBloc('civil')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsBloc('army')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','1:father')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',1)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','2:father')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',4)",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "← 返回治国理政",
+        "官员表",
+        "在朝官员出自妃嫔娘家或科举。同父姐妹共用父兄履历。点姓名看履历，点妃嫔或皇嗣可直接跳转。在朝 2 人，故去与获罪 0 人。",
+        "在朝",
+        "全部",
+        "外任与奉差",
+        "故去与获罪",
+        "全部派系",
+        "文官",
+        "武将",
+        "姓名",
+        "官职",
+        "家族 · 宫中",
+        "派系",
+        "状态",
+        "才干/信任/功绩",
+        "皇嗣",
+        "近期事迹",
+        "崔鸿儒",
+        "55岁 · 持正",
+        "内阁首辅",
+        "崔氏 · 家主",
+        "皇后的父亲",
+        "文官",
+        "在任",
+        "58 / 37 / 42",
+        "—",
+        "尚无记载",
+        "楚伯庸",
+        "45岁 · 圆融",
+        "两江总督",
+        "楚氏 · 家主",
+        "楚妃的父亲",
+        "武将",
+        "在任",
+        "40 / 55 / 21",
+        "皇长子 承安",
+        "长公主 昭宁",
+        "尚无记载"
+      ]
+    },
+    {
+      "name": "residences-from-harem",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.go('harem')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.openResidence(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "← 返回后宫",
+        "宫室分配",
+        "坤宁宫为皇后独居。十二宫各设一名主位（嫔位及以上）和三处侧殿。晋位不等于另获一宫，主位满额时可暂居侧殿。迁居需精力1。",
+        "主位 0/12 · 侧殿 1/36 · 待安置 0 人。空主位须嫔位及以上才能入住；无合适余位时暂居掖庭，身份不变。",
+        "楚怜 · 楚妃",
+        "先选择要安排住处的人，再选择正殿或侧殿。",
+        "坤宁宫 · 皇后专居",
+        "中宫独居，不安排其他妃嫔同住；随皇后养育的幼儿不受此限。",
+        "崔绾清",
+        "景仁宫",
+        "近御花园 · 主位 空缺（嫔位及以上可任） · 侧殿 1/3",
+        "东六宫之一，庭前老槐成荫，夏日最是凉爽。",
+        "楚怜",
+        "侧殿 · 楚妃",
+        "承乾宫",
+        "近御花园 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "东六宫之一，窗下摆着棋枰，时闻落子声。",
+        "暂时无人居住",
+        "钟粹宫",
+        "宫苑中段 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "东六宫之一，院里种满了秋菊。",
+        "暂时无人居住",
+        "延禧宫",
+        "宫苑中段 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "东六宫之一，偏僻清静，少有人来。",
+        "暂时无人居住",
+        "永和宫",
+        "南隅清静 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "东六宫之一，檐下挂着风铃，风过叮咚。",
+        "暂时无人居住",
+        "景阳宫",
+        "南隅清静 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "东六宫之一，藏书最多，满室书香。",
+        "暂时无人居住",
+        "永寿宫",
+        "近御花园 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "西六宫之一，庭中一池睡莲，夏夜蛙鸣。",
+        "暂时无人居住",
+        "翊坤宫",
+        "近御花园 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "西六宫之一，院墙高高，里头常飘出琴声。",
+        "暂时无人居住",
+        "储秀宫",
+        "宫苑中段 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "西六宫之一，秀女初入宫时，多半先住这里。",
+        "暂时无人居住",
+        "启祥宫",
+        "宫苑中段 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "西六宫之一，廊柱新漆，颜色格外鲜亮。",
+        "暂时无人居住",
+        "长春宫",
+        "南隅清静 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "西六宫之一，四季常青，冬日也有绿意。",
+        "暂时无人居住",
+        "咸福宫",
+        "南隅清静 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "西六宫之一，地方宽敞，宫人进出不断。",
+        "暂时无人居住"
+      ]
+    },
+    {
+      "name": "official-retired",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.backPerson('officials')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.officialAct('2:father','talk')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.officialAct('2:father','commission')",
+          "disabled": true,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.officialAct('2:father','reward')",
+          "disabled": true,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.officialAct('2:father','recall')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','2:brother')",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "← 返回官员表",
+        "外家长辈 · 武将",
+        "楚伯庸",
+        "两江总督",
+        "45岁 ·",
+        "致仕归乡",
+        "· 圆融",
+        "不再承接官差；仍可书信问候。",
+        "才干",
+        "40",
+        "功绩",
+        "21",
+        "信任",
+        "55",
+        "赐书问候",
+        "精力 −1",
+        "委派差事",
+        "选择差事与所需银两",
+        "论功赏赐",
+        "精力 −1 · 国库 −20",
+        "征召复出",
+        "精力 −1",
+        "问候每三个月一次；差事有回奏与冷却；赏赐须有新增功绩且间隔一年。致仕须满五十五岁，复出须未满七十岁且致仕满一年。",
+        "家族往来",
+        "楚怜 · 女儿",
+        "儿子：",
+        "楚仲安 ↗",
+        "· 在家读书",
+        "个人履历与纪事",
+        "尚无记载。"
+      ]
+    },
+    {
+      "name": "official-deceased",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.backPerson('officials')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.officialAct('2:father','honor')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','2:brother')",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "← 返回官员表",
+        "外家长辈 · 武将",
+        "楚伯庸",
+        "两江总督",
+        "45岁 ·",
+        "已故",
+        "· 圆融",
+        "才干",
+        "40",
+        "功绩",
+        "21",
+        "信任",
+        "55",
+        "赐祭抚恤",
+        "精力 −1 · 国库 −20",
+        "故人的履历与家族关系继续保留；抚恤仅可办理一次。",
+        "家族往来",
+        "楚怜 · 女儿",
+        "儿子：",
+        "楚仲安 ↗",
+        "· 在家读书",
+        "个人履历与纪事",
+        "尚无记载。"
+      ]
+    },
+    {
+      "name": "queen",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.backPerson('harem')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.visitConsortHome(1)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.night(1)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.chat(1)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.gift(1)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.toggleGreenCard(1)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.lifePlan(1)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','1:father')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','1:brother')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('natal','1:-2638131742')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','1:relative-2621354123')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','1:relative-2604576504')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.momIn(1)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.homeLeave(1)",
+          "disabled": true,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.rename(1)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "select",
+          "onchange": "A.chronicleFilter('1:1','year',this.value)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "永宁元年",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "select",
+          "onchange": "A.chronicleFilter('1:1','topic',this.value)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "craft",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "family",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "bond",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "loss",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "court",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "days",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "input",
+          "id": "chronicle-search-1:1",
+          "value": "",
+          "onkeydown": "if(event.key==='Enter') A.chronicleSearch('1:1')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.chronicleSearch('1:1')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.cold(1)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.away(1)",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "← 返回后宫",
+        "崔绾清 · 18岁 · 坤宁宫 · 中宫独居",
+        "皇后",
+        "去宫里看看 →",
+        "内阁首辅 · 城府",
+        "衣着 · 玉羽流仙",
+        "渐渐熟悉宫中日子，她试着多说一点自己的心意。",
+        "“从前凡事只听着，如今也渐渐有了自己的想法，只怕说得不周全。”",
+        "人物操作",
+        "召幸侍寝",
+        "精力-1",
+        "闲话家常",
+        "精力-1",
+        "赏赐",
+        "礼物 · 内库珍饰",
+        "撤下绿头牌",
+        "恩宠",
+        "40",
+        "心情",
+        "65",
+        "情分",
+        "40",
+        "自己的打算",
+        "平日喜欢骑射，她想把散在手边的心得留成一册。",
+        "“想慢慢做成自己的东西，先留在身边，不急着送到众人面前。”",
+        "听她说说想做的事",
+        "皇帝万寿宴 · 三月",
+        "皇后千秋宴 · 腊月",
+        "近况与性情",
+        "心思深沉，喜怒不形于色。 · 侍寝 0 次",
+        "心境：",
+        "平和",
+        "小性子：",
+        "护短",
+        "喜好：",
+        "多闲谈才知道",
+        "平日消遣：",
+        "骑射",
+        "心愿：",
+        "情分到 50 以后，闲谈时她也许会说",
+        "往事：情分到 65 以后，她也许会对你说起",
+        "容貌",
+        "66",
+        "才情",
+        "41",
+        "德行",
+        "67",
+        "心机",
+        "??",
+        "家族与人际",
+        "家族：崔氏（内阁首辅家） 势力 90",
+        "派系：无派系",
+        "父亲：",
+        "崔鸿儒 ↗",
+        "内阁首辅 · 在任",
+        "兄长：",
+        "崔仲安 ↗",
+        "书生 · 在家读书",
+        "姐姐：",
+        "崔柔珠 ↗",
+        "41岁 · 居于娘家",
+        "弟弟：",
+        "崔伯言 ↗",
+        "33岁 · 书生 · 居于娘家",
+        "弟弟：",
+        "崔子期 ↗",
+        "30岁 · 书生 · 居于娘家",
+        "立场：",
+        "文官",
+        "册封与宫务",
+        "接母亲入宫",
+        "国库-15万两 · 小住两三个月",
+        "准回家省亲",
+        "改封号",
+        "人生篇章",
+        "按实际纪事归拢；同一段经历可以翻回原文。心中所记单独列出，不替代事实。",
+        "宫中来路",
+        "永宁元年三月 · 1则纪事",
+        "潜邸时奉先帝之命嫁与陛下为嫡妻。新帝登基，册为皇后，入主坤宁宫。",
+        "翻阅这一篇的原始纪事",
+        "永宁元年三月",
+        "潜邸时奉先帝之命嫁与陛下为嫡妻。新帝登基，册为皇后，入主坤宁宫。",
+        "人物纪事",
+        "经历「相伴有凭」：第一幕",
+        "（情分越高越容易推进）",
+        "年份",
+        "全部",
+        "永宁元年",
+        "主题",
+        "全部",
+        "手中留下的东西",
+        "子女与亲缘",
+        "人与人之间",
+        "离别与牵念",
+        "宫中来路",
+        "走过的日子",
+        "搜索纪事",
+        "共1则。筛选不会删去原始记载。",
+        "永宁元年三月",
+        "潜邸时奉先帝之命嫁与陛下为嫡妻。新帝登基，册为皇后，入主坤宁宫。",
+        "处置",
+        "废后",
+        "遣出宫"
+      ]
+    },
+    {
+      "name": "consort",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.backPerson('harem')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.visitConsortHome(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.night(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.chat(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.gift(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.toggleGreenCard(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.lifePlan(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.parentEpisode(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',4)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','2:father')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','2:brother')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.familyTime(3,2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',4)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.familyTime(4,2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.momIn(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.homeLeave(2)",
+          "disabled": true,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.residencePetition(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.openResidence(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.promote(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.rename(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "select",
+          "onchange": "A.chronicleFilter('1:2','year',this.value)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "永宁二十一年",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "永宁元年",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "select",
+          "onchange": "A.chronicleFilter('1:2','topic',this.value)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "craft",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "family",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "bond",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "loss",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "court",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "days",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "input",
+          "id": "chronicle-search-1:2",
+          "value": "",
+          "onkeydown": "if(event.key==='Enter') A.chronicleSearch('1:2')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.chronicleSearch('1:2')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.demote(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.cold(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.away(2)",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "← 返回后宫",
+        "楚怜 · 18岁 · 景仁宫 · 侧殿",
+        "楚妃",
+        "去宫里看看 →",
+        "两江总督 · 好学",
+        "衣着 · 桂月珠华·近景",
+        "相伴多年，她省去了几句客套。",
+        "“年轻时只想证明自己，如今更愿把日子过稳。自己的主意，却仍是要留的。”",
+        "人物操作",
+        "召幸侍寝",
+        "精力-1",
+        "闲话家常",
+        "精力-1",
+        "赏赐",
+        "礼物 · 内库珍饰",
+        "撤下绿头牌",
+        "恩宠",
+        "55",
+        "心情",
+        "65",
+        "情分",
+        "60",
+        "自己的打算",
+        "平日喜欢读书，她想把散在手边的心得留成一册。",
+        "“想慢慢做成自己的东西，先留在身边，不急着送到众人面前。”",
+        "听她说说想做的事",
+        "人和事的后续",
+        "和承安说说心里话",
+        "孩子8岁 · 精力1",
+        "近况与性情",
+        "肯向任何人请教，碰到不懂的事就记下来。 · 侍寝 0 次",
+        "心境：",
+        "平和",
+        "小性子：",
+        "贪睡",
+        "喜好：",
+        "多闲谈才知道",
+        "平日消遣：",
+        "读书",
+        "心愿：",
+        "情分已够，多闲谈几次，她也许会说出心愿",
+        "往事：情分到 65 以后，她也许会对你说起",
+        "容貌",
+        "77",
+        "才情",
+        "76",
+        "德行",
+        "77",
+        "心机",
+        "19",
+        "家族与人际",
+        "子女：",
+        "承安",
+        "昭宁",
+        "家族：楚氏（两江总督家） 势力 70",
+        "对皇嗣：",
+        "承安·亲生皇子",
+        "昭宁·亲生公主",
+        "派系：无派系",
+        "父亲：",
+        "楚伯庸 ↗",
+        "两江总督 · 在任",
+        "兄长：",
+        "楚仲安 ↗",
+        "书生 · 在家读书",
+        "立场：",
+        "武将",
+        "与孩子的日常",
+        "皇长子 承安",
+        "生母 ·",
+        "楚怜",
+        "有事愿意先来找她",
+        "一起陪陪孩子",
+        "精力-1",
+        "长公主 昭宁",
+        "生母 ·",
+        "楚怜",
+        "有事愿意先来找她",
+        "一起陪陪孩子",
+        "精力-1",
+        "册封与宫务",
+        "接母亲入宫",
+        "国库-15万两 · 小住两三个月",
+        "准回家省亲",
+        "听她谈居处",
+        "安排居所",
+        "主位 · 同住 · 换宫",
+        "晋封",
+        "→贵妃",
+        "改封号",
+        "人生篇章",
+        "按实际纪事归拢；同一段经历可以翻回原文。心中所记单独列出，不替代事实。",
+        "宫中来路",
+        "永宁元年三月 · 1则纪事",
+        "潜邸旧人，陪伴陛下多年。新帝登基，册为贵人。",
+        "翻阅这一篇的原始纪事",
+        "永宁元年三月",
+        "潜邸旧人，陪伴陛下多年。新帝登基，册为贵人。",
+        "子女与亲缘",
+        "永宁二十一年正月 · 1则纪事",
+        "与皇上谈起旧日家书，盼孩子平安长大。",
+        "翻阅这一篇的原始纪事",
+        "永宁二十一年正月",
+        "与皇上谈起旧日家书，盼孩子平安长大。",
+        "人物纪事",
+        "经历「相伴有凭」：第一幕",
+        "（情分越高越容易推进）",
+        "年份",
+        "全部",
+        "永宁二十一年",
+        "永宁元年",
+        "主题",
+        "全部",
+        "手中留下的东西",
+        "子女与亲缘",
+        "人与人之间",
+        "离别与牵念",
+        "宫中来路",
+        "走过的日子",
+        "搜索纪事",
+        "共2则。筛选不会删去原始记载。",
+        "永宁二十一年正月",
+        "与皇上谈起旧日家书，盼孩子平安长大。",
+        "永宁元年三月",
+        "潜邸旧人，陪伴陛下多年。新帝登基，册为贵人。",
+        "处置",
+        "降位",
+        "打入冷宫",
+        "遣出宫"
+      ]
+    },
+    {
+      "name": "pregnant",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.backPerson('harem')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.visitConsortHome(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.night(2)",
+          "disabled": true,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.chat(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.gift(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.toggleGreenCard(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.lifePlan(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.parentEpisode(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.pregnancyPrayer(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',4)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','2:father')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','2:brother')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.familyTime(3,2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',4)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.familyTime(4,2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.momIn(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.homeLeave(2)",
+          "disabled": true,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.residencePetition(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.openResidence(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.promote(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.rename(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "select",
+          "onchange": "A.chronicleFilter('1:2','year',this.value)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "永宁二十一年",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "永宁元年",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "select",
+          "onchange": "A.chronicleFilter('1:2','topic',this.value)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "craft",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "family",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "bond",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "loss",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "court",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "days",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "input",
+          "id": "chronicle-search-1:2",
+          "value": "",
+          "onkeydown": "if(event.key==='Enter') A.chronicleSearch('1:2')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.chronicleSearch('1:2')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.demote(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.cold(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.away(2)",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "← 返回后宫",
+        "楚怜 · 18岁 · 景仁宫 · 侧殿",
+        "楚妃",
+        "去宫里看看 →",
+        "两江总督 · 好学",
+        "有孕5月",
+        "衣着 · 桂月珠华·近景",
+        "相伴多年，她省去了几句客套。",
+        "“年轻时只想证明自己，如今更愿把日子过稳。自己的主意，却仍是要留的。”",
+        "人物操作",
+        "召幸侍寝",
+        "有孕在身",
+        "闲话家常",
+        "精力-1",
+        "赏赐",
+        "礼物 · 内库珍饰",
+        "撤下绿头牌",
+        "恩宠",
+        "55",
+        "心情",
+        "65",
+        "情分",
+        "60",
+        "自己的打算",
+        "平日喜欢读书，她想把散在手边的心得留成一册。",
+        "“想慢慢做成自己的东西，先留在身边，不急着送到众人面前。”",
+        "听她说说想做的事",
+        "人和事的后续",
+        "和承安说说心里话",
+        "孩子8岁 · 精力1",
+        "孕中祈愿",
+        "松风入殿，她或许有想问国师的话。",
+        "同赴钦安殿问男女",
+        "精力−1 · 可另留平安灯",
+        "近况与性情",
+        "肯向任何人请教，碰到不懂的事就记下来。 · 侍寝 0 次",
+        "心境：",
+        "平和",
+        "小性子：",
+        "贪睡",
+        "喜好：",
+        "多闲谈才知道",
+        "平日消遣：",
+        "读书",
+        "心愿：",
+        "情分已够，多闲谈几次，她也许会说出心愿",
+        "往事：情分到 65 以后，她也许会对你说起",
+        "容貌",
+        "77",
+        "才情",
+        "76",
+        "德行",
+        "77",
+        "心机",
+        "19",
+        "家族与人际",
+        "子女：",
+        "承安",
+        "昭宁",
+        "家族：楚氏（两江总督家） 势力 70",
+        "对皇嗣：",
+        "承安·亲生皇子",
+        "昭宁·亲生公主",
+        "派系：无派系",
+        "父亲：",
+        "楚伯庸 ↗",
+        "两江总督 · 在任",
+        "兄长：",
+        "楚仲安 ↗",
+        "书生 · 在家读书",
+        "立场：",
+        "武将",
+        "与孩子的日常",
+        "皇长子 承安",
+        "生母 ·",
+        "楚怜",
+        "有事愿意先来找她",
+        "一起陪陪孩子",
+        "精力-1",
+        "长公主 昭宁",
+        "生母 ·",
+        "楚怜",
+        "有事愿意先来找她",
+        "一起陪陪孩子",
+        "精力-1",
+        "册封与宫务",
+        "接母亲入宫",
+        "国库-15万两 · 小住两三个月",
+        "准回家省亲",
+        "听她谈居处",
+        "安排居所",
+        "主位 · 同住 · 换宫",
+        "晋封",
+        "→贵妃",
+        "改封号",
+        "人生篇章",
+        "按实际纪事归拢；同一段经历可以翻回原文。心中所记单独列出，不替代事实。",
+        "宫中来路",
+        "永宁元年三月 · 1则纪事",
+        "潜邸旧人，陪伴陛下多年。新帝登基，册为贵人。",
+        "翻阅这一篇的原始纪事",
+        "永宁元年三月",
+        "潜邸旧人，陪伴陛下多年。新帝登基，册为贵人。",
+        "子女与亲缘",
+        "永宁二十一年正月 · 1则纪事",
+        "与皇上谈起旧日家书，盼孩子平安长大。",
+        "翻阅这一篇的原始纪事",
+        "永宁二十一年正月",
+        "与皇上谈起旧日家书，盼孩子平安长大。",
+        "人物纪事",
+        "经历「相伴有凭」：第一幕",
+        "（情分越高越容易推进）",
+        "年份",
+        "全部",
+        "永宁二十一年",
+        "永宁元年",
+        "主题",
+        "全部",
+        "手中留下的东西",
+        "子女与亲缘",
+        "人与人之间",
+        "离别与牵念",
+        "宫中来路",
+        "走过的日子",
+        "搜索纪事",
+        "共2则。筛选不会删去原始记载。",
+        "永宁二十一年正月",
+        "与皇上谈起旧日家书，盼孩子平安长大。",
+        "永宁元年三月",
+        "潜邸旧人，陪伴陛下多年。新帝登基，册为贵人。",
+        "处置",
+        "降位",
+        "打入冷宫",
+        "遣出宫"
+      ]
+    },
+    {
+      "name": "cold",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.backPerson('harem')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.uncold(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.toggleGreenCard(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',4)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','2:father')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','2:brother')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',4)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "select",
+          "onchange": "A.chronicleFilter('1:2','year',this.value)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "永宁二十一年",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "永宁元年",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "select",
+          "onchange": "A.chronicleFilter('1:2','topic',this.value)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "craft",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "family",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "bond",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "loss",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "court",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "days",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "input",
+          "id": "chronicle-search-1:2",
+          "value": "",
+          "onkeydown": "if(event.key==='Enter') A.chronicleSearch('1:2')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.chronicleSearch('1:2')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.away(2)",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "← 返回后宫",
+        "楚怜 · 18岁 · 冷宫",
+        "楚庶人",
+        "两江总督 · 好学",
+        "衣着 · 桂月珠华·近景",
+        "隔着门扉，她只说了几句。",
+        "“门外的声响听得分明，日子却记得模糊了。陛下可还愿听臣妾一言？”",
+        "人物操作",
+        "放出冷宫",
+        "撤下绿头牌",
+        "恩宠",
+        "55",
+        "心情",
+        "65",
+        "情分",
+        "60",
+        "近况与性情",
+        "肯向任何人请教，碰到不懂的事就记下来。 · 侍寝 0 次",
+        "心境：",
+        "平和",
+        "小性子：",
+        "贪睡",
+        "喜好：",
+        "多闲谈才知道",
+        "平日消遣：",
+        "读书",
+        "心愿：",
+        "情分已够，多闲谈几次，她也许会说出心愿",
+        "往事：情分到 65 以后，她也许会对你说起",
+        "容貌",
+        "77",
+        "才情",
+        "76",
+        "德行",
+        "77",
+        "心机",
+        "19",
+        "家族与人际",
+        "子女：",
+        "承安",
+        "昭宁",
+        "家族：楚氏（两江总督家） 势力 70",
+        "对皇嗣：",
+        "承安·亲生皇子",
+        "昭宁·亲生公主",
+        "派系：无派系",
+        "父亲：",
+        "楚伯庸 ↗",
+        "两江总督 · 在任",
+        "兄长：",
+        "楚仲安 ↗",
+        "书生 · 在家读书",
+        "立场：",
+        "武将",
+        "与孩子的日常",
+        "皇长子 承安",
+        "生母 ·",
+        "楚怜",
+        "如今无法相见",
+        "长公主 昭宁",
+        "生母 ·",
+        "楚怜",
+        "如今无法相见",
+        "人生篇章",
+        "按实际纪事归拢；同一段经历可以翻回原文。心中所记单独列出，不替代事实。",
+        "宫中来路",
+        "永宁元年三月 · 1则纪事",
+        "潜邸旧人，陪伴陛下多年。新帝登基，册为贵人。",
+        "翻阅这一篇的原始纪事",
+        "永宁元年三月",
+        "潜邸旧人，陪伴陛下多年。新帝登基，册为贵人。",
+        "子女与亲缘",
+        "永宁二十一年正月 · 1则纪事",
+        "与皇上谈起旧日家书，盼孩子平安长大。",
+        "翻阅这一篇的原始纪事",
+        "永宁二十一年正月",
+        "与皇上谈起旧日家书，盼孩子平安长大。",
+        "人物纪事",
+        "经历「相伴有凭」：第一幕",
+        "（情分越高越容易推进）",
+        "年份",
+        "全部",
+        "永宁二十一年",
+        "永宁元年",
+        "主题",
+        "全部",
+        "手中留下的东西",
+        "子女与亲缘",
+        "人与人之间",
+        "离别与牵念",
+        "宫中来路",
+        "走过的日子",
+        "搜索纪事",
+        "共2则。筛选不会删去原始记载。",
+        "永宁二十一年正月",
+        "与皇上谈起旧日家书，盼孩子平安长大。",
+        "永宁元年三月",
+        "潜邸旧人，陪伴陛下多年。新帝登基，册为贵人。",
+        "处置",
+        "遣出宫"
+      ]
+    },
+    {
+      "name": "maid",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.backPerson('harem')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.night(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.chat(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.gift(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.parentEpisode(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',4)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.familyTime(3,2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',4)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.familyTime(4,2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.raiseMaid(2,1)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.raiseMaid(2,0)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.maidNear(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "select",
+          "onchange": "A.chronicleFilter('1:2','year',this.value)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "永宁二十一年",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "永宁元年",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "select",
+          "onchange": "A.chronicleFilter('1:2','topic',this.value)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "craft",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "family",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "bond",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "loss",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "court",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "days",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "input",
+          "id": "chronicle-search-1:2",
+          "value": "",
+          "onkeydown": "if(event.key==='Enter') A.chronicleSearch('1:2')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.chronicleSearch('1:2')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.maidOut(2)",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "← 返回后宫",
+        "楚怜 · 18岁 · 景仁宫 · 侧殿",
+        "贴身宫女怜",
+        "两江总督 · 好学",
+        "衣着 · 桂月珠华·近景",
+        "相伴多年，她省去了几句客套。",
+        "“年轻时只想证明自己，如今更愿把日子过稳。自己的主意，却仍是要留的。”",
+        "人物操作",
+        "召幸",
+        "精力-1",
+        "闲话家常",
+        "精力-1",
+        "赏赐",
+        "国库-20",
+        "恩宠",
+        "55",
+        "心情",
+        "65",
+        "情分",
+        "60",
+        "人和事的后续",
+        "和承安说说心里话",
+        "孩子8岁 · 精力1",
+        "近况与性情",
+        "肯向任何人请教，碰到不懂的事就记下来。 · 侍寝 0 次",
+        "心境：",
+        "平和",
+        "小性子：",
+        "贪睡",
+        "喜好：",
+        "多闲谈才知道",
+        "平日消遣：",
+        "读书",
+        "心愿：",
+        "情分已够，多闲谈几次，她也许会说出心愿",
+        "往事：情分到 65 以后，她也许会对你说起",
+        "容貌",
+        "77",
+        "才情",
+        "76",
+        "德行",
+        "77",
+        "心机",
+        "19",
+        "家族与人际",
+        "子女：",
+        "承安",
+        "昭宁",
+        "对皇嗣：",
+        "承安·亲生皇子",
+        "昭宁·亲生公主",
+        "派系：无派系",
+        "与孩子的日常",
+        "皇长子 承安",
+        "生母 ·",
+        "楚怜",
+        "有事愿意先来找她",
+        "一起陪陪孩子",
+        "精力-1",
+        "长公主 昭宁",
+        "生母 ·",
+        "楚怜",
+        "有事愿意先来找她",
+        "一起陪陪孩子",
+        "精力-1",
+        "册封与宫务",
+        "册封为答应",
+        "册封为官女子",
+        "遣回尚衣局",
+        "人生篇章",
+        "按实际纪事归拢；同一段经历可以翻回原文。心中所记单独列出，不替代事实。",
+        "宫中来路",
+        "永宁元年三月 · 1则纪事",
+        "潜邸旧人，陪伴陛下多年。新帝登基，册为贵人。",
+        "翻阅这一篇的原始纪事",
+        "永宁元年三月",
+        "潜邸旧人，陪伴陛下多年。新帝登基，册为贵人。",
+        "子女与亲缘",
+        "永宁二十一年正月 · 1则纪事",
+        "与皇上谈起旧日家书，盼孩子平安长大。",
+        "翻阅这一篇的原始纪事",
+        "永宁二十一年正月",
+        "与皇上谈起旧日家书，盼孩子平安长大。",
+        "人物纪事",
+        "经历「相伴有凭」：第一幕",
+        "（情分越高越容易推进）",
+        "年份",
+        "全部",
+        "永宁二十一年",
+        "永宁元年",
+        "主题",
+        "全部",
+        "手中留下的东西",
+        "子女与亲缘",
+        "人与人之间",
+        "离别与牵念",
+        "宫中来路",
+        "走过的日子",
+        "搜索纪事",
+        "共2则。筛选不会删去原始记载。",
+        "永宁二十一年正月",
+        "与皇上谈起旧日家书，盼孩子平安长大。",
+        "永宁元年三月",
+        "潜邸旧人，陪伴陛下多年。新帝登基，册为贵人。",
+        "处置",
+        "放出宫"
+      ]
+    },
+    {
+      "name": "deceased",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.backPerson('harem')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',4)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','2:father')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','2:brother')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "select",
+          "onchange": "A.chronicleFilter('1:2','year',this.value)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "永宁二十一年",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "永宁元年",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "select",
+          "onchange": "A.chronicleFilter('1:2','topic',this.value)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "craft",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "family",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "bond",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "loss",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "court",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "days",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "input",
+          "id": "chronicle-search-1:2",
+          "value": "",
+          "onkeydown": "if(event.key==='Enter') A.chronicleSearch('1:2')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.chronicleSearch('1:2')",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "← 返回后宫",
+        "楚怜 · 18岁 · 已故",
+        "楚妃",
+        "两江总督 · 好学",
+        "衣着 · 桂月珠华·近景",
+        "恩宠",
+        "55",
+        "心情",
+        "65",
+        "情分",
+        "60",
+        "近况与性情",
+        "肯向任何人请教，碰到不懂的事就记下来。 · 侍寝 0 次",
+        "容貌",
+        "77",
+        "才情",
+        "76",
+        "德行",
+        "77",
+        "心机",
+        "19",
+        "家族与人际",
+        "子女：",
+        "承安",
+        "昭宁",
+        "父亲：",
+        "楚伯庸 ↗",
+        "两江总督 · 在任",
+        "兄长：",
+        "楚仲安 ↗",
+        "书生 · 在家读书",
+        "立场：",
+        "武将",
+        "人生篇章",
+        "按实际纪事归拢；同一段经历可以翻回原文。心中所记单独列出，不替代事实。",
+        "宫中来路",
+        "永宁元年三月 · 1则纪事",
+        "潜邸旧人，陪伴陛下多年。新帝登基，册为贵人。",
+        "翻阅这一篇的原始纪事",
+        "永宁元年三月",
+        "潜邸旧人，陪伴陛下多年。新帝登基，册为贵人。",
+        "子女与亲缘",
+        "永宁二十一年正月 · 1则纪事",
+        "与皇上谈起旧日家书，盼孩子平安长大。",
+        "翻阅这一篇的原始纪事",
+        "永宁二十一年正月",
+        "与皇上谈起旧日家书，盼孩子平安长大。",
+        "人物纪事",
+        "年份",
+        "全部",
+        "永宁二十一年",
+        "永宁元年",
+        "主题",
+        "全部",
+        "手中留下的东西",
+        "子女与亲缘",
+        "人与人之间",
+        "离别与牵念",
+        "宫中来路",
+        "走过的日子",
+        "搜索纪事",
+        "共2则。筛选不会删去原始记载。",
+        "永宁二十一年正月",
+        "与皇上谈起旧日家书，盼孩子平安长大。",
+        "永宁元年三月",
+        "潜邸旧人，陪伴陛下多年。新帝登基，册为贵人。"
+      ]
+    },
+    {
+      "name": "children",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.visitMapActivity('ss')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "true",
+          "onclick": "A.kidsResidence('palace')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.kidsResidence('out')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',4)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',4)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "皇嗣",
+        "去上书房看看 →",
+        "宫内",
+        "2",
+        "已出宫",
+        "0",
+        "皇长子 承安",
+        "8岁 · 生母",
+        "楚怜",
+        "才学",
+        "56",
+        "武艺",
+        "15",
+        "品德",
+        "56",
+        "长公主 昭宁",
+        "6岁 · 生母",
+        "楚怜",
+        "才学",
+        "63",
+        "武艺",
+        "28",
+        "品德",
+        "65"
+      ]
+    },
+    {
+      "name": "children-out",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.visitMapActivity('ss')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.kidsResidence('palace')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "true",
+          "onclick": "A.kidsResidence('out')",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "皇嗣",
+        "去上书房看看 →",
+        "宫内",
+        "2",
+        "已出宫",
+        "0",
+        "尚无皇子公主出宫。"
+      ]
+    },
+    {
+      "name": "child-young",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.backPerson('kids')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.visitChildHome(3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.kidVisit(3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.familyTime(3,2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "true",
+          "onclick": "A.kidPolicy(3,'均衡')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.kidPolicy(3,'读书')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.kidPolicy(3,'习武')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.kidPolicy(3,'修德')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.kidPolicy(3,'放养')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.foster(3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "select",
+          "onchange": "A.chronicleFilter('1:3','year',this.value)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "永宁二十一年",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "select",
+          "onchange": "A.chronicleFilter('1:3','topic',this.value)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "craft",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "family",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "bond",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "loss",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "court",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "days",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "input",
+          "id": "chronicle-search-1:3",
+          "value": "",
+          "onkeydown": "if(event.key==='Enter') A.chronicleSearch('1:3')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.chronicleSearch('1:3')",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "← 返回皇嗣",
+        "2岁",
+        "皇长子 承安",
+        "生母",
+        "楚怜",
+        "随生母楚妃同住 · 景仁宫",
+        "去宫里看看 →",
+        "孩子伸出小手，想够你的衣袖。",
+        "人物操作",
+        "探望",
+        "精力-1",
+        "才学",
+        "56",
+        "武艺",
+        "15",
+        "品德",
+        "56",
+        "出生禀赋",
+        "生母",
+        "楚怜",
+        "· 生父 萧彻",
+        "才学起点受生母才情与生父文才影响。生母德行、心机分别影响品德与野心起点；将门出身影响武艺，体弱影响体魄。教养、太傅与日常活动会继续改变属性。",
+        "初始才学",
+        "56",
+        "初始品德",
+        "56",
+        "初始武艺",
+        "15",
+        "与母亲的日常",
+        "生母 ·",
+        "楚怜",
+        "认得她的声音",
+        "一起陪陪孩子",
+        "精力-1",
+        "教养与抚养",
+        "当前方针：均衡 · 三岁起生效",
+        "均衡",
+        "读书",
+        "习武",
+        "修德",
+        "放养",
+        "交给妃嫔抚养",
+        "其他属性",
+        "体魄",
+        "66",
+        "野心",
+        "16",
+        "父爱",
+        "50",
+        "宫中关系",
+        "手足：",
+        "昭宁·亲近",
+        "宫中娘娘：",
+        "都还寻常",
+        "人生篇章",
+        "按实际纪事归拢；同一段经历可以翻回原文。心中所记单独列出，不替代事实。",
+        "走过的日子",
+        "永宁二十一年正月 · 1则纪事",
+        "与母亲一同读诗。",
+        "翻阅这一篇的原始纪事",
+        "永宁二十一年正月",
+        "与母亲一同读诗。",
+        "人物纪事",
+        "年份",
+        "全部",
+        "永宁二十一年",
+        "主题",
+        "全部",
+        "手中留下的东西",
+        "子女与亲缘",
+        "人与人之间",
+        "离别与牵念",
+        "宫中来路",
+        "走过的日子",
+        "搜索纪事",
+        "共1则。筛选不会删去原始记载。",
+        "永宁二十一年正月",
+        "与母亲一同读诗。"
+      ]
+    },
+    {
+      "name": "child-fostered",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.backPerson('kids')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',1)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.kidVisit(3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.familyTime(3,2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',1)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.familyTime(3,1)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.familyVisitRule(3,'open')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.familyVisitRule(3,'closed')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "true",
+          "onclick": "A.kidPolicy(3,'均衡')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.kidPolicy(3,'读书')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.kidPolicy(3,'习武')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.kidPolicy(3,'修德')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.kidPolicy(3,'放养')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.kidTutor(3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.foster(3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.unfoster(3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.kidHeir(3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "select",
+          "onchange": "A.chronicleFilter('1:3','year',this.value)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "永宁二十一年",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "select",
+          "onchange": "A.chronicleFilter('1:3','topic',this.value)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "craft",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "family",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "bond",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "loss",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "court",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "days",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "input",
+          "id": "chronicle-search-1:3",
+          "value": "",
+          "onkeydown": "if(event.key==='Enter') A.chronicleSearch('1:3')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.chronicleSearch('1:3')",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "← 返回皇嗣",
+        "8岁",
+        "皇长子 承安",
+        "生母",
+        "楚怜",
+        "· 养母",
+        "崔绾清",
+        "他说着自己的想法，露出平日的性情。",
+        "“先别夸我。我想知道差在哪里，下回才能真的赢。”",
+        "人物操作",
+        "探望",
+        "精力-1",
+        "才学",
+        "56",
+        "武艺",
+        "15",
+        "品德",
+        "56",
+        "性情 · 好胜",
+        "肯下苦功，也在意输赢；更希望凭本事被看见。",
+        "教养会增长本领，经历会留下心事。",
+        "出生禀赋",
+        "生母",
+        "楚怜",
+        "· 生父 萧彻",
+        "才学起点受生母才情与生父文才影响。生母德行、心机分别影响品德与野心起点；将门出身影响武艺，体弱影响体魄。教养、太傅与日常活动会继续改变属性。",
+        "初始才学",
+        "56",
+        "初始品德",
+        "56",
+        "初始武艺",
+        "15",
+        "与母亲的日常",
+        "生母 ·",
+        "楚怜",
+        "见面还有些拘谨",
+        "一起陪陪孩子",
+        "精力-1",
+        "养母 ·",
+        "崔绾清",
+        "有事愿意先来找她",
+        "一起陪陪孩子",
+        "精力-1",
+        "生母探望安排 · 照宫中旧例",
+        "准许探望",
+        "暂缓探望",
+        "教养与抚养",
+        "当前方针：均衡 · 三岁起生效",
+        "均衡",
+        "读书",
+        "习武",
+        "修德",
+        "放养",
+        "延请太傅",
+        "每月5万两",
+        "换一位养母",
+        "抱回生母身边",
+        "其他属性",
+        "体魄",
+        "66",
+        "野心",
+        "16",
+        "父爱",
+        "50",
+        "宫中关系",
+        "手足：",
+        "昭宁·亲近",
+        "宫中娘娘：",
+        "都还寻常",
+        "封号与储位",
+        "立为太子",
+        "人生篇章",
+        "按实际纪事归拢；同一段经历可以翻回原文。心中所记单独列出，不替代事实。",
+        "走过的日子",
+        "永宁二十一年正月 · 1则纪事",
+        "与母亲一同读诗。",
+        "翻阅这一篇的原始纪事",
+        "永宁二十一年正月",
+        "与母亲一同读诗。",
+        "人物纪事",
+        "年份",
+        "全部",
+        "永宁二十一年",
+        "主题",
+        "全部",
+        "手中留下的东西",
+        "子女与亲缘",
+        "人与人之间",
+        "离别与牵念",
+        "宫中来路",
+        "走过的日子",
+        "搜索纪事",
+        "共1则。筛选不会删去原始记载。",
+        "永宁二十一年正月",
+        "与母亲一同读诗。"
+      ]
+    },
+    {
+      "name": "child-teen",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.backPerson('kids')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.kidVisit(3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.familyTime(3,2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "true",
+          "onclick": "A.kidPolicy(3,'均衡')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.kidPolicy(3,'读书')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.kidPolicy(3,'习武')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.kidPolicy(3,'修德')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.kidPolicy(3,'放养')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.kidTutor(3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.foster(3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.kidHeir(3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.kidTitle(3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "select",
+          "onchange": "A.chronicleFilter('1:3','year',this.value)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "永宁二十一年",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "select",
+          "onchange": "A.chronicleFilter('1:3','topic',this.value)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "craft",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "family",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "bond",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "loss",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "court",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "days",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "input",
+          "id": "chronicle-search-1:3",
+          "value": "",
+          "onkeydown": "if(event.key==='Enter') A.chronicleSearch('1:3')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.chronicleSearch('1:3')",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "← 返回皇嗣",
+        "13岁",
+        "皇长子 承安",
+        "生母",
+        "楚怜",
+        "他说着自己的想法，露出平日的性情。",
+        "“我会羡慕别人得夸奖，也知道不能靠让人闭嘴赢这一局。”",
+        "人物操作",
+        "探望",
+        "精力-1",
+        "才学",
+        "56",
+        "武艺",
+        "15",
+        "品德",
+        "56",
+        "性情 · 好胜",
+        "肯下苦功，也在意输赢；更希望凭本事被看见。",
+        "教养会增长本领，经历会留下心事。",
+        "出生禀赋",
+        "生母",
+        "楚怜",
+        "· 生父 萧彻",
+        "才学起点受生母才情与生父文才影响。生母德行、心机分别影响品德与野心起点；将门出身影响武艺，体弱影响体魄。教养、太傅与日常活动会继续改变属性。",
+        "初始才学",
+        "56",
+        "初始品德",
+        "56",
+        "初始武艺",
+        "15",
+        "与母亲的日常",
+        "生母 ·",
+        "楚怜",
+        "有事愿意先来找她",
+        "一起陪陪孩子",
+        "精力-1",
+        "教养与抚养",
+        "当前方针：均衡 · 三岁起生效",
+        "均衡",
+        "读书",
+        "习武",
+        "修德",
+        "放养",
+        "延请太傅",
+        "每月5万两",
+        "交给妃嫔抚养",
+        "其他属性",
+        "体魄",
+        "66",
+        "野心",
+        "16",
+        "父爱",
+        "50",
+        "支持",
+        "0",
+        "宫中关系",
+        "手足：",
+        "昭宁·亲近",
+        "宫中娘娘：",
+        "都还寻常",
+        "封号与储位",
+        "立为太子",
+        "赐封号",
+        "人生篇章",
+        "按实际纪事归拢；同一段经历可以翻回原文。心中所记单独列出，不替代事实。",
+        "走过的日子",
+        "永宁二十一年正月 · 1则纪事",
+        "与母亲一同读诗。",
+        "翻阅这一篇的原始纪事",
+        "永宁二十一年正月",
+        "与母亲一同读诗。",
+        "人物纪事",
+        "年份",
+        "全部",
+        "永宁二十一年",
+        "主题",
+        "全部",
+        "手中留下的东西",
+        "子女与亲缘",
+        "人与人之间",
+        "离别与牵念",
+        "宫中来路",
+        "走过的日子",
+        "搜索纪事",
+        "共1则。筛选不会删去原始记载。",
+        "永宁二十一年正月",
+        "与母亲一同读诗。"
+      ]
+    },
+    {
+      "name": "child-adult",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.backPerson('kids')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.kidVisit(3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.kidMarriage(3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.familyTime(3,2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "true",
+          "onclick": "A.kidPolicy(3,'均衡')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.kidPolicy(3,'读书')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.kidPolicy(3,'习武')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.kidPolicy(3,'修德')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.kidPolicy(3,'放养')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.kidTutor(3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.kidHeir(3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.kidTitle(3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "select",
+          "onchange": "A.chronicleFilter('1:3','year',this.value)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "永宁二十一年",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "select",
+          "onchange": "A.chronicleFilter('1:3','topic',this.value)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "craft",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "family",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "bond",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "loss",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "court",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "days",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "input",
+          "id": "chronicle-search-1:3",
+          "value": "",
+          "onkeydown": "if(event.key==='Enter') A.chronicleSearch('1:3')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.chronicleSearch('1:3')",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "← 返回皇嗣",
+        "18岁",
+        "皇长子 承安",
+        "生母",
+        "楚怜",
+        "他说着自己的想法，露出平日的性情。",
+        "“我会羡慕别人得夸奖，也知道不能靠让人闭嘴赢这一局。”",
+        "人物操作",
+        "探望",
+        "精力-1",
+        "已满十五岁 · 可以议婚",
+        "先看名帖、听本人意愿，再确认赐婚；也可以暂缓半年。",
+        "议婚 / 赐婚 →",
+        "才学",
+        "56",
+        "武艺",
+        "15",
+        "品德",
+        "56",
+        "性情 · 好胜",
+        "肯下苦功，也在意输赢；更希望凭本事被看见。",
+        "教养会增长本领，经历会留下心事。",
+        "出生禀赋",
+        "生母",
+        "楚怜",
+        "· 生父 萧彻",
+        "才学起点受生母才情与生父文才影响。生母德行、心机分别影响品德与野心起点；将门出身影响武艺，体弱影响体魄。教养、太傅与日常活动会继续改变属性。",
+        "初始才学",
+        "56",
+        "初始品德",
+        "56",
+        "初始武艺",
+        "15",
+        "与母亲的日常",
+        "生母 ·",
+        "楚怜",
+        "有事愿意先来找她",
+        "一起陪陪孩子",
+        "精力-1",
+        "教养与抚养",
+        "当前方针：均衡 · 三岁起生效",
+        "均衡",
+        "读书",
+        "习武",
+        "修德",
+        "放养",
+        "延请太傅",
+        "每月5万两",
+        "其他属性",
+        "体魄",
+        "66",
+        "野心",
+        "16",
+        "父爱",
+        "50",
+        "支持",
+        "0",
+        "宫中关系",
+        "手足：",
+        "昭宁·亲近",
+        "宫中娘娘：",
+        "都还寻常",
+        "封号与储位",
+        "立为太子",
+        "赐封号",
+        "人生篇章",
+        "按实际纪事归拢；同一段经历可以翻回原文。心中所记单独列出，不替代事实。",
+        "走过的日子",
+        "永宁二十一年正月 · 1则纪事",
+        "与母亲一同读诗。",
+        "翻阅这一篇的原始纪事",
+        "永宁二十一年正月",
+        "与母亲一同读诗。",
+        "人物纪事",
+        "年份",
+        "全部",
+        "永宁二十一年",
+        "主题",
+        "全部",
+        "手中留下的东西",
+        "子女与亲缘",
+        "人与人之间",
+        "离别与牵念",
+        "宫中来路",
+        "走过的日子",
+        "搜索纪事",
+        "共1则。筛选不会删去原始记载。",
+        "永宁二十一年正月",
+        "与母亲一同读诗。"
+      ]
+    },
+    {
+      "name": "child-deceased",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.backPerson('kids')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "select",
+          "onchange": "A.chronicleFilter('1:3','year',this.value)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "永宁二十一年",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "select",
+          "onchange": "A.chronicleFilter('1:3','topic',this.value)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "craft",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "family",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "bond",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "loss",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "court",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "option",
+          "value": "days",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "input",
+          "id": "chronicle-search-1:3",
+          "value": "",
+          "onkeydown": "if(event.key==='Enter') A.chronicleSearch('1:3')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.chronicleSearch('1:3')",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "← 返回皇嗣",
+        "已故",
+        "皇长子 承安",
+        "生母",
+        "楚怜",
+        "才学",
+        "56",
+        "武艺",
+        "15",
+        "品德",
+        "56",
+        "性情 · 好胜",
+        "肯下苦功，也在意输赢；更希望凭本事被看见。",
+        "教养会增长本领，经历会留下心事。",
+        "出生禀赋",
+        "生母",
+        "楚怜",
+        "· 生父 萧彻",
+        "才学起点受生母才情与生父文才影响。生母德行、心机分别影响品德与野心起点；将门出身影响武艺，体弱影响体魄。教养、太傅与日常活动会继续改变属性。",
+        "初始才学",
+        "56",
+        "初始品德",
+        "56",
+        "初始武艺",
+        "15",
+        "其他属性",
+        "体魄",
+        "66",
+        "野心",
+        "16",
+        "父爱",
+        "50",
+        "人生篇章",
+        "按实际纪事归拢；同一段经历可以翻回原文。心中所记单独列出，不替代事实。",
+        "走过的日子",
+        "永宁二十一年正月 · 1则纪事",
+        "与母亲一同读诗。",
+        "翻阅这一篇的原始纪事",
+        "永宁二十一年正月",
+        "与母亲一同读诗。",
+        "人物纪事",
+        "年份",
+        "全部",
+        "永宁二十一年",
+        "主题",
+        "全部",
+        "手中留下的东西",
+        "子女与亲缘",
+        "人与人之间",
+        "离别与牵念",
+        "宫中来路",
+        "走过的日子",
+        "搜索纪事",
+        "共1则。筛选不会删去原始记载。",
+        "永宁二十一年正月",
+        "与母亲一同读诗。"
+      ]
+    },
+    {
+      "name": "out",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.out('garden')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.out('city')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.out('hunt')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.out('temple')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.out('spa')",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "出巡",
+        "每次出巡花费1点精力。",
+        "御花园",
+        "偶遇妃嫔、宫女，或独自散心",
+        "微服出宫",
+        "体察民情，也许会遇见有缘人",
+        "南苑围猎",
+        "武略越高越易成功，有受伤风险",
+        "护国寺祈福",
+        "民心、龙体小增，本月更易得子",
+        "温泉行宫",
+        "休养龙体（国库-60万两）",
+        "微服见闻与回访",
+        "微服走访所得，将记明地点、承办人和后续结果。"
+      ]
+    },
+    {
+      "name": "log",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "UI.logF='all';render()",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "UI.logF='big';render()",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.logCard()",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "起居注",
+        "全部",
+        "只看大事",
+        "保存上月纪念卡",
+        "永宁元年三月",
+        "册嫡妻崔绾清为皇后，潜邸旧人楚怜为贵人。",
+        "永宁元年三月",
+        "永宁元年三月，新帝萧彻登基，改元永宁，大赦天下。"
+      ]
+    },
+    {
+      "name": "saves",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.save('1')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.load('1')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.save('2')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.load('2')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.save('3')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.load('3')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.load('auto')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.downloadSave()",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "document.getElementById('save-file').click()",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "input",
+          "id": "save-file",
+          "type": "file",
+          "accept": ".json,application/json",
+          "onchange": "A.readSaveFile(this)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "S=null;UI.view='title';render()",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "存档",
+        "存档保存在本浏览器中；每月结束时会自动存档。",
+        "存档1",
+        "空",
+        "保存",
+        "读取",
+        "存档2",
+        "空",
+        "保存",
+        "读取",
+        "存档3",
+        "空",
+        "保存",
+        "读取",
+        "自动",
+        "萧彻·永宁元年三月·后妃2",
+        "读取",
+        "文件备份",
+        "下载一个 JSON 文件留存；换浏览器时选择此文件恢复。备份不会复制到剪贴板。",
+        "下载备份文件",
+        "选择备份文件导入",
+        "其他",
+        "返回标题"
+      ]
+    },
+    {
+      "name": "saves-populated",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.save('1')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.load('1')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.save('2')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.load('2')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.save('3')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.load('3')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.load('auto')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.downloadSave()",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "document.getElementById('save-file').click()",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "input",
+          "id": "save-file",
+          "type": "file",
+          "accept": ".json,application/json",
+          "onchange": "A.readSaveFile(this)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "S=null;UI.view='title';render()",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "存档",
+        "存档保存在本浏览器中；每月结束时会自动存档。",
+        "存档1",
+        "萧彻·永宁二十一年正月·后妃2",
+        "保存",
+        "读取",
+        "存档2",
+        "萧彻·永宁二十一年正月·后妃2",
+        "保存",
+        "读取",
+        "存档3",
+        "萧彻·永宁二十一年正月·后妃2",
+        "保存",
+        "读取",
+        "自动",
+        "萧彻·永宁二十一年正月·后妃2",
+        "读取",
+        "文件备份",
+        "下载一个 JSON 文件留存；换浏览器时选择此文件恢复。备份不会复制到剪贴板。",
+        "下载备份文件",
+        "选择备份文件导入",
+        "其他",
+        "返回标题"
+      ]
+    }
+  ]
+}
