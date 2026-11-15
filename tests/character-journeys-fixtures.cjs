@@ -23,3 +23,6 @@ b=world();companion(b);b.run(`var a=makeKid(o,'f','锦和'),d=makeKid(o,'m','承
 b=world();companion(b);b.run(`initTimeTraveler(o,true);PalaceActions.reset();A.neighborWord(c.id);`);write('traveler-quiet',b);
 b=world();companion(b);b.run(`c.artPortrait=o.artPortrait=CONSORT_PORTRAITS[0];PalaceActions.reset();A.resemblanceTalk(c.id);`);write('resemblance',b);
 b=world();b.run(`var candidate=makeGirl({sur:'林',given:'宛宁',trait:'温婉',age:23,fam:{t:'书香门第',p:25}});candidate.artPortrait=c.artPortrait;S.cands=[candidate];S.selection={phase:'audience',current:candidate.id};S.flags.peek=3;UI.view='xx';PalaceActions.reset();`);write('resemblance-selection',b);
+function fosterWorld(){const b=world();companion(b);b.run(`S.consorts=S.consorts.filter(p=>p===c||p===o||p.rank===8);S.children=[];c.age=26;c.rank=5;c.enteredAt=24;c.nights=12;c.favor=85;c.lastBirth=-99;c.fertility.base=.08;o.rank=2;o.age=25;o.hp=90;delete o.solitary;var baby=makeKid(o,'f','明月');baby.born=S.turn-24;baby.pendingName=false;relAdd(c,o,15-relGet(c,o));UI.view='consort';UI.sel=c.id;PalaceActions.reset();`);return b;}
+b=fosterWorld();b.run(`A.fosterWish(c.id);`);write('foster-long-wait',b);
+b=fosterWorld();b.run(`o.hp=48;relAdd(c,o,65-relGet(c,o));A.fosterWish(c.id);choose(0);`);write('foster-agreement',b);

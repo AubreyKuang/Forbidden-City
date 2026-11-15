@@ -69,7 +69,7 @@ function makeGirl(o={}){
     looks:clamp(ri(40,88)+(T.looks||0)), talent:clamp(ri(30,85)+(T.talent||0)), virtue:clamp(ri(30,85)+(T.virtue||0)), scheme:clamp(ri(15,75)+(T.scheme||0)),
     rank:0, palace:'', favor:ri(5,15), mood:65, aff:ri(10,25), preg:0, prot:false, lastBirth:-99, alive:true, cold:false, gone:false,
     seed:ri(1,2e9), title:'', story:[], nights:0, known:false};
-  assignConsortPortrait(girl);initSolitary(girl);
+  assignConsortPortrait(girl);initSolitary(girl);ensureConsortFertility(girl);
   return girl;
 }
 function assignPalace(c){
@@ -180,7 +180,7 @@ function nightWith(c,fromEvent){
   const fm=e.style==='风流'?1.5:1;
   const s=cchg(c,{favor:10*fm*(XIN[xinOf(c)].favorMul||1),mood:10,aff:routineAffection(c,c.trait==='痴情'?9:6)});
   c.nights++;recordImperialNight(c);S.flags.lastNight=c.id;if(c.nights===1)remember(c,'first','第一次侍寝');
-  let p=.18+(e.style==='风流'?.06:0)+(S.flags.bless===S.turn?.1:0)-(c.trait==='体弱'?.05:0)-(e.age>50?.07:0)+(e.health>80?.03:0);
+  const p=consortConceptionChance(c);
   if(!c.preg&&(!c.delivery||c.delivery.settled)&&S.turn-c.lastBirth>=3&&chance(p)){c.preg=1;c.pregnancyFather={kind:'emperor',gen:S.gen,mother:c.id,name:e.sur+e.name,wen:e.wen,wu:e.wu,conceived:S.turn};beginPregnancyCalendar(c);}
   harem().forEach(o=>{if(o!==c&&TRAITS[o.trait].jealous){o.mood=clamp(o.mood-2);relAdd(o,c,-3)}});
   story(c,`奉召侍寝。${line}`);

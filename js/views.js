@@ -353,7 +353,7 @@ function viewConsort(){
     ${act?detailSection('牵挂远方的孩子',motherConcernPanel(c)):''}
     ${detailSection('孩子的身世',consortParentagePanel(c))}
     ${detailSection('册封与宫务',management?`<div class="acts">${management}</div>`:'')}
-    ${homeLeavePanel(c)}${homeFamilyPanel(c)}${maternalPanel(c)}${journeyPanel(c)}${solitaryPanel(c)}${pastLifePanel(c)}${timeTravelerPanel(c)}${personalExperiencePanel(c)}${historyPanel(c)}
+    ${fosterWishButton(c)}${homeLeavePanel(c)}${homeFamilyPanel(c)}${maternalPanel(c)}${journeyPanel(c)}${solitaryPanel(c)}${pastLifePanel(c)}${timeTravelerPanel(c)}${personalExperiencePanel(c)}${historyPanel(c)}
     ${detailSection('人物纪事',arcLine(c)+detailStory(c))}
     ${detailFold('处置',penalties?`<div class="acts">${penalties}</div>`:'')}
    </div>`;

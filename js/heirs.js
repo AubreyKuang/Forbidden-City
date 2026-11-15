@@ -122,7 +122,8 @@ function doFoster(k,c,options={}){const m=byId(k.mom),old=fosterOf(k),childless=
   k.foster=c.id;k.fosterT=S.turn;relAdd(c,k,Math.max(0,50-relGet(c,k)));
   kstory(k,`交由${fullName(c)}抚养。`);story(c,`陛下将${kidName(k)}交给她抚养。`);log(`${kidName(k)}交由${fullName(c)}抚养。`,1);
   setXin(c,'欢喜',`得以抚养${k.name}`);let s=cchg(c,{aff:childless?12:6,mood:childless?20:8});
-  if(m&&m.alive&&m!==c&&options.maternalKin){relAdd(m,c,12);cchg(m,{mood:8});setXin(m,'释然',`姐妹代为照料${k.name}`);story(m,`得知姐妹${fullName(c)}获准照料${k.name}，心中稍安。`)}
+  if(m&&m.alive&&m!==c&&options.consensual){relAdd(m,c,8);cchg(m,{mood:-3});story(m,`与${fullName(c)}商议后，让她承担${k.name}的日常抚养，自己仍可探望。虽放心她的照护，分别时仍有不舍。`)}
+  else if(m&&m.alive&&m!==c&&options.maternalKin){relAdd(m,c,12);cchg(m,{mood:8});setXin(m,'释然',`姐妹代为照料${k.name}`);story(m,`得知姐妹${fullName(c)}获准照料${k.name}，心中稍安。`)}
   else if(m&&m.alive&&m!==c){relAdd(m,c,-25);const hate=m.scheme>=60||m.t2==='记仇';setXin(m,hate?'怨恨':'悲恸',`亲生的${k.name}被抱给了${fullName(c)}`,hate?c.id:null);s+='　'+cchg(m,{mood:-30,aff:-8});story(m,`亲生的${k.name}被抱去给${fullName(c)}抚养。`)}
   if(old&&old.alive&&old!==c){setXin(old,'委屈',`养了多年的${k.name}被抱走`);cchg(old,{mood:-15})}
   return `${fullName(c)}接过孩子，抱得很紧。${fx(s)}`}
