@@ -371,9 +371,9 @@ A.endMonth=function(){
   if(revenue)pushEv(revenue);
   // 事件
   if(S.month===2&&S.turn-S.flags.lastXX>=34&&newConsortEventAllowed()) pushEv({title:'三年大选',sfx:'chime',text:'又到三年一度的大选之期，各地秀女已候于储秀宫。',choices:[{t:'前去看看',f:()=>{genCands();UI.view='xx';return null}},{t:'今年免了',f:()=>{S.flags.lastXX=S.turn;return fx(chg({people:2}))}}]});
-  reconcileResidences();archivePastLives();travelerLifeTick();daoLifeTick();childTempleTick();relTick();consortSocialTick();kidRelTick();clanTick();dowagerTick();initiativeTick();familyLifeTick();childLifeTick();courtTick();natalFamilyTick();seasonalTick();palaceDutiesTick();palaceRomanceTick();palaceParentageTick();marriedLifeTick();personalExperienceTick();journeyTick();maternalTick();historyTick();continuityTick();personalLifeTick();livedRelationshipsTick();
+  reconcileResidences();archivePastLives();travelerLifeTick();daoLifeTick();immortalTick();childTempleTick();relTick();consortSocialTick();kidRelTick();clanTick();dowagerTick();initiativeTick();familyLifeTick();childLifeTick();courtTick();natalFamilyTick();seasonalTick();palaceDutiesTick();palaceRomanceTick();palaceParentageTick();marriedLifeTick();personalExperienceTick();journeyTick();maternalTick();historyTick();continuityTick();personalLifeTick();livedRelationshipsTick();
   const passing=dowagerPassingEvent();if(passing)pushEv(passing);
-  const must=[passing?null:haremRemonstranceEvent(),passing?null:arcTick(),heirTick(),milestone(),parentageReportEvent(),birthSwapClueEvent(),birthSwapSearchReport(),pendingBirthSwapJustice(),pendingKinGreeting(),pendingMaternalKinCare(),pendingMaternalSisterArrival(),pendingDaoVoyage(),pendingTravelerEvent(),pendingOfficialReport(),pendingConcealedLoss(),...(legacyPendingAction()?[]:[pendingIncognitoReport(),passing?null:jingtishiEvent(),passing?null:selectionCouncilEvent()])].filter(Boolean),opt=[];
+  const must=[passing?null:haremRemonstranceEvent(),passing?null:pendingImmortalEvent(),passing?null:arcTick(),heirTick(),milestone(),parentageReportEvent(),birthSwapClueEvent(),birthSwapSearchReport(),pendingBirthSwapJustice(),pendingKinGreeting(),pendingMaternalKinCare(),pendingMaternalSisterArrival(),pendingDaoVoyage(),pendingTravelerEvent(),pendingOfficialReport(),pendingConcealedLoss(),...(legacyPendingAction()?[]:[pendingIncognitoReport(),passing?null:jingtishiEvent(),passing?null:selectionCouncilEvent()])].filter(Boolean),opt=[];
   // 积压的奏折：离宫期间攒下的朝堂事务，月末一并呈上
   while((S.flags.memorials||0)>0){S.flags.memorials--;const memo=factionEvent();if(memo&&!must.some(e=>e.title===memo.title))must.push(memo)}
   const add=(e,p)=>{if(e&&ambientEventReady(e))opt.push([e,p+R()-ambientNovelty(e)+continuityEventScore(e)])};
@@ -408,13 +408,13 @@ function deathEvent(why){
   const score=e.prestige*.5+e.people*.5;
   const shi=score>=80?'圣':score>=68?'文':score>=56?'景':score>=44?'恭':score>=32?'哀':'炀';
   const miao=['太祖','太宗','高宗','仁宗','宣宗','英宗','宪宗','孝宗','穆宗','神宗'][S.gen-1]||'睿宗';
-  const sons=kidsAlive().filter(k=>k.sex==='m'&&!k.jailed);let heir=S.heir&&kidById(S.heir);if(!heir||!heir.alive)heir=sons.sort((a,b)=>a.born-b.born)[0];
+  const sons=kidsAlive().filter(k=>k.sex==='m'&&!k.jailed&&!immortalAway(k));let heir=S.heir&&kidById(S.heir);if(!heir||!heir.alive||immortalAway(heir))heir=sons.sort((a,b)=>a.born-b.born)[0];
   const nC=S.consorts.length,nK=S.children.length;
   let t= why==='民变'?`流民四起，叛军攻破京城。${e.era}${cnNum(yrs)}年，${e.sur}${e.name}自缢于宫中，享年${e.age}岁。`
     :`${dateStr()}，${e.sur}${e.name}崩于养心殿，享年${e.age}岁，在位${yrs}年。`;
   t+=`\n庙号${miao}，谥曰「${shi}皇帝」。\n一生册封后妃${nC}人，育皇子${S.children.filter(k=>k.sex==='m').length}人、公主${S.children.filter(k=>k.sex==='f').length}人。`;
   if(why==='民变')heir=null;
-  t+=heir?`\n遗诏：传位于${kidName(heir)}。`:why==='民变'?'\n社稷倾覆，国祚至此而终。':'\n膝下无子，宗室旁支入继大统，本朝血脉至此而终。';
+  t+=heir?`\n遗诏：传位于${kidName(heir)}。`:why==='民变'?'\n社稷倾覆，国祚至此而终。':immortalEnabled()&&kidsAlive().some(k=>k.sex==='m'&&immortalAway(k))?'\n皇子长留山门，未列入继统之序，宗室旁支承继大统。山中的亲人仍在人世。':'\n膝下无子，宗室旁支入继大统，本朝血脉至此而终。';
   S.history.push({sur:e.sur,name:e.name,era:e.era,yrs,miao,shi});
   log(t.split('\n')[0]+`庙号${miao}。`,1);AU.sfx('gong');
   const ch=[];

@@ -1,5 +1,7 @@
 /* Saved journeys, care arrangements and mothers' concern for children living away. */
 function childWhereabouts(k){
+  if(immortalAway(k))return IMMORTAL_SECTS[k.immortal.route].name;
+  if(k.immortal?.stage==='returned'&&k.immortal.returnPlace)return k.immortal.returnPlace;
   if(k.templeStay)return '护国寺';
   if(k.birthSwap?.occurred&&k.parentage?.decision==='family')return '宫外亲生父母家';
   if(k.parentage?.decision==='household')return '生父皇子府';
@@ -11,7 +13,7 @@ function childWhereabouts(k){
   return '宫中';
 }
 function openPrinceEstate(k,record=true){
-  if(k.sex!=='m'||!k.alive||k.pendingName||k.removedFromRoyal||S.heir===k.id||kidAge(k)<16||k.princeEstate)return false;
+  if(k.sex!=='m'||!k.alive||immortalAway(k)||k.pendingName||k.removedFromRoyal||S.heir===k.id||kidAge(k)<16||k.princeEstate)return false;
   k.princeEstate={opened:S.turn,location:'京城'};
   if(record){childSeparationMemory(k,`${k.name}在京开府，迁出宫中，自此居于皇子府。`,.1);log(`${k.name}在京开府，迁居皇子府。`);}
   return true;
@@ -41,7 +43,7 @@ function childSeparationMemory(k,text,emotion=-.4){
     ]);
   }
 }
-function templeEligible(k){return !!(k?.alive&&!k.jailed&&!k.pendingName&&!k.templeStay&&!S.over);}
+function templeEligible(k){return !!(k?.alive&&!immortalAway(k)&&!k.jailed&&!k.pendingName&&!k.templeStay&&!S.over);}
 function sendChildToTemple(k,{months=6,reason='prayer'}={}){
   if(!templeEligible(k))return false;
   k.templeStay={from:S.turn,due:months==null?null:S.turn+months,reason};

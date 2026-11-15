@@ -99,7 +99,8 @@ assert.equal(S.turn,turn+60);
 assert.ok(ambientTurns.size>0);
 // The same court can play differently when a character's situation or education changes.
 const actor=harem()[0]||makeGirl({trait:'温婉'});
-S.consorts=[actor];actor.trait='温婉';actor.t2='嗜甜';actor.alive=true;actor.gone=false;actor.cold=false;actor.maid=false;
+// Start this isolated personality scenario without children whose caregivers were removed.
+S.consorts=[actor];S.children=[];actor.trait='温婉';actor.t2='嗜甜';actor.alive=true;actor.gone=false;actor.cold=false;actor.maid=false;
 delete actor.initiative;delete actor.qcd;delete S.flags.ambientRecent?.['牙疼'];delete S.flags.ambientPeople?.['牙疼'];
 S.flags.initiativeTurns={};E().health=70;E().energy=4;
 const discardedQuirk=quirkEvent();assert.ok(discardedQuirk);assert.equal(actor.qcd,undefined);
@@ -118,6 +119,8 @@ S.children=[student];initiativeTick();assert.equal(currentInitiative(student),nu
 A.kidPolicy(student.id,'读书');initiativeTick();assert.equal(student.initiative.id,'study');assert.equal(student.lit,36);
 A.go('kid',student.id);assert.match($('#panel').innerHTML,/主动校书/);
 reloaded.trait='才女';delete reloaded.initiative;delete reloaded.initiativeHistory;delete S.flags.initiativeTurns.fan;S.month=4;
+// Isolate the named seasonal rule; another equally valid spring activity may win a shuffle.
+for(const [id,rule] of Object.entries(PALACE_INITIATIVES))if(rule.seasonal&&!rule.child&&id!=='fan')S.flags.initiativeTurns[id]=S.turn;
 assert.equal(PALACE_INITIATIVES.fan.match(reloaded),false);
 S.month=5;initiativeTick();assert.equal(reloaded.initiative.id,'fan');
 A.go('consort',reloaded.id);assert.match($('#panel').innerHTML,/《东京梦华录》卷八·端午/);
