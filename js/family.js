@@ -1,5 +1,5 @@
 /* ============ 母子日常与御花园小宴 ============ */
-const inPalace = c => c?.alive && !c.gone && !c.cold && !c.templeStay;
+const inPalace = c => c?.alive && !c.gone && !c.cold && !c.templeStay && !c.homeLeave;
 // Marriage alone does not move a child: a local couple may still await an estate.
 const childHasLeftPalace = k => !!(k?.away || k?.estate || k?.princeEstate || k?.jailed || k?.templeStay || k?.removedFromRoyal || k?.princessMarriage==='frontier');
 const childInPalace = k => !!k?.alive && !childHasLeftPalace(k);
@@ -62,7 +62,8 @@ function familyActivity(k, mother, seeking) {
 }
 
 function spendFamilyTime(k, mother, seeking) {
-  const act = familyActivity(k, mother, seeking);
+  const act = {...familyActivity(k, mother, seeking)};
+  const personal=maternalActivity(k,mother,seeking);act.child+=' '+personal.child;act.mother+=' '+personal.mother;
   const childView = act.title==='哄睡'?`在${fullName(mother)}身边听着熟悉的声音。${act.child}`:act.title==='听孩子说心事'?`向${fullName(mother)}说起心事。${act.child}`:`与${fullName(mother)}${act.title}。${act.child}`;
   recordFamilyTime(k, mother, act.title, childView, `${k.name}在身边。${act.mother}`, {
     place: act.place, stat: act.stat, gain: seeking ? 9 : 7
@@ -175,7 +176,7 @@ const KIN_TXT={'亲姐':'亲姐姐','亲妹':'亲妹妹','堂姐':'堂姐','堂�
 function clanKey(c){return c.clan||(c.clan=c.sur+'|'+c.fam.t)}
 function clanName(key){const [s,t]=key.split('|');return `${s}氏（${t.endsWith('家')?t:t+'家'}）`}
 function clanMembers(key){return alive().filter(c=>!c.maid&&clanKey(c)===key&&!NOCLAN.includes(key.split('|')[1]))}
-const NOCLAN=['宫女','寒门','西域贡女','歌女','良家子','先帝才人'];
+const NOCLAN=['宫女','寒门','西域贡女','歌女','良家子','先帝才人','西域流寓','农家'];
 const hasClan=c=>!c.maid&&!NOCLAN.includes((c.clan||'').split('|')[1]||c.fam.t);
 function clans(){const m={};alive().filter(hasClan).forEach(c=>{const k=clanKey(c);(m[k]=m[k]||[]).push(c)});return Object.entries(m).filter(([k,v])=>v.length>=2)}
 const isRival=(a,b)=>!!(a.kinRival&&a.kinRival[b.id]);

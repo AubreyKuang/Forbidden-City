@@ -13,6 +13,7 @@ A.out=function(kind){ if(!useE())return; const e=E();
     }
   }
   else if(kind==='city'){setScene('city');
+    if(!S.flags.marketRescueSeen&&chance(.18)){const rescue=marketRescueEvent();if(rescue){pushEv(rescue);return;}}
     const ev=pick(['girl','tea','porridge','assassin','girl']);
     if(ev==='girl'){const g=makeGirl({fam:pick([{t:'寒门',p:5},{t:'书香门第',p:15},{t:'皇商',p:30}]),age:ri(16,19)});
       const t=pick([`街角书肆里，一位姑娘正与掌柜争论一句诗的出处，句句有据，掌柜哑口无言。`,`桥头一个卖花的姑娘不小心把花篮撞翻在你脚边，抬头一笑，你怔了一怔。`,`茶楼上有位姑娘凭栏而立，正在吹一支竹笛，曲调清越。`]);
@@ -118,7 +119,7 @@ A.greet=function(){if(!S.flags.dowager?.alive){A.go('place','cn');return;}if(!us
 
 /* ============ 母亲入宫小住 ============ */
 function momVisitState(c){
-  if(!inPalace(c)||c.maid)return {ready:false,hint:'眼下不能安排家眷入宫'};
+  if(!inPalace(c)||c.maid||c.rescue||c.wound==='mom')return {ready:false,hint:c?.rescue?'远方家人需循寻亲线索联系':'眼下不能安排家眷入宫'};
   if(c.visitor){const left=Math.max(0,Math.ceil(c.visitor.until-S.turn)||0);return {ready:false,hint:left?`母亲在宫 · 还住${left}个月`:'母亲在宫 · 本月出宫'};}
   const last=c.lastVisit==null?null:Number(c.lastVisit);
   const wait=Number.isFinite(last)&&last<=S.turn?Math.max(0,24-(S.turn-last)):0;
