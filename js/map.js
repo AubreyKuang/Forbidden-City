@@ -113,6 +113,7 @@ function goDirect(p){emp.path=[];emp.arrive=null;emp.x=p.d[0];emp.y=p.d[1];arriv
 A.arrivePlace=function(id){const p=PLACES.find(p=>p.id===id);if(p)arrive(p);};
 function arrive(p){if(typeof PalaceActions!=='undefined'&&!PalaceActions.busy)return A.arrivePlace(p.id);S.pos={x:p.d[0],y:p.d[1]};setScene(p.sc);AU.sfx('page');
   if(p.k==='view')UI.view=p.v;else if(p.k==='palace'){UI.view='palace';UI.sel=p.p;preparePalaceLife(p.p)}else{UI.view='place';UI.sel=p.id}
+  if(p.id==='cn'&&dowagerLivingActive()&&S.flags.dowager?.alive)prepareDowagerCompany(ensureDowager());
   render();if(p.k==='palace')pushEv(palaceActiveSceneEvent(p)||palaceArrivalEvent(p.p))}
 function nearestPlace(){const p=PLACES.find(p=>S.pos&&p.d[0]===S.pos.x&&p.d[1]===S.pos.y);return p?p.n+'门前':'宫道上'}
 function mapTick(){if(!S||UI.view!=='map'||modalOpen||exhaustedMonthNotice)return;
@@ -439,5 +440,5 @@ function viewPlace(){const id=UI.sel;
       ${initiativesAt(id)||(school||historyAt(id)?'':'<p class="hint">此刻只有当值宫人在这里。</p>')}
       <button class="btn" onclick="A.go('${school?'kids':'log'}')">${school?'查看皇嗣':'翻阅起居注'}</button>`;
   }
-  if(id==='cn'){const d=S.flags.dowager;return `<h2>慈宁宫${backBtn}</h2>${dowagerCourtPanel()}${d&&d.alive?`<p>${esc(d.name)}正在佛堂诵经。</p><div class="acts"><button class="btn" onclick="A.greet()">请安<small>精力-1</small></button></div>`:mourningPlacePanel()}${initiativesAt('cn')}`}
+  if(id==='cn'){const d=S.flags.dowager;return `<h2>慈宁宫${backBtn}</h2>${dowagerCourtPanel()}${d&&d.alive?`<p>${dowagerLivingActive()&&dowagerCompanyPeople(d).length?esc(d.name)+'与'+dowagerCompanyPeople(d).map(c=>esc(fullName(c))).join('、')+'坐在窗下说话。':esc(d.name)+'正在佛堂诵经。'}</p><div class="acts"><button class="btn" onclick="A.greet()">请安<small>精力-1</small></button></div>`:mourningPlacePanel()}${initiativesAt('cn')}`}
   return viewMap()}

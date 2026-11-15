@@ -21,10 +21,10 @@ test('factual topics identify a real child, cleared mother, new selection and vi
  k.alive=false;S.turn+=7;topics=dowagerConversationTopics(d);for(var key of ['grandchild','cleared','selection','frontier'])assert.ok(!topics.some(t=>t.key===key));`);
 });
 test('sixty months of forced praise requests still praise one woman at most once per year',()=>{
- const b=world();let count=0;for(let month=0;month<60;month++){b.run(`S.turn=${60+month};S.month=${month%12+1};`);b.force(.01);const key=b.run(`var ev=dowagerEvent();ev.onShow?.();ev.choices[0].f();ev.dowagerTopic`);if(key==='praise')count++;b.run(`assert.equal(dowagerEvent().title,'慈宁宫 · 静坐');assert.equal(dowagerFavorEvent(),null);`);}assert.ok(count<=5);assert.ok(count>0);
+ const b=world();let count=0;for(let month=0;month<60;month++){b.run(`S.turn=${60+month};S.month=${month%12+1};`);b.force(.01);const key=b.run(`var ev=livingDowagerEvent();ev.onShow?.();ev.choices[0].f();ev.dowagerTopic`);if(key==='praise')count++;b.run(`assert.equal(livingDowagerEvent().title,'慈宁宫 · 静坐');assert.equal(dowagerFavorEvent(),null);`);}assert.ok(count<=5);assert.ok(count>0);
 });
 test('greeting results and praise intervals persist through an actual action replay',()=>{
- const b=world();b.force(.01);b.run(`A.greet();assert.equal(curEv.title,'慈宁宫');choose(0);var n=c.story.length;save('auto');A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(S.consorts[0].story.length,n);drain();assert.equal(dowagerFavorEvent(),null);A.greet();assert.equal(curEv.title,'慈宁宫 · 静坐');`);
+ const b=world();b.force(.99,.99,.01);b.run(`A.greet();assert.equal(curEv.title,'慈宁宫');choose(0);var n=c.story.length;save('auto');A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(S.consorts[0].story.length,n);drain();assert.equal(dowagerFavorEvent(),null);A.greet();assert.equal(curEv.title,'慈宁宫 · 静坐');`);
 });
 test('everyday remarks retain the same topic, words and notes after refresh',()=>{
  const b=world();b.force(.9,0);b.run(`A.greet();var title=curEv.title,text=curEv.text;save('auto');A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(curEv.title,title);assert.equal(curEv.text,text);choose(0);save('auto');A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(S.flags.dowager.conversations.notes.length,1);`);
