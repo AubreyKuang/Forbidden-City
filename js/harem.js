@@ -1,5 +1,5 @@
 /* ============ 选秀 ============ */
-function genCands(n=6){S.cands=[];for(let i=0;i<n;i++)S.cands.push(makeGirl());{const kc=harem().filter(c=>c.fam.p>=15&&hasClan(c));if(kc.length&&chance(.4))S.cands[0]=makeKin(pick(kc),chance(.6)?'堂':'亲')}S.cands.forEach(c=>{deepen(c);initTimeTraveler(c);});assignPastLifeCandidates();S.selection={phase:'audience',current:S.cands[0]?.id,performed:[]};S.flags.peek=3;S.flags.lastXX=S.turn;log(`${dateStr()}，开选秀，各地秀女入宫待选。`,1)}
+function genCands(n=6){finishSelection();S.cands=[];for(let i=0;i<n;i++)S.cands.push(makeGirl());{const kc=harem().filter(c=>c.fam.p>=15&&hasClan(c));if(kc.length&&chance(.4))S.cands[0]=makeKin(pick(kc),chance(.6)?'堂':'亲')}S.cands.forEach(c=>{deepen(c);initTimeTraveler(c);});assignPastLifeCandidates();S.selection={phase:'audience',current:S.cands[0]?.id,performed:[]};selectionBatch();S.flags.peek=3;S.flags.lastXX=S.turn;log(`${dateStr()}，开选秀，各地秀女入宫待选。`,1)}
 A.xxDecree=function(){
   const since=S.turn-S.flags.lastXX;
   if(since>=36){genCands();AU.sfx('chime');A.go('xx');return}
@@ -14,11 +14,12 @@ A.xxTake=function(id){const c=S.cands.find(x=>x.id===id);if(!c)return;
   function take(r){if(!S.cands.some(x=>x.id===c.id)||S.consorts.some(x=>x.id===c.id)||rankCount(r)>=RANK_CAP[r])return null;S.cands=S.cands.filter(x=>x!==c);addConsort(c,r,`${dateStr()}选秀入宫`);let s='';
     if(r>=3&&c.fam.p>=60)s=chg({prestige:2});
     if(r>=4&&!c.title)grantConsortTitle(c,pick(TITLES.filter(t=>!harem().some(x=>x.title===t))));
-    c.entryAdjustment={turn:S.turn,manner:entryManner(c),settled:false};pushNow(newcomerWelcomeEvent(c));save('auto');
+    const batch=selectionBatch();batch.accepted.push(c.id);
+    c.entryAdjustment={turn:S.turn,manner:entryManner(c),settled:false,pendingBatch:true};save('auto');
  AU.sfx('joy');return `${fullName(c)}叩首谢恩，入住${c.palace}。${fx(s)}`}
   pushEv({title:'留牌子',por:c,text:`${fullName(c)}，年方${c.age}，${c.fam.t}之女。\n陛下欲赐何等位分？`,choices:[...ch,{t:'再想想'}]});
 };
-A.xxEnd=function(){S.cands=[];delete S.selection;log('选秀礼毕。');A.go('harem')};
+A.xxEnd=function(){if(modalOpen)return;finishSelection();save('auto');A.go(S.selection?.phase==='arrivals'?'xx':'harem')};
 
 /* ============ 后宫事件 ============ */
 function punishEv(A_,B,crime){
@@ -140,9 +141,9 @@ function consortSocialTick(){
   const pairs=[];
   for(let i=0;i<available.length;i++)for(let j=i+1;j<available.length;j++){
     const a=available[i],b=available[j],relationship=relGet(a,b);
-    const compatibility=consortCompatibility(a,b);
-    if(relationship<-15||isRival(a,b)||(compatibility<3&&relationship<20))continue;
-    pairs.push({a,b,w:1+Math.max(0,compatibility)+Math.min(4,Math.max(0,relationship)/10)});
+    const compatibility=consortCompatibility(a,b),cohort=cohortAffinity(a,b);
+    if(relationship<-15||isRival(a,b)||isRival(b,a)||(compatibility<3&&relationship<20&&!cohort))continue;
+    pairs.push({a,b,w:1+Math.max(0,compatibility)+Math.min(4,Math.max(0,relationship)/10)+(cohort?3:0)});
   }
   if(!pairs.length||!chance(.65))return;
   const {a,b}=pickW(pairs);
@@ -152,7 +153,7 @@ function consortSocialTick(){
   relAdd(a,b,5);
   for(const [person,other] of [[a,b],[b,a]]){
     person.lastSocial={turn:S.turn,other:other.id,place,activity};
-    story(person,`【日常往来】与${fullName(other)}在${place}${activity}，相处之后比从前更亲近些。`);
+    story(person,`【日常往来】${sameSelectionCohort(person,other)?'与同批入宫的':'与'}${fullName(other)}在${place}${activity}，相处之后比从前更亲近些。`);
     person.mood=clamp(person.mood+2);
   }
   NPCMemory.record(S,{type:'consort_social',time:S.turn,location:place,
@@ -173,7 +174,7 @@ function facHTML(){const f=factions();if(!f.L.length)return '';
 function relLine(c){if(!c.alive||c.gone)return '';
   const h=harem().filter(o=>o!==c).map(o=>[o,relGet(c,o)]).sort((a,b)=>b[1]-a[1]);
   const good=h.filter(x=>x[1]>=30&&socialPair(c,x[0])).slice(0,4),respect=h.filter(x=>x[1]>=30&&!socialPair(c,x[0])).slice(0,4),bad=h.filter(x=>x[1]<=-30).slice(-4),fac=c.cold?null:facOf(c);
-  return `<div>派系：${fac?(fac===c?'一派之首':esc(cName(fac))+'一派'):'中立'}${good.length?`　交好：${good.map(([o])=>`<span class="tag g">${esc(cName(o))}</span>`).join('')}`:''}${respect.length?`　敬重：${respect.map(([o])=>`<span class="tag">${esc(cName(o))}</span>`).join('')}`:''}${bad.length?`　交恶：${bad.map(([o])=>`<span class="tag r">${esc(cName(o))}</span>`).join('')}`:''}</div>${consortSocialLine(c)}`}
+  return `<div>派系：${fac?(fac===c?'一派之首':esc(cName(fac))+'一派'):'中立'}${good.length?`　交好：${good.map(([o])=>`<span class="tag g">${esc(cName(o))}</span>`).join('')}`:''}${respect.length?`　敬重：${respect.map(([o])=>`<span class="tag">${esc(cName(o))}</span>`).join('')}`:''}${bad.length?`　交恶：${bad.map(([o])=>`<span class="tag r">${esc(cName(o))}</span>`).join('')}`:''}</div>${selectionCohortHTML(c)}${consortSocialLine(c)}`}
 HAREM.push(
  function clash(){const f=factions();if(f.L.length<2)return null;const [a,b]=f.L,ma=f.map[a.id],mb=f.map[b.id];if(!ma.length&&!mb.length)return null;
   const side=(w,l,mw,ml)=>()=>{[w,...mw].forEach(c=>cchg(c,{mood:8}));[l,...ml].forEach(c=>{cchg(c,{mood:-8});relAdd(c,w,-6)});story(w,`派系相争，陛下站在了她这一边。`);return `${cName(w)}一派扬眉吐气，${cName(l)}一派面色难看。`};

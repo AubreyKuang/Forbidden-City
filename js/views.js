@@ -371,13 +371,15 @@ function viewCards(){
 }
 function viewXX(){
   const since=S.turn-S.flags.lastXX;
-  if(!S.cands.length) return `<h2>选秀</h2><p>距上次选秀：${S.flags.lastXX<0?'从未':`${Math.floor(since/12)}年${since%12}月`}。三年一度大选可在二月自动举行；也可随时下旨，但未满三年会耗费国库、有损民心。</p>
+  if(S.selection?.phase==='arrivals')return viewSelectionArrivals();
+  if(!S.cands.length&&!S.selection) return `<h2>选秀</h2><p>距上次选秀：${S.flags.lastXX<0?'从未':`${Math.floor(since/12)}年${since%12}月`}。三年一度大选可在二月自动举行；也可随时下旨，但未满三年会耗费国库、有损民心。</p>
     <div class="acts"><button class="btn gold" onclick="A.xxDecree()">下旨选秀</button></div>`;
   if(selectionCurrent())return viewSelectionAudience();
   return `<section class="story-scene selection-scene" aria-labelledby="selection-title">
     <header><p>储秀宫</p><h2 id="selection-title">选秀</h2></header>
-    <button class="btn sm" onclick="A.xxEnd()">结束选秀</button>
+    <button class="btn gold" onclick="A.xxEnd()">确定名单，安排入宫</button>
    </section>
+   <p>已留选 ${(S.selection?.accepted||[]).length} 人${(S.selection?.accepted||[]).length?' · '+S.selection.accepted.map(id=>parentLink(id)).join('、'):''}。${S.cands.length?'名单确定后，再看她们入宫时的反应。':'候选已全部处理，请确认本批名单。'}</p>
    <p class="hint">容貌、才情一望便知；德行、心机需要暗访（剩余 ${S.flags.peek} 次）。本月结束时未选的秀女会遣返回家。</p>
    <div class="grid portrait-grid">${S.cands.map(c=>`<div class="card portrait-card" style="cursor:default;flex-direction:column">
      <div class="row" style="gap:8px">${porImg(c,76)}<div class="grow"><div class="nm">${esc(fullName(c))}</div><div>${c.age}岁 · ${esc(c.fam.t)}之女</div>${c.kinNote?`<div><span class="tag y">${esc(c.kinNote)}</span></div>`:''}<div><span class="tag">${c.trait}</span>${solitaryTag(c)} <span class="tag">${esc(consortHobby(c))}</span></div></div></div>

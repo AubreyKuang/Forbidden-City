@@ -26,6 +26,79 @@ function selectionCurrent(){
   if(!S.cands.length||session?.phase==='roster')return null;
   return S.cands.find(c=>c.id===session?.current)||S.cands[0];
 }
+// A selection has one durable cohort, even if the last candidate has been dismissed.
+function selectionBatch(){
+  S.selection||={phase:'roster',performed:[]};
+  const s=S.selection;
+  if(!s.batch){S.flags.selectionSerial=(S.flags.selectionSerial||0)+1;s.batch=`${S.gen}:${S.turn}:${S.flags.selectionSerial}`;s.date=dateStr();}
+  s.accepted||=[];
+  return s;
+}
+function sameSelectionCohort(a,b){return !!(a!==b&&a?.selectionCohort?.id&&a.selectionCohort.id===b?.selectionCohort?.id);}
+function cohortAffinity(a,b){
+  return sameSelectionCohort(a,b)&&socialPair(a,b)&&!isRival(a,b)&&!isRival(b,a)&&relGet(a,b)>=0&&consortCompatibility(a,b)>=0;
+}
+function newcomerReaction(c){
+  return {
+    solitary:'她向同来的几人依礼道别，将书匣交给宫人，独自认了回宫的路。有人邀她晚间闲坐，她温言辞谢，并无怠慢之意。',
+    careful:'她将名册上的位分与各宫住处听得仔细，先请教了明日请安的次序，才松开一直捏着的袖边。',
+    bold:'她听清封位便抬起眼，谢恩的声音清亮。转身时又回望了一眼殿门，盼着往后还能常被记起。',
+    quiet:'她随宫人走过长廊，瞧见窗外的一枝新绿，脚步便慢下来。行李里那卷旧书，终于有地方安放了。',
+    nervous:'直到名册合上，她才确信自己的名字留了下来。走出殿门时眼眶微红，悄悄向同来的几人点了点头。'
+  }[c.entryAdjustment?.manner||entryManner(c)];
+}
+function finishSelection(){
+  const s=S.selection;
+  if(s?.phase==='arrivals'||(!s&&!S.cands.length))return false;
+  S.cands=[];
+  const members=(s?.accepted||[]).map(byId).filter(Boolean);
+  if(!members.length){delete S.selection;log('选秀礼毕，本次未留新人。');return true;}
+  s.phase='arrivals';s.finishedAt=S.turn;
+  for(const c of members){
+    c.selectionCohort={id:s.batch,date:s.date,turn:S.turn};
+    if(c.entryAdjustment)c.entryAdjustment.pendingBatch=false;
+    if(!inPalace(c))continue;
+    c.entryAdjustment.reaction=newcomerReaction(c);
+    story(c,`【选秀礼毕】同批留选共${members.length}人。${c.entryAdjustment.reaction}`);
+  }
+  // At most two new acquaintances each; ceremony attendance never erases a feud.
+  const pairs=[],counts={};
+  for(let i=0;i<members.length;i++)for(let j=i+1;j<members.length;j++){
+    const a=members[i],b=members[j];
+    if(inPalace(a)&&inPalace(b)&&cohortAffinity(a,b))pairs.push({a,b,order:R()});
+  }
+  pairs.sort((a,b)=>a.order-b.order);
+  for(const {a,b} of pairs){
+    if((counts[a.id]||0)>=2||(counts[b.id]||0)>=2)continue;
+    const shared=sharedConsortHobby(a,b),p=Math.min(.8,.4+consortCompatibility(a,b)*.025+(Math.abs(a.age-b.age)<=4?.1:0));
+    if(!chance(p))continue;
+    relAdd(a,b,10);counts[a.id]=(counts[a.id]||0)+1;counts[b.id]=(counts[b.id]||0)+1;
+    const activity=shared?`说起彼此都喜欢${shared}，约好安顿后再叙`:'一同记下请安的时辰与宫门的方向，约好日后照应';
+    for(const [c,o] of [[a,b],[b,a]]){
+      const line=`【同批入宫】与${fullName(o)}一同留选，${activity}，陌生的宫里多了一个相识的人。`;
+      c.entryAdjustment.acquaintances||=[];c.entryAdjustment.acquaintances.push(o.id);story(c,line);
+    }
+    NPCMemory.record(S,{type:'selection_cohort',time:S.turn,location:'储秀宫',participants:[a.id,b.id],outcome:activity},
+      [[a,b],[b,a]].map(([c,o])=>({person:c.id,subject:o.id,emotion:.55,impact:55,interpretation:`与${fullName(o)}同批入宫，${activity}。`})));
+  }
+  log(`选秀礼毕，留选${members.length}人。可到储秀宫查看新妃安顿。`);return true;
+}
+function selectionCohortHTML(c){
+  if(!c.selectionCohort)return '';
+  const peers=S.consorts.filter(o=>sameSelectionCohort(c,o));
+  return `<div>入宫同批 · ${esc(c.selectionCohort.date)}${peers.length?' · '+peers.map(o=>`${parentLink(o.id)}${!o.alive?'（已故）':''}`).join('、'):' · 本批仅她一人留选'}</div>`;
+}
+function viewSelectionArrivals(){
+  const members=(S.selection?.accepted||[]).map(byId).filter(Boolean);
+  return `<section class="story-scene selection-scene"><header><p>储秀宫 · ${esc(S.selection.date||'选秀礼毕')}</p><h2>新妃安顿</h2></header><button class="btn" onclick="A.go('harem')">回后宫</button></section>
+    <p class="hint">本批名单已定，共留选 ${members.length} 人。看看各人的反应，也可待她们安顿后再去问候。</p>
+    <div class="grid portrait-grid">${members.map(c=>`<article class="card" style="display:block"><div class="row">${porImg(c,76)}<div><h3>${esc(fullName(c))}</h3><p>${esc(c.palace)} · ${esc(c.trait)} ${solitaryTag(c)}</p></div></div>
+    <p>${esc(c.entryAdjustment?.reaction||'她的留选记在这一批名册中。')}</p>
+    ${(c.entryAdjustment?.acquaintances||[]).length?`<p class="hint">一同入宫时相识：${c.entryAdjustment.acquaintances.map(id=>parentLink(id)).join('、')}。</p>`:''}
+    <div class="acts">${!inPalace(c)?'<span class="hint">目前不在宫中</span>':c.entryAdjustment?.settled?'<span class="tag g">已问候</span>':S.turn-c.entryAdjustment?.turn>=6?'<span class="hint">已渐渐住惯</span>':`<button class="btn gold sm" onclick="A.xxWelcome(${c.id})">去问候她</button>`}<button class="btn sm" onclick="A.go('consort',${c.id})">人物纪事与近况</button></div></article>`).join('')}</div>
+    <div class="acts"><button class="btn" onclick="A.xxDecree()">另开选秀</button></div>`;
+}
+A.xxWelcome=function(id){if(modalOpen)return;const c=byId(id);if(c)pushEv(newcomerWelcomeEvent(c));};
 function viewSelectionAudience(){
   const c=selectionCurrent();if(!c)return '';
   const speech=selectionSpeech(c),shown=S.selection?.performed?.includes(c.id);
@@ -39,8 +112,8 @@ A.xxPerform=function(id){if(modalOpen||selectionCurrent()?.id!==id)return;S.sele
 A.xxNext=function(id){if(modalOpen||selectionCurrent()?.id!==id)return;const i=S.cands.findIndex(c=>c.id===id);S.selection||={};S.selection.current=S.cands[i+1]?.id;S.selection.phase=i+1<S.cands.length?'audience':'roster';save('auto');render();};
 function newcomerWelcomeEvent(c){
   const arrival=c.entryAdjustment;
-  if(!arrival||arrival.settled||!inPalace(c))return null;
-  const valid=()=>inPalace(c)&&!arrival.settled;
+  if(!arrival||arrival.settled||arrival.pendingBatch||S.turn-arrival.turn>=6||!inPalace(c))return null;
+  const valid=()=>inPalace(c)&&!arrival.settled&&!arrival.pendingBatch&&S.turn-arrival.turn<6;
   const favored=harem().filter(o=>o.id!==c.id&&o.favor>=40).sort((a,b)=>b.favor-a.favor||a.id-b.id)[0];
   const news=favored?`宫人答说，近来${cName(favored)}常蒙召见。`:'宫人只说，各宫各有起居，不好妄议圣意。';
   const text={solitary:'她问清请安的时辰，便将自己的书与茶具放好。“分内的礼数，臣妾不会怠慢。至于闲时，可否容臣妾独自过？并非与谁不睦，只是不惯结伴。”',careful:`她先请教请安的次序，又不动声色地问了各宫近来的赏赐。${news}\n见你进来，她收住话：“臣妾只怕不懂规矩，给人添了麻烦。”`,
@@ -51,7 +124,7 @@ function newcomerWelcomeEvent(c){
     if(!valid())return null;arrival.settled=true;arrival.answer=answer;arrival.favored=favored?.id;arrival.answeredAt=S.turn;
     cchg(c,changes);story(c,`初入宫时，${line}`);remember(c,'care',line);save('auto');return line;
   };
-  return {title:'初入宫门',por:c,valid,text:`${fullName(c)}刚住进${c.palace}。\n${text}`,choices:[
+  return {title:'初入宫门',por:c,valid,text:`${fullName(c)}${S.turn===arrival.turn?'刚住进':'入宫不久，住在'}${c.palace}。\n${text}`,choices:[
     {t:'先安心住下，有不懂的慢慢问',f:()=>settle('reassured',{aff:6,mood:8},'陛下许她慢慢熟悉宫中生活，不必事事惶恐。')},
     {t:'请掌事姑姑教她宫中礼数',f:()=>settle('guided',{aff:2,mood:4},'陛下安排掌事姑姑陪她认路、习礼，也教她分辨传言。')},
     {t:'各人有各人的日子，不必急着比较',f:()=>settle('boundaries',{mood:2},'陛下劝她先过好自己的日子，不必急着争高下。')}]};

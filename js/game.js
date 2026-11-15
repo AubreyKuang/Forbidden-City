@@ -330,6 +330,7 @@ A.endMonth=function(){
     if(c.preg>0){concealedLossTick(c);c.preg++;if(c.preg===2)pushEv(pregEvent(c));if(c.preg>=(c.pregnancyCalendar?.term||10))pushEv(birthEvent(c))}
   }
   maternalTick();alive().forEach(c=>{xinTick(c);visitorTick(c)});kidsAlive().forEach(growKid);
+  finishSelection();
   // 时间
   S.turn++;S.month++;let newYear=false;
   UI.view='map';UI.sel=null;
@@ -345,7 +346,6 @@ A.endMonth=function(){
   let dh=-.17-(e.age>40?(e.age-40)*.05:0)-Math.max(0,(e.nightsMonth||0)-3)*1.2-(e.style==='风流'?.05:0);
   e.health=clamp(e.health+dh);e.nightsMonth=0;e.energy=maxEnergy();
   if(e.treasury<0){const d=Math.min(8,Math.ceil(-e.treasury/400));chg({people:-1-d,prestige:-1});log(`国库亏空${-e.treasury}万两，百官俸禄迟发，民间加征赋税。`)}
-  if(S.cands.length){S.cands=[];delete S.selection;log('选秀礼毕。')}
   toast(`${monthDate}　月入${inc}　支出${exp}`);
   // 岁末总结
   if(newYear)snapshotYear();
