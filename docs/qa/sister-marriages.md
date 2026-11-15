@@ -12,7 +12,7 @@
 事件回放版本 8 → 9（main=6、#29=7、#30=8）。版本 ≤8 的未完事件不做婚嫁结算、不呈议亲事件，原样重放；`tests/fixtures/marriages-legacy-v8.json` 由 #30 分支 3575103 生成（家中有一位 33 岁未婚姐妹），测试确认可续接、标为版本 9 即无法续接。新开局才把平民父兄设为平民，旧存档家族不变。
 
 ## 验证
-- `node --test tests/*.test.cjs`：902 项通过（合入最新 main 后）（新增 `tests/palace-marriages.test.cjs` 9 项）。
+- `node --test tests/*.test.cjs`：910 项通过（合入含 #23 的最新 main 后）（新增 `tests/palace-marriages.test.cjs` 9 项）。
 - `node tests/palace-flow.cjs`：通过。
 - `tests/audit-personality-memory.cjs`（6 玩法 × 4 种子 × 120 月）：24 局无报错；议亲 / 相看事件约每年 0.28 次；每位妃嫔 10 年内婚嫁相关纪事中位数 1 条、最多 2 条；无 undefined / NaN。
 - 浏览器实机：议亲事件赐婚后，两位妃嫔纪事都有记载、姐妹状态变为已婚；寒门父亲显示「务农」、只可召见问候、不在官员表中；34 岁未婚姐妹清点后显示「配偶：…· 务农的邻村人家」。

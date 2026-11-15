@@ -25,7 +25,7 @@
 事件回放版本 7 → 8（main 已用到 6，#29 用 7）。版本 ≤7 的未完事件不举行科举、不立案、不回报，原样重放；`tests/fixtures/offices-legacy-v7.json` 由 #29 分支 e9f7233 生成（月末正好转入殿试月），测试确认其可续接，且标为版本 8 即无法续接。
 
 ## 验证
-- `node --test tests/*.test.cjs`：893 项通过（合入最新 main 后）（新增 `tests/palace-offices.test.cjs` 12 项）。
+- `node --test tests/*.test.cjs`：901 项通过（合入含 #23 的最新 main 后）（新增 `tests/palace-offices.test.cjs` 12 项）。
 - `node tests/palace-flow.cjs`：通过。
 - `tests/audit-personality-memory.cjs`（6 玩法 × 4 种子 × 120 月）：24 局无报错；殿试每局 3 次（三年一科）；无 undefined / NaN。
 - 浏览器实机：任命吏部尚书、京察；设立锦衣卫；香囊疑案交锦衣卫密查 → 月末殿试钦点三甲 → 锦衣卫密报（线索中断）→ 搜宫搜出真正主使的物证并进入「真相大白」。

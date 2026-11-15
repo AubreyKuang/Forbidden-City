@@ -57,10 +57,12 @@ test('chronicle context and names survive saves and repeated result clicks',()=>
  save('2');A.load('2');assert.equal(PalaceActions.blocked,false);a=byId(id);assert.equal(JSON.stringify(a.story),before);
  assert.match(detailStory(a),/参汤/);assert.match(detailStory(a),/道谢/);`);
 });
-test('a failed save rolls back both the consequence and its chronicle',()=>{
+test('a failed write keeps the consequence and its chronicle together, once',()=>{
  const w=world();w.run(`A.auditQuirk=id=>pushEv(QEV.擅厨艺(byId(id)));PalaceActions.install();var id=a.id;A.auditQuirk(id);var before=JSON.stringify(a.story),energy=E().energy;`);
  const set=w.storage.set;w.storage.set=()=>{throw Error('quota');};
- w.run(`choose(0);a=byId(id);assert.equal(JSON.stringify(a.story),before);assert.equal(E().energy,energy);assert.equal(modalResult,null);`);w.storage.set=set;
+ w.run(`choose(0);a=byId(id);var after=JSON.stringify(a.story),spent=E().energy;assert.notEqual(after,before);assert.ok(a.story.at(-1).event?.choice);assert.ok(modalResult);
+  choose(0);assert.equal(JSON.stringify(a.story),after);assert.equal(E().energy,spent);`);w.storage.set=set;
+ w.run(`nextEv();assert.equal(lastAutoSaveError,'');A.load('auto');assert.equal(JSON.stringify(byId(id).story),after);assert.equal(E().energy,spent);`);
 });
 test('reading or discarding a generated event does not fabricate a chronicle',()=>{
  const w=world();w.run(`var before=JSON.stringify(S);var e=QEV.嘴硬心软(a);assert.equal(JSON.stringify(S),before);e.choices[0].f();var n=a.story.length;
