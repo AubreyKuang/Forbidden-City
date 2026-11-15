@@ -245,7 +245,7 @@ for(let cell=208;cell<216;cell++)PORTRAIT_CLOTHES[cell]='盛装华服';
  '月华琼宫','敦煌流金','洛水凝碧','牡丹天香','星河紫阙','金霞映雪'].forEach((name,i)=>{PORTRAIT_CLOTHES[316+i]=name;});
 ['朱金凤华','翠金云肩','海棠珠绣','紫晶莲纹','玄金团花','月白银枝','桂月玉兔','茉莉初雪','玉兰雪裘','月白银枝·近景','桂月珠华·近景','茉莉初雪·近景','玉兰雪裘·近景'].forEach((name,i)=>{PORTRAIT_CLOTHES[358+i]=name;});
 ['山茶绯玉','梅花雪霁','海棠春酣','幽兰碧岫','紫藤烟霞·近景','虞美人绛绡','紫藤烟霞·半身','牡丹国色·近景','牡丹国色·半身'].forEach((name,i)=>{PORTRAIT_CLOTHES[371+i]=name;});
-const consortPortraits=c=>c.fam?.t==='西域贡女'?WESTERN_PORTRAITS:c.fam?.t==='东瀛贵族'?EASTERN_PORTRAITS:c.fam?.t==='海西贵族'?OVERSEAS_PORTRAITS:CONSORT_PORTRAITS;
+const consortPortraits=c=>(c.rescue||['西域贡女','西域流寓'].includes(c.fam?.t))?WESTERN_PORTRAITS:c.fam?.t==='东瀛贵族'?EASTERN_PORTRAITS:c.fam?.t==='海西贵族'?OVERSEAS_PORTRAITS:CONSORT_PORTRAITS;
 
 const FATHER_PORTRAITS=[268,269,270,271,276,277,278,282,283,284,288,289,290];
 const BROTHER_PORTRAITS=[272,273,274,275,279,280,281,285,286,287,291,292,293];
@@ -345,7 +345,7 @@ function portraitCell(x){
   if(x==='emp')return emperorPortraitCell(E());
   if(x.official!==undefined)return [...FATHER_PORTRAITS,...BROTHER_PORTRAITS].includes(x.artPortrait)?x.artPortrait:FAMILY_PORTRAIT_START+12+x.official;
   if(x.isMom)return 9;
-  if(x.maid)return 10;
+  if(x.maid)return CONSORT_PORTRAITS.includes(x.artPortrait)?x.artPortrait:CONSORT_PORTRAITS[Math.floor(mulberry32(x.seed||7)()*CONSORT_PORTRAITS.length)];
   if(x.sex)return childPortraitCell(x);
   const cells=consortPortraits(x);
   return cells.includes(x.artPortrait)?x.artPortrait:cells[Math.floor(mulberry32(x.seed||7)()*cells.length)];

@@ -1,23 +1,25 @@
 /* Named maternal relatives: one household, one life record, shared by sisters. */
 // Stable slots retain the original brother key for old saves and journal actions.
 const brotherRoles=h=>Object.keys(h||{}).filter(k=>/^brother(?:[2-9]\d*)?$/.test(k)&&h[k]).sort((a,b)=>(Number(a.slice(7))||1)-(Number(b.slice(7))||1));
-const officialRoles=h=>['father',...brotherRoles(h)];
+const officialRoles=h=>['father',...brotherRoles(h),...natalPeople(h).filter(p=>p.sex==='m'&&natalAge(p)>=18).map(p=>'relative'+p.id)];
 const brotherRole=(h,predicate=()=>true)=>brotherRoles(h).find(role=>predicate(h[role]));
-const officialKinLabel=(h,role)=>role==='father'?'父亲':brotherRoles(h).length<2?'兄长':({brother:'长兄',brother2:'二兄',brother3:'三兄',brother4:'四兄',brother5:'五兄'}[role]||'兄长');
+const officialKinLabel=(h,role)=>role==='father'?'父亲':role.startsWith('relative')?(officialPerson(h,role).born<Math.min(...Object.values(h.natal.memberBorn))?'兄长':'弟弟'):brotherRoles(h).length<2?'兄长':({brother:'长兄',brother2:'二兄',brother3:'三兄',brother4:'四兄',brother5:'五兄'}[role]||'兄长');
 const OFFICIAL_TEMPERAMENTS=['持正','谨慎','进取','圆融'];
 const officialAlive=p=>!!p&&p.alive!==false;
-const officialServing=p=>officialAlive(p)&&!p.retired&&!p.commission&&!p.exiled&&!p.dismissed;
+const officialServing=p=>officialAlive(p)&&p.career!=='student'&&!p.retired&&!p.commission&&!p.exiled&&!p.dismissed;
 function initializeOfficialHouse(c,h,family){
   for(const other of family.map(x=>x.house).filter(Boolean))for(const role of brotherRoles(other))h[role]??=other[role];
+  initializeNatalFamily(c,h,family);
   for(const role of officialRoles(h)){
-    const p=h[role];if(!p)continue;
+    const p=officialPerson(h,role);if(!p)continue;if(role.startsWith('relative')&&p.alive!==false)p.age=natalAge(p);
     // JSON saves copy the same household into each sister. A death must survive reunion.
-    for(const other of family.map(x=>x.house?.[role]).filter(x=>x&&x!==p)){
+    for(const other of family.map(x=>officialPerson(x.house,role)).filter(x=>x&&x!==p)){
       if(other.alive===false){p.alive=false;p.death||=other.death;}
       p.story=[...(p.story||[]),...(other.story||[])].filter((x,i,a)=>a.findIndex(y=>y.d===x.d&&y.t===x.t)===i);
       p.report||=other.report;p.commission||=other.commission;
     }
     const seed=voiceHash(h.father.id+':'+role);
+    initializeRelativeCareer(p,role);
     p.id||=role==='father'?h.father.id:h.father.id+':'+role;p.seed??=seed;
     // Existing relatives retain their original face; new people use the expanded cast.
     if(p.official===undefined&&p.artPortrait===undefined)assignOfficialPortrait(p,h,role);
@@ -44,20 +46,20 @@ function initializeOfficialHouse(c,h,family){
 function officialEntries(){
   const entries=[],seen=new Set();
   for(const c of S.consorts){const h=houseOf(c);if(!h)continue;
-    for(const role of officialRoles(h)){const p=h[role];if(!p||seen.has(p.id))continue;seen.add(p.id);entries.push({c,h,p,role,key:c.id+':'+role});}
+    for(const role of officialRoles(h)){const p=officialPerson(h,role);if(!p||seen.has(p.id))continue;seen.add(p.id);entries.push({c,h,p,role,key:c.id+':'+role});}
   }
   return entries;
 }
 function officialEntry(key){
-  const [id,role]=String(key).split(':');if(role!=='father'&&!/^brother(?:[2-9]\d*)?$/.test(role))return null;
-  const c=byId(Number(id)),h=c&&houseOf(c),p=h?.[role];return p?{c,h,p,role,key:c.id+':'+role}:null;
+  const [id,role]=String(key).split(':');if(role!=='father'&&!/^brother(?:[2-9]\d*)?$/.test(role)&&!/^relative-?\d+$/.test(role))return null;
+  const c=byId(Number(id)),h=c&&houseOf(c),p=officialPerson(h,role);return p?{c,h,p,role,key:c.id+':'+role}:null;
 }
 function officialStatus(p){
   if(!officialAlive(p))return p.death?.kind==='battle'?'阵亡':'已故';
-  return p.exiled?'流放':p.dismissed?'革职':p.commission?'奉差在外':p.retired?'致仕归乡':p.away?'外任':'在任';
+  return p.exiled?'流放':p.dismissed?'革职':p.career==='student'?(p.education==='举人'?'候选 · 尚未授官':'在家读书'):p.commission?'奉差在外':p.retired?'致仕归乡':p.away?'外任':'在任';
 }
 function officialRecord(c,role,text,{family=true,emotion=0}={}){
-  const h=houseOf(c),p=h?.[role];if(!p)return;
+  const h=houseOf(c),p=officialPerson(h,role);if(!p)return;
   story(p,text);
   if(family)for(const member of paternalFamily(c).filter(x=>S.consorts.includes(x)&&x.alive)){
     story(member,`${officialKinLabel(h,role)}${p.name}：${text}`);
@@ -90,11 +92,11 @@ function officialFamilyReaction(e,kind,task){
 }
 function officialFamilyVoice(c){
  const r=c?.familyDuty;if(!r||!inPalace(c)||S.turn-r.turn>6)return null;
- const p=c.house?.[r.role];if(!p||p.id!==r.relativeId||!officialAlive(p)&&!['death','honor'].includes(r.kind))return null;
+ const p=officialPerson(c.house,r.role);if(!p||p.id!==r.relativeId||!officialAlive(p)&&!['death','honor'].includes(r.kind))return null;
  return voiceLine('official-family-'+r.kind,`说起${r.kin}${r.name}，她想起「${r.task||'家中往事'}」。`,r.quote);
 }
 function officialDeath(c,role,reason,kind='illness'){
-  const h=houseOf(c),p=h?.[role];if(!officialAlive(p))return false;
+  const h=houseOf(c),p=officialPerson(h,role);if(!officialAlive(p))return false;
   p.alive=false;p.death={kind,reason,d:dateStr(),turn:S.turn};p.away=false;delete p.commission;
   if(p.report)p.report={text:reason,outcome:'death',title:'身故讣报',turn:S.turn};
   officialRecord(c,role,reason,{emotion:-.9});
@@ -107,11 +109,11 @@ function officialDeath(c,role,reason,kind='illness'){
   return true;
 }
 function officialLink(c,role,label){
-  const p=houseOf(c)?.[role];return p?`<button class="person-link" onclick="A.go('official','${c.id}:${role}')">${esc(label||p.name)} ↗</button>`:'';
+  const p=officialPerson(houseOf(c),role);return p?`<button class="person-link" onclick="A.go('official','${c.id}:${role}')">${esc(label||p.name)} ↗</button>`:'';
 }
 function officialFamilyLine(c){
   const h=houseOf(c);if(!h)return '';
-  return `<div class="official-family-links">${officialRoles(h).map(role=>{const p=h[role];return p?`<div>${officialKinLabel(h,role)}：${officialLink(c,role)} <span class="hint">${esc(p.office||p.post)} · ${officialStatus(p)}${p.death?' · '+esc(p.death.d||'日期未详'):''}</span></div>`:'';}).join('')}${brotherRoles(h).length?'':'<p class="hint">无兄长</p>'}</div>`;
+  return `<div class="official-family-links">${officialRoles(h).filter(r=>!r.startsWith('relative')).map(role=>{const p=officialPerson(h,role);return p?`<div>${officialKinLabel(h,role)}：${officialLink(c,role)} <span class="hint">${esc(p.office||p.post)} · ${officialStatus(p)}${p.death?' · '+esc(p.death.d||'日期未详'):''}</span></div>`:'';}).join('')}${natalFamilyLinks(c)}</div>`;
 }
 function officialsRoster(){
   const entries=officialEntries(),dead=entries.filter(x=>!officialAlive(x.p));
@@ -123,6 +125,7 @@ function officialActionReady(e,action){
   if(action==='honor')return !officialAlive(p)&&!p.memorialHonor;
   if(!officialAlive(p))return false;
   if(p.exiled||p.dismissed)return false;
+  if(p.career==='student'&&action!=='talk')return false;
   if(action==='talk')return S.turn-(p.lastAudience??-99)>=3;
   if(action==='reward')return !p.report&&p.merit>=50&&p.merit>(p.rewardedMerit??0)&&S.turn-(p.lastReward??-99)>=12;
   if(action==='retire')return !p.retired&&!p.commission&&p.age>=55;
@@ -137,14 +140,14 @@ function viewOfficial(){
   const actions=!officialAlive(p)?act('honor','赐祭抚恤',20):p.exiled||p.dismissed?'':act('talk',p.away||p.commission||p.retired?'赐书问候':'召见议事')+act('commission','委派差事')+act('reward','论功赏赐',20)+(p.retired?act('recall','征召复出'):p.age>=55?act('retire','准予致仕'): '');
   const hint=!officialAlive(p)?'故人的履历与家族关系继续保留；抚恤仅可办理一次。':p.exiled||p.dismissed?'获罪期间不再召见、领差或受赏，既有处置留在履历中。':'问候每三个月一次；差事有回奏与冷却；赏赐须有新增功绩且间隔一年。致仕须满五十五岁，复出须未满七十岁且致仕满一年。';
   return `${personBackButton('officials')}<header class="detail-head">${porImg(p,224)}<div class="grow"><p>${role==='father'?'外家长辈':'外家子弟'} · ${esc(blocName(h.bloc))}</p><h2>${esc(p.name)}</h2><p>${esc(p.office||p.post)}${p.honor?' · '+esc(p.honor):''}</p><p>${p.age}岁 · <strong>${officialStatus(p)}</strong> · ${esc(p.temperament)}</p>${p.death?`<p class="official-death">${esc(p.death.d||'日期未详')} · ${esc(p.death.reason)}</p>`:''}${p.retired?'<p class="hint">不再承接官差；仍可书信问候。</p>':''}</div></header>
-    <div class="detail-vitals">${bar('才干',p.ability)}${bar('功绩',p.merit)}${bar('信任',p.trust)}</div><div class="detail-actions"><div class="acts">${actions}</div><p class="hint">${hint}</p></div>
+    <div class="detail-vitals">${bar('才干',p.ability)}${bar('功绩',p.merit)}${bar('信任',p.trust)}</div><div class="detail-actions"><div class="acts">${actions}${canAppointRelative(e)?`<button class="btn jade" onclick="A.appointRelative('${key}')">核验科名与授官</button>`:''}</div><p class="hint">${hint}</p></div>
     ${p.report?`<section class="detail-section"><h3>待阅回奏</h3><p>${esc(p.report.text)}</p><button class="btn jade" onclick="A.officialReport('${key}')">阅看回奏</button></section>`:''}
     ${p.commission?detailSection('当前差事',`<p>${esc(p.commission.title)} · ${Math.max(0,p.commission.due-S.turn)}个月后回奏</p>`):''}
-    ${detailSection('家族往来',kin.map(x=>`<button class="btn quiet sm" onclick="A.go('consort',${x.id})">${esc(fullName(x))} · ${role==='father'?'女儿':'姐妹'}${x.alive?'':' · 已故'}</button>`).join(' ')+otherRoles.map(r=>`<p>${r==='father'?'父亲':role==='father'?'儿子':'兄弟'}：${officialLink(c,r)} · ${officialStatus(h[r])}</p>`).join(''))}
-    ${detailSection('个人履历与纪事',detailStory(p))}`;
+    ${detailSection('家族往来',kin.map(x=>`<button class="btn quiet sm" onclick="A.go('consort',${x.id})">${esc(fullName(x))} · ${role==='father'?'女儿':'姐妹'}${x.alive?'':' · 已故'}</button>`).join(' ')+otherRoles.map(r=>`<p>${r==='father'?'父亲':role==='father'?'儿子':'兄弟'}：${officialLink(c,r)} · ${officialStatus(officialPerson(h,r))}</p>`).join(''))}
+    ${detailSection('娘家手足',natalFamilyLinks(c))}${detailSection('个人履历与纪事',detailStory(p))}`;
 }
 function officialConversation(e,topic){
-  const {c,p,role,h}=e,kin=role==='father'?'女儿':'妹妹';
+  const {c,p,role,h}=e,kin=role==='father'?'女儿':officialKinLabel(h,role)==='弟弟'?'姐姐':'妹妹';
   if(topic==='family'){
     const relatives=paternalFamily(c).filter(x=>S.consorts.includes(x));
     if(relatives.some(x=>!x.alive))return '“家中还留着她旧时的书信。有些话，当年只当来日方长，如今再无机会问了。”';
@@ -155,6 +158,7 @@ function officialConversation(e,topic){
     return `“${kin}入宫前${p.temperament==='谨慎'?'总怕行差踏错':'也会在家中檐下听雨'}。臣只盼她记得本心，不因一时荣辱忘了从前。”`;
   }
   if(topic==='service'){
+    if(p.career==='student')return `“如今仍以${p.education}身份在家读书，尚未任官。愿凭学业应选，不敢将科名说成任上的功绩。”`;
     if(p.retired)return '“离了公署才知，乡间一条断桥，能让百姓绕上半日。臣虽归田，仍愿把亲眼所见写给陛下。”';
     if(p.commission)return `“${p.commission.title}尚未办结，臣不敢先报全功。待簿册与实情一一核对，再据实回奏。”`;
     if(h.bloc==='army')return '“边关不只有捷报。马料、棉衣、伤兵的归途，少顾一样，便要士卒拿命去填。”';
@@ -174,7 +178,7 @@ function officialArcEligible(c){
 }
 function syncOfficialArcOutcome(c,title,text){
   const role=c.arc.id==='general'?'father':c.arc.id==='greed'?(c.arc.f.brotherRole||'brother'):null;
-  if(!role)return;if(c.arc.id==='greed')c.arc.f.brotherRole=role;const p=houseOf(c)?.[role];if(!p)return;
+  if(!role)return;if(c.arc.id==='greed')c.arc.f.brotherRole=role;const p=officialPerson(houseOf(c),role);if(!p)return;
   if(role==='father'&&['削爵','孤女'].includes(title))return officialDeath(c,role,title==='孤女'?'叛乱平定后伏诛。':'被夺去兵权、削去爵位，回京后郁郁而终。',title==='孤女'?'execution':'illness');
   if(title==='抄家'){p.exiled=true;delete p.commission;}
   if(title==='连坐'){p.dismissed=true;delete p.commission;}
@@ -197,7 +201,7 @@ function assignOfficialTask(e,id){
 function officialTaskTick(){
   for(const e of officialEntries()){
     const {p,c,role}=e,j=p.commission;if(!j||!officialAlive(p)||S.turn<j.due)continue;
-    const contact=byId(j.contact),familyContact=contact?.house?.[role]?.id===p.id?{...e,c:contact}:e;
+    const contact=byId(j.contact),familyContact=officialPerson(contact?.house,role)?.id===p.id?{...e,c:contact}:e;
     delete p.commission;p.away=j.wasAway;let text;
     if(j.outcome==='death'){text=`奉差${j.title}途中遇伏，率部断后，力战身亡。`;officialDeath(familyContact.c,role,text,'battle');}
     else{
@@ -231,8 +235,9 @@ A.officialAct=function(key,action){
   const valid=()=>officialActionReady(e,action),cost=['honor','reward'].includes(action)?20:0;
   if(action==='commission')return pushEv({title:'委派差事 · '+p.name,por:p,valid,text:'按其履历选择差事，领命后会在数月内回奏。边关军务有低概率遇伏伤亡。',choices:[
     ...Object.entries(OFFICIAL_TASKS).filter(([,t])=>t.army===(h.bloc==='army')).map(([id,t])=>({t:`${t.title} · ${t.months}个月 · 精力−1 · 国库−${t.cost}`,cond:()=>E().energy>=1&&E().treasury>=t.cost,why:'精力或国库不足',f:()=>assignOfficialTask(e,id)})),{t:'暂不委派'}]});
+  if(p.career==='student'&&action!=='talk')return false;
   if(action==='talk')return pushEv({title:(p.away||p.commission||p.retired?'赐书问候':'召见议事')+' · '+p.name,por:p,valid,text:p.away||p.commission||p.retired?'内侍备好御札，可写下想问的话。':'内侍引他入殿。他行礼后，等候你开口。',choices:[
-    ...[['service','问任上见闻'],['family','问家中近况'],['duty','谈公私与用人']].map(([topic,t])=>({t:t+' · 精力−1',cond:()=>E().energy>=1,why:'精力不足',f:()=>{
+    ...[['service',p.career==='student'?'问学业与科名':'问任上见闻'],['family','问家中近况'],['duty','谈公私与用人']].map(([topic,t])=>({t:t+' · 精力−1',cond:()=>E().energy>=1,why:'精力不足',f:()=>{
       if(!valid()||!useE())return null;p.lastAudience=S.turn;p.trust=clamp(p.trust+4);const line=officialConversation(e,topic);
       officialRecord(c,role,`陛下${p.away||p.commission||p.retired?'赐书垂询':'召见'}。${line}`,{family:topic==='family',emotion:.4});save('auto');return {text:line,por:p};
     }})),{t:'改日再谈'}]});

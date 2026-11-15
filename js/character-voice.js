@@ -101,6 +101,7 @@ function consortVoicePool(c){
   const maternal=maternalVoice(c);
   if(maternalConcern(c)&&maternal)return [maternal];
   const home=homeLifeVoice(c);if(home&&!['悲恸','心如死灰','怨恨'].includes(x))return [home];
+  const frail=frailFosterVoice(c);if(frail&&!['悲恸','心如死灰','怨恨'].includes(x))return [frail];
   const duty=officialFamilyVoice(c);if(duty)return [duty];
   if(['悲恸','心如死灰','怨恨','惶恐'].includes(x)||c.hp<40)return [consortEmotionalVoice(c,x)];
   const concern=motherConcernVoice(c);if(concern&&(c.childConcern?.value??35)>=30)return [concern];
@@ -108,6 +109,8 @@ function consortVoicePool(c){
 
   const personal=lifeVoice(c);if(personal)return [personal];
   const quietHome=solitaryHouseholdVoice(c);if(quietHome)return [quietHome];
+  const sister=sisterArrivalVoice(c);if(sister)return [sister];
+  const waiting=awaitingNoticeVoice(c);if(waiting&&!maternal)return [waiting];
   if(isSolitary(c))return [maternal,solitaryVoice(c),cohabVoice(c),resemblanceVoice(c),pastLifeVoice(c),timeTravelerVoice(c),concern].filter(Boolean);
   const years=newcomerVoice(c)||consortYearsVoice(c),phase=consortVoicePhase(c);
   if(phase==='distant')return [years];

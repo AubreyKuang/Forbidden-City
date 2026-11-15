@@ -622,6 +622,7 @@ test('one-person reward choices omit duplicate portraits but retain the large po
 test('frontier reports share a yearly court limit and a two-year household limit across sisters and reloads',()=>{
   const {run}=boot();
   run(`var a=harem()[0],other=harem()[1],b=makeKin(a,'亲');addConsort(b,2,'亲妹入宫');S.turn=100;
+    houseOf(a).brother.career='official';houseOf(a).brother.post='参将';
     var discarded=militaryMeritEvent(a,'雁门关');assert.equal(frontierReportReady(a),true);
     pushEv(discarded);assert.equal(frontierReportReady(a),false);assert.equal(frontierReportReady(b),false);assert.equal(frontierReportReady(other),false);
     choose(3);drain();assert.equal(S.flags.lastFrontierReport,100);assert.equal(houseOf(b).lastFrontierReport,100);
