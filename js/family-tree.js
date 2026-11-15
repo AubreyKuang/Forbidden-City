@@ -1,5 +1,5 @@
 /* One person record, two parent links. Household branches follow a known father. */
-const layeredFamilyActive=()=>!!S&&journalContentVersion()>=17;
+const layeredFamilyActive=()=>!!S&&journalContentVersion()>=19;
 function familyTreeRegistry(){
   const houses=[],seen=new Set(),relatives=[];
   for(const c of S.consorts){const h=houseOf(c);if(!h||seen.has(h.father.id))continue;seen.add(h.father.id);houses.push({c,h});}

@@ -1,7 +1,7 @@
 /* Keep pending scenes from older releases replayable until they are finished. */
 function familyScenesEnabled(){return typeof PalaceActions==='undefined'||PalaceActions.contentVersion>=5;}
 function childVisitCompany(k){
- if(journalContentVersion()>=17)return occasionalChildVisitCompany(k);
+ if(journalContentVersion()>=19)return occasionalChildVisitCompany(k);
  const primary=byId(k.foster||k.mom),birth=byId(k.mom),people=[];
  if(familyVisitAllowed(k,primary)&&chance(.78))people.push(primary);
  if(birth!==primary&&familyVisitAllowed(k,birth)&&S.turn-(k.lastQuietVisit??-99)>=6&&chance(.38))people.push(birth);
@@ -50,7 +50,7 @@ function visitChildTogether(k){
  if(quiet)scene+=`生母${fullName(birth)}也悄悄来看孩子，怕惊动旁人，只带了一件亲手收拾的小物。${k.visitRule==='open'?'这是依照先前准许的探视安排。':'这回尚无禁探之令，她仍先请乳母通报，并未擅改抚养安排。'}`;
  else if(mothers.includes(birth))scene+=`生母${fullName(birth)}正陪在孩子身边，见你来了便挪出一处位置。`;
  for(const m of mothers.filter(m=>m!==birth&&m!==foster))scene+=`原养母${fullName(m)}也依约来看${k.name}，仍记得从前照料时的小习惯；她此来只是探望，并非把孩子接走。`;
- if(!mothers.length)scene+=journalContentVersion()<17?`乳母与随侍在旁照应，你留了一段只陪孩子的时辰。`:age<3?'乳母轻声报了饮食起居，便让出床边的位置，你留了一段只陪孩子的时辰。':age<10?'孩子正摆弄案上的东西，见你来了，便拉你看自己今日的新发现。随侍退到一旁，没有旁人代孩子答话。':'孩子放下手头的事，请你坐到窗边。随侍留在门外，这一会儿只听孩子自己说。';
+ if(!mothers.length)scene+=journalContentVersion()<19?`乳母与随侍在旁照应，你留了一段只陪孩子的时辰。`:age<3?'乳母轻声报了饮食起居，便让出床边的位置，你留了一段只陪孩子的时辰。':age<10?'孩子正摆弄案上的东西，见你来了，便拉你看自己今日的新发现。随侍退到一旁，没有旁人代孩子答话。':'孩子放下手头的事，请你坐到窗边。随侍留在门外，这一会儿只听孩子自己说。';
  if(mothers.includes(birth)&&mothers.includes(foster))scene+=relGet(birth,foster)<0||isRival(birth,foster)?'两人说话仍有分寸上的戒备，你没有让孩子替大人选择亲疏。':isSolitary(birth)||isSolitary(foster)?'两人各自守礼，没有因同在一处就变得亲密。':'两人把孩子的作息对过一遍，仍保留各自照料的位置。';
  const response=mothers.length?childVisitResponse(k,mothers[0]):voice.stage+(age>=3&&voice.text?`“${voice.text}”`:'');
  const valid=()=>!k.pendingName&&childInPalace(k)&&mothers.every(m=>familyVisitAllowed(k,m)||careVisitorAllowed(k,m));
@@ -59,8 +59,8 @@ function visitChildTogether(k){
   if(resolved||!valid())return null;resolved=true;
   const shared=mode!=='brief',activity=age<3?'轻声哄睡':age<6?'一起看小画册':age<16?'听孩子说近来的心事':'听孩子说自己的打算';
   const outcome=mode==='care'?`你问起${k.name}近来的${age<3?'饮食与睡眠':'起居与心绪'}，让在旁的母亲把实际难处说清，也留意孩子的反应。`:
-   mode==='brief'?`你陪${k.name}坐了一会儿，临走叮嘱随侍照常照料，没有另改抚养与探视安排。`:`${!mothers.length&&journalContentVersion()>=17?'你留下来':`你与${mothers.length?mothers.map(fullName).join('、'):'随侍'}留下来`}${activity}。${response}`;
-  const childThought=age<3?'在熟悉的照料下渐渐安稳。':shared?(!mothers.length&&journalContentVersion()>=17?'父皇听我自己说完，没有旁人替我答话。':mothers.some(m=>childTrust(k,m)<40)?'还需要慢慢熟悉，父皇没有催我马上亲近。':'父皇肯留下来听，也没有要我在亲人中选一个。'):'这次见面的时辰虽短，也留了下来。';
+   mode==='brief'?`你陪${k.name}坐了一会儿，临走叮嘱随侍照常照料，没有另改抚养与探视安排。`:`${!mothers.length&&journalContentVersion()>=19?'你留下来':`你与${mothers.length?mothers.map(fullName).join('、'):'随侍'}留下来`}${activity}。${response}`;
+  const childThought=age<3?'在熟悉的照料下渐渐安稳。':shared?(!mothers.length&&journalContentVersion()>=19?'父皇听我自己说完，没有旁人替我答话。':mothers.some(m=>childTrust(k,m)<40)?'还需要慢慢熟悉，父皇没有催我马上亲近。':'父皇肯留下来听，也没有要我在亲人中选一个。'):'这次见面的时辰虽短，也留了下来。';
   const thoughts=[childThought,...mothers.map(m=>mode==='brief'?'这回见到了孩子，尚有些话留待以后。':isSolitary(m)?'对旁人不必多言，对孩子却总有舍不得收回的温柔。':m===birth&&foster?'能见到孩子已属难得，不愿把大人的难处压在孩子身上。':m!==birth&&m!==foster?'换了抚养安排，也盼有人记得我从前的照料与如今的牵挂。':'日日照料的琐碎，今天终于有人肯认真听一听。')];
   livedRecord([k,...mothers],'family','父皇来探望',thread,outcome,thoughts);
   if(shared)for(const m of mothers)recordFamilyTime(k,m,activity,childThought,thoughts[mothers.indexOf(m)+1],{gain:3});

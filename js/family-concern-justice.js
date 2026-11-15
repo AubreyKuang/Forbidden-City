@@ -1,5 +1,5 @@
 /* A family's worry follows the known verdict. Affection is not a claim of innocence. */
-const familyJusticeActive=()=>!!S&&journalContentVersion()>=17;
+const familyJusticeActive=()=>!!S&&journalContentVersion()>=19;
 function familyPenaltyContext(c,old){
   const lines=(c.story||[]).slice(old?.story?.length??0).map(s=>s.t);
   const d=c.discipline;

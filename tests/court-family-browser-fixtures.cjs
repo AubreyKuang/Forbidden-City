@@ -25,5 +25,8 @@ const scenarios={
  'jinyiwei-clue':`setupJyw();wed();report('setback');createJinyiweiClue(jinyiweiClueSources()[0]);PalaceActions.reset();A.jinyiweiClue(jinyiwei().clues[0].id)`,
  'gouyi':`PalaceActions.reset();A.out('procession')`
 };
+const gouyiSetup=`A.out('procession');choose(0);choose(0);drain();var g=S.consorts.find(c=>c.gouyi);E().energy=20;S.turn+=3;`;
+for(let stage=0;stage<4;stage++)scenarios['gouyi-inquiry-'+(stage+1)]=gouyiSetup+`for(var n=0;n<${stage};n++){queueGouyiInquiry(g);gouyiInquiryEvent(g).choices[n%2].f();S.turn+=4;}queueGouyiInquiry(g);PalaceActions.reset();A.gouyiInquiry(g.id);`;
+for(const [kind,trait] of Object.entries({curious:'活泼',doubt:'聪慧',rival:'善妒',kind:'温婉',reserved:'淡泊',etiquette:'持重'}))scenarios['gouyi-reaction-'+kind]=gouyiSetup+`a.trait='${trait}';a.rank=${kind==='etiquette'?8:2};a.favor=20;g.favor=60;S.rel[rk(a,g)]=0;queueGouyiReaction(g,a);PalaceActions.reset();A.gouyiReaction(g.id);`;
 if(require.main===module){const out=process.argv[2]||'/tmp/palace-court-family-fixtures';fs.mkdirSync(out,{recursive:true});for(const [name,script] of Object.entries(scenarios)){const b=world();b.run(script);fs.writeFileSync(path.join(out,name+'.json'),b.run('JSON.stringify(PalaceActions.payload())'));}console.log('Wrote '+Object.keys(scenarios).length+' scenarios.');}
 module.exports={world,scenarios};

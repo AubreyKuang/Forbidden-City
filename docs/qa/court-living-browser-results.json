@@ -1,6 +1,6 @@
 {
   "url": "http://127.0.0.1:8428/dev.html",
-  "started": "2026-11-15T23:16:38.409Z",
+  "started": "2026-11-15T23:20:59.709Z",
   "runs": [
     {
       "name": "report-clear",
@@ -152,9 +152,11 @@
         "子女档案"
       ],
       "errors": [],
-      "passed": false,
-      "failure": "locator.click: Timeout 9000ms exceeded.\nCall log:\n  - waiting for locator('details.family-branch').filter({ has: getByRole('button', { name: '查看沈明远', exact: true }) }).locator('summary').first()\n\n    at run (/Users/apple/Developer/forbidden-city-kin-visits/tests/court-living-browser-acceptance.cjs:42:203)\n    at async /Users/apple/Developer/forbidden-city-kin-visits/tests/court-living-browser-acceptance.cjs:62:7",
-      "visible": "永宁六年正月\n萧彻 · 18岁\n龙体\n90\n威望\n58\n民心\n65\n国库\n880\n万两\n精力\n9／4\n♪ 开启声音\n清泉 · 古筝\n花月 · 琵琶\n松风 · 琴箫\n随场景变奏\n结束本月 ▸\n宫城\n御书房\n理政\n后宫\n翻牌子\n选秀\n皇嗣\n家族\n出巡\n起居注\n存档\n家族关系树\n关系图\n家族列表\n\n皇嗣列在生母名下，另标养母。点名字可查看人物。\n\n卢太后\n慈宁宫\n母子 →\n萧彻\n皇帝\n母家同族 ↳\n卢氏（太后母家）\n\n尚无母家族女入宫\n\n下方按父亲分支，同父姐妹共用一个父亲节点。\n沈氏（吏部尚书家）1 人 · 0 位皇嗣 · 势力 78\n魏氏（礼部侍郎家）1 人 · 1 位皇嗣 · 势力 65\nDEV · 金手指"
+      "passed": true,
+      "layout": {
+        "viewport": 1440,
+        "width": 1440
+      }
     },
     {
       "name": "story",
@@ -407,9 +409,11 @@
         "子女档案"
       ],
       "errors": [],
-      "passed": false,
-      "failure": "locator.click: Timeout 9000ms exceeded.\nCall log:\n  - waiting for locator('details.family-branch').filter({ has: getByRole('button', { name: '查看沈明远', exact: true }) }).locator('summary').first()\n\n    at run (/Users/apple/Developer/forbidden-city-kin-visits/tests/court-living-browser-acceptance.cjs:42:203)\n    at async /Users/apple/Developer/forbidden-city-kin-visits/tests/court-living-browser-acceptance.cjs:62:7",
-      "visible": "永宁六年正月\n萧彻 · 18岁\n龙体\n90\n威望\n58\n民心\n65\n国库\n880\n万两\n精力\n9／4\n♪ 开启声音\n清泉 · 古筝\n花月 · 琵琶\n松风 · 琴箫\n随场景变奏\n结束本月 ▸\n宫城\n御书房\n理政\n后宫\n翻牌子\n选秀\n皇嗣\n家族\n出巡\n起居注\n存档\n家族关系树\n关系图\n家族列表\n\n皇嗣列在生母名下，另标养母。点名字可查看人物。\n\n卢太后\n慈宁宫\n母子 →\n萧彻\n皇帝\n母家同族 ↳\n卢氏（太后母家）\n\n尚无母家族女入宫\n\n下方按父亲分支，同父姐妹共用一个父亲节点。\n沈氏（吏部尚书家）1 人 · 0 位皇嗣 · 势力 78\n魏氏（礼部侍郎家）1 人 · 1 位皇嗣 · 势力 65\nDEV · 金手指"
+      "passed": true,
+      "layout": {
+        "viewport": 390,
+        "width": 390
+      }
     },
     {
       "name": "story",
@@ -514,6 +518,6 @@
     }
   ],
   "browser": "157.0.8103.78",
-  "finished": "2026-11-15T23:18:33.306Z",
-  "passed": false
+  "finished": "2026-11-15T23:22:51.075Z",
+  "passed": true
 }

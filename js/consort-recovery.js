@@ -1,5 +1,5 @@
 /* Recovery is dated by the real pregnancy outcome, never by a later inquiry or reload. */
-const consortRecoveryActive=()=>!!S&&journalContentVersion()>=17;
+const consortRecoveryActive=()=>!!S&&journalContentVersion()>=19;
 function beginConsortRecovery(c,kind,turn=S.turn,hidden=false){
   if(!consortRecoveryActive()||!c)return;
   const old=c.recovery;

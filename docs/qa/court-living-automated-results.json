@@ -1,0 +1,30 @@
+{
+  "node": "22.18.0",
+  "mergedMain": "cc5101a96b46d952a231509548ede227226c20b0",
+  "journalVersion": 19,
+  "automated": {
+    "tests": 1369,
+    "pass": 1369,
+    "fail": 0
+  },
+  "flow": {
+    "months": 60,
+    "passed": true
+  },
+  "browser": {
+    "scenarios": 62,
+    "passed": 62,
+    "reloads": 192,
+    "viewportSizes": [
+      [
+        1440,
+        1000
+      ],
+      [
+        390,
+        844
+      ]
+    ],
+    "browser": "157.0.8103.78"
+  }
+}

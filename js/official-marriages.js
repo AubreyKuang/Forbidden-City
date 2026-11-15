@@ -1,5 +1,5 @@
 /* 官员议婚：名帖指向真人，问意与诏书分开，婚后继续沿用原有家族与公主府。 */
-const officialMarriageActive=()=>!!S&&!S.over&&journalContentVersion()>=17;
+const officialMarriageActive=()=>!!S&&!S.over&&journalContentVersion()>=19;
 const officialMarriageState=()=>S.officialMarriages ||= {guests:[],couples:[]};
 const officialMarriageAge=p=>Number.isFinite(p.born)?natalAge(p):p.age||0;
 function officialMarriageRef(person){return {key:person.key,id:person.p.id,gen:S.gen};}

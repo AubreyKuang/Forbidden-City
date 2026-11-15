@@ -43,7 +43,7 @@ test('court portraits identify officers; numeric choice IDs resolve to their rea
   openModal({title:'两人',text:'',choices:harem().map(x=>({person:x.id,t:fullName(x)}))});for(var p of harem())assert.ok(document.querySelector('#mbox').innerHTML.includes('data-portrait-cell="'+portraitCell(p)+'"'));`);
 });
 test('crown is shifted upward equally for canvas and file rendering without replacing the face',()=>{
- const b=world();b.run(`var queen=empress(),cell=portraitCell(queen);var fit=fittedPortraitJewelry(cell,8,''),svg=localPortrait(cell,8,'');if(fit){assert.ok(fit.box[2]<80);assert.ok(fit.box[1]+fit.box[2]*.42<portraitHead(cell)[1]);}assert.ok(svg.includes(portraitSheet(cell).src));assert.equal(portraitCell(queen),cell);`);
+ const b=world();b.run(`var queen=empress(),cell=portraitCell(queen);for(var bust of [true,false]){var view=portraitView(cell,bust),fit=fittedPortraitJewelry(cell,8,'',view.head),svg=localPortrait(cell,8,'','',bust);if(fit){assert.ok(fit.box[2]<80);assert.ok(fit.box[1]+fit.box[2]*.42<view.head[1]);}assert.ok(svg.includes(view.sheet.src));assert.equal(portraitCell(queen),cell);}`);
 });
 test('six months of absence summon the keeper, respects mourning, cards and cooldown',()=>{
  const b=world();b.run(`S.turn=6;S.flags.haremAttendance={gen:S.gen,turn:0};S.flags.dowager.mourning={turn:S.turn};assert.equal(jingtishiEvent(),null);delete S.flags.dowager.mourning;var ev=jingtishiEvent();assert.ok(ev);assert.equal(ev.por,undefined);ev.onShow();assert.equal(jingtishiEvent(),null);S.turn=10;
@@ -102,7 +102,7 @@ for(const fixture of legacyFixtures.cases)test(`pre-upgrade ${fixture.name} cont
  b.run("if(modalResult)nextEv();else choose(curEv.choices.findIndex(c=>!c.cond||c.cond()))");
  b=reload(b);b.run('drain();assert.equal(PalaceActions.legacy,false);');
  assert.equal(b.run('S.turn'),fixture.save.turn,'finishing a version 2 scene retains the original month');
- b.run("E().energy=1;A.out('spa');assert.equal(PalaceActions.payload().pendingActions.version,17)");
+ b.run("E().energy=1;A.out('spa');assert.equal(PalaceActions.payload().pendingActions.version,19)");
  b=reload(b);b.run('var previousTurn=S.turn;choose(0);tick(1500);assert.equal(S.turn,previousTurn+1);');
 });
 test('the old commission cancellation index still cancels instead of assigning a new mission',()=>{

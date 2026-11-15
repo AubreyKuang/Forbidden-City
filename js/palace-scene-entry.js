@@ -1,5 +1,5 @@
 /* Map invitations open the advertised scene, retaining the palace overview as a separate choice. */
-const directPalaceScenes=()=>!!S&&journalContentVersion()>=17;
+const directPalaceScenes=()=>!!S&&journalContentVersion()>=19;
 function mapStoryToken(kind,p){
   const c=kind==='experience'?experienceState(p)?.current:kind==='journey'?p.journeys?.current:historyState(p)?.current;
   return c?`${c.id}:${c.stage}`:null;

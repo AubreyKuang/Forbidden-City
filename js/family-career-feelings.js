@@ -1,5 +1,5 @@
 /* 升黜发生在父亲身上，家书落到每个子女的生活里；未收到消息的人不共享内心。 */
-const familyCareerActive=()=>!!S&&!S.over&&journalContentVersion()>=17;
+const familyCareerActive=()=>!!S&&!S.over&&journalContentVersion()>=19;
 function familyCareerChildren(person){
   if(person?.e?.role!=='father')return [];
   const {c,h}=person.e,people=[...paternalFamily(c).filter(p=>S.consorts.includes(p)),...brotherRoles(h).map(role=>h[role]),...natalPeople(h).filter(p=>!p.parentRelativeId)];

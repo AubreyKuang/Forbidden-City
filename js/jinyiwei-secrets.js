@@ -1,5 +1,5 @@
 /* 巡察发现保存世界中的隐情，查访只决定证据能否查齐，不抽签改写身世。 */
-const secretCasesActive=()=>!!S&&!S.over&&journalContentVersion()>=17;
+const secretCasesActive=()=>!!S&&!S.over&&journalContentVersion()>=19;
 function secretCaseKey(kind,id){return `${S.gen}:${kind}:${id}`;}
 function secretCaseExisting(kind,id){return palaceCases().find(x=>x.kind==='palace-secret'&&x.secretKey===secretCaseKey(kind,id));}
 function secretCaseSubject(x){

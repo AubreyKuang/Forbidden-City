@@ -2,11 +2,11 @@
 const examGroomReady=p=>careersActive()&&p?.examRank==='探花'&&officialServing(p)&&p.age>=18&&!p.married&&!p.spouse&&!p.spouseRelative&&!p.royalSpouseId&&!p.betrothal;
 function examMarriageCandidates(p){
   if(!examGroomReady(p))return [];
-  const out=S.children.filter(k=>k.sex==='f'&&kidAge(k)>=(journalContentVersion()>=17?15:18)&&(journalContentVersion()>=17||Math.abs(kidAge(k)-p.age)<=15)&&marriageReady(k)&&!k.betrothal).map(k=>({p:k,kind:'princess',key:'princess:'+k.id})),seen=new Set();
+  const out=S.children.filter(k=>k.sex==='f'&&kidAge(k)>=(journalContentVersion()>=19?15:18)&&(journalContentVersion()>=19||Math.abs(kidAge(k)-p.age)<=15)&&marriageReady(k)&&!k.betrothal).map(k=>({p:k,kind:'princess',key:'princess:'+k.id})),seen=new Set();
   for(const c of harem())for(const sister of natalPeople(houseOf(c))){
     if(seen.has(sister.id))continue;seen.add(sister.id);
     if(sister.sex!=='f'||!sister.alive||sister.parentRelativeId||sister.consortId||natalAge(sister)<18||Math.abs(natalAge(sister)-p.age)>15||sister.married||sister.spouse||sister.betrothal||sister.widow||sister.natalPregnancy)continue;
-    if(journalContentVersion()<17&&p.courtKin?.some(edge=>edge.fatherId===houseOf(c).father.id))continue;
+    if(journalContentVersion()<19&&p.courtKin?.some(edge=>edge.fatherId===houseOf(c).father.id))continue;
     out.push({p:sister,c,kind:'sister',key:'sister:'+sister.id});
   }
   return out;

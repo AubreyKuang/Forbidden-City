@@ -4,6 +4,29 @@
   "url": "http://127.0.0.1:8767/dev.html",
   "runner": "tests/court-family-browser-acceptance.cjs",
   "runs": [],
-  "summary": {"cases": 0, "passed": 0, "reloads": 0},
-  "reason": "Temporary Chrome launch exited with SIGABRT under the current sandbox. Escalation was rejected because sandbox_approval is false. No browser checks or screenshots completed."
+  "summary": {
+    "cases": 0,
+    "passed": 0,
+    "reloads": 0
+  },
+  "reason": "No browser page was created by the local engines. The remote job was rejected before runner allocation. Browser acceptance and screenshots remain incomplete.",
+  "attempts": [
+    {
+      "method": "local Chrome",
+      "status": "blocked-before-launch",
+      "signal": "SIGABRT",
+      "permissionEscalation": "denied by current policy"
+    },
+    {
+      "method": "GitHub Actions Chromium",
+      "status": "job-not-started",
+      "run": "https://github.com/AubreyKuang/Forbidden-City/actions/runs/43769768538",
+      "reason": "Platform account restriction prevented runner allocation; zero steps ran."
+    },
+    {
+      "method": "isolated Firefox 159.0",
+      "status": "blocked-before-launch",
+      "signal": "SIGABRT"
+    }
+  ]
 }
