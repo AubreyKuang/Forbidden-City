@@ -146,7 +146,7 @@ function kinSuccessionEvent(){
   if(S.over||mourningActive()||S.turn-(S.flags.lastKinSuccession??-99)<36)return null;
   const sources=S.consorts.filter(c=>kinSuccessionSource(c)&&!(maternalAbsent(c)&&kinCareChildren(c).length&&maternalSisterCandidates(c).length)&&S.turn-(c.lastKinSuccession??-99)>=48&&
     !harem().some(o=>o.id!==c.id&&o.clan===c.clan&&S.turn-o.enteredAt<24));
-  if(!sources.length||!chance(.06))return null;
+  if(!sources.length||!chance(.06)||!newConsortEventAllowed())return null;
   const c=pick(sources),children=kinCareChildren(c);
   return {title:'家门旧缘',por:c,cooldown:36,valid:()=>kinSuccessionSource(c),
     onQueue:()=>{S.flags.lastKinSuccession=c.lastKinSuccession=S.turn;},

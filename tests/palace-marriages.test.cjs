@@ -80,16 +80,16 @@ test("hostile houses are not matched, and a humble sister's match is a matter fo
 
 test('older pending transcripts neither settle marriages nor raise matches',()=>{
  const b=world();
- b.run(`var poor=addGirl('寒门'),p=sister(poor,33);p.married=false;delete p.spouse;Object.defineProperty(PalaceActions,'contentVersion',{get:()=>7,configurable:true});
+ b.run(`var poor=addGirl('寒门'),p=sister(poor,33);p.married=false;delete p.spouse;Object.defineProperty(PalaceActions,'contentVersion',{get:()=>8,configurable:true});
  kinMarriageTick();assert.equal(p.married,false);assert.equal(betrothalEvent(),null);delete PalaceActions.contentVersion;kinMarriageTick();assert.equal(p.married,true);`);
 });
 
 const {withClock}=require('./test-clock.cjs');
-const legacy=require('./fixtures/marriages-legacy-v7.json');
-for(const fixture of legacy.cases)test('version 7 month-end transcript still replays exactly: '+fixture.name,()=>{
+const legacy=require('./fixtures/marriages-legacy-v8.json');
+for(const fixture of legacy.cases)test('version 8 month-end transcript still replays exactly: '+fixture.name,()=>{
  const game=save=>{const b=withClock(boot(311,new Map([['chengongji_v1_auto',JSON.stringify(save)]])));b.ctx.assert=assert;return b;};
  let b=game(fixture.save);b.run("A.load('auto');assert.equal(PalaceActions.blocked,false);");
- const relabelled=JSON.parse(JSON.stringify(fixture.save));relabelled.pendingActions.version=8;
+ const relabelled=JSON.parse(JSON.stringify(fixture.save));relabelled.pendingActions.version=9;
  b=game(relabelled);b.run("A.load('auto');assert.equal(PalaceActions.blocked,true);");
 });
 

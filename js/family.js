@@ -213,7 +213,7 @@ function clanEvent(){
     if(!rv&&a.favor>=50&&b.favor>=50)return {title:'娥皇女英',present:[a,b],ref:'娥皇、女英姐妹同嫁舜（上古传说）',cast:[a,b],text:`宫宴上有人吟起娥皇女英的典故，满座都看向${cName(a)}与${cName(b)}这对姐妹。两人对视一眼，都红了脸。`,choices:[{t:'举杯：“朕之幸也。”',f:()=>{relAdd(a,b,8);return fx(cchg(a,{aff:5,mood:8}),cchg(b,{aff:5,mood:8}))}}]};
   }
   const h=harem().filter(c=>c.favor>=60&&c.fam.p>=15&&hasClan(c)&&!c.recommended);
-  if(h.length&&chance(.5)){const c=pick(h);c.recommended=1;const g=makeKin(c,chance(.5)?'亲':'堂');
+  if(h.length&&chance(.5)&&newConsortEventAllowed()){const c=pick(h);c.recommended=1;const g=makeKin(c,chance(.5)?'亲':'堂');
     return {title:'家书',por:g,text:`${cName(c)}的娘家送来一封信：家中${KIN_TXT[c.kin[g.id]].replace(/^亲/,'')}${fullName(g)}今年${g.age}岁，想送进宫来陪伴姐姐。\n${sisterArrivalFeeling(c,g,true).text}`,choices:[
       {t:'接她入宫，封为常在',f:()=>{addConsort(g,2,`经${fullName(c)}娘家举荐入宫`);return sisterArrivalFeeling(c,g,true).text}},
       {t:'婉拒',f:()=>{delete c.kin[g.id];return '信被原样退了回去。'}}]}}

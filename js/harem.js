@@ -244,7 +244,7 @@ function monthlyMaidEvent(){
   const event=pick(pool)();
   return event?{...event,maidEncounter:true}:null;
 }
-function teaMaid(){if(maids().filter(m=>m.near).length>=4)return null;const g=makeGirl({fam:{t:'宫女',p:3},age:ri(16,20)});
+function teaMaid(){if(maids().filter(m=>m.near).length>=4||!newConsortEventAllowed())return null;const g=makeGirl({fam:{t:'宫女',p:3},age:ri(16,20)});
   return {title:'奉茶',por:g,text:`夜深了，你还在乾清宫批折子。奉茶的宫女${g.given}换了第三回茶，见你揉眉心，小声说：“陛下，奴婢给您按一按？”她的手很凉，力道却刚好。`,choices:[
    {t:'今夜留她（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{g.maid=true;g.near=false;g.palace='乾清宫';g.favor=20;g.aff=25;S.consorts.push(g);deepen(g);story(g,'本是乾清宫奉茶的宫女，深夜被陛下留下。');maidNight(g);return null}},
    {t:'调她到御前当差',f:()=>{g.maid=true;g.near=true;g.palace='乾清宫';g.favor=10;g.aff=20;S.consorts.push(g);deepen(g);story(g,'被调到御前当差，做了贴身宫女。');return `她红着脸谢了恩。\n§她成了你的贴身宫女`}},
