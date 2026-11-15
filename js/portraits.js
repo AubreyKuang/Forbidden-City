@@ -172,11 +172,11 @@ const youngRoyalAtlas=document.createElement('img');
 const FAMILY_PORTRAIT_START=28;
 const DESCENDANT_PORTRAIT_START=44;
 const LEGACY_DESCENDANT_VARIANTS=10;
-const ROYAL_GROWTH_SETS={f:[380,383],m:[386,389]};
+const ROYAL_GROWTH_SETS={f:[380,383,392,395],m:[386,389]};
 const DESCENDANT_VARIANTS=29+ROYAL_GROWTH_SETS.m.length;
 const EXISTING_PRINCE_VARIANTS=4;
 const EXTRA_PRINCE_VARIANTS=LEGACY_DESCENDANT_VARIANTS-EXISTING_PRINCE_VARIANTS;
-const BEAUTY_PORTRAIT_START=92, YOUNG_ROYAL_PORTRAIT_START=136, PORTRAIT_COUNT=392;
+const BEAUTY_PORTRAIT_START=92, YOUNG_ROYAL_PORTRAIT_START=136, PORTRAIT_COUNT=398;
 const PRINCESS_VARIANTS=33+ROYAL_GROWTH_SETS.f.length;
 const EXPANDED_ROYAL_START=294;
 const EMPEROR_PORTRAITS=[12,13,312,313,314,315];
@@ -201,7 +201,8 @@ const portraitSheets=[
   {start:346,rows:3,scale:4,src:'./assets/images/palace-consorts-finery.webp?v=1',image:document.createElement('img')},
   {start:358,rows:4,scale:4,src:'./assets/images/palace-consorts-closeups.webp?v=1',image:document.createElement('img')},
   {start:371,rows:3,scale:4,src:'./assets/images/palace-consorts-flowers.webp?v=1',image:document.createElement('img')},
-  {start:380,rows:3,scale:4,src:'./assets/images/palace-royal-growth.webp?v=1',image:document.createElement('img')}
+  {start:380,rows:3,scale:4,src:'./assets/images/palace-royal-growth.webp?v=1',image:document.createElement('img')},
+  {start:392,rows:2,scale:4,src:'./assets/images/palace-princess-petite-growth.webp?v=1',image:document.createElement('img')}
 ];
 const portraitSheet=cell=>portraitSheets.slice().reverse().find(sheet=>cell>=sheet.start)||portraitSheets[0];
 function ensurePortraitSheet(cell){const sheet=portraitSheet(cell);if(!sheet.image.src)sheet.image.src=sheet.src;}
