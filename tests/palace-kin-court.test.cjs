@@ -126,7 +126,7 @@ test('older pending transcripts draw nothing and write nothing for court ties',(
  assert.equal(JSON.stringify(S.flags.kinCourt||null),flags);assert.equal(relGet(a,z),rel);delete PalaceActions.contentVersion;assert.ok(kinCourtActive());`);
 });
 
-const legacy=[...require('./fixtures/kin-court-legacy-v4.json').cases.map(c=>({...c,v:4})),...require('./fixtures/kin-court-legacy-v5.json').cases.map(c=>({...c,v:5}))];
+const legacy=[...require('./fixtures/kin-court-legacy-v4.json').cases.map(c=>({...c,v:4})),...require('./fixtures/kin-court-legacy-v5.json').cases.map(c=>({...c,v:5})),...require('./fixtures/kin-court-legacy-v6.json').cases.map(c=>({...c,v:6}))];
 for(const fixture of legacy)test(`version ${fixture.v} month-end transcript still replays exactly: ${fixture.name}`,()=>{
  const game=save=>{const b=withClock(boot(311,new Map([['chengongji_v1_auto',JSON.stringify(save)]])));b.ctx.assert=assert;return b;};
  let b=game(fixture.save);
@@ -134,7 +134,7 @@ for(const fixture of legacy)test(`version ${fixture.v} month-end transcript stil
  assert.equal(b.run('curEv.title'),fixture.save.pendingActions.pending.title);
  assert.equal(b.run('S.flags.kinCourt'),undefined);
  // The same transcript claimed as version 5 would now draw for court ties, so it cannot match.
- const relabelled=JSON.parse(JSON.stringify(fixture.save));relabelled.pendingActions.version=6;
+ const relabelled=JSON.parse(JSON.stringify(fixture.save));relabelled.pendingActions.version=7;
  b=game(relabelled);b.run("A.load('auto');assert.equal(PalaceActions.blocked,true);");
 });
 

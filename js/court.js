@@ -47,7 +47,7 @@ const COURT=[
    {t:'分赏六宫',f:()=>{harem().forEach(c=>{c.mood=clamp(c.mood+8)});return '六宫欢喜，争相裁制新衣。\n§后宫众人心情+8'}},
    {t:'变卖充入国库',f:()=>`${fx(chg({treasury:120}))}`},
    {t:'下旨减免织造之役',f:()=>`江南织工感激涕零。${fx(chg({people:5}))}`}]}),
- brief=>{const g=brief?.guest||makeForeignConsort(),d=FOREIGN_CONSORT_ORIGINS.find(o=>o.fam===g.fam.t)||FOREIGN_CONSORT_ORIGINS[0];
+ brief=>{if(!brief?.guest&&!newConsortEventAllowed())return null;const g=brief?.guest||makeForeignConsort(),d=FOREIGN_CONSORT_ORIGINS.find(o=>o.fam===g.fam.t)||FOREIGN_CONSORT_ORIGINS[0];
   return {title:d.region+'使臣',por:g,foreignArrival:true,text:`${d.region}遣使来朝，同行的${fullName(g)}自愿来京入选。${d.dress}。译者为她通传姓名与来意，她依礼上前相见。`,choices:[
    {t:'纳入后宫，封为常在',f:()=>{addConsort(g,2,d.region+'来朝入选');return `她向你行礼，女官与译者引她熟悉宫中起居。${fx(chg({prestige:2}))}`}},
    {t:'婉拒，厚赐使臣',f:()=>`使臣叹服天朝气度。${fx(chg({prestige:3,people:2,treasury:-30}))}`}]}},
