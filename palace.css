@@ -366,6 +366,8 @@ body{background:#241917}
 .hud-person{color:#efdfc7}
 #top .hud-next{background:#eac481;color:#38261a}
 #top .hud-next:hover{background:#f4d5a0}
+#top .hud-unsaved{background:#9c3b2e;color:#fff4e6;min-height:36px}
+#top .hud-unsaved:hover{background:#b44a3a}
 #top .st{background:#ffedc413}
 #app[data-layout="game"] #menu{background:#3d2420f7;border-top-color:#d7ac6c65}
 #app[data-layout="game"] #menu .btn{color:#f4e6ce;border-radius:7px}
