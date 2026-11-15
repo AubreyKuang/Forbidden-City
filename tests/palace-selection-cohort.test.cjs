@@ -83,5 +83,22 @@ test('cohort familiarity opens later low-compatibility social opportunities with
 test('a much-delayed visit does not repeat a first-night conversation',()=>{
   const {run}=setup(1);
   run(`take(ids[0]);A.xxEnd();S.turn+=6;assert.equal(newcomerWelcomeEvent(byId(ids[0])),null);
-    assert.match(viewXX(),/已渐渐住惯/);assert.doesNotMatch(viewXX(),/去问候她/);`);
+    assert.match(viewXX(),/下旨选秀/);assert.doesNotMatch(viewXX(),/新妃安顿|去问候她/);`);
+});
+test('arrival cards last only the completion month and next month, while history remains intact',()=>{
+ const {run}=setup(1);run(`take(ids[0]);A.xxEnd();var turn=S.turn,c=byId(ids[0]),history=JSON.stringify(c.story),cohort=JSON.stringify(c.selectionCohort);
+ for(var offset of [0,1,2,24]){S.turn=turn+offset;var before=JSON.stringify(S),html=viewXX();assert.equal(JSON.stringify(S),before);
+ if(offset<2){assert.match(html,/新妃安顿/);assert.match(html,/重新选秀/);}else{assert.doesNotMatch(html,/新妃安顿|去问候她/);assert.match(html,/下旨选秀/);}
+ assert.equal(JSON.stringify(c.story),history);assert.equal(JSON.stringify(c.selectionCohort),cohort);}
+ save('auto');A.load('auto');assert.equal(PalaceActions.blocked,false);assert.doesNotMatch(viewXX(),/新妃安顿/);`);
+});
+test('reopening selection respects the existing early-selection price and preserves the previous cohort',()=>{
+ const {run}=setup(1);run(`take(ids[0]);A.xxEnd();var c=byId(ids[0]),cohort=JSON.stringify(c.selectionCohort),funds=E().treasury,people=E().people;
+ A.xxDecree();assert.equal(curEv.title,'下旨选秀');choose(1);drain();assert.equal(E().treasury,funds);assert.match(viewXX(),/新妃安顿/);
+ A.xxDecree();choose(0);drain();assert.equal(E().treasury,funds-100);assert.equal(E().people,Math.max(0,people-4));
+ assert.ok(S.cands.length);assert.equal(S.selection.phase,'audience');assert.equal(JSON.stringify(c.selectionCohort),cohort);assert.ok(c.story.some(s=>s.t.includes('【选秀礼毕】')));`);
+});
+test('legacy arrival pages infer time only from the stored cohort and never keep undated cards forever',()=>{
+ const {run}=setup(1);run(`take(ids[0]);A.xxEnd();delete S.selection.finishedAt;assert.equal(selectionArrivalsRecent(),true);
+ S.turn+=2;assert.equal(selectionArrivalsRecent(),false);delete byId(ids[0]).selectionCohort;assert.equal(selectionArrivalsRecent(),false);assert.match(viewXX(),/下旨选秀/);`);
 });

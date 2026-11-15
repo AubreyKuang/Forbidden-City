@@ -50,6 +50,9 @@ finishDelivery=function(c){
 };
 const birthFeelingsVoice=maternalVoice;
 maternalVoice=function(c){
+ const hurt=c.parentageHurt,child=hurt&&kidById(hurt.child);
+ if(hurt&&S.turn-hurt.turn<3&&child?.alive&&inPalace(c)&&xinOf(c)==='委屈'&&!maternalConcern(c))
+  return voiceLine('maternal-cleared',`说起${child.name}的身世查证，她仍有些委屈。`,hurt.line);
  const f=c.delivery?.feeling,ks=deliveryKids(c);
  if(f&&S.turn-f.turn<=2&&!maternalConcern(c)&&inPalace(c)&&ks.length&&ks.every(k=>k.alive&&maternalStatus(k,c)==='near'))
   return voiceLine('maternal-newborn',`说起${ks.map(k=>k.name).join('、')}，她还记得初见时的心情。`,f.line);
