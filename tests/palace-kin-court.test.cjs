@@ -120,21 +120,21 @@ test('court ties are rare: at most one decision scene per eight months',()=>{
 
 test('older pending transcripts draw nothing and write nothing for court ties',()=>{
  const b=world(60);
- b.run(`S.pendingActions={version:4};var flags=JSON.stringify(S.flags.kinCourt||null),rel=relGet(a,z);`);
+ b.run(`Object.defineProperty(PalaceActions,'contentVersion',{get:()=>5,configurable:true});var flags=JSON.stringify(S.flags.kinCourt||null),rel=relGet(a,z);`);
  b.force(.123456);
  b.run(`assert.equal(kinCourtEvent(),null);assert.equal(kinCourtTick(),null);assert.equal(R(),.123456,'no random draw was consumed');
- assert.equal(JSON.stringify(S.flags.kinCourt||null),flags);assert.equal(relGet(a,z),rel);delete S.pendingActions;`);
+ assert.equal(JSON.stringify(S.flags.kinCourt||null),flags);assert.equal(relGet(a,z),rel);delete PalaceActions.contentVersion;assert.ok(kinCourtActive());`);
 });
 
-const legacy=require('./fixtures/kin-court-legacy-v4.json');
-for(const fixture of legacy.cases)test('version 4 month-end transcript still replays exactly: '+fixture.name,()=>{
+const legacy=[...require('./fixtures/kin-court-legacy-v4.json').cases.map(c=>({...c,v:4})),...require('./fixtures/kin-court-legacy-v5.json').cases.map(c=>({...c,v:5}))];
+for(const fixture of legacy)test(`version ${fixture.v} month-end transcript still replays exactly: ${fixture.name}`,()=>{
  const game=save=>{const b=withClock(boot(311,new Map([['chengongji_v1_auto',JSON.stringify(save)]])));b.ctx.assert=assert;return b;};
  let b=game(fixture.save);
  b.run("A.load('auto');assert.equal(PalaceActions.blocked,false);");
  assert.equal(b.run('curEv.title'),fixture.save.pendingActions.pending.title);
  assert.equal(b.run('S.flags.kinCourt'),undefined);
  // The same transcript claimed as version 5 would now draw for court ties, so it cannot match.
- const relabelled=JSON.parse(JSON.stringify(fixture.save));relabelled.pendingActions.version=5;
+ const relabelled=JSON.parse(JSON.stringify(fixture.save));relabelled.pendingActions.version=6;
  b=game(relabelled);b.run("A.load('auto');assert.equal(PalaceActions.blocked,true);");
 });
 
