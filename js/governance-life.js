@@ -99,7 +99,7 @@ function canTransfer(e,id){const t=GOVERNMENT_POSTS[id];return !!(t&&e&&official
 function transferOfficial(e,id){
   if(!canTransfer(e,id)||E().treasury<20||!useE())return null;
   const t=GOVERNMENT_POSTS[id],p=e.p,old=p.office||p.post;
-  p.office=t.name;p.post=t.name;p.away=t.away;p.lastTransfer=S.turn;governance().posts[id]=e.key;chg({treasury:-20});
+  if(careersActive())careerSetOffice({p,e,key:e.key},t.name,'吏部调任');else{p.office=t.name;p.post=t.name;}p.away=t.away;p.lastTransfer=S.turn;governance().posts[id]=e.key;chg({treasury:-20});
   const task=`由${old}调任${t.name}${t.away?'，离京赴任':'，在京供职'}`;
   officialRecord(e.c,e.role,task+'，限半年内呈报任上实绩。');officialFamilyReaction(e,'transfer',task);
   p.postReview={due:S.turn+6,office:t.name,from:old,contact:e.c.id};
@@ -132,6 +132,7 @@ A.governmentTask=function(id){
 function viewGovernment(){
   const g=governance(),receipt=treasuryReceipt('tax');
   return `${pageHeading('治国理政','用人、钱粮、民间见闻，都须有去处，也有回音。')}<div class="acts page-actions"><button class="btn primary" onclick="A.court()">本月奏折</button><button class="btn" onclick="A.go('officials')">官员表</button><button class="btn" onclick="A.go('ministries')">六部</button><button class="btn" onclick="A.go('jinyiwei')">锦衣卫</button><button class="btn" onclick="A.go('out')">微服问民情</button></div>
+  ${careerReportsHTML()}
   ${pageChapters('government',[
     ['tax','户部岁入',`<section class="detail-section"><p>每年十月结算秋税，正月收取岁贡银 120 万两与珍饰一件。月常入与俸禄仍逐月结算。</p><p>${receipt?`本年秋税已实收 ${receipt.amount} 万两。`:`今年采用「${TAX_PLANS[g.tax].name}」，按当前民心估计秋税 ${taxEstimate()} 万两。`}</p><div class="acts">${Object.entries(TAX_PLANS).map(([id,p])=>`<button class="btn sm" onclick="A.taxPlan('${id}')" ${receipt||g.tax===id||E().energy<1?'disabled':''}>${p.name} · 精力−1${id==='light'?' · 秋税入库时民心+5':''}</button>`).join('')}</div><ul class="story">${g.receipts.slice(-8).reverse().map(r=>`<li><time>${esc(r.date)}</time>${esc(r.text)}</li>`).join('')||'<li>尚未到年度入库时节。</li>'}</ul></section>`],
     ['posts','吏部调度',`<section class="detail-section"><p class="hint">调任需精力 1、交接银 20 万两。同一官员半年内不再调任，在途差务、致仕或获罪期间不可调动。</p><div class="grid">${Object.entries(GOVERNMENT_POSTS).map(([id,p])=>{const e=postHolder(id);return `<article class="card government-post"><h3>${p.name}</h3><p>${p.detail}</p>${e?`<p>${officialLink(e.c,e.role)} · ${officialStatus(e.p)}</p>`:`<button class="btn sm jade" onclick="A.postCandidates('${id}')">择人调任</button>`}</article>`;}).join('')}</div></section>`],

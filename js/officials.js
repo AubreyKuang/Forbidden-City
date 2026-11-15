@@ -114,7 +114,7 @@ function officialLink(c,role,label){
 }
 function officialFamilyLine(c){
   const h=houseOf(c);if(!h)return '';
-  return `<div class="official-family-links">${officialRoles(h).filter(r=>!r.startsWith('relative')).map(role=>{const p=officialPerson(h,role);return p?`<div>${officialKinLabel(h,role)}：${officialLink(c,role)} <span class="hint">${esc(p.office||p.post)} · ${officialStatus(p)}${p.death?' · '+esc(p.death.d||'日期未详'):''}</span></div>`:'';}).join('')}${natalFamilyLinks(c)}</div>`;
+  return `<div class="official-family-links">${officialRoles(h).filter(r=>!r.startsWith('relative')).map(role=>{const p=officialPerson(h,role);return p?`<div>${officialKinLabel(h,role)}：${officialLink(c,role)} <span class="hint">${esc(officialOfficeLabel(p))} · ${officialStatus(p)}${p.death?' · '+esc(p.death.d||'日期未详'):''}</span></div>`:'';}).join('')}${natalFamilyLinks(c)}</div>`;
 }
 function officialsRoster(){return typeof officialsTable==='function'?officialsTable():'<h2>官员表</h2><p class="hint">页面已更新，请刷新后查看。</p>';}
 function officialActionReady(e,action){
@@ -136,12 +136,12 @@ function viewOfficial(){
   const act=(action,label,cost=0)=>`<button class="btn ${action==='talk'?'primary':''}" onclick="A.officialAct('${key}','${action}')" ${officialActionReady(e,action)?'':'disabled'}>${label}<small>${action==='commission'?'选择差事与所需银两':`精力 −1${cost?' · 国库 −'+cost:''}`}</small></button>`;
   const actions=!officialAlive(p)?act('honor','赐祭抚恤',20):p.exiled||p.dismissed?'':p.career==='commoner'?act('talk','召见问候'):act('talk',p.away||p.commission||p.retired?'赐书问候':'召见议事')+act('commission','委派差事')+act('reward','论功赏赐',20)+(p.retired?act('recall','征召复出'):p.age>=55?act('retire','准予致仕'): '');
   const hint=!officialAlive(p)?'故人的履历与家族关系继续保留；抚恤仅可办理一次。':p.career==='commoner'?`以${p.post||p.office||'营生'}为业的平民，不承接官差；问候每三个月一次。`:p.exiled||p.dismissed?'获罪期间不再召见、领差或受赏，既有处置留在履历中。':'问候每三个月一次；差事有回奏与冷却；赏赐须有新增功绩且间隔一年。致仕须满五十五岁，复出须未满七十岁且致仕满一年。';
-  return `${personBackButton('officials')}<header class="detail-head">${porImg(p,224)}<div class="grow"><p>${role==='father'?'外家长辈':'外家子弟'} · ${esc(blocName(h.bloc))}</p><h2>${esc(p.name)}</h2><p>${esc(p.office||p.post)}${p.honor?' · '+esc(p.honor):''}</p><p>${p.age}岁 · <strong>${officialStatus(p)}</strong> · ${esc(p.temperament)}</p>${p.death?`<p class="official-death">${esc(p.death.d||'日期未详')} · ${esc(p.death.reason)}</p>`:''}${p.retired?'<p class="hint">不再承接官差；仍可书信问候。</p>':''}</div></header>
+  return `${personBackButton('officials')}<header class="detail-head">${porImg(p,224)}<div class="grow"><p>${role==='father'?'外家长辈':'外家子弟'} · ${esc(blocName(h.bloc))}</p><h2>${esc(p.name)}</h2><p>${esc(officialOfficeLabel(p))}${p.honor?' · '+esc(p.honor):''}</p><p>${p.age}岁 · <strong>${officialStatus(p)}</strong> · ${esc(p.temperament)}</p>${p.death?`<p class="official-death">${esc(p.death.d||'日期未详')} · ${esc(p.death.reason)}</p>`:''}${p.retired?'<p class="hint">不再承接官差；仍可书信问候。</p>':''}</div></header>
     <div class="detail-vitals">${bar('才干',p.ability)}${bar('功绩',p.merit)}${bar('信任',p.trust)}</div><div class="detail-actions" role="group" aria-label="朝臣往来"><span class="detail-action-label">召见与任用</span><div class="acts">${actions}${canAppointRelative(e)?`<button class="btn jade" onclick="A.appointRelative('${key}')">核验科名与授官</button>`:''}</div><p class="hint">${hint}</p></div>
     ${p.report?`<section class="detail-section"><h3>待阅回奏</h3><p>${esc(p.report.text)}</p><button class="btn jade" onclick="A.officialReport('${key}')">阅看回奏</button></section>`:''}
     ${p.commission?detailSection('当前差事',`<p>${esc(p.commission.title)} · ${Math.max(0,p.commission.due-S.turn)}个月后回奏</p>`):''}
     ${detailSection('家族往来',kin.map(x=>`<button class="btn quiet sm" onclick="A.go('consort',${x.id})">${esc(fullName(x))} · ${role==='father'?'女儿':'姐妹'}${x.alive?'':' · 已故'}</button>`).join(' ')+otherRoles.map(r=>`<p>${r==='father'?'父亲':role==='father'?'儿子':'兄弟'}：${officialLink(c,r)} · ${officialStatus(officialPerson(h,r))}</p>`).join(''))}
-    ${typeof kinCourtPanel==='function'?kinCourtPanel(e):''}${detailSection('娘家手足',natalFamilyLinks(c))}${h.relatives?.includes(p)?natalLifePanel(c,p):''}${detailSection('个人履历与纪事',detailStory(p))}`;
+    ${officialSpousePanel({p,e,key})}${detailSection('血亲与姻亲',careerKinHTML({p,e,key}))}${typeof kinCourtPanel==='function'?kinCourtPanel(e):''}${detailSection('娘家手足',natalFamilyLinks(c))}${h.relatives?.includes(p)?natalLifePanel(c,p):''}${detailSection('个人履历与纪事',detailStory(p))}`;
 }
 function officialConversation(e,topic){
   const {c,p,role,h}=e,kin=p.parentRelativeId?'姨母':role==='father'?'女儿':officialKinLabel(h,role)==='弟弟'?'姐姐':'妹妹';
@@ -223,7 +223,7 @@ function officialTaskTick(){
       p.merit=clamp(p.merit+(j.outcome==='success'?12:-6));chg({people:j.outcome==='success'?3:-1});officialRecord(c,role,text,{emotion:j.outcome==='success'?.5:-.3});
       officialFamilyReaction(familyContact,j.outcome,j.title);
     }
-    p.report={text,outcome:j.outcome,title:j.title,turn:S.turn};
+    p.report={text,outcome:j.outcome,title:j.title,turn:S.turn};if(careersActive())p.report.office=p.office||p.post;
     startOfficialContinuity(familyContact,j.outcome,j.title);
   }
 }

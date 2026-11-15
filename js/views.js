@@ -170,7 +170,7 @@ function familyGraphSVG(){
         const military=stance==='army'?1:0;
         const kin=(person,role,office)=>person?`<button class="graph-kin-person${!person.alive?' deceased':''}" onclick="A.go('official','${c.id}:${role}')" aria-label="查看${esc(person.name)}">${porImg(person,34)}${label(person.name,`${role==='father'?(indices.length>1?'父亲 · 亲姐妹同父':'父亲'):officialKinLabel(h,role)} · ${officialStatus(person)} · ${office}`)}</button>`:'';
         cards+=`<div class="graph-card graph-house" data-father-id="${c.fatherId}" data-person-id="${esc(father.id)}" style="${at(cx,houseY,houseHeight)};--house-color:${color}">
-          ${kin(father,'father',father.office)}${brotherRoles(h).map(role=>kin(h[role],role,h[role].post)).join('')}${natalPeople(h).map(p=>`<button class="graph-kin-person" onclick="A.go('natal','${c.id}:${p.id}')" aria-label="查看${esc(p.name)}">${porImg(natalPortrait(p),34)}${label(p.name,natalLabel(c,p)+' · '+natalAge(p)+'岁 · '+natalStatus(p))}</button>`).join('')}</div>`;
+          ${kin(father,'father',father.office)}${brotherRoles(h).map(role=>kin(h[role],role,h[role].post)).join('')}${natalPeople(h).map(p=>`<button class="graph-kin-person${p.alive?'':' deceased'}" onclick="A.go('natal','${c.id}:${p.id}')" aria-label="查看${esc(p.name)}">${porImg(natalPortrait(p),34)}${label(p.name,natalLabel(c,p)+' · '+natalAge(p)+'岁 · '+natalStatus(p))}</button>`).join('')}</div>`;
         // One shared trunk and sibling rail; every daughter connects directly below her father.
         wires+=`<g class="paternal-links" data-parent-id="${esc(father.id)}">${line(cx,houseY+houseHeight,cx,consortY-19,blood)}${line(x(indices[0]),consortY-19,x(indices.at(-1)),consortY-19,blood)}
           ${indices.map(index=>`<path data-child-id="${people[index].id}" d="M${x(index)} ${consortY-19} V${consortY}" stroke="${blood}" stroke-width="1.8"><title>${esc(father.name)}之女 ${esc(fullName(people[index]))}</title></path>`).join('')}</g>`;
@@ -336,6 +336,8 @@ function viewConsort(){
     if(solitaryQuietEvent(c))conversations+=`<button class="btn" onclick="A.quietHousehold(${c.id})">听她谈清静</button>`;
     if(travelerQuietPair(c))conversations+=`<button class="btn" onclick="A.neighborWord(${c.id})">听听廊下的新词</button>`;
     if(resemblanceEvent(c))conversations+=`<button class="btn" onclick="A.resemblanceTalk(${c.id})">听听肖似之议</button>`;
+    if(brotherSupportContext(c))conversations+=`<button class="btn" onclick="A.brotherSupport(${c.id})">听她谈兄长与家书</button>`;
+    if(firstChildWishContext(c))conversations+=`<button class="btn" onclick="A.firstChildWish(${c.id})">听她说这一胎的盼望</button>`;
     if(c.rescue?.familyContact==='confirmed')familyActions+=`<button class="btn" onclick="A.rescuedReturn(${c.id})">商议归乡</button>`;
     if(c.rank!==8)management+=`<button class="btn" onclick="A.openResidence(${c.id})">安排居所<small>主位 · 同住 · 换宫</small></button>`;
     if(c.rank<7)management+=`<button class="btn" onclick="A.promote(${c.id})">晋封<small>→${RANKS[c.rank+1]}</small></button>`;
@@ -349,7 +351,7 @@ function viewConsort(){
   }
   if(act&&!c.maid){cardAction=`<button class="btn quiet" onclick="A.toggleGreenCard(${c.id})">${c.cardWithdrawn?'恢复绿头牌':'撤下绿头牌'}</button>`;}
   if(act&&awaitingNoticeReason(c))conversations+=`<button class="btn" onclick="A.awaitingNotice(${c.id})">听她说久候的心事</button>`;
-  const family=(act?visitorLine(c)+fosterLine(c)+clanLine(c)+conKidLine(c)+relLine(c):'')+houseLine(c)+fiveBrotherPanel(c);
+  const family=(act?visitorLine(c)+fosterLine(c)+clanLine(c)+conKidLine(c)+relLine(c):'')+houseLine(c)+natalVisitorsPanel(c)+fiveBrotherPanel(c);
   return `${personBackButton('harem')}
    <header class="detail-head">${porImg(c,224)}<div class="grow">
     <p>${esc(fullName(c))} · ${c.age}岁 · ${c.alive?c.gone?'已出宫':c.homeLeave?'娘家 · 暂离宫中':c.templeStay?'护国寺':esc(residenceLabel(c)):esc(c.deathReason||'已故')}</p>

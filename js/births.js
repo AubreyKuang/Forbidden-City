@@ -26,9 +26,9 @@ function birthEvent(c){
   const kind=birthType(sexes),omen=chance(.03)?pick(Object.keys(BIRTH_OMENS)):null;
   const children=sexes.map(sex=>makeKid(c,sex,suggestName(sex)));
   registerMultipleBirth(children);
-  const prayerKey=currentPregnancyPrayer(c)?.key;
+  const prayerKey=currentPregnancyPrayer(c)?.key,firstWishKey=careersActive()&&c.firstChildWish?.key===pregnancyPrayerKey(c)?c.firstChildWish.key:null;
   delete c.pregnancyFather;delete c.pregnancyCalendar;
-  c.delivery={children:children.map(k=>k.id),kind,omen,date:dateStr(),turn:S.turn,...(prayerKey?{prayerKey}:{}),settled:false,
+  c.delivery={children:children.map(k=>k.id),kind,omen,date:dateStr(),turn:S.turn,...(prayerKey?{prayerKey}:{}),...(firstWishKey?{firstWishKey}:{}),settled:false,
     difficult:chance(c.trait==='体弱'?.12:.03),originalLoss:count===1&&!!c.swapPlot&&!c.swapPlot.settled&&chance(.02),swap:false,templeAdvice:rollBirthTempleAdvice(children,omen)};
   c.preg=0;c.prot=false;c.swapRisk=false;c.lastBirth=S.turn+1;
   children.forEach((k,i)=>{

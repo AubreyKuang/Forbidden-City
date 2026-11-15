@@ -322,7 +322,7 @@ function officialsTable(){
     const cell=(label,html,cls='')=>`<td data-label="${label}"${cls?` class="${cls}"`:''}><div>${html}</div></td>`;
     return `<tr class="${officialAlive(p)?'':'deceased'}">${[
       cell('姓名',`<button class="person-link official-name" onclick="A.go('official','${key}')">${porImg(p,36)}<span>${esc(p.name)}</span></button><small>${p.age}岁 · ${esc(p.temperament||'')}</small>`),
-      cell('官职',`${esc(p.office||p.post||'')}${p.honor?`<small>${esc(p.honor)}</small>`:''}`),
+      cell('官职',`${esc(officialOfficeLabel(p))}${p.honor?`<small>${esc(p.honor)}</small>`:''}`),
       cell('家族 · 宫中',`${esc(c.sur)}氏 · ${role==='father'?'家主':esc(officialKinLabel(h,role))}<div class="official-kin">${consorts||'<span class="hint">宫中无人</span>'}</div>`),
       cell('派系',`<span class="tag" style="border-color:${BLOC_COLOR[h.bloc]||'#999'}">${esc(blocName(h.bloc))}</span>`),
       cell('状态',officialStatus(p)),
@@ -334,13 +334,13 @@ function officialsTable(){
   // 科举出身的朝臣没有宫中亲眷，同表另列。
   const scholarRow=p=>{const cell=(label,html,cls='')=>`<td data-label="${label}"${cls?` class="${cls}"`:''}><div>${html}</div></td>`,last=(p.story||[]).at(-1),deed=last?`${last.d} · ${last.t}`:'尚无记载';
     return `<tr class="${officialAlive(p)?'':'deceased'}">${[cell('姓名',`<button class="person-link official-name" onclick="A.go('scholar','${p.id}')">${porImg(p,36)}<span>${esc(p.name)}</span></button><small>${p.age}岁 · ${esc(p.temperament||'')}</small>`),
-      cell('官职',esc(p.office||'')),cell('家族 · 宫中',`${esc(p.origin||'')} · ${esc(p.examRank||'进士')}出身<div class="official-kin"><span class="hint">宫中无亲眷</span></div>`),
+      cell('官职',esc(officialOfficeLabel(p))),cell('家族 · 宫中',`${esc(p.origin||'')} · ${esc(p.registrySource==='local'?'地方铨选':p.examRank||'进士')}<div class="official-kin">${careerKinHTML({p,key:'scholar:'+p.id,scholar:true})}</div>`),
       cell('派系',`<span class="tag" style="border-color:${BLOC_COLOR.civil}">${blocName('civil')}</span>`),cell('状态',officialStatus(p)),
       cell('才干/信任/功绩',`${rd(p.ability??0)} / ${rd(p.trust??0)} / ${rd(p.merit??0)}`,'official-nums'),cell('皇嗣','<span class="hint">—</span>'),
       cell('近期事迹',`${esc(deed.slice(0,64))}${deed.length>64?'…':''}`,'official-deed')].join('')}</tr>`;};
   const scholarRows=scholars.filter(p=>officialFilterMatch(p,filter)&&(bloc==='all'||bloc==='civil'));
   const counts={serving:entries.filter(e=>officialFilterMatch(e.p,'serving')).length+scholars.filter(p=>officialFilterMatch(p,'serving')).length,gone:entries.filter(e=>officialFilterMatch(e.p,'gone')).length+scholars.filter(p=>officialFilterMatch(p,'gone')).length};
-  return `${pageBackButton('officials','home')}<h2>官员表</h2><p class="hint">在朝官员出自妃嫔娘家或科举。同父姐妹共用父兄履历。点姓名看履历，点妃嫔或皇嗣可直接跳转。在朝 ${counts.serving} 人，故去与获罪 ${counts.gone} 人。</p>
+  return `${pageBackButton('officials','home')}<h2>官员表</h2><p class="hint">在朝官员出自妃嫔娘家、地方铨选或科举。同父姐妹共用父兄履历。点姓名看履历，点妃嫔或皇嗣可直接跳转。在朝 ${counts.serving} 人，故去与获罪 ${counts.gone} 人。</p>
     <div class="acts official-filters">${OFFICIAL_FILTERS.map(([id,l])=>chip(id,l,filter,'officialsFilter')).join('')}</div>
     <div class="acts official-filters">${chip('all','全部派系',bloc,'officialsBloc')}${blocs.map(id=>chip(id,id==='none'?'无所依附':blocName(id),bloc,'officialsBloc')).join('')}</div>
     ${rows.length+scholarRows.length?`<div class="official-table-wrap"><table class="official-table"><thead><tr><th>姓名</th><th>官职</th><th>家族 · 宫中</th><th>派系</th><th>状态</th><th>才干/信任/功绩</th><th>皇嗣</th><th>近期事迹</th></tr></thead><tbody>${rows.map(row).join('')}${scholarRows.map(scholarRow).join('')}</tbody></table></div>`:'<p class="hint">没有符合条件的官员。</p>'}`;

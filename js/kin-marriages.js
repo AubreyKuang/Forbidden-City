@@ -93,6 +93,7 @@ function matchStillOpen(match){
 /* —— 成婚 —— */
 function marrySister(c,p,match,{quiet=false,source='两家议定'}={}){
   p.married=true;p.spouse={id:`spouse:${p.id}`,sur:match.sur,name:match.name,desc:match.desc,kind:match.kind,born:S.turn-(natalAge(p)+1+marriageHash(p.id+':gap')%4)*12,alive:true};
+  if(journalContentVersion()>=12&&match.kind==='alliance'){p.spouse.personId=match.personId;p.spouse.consortId=match.consortId;p.spouse.role=match.role;}
   delete p.betrothal;(p.lifeCourse ||= {}).last=S.turn;
   const where=match.kind==='commoner'?`嫁与${match.desc}${match.name}`:`嫁与${match.desc}${match.name}`;
   if(quiet){story(p,`家书补记：早年已${where}。`);return;}
