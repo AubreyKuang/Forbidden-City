@@ -93,7 +93,7 @@ function matchStillOpen(match){
 /* —— 成婚 —— */
 function marrySister(c,p,match,{quiet=false,source='两家议定'}={}){
   p.married=true;p.spouse={id:`spouse:${p.id}`,sur:match.sur,name:match.name,desc:match.desc,kind:match.kind,born:S.turn-(natalAge(p)+1+marriageHash(p.id+':gap')%4)*12,alive:true};
-  if(journalContentVersion()>=12&&match.kind==='alliance'){p.spouse.personId=match.personId;p.spouse.consortId=match.consortId;p.spouse.role=match.role;}
+  if(journalContentVersion()>=15&&match.kind==='alliance'){p.spouse.personId=match.personId;p.spouse.consortId=match.consortId;p.spouse.role=match.role;}
   delete p.betrothal;(p.lifeCourse ||= {}).last=S.turn;
   const where=match.kind==='commoner'?`嫁与${match.desc}${match.name}`:`嫁与${match.desc}${match.name}`;
   if(quiet){story(p,`家书补记：早年已${where}。`);return;}
@@ -118,6 +118,7 @@ function kinMarriageTick(){
       const age=natalAge(p);
       if(p.married&&p.spouse&&!p.spouse.desc)p.spouse.desc=spouseFor(c,p,{alliance:false}).desc;
       if(age<20||p.married)continue;
+      if(journalContentVersion()>=15&&p.widow&&!p.betrothal)continue;
       if(age>=30){marrySister(c,p,p.betrothal&&matchStillOpen(p.betrothal.match)?p.betrothal.match:spouseFor(c,p,{alliance:false}),{quiet:!p.betrothal});continue;}
       // 头一回清点：家中早有安排的，照实补记；不靠抽签。
       if(!p.marriageChecked){

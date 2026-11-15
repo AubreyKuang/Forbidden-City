@@ -903,11 +903,13 @@ const familyHash=key=>voiceHash(newFamilyRules()?`${S.emp.seed}:${key}`:key);
 const givenOf=p=>{const n=String(p?.name||'');return p?.sur&&n.startsWith(p.sur)&&n.length>p.sur.length?n.slice(p.sur.length):n;};
 function fatherGivenName(seed,family){
   const used=new Set(family.flatMap(p=>[...givenOf(p)]));
+  if(courtNamesActive())return courtGivenName(family[0].sur,seed,{taboo:used});
   for(let i=0;i<FATHER_NAMES.length;i++){const name=FATHER_NAMES[(seed+i)%FATHER_NAMES.length];if(![...name].some(ch=>used.has(ch)))return name;}
   return FATHER_NAMES[seed%FATHER_NAMES.length];
 }
 function sonGivenName(start,house,sur){
   const taboo=new Set([...givenOf({sur,name:house.father.name})]),taken=new Set(Object.values(house).map(p=>p?.name));
+  if(courtNamesActive())return courtGivenName(sur,start,{taboo,used:new Set([...courtUsedNames(),...taken])});
   for(let i=0;i<BROTHER_NAMES.length;i++){const name=BROTHER_NAMES[(start+i)%BROTHER_NAMES.length];if(![...name].some(ch=>taboo.has(ch))&&!taken.has(sur+name))return name;}
   return BROTHER_NAMES[start%BROTHER_NAMES.length];
 }
@@ -1046,7 +1048,7 @@ function militaryMeritEvent(c,place,relative='brother'){
   return frontierReport(c,officer,{title:'边关捷报',por:c,
     text:`传旨公公捧着${place}八百里捷报进殿：${officer.name}率部夜袭敌营，斩获颇丰。\n${cName(c)}听见${kin}的名字，忙起身听旨，眼中难掩喜色。`,choices:[
       {t:`厚赏，加封其${relative==='father'?'父':'兄'}（国库-20）`,cond:()=>E().treasury>=20,why:'国库银两不足',f:()=>{
-        mark();if(relative==='father')officer.honor='护国功臣';else if(journalContentVersion()>=12){if(!officialGrade(officer)||officialGrade(officer)>3)careerSetOffice({p:officer,key:c.id+':'+relative,e:{c,p:officer,h:houseOf(c),role:relative}},'总兵','边功擢升');}else officer.post='总兵';
+        mark();if(relative==='father')officer.honor='护国功臣';else if(journalContentVersion()>=15){if(!officialGrade(officer)||officialGrade(officer)>3)careerSetOffice({p:officer,key:c.id+':'+relative,e:{c,p:officer,h:houseOf(c),role:relative}},'总兵','边功擢升');}else officer.post='总兵';
         officialRecord(c,relative,`在${place}立功受封，朝廷加封厚赏。`,{emotion:.7});
         return fx(cchg(c,{mood:10,aff:3}),chg({treasury:-20,prestige:3}));
       }},
@@ -1083,9 +1085,9 @@ function factionEvent(){
   const withHouse=harem().filter(c=>officialServing(houseOf(c)?.father));
   const kin=withHouse.filter(c=>stanceOf(c)==='kin'&&c.favor>=45&&brotherRole(houseOf(c),officialServing));
   if(kin.length){const c=pick(kin),h=houseOf(c),role=pick(brotherRoles(h).filter(r=>officialServing(h[r]))),brother=h[role];pool.push({title:'外戚请封',por:c,valid:()=>officialServing(h.father)&&officialServing(brother),text:`${h.father.name}递了折子，请擢其子${brother.name}为京官。朝中都知道，这是${cName(c)}的娘家。文官们已经在私下议论“恩出于内”。`,choices:[
-    {t:'准了',f:()=>{brother.post='通政司参议';if(journalContentVersion()>=12)brother.office=brother.post;brother.merit+=8;c.fam.p=Math.min(95,c.fam.p+6);policyNudge('kin',5);policyNudge('civil',-4);officialRecord(c,role,'奉准入京为官，授通政司参议。',{emotion:.5});return fx(cchg(c,{mood:8,aff:3}),chg({prestige:-2}))}},
+    {t:'准了',f:()=>{brother.post='通政司参议';if(journalContentVersion()>=15)brother.office=brother.post;brother.merit+=8;c.fam.p=Math.min(95,c.fam.p+6);policyNudge('kin',5);policyNudge('civil',-4);officialRecord(c,role,'奉准入京为官，授通政司参议。',{emotion:.5});return fx(cchg(c,{mood:8,aff:3}),chg({prestige:-2}))}},
     {t:'驳回：“官职是朝廷的，不是谁家的。”',f:()=>{policyNudge('civil',3);setXin(c,'委屈','娘家请封被驳');return fx(cchg(c,{mood:-8}),chg({prestige:2}))}},
-    {t:'外放历练，三年后再议',f:()=>{brother.away=true;brother.post='外放'+pick(['知州','同知','通判']);if(journalContentVersion()>=12)brother.office=brother.post;brother.merit+=4;policyNudge('civil',1);officialRecord(c,role,`外放历练，授${brother.post}。`);return fx(cchg(c,{mood:-2}))+`\n§${brother.name}出京赴任`}}]});}
+    {t:'外放历练，三年后再议',f:()=>{brother.away=true;brother.post='外放'+pick(['知州','同知','通判']);if(journalContentVersion()>=15)brother.office=brother.post;brother.merit+=4;policyNudge('civil',1);officialRecord(c,role,`外放历练，授${brother.post}。`);return fx(cchg(c,{mood:-2}))+`\n§${brother.name}出京赴任`}}]});}
   const civil=withHouse.filter(c=>stanceOf(c)==='civil');
   if(civil.length){const c=pick(civil),h=houseOf(c);pool.push({title:'科场案',valid:()=>officialServing(h.father),ref:'科场舞弊（明·弘治己未科场案）',por:c,text:`今科会试有舞弊传闻，御史顺藤摸瓜，查到${h.father.name}的门生头上。${cName(c)}一早就跪在殿外，说父亲为官清白。`,choices:[
     {t:'严查到底',f:()=>{c.fam.p=Math.max(5,c.fam.p-12);policyNudge('civil',4);setXin(c,'惶恐','父亲牵涉科场案');officialRecord(c,'father','因科场案受审。',{emotion:-.4});return fx(cchg(c,{mood:-10}),chg({people:4,prestige:2}))}},

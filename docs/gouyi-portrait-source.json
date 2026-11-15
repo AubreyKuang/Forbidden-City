@@ -1,0 +1,24 @@
+{
+  "frame": [
+    448,
+    560
+  ],
+  "columns": 4,
+  "portraits": [
+    {
+      "id": 422,
+      "key": "gouyi",
+      "name": "钩弋夫人",
+      "atlas": "palace-consort-gouyi.webp",
+      "source": "exec-3f04e16c-396b-419b-8119-510234ffe1bd.png",
+      "cell": 0,
+      "crop": [
+        2,
+        0,
+        1117,
+        1402
+      ],
+      "storyOnly": true
+    }
+  ]
+}

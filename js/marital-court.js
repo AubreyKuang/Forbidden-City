@@ -54,6 +54,7 @@ marrySister=function(c,p,match,options={}){
 function maritalCourtTick(){
   if(!careersActive())return;
   for(const person of careerPeople())if(!officialAlive(person.p))maritalCourtEcho(person,person.p.death?.reason||'收到讣报','death');
+  widowSocialTick();
 }
 const maritalCareersTick=careerTick;
 careerTick=function(){maritalCourtTick();return maritalCareersTick();};
@@ -81,6 +82,7 @@ natalMeetingEvent=function(c,p){
   const ev=maritalNatalMeeting(c,p);if(!ev||!careersActive()||!p.widow)return ev;
   ev.text=`${p.name}正在${c.palace}小住。提起亡夫${p.widow.name}，她握着茶盏，没有像平日那样说完一句话。${fullName(c)}陪在旁边，等她慢慢开口。`;
   ev.choices.unshift({t:'让姐妹慢慢说，暂不催她振作',f:()=>{if(!natalInPalace(c,p))return null;p.maritalMood='悲伤中稍得宽慰';p.mood=clamp((p.mood??40)+8);relAdd(c,p,5);const line=`${p.name}入宫小住时向${fullName(c)}说起亡夫${p.widow.name}。姐妹静坐许久，她终于肯说起思念，也知道不必立刻装作无事。`;natalRecord(c,p,line,.4);return line;}});
+  ev.choices.splice(1,0,{t:'赐银照顾生活，也许她有自己的来日 · 国库−10',cond:()=>E().treasury>=10&&S.turn-(p.widow.lastGift??-99)>=12,why:'国库不足或一年内已赐助',f:()=>{if(!natalInPalace(c,p)||E().treasury<10||S.turn-(p.widow.lastGift??-99)<12)return null;p.widow.lastGift=S.turn;chg({treasury:-10});const line=`陛下赐银照顾${p.name}往后的生活，肯定她撑持家事的不易，也说明不以守寡拘束终身。她一面感激，一面承认自己仍会想念亡夫，尚需时日理清心绪。`;natalRecord(c,p,line,.4);return line;}});
   return ev;
 };
 function widowFutureReady(c,p){return careersActive()&&p.alive&&inPalace(c)&&!!p.widow&&!p.widow.authorized&&S.turn-p.widow.turn>=6&&S.turn-(p.widow.lastAsked??-99)>=6;}
@@ -91,8 +93,7 @@ A.widowFuture=function(id,relative){
     {t:'准其依本人意愿重新议亲',cond:()=>willing&&E().energy>0,why:willing?'精力不足':'她目前无意再婚',f:()=>{
       if(!valid()||!willing||!useE())return null;p.widow.authorized=true;p.widow.authorizedAt=S.turn;p.married=false;
       (p.formerSpouses ||= []).push({...p.spouse});delete p.spouse;p.marriageChecked=S.turn;
-      startBetrothal(c,p);p.betrothal.due=Math.max(p.betrothal.due,S.turn+6);
-      const text=`${p.name}表达愿意重新考虑婚事，陛下准其重新议亲${p.widow.imperial?'，说明不因前次赐婚而终身拘束':''}。亡夫${p.widow.name}与旧日婚姻仍留在纪事，新的亲事尚未成婚。`;natalRecord(c,p,text,.4);p.maritalMood='惆怅中有了盼望';save('auto');return text;
+      const text=`${p.name}表达愿意重新考虑婚事，陛下准其重新议亲${p.widow.imperial?'，说明不因前次赐婚而终身拘束':''}。亡夫${p.widow.name}与旧日婚姻仍留在纪事，眼下没有替她选定新人，她可以先慢慢重拾来往。`;natalRecord(c,p,text,.4);p.maritalMood='惆怅中有了盼望';save('auto');return text;
     }},
     {t:'尊重她眼下的步调，先不议亲',f:()=>{if(!valid())return null;p.widow.lastAsked=S.turn;const line=`陛下让${p.name}不必急着重议婚事，也准她按亲眷规矩进宫向姐妹说说心事。`;natalRecord(c,p,line,.2);return line;}}
   ]});
@@ -100,7 +101,7 @@ A.widowFuture=function(id,relative){
 const maritalLifePanel=natalLifePanel;
 natalLifePanel=function(c,p){
   const person=p.spouse?.personId&&careerPeople().find(x=>x.p.id===p.spouse.personId);
-  return maritalLifePanel(c,p)+(p.maritalMood?detailSection('婚后心绪',`<p>${esc(p.maritalMood)}${p.maritalNews?' · '+esc(p.maritalNews.text):''}</p>${person?`<p>丈夫履历：${careerLink(person)} · ${esc(officialStatus(person.p))}</p>`:''}${p.widow?`<p>亡夫：${esc(p.widow.name)} · ${p.widow.imperial?'原为赐婚':'两家旧约'}。${p.widow.authorized?'已获准依本人意愿重新议亲。':'原婚姻保留记载，尚未重新议亲。'}</p>`:''}${widowFutureReady(c,p)?`<button class="btn" onclick="A.widowFuture(${c.id},${p.id})">听她谈往后婚事<small>同意重议需精力−1</small></button>`:''}`):'');
+  return maritalLifePanel(c,p)+(p.maritalMood?detailSection('婚后心绪',`<p>${esc(p.maritalMood)}${p.maritalNews?' · '+esc(p.maritalNews.text):''}</p>${person?`<p>丈夫履历：${careerLink(person)} · ${esc(officialStatus(person.p))}</p>`:''}${p.widow?`<p>亡夫：${esc(p.widow.name)} · ${p.widow.imperial?'原为赐婚':'两家旧约'}。${p.widow.authorized?'已获准依本人意愿重新议亲。':'原婚姻保留记载，尚未重新议亲。'}</p>`:''}${p.widow?.meeting?`<button class="btn" onclick="A.widowMeeting(${c.id},${p.id})">听她谈新认识的人</button>`:''}${widowFutureReady(c,p)?`<button class="btn" onclick="A.widowFuture(${c.id},${p.id})">听她谈往后婚事<small>同意重议需精力−1</small></button>`:''}`):'');
 };
 function natalVisitorsPanel(c){
   const visitors=natalPeople(houseOf(c)).filter(p=>p.visit&&p.visit.host===c.id&&natalInPalace(c,p));
@@ -114,4 +115,31 @@ function natalSpouseSummary(p){
 }
 function officialSpousePanel(person){
   const wives=courtWives(person);return wives.length?detailSection('婚姻与家书',wives.map(({c,p})=>`<p>妻子：<button class="person-link" onclick="A.go('natal','${c.id}:${p.id}')">${esc(p.name)} ↗</button> · ${esc(natalStatus(p))}${p.maritalMood?' · '+esc(p.maritalMood):''}</p>`).join('')):'';
+}
+function widowSocialReady(c,p){return careersActive()&&inPalace(c)&&p.alive&&!p.consortId&&!p.visit&&!p.natalPregnancy&&p.widow?.authorized&&!p.married&&!p.betrothal&&p.willing!==false&&S.turn-p.widow.turn>=18&&S.turn-(p.widow.authorizedAt??S.turn)>=6;}
+function widowNewMeeting(c,p){
+  if(!widowSocialReady(c,p)||p.widow.meeting)return null;
+  const match=spouseFor(c,p),place=pick(['旧友相聚','花朝诗会','寺前义卖']);
+  p.widow.meeting={match,place,turn:S.turn};const line=`守寡许久后，${p.name}在${place}中认识${match.name}。说到旧日的失落，对方没有急着劝她忘记。她有了愿意再见一面的念头，又怕自己辜负旧情，将这份纠结写给${fullName(c)}。`;
+  natalRecord(c,p,line,.3);const man=match.personId&&careerPeopleForMarriage(match.personId);if(man)courtPersonRecord(courtPerson(man.key),`在${place}与${p.name}相识，听她提及旧事，愿先以朋友相待，不催她作婚姻之诺。`);
+  return p.widow.meeting;
+}
+function widowMeetingEvent(c,p){
+  const meet=p.widow?.meeting;if(!meet||!widowSocialReady(c,p))return null;
+  const valid=()=>p.widow?.meeting===meet&&widowSocialReady(c,p)&&matchStillOpen(meet.match);
+  return {title:'旧伤与新识 · '+p.name,por:natalPortrait(p),cast:[c],valid,text:`${p.name}在${meet.place}认识了${meet.match.name}，来信说：“我还记得从前，也想知道往后可否有人同行。可一动这个念头，又觉得心里发酸。”\n她尚未定亲，只愿先慢慢相识。`,choices:[
+    {t:'尊重她的心意，让两家慢慢相看',f:()=>{if(!valid())return null;p.betrothal={turn:S.turn,due:S.turn+12,match:meet.match,seen:true};delete p.widow.meeting;p.maritalMood='思念旧人，也愿了解新人';const text=`${p.name}愿与${meet.match.name}慢慢相看，陛下尊重她的意思。新亲事开始商议，仍未成婚；旧日的婚姻与思念不因此抹去。`;natalRecord(c,p,text,.4);return text;}},
+    {t:'先以朋友来往，不急着谈婚事',f:()=>{if(!valid())return null;delete p.widow.meeting;p.widow.lastSocial=S.turn;const text=`${p.name}决定先与${meet.match.name}以朋友来往，不急着再次成婚。她仍需要时间与自己的伤心相处。`;natalRecord(c,p,text,.2);return text;}}
+  ]};
+}
+A.widowMeeting=function(id,relative){const e=natalEntry(id,relative);if(!modalOpen&&e)pushEv(widowMeetingEvent(e.c,e.p));};
+function widowSocialTick(){
+  const seen=new Set();for(const c of harem()){const h=houseOf(c);if(!h||seen.has(h.father.id))continue;seen.add(h.father.id);
+    for(const p of natalPeople(h)){
+      if(!widowSocialReady(c,p))continue;
+      if(p.widow.meeting&&!matchStillOpen(p.widow.meeting.match)){natalRecord(c,p,`与${p.widow.meeting.match.name}的往来因对方处境变化暂且停下，未结新亲。`);delete p.widow.meeting;}
+      if(p.widow.meeting||S.turn-(p.widow.lastSocial??-99)<6)continue;p.widow.lastSocial=S.turn;
+      if(chance(.12)){widowNewMeeting(c,p);const ev=widowMeetingEvent(c,p);if(ev)pushEv(ev);return;}
+    }
+  }
 }

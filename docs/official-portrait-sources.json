@@ -1,0 +1,346 @@
+{
+  "frame": [
+    448,
+    560
+  ],
+  "columns": 4,
+  "portraits": [
+    {
+      "id": 398,
+      "atlas": "palace-officials-expanded.webp",
+      "source": "exec-d917a5a2-ecf2-45ae-b934-130b605d8d05.png",
+      "cell": 0,
+      "crop": [
+        0,
+        0,
+        512,
+        511
+      ],
+      "bloc": "civil",
+      "ageGroup": "young"
+    },
+    {
+      "id": 399,
+      "atlas": "palace-officials-expanded.webp",
+      "source": "exec-d917a5a2-ecf2-45ae-b934-130b605d8d05.png",
+      "cell": 1,
+      "crop": [
+        512,
+        0,
+        1024,
+        511
+      ],
+      "bloc": "civil",
+      "ageGroup": "young"
+    },
+    {
+      "id": 400,
+      "atlas": "palace-officials-expanded.webp",
+      "source": "exec-d917a5a2-ecf2-45ae-b934-130b605d8d05.png",
+      "cell": 2,
+      "crop": [
+        1024,
+        0,
+        1536,
+        511
+      ],
+      "bloc": "civil",
+      "ageGroup": "young"
+    },
+    {
+      "id": 401,
+      "atlas": "palace-officials-expanded.webp",
+      "source": "exec-d917a5a2-ecf2-45ae-b934-130b605d8d05.png",
+      "cell": 3,
+      "crop": [
+        0,
+        513,
+        512,
+        1024
+      ],
+      "bloc": "civil",
+      "ageGroup": "mature"
+    },
+    {
+      "id": 402,
+      "atlas": "palace-officials-expanded.webp",
+      "source": "exec-d917a5a2-ecf2-45ae-b934-130b605d8d05.png",
+      "cell": 4,
+      "crop": [
+        512,
+        513,
+        1024,
+        1024
+      ],
+      "bloc": "civil",
+      "ageGroup": "young"
+    },
+    {
+      "id": 403,
+      "atlas": "palace-officials-expanded.webp",
+      "source": "exec-d917a5a2-ecf2-45ae-b934-130b605d8d05.png",
+      "cell": 5,
+      "crop": [
+        1024,
+        513,
+        1536,
+        1024
+      ],
+      "bloc": "civil",
+      "ageGroup": "mature"
+    },
+    {
+      "id": 404,
+      "atlas": "palace-officials-expanded.webp",
+      "source": "exec-bf4af560-9c73-486a-9595-620e4504faf5.png",
+      "cell": 0,
+      "crop": [
+        0,
+        0,
+        512,
+        509
+      ],
+      "bloc": "army",
+      "ageGroup": "young"
+    },
+    {
+      "id": 405,
+      "atlas": "palace-officials-expanded.webp",
+      "source": "exec-bf4af560-9c73-486a-9595-620e4504faf5.png",
+      "cell": 1,
+      "crop": [
+        512,
+        0,
+        1024,
+        509
+      ],
+      "bloc": "army",
+      "ageGroup": "young"
+    },
+    {
+      "id": 406,
+      "atlas": "palace-officials-expanded.webp",
+      "source": "exec-bf4af560-9c73-486a-9595-620e4504faf5.png",
+      "cell": 2,
+      "crop": [
+        1024,
+        0,
+        1536,
+        509
+      ],
+      "bloc": "army",
+      "ageGroup": "young"
+    },
+    {
+      "id": 407,
+      "atlas": "palace-officials-expanded.webp",
+      "source": "exec-bf4af560-9c73-486a-9595-620e4504faf5.png",
+      "cell": 3,
+      "crop": [
+        0,
+        509,
+        512,
+        1024
+      ],
+      "bloc": "army",
+      "ageGroup": "mature"
+    },
+    {
+      "id": 408,
+      "atlas": "palace-officials-expanded.webp",
+      "source": "exec-bf4af560-9c73-486a-9595-620e4504faf5.png",
+      "cell": 4,
+      "crop": [
+        512,
+        509,
+        1024,
+        1024
+      ],
+      "bloc": "army",
+      "ageGroup": "young",
+      "transparentSource": "exec-2cc750c0-462a-4922-b075-ccd73a7d7eac.png"
+    },
+    {
+      "id": 409,
+      "atlas": "palace-officials-expanded.webp",
+      "source": "exec-bf4af560-9c73-486a-9595-620e4504faf5.png",
+      "cell": 5,
+      "crop": [
+        1024,
+        509,
+        1536,
+        1024
+      ],
+      "bloc": "army",
+      "ageGroup": "mature"
+    },
+    {
+      "id": 410,
+      "atlas": "palace-officials-expanded.webp",
+      "source": "exec-db227d87-30d4-47ac-9476-ed5153292089.png",
+      "cell": 0,
+      "crop": [
+        0,
+        0,
+        512,
+        511
+      ],
+      "bloc": "civil",
+      "ageGroup": "young"
+    },
+    {
+      "id": 411,
+      "atlas": "palace-officials-expanded.webp",
+      "source": "exec-db227d87-30d4-47ac-9476-ed5153292089.png",
+      "cell": 1,
+      "crop": [
+        512,
+        0,
+        1024,
+        511
+      ],
+      "bloc": "civil",
+      "ageGroup": "young"
+    },
+    {
+      "id": 412,
+      "atlas": "palace-officials-expanded.webp",
+      "source": "exec-db227d87-30d4-47ac-9476-ed5153292089.png",
+      "cell": 2,
+      "crop": [
+        1024,
+        0,
+        1536,
+        511
+      ],
+      "bloc": "civil",
+      "ageGroup": "young"
+    },
+    {
+      "id": 413,
+      "atlas": "palace-officials-expanded.webp",
+      "source": "exec-db227d87-30d4-47ac-9476-ed5153292089.png",
+      "cell": 3,
+      "crop": [
+        0,
+        513,
+        512,
+        1024
+      ],
+      "bloc": "civil",
+      "ageGroup": "young"
+    },
+    {
+      "id": 414,
+      "atlas": "palace-officials-expanded.webp",
+      "source": "exec-db227d87-30d4-47ac-9476-ed5153292089.png",
+      "cell": 4,
+      "crop": [
+        519,
+        513,
+        1024,
+        1024
+      ],
+      "bloc": "civil",
+      "ageGroup": "young"
+    },
+    {
+      "id": 415,
+      "atlas": "palace-officials-expanded.webp",
+      "source": "exec-db227d87-30d4-47ac-9476-ed5153292089.png",
+      "cell": 5,
+      "crop": [
+        1024,
+        513,
+        1536,
+        1024
+      ],
+      "bloc": "civil",
+      "ageGroup": "young"
+    },
+    {
+      "id": 416,
+      "atlas": "palace-officials-expanded.webp",
+      "source": "exec-c1ad7235-72e6-487e-b9c1-439a80f7a7fc.png",
+      "cell": 0,
+      "crop": [
+        0,
+        0,
+        512,
+        510
+      ],
+      "bloc": "army",
+      "ageGroup": "young"
+    },
+    {
+      "id": 417,
+      "atlas": "palace-officials-expanded.webp",
+      "source": "exec-c1ad7235-72e6-487e-b9c1-439a80f7a7fc.png",
+      "cell": 1,
+      "crop": [
+        512,
+        0,
+        1024,
+        510
+      ],
+      "bloc": "army",
+      "ageGroup": "young"
+    },
+    {
+      "id": 418,
+      "atlas": "palace-officials-expanded.webp",
+      "source": "exec-c1ad7235-72e6-487e-b9c1-439a80f7a7fc.png",
+      "cell": 2,
+      "crop": [
+        1024,
+        0,
+        1536,
+        510
+      ],
+      "bloc": "army",
+      "ageGroup": "young"
+    },
+    {
+      "id": 419,
+      "atlas": "palace-officials-expanded.webp",
+      "source": "exec-c1ad7235-72e6-487e-b9c1-439a80f7a7fc.png",
+      "cell": 3,
+      "crop": [
+        0,
+        513,
+        512,
+        1024
+      ],
+      "bloc": "army",
+      "ageGroup": "young"
+    },
+    {
+      "id": 420,
+      "atlas": "palace-officials-expanded.webp",
+      "source": "exec-c1ad7235-72e6-487e-b9c1-439a80f7a7fc.png",
+      "cell": 4,
+      "crop": [
+        512,
+        513,
+        1024,
+        1024
+      ],
+      "bloc": "army",
+      "ageGroup": "young"
+    },
+    {
+      "id": 421,
+      "atlas": "palace-officials-expanded.webp",
+      "source": "exec-c1ad7235-72e6-487e-b9c1-439a80f7a7fc.png",
+      "cell": 5,
+      "crop": [
+        1024,
+        513,
+        1536,
+        1024
+      ],
+      "bloc": "army",
+      "ageGroup": "young"
+    }
+  ]
+}

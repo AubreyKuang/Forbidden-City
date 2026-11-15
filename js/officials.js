@@ -141,7 +141,7 @@ function viewOfficial(){
     ${p.report?`<section class="detail-section"><h3>待阅回奏</h3><p>${esc(p.report.text)}</p><button class="btn jade" onclick="A.officialReport('${key}')">阅看回奏</button></section>`:''}
     ${p.commission?detailSection('当前差事',`<p>${esc(p.commission.title)} · ${Math.max(0,p.commission.due-S.turn)}个月后回奏</p>`):''}
     ${detailSection('家族往来',kin.map(x=>`<button class="btn quiet sm" onclick="A.go('consort',${x.id})">${esc(fullName(x))} · ${role==='father'?'女儿':'姐妹'}${x.alive?'':' · 已故'}</button>`).join(' ')+otherRoles.map(r=>`<p>${r==='father'?'父亲':role==='father'?'儿子':'兄弟'}：${officialLink(c,r)} · ${officialStatus(officialPerson(h,r))}</p>`).join(''))}
-    ${officialSpousePanel({p,e,key})}${detailSection('血亲与姻亲',careerKinHTML({p,e,key}))}${typeof kinCourtPanel==='function'?kinCourtPanel(e):''}${detailSection('娘家手足',natalFamilyLinks(c))}${h.relatives?.includes(p)?natalLifePanel(c,p):''}${detailSection('个人履历与纪事',detailStory(p))}`;
+    ${officialSpousePanel({p,e,key})}${officialBrothersPanel({p,e,key})}${detailSection('血亲与姻亲',careerKinHTML({p,e,key}))}${typeof kinCourtPanel==='function'?kinCourtPanel(e):''}${detailSection('娘家手足',natalFamilyLinks(c))}${h.relatives?.includes(p)?natalLifePanel(c,p):''}${detailSection('个人履历与纪事',detailStory(p))}`;
 }
 function officialConversation(e,topic){
   const {c,p,role,h}=e,kin=p.parentRelativeId?'姨母':role==='father'?'女儿':officialKinLabel(h,role)==='弟弟'?'姐姐':'妹妹';

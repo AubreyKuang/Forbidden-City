@@ -1,11 +1,11 @@
 /* 官品、具名回奏与内外家书。旧事务按原版本重放，不补抽签、不改变旧批复。 */
-const CAREER_JOURNAL=12;
+const CAREER_JOURNAL=15;
 const careersActive=()=>!!S&&!S.over&&journalContentVersion()>=CAREER_JOURNAL;
 const GRADE_NAMES=['正一品','从一品','正二品','从二品','正三品','从三品','正四品','从四品','正五品','从五品','正六品','从六品','正七品','从七品','正八品','从八品','正九品','从九品'];
 // 官名沿用游戏的架空朝制；品序以清制为参照。爵位、科名与营生不充作官品。
 const CIVIL_CAREERS=[[1,'内阁大学士'],[2,'协办大学士'],[3,'户部侍郎'],[4,'内阁学士'],[5,'大理寺卿'],[6,'光禄寺卿'],[7,'道员'],[8,'知府'],[9,'同知'],[10,'知州'],[11,'通判'],[12,'翰林院修撰'],[13,'知县'],[14,'州同'],[15,'县丞'],[17,'主簿'],[18,'巡检']];
 const ARMY_CAREERS=[[1,'镇国大将军'],[2,'提督'],[3,'总兵'],[4,'副将'],[5,'参将'],[6,'游击'],[7,'都司'],[9,'守备'],[10,'守御所千总'],[11,'千总'],[13,'把总'],[14,'外委千总'],[15,'外委把总']];
-const OFFICE_GRADES={...Object.fromEntries([...CIVIL_CAREERS,...ARMY_CAREERS].map(([g,n])=>[n,g])),内阁首辅:1,河道总督:2,太医院院判:11,通政司参议:9,京营统领:3,县令:13,翰林院编修:13,翰林学士:4,两江总督:2,监察御史:14,盐运使:6,苏州织造:9,太医院吏目:18,游击将军:6,骁骑校尉:11};
+const OFFICE_GRADES={...Object.fromEntries([...CIVIL_CAREERS,...ARMY_CAREERS].map(([g,n])=>[n,g])),内阁首辅:1,河道总督:2,太医院院判:11,锦衣卫指挥使:5,通政司参议:9,京营统领:3,县令:13,翰林院编修:13,翰林学士:4,两江总督:2,监察御史:14,盐运使:6,苏州织造:9,太医院吏目:18,游击将军:6,骁骑校尉:11};
 function officialGrade(p){
   if(!p||['student','commoner'].includes(p.career))return null;
   const title=p.office||p.post||'';
@@ -50,14 +50,14 @@ function careerKin(person){
   for(const {c,h} of houses.values())for(const sister of h.relatives||[]){
     const sp=sister.spouse;if(!sister.married||sister.alive===false||sp?.alive===false&&!sister.widow||!sp?.personId)continue;
     const husband=careerPeopleForMarriage(sp.personId);if(!husband)continue;
-    const inGroom=person.e?.h.father.id===husband.h.father.id,inBride=person.e?.h.father.id===h.father.id;
+    const inGroom=person.p.id===husband.p.id||!!(person.e&&husband.h&&person.e.h.father.id===husband.h.father.id),inBride=!!(husband.c&&person.e?.h.father.id===h.father.id);
     if(!inGroom&&!inBride)continue;
     const other=inGroom?c:husband.c;
     for(const member of paternalFamily(other).filter(x=>S.consorts.includes(x)))add(member,'marriage','姻亲',`${sister.name}与${husband.p.name}成婚，两家结亲`);
   }
   return [...found.values()];
 }
-function careerPeopleForMarriage(id){return officialEntries().find(e=>e.p.id===id);}
+function careerPeopleForMarriage(id){return officialEntries().find(e=>e.p.id===id)||(scholarById(id)?{p:scholarById(id),key:'scholar:'+id,scholar:true}:null);}
 function careerKinText(person){return careerKin(person).map(r=>`${fullName(r.c)}的${r.label}（${r.detail}）`).join('；')||'未登记宫中亲缘';}
 function careerKinHTML(person){return careerKin(person).map(r=>`<p><button class="person-link" onclick="A.go('consort',${r.c.id})">${esc(fullName(r.c))}${r.c.alive?'':'（已故）'}</button> · ${esc(r.label)}<small>${esc(r.detail)}</small></p>`).join('')||'<p class="hint">未登记宫中亲缘。同姓不等于同族。</p>';}
 function careerFamilyEcho(person,kind,text){
@@ -90,7 +90,7 @@ function ensureLocalOfficers(){
     p.origin='地方铨选';p.essay='按季呈报任内实绩，候吏部考核';
     if(i===0&&chance(.35)){
       const roots=officialEntries().filter(e=>e.role==='father'&&officialAlive(e.p)&&familyIsNoble(e.c));
-      if(roots.length){const root=pick(roots);p.sur=root.c.sur;p.name=p.sur+pick(FATHER_NAMES);p.age=Math.max(30,Math.min(65,root.p.age+ri(-8,8)));p.courtKin=[{fatherId:root.p.id,type:'branch',detail:`谱牒记载：与${root.p.name}出自同族旁支，分房多年，非亲兄弟`}];}
+      if(roots.length){const root=pick(roots);p.sur=root.c.sur;p.name=p.sur+courtGivenName(p.sur,p.seed);p.age=Math.max(30,Math.min(65,root.p.age+ri(-8,8)));p.courtKin=[{fatherId:root.p.id,type:'branch',detail:`谱牒记载：与${root.p.name}出自同族旁支，分房多年，非亲兄弟`}];}
     }
     S.scholars.push(p);scholarRecord(p,`吏部核录：现任${officialOfficeLabel(p)}，在${region}办差。${careerKinText({p,scholar:true,key:'scholar:'+p.id})}。`,false);
   }

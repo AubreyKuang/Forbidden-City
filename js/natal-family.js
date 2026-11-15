@@ -30,7 +30,7 @@ function initializeNatalFamily(c,h,family){
 const NATAL_TRAITS_F=['温婉','活泼','沉静','才女','爽直','聪慧'],NATAL_TRAITS_M=['温厚','活泼','沉静','有文才','爽直','聪慧'];
 const natalTrait=p=>p.sex==='m'?({才女:'有文才',温婉:'温厚'})[p.trait]||p.trait:p.trait;
 function addNatalPerson(c,h,sex,age,seed,birth=true){
-  const names=sex==='f'?GIRLA.flatMap(a=>GIRLB.map(b=>a+b)):BROTHER_NAMES;
+  const names=sex==='f'?GIRLA.flatMap(a=>GIRLB.map(b=>a+b)):(courtNamesActive()?COURT_GIVEN:BROTHER_NAMES);
   const used=new Set([h.father.name,...brotherRoles(h).map(r=>h[r].name),...(h.relatives||[]).map(p=>p.name),...S.consorts.map(fullName)]);
   // Children avoid the characters of their father's given name (避讳).
   const taboo=new Set(newFamilyRules()?[...givenOf({sur:c.sur,name:h.father.name})]:[]),clash=g=>used.has(c.sur+g)||[...g].some(ch=>taboo.has(ch));

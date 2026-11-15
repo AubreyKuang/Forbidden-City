@@ -29,7 +29,9 @@ const cases=[
 ];
 function renderCase([name,render,setup='']){
  const b=boot(6701);
- b.run(`A.start();drain();S.turn=240;S.year=21;S.month=1;E().energy=4;
+ // Preserve the pre-layout fixture's names; naming diversity is tested separately.
+ b.run(`var nameVersion=Object.getOwnPropertyDescriptor(PalaceActions,'contentVersion');Object.defineProperty(PalaceActions,'contentVersion',{get:()=>11,configurable:true});
+  A.start();drain();harem().forEach(c=>houseOf(c));Object.defineProperty(PalaceActions,'contentVersion',nameVersion);S.turn=240;S.year=21;S.month=1;E().energy=4;
   var c=harem().find(x=>x.rank!==8);c.rank=5;c.known=true;
   var k=makeKid(c,'m','承安');var sister=makeKid(c,'f','昭宁');
   k.born=S.turn-96;sister.born=S.turn-72;
