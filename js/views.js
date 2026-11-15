@@ -433,7 +433,9 @@ function viewOut(){
   const o=[['garden','御花园','偶遇妃嫔、宫女，或独自散心'],['city','微服出宫','体察民情，也许会遇见有缘人'],['hunt','南苑围猎','武略越高越易成功，有受伤风险'],['temple','护国寺祈福','民心、龙体小增，本月更易得子'],['spa','温泉行宫',`休养龙体（国库-${SPA_COST}万两）`]];
   return `<h2>出巡</h2><p class="hint">每次出巡花费1点精力。</p><div class="grid">${o.map(([k,n,d])=>`<button class="card" onclick="A.out('${k}')"><div class="grow"><div class="nm">${n}</div><div>${d}</div></div></button>`).join('')}</div>${rescuedGuestsPanel()}${princessEstatePanel()}${incognitoLedger()}`}
 function viewLog(){
-  const L=S.log.filter(l=>UI.logF==='all'?true:l.b).slice().reverse();
+  // A month divider with nothing recorded after it is noise; keep only dividers that head real entries.
+  const divider=l=>/^—— .+ ——$/.test(l?.t||'');
+  const L=S.log.filter(l=>UI.logF==='all'?true:l.b).filter((l,i,all)=>!divider(l)||(all[i+1]&&!divider(all[i+1]))).reverse();
   const month=S.flags.lastMonthReview;
   const link=(id,child=false)=>{
     const person=child?kidById(id):byId(id);

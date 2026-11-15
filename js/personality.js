@@ -158,8 +158,8 @@ function rememberQuarrel(a,b,winner){
 function deepLine(c){deepen(c);if(c.wish==='title'&&c.title&&!c.wishDone){c.wishDone=true}const w=WISHES[c.wish];
   return `<div style="margin-top:4px">小性子：<span class="tag">${c.t2}</span>　喜好：${c.kl?`<span class="tag g">${c.like}</span>不喜<span class="tag r">${c.hate}</span>`:'<span class="hint">多闲谈才知道</span>'}</div>
   <div>平日消遣：<span class="tag">${esc(c.hobby)}</span></div>
-  <div>心愿：${c.wishKnown?`${esc(w.t)}${c.wishDone?' <span class="tag y">已成全</span>':w.btn?` <button class="btn sm jade" onclick="A.wish(${c.id})" ${inPalace(c)?'':'disabled'}>${esc(w.btn)}</button>`:' <span class="hint">（生下孩子便成全了）</span>'}`:'<span class="hint">情分到 50 以后，闲谈时她也许会说</span>'}</div>
-  ${c.woundKnown?`<div>往事：${esc(WOUNDS[c.wound])}</div>`:'<div class="hint">往事：情分到 65 以后，她也许会对你说起</div>'}`}
+  <div>心愿：${c.wishKnown?`${esc(w.t)}${c.wishDone?' <span class="tag y">已成全</span>':w.btn?` <button class="btn sm jade" onclick="A.wish(${c.id})" ${inPalace(c)?'':'disabled'}>${esc(w.btn)}</button>`:' <span class="hint">（生下孩子便成全了）</span>'}`:`<span class="hint">${c.aff>=50?'情分已够，多闲谈几次，她也许会说出心愿':'情分到 50 以后，闲谈时她也许会说'}</span>`}</div>
+  ${c.woundKnown?`<div>往事：${esc(WOUNDS[c.wound])}</div>`:`<div class="hint">往事：${c.aff>=65?'情分已够，多闲谈几次，她也许会对你说起':'情分到 65 以后，她也许会对你说起'}</div>`}`}
 A.chat=function(id,fromEvent=false){const c=byId(id);if((modalOpen&&!fromEvent)||!inPalace(c))return;const home=homeCareEvent(c)||solitaryQuietEvent(c);if(home){(fromEvent?pushNow:pushEv)(home);return;}const arrival=kinArrivalGreeting(c)||newcomerWelcomeEvent(c);if(arrival){(fromEvent?pushNow:pushEv)(arrival);return;}const past=pastLifeEvent(c);if(past){(fromEvent?pushNow:pushEv)(past);return;}initTimeTraveler(c);const quiet=solitaryEvent(c);if(quiet){(fromEvent?pushNow:pushEv)(quiet);return;}const oldWorld=travelerConfessionEvent(c);if(oldWorld){if(useE())(fromEvent?pushNow:pushEv)(oldWorld);return;}if(!useE())return;if(!legacyPendingAction()){noteHaremVisit(c);c.lastPersonalAttention=S.turn;}deepen(c);const L=[];const xk=xinOf(c),opening=consortVoicePhase(c)==='first';
   const voice=characterVoice(c,'talk');L.push(voice.stage);L.push(`“${voice.text}”`);
   const familyTalk=fiveBrotherChat(c);if(familyTalk)L.push(familyTalk);
@@ -239,9 +239,10 @@ const QEV={
    {t:'把乾清宫的银霜炭分她一半',f:()=>{remember(c,'care','分了陛下的银霜炭');return fx(cchg(c,{aff:10,mood:15}))}},{t:'申斥内务府',f:()=>fx(cchg(c,{mood:8}),chg({people:1}))}]},
  '嗜甜':c=>({title:'牙疼',por:c,text:`${cName(c)}偷吃松子糖吃坏了牙，半边脸肿得老高，还嘴硬说是被蚊子咬的。`,choices:[
    {t:'笑着让太医去瞧',f:()=>fx(cchg(c,{mood:5,aff:3}))},{t:'下令她宫里禁糖一月',f:()=>fx(cchg(c,{mood:-8}))}]}),
- '好读史':c=>({title:'读史',por:c,ref:'立子杀母（西汉·汉武帝与钩弋夫人）',text:`${cName(c)}合上书，问你：“陛下觉得，汉武帝该不该杀钩弋夫人？”\n汉武帝立幼子为太子，怕“主少母壮”，赐死了太子的生母。`,choices:[
-   {t:'“该。主少母壮，必生祸乱。”',f:()=>{remember(c,'hurt','陛下说钩弋夫人该杀');return `她沉默了很久，没有再说话。${fx(cchg(c,{mood:-10}))}`}},
-   {t:'“不该。防人之心，不该拿人命去换。”',f:()=>fx(cchg(c,{aff:10,mood:8}))},{t:'“朕不是汉武帝。”',f:()=>fx(cchg(c,{aff:6}))}]}),
+ // She asks this once and remembers the answer; asking again would make the answer meaningless.
+ '好读史':c=>c.gouyiAnswer?null:({title:'读史',por:c,ref:'立子杀母（西汉·汉武帝与钩弋夫人）',text:`${cName(c)}合上书，问你：“陛下觉得，汉武帝该不该杀钩弋夫人？”\n汉武帝立幼子为太子，怕“主少母壮”，赐死了太子的生母。`,choices:[
+   {t:'“该。主少母壮，必生祸乱。”',f:()=>{c.gouyiAnswer='yes';remember(c,'hurt','陛下说钩弋夫人该杀');return `她沉默了很久，没有再说话。${fx(cchg(c,{mood:-10}))}`}},
+   {t:'“不该。防人之心，不该拿人命去换。”',f:()=>{c.gouyiAnswer='no';return fx(cchg(c,{aff:10,mood:8}))}},{t:'“朕不是汉武帝。”',f:()=>{c.gouyiAnswer='self';return fx(cchg(c,{aff:6}))}}]}),
  '爱哭':c=>{const o=pick(harem().filter(x=>x!==c&&relGet(c,x)<0));if(!o)return null;return {title:'梨花带雨',por:c,text:`${cName(c)}哭着来找你，说${cName(o)}笑她请安时裙角沾了泥。宫女们说，其实${cName(o)}只是多看了一眼。`,choices:[
    {t:'哄她',f:()=>fx(cchg(c,{mood:10,aff:3}))},{t:'“这点小事也值得哭？”',f:()=>{remember(c,'hurt','被说小题大做');return fx(cchg(c,{mood:-10}))}}]}},
  '擅骑射':c=>c.preg||c.hp<45?null:({title:'南苑跑马',por:c,text:`${cName(c)}换了一身胡服，在南苑骑马射柳，三箭全中。围观的侍卫齐声喝彩。`,choices:[

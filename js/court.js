@@ -20,7 +20,7 @@ const COURT=[
    {t:'令地方官府自行筹措',f:()=>{log('黄河决堤，帝令地方自筹，民怨沸腾。');return `地方层层摊派，民间怨声四起。${fx(chg({people:-8}))}`}}];
   if(off)ch.push({t:`命${cName(off)}之父（${off.fam.t}）督办`,cond:()=>officialServing(houseOf(off)?.father),why:'已不在任或另有差事',f:()=>{if(chance(.6)){officialRecord(off,'father','奉旨督办黄河赈灾，颇有成效。',{emotion:.6});return `差事办得漂亮。${fx(chg({treasury:-150,people:6,prestige:2}),cchg(off,{aff:8,mood:10}))}`}
     officialRecord(off,'father','督办赈灾不力，遭御史弹劾。',{emotion:-.5});return `赈灾银两被层层克扣，灾情反而加重。${fx(chg({treasury:-200,people:-5}),cchg(off,{mood:-12}))}`}});
-  return {title:'黄河决堤',person:off?.id,text:'工部急奏：入夏以来暴雨连绵，黄河于开封段决口，良田万顷尽成泽国，灾民流离失所。',choices:ch}},
+  return {title:'黄河决堤',person:off?.id,text:`工部急奏：${['开春冰凌壅塞，春汛骤涨','入夏以来暴雨连绵','入秋以来秋雨不止','入冬以来凌汛壅塞'][season()]}，黄河于开封段决口，良田万顷尽成泽国，灾民流离失所。`,choices:ch}},
  brief=>{const e=E();const gen=harem().find(c=>(brief?c.id===brief.person:c.trait==='将门')&&officialRoles(houseOf(c)).some(role=>officialServing(houseOf(c)?.[role])&&houseOf(c).bloc==='army'));const ch=[
    {t:'遣大将出征',f:()=>{if(chance(S.flags.wolf?.35:.6)){log('北狄犯边，王师击退之。');return `王师告捷。${fx(chg({treasury:-300,prestige:5}))}`}return `前线失利，丢了两座城池。${fx(chg({treasury:-300,prestige:-5,people:-5}))}`}},
    {t:'御驾亲征',f:()=>{const p=.35+e.wu/180;if(chance(p)){log('北狄犯边，帝御驾亲征，大破敌军。',1);return `你身先士卒，三战三捷，狄戎远遁漠北。${fx(chg({prestige:12,people:5,treasury:-300}))}`}
@@ -894,6 +894,23 @@ function courtBlocHTML(){
 // 每位妃嫔的父亲和兄长都是有名有姓的人，分属五大集团之一。朝堂上的事会落到具体的人和妃嫔身上。
 const OFFICE_BLOC={'内阁首辅':'civil','吏部尚书':'civil','户部侍郎':'civil','翰林学士':'civil','知府':'civil','县令':'civil','书香门第':'civil',
   '镇国大将军':'army','两江总督':'army','皇商':'kin','太医院院判':'dowager','寒门':null};
+// Father ids repeat between playthroughs (father-<gen>-<consort id>), so anything drawn from them
+// is mixed with this reign's seed; otherwise the empress's family would be identical every game.
+// Games begun before these rules keep generating families the old way, so their saved scenes replay exactly.
+const newFamilyRules=()=>(S?.flags?.familyRules||0)>=2;
+const familyHash=key=>voiceHash(newFamilyRules()?`${S.emp.seed}:${key}`:key);
+// A daughter does not share a character with her father's given name (避讳).
+const givenOf=p=>{const n=String(p?.name||'');return p?.sur&&n.startsWith(p.sur)&&n.length>p.sur.length?n.slice(p.sur.length):n;};
+function fatherGivenName(seed,family){
+  const used=new Set(family.flatMap(p=>[...givenOf(p)]));
+  for(let i=0;i<FATHER_NAMES.length;i++){const name=FATHER_NAMES[(seed+i)%FATHER_NAMES.length];if(![...name].some(ch=>used.has(ch)))return name;}
+  return FATHER_NAMES[seed%FATHER_NAMES.length];
+}
+function sonGivenName(start,house,sur){
+  const taboo=new Set([...givenOf({sur,name:house.father.name})]),taken=new Set(Object.values(house).map(p=>p?.name));
+  for(let i=0;i<BROTHER_NAMES.length;i++){const name=BROTHER_NAMES[(start+i)%BROTHER_NAMES.length];if(![...name].some(ch=>taboo.has(ch))&&!taken.has(sur+name))return name;}
+  return BROTHER_NAMES[start%BROTHER_NAMES.length];
+}
 const FATHER_NAMES=['敬之','文远','守义','承业','怀瑾','思齐','伯庸','仲谋','子衡','季安','修远','明德','元朗','景行','致远','叔夜','延年','鸿儒'];
 const BROTHER_NAMES=['子昂','云深','少卿','长风','清和','怀远','叔宝','仲安','伯言','子期','砚秋','望舒','承泽','慕白'];
 const BROTHER_POSTS={civil:['翰林院编修','户部主事','监察御史','知县'],army:['游击将军','守备','参将','骁骑校尉'],kin:['盐运使','苏州织造','内务府员外郎'],dowager:['太医院吏目','宗人府主事'],none:['举人','国子监生']};
@@ -958,12 +975,12 @@ function houseOf(c){
   const seed=(root.seed||root.id*7919)>>>0,bloc=Object.hasOwn(OFFICE_BLOC,root.fam?.t)?OFFICE_BLOC[root.fam.t]:null;
   const posts=BROTHER_POSTS[bloc||'none'];
   root.house={bloc,familyVersion:2,
-    father:{name:root.sur+FATHER_NAMES[seed%FATHER_NAMES.length],office:root.fam?.t||'寒门',age:42+seed%17,alive:true},brother:null};
+    father:{name:root.sur+(newFamilyRules()?fatherGivenName(seed,family):FATHER_NAMES[seed%FATHER_NAMES.length]),office:root.fam?.t||'寒门',age:42+seed%17,alive:true},brother:null};
   const roll=voiceHash('siblings:'+seed)%100,count=roll<30?0:roll<75?1:roll<93?2:roll<98?3:roll<99?4:5;
   const youngest=Math.max(...family.map(p=>p.age||18))+2;
   for(let i=0;i<count;i++){
     const role=i?'brother'+(i+1):'brother',age=youngest+(count-i-1)*2;
-    root.house[role]={name:root.sur+BROTHER_NAMES[((seed>>>5)+i)%BROTHER_NAMES.length],post:posts[((seed>>>9)+i)%posts.length],age,merit:20+((seed>>>3)+i*7)%30,away:false};
+    root.house[role]={name:root.sur+(newFamilyRules()?sonGivenName((seed>>>5)+i,root.house,root.sur):BROTHER_NAMES[((seed>>>5)+i)%BROTHER_NAMES.length]),post:posts[((seed>>>9)+i)%posts.length],age,merit:20+((seed>>>3)+i*7)%30,away:false};
     if(voiceHash(seed+':career:'+i)%100<60){root.house[role].career='student';root.house[role].post=age>=22&&voiceHash(seed+':degree:'+i)%3===0?'举人':'书生';}
     root.house.father.age=Math.max(root.house.father.age,age+18);
   }
@@ -1093,5 +1110,5 @@ function offlineMemorials(){
   if(hours<1)return;
   const n=Math.min(3,Math.floor(hours/2)+1);
   S.flags.memorials=Math.min(3,(S.flags.memorials||0)+n);
-  toast(`陛下离宫约${Math.round(hours)}个时辰，御案上积了${S.flags.memorials}份奏折，月末呈上`);
+  toast(`陛下离宫约${Math.max(1,Math.round(hours/2))}个时辰，御案上积了${S.flags.memorials}份奏折，月末呈上`);
 }

@@ -1,10 +1,26 @@
 /* ============ 出巡 ============ */
+// A chance meeting should look like something she would actually be doing.
+const GARDEN_HOBBY_SCENES={
+  读书:n=>`${n}坐在澄瑞亭里读一卷旧书，读到入神处，连你走近都没察觉。`,
+  抚琴:n=>`你远远听见琴声，循声而去，原来是${n}在水榭抚琴。`,
+  刺绣:n=>`${n}借着亭中天光描绣样，见你来了，忙把未完的花样掩在袖下。`,
+  侍花:n=>`${n}蹲在花圃边，正替一株新移的芍药培土，指尖还沾着泥。`,
+  做点心:n=>`${n}提着食盒从园中经过，说是试做了时令点心，正要送去给姐妹们尝。`,
+  投壶:n=>`${n}在亭前摆了铜壶，一连投中三支，回头见你，笑着把箭递了过来。`,
+  骑射:n=>`${n}在园中空地比划弓步，见你来了，收了架势规规矩矩行礼。`,
+  对弈:n=>`${n}独自在石桌上摆一局残棋，一手执黑一手执白，正想得出神。`,
+  品茶:n=>`${n}在亭中温杯煮水，见你过来，先分了一盏新茶给你。`
+};
+function gardenEncounterText(c){
+  const n=cName(c),own=GARDEN_HOBBY_SCENES[consortHobby(c)];
+  return pick([own?.(n),`${n}正在亭中扑蝶，见你来了，红着脸躲到柱子后面。`,`${n}在池边喂鱼，鱼儿聚了一大片。她笑着分了你一把鱼食。`,`细雨忽至，你与${n}在回廊下躲雨，说了许多话。`].filter(Boolean));
+}
 const SPA_COST=60;
 A.out=function(kind){ if(!useE())return; const e=E();
   if(kind==='garden'){setScene('garden');
     const h=harem();
     const roll=R();
-    if(roll<.5&&h.length){const c=pick(h);const t=pick([`${cName(c)}正在亭中扑蝶，见你来了，红着脸躲到柱子后面。`,`你远远听见琴声，循声而去，原来是${cName(c)}在水榭抚琴。`,`${cName(c)}在池边喂鱼，鱼儿聚了一大片。她笑着分了你一把鱼食。`,`细雨忽至，你与${cName(c)}在回廊下躲雨，说了许多话。`]);
+    if(roll<.5&&h.length){const c=pick(h);const t=gardenEncounterText(c);
       story(c,`与陛下在御花园偶遇。${t}`);pushEv({title:'御花园偶遇',por:c,text:t+fx(cchg(c,{favor:6,aff:6,mood:10})),choices:[{t:'今夜便召她侍寝',cond:()=>E().energy>0&&!c.preg,why:c.preg?'她有孕在身':'精力不足',f:()=>{nightWith(c);return null}},{t:'与她作别'}]});}
     else {
       const encounter=roll>=.5&&roll<.6?maidEvent('御花园'):null;
