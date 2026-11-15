@@ -49,3 +49,22 @@ PALACE_QA_URL=https://aubreykuang.github.io/Forbidden-City/dev.html node tests/c
 ## 发布核验
 
 游戏代码提交 `d9eac4a` 已推送 main，[GitHub Pages 部署成功](https://github.com/AubreyKuang/Forbidden-City/actions/runs/43768946446)。正式／测试入口、事务日志、官员逻辑、钩弋剧情、立绘分配脚本及两张图集共 9 项线上资源均 HTTP 200，下载内容与该提交逐字节一致。明细见 [线上资源核验](court-family-production-results.json)。浏览器交互与截图仍是上文所列未完成项。
+
+## 再次尝试与可恢复入口
+
+2026-11-15 再次检查：当前会话没有可用的浏览器扩展或云桌面控制入口。新增了独立 Chromium 的 [GitHub Actions 验收](https://github.com/AubreyKuang/Forbidden-City/actions/runs/43769768538)，但平台在分配运行器前拒绝任务，零步骤执行；在现有本机权限下安装的独立 Firefox 159.0 也在创建页面前以 SIGABRT 退出。上述尝试均不能记为浏览器验收通过。
+
+脚本支持 `PALACE_CHROME_PATH` 指定已安装 Chrome，或 `PALACE_BROWSER=firefox` 选择 Playwright Firefox。省略这些变量时使用 Playwright Chromium。`PALACE_FAIL_FAST=1` 会在首次失败后停止，方便排查；完整验收应覆盖桌面与手机共 44 分支。云端工作流只在专用 QA 分支推送或手动触发时运行，保留 14 天截图与结果，不访问玩家的现有存档。
+
+在允许浏览器运行的环境可复跑：
+
+```sh
+npm install --prefix /tmp/palace-browser playwright@1.65.1
+/tmp/palace-browser/node_modules/.bin/playwright install chromium
+node tests/court-family-browser-fixtures.cjs
+NODE_PATH=/tmp/palace-browser/node_modules \
+PALACE_QA_URL=https://aubreykuang.github.io/Forbidden-City/dev.html \
+node tests/court-family-browser-acceptance.cjs
+```
+
+如另一处会话已有可用浏览器，可在当前 main 上运行此脚本；结果与截图分别写入 `docs/qa/court-family-browser-results.json`、`docs/screenshots/court-family/`。必须实际运行后再更新本文的验收结论。
