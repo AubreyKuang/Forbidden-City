@@ -163,6 +163,7 @@ function deepLine(c){deepen(c);if(c.wish==='title'&&c.title&&!c.wishDone){c.wish
 A.chat=function(id,fromEvent=false){const c=byId(id);if((modalOpen&&!fromEvent)||!inPalace(c))return;const home=homeCareEvent(c)||solitaryQuietEvent(c);if(home){(fromEvent?pushNow:pushEv)(home);return;}const arrival=kinArrivalGreeting(c)||newcomerWelcomeEvent(c);if(arrival){(fromEvent?pushNow:pushEv)(arrival);return;}const past=pastLifeEvent(c);if(past){(fromEvent?pushNow:pushEv)(past);return;}initTimeTraveler(c);const quiet=solitaryEvent(c);if(quiet){(fromEvent?pushNow:pushEv)(quiet);return;}const oldWorld=travelerConfessionEvent(c);if(oldWorld){if(useE())(fromEvent?pushNow:pushEv)(oldWorld);return;}if(!useE())return;if(!legacyPendingAction()){noteHaremVisit(c);c.lastPersonalAttention=S.turn;}deepen(c);const L=[];const xk=xinOf(c),opening=consortVoicePhase(c)==='first';
   const voice=characterVoice(c,'talk');L.push(voice.stage);L.push(`“${voice.text}”`);
   const familyTalk=fiveBrotherChat(c);if(familyTalk)L.push(familyTalk);
+  const sisterTalk=sisterChatLine(c);if(sisterTalk)L.push(sisterTalk);
   if(!opening&&S.flags.lastCourt&&(c.t2==='好读史'||c.t2==='直言')&&chance(.6))L.push(c.t2==='好读史'?`她听说了「${S.flags.lastCourt}」的事。${HISTC[S.flags.lastCourt]||'她说：“以史为镜，可以知兴替。”'}`:`她听说了「${S.flags.lastCourt}」的事，直截了当地说：“陛下那样处置，${pick(['臣妾觉得不妥。','臣妾觉得极好。','怕是要挨骂的。'])}”`);
   const others=harem().filter(o=>o!==c).map(o=>[o,relGet(c,o)]),fr=others.filter(x=>x[1]>=30&&socialPair(c,x[0])),en=others.filter(x=>x[1]<=-30);
   if(!opening&&fr.length&&chance(.35)){const o=pick(fr)[0],hobby=sharedConsortHobby(c,o),memory=genuineSocialMemory(c,o);L.push(memory||`说起${fullName(o)}，她眉眼都软了：“${hobby?`下回得了闲，臣妾想约她${CONSORT_HOBBIES[hobby].activity}。`:'与她说话，臣妾觉得自在。'}”`)}
@@ -299,7 +300,7 @@ function xinTick(c){if(!c.alive||c.gone)return;
   if(TRAITS[c.trait].jealous&&['平和','委屈'].includes(xinOf(c))){const top=harem().filter(o=>o!==c).sort((a,b)=>b.favor-a.favor)[0];if(top&&top.favor>c.favor+40&&chance(.3))setXin(c,'嫉恨',`${fullName(top)}独得圣宠`,top.id)}}
 const XEV={
  '思念':c=>c.cold?null:{title:'香囊',por:c,text:`${cName(c)}托人送来一只香囊，里面没有香料，只有一张折得很小的纸条：“${pick(['庭前的海棠开了，陛下何时来看？','近来夜长，数着更漏到天明。','一日不见，如三秋兮。'])}”`,choices:[
-   {t:'今晚就去（精力-1）',cond:()=>E().energy>0&&!c.preg,why:'精力不足或她有孕',f:()=>{setXin(c,'欢喜','陛下见了香囊便来了');nightWith(c);return null}},
+   {t:'今晚就去（精力-1）',cond:()=>E().energy>0&&!c.preg&&(!consortRecoveryActive()||!consortNightReason(c)),why:(consortRecoveryActive()&&consortNightReason(c))||('精力不足或她有孕'),f:()=>{setXin(c,'欢喜','陛下见了香囊便来了');nightWith(c);return null}},
    {t:'回一张纸条',f:()=>{remember(c,'care','回了她的纸条');return fx(cchg(c,{aff:4,mood:8}))}},
    {t:'收下，不回',f:()=>{setXin(c,'委屈','香囊送去，石沉大海');return fx(cchg(c,{mood:-8}))}}]},
  '委屈':c=>c.cold?null:{title:'委屈',por:c,text:`${cName(c)}宫里的掌事姑姑来求见，跪着说：“我们小主这些日子吃不下睡不着，夜里一个人对着窗户掉眼泪。奴婢斗胆，求陛下去看看她。”`,choices:[

@@ -17,7 +17,7 @@ function frontierCreateGeneral(){
  return {c:g,h,p,role:'father',key:g.id+':father',outside:true};
 }
 function frontierPickCommander(){
- const entries=officialEntries().filter(e=>e.h.bloc==='army'&&officialServing(e.p)&&!e.p.report&&e.p.age<70);
+ const entries=officialEntries().filter(e=>officialMilitary(e.p,e.h)&&officialServing(e.p)&&!e.p.report&&e.p.age<70);
  if(entries.length&&chance(.5))return pick(entries);
  const outside=(S.flags.frontierHouses||[]).filter(x=>x.gen===S.gen&&!byId(x.guest.id)).map(x=>frontierEntry({kind:'guest',id:x.guest.id})).filter(e=>e&&officialServing(e.p)&&e.p.age<70);
  return outside[0]||frontierCreateGeneral();
@@ -39,7 +39,7 @@ function frontierPromotion(e){
 function frontierRecord(r){return (S.flags.frontierCampaigns||[]).find(x=>x.id===r);}
 function frontierCanReward(r){const e=r&&frontierEntry(r.commander);return !!r&&r.gen===S.gen&&r.outcome==='victory'&&!r.reward&&!S.over&&e&&officialAlive(e.p)&&!e.p.exiled&&!e.p.dismissed;}
 function frontierDispatch(e,{cost=300,odds=.6,named=false}={}){
- if(!e||!officialServing(e.p)||e.p.report)return null;
+ if(!e||!officialServing(e.p)||!officialMilitary(e.p,e.h)||e.p.report)return null;
  const ref=frontierRef(e),id=`${S.gen}-${S.turn}-${(S.flags.frontierSerial||0)+1}`;S.flags.frontierSerial=(S.flags.frontierSerial||0)+1;
  const r={id,gen:S.gen,turn:S.turn,date:dateStr(),commander:ref,name:e.p.name,post:e.p.office||e.p.post,outcome:chance(odds)?'victory':'defeat'};
  (S.flags.frontierCampaigns||=[]).push(r);
@@ -139,10 +139,10 @@ viewGovernment=function(...args){return frontierGovernment.apply(this,args)+fron
 const frontierNorthern=COURT[1];
 COURT[1]=function(brief){
  const ev=frontierNorthern(brief);if(!frontierRewardsEnabled())return ev;
- let sent=false;const once=(get,options)=>()=>{if(sent)return null;const e=get();if(!e||!officialServing(e.p)||e.p.report)return null;sent=true;return frontierDispatch(e,options);};
+ let sent=false;const once=(get,options)=>()=>{if(sent)return null;const e=get();if(!e||!officialServing(e.p)||!officialMilitary(e.p,e.h)||e.p.report)return null;sent=true;return frontierDispatch(e,options);};
  ev.choices[0].f=once(frontierPickCommander,{odds:S.flags.wolf?.35:.6});
- const c=byId(ev.person),h=c&&houseOf(c),role=h&&(brotherRole(h,officialServing)||'father'),e=c&&{c,h,role,p:officialPerson(h,role),key:c.id+':'+role};
- if(ev.choices[3]&&e){ev.choices[3].person=e.p;ev.choices[3].cond=()=>officialServing(e.p)&&!e.p.report;ev.choices[3].f=once(()=>e,{cost:250,odds:.75,named:true});}
+ const c=byId(ev.person),h=c&&houseOf(c),role=h&&(brotherRole(h,p=>officialServing(p)&&officialMilitary(p,h))||'father'),e=c&&{c,h,role,p:officialPerson(h,role),key:c.id+':'+role};
+ if(ev.choices[3]&&e){ev.choices[3].person=e.p;ev.choices[3].cond=()=>officialServing(e.p)&&officialMilitary(e.p,e.h)&&!e.p.report;ev.choices[3].f=once(()=>e,{cost:250,odds:.75,named:true});}
  delete ev.person;ev.cast=[];return ev;
 };
 const frontierCourtTick=courtTick;

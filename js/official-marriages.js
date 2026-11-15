@@ -1,5 +1,5 @@
 /* 官员议婚：名帖指向真人，问意与诏书分开，婚后继续沿用原有家族与公主府。 */
-const officialMarriageActive=()=>!!S&&!S.over&&journalContentVersion()>=15;
+const officialMarriageActive=()=>!!S&&!S.over&&journalContentVersion()>=17;
 const officialMarriageState=()=>S.officialMarriages ||= {guests:[],couples:[]};
 const officialMarriageAge=p=>Number.isFinite(p.born)?natalAge(p):p.age||0;
 function officialMarriageRef(person){return {key:person.key,id:person.p.id,gen:S.gen};}
@@ -32,7 +32,7 @@ function officialMarriageReason(person){
   if(!person||person.archived)return '不在本朝任上';
   const p=person.p;
   if(p.alive===false)return '已故，保留原有婚事记录';
-  if(p.married||p.spouse||p.spouseName||person.e?.role==='father')return '已有家室，不再另配婚事';
+  if(p.married||p.spouse||p.spouseName||p.spouseRelative||p.royalSpouseId||person.e?.role==='father')return '已有家室，不再另配婚事';
   if(!officialServing(p)||p.report)return '待任职或差事回奏后再议';
   if(officialMarriageAge(p)<18)return '尚未成年，暂不议婚';
   return '';
@@ -40,7 +40,7 @@ function officialMarriageReason(person){
 function officialMarriageOpen(person,b){
   if(!officialMarriageActive()||officialMarriageReason(person)||!b||b.archived)return false;
   const p=b.p,age=officialMarriageAge(p);
-  if(p.alive===false||p.married||p.spouse||p.consortId||p.gone||p.officialMarriageId)return false;
+  if(p.alive===false||p.married||p.spouse||p.consortId||p.gone||p.widow&&!p.widow.authorized)return false;
   if(b.kind==='princess'?!marriageReady(p)||p.sex!=='f':age<18)return false;
   return true;
 }
@@ -64,7 +64,7 @@ function officialMarriageRelease(person,b,changes){
   delete person.p.betrothal;
 }
 function officialMarriageGuest(person,index,round){
-  const st=officialMarriageState(),sur=pick(SUR.filter(s=>s!==(person.p.sur||person.e?.c.sur)&&s!==E().sur));
+  const st=officialMarriageState(),sur=pick(SUR);
   const family=index?'将门人家':'书香人家',g=makeGirl({sur,age:Math.max(18,Math.min(32,officialMarriageAge(person.p)-2+index)),trait:index?'将门':'好学',fam:{t:index?'参将':'书香门第',p:index?42:30}});
   g.name=fullName(g);g.born=S.turn-g.age*12;g.background=family;g.married=false;g.story=[];g.guestFor=person.p.id;g.round=round;
   st.guests.push(g);return {kind:'guest',id:g.id,gen:S.gen};
@@ -87,7 +87,7 @@ function officialMarriageOffers(person,renew=false){
   return person.p.officialCourtship={gen:S.gen,turn:S.turn,round,candidates,answers:{}};
 }
 const officialBrideToken=b=>b.kind+':'+b.id;
-const officialBridePortrait=b=>b.kind==='family'?natalPortrait(b.p):b.p;
+const officialBridePortrait=b=>b.kind==='family'?natalPortrait(b.p):b.kind==='guest'?{...b.p,age:officialMarriageAge(b.p)}:b.p;
 const officialBrideLabel=b=>b.kind==='princess'?kidName(b.p):b.kind==='family'?`${fullName(b.c)}的${natalLabel(b.c,b.p)} · ${b.p.name}`:`${b.p.name} · ${b.p.background}`;
 function officialMarriageMenu(ref){
   const person=officialMarriagePerson(ref);if(officialMarriageReason(person))return null;
@@ -138,15 +138,16 @@ function officialMarriageConfirm(ref,brideRef,round,changeAccepted=false){
   officialMarriageRelease(person,b,changes);
   const record={id,gen:S.gen,turn:S.turn,date:dateStr(),groom:{...ref},bride:{...brideRef},groomName:p.name,brideName:bride.name,lastTalk:S.turn};
   officialMarriageState().couples.push(record);E().treasury-=cost;
-  const snapshot={id:p.id,name:p.name,sur:p.sur||person.e?.c.sur,seed:p.seed,official:p.official??2,artPortrait:p.artPortrait,born:S.turn-officialMarriageAge(p)*12,age:officialMarriageAge(p),alive:true,officialMarriageId:id,office:p.office||p.post,background:p.office||p.post,marriedAt:S.turn};
+  const snapshot={id:p.id,personId:p.id,name:p.name,sur:p.sur||person.e?.c.sur,seed:p.seed,official:p.official??2,artPortrait:p.artPortrait,born:S.turn-officialMarriageAge(p)*12,age:officialMarriageAge(p),alive:true,officialMarriageId:id,office:p.office||p.post,background:p.office||p.post,marriedAt:S.turn};
   if(b.kind==='family'){
     const match=person.e?{kind:'alliance',name:p.name,sur:snapshot.sur,desc:`${fullName(person.e.c)}的${officialKinLabel(person.e.h,person.e.role,person.e.c)}`,consortId:person.e.c.id,personId:p.id,role:person.e.role}:{kind:'official',name:p.name,sur:snapshot.sur,desc:(p.office||'朝臣')+' '};
     marrySister(b.c,bride,match,{source:'分别问过双方心意后，奉旨赐婚'});
     Object.assign(bride.spouse,snapshot);
+    p.spouseRelative={consortId:b.c.id,relativeId:bride.id};delete bride.visit;delete bride.maritalBond;ensureMaritalBond(bride);
   }else{
     bride.married=true;bride.spouse=snapshot;
     if(b.kind==='princess'){
-      bride.princessMarriage='official';if(bride.estate)bride.estate.route='official';bride.love=clamp(bride.love+8);ensureMarriedLife(bride);
+      p.royalSpouseId=bride.id;bride.princessMarriage='official';if(bride.estate)bride.estate.route='official';bride.love=clamp(bride.love+8);ensureMarriedLife(bride);
       householdRecord(bride,'princess_marriage',`经礼部分别问意，奉旨与${p.office||p.post}${p.name}成婚；驸马仍任原职，两人开始经营自己的家。`);
     }else story(bride,`经礼部分别问意，奉旨与${p.name}成婚。${answer.text}`);
   }
@@ -183,8 +184,13 @@ function officialMarriagePanel(key){
   const p=person.p,r=officialMarriageRecord(p.officialMarriageId),b=r&&officialMarriageBride(r.bride),reason=officialMarriageReason(person);
   const status=r?`${r.date}奉旨成婚 · ${r.brideName}${b?.p.alive===false?'（已故）':''}`:p.spouseName||p.spouse?.name?`配偶：${p.spouseName||p.spouse.name}`:reason||'尚未婚配';
   return detailSection('婚事与家室',`<p>${esc(status)}</p>${b?.kind==='princess'?`<button class="btn jade" onclick="A.go('kid',${b.id})">看看${esc(b.p.name)}的近况</button>`:b?.kind==='family'&&!b.archived?`<button class="btn jade" onclick="A.go('natal','${b.host}:${b.id}')">查看${esc(b.p.name)}的纪事</button>`:''}
-    ${r?`<button class="btn quiet" onclick="A.officialMarriageTalk('${key}')" ${p.alive!==false&&b&&b.p.alive!==false&&S.turn-r.lastTalk>=6?'':'disabled'}>问问婚后近况<small>每半年一次 · 精力−1</small></button>`:`<button class="btn gold" onclick="A.officialMarriage('${key}')" ${reason?'disabled':''}>议婚 / 赐婚</button>`}<p class="hint">${r?'婚姻不改变官员的原职与任用；双方纪事保留同一门婚事。':'先阅名帖、问双方心意，再确认赐婚。公主满十五岁可议；其他女子须满十八岁。'}</p>`);
+    ${r?`<button class="btn quiet" onclick="A.officialMarriageHistory('${key}')">查看婚事纪事</button><button class="btn quiet" onclick="A.officialMarriageTalk('${key}')" ${p.alive!==false&&b&&b.p.alive!==false&&S.turn-r.lastTalk>=6?'':'disabled'}>问问婚后近况<small>每半年一次 · 精力−1</small></button>`:`<button class="btn gold" onclick="A.officialMarriage('${key}')" ${reason?'disabled':''}>议婚 / 赐婚</button>`}<p class="hint">${r?'婚姻不改变官员的原职与任用；双方纪事保留同一门婚事。':'先阅名帖、问双方心意，再确认赐婚。公主满十五岁可议；其他女子须满十八岁。'}</p>`);
 }
+A.officialMarriageHistory=function(key){
+  const person=courtPerson(key),r=officialMarriageRecord(person?.p.officialMarriageId),b=r&&officialMarriageBride(r.bride);
+  if(modalOpen||!r||!b)return;
+  pushEv({title:'婚事纪事',cast:[person.p,officialBridePortrait(b)],text:`${r.date} · ${r.groomName}与${r.brideName}奉旨成婚。\n${b.p.name}的记忆：\n${(b.p.story||[]).slice(-12).map(s=>`${s.d} · ${s.t}`).join('\n')}`,choices:[{t:'收起家书'}]});
+};
 A.officialMarriage=function(key){
   const person=courtPerson(key);if(modalOpen||!officialMarriageActive()||officialMarriageReason(person))return;
   pushEv(officialMarriageMenu(officialMarriageRef(person)));save('auto');

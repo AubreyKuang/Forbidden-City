@@ -12,6 +12,7 @@ function world(seed=616){
  for(const p of [fa,fz]){p.alive=true;p.retired=false;p.career='official';delete p.commission;delete p.report;p.age=50;p.ability=70;}
  var musk=HAREM.find(f=>f.name==='musk'),drainAll=()=>{for(let i=0;modalOpen&&i<50;i++){if(modalResult)nextEv();else choose(curEv.choices.findIndex(c=>!c.cond||c.cond()));}};
  var setupMusk=()=>{a.scheme=90;a.mood=40;z.favor=a.favor+20;return musk();};
+ var closeExamMarriage=()=>{if(curEv?.title==='金榜之后 · 探花议婚'){choose(curEv.choices.length-1);nextEv();}};
  var establish=()=>{A.establishJinyiwei();choose(0);nextEv();return S.jinyiwei.commander;};`);
  return b;
 }
@@ -34,7 +35,7 @@ test('the triennial palace examination names three graduates, and kin with a jur
 
 test('ministers must be serving and able; graduates serve two years first; one person heads one ministry',()=>{
  const b=world();
- b.run(`fa.office='知府';fz.office='知府';var ev=examEvent();ev.choices[3].f();var top=S.scholars[0];top.ability=80;
+ b.run(`fa.office='知府';fz.office='知府';var ev=examEvent();ev.choices[3].f();closeExamMarriage();var top=S.scholars[0];top.ability=80;
  assert.ok(!ministryCandidates('revenue').some(x=>x.p===top),'a new graduate is not yet eligible');
  S.turn+=24;assert.ok(ministryCandidates('revenue').some(x=>x.p===top));
  assert.ok(!ministryCandidates('war').some(x=>x.p===top),'civil graduates do not head the war ministry');
@@ -117,7 +118,7 @@ test('older pending transcripts neither hold examinations nor file or report cas
 test('pages render real people without gaps',()=>{
  const b=world();
  b.run(`var html=viewMinistries();assert.match(html,/吏部/);assert.match(html,/工部/);assert.doesNotMatch(html,/undefined|NaN/);
- assert.match(viewJinyiwei(),/设立锦衣卫/);establish();var ev=examEvent();ev.choices[3].f();
+ assert.match(viewJinyiwei(),/设立锦衣卫/);establish();var ev=examEvent();ev.choices[3].f();closeExamMarriage();
  var p=S.scholars[0];A.go('scholar',p.id);var page=viewScholar();assert.ok(page.includes(p.name));assert.doesNotMatch(page,/undefined|NaN/);
  A.scholarTalk(p.id);assert.ok(modalOpen);nextEv();assert.equal(p.lastAudience,S.turn);
  A.go('officials');var table=officialsTable();assert.ok(table.includes(p.name));assert.ok(table.includes("A.go('scholar','"+p.id+"')"));
@@ -136,7 +137,7 @@ for(const fixture of legacy.cases)test('version 8 month-end transcript still rep
 test('a father who already holds a ministry title is its sitting minister until someone replaces him',()=>{
  const b=world();
  b.run(`assert.equal(fa.office,'吏部尚书');S.ministries=undefined;assert.equal(ministryHead('personnel').p,fa);
- fz.office='户部侍郎';var ev=examEvent();ev.choices[3].f();var top=S.scholars[0];top.ability=80;S.turn+=24;
+ fz.office='户部侍郎';var ev=examEvent();ev.choices[3].f();closeExamMarriage();var top=S.scholars[0];top.ability=80;S.turn+=24;
  S.flags.kinCourt=undefined;A.ministryAppoint('personnel');var i=curEv.choices.findIndex(c=>c.t.startsWith(top.name));assert.ok(i>=0);choose(i);nextEv();
  assert.equal(ministryHead('personnel').p,top);assert.equal(fa.office,'内阁学士');assert.ok(a.story.some(x=>x.t.includes('卸任吏部尚书')));`);
 });

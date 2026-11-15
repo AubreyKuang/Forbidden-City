@@ -52,7 +52,7 @@ A.establishJinyiwei=function(){
   pushEv({title:'设立锦衣卫',text:'锦衣卫掌侍卫、缉捕与诏狱，可替陛下密查宫闱疑案、核实风闻奏事，也能搜查宫室。\n文官们担心“厂卫横行”，设立之后每次搜宫或密查都会让朝野多一分侧目。',choices:[
     {t:'设立锦衣卫，择人出任指挥使 · 精力−1 · 国库−50',cond:()=>E().energy>=1&&E().treasury>=50,why:'精力或国库不足',f:()=>{
       if(jinyiwei()||!useE())return null;chg({treasury:-50});
-      const sur=pick(SUR),given=pick(BROTHER_NAMES),seed=ri(1,2e9),faces=[273,285,286,287];
+      const sur=pick(courtNamesActive()?COURT_SURNAMES:SUR),given=courtNamesActive()?courtGivenName(sur,ri(0,2e9)):pick(BROTHER_NAMES),seed=ri(1,2e9),faces=[273,285,286,287];
       const commander={id:`jyw-${S.gen}-${S.turn}`,name:sur+given,sur,age:ri(30,46),seed,ability:ri(55,82),trust:50,merit:20,temperament:pick(['持正','谨慎','进取']),
         office:'锦衣卫指挥使',post:'锦衣卫指挥使',career:'official',alive:true,story:[],official:3,artPortrait:faces[seed%faces.length],jinyiwei:true};
       if(expandedOfficialPortraitsActive()){delete commander.artPortrait;assignCourtOfficialPortrait(commander,'army');}

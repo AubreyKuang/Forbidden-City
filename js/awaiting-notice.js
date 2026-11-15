@@ -1,6 +1,6 @@
 /* Waiting for recognition is different from lacking affection or daily company. */
 function awaitingNoticeReason(c){
-  if(S.children.some(k=>k.mom===c.id)||!inPalace(c)||c.maid||c.age<18||c.cardWithdrawn||c.preg||c.hp<40||(c.nights||0)>0||
+  if(S.children.some(k=>k.mom===c.id)||!inPalace(c)||c.maid||c.age<18||c.cardWithdrawn||c.preg||consortRecoveryActive()&&consortNightReason(c)||c.hp<40||(c.nights||0)>0||
     !Number.isFinite(c.enteredAt)||S.turn-c.enteredAt<6||['悲恸','心如死灰','怨恨'].includes(xinOf(c)))return null;
   if(S.turn-(c.lastPersonalAttention??c.enteredAt)>=6&&c.favor<35)return 'forgotten';
   if(c.aff<60&&c.favor<55&&!isSolitary(c)&&c.trait!=='淡泊')return 'uncertain';
@@ -24,7 +24,7 @@ function awaitingNoticeEvent(only){
   return {title:'未翻起的牌',por:c,present:[c],valid,onQueue:()=>{c.lastAwaitingNotice=S.turn;story(c,`【久候的心事】${words}`);cchg(c,{mood:-4});},
     text:`${cName(c)}入宫已有${Math.floor((S.turn-c.enteredAt)/12)?Math.floor((S.turn-c.enteredAt)/12)+'年':S.turn-c.enteredAt+'个月'}，尚未侍寝。\n“${words}”`,choices:[
       {t:'留下听她说话，告诉她仍被记着',f:()=>{if(!valid())return null;c.lastPersonalAttention=S.turn;story(c,'说出久候的不安后，陛下留下听她说话。虽未因此侍寝，却知道自己没有被遗忘。');remember(c,'care','我说出未承召的心事，陛下留下认真听完。');return fx(cchg(c,{mood:10,aff:5}));}},
-      {t:'今夜相伴',cond:()=>E().energy>0&&!c.cardWithdrawn,f:()=>{if(valid())nightWith(c);return null;}},
+      {t:'今夜相伴',cond:()=>E().energy>0&&!c.cardWithdrawn&&(!consortRecoveryActive()||!consortNightReason(c)),f:()=>{if(valid())nightWith(c);return null;}},
       {t:'眼下仍不得空',f:()=>{if(!valid())return null;story(c,'谈及尚未承召的心事，陛下仍不得空；她收起话头，心中失落。');remember(c,'neglect','说出久候的心事，仍没能等到相伴。');return fx(cchg(c,{mood:-6}));}}
     ]};
 }

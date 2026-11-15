@@ -1,6 +1,16 @@
 /* A degree is a qualification, not an office. Every request names a real person. */
 const STUDENT_POSTS=['书生','秀才','举人','国子监生'];
-const officialPerson=(h,role)=>role?.startsWith('relative')?h?.relatives?.find(p=>p.id===Number(role.slice(8))):h?.[role];
+const officialPerson=(h,role)=>{
+  if(!role?.startsWith('relative'))return h?.[role];
+  const id=Number(role.slice(8)),own=h?.relatives?.find(p=>p.id===id);
+  if(own||!h||typeof layeredFamilyActive!=='function'||!layeredFamilyActive())return own;
+  // A paternal-tree link can point at the same child record kept with its birth history.
+  const men=new Set([h.father?.id,...brotherRoles(h).map(r=>h[r].id),...(h.relatives||[]).filter(p=>p.sex==='m').map(p=>p.id)]);
+  for(const c of S.consorts){const p=c.house?.relatives?.find(p=>p.id===id);if(!p)continue;
+    const mother=c.house.relatives.find(m=>m.id===p.parentRelativeId);
+    if(men.has(p.fatherId??mother?.spouse?.personId))return p;
+  }
+};
 function initializeRelativeCareer(p,role){
   if(role==='father')return;
   if(!p.career)p.career=STUDENT_POSTS.includes(p.post)?'student':'official';
@@ -9,7 +19,7 @@ function initializeRelativeCareer(p,role){
 function canAppointRelative(e){return !!e&&officialAlive(e.p)&&e.p.career==='student'&&e.p.age>=18&&['举人','进士'].includes(e.p.education)&&!e.p.exiled&&!e.p.dismissed;}
 function appointRelative(e){
   if(!canAppointRelative(e)||!useE())return null;
-  const {c,p,role}=e;p.career='official';p.post='候补知县';p.appointedAt=S.turn;p.merit=0;
+  const {c,p,role}=e;p.career='official';p.post='候补知县';if(journalContentVersion()>=15)p.office=p.post;p.appointedAt=S.turn;p.merit=0;
   officialRecord(c,role,'经核验科名，奉旨授候补知县，自此开始任官。',{emotion:.6});
   officialFamilyReaction(e,'assigned','候补知县');return `${p.name}奉旨授候补知县。此前只有${p.education}功名，并无官职。`;
 }

@@ -1,0 +1,9 @@
+{
+  "status": "blocked-before-launch",
+  "attempted": "2026-11-15",
+  "url": "http://127.0.0.1:8767/dev.html",
+  "runner": "tests/court-family-browser-acceptance.cjs",
+  "runs": [],
+  "summary": {"cases": 0, "passed": 0, "reloads": 0},
+  "reason": "Temporary Chrome launch exited with SIGABRT under the current sandbox. Escalation was rejected because sandbox_approval is false. No browser checks or screenshots completed."
+}
