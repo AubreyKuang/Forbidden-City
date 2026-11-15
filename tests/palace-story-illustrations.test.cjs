@@ -74,7 +74,7 @@ test('the eastern sea illustration appears on arrival and survives an autosave r
 test('a city visit shows the old school only for the school encounter',()=>{
   for(const [roll,title,illustrated] of [[.16,'私塾门前的旧书',true],[.33,'药铺的半张方子',false]]){
     const game=start();
-    game.run('S.flags.marketRescueSeen=true');
+    game.run('S.flags.marketRescueSeen=true;S.flags.xieCityAttempt=S.turn');
     game.force(.1,roll);
     game.run("A.out('city')");
     assert.equal(game.run('curEv.title'),'微服 · '+title);
