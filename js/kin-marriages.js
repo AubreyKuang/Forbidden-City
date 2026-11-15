@@ -8,6 +8,8 @@ function kinMarriageActive(){
   if(!S||S.over)return false;
   return journalContentVersion()>=KIN_MARRIAGE_JOURNAL;
 }
+// Ids repeat between playthroughs; #25's familyHash mixes in this reign's seed for new games and is plain voiceHash for older ones.
+const marriageHash=key=>typeof familyHash==='function'?familyHash(key):voiceHash(key);
 const NOBLE_FAMS=['内阁首辅','镇国大将军','吏部尚书','两江总督','户部侍郎','翰林学士','知府','皇商'];
 const familyTitle=c=>String(paternalFamily(c)[0]?.fam?.t||c?.fam?.t||'').replace(/（获罪）/g,'');
 const familyIsNoble=c=>NOBLE_FAMS.includes(familyTitle(c));
@@ -38,7 +40,7 @@ function applyCommonerHouse(h,c){
 }
 function commonerSon(p,work){
   if(!p||p.career==='commoner'||p.career==='official'&&p.appointedAt!=null)return;
-  p.career='commoner';p.post=work.son[voiceHash(String(p.id||p.name))%work.son.length];delete p.education;p.merit=0;
+  p.career='commoner';p.post=work.son[marriageHash(String(p.id||p.name))%work.son.length];delete p.education;p.merit=0;
 }
 function commonerRelatives(h,c){
   if(!h.commonerChecked||familyIsNoble(c))return;
@@ -71,10 +73,10 @@ function spouseFor(c,sister,{alliance=true}={}){
   if(familyIsNoble(c)){
     const options=alliance?allianceCandidates(c,sister):[];
     if(options.length){const x=pickW(options);return {kind:'alliance',name:x.p.name,sur:x.p.sur||x.consort.sur,desc:`${fullName(x.consort)}的${officialKinLabel(x.h,x.role,x.consort)}`,consortId:x.consort.id,personId:x.p.id??null,role:x.role};}
-    const n=voiceHash(sister.id+':noble-spouse'),sur=SUR[n%SUR.length];
+    const n=marriageHash(sister.id+':noble-spouse'),sur=SUR[n%SUR.length];
     return {kind:'noble',name:sur+BROTHER_NAMES[(n>>>4)%BROTHER_NAMES.length],sur,desc:`${NOBLE_SPOUSE_HOUSES[(n>>>8)%NOBLE_SPOUSE_HOUSES.length]}之子`};
   }
-  const work=COMMONER_WORK[humbleKind(c)],n=voiceHash(sister.id+':spouse'),sur=SUR[n%SUR.length];
+  const work=COMMONER_WORK[humbleKind(c)],n=marriageHash(sister.id+':spouse'),sur=SUR[n%SUR.length];
   return {kind:'commoner',name:sur+BROTHER_NAMES[(n>>>4)%BROTHER_NAMES.length],sur,desc:work.spouse[(n>>>8)%work.spouse.length]};
 }
 function allianceEntry(match){
@@ -88,7 +90,7 @@ function matchStillOpen(match){
 
 /* —— 成婚 —— */
 function marrySister(c,p,match,{quiet=false,source='两家议定'}={}){
-  p.married=true;p.spouse={id:`spouse:${p.id}`,sur:match.sur,name:match.name,desc:match.desc,kind:match.kind,born:S.turn-(natalAge(p)+1+voiceHash(p.id+':gap')%4)*12,alive:true};
+  p.married=true;p.spouse={id:`spouse:${p.id}`,sur:match.sur,name:match.name,desc:match.desc,kind:match.kind,born:S.turn-(natalAge(p)+1+marriageHash(p.id+':gap')%4)*12,alive:true};
   delete p.betrothal;(p.lifeCourse ||= {}).last=S.turn;
   const where=match.kind==='commoner'?`嫁与${match.desc}${match.name}`:`嫁与${match.desc}${match.name}`;
   if(quiet){story(p,`家书补记：早年已${where}。`);return;}
@@ -116,7 +118,7 @@ function kinMarriageTick(){
       if(age>=30){marrySister(c,p,p.betrothal&&matchStillOpen(p.betrothal.match)?p.betrothal.match:spouseFor(c,p,{alliance:false}),{quiet:!p.betrothal});continue;}
       // 头一回清点：家中早有安排的，照实补记；不靠抽签。
       if(!p.marriageChecked){
-        p.marriageChecked=S.turn;const n=voiceHash(p.id+':match')%100;
+        p.marriageChecked=S.turn;const n=marriageHash(p.id+':match')%100;
         if(n<40){marrySister(c,p,spouseFor(c,p,{alliance:false}),{quiet:true});continue;}
         if(n<75)startBetrothal(c,p);
         continue;
@@ -132,7 +134,7 @@ function kinMarriageTick(){
 }
 function startBetrothal(c,p){
   const match=spouseFor(c,p);
-  p.betrothal={turn:S.turn,due:S.turn+6+voiceHash(p.id+':due:'+S.turn)%12,match,seen:false};
+  p.betrothal={turn:S.turn,due:S.turn+6+marriageHash(p.id+':due:'+S.turn)%12,match,seen:false};
   story(p,`家中为她与${match.desc}${match.name}议亲。`);
   return p.betrothal;
 }
