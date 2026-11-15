@@ -35,6 +35,7 @@ function maternalStatus(k,c){
  return 'near';
 }
 const MATERNAL_STATUS={near:'相伴',foster:'抱养分居',closed:'探望受阻',away:'出宫牵挂',missing:'失散待寻',death:'丧子追思'};
+function maternalLongSeparation(c,k,r){return ['death','missing','closed'].includes(r.kind)||isSolitary(c)&&['foster','away'].includes(r.kind)&&S.turn-(k.motherBonds?.[c.id]?.turn??r.since)>=6&&(r.kind==='foster'||kidAge(k)<12||k.princessMarriage==='frontier'||k.templeStay);}
 function maternalRecord(c,k,r,text,emotion){
  story(c,`【${MATERNAL_STATUS[r.kind]}·${k.name}】${text}`);
  NPCMemory.record(S,{type:'maternal-life',time:S.turn,participants:[c.id,k.id],object:k.name,outcome:text},[{person:c.id,subject:k.id,interpretation:text,emotion,impact:85}]);
@@ -52,7 +53,7 @@ function maternalTick(){
    }
   }
   const r=state.children[k.id];
-  if(['death','missing','closed'].includes(kind)&&S.turn-r.since>=6&&r.care<2&&!r.retreat){
+  if(maternalLongSeparation(c,k,r)&&S.turn-r.since>=6&&r.care<2&&!r.retreat){
    r.retreat=solitaryDao(c)?'静室问道':c.t2==='信佛'||c.like==='佛经'?'青灯诵经':'闭门少言';
    maternalRecord(c,k,r,`牵挂久久未解，她渐渐${r.retreat}。清静并没有让她忘记${k.name}。`,-.6);
   }
