@@ -407,7 +407,7 @@ function portraitCell(x){
   const override=(x==='emp'?E():x)?.portraitOverride;
   if(Number.isInteger(override)&&override>=0&&override<PORTRAIT_COUNT&&!(journalContentVersion()>=19&&!x.jinyiwei&&JINYIWEI_PORTRAITS.includes(override)))return override;
   if(x==='emp')return emperorPortraitCell(E());
-  if(x.storyPerson==='xiean')return STORY_NPC_PORTRAITS.capitalNoble;
+  if(x.storyPerson==='xiean'||x.personId&&S?.scholars?.some(p=>p.id===x.personId&&p.storyPerson==='xiean'))return STORY_NPC_PORTRAITS.capitalNoble;
   if(x.jinyiwei)return jinyiweiPortraitCell(x);
   if(x.official!==undefined)return journalContentVersion()>=19&&JINYIWEI_PORTRAITS.includes(x.artPortrait)?ordinaryOfficialPortrait(x):ALL_OFFICIAL_PORTRAITS.includes(x.artPortrait)?x.artPortrait:FAMILY_PORTRAIT_START+12+x.official;
   if(x.isMom)return 9;

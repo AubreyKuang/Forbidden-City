@@ -14,6 +14,8 @@
    for(let i=0;modalOpen&&modalResult&&i<8;i++)document.querySelector('#mbox .mch button').click();
    assert(!modalOpen,'结果未正常关闭');A.go('scholar',p.id);
    assert(document.querySelector('#panel').textContent.includes('谢安'),'人物页未显示');
+   assert(document.querySelector('#panel [data-portrait-cell="433"]'),'人物页未使用实际433图格');
+   assert(portraitCell(k.spouse)===433,'驸马小像未使用433');
    const label=document.createElement('p');label.id='browser-check-result';label.textContent='浏览器校验：通过 · 赐婚点击、夫妻身份、433立绘、分房禁孕、无妾、存读档续接';
    label.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99999;margin:0;padding:8px;background:#214b3d;color:white;text-align:center;font-size:14px';document.body.appendChild(label);
    document.documentElement.dataset.royalHeartCheck='passed';
