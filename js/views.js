@@ -274,6 +274,7 @@ function viewHome(){
      ['recent','近事',`<ul class="story">${recent.map(l=>`<li class="${l.b?'big':''}"><time>${esc(l.d)}</time>${esc(l.t)}</li>`).join('')||'<li>尚无记载</li>'}</ul>`],
      ['court','朝堂与外家',courtBlocHTML()],
      ['story-consorts','剧情妃图鉴',storyConsortCodex()],
+     ['notable-people','风华人物志',notablePeopleCodex()],
      ['keepsakes','家书与手稿',detailSection('从旧朝带来的家书与手稿',lifeWorksPanel(e))],
      ['guide','起居与用度',`<p class="hint">每月有${maxEnergy()}点精力。上朝可先免费查看本月奏折，亲自批复通常花 1 点；召幸、闲谈、探望皇嗣、出巡也要花精力。赏赐、晋封、选秀不花精力。精力用完后，处理完当前事件及后续便会自动转月；也可提前点「结束本月」。侍寝后若怀上龙胎，要到下个月末太医才诊得出喜脉。每位妃嫔都有一段专属故事，情分越深越容易推进。</p>`]
    ])}`}

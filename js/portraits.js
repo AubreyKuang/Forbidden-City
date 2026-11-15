@@ -292,7 +292,7 @@ function assignCourtOfficialPortrait(person,bloc,{mature=person.age>=40,house={}
   if(ALL_OFFICIAL_PORTRAITS.includes(person.artPortrait)&&!(journalContentVersion()>=19&&!person.jinyiwei&&JINYIWEI_PORTRAITS.includes(person.artPortrait)))return;
   const basePool=OFFICIAL_PORTRAITS[bloc==='army'?'army':'civil'][mature?'mature':'young'];
   // Preserve pending v19 (and earlier) scenes; new brothers may use the approved white portrait.
-  const pool=brother&&!mature&&journalContentVersion()>=20?[...basePool,...BROTHER_ONLY_PORTRAITS]:basePool;
+  const pool=brother&&!mature&&journalContentVersion()>=21?[...basePool,...BROTHER_ONLY_PORTRAITS]:basePool;
   const cells=dedicatedJinyiweiPortraitsActive()?pool:pool.filter(cell=>!SHARED_OFFICIAL_PORTRAITS.includes(cell));
   const usage=new Map(cells.map(cell=>[cell,0])),seen=new Set();
   const families=[...(S?.consorts||[]),...(S?.cands||[]),...(S?.flags?.frontierHouses||[]).map(x=>x.guest)].filter(Boolean);
@@ -403,6 +403,7 @@ function childPortraitCell(child){
 
 function portraitCell(x){
   if(x?.appearance)x=x.appearance;
+  if(journalContentVersion()>=21&&(x?.storyPerson==='xiean'||x?.personId&&(S?.scholars||[]).some(p=>p.id===x.personId&&p.storyPerson==='xiean')))return STORY_NPC_PORTRAITS.capitalNoble;
   const override=(x==='emp'?E():x)?.portraitOverride;
   if(Number.isInteger(override)&&override>=0&&override<PORTRAIT_COUNT&&!(journalContentVersion()>=19&&!x.jinyiwei&&JINYIWEI_PORTRAITS.includes(override)))return override;
   if(x==='emp')return emperorPortraitCell(E());

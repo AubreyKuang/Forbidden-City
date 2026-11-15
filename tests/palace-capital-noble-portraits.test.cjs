@@ -45,5 +45,5 @@ test('an untouched v19 pending coronation restores original faces before enablin
   assert.equal(b.run('curEv.title'),legacy.pendingActions.pending.title);
   const faces=consorts=>consorts.map(c=>Object.values(c.house||{}).filter(p=>p&&typeof p==='object'&&p.id).map(p=>[p.id,p.artPortrait]));
   assert.deepEqual(faces(JSON.parse(b.run('JSON.stringify(S.consorts)'))),faces(legacy.consorts));
-  b.run('drain();assert.equal(PalaceActions.contentVersion,20);');
+  b.run('drain();assert.equal(PalaceActions.contentVersion,21);');
 });

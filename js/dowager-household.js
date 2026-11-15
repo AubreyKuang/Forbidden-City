@@ -1,5 +1,5 @@
 /* The dowager remembers actual births, losses, visits and publicly established facts. */
-const dowagerLivingActive=()=>!!S&&journalContentVersion()>=20;
+const dowagerLivingActive=()=>!!S&&journalContentVersion()>=21;
 function dowagerLiving(d=ensureDowager()){
  if(!d)return null;
  if(!d.household||d.household.gen!==S.gen)d.household={gen:S.gen,seen:{},news:[],bonds:{},publicCases:{},lastTick:-1};
@@ -54,17 +54,19 @@ function dowagerFamilyChanges(previous){
 function dowagerVisitReady(c){return inPalace(c)&&!c.maid&&(c.hp??100)>=55&&c.preg<7&&!consortRecovery(c)&&!(c.illnessRecovery&&S.turn<c.illnessRecovery.until);}
 function prepareDowagerCompany(d){
  const h=dowagerLiving(d);if(!d.alive)return {turn:S.turn,people:[]};if(h.company?.turn===S.turn)return h.company;
- h.company={turn:S.turn,people:[]};if(mourningActive()||!chance(.38))return h.company;
- const people=harem().filter(c=>dowagerVisitReady(c)&&(c.rank===8||c.clan===d.clan||dowagerBond(c,d)>=65));
+ h.company={turn:S.turn,people:[]};const busy=dowagerRumorActive(d);
+ if(mourningActive()||S.turn<(h.quietUntil??0)||!chance(busy?.85:.38))return h.company;
+ const people=harem().filter(c=>dowagerVisitReady(c)&&(c.rank===8||c.clan===d.clan||dowagerBond(c,d)>=65||busy&&(!['淡泊','沉静'].includes(c.trait)||chance(.2))));
  if(!people.length)return h.company;
  h.company.people=[pick(people).id];
- if(people.length>1&&chance(.22))h.company.people.push(pick(people.filter(c=>c.id!==h.company.people[0])).id);
+ if(people.length>1&&chance(busy?.8:.22))h.company.people.push(pick(people.filter(c=>c.id!==h.company.people[0])).id);
+ if(busy){h.rumor.visits+=h.company.people.length;h.rumor.crowdedAt=S.turn;}
  noteDowagerCompany(d,h.company.people.map(byId));return h.company;
 }
 function dowagerCompanyPeople(d){return (d.household?.company?.turn===S.turn?d.household.company.people:[]).map(byId).filter(dowagerVisitReady);}
 function noteDowagerCompany(d,people){
  for(const c of people){if(d.household.bonds[c.id]?.lastVisit===S.turn)continue;const b=changeDowagerBond(c,2,d);b.lastVisit=S.turn;b.visits++;
-  const line=`${fullName(c)}到慈宁宫${c.rank===8?'问安，谈起宫中起居':'陪太后坐坐，说起日常琐事'}。`;
+  const line=`${fullName(c)}到慈宁宫${c.rank===8?'问安，谈起宫中起居':'陪太后坐坐，说起日常琐事'}。${dowagerRumorActive(d)?['骄纵','善妒','城府'].includes(c.trait)?'听说此处曾偶遇圣驾，她也多留意了一眼殿门。':'宫中传言此处常遇圣驾，她听过，却仍先向太后问安。':''}`;
   story(c,'【慈宁宫往来】'+line);dowagerRecord(d,'有人相伴',line);
  }
 }
@@ -80,12 +82,12 @@ function dowagerCompanyEvent(d,people){
    if(bond<=40)return `皇后${fullName(c)}依礼问安。太后与她说话仍有些生分：${work?'“这件宫务办得妥，照章料理便好。”':'“中宫自有职责，今日既来了，坐下喝杯茶罢。”'}皇后应了一声，接过宫人递来的温茶。`;
    return `皇后${fullName(c)}陪太后说起宫中起居。太后说：“你肯来听哀家说几句，便很好。六宫的事慢慢说，先让茶温一温。”`;
   }
-  return `太后笑着提起${fullName(c)}：“${c.clan===d.clan?'这是哀家母家的孩子，':'这孩子与哀家投缘，'}${visits>=3?'平日这里清静，多亏她常来陪哀家说话。':'今日肯来陪哀家坐坐，屋里也热闹些。'}${bond<=40?'性子虽未必事事合拍，肯坐下来好好说话，总比疏远了强。':'她记得哀家爱听的家常，哀家也愿听她说自己的日子。'}”`;
+  return `太后提起${fullName(c)}：“${c.clan===d.clan?'这是哀家母家的孩子，':bond>=65?'这孩子与哀家投缘，':'平日来往不算多，'}${visits>=3?'平日这里清静，多亏她常来陪哀家说话。':'今日肯来陪哀家坐坐，屋里也热闹些。'}${bond<=40?'性子虽未必事事合拍，肯坐下来好好说话，总比疏远了强。':'家常慢慢说，茶还温着。'}”`;
  });
  let done=false;const valid=()=>!done&&d.alive&&people.every(dowagerVisitReady);
  return trackDowagerTalk(d,{title:'慈宁宫 · 茶席有伴',por:dowagerPerson(d),cast:people,present:people,valid,
   text:`你到慈宁宫时，${people.map(fullName).join('、')}也在。宫人添上一盏茶。\n${descriptions.join('\n')}`,
-  onShow:()=>noteDowagerCompany(d,people),choices:[
+  onShow:()=>{noteDowagerCompany(d,people);startDowagerRumor(d,people);},choices:[
    {t:'坐下一同说说话',f:()=>{if(!valid())return null;done=true;d.mood=clamp(d.mood+5);for(const c of people){changeDowagerBond(c,3,d);story(c,`【慈宁宫同坐】与陛下、太后一同喝茶，太后谈起${c.rank===8?'中宫往来与起居':'自己陪伴她的情分'}。`);cchg(c,{mood:4});}const text='你坐下来听她们说话，茶添了两回，窗下的笑声才渐渐歇下。';dowagerRecord(d,'茶席同坐',people.map(fullName).join('、')+'与皇帝留下相伴。');return text;}},
    {t:'让她们继续陪母后，先告退',f:()=>{if(!valid())return null;done=true;dowagerRecord(d,'茶席相伴',`皇帝问安后告退，${people.map(fullName).join('、')}仍留下说话。`);return '你问候过众人，留她们自在说话。';}}
   ]},'company',{months:2});
@@ -131,6 +133,8 @@ dowagerEvent=function(){
  const loss=h.news.find(n=>!n.discussed&&(n.kind==='death'||n.kind==='justice'));
  if(loss){const ev=dowagerNewsEvent(d,loss);if(ev)return ev;}
  if(d.conversations?.lastTurn===S.turn||S.month===9)return livingDowagerEvent();
+ const crowd=dowagerCrowdEvent(d);if(crowd)return crowd;
+ const question=dowagerDaoEvent(d);if(question)return question;
  const births=h.news.filter(n=>n.kind==='birth'&&!n.discussed&&S.turn-n.turn<=4);
  if(births.length&&chance(.65)){for(const n of births){const ev=dowagerNewsEvent(d,n);if(ev)return ev;}}
  prepareDowagerCompany(d);const people=dowagerCompanyPeople(d);
@@ -141,7 +145,7 @@ dowagerEvent=function(){
 const livingDowagerTick=dowagerTick;
 dowagerTick=function(){livingDowagerTick();if(!dowagerLivingActive())return;const d=ensureDowager();if(!d?.alive)return;const h=dowagerLiving(d);if(h.lastTick===S.turn)return;h.lastTick=S.turn;
  if(d.feeling?.kind==='悲恸'&&S.turn-d.feeling.turn>12)d.feeling.kind='思念';
- prepareDowagerCompany(d);
+ prepareDowagerCompany(d);dowagerCrowdTick(d);dowagerDaoTick(d);
 };
 const livingPunishEvent=punishEv;
 punishEv=function(a,v,crime){
