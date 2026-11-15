@@ -73,9 +73,9 @@ function natalVisitEvent(c,p){
   const response=sisterArrivalFeeling(c,p,false);
   return {title:'娘家来访',por:c,present:[c],valid:()=>natalVisitReady(c,p),text:`${cName(c)}的${natalLabel(c,p)}${p.name}想入宫探望，${natalAge(p)<18?'将由家中长辈陪同，':'按亲眷探视的礼数，'}住两个月后回家。\n${response.text}`,choices:[
     {t:'准许探亲',f:()=>{if(!natalVisitReady(c,p))return null;p.visit={host:c.id,from:S.turn,until:S.turn+2};p.lastVisit=S.turn;
-      natalRecord(c,p,`${p.name}获准入宫探望${fullName(c)}，约定两个月后归家。${response.text}`,response.delta/20);relAdd(c,p,response.delta);cchg(c,{mood:response.delta});
+      natalSceneRecord(c,p,`${p.name}获准入宫探望${fullName(c)}，约定两个月后归家。${response.text}`,response.delta/20);relAdd(c,p,response.delta);cchg(c,{mood:response.delta});
       pushNow(natalMeetingEvent(c,p));return null;}},
-    {t:'暂缓，先让她们通书信',f:()=>{p.lastVisit=S.turn-6;natalRecord(c,p,'这次探亲暂缓，仍可由家中递送书信。');return '家中收到回信，尚未动身。';}}
+    {t:'暂缓，先让她们通书信',f:()=>{p.lastVisit=S.turn-6;natalSceneRecord(c,p,'这次探亲暂缓，仍可由家中递送书信。');return '家中收到回信，尚未动身。';}}
   ]};
 }
 function natalMeetingEvent(c,p){
@@ -84,19 +84,19 @@ function natalMeetingEvent(c,p){
   const scene=age<3?'由长辈抱着，在帘下听见说话声便转过头来':child?'把家中带来的小物一件件摆好，认真说着读书与起居的小事':
     ({温婉:'把家人的问候慢慢说清，又问她近来睡得可好',活泼:'说起家乡街巷的新鲜事，听见通报便收声行礼',沉静:'在窗边陪她坐着，偶尔补上一句家中的近况',才女:'带来一本旧书，在页边留着两人都认得的批注',爽直:'先问她过得如何，见你到来便大方行礼',聪慧:'将家中近况分说明白，也留意到她欲言又止的神色'}[p.trait]);
   return {title:'探亲相见',por:natalPortrait(p),cast:[c],present:[c],valid:()=>natalInPalace(c,p),text:`你来到${c.palace}，见${fullName(c)}的${natalLabel(c,p)}${p.name}正在探亲。${p.name}${scene}。${child?'随行长辈始终在旁照看。':''}`,choices:[
-    {t:age<3?'问起家中的照料':'听她们说家中近况',f:()=>{if(!natalInPalace(c,p))return null;natalRecord(c,p,`探亲时与陛下一同谈起家中近况。${fullName(c)}把这次见面记了下来。`,.4);relAdd(c,p,4);return '你听完家中的近况，将余下的时辰留给亲人相聚。';}},
+    {t:age<3?'问起家中的照料':'听她们说家中近况',f:()=>{if(!natalInPalace(c,p))return null;natalSceneRecord(c,p,`探亲时与陛下一同谈起家中近况。${fullName(c)}把这次见面记了下来。`,.4);relAdd(c,p,4);return '你听完家中的近况，将余下的时辰留给亲人相聚。';}},
     ...(natalRomanceReady(c,p)?[{t:'一见倾心，询问她是否愿意入宫',f:()=>{if(!natalRomanceReady(c,p))return null;pushNow(natalCourtshipEvent(c,p));return null;}}]:[]),
-    {t:'让亲人自在说话',f:()=>{if(!natalInPalace(c,p))return null;natalRecord(c,p,'陛下留下亲人独处的时辰，没有打断探亲。',.2);return '廊下渐渐静了，亲人可以把尚未说完的话慢慢说完。';}}
+    {t:'让亲人自在说话',f:()=>{if(!natalInPalace(c,p))return null;natalSceneRecord(c,p,'陛下留下亲人独处的时辰，没有打断探亲。',.2);return '廊下渐渐静了，亲人可以把尚未说完的话慢慢说完。';}}
   ]};
 }
 function natalCourtshipEvent(c,p){
   if(!natalRomanceReady(c,p))return null;
-  if(!p.willing){p.declined=true;natalRecord(c,p,`${p.name}听到入宫之意，明言更愿过宫外的日子。她的意愿被保留，仍按原约探亲归家。`);
+  if(!p.willing){p.declined=true;natalSceneRecord(c,p,`${p.name}听到入宫之意，明言更愿过宫外的日子。她的意愿被保留，仍按原约探亲归家。`);
     return {title:'她自己的心意',por:natalPortrait(p),present:[c],text:`${p.name}认真行礼：“承蒙陛下垂问，只是民女更愿过宫外的日子。此来是看望亲人，还请成全。”`,choices:[{t:'尊重她的心意',f:()=>'这次仍只是探亲。'}]};}
   return {title:'留宫之意',por:natalPortrait(p),present:[c],valid:()=>natalRomanceReady(c,p)&&p.willing,
     text:`${p.name}听清入宫意味着什么，思量后愿意留下。\n${sisterArrivalFeeling(c,p,true).text}\n若准入宫，她将以自己的身份生活，家中的亲缘与既有经历继续保留。`,choices:[
       {t:'纳为常在',cond:()=>rankCount(2)<RANK_CAP[2],why:'常在位分已满',f:()=>admitNatalSister(c,p)},
-      {t:'不急，仍按探亲之约',f:()=>{natalRecord(c,p,'谈过入宫之意，尚未定下，仍按原约探亲。');return '你没有立刻册封，她仍是来访的亲眷。';}}
+      {t:'不急，仍按探亲之约',f:()=>{natalSceneRecord(c,p,'谈过入宫之意，尚未定下，仍按原约探亲。');return '你没有立刻册封，她仍是来访的亲眷。';}}
     ]};
 }
 function makeNatalConsort(c,p){
@@ -110,7 +110,8 @@ function makeNatalConsort(c,p){
 function admitNatalSister(c,p){
   if(!natalRomanceReady(c,p)||!p.willing||rankCount(2)>=RANK_CAP[2])return null;
   const g=makeNatalConsort(c,p);
-  addConsort(g,2,`探亲时与陛下相识，自愿入宫`);story(p,'探亲相识后，自愿留下，册为常在。');
+  addConsort(g,2,`探亲时与陛下相识，自愿入宫`);
+  if(familyScenesEnabled())p.story=g.story.map(e=>({...e}));else story(p,'探亲相识后，自愿留下，册为常在。');
   return `${fullName(g)}受封常在。她与亲人的旧交、各自心思，都随之进入宫中的新生活。`;
 }
 function viewNatalRelative(){

@@ -2,13 +2,11 @@
 // 世家之女多由两家议亲，交好的家族之间常结姻亲；小门小户、农家、太医之家的女儿嫁的是普通人家，
 // 兄长也多是平民营生。二十岁以上的姐妹或已出嫁、或正在议亲；三十岁以上都已出嫁。
 // 平民父兄不是官员：不上朝、不领差、不被举荐或参劾（新开局起生效）。
-// 旧存档里未完的事件按原样重放：事务日志版本 7 之前的步骤不触发这里的抽签或写入。
-const KIN_MARRIAGE_JOURNAL=7;
+// 旧存档里未完的事件按原样重放：事务日志版本 8 之前的步骤不触发这里的抽签或写入。
+const KIN_MARRIAGE_JOURNAL=8;
 function kinMarriageActive(){
   if(!S||S.over)return false;
-  if(typeof PalaceActions==='undefined')return true;
-  const version=PalaceActions.payload().pendingActions?.version;
-  return version===undefined||version>=KIN_MARRIAGE_JOURNAL;
+  return journalContentVersion()>=KIN_MARRIAGE_JOURNAL;
 }
 const NOBLE_FAMS=['内阁首辅','镇国大将军','吏部尚书','两江总督','户部侍郎','翰林学士','知府','皇商'];
 const familyTitle=c=>String(paternalFamily(c)[0]?.fam?.t||c?.fam?.t||'').replace(/（获罪）/g,'');

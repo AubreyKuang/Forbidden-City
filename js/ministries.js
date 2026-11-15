@@ -1,13 +1,11 @@
 /* ============ 六部与科举 ============ */
 // 六部各设尚书，由在任且有才干的官员出任；尚书的才干决定本部差事的成败。
 // 三年一科：会试后殿试钦点三甲，新科进士授翰林院官职，成为外戚之外有名有姓的朝臣。
-// 旧存档里未完的事件按原样重放：事务日志版本 6 之前的步骤不触发这里的抽签或写入。
-const COURT_OFFICES_JOURNAL=6;
+// 旧存档里未完的事件按原样重放：事务日志版本 7 之前的步骤不触发这里的抽签或写入。
+const COURT_OFFICES_JOURNAL=7;
 function courtOfficesActive(){
   if(!S||S.over)return false;
-  if(typeof PalaceActions==='undefined')return true;
-  const version=PalaceActions.payload().pendingActions?.version;
-  return version===undefined||version>=COURT_OFFICES_JOURNAL;
+  return journalContentVersion()>=COURT_OFFICES_JOURNAL;
 }
 function ministryState(){
   const st=S.ministries ||= {};

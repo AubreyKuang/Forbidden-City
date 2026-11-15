@@ -109,8 +109,8 @@ test('a rumoured impeachment can go to the Jinyiwei; its truth is fixed when the
 
 test('older pending transcripts neither hold examinations nor file or report cases',()=>{
  const b=world();
- b.run(`S.month=3;S.pendingActions={version:5};assert.equal(examDueNow(),false);var ev=setupMusk();var n=ev.choices.length;`);
- b.force(.99);b.run(`ev.choices[0].f();assert.equal(S.palaceCases,undefined);delete S.pendingActions;`);
+ b.run(`S.month=3;Object.defineProperty(PalaceActions,'contentVersion',{get:()=>6,configurable:true});assert.equal(examDueNow(),false);var ev=setupMusk();var n=ev.choices.length;`);
+ b.force(.99);b.run(`ev.choices[0].f();assert.equal(S.palaceCases,undefined);delete PalaceActions.contentVersion;assert.ok(courtOfficesActive());`);
 });
 
 test('pages render real people without gaps',()=>{
@@ -124,11 +124,11 @@ test('pages render real people without gaps',()=>{
  A.go('government');assert.match(viewGovernment(),/六部/);assert.match(viewGovernment(),/锦衣卫/);`);
 });
 
-const legacy=require('./fixtures/offices-legacy-v5.json');
-for(const fixture of legacy.cases)test('version 5 month-end transcript still replays exactly: '+fixture.name,()=>{
+const legacy=require('./fixtures/offices-legacy-v6.json');
+for(const fixture of legacy.cases)test('version 6 month-end transcript still replays exactly: '+fixture.name,()=>{
  const game=save=>{const b=withClock(boot(311,new Map([['chengongji_v1_auto',JSON.stringify(save)]])));b.ctx.assert=assert;return b;};
  let b=game(fixture.save);b.run("A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(S.scholars,undefined);");
- const relabelled=JSON.parse(JSON.stringify(fixture.save));relabelled.pendingActions.version=6;
+ const relabelled=JSON.parse(JSON.stringify(fixture.save));relabelled.pendingActions.version=7;
  b=game(relabelled);b.run("A.load('auto');assert.equal(PalaceActions.blocked,true);");
 });
 
