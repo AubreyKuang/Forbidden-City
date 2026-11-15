@@ -16,8 +16,9 @@ test('last court action keeps its decision and only advances after the result is
 test('a non-dialog action also advances; rejected actions and reading do not consume a month',()=>{
  const b=world();b.run("E().energy=1;A.taxPlan('light');assert.equal(S.turn,1);while(modalOpen)nextEv();E().energy=0;delete S.flags.exhaustedTurn;A.taxPlan('regular');A.go('government');assert.equal(S.turn,1);assert.equal(governance().tax,'light');");
 });
-test('save failure rolls back exhausted energy and its eventual month transition',()=>{
- const b=world();b.run("E().energy=1;var original=S.turn,coins=E().treasury;localStorage.setItem=()=>{throw Error('quota')};A.out('spa');assert.equal(S.turn,original);assert.equal(E().energy,1);assert.equal(E().treasury,coins);assert.equal(S.flags.exhaustedTurn,undefined);");
+test('a failed write keeps exhausted energy and its month transition, then saves when storage returns',()=>{
+ const b=world();b.run("E().energy=1;var original=S.turn,coins=E().treasury,write=localStorage.setItem;localStorage.setItem=()=>{throw Error('quota')};A.out('spa');assert.equal(E().treasury,coins-60);assert.equal(E().energy,0);assert.ok(lastAutoSaveError);");
+ b.run("drain();assert.equal(S.turn,original+1);assert.equal(S.flags.exhaustedTurn,undefined);localStorage.setItem=write;assert.equal(save('auto'),true);assert.equal(JSON.parse(localStorage.getItem(SKEY+'auto')).turn,original+1);");
 });
 test('unsettled birth is handled before an exhausted month can advance',()=>{
  const b=world();b.run(`var c=harem()[1];c.preg=10;birthEvent(c);E().energy=0;S.flags.exhaustedTurn=S.turn;A.resumeBirth(c.id);
