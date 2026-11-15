@@ -70,7 +70,7 @@ test('only the four selected older pictures enter the general scholar and brothe
     assert.ok(S.scholars.every(p=>!JINYIWEI_PORTRAITS.includes(p.artPortrait)));
     for(var bloc of ['civil','army']){
       S.consorts=[];S.cands=[];S.scholars=[];var h={bloc};
-      for(var i=0;i<OFFICIAL_PORTRAITS[bloc].young.length;i++){
+      for(var i=0;i<OFFICIAL_PORTRAITS[bloc].young.length+BROTHER_ONLY_PORTRAITS.length;i++){
         var p={id:bloc+'-brother-'+i,age:25,seed:i+700,official:3};h['brother'+i]=p;assignOfficialPortrait(p,h,'brother');
       }
       for(var cell of SHARED_OFFICIAL_PORTRAITS)assert.ok(Object.values(h).some(p=>p.artPortrait===cell));

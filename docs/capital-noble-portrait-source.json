@@ -1,0 +1,68 @@
+{
+  "id": 433,
+  "role": "capitalNoble",
+  "approval": "approved",
+  "source": "exec-30423af5-5c4b-4d1c-ab6d-69191f9d2f6f.png",
+  "sourceSize": [
+    1086,
+    1448
+  ],
+  "sourceSha256": "0c0c0c765fd1ae3a93367750e6d0954a1ca50fb60f9853bedd9135329c2ae22b",
+  "atlas": "assets/images/palace-capital-noble.webp",
+  "frame": [
+    448,
+    560
+  ],
+  "columns": 4,
+  "tile": 0,
+  "size": [
+    414,
+    552
+  ],
+  "offset": [
+    17,
+    8
+  ],
+  "head": [
+    61,
+    26,
+    26
+  ],
+  "revision": "朱红金鹤盛装版：俊美明朗，金玉冠、折扇与洒脱姿态",
+  "supersededSource": "exec-6365ff2b-9b14-4b03-a793-ce8137f498b8.png",
+  "characterName": "谢安",
+  "repurposedPortraits": [
+    {
+      "id": 434,
+      "source": "exec-d6ee8a3b-f449-4600-a834-9e8cfff90fce.png",
+      "role": "consortBrother",
+      "artApproved": true,
+      "integrationStatus": "brother-only pool, retained through later office changes",
+      "atlas": "assets/images/palace-brother-jade-white.webp",
+      "sourceSize": [
+        1086,
+        1448
+      ],
+      "sourceSha256": "33c0c006db1a06f7d41eced890d2af5e9fa89800b757fe3dd44c2d05a079da7d",
+      "frame": [
+        448,
+        560
+      ],
+      "columns": 4,
+      "tile": 0,
+      "size": [
+        414,
+        552
+      ],
+      "offset": [
+        17,
+        8
+      ],
+      "head": [
+        62,
+        26,
+        26
+      ]
+    }
+  ]
+}
