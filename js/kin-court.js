@@ -11,6 +11,7 @@ const KIN_COURT_EVENT_GAP=8, KIN_COURT_TICK_GAP=4, KIN_COURT_PAIR_GAP=12, KIN_CO
 const KIN_COURT_TASKS={army:['border','drills','escort'],civil:['dikes','granaries','accounts','schools','water']};
 // 部议时可附议的具体事务，按其所在派系的职守取材。
 const KIN_COURT_TOPICS={civil:['清丈田亩','漕运章程','科场条例','赈济章程','州县考成'],army:['边镇换防','军屯章程','马政','烽燧修缮'],kin:['织造贡额','盐引新规','内库采办'],dowager:['宗室赡养','太医院药材采办'],none:['州县考成','赈济章程']};
+const KIN_COURT_ACCUSER=/^(?:朝议时指摘|参劾|上疏举荐|部议时附议)/;
 const KIN_COURT_LAPSE=/未尽如期|疏漏|兵败|失察|不力|未能理清|罚俸|问责|空名|有缺|未能核清|未议定/;
 
 // The version of the transcript being played or replayed; scenes from older versions keep older rules.
@@ -35,7 +36,8 @@ function kinCourtFree(p){
 // 只认已经写在履历里的疏失；功绩偏低只能算“才具平平”的评语，不算罪证。
 function kinCourtLapse(p){
   if(p.report?.outcome==='setback')return {text:`${p.report.title}未尽如期`,grounded:true};
-  const record=(p.story||[]).slice(-6).reverse().find(x=>KIN_COURT_LAPSE.test(x.t));
+  // Lines in which this person accused someone else describe the other's fault, not his own.
+  const record=(p.story||[]).slice(-6).reverse().find(x=>KIN_COURT_LAPSE.test(x.t)&&!KIN_COURT_ACCUSER.test(x.t));
   if(record)return {text:`${record.d}${record.t.replace(/[。；]+$/,'').slice(0,28)}`,grounded:true};
   if((p.merit??50)<30)return {text:'任上功绩平平',grounded:false};
   return null;
@@ -127,8 +129,9 @@ function kinCourtTick(){
     const lapse=cast.lapse;
     kind=lapse?.grounded?'criticize':'belittle';
     if(kind==='criticize'){
-      actorText=`朝议时指摘${y.p.name}「${lapse.text}」，请部里记明。`;
-      targetText=`朝议时被${x.p.name}指摘「${lapse.text}」，当廷陈明缘由。`;
+      // Neither line quotes the fault again, so a criticism does not renew or transfer the record.
+      actorText=`朝议时指摘${y.p.name}任上的旧失，请部里记明。`;
+      targetText=`朝议时被${x.p.name}当廷指摘任上旧失，陈明了缘由。`;
       y.p.trust=clamp(y.p.trust-1);
     }else{
       actorText=`朝议时语带讥讽，说${y.p.name}${lapse?lapse.text:'资历尚浅、才具未见'}。有同僚以为失了大臣体面。`;

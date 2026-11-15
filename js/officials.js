@@ -56,7 +56,7 @@ function officialEntry(key){
 }
 function officialStatus(p){
   if(!officialAlive(p))return p.death?.kind==='battle'?'阵亡':'已故';
-  return p.exiled?'流放':p.dismissed?'革职':p.career==='student'?(p.education==='举人'?'候选 · 尚未授官':'在家读书'):p.commission||p.incognitoCase?'奉差在外':p.retired?'致仕归乡':p.away?'外任':'在任';
+  return p.exiled?'流放':p.dismissed?'革职':p.career==='student'?(p.education==='进士'?'进士 · 候选授官':p.education==='举人'?'候选 · 尚未授官':'在家读书'):p.commission||p.incognitoCase?'奉差在外':p.retired?'致仕归乡':p.away?'外任':'在任';
 }
 function officialRecord(c,role,text,{family=true,emotion=0}={}){
   const h=houseOf(c),p=officialPerson(h,role);if(!p)return;

@@ -164,3 +164,14 @@ test('list pages offer a way back to the page that opened them',()=>{
  A.go('harem');A.openResidence();assert.match(viewResidences(),/← 返回后宫/);A.go('map');A.go('residences');assert.match(viewResidences(),/← 返回宫城/);
  UI.pageFrom={};assert.match(officialsTable(),/← 返回御书房/);`);
 });
+
+test('an accuser does not inherit the fault he pointed out, and a criticism does not renew it',()=>{
+ const b=world(0,{blocs:['皇商','内阁首辅']});
+ b.run(`fz.story.push({d:dateStr(),t:'核查地方钱粮未尽如期，回奏列明了调度疏漏。'});
+ var t=null;for(let i=0;i<40&&!t;i++){S.flags.kinCourt&&(S.flags.kinCourt.lastTick=-99,S.flags.kinCourt.pairs={},S.flags.kinCourt.log=[]);t=kinCourtTick();if(t&&t.kind!=='criticize')t=null;}
+ assert.ok(t);var accuser=t.cast.x.p,target=t.cast.y.p;assert.equal(target,fz);
+ assert.equal(kinCourtLapse(accuser),null,'the accuser\\'s own record holds no lapse');
+ for(const p of [accuser,target])assert.doesNotMatch(p.story.at(-1).t,/未尽如期/);
+ accuser.story.push({d:dateStr(),t:'参劾某人，所参「钱粮未尽如期」属实。'});assert.equal(kinCourtLapse(accuser),null);
+ for(let i=0;i<6;i++)target.story.push({d:dateStr(),t:'照常办差。'});assert.equal(kinCourtLapse(target),fz.merit<30?kinCourtLapse(target):null,'an old fault ages out once six newer entries follow');`);
+});
