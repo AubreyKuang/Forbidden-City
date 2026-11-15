@@ -172,11 +172,12 @@ const youngRoyalAtlas=document.createElement('img');
 const FAMILY_PORTRAIT_START=28;
 const DESCENDANT_PORTRAIT_START=44;
 const LEGACY_DESCENDANT_VARIANTS=10;
-const DESCENDANT_VARIANTS=29;
+const ROYAL_GROWTH_SETS={f:[380,383],m:[386,389]};
+const DESCENDANT_VARIANTS=29+ROYAL_GROWTH_SETS.m.length;
 const EXISTING_PRINCE_VARIANTS=4;
 const EXTRA_PRINCE_VARIANTS=LEGACY_DESCENDANT_VARIANTS-EXISTING_PRINCE_VARIANTS;
-const BEAUTY_PORTRAIT_START=92, YOUNG_ROYAL_PORTRAIT_START=136, PORTRAIT_COUNT=380;
-const PRINCESS_VARIANTS=33;
+const BEAUTY_PORTRAIT_START=92, YOUNG_ROYAL_PORTRAIT_START=136, PORTRAIT_COUNT=392;
+const PRINCESS_VARIANTS=33+ROYAL_GROWTH_SETS.f.length;
 const EXPANDED_ROYAL_START=294;
 const EMPEROR_PORTRAITS=[12,13,312,313,314,315];
 const EMPEROR_PORTRAIT_LABELS={12:'原版青年',13:'原版壮年',312:'温润青年',313:'英武青年',314:'威严壮年',315:'儒雅长者'};
@@ -199,7 +200,8 @@ const portraitSheets=[
   {start:340,rows:2,scale:4,src:'./assets/images/palace-consorts-foreign.webp?v=1',image:document.createElement('img')},
   {start:346,rows:3,scale:4,src:'./assets/images/palace-consorts-finery.webp?v=1',image:document.createElement('img')},
   {start:358,rows:4,scale:4,src:'./assets/images/palace-consorts-closeups.webp?v=1',image:document.createElement('img')},
-  {start:371,rows:3,scale:4,src:'./assets/images/palace-consorts-flowers.webp?v=1',image:document.createElement('img')}
+  {start:371,rows:3,scale:4,src:'./assets/images/palace-consorts-flowers.webp?v=1',image:document.createElement('img')},
+  {start:380,rows:3,scale:4,src:'./assets/images/palace-royal-growth.webp?v=1',image:document.createElement('img')}
 ];
 const portraitSheet=cell=>portraitSheets.slice().reverse().find(sheet=>cell>=sheet.start)||portraitSheets[0];
 function ensurePortraitSheet(cell){const sheet=portraitSheet(cell);if(!sheet.image.src)sheet.image.src=sheet.src;}
@@ -306,10 +308,10 @@ function childPortraitVariant(child){
 function assignChildPortrait(child){
   // New adult faces share four childhood sets; keep young siblings distinct too.
   const existing=S.children.filter(k=>k.sex===child.sex);
-  const count=portraitVariantCount(child),usage=Array(count).fill(0),youngUsage=Array(DESCENDANT_VARIANTS).fill(0);
+  const count=portraitVariantCount(child),youngCount=count-(child.sex==='f'?4:0),usage=Array(count).fill(0),youngUsage=Array(youngCount).fill(0);
   const young=v=>child.sex==='f'?(v>=30?v-4:v>=26?v-26:v):v;
   existing.forEach(k=>{const v=childPortraitVariant(k);if(v<count){usage[v]++;youngUsage[young(v)]++;}});
-  const score=v=>usage[v]+(existing.length<DESCENDANT_VARIANTS?youngUsage[young(v)]*(existing.length+1):0);
+  const score=v=>usage[v]+(existing.length<youngCount?youngUsage[young(v)]*(existing.length+1):0);
   const start=Math.floor(mulberry32(child.seed||7)()*count);
   let best=start;
   for(let i=1;i<count;i++){const v=(start+i)%count;if(score(v)<score(best))best=v;}
@@ -317,6 +319,9 @@ function assignChildPortrait(child){
 }
 function childPortraitCell(child){
   const age=kidAge(child),stage=age<3?0:age<12?1:2;let variant=childPortraitVariant(child);
+  // These appended sheets store each identity's three stages consecutively.
+  const growthStart=ROYAL_GROWTH_SETS[child.sex]?.[variant-(child.sex==='f'?33:29)];
+  if(Number.isInteger(growthStart))return growthStart+stage;
   const expandedVariant=variant-(child.sex==='f'?30:26);
   if(expandedVariant>=0)return EXPANDED_ROYAL_START+(child.sex==='f'?9:0)+stage*3+expandedVariant;
   if(child.sex==='f'&&variant>=26){if(age>=18)return 244+variant-26;variant-=26;}
