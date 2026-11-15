@@ -10,7 +10,7 @@ node tests/palace-flow.cjs
 node tests/character-journeys-fixtures.cjs /tmp/palace-character-fixtures
 ```
 
-- 26 个测试文件中的 **579 项用例通过**，连续 **60 个月**流程通过。包含同期合入的 **142 张妃嫔立绘**及其编号检查。
+- 26 个测试文件中的 **579 项用例通过**，连续 **60 个月**流程通过。初次验证包含 142 张妃嫔立绘；同期 [PR #13](https://github.com/AubreyKuang/Forbidden-City/pull/13) 补入九张花系立绘后，再对 **151 张妃嫔立绘**的整合版本运行同一组回归。
 - `palace-home-family.test.cjs` 的 29 项检查覆盖母亲病讯、省亲归来、朋友闲谈、父兄差事、同宫关系、迁居与容量、人物纪事。
 - `palace-household-personality.test.cjs` 的 14 项检查覆盖孤高者的居处压力、清静安排、穿越者新词、实际立绘肖似、候选人渲染不改状态、冷宫与丧亲限制、事件恢复和防重复。
 - 多人同宫、实际照护的幼儿与人物出席决定清静压力；孩子离世、母子分离、家中病讯等未解处境优先，不被热闹日常覆盖。孤高者不会仅因同住自动成为好友，也不会仅因孩子吵闹自动结仇。
