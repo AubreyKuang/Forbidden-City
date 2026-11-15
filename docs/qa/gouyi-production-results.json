@@ -1,0 +1,52 @@
+{
+  "checkedAt": "2026-11-15T22:54:45.476065+00:00",
+  "commit": "bff2a174bdfc59ebffbb0c30ee57c10e025c4555",
+  "checks": [
+    {
+      "file": "index.html",
+      "status": 200,
+      "bytes": 9221,
+      "match": true,
+      "sha256": "6bc138a3c7b5a73d6a09560856ffe275d81ebcccb3dd65742debc06ff2088535"
+    },
+    {
+      "file": "dev.html",
+      "status": 200,
+      "bytes": 9449,
+      "match": true,
+      "sha256": "0ff92d45559b38d8cdeea934539fcbb28b3c3dbf60a525477a13d6f052c7e783"
+    },
+    {
+      "file": "js/action-journal.js",
+      "status": 200,
+      "bytes": 8853,
+      "match": true,
+      "sha256": "4a170f806ef1b356700d247e85061708b62286097a0079f794d888d274dfd037"
+    },
+    {
+      "file": "js/gouyi-consort.js",
+      "status": 200,
+      "bytes": 8616,
+      "match": true,
+      "sha256": "7f1149d89f2a07692900ab6c341dd99319beea45b0bb2f5aefbebf3a72fa82bd"
+    },
+    {
+      "file": "js/gouyi-court-life.js",
+      "status": 200,
+      "bytes": 20168,
+      "match": true,
+      "sha256": "d39df3bbbf02b7ff8ed789b859854b9f238351a29610881e26802aeff01a75da"
+    },
+    {
+      "file": "assets/images/palace-consort-gouyi.webp",
+      "status": 200,
+      "bytes": 110610,
+      "match": true,
+      "sha256": "44014a2fdaecc32aacccd10907507a82ca6063aa92c9aa957199fa45b2df08f3"
+    }
+  ],
+  "browserVerified": false,
+  "deployment": {
+    "url": "https://github.com/AubreyKuang/Forbidden-City/actions/runs/43771801669"
+  }
+}

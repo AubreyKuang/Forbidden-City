@@ -12,7 +12,7 @@ async function finish(page){if(await page.locator('#modal[open]').count()){const
 async function profile(page,id){await page.locator('#menu').getByRole('button',{name:'后宫',exact:true}).click();await page.locator(`[onclick="A.go('consort',${id})"]`).first().click();}
 async function run(page,r){
  await page.goto(url);await page.getByRole('button',{name:'新开一局',exact:true}).click();await page.getByRole('button',{name:'登基',exact:true}).click();await click(page,'进入宫城');await page.locator('#menu').getByRole('button',{name:'存档',exact:true}).click();
- await page.locator('#save-file').setInputFiles(path.join(fixtures,r.fixture+'.json'));await page.waitForFunction(()=>S?.turn>=60&&S?.turn<=69);await reload(page,r,'导入');await layout(page,r);
+ await page.locator('#save-file').setInputFiles(path.join(fixtures,r.fixture+'.json'));await page.waitForFunction(()=>S?.turn>=60&&S?.turn<=80);await reload(page,r,'导入');await layout(page,r);
  const initial=await read(page),host=initial.consorts.find(c=>c.given==='知微'),other=initial.consorts.find(c=>c.given==='清容'),wife=host.house.relatives.find(p=>p.name==='沈清月');
  if(r.fixture.startsWith('report-')){
   const label=r.mode==='promote'?/^升职/:r.mode==='demote'?/^降职/:r.mode==='reward'?/^嘉奖/:r.mode==='rebuke'?/^申斥/:/^阅毕/;
@@ -36,6 +36,17 @@ async function run(page,r){
   if(g.married){assert.equal(r.mode==='sister'?d.consorts.find(c=>c.id===host.id).house.relatives.find(p=>p.id===wife.id).spouse.personId:d.children.find(k=>k.id===princess.id).spouse.personId,g.id);}
  }else if(r.fixture==='jinyiwei-clue'){
   await shot(page,'jinyiwei-clue-'+r.viewport);await click(page,r.mode==='trace'?/^循线查证/:r.mode==='watch'?'继续留意，暂不立案':'证据不足，暂且封存');await reload(page,r,'线索批复');const d=await read(page);assert.equal(d.jinyiwei.clues[0].status,{trace:'assigned',watch:'watching',seal:'shelved'}[r.mode]);assert.equal(d.consorts.find(c=>c.id===other.id).house.brother.office,'江南知府');
+ }else if(r.fixture.startsWith('gouyi-inquiry-')){
+  const g=initial.consorts.find(c=>c.gouyi),stage=Number(r.fixture.at(-1));assert.match(initial.title,/钦安殿/);await shot(page,r.fixture+'-'+r.viewport);
+  const index=r.mode==='second'?1:r.mode==='later'?2:0;await page.locator('#modal .mch button').nth(index).click();await reload(page,r,'问缘选择');
+  const d=await read(page),now=d.consorts.find(c=>c.id===g.id);assert.equal(now.gouyi.inquiry.stage,index===2?stage-1:stage);assert.equal(d.energy,initial.energy-(index===2?0:1));
+  await finish(page);await profile(page,g.id);assert.match(await page.locator('#panel').innerText(),/令仪问缘/);await shot(page,r.fixture+'-profile-'+r.viewport);
+  if(index===2){await page.getByRole('button',{name:/同赴钦安殿/}).click();assert.match((await read(page)).title,/钦安殿/);await reload(page,r,'暂缓后再赴殿');}
+ }else if(r.fixture.startsWith('gouyi-reaction-')){
+  const g=initial.consorts.find(c=>c.gouyi),other=g.gouyi.court.pending.other;await shot(page,r.fixture+'-'+r.viewport);
+  await click(page,r.mode==='protect'?'制止以奇闻讥人，不要求她展示':/让赵令仪自己回答|听她们把话说完/);await reload(page,r,'宫人反响');
+  const d=await read(page),now=d.consorts.find(c=>c.id===g.id),peer=d.consorts.find(c=>c.id===other);assert.ok(!now.gouyi.court.pending);assert.ok(peer.gouyiImpression);assert.ok(now.story.some(s=>s.thread?.includes('gouyi-court:')));assert.ok(peer.story.some(s=>s.thread?.includes('gouyi-court:')));
+  await finish(page);await profile(page,peer.id);assert.match(await page.locator('#panel').innerText(),/人物纪事/);await shot(page,r.fixture+'-peer-'+r.viewport);
  }else if(r.fixture==='gouyi'){
   if(r.mode==='leave'){await click(page,/赏赐医资/);await reload(page,r,'归家');assert.equal((await read(page)).consorts.some(c=>c.gouyi),false);}
   else {await shot(page,'gouyi-meeting-'+r.viewport);await click(page,'屏退围观者，亲自问她是否愿意近前');await reload(page,r,'帝前展掌');await shot(page,'gouyi-palm-'+r.viewport);await click(page,'应她所愿，接入宫中册为贵人');await reload(page,r,'钩弋入宫');await finish(page);const g=(await read(page)).consorts.find(c=>c.gouyi);assert.equal(g.rank,3);assert.equal(g.arc.id,'gouyi');await profile(page,g.id);assert.match(await page.locator('#panel').innerText(),/钩弋之遇/);await shot(page,'gouyi-profile-'+r.viewport);}
@@ -43,6 +54,8 @@ async function run(page,r){
  await layout(page,r);assert.equal((await read(page)).blocked,false);assert.deepEqual(r.errors,[]);r.passed=true;
 }
 const cases=[['report-good','promote'],['report-good','reward'],['report-good','archive'],['report-bad','demote'],['report-bad','rebuke'],['report-bad','archive'],['widow-permission','allow'],['widow-permission','wait'],['widow-visit','comfort'],['widow-visit','gift'],['sister-pregnancy','comfort'],['sister-birth','profile'],['sister-death','profile'],['exam-marriage','princess'],['exam-marriage','sister'],['exam-refusal','princess'],['exam-roster','ranking'],['jinyiwei-clue','trace'],['jinyiwei-clue','watch'],['jinyiwei-clue','seal'],['gouyi','admit'],['gouyi','leave']];
+for(let stage=1;stage<=4;stage++)for(const mode of ['first','second','later'])cases.push(['gouyi-inquiry-'+stage,mode]);
+for(const kind of ['curious','doubt','rival','kind','reserved','etiquette']){cases.push(['gouyi-reaction-'+kind,'listen']);if(['doubt','rival'].includes(kind))cases.push(['gouyi-reaction-'+kind,'protect']);}
 (async()=>{await fs.mkdir(shots,{recursive:true});const engine=process.env.PALACE_BROWSER==='firefox'?firefox:chromium;report.engine=engine.name();const browser=await engine.launch({headless:true,...(process.env.PALACE_CHROME_PATH?{executablePath:process.env.PALACE_CHROME_PATH}:{})});report.browser=browser.version();try{
  casesLoop: for(const [viewport,size] of [['desktop',{width:1440,height:1000}],['mobile',{width:390,height:844}]])for(const [fixture,mode] of cases){if(process.env.PALACE_CASE&&!fixture.includes(process.env.PALACE_CASE))continue;const context=await browser.newContext({viewport:size}),page=await context.newPage();page.setDefaultTimeout(9000);const r={fixture,mode,viewport,reloads:[],layouts:[],errors:[],passed:false};report.runs.push(r);page.on('dialog',d=>d.accept());page.on('pageerror',e=>r.errors.push(e.message));try{await run(page,r);console.log('PASS',viewport,fixture,mode);}catch(e){r.failure=e.stack;r.visible=await page.locator('body').innerText().catch(()=>null);await shot(page,'failure-'+fixture+'-'+mode+'-'+viewport);console.error('FAIL',viewport,fixture,mode,e.message);}await context.close();await fs.writeFile(reportPath,JSON.stringify(report,null,2));if(!r.passed&&process.env.PALACE_FAIL_FAST)break casesLoop;}
  }finally{await browser.close();report.finished=new Date().toISOString();report.summary={cases:report.runs.length,passed:report.runs.filter(r=>r.passed).length,reloads:report.runs.reduce((n,r)=>n+r.reloads.length,0)};await fs.writeFile(reportPath,JSON.stringify(report,null,2));}if(report.runs.some(r=>!r.passed))process.exitCode=1;
