@@ -3,6 +3,7 @@ const journeyPeople=()=>[...S.consorts,...(S.shelteredGuests||[])];
 const journeyPerson=id=>journeyPeople().find(c=>c.id===id);
 function journeyBinding(c,id){
  const gate=CHARACTER_JOURNEYS[id]?.gate;if(!gate)return null;
+ if(gate.startsWith('novel'))return romanceJourneyBinding(c,gate);
  const children=maternalChildren(c).filter(k=>!k.pendingName&&c.age>=kidAge(k)+14);
  const child=children.find(k=>gate==='bereaved'?!k.alive&&!k.lost&&S.turn-(c.maternalLife?.children?.[k.id]?.since??S.turn)>=3:
   familyVisitAllowed(k,c)&&(gate==='quietChild'?kidAge(k)>=3&&kidAge(k)<12:kidAge(k)>=12));
@@ -16,7 +17,7 @@ function journeyBinding(c,id){
  if(gate==='sister'){const other=S.consorts.find(o=>o!==c&&inPalace(o)&&c.kin?.[o.id]);return other?{sister:other.id,personName:fullName(other)}:null;}
  return null;
 }
-function journeyEligible(c,id){return !!(c&&inPalace(c)&&!c.maid&&c.age>=18&&c.aff>=35&&S.turn-(c.enteredAt??S.turn)>=6&&journeyBinding(c,id));}
+function journeyEligible(c,id){if(CHARACTER_JOURNEYS[id]?.version===7&&(!immortalEnabled()||c?.rescuedGuest||maternalVoiceUrgent(c)))return false;return !!(c&&inPalace(c)&&!c.maid&&c.age>=18&&c.aff>=35&&S.turn-(c.enteredAt??S.turn)>=6&&journeyBinding(c,id));}
 function journeyStart(c,id){
  if(!journeyEligible(c,id)||c.journeys?.current||c.journeys?.seen?.[id]!==undefined||S.turn-(c.journeys?.lastEnd??-99)<12)return false;
  const h=c.journeys||={seen:{},history:[],lastEnd:-99};
@@ -78,7 +79,7 @@ function journeyTick(){
 }
 function journeyPanel(c){
  const h=c.journeys,r=h?.current;
- const available=!r&&S.turn-(h?.lastEnd??-99)>=12?Object.keys(CHARACTER_JOURNEYS).filter(id=>h?.seen?.[id]===undefined&&journeyEligible(c,id)).slice(0,3):[];
+ const available=!r&&S.turn-(h?.lastEnd??-99)>=12?Object.keys(CHARACTER_JOURNEYS).filter(id=>h?.seen?.[id]===undefined&&journeyEligible(c,id)):[];
  if(!r&&!h?.history.length&&!available.length)return '';
  return `<section class="personal-experience"><h3>人生长卷</h3>${r?`<p><strong>${CHARACTER_JOURNEYS[r.id].name}</strong> · 第${cnNum(r.stage+1)}章 / 三章</p>${inPalace(c)?`<button class="btn jade" onclick="A.journeyTalk(${c.id})" ${journeyEvent(c)?'':'disabled'}>${journeyEvent(c)?'听她说后来的事 →':`再过${Math.max(0,r.due-S.turn)}个月`}</button>`:'<p class="hint">暂不在宫中，待能相见时再续。</p>'}`:available.map(id=>`<button class="btn" onclick="A.journeyBegin(${c.id},'${id}')">谈谈「${CHARACTER_JOURNEYS[id].name}」</button>`).join('')}${(h?.history||[]).slice(-3).reverse().map(e=>`<p>${esc(e.d)} · ${esc(e.title)}${e.outcome?' · '+esc(e.outcome):''}<br>${esc(e.text)}</p>`).join('')}</section>`;
 }

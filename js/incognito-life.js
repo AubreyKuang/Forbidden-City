@@ -3,7 +3,7 @@ const INCOGNITO_SCENES={
   bridge:{title:'断桥旁的渡钱',place:'柳溪渡口',army:false,cost:45,months:3,
     scene:'老桥塌了一半，挑菜进城的农人只好绕到渡口。船家说水急难行，菜贩却拿出一叠层层加收的渡钱票，问这桥究竟还修不修。',
     action:'核验渡钱，修复便桥',success:'工部复验新桥，挑菜的农人已经能走过河。重复征收的渡钱退还原主，桥边立着工料账。',failure:'桥墩下的淤泥比预计更深，原定工期未完。渡口虽已停收重复的票钱，过河仍不方便。'},
-  school:{title:'私塾门前的旧书',place:'城南私塾',army:false,cost:30,months:2,
+  school:{title:'私塾门前的旧书',illustration:'school-window',place:'城南私塾',army:false,cost:30,months:2,
     scene:'私塾先生把一本翻散的书递给门外的孩子。孩子替人跑腿，凑不齐束脩，日日只在窗下听一小段。先生说，学田被邻庄占了多年，塾里也快揭不开锅。',
     action:'查验学田，恢复义学',success:'旧契与田界核验相合，学田收入归还私塾。几个曾在窗下听课的孩子，领到了旧桌凳和课本。',failure:'新旧地契的界址不一，县里尚未查明。暂拨的束脩只能让孩子先读几日，学田还没有交割。'},
   clinic:{title:'药铺的半张方子',place:'惠民药铺',army:false,cost:40,months:2,
@@ -59,7 +59,7 @@ function incognitoEvent(){
   const g=governance(),pool=Object.keys(INCOGNITO_SCENES).filter(id=>!g.visits.some(c=>c.id===id&&['pending','setback'].includes(c.status)));
   if(!pool.length)return null;
   const fresh=pool.filter(id=>!g.seenVisits.slice(-4).includes(id)),id=pick(fresh.length?fresh:pool),s=INCOGNITO_SCENES[id];
-  return {title:'微服 · '+s.title,text:s.place+'。\n'+s.scene,onShow:()=>{g.seenVisits.push(id);g.seenVisits=g.seenVisits.slice(-8);},choices:[
+  return {title:'微服 · '+s.title,illustration:s.illustration,text:s.place+'。\n'+s.scene,onShow:()=>{g.seenVisits.push(id);g.seenVisits=g.seenVisits.slice(-8);},choices:[
     {t:'记下凭据，回宫择人查办',f:()=>{pushNow(incognitoAssignEvent(id));return null;}},
     {t:'多听一会儿，暂不交办',f:()=>noteIncognito(id)}]};
 }

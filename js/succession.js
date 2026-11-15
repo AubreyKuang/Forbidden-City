@@ -50,5 +50,5 @@ function royalRelativesPanel(){
 }
 function viewRoyalRelative(){
   const k=royalById(UI.sel);if(!k)return viewFamily();
-  return `${personBackButton('family')}<header class="detail-head">${porImg(k,224)}<div class="grow"><h2>${esc(k.name)}</h2><p>${esc(k.kinship||'宗亲')} · ${kidAge(k)}岁</p><p>生母 ${esc(k.momName||'未记载')}</p></div></header>${marriagePanel(k)}${householdPanel(k)}${detailSection('亲族纪事',detailStory(k))}`;
+  return `${personBackButton('family')}<header class="detail-head">${porImg(k,224)}<div class="grow"><h2>${esc(k.name)}</h2><p>${esc(k.kinship||'宗亲')} · ${kidAge(k)}岁</p><p>生母 ${esc(k.momName||'未记载')}</p></div></header>${immortalPanel(k)}${marriagePanel(k)}${householdPanel(k)}${detailSection('亲族纪事',detailStory(k))}`;
 }

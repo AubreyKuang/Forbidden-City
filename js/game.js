@@ -127,6 +127,26 @@ function eventCast(people,event){
   return people.length>1?`<div class="event-cast" aria-label="${event?.personalStory?'故事相关人物':'事件在场人物'}">${people.map(person=>
     `<figure>${porImg(person,104)}<figcaption>${esc(label(person))}</figcaption></figure>`).join('')}</div>`:'';
 }
+const EVENT_ILLUSTRATIONS={
+  'spring-garden':'几瓣海棠落进池里，贴着水纹慢慢打转。你沿回廊走过去，隔着花枝看见一个熟悉的身影。',
+  'mother-window':'竹影在窗纸上轻轻摇。你正要让人通传，忽听里面有人低低唤了一声她的乳名。',
+  'lantern-street':'沿街的灯一盏盏亮起。桥头人潮一挤，你伸手去牵她，掌心只擦过一点衣袖。',
+  'east-sea':'船身轻轻一晃，栏外的礁石白了一瞬。再抬眼，日光已沿着浪尖，一路照到雾里的岛影。',
+  'snow-painting':'画卷暂搁在廊栏上。檐外雪还在落，隔着一方院子，连脚步声都轻了。',
+  'school-window':'私塾的窗半开着。站在墙外看不见书上写些什么，先生每念一句，却都能听得真切。',
+  'dream-corridor':'“每回都走到那处拐角。廊外天已经亮了，臣妾还是想不起自己在等谁。”',
+  'kite-eaves':'檐影里露出半边纸燕翅。一截红纸尾扑在瓦上，风再起时，断了的线也跟着一跳。',
+  'garden-fish':'水面落了几点碎光。她的手影才移过青瓷缸，两尾小鱼已经摇着尾巴凑了上来。',
+  'plum-lattice':'日光穿过花窗，照得枝上那几枚李子像是熟透了。孩子仰着头看了半晌，还是没伸手。',
+  'red-plum-snow':'她说最难调的是雪光里的那一点红。笔尖只重半分，枝旁的雪也像添了颜色。',
+  'rain-lotus':'廊下静了好一会儿，才听见一滴雨敲在卷起的荷叶上。紧接着，满池都是轻轻接上的声响。',
+  'old-inkstone':'晨光擦过砚角，那一处磨得最亮。新写的纸页搁在旁边，墨迹还湿，孩子舍不得拿手去碰。',
+  'old-teabowl':'她指腹沿着盏口慢慢转了一圈，那一处釉面早已磨得温润。日光里，茶还冒着细细的热气。'
+};
+function eventIllustration(key){
+  if(!Object.hasOwn(EVENT_ILLUSTRATIONS,key))return '';
+  return `<figure class="event-illustration" data-illustration="${key}"><img src="./assets/images/story-${key}.webp" alt="" decoding="async"><figcaption>${esc(EVENT_ILLUSTRATIONS[key])}</figcaption></figure>`;
+}
 function openModal(ev){
   if(!modalOpen&&document.activeElement?.matches('button,input,select')) modalInvoker=document.activeElement;
   modalOpen=true;curEv=ev;modalResult=null;if(ev.onShow)ev.onShow();const b=$('#mbox');
@@ -135,7 +155,7 @@ function openModal(ev){
   const choicePeople=new Set(ev.choices.filter(c=>c.portrait||c.person).map(c=>(c.portrait||c.person).id??c.person));
   const showChoicePortraits=choicePeople.size>1;
   const arrival=ev.scene==='palace-arrival';
-  let h=`<h2 class="mtitle" id="event-title" tabindex="-1">${esc(ev.title)}</h2>${ev.scene==='mourning'?mourningScene():''}${arrival?palaceArrivalHTML(ev):eventCast(people,ev)}<div class="mbody"${arrival?' hidden':''}>`;
+  let h=`<h2 class="mtitle" id="event-title" tabindex="-1">${esc(ev.title)}</h2>${ev.scene==='mourning'?mourningScene():''}${eventIllustration(ev.illustration)}${arrival?palaceArrivalHTML(ev):eventCast(people,ev)}<div class="mbody"${arrival?' hidden':''}>`;
   if(people.length===1)h+=`<div class="mpor">${porImg(people[0],112)}<div>${esc(porName(people[0]))}</div></div>`;
   h+=`<div class="mtext">${ev.jewelry?`<figure class="event-jewelry">${jewelryImage(ev.jewelry,88)}<figcaption>${esc(JEWELRY[ev.jewelry]?.name||'')}</figcaption></figure>`:''}${fmt(ev.text)}${ev.ref?`<p class="ref">典出 · ${ev.refURL?`<a href="${esc(ev.refURL)}" target="_blank" rel="noopener noreferrer">${esc(ev.ref)}</a>`:esc(ev.ref)}</p>`:''}${ev.input?`<input id="minput" class="inp" maxlength="${ev.input.max||4}" value="${esc(ev.input.def||'')}" aria-label="输入">`:''}</div></div><div class="mch${showChoicePortraits?' event-choices':''}">`;
   ev.choices.forEach((c,i)=>{
@@ -167,9 +187,10 @@ function showRes(res){
   modalResult=res;
   const b=$('#mbox');
   const cast=res.por?'':eventCast(eventPortraits(curEv),curEv);
-  b.innerHTML=`<h2 class="mtitle" id="event-title">${esc(res.title||curEv.title)}</h2>${curEv.scene==='mourning'?mourningScene():''}${cast}<div class="mbody">${res.por?`<div class="mpor">${porImg(res.por,96)}</div>`:''}<div class="mtext">${fmt(res.text)}</div></div><div class="mch"><button class="btn gold" onclick="nextEv()">继续</button></div>`;
+  const illustration=eventIllustration(res.illustration);
+  b.innerHTML=`<h2 class="mtitle" id="event-title"${illustration?' tabindex="-1"':''}>${esc(res.title||curEv.title)}</h2>${curEv.scene==='mourning'?mourningScene():''}${illustration}${cast}<div class="mbody">${res.por?`<div class="mpor">${porImg(res.por,96)}</div>`:''}<div class="mtext">${fmt(res.text)}</div></div><div class="mch"><button class="btn gold" onclick="nextEv()">继续</button></div>`;
   b.scrollTop=0;renderTop();
-  $('#mbox .mch button')?.focus?.({preventScroll:true});
+  $(illustration?'#event-title':'#mbox .mch button')?.focus?.({preventScroll:true});
 }
 
 /* ============ 侍寝与互动 ============ */
@@ -358,9 +379,9 @@ A.endMonth=function(){
   if(revenue)pushEv(revenue);
   // 事件
   if(S.month===2&&S.turn-S.flags.lastXX>=34&&newConsortEventAllowed()) pushEv({title:'三年大选',sfx:'chime',text:'又到三年一度的大选之期，各地秀女已候于储秀宫。',choices:[{t:'前去看看',f:()=>{genCands();UI.view='xx';return null}},{t:'今年免了',f:()=>{S.flags.lastXX=S.turn;return fx(chg({people:2}))}}]});
-  reconcileResidences();archivePastLives();travelerLifeTick();daoLifeTick();childTempleTick();relTick();consortSocialTick();kidRelTick();clanTick();dowagerTick();initiativeTick();familyLifeTick();childLifeTick();courtTick();natalFamilyTick();seasonalTick();palaceDutiesTick();palaceRomanceTick();palaceParentageTick();marriedLifeTick();personalExperienceTick();journeyTick();maternalTick();historyTick();continuityTick();personalLifeTick();livedRelationshipsTick();
+  reconcileResidences();archivePastLives();travelerLifeTick();daoLifeTick();immortalTick();childTempleTick();relTick();consortSocialTick();kidRelTick();clanTick();dowagerTick();initiativeTick();familyLifeTick();childLifeTick();courtTick();natalFamilyTick();seasonalTick();palaceDutiesTick();palaceRomanceTick();palaceParentageTick();marriedLifeTick();personalExperienceTick();journeyTick();maternalTick();historyTick();continuityTick();personalLifeTick();livedRelationshipsTick();
   const passing=dowagerPassingEvent();if(passing)pushEv(passing);
-  const must=[passing?null:haremRemonstranceEvent(),passing?null:arcTick(),heirTick(),milestone(),parentageReportEvent(),birthSwapClueEvent(),birthSwapSearchReport(),pendingBirthSwapJustice(),pendingKinGreeting(),pendingMaternalKinCare(),pendingMaternalSisterArrival(),pendingDaoVoyage(),pendingTravelerEvent(),pendingOfficialReport(),pendingConcealedLoss(),...(legacyPendingAction()?[]:[pendingIncognitoReport(),passing?null:jingtishiEvent(),passing?null:selectionCouncilEvent()])].filter(Boolean),opt=[];
+  const must=[passing?null:haremRemonstranceEvent(),passing?null:pendingImmortalEvent(),passing?null:arcTick(),heirTick(),milestone(),parentageReportEvent(),birthSwapClueEvent(),birthSwapSearchReport(),pendingBirthSwapJustice(),pendingKinGreeting(),pendingMaternalKinCare(),pendingMaternalSisterArrival(),pendingDaoVoyage(),pendingTravelerEvent(),pendingOfficialReport(),pendingConcealedLoss(),...(legacyPendingAction()?[]:[pendingIncognitoReport(),passing?null:jingtishiEvent(),passing?null:selectionCouncilEvent()])].filter(Boolean),opt=[];
   // 积压的奏折：离宫期间攒下的朝堂事务，月末一并呈上
   while((S.flags.memorials||0)>0){S.flags.memorials--;const memo=factionEvent();if(memo&&!must.some(e=>e.title===memo.title))must.push(memo)}
   const add=(e,p)=>{if(e&&ambientEventReady(e))opt.push([e,p+R()-ambientNovelty(e)+continuityEventScore(e)])};
@@ -396,13 +417,13 @@ function deathEvent(why){
   const score=e.prestige*.5+e.people*.5;
   const shi=score>=80?'圣':score>=68?'文':score>=56?'景':score>=44?'恭':score>=32?'哀':'炀';
   const miao=['太祖','太宗','高宗','仁宗','宣宗','英宗','宪宗','孝宗','穆宗','神宗'][S.gen-1]||'睿宗';
-  const sons=kidsAlive().filter(k=>k.sex==='m'&&!k.jailed);let heir=S.heir&&kidById(S.heir);if(!heir||!heir.alive)heir=sons.sort((a,b)=>a.born-b.born)[0];
+  const sons=kidsAlive().filter(k=>k.sex==='m'&&!k.jailed&&!immortalAway(k));let heir=S.heir&&kidById(S.heir);if(!heir||!heir.alive||immortalAway(heir))heir=sons.sort((a,b)=>a.born-b.born)[0];
   const nC=S.consorts.length,nK=S.children.length;
   let t= why==='民变'?`流民四起，叛军攻破京城。${e.era}${cnNum(yrs)}年，${e.sur}${e.name}自缢于宫中，享年${e.age}岁。`
     :`${dateStr()}，${e.sur}${e.name}崩于养心殿，享年${e.age}岁，在位${yrs}年。`;
   t+=`\n庙号${miao}，谥曰「${shi}皇帝」。\n一生册封后妃${nC}人，育皇子${S.children.filter(k=>k.sex==='m').length}人、公主${S.children.filter(k=>k.sex==='f').length}人。`;
   if(why==='民变')heir=null;
-  t+=heir?`\n遗诏：传位于${kidName(heir)}。`:why==='民变'?'\n社稷倾覆，国祚至此而终。':'\n膝下无子，宗室旁支入继大统，本朝血脉至此而终。';
+  t+=heir?`\n遗诏：传位于${kidName(heir)}。`:why==='民变'?'\n社稷倾覆，国祚至此而终。':immortalEnabled()&&kidsAlive().some(k=>k.sex==='m'&&immortalAway(k))?'\n皇子长留山门，未列入继统之序，宗室旁支承继大统。山中的亲人仍在人世。':'\n膝下无子，宗室旁支入继大统，本朝血脉至此而终。';
   S.history.push({sur:e.sur,name:e.name,era:e.era,yrs,miao,shi});
   log(t.split('\n')[0]+`庙号${miao}。`,1);AU.sfx('gong');
   const ch=[];

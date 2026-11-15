@@ -67,7 +67,7 @@ function personalExperienceEvent(c){
   const valid=()=>inPalace(c)&&experienceState(c)?.current===current&&(episode.group!=='mother'||experienceParticipants(c,episode,current).length>=(episode.id==='life51'?2:1));
   if(!valid())return null;
   const source=EXPERIENCE_SOURCES[episode.source],ref=source.name+' · 意象改编';
-  if(current.stage==='offered')return {title:episode.title,por:c,present:[c],valid,ref,text:`${cName(c)}：\n${episode.begin}\n她想听听你的意思，也希望保留自己作主的余地。`,choices:[
+  if(current.stage==='offered')return {title:episode.title,illustration:episode.illustration,por:c,present:[c],valid,ref,text:`${cName(c)}：\n${episode.begin}\n她想听听你的意思，也希望保留自己作主的余地。`,choices:[
     {t:episode.action+' · 精力−1',cond:()=>valid()&&E().energy>0,why:'精力不足',f:()=>{
       if(!valid()||!useE())return null;
       current.stage='working';current.due=S.turn+ri(2,4);current.skill=c[EXPERIENCE_GROUPS[episode.group].stat]??50;
@@ -82,7 +82,9 @@ function personalExperienceEvent(c){
       const success=chance(.4+current.skill/220),result=success?episode.success:episode.setback,stat=EXPERIENCE_GROUPS[episode.group].stat;
       endPersonalExperience(c,episode,result,success?'有所成':'有遗憾');c[stat]=clamp(c[stat]+(success?3:1));cchg(c,{aff:success?5:3,mood:success?6:1});
       if(episode.group==='mother')for(const k of experienceParticipants(c,episode,current)){k.vir=clamp(k.vir+2);const bonds=k.motherBonds||={};const b=bonds[c.id]||={trust:childTrust(k,c)};b.trust=clamp(b.trust+4);b.turn=S.turn;b.activity=episode.title;b.motherView=result;kstory(k,`母亲${fullName(c)}在「${episode.title}」中学着更认真听我的想法。`);}
-      save('auto');return result+fx(`${{talent:'才情',virtue:'德行',mood:'心情'}[stat]}+${success?3:1} · 情分+${success?5:3}`);
+      save('auto');
+      const text=result+fx(`${{talent:'才情',virtue:'德行',mood:'心情'}[stat]}+${success?3:1} · 情分+${success?5:3}`);
+      return success&&episode.successIllustration?{text,illustration:episode.successIllustration}:text;
     }},
     {t:'让她先保管好，改日再听'}
   ]};
