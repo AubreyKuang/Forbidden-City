@@ -98,13 +98,17 @@ function natalCourtshipEvent(c,p){
       {t:'不急，仍按探亲之约',f:()=>{natalRecord(c,p,'谈过入宫之意，尚未定下，仍按原约探亲。');return '你没有立刻册封，她仍是来访的亲眷。';}}
     ]};
 }
-function admitNatalSister(c,p){
-  if(!natalRomanceReady(c,p)||!p.willing||rankCount(2)>=RANK_CAP[2])return null;
+function makeNatalConsort(c,p){
   const g=makeGirl({sur:p.sur,given:p.given,age:natalAge(p),trait:p.trait,fam:{...c.fam}});
   g.id=p.id;g.seed=p.seed;g.artPortrait=p.artPortrait;g.house=c.house;g.fatherId=c.fatherId;g.clan=clanKey(c);g.story=p.story.map(s=>({...s}));g.kin={};g.kinRival={};
   for(const member of paternalFamily(c)){g.kin[member.id]='亲'+(natalLabel(member,p)==='姐姐'?'妹':'姐');member.kin||={};member.kin[g.id]='亲'+(natalLabel(member,p)==='姐姐'?'姐':'妹');
     if(relGet(member,p)<0){g.kinRival[member.id]=1;(member.kinRival||={})[g.id]=1;}}
   g.natalOrigin={host:c.id,relative:p.id};p.consortId=g.id;delete p.visit;
+  return g;
+}
+function admitNatalSister(c,p){
+  if(!natalRomanceReady(c,p)||!p.willing||rankCount(2)>=RANK_CAP[2])return null;
+  const g=makeNatalConsort(c,p);
   addConsort(g,2,`探亲时与陛下相识，自愿入宫`);story(p,'探亲相识后，自愿留下，册为常在。');
   return `${fullName(g)}受封常在。她与亲人的旧交、各自心思，都随之进入宫中的新生活。`;
 }

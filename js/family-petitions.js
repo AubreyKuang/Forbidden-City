@@ -44,34 +44,32 @@ function fosterPetitionText(c,k){
   return `${opening}\n“${fosterWishWords(c,k)}”\n${relGet(c,k)>=25?`她也记得与${k.name}已有的来往，并非随意指一个孩子。\n`:''}${care}`;
 }
 function maternalKinMatch(c,k){
-  const m=k&&byId(k.mom),f=k&&fosterOf(k);
-  // Existing sisters and the dowager's nieces need no special arrival story.
-  const sister=m&&(KIN_TXT[c?.kin?.[m.id]]||KIN_TXT[m.kin?.[c?.id]]);
-  return !!(inPalace(c)&&!c.maid&&c.age>=16&&!(c.hp<40)&&!(c.delivery&&!c.delivery.settled)&&
-    childInPalace(k)&&!k.pendingName&&kidAge(k)<14&&m&&(!m.alive||m.cold||m.gone)&&sister&&
-    (!f||!f.alive||f.cold||f.gone));
+  // Direct adoption still requires an empty place; discussing care does not.
+  return maternalKinCanAsk(c,k)&&!maternalCaregiver(k);
 }
 function maternalKinCareEvent(m,only=null,manual=false){
- if(!m||m.alive||S.over||!manual&&S.children.filter(k=>k.mom===m.id&&k.alive).every(k=>k.maternalKinAsked))return null;
- const candidates=harem().filter(c=>(!only||c===only)&&S.children.some(k=>k.mom===m.id&&maternalKinMatch(c,k))&&
+ if(!maternalAbsent(m)||S.over)return null;
+ const candidates=harem().filter(c=>(!only||c===only)&&!c.kinArrival?.pending&&S.children.some(k=>k.mom===m.id&&maternalKinCanAsk(c,k))&&
    (!c.maternalKinRequests?.[m.id]||manual&&['deferred','pending'].includes(c.maternalKinRequests[m.id].status)))
    .sort((a,b)=>Number(b.kin?.[m.id]?.startsWith('亲'))-Number(a.kin?.[m.id]?.startsWith('亲'))||relGet(b,m)-relGet(a,m)||a.id-b.id);
  const c=candidates[0];if(!c)return null;
- const children=S.children.filter(k=>k.mom===m.id&&maternalKinMatch(c,k)),names=children.map(k=>k.name).join('、');let done=false;
- const valid=()=>!done&&inPalace(c)&&children.every(k=>maternalKinMatch(c,k));
- const record=text=>{story(c,text);children.filter(k=>k.alive).forEach(k=>kstory(k,text));story(m,text);};
+ const children=S.children.filter(k=>k.mom===m.id&&maternalKinCanAsk(c,k)),names=children.map(k=>k.name).join('、');let done=false;
+ const placement=maternalCareSnapshot(children),cared=children.some(maternalCaregiver);
+ const valid=()=>!done&&maternalAbsent(m)&&maternalCareUnchanged(c,children,placement);
+ const record=text=>maternalCareRecord(c,m,children,text);
  const setStatus=status=>{(c.maternalKinRequests||={})[m.id]={status,turn:S.turn,children:children.map(k=>k.id)};};
  return {title:'姐妹留下的孩子',por:c,cast:children,present:[c],valid,
-  onShow:()=>{if(c.maternalKinRequests?.[m.id]?.status==='pending')return;setStatus('pending');children.forEach(k=>{k.maternalKinAsked=true;});record(`${fullName(c)}听闻姐妹${fullName(m)}去世，主动请求照看${names}，保留孩子的生母身份与原有亲缘。`);},
-  text:`${fullName(m)}去世后，${fullName(c)}特地来谈${names}的安置。\n${c.clan===S.flags.dowager?.clan?'她们同出太后母家，这份姐妹亲缘并没有因入宫而断。\n':''}“${isRival(c,m)?'我与她生前有过不和，但孩子不该独自受这些事。':''}她留下的孩子，臣妾想亲自照看。乳母与太医仍照常留着；臣妾${raisesKid(c)?'已有抚养孩子的日子，也会把他们的起居一同安排妥当':'愿从每日的起居慢慢学起'}。宗谱上仍记她是生母。”`,
-  choices:[{t:`准她照料${names}`,f:()=>{if(!valid())return null;
+  onShow:()=>{if(c.maternalKinRequests?.[m.id]?.status==='pending')return;setStatus('pending');children.forEach(k=>{k.maternalKinAsked=true;});record(`${fullName(c)}听闻姐妹${fullName(m)}${maternalAbsenceText(m)}，主动请求照看${names}，保留孩子的生母身份与原有亲缘。`);},
+  text:`${fullName(m)}${maternalAbsenceText(m)}后，${fullName(c)}特地来谈${names}的安置。\n${c.clan===S.flags.dowager?.clan?'她们同出太后母家，这份姐妹亲缘并没有因入宫而断。\n':''}“${isRival(c,m)?'我与她从前有过不和，但孩子不该独自受这些事。':''}她留下的孩子，臣妾想亲自照看。乳母与太医仍照常留着；臣妾${raisesKid(c)?'已有抚养孩子的日子，也会把他们的起居一同安排妥当':'愿从每日的起居慢慢学起'}。宗谱上仍记她是生母。”${cared?'\n'+maternalPlacementText(children)+'\n“已有养母尽心照顾，臣妾记得这份情。愿先听她的意思，再谈如何陪伴孩子。”':''}`,
+  choices:[{t:cared?'请养母一同商议照料':`准她照料${names}`,cond:()=>!cared||maternalCaregiversPresent(children),why:'请等原养母回宫后再一同商议',f:()=>{if(!valid())return null;
+   if(cared){if(maternalCaregiversPresent(children))pushNow(maternalCareDiscussion(c,m,children));return null;}
    const results=children.map(k=>petitionFoster(k,c,true)).filter(Boolean);if(!results.length)return null;done=true;setStatus('accepted');
    const t=`${fullName(c)}获准照料${fullName(m)}留下的${names}；生母身份保留，乳母与太医协助起居。`;record(t);save('auto');return t+'\n'+results.join('\n');}},
-  {t:'暂由乳母照看，改日再谈',f:()=>{if(!valid())return null;done=true;setStatus('deferred');const t=`${fullName(c)}请求照看${names}，陛下暂缓定夺；孩子仍由乳母照料，可到她的档案继续商议。`;record(t);save('auto');return t;}},
-  {t:'另择抚养人选',f:()=>{if(!valid())return null;done=true;setStatus('declined');const t=`陛下听取${fullName(c)}照看${names}的请求，决定另择抚养人；此时尚未更换养母。`;record(t);save('auto');pushNow(fosterOffer(children.find(k=>maternalKinMatch(c,k)),t));return null;}}]};
+  {t:cared?'维持原安排，改日再谈':'暂由乳母照看，改日再谈',f:()=>{if(!valid())return null;done=true;setStatus('deferred');const t=`${fullName(c)}请求照看${names}，陛下暂缓定夺；${cared?'孩子仍按原有安排照料':'孩子仍由乳母照料'}，可到她的档案继续商议。`;record(t);save('auto');return t;}},
+  {t:cared?'维持原安排，不另定照料':'另择抚养人选',f:()=>{if(!valid())return null;done=true;setStatus('declined');const t=`陛下听取${fullName(c)}照看${names}的请求，决定${cared?'维持原有安排':'另择抚养人'}；此时尚未更换养母。`;record(t);save('auto');if(!cared)pushNow(fosterOffer(children.find(k=>maternalKinMatch(c,k)),t));return cared?t:null;}}]};
 }
 function pendingMaternalKinCare(){
- return S.consorts.filter(m=>!m.alive).map(m=>maternalKinCareEvent(m)).find(Boolean)||null;
+ return S.consorts.filter(maternalAbsent).map(m=>maternalKinCareEvent(m)).find(Boolean)||null;
 }
 A.maternalKinCare=function(id,mother){if(modalOpen)return;const c=byId(id),m=byId(mother);if(!c||!m)return;const ev=maternalKinCareEvent(m,c,true);if(ev)pushEv(ev);};
 function maternalKinCareButton(c){
@@ -122,31 +120,33 @@ function fosterMotherDiscussion(c,k){
       {t:'暂缓定夺',f:()=>{if(!valid())return null;story(c,`听取${fullName(m)}的意思后，抚养${k.name}之议暂缓。`);save('auto');return '原有照护安排不变。';}}]};
 }
 A.fosterWish=function(id){if(modalOpen)return;const c=byId(id),ev=c&&fosterPetitionEvent(c);if(ev)pushEv(ev);};
-function fosterWishButton(c){return maternalKinCareButton(c)+(fosterPetitionPairs(c).length?`<button class="btn sm" onclick="A.fosterWish(${c.id})">听她谈抚养孩子</button>`:'');}
+function fosterWishButton(c){return maternalSisterArrivalButton(c)+maternalKinCareButton(c)+(fosterPetitionPairs(c).length?`<button class="btn sm" onclick="A.fosterWish(${c.id})">听她谈抚养孩子</button>`:'');}
 function kinSuccessionSource(c){
-  return c&&!c.maid&&c.rank>=5&&c.age>=20&&hasClan(c)&&(!c.alive||c.cold||c.gone)&&!c.kinSuccessor;
+  return c&&!c.maid&&c.rank>=5&&c.age>=20&&hasClan(c)&&(!c.alive||c.cold||c.gone)&&!c.kinSuccessor&&!c.maternalArrival;
 }
 function kinArrivalGreeting(c){
   const a=c?.kinArrival,m=byId(a?.mother);if(!a?.pending||!inPalace(c)||!m)return null;
-  const children=S.children.filter(k=>k.mom===m.id&&maternalKinMatch(c,k));
+  const children=S.children.filter(k=>k.mom===m.id&&maternalKinCanAsk(c,k));
   const all=S.children.filter(k=>k.mom===m.id&&k.alive&&!k.pendingName);
-  const kin=c.kin?.[m.id]?.startsWith('亲')?'姐姐':'堂姐';
+  const kin=KIN_TXT[c.kin?.[m.id]]||'姐妹',cared=children.some(maternalCaregiver),placement=maternalCareSnapshot(children);
   const finish=()=>{a.pending=false;save('auto');};
   return {title:'初入宫 · 姐妹旧缘',por:c,cast:children, present:[c],valid:()=>a.pending&&inPalace(c),
-    text:`${fullName(c)}初次在宫中向你问安，没有先提自己的封赏。\n“臣妾今日能来，是家中仍念着${kin}${fullName(m)}的旧缘。${!m.alive?'她已不在，臣妾不敢说能替代她。':'她如今不能在御前说话，臣妾也不敢替她辩解。'}”\n${children.length?`她又轻声道：“${children.map(k=>k.name).join('、')}还小，臣妾想先求一道恩典，照看${kin}的孩子。宗谱上的生母不改，只求让孩子有个亲人在身边。”`:all.length?'她又问起姐姐的孩子。得知已有安顿，便道：“已有养母照看或已长大的，臣妾不敢另求更改，只愿日后多些往来。”':'她顿了一顿：“臣妾愿慢慢学宫里的日子，也盼这份家门旧缘还能续下去。”'}`,choices:[
-      ...(children.length?[{t:`准她照料${children.map(k=>k.name).join('、')}`,f:()=>{
-        if(!a.pending||!inPalace(c))return null;
-        const results=children.map(k=>petitionFoster(k,c,true)).filter(Boolean);finish();
+    onShow:()=>{if(a.greeted)return;a.greeted=true;maternalCareRecord(c,m,children,`${fullName(c)}初次问安提起${kin}${fullName(m)}${children.length?'，请求照看'+children.map(k=>k.name).join('、'):''}；此时尚未更换抚养安排。`);},
+    text:`${fullName(c)}初次在宫中向你问安，没有先提自己的封赏。\n“臣妾今日能来，是家中仍念着${kin}${fullName(m)}的旧缘。${!m.alive?'她已不在，臣妾不敢说能替代她。':'她如今不能在御前说话，臣妾也不敢替她辩解。'}”\n${children.length?`她又轻声道：“${children.map(k=>k.name).join('、')}还小，臣妾想先求一道恩典，照看${kin}的孩子。宗谱上的生母不改，只求让孩子有个亲人在身边。”${cared?'\n'+maternalPlacementText(children)+'\n她知道养母已在照料，仍希望商议共同照看，而不是因此断了来往。':''}`:all.length?'她又问起姐妹的孩子，愿日后保持亲族往来。':'她顿了一顿：“臣妾愿慢慢学宫里的日子，也盼这份家门旧缘还能续下去。”'}`,choices:[
+      ...(children.length?[{t:cared?'请养母一同商议照料':`准她照料${children.map(k=>k.name).join('、')}`,cond:()=>!cared||maternalCaregiversPresent(children),why:'请等原养母回宫后再一同商议',f:()=>{
+        if(!a.pending||!maternalCareUnchanged(c,children,placement))return null;
+        if(cared){if(!maternalCaregiversPresent(children))return null;finish();pushNow(maternalCareDiscussion(c,m,children));return null;}
+        const results=children.map(k=>petitionFoster(k,c,true)).filter(Boolean);maternalCareStatus(c,m,children,'accepted');finish();
         return results.length?results.join('\n'):'孩子的照护安排已有变化，此时不再另换养母。';}}]:[]),
-      {t:children.length?'先安顿下来，抚养之事暂缓':'让她安心住下',f:()=>{if(!a.pending)return null;story(c,'初见时提起姐姐的旧缘，陛下让她先安心住下。');finish();return '你让她先安顿宫中日常。孩子原有的抚养安排没有改变。';}}]};
+      {t:children.length?'先安顿下来，抚养之事暂缓':'让她安心住下',f:()=>{if(!a.pending)return null;story(c,`初见时提起${kin}${fullName(m)}与孩子的旧缘，陛下让她先安心住下。`);if(children.length)maternalCareStatus(c,m,children,'deferred');finish();return '你让她先安顿宫中日常。孩子原有的抚养安排没有改变。';}}]};
 }
 function pendingKinGreeting(){return S.consorts.map(kinArrivalGreeting).find(Boolean)||null;}
 function kinSuccessionEvent(){
   if(S.over||mourningActive()||S.turn-(S.flags.lastKinSuccession??-99)<36)return null;
-  const sources=S.consorts.filter(c=>kinSuccessionSource(c)&&S.turn-(c.lastKinSuccession??-99)>=48&&
+  const sources=S.consorts.filter(c=>kinSuccessionSource(c)&&!(maternalAbsent(c)&&kinCareChildren(c).length&&maternalSisterCandidates(c).length)&&S.turn-(c.lastKinSuccession??-99)>=48&&
     !harem().some(o=>o.id!==c.id&&o.clan===c.clan&&S.turn-o.enteredAt<24));
   if(!sources.length||!chance(.06))return null;
-  const c=pick(sources),children=S.children.filter(k=>k.mom===c.id&&childNeedsMother(k));
+  const c=pick(sources),children=kinCareChildren(c);
   return {title:'家门旧缘',por:c,cooldown:36,valid:()=>kinSuccessionSource(c),
     onQueue:()=>{S.flags.lastKinSuccession=c.lastKinSuccession=S.turn;},
     text:`${fullName(c)}${!c.alive?'去世':'离开原来的宫中生活'}之后，娘家递来一封家书，问能否让家中未婚的妹妹或堂妹入宫。\n家中既念旧情，也希望延续宫中的倚仗。${children.length?`信末另提起${children.map(k=>k.name).join('、')}，说孩子年幼，若准亲人入宫，也愿承担照护。`:'至于宫中的孩子与旧有安排，并不因此自动变更。'}\n是否接纳，仍由你决定。`,choices:[

@@ -21,16 +21,16 @@ A.visitConsortHome=function(id){
 };
 const nurseryChildren=name=>kidsAlive().filter(k=>youngChildMother(k)?.palace===name);
 function nurseryActivity(k,m){
-  const age=kidAge(k),strict=['城府','骄矜','骄纵'].includes(m.trait),last=k.nurseryLastKind;
+  const age=kidAge(k),address=childCareAddress(k,m)==='姨母'?'姨母':'娘',strict=['城府','骄矜','骄纵'].includes(m.trait),last=k.nurseryLastKind;
   if(age<1)return {id:'cradle',title:'窗下哄睡',prop:'软枕 · 小摇篮',mother:strict?'方才还在吩咐宫务，她听见孩子哼唧，声音不自觉地放轻了。':'她轻轻哼着家乡的小调，一只手护着孩子的后背。',child:'孩子攥住她的袖角，睫毛一颤一颤，渐渐睡熟了。'};
-  if(age<3)return {id:'steps',title:'扶案学步',prop:'软垫 · 布老虎',mother:m.trait==='将门'?'“再走一步。娘在这儿，接着你。”':'她蹲下身张开双手，等孩子自己迈过门边的小垫子。',child:'孩子晃晃悠悠扑进她怀里，又回头去够那只布老虎。'};
+  if(age<3)return {id:'steps',title:'扶案学步',prop:'软垫 · 布老虎',mother:m.trait==='将门'?`“再走一步。${address}在这儿，接着你。”`:'她蹲下身张开双手，等孩子自己迈过门边的小垫子。',child:'孩子晃晃悠悠扑进她怀里，又回头去够那只布老虎。'};
   const options=[];
-  if(m.mood<35)options.push({id:'comfort',title:'小手拭泪',prop:'绢帕 · 窗前小凳',mother:'她望着窗外出神，回过神时，孩子已经把绢帕塞进她手里。',child:'“是不是有人惹娘难过？我陪着你。”',stat:'vir'});
+  if(m.mood<35)options.push({id:'comfort',title:'小手拭泪',prop:'绢帕 · 窗前小凳',mother:'她望着窗外出神，回过神时，孩子已经把绢帕塞进她手里。',child:`“是不是有人惹${address}难过？我陪着你。”`,stat:'vir'});
   if(['才女','聪慧','好学','沉静'].includes(m.trait)||m.talent>=70||k.policy==='读书')options.push({id:'letters',title:'膝前认字',prop:'字帖 · 小砚台',mother:strict?'“这一笔要稳。写累了便歇一会儿，不能只求快。”':'“先认自己的名字。往后写信，就会落款了。”',child:'“那我也能给父皇写一封吗？”',stat:'lit'});
   if(m.trait==='巧手'||m.like==='字画')options.push({id:'ribbon',title:'彩线与花枝',prop:'彩线 · 花样纸',mother:'她把复杂的花样收起来，换一朵小花，让孩子自己挑颜色。',child:'“我要把这朵歪的也留下，它是我做的。”',stat:'lit'});
   if(['将门','活泼','爽直'].includes(m.trait)||k.policy==='习武')options.push({id:'play',title:'榻前小将军',prop:'木马 · 布老虎',mother:'她摆好两只软枕当山门，笑着让孩子想办法把布老虎送过去。',child:'“先让小马走前面，我护着后面！”',stat:'mar'});
-  if(['温婉','好客'].includes(m.trait)||['嗜甜','擅厨艺'].includes(m.t2))options.push({id:'cakes',title:'小厨房的点心',prop:'蒸笼 · 花糕模',mother:'她将一小团面放在孩子手心，任那双小手捏成圆圆扁扁的形状。',child:'“最大的给娘，这一块留给父皇。”'});
-  options.push({id:'tale',title:'灯前听旧事',prop:'小灯 · 绘本',mother:strict?'她讲起自己幼时学规矩闹过的笑话，说到一半，也忍不住笑了。':'她讲起小时候在家中放纸鸢的事，孩子听得忘了摆弄手中的玩具。',child:'“娘小时候，也会被人说调皮吗？”'});
+  if(['温婉','好客'].includes(m.trait)||['嗜甜','擅厨艺'].includes(m.t2))options.push({id:'cakes',title:'小厨房的点心',prop:'蒸笼 · 花糕模',mother:'她将一小团面放在孩子手心，任那双小手捏成圆圆扁扁的形状。',child:`“最大的给${address}，这一块留给父皇。”`});
+  options.push({id:'tale',title:'灯前听旧事',prop:'小灯 · 绘本',mother:strict?'她讲起自己幼时学规矩闹过的笑话，说到一半，也忍不住笑了。':'她讲起小时候在家中放纸鸢的事，孩子听得忘了摆弄手中的玩具。',child:`“${address}小时候，也会被人说调皮吗？”`});
   return options.find(a=>a.id!==last)||options[0];
 }
 function palaceLifeState(){

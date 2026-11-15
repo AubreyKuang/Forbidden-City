@@ -174,7 +174,7 @@ function facHTML(){const f=factions();if(!f.L.length)return '';
 function relLine(c){if(!c.alive||c.gone)return '';
   const h=harem().filter(o=>o!==c).map(o=>[o,relGet(c,o)]).sort((a,b)=>b[1]-a[1]);
   const good=h.filter(x=>x[1]>=30&&socialPair(c,x[0])).slice(0,4),respect=h.filter(x=>x[1]>=30&&!socialPair(c,x[0])).slice(0,4),bad=h.filter(x=>x[1]<=-30).slice(-4),fac=c.cold?null:facOf(c);
-  return `<div>派系：${fac?(fac===c?'一派之首':esc(cName(fac))+'一派'):'中立'}${good.length?`　交好：${good.map(([o])=>`<span class="tag g">${esc(cName(o))}</span>`).join('')}`:''}${respect.length?`　敬重：${respect.map(([o])=>`<span class="tag">${esc(cName(o))}</span>`).join('')}`:''}${bad.length?`　交恶：${bad.map(([o])=>`<span class="tag r">${esc(cName(o))}</span>`).join('')}`:''}</div>${selectionCohortHTML(c)}${consortSocialLine(c)}`}
+  return `<div>派系：${fac?(fac===c?'一派之首':esc(cName(fac))+'一派'):'中立'}${good.length?`　交好：${good.map(([o])=>`<span class="tag g">${esc(cName(o))}</span>`).join('')}`:''}${respect.length?`　敬重：${respect.map(([o])=>`<span class="tag">${esc(cName(o))}</span>`).join('')}`:''}${bad.length?`　交恶：${bad.map(([o])=>`<span class="tag r">${esc(cName(o))}</span>`).join('')}`:''}</div>${selectionCohortHTML(c)}${consortSocialLine(c)}${friendFavorPanel(c)}`}
 HAREM.push(
  function clash(){const f=factions();if(f.L.length<2)return null;const [a,b]=f.L,ma=f.map[a.id],mb=f.map[b.id];if(!ma.length&&!mb.length)return null;
   const side=(w,l,mw,ml)=>()=>{[w,...mw].forEach(c=>cchg(c,{mood:8}));[l,...ml].forEach(c=>{cchg(c,{mood:-8});relAdd(c,w,-6)});story(w,`派系相争，陛下站在了她这一边。`);return `${cName(w)}一派扬眉吐气，${cName(l)}一派面色难看。`};

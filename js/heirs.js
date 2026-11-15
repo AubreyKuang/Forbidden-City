@@ -126,7 +126,7 @@ function doFoster(k,c,options={}){const m=byId(k.mom),old=fosterOf(k),childless=
   else if(m&&m.alive&&m!==c&&options.maternalKin){relAdd(m,c,12);cchg(m,{mood:8});setXin(m,'释然',`姐妹代为照料${k.name}`);story(m,`得知姐妹${fullName(c)}获准照料${k.name}，心中稍安。`)}
   else if(m&&m.alive&&m!==c){relAdd(m,c,-25);const hate=m.scheme>=60||m.t2==='记仇';setXin(m,hate?'怨恨':'悲恸',`亲生的${k.name}被抱给了${fullName(c)}`,hate?c.id:null);s+='　'+cchg(m,{mood:-30,aff:-8});story(m,`亲生的${k.name}被抱去给${fullName(c)}抚养。`)}
   if(old&&old.alive&&old!==c){setXin(old,'委屈',`自己照料的${k.name}被抱走`);story(old,`照料的${k.name}改由${fullName(c)}抚养。`);cchg(old,{mood:-15})}
-  return `${fullName(c)}接过孩子，抱得很紧。${fx(s)}`}
+  return `${fullName(c)}${kidAge(k)<3?'接过孩子，抱得很紧':'牵起孩子的手，让孩子慢慢熟悉新的起居'}。${childCareAddress(k,c)==='姨母'&&kidAge(k)>=3?'孩子仍唤她姨母，不必改口。':''}${fx(s)}`}
 A.unfoster=function(id){const k=kidById(id),c=fosterOf(k),m=byId(k.mom);if(!m||!m.alive){toast('生母已不在');return}
   if(c&&!k.motherBonds?.[c.id]){(k.motherBonds ||= {})[c.id]={trust:childTrust(k,c)}}
   k.foster=null;delete k.visitRule;kstory(k,`离开养母${c?fullName(c):'的居处'}，回到生母${fullName(m)}身边。`);if(c&&c.alive){setXin(c,'委屈',`${k.name}被抱回生母身边`);story(c,`照料的${k.name}回到生母${fullName(m)}身边。`);cchg(c,{mood:-15})}

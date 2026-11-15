@@ -43,7 +43,7 @@ function courtFriendshipEvent(){
         {t:'暂且避嫌，少些走动',f:finish('避嫌',-9,-5,`${ally}此后没再登门，我以为她也避着我。`,`奉旨少往${name}宫里走动，始终惦念她。`,-.75,.25)}
       ]};
   }
-  return null;
+  return friendFavorEvent();
 }
 
 function duanwuWork(){return S.duanwuWork?.gen===S.gen?S.duanwuWork:null;}

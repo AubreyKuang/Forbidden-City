@@ -1,0 +1,39 @@
+const {test}=require('node:test'),assert=require('node:assert/strict');
+const {boot}=require('./playtest-harness.cjs');
+function game(age=9,absence='death'){
+ const b=boot(206);b.ctx.assert=assert;b.run(`A.start();drain();S.turn=144;S.year=13;S.month=3;E().energy=5;
+ var m=harem()[0];m.sur='沈';m.given='清和';m.age=32;m.preg=0;var h=houseOf(m);h.relatives=[];
+ var relative=addNatalPerson(m,h,'f',35,123,false);relative.willing=true;relative.married=false;
+ var foster=makeGirl({sur:'柳',given:'知微',trait:'持重',age:30});addConsort(foster,4,'入宫');foster.hp=90;
+ var k=makeKid(m,'f','明月');k.born=S.turn-${age}*12;k.pendingName=false;doFoster(k,foster);
+ ${absence==='death'?'m.alive=false;m.deathReason="病逝";':absence==='gone'?'m.gone=true;':''}
+ `);return b;
+}
+test('older existing sister requests entry after later illness despite established foster placement',()=>{const b=game();b.run(`var before=JSON.stringify(S),ev=pendingMaternalSisterArrival();assert.ok(ev);assert.equal(JSON.stringify(S),before);assert.match(ev.text,/姐姐/);assert.match(ev.text,/已有养母柳知微/);
+ ev.onShow();ev.choices[0].f();var aunt=byId(relative.id);assert.equal(m.kinSuccessor,relative.id);assert.equal(aunt.age,35);assert.equal(aunt.artPortrait,relative.artPortrait);assert.equal(aunt.kin[m.id],'亲妹');assert.equal(aunt.house,h);assert.equal(k.foster,foster.id);
+ assert.equal(curEv.title,'初入宫 · 姐妹旧缘');assert.match(curEv.text,/亲妹妹/);choose(0);assert.equal(curEv.title,'姨母与养母');choose(0);drain();assert.equal(k.foster,foster.id);assert.equal(k.mom,m.id);assert.equal(k.careVisitors[aunt.id].role,'姨母');assert.ok(k.story.some(s=>s.t.includes('共同照看')));assert.ok(foster.story.some(s=>s.t.includes('共同照看')));
+ assert.equal(pendingMaternalSisterArrival(),null);assert.equal(pendingMaternalKinCare(),null);`);});
+test('permanent departure of a living mother supports teen children without calling her dead',()=>{const b=game(15,'gone');b.run(`var ev=pendingMaternalSisterArrival();assert.ok(ev);assert.match(ev.text,/出宫/);assert.doesNotMatch(ev.text,/去世/);ev.choices[0].f();choose(0);choose(1);drain();var aunt=byId(relative.id);assert.equal(k.foster,aunt.id);assert.equal(k.mom,m.id);assert.equal(m.alive,true);assert.equal(childCareAddress(k,aunt),'姨母');assert.match(kidFamilyPanel(k),/仍唤姨母/);assert.equal(k.careVisitors[foster.id].role,'原养母');`);});
+test('temporary maternal trips are not abandonment and adults outside the palace are not recalled for care',()=>{const b=game(9,'present');b.run(`m.homeLeave={until:150};assert.equal(pendingMaternalSisterArrival(),null);delete m.homeLeave;m.templeStay={due:150};assert.equal(pendingMaternalSisterArrival(),null);delete m.templeStay;m.alive=false;
+ k.away=true;assert.equal(pendingMaternalSisterArrival(),null);delete k.away;k.born=S.turn-18*12;assert.equal(pendingMaternalSisterArrival(),null);`);});
+test('unwilling married minor deceased or already admitted relatives cannot be recruited',()=>{const b=game();b.run(`for(var prop of ['married','declined','consortId','visit']){relative[prop]=true;assert.equal(pendingMaternalSisterArrival(),null);delete relative[prop];}
+ relative.willing=false;assert.equal(pendingMaternalSisterArrival(),null);relative.willing=true;relative.alive=false;assert.equal(pendingMaternalSisterArrival(),null);relative.alive=true;relative.born=S.turn-17*12;assert.equal(pendingMaternalSisterArrival(),null);`);});
+test('deferring or refusing entry never secretly admits a sister and deferral remains actionable',()=>{const b=game();b.run(`var count=S.consorts.length,ev=pendingMaternalSisterArrival();ev.onShow();ev.choices[1].f();assert.equal(pendingMaternalSisterArrival(),null);assert.equal(S.consorts.length,count);assert.match(fosterWishButton(m),/谈谈姐妹入宫/);A.maternalSisterArrival(m.id);choose(2);drain();assert.equal(pendingMaternalSisterArrival(),null);assert.equal(maternalSisterArrivalButton(m),'');assert.equal(k.foster,foster.id);`);});
+test('shared care gives actual recurring visits, chronicles and save continuity, without changing custody',()=>{const b=game();b.run(`A.maternalSisterArrival(m.id);choose(0);choose(0);choose(0);drain();var aunt=byId(relative.id),energy=E().energy;
+ A.kinCareTime(-999999,aunt.id);A.kinCareTime(k.id,-999999);assert.equal(E().energy,energy);A.kinCareTime(k.id,aunt.id);drain();assert.equal(E().energy,energy-1);assert.equal(k.foster,foster.id);assert.ok(aunt.story.some(s=>s.t.includes('来看明月')));assert.ok(k.story.some(s=>s.t.includes('来看明月')));assert.ok(foster.story.some(s=>s.t.includes('来看明月')));A.kinCareTime(k.id,aunt.id);assert.equal(E().energy,energy-1);save('auto');`);
+ const n=boot(999,b.storage);n.ctx.assert=assert;n.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);var k=S.children.find(k=>k.name==='明月'),id=Object.keys(k.careVisitors)[0],c=byId(+id);assert.match(careVisitorPanel(k),/本月已相伴/);S.turn++;assert.ok(careVisitorAllowed(k,c));c.cold=true;assert.equal(careVisitorAllowed(k,c),false);`);});
+test('arrival, greeting and care discussion each restore into a cold runtime and settle once',()=>{
+ let b=game();b.run('A.maternalSisterArrival(m.id);save("auto");');
+ for(const title of ['姐妹来书 · 惦念幼子','初入宫 · 姐妹旧缘','姨母与养母']){
+  const n=boot(99,b.storage);n.ctx.assert=assert;n.ctx.title=title;n.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(curEv.title,title);choose(0);save('auto');`);b=n;
+ }
+ const n=boot(88,b.storage);n.ctx.assert=assert;n.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);drain();var k=S.children.find(k=>k.name==='明月');assert.equal(Object.keys(k.careVisitors).length,1);assert.equal(pendingMaternalSisterArrival(),null);assert.equal(pendingMaternalKinCare(),null);`);
+});
+test('an existing aunt is notified after non-birth death and an old foster placement',()=>{const b=game();b.run(`var aunt=makeNatalConsort(m,relative);addConsort(aunt,3,'入宫');assert.ok(maternalKinCareEvent(m));assert.equal(pendingMaternalSisterArrival(),null);
+ A.maternalKinCare(aunt.id,m.id);choose(0);choose(0);drain();assert.equal(k.foster,foster.id);assert.ok(k.careVisitors[aunt.id]);`);});
+test('monthly required followups are not lost to optional-event randomness',()=>{const b=game();b.run(`A.endMonth();assert.ok(curEv?.title==='姐妹来书 · 惦念幼子'||Q.some(ev=>ev.title==='姐妹来书 · 惦念幼子'));`);});
+test('mixed siblings retain their individual placements and an obsolete decision cannot steal custody',()=>{const b=game();b.run(`var twin=makeKid(m,'m','承安');twin.pendingName=false;var aunt=makeNatalConsort(m,relative);addConsort(aunt,3,'入宫');
+ var ev=maternalCareDiscussion(aunt,m,[k,twin]);ev.onShow();ev.choices[0].f();assert.equal(k.foster,foster.id);assert.equal(twin.foster,aunt.id);assert.equal(ev.choices[1].f(),null);
+ var other=makeGirl();addConsort(other,3,'入宫');var ev2=maternalCareDiscussion(aunt,m,[k]);k.foster=other.id;assert.equal(ev2.valid(),false);assert.equal(ev2.choices[1].f(),null);assert.equal(k.foster,other.id);`);});
+test('a foster mother temporarily away keeps her role and is heard upon return',()=>{const b=game();b.run(`var aunt=makeNatalConsort(m,relative);addConsort(aunt,3,'入宫');foster.homeLeave={};var ev=maternalKinCareEvent(m);assert.ok(ev);assert.equal(ev.choices[0].cond(),false);assert.equal(maternalKinMatch(aunt,k),false);delete foster.homeLeave;assert.equal(ev.choices[0].cond(),true);`);});
+test('older children retain aunt address in adoption, family companionship and nursery dialogue',()=>{const b=game(5);b.run(`var aunt=makeNatalConsort(m,relative);addConsort(aunt,3,'入宫');aunt.trait='温婉';aunt.t2='嗜甜';aunt.mood=70;var ev=maternalCareDiscussion(aunt,m,[k]);ev.choices[1].f();assert.equal(childCareAddress(k,aunt),'姨母');assert.match(nurseryActivity(k,aunt).child,/姨母/);assert.match(spendFamilyTime(k,aunt,false),/唤她姨母/);assert.equal(k.mom,m.id);assert.equal(k.motherBonds[foster.id]!==undefined,true);`);});

@@ -24,7 +24,7 @@ const MATERNAL_STYLES={
 const maternalStyle=c=>MATERNAL_STYLES[isSolitary(c)?'孤高':c.trait]||MATERNAL_STYLES.温婉;
 function maternalActivity(k,c,seeking){
  const a=kidAge(k),line=maternalStyle(c)[a<3?0:a<12?1:2];
- return {title:a<3?'轻声照护':seeking?'听孩子说心事':a<12?'母子小坐':'灯下谈心',place:c.palace||'宫中',child:`${fullName(c)}${line}。`,mother:`面对${k.name}，她${line}。`};
+ return {title:a<3?'轻声照护':seeking?'听孩子说心事':a<12?(childCareAddress(k,c)==='姨母'?'姨甥小坐':'母子小坐'):'灯下谈心',place:c.palace||'宫中',child:`${fullName(c)}${line}。`,mother:`面对${k.name}，她${line}。`};
 }
 function maternalChildren(c){return S.children.filter(k=>k.mom===c.id||k.foster===c.id||k.motherBonds?.[c.id]);}
 function maternalStatus(k,c){

@@ -354,7 +354,7 @@ A.endMonth=function(){
   if(S.month===2&&S.turn-S.flags.lastXX>=34) pushEv({title:'三年大选',sfx:'chime',text:'又到三年一度的大选之期，各地秀女已候于储秀宫。',choices:[{t:'前去看看',f:()=>{genCands();UI.view='xx';return null}},{t:'今年免了',f:()=>{S.flags.lastXX=S.turn;return fx(chg({people:2}))}}]});
   reconcileResidences();archivePastLives();travelerLifeTick();daoLifeTick();childTempleTick();relTick();consortSocialTick();kidRelTick();clanTick();dowagerTick();initiativeTick();familyLifeTick();childLifeTick();courtTick();natalFamilyTick();seasonalTick();palaceDutiesTick();palaceRomanceTick();palaceParentageTick();marriedLifeTick();personalExperienceTick();journeyTick();maternalTick();historyTick();continuityTick();personalLifeTick();
   const passing=dowagerPassingEvent();if(passing)pushEv(passing);
-  const must=[passing?null:arcTick(),heirTick(),milestone(),parentageReportEvent(),birthSwapClueEvent(),birthSwapSearchReport(),pendingBirthSwapJustice(),pendingKinGreeting(),pendingMaternalKinCare(),pendingDaoVoyage(),pendingTravelerEvent(),pendingOfficialReport(),pendingConcealedLoss()].filter(Boolean),opt=[];
+  const must=[passing?null:arcTick(),heirTick(),milestone(),parentageReportEvent(),birthSwapClueEvent(),birthSwapSearchReport(),pendingBirthSwapJustice(),pendingKinGreeting(),pendingMaternalKinCare(),pendingMaternalSisterArrival(),pendingDaoVoyage(),pendingTravelerEvent(),pendingOfficialReport(),pendingConcealedLoss()].filter(Boolean),opt=[];
   // 积压的奏折：离宫期间攒下的朝堂事务，月末一并呈上
   while((S.flags.memorials||0)>0){S.flags.memorials--;const memo=factionEvent();if(memo&&!must.some(e=>e.title===memo.title))must.push(memo)}
   const add=(e,p)=>{if(e&&ambientEventReady(e))opt.push([e,p+R()-ambientNovelty(e)+continuityEventScore(e)])};

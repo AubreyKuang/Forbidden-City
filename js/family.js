@@ -64,6 +64,7 @@ function familyActivity(k, mother, seeking) {
 function spendFamilyTime(k, mother, seeking) {
   const act = {...familyActivity(k, mother, seeking)};
   const personal=maternalActivity(k,mother,seeking);act.child+=' '+personal.child;act.mother+=' '+personal.mother;
+  if(childCareAddress(k,mother)==='姨母'&&kidAge(k)>=3)act.child+=' 孩子仍习惯唤她姨母，她没有要求改口。';
   const childView = act.title==='哄睡'?`在${fullName(mother)}身边听着熟悉的声音。${act.child}`:act.title==='听孩子说心事'?`向${fullName(mother)}说起心事。${act.child}`:`与${fullName(mother)}${act.title}。${act.child}`;
   recordFamilyTime(k, mother, act.title, childView, `${k.name}在身边。${act.mother}`, {
     place: act.place, stat: act.stat, gain: seeking ? 9 : 7
@@ -151,7 +152,7 @@ function familyTimePanel(k, mothers) {
       ? trust >= 45 ? '认得她的声音' : '还在熟悉她的声音'
       : trust >= 68 ? '有事愿意先来找她' : trust >= 45 ? '相处自在' : '见面还有些拘谨';
     const ready = familyVisitAllowed(k, mother) && bond?.turn !== S.turn;
-    return `<article class="family-time-row"><div><strong>${mother.id === k.mom ? '生母' : '养母'} · ${parentLink(mother.id)}</strong>
+    return `<article class="family-time-row"><div><strong>${mother.id === k.mom ? '生母' : childCareAddress(k,mother)==='姨母'?'养母（仍唤姨母）':'养母'} · ${parentLink(mother.id)}</strong>
       <p class="hint">${inPalace(mother) ? closeness : '如今无法相见'}</p>
       ${bond?.activity ? `<p>${esc(UI.view === 'kid' ? bond.childView : bond.motherView)}</p>` : ''}</div>
       ${ready ? `<button class="btn sm jade" onclick="A.familyTime(${k.id},${mother.id})">一起陪陪孩子<small>精力-1</small></button>` : ''}</article>`;
@@ -164,13 +165,13 @@ function kidFamilyPanel(k) {
   const controls = separated ? `<p class="hint">生母探望安排 · ${rule}</p><div class="acts">
     <button class="btn sm" aria-pressed="${k.visitRule === 'open'}" onclick="A.familyVisitRule(${k.id},'open')">准许探望</button>
     <button class="btn sm" aria-pressed="${k.visitRule === 'closed'}" onclick="A.familyVisitRule(${k.id},'closed')">暂缓探望</button></div>` : '';
-  return familyTimePanel(k, mothersOf(k)) + controls;
+  return familyTimePanel(k, mothersOf(k)) + careVisitorPanel(k) + controls;
 }
 
 function consortFamilyPanel(mother) {
   return S.children.filter(k => k.alive && (k.mom === mother.id || k.foster === mother.id)).map(k =>
     `<div><button class="btn quiet sm" onclick="A.go('kid',${k.id})">${esc(kidName(k))}</button>${familyTimePanel(k,[mother])}</div>`
-  ).join('');
+  ).join('')+S.children.filter(k=>k.alive).map(k=>careVisitorPanel(k,mother)).join('');
 }
 
 /* ============ 家族 ============ */

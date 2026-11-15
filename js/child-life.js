@@ -23,7 +23,7 @@ function motherAppealEvent(){
       episode.child=child.id;
     }
     const k=children.find(k=>k.id===episode.child);if(!k)continue;
-    const address=mother.id===k.mom?'母妃':'养母';
+    const address=childCareAddress(k,mother);
     const plea=kidAge(k)<8?`攥着一包点心，眼圈通红：“父皇，${address}那里冷。儿臣能把这个送给她吗？”`:
       k.vir>=60?`把功课抄得整整齐齐，跪下说：“${address}若有过错，自当受罚。儿臣只求父皇容她添一床被子，容儿臣见她一面。”`:
       k.amb>=60?`攥着一张写了又改的请罪笺：“父皇，儿臣会用功。往后办好了差事，能不能换${address}出来？”`:
