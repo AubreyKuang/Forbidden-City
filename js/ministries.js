@@ -217,7 +217,7 @@ function viewScholar(){
   return `${personBackButton('ministries')}<header class="detail-head">${porImg(p,224)}<div class="grow"><p>科举出身 · ${esc(p.origin)}</p><h2>${esc(p.name)}</h2><p>${esc(p.office)}${held?'':''}</p><p>${p.age}岁 · <strong>${officialStatus(p)}</strong> · ${esc(p.temperament)} · ${esc(p.examYear?`${p.examRank}`:'')}</p></div></header>
     <div class="detail-vitals">${bar('才干',p.ability)}${bar('功绩',p.merit)}${bar('信任',p.trust)}</div>
     <div class="detail-actions"><div class="acts"><button class="btn primary" onclick="A.scholarTalk('${p.id}')" ${ready?'':'disabled'}>召见垂询<small>精力 −1</small></button></div><p class="hint">问候每三个月一次。翰林院历练满两年、才干 55 以上可出任文职各部尚书。</p></div>
-    ${detailSection('殿试策论',`<p>${esc(p.essay)}。</p>`)}${detailSection('个人履历与纪事',detailStory(p))}`;
+    ${detailSection('殿试策论',`<p>${esc(p.essay)}。</p>`)}${officialMarriagePanel('scholar:'+p.id)}${detailSection('个人履历与纪事',detailStory(p))}`;
 }
 A.scholarTalk=function(id){
   const p=scholarById(id);if(modalOpen||!p||!officialServing(p)||S.turn-(p.lastAudience??-99)<3||!useE())return;
