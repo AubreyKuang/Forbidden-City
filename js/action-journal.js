@@ -2,7 +2,7 @@
    never from serialized JavaScript. Each command owns its random draws and answers.
    The saved world remains the authority; replay is checked before it is displayed. */
 const PalaceActions=(()=>{
-  const version=3, excluded=new Set(['save','load','rewind','downloadSave','readSaveFile','undoImport','newGame','chronicleFilter','chronicleSearch','chronicleClear','chronicleThread']);
+  const version=4, excluded=new Set(['save','load','rewind','downloadSave','readSaveFile','undoImport','newGame','chronicleFilter','chronicleSearch','chronicleClear','chronicleThread']);
   const actions=new Map();
   let blocked=false,snapshotRequested=false,journal=null,depth=0,replaying=false,step=null,cursor=0,answer=0,saving=0,fields=null;
   const clone=x=>JSON.parse(JSON.stringify(x));
@@ -18,6 +18,7 @@ const PalaceActions=(()=>{
   function payload(){return {...S,pendingActions:journal||S?.pendingActions};}
   function run(name,args,fn){
     if(depth)return fn();
+    if(exhaustedMonthNotice&&name!=='completeExhaustedMonth')return;
     const canRecord=actions.has(name)||name==='choose'||name==='next';
     if(!canRecord)return fn();
     if(name==='start'){journal=null;blocked=false;}
@@ -25,7 +26,7 @@ const PalaceActions=(()=>{
     if(!journal&&!modalOpen&&!Q.length){
       journal={version,base:S?clone(world(S)):null,ui:clone(UI),steps:[]};
     }
-    const current={name,args:clone(args),rolls:[],answers:[],saves:[],ui:clone(UI)};
+    const current={name,args:clone(args),monthNotice:true,rolls:[],answers:[],saves:[],ui:clone(UI)};
     if(name==='start')current.fields=Object.fromEntries(['#f-sur','#f-name','#f-era','input[name=f-style]:checked'].map(k=>[k,$(k)?.value||'']));
     if(journal){journal.steps.push(current);if(name==='choose'||name==='next')delete journal.draft;}
     step=journal?current:null;depth++;
@@ -47,13 +48,14 @@ const PalaceActions=(()=>{
           render();toast('未能保存，这次操作已撤回。可重试或下载现有进度。');
         }
         if(snapshotRequested){snapshotRequested=false;if(ok)snapshotYear();}
+        if(ok)syncExhaustedMonthNotice();else clearExhaustedMonthNotice();
       }
     }
   }
   function valid(j){
-    return !!j&&[2,version].includes(j.version)&&(j.base===null||validPalaceSave(j.base))&&!j.base?.pendingActions&&
+    return !!j&&[2,3,version].includes(j.version)&&(j.base===null||validPalaceSave(j.base))&&!j.base?.pendingActions&&
       record(j.ui)&&(j.draft===undefined||typeof j.draft==='string'&&j.draft.length<=128)&&Array.isArray(j.steps)&&j.steps.length>0&&j.steps.length<=2048&&j.steps.every(s=>
-        record(s)&&((s.name==='choose'&&s.args?.length===2&&Number.isInteger(s.args[0]))||
+        record(s)&&(s.monthNotice===undefined||typeof s.monthNotice==='boolean')&&((s.name==='choose'&&s.args?.length===2&&Number.isInteger(s.args[0]))||
           (s.name==='next'&&s.args?.length===0)||actions.has(s.name))&&
         Array.isArray(s.args)&&s.args.length<=8&&s.args.every(a=>a===null||typeof a==='string'||typeof a==='boolean'||Number.isFinite(a))&&
         Array.isArray(s.rolls)&&s.rolls.length<=100000&&s.rolls.every(n=>Number.isFinite(n)&&n>=0&&n<1)&&
@@ -61,6 +63,7 @@ const PalaceActions=(()=>{
         (s.fields===undefined||record(s.fields)&&Object.values(s.fields).every(v=>typeof v==='string')))&&record(j.pending);
   }
   function restore(j){
+    clearExhaustedMonthNotice();
     journal=null;blocked=false;if(!j)return false;
     const saved=S,ui=clone(UI),ask=globalThis.confirm,sound=AU.sfx,persist=save;
     try{
@@ -98,6 +101,6 @@ const PalaceActions=(()=>{
       A[name]=function(...args){return run(name,args,()=>fn.apply(this,args));};
     }
   }
-  return {random,input,keepInput,payload,run,restore,valid,install,get legacy(){return journal?.version===2;},get blocked(){return blocked;},requestSnapshot(){snapshotRequested=true;},get busy(){return depth>0;},get replaying(){return replaying;},reset(){journal=null;blocked=false;}};
+  return {random,input,keepInput,payload,run,restore,valid,install,get legacy(){return journal?.version===2;},get immediateMonth(){return journal?.version===3&&!step?.monthNotice;},get blocked(){return blocked;},requestSnapshot(){snapshotRequested=true;},get busy(){return depth>0;},get replaying(){return replaying;},reset(){clearExhaustedMonthNotice();journal=null;blocked=false;}};
 })();
 PalaceActions.install();

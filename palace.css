@@ -801,3 +801,25 @@ button.family-room-person{cursor:pointer}button.family-room-person:hover{color:#
   #app[data-layout="landing"] #panel{justify-self:stretch;align-self:stretch;width:100%;max-height:none;margin:0;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;backdrop-filter:none}
   #app[data-layout="landing"] .title-wrap{margin-top:56.28vw;padding:24px 24px max(24px,env(safe-area-inset-bottom));gap:14px;background:linear-gradient(#213e46ee,#213e46)}
 }
+/* Painted court: fine artwork and quiet gold-line navigation. */
+
+/* Fine palace art and the brief, non-interactive month boundary. */
+#mapc,.por.palace-portrait{image-rendering:auto}
+#mapwrap{background:#e5d8bc}
+.dock-icon{color:#e8c384;flex:none;filter:drop-shadow(0 1px 1px #22140d66)}
+#menu .btn.on .dock-icon{color:#ffe1a0}
+#menu .btn span,.mlab,#panel h2,#panel h3,.mtitle{font-family:"Songti SC","Noto Serif CJK SC","STSong",serif}
+.mlab,.mlab.landmark{background:linear-gradient(#fff3d9,#e7cfa8);color:#523b2b;border:1px solid #ac8351;border-radius:4px;box-shadow:0 1px 3px #59412545,inset 0 0 0 1px #fff4d797;font-weight:600;line-height:1.35;padding:2px 6px}
+.mlab.landmark{background:linear-gradient(#fff1cc,#dfc091);border-color:#98703d;color:#503323}
+.mlab:hover,.mlab:focus-visible{background:#fff4d9;color:#733c2c;outline:2px solid #d3a15c;outline-offset:1px}
+#month-notice[hidden]{display:none!important}
+#month-notice{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;background:#2d221d38;backdrop-filter:blur(2px);pointer-events:auto;padding:24px}
+.month-notice-card{position:relative;width:min(100%,340px);overflow:hidden;text-align:center;border:1px solid #c59d68;border-radius:12px;padding:26px 28px 30px;background:linear-gradient(135deg,#fff7e8,#eee0c5);color:#694633;box-shadow:0 14px 48px #24150f55,inset 0 0 0 5px #fff8e77a;font-family:"Songti SC","STSong",serif;animation:month-notice-in .2s ease-out}
+.month-notice-seal{display:inline-block;border:1px solid #ae755e;color:#98563e;border-radius:3px;font-size:13px;letter-spacing:.2em;padding:4px 4px 4px 7px}
+.month-notice-card p{margin:15px 0 7px;font-size:20px;letter-spacing:.12em}
+.month-notice-card strong{display:block;font-size:16px;font-weight:500;color:#8b694d}
+.month-notice-card i{position:absolute;bottom:0;left:0;height:3px;width:100%;background:#b6894c;transform-origin:left;animation:month-notice-progress 1.5s linear}
+@keyframes month-notice-progress{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes month-notice-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.month-notice-card,.month-notice-card i{animation:none}}
+@media(max-width:700px){.mlab,.mlab.landmark{padding:2px 4px;font-size:10px}.dock-icon{stroke-width:1.65}}

@@ -26,9 +26,9 @@ test('partially loaded portrait atlases cannot leave permanently blank cached fa
     E().portraitOverride=cell;var atlas=portraitSheet(cell).image;
     Object.assign(atlas,{naturalWidth:896,naturalHeight:560,complete:false});ART_CACHE.clear();
     assert.equal(portraitAtlasReady(cell,0),false);
-    porImg('emp');assert.equal(ART_CACHE.has(cell+':0'),false);
+    var before=porImg('emp');assert.match(before,/<svg /);assert.ok(before.includes(portraitSheet(cell).src));assert.equal(ART_CACHE.has(cell+':0'),false);
     atlas.complete=true;assert.equal(portraitAtlasReady(cell,0),true);
-    porImg('emp');assert.equal(ART_CACHE.has(cell+':0'),true);
+    assert.equal(porImg('emp'),before);assert.equal(ART_CACHE.has(cell+':0'),false);
     atlas.naturalHeight=0;assert.equal(portraitAtlasReady(cell,0),false);
     }
     delete E().portraitOverride;portraitAtlas.naturalHeight=1960;
