@@ -29,6 +29,7 @@ function growKid(k){
   {const fm=fosterOf(k);if(fm&&fm.alive){if(fm.virtue>65)k.vir+=.15;if(fm.talent>65)k.lit+=.15;if(fm.scheme>65)k.amb+=.12}}['lit','mar','vir','hp','amb','love'].forEach(s=>k[s]=clamp(k[s]));supTick(k);
 }
 A.kidVisit=function(id){const k=kidById(id);if(modalOpen||!k?.alive||k.removedFromRoyal||k.jailed||k.pendingName||!useE())return;
+  if(familyScenesEnabled()&&childInPalace(k)){visitChildTogether(k);return;}
   const voice=characterVoice(k,'talk'),away=childHasLeftPalace(k);
   k.love=clamp(k.love+10);const st=pick(['lit','mar','vir']);k[st]=clamp(k[st]+2);
   const t=voice.stage+(voice.text?`\n“${voice.text}”`:'')+`\n${away?'你写下回信，认真回答了孩子的话。':'你坐下来，陪孩子慢慢说完这一段。'}`;
@@ -117,18 +118,21 @@ A.foster=function(id){const k=kidById(id);const m=byId(k.mom);
   if(!cands.length){toast('眼下没有合适的妃嫔（需贵人及以上）');return}
   pushEv({title:'抚养',por:k,text:`把${kidName(k)}交给谁抚养？\n${m&&m.alive?`生母${cName(m)}会很难过。`:'孩子的生母已经不在了。'}养母的德行、才情、心机会影响孩子的成长，她的家世也会成为孩子将来的倚仗。`,
     choices:[...cands.map(c=>({t:`${cName(c)}（德${rd(c.virtue)} 才${rd(c.talent)}${c.known?' 心机'+rd(c.scheme):''}，${c.fam.t}，${raisesKid(c)?'已有孩子':'膝下无子'}）`,person:c,f:()=>doFoster(k,c)})),{t:'再想想'}]})};
-function doFoster(k,c,options={}){const m=byId(k.mom),old=fosterOf(k),childless=!raisesKid(c);if(m&&m.alive&&m!==c&&!k.motherBonds?.[m.id]){(k.motherBonds ||= {})[m.id]={trust:childTrust(k,m)}}
+function doFoster(k,c,options={}){if(familyScenesEnabled()&&(!childInPalace(k)||!inPalace(c)||k.foster===c.id||c.id===k.mom))return null;const m=byId(k.mom),old=fosterOf(k),childless=!raisesKid(c);if(m&&m.alive&&m!==c&&!k.motherBonds?.[m.id]){(k.motherBonds ||= {})[m.id]={trust:childTrust(k,m)}}
   if(old&&old!==c&&!k.motherBonds?.[old.id]){(k.motherBonds ||= {})[old.id]={trust:childTrust(k,old)}}
+  preserveFormerCare(k,old,c);
   k.foster=c.id;k.fosterT=S.turn;relAdd(c,k,Math.max(0,50-relGet(c,k)));
   kstory(k,`交由${fullName(c)}抚养。`);story(c,`陛下将${kidName(k)}交给她抚养。`);log(`${kidName(k)}交由${fullName(c)}抚养。`,1);
   setXin(c,'欢喜',`得以抚养${k.name}`);let s=cchg(c,{aff:childless?12:6,mood:childless?20:8});
   if(m&&m.alive&&m!==c&&options.consensual){relAdd(m,c,8);cchg(m,{mood:-3});story(m,`与${fullName(c)}商议后，让她承担${k.name}的日常抚养，自己仍可探望。虽放心她的照护，分别时仍有不舍。`)}
   else if(m&&m.alive&&m!==c&&options.maternalKin){relAdd(m,c,12);cchg(m,{mood:8});setXin(m,'释然',`姐妹代为照料${k.name}`);story(m,`得知姐妹${fullName(c)}获准照料${k.name}，心中稍安。`)}
+  else if(familyScenesEnabled()&&old&&m&&m.alive&&m!==c){cchg(m,{mood:-6});story(m,`得知${k.name}由原养母${fullName(old)}改交${fullName(c)}照料。孩子此前已不在自己身边，如今更惦念能否适应新的起居；原有探视安排仍然保留。`)}
   else if(m&&m.alive&&m!==c){relAdd(m,c,-25);const hate=m.scheme>=60||m.t2==='记仇';setXin(m,hate?'怨恨':'悲恸',`亲生的${k.name}被抱给了${fullName(c)}`,hate?c.id:null);s+='　'+cchg(m,{mood:-30,aff:-8});story(m,`亲生的${k.name}被抱去给${fullName(c)}抚养。`)}
   if(old&&old.alive&&old!==c){setXin(old,'委屈',`自己照料的${k.name}被抱走`);story(old,`照料的${k.name}改由${fullName(c)}抚养。`);cchg(old,{mood:-15})}
   return `${fullName(c)}${kidAge(k)<3?'接过孩子，抱得很紧':'牵起孩子的手，让孩子慢慢熟悉新的起居'}。${childCareAddress(k,c)==='姨母'&&kidAge(k)>=3?'孩子仍唤她姨母，不必改口。':''}${fx(s)}`}
 A.unfoster=function(id){const k=kidById(id),c=fosterOf(k),m=byId(k.mom);if(!m||!m.alive){toast('生母已不在');return}
   if(c&&!k.motherBonds?.[c.id]){(k.motherBonds ||= {})[c.id]={trust:childTrust(k,c)}}
+  preserveFormerCare(k,c,m);
   k.foster=null;delete k.visitRule;kstory(k,`离开养母${c?fullName(c):'的居处'}，回到生母${fullName(m)}身边。`);if(c&&c.alive){setXin(c,'委屈',`${k.name}被抱回生母身边`);story(c,`照料的${k.name}回到生母${fullName(m)}身边。`);cchg(c,{mood:-15})}
   setXin(m,'欢喜',`${k.name}回到身边`);cchg(m,{mood:25,aff:6});story(m,`${k.name}回到了她身边。`);toast('孩子回到了生母身边');render()};
 function fosterOffer(k,why){return {title:'抚养',por:k,text:why+'\n按宫中旧例，可将孩子交给位分高的妃嫔抚养，将来也好有个倚仗。',choices:[{t:'挑一位妃嫔抚养',f:()=>{A.foster(k.id);return null}},{t:'不必',f:()=>{kstory(k,'曾议交由妃嫔抚养，陛下未允，仍依原安排照料。');return '你没有把孩子交给旁人。';}}]}}

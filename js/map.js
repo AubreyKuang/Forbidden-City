@@ -115,174 +115,159 @@ function arrive(p){if(typeof PalaceActions!=='undefined'&&!PalaceActions.busy)re
   if(p.k==='view')UI.view=p.v;else if(p.k==='palace'){UI.view='palace';UI.sel=p.p;preparePalaceLife(p.p)}else{UI.view='place';UI.sel=p.id}
   render();if(p.k==='palace')pushEv(palaceArrivalEvent(p.p))}
 function nearestPlace(){const p=PLACES.find(p=>S.pos&&p.d[0]===S.pos.x&&p.d[1]===S.pos.y);return p?p.n+'门前':'宫道上'}
-function mapTick(){if(!S||UI.view!=='map'||modalOpen)return;
+function mapTick(){if(!S||UI.view!=='map'||modalOpen||exhaustedMonthNotice)return;
   if(emp.path.length){const done=stepTo(emp,3.5);emp.trail.push([emp.x,emp.y]);if(emp.trail.length>5)emp.trail.shift();
     if(done){S.pos={x:Math.round(emp.x),y:Math.round(emp.y)};if(emp.arrive){const f=emp.arrive;emp.arrive=null;f()}}}
   npcStep();drawMap()}
-const MAP_SCALE=2;
+// Six physical pixels per map unit retain fine brushwork on high-density displays.
+const MAP_SCALE=6;
 MAPC.width=MW*MAP_SCALE;MAPC.height=MH*MAP_SCALE;
 mg.setTransform(MAP_SCALE,0,0,MAP_SCALE,0,0);
-mg.imageSmoothingEnabled=false;
+mg.imageSmoothingEnabled=true;mg.imageSmoothingQuality='high';
 const terrainCanvas=document.createElement('canvas');
 terrainCanvas.width=MAPC.width;terrainCanvas.height=MAPC.height;
 const terrainInk=terrainCanvas.getContext('2d');
 terrainInk.setTransform(MAP_SCALE,0,0,MAP_SCALE,0,0);
-terrainInk.imageSmoothingEnabled=false;
-const buildingAtlas=document.createElement('img');
-let terrainSeason=-1;
-buildingAtlas.addEventListener('load',()=>{terrainSeason=-1});
-buildingAtlas.src='./assets/images/palace-buildings-b.webp';
-let mapInk=mg;
-function M(x,y,w,h,c){mapInk.fillStyle=c;mapInk.fillRect(Math.round(x*MAP_SCALE)/MAP_SCALE,Math.round(y*MAP_SCALE)/MAP_SCALE,w,h)}
-
+terrainInk.imageSmoothingEnabled=true;terrainInk.imageSmoothingQuality='high';
+let terrainSeason=-1,mapInk=mg;
+function mapAtlas(file){
+  const image=document.createElement('img');
+  image.addEventListener('load',()=>{terrainSeason=-1;if(S&&UI.view==='map')drawMap();});
+  image.src='./assets/images/'+file;
+  return image;
+}
+const buildingAtlas=mapAtlas('palace-map-buildings.webp');
+const winterBuildingAtlas=mapAtlas('palace-map-buildings-winter.webp');
+const floraAtlas=mapAtlas('palace-map-flora.webp');
+const figureAtlas=mapAtlas('palace-map-figures.webp');
+function M(x,y,w,h,c){mapInk.fillStyle=c;mapInk.fillRect(x,y,w,h);}
+function mapOval(x,y,rx,ry,color){mapInk.fillStyle=color;mapInk.beginPath();mapInk.ellipse(x,y,rx,ry,0,0,Math.PI*2);mapInk.fill();}
+function mapLine(points,color,width=.2){
+  mapInk.strokeStyle=color;mapInk.lineWidth=width;mapInk.beginPath();
+  points.forEach(([x,y],i)=>i?mapInk.lineTo(x,y):mapInk.moveTo(x,y));mapInk.stroke();
+}
 function mapPaving(x,y,w,h,palette){
   const [edge,shadow,stone,joint,light]=palette;
-  M(x,y,w,h,edge);M(x+.5,y+.5,w-1,h-1,stone);M(x+1,y+h-1,w-2,.5,shadow);
-  for(let row=0;row<h-2;row+=2.5){
-    const line=y+1+row;
-    M(x+1,line,w-2,.5,joint);
-    for(let col=2+(Math.round(row/2.5)%2)*3;col<w-1;col+=6)M(x+col,line,.5,Math.min(2,h-row-2),joint);
+  M(x,y,w,h,edge);M(x+.35,y+.35,w-.7,h-.7,stone);
+  for(let row=0;row<h-.7;row+=2.6){
+    const line=y+.5+row;mapLine([[x+.4,line],[x+w-.4,line]],joint,.12);
+    for(let col=2+(Math.round(row/2.6)%2)*3;col<w-.4;col+=6)
+      mapLine([[x+col,line],[x+col,Math.min(y+h-.4,line+2.6)]],joint,.12);
   }
-  M(x+1,y+.5,w-2,.5,light);
+  mapLine([[x+.35,y+.35],[x+w-.35,y+.35]],light,.2);
+  mapLine([[x+.35,y+h-.35],[x+w-.35,y+h-.35]],shadow,.2);
 }
-
-function mapTree(x,y,s,size=1){
-  const [dark,leaf,glow]=[
-    ['#4e6150','#64836c','#e0a6ac'],['#405c4d','#577760','#9db477'],
-    ['#8b5740','#ab794e','#d5a66b'],['#53645f','#788681','#e8e3d6']
-  ][s];
-  M(x-2*size,y-1,5*size,2,'#342e2844');M(x,y-3,.75,4,'#634330');
-  M(x-2.5*size,y-5,5*size,3,dark);M(x-1.5*size,y-6.5,3*size,4,leaf);
-  M(x-2*size,y-5.5,2.5*size,2,leaf);M(x-size,y-6,1.5*size,1,glow);
-  M(x+.5*size,y-4.5,1.5*size,.75,glow);
+function mapTree(x,y,s,size=1,kind=0){
+  const w=(kind===2?7.5:9)*size,h=(kind===2?5.2:11)*size;
+  if(floraAtlas.complete&&floraAtlas.naturalWidth){
+    mapInk.drawImage(floraAtlas,s*288,kind*288,288,288,x-w/2,y-h,w,h);return;
+  }
+  mapLine([[x,y],[x,y-h*.6]],'#79654d',.5);
+  mapOval(x,y-h*.6,w*.38,h*.3,['#9ba786','#77936f','#c1a06b','#deded3'][s]);
 }
-
-function drawBuildingArt(ctx,cell,x,y,w,h,filter='none'){
-  if(!buildingAtlas.naturalWidth)return false;
-  ctx.imageSmoothingEnabled=false;
-  ctx.filter=filter;
-  ctx.drawImage(buildingAtlas,cell%3*128,Math.floor(cell/3)*80,128,80,x,y,w,h);
-  ctx.filter='none';
-  return true;
+function drawBuildingArt(ctx,cell,x,y,w,h,filter='none',s=season()){
+  const atlas=s===3&&winterBuildingAtlas.complete&&winterBuildingAtlas.naturalWidth?winterBuildingAtlas:buildingAtlas;
+  if(!atlas.complete||!atlas.naturalWidth)return false;
+  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.filter=filter;
+  ctx.drawImage(atlas,cell%3*512,Math.floor(cell/3)*352,512,352,x,y,w,h);
+  ctx.filter='none';return true;
 }
-
 function mapBuilding(cell,x,y,w,h,s,cold=false){
-  if(drawBuildingArt(mapInk,cell,x,y,w,h,cold?'grayscale(.8) brightness(.85)':'none')){
-    if(s===3){
-      M(x+w*.26,y+h*.26,w*.47,.5,'#f4ede3c8');
-      M(x+w*.14,y+h*.43,w*.7,.5,'#ebe8e2b0');
-    }
-    return;
-  }
-  const red=cold?'#6f5a55':'#914a3c',roof=cell===2||cell===5?'#486755':'#a37a40';
-  M(x+2,y+h*.44,w-4,h*.5,red);M(x+3,y+h-1,w-6,1,'#a89b83');
-  M(x,y+h*.32,w,h*.16,'#4b3528');M(x+2,y+h*.16,w-4,h*.18,roof);M(x+5,y+h*.08,w-10,h*.12,roof);
-  for(let i=4;i<w-4;i+=3)M(x+i,y+h*.49,.75,h*.32,'#d48963');
+  if(drawBuildingArt(mapInk,cell,x,y,w,h,cold?'grayscale(.75) brightness(.85)':'none',s))return;
+  M(x+2,y+h*.45,w-4,h*.5,cold?'#8c7f70':'#aa7762');
+  mapInk.fillStyle=cell===2||cell===5?'#779283':'#c6a36c';mapInk.beginPath();
+  mapInk.moveTo(x,y+h*.45);mapInk.quadraticCurveTo(x+w*.2,y+h*.25,x+w*.3,y+h*.1);
+  mapInk.lineTo(x+w*.7,y+h*.1);mapInk.quadraticCurveTo(x+w*.8,y+h*.25,x+w,y+h*.45);mapInk.closePath();mapInk.fill();
 }
-
 function drawMapTerrain(s){
-  if(terrainSeason===s)return;
-  terrainSeason=s;
-  mapInk=terrainInk;
+  if(terrainSeason===s)return;terrainSeason=s;mapInk=terrainInk;
   const winter=s===3;
-  const paving=winter?['#a89f90','#b2a99a','#e0d8c9','#c9beb0','#f8f1e3']:
-    ['#97826d','#ab967b','#d9c6a7','#c8b492','#f0ddbf'];
-  M(0,0,MW,MH,winter?'#c5c3b4':'#bba98c');
-  M(3,2,194,124,winter?'#e1dacf':'#d5c2a1');
-  // Rows of warm stone courts are framed by the cinnabar perimeter.
-  for(let y=8;y<MH-4;y+=4)for(let x=5+(y%8?2:0);x<MW-4;x+=8)M(x,y,1.5,.5,winter?'#cac1b2':'#beaa88');
-  M(2,0,196,2.5,'#563329');M(2,2.5,196,1,'#b9774d');
+  const paving=winter?['#b7b1a2','#c0b8aa','#e6e0d5','#d0c8bb','#fcf8ee']:
+    ['#b4a58b','#c4b395','#eee2c9','#d2c2a5','#fff5de'];
+  M(0,0,MW,MH,winter?'#d8d8cf':'#d9c9ac');
+  mapPaving(3,3,194,121,paving);
+  // Cinnabar enclosure and a continuous gilded roof-cap, with slender pilasters.
+  M(2,1,196,2,'#8e5141');M(2,1,196,.4,'#d9b77c');M(2,3,196,.25,'#f5dfb0');
+  M(2,124,196,2.5,'#985846');M(2,124,196,.45,'#e0be8b');
   for(const x of [2,196]){
-    M(x,3,2,121,'#6e3b32');M(x+1,4,.5,119,'#c68461');
-    for(let y=8;y<124;y+=9)M(x-1,y,4,2,'#92503d');
+    M(x,3,1.6,121,'#a76855');M(x+.3,3,.35,121,'#e0ae85');
+    for(let y=8;y<124;y+=9){M(x-.6,y,2.8,1,'#a06b50');M(x-.8,y-.25,3.2,.3,'#e3c391');}
   }
-  M(2,124,196,2.5,'#6e3b32');M(2,124,196,.5,'#cf8c61');
-  for(const y of HY)mapPaving(6,y-3,188,6.5,paving);
+  for(const y of HY)mapPaving(5,y-3,190,6.5,paving);
   for(const x of [44,100,154])mapPaving(x-2.5,x===100?4:43,5.5,x===100?118:60,paving);
-  mapPaving(77,39,46,7,paving);
-  mapPaving(76,113,48,6,paving);
-
-  // Garden: shaded trees, koi pond, stepping stones and a waterside pavilion.
-  M(58,12,84,30,'#71564a');
-  M(59,13,82,28,winter?'#bcc3b4':['#81936d','#687f5f','#a18a61'][s]);
-  M(60,14,80,1,'#c4986f');
-  for(let i=0;i<28;i++){
-    const x=61+(i*23)%78,y=15+(i*17)%23;
-    M(x,y,1.5,.5,i%3===0?'#e8c6a166':'#42594345');
+  mapPaving(77,39,46,7,paving);mapPaving(76,113,48,6,paving);
+  // Garden walls, a rounded koi pond and fine stone paths preserve walkable space.
+  M(57.5,11.5,85,31,'#9d8c73');M(58,12,84,30,'#f3e5c9');
+  M(59,13,82,28,winter?'#d1d8cb':['#b9c5a0','#a3b294','#c4b48e'][s]);
+  mapOval(79,27,16.8,8,'#a79d80');mapOval(79,26.7,16,7.4,winter?'#b7d0cb':'#74a39e');
+  mapOval(78.7,26.1,14.8,6.3,winter?'#d6e4de':'#85b2aa');
+  for(let i=0;i<15;i++){
+    const a=i/15*Math.PI*2,x=79+Math.cos(a)*16,y=27+Math.sin(a)*7.4;
+    mapOval(x,y,1.1,.65,winter?'#efede3':'#d1c9ac');
   }
-  for(let y=-7;y<=7;y++)for(let x=-16;x<=16;x++){
-    const d=(x/16)**2+(y/7)**2;
-    if(d>1)continue;
-    const color=d>.88?'#927d61':d>.72?'#87a8a0':y<0?'#588b8b':'#416f78';
-    M(79+x,27+y,1,1,color);
-    if(d<.7&&(x+3*y)%11===0)M(79+x,27+y,2,.5,'#a4c2af');
+  for(const [x,y] of [[72,25],[84,29],[87,24]]){
+    mapLine([[x-1,y],[x+1,y]],winter?'#f4faf3':'#c8ded0',.18);
+    if(!winter){mapOval(x,y+.6,.6,.2,'#d99b66');mapOval(x+2,y-1,.8,.4,'#789c78');}
   }
-  for(const [x,y] of [[73,26],[84,29],[88,24]]){
-    M(x,y,1.5,.5,'#f0b97e');M(x+.5,y+.5,.5,.5,'#db875f');
-  }
-  mapPaving(96,28,5,13,paving);
-  mapPaving(100,28,22,3.5,paving);
-  mapBuilding(5,114,13,22,15,s);
-  [[64,19],[68,38],[92,18],[132,36],[136,21],[107,38],[63,29],[126,37]].forEach(([x,y],i)=>mapTree(x,y,s,i%3===0?1.2:1));
-  for(const x of [10,49,149,190])for(const y of [18,28,36,109,116])mapTree(x,y,s,.75);
-  for(const [x,y] of [[73,52],[126,52],[76,70],[124,70],[73,90],[126,90]])mapTree(x,y,s,.7);
-
+  mapPaving(96,28,5,13,paving);mapPaving(100,28,22,3.5,paving);
+  mapBuilding(5,113,12,24,17,s);
+  [[64,19],[92,18],[132,36],[136,21],[107,38],[63,32]].forEach(([x,y],i)=>mapTree(x,y,s,i===0?1.3:.9,i===0?1:0));
+  for(const [x,y] of [[68,38],[91,36],[109,21],[126,38]])mapTree(x,y,s,1,2);
+  for(const x of [10,49,149,190])for(const y of [18,29,38,110,120])mapTree(x,y,s,.8,y===120?2:0);
+  for(const [x,y] of [[74,54],[122,54],[76,72],[122,72],[73,92],[126,92]])mapTree(x,y,s,.7);
   for(const p of PLACES){
     if(p.id==='yh')continue;
     const [x,y,w,h]=p.r;
-    const cell=p.id==='cj'?0:p.id==='qq'||p.id==='kn'||p.id==='cn'?1:
-      ['wy','ss','qa'].includes(p.id)?2:['sw','wm'].includes(p.id)?4:3;
-    if(cell!==4){
-      M(x-.5,y+.5,w+1,h+1,'#60493644');
-      mapPaving(x,y+h-2,w,3,paving);
-    }
-    mapBuilding(cell,x,y-1,w,h+2,s,p.id==='lg');
+    const cell=p.id==='cj'?0:['qq','kn','cn'].includes(p.id)?1:['wy','ss','qa'].includes(p.id)?2:['sw','wm'].includes(p.id)?4:3;
+    if(cell!==4){mapOval(x+w/2,y+h-.8,w*.48,1,'#79684c22');mapPaving(x,y+h-2,w,3,paving);}
+    mapBuilding(cell,x,y-2,w,h+3,s,p.id==='lg');
   }
   mapInk=mg;
 }
-
-function figOnMap(x,y,color,small){
-  const top=y-(small?5:7);
-  M(x-1,top,3,2,'#1d1520');M(x-1,top+2,3,1,'#f2cfb2');
-  M(x-1,top+3,3,y-top-3,color);M(x-1,y,1,1,INK);M(x+1,y,1,1,INK);
+function mapFigure(cell,x,y,height=8.2,moving=false,cold=false){
+  const bob=moving?Math.sin(frame*1.4)*.18:0,w=height*2/3;
+  mapOval(x,y,1.3,.35,'#53452c25');
+  if(figureAtlas.complete&&figureAtlas.naturalWidth){
+    mg.filter=cold?'grayscale(.8)':'none';
+    mg.drawImage(figureAtlas,cell%4*224,Math.floor(cell/4)*336,224,336,x-w/2,y-height-bob,w,height);mg.filter='none';return;
+  }
+  mapOval(x,y-height*.8,.65,.8,'#d9b696');
+  mg.fillStyle=cell===6?'#c9a04b':'#a88986';mg.beginPath();mg.moveTo(x-.7,y-height*.65);mg.lineTo(x+.7,y-height*.65);mg.lineTo(x+1.4,y);mg.lineTo(x-1.4,y);mg.closePath();mg.fill();
 }
+function figOnMap(x,y,color,small){mapFigure(small?(color==='#527987'?8:9):Math.abs(Math.round(x+y))%6,x,y,small?6:8.2);}
 function drawMap(){const s=season(),family=gardenFamilyMoment(),scenes=initiativeMapScenes();
   const busy=new Set(scenes.flatMap(scene=>scene.visitors.map(p=>p.id)));
-  drawMapTerrain(s);
-  mg.drawImage(terrainCanvas,0,0,MW,MH);
+  drawMapTerrain(s);mg.drawImage(terrainCanvas,0,0,MW,MH);
   const occupied=new Set(harem().filter(c=>c.preg>=2).map(c=>c.palace));
   for(const p of PLACES){
     const [x,y,w,h]=p.r;
-    if(p.k==='palace'&&occupied.has(p.p))M(x+w-3,y+1,2,2,'#f7a4b3');
-    if(S.cands?.length&&p.p==='储秀宫')M(x+1,y+1,2,2,GOLD);
-    if(hoverP===p){
-      mg.strokeStyle='#ffe2a8';mg.lineWidth=.65;
-      mg.strokeRect(x-.5,y-.5,w+1,h+1);
-    }
+    if(p.k==='palace'&&occupied.has(p.p))mapOval(x+w-2,y+1,.85,.85,'#d68b99');
+    if(S.cands?.length&&p.p==='储秀宫')mapOval(x+1,y+1,.85,.85,'#d7a54f');
+    if(hoverP===p){mg.fillStyle='#fff4ce26';mg.fillRect(x-.5,y-.5,w+1,h+1);mg.strokeStyle='#a87139';mg.lineWidth=.3;mg.strokeRect(x-.5,y-.5,w+1,h+1);}
   }
-  // 妃嫔
-  for(const [id,n] of NPC){const c=byId(id);if(!c||family?.mother===id||busy.has(id))continue;const x=Math.round(n.x+n.ox),y=Math.round(n.y);
+  for(const [id,n] of NPC){
+    const c=byId(id);if(!c||family?.mother===id||busy.has(id))continue;
     if(n.where==='home'&&!n.path.length&&n.wait>0&&(frame+id)%40<28)continue;
-    M(x-1,y-6,3,2,'#1d1520');M(x-1,y-4,3,1,'#f2cfb2');M(x-1,y-3,3,3,c.cold?'#8a8a8a':robeOf(c));M(x-1,y,1,1,INK);M(x+1,y,1,1,INK);
-    if(c.preg>=2)M(x,y-8,1,1,'#f08aa8');if(c.rank>=5)M(x+1,y-7,1,1,GOLD)}
+    const x=n.x+n.ox,y=n.y;
+    mapFigure(Math.abs(c.seed||id)%6,x,y,8.2,!!n.path.length,c.cold);
+    if(c.preg>=2)mapOval(x,y-9,.4,.4,'#ca718c');
+  }
   if(family){
-    const x=GARDEN_FAMILY_SPOT[0], y=GARDEN_FAMILY_SPOT[1], child=kidById(family.child);
-    figOnMap(x-4,y,robeOf(byId(family.mother)),false);
-    figOnMap(x+4,y,child.sex==='m'?'#527987':'#ae6c82',true);
+    const x=GARDEN_FAMILY_SPOT[0],y=GARDEN_FAMILY_SPOT[1],child=kidById(family.child);
+    mapFigure(Math.abs(byId(family.mother).seed||0)%6,x-4,y);
+    mapFigure(child.sex==='m'?8:9,x+4,y,6);
   }
   for(const scene of scenes){
-    scene.visitors.forEach((p,i)=>figOnMap(scene.x+i*5,scene.y,p.sex?(p.sex==='m'?'#527987':'#ae6c82'):robeOf(p),!!p.sex));
-    M(scene.x,scene.y-10,2,2,JADE);
+    scene.visitors.forEach((p,i)=>mapFigure(p.sex?(p.sex==='m'?8:9):Math.abs(p.seed||0)%6,scene.x+i*5,scene.y,p.sex?6:8.2));
+    mapOval(scene.x,scene.y-10,.7,.7,'#6c9a8b');
   }
   drawSeasonalMap();
-  // 皇帝与太监
-  const tr=emp.trail[0]||[emp.x,emp.y];const ax=Math.round(tr[0])-4,ay=Math.round(tr[1]);
-  drawAttendant(M,ax,ay,emp.path.length?(frame%2?1:-1):0);
-  const ex=Math.round(emp.x),ey=Math.round(emp.y),bob=emp.path.length&&frame%2?1:0;
-  M(ex-2,ey-7-bob,5,1,'#1b1b24');M(ex-1,ey-8-bob,3,1,'#1b1b24');M(ex-1,ey-6-bob,3,1,'#f2cfb2');M(ex-1,ey-5-bob,3,4,'#e8b52c');M(ex,ey-4-bob,1,1,'#c0392b');M(ex-1,ey-1,1,1,INK);M(ex+1,ey-1,1,1,INK);
-  // 四季
-  const want=[18,0,14,30][s];if(mapParts.length<want&&chance(.5))mapParts.push({x:R()*MW,y:-2,vx:s===3?.1:.4,vy:s===3?.35:.3,t:R()*6,c:s===0?'#f7b6c8':s===2?pick(['#e0893a','#c9562a']):'#ffffff'});
-  mapParts.forEach(p=>{p.t+=.2;p.x+=p.vx+Math.sin(p.t)*.3;p.y+=p.vy;M(p.x,p.y,1,1,p.c)});mapParts=mapParts.filter(p=>p.y<MH&&p.x<MW);
+  const tr=emp.trail[0]||[emp.x,emp.y];
+  mapFigure(7,tr[0]-4,tr[1],8.1,!!emp.path.length);
+  mapFigure(6,emp.x,emp.y,9,!!emp.path.length);
+  const want=[18,0,14,30][s];
+  if(mapParts.length<want&&chance(.5))mapParts.push({x:R()*MW,y:-2,vx:s===3?.1:.4,vy:s===3?.35:.3,t:R()*6,c:s===0?'#edb7bd':s===2?pick(['#c99557','#bd7c51']):'#ffffff'});
+  mapParts.forEach(p=>{p.t+=.2;p.x+=p.vx+Math.sin(p.t)*.3;p.y+=p.vy;mapOval(p.x,p.y,.45,s===3?.45:.2,p.c);});mapParts=mapParts.filter(p=>p.y<MH&&p.x<MW);
 }
 // Routed through A.* like arrivals, so the encounter is journaled and survives a refresh.
 // The routine line is passed in because walker positions are not part of the save.
@@ -296,7 +281,7 @@ function meetConsort(c,routine){if(!c||!c.alive||c.gone)return;
     {t:'今夜召她侍寝（精力-1）',cond:()=>E().energy>0&&!c.preg,why:c.preg?'她有孕在身':'精力不足',f:()=>{nightWith(c);return null}},
     {t:'赏她一支簪子（国库-10万两）',f:()=>fx(chg({treasury:-10}),cchg(c,{mood:10,aff:3}))},
     {t:'点头作别'}]})}
-MAPC.addEventListener('click',e=>{if(!S)return;const r=MAPC.getBoundingClientRect(),mx=(e.clientX-r.left)/r.width*MW,my=(e.clientY-r.top)/r.height*MH;
+MAPC.addEventListener('click',e=>{if(!S||exhaustedMonthNotice)return;const r=MAPC.getBoundingClientRect(),mx=(e.clientX-r.left)/r.width*MW,my=(e.clientY-r.top)/r.height*MH;
   if(mapGuideInspect){const place=PLACES.find(p=>mx>=p.r[0]&&mx<=p.r[0]+p.r[2]&&my>=p.r[1]&&my<=p.r[1]+p.r[3]);if(place)showMapGuide(place);return;}
   const family=gardenFamilyMoment();
   if(family&&Math.abs(mx-GARDEN_FAMILY_SPOT[0])<9&&Math.abs(my-GARDEN_FAMILY_SPOT[1]+3)<5){
@@ -415,14 +400,15 @@ function viewMap(){
       ${next}
       ${S.flags.lastMonthReview?'<button class="btn sm" onclick="A.go(\'log\')">上月回顾</button>':''}
     </div>
+    <section class="map-month-notices" aria-label="本月宫中消息">${mourningNotice()}${mapActivityPanel(leads)}${princessMapNotice()}${birthdayBanquetButtons()}${proudDemandNotice()}</section>
     <div id="mapwrap"></div>
     <div id="map-guide-preview" aria-live="polite"></div>
     <div class="map-dock">
       <button id="map-guide-toggle" class="btn sm" aria-pressed="false" onclick="A.toggleMapGuide()">地点用途与玩法</button>
       <details class="map-brief" ${UI.mapBriefOpen?'open':''} ontoggle="UI.mapBriefOpen=this.open">
-        <summary>宫中动向</summary>
+        <summary>宫中事务与常平仓</summary>
         <div class="map-brief-content">
-          ${mourningNotice()}${mapActivityPanel(leads)}${princessMapNotice()}${birthdayBanquetButtons()}${proudDemandNotice()}
+
           ${floodDikeReady()?'<p class="hint">黄河险堤已加固。日后一次直接赈济可少花 '+FLOOD_DIKE_SAVING+' 万两。</p>':''}
           <p class="hint">${grainReserveReady()?`常平仓有${grainReserveLabel()}备荒粮。遇到蝗灾月奏时可发放，免耗精力。`:'常平仓暂无备荒粮，可以向粮商买半批。'}</p>
           ${Number.isInteger(S.flags.localGrainPaymentTurn)?`<p class="hint">赈粮尾款 ${localGrainBalance()} 万两，将于${localGrainPaymentDue()?'本月底':'下月底'}结清。${localGrainPaymentDue()&&grainReserveReady()?'可到常平仓以粮抵款。':''}${localGrainExtensionAvailable()?'可在常平仓展期一次。':''}</p>`:''}

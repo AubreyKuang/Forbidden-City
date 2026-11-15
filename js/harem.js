@@ -116,21 +116,44 @@ const rk=(a,b)=>a.id<b.id?a.id+'_'+b.id:b.id+'_'+a.id;
 function relGet(a,b){if(!a||!b||a===b||!S.rel)return 0;return S.rel[rk(a,b)]||0}
 function relAdd(a,b,v){if(!a||!b||a===b)return;S.rel=S.rel||{};const k=rk(a,b);S.rel[k]=clamp((S.rel[k]||0)+v,-100,100)}
 function initRel(c){harem().forEach(o=>{if(o===c)return;let v=ri(-8,12)+consortCompatibility(c,o);if(TRAITS[c.trait].jealous&&o.favor>40)v-=8;if(Math.abs(o.fam.p-c.fam.p)<15)v+=4;relAdd(c,o,socialPair(c,o)?v:0)})}
-function leaders(){const h=harem(),L=[],em=empress();if(em&&!isSolitary(em))L.push(em);
+function leaders(){if(familyScenesEnabled())return palaceFactions().L;const h=harem(),L=[],em=empress();if(em&&!isSolitary(em))L.push(em);
   const others=h.filter(c=>!isSolitary(c)&&c.rank>=5&&c.rank<8).sort((a,b)=>(b.rank*20+b.favor+b.scheme*.5)-(a.rank*20+a.favor+a.scheme*.5));
   for(const o of others){if(L.length>=2)break;L.push(o)}
   return L}
-function factions(){const L=leaders(),map={},neutral=[];L.forEach(l=>map[l.id]=[]);
+function factions(){if(familyScenesEnabled())return palaceFactions();const L=leaders(),map={},neutral=[];L.forEach(l=>map[l.id]=[]);
   harem().forEach(c=>{if(L.includes(c))return;if(isSolitary(c)){neutral.push(c);return;}let best=null,bv=8;
     L.forEach(l=>{const v=relGet(c,l)+3*NPCMemory.influence(S,c.id,l.id)+(l.rank===8&&c.virtue>60?6:0)+(l.scheme>60&&c.scheme>60?6:0);if(v>bv){bv=v;best=l}});
     if(best)map[best.id].push(c);else neutral.push(c)});
   return {L,map,neutral}}
+function palaceFactions(){
+ const h=harem(),L=[],map={},assigned=new Set();
+ const power=c=>c.rank*20+c.favor+c.scheme*.5;
+ const candidates=h.filter(c=>!isSolitary(c)&&(c.rank>=5||c.rank===4&&c.favor>=45)).sort((a,b)=>power(b)-power(a)||a.id-b.id);
+ for(const leader of candidates){
+  if(assigned.has(leader.id))continue;
+  const members=h.filter(c=>c!==leader&&!assigned.has(c.id)&&socialPair(c,leader)&&relGet(c,leader)>=30&&!isRival(c,leader)&&!isRival(leader,c));
+  if(!members.length)continue;
+  L.push(leader);map[leader.id]=members;[leader,...members].forEach(c=>assigned.add(c.id));
+ }
+ return {L,map,neutral:h.filter(c=>!assigned.has(c.id))};
+}
+function palaceFactionTick(){
+ if(!familyScenesEnabled())return;
+ const f=factions(),now={};for(const leader of f.L)for(const c of [leader,...f.map[leader.id]])now[c.id]=leader.id;
+ const prior=S.flags.palaceFactionState;if(prior?.gen===S.gen)for(const c of harem()){
+  const old=prior.members[c.id]||null,next=now[c.id]||null;if(old===next)continue;
+  const oldLeader=byId(old),newLeader=byId(next);
+  const text=next?`${fullName(c)}${next===c.id?'与交好的妃嫔渐成一派':`因近来的交往，开始与${fullName(newLeader)}一派来往`}。${oldLeader?'先前与'+fullName(oldLeader)+'一派的关系也有了变化。':''}`:`${fullName(c)}${oldLeader?'不再归入'+fullName(oldLeader)+'一派':'不再结党'}，如今无派系；既有交情与旧怨仍按实际往来保留。`;
+  livedRecord([c],'court','派系往来',`faction:${S.gen}:${c.id}`,text,[isSolitary(c)?'仍愿各自守礼，不必以结党证明情分。':'往来有亲疏，不能只凭位分便替我定一辈子。']);
+ }
+ S.flags.palaceFactionState={gen:S.gen,members:now};
+}
 function facOf(c){const f=factions();for(const l of f.L){if(l===c||f.map[l.id].includes(c))return l}return null}
 function allyBonus(v){if(!v)return 0;return Math.min(.25,harem().filter(o=>o!==v&&relGet(o,v)>=40).length*.08)}
 function relTick(){const h=harem(),f=factions(),fid={};
   f.L.forEach(l=>{fid[l.id]=l.id;f.map[l.id].forEach(m=>fid[m.id]=l.id)});
   for(let i=0;i<h.length;i++)for(let j=i+1;j<h.length;j++){const a=h[i],b=h[j];if(!socialPair(a,b)){S.rel[rk(a,b)]=relGet(a,b)*.985;continue;}let d=0;
-    if(fid[a.id]&&fid[a.id]===fid[b.id])d+=1.5;else if(fid[a.id]&&fid[b.id])d-=1.2;
+    if(fid[a.id]&&fid[a.id]===fid[b.id])d+=1.5;else if(fid[a.id]&&fid[b.id]&&(!familyScenesEnabled()||relGet(a,b)<0||isRival(a,b)))d-=1.2;
     if(TRAITS[a.trait].jealous&&b.favor>a.favor+15)d-=2;if(TRAITS[b.trait].jealous&&a.favor>b.favor+15)d-=2;
     if(a.trait==='温婉'||b.trait==='温婉')d+=.5;
     if(relGet(a,b)>-15&&!isRival(a,b))d+=Math.max(0,consortCompatibility(a,b))*.12;
@@ -168,17 +191,20 @@ function consortSocialLine(c){
   if(!other||S.turn-note.turn>=3)return '';
   return `<div>近来往来 · 与 <button class="btn quiet sm" onclick="A.go('consort',${other.id})">${esc(fullName(other))}</button> 在${esc(note.place)}${esc(note.activity)}。</div>`;
 }
-function facHTML(){const f=factions();if(!f.L.length)return '';
+function facHTML(){const f=factions();if(!f.L.length&&!f.neutral.length)return '';
   const box=(t,arr)=>`<div class="card" style="cursor:default;flex-direction:column"><div class="nm">${t}</div><div>${arr.length?arr.map(c=>`<span class="tag">${esc(cName(c))}</span>`).join(''):'<span class="hint">尚无依附者</span>'}</div></div>`;
-  return `<h3>派系</h3><div class="grid">${f.L.map(l=>box(esc(cName(l))+'一派',f.map[l.id])).join('')}${f.neutral.length?box('中立',f.neutral):''}</div>`}
+  return `<section class="harem-factions" aria-label="后宫派系"><h3>派系</h3><p class="hint">随实际交情形成，可有多派，也可不入任何派系。各派并非天然互为仇敌。</p><div class="grid">${f.L.map(l=>box(esc(cName(l))+'一派',f.map[l.id])).join('')}${f.neutral.length?box('无派系',f.neutral):''}</div></section>`}
 function relLine(c){if(!c.alive||c.gone)return '';
   const h=harem().filter(o=>o!==c).map(o=>[o,relGet(c,o)]).sort((a,b)=>b[1]-a[1]);
   const good=h.filter(x=>x[1]>=30&&socialPair(c,x[0])).slice(0,4),respect=h.filter(x=>x[1]>=30&&!socialPair(c,x[0])).slice(0,4),bad=h.filter(x=>x[1]<=-30).slice(-4),fac=c.cold?null:facOf(c);
-  return `<div>派系：${fac?(fac===c?'一派之首':esc(cName(fac))+'一派'):'中立'}${good.length?`　交好：${good.map(([o])=>`<span class="tag g">${esc(cName(o))}</span>`).join('')}`:''}${respect.length?`　敬重：${respect.map(([o])=>`<span class="tag">${esc(cName(o))}</span>`).join('')}`:''}${bad.length?`　交恶：${bad.map(([o])=>`<span class="tag r">${esc(cName(o))}</span>`).join('')}`:''}</div>${selectionCohortHTML(c)}${consortSocialLine(c)}${friendFavorPanel(c)}`}
+  return `<div>派系：${fac?(fac===c?'一派之首':esc(cName(fac))+'一派'):'无派系'}${good.length?`　交好：${good.map(([o])=>`<span class="tag g">${esc(cName(o))}</span>`).join('')}`:''}${respect.length?`　敬重：${respect.map(([o])=>`<span class="tag">${esc(cName(o))}</span>`).join('')}`:''}${bad.length?`　交恶：${bad.map(([o])=>`<span class="tag r">${esc(cName(o))}</span>`).join('')}`:''}</div>${selectionCohortHTML(c)}${consortSocialLine(c)}${friendFavorPanel(c)}`}
 HAREM.push(
- function clash(){const f=factions();if(f.L.length<2)return null;const [a,b]=f.L,ma=f.map[a.id],mb=f.map[b.id];if(!ma.length&&!mb.length)return null;
+ function clash(){const f=factions();if(f.L.length<2)return null;
+  const pairs=f.L.flatMap((a,i)=>f.L.slice(i+1).filter(b=>relGet(a,b)<10||isRival(a,b)||isRival(b,a)).map(b=>[a,b]));
+  if(familyScenesEnabled()&&!pairs.length)return null;
+  const [a,b]=familyScenesEnabled()?pick(pairs):f.L,ma=f.map[a.id],mb=f.map[b.id];if(!ma.length&&!mb.length)return null;
   const side=(w,l,mw,ml)=>()=>{[w,...mw].forEach(c=>cchg(c,{mood:8}));[l,...ml].forEach(c=>{cchg(c,{mood:-8});relAdd(c,w,-6)});story(w,`派系相争，陛下站在了她这一边。`);return `${cName(w)}一派扬眉吐气，${cName(l)}一派面色难看。`};
-  return {title:'派系倾轧',present:[a,b,...ma,...mb],cast:[a,b,ma[0],mb[0]],text:`晨昏定省时，${cName(a)}一派与${cName(b)}一派为${pick(['御花园赏花的座次','内务府分发的冰例','中秋宴上谁坐陛下左手边','新入宫的小主该住哪处偏殿'])}争执不下，两边都盯着你。\n${cName(a)}身边：${ma.map(cName).join('、')||'无人'}\n${cName(b)}身边：${mb.map(cName).join('、')||'无人'}`,choices:[
+  return {title:'派系倾轧',present:[a,b,...ma,...mb],cast:familyScenesEnabled()?[a,b,...ma,...mb]:[a,b,ma[0],mb[0]],text:`晨昏定省时，${cName(a)}一派与${cName(b)}一派为${pick(['御花园赏花的座次','内务府分发的冰例','中秋宴上谁坐陛下左手边','新入宫的小主该住哪处偏殿'])}争执不下，两边都盯着你。\n${cName(a)}身边：${ma.map(cName).join('、')||'无人'}\n${cName(b)}身边：${mb.map(cName).join('、')||'无人'}`,choices:[
    {t:`偏向${cName(a)}`,person:a,f:side(a,b,ma,mb)},{t:`偏向${cName(b)}`,person:b,f:side(b,a,mb,ma)},
    {t:'各打五十大板：“都回去抄《女诫》。”',f:()=>{[a,b,...ma,...mb].forEach(c=>cchg(c,{mood:-4}));relAdd(a,b,4);return '两边都闭了嘴，表面上总算和气了几分。'}}]}},
  function sisters(){const h=harem().filter(c=>!isSolitary(c));let best=null,bv=45;for(let i=0;i<h.length;i++)for(let j=i+1;j<h.length;j++){const v=relGet(h[i],h[j]);if(v>bv){bv=v;best=[h[i],h[j]]}}if(!best)return null;const [a,b]=best;
