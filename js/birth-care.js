@@ -7,7 +7,7 @@ function birthCareRecord(c,ks,title,text){const carers=[...new Set(ks.map(foster
 function birthCareEvent(c){
  if(!birthCareOpen(c))return null;const plan=c.delivery.carePlan,ks=birthCareKids(c),valid=()=>birthCareOpen(c)&&c.delivery.carePlan===plan;
  const arrangements=ks.map(k=>`${kidName(k)}：${fosterOf(k)?fullName(fosterOf(k))+'抚养':byId(k.mom)?.alive?'仍由生母照料':'暂由宫中乳母照料'}`).join('\n');
- return {title:'同生手足的安置',por:ks[0],cast:ks,valid,text:`孩子们已经分别赐名，不必逐个重复问一遍。\n${arrangements}\n${c.alive?'另择养母会使生母不舍；同生手足也可尽量一处养育。':'生母已经不在，当前的乳母照料不会因暂未选养母而中断。'}\n可以一次选同一位养母，也可以只调整某个孩子。`,choices:[
+ return {title:'同生手足的安置',por:ks[0],cast:ks,valid,text:`孩子们均已赐名，乳母候着听取照料安排。\n${arrangements}\n${c.alive?'另择养母会使生母不舍；同生手足也可尽量一处养育。':'生母已经不在，当前的乳母照料不会因暂未选养母而中断。'}\n可以一次选同一位养母，也可以只调整某个孩子。`,choices:[
   {t:'照现有安排，一并定下',f:()=>{if(!valid())return null;plan.closed=true;plan.settled=S.turn;const t=`${ks.map(k=>k.name).join('、')}的照料商议完毕：${arrangements.replaceAll('\n','；')}。没有另行更换抚养人。`;birthCareRecord(c,ks,'同生手足的安置',t);return t;}},
   {t:'一同交给同一位养母',f:()=>{if(!valid())return null;pushNow(birthCareChoose(c,ks));return null;}},
   ...ks.map(k=>({t:`单独商议${k.name}的照料`,f:()=>{if(!valid())return null;pushNow(birthCareChoose(c,[k]));return null;}})),
