@@ -2,14 +2,14 @@ const assert=require('node:assert/strict');
 const {test}=require('node:test');
 const {boot}=require('./playtest-harness.cjs');
 const {withClock}=require('./test-clock.cjs');
-const legacy=require('./fixtures/capital-noble-art-legacy-v19.json');
+const legacyCases=[require('./fixtures/capital-noble-art-legacy-v19.json'),require('./fixtures/capital-noble-art-legacy-v20.json')];
 function game(storage=new Map()){const b=withClock(boot(947,storage));b.ctx.assert=assert;return b;}
 
 test('Xie An keeps his dedicated face through office assignment, aging and save reload',()=>{
   let b=game();b.run(`A.start();drain();
     assert.equal(STORY_NPC_PORTRAITS.capitalNoble,433);
     for(var pool of [ALL_CONSORT_PORTRAITS,ALL_OFFICIAL_PORTRAITS,EMPEROR_PORTRAITS])assert.ok(!pool.includes(433));
-    var p=makeScholar();p.portraitOverride=STORY_NPC_PORTRAITS.capitalNoble;(S.scholars??=[]).push(p);
+    var p=createXieAn();assert.equal(p.artPortrait,433);assert.equal(portraitCell(p),433);
     p.age=70;assignCourtOfficialPortrait(p,'army');assert.equal(portraitCell(p),433);
     for(var size of [64,224])assert.match(porImg(p,size),/palace-capital-noble.webp/);
     S.flags.portraitSubject=p.id;save('auto');
@@ -39,11 +39,11 @@ test('white jade art reaches brothers including later sons, never the general of
   `);
 });
 
-test('an untouched v19 pending coronation restores original faces before enabling new brother art',()=>{
+for(const legacy of legacyCases)test('v'+legacy.pendingActions.version+' pending coronation restores original faces before enabling new brother art',()=>{
   const b=game(new Map([['chengongji_v1_auto',JSON.stringify(legacy)]]));
-  b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,19);`);
+  b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,${legacy.pendingActions.version});`);
   assert.equal(b.run('curEv.title'),legacy.pendingActions.pending.title);
   const faces=consorts=>consorts.map(c=>Object.values(c.house||{}).filter(p=>p&&typeof p==='object'&&p.id).map(p=>[p.id,p.artPortrait]));
   assert.deepEqual(faces(JSON.parse(b.run('JSON.stringify(S.consorts)'))),faces(legacy.consorts));
-  b.run('drain();assert.equal(PalaceActions.contentVersion,20);');
+  b.run('drain();assert.equal(PalaceActions.contentVersion,21);');
 });
