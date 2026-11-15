@@ -328,7 +328,7 @@ function officialsTable(){
   };
   const chip=(id,label,current,action)=>`<button class="btn sm${current===id?' on':''}" aria-pressed="${current===id}" onclick="A.${action}('${id}')">${label}</button>`;
   const counts={serving:entries.filter(e=>officialFilterMatch(e.p,'serving')).length,gone:entries.filter(e=>officialFilterMatch(e.p,'gone')).length};
-  return `<h2>官员表</h2><p class="hint">在朝官员均出自妃嫔娘家：同父姐妹共用父兄履历。点姓名看履历，点妃嫔或皇嗣可直接跳转。在朝 ${counts.serving} 人，故去与获罪 ${counts.gone} 人。</p>
+  return `${pageBackButton('officials','home')}<h2>官员表</h2><p class="hint">在朝官员均出自妃嫔娘家：同父姐妹共用父兄履历。点姓名看履历，点妃嫔或皇嗣可直接跳转。在朝 ${counts.serving} 人，故去与获罪 ${counts.gone} 人。</p>
     <div class="acts official-filters">${OFFICIAL_FILTERS.map(([id,l])=>chip(id,l,filter,'officialsFilter')).join('')}</div>
     <div class="acts official-filters">${chip('all','全部派系',bloc,'officialsBloc')}${blocs.map(id=>chip(id,id==='none'?'无所依附':blocName(id),bloc,'officialsBloc')).join('')}</div>
     ${rows.length?`<div class="official-table-wrap"><table class="official-table"><thead><tr><th>姓名</th><th>官职</th><th>家族 · 宫中</th><th>派系</th><th>状态</th><th>才干/信任/功绩</th><th>皇嗣</th><th>近期事迹</th></tr></thead><tbody>${rows.map(row).join('')}</tbody></table></div>`:'<p class="hint">没有符合条件的官员。</p>'}`;

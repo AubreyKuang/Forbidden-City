@@ -52,6 +52,13 @@ function personBackButton(fallback){
     MENU.find(([id])=>id===view)?.[1]||'上一页';
   return `<button class="btn quiet sm detail-back" onclick="A.backPerson('${fallback}')">← 返回${esc(label)}</button>`;
 }
+// List pages reached from several places return to the page that opened them.
+const PAGE_ORIGIN_VIEWS=['officials','residences'];
+const PAGE_BACK_LABEL={home:'御书房',government:'治国理政',map:'宫城',harem:'后宫',family:'家族',kids:'皇嗣'};
+function pageBackButton(page,fallback){
+  const from=UI.pageFrom?.[page],target=PAGE_BACK_LABEL[from]?from:fallback;
+  return `<button class="btn quiet sm detail-back" onclick="A.go('${target}')">← 返回${PAGE_BACK_LABEL[target]}</button>`;
+}
 A.backPerson=function(fallback){
   const source=personBackStack.pop();
   if(!source||source.state!==S){A.go(fallback);return;}

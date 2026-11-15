@@ -193,6 +193,7 @@ function nightWith(c,fromEvent){
 }
 const A={
   go(v,id){
+    if(PAGE_ORIGIN_VIEWS.includes(v)&&UI.view!==v&&!PERSON_DETAIL_VIEWS.includes(UI.view))(UI.pageFrom ||= {})[v]=UI.view;
     rememberPersonRoute(v,id);UI.view=v;UI.sel=id;
     if(v==='palace')preparePalaceLife(id);
     if(v==='consort'&&S)noteHaremVisit(byId(id));

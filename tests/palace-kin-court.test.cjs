@@ -155,3 +155,12 @@ test('the officials table lists real people with consort and heir links, filters
  A.go('official',a.id+':father');var page=viewOfficial();assert.match(page,/同朝往来/);assert.ok(page.includes(fz.name));
  A.go('consort',z.id);assert.equal(UI.view,'consort');A.go('kid',9001);assert.equal(UI.view,'kid');assert.equal(UI.sel,9001);`);
 });
+
+test('list pages offer a way back to the page that opened them',()=>{
+ const b=world(60);
+ b.run(`A.go('home');A.go('officials');assert.match(officialsTable(),/← 返回御书房/);assert.ok(officialsTable().includes("A.go('home')"));
+ A.go('government');A.go('officials');assert.match(officialsTable(),/← 返回治国理政/);
+ A.go('official',a.id+':father');A.backPerson('officials');assert.equal(UI.view,'officials');assert.match(officialsTable(),/← 返回治国理政/,'a profile visit keeps the original origin');
+ A.go('harem');A.openResidence();assert.match(viewResidences(),/← 返回后宫/);A.go('map');A.go('residences');assert.match(viewResidences(),/← 返回宫城/);
+ UI.pageFrom={};assert.match(officialsTable(),/← 返回御书房/);`);
+});
