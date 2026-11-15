@@ -176,7 +176,7 @@ const ROYAL_GROWTH_SETS={f:[380,383,392,395],m:[386,389]};
 const DESCENDANT_VARIANTS=29+ROYAL_GROWTH_SETS.m.length;
 const EXISTING_PRINCE_VARIANTS=4;
 const EXTRA_PRINCE_VARIANTS=LEGACY_DESCENDANT_VARIANTS-EXISTING_PRINCE_VARIANTS;
-const BEAUTY_PORTRAIT_START=92, YOUNG_ROYAL_PORTRAIT_START=136, PORTRAIT_COUNT=434;
+const BEAUTY_PORTRAIT_START=92, YOUNG_ROYAL_PORTRAIT_START=136, PORTRAIT_COUNT=435;
 // Reserved story art never enters the random consort pools. Stable zero-based IDs.
 const STORY_CONSORT_PORTRAITS=Object.freeze({gouyi:422});
 // Dedicated story characters are bound with portraitOverride, outside random pools.
@@ -211,7 +211,8 @@ const portraitSheets=[
   {start:422,rows:1,scale:4,src:'./assets/images/palace-consort-gouyi.webp?v=1',image:document.createElement('img')},
   {start:423,rows:2,scale:4,src:'./assets/images/palace-jinyiwei.webp?v=1',image:document.createElement('img')},
   {start:429,rows:1,scale:4,src:'./assets/images/palace-officials-selected.webp?v=1',image:document.createElement('img')},
-  {start:433,rows:1,scale:4,src:'./assets/images/palace-capital-noble.webp?v=1',image:document.createElement('img')}
+  {start:433,rows:1,scale:4,src:'./assets/images/palace-capital-noble.webp?v=1',image:document.createElement('img')},
+  {start:434,rows:1,scale:4,src:'./assets/images/palace-brother-jade-white.webp?v=1',image:document.createElement('img')}
 ];
 const portraitSheet=cell=>portraitSheets.slice().reverse().find(sheet=>cell>=sheet.start)||portraitSheets[0];
 function ensurePortraitSheet(cell){const sheet=portraitSheet(cell);if(!sheet.image.src)sheet.image.src=sheet.src;}
@@ -264,12 +265,13 @@ const JINYIWEI_PORTRAITS=Object.freeze([423,424,425,426,427,428]);
 const JINYIWEI_PORTRAIT_LABELS=Object.freeze({423:'玄黑金绣',424:'朱红金绣',425:'藏青银绣',426:'墨绿金绣',427:'月白金绣',428:'绛紫金绣'});
 // Four explicitly selected cells (0,1,2,4) from the earlier, loose-haired batch.
 const SHARED_OFFICIAL_PORTRAITS=Object.freeze([429,430,431,432]);
+const BROTHER_ONLY_PORTRAITS=Object.freeze([434]);
 const OFFICIAL_PORTRAITS={
   civil:{young:[272,274,275,279,280,281,291,292,293,398,399,400,402,410,411,412,413,414,415,...SHARED_OFFICIAL_PORTRAITS],mature:[268,270,271,276,277,278,288,289,290,401,403]},
   army:{young:[273,285,286,287,404,405,406,408,416,417,418,419,420,421,...SHARED_OFFICIAL_PORTRAITS],mature:[269,282,283,284,407,409]}
 };
 const FATHER_PORTRAITS=[...LEGACY_FATHER_PORTRAITS,401,403,407,409];
-const BROTHER_PORTRAITS=[...LEGACY_BROTHER_PORTRAITS,398,399,400,402,404,405,406,408,410,411,412,413,414,415,416,417,418,419,420,421,...SHARED_OFFICIAL_PORTRAITS];
+const BROTHER_PORTRAITS=[...LEGACY_BROTHER_PORTRAITS,398,399,400,402,404,405,406,408,410,411,412,413,414,415,416,417,418,419,420,421,...SHARED_OFFICIAL_PORTRAITS,...BROTHER_ONLY_PORTRAITS];
 const ALL_OFFICIAL_PORTRAITS=[...FATHER_PORTRAITS,...BROTHER_PORTRAITS,...JINYIWEI_PORTRAITS];
 function expandedOfficialPortraitsActive(){return journalContentVersion()>=14;}
 function dedicatedJinyiweiPortraitsActive(){return journalContentVersion()>=16;}
@@ -285,10 +287,12 @@ function ordinaryOfficialPortrait(person){
 }
 // One pool for court officers and consorts' relatives. Identity is assigned once,
 // using local seeded randomness so adding artwork never shifts gameplay rolls.
-function assignCourtOfficialPortrait(person,bloc,{mature=person.age>=40,house={},peers=[]}={}){
+function assignCourtOfficialPortrait(person,bloc,{mature=person.age>=40,house={},peers=[],brother=false}={}){
   if(person.jinyiwei&&dedicatedJinyiweiPortraitsActive())return assignJinyiweiPortrait(person);
   if(ALL_OFFICIAL_PORTRAITS.includes(person.artPortrait)&&!(journalContentVersion()>=19&&!person.jinyiwei&&JINYIWEI_PORTRAITS.includes(person.artPortrait)))return;
-  const pool=OFFICIAL_PORTRAITS[bloc==='army'?'army':'civil'][mature?'mature':'young'];
+  const basePool=OFFICIAL_PORTRAITS[bloc==='army'?'army':'civil'][mature?'mature':'young'];
+  // Preserve pending v19 (and earlier) scenes; new brothers may use the approved white portrait.
+  const pool=brother&&!mature&&journalContentVersion()>=20?[...basePool,...BROTHER_ONLY_PORTRAITS]:basePool;
   const cells=dedicatedJinyiweiPortraitsActive()?pool:pool.filter(cell=>!SHARED_OFFICIAL_PORTRAITS.includes(cell));
   const usage=new Map(cells.map(cell=>[cell,0])),seen=new Set();
   const families=[...(S?.consorts||[]),...(S?.cands||[]),...(S?.flags?.frontierHouses||[]).map(x=>x.guest)].filter(Boolean);
@@ -306,7 +310,7 @@ function assignCourtOfficialPortrait(person,bloc,{mature=person.age>=40,house={}
 }
 function assignOfficialPortrait(person,house,role){
   const father=role==='father';
-  if(expandedOfficialPortraitsActive())return assignCourtOfficialPortrait(person,house.bloc,{mature:father,house});
+  if(expandedOfficialPortraitsActive())return assignCourtOfficialPortrait(person,house.bloc,{mature:father,house,brother:/^brother(?:[2-9]\d*)?$/.test(role)});
   // A saved version 13 (or earlier) pending scene must recreate its original faces.
   const cells=father?LEGACY_FATHER_PORTRAITS:LEGACY_BROTHER_PORTRAITS;
   if(cells.includes(person.artPortrait))return;
@@ -419,6 +423,7 @@ function portraitJewelry(rank,id){return JEWELRY[id]|| (rank===8?JEWELRY.phoenix
 // Half-length paintings need much smaller ornaments than the original close-ups.
 const PORTRAIT_HEADS={
   433:[61,26,26],
+  434:[62,26,26],
   422:[51,38,27],
   248:[47,39,34],249:[59,40,34],250:[65,39,32],251:[66,38,32],252:[60,39,34],253:[54,39,34],254:[59,38,34],255:[59,39,34],
   256:[57,28,23],257:[50,31,27],258:[60,31,27],259:[56,31,27],260:[62,29,27],261:[65,30,25],262:[58,30,27],263:[59,31,27],264:[56,28,25],265:[60,28,26],266:[61,27,26],267:[50,29,27],

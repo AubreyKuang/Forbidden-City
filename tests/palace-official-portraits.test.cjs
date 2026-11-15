@@ -26,13 +26,13 @@ test('24 approved portraits occupy appended atlas cells and all belong to the co
   }`);
 });
 
-test('both family roles share profession pools with general officials and use every face before repeating',()=>{
+test('family roles use profession pools and dedicated brother additions without repeating',()=>{
   const b=game();b.run(`A.start();drain();S.consorts=[];S.cands=[];delete S.jinyiwei;
     for(var bloc of ['civil','army'])for(var role of ['father','brother']){
-      S.scholars=[];var mature=role==='father',pool=OFFICIAL_PORTRAITS[bloc][mature?'mature':'young'];
+      S.scholars=[];var mature=role==='father',pool=[...OFFICIAL_PORTRAITS[bloc][mature?'mature':'young'],...(mature?[]:BROTHER_ONLY_PORTRAITS)];
       for(var i=0;i<pool.length;i++){
         var p={id:'pool-'+i,seed:193+i,age:mature?50:25,official:mature?0:2};
-        if(i%2)assignCourtOfficialPortrait(p,bloc);else assignOfficialPortrait(p,{bloc},role);
+        assignOfficialPortrait(p,{bloc},role);
         assert.ok(pool.includes(p.artPortrait));S.scholars.push(p);
       }
       assert.equal(new Set(S.scholars.map(p=>p.artPortrait)).size,pool.length);
@@ -103,5 +103,5 @@ for(const fixture of [...legacy.cases,...legacy13.cases])test('unmodified versio
   if(fixture.name==='commander')assert.equal(b.run('S.jinyiwei.commander.artPortrait'),fixture.save.jinyiwei.commander.artPortrait);
   if(fixture.name==='examination')assert.deepEqual(JSON.parse(b.run('JSON.stringify(S.scholars.filter(p=>p.examRank).map(p=>p.artPortrait))')),fixture.save.scholars.filter(p=>p.examRank).map(p=>p.artPortrait));
   b.run('if(modalResult)nextEv();else choose(curEv.choices.findIndex(c=>!c.cond||c.cond()));');
-  b=reload(b);b.run('drain();assert.equal(PalaceActions.contentVersion,19);');
+  b=reload(b);b.run('drain();assert.equal(PalaceActions.contentVersion,20);');
 });
