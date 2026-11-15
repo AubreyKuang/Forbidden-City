@@ -35,7 +35,11 @@
       "file": "docs/screenshots/gouyi/inquiry.jpg",
       "bytes": 168708,
       "sha256": "7f70f484ea57fb8de892ad9cf0c971ba4e0eafec0961661e53adfc55664b714e",
-      "visualReview": "pending"
+      "visualReview": "passed",
+      "dimensions": [
+        1200,
+        1200
+      ]
     },
     {
       "scene": "lamplight",

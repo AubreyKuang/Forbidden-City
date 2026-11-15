@@ -146,8 +146,8 @@ function familyGraphSVG(){
     if(!group.fathers.has(id))group.fathers.set(id,{father,person:c,indices:[]});
     group.fathers.get(id).indices.push(index);
   });
-  const col=190,cardWidth=168,W=people.length*col+24;
-  const clanY=12,clanHeight=54,houseY=98,houseHeight=56+44*Math.max(1,...people.map(c=>brotherRoles(houseOf(c)).length+natalPeople(c.house).length)),consortY=houseY+houseHeight+38,consortHeight=82;
+  const col=layeredFamilyActive()?286:190,cardWidth=layeredFamilyActive()?264:168,W=people.length*col+24;
+  const clanY=12,clanHeight=54,houseY=98,houseHeight=layeredFamilyActive()?Math.max(68,...people.map(familyHouseHeight)):56+44*Math.max(1,...people.map(c=>brotherRoles(houseOf(c)).length+natalPeople(c.house).length)),consortY=houseY+houseHeight+38,consortHeight=82;
   const childY=consortY+128,childHeight=66,childStep=childHeight+12;
   const H=childY+Math.max(0,...people.map(c=>kids.get(c.id)?.length||0))*childStep+12;
   const x=i=>12+col*(i+.5),blood='#996a48',consortBottom=consortY+consortHeight;
@@ -170,7 +170,7 @@ function familyGraphSVG(){
         const military=stance==='army'?1:0;
         const kin=(person,role,office)=>person?`<button class="graph-kin-person${!person.alive?' deceased':''}" onclick="A.go('official','${c.id}:${role}')" aria-label="查看${esc(person.name)}">${porImg(person,34)}${label(person.name,`${role==='father'?(indices.length>1?'父亲 · 亲姐妹同父':'父亲'):officialKinLabel(h,role)} · ${officialStatus(person)} · ${office}`)}</button>`:'';
         cards+=`<div class="graph-card graph-house" data-father-id="${c.fatherId}" data-person-id="${esc(father.id)}" style="${at(cx,houseY,houseHeight)};--house-color:${color}">
-          ${kin(father,'father',father.office)}${brotherRoles(h).map(role=>kin(h[role],role,h[role].post)).join('')}${natalPeople(h).map(p=>`<button class="graph-kin-person${p.alive?'':' deceased'}" onclick="A.go('natal','${c.id}:${p.id}')" aria-label="查看${esc(p.name)}">${porImg(natalPortrait(p),34)}${label(p.name,natalLabel(c,p)+' · '+natalAge(p)+'岁 · '+natalStatus(p))}</button>`).join('')}</div>`;
+          ${layeredFamilyActive()?familyHouseTree(c):`${kin(father,'father',father.office)}${brotherRoles(h).map(role=>kin(h[role],role,h[role].post)).join('')}${natalPeople(h).map(p=>`<button class="graph-kin-person${p.alive?'':' deceased'}" onclick="A.go('natal','${c.id}:${p.id}')" aria-label="查看${esc(p.name)}">${porImg(natalPortrait(p),34)}${label(p.name,natalLabel(c,p)+' · '+natalAge(p)+'岁 · '+natalStatus(p))}</button>`).join('')}`}</div>`;
         // One shared trunk and sibling rail; every daughter connects directly below her father.
         wires+=`<g class="paternal-links" data-parent-id="${esc(father.id)}">${line(cx,houseY+houseHeight,cx,consortY-19,blood)}${line(x(indices[0]),consortY-19,x(indices.at(-1)),consortY-19,blood)}
           ${indices.map(index=>`<path data-child-id="${people[index].id}" d="M${x(index)} ${consortY-19} V${consortY}" stroke="${blood}" stroke-width="1.8"><title>${esc(father.name)}之女 ${esc(fullName(people[index]))}</title></path>`).join('')}</g>`;
@@ -249,7 +249,7 @@ function viewFamily(){
     for(const c of people){const house=houseOf(c);const key=house?.father.id??c.id;if(!fathers.has(key))fathers.set(key,[]);fathers.get(key).push(c);}
     return `<details class="family-branch"><summary><strong>${esc(label)}</strong><span class="hint">${people.length} 人 · ${childCount} 位皇嗣${force}</span></summary>
       ${[...fathers.values()].map(sisters=>{const father=houseOf(sisters[0])?.father;
-        return `<section class="paternal-branch">${father?officialFamilyLine(sisters[0])+(sisters.length>1?'<p class="hint">亲姐妹同父，共用父兄履历。</p>':''):''}<ul>${sisters.map(member).join('')}</ul></section>`;
+        return `<section class="paternal-branch">${father?(layeredFamilyActive()?familyHouseTree(sisters[0],true):officialFamilyLine(sisters[0]))+(sisters.length>1?'<p class="hint">亲姐妹同父，共用父兄履历。</p>':''):''}<ul>${sisters.map(member).join('')}</ul></section>`;
       }).join('')}</details>`;
   };
   const branches=[...byClan].sort(([a],[b])=>Number(a==null)-Number(b==null)).map(([key,people])=>
@@ -273,6 +273,7 @@ function viewHome(){
    ${pageChapters('home',[
      ['recent','近事',`<ul class="story">${recent.map(l=>`<li class="${l.b?'big':''}"><time>${esc(l.d)}</time>${esc(l.t)}</li>`).join('')||'<li>尚无记载</li>'}</ul>`],
      ['court','朝堂与外家',courtBlocHTML()],
+     ['story-consorts','剧情妃图鉴',storyConsortCodex()],
      ['keepsakes','家书与手稿',detailSection('从旧朝带来的家书与手稿',lifeWorksPanel(e))],
      ['guide','起居与用度',`<p class="hint">每月有${maxEnergy()}点精力。上朝可先免费查看本月奏折，亲自批复通常花 1 点；召幸、闲谈、探望皇嗣、出巡也要花精力。赏赐、晋封、选秀不花精力。精力用完后，处理完当前事件及后续便会自动转月；也可提前点「结束本月」。侍寝后若怀上龙胎，要到下个月末太医才诊得出喜脉。每位妃嫔都有一段专属故事，情分越深越容易推进。</p>`]
    ])}`}
@@ -319,7 +320,7 @@ function viewConsort(){
   const st=(l,v,hid)=>hid?`<div class="bar"><span>${l}</span><i></i><em>??</em></div>`:bar(l,v,'#8e6f57');
   let acts='', management='', familyActions='', conversations='', cardAction='', penalties='';
   if(act&&c.maid){
-    acts+=`<button class="btn" onclick="A.night(${c.id})" ${c.preg||c.cardWithdrawn?'disabled':''}>召幸<small>${c.cardWithdrawn?'绿头牌已撤':c.preg?'有孕在身':'精力-1'}</small></button>`;
+    acts+=`<button class="btn" onclick="A.night(${c.id})" ${consortNightReason(c)?'disabled':''}>召幸<small>${consortNightReason(c)||'精力-1'}</small></button>`;
     acts+=`<button class="btn primary" onclick="A.chat(${c.id})">闲话家常<small>精力-1</small></button>`;
     acts+=`<button class="btn jade" onclick="A.gift(${c.id})">赏赐<small>国库-20</small></button>`;
     management+=`<button class="btn" onclick="A.raiseMaid(${c.id},1)">册封为答应</button><button class="btn" onclick="A.raiseMaid(${c.id},0)">册封为官女子</button><button class="btn" onclick="A.maidNear(${c.id})">${c.near?'遣回尚衣局':'调到身边'}</button>`;
@@ -327,7 +328,7 @@ function viewConsort(){
   } else if(act&&(c.templeStay||c.homeLeave)){
     // Temple status and return actions have their own section below.
   } else if(act&&!c.cold){
-    acts+=`<button class="btn" onclick="A.night(${c.id})" ${c.preg||c.cardWithdrawn?'disabled':''}>召幸侍寝<small>${c.cardWithdrawn?'绿头牌已撤':c.preg?'有孕在身':'精力-1'}</small></button>`;
+    acts+=`<button class="btn" onclick="A.night(${c.id})" ${consortNightReason(c)?'disabled':''}>召幸侍寝<small>${consortNightReason(c)||'精力-1'}</small></button>`;
     acts+=`<button class="btn primary" onclick="A.chat(${c.id})">闲话家常<small>精力-1</small></button>`;
     acts+=`<button class="btn jade" onclick="A.gift(${c.id})">赏赐<small>礼物 · 内库珍饰</small></button>`;
     familyActions+=momVisitButton(c);
@@ -391,7 +392,7 @@ function viewConsort(){
 function viewCards(){
   const h=harem().filter(c=>!c.cardWithdrawn).sort((a,b)=>b.rank-a.rank||b.favor-a.favor).concat(maids().filter(m=>m.near&&!m.cardWithdrawn));
   return `<h2>敬事房 · 翻牌子</h2><p class="hint">敬事房呈上绿头牌。翻谁的牌子，今夜便召谁侍寝（精力-1）。本月已侍寝 ${E().nightsMonth||0} 次，一月超过三次有损龙体。</p>
-   ${h.length?`<div class="pais">${h.map(c=>`<button class="pai" ${c.preg?'disabled':''} onclick="A.night(${c.id})"><strong>${esc(cName(c))}</strong><small>${c.preg?'有孕':'恩宠 '+rd(c.favor)}</small></button>`).join('')}</div>`:'<p class="hint">暂无可翻的绿头牌。可在妃嫔详情中恢复绿头牌。</p>'}`;
+   ${h.length?`<div class="pais">${h.map(c=>`<button class="pai" ${consortNightReason(c)?'disabled':''} onclick="A.night(${c.id})"><strong>${esc(cName(c))}</strong><small>${consortNightReason(c)||'恩宠 '+rd(c.favor)}</small></button>`).join('')}</div>`:'<p class="hint">暂无可翻的绿头牌。可在妃嫔详情中恢复绿头牌。</p>'}`;
 }
 function viewXX(){
   const since=S.turn-S.flags.lastXX;

@@ -10,13 +10,13 @@ function haremAbsence(){
 }
 function jingtishiEvent(){
   if(S.over||mourningActive()||haremAbsence()<6||S.flags.cardReminderGen===S.gen&&S.turn-(S.flags.cardReminderTurn??-99)<4)return null;
-  const women=harem().filter(c=>!c.cardWithdrawn&&!c.preg);
+  const women=harem().filter(c=>!c.cardWithdrawn&&!c.preg&&(!consortRecoveryActive()||!consortNightReason(c)));
   if(!women.length)return null;
   const valid=()=>!S.over&&!mourningActive()&&haremAbsence()>=6;
   return {title:'敬事房 · 捧牌候旨',valid,text:`陛下已有${haremAbsence()}个月未往后宫与妃嫔相处。\n敬事房总管候在御书房外，捧着绿头牌轻声道：“各宫的牌子都备下了。陛下若愿，今夜可召人相伴；若只想过去坐坐，奴才也好先去通传。”`,
     onShow:()=>{S.flags.cardReminderGen=S.gen;S.flags.cardReminderTurn=S.turn;log('敬事房因陛下久未入后宫，捧绿头牌至御书房候旨。');},choices:[
-      {t:'把牌子呈上来',cond:()=>E().energy>0,why:'本月精力已尽',f:()=>{pushNow({title:'敬事房 · 今夜召谁',text:'有孕、撤牌或不在宫中的人不列在此。',choices:[
-        ...women.filter(c=>inPalace(c)&&!c.cardWithdrawn&&!c.preg).map(c=>({t:`${cName(c)} · ${fullName(c)}`,person:c,cond:()=>E().energy>0&&inPalace(c)&&!c.preg&&!c.cardWithdrawn,why:'眼下不宜召见',f:()=>{nightWith(c);return null;}})),{t:'改日再说'}]});return null;}},
+      {t:'把牌子呈上来',cond:()=>E().energy>0,why:'本月精力已尽',f:()=>{pushNow({title:'敬事房 · 今夜召谁',text:consortRecoveryActive()?'有孕、撤牌、不在宫中或尚在产后、小产后三个月调养期的人不列在此。':'有孕、撤牌或不在宫中的人不列在此。',choices:[
+        ...women.filter(c=>inPalace(c)&&!c.cardWithdrawn&&!c.preg&&(!consortRecoveryActive()||!consortNightReason(c))).map(c=>({t:`${cName(c)} · ${fullName(c)}`,person:c,cond:()=>E().energy>0&&inPalace(c)&&!c.preg&&!c.cardWithdrawn&&(!consortRecoveryActive()||!consortNightReason(c)),why:'眼下不宜召见',f:()=>{nightWith(c);return null;}})),{t:'改日再说'}]});return null;}},
       {t:'只去后宫坐坐',f:()=>{UI.view='harem';return '总管收起牌匣，吩咐宫人备灯。可选一位妃嫔前去问候。';}},
       {t:'政务未完，暂且收起',f:()=>{log('帝命敬事房暂收绿头牌，继续处理政务。');return '总管依礼退下，过些时日再来请旨。';}}]};
 }

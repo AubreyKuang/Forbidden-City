@@ -27,7 +27,7 @@ A.out=function(kind){ if(!useE())return; const e=E();
     const h=harem();
     const roll=R();
     if(roll<.5&&h.length){const c=pick(h);const {text:t,illustration}=gardenEncounter(c);
-      story(c,`与陛下在御花园偶遇。${t}`);pushEv({title:'御花园偶遇',illustration,por:c,text:t+fx(cchg(c,{favor:6,aff:6,mood:10})),choices:[{t:'今夜便召她侍寝',cond:()=>E().energy>0&&!c.preg,why:c.preg?'她有孕在身':'精力不足',f:()=>{nightWith(c);return null}},{t:'与她作别'}]});}
+      story(c,`与陛下在御花园偶遇。${t}`);pushEv({title:'御花园偶遇',illustration,por:c,text:t+fx(cchg(c,{favor:6,aff:6,mood:10})),choices:[{t:'今夜便召她侍寝',cond:()=>E().energy>0&&!c.preg&&(!consortRecoveryActive()||!consortNightReason(c)),why:(consortRecoveryActive()&&consortNightReason(c))||(c.preg?'她有孕在身':'精力不足'),f:()=>{nightWith(c);return null}},{t:'与她作别'}]});}
     else {
       const encounter=roll>=.5&&roll<.6?maidEvent('御花园'):null;
       if(encounter){pushEv(encounter);return;}

@@ -1,0 +1,183 @@
+{
+  "url": "https://aubreykuang.github.io/Forbidden-City/index.html?verify=d898246",
+  "started": "2026-11-15T23:25:16.742Z",
+  "runs": [
+    {
+      "name": "report-romance",
+      "viewport": "desktop",
+      "reloads": [
+        "导入与刷新",
+        "接回原私情剧情",
+        "处置结果"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "recovery-loss",
+      "viewport": "desktop",
+      "reloads": [
+        "导入与刷新",
+        "查看翻牌后"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "family-tree",
+      "viewport": "desktop",
+      "reloads": [
+        "导入与刷新",
+        "子女档案"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "story",
+      "viewport": "desktop",
+      "reloads": [
+        "导入与刷新",
+        "宫殿直达剧情",
+        "剧情选择"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "codex",
+      "viewport": "desktop",
+      "reloads": [
+        "导入与刷新",
+        "图鉴入口进入相遇",
+        "固定剧情妃入宫"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "exam-sister",
+      "viewport": "desktop",
+      "reloads": [
+        "导入与刷新",
+        "姐妹指婚结果"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "report-romance",
+      "viewport": "mobile",
+      "reloads": [
+        "导入与刷新",
+        "接回原私情剧情",
+        "处置结果"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "recovery-loss",
+      "viewport": "mobile",
+      "reloads": [
+        "导入与刷新",
+        "查看翻牌后"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "family-tree",
+      "viewport": "mobile",
+      "reloads": [
+        "导入与刷新",
+        "子女档案"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "story",
+      "viewport": "mobile",
+      "reloads": [
+        "导入与刷新",
+        "宫殿直达剧情",
+        "剧情选择"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "codex",
+      "viewport": "mobile",
+      "reloads": [
+        "导入与刷新",
+        "图鉴入口进入相遇",
+        "固定剧情妃入宫"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "exam-sister",
+      "viewport": "mobile",
+      "reloads": [
+        "导入与刷新",
+        "姐妹指婚结果"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 390,
+        "width": 390
+      }
+    }
+  ],
+  "browser": "157.0.8103.78",
+  "finished": "2026-11-15T23:26:09.731Z",
+  "passed": true
+}

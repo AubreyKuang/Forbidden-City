@@ -57,8 +57,8 @@ const HIST=[
  ()=>{const c=alive().find(c=>c.cold);if(!c)return null;return {title:'长门赋',present:[],valid:()=>c.alive&&!c.gone&&c.cold,ref:'陈皇后千金买《长门赋》（西汉·汉武帝）',por:c,text:`冷宫里的${fullName(c)}拿出最后一点体己，托人求当世第一才子写了一篇赋，辗转送到你案头。\n“夫何一佳人兮，步逍遥以自虞……”`,choices:[
    {t:'读完，去冷宫看她',f:()=>{A.uncold(c.id);story(c,'一篇赋，换回了陛下的一次探望。');return '你去了冷宫。她瘦得几乎认不出来。'}},
    {t:'赋是好赋',f:()=>fx(cchg(c,{mood:-10}))}]}},
- ()=>{const c=harem().filter(c=>!c.bond&&c.hp>=50&&c.aff>=60).sort((a,b)=>b.aff-a.aff)[0];if(!c)return null;return {title:'当熊',ref:'冯媛挡熊（西汉·汉元帝）',por:c,text:`南苑观兽，一头黑熊忽然冲出栅栏，直扑御座。左右嫔妃尖叫四散，只有${cName(c)}一步挡在你身前。`,choices:[
-   {t:'“你不怕么？”',f:()=>{c.bond=true;remember(c,'care','挡熊护驾');story(c,'南苑观兽，黑熊出槛，她挡在陛下身前。她说：“熊得一人便会停下，臣妾怕它伤了陛下。”');log(`南苑熊出槛，${fullName(c)}挺身护驾。`,1);return `侍卫一拥而上，制住了熊。她这才腿一软：“熊抓到一个人就会停下，臣妾怕它伤了陛下。”${fx(cchg(c,{aff:20,favor:15}))}\n§她的恩宠从此不再衰减`}}]}},
+ ()=>{const c=harem().filter(c=>!c.bond&&c.hp>=50&&c.aff>=60&&bearGuardEligible(c)).sort((a,b)=>b.aff-a.aff)[0];if(!c)return null;return {title:'当熊',valid:()=>bearGuardEligible(c),ref:'冯媛挡熊（西汉·汉元帝）',por:c,text:`南苑观兽，一头黑熊忽然冲出栅栏，直扑御座。左右嫔妃尖叫四散，只有${cName(c)}一步挡在你身前。`,choices:[
+   {t:'“你不怕么？”',f:()=>{if(!bearGuardEligible(c))return null;c.bond=true;remember(c,'care','挡熊护驾');story(c,'南苑观兽，黑熊出槛，她挡在陛下身前。她说：“熊得一人便会停下，臣妾怕它伤了陛下。”');log(`南苑熊出槛，${fullName(c)}挺身护驾。`,1);return `侍卫一拥而上，制住了熊。她这才腿一软：“熊抓到一个人就会停下，臣妾怕它伤了陛下。”${fx(cchg(c,{aff:20,favor:15}))}\n§她的恩宠从此不再衰减`}}]}},
  ()=>{const c=harem().find(c=>c.rank===8)||harem().find(c=>c.story.some(s=>s.t.includes('潜邸')));if(!c||c.goldAsked)return null;return {title:'金屋',ref:'汉武帝“金屋藏娇”（西汉）',por:c,text:`${cName(c)}翻到“金屋藏娇”的旧事，掩卷问你：“若是臣妾问起一个安稳的归处，陛下会怎样答？”`,choices:[
    {t:'“愿给你一个安稳的归处。”',f:()=>{c.goldAsked=true;remember(c,'care','今日读到金屋旧事，陛下许她安稳的归处');return fx(cchg(c,{aff:12,mood:15}))}},
    {t:'真给她修一座金屋（国库-200万两）',f:()=>{c.goldAsked=true;log('帝为皇后修金屋。',1);return fx(chg({treasury:-200,people:-4}),cchg(c,{aff:20,mood:30}))}},

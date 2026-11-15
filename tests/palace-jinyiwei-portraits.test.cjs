@@ -10,6 +10,17 @@ function game(seed=831,storage=new Map()){
 }
 function reload(b){const n=game(901,b.storage);n.run("A.load('auto');assert.equal(PalaceActions.blocked,false);");return n;}
 
+test('guard portraits remain exclusive even when an old ordinary officer has a mistaken assignment',()=>{
+ const b=game();b.run(`A.start();drain();
+ for(var cell of JINYIWEI_PORTRAITS){
+   var p={id:'ordinary-'+cell,seed:cell,age:28,official:2,artPortrait:cell,portraitOverride:cell};var before=JSON.stringify(p);
+   assert.ok(!JINYIWEI_PORTRAITS.includes(portraitCell(p)));assert.equal(JSON.stringify(p),before);
+   assignCourtOfficialPortrait(p,'civil');assert.ok(!JINYIWEI_PORTRAITS.includes(p.artPortrait));assert.ok(!JINYIWEI_PORTRAITS.includes(portraitCell(p)));
+   assert.ok(!JINYIWEI_PORTRAITS.includes(portraitCell({sex:'f',born:S.turn-240,seed:cell,portraitOverride:cell})));
+   assert.equal(portraitCell({jinyiwei:true,artPortrait:cell,portraitOverride:cell}),cell);
+ }`);
+});
+
 test('stable guard and shared IDs select the two explicitly approved batches and exact source cells',()=>{
   assert.deepEqual(manifest.portraits.map(p=>p.id),Array.from({length:10},(_,i)=>423+i));
   const guards=manifest.portraits.slice(0,6),shared=manifest.portraits.slice(6);
@@ -23,7 +34,7 @@ test('stable guard and shared IDs select the two explicitly approved batches and
     assert.equal(STORY_CONSORT_PORTRAITS.gouyi,422);
     for(var cell of JINYIWEI_PORTRAITS){
       assert.equal(portraitCell({jinyiwei:true,artPortrait:cell}),cell);
-      assert.equal(portraitCell({official:3,artPortrait:cell}),cell);
+      assert.ok(!JINYIWEI_PORTRAITS.includes(portraitCell({official:3,artPortrait:cell})));
       assert.ok(!FATHER_PORTRAITS.includes(cell)&&!BROTHER_PORTRAITS.includes(cell));
       assert.equal(portraitSheet(cell).start,423);
     }
@@ -32,7 +43,7 @@ test('stable guard and shared IDs select the two explicitly approved batches and
       assert.ok(OFFICIAL_PORTRAITS.army.young.includes(cell));assert.equal(portraitSheet(cell).start,429);
     }
     for(var cell=423;cell<433;cell++){
-      assert.equal(portraitCell({portraitOverride:cell}),cell);assert.ok(!ALL_CONSORT_PORTRAITS.includes(cell));
+      assert.equal(portraitCell({portraitOverride:cell,jinyiwei:JINYIWEI_PORTRAITS.includes(cell)}),cell);assert.ok(!ALL_CONSORT_PORTRAITS.includes(cell));
       var sheet=portraitSheet(cell),[x,y]=portraitTile(cell,sheet);assert.ok(x>=0&&x<448&&y>=0&&y<sheet.rows*140);
     }
   `);
@@ -80,5 +91,5 @@ for(const fixture of [...legacy.cases,...legacy15.cases])test('version '+fixture
   }
   if(fixture.name==='examination')assert.deepEqual(JSON.parse(b.run('JSON.stringify(S.scholars.map(p=>p.artPortrait))')),fixture.save.scholars.map(p=>p.artPortrait));
   b.run('if(modalResult)nextEv();else choose(curEv.choices.findIndex(c=>!c.cond||c.cond()));');
-  b=reload(b);b.run('drain();assert.equal(PalaceActions.contentVersion,19);');
+  b=reload(b);b.run('drain();assert.equal(PalaceActions.contentVersion,20);');
 });

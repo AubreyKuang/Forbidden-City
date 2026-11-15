@@ -85,6 +85,13 @@
 ![钦安殿灯下验影，令仪要求先听自己的观察](../screenshots/gouyi/lamplight.jpg)
 
 <details>
+<summary>第一问：为何唯在帝前舒掌</summary>
+
+![赵令仪在钦安殿向观澜国师追问掌心之因](../screenshots/gouyi/inquiry.jpg)
+
+</details>
+
+<details>
 <summary>展开人物纪事：从初遇到掌心问因</summary>
 
 ![赵令仪的连续人物纪事，包含经历与本人记下的心声](../screenshots/gouyi/chronicle.jpg)

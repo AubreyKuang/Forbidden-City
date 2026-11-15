@@ -1,5 +1,5 @@
 /* Private hopes belong to a person and a season of life, not to every unmarried girl alike. */
-const royalHeartActive=()=>!!S&&!S.over&&journalContentVersion()>=19;
+const royalHeartActive=()=>!!S&&!S.over&&journalContentVersion()>=20;
 const heartStage=k=>kidAge(k)<16?'early':kidAge(k)<20?'young':'adult';
 const heartReady=k=>royalHeartActive()&&S.children.includes(k)&&childCanVisitCourt(k)&&kidAge(k)>=12&&!k.pendingName&&!k.married&&!k.spouse&&!k.betrothal&&k.hp>=45;
 const HEART_WORDS={

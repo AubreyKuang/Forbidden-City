@@ -34,7 +34,7 @@ const ARCS={
   (c,f)=>({text:`琼林宴上，状元奉旨献诗。他念到一半，${cName(c)}失手打翻了酒盏，满座寂然。`,choices:[
     {t:'笑说“诗好，连娘娘都听醉了”',f:()=>{aNext(c,2,4,7);return fx(cchg(c,{aff:6}))}},
     {t:'冷眼看着',f:()=>{aNext(c,2,4,7);return fx(cchg(c,{mood:-10}))}},
-    {t:'当晚召她侍寝',cond:()=>E().energy>0&&!c.preg,why:'精力不足',f:()=>{aNext(c,2,4,7);nightWith(c);return null}}]}),
+    {t:'当晚召她侍寝',cond:()=>E().energy>0&&!c.preg&&(!consortRecoveryActive()||!consortNightReason(c)),why:(consortRecoveryActive()&&consortNightReason(c))||('精力不足'),f:()=>{aNext(c,2,4,7);nightWith(c);return null}}]}),
   (c,f)=>({text:`宫门侍卫截下一封信，是状元托人带给${cName(c)}的。信上只有两个字：“珍重”。`,choices:[
     {t:'烧了信，什么也不说',f:()=>{c.talent=clamp(c.talent+5);aEnd(c,'知音','陛下烧了那封信，从未提起。后来她知道了，从此为陛下写的诗比从前多了许多。');return fx(cchg(c,{aff:22,mood:10}))}},
     {t:'召她对质',f:()=>{if(f.asked||c.aff>=60){aEnd(c,'此心已许','她看完信，当着陛下的面把它投进炭盆：“臣妾此生，只是陛下的人。”');return fx(cchg(c,{aff:15}))}aEnd(c,'心结','对质之后，两人之间多了一道看不见的墙。');return fx(cchg(c,{aff:-20,mood:-15}))}},
