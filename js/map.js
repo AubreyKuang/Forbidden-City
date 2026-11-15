@@ -316,7 +316,7 @@ setInterval(mapTick,50);
 // Derive leads from live activities so expired or unavailable characters leave the map.
 function mapActivityLeads(){
   if(!S||S.over)return [];
-  const leads=[...continuityLeads(),...palaceRomanceLeads(),...personalExperienceLeads(),...historyLeads(),...multipleLeads()],meeting=showGardenReunion(),stop=lanternStop(),work=duanwuWork();
+  const leads=[...journeyLeads(),...continuityLeads(),...palaceRomanceLeads(),...personalExperienceLeads(),...historyLeads(),...multipleLeads()],meeting=showGardenReunion(),stop=lanternStop(),work=duanwuWork();
   const school=schoolScene();if(school&&!school.scene.result)leads.push({place:'ss',title:SCHOOL_TITLES[school.scene.kind],text:school.cast.map(k=>k.name).join('与')+'正在窗下说话。',cast:school.cast});
   if(meeting)leads.push({place:'yh',title:'御花园赴约',button:'去御花园赴约',text:meeting.reunion.text,cast:[meeting.first,meeting.second],expires:true});
   if(stop)leads.push({place:stop.place,title:'上元寻灯 · '+stop.name,text:'正月灯会，带孩子走一走，猜一回灯谜。',cast:(activeLantern()?.ids||lanternChildren().map(k=>k.id)).map(kidById),expires:!!activeLantern()});

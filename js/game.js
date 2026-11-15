@@ -17,7 +17,7 @@ $('#modal').addEventListener('cancel',event=>event.preventDefault());
 const UI={view:'title',sel:null,logF:'all'};
 const E=()=>S.emp;
 const alive=()=>S.consorts.filter(c=>c.alive&&!c.gone);
-const harem=()=>alive().filter(c=>!c.cold&&!c.maid&&!c.templeStay);
+const harem=()=>alive().filter(c=>!c.cold&&!c.maid&&!c.templeStay&&!c.homeLeave);
 const kidsAlive=()=>S.children.filter(k=>k.alive&&!k.removedFromRoyal);
 const byId=id=>S.consorts.find(c=>c.id===id);
 const kidById=id=>S.children.find(k=>k.id===id);
@@ -27,6 +27,7 @@ const rankCount=r=>alive().filter(c=>c.rank===r&&!c.cold&&!c.maid).length;
 const season=()=>S?Math.floor(((S.month+11)%12)/3):0; // 0春(1-3)…
 function dateStr(s=S){return `${s.emp.era}${s.year===1?'元':cnNum(s.year)}年${MONTHS[s.month-1]}`}
 function cName(c){
+  if(c.rescuedGuest)return fullName(c)+'姑娘';
   if(c.maid) return c.near?`贴身宫女${c.given}`:`宫女${c.given}`;
   if(c.cold) return `${c.sur}庶人`;
   if(c.rank===8) return '皇后';
@@ -327,7 +328,7 @@ A.endMonth=function(){
     if(!c.cold){c.favor=clamp(c.favor-(c.bond?0:c.trait==='淡泊'?1:2));if(c.favor<25)c.mood=clamp(c.mood-3);else if(c.favor>60)c.mood=clamp(c.mood+1)}else c.mood=clamp(c.mood-3);
     if(c.preg>0){concealedLossTick(c);c.preg++;if(c.preg===2)pushEv(pregEvent(c));if(c.preg>=(c.pregnancyCalendar?.term||10))pushEv(birthEvent(c))}
   }
-  alive().forEach(c=>{xinTick(c);visitorTick(c)});kidsAlive().forEach(growKid);
+  homeLeaveTick();maternalTick();alive().forEach(c=>{xinTick(c);visitorTick(c)});kidsAlive().forEach(growKid);
   // 时间
   S.turn++;S.month++;let newYear=false;
   UI.view='map';UI.sel=null;
@@ -347,7 +348,7 @@ A.endMonth=function(){
   if(newYear){const y=S.ys;pushEv({title:'岁首',sfx:'chime',text:`爆竹声中一岁除。${dateStr()}，陛下${e.age}岁。\n去岁：新入宫${y.c}人，皇嗣降生${y.b}位，侍寝${y.n}次。\n国库${e.treasury}万两，威望${rd(e.prestige)}，民心${rd(e.people)}。`,choices:[{t:'新岁新气象'}]});S.ys={c:0,b:0,n:0}}
   // 事件
   if(S.month===2&&S.turn-S.flags.lastXX>=34) pushEv({title:'三年大选',sfx:'chime',text:'又到三年一度的大选之期，各地秀女已候于储秀宫。',choices:[{t:'前去看看',f:()=>{genCands();UI.view='xx';return null}},{t:'今年免了',f:()=>{S.flags.lastXX=S.turn;return fx(chg({people:2}))}}]});
-  reconcileResidences();archivePastLives();travelerLifeTick();daoLifeTick();childTempleTick();relTick();consortSocialTick();kidRelTick();clanTick();dowagerTick();initiativeTick();familyLifeTick();childLifeTick();courtTick();seasonalTick();palaceDutiesTick();palaceRomanceTick();palaceParentageTick();marriedLifeTick();personalExperienceTick();historyTick();continuityTick();
+  reconcileResidences();archivePastLives();travelerLifeTick();daoLifeTick();childTempleTick();relTick();consortSocialTick();kidRelTick();clanTick();dowagerTick();initiativeTick();familyLifeTick();childLifeTick();courtTick();seasonalTick();palaceDutiesTick();palaceRomanceTick();palaceParentageTick();marriedLifeTick();personalExperienceTick();journeyTick();maternalTick();historyTick();continuityTick();
   const passing=dowagerPassingEvent();if(passing)pushEv(passing);
   const must=[passing?null:arcTick(),heirTick(),milestone(),parentageReportEvent(),birthSwapClueEvent(),birthSwapSearchReport(),pendingBirthSwapJustice(),pendingKinGreeting(),pendingDaoVoyage(),pendingTravelerEvent(),pendingOfficialReport(),pendingConcealedLoss()].filter(Boolean),opt=[];
   // 积压的奏折：离宫期间攒下的朝堂事务，月末一并呈上

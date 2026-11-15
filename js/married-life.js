@@ -200,7 +200,7 @@ function householdPanel(k){
   const h=ensureMarriedLife(k);if(!h||kidAge(k)<15)return '';
   const p=k.spouse,fit=marriageFit(k,p),adult=kidAge(k)>=18&&kidAge(p)>=18,concubineReason=householdConcubineReason(k);
   const pregnant=adult?h.pregnancies.map(g=>{const person=g.mother===k.id?k:householdPeople(k).find(p=>p.id===g.mother);return person?`${esc(k.sex==='f'?k.name:householdMotherName(k,person))}有孕 · ${Math.min(10,S.turn-g.conceived+1)}个月`:'';}).filter(Boolean):[];
-  return `<section class="household-panel"><h3>婚后家事</h3><p>${esc(p.name)} · ${esc(marriageNature(p).temperament)} · ${esc(COUPLE_HOBBIES[marriageNature(p).hobby])} · ${esc(marriageNature(p).spending)}</p>
+  return `<section class="household-panel"><h3>家人与往来</h3><p>${esc(p.name)} · ${esc(marriageNature(p).temperament)} · ${esc(COUPLE_HOBBIES[marriageNature(p).hobby])} · ${esc(marriageNature(p).spending)}</p>
     <p class="hint">${esc(fit.common.join('、')||'各有所长')}；${esc(fit.different.join('；')||'相处习惯较为接近')}。</p>
     ${bar('夫妻信任',p.trust,'#936375')}${bar('府中和睦',h.harmony??60,'#517369')}
     ${adult?`<p><strong>${esc(householdSummary(k))}</strong> · ${pregnant.length?pregnant.join('；'):'暂无孕信'}</p>`:''}
@@ -209,7 +209,7 @@ function householdPanel(k){
     ${h.pending?`<p class="initiative-note">府中近况：${esc(HOUSEHOLD_SCENES[h.pending.id]?.title||'待询问')}</p>`:''}
     ${householdActive(k)?`<div class="acts"><button class="btn jade" onclick="A.householdVisit(${k.id})">${k.away||k.princessMarriage==='frontier'?'读府中来信':'探望小家'} →</button><button class="btn" onclick="A.householdProject(${k.id})" ${h.project||S.turn-(h.lastProject??-99)<12?'disabled':''}>帮两人办件事</button>${adult&&k.sex==='m'?`<button class="btn" onclick="A.householdConcubine(${k.id})" title="${esc(concubineReason||'先听皇子的想法，再决定是否准许纳妾')}" ${concubineReason?'disabled':''}>询问皇子纳妾意愿${concubineReason?`<small>${esc(concubineReason)}</small>`:''}</button>`:''}</div>`:''}
     ${adult&&h.children.length?`<div class="household-children">${h.children.map(c=>`<article>${porImg(c,56)}<div><strong>${esc(c.name)}</strong><small>${kidAge(c)}岁 · ${c.sex==='m'?'子':'女'} · 生母${esc(c.motherName)}</small></div></article>`).join('')}</div>`:''}
-    ${h.history.length?`<ul class="story">${h.history.slice(-5).reverse().map(e=>`<li><time>${esc(e.d)}</time>${esc(e.t)}</li>`).join('')}</ul>`:''}</section>`;
+    </section>`;
 }
 A.householdVisit=function(id){
   const k=royalById(id);if(modalOpen||!householdActive(k))return;

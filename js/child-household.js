@@ -37,7 +37,8 @@ function preparePalaceLife(name){
   const state=palaceLifeState();if(state.checked[name])return;state.checked[name]=true;
   const children=nurseryChildren(name).filter(k=>S.turn-(k.nurserySeen??-99)>=3);
   if(!state.nurseryFound&&children.length&&chance(.38)){
-    const k=pick(children),mother=youngChildMother(k),activity=nurseryActivity(k,mother);
+    const k=pick(children),mother=youngChildMother(k),activity={...nurseryActivity(k,mother)};
+    activity.mother+=' '+maternalActivity(k,mother,false).mother;
     state.scenes[name]={kind:'nursery',child:k.id,mother:mother.id,activity};state.nurseryFound=true;k.nurserySeen=S.turn;k.nurseryLastKind=activity.id;
   }else if(!state.youthFound){
     const visit=youngGuestVisit(name);

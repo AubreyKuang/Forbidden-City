@@ -29,7 +29,7 @@ function palaceWelcome(c){
   if(['grief','distant-child','distance','ill'].includes(voice.key)||['悲恸','心如死灰','怨恨','惶恐'].includes(x)||c.aff<20){
     stage=voice.stage;lines=voice.lines;key=voice.key;
   }else if(isSolitary(c)){
-    const quiet=solitaryVoice(c);stage=quiet.stage;lines=quiet.lines;key=quiet.key;
+    const quiet=maternalVoice(c)||solitaryVoice(c);stage=quiet.stage;lines=quiet.lines;key=quiet.key;
   }else if(c.preg>=2){
     stage='她扶着宫人的手缓缓起身，又被你示意坐下。';key='pregnant';
     lines=['骄纵','骄矜'].includes(c.trait)&&c.favor>=65?['今日可得坐久些。臣妾等陛下，腹中的小家伙也等着呢。','臣妾如今走得慢，您便到这边来。今日这一盏茶，要陪着臣妾喝完。']:['陛下来了。方才还想着，等孩子出世，这院子里便多一个脚步声了。','近来起坐慢些，没能迎到门前。您坐近些罢，臣妾有许多小事想说。'];

@@ -110,8 +110,8 @@ const HISTC={
  '开凿运河':'她说隋炀帝开运河，骂名背了千年，可那条河如今还在走船。',
  '文字狱':'她说：“清风不识字，何故乱翻书——为一句诗杀人，诗没了，人心也没了。”',
 };
-const woundOK=(c,w)=>w==='quiet'?isSolitary(c):!isSolitary(c)&&!((w==='scorn'&&c.fam.p>=30)||(w==='fall'&&c.fam.p>=55));
-const wishOK=(c,w)=>!(w==='father'&&c.fam.p>=60);
+const woundOK=(c,w)=>w==='exile'?!!c.rescue:c.rescue?false:w==='quiet'?isSolitary(c):!isSolitary(c)&&!((w==='scorn'&&c.fam.p>=30)||(w==='fall'&&c.fam.p>=55));
+const wishOK=(c,w)=>w==='rescueLetter'?!!c.rescue:c.rescue?false:!(w==='father'&&c.fam.p>=60);
 function grantConsortTitle(c,title){c.title=title;if(title&&c.wish==='title')c.wishDone=true;}
 function deepen(c){if(!c)return;
   if(c.t2===undefined){c.t2=pick(Object.keys(QUIRKS));c.like=pick(LIKES);let h=pick(LIKES);while(h===c.like)h=pick(LIKES);c.hate=h;c.kl=false;
@@ -253,6 +253,7 @@ const NEGX=['思念','委屈','惶恐','嫉恨','怨恨','悲恸','心如死灰'
 const ARCX={'孤女':'心如死灰','诗绝':'心如死灰','沙尽':'心如死灰','冷月':'心如死灰','囚鸟':'怨恨','怨怼':'怨恨','削爵':'怨恨','连坐':'怨恨','心冷':'委屈','心结':'委屈','抄家':'委屈','昭雪':'释然','尘封':'释然','回头':'释然','知音':'欢喜','此心已许':'欢喜','同心':'欢喜','知己':'欢喜','回春':'欢喜','江南春':'欢喜','君臣相得':'感激','赎罪':'感激','驼铃归':'感激','将相和':'感激','清白':'感激','凤仪':'野心','摄六宫':'野心','败露':'惶恐'};
 function xinOf(c){return (c&&c.xin&&c.xin.k)||'平和'}
 function setXin(c,k,why,who){if(!c||!c.alive||!XIN[k])return;const cur=xinOf(c);
+  if(maternalUnsettled(c)&&['悲恸','心如死灰'].includes(cur)&&['欢喜','释然','感激','平和'].includes(k))return;
   if(cur==='心如死灰'&&!['释然','感激','悲恸'].includes(k))return;
   if(cur==='怨恨'&&['欢喜','委屈','思念','惶恐','嫉恨','野心'].includes(k))return;
   if(cur===k){c.xin.t=S.turn;c.xin.why=why;if(who)c.xin.who=who;return}
@@ -265,7 +266,7 @@ function xinTick(c){if(!c.alive||c.gone)return;
   if(c.cold){if(c.coldT===undefined)c.coldT=S.turn}else delete c.coldT;
   const x=c.xin,k=xinOf(c);
   if(k!=='平和'){const X=XIN[k];c.mood=clamp(c.mood+X.mood);if(X.scheme)c.scheme=clamp(c.scheme+X.scheme*.3);
-    if(S.turn-x.t>=X.d){if(k==='怨恨'||k==='心如死灰'){if(chance(.2))c.xin={k:'平和',t:S.turn}}else if(k==='悲恸'&&chance(.3))setXin(c,'心如死灰','悲伤久久不散');else c.xin={k:'平和',t:S.turn}}}
+    if(S.turn-x.t>=X.d&&!maternalUnsettled(c)){if(k==='怨恨'||k==='心如死灰'){if(chance(.2))c.xin={k:'平和',t:S.turn}}else if(k==='悲恸'&&chance(.3))setXin(c,'心如死灰','悲伤久久不散');else c.xin={k:'平和',t:S.turn}}}
   const k2=xinOf(c);
   if(c.cold&&!['心如死灰','怨恨'].includes(k2)&&S.turn-c.coldT>=3)setXin(c,'心如死灰','冷宫的日子一天比一天长');
   if(c.cold)return;
@@ -315,7 +316,9 @@ function xinEvent(){
   if(S.turn-(pace.last??-99)<2)return null;
   for(const c of shuffle(alive())){
     const k=xinOf(c),x=c.xin;
+    if(c.homeLeave)continue;
     if(k==='平和'||x?.eventTurn!=null||S.turn-(c.xcd??-99)<6)continue;
+    if(maternalConcern(c)&&['悲恸','心如死灰','思念'].includes(k))continue;
     const ev=XEV[k]?.(c,x);if(!ev)continue;
     // The whole court shares a cooldown; changing the speaker cannot bypass it.
     const last=pace.byTitle[ev.title]??S.flags.ambientRecent?.[ev.title]??-99;

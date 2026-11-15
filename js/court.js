@@ -941,7 +941,7 @@ function identifyFather(family,house){
   return house;
 }
 function houseOf(c){
-  if(!c||c.maid)return null;
+  if(!c||c.maid||c.rescue)return null;
   const family=paternalFamily(c),root=family[0];
   const existing=family.find(p=>p.house)?.house;
   if(existing)return identifyFather(family,existing);
