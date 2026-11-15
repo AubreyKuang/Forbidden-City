@@ -4,6 +4,7 @@ const SaveManager = (() => {
   const version = 2;
   const SNAPSHOTS = 4;
   const observed = new Map();
+  let lastError = null;
 
   function getStorage() {
     try { return globalThis.localStorage; } catch { return null; }
@@ -56,8 +57,9 @@ const SaveManager = (() => {
     }
   }
 
-  function save(storage, key, data, valid, { touch = false, alongside = [] } = {}) {
+  function save(storage, key, data, valid, { touch = false, alongside = [], backup = true } = {}) {
     const changed = [];
+    lastError = null;
     try {
       const { raw: previous, entry } = track(storage, key);
       if (previous !== entry.raw || entry.newer) return false;
@@ -72,7 +74,7 @@ const SaveManager = (() => {
       if (previous === next && !alongside.length) return true;
 
       const writes = [...alongside];
-      if (entry.content !== null && content !== entry.content) writes.push([key + ':backup', previous]);
+      if (backup && entry.content !== null && content !== entry.content) writes.push([key + ':backup', previous]);
       for (const [name, value] of writes) {
         const old = storage.getItem(name) ?? null;
         if (old === value) continue;
@@ -83,7 +85,8 @@ const SaveManager = (() => {
       storage.setItem(key, next);
       observed.set(key, { raw: next, content, newer: false });
       return true;
-    } catch {
+    } catch (error) {
+      lastError = error;
       for (const [name, old, written] of changed.reverse()) {
         try {
           if (storage.getItem(name) !== written) continue;
@@ -121,6 +124,19 @@ const SaveManager = (() => {
     }
     return false;
   }
+  // Rewind points are a convenience; they give way when the playable save needs room.
+  function dropOldestSnapshot(storage, key) {
+    const list = readSnapshots(storage, key);
+    if (!list.length) return false;
+    list.shift();
+    try {
+      if (list.length) storage.setItem(key + ':snapshots', JSON.stringify(list));
+      else storage.removeItem(key + ':snapshots');
+      return true;
+    } catch {
+      try { storage.removeItem(key + ':snapshots'); return true; } catch { return false; }
+    }
+  }
   function snapshots(storage, key) {
     return readSnapshots(storage, key).map(({ raw, ...meta }, index) => ({ ...meta, index }));
   }
@@ -132,7 +148,12 @@ const SaveManager = (() => {
     return entry ? decode(entry.raw, valid, migrate) : null;
   }
 
-  return { getStorage, load, save, snapshot, snapshots, restore, decode, status, version };
+  // Browsers name a full store differently; anything else must not cost the player saved data.
+  function storeFull() {
+    const e = lastError;
+    return !!e && (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED' || e.code === 22 || e.code === 1014);
+  }
+  return { getStorage, load, save, snapshot, snapshots, dropOldestSnapshot, storeFull, restore, decode, status, version };
 })();
 
 /* ============ 存档 ============ */
@@ -152,17 +173,31 @@ function palaceSaveError(slot){
   const status=SaveManager.status(SaveManager.getStorage(),SKEY+slot);
   if(status==='newer')return '此存档由新版游戏保存，请打开新版继续。';
   if(status==='conflict')return '另一标签页已更新此存档。本页已暂停覆盖，可下载备份文件后重新读取。';
-  return '无法写入存档，请检查浏览器存储或下载备份文件。';
+  return '浏览器存储已满或不可用，眼下的进度尚未写入。可以继续玩，请下载备份文件留存。';
 }
 let lastAutoSaveError='';
+// When the browser store is full, rewind points and the previous-copy backup give way
+// before the playable save does.
+function writePalace(storage,key,data){
+  if(SaveManager.save(storage,key,data,validPalaceSave))return true;
+  if(!storage||!SaveManager.storeFull()||SaveManager.status(storage,key)!=='ready')return false;
+  while(SaveManager.dropOldestSnapshot(storage,SKEY+'auto')){
+    if(SaveManager.save(storage,key,data,validPalaceSave))return true;
+    if(!SaveManager.storeFull())return false;
+  }
+  try{storage.removeItem(key+':backup');}catch{return false;}
+  return SaveManager.save(storage,key,data,validPalaceSave,{backup:false});
+}
 function save(slot){
   if(!S)return false;
   if(typeof PalaceActions!=='undefined'){if(PalaceActions.blocked)return false;if(PalaceActions.busy)return true;}
-  const ok=SaveManager.save(SaveManager.getStorage(),SKEY+slot,{...PalaceActions.payload(),savedAt:Date.now()},validPalaceSave);
+  const ok=writePalace(SaveManager.getStorage(),SKEY+slot,{...PalaceActions.payload(),savedAt:Date.now()});
   if(slot==='auto'){
     const error=ok?'':palaceSaveError(slot);
     if(error&&error!==lastAutoSaveError)toast(error);
+    const changed=error!==lastAutoSaveError;
     lastAutoSaveError=error;
+    if(changed&&typeof renderTop==='function')renderTop();
   }
   return ok;
 }
@@ -191,6 +226,30 @@ function showRestoredPalace(){
   if(PalaceActions.restore(pending)){resetMapPosition(S.pos);render();return;}
   render();
   if(!PalaceActions.blocked)A.resumePendingScenes();
+  else pushEv(pendingRecoveryEvent());
+}
+// Scenes that were queued but never shown should not keep their palace-wide cooldowns.
+function releaseUnansweredCooldowns(titles){
+  const recent=S.flags.ambientRecent||{},people=S.flags.ambientPeople||{},counts=S.flags.ambientCounts||{};
+  for(const title of new Set(titles)){
+    if(recent[title]!==S.turn)continue;
+    delete recent[title];
+    for(const [id,turn] of Object.entries(people[title]||{}))if(turn===S.turn)delete people[title][id];
+    if(counts[title])counts[title]--;
+  }
+}
+function pendingRecoveryEvent(){
+  return {title:'未完事件无法续接',
+    text:'这份存档关闭时，还有一件事没有处理完。当前版本的游戏无法原样重现那一幕。\n人物、国库与此前的选择都已保留。可以放下那一幕，从本月继续；也可以先下载备份文件，留住原样的存档。\n在作出决定之前，这份存档不会被覆盖。',
+    choices:[
+      {t:'放下那一幕，从本月继续',primary:true,f:()=>{
+        const unanswered=PalaceActions.abandon();if(!unanswered)return null;
+        releaseUnansweredCooldowns(unanswered);
+        log('未能续接的未完事件已放下，从本月继续。');
+        toast('已放下未完事件，进度会照常保存。');
+        A.resumePendingScenes();return null;}},
+      {t:'先下载备份文件',f:()=>{A.downloadSave();pushEv(pendingRecoveryEvent());return null;}},
+      {t:'暂不处理，保持存档原样',f:()=>null}]};
 }
 A.resumePendingScenes=function(){
   const voyage=pendingDaoVoyage();if(voyage)pushEv(voyage);

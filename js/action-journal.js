@@ -41,14 +41,20 @@ const PalaceActions=(()=>{
       if(!modalOpen&&!Q.length)journal=null;
       if(S&&!replaying){
         const ok=save('auto');
-        if(!ok&&(JSON.stringify(world(S))!==JSON.stringify(world(before)))){
+        // Only undo when writing would overwrite something newer or a save we must keep intact.
+        // A full or unavailable store keeps the decision in play; the HUD asks for a backup file.
+        const guarded=!ok&&(blocked||['newer','conflict'].includes(SaveManager.status(SaveManager.getStorage(),SKEY+'auto')));
+        if(guarded&&(JSON.stringify(world(S))!==JSON.stringify(world(before)))){
           S=before;Q.length=0;curEv=null;modalOpen=false;modalResult=null;Object.assign(UI,priorUI);
           $('#modal').close?.();$('#modal').hidden=true;
           if(prior)restore(prior);else journal=null;
-          render();toast('未能保存，这次操作已撤回。可重试或下载现有进度。');
+          render();
+          if(blocked){toast('请先处理无法续接的未完事件，这次操作已撤回。');if(typeof pendingRecoveryEvent==='function')pushEv(pendingRecoveryEvent());}
+          else toast('存档已在别处更新，这次操作已撤回。可重新读取或下载现有进度。');
         }
         if(snapshotRequested){snapshotRequested=false;if(ok)snapshotYear();}
-        if(ok)syncExhaustedMonthNotice();else clearExhaustedMonthNotice();
+        // A kept decision (saved, or held in play while storage is unavailable) may still reach the month's end.
+        if(ok||!guarded)syncExhaustedMonthNotice();else clearExhaustedMonthNotice();
       }
     }
   }
@@ -87,9 +93,10 @@ const PalaceActions=(()=>{
       S.savedAt=saved.savedAt;journal=clone(j);if(j.draft!==undefined&&curEv?.input)$('#minput').value=j.draft;return true;
     }catch(error){
       console.warn('Pending scene recovery:',error.message);
-      S=saved;S.pendingActions=j;blocked=true;Q.length=0;curEv=null;modalOpen=false;modalResult=null;
+      // The untouched transcript stays on the world; no partial replay is kept as the live journal.
+      journal=null;S=saved;S.pendingActions=j;blocked=true;Q.length=0;curEv=null;modalOpen=false;modalResult=null;
       Object.assign(UI,ui);
-      toast('这份存档的未完事件无法在当前版本续接，人物进度已保留。请保留备份，勿覆盖原槽位。');
+      toast('这份存档的未完事件无法在当前版本续接，人物进度已保留。');
       return false;
     }finally{depth=Math.max(0,depth-1);replaying=false;step=null;fields=null;AU.sfx=sound;globalThis.confirm=ask;save=persist;}
   }
@@ -101,6 +108,14 @@ const PalaceActions=(()=>{
       A[name]=function(...args){return run(name,args,()=>fn.apply(this,args));};
     }
   }
-  return {random,input,keepInput,payload,run,restore,valid,install,get contentVersion(){return journal?.version??version;},get legacy(){return journal?.version===2;},get immediateMonth(){return journal?.version===3&&!step?.monthNotice;},get blocked(){return blocked;},requestSnapshot(){snapshotRequested=true;},get busy(){return depth>0;},get replaying(){return replaying;},reset(){clearExhaustedMonthNotice();journal=null;blocked=false;}};
+  // Leave an unrecoverable scene behind on the player's word: the saved world stays,
+  // the transcript is dropped and saving resumes. Returns the scenes that were never answered.
+  function abandon(){
+    if(!blocked||!S)return null;
+    const pending=S.pendingActions?.pending||{};
+    delete S.pendingActions;journal=null;blocked=false;
+    return [...(pending.result||!pending.title?[]:[pending.title]),...(Array.isArray(pending.queue)?pending.queue:[])];
+  }
+  return {random,input,keepInput,payload,run,restore,valid,install,abandon,get contentVersion(){return journal?.version??version;},get legacy(){return journal?.version===2;},get immediateMonth(){return journal?.version===3&&!step?.monthNotice;},get blocked(){return blocked;},requestSnapshot(){snapshotRequested=true;},get busy(){return depth>0;},get replaying(){return replaying;},reset(){clearExhaustedMonthNotice();journal=null;blocked=false;}};
 })();
 PalaceActions.install();
