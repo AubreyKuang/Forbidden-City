@@ -13,7 +13,7 @@ const PalaceActions=(()=>{
     if(replaying){if(cursor>=step.rolls.length)throw Error('Missing recorded roll');return step.rolls[cursor++];}
     const value=Math.random();step.rolls.push(value);return value;
   }
-  function settle(){maternalTick();for(const c of S?.consorts||[])if(c.childDisgrace&&(!c.cold||!c.alive||c.gone))c.childDisgrace.active=false;}
+  function settle(){maternalTick();if(S)syncChildDisgrace();}
   function input(selector){return fields?fields[selector]:$(selector)?.value;}
   function payload(){return {...S,pendingActions:journal||S?.pendingActions};}
   function run(name,args,fn){

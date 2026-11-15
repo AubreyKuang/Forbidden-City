@@ -289,7 +289,7 @@ function detailStory(person){
   const entries=person.story.slice().reverse().map(s=>`<li><time>${esc(s.d)}</time>${esc(s.t)}</li>`);
   if(!entries.length)return '<p class="hint">尚无记载。</p>';
   const list=items=>`<ul class="story">${items.join('')}</ul>`;
-  return list(entries.slice(0,2))+(entries.length>2?detailFold(`更早的记录（${entries.length-2}条）`,list(entries.slice(2))):'');
+  return list(entries.slice(0,6))+(entries.length>6?detailFold(`翻阅更早的纪事（${entries.length-6}条）`,list(entries.slice(6))):'');
 }
 function viewConsort(){
   const c=byId(UI.sel);if(!c)return viewHarem();
@@ -311,6 +311,10 @@ function viewConsort(){
     acts+=`<button class="btn jade" onclick="A.gift(${c.id})">赏赐<small>礼物 · 内库珍饰</small></button>`;
     management+=momVisitButton(c);
     management+=`<button class="btn" onclick="A.homeLeave(${c.id})" ${homeLeaveEligible(c)?'':'disabled'}>准回家省亲</button>`;
+    if(residencePetitionFor(c))management+=`<button class="btn" onclick="A.residencePetition(${c.id})">听她谈居处</button>`;
+    if(solitaryQuietEvent(c))management+=`<button class="btn" onclick="A.quietHousehold(${c.id})">听她谈清静</button>`;
+    if(travelerQuietPair(c))management+=`<button class="btn" onclick="A.neighborWord(${c.id})">听听廊下的新词</button>`;
+    if(resemblanceEvent(c))management+=`<button class="btn" onclick="A.resemblanceTalk(${c.id})">听听肖似之议</button>`;
     if(c.rescue?.familyContact==='confirmed')management+=`<button class="btn" onclick="A.rescuedReturn(${c.id})">商议归乡</button>`;
     if(c.rank!==8)management+=`<button class="btn" onclick="A.openResidence(${c.id})">安排居所<small>主位 · 同住 · 换宫</small></button>`;
     if(c.rank<7)management+=`<button class="btn" onclick="A.promote(${c.id})">晋封<small>→${RANKS[c.rank+1]}</small></button>`;
@@ -349,8 +353,8 @@ function viewConsort(){
     ${act?detailSection('牵挂远方的孩子',motherConcernPanel(c)):''}
     ${detailSection('孩子的身世',consortParentagePanel(c))}
     ${detailSection('册封与宫务',management?`<div class="acts">${management}</div>`:'')}
-    ${homeLeavePanel(c)}${maternalPanel(c)}${journeyPanel(c)}${solitaryPanel(c)}${pastLifePanel(c)}${timeTravelerPanel(c)}${personalExperiencePanel(c)}${historyPanel(c)}
-    ${detailSection('她的故事',arcLine(c)+detailStory(c))}
+    ${homeLeavePanel(c)}${homeFamilyPanel(c)}${maternalPanel(c)}${journeyPanel(c)}${solitaryPanel(c)}${pastLifePanel(c)}${timeTravelerPanel(c)}${personalExperiencePanel(c)}${historyPanel(c)}
+    ${detailSection('人物纪事',arcLine(c)+detailStory(c))}
     ${detailFold('处置',penalties?`<div class="acts">${penalties}</div>`:'')}
    </div>`;
 }
@@ -371,7 +375,7 @@ function viewXX(){
    <p class="hint">容貌、才情一望便知；德行、心机需要暗访（剩余 ${S.flags.peek} 次）。本月结束时未选的秀女会遣返回家。</p>
    <div class="grid portrait-grid">${S.cands.map(c=>`<div class="card portrait-card" style="cursor:default;flex-direction:column">
      <div class="row" style="gap:8px">${porImg(c,76)}<div class="grow"><div class="nm">${esc(fullName(c))}</div><div>${c.age}岁 · ${esc(c.fam.t)}之女</div>${c.kinNote?`<div><span class="tag y">${esc(c.kinNote)}</span></div>`:''}<div><span class="tag">${c.trait}</span>${solitaryTag(c)} <span class="tag">${esc(consortHobby(c))}</span></div></div></div>
-     ${c.pastLife?`<p class="hint">${esc(pastLifeSelectionHint(c))}</p>`:''}${bar('容貌',c.looks,'#8e6f57')}${bar('才情',c.talent,'#8e6f57')}${c.known?bar('德行',c.virtue,'#8e6f57')+bar('心机',c.scheme,'#8e6f57'):'<div class="bar"><span>德行</span><i></i><em>??</em></div><div class="bar"><span>心机</span><i></i><em>??</em></div>'}
+     ${portraitResemblanceHint(c)?`<p class="hint">${esc(portraitResemblanceHint(c))}</p>`:''}${c.pastLife?`<p class="hint">${esc(pastLifeSelectionHint(c))}</p>`:''}${bar('容貌',c.looks,'#8e6f57')}${bar('才情',c.talent,'#8e6f57')}${c.known?bar('德行',c.virtue,'#8e6f57')+bar('心机',c.scheme,'#8e6f57'):'<div class="bar"><span>德行</span><i></i><em>??</em></div><div class="bar"><span>心机</span><i></i><em>??</em></div>'}
      <div class="acts" style="margin:4px 0 0"><button class="btn sm" onclick="A.xxMeet(${c.id})">再见一面</button><button class="btn sm gold" onclick="A.xxTake(${c.id})">留牌子</button><button class="btn sm" onclick="A.xxDrop(${c.id})">撂牌子</button>${c.known?'':`<button class="btn sm jade" onclick="A.xxPeek(${c.id})">暗访</button>`}</div></div>`).join('')}</div>`}
 function parentLink(id,name){
   const c=byId(id);return c?`<button class="person-link" onclick="A.go('consort',${c.id})">${esc(name||fullName(c))}</button>`:esc(name||'未记载');

@@ -11,6 +11,7 @@ function marketRescueEvent(){
  return {title:'集市异乡人',por:g,valid,text:`集市旁，一名商贩正扣着${g.age}岁的异乡女子讨价。她用断续的汉话说自己被骗离乡，想请人捎一封信，却被推回门后。随从查到她的路引被扣，人贩手中并无合法雇契。`,choices:[
   {t:'救下她，交官府查办贩卖者',f:()=>{
    if(!valid())return null;rescued=true;S.flags.marketRescueSeen={turn:S.turn,name:fullName(g)};log(`微服集市救下被贩卖的${fullName(g)}，命官府追查路引与贩卖者。`,1);
+   story(g,'【集市获救】被骗离乡、路引被扣，辗转来到异地后被陛下救下。获还自由，她既感激又惊惶，在陌生地方还不知道能够依靠谁。');
    pushNow({title:'获救之后',por:g,valid:()=>rescued&&!settled,text:'她裹着送来的披衣，仍不敢离救她的人太远。“我不知道这里还有谁可以信。”你说明她已经自由，不必以任何身份报答。她说若有安全住处，愿先留下养好身体。',choices:[
     {t:'资助路费，安排可靠女眷护送 · 国库−20',cond:()=>E().treasury>=20,f:()=>{if(settled||E().treasury<20)return null;settled=true;chg({treasury:-20});S.flags.marketRescueSeen.outcome='护送离开';log(`${fullName(g)}自愿随护送者离开，留下谢意，未入宫籍。`,1);return '她道了谢，带着自己的路引离开。官府继续追查贩卖案，她的自由不以入宫为条件。';}},
     {t:'按她的意愿，安置在宫中客舍',f:()=>{if(settled)return null;settled=true;(S.shelteredGuests||=[]).push(g);story(g,'获救后自愿在宫中客舍暂住，尚未入妃嫔名册。');return '女官与译者安排了起居。她暂不入妃嫔名册；在「出巡」页可以探问近况、帮助寻亲，或资助她离开。';}},
@@ -32,7 +33,7 @@ function rescuedGuestEvent(g){
 }
 A.rescuedGuest=function(id){if(modalOpen)return;const ev=rescuedGuestEvent((S.shelteredGuests||[]).find(g=>g.id===id));if(ev)pushEv(ev);};
 A.rescuedReturn=function(id){const c=byId(id);if(modalOpen||!inPalace(c)||c.rescue?.familyContact!=='confirmed')return;pushEv({title:'归信之后',por:c,text:'她已核实远方亲人的回信，提出归乡相见的心愿。若准她离宫，她会带走信笺与路引，这段宫中身份也随之结束。',choices:[{t:'尊重她的心愿，安排归乡 · 国库−20',cond:()=>E().treasury>=20&&!c.preg,f:()=>{if(!inPalace(c)||E().treasury<20||c.preg)return null;chg({treasury:-20});c.gone=true;story(c,'寻亲后自愿离宫归乡，陛下安排了护送。');log(`${fullName(c)}循已核实的家书归乡。`,1);return '她带着家书离宫。昔日相救与相伴仍保留在彼此纪事里。';}},{t:'先继续通信，改日再议'}]});};
-function rescuedGuestsPanel(){return (S.shelteredGuests||[]).filter(g=>!g.gone).map(g=>`<section class="personal-experience"><h3>宫中客舍 · ${esc(fullName(g))}</h3><p>成年异乡来客 · 自愿暂住，尚未册封</p><p>${esc(rescueVoice(g).lines[0])}</p><button class="btn jade" onclick="A.rescuedGuest(${g.id})">探问近况与去留</button>${journeyPanel(g)}</section>`).join('');}
+function rescuedGuestsPanel(){return (S.shelteredGuests||[]).filter(g=>!g.gone).map(g=>`<section class="personal-experience"><h3>宫中客舍 · ${esc(fullName(g))}</h3><p>成年异乡来客 · 自愿暂住，尚未册封</p><p>${esc(rescueVoice(g).lines[0])}</p><button class="btn jade" onclick="A.rescuedGuest(${g.id})">探问近况与去留</button>${journeyPanel(g)}<h3>人物纪事</h3>${detailStory(g)}</section>`).join('');}
 
 /* Prejudice belongs to actors and institutions; it is not a truth about origins. */
 const outsiderConsort=c=>!!c.rescue||['西域贡女','西域流寓','东瀛贵族','海西贵族'].includes(c.fam.t);
@@ -53,14 +54,15 @@ function originPressureEvent(){
  const foreign=outsiderConsort(target),tone=actor&&originAttitude(actor,target);
  const witness=harem().find(a=>a!==target&&a!==actor&&originAttitude(a,target)==='reserved');
  const text=actor?tone==='mock'?`${cName(actor)}当面挑剔${cName(target)}${foreign?'的口音与衣饰，说她不懂宫里的体面':'的出身，说小门小户终究学不会世家的规矩'}。`:`${cName(actor)}以旧例为由，将${cName(target)}应有的席次挪后，又故意不把礼仪安排说全。`:`宫人见${cName(target)}${foreign?'来自异乡、在此没有亲族':'娘家无势、眼下也不受宠'}，送来的衣料与册上不符，还推说是她不懂旧例。`;
- let done=false;const valid=()=>!done&&inPalace(target)&&(!actor||inPalace(actor));
+ let done=false;const valid=()=>!done&&inPalace(target)&&(!actor||inPalace(actor))&&(!witness||inPalace(witness));
  const response=mode=>{if(!valid())return null;done=true;
-  const result=mode==='fair'?`陛下查明份例与当事人的做法，要求依身份与实际行事相待，不许以出身、口音夺去应有待遇。${cName(target)}记得这次是非被说清。`:
-   mode==='gift'?`陛下另赏${cName(target)}衣料，暂解眼前的窘迫，却未追问原来的份例为何被扣。`:`陛下默认了这次怠慢。${cName(target)}没有再当众辩解，此后对在场的人多了戒心。`;
+  const result=text+(mode==='fair'?`陛下查明份例与当事人的做法，要求依身份与实际行事相待，不许以出身、口音夺去应有待遇。${cName(target)}记得这次是非被说清。`:
+   mode==='gift'?`陛下另赏${cName(target)}衣料，暂解眼前的窘迫，却未追问原来的份例为何被扣。`:`陛下默认了这次怠慢。${cName(target)}没有再当众辩解，此后对在场的人多了戒心。`);
   cchg(target,{aff:mode==='fair'?7:mode==='gift'?2:-7,mood:mode==='fair'?6:mode==='gift'?2:-9});
   if(actor)relAdd(target,actor,mode==='fair'?-3:-10);if(witness&&mode==='fair')relAdd(target,witness,3);
   if(target.rescue)target.rescue.trust=clamp(target.rescue.trust+(mode==='fair'?8:mode==='gift'?2:-8));
   story(target,result);if(actor)story(actor,`与${fullName(target)}之间的门第争执：${result}`);
+  if(witness)story(witness,`【门第争执中的公道话】见${fullName(target)}受到怠慢，自己虽未与她亲近，仍说明礼数不能只凭来处改换。${result}`);
   NPCMemory.record(S,{type:'origin-prejudice',time:S.turn,participants:[target.id,...(actor?[actor.id]:[])],outcome:result},[{person:target.id,subject:'emperor',interpretation:result,emotion:mode==='ignore'?-.8:.5,impact:80}]);return result;
  };
  return {title:foreign?'异乡与宫规':'门第与份例',por:target,present:[target,...(actor?[actor]:[]),...(witness?[witness]:[])],valid,text:text+(witness?`\n${cName(witness)}虽未与她亲近，仍说：“礼数自有定例，不能只凭来处改换。”`:'')+'\n她来问的是事情能否论清，不只是再得一份赏赐。',onQueue:()=>{pace.last=S.turn;pace.people[target.id]=S.turn;},choices:[{t:'查清并纠正待遇，不以出身定是非',f:()=>response('fair')},{t:'另赏衣料安抚，不追究旧例',f:()=>response('gift')},{t:'让她自行适应',f:()=>response('ignore')}]};

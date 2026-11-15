@@ -60,7 +60,7 @@ function solitaryEvent(c){
       kind==='discuss'?'她没有附和你的每一句话，却第一次把没想好的地方也摊开来谈。':
       '她轻轻颔首，往你手边推了推茶盏。话虽不多，却比方才自在。';
     cchg(c,{aff:kind==='press'?-2:5,mood:kind==='press'?-3:6});
-    s.history.push({turn:S.turn,d:dateStr(),text:line});story(c,line);
+    s.history.push({turn:S.turn,d:dateStr(),text:line});story(c,`【${titles[stage]}】${line}${answer}`);
     NPCMemory.record(S,{type:'solitary-trust',time:S.turn,location:c.palace,participants:[c.id],outcome:line},[{person:c.id,subject:'emperor',interpretation:line,emotion:kind==='press'?-.25:.65,impact:65}]);
     save('auto');return line+'\n'+answer;
   };

@@ -34,7 +34,13 @@ function journeyCastValid(c,r){
 function journeyText(c,r,text){return text.replaceAll('{child}',r.binding.childName||'孩子').replaceAll('{person}',r.binding.personName||'家人').replaceAll('{prior}',r.notes.at(-1)||'');}
 function journeyRecord(c,r,text,outcome){
  const h=c.journeys,e={id:r.id,turn:S.turn,d:dateStr(),title:CHARACTER_JOURNEYS[r.id].name,chapter:r.stage,text,outcome};
- h.history.push(e);story(c,`【${e.title}${outcome?'·'+outcome:''}】${text}`);
+ h.history.push(e);const chapter=CHARACTER_JOURNEYS[r.id].chapters[r.stage]?.[0]||'';
+ const entry=`【${e.title}${outcome?'·'+outcome:''}】${chapter}。${text}`;story(c,entry);
+ if(!outcome||outcome!=='未竟'){
+  const child=r.binding.child&&kidById(r.binding.child),sister=r.binding.sister&&byId(r.binding.sister);
+  if(child?.alive&&familyVisitAllowed(child,c))kstory(child,`与${fullName(c)}有关的共同经历：${entry}`);
+  if(inPalace(sister))story(sister,`与${fullName(c)}的姐妹往来：${entry}`);
+ }
  NPCMemory.record(S,{type:'character-journey',time:S.turn,location:c.palace,participants:[c.id,...(r.binding.child?[r.binding.child]:[])],outcome:text},[{person:c.id,subject:'emperor',interpretation:text,emotion:.35,impact:75}]);
 }
 function journeyEnd(c,r,text,outcome){journeyRecord(c,r,text,outcome);c.journeys.seen[r.id]=S.turn;c.journeys.lastEnd=S.turn;delete c.journeys.current;}

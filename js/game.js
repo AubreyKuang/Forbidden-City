@@ -78,7 +78,7 @@ function assignPalace(c){
 function addConsort(c,rank,why){
   c.rank=rank; c.enteredAt=S.turn; c.enteredMonth=S.month; S.consorts.push(c); assignPalace(c); S.ys.c++; deepen(c); initRel(c); assignArc(c); acceptPastLife(c); initTimeTraveler(c); clanKey(c); if(c.kin)for(const id in c.kin){const o=byId(+id);if(o&&o.alive)relAdd(c,o,(isRival(c,o)?-30:45)-relGet(c,o))}
   story(c,`${why}，封为${RANKS[rank]}，赐居${c.palace}。`);
-  log(`${fullName(c)}（${c.fam.t}之女）${why}，封${RANKS[rank]}。`);houseOf(c);
+  log(`${fullName(c)}（${c.fam.t}之女）${why}，封${RANKS[rank]}。`);houseOf(c);portraitAdmission(c);
 }
 
 /* ============ 弹窗与事件队列 ============ */
@@ -328,7 +328,7 @@ A.endMonth=function(){
     if(!c.cold){c.favor=clamp(c.favor-(c.bond?0:c.trait==='淡泊'?1:2));if(c.favor<25)c.mood=clamp(c.mood-3);else if(c.favor>60)c.mood=clamp(c.mood+1)}else c.mood=clamp(c.mood-3);
     if(c.preg>0){concealedLossTick(c);c.preg++;if(c.preg===2)pushEv(pregEvent(c));if(c.preg>=(c.pregnancyCalendar?.term||10))pushEv(birthEvent(c))}
   }
-  homeLeaveTick();maternalTick();alive().forEach(c=>{xinTick(c);visitorTick(c)});kidsAlive().forEach(growKid);
+  maternalTick();alive().forEach(c=>{xinTick(c);visitorTick(c)});kidsAlive().forEach(growKid);
   // 时间
   S.turn++;S.month++;let newYear=false;
   UI.view='map';UI.sel=null;
@@ -338,6 +338,9 @@ A.endMonth=function(){
     log('查账回奏未获批复，弹劾案已归档。');
   }
   if(S.month>12){S.month=1;S.year++;e.age++;newYear=true;alive().forEach(c=>c.age++)}
+  homeLeaveTick();
+  cohabitationTick();
+  S.consorts.forEach(solitaryHouseholdTick);
   let dh=-.17-(e.age>40?(e.age-40)*.05:0)-Math.max(0,(e.nightsMonth||0)-3)*1.2-(e.style==='风流'?.05:0);
   e.health=clamp(e.health+dh);e.nightsMonth=0;e.energy=maxEnergy();
   if(e.treasury<0){const d=Math.min(8,Math.ceil(-e.treasury/400));chg({people:-1-d,prestige:-1});log(`国库亏空${-e.treasury}万两，百官俸禄迟发，民间加征赋税。`)}
@@ -356,6 +359,7 @@ A.endMonth=function(){
   const add=(e,p)=>{if(e&&ambientEventReady(e))opt.push([e,p+R()-ambientNovelty(e)+continuityEventScore(e)])};
   if(!passing){
   add(continuityMonthlyEvent(),9);
+  add(homeReturnSocialEvent(),8);
   add(pastLifeMonthlyEvent(),6);add(pregnancyPrayerMonthlyEvent(),6);add(residencePetitionEvent(),8);add(fiveBrotherMonthlyEvent(),6);add(travelerMonthlyEvent(),8);add(recoveredSwapEvent(),8);add(fosterPetitionEvent(),8);add(kinSuccessionEvent(),8);add(parentageClueEvent(),8);
   add(jewelryTributeEvent(),7);add(jewelryRequestEvent(),7);
   add(chance(.8)?festival():null,5);add(chance(.75)?haremEvent():null,6);

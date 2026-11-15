@@ -82,6 +82,7 @@ function settleResidenceMove(c,plan,why='奉旨调整居所'){
     const liking=relGet(c,peer);story(peer,`${fullName(c)}迁入${c.palace}${c.residenceRoom==='main'?'，出任主位':'侧殿'}，与自己同住。`);
     if(liking>=30){cchg(peer,{mood:4});relAdd(c,peer,3);}else if(liking<=-25)cchg(peer,{mood:-5});
   }
+  for(const person of [...moved,...oldPeers])solitaryHouseholdTick(person);
   resetMapPosition(S.pos);log(line);save('auto');return line+'随母居住的幼儿一同迁居；其他同宫妃嫔保留原来的住处。';
 }
 function residenceMoveEvent(c,name,room){
@@ -100,7 +101,10 @@ function residenceSummary(name){
 }
 function viewResidences(){
   const c=byId(UI.sel),selected=inPalace(c)&&c.rank!==8?c:null;
+  const waiting=S.consorts.filter(x=>residenceMember(x)&&x.palace===PALACE_WAITING),sides=PALACES.reduce((n,p)=>n+palaceSides(p).length,0),heads=PALACES.filter(p=>palaceHost(p)).length;
   return `<h2>宫室分配${backBtn}</h2><p class="hint">坤宁宫为皇后独居。十二宫各设一名主位（嫔位及以上）和三处侧殿。晋位不等于另获一宫，主位满额时可暂居侧殿。迁居需精力1。</p>
+    <p>主位 ${heads}/12 · 侧殿 ${sides}/36 · 待安置 ${waiting.length} 人。空主位须嫔位及以上才能入住；无合适余位时暂居掖庭，身份不变。</p>
+    ${waiting.length?`<section class="residence-palace"><h3>掖庭待安置</h3><p>选中人物查看可用宫室；没有合法余位时，保留待安置身份，不挤占中宫或增加侧殿名额。</p>${waiting.map(x=>`<button class="btn" onclick="A.openResidence(${x.id})">安排${esc(fullName(x))} · ${esc(cName(x))}</button>`).join('')}</section>`:''}
     <div class="residence-picker" aria-label="选择安排住处的妃嫔">${harem().filter(x=>x.rank!==8).map(x=>`<button class="btn ${x===selected?'primary':''}" aria-pressed="${x===selected}" onclick="A.openResidence(${x.id})">${esc(fullName(x))} · ${esc(cName(x))}</button>`).join('')}</div>
     ${selected?`<header class="residence-selected">${porImg(selected,96)}<div><h3>为${esc(fullName(selected))}安排住处</h3><p>${esc(residenceLabel(selected))}</p><button class="btn quiet" onclick="A.go('consort',${selected.id})">查看人物 →</button></div></header>`:'<p>先选择要安排住处的人，再选择正殿或侧殿。</p>'}
     <section class="residence-palace"><h3>坤宁宫 · 皇后专居</h3>${residenceSummary('坤宁宫')}<p>${empress()?esc(fullName(empress())):'中宫暂缺，保留宫室'}</p></section>
@@ -113,33 +117,47 @@ function viewResidences(){
 function residencePetitionFor(c){
   if(!inPalace(c)||c.rank===8||S.turn-(c.lastResidenceRequest??-99)<36||S.turn-(c.lastResidenceMove??-99)<6)return null;
   const choices=[];
+  const peers=palaceResidents(c.palace).filter(x=>x!==c),children=nurseryChildren(c.palace),own=children.filter(k=>youngChildMother(k)?.id===c.id),otherKids=children.filter(k=>youngChildMother(k)?.id!==c.id);
+  const room=c.residenceRoom==='main'?'main':'side';
+  const conflict=peers.find(x=>relGet(c,x)<=-30);
+  const quiet=isSolitary(c)||['淡泊','沉静','体弱','才女','好学'].includes(c.trait);
+  if(own.length>=2&&peers.length){
+    const name=PALACES.find(n=>n!==c.palace&&!residencePeople(n).length&&residenceMovePlan(c,n,room));
+    if(name)return {plan:residenceMovePlan(c,name,room),reason:`“${own.map(k=>k.name).join('、')}都还小，起居照护容易惊动同住的人。臣妾想带孩子迁往空着的${name}，单独安排这一院的日常。”`};
+  }
+  if(otherKids.length>=2&&(quiet||['骄纵','骄矜'].includes(c.trait))||conflict){
+    const names=PALACES.filter(n=>n!==c.palace&&nurseryChildren(n).length<children.length+(conflict?1:0)&&!residencePeople(n).some(x=>relGet(c,x)<=-30)).sort((a,b)=>nurseryChildren(a).length-nurseryChildren(b).length||residencePeople(a).length-residencePeople(b).length);
+    for(const name of names){const plan=residenceMovePlan(c,name,room);if(plan)return {plan,peer:plan.swap&&byId(plan.swap),reason:conflict?`“臣妾与${fullName(conflict)}同住，近来作息上屡有争执。想换一处住，免得小事积成更深的怨。”`:`“同宫有${otherKids.length}个幼儿，夜里照护来往多，臣妾常歇不好。不是怪孩子，只想换一处少些喧闹的居所。”`};}
+  }
+  if(isSolitary(c)&&solitaryNoiseActive(c)){
+    for(const name of PALACES.filter(n=>n!==c.palace&&residencePeople(n).length<2&&nurseryChildren(n).length<2)){const plan=residenceMovePlan(c,name,room);if(plan)return {plan,reason:`“${solitaryHousehold(c).reason}，臣妾想换一处人少的院落。礼数仍会尽，只求每日能留一段独处的时光。”`};}
+  }
   const friend=harem().filter(x=>x!==c&&socialPair(c,x)&&x.rank!==8&&x.palace!==c.palace&&relGet(c,x)>=35).sort((a,b)=>relGet(c,b)-relGet(c,a))[0];
   if(friend){const plan=residenceMovePlan(c,friend.palace,'side');if(plan)choices.push({plan,peer:friend,reason:`“${fullName(friend)}与臣妾一向说得来。若能同住，闲时也好相伴。”`});}
   const proud=['骄纵','骄矜','善妒'].includes(c.trait)&&c.favor>=65&&(c.rank>=4||c.preg>0);
-  const quiet=isSolitary(c)||['淡泊','沉静','体弱'].includes(c.trait);
   const garden=proud||c.trait==='活泼'||c.hobby==='侍花';
-  const room=c.residenceRoom==='main'?'main':'side';
   if(quiet||garden){
     const area=quiet?'南隅清静':'近御花园';
     if(palacePosition(c.palace)!==area)for(const name of PALACES.filter(n=>palacePosition(n)===area)){
       const plan=residenceMovePlan(c,name,room);if(!plan)continue;
-      choices.push({plan,peer:plan.swap&&byId(plan.swap),reason:quiet?'“臣妾想择一处清静院落，窗下读书养神，不必日日听人来往。”':proud?`“臣妾想住得离御花园近些。${c.preg?'如今有了身子，晴日散步也方便。':'若正殿已有主人，请陛下替臣妾议一议。'}”`:'“花开时总想早些去看。若能住得近些，便不必绕那么长的宫道了。”'});
+      choices.push({plan,peer:plan.swap&&byId(plan.swap),reason:quiet?'“臣妾想择一处清静院落，窗下读书养神，不必日日听人来往。”':proud?`“${plan.swap?fullName(byId(plan.swap))+'那边的'+name+'离花园更近，臣妾想与她换一换。':'臣妾想住得离御花园近些。'}${c.preg?'如今有了身子，晴日散步也方便。':'请陛下替臣妾议一议。'}”`:'“花开时总想早些去看。若能住得近些，便不必绕那么长的宫道了。”'});
     }
   }
   return choices[0]||null;
 }
-function residencePetitionEvent(){
-  if(S.turn-(S.flags.lastResidenceRequest??-99)<12||!chance(.12))return null;
-  const candidates=harem().map(c=>({c,request:residencePetitionFor(c)})).filter(x=>x.request);if(!candidates.length)return null;
+function residencePetitionEvent(person){
+  if(!person&&(S.turn-(S.flags.lastResidenceRequest??-99)<12||!chance(.12)))return null;
+  const candidates=(person?[person]:harem()).map(c=>({c,request:residencePetitionFor(c)})).filter(x=>x.request);if(!candidates.length)return null;
   const {c,request}=pick(candidates),{plan,reason,peer}=request;
   let resolved=false;
   const valid=()=>!resolved&&inPalace(c)&&JSON.stringify(residenceMovePlan(c,plan.to,plan.room))===JSON.stringify(plan);
   return {title:'迁宫之请',cast:[c,peer].filter(Boolean),present:[c],valid,
-    onQueue:()=>{S.flags.lastResidenceRequest=S.turn;c.lastResidenceRequest=S.turn;},
+    onQueue:()=>{S.flags.lastResidenceRequest=S.turn;c.lastResidenceRequest=S.turn;story(c,`【迁宫之请】${reason}请求迁往${plan.to}${plan.room==='main'?'正殿':'侧殿'}${plan.swap?'，拟与'+fullName(byId(plan.swap))+'换宫':''}。`);},
     text:`${cName(c)}提起居处，先看了看你的神色。\n${reason}\n她想迁往${plan.to}${plan.room==='main'?'正殿':'侧殿'}。${plan.swap?`这会让${fullName(byId(plan.swap))}换往${plan.from}正殿。`:''}`,choices:[
-      {t:'准她所请 · 精力−1',cond:()=>E().energy>0,f:()=>settleResidenceMove(c,plan,'准其迁宫之请')},
-      {t:'仍按原居处，温言说明',f:()=>{if(!valid())return null;resolved=true;const text=`请求迁往${plan.to}，陛下以宫室已有安排为由未允。`;story(c,text);cchg(c,{mood:['骄纵','骄矜'].includes(c.trait)?-5:-1});save('auto');return text;}},
+      {t:'准她所请 · 精力−1',cond:()=>E().energy>0,f:()=>{if(!valid())return null;const result=settleResidenceMove(c,plan,'准其迁宫之请');if(result)resolved=true;return result;}},
+      {t:'仍按原居处，温言说明',f:()=>{if(!valid())return null;resolved=true;const text=`请求迁往${plan.to}，陛下以宫室已有安排为由未允。她${['骄纵','骄矜'].includes(c.trait)?'听后不快，仍惦记着想换居的缘由':'领旨仍住原处，原来的难处尚需慢慢协调'}。`;story(c,text);cchg(c,{mood:['骄纵','骄矜'].includes(c.trait)?-5:-1});save('auto');return text;}},
       {t:'另看各宫安排',f:()=>{A.openResidence(c.id);return null;}}]};
 }
 A.openResidence=function(id){reconcileResidences();A.go('residences',id||null);};
+A.residencePetition=function(id){if(!modalOpen)pushEv(residencePetitionEvent(byId(id)));};
 A.moveResidence=function(id,name,room){if(!modalOpen)pushEv(residenceMoveEvent(byId(id),name,room));};

@@ -83,6 +83,6 @@ function pregnancyPrayerBirthEcho(c,children){
   const lot=PREGNANCY_LOTS.find(l=>l.id===p.lot),names=children.map(k=>k.name).join('、');
   const answer=children.length>1?'如今几声啼哭此起彼伏，一张签笺装不下每个孩子的来处。':!lot?.hint?'当日签里没有定下男女，如今总算见到了孩子。':lot.hint===children[0].sex?'当日签意恰与报喜相合，她笑说，倒像是先得了一封孩子的来信。':'当日签意与眼前的孩子不同，她仍将旧笺收好：“原来你不按签上的路来，倒更叫人记得。”';
   const text=`${fullName(c)}抱着${names}，又想起孕中「${lot?.name||'平安'}」的旧笺。${answer}`;
-  pregnancyPrayerMemory(c,text,c.palace);log(text);return '\n'+text;
+  pregnancyPrayerMemory(c,text,c.palace);children.forEach(k=>kstory(k,`【孕中祈愿的后话】${text}`));log(text);return '\n'+text;
 }
 A.pregnancyPrayer=function(id){if(!modalOpen)pushEv(pregnancyPrayerEvent(byId(id)));};
