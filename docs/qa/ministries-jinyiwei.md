@@ -22,10 +22,10 @@
 - 同朝参本中的“风闻奏事”可改交锦衣卫核实，真伪在交办时即已定下。
 
 ## 旧存档
-事件回放版本 5 → 6。版本 ≤5 的未完事件不举行科举、不立案、不回报，原样重放；`tests/fixtures/offices-legacy-v5.json` 由 #29 分支 2199108 生成（月末正好转入殿试月），测试确认其可续接，且标为版本 6 即无法续接。
+事件回放版本 6 → 7（main 的 #28 用了 5，#29 用 6）。版本 ≤6 的未完事件不举行科举、不立案、不回报，原样重放；`tests/fixtures/offices-legacy-v6.json` 由 #29 分支 501fde4 生成（月末正好转入殿试月），测试确认其可续接，且标为版本 7 即无法续接。
 
 ## 验证
-- `node --test tests/*.test.cjs`：841 项通过（新增 `tests/palace-offices.test.cjs` 12 项）。
+- `node --test tests/*.test.cjs`：874 项通过（合入 main 后）（新增 `tests/palace-offices.test.cjs` 12 项）。
 - `node tests/palace-flow.cjs`：通过。
 - `tests/audit-personality-memory.cjs`（6 玩法 × 4 种子 × 120 月）：24 局无报错；殿试每局 3 次（三年一科）；无 undefined / NaN。
 - 浏览器实机：任命吏部尚书、京察；设立锦衣卫；香囊疑案交锦衣卫密查 → 月末殿试钦点三甲 → 锦衣卫密报（线索中断）→ 搜宫搜出真正主使的物证并进入「真相大白」。

@@ -71,4 +71,4 @@ function parentEpisodeTick(){for(const c of S.consorts)for(const [id,p] of Objec
  livedRecord([c,k],'family',p.title,p.thread,t,[p.mode==='listen'?'这一次看见的，是孩子自己的小小进步。':'管得住一回功课，还需要慢慢学会听孩子说话。',p.mode==='listen'?'有事还可以再来找母亲。':'把事情做完，不等于心里已经释然。']);
 }}
 function parentEpisodePanel(c){const k=parentEpisodeCandidate(c),pending=Object.entries(c.parentEpisodes||{}).filter(([,p])=>p.pending);return `${pending.map(([id,p])=>`<p class="hint">与${esc(kidById(+id)?.name||'孩子')}的「${esc(p.title)}」尚有后续，待下次能相见。</p>`).join('')}${k?`<button class="btn" onclick="A.parentEpisode(${c.id})">和${esc(k.name)}说说心里话<small>孩子${kidAge(k)}岁 · 精力1</small></button>`:''}`;}
-function livedRelationshipsTick(){cohortLifeTick();parentEpisodeTick();natalLifeTick();}
+function livedRelationshipsTick(){cohortLifeTick();parentEpisodeTick();natalLifeTick();sisterArrivalTick();palaceFactionTick();formerCareTick();}

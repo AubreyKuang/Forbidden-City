@@ -177,7 +177,7 @@ function nightWith(c,fromEvent){
   if(!inPalace(c)||c.preg||c.cardWithdrawn)return;
   if(!useE()) return;
   const e=E();e.nightsMonth=(e.nightsMonth||0)+1;S.ys.n++;
-  const lines=isSolitary(c)?['她合上读到一半的书，给你留出身侧的位置。夜深后仍有半晌，各自静静想着白日未尽的话。','她不说讨巧的话，只把茶递到你手里。你们谈了一回诗书，意见未必相同，她却比平日更愿意说了。']:(NIGHT[c.trait]||[]).concat(NIGHT._),line=pick(lines);
+  const lines=isSolitary(c)?['她合上读到一半的书，给你留出身侧的位置。夜深后仍有半晌，各自静静想着白日未尽的话。','她不说讨巧的话，只把茶递到你手里。你们谈了一回诗书，意见未必相同，她却比平日更愿意说了。']:(NIGHT[c.trait]||[]).concat(NIGHT._),line=familyScenesEnabled()?nightVoice(c):pick(lines);
   const fm=e.style==='风流'?1.5:1;
   const s=cchg(c,{favor:10*fm*(XIN[xinOf(c)].favorMul||1),mood:10,aff:routineAffection(c,c.trait==='痴情'?9:6)});
   c.nights++;noteHaremVisit(c);c.lastPersonalAttention=S.turn;recordImperialNight(c);S.flags.lastNight=c.id;if(c.nights===1)remember(c,'first','第一次侍寝');

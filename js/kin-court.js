@@ -4,8 +4,8 @@
 // 规则：只有在世、在任、确有职守的父兄才会出面；被举荐者须能领差；
 // 参本须有起因（宫中嫌隙或派系相争），凭实据的才算“参本”，否则只能“风闻奏事”交部核查。
 // 每个结果都同时写进双方父兄、她们在宫中的女儿/姐妹的纪事。
-// 旧存档里未完的事件按原样重放：事务日志版本 5 之前的步骤不触发这里的抽签或写入。
-const KIN_COURT_JOURNAL=5;
+// 旧存档里未完的事件按原样重放：事务日志版本 6 之前的步骤不触发这里的抽签或写入。
+const KIN_COURT_JOURNAL=6;
 const KIN_COURT_FRIEND=35, KIN_COURT_FOE=-35;
 const KIN_COURT_EVENT_GAP=8, KIN_COURT_TICK_GAP=4, KIN_COURT_PAIR_GAP=12, KIN_COURT_PERSON_GAP=8;
 const KIN_COURT_TASKS={army:['border','drills','escort'],civil:['dikes','granaries','accounts','schools','water']};
@@ -13,11 +13,11 @@ const KIN_COURT_TASKS={army:['border','drills','escort'],civil:['dikes','granari
 const KIN_COURT_TOPICS={civil:['清丈田亩','漕运章程','科场条例','赈济章程','州县考成'],army:['边镇换防','军屯章程','马政','烽燧修缮'],kin:['织造贡额','盐引新规','内库采办'],dowager:['宗室赡养','太医院药材采办'],none:['州县考成','赈济章程']};
 const KIN_COURT_LAPSE=/未尽如期|疏漏|兵败|失察|不力|未能理清|罚俸|问责|空名|有缺|未能核清|未议定/;
 
+// The version of the transcript being played or replayed; scenes from older versions keep older rules.
+function journalContentVersion(){return typeof PalaceActions==='undefined'?Infinity:PalaceActions.contentVersion??Infinity;}
 function kinCourtActive(){
   if(!S||S.over)return false;
-  if(typeof PalaceActions==='undefined')return true;
-  const version=PalaceActions.payload().pendingActions?.version;
-  return version===undefined||version>=KIN_COURT_JOURNAL;
+  return journalContentVersion()>=KIN_COURT_JOURNAL;
 }
 function kinCourtState(){
   const st=S.flags.kinCourt ||= {};
