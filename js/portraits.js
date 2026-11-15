@@ -418,7 +418,7 @@ const PORTRAIT_HEADS={
   326:[54,25,24],327:[57,24,24],328:[60,25,24],329:[62,24,24],330:[56,24,24],331:[59,27,24],332:[56,25,24],333:[50,24,24],334:[55,25,24],335:[56,24,24],
   336:[54,25,24],337:[63,25,24],338:[57,25,24],339:[60,23,24],340:[55,24,24],341:[57,23,24],342:[54,25,24],343:[57,25,24],344:[61,25,24],345:[56,25,24],
   346:[56,28,23],347:[58,29,23],348:[58,25,23],349:[59,26,23],350:[56,28,23],351:[60,25,23],352:[57,26,23],353:[57,27,23],354:[62,27,23],355:[62,25,23],356:[56,26,23],357:[60,26,23],
-  363:[53,29,27],364:[59,29,27],365:[52,30,27],366:[53,31,27],371:[55,29,27],372:[50,31,27],373:[56,30,27],377:[59,29,27],379:[54,28,27]
+  363:[55,35,27],364:[42,33,27],365:[54,28,28],366:[42,27,27],371:[55,29,27],372:[50,31,27],373:[56,30,27],377:[61,27,27],379:[59,31,27]
 };
 function portraitHead(cell){return PORTRAIT_HEADS[cell]||[56,42,38];}
 function portraitFrame(cell,bust=false){
@@ -426,11 +426,13 @@ function portraitFrame(cell,bust=false){
   const [cx,,headWidth]=portraitHead(cell),w=Math.min(112,Math.max(62,headWidth*2.4));
   return [Math.max(0,Math.min(112-w,cx-w/2)),0,w,w*1.25];
 }
-function fittedPortraitJewelry(cell,rank,id=''){
+function fittedPortraitJewelry(cell,rank,id='',head=portraitHead(cell)){
   const ornament=portraitJewelry(rank,id);if(!ornament)return null;
   const full=ornament.cell<3;
-  const [cx,brow,headWidth]=portraitHead(cell),w=headWidth*(full?1.85:1.12);
-  const box=full?[cx-w/2,Math.max(-2,brow-w*.42-6),w,w]:[cx-headWidth*.83-w*.5,Math.max(0,brow-w*.55),w,w];
+  const [cx,brow,headWidth]=head,w=headWidth*(full?1.85:1.12);
+  // Smaller half-body heads need the pin seated inside the hair, not outside it.
+  const sideOffset=headWidth<=30?.42:.83;
+  const box=full?[cx-w/2,Math.max(-2,brow-w*.42-6),w,w]:[cx-headWidth*sideOffset-w*.5,Math.max(0,brow-w*.55),w,w];
   return {ornament,box};
 }
 function atlasPortrait(cell,rank,jewelry=''){
@@ -479,9 +481,17 @@ familyAtlas.src=portraitSheets[1].src;
 jewelryAtlas.addEventListener('load',()=>{ART_CACHE.clear();refreshAtlasPortraits();});
 
 // Local images can be displayed directly. Reading their canvas pixels is restricted on file URLs.
+// Detail art is a rendering variant of the same saved ID, never a new identity.
+// Thumbnails and the developer's source-atlas gallery retain their original art.
+function portraitView(cell,bust=false){
+  const detail=!bust&&CONSORT_DETAIL_ART[cell];
+  if(detail)return {sheet:CONSORT_DETAIL_SHEETS[detail.atlas],cell:detail.tile,head:detail.head};
+  const source=bust?cell:(CONSORT_DETAIL_PAIRS[cell]??cell);
+  return {sheet:portraitSheet(source),cell:source,head:portraitHead(source)};
+}
 function localPortrait(cell,rank,attrs,jewelry='',bust=false){
-  const sheet=portraitSheet(cell),[x,y]=portraitTile(cell,sheet),frame=portraitFrame(cell,bust);
-  const fit=fittedPortraitJewelry(cell,rank,jewelry),ornament=fit?.ornament;
+  const view=portraitView(cell,bust),sheet=view.sheet,[x,y]=portraitTile(view.cell,sheet),frame=portraitFrame(cell,bust);
+  const fit=fittedPortraitJewelry(cell,rank,jewelry,view.head),ornament=fit?.ornament;
   let crown='';
   if(ornament){
     const box=fit.box;
