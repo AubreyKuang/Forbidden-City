@@ -777,3 +777,29 @@ button.family-room-person{cursor:pointer}button.family-room-person:hover{color:#
 
 /* Chronicle controls stay readable on narrow person cards. */
 .chronicle-tools{padding:12px;border:1px solid var(--line,#d7c7ac);margin:12px 0;background:#f4eddf}.chronicle-filters{display:flex;flex-wrap:wrap;gap:10px}.chronicle-filters label{display:flex;align-items:center;gap:6px}.chronicle-filters select{max-width:180px;padding:6px;background:#fffaf0;color:#493b30;border:1px solid #b7a288}.chronicle-tools input{min-width:0;flex:1;padding:8px;border:1px solid #b7a288;background:#fffaf0}.chronicle-cast{margin:6px 0;font-size:12px}.chronicle-tools .acts{flex-wrap:wrap}
+
+/* 细绘四季宫苑与开场画卷：背景不拦截地图或界面操作。 */
+#app[data-layout] #stage{background:#c5c8bc url('./assets/images/palace-painted-cover.webp') center center/cover no-repeat;pointer-events:none;image-rendering:auto}
+#app[data-layout="game"] #stage::after{background:linear-gradient(180deg,#17272936,transparent 35%,#192b3540)}
+#app[data-layout="game"] #stage[data-time="night"]::after{background:linear-gradient(180deg,#111e528c,#1b2a605c 55%,#101f4b9e)}
+#app[data-layout="setup"] #stage::after{background:#18303845}
+#app[data-layout="landing"]{background:#213e46}
+#app[data-layout="landing"] #stage::after{background:linear-gradient(180deg,#152c3b24,transparent 45%,#152c3b28)}
+#app[data-layout="landing"] #top{background:#173139c9}
+#app[data-layout="landing"] #panel{justify-self:end;align-self:center;display:block;width:min(400px,40%);max-height:calc(100% - 48px);margin:24px 5% 24px 0;border-radius:14px;border:1px solid #d6c59b66;background:#17333ee8;box-shadow:0 16px 44px #17313b38;backdrop-filter:blur(8px)}
+#app[data-layout="landing"] .title-wrap{padding:28px;gap:16px;align-items:stretch}
+/* 题字已绘于封面，保留可读的语义标题供辅助技术访问。 */
+#app[data-layout="landing"] .title-wrap h1{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+#app[data-layout="landing"] .title-wrap .eyebrow{color:#ebce96;letter-spacing:.22em;font-size:11px}
+#app[data-layout="landing"] .title-wrap .intro{color:#f3e7d2;font-size:15px;max-width:none;line-height:1.9}
+#app[data-layout="landing"] .title-wrap>.btn.gold{max-width:none;min-height:46px;background:#ebcc92;color:#273c3e}
+#app[data-layout="landing"] .save-list{max-width:none;gap:8px}
+#app[data-layout="landing"] .save-list .btn{background:#f1e4c412;color:#f5ebd7;border:1px solid #dfcda53b;min-height:42px;font-size:12px;line-height:1.6}
+#app[data-layout="landing"] .save-list .btn:hover{background:#f1e4c426}
+@media(max-width:700px){
+  #app[data-layout="landing"] #stage{top:50px;background-size:100% auto;background-position:center top;background-color:#213e46}
+  #app[data-layout="landing"] #stage::after{background:none}
+  #app[data-layout="landing"] #top{background:#213e46}
+  #app[data-layout="landing"] #panel{justify-self:stretch;align-self:stretch;width:100%;max-height:none;margin:0;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;backdrop-filter:none}
+  #app[data-layout="landing"] .title-wrap{margin-top:56.28vw;padding:24px 24px max(24px,env(safe-area-inset-bottom));gap:14px;background:linear-gradient(#213e46ee,#213e46)}
+}

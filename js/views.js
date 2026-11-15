@@ -84,6 +84,7 @@ function render(){
   const app=$('#app');
   app.setAttribute('data-layout',S?'game':UI.view==='new'?'setup':'landing');
   app.setAttribute('data-view',UI.view);
+  drawScene();
   renderTop();renderMenu();renderPanel();if(S&&UI.view==='map')mountMap();
 }
 function viewTitle(){
