@@ -8,6 +8,7 @@ function setup(d={name:'沈太后',alive:true}){
   const S={flags:{dowager:d},emp:{sur:'萧',age:18},consorts:[],children:[],turn:1,month:1};
   let id=100;
   const ctx=vm.createContext({S,legacyPendingAction:()=>false,E:()=>S.emp,dowagerPerson:d=>({isMom:true,name:d.name,seed:91}),SUR:['沈','苏'],pick:a=>a[0],ri:a=>a,fullName:c=>c.sur+'兰',remember:()=>{},story:()=>{},R:()=>.5,chance:()=>false,kidsAlive:()=>S.children,makeGirl:o=>({id:id++,alive:true,favor:10,lastBirth:-99,trait:'温婉',...o}),addConsort:g=>{g.enteredAt=S.turn;S.consorts.push(g)},chg:()=>'',fx:()=>'',harem:()=>S.consorts,byId:id=>S.consorts.find(c=>c.id===id),relGet:()=>80,rd:Math.round,esc:String});
+  vm.runInContext(read('js/harem-restraint.js'),ctx);
   vm.runInContext(source(visits,'function ensureDowager()','function festival()'),ctx);
   vm.runInContext(source(heirs,'const fosterOf=','const raisesKid='),ctx);
   vm.runInContext(source(heirs,'function relWord(','function initKidRel('),ctx);

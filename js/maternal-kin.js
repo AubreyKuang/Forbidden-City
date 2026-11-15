@@ -71,6 +71,7 @@ function maternalSisterSource(m,manual=false){
 }
 function maternalSisterArrival(m,manual=false){
  if(!maternalSisterSource(m,manual))return null;
+ if(!manual&&m.maternalArrival?.status!=='pending'&&!newConsortEventAllowed())return null;
  const candidates=maternalSisterCandidates(m),p=candidates.find(p=>p.id===m.maternalArrival?.relative)||candidates[0],children=kinCareChildren(m),names=children.map(k=>k.name).join('、');let done=false;
  const valid=()=>!done&&maternalSisterSource(m,true)&&maternalSisterCandidates(m).includes(p);
  const setStatus=status=>{m.maternalArrival={status,relative:p.id,turn:S.turn};};
@@ -85,6 +86,11 @@ function maternalSisterArrival(m,manual=false){
    {t:'婉拒入宫，维持现有照料',f:()=>{if(!valid())return null;done=true;setStatus('declined');const text=`${p.name}请求入宫照看${names}，陛下未允；孩子现有照料不变。`;record(text);save('auto');return text;}}
   ]};
 }
-function pendingMaternalSisterArrival(){return S.consorts.map(m=>maternalSisterArrival(m)).find(Boolean)||null;}
+function pendingMaternalSisterArrival(){
+ if(!haremRestraintEnabled())return S.consorts.map(m=>maternalSisterArrival(m)).find(Boolean)||null;
+ // One new-letter opportunity per month; many eligible families must not reroll it.
+ const m=S.consorts.find(c=>c.maternalArrival?.status==='pending'&&maternalSisterSource(c))||S.consorts.find(c=>maternalSisterSource(c));
+ return m?maternalSisterArrival(m):null;
+}
 A.maternalSisterArrival=function(id){if(modalOpen)return;const ev=maternalSisterArrival(byId(id),true);if(ev)pushEv(ev);};
 function maternalSisterArrivalButton(m){return maternalSisterSource(m,true)?`<button class="btn sm jade" onclick="A.maternalSisterArrival(${m.id})">谈谈姐妹入宫照看孩子</button>`:'';}
