@@ -116,7 +116,7 @@ function officialFamilyLine(c){
   const h=houseOf(c);if(!h)return '';
   return `<div class="official-family-links">${officialRoles(h).filter(r=>!r.startsWith('relative')).map(role=>{const p=officialPerson(h,role);return p?`<div>${officialKinLabel(h,role)}：${officialLink(c,role)} <span class="hint">${esc(p.office||p.post)} · ${officialStatus(p)}${p.death?' · '+esc(p.death.d||'日期未详'):''}</span></div>`:'';}).join('')}${natalFamilyLinks(c)}</div>`;
 }
-function officialsRoster(){return officialsTable();}
+function officialsRoster(){return typeof officialsTable==='function'?officialsTable():'<h2>官员表</h2><p class="hint">页面已更新，请刷新后查看。</p>';}
 function officialActionReady(e,action){
   if(!e||S.over)return false;const p=e.p;
   if(action==='honor')return !officialAlive(p)&&!p.memorialHonor;
@@ -141,7 +141,7 @@ function viewOfficial(){
     ${p.report?`<section class="detail-section"><h3>待阅回奏</h3><p>${esc(p.report.text)}</p><button class="btn jade" onclick="A.officialReport('${key}')">阅看回奏</button></section>`:''}
     ${p.commission?detailSection('当前差事',`<p>${esc(p.commission.title)} · ${Math.max(0,p.commission.due-S.turn)}个月后回奏</p>`):''}
     ${detailSection('家族往来',kin.map(x=>`<button class="btn quiet sm" onclick="A.go('consort',${x.id})">${esc(fullName(x))} · ${role==='father'?'女儿':'姐妹'}${x.alive?'':' · 已故'}</button>`).join(' ')+otherRoles.map(r=>`<p>${r==='father'?'父亲':role==='father'?'儿子':'兄弟'}：${officialLink(c,r)} · ${officialStatus(officialPerson(h,r))}</p>`).join(''))}
-    ${kinCourtPanel(e)}${detailSection('娘家手足',natalFamilyLinks(c))}${h.relatives?.includes(p)?natalLifePanel(c,p):''}${detailSection('个人履历与纪事',detailStory(p))}`;
+    ${typeof kinCourtPanel==='function'?kinCourtPanel(e):''}${detailSection('娘家手足',natalFamilyLinks(c))}${h.relatives?.includes(p)?natalLifePanel(c,p):''}${detailSection('个人履历与纪事',detailStory(p))}`;
 }
 function officialConversation(e,topic){
   const {c,p,role,h}=e,kin=p.parentRelativeId?'姨母':role==='father'?'女儿':officialKinLabel(h,role)==='弟弟'?'姐姐':'妹妹';
