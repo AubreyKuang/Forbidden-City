@@ -238,6 +238,7 @@ function kinCourtImpeachEvent(pair,cast){
         kinCourtNote(pair,cast,proven?'impeach-proven':'impeach-cleared',`参劾${y.p.name}，${proven?'属实':'查无实据'}。`,delta);
         return proven?`所参属实，${y.p.name}罚俸半年。${fx(chg({people:1}),cchg(y.c,{mood:-8}))}`:`查无实据，${y.p.name}得还清白。${fx(cchg(x.c,{mood:-6}),cchg(y.c,{mood:3}))}`;
       })},
+      ...(typeof jinyiweiRumorChoice==='function'&&courtOfficesActive()?[jinyiweiRumorChoice(pair,cast,charge.replace(/^风闻其|，请旨核查$/g,''))].filter(Boolean).map(c=>({...c,f:once(c.f)})):[]),
       {t:'留中不发',f:once(()=>{
         officialRecord(x.c,x.role,`参劾${y.p.name}的奏本留中不发。`);
         officialRecord(y.c,y.role,`被${x.p.name}参了一本，奏本留中不发。`,{emotion:-.2});
@@ -307,7 +308,7 @@ function officialFilterMatch(p,filter){
 function officialsTable(){
   const filter=OFFICIAL_FILTERS.some(([id])=>id===UI.officialsFilter)?UI.officialsFilter:'serving';
   const bloc=UI.officialsBloc||'all';
-  const entries=officialEntries(),blocs=[...new Set(entries.map(e=>e.h.bloc||'none'))];
+  const entries=officialEntries(),scholars=typeof scholarList==='function'?scholarList():[],blocs=[...new Set([...entries.map(e=>e.h.bloc||'none'),...(scholars.length?['civil']:[])])];
   const rows=entries.filter(e=>officialFilterMatch(e.p,filter)&&(bloc==='all'||(e.h.bloc||'none')===bloc))
     .sort((a,b)=>(officialAlive(b.p)-officialAlive(a.p))||((b.role==='father')-(a.role==='father'))||(b.p.merit-a.p.merit));
   const row=e=>{
@@ -327,11 +328,19 @@ function officialsTable(){
       cell('近期事迹',`${esc(String(deed).slice(0,64))}${String(deed).length>64?'…':''}`,'official-deed')].join('')}</tr>`;
   };
   const chip=(id,label,current,action)=>`<button class="btn sm${current===id?' on':''}" aria-pressed="${current===id}" onclick="A.${action}('${id}')">${label}</button>`;
-  const counts={serving:entries.filter(e=>officialFilterMatch(e.p,'serving')).length,gone:entries.filter(e=>officialFilterMatch(e.p,'gone')).length};
-  return `${pageBackButton('officials','home')}<h2>官员表</h2><p class="hint">在朝官员均出自妃嫔娘家：同父姐妹共用父兄履历。点姓名看履历，点妃嫔或皇嗣可直接跳转。在朝 ${counts.serving} 人，故去与获罪 ${counts.gone} 人。</p>
+  // 科举出身的朝臣没有宫中亲眷，同表另列。
+  const scholarRow=p=>{const cell=(label,html,cls='')=>`<td data-label="${label}"${cls?` class="${cls}"`:''}><div>${html}</div></td>`,last=(p.story||[]).at(-1),deed=last?`${last.d} · ${last.t}`:'尚无记载';
+    return `<tr class="${officialAlive(p)?'':'deceased'}">${[cell('姓名',`<button class="person-link official-name" onclick="A.go('scholar','${p.id}')">${porImg(p,36)}<span>${esc(p.name)}</span></button><small>${p.age}岁 · ${esc(p.temperament||'')}</small>`),
+      cell('官职',esc(p.office||'')),cell('家族 · 宫中',`${esc(p.origin||'')} · ${esc(p.examRank||'进士')}出身<div class="official-kin"><span class="hint">宫中无亲眷</span></div>`),
+      cell('派系',`<span class="tag" style="border-color:${BLOC_COLOR.civil}">${blocName('civil')}</span>`),cell('状态',officialStatus(p)),
+      cell('才干/信任/功绩',`${rd(p.ability??0)} / ${rd(p.trust??0)} / ${rd(p.merit??0)}`,'official-nums'),cell('皇嗣','<span class="hint">—</span>'),
+      cell('近期事迹',`${esc(deed.slice(0,64))}${deed.length>64?'…':''}`,'official-deed')].join('')}</tr>`;};
+  const scholarRows=scholars.filter(p=>officialFilterMatch(p,filter)&&(bloc==='all'||bloc==='civil'));
+  const counts={serving:entries.filter(e=>officialFilterMatch(e.p,'serving')).length+scholars.filter(p=>officialFilterMatch(p,'serving')).length,gone:entries.filter(e=>officialFilterMatch(e.p,'gone')).length+scholars.filter(p=>officialFilterMatch(p,'gone')).length};
+  return `${pageBackButton('officials','home')}<h2>官员表</h2><p class="hint">在朝官员出自妃嫔娘家或科举。同父姐妹共用父兄履历。点姓名看履历，点妃嫔或皇嗣可直接跳转。在朝 ${counts.serving} 人，故去与获罪 ${counts.gone} 人。</p>
     <div class="acts official-filters">${OFFICIAL_FILTERS.map(([id,l])=>chip(id,l,filter,'officialsFilter')).join('')}</div>
     <div class="acts official-filters">${chip('all','全部派系',bloc,'officialsBloc')}${blocs.map(id=>chip(id,id==='none'?'无所依附':blocName(id),bloc,'officialsBloc')).join('')}</div>
-    ${rows.length?`<div class="official-table-wrap"><table class="official-table"><thead><tr><th>姓名</th><th>官职</th><th>家族 · 宫中</th><th>派系</th><th>状态</th><th>才干/信任/功绩</th><th>皇嗣</th><th>近期事迹</th></tr></thead><tbody>${rows.map(row).join('')}</tbody></table></div>`:'<p class="hint">没有符合条件的官员。</p>'}`;
+    ${rows.length+scholarRows.length?`<div class="official-table-wrap"><table class="official-table"><thead><tr><th>姓名</th><th>官职</th><th>家族 · 宫中</th><th>派系</th><th>状态</th><th>才干/信任/功绩</th><th>皇嗣</th><th>近期事迹</th></tr></thead><tbody>${rows.map(row).join('')}${scholarRows.map(scholarRow).join('')}</tbody></table></div>`:'<p class="hint">没有符合条件的官员。</p>'}`;
 }
 A.officialsFilter=function(id){if(!OFFICIAL_FILTERS.some(([x])=>x===id))return;UI.officialsFilter=id;render();};
 A.officialsBloc=function(id){UI.officialsBloc=String(id||'all');render();};
