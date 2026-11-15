@@ -22,6 +22,7 @@ test('discovery requires age, interest and a real local living royal child',()=>
 });
 test('the master is a named Daoist and personality remains the child’s own',()=>{
  const b=world();b.run(`immortalDiscover(k);var e=immortalEvent(k);assert.match(e.title,/仙师来访/);assert.match(e.text,new RegExp(IMMORTAL_VOICES[childDisposition(k)]));assert.doesNotMatch(porName(immortalMaster(k)),/国师/);
+ assert.ok(porImg(immortalMaster(k)).includes('aria-label="'+porName(immortalMaster(k))+'"'));
  var before=JSON.stringify(S);immortalPanel(k);immortalHall();immortalEvent(k);assert.equal(JSON.stringify(S),before);`);
 });
 test('young children, heirs, ill children and married children cannot depart',()=>{

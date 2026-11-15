@@ -44,8 +44,35 @@ git diff --check
 | `next-reign.json` | 新君继位后的先朝亲族来信；称陛下，保留同一人的年龄、身份、师承与纪事 |
 | `window-chess.json` | 孤高才女的西窗残局，三章选择保存、后续页面入口与旧有清冷气质 |
 
-## 浏览器验收状态
+## 浏览器验收结果
 
-**尚未完成实机浏览器验收。** 本会话重试发现浏览器操作入口仍不可用，也没有可用的云端浏览器入口。脚本检查使用真实游戏代码和模拟页面接口，不作为视觉或真实点击证据。
+**2026-11-15 已完成六个演示场景的真实浏览器验收。** 使用独立的无头 Chrome 157.0.8103.78、Playwright 1.65.1，打开[线上测试页](https://aubreykuang.github.io/Forbidden-City/dev.html)，逐个通过文件导入控件载入演示档，再实际点击页面按钮。每条分支使用新建浏览器上下文，没有连接玩家的浏览器配置或读取正式存档。桌面尺寸为 1440 × 1000，手机视口为 390 × 844；手机结果是 Chrome 窄屏验证，不是 iOS/Android 真机结果。
 
-连接恢复后，需在发布的测试页导入上述场景，实际点击每条路径、刷新并读取自动档，确认手机和桌面宽度的正文、头像、选择按钮、家书与人物纪事没有截断。再补入本功能的真实截图；旧功能截图不作为本次证明。
+目标提交为 `ff478c6`；验收时线上版本为其后继 `1ac12f0`，仙缘脚本与目标提交逐字一致。**26 条分支全部通过，102 次刷新读取自动档全部通过，未捕获 JavaScript 异常。** 对话未选择、结果未关闭、事件已结束三个时点均检查恢复后的人物、国库、精力、剧情阶段与纪事一致；西窗残局另检查第二、第三章及完结后的恢复。
+
+| 演示场景 | 桌面、手机各自实际点击的分支与结果 | 截图 |
+| --- | --- | --- |
+| 仙师来访 | 准许、暂留、放弃三条分支；准许只扣 30 万两，清和转入学艺，另外两条不扣款；沈知微、许清容均能搜索到具体送别纪事。寄家书后刷新仍受六个月冷却限制 | [桌面](../screenshots/immortal-journeys/master-desktop-pending.jpg) · [手机](../screenshots/immortal-journeys/master-mobile-pending.jpg) · [详情](../screenshots/immortal-journeys/master-desktop-detail.jpg) |
+| 第一次历练 | 两种回信都进入历练阶段，下次节点为十二个月后，身份仍是门中弟子 | [桌面](../screenshots/immortal-journeys/first-trial-desktop-pending.jpg) · [手机](../screenshots/immortal-journeys/first-trial-mobile-pending.jpg) |
+| 留山或归来 | 正式入门与归来两条分支均能保存恢复；留山后“商议归来”尊重其继续修行的意愿，不把孩子强制送回宫 | [桌面](../screenshots/immortal-journeys/stay-or-return-desktop-pending.jpg) · [手机](../screenshots/immortal-journeys/stay-or-return-mobile-pending.jpg) |
+| 宗主传闻 | 核实后才升为宗主；暂存传闻保留原身份，国库、威望、民心、文才均不凭传闻增加 | [桌面](../screenshots/immortal-journeys/sect-leader-desktop-pending.jpg) · [手机](../screenshots/immortal-journeys/sect-leader-mobile-pending.jpg) · [核实后详情](../screenshots/immortal-journeys/sect-leader-desktop-detail.jpg) |
+| 新朝来信 | 核实与暂存均可续接；人物编号、出生时间、师承与既有纪事保留；从家族进入先朝亲族页后可再寄家书，信中称“陛下”，不误称“父皇” | [桌面](../screenshots/immortal-journeys/next-reign-desktop-pending.jpg) · [手机](../screenshots/immortal-journeys/next-reign-mobile-pending.jpg) · [新朝家书](../screenshots/immortal-journeys/next-reign-letter.jpg) |
+| 西窗残局 | 三章分别选择第一项和第二项，各完整走完一遍；每章后刷新、从人物页续接，冷却前按钮不可用；总耗三点精力，保留才女与孤高设定，两个结局及三章纪事均保留 | [开篇](../screenshots/immortal-journeys/window-chess-desktop-pending.jpg) · [完结纪事](../screenshots/immortal-journeys/window-chess-desktop-history.jpg) · [手机纪事](../screenshots/immortal-journeys/window-chess-mobile-history.jpg) |
+
+西窗残局的三个月章节间隔通过测试页自带的“跳过并保存”控件推进；此控件只快进日历，不模拟这期间所有随机事件。这里的浏览器检查覆盖每个选项，八组完整组合仍由前述自动测试覆盖。正文、立绘、选择按钮和搜索后的原始纪事已逐图查看；两个视口均没有横向溢出，长页面可以滚动，按钮文字未被裁切。
+
+双母纪事可直接对照：[生母沈知微](../screenshots/immortal-journeys/master-birth-mother-chronicle.jpg) · [养母许清容](../screenshots/immortal-journeys/master-foster-mother-chronicle.jpg)。她们记住的是同一个清和和同一位照玄道长，心绪分别保留清冷与温婉的区别。
+
+发现并修正一处无障碍称呼：仙师画像的屏幕阅读器标签原为“照玄国师”，画面标题与台词原本正确。标签现使用人物实际道号“照玄道长”（另一师承为“云岑真人”），保留普通国师的原有称呼。修正后在本地同代码的桌面、手机页面再跑实际导入、角色标签及刷新检查；合入当前主线后全量 **927 / 927** 回归通过。
+
+原始逐分支记录、恢复点、布局测量和人物纪事见 [浏览器验收数据](immortal-browser-results.json)。27 张截图保存在 `docs/screenshots/immortal-journeys/`，均取自这些场景的真实浏览器渲染。
+
+### 重跑浏览器检查
+
+```sh
+node tests/immortal-journeys-fixtures.cjs /tmp/palace-immortal-browser-fixtures
+npm install --prefix /tmp/palace-browser-qa-runtime --ignore-scripts --no-audit --no-fund playwright@1.65.1
+NODE_PATH=/tmp/palace-browser-qa-runtime/node_modules PALACE_CHECK_ACCESSIBLE_NAME=1 node tests/immortal-browser-acceptance.cjs
+```
+
+运行器默认使用 macOS 已安装的 Google Chrome；其他环境通过 `PALACE_CHROME` 指定兼容浏览器路径。可通过 `PALACE_QA_URL` 指向同版本的本地 `dev.html`，或用 `PALACE_CASE`、`PALACE_VIEWPORT`、`PALACE_CHOICE` 单独重跑某条分支。测试仅在一次性浏览器上下文中导入演示档。
