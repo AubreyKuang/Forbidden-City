@@ -156,7 +156,7 @@ const DEV={
     let choices=[];
     if(kind==='kid')choices=Array.from({length:portraitVariantCount(p)},(_,v)=>({value:v,cell:childPortraitCell({...p,portraitVariant:v}),label:'形象 '+(v+1)}));
     else if(kind==='emp')choices=EMPEROR_PORTRAITS.map(cell=>({cell,value:cell,label:EMPEROR_PORTRAIT_LABELS[cell]}));
-    else if(kind==='consort')choices=[...CONSORT_PORTRAITS,...WESTERN_PORTRAITS,8,9,10,11].map(cell=>({cell,value:cell,label:PORTRAIT_CLOTHES[cell]||'形象 '+cell}));
+    else if(kind==='consort')choices=[...ALL_CONSORT_PORTRAITS,8,9,10,11].map(cell=>({cell,value:cell,label:PORTRAIT_CLOTHES[cell]||'形象 '+cell}));
     $('#dev-gallery').innerHTML=choices.map(({cell,value,label})=>{
       ensurePortraitSheet(cell);
       const current=kind==='kid'?childPortraitCell(p):p.portraitOverride??(kind==='emp'?emperorPortraitCell(p):portraitCell(p));

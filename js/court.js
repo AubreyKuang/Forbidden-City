@@ -4,6 +4,16 @@ const RELIEF_SUSPENSION_MONTHS=3;
 const FLOOD_AUDIT_COST=30, FLOOD_AUDITED_ODDS=70;
 const reliefSuspended=father=>father?.reliefResumeTurn>S.turn;
 const officialC=(p=50)=>{const a=harem().filter(c=>c.fam.p>=p&&officialServing(houseOf(c)?.father)&&!reliefSuspended(houseOf(c)?.father));return a.length?pick(a):null};
+const FOREIGN_CONSORT_ORIGINS=[
+ {fam:'西域贡女',region:'西域',sur:'阿',names:['依娜','古丽','月儿','米娅'],dress:'锦衣织着石榴与藤蔓，发间垂着细珠'},
+ {fam:'东瀛贵族',region:'东瀛',sur:'藤原',names:['绫','千鹤','雪子','静香'],dress:'重衣层叠，袖上绣着菊与藤花'},
+ {fam:'海西贵族',region:'海西',sur:'伊',names:['莲娜','薇拉','莉娅','莎贝拉'],dress:'珍珠映着浅色眼眸，金棕或赤褐的发间簪着花叶'}
+];
+function makeForeignConsort(origin=pick([0,0,0,0,1,2])){
+ const d=FOREIGN_CONSORT_ORIGINS[origin]||FOREIGN_CONSORT_ORIGINS[0];
+ const c=makeGirl({fam:{t:d.fam,p:10},sur:d.sur,given:pick(d.names),age:ri(20,28),trait:pick(['活泼','骄矜','聪慧','痴情'])});
+ c.looks=clamp(c.looks+12);return c;
+}
 const COURT=[
  brief=>{const off=brief?harem().find(c=>c.id===brief.person&&officialServing(houseOf(c)?.father)):officialC(50);const ch=[
    {t:'拨银三百万两赈灾',f:()=>{log('黄河决堤，帝拨银三百万两赈灾。',1);return `赈灾粮银连夜出京，灾民感念皇恩。${fx(chg({treasury:-FLOOD_DIRECT_COST,people:10,prestige:3}))}`}},
@@ -37,9 +47,9 @@ const COURT=[
    {t:'分赏六宫',f:()=>{harem().forEach(c=>{c.mood=clamp(c.mood+8)});return '六宫欢喜，争相裁制新衣。\n§后宫众人心情+8'}},
    {t:'变卖充入国库',f:()=>`${fx(chg({treasury:120}))}`},
    {t:'下旨减免织造之役',f:()=>`江南织工感激涕零。${fx(chg({people:5}))}`}]}),
- brief=>{const g=brief?.guest||makeGirl({fam:{t:'西域贡女',p:10},trait:pick(['活泼','骄矜','聪慧','痴情'])});if(!brief?.guest){g.looks=clamp(g.looks+12);g.sur='阿';g.given=pick(['依娜','古丽','月儿','米娅']);}
-  return {title:'西域使臣',por:g,text:`西域诸国遣使朝贡，献上美人${fullName(g)}，碧眼雪肤，能歌善舞。`,choices:[
-   {t:'纳入后宫，封为常在',f:()=>{addConsort(g,2,'西域进献');return `她用生涩的汉话向你行礼。${fx(chg({prestige:2}))}`}},
+ brief=>{const g=brief?.guest||makeForeignConsort(),d=FOREIGN_CONSORT_ORIGINS.find(o=>o.fam===g.fam.t)||FOREIGN_CONSORT_ORIGINS[0];
+  return {title:d.region+'使臣',por:g,foreignArrival:true,text:`${d.region}遣使来朝，同行的${fullName(g)}自愿来京入选。${d.dress}。译者为她通传姓名与来意，她依礼上前相见。`,choices:[
+   {t:'纳入后宫，封为常在',f:()=>{addConsort(g,2,d.region+'来朝入选');return `她向你行礼，女官与译者引她熟悉宫中起居。${fx(chg({prestige:2}))}`}},
    {t:'婉拒，厚赐使臣',f:()=>`使臣叹服天朝气度。${fx(chg({prestige:3,people:2,treasury:-30}))}`}]}},
  brief=>{const sons=kidsAlive().filter(k=>k.sex==='m'&&kidAge(k)>=6&&(!brief||brief.sons?.includes(k.id))).slice(0,4);if(!sons.length||S.heir)return null;
   return {title:'请立储君',sons:sons.map(k=>k.id),text:`以内阁首辅为首，群臣联名上书：“国本未定，人心不安，伏请陛下早立储君。”`,choices:[
@@ -838,7 +848,7 @@ function monthlyCourtEvent(){
       ...(floodNeed?{floodNeed}:{}),
       ...(locustNeed?{locustNeed}:{}),
       ...(locustAuditNeed?{locustAuditNeed}:{}),
-      guest:ev.title==='西域使臣'?ev.por:undefined};
+      guest:ev.foreignArrival?ev.por:undefined};
     if(impeachment)S.flags.impeachmentSeen=true;
     markGrainMemorialSeen(index);
     save('auto');
