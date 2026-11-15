@@ -176,7 +176,7 @@ function betrothalEvent(){
       chg({treasury:-5});b.seen=true;b.dowry=true;natalRecord(c,p,`将与${m.name}成亲，宫中赏了一份嫁妆，${fullName(c)}托人一并捎去。`,.5);
       return `嫁妆随家书送去了。${fx(cchg(c,{mood:6,aff:4}))}`;})},
     {t:'由她家里做主',f:once(()=>{b.seen=true;natalRecord(c,p,`与${m.name}议亲一事，由家里做主。`,.2);return '这是她家里的事，由家里做主。';})}];
-  return {title:discovered?'相看':'议亲',kinMarriage:true,por:c,present:[c],cooldown:10,valid,text:opening+note,choices};
+  return {title:discovered?'相看':'议亲',kinMarriage:true,kinMarriagePerson:p.id,por:c,present:[c],cooldown:10,valid,text:opening+note,choices};
 }
 
 /* —— 显示 —— */

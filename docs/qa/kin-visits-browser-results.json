@@ -1,0 +1,373 @@
+{
+  "url": "http://127.0.0.1:8428/dev.html",
+  "started": "2026-11-15T20:52:19.467Z",
+  "runs": [
+    {
+      "name": "decree",
+      "viewport": "desktop",
+      "reloads": [
+        "imported",
+        "petition",
+        "decreed",
+        "settled"
+      ],
+      "layouts": [
+        {
+          "viewport": 1440,
+          "document": 1440,
+          "box": 740,
+          "content": 740
+        },
+        {
+          "viewport": 1440,
+          "document": 1440,
+          "box": 940,
+          "content": 940
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "admit",
+      "viewport": "desktop",
+      "reloads": [
+        "imported",
+        "courtship",
+        "answer",
+        "settled"
+      ],
+      "layouts": [
+        {
+          "viewport": 1440,
+          "document": 1440,
+          "box": 740,
+          "content": 740
+        },
+        {
+          "viewport": 1440,
+          "document": 1440,
+          "box": 850,
+          "content": 850
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "defer",
+      "viewport": "desktop",
+      "reloads": [
+        "imported",
+        "courtship",
+        "answer",
+        "settled"
+      ],
+      "layouts": [
+        {
+          "viewport": 1440,
+          "document": 1440,
+          "box": 740,
+          "content": 740
+        },
+        {
+          "viewport": 1440,
+          "document": 1440,
+          "box": 940,
+          "content": 940
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "decline",
+      "viewport": "desktop",
+      "reloads": [
+        "imported",
+        "courtship",
+        "answer",
+        "settled"
+      ],
+      "layouts": [
+        {
+          "viewport": 1440,
+          "document": 1440,
+          "box": 740,
+          "content": 740
+        },
+        {
+          "viewport": 1440,
+          "document": 1440,
+          "box": 940,
+          "content": 940
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "friend-admit",
+      "viewport": "desktop",
+      "reloads": [
+        "imported",
+        "roster",
+        "rank-choice",
+        "admitted",
+        "batch-settled"
+      ],
+      "layouts": [
+        {
+          "viewport": 1440,
+          "document": 1440,
+          "box": 850,
+          "content": 850
+        },
+        {
+          "viewport": 1440,
+          "document": 1440,
+          "box": 850,
+          "content": 850
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "friend-drop",
+      "viewport": "desktop",
+      "reloads": [
+        "imported",
+        "roster",
+        "dismissed"
+      ],
+      "layouts": [
+        {
+          "viewport": 1440,
+          "document": 1440,
+          "box": 850,
+          "content": 850
+        },
+        {
+          "viewport": 1440,
+          "document": 1440,
+          "box": 940,
+          "content": 940
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "friend-later",
+      "viewport": "desktop",
+      "reloads": [
+        "imported",
+        "later-history"
+      ],
+      "layouts": [
+        {
+          "viewport": 1440,
+          "document": 1440,
+          "box": 850,
+          "content": 850
+        },
+        {
+          "viewport": 1440,
+          "document": 1440,
+          "box": 940,
+          "content": 940
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "decree",
+      "viewport": "mobile",
+      "reloads": [
+        "imported",
+        "petition",
+        "decreed",
+        "settled"
+      ],
+      "layouts": [
+        {
+          "viewport": 390,
+          "document": 390,
+          "box": 366,
+          "content": 366
+        },
+        {
+          "viewport": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "admit",
+      "viewport": "mobile",
+      "reloads": [
+        "imported",
+        "courtship",
+        "answer",
+        "settled"
+      ],
+      "layouts": [
+        {
+          "viewport": 390,
+          "document": 390,
+          "box": 366,
+          "content": 366
+        },
+        {
+          "viewport": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "defer",
+      "viewport": "mobile",
+      "reloads": [
+        "imported",
+        "courtship",
+        "answer",
+        "settled"
+      ],
+      "layouts": [
+        {
+          "viewport": 390,
+          "document": 390,
+          "box": 366,
+          "content": 366
+        },
+        {
+          "viewport": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "decline",
+      "viewport": "mobile",
+      "reloads": [
+        "imported",
+        "courtship",
+        "answer",
+        "settled"
+      ],
+      "layouts": [
+        {
+          "viewport": 390,
+          "document": 390,
+          "box": 366,
+          "content": 366
+        },
+        {
+          "viewport": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "friend-admit",
+      "viewport": "mobile",
+      "reloads": [
+        "imported",
+        "roster",
+        "rank-choice",
+        "admitted",
+        "batch-settled"
+      ],
+      "layouts": [
+        {
+          "viewport": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        },
+        {
+          "viewport": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "friend-drop",
+      "viewport": "mobile",
+      "reloads": [
+        "imported",
+        "roster",
+        "dismissed"
+      ],
+      "layouts": [
+        {
+          "viewport": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        },
+        {
+          "viewport": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "friend-later",
+      "viewport": "mobile",
+      "reloads": [
+        "imported",
+        "later-history"
+      ],
+      "layouts": [
+        {
+          "viewport": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        },
+        {
+          "viewport": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    }
+  ],
+  "browser": "157.0.8103.78",
+  "finished": "2026-11-15T20:52:44.548Z",
+  "summary": {
+    "cases": 14,
+    "passed": 14,
+    "reloads": 52
+  }
+}

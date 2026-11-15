@@ -74,7 +74,7 @@ test("hostile houses are not matched, and a humble sister's match is a matter fo
  var poor=addGirl('农家'),q=sister(poor,21,777);q.married=false;delete q.spouse;q.marriageChecked=S.turn-12;startBetrothal(poor,q);
  assert.equal(q.betrothal.match.kind,'commoner');for(const r of natalPeople(houseOf(a)))r.betrothal&&(r.betrothal.seen=true);
  var ev=null;for(let i=0;i<20&&!ev;i++){ev=betrothalEvent();if(ev&&!ev.text.includes(q.name))ev=null;}assert.ok(ev);
- assert.deepEqual(ev.choices.map(c=>c.t),['赏一份嫁妆 · 国库−5','由她家里做主']);ev.choices[0].f();assert.equal(q.betrothal.dowry,true);
+ assert.deepEqual(ev.choices.map(c=>c.t),['赏一份嫁妆 · 国库−5','由她家里做主','召她入宫，亲自听听婚事']);ev.choices[0].f();assert.equal(q.betrothal.dowry,true);
  assert.equal(betrothalEvent()?.text?.includes(q.name)||false,false,'a match the emperor already knows about is not raised again');`);
 });
 
@@ -108,8 +108,9 @@ test('only humble backgrounds count as commoners; the dowager\'s kin and foreign
  var g=addGirl('太后母家'),p=sister(g,33,555);p.married=false;delete p.spouse;kinMarriageTick();assert.notEqual(p.spouse.kind,'commoner');`);
 });
 
-test('a sister already in marriage talks cannot be taken into the palace',()=>{
+test('marriage talks allow asking about palace life, but an already decreed marriage does not',()=>{
  const b=world();
  b.run(`var g=addGirl('吏部尚书'),p=sister(g,21,321);p.married=false;delete p.spouse;natalInPalace=()=>true;
- assert.equal(natalRomanceReady(g,p),true);p.marriageChecked=S.turn-12;startBetrothal(g,p);assert.equal(natalRomanceReady(g,p),false);`);
+ assert.equal(natalRomanceReady(g,p),true);p.marriageChecked=S.turn-12;startBetrothal(g,p);assert.equal(natalRomanceReady(g,p),true);
+ p.betrothal.arranged=true;assert.equal(natalRomanceReady(g,p),false);`);
 });
