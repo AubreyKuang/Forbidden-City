@@ -772,3 +772,6 @@ button.family-room-person{cursor:pointer}button.family-room-person:hover{color:#
 
 /* Factual chapters and the objects kept through a life. */
 .life-works,.life-chapters{display:grid;gap:12px;margin-top:14px}.life-works article,.life-chapters article{border:1px solid #bcae98;border-radius:8px;padding:12px;background:#fff9ed80;overflow-wrap:anywhere}.life-chapters h4{margin:0 0 7px;color:#70533d}.life-boundary{border-left:3px solid #9b796d;margin-top:12px;padding:1px 12px}.life-works .acts{margin-bottom:0}
+
+/* Chronicle controls stay readable on narrow person cards. */
+.chronicle-tools{padding:12px;border:1px solid var(--line,#d7c7ac);margin:12px 0;background:#f4eddf}.chronicle-filters{display:flex;flex-wrap:wrap;gap:10px}.chronicle-filters label{display:flex;align-items:center;gap:6px}.chronicle-filters select{max-width:180px;padding:6px;background:#fffaf0;color:#493b30;border:1px solid #b7a288}.chronicle-tools input{min-width:0;flex:1;padding:8px;border:1px solid #b7a288;background:#fffaf0}.chronicle-cast{margin:6px 0;font-size:12px}.chronicle-tools .acts{flex-wrap:wrap}
