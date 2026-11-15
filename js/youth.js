@@ -1,5 +1,5 @@
 /* Adolescent friendships, ideals and named acquaintances remembered until marriage. */
-const teenageChildren=()=>kidsAlive().filter(k=>childInPalace(k)&&kidAge(k)>=13&&kidAge(k)<16);
+const teenageChildren=()=>kidsAlive().filter(k=>childInPalace(k)&&kidAge(k)>=13&&kidAge(k)<16&&(journalContentVersion()<20||!k.married&&!k.spouse&&!k.betrothal));
 const youthIdeal=k=>k.mar>k.lit+8?'riding':k.lit>=55?'books':'kindness';
 const YOUTH_IDEALS={
   riding:'肯陪我骑马、也尊重我自己拿主意的人。',

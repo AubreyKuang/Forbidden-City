@@ -83,7 +83,7 @@ test('an officer occupied by a street inquiry cannot take another job; his death
   e.p.alive=false;var f=governance().visits.at(-1);S.turn=f.due;incognitoTick();assert.equal(f.status,'pending');assert.equal(f.officerId,null);assert.match(f.note,/接手/);assert.equal(e.p.incognitoCase,undefined);`);
 });
 test('new private visits avoid recent repeats and cold-reload through the actual city action',()=>{
- let b=world();b.run("S.flags.marketRescueSeen=true;");b.force(.1,.1);b.run("A.out('city');assert.match(curEv.title,/微服 ·/);choose(0);assert.match(curEv.title,/民情交办/);");
+ let b=world();b.run("S.flags.marketRescueSeen=true;S.flags.xieCityAttempt=S.turn;");b.force(.1,.1);b.run("A.out('city');assert.match(curEv.title,/微服 ·/);choose(0);assert.match(curEv.title,/民情交办/);");
  b=reload(b);b.run("choose(curEv.choices.length-2);assert.equal(governance().visits.at(-1).status,'pending');");b=reload(b);b.run("assert.equal(governance().visits.length,1);while(modalOpen)nextEv();var a=incognitoEvent();a.onShow();var last=governance().seenVisits.at(-1);for(var i=0;i<3;i++){var ev=incognitoEvent();ev.onShow();assert.notEqual(governance().seenVisits.at(-1),last);}");
 });
 
