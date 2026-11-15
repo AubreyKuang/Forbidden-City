@@ -1,5 +1,5 @@
 {
-  "sourceCommit": "1ac12f0b99a0e36ee260c700a98ba9fe8a8fc241",
+  "sourceCommit": "70588a2bcb012cb4e90099b976d494ed560616f4",
   "pages": [
     {
       "name": "home",
@@ -76,7 +76,7 @@
         "皇帝万寿宴 · 三月",
         "皇后千秋宴 · 腊月",
         "朝堂势力",
-        "朝臣与外家 · 查看父兄履历 →",
+        "官员表 · 父兄与外家 →",
         "外戚",
         "家族地位与官职",
         "影响力",
@@ -237,7 +237,7 @@
         "治国理政",
         "用人、钱粮、民间见闻，都须有去处，也有回音。",
         "本月奏折",
-        "朝臣履历",
+        "官员表",
         "微服问民情",
         "户部岁入",
         "每年十月结算秋税，正月收取岁贡银 120 万两与珍饰一件。月常入与俸禄仍逐月结算。",
@@ -618,6 +618,7 @@
         },
         {
           "kind": "button",
+          "aria-pressed": "false",
           "onclick": "A.openResidence(2)",
           "disabled": false,
           "selected": false
@@ -630,8 +631,8 @@
         }
       ],
       "text": [
+        "← 返回宫城",
         "宫室分配",
-        "◂ 返回宫城",
         "坤宁宫为皇后独居。十二宫各设一名主位（嫔位及以上）和三处侧殿。晋位不等于另获一宫，主位满额时可暂居侧殿。迁居需精力1。",
         "主位 0/12 · 侧殿 1/36 · 待安置 0 人。空主位须嫔位及以上才能入住；无合适余位时暂居掖庭，身份不变。",
         "楚怜 · 楚妃",
@@ -701,6 +702,7 @@
         },
         {
           "kind": "button",
+          "aria-pressed": "true",
           "onclick": "A.openResidence(2)",
           "disabled": false,
           "selected": false
@@ -863,8 +865,8 @@
         }
       ],
       "text": [
+        "← 返回宫城",
         "宫室分配",
-        "◂ 返回宫城",
         "坤宁宫为皇后独居。十二宫各设一名主位（嫔位及以上）和三处侧殿。晋位不等于另获一宫，主位满额时可暂居侧殿。迁居需精力1。",
         "主位 0/12 · 侧殿 1/36 · 待安置 0 人。空主位须嫔位及以上才能入住；无合适余位时暂居掖庭，身份不变。",
         "楚怜 · 楚妃",
@@ -954,25 +956,68 @@
       "controls": [
         {
           "kind": "button",
+          "onclick": "A.go('home')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "true",
+          "onclick": "A.officialsFilter('serving')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsFilter('all')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsFilter('away')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsFilter('gone')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "true",
+          "onclick": "A.officialsBloc('all')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsBloc('civil')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsBloc('army')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
           "onclick": "A.go('official','1:father')",
           "disabled": false,
           "selected": false
         },
         {
           "kind": "button",
-          "onclick": "A.go('official','1:brother')",
-          "disabled": false,
-          "selected": false
-        },
-        {
-          "kind": "button",
-          "onclick": "A.go('official','1:relative-2621354123')",
-          "disabled": false,
-          "selected": false
-        },
-        {
-          "kind": "button",
-          "onclick": "A.go('official','1:relative-2604576504')",
+          "onclick": "A.go('consort',1)",
           "disabled": false,
           "selected": false
         },
@@ -984,38 +1029,63 @@
         },
         {
           "kind": "button",
-          "onclick": "A.go('official','2:brother')",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',4)",
           "disabled": false,
           "selected": false
         }
       ],
       "text": [
-        "朝臣与外家",
-        "按实际人物归档，同父姐妹共用父兄履历。可从家族树、妃嫔详情或此处进入。",
+        "← 返回御书房",
+        "官员表",
+        "在朝官员均出自妃嫔娘家：同父姐妹共用父兄履历。点姓名看履历，点妃嫔或皇嗣可直接跳转。在朝 2 人，故去与获罪 0 人。",
+        "在朝",
+        "全部",
+        "外任与奉差",
+        "故去与获罪",
+        "全部派系",
+        "文官",
+        "武将",
+        "姓名",
+        "官职",
+        "家族 · 宫中",
+        "派系",
+        "状态",
+        "才干/信任/功绩",
+        "皇嗣",
+        "近期事迹",
         "崔鸿儒",
-        "内阁首辅 · 在任",
-        "崔绾清的父亲",
-        "查看履历与往来 →",
-        "崔仲安",
-        "书生 · 在家读书",
-        "崔绾清的兄长",
-        "查看履历与往来 →",
-        "崔伯言",
-        "书生 · 在家读书",
-        "崔绾清的弟弟",
-        "查看履历与往来 →",
-        "崔子期",
-        "书生 · 在家读书",
-        "崔绾清的弟弟",
-        "查看履历与往来 →",
+        "55岁 · 持正",
+        "内阁首辅",
+        "崔氏 · 家主",
+        "皇后的父亲",
+        "文官",
+        "在任",
+        "58 / 37 / 42",
+        "—",
+        "尚无记载",
         "楚伯庸",
-        "两江总督 · 在任",
-        "楚怜的父亲",
-        "查看履历与往来 →",
-        "楚仲安",
-        "书生 · 在家读书",
-        "楚怜的兄长",
-        "查看履历与往来 →"
+        "45岁 · 圆融",
+        "两江总督",
+        "楚氏 · 家主",
+        "楚妃的父亲",
+        "武将",
+        "在任",
+        "40 / 55 / 21",
+        "皇长子 承安",
+        "长公主 昭宁",
+        "尚无记载"
       ]
     },
     {
@@ -1059,7 +1129,7 @@
         }
       ],
       "text": [
-        "← 返回朝臣名录",
+        "← 返回官员表",
         "外家长辈 · 武将",
         "楚伯庸",
         "两江总督",
@@ -1086,6 +1156,695 @@
         "· 在家读书",
         "个人履历与纪事",
         "尚无记载。"
+      ]
+    },
+    {
+      "name": "officials-all",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.go('home')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsFilter('serving')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "true",
+          "onclick": "A.officialsFilter('all')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsFilter('away')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsFilter('gone')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "true",
+          "onclick": "A.officialsBloc('all')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsBloc('civil')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsBloc('army')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','1:father')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',1)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','2:father')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',4)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','1:brother')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',1)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','1:relative-2621354123')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',1)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','1:relative-2604576504')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',1)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','2:brother')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',4)",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "← 返回御书房",
+        "官员表",
+        "在朝官员均出自妃嫔娘家：同父姐妹共用父兄履历。点姓名看履历，点妃嫔或皇嗣可直接跳转。在朝 2 人，故去与获罪 0 人。",
+        "在朝",
+        "全部",
+        "外任与奉差",
+        "故去与获罪",
+        "全部派系",
+        "文官",
+        "武将",
+        "姓名",
+        "官职",
+        "家族 · 宫中",
+        "派系",
+        "状态",
+        "才干/信任/功绩",
+        "皇嗣",
+        "近期事迹",
+        "崔鸿儒",
+        "55岁 · 持正",
+        "内阁首辅",
+        "崔氏 · 家主",
+        "皇后的父亲",
+        "文官",
+        "在任",
+        "58 / 37 / 42",
+        "—",
+        "尚无记载",
+        "楚伯庸",
+        "45岁 · 圆融",
+        "两江总督",
+        "楚氏 · 家主",
+        "楚妃的父亲",
+        "武将",
+        "在任",
+        "40 / 55 / 21",
+        "皇长子 承安",
+        "长公主 昭宁",
+        "尚无记载",
+        "崔仲安",
+        "20岁 · 持正",
+        "书生",
+        "崔氏 · 兄长",
+        "皇后的兄长",
+        "文官",
+        "在家读书",
+        "79 / 42 / 0",
+        "—",
+        "尚无记载",
+        "崔伯言",
+        "33岁 · 持正",
+        "书生",
+        "崔氏 · 弟弟",
+        "皇后的弟弟",
+        "文官",
+        "在家读书",
+        "58 / 53 / 0",
+        "—",
+        "尚无记载",
+        "崔子期",
+        "30岁 · 持正",
+        "书生",
+        "崔氏 · 弟弟",
+        "皇后的弟弟",
+        "文官",
+        "在家读书",
+        "59 / 45 / 0",
+        "—",
+        "尚无记载",
+        "楚仲安",
+        "20岁 · 谨慎",
+        "书生",
+        "楚氏 · 兄长",
+        "楚妃的兄长",
+        "武将",
+        "在家读书",
+        "83 / 36 / 0",
+        "皇长子 承安",
+        "长公主 昭宁",
+        "尚无记载"
+      ]
+    },
+    {
+      "name": "officials-away",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.go('home')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsFilter('serving')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsFilter('all')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "true",
+          "onclick": "A.officialsFilter('away')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsFilter('gone')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "true",
+          "onclick": "A.officialsBloc('all')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsBloc('civil')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsBloc('army')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','2:father')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',4)",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "← 返回御书房",
+        "官员表",
+        "在朝官员均出自妃嫔娘家：同父姐妹共用父兄履历。点姓名看履历，点妃嫔或皇嗣可直接跳转。在朝 2 人，故去与获罪 0 人。",
+        "在朝",
+        "全部",
+        "外任与奉差",
+        "故去与获罪",
+        "全部派系",
+        "文官",
+        "武将",
+        "姓名",
+        "官职",
+        "家族 · 宫中",
+        "派系",
+        "状态",
+        "才干/信任/功绩",
+        "皇嗣",
+        "近期事迹",
+        "楚伯庸",
+        "45岁 · 圆融",
+        "两江总督",
+        "楚氏 · 家主",
+        "楚妃的父亲",
+        "武将",
+        "外任",
+        "40 / 55 / 21",
+        "皇长子 承安",
+        "长公主 昭宁",
+        "尚无记载"
+      ]
+    },
+    {
+      "name": "officials-gone",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.go('home')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsFilter('serving')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsFilter('all')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsFilter('away')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "true",
+          "onclick": "A.officialsFilter('gone')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "true",
+          "onclick": "A.officialsBloc('all')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsBloc('civil')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsBloc('army')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','2:father')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',4)",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "← 返回御书房",
+        "官员表",
+        "在朝官员均出自妃嫔娘家：同父姐妹共用父兄履历。点姓名看履历，点妃嫔或皇嗣可直接跳转。在朝 1 人，故去与获罪 1 人。",
+        "在朝",
+        "全部",
+        "外任与奉差",
+        "故去与获罪",
+        "全部派系",
+        "文官",
+        "武将",
+        "姓名",
+        "官职",
+        "家族 · 宫中",
+        "派系",
+        "状态",
+        "才干/信任/功绩",
+        "皇嗣",
+        "近期事迹",
+        "楚伯庸",
+        "45岁 · 圆融",
+        "两江总督",
+        "楚氏 · 家主",
+        "楚妃的父亲",
+        "武将",
+        "已故",
+        "40 / 55 / 21",
+        "皇长子 承安",
+        "长公主 昭宁",
+        "尚无记载"
+      ]
+    },
+    {
+      "name": "officials-from-government",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.go('government')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "true",
+          "onclick": "A.officialsFilter('serving')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsFilter('all')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsFilter('away')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsFilter('gone')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "true",
+          "onclick": "A.officialsBloc('all')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsBloc('civil')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.officialsBloc('army')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','1:father')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',1)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('official','2:father')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',3)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('kid',4)",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "← 返回治国理政",
+        "官员表",
+        "在朝官员均出自妃嫔娘家：同父姐妹共用父兄履历。点姓名看履历，点妃嫔或皇嗣可直接跳转。在朝 2 人，故去与获罪 0 人。",
+        "在朝",
+        "全部",
+        "外任与奉差",
+        "故去与获罪",
+        "全部派系",
+        "文官",
+        "武将",
+        "姓名",
+        "官职",
+        "家族 · 宫中",
+        "派系",
+        "状态",
+        "才干/信任/功绩",
+        "皇嗣",
+        "近期事迹",
+        "崔鸿儒",
+        "55岁 · 持正",
+        "内阁首辅",
+        "崔氏 · 家主",
+        "皇后的父亲",
+        "文官",
+        "在任",
+        "58 / 37 / 42",
+        "—",
+        "尚无记载",
+        "楚伯庸",
+        "45岁 · 圆融",
+        "两江总督",
+        "楚氏 · 家主",
+        "楚妃的父亲",
+        "武将",
+        "在任",
+        "40 / 55 / 21",
+        "皇长子 承安",
+        "长公主 昭宁",
+        "尚无记载"
+      ]
+    },
+    {
+      "name": "residences-from-harem",
+      "controls": [
+        {
+          "kind": "button",
+          "onclick": "A.go('harem')",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "aria-pressed": "false",
+          "onclick": "A.openResidence(2)",
+          "disabled": false,
+          "selected": false
+        },
+        {
+          "kind": "button",
+          "onclick": "A.go('consort',2)",
+          "disabled": false,
+          "selected": false
+        }
+      ],
+      "text": [
+        "← 返回后宫",
+        "宫室分配",
+        "坤宁宫为皇后独居。十二宫各设一名主位（嫔位及以上）和三处侧殿。晋位不等于另获一宫，主位满额时可暂居侧殿。迁居需精力1。",
+        "主位 0/12 · 侧殿 1/36 · 待安置 0 人。空主位须嫔位及以上才能入住；无合适余位时暂居掖庭，身份不变。",
+        "楚怜 · 楚妃",
+        "先选择要安排住处的人，再选择正殿或侧殿。",
+        "坤宁宫 · 皇后专居",
+        "中宫独居，不安排其他妃嫔同住；随皇后养育的幼儿不受此限。",
+        "崔绾清",
+        "景仁宫",
+        "近御花园 · 主位 空缺（嫔位及以上可任） · 侧殿 1/3",
+        "东六宫之一，庭前老槐成荫，夏日最是凉爽。",
+        "楚怜",
+        "侧殿 · 楚妃",
+        "承乾宫",
+        "近御花园 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "东六宫之一，窗下摆着棋枰，时闻落子声。",
+        "暂时无人居住",
+        "钟粹宫",
+        "宫苑中段 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "东六宫之一，院里种满了秋菊。",
+        "暂时无人居住",
+        "延禧宫",
+        "宫苑中段 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "东六宫之一，偏僻清静，少有人来。",
+        "暂时无人居住",
+        "永和宫",
+        "南隅清静 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "东六宫之一，檐下挂着风铃，风过叮咚。",
+        "暂时无人居住",
+        "景阳宫",
+        "南隅清静 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "东六宫之一，藏书最多，满室书香。",
+        "暂时无人居住",
+        "永寿宫",
+        "近御花园 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "西六宫之一，庭中一池睡莲，夏夜蛙鸣。",
+        "暂时无人居住",
+        "翊坤宫",
+        "近御花园 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "西六宫之一，院墙高高，里头常飘出琴声。",
+        "暂时无人居住",
+        "储秀宫",
+        "宫苑中段 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "西六宫之一，秀女初入宫时，多半先住这里。",
+        "暂时无人居住",
+        "启祥宫",
+        "宫苑中段 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "西六宫之一，廊柱新漆，颜色格外鲜亮。",
+        "暂时无人居住",
+        "长春宫",
+        "南隅清静 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "西六宫之一，四季常青，冬日也有绿意。",
+        "暂时无人居住",
+        "咸福宫",
+        "南隅清静 · 主位 空缺（嫔位及以上可任） · 侧殿 0/3",
+        "西六宫之一，地方宽敞，宫人进出不断。",
+        "暂时无人居住"
       ]
     },
     {
@@ -1135,7 +1894,7 @@
         }
       ],
       "text": [
-        "← 返回朝臣名录",
+        "← 返回官员表",
         "外家长辈 · 武将",
         "楚伯庸",
         "两江总督",
@@ -1196,7 +1955,7 @@
         }
       ],
       "text": [
-        "← 返回朝臣名录",
+        "← 返回官员表",
         "外家长辈 · 武将",
         "楚伯庸",
         "两江总督",
@@ -3058,12 +3817,14 @@
         },
         {
           "kind": "button",
+          "aria-pressed": "true",
           "onclick": "A.kidsResidence('palace')",
           "disabled": false,
           "selected": false
         },
         {
           "kind": "button",
+          "aria-pressed": "false",
           "onclick": "A.kidsResidence('out')",
           "disabled": false,
           "selected": false
@@ -3143,12 +3904,14 @@
         },
         {
           "kind": "button",
+          "aria-pressed": "false",
           "onclick": "A.kidsResidence('palace')",
           "disabled": false,
           "selected": false
         },
         {
           "kind": "button",
+          "aria-pressed": "true",
           "onclick": "A.kidsResidence('out')",
           "disabled": false,
           "selected": false
@@ -3211,30 +3974,35 @@
         },
         {
           "kind": "button",
+          "aria-pressed": "true",
           "onclick": "A.kidPolicy(3,'均衡')",
           "disabled": false,
           "selected": false
         },
         {
           "kind": "button",
+          "aria-pressed": "false",
           "onclick": "A.kidPolicy(3,'读书')",
           "disabled": false,
           "selected": false
         },
         {
           "kind": "button",
+          "aria-pressed": "false",
           "onclick": "A.kidPolicy(3,'习武')",
           "disabled": false,
           "selected": false
         },
         {
           "kind": "button",
+          "aria-pressed": "false",
           "onclick": "A.kidPolicy(3,'修德')",
           "disabled": false,
           "selected": false
         },
         {
           "kind": "button",
+          "aria-pressed": "false",
           "onclick": "A.kidPolicy(3,'放养')",
           "disabled": false,
           "selected": false
@@ -3466,42 +4234,49 @@
         },
         {
           "kind": "button",
+          "aria-pressed": "false",
           "onclick": "A.familyVisitRule(3,'open')",
           "disabled": false,
           "selected": false
         },
         {
           "kind": "button",
+          "aria-pressed": "false",
           "onclick": "A.familyVisitRule(3,'closed')",
           "disabled": false,
           "selected": false
         },
         {
           "kind": "button",
+          "aria-pressed": "true",
           "onclick": "A.kidPolicy(3,'均衡')",
           "disabled": false,
           "selected": false
         },
         {
           "kind": "button",
+          "aria-pressed": "false",
           "onclick": "A.kidPolicy(3,'读书')",
           "disabled": false,
           "selected": false
         },
         {
           "kind": "button",
+          "aria-pressed": "false",
           "onclick": "A.kidPolicy(3,'习武')",
           "disabled": false,
           "selected": false
         },
         {
           "kind": "button",
+          "aria-pressed": "false",
           "onclick": "A.kidPolicy(3,'修德')",
           "disabled": false,
           "selected": false
         },
         {
           "kind": "button",
+          "aria-pressed": "false",
           "onclick": "A.kidPolicy(3,'放养')",
           "disabled": false,
           "selected": false
@@ -3750,30 +4525,35 @@
         },
         {
           "kind": "button",
+          "aria-pressed": "true",
           "onclick": "A.kidPolicy(3,'均衡')",
           "disabled": false,
           "selected": false
         },
         {
           "kind": "button",
+          "aria-pressed": "false",
           "onclick": "A.kidPolicy(3,'读书')",
           "disabled": false,
           "selected": false
         },
         {
           "kind": "button",
+          "aria-pressed": "false",
           "onclick": "A.kidPolicy(3,'习武')",
           "disabled": false,
           "selected": false
         },
         {
           "kind": "button",
+          "aria-pressed": "false",
           "onclick": "A.kidPolicy(3,'修德')",
           "disabled": false,
           "selected": false
         },
         {
           "kind": "button",
+          "aria-pressed": "false",
           "onclick": "A.kidPolicy(3,'放养')",
           "disabled": false,
           "selected": false
@@ -4020,30 +4800,35 @@
         },
         {
           "kind": "button",
+          "aria-pressed": "true",
           "onclick": "A.kidPolicy(3,'均衡')",
           "disabled": false,
           "selected": false
         },
         {
           "kind": "button",
+          "aria-pressed": "false",
           "onclick": "A.kidPolicy(3,'读书')",
           "disabled": false,
           "selected": false
         },
         {
           "kind": "button",
+          "aria-pressed": "false",
           "onclick": "A.kidPolicy(3,'习武')",
           "disabled": false,
           "selected": false
         },
         {
           "kind": "button",
+          "aria-pressed": "false",
           "onclick": "A.kidPolicy(3,'修德')",
           "disabled": false,
           "selected": false
         },
         {
           "kind": "button",
+          "aria-pressed": "false",
           "onclick": "A.kidPolicy(3,'放养')",
           "disabled": false,
           "selected": false

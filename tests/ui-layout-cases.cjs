@@ -5,6 +5,11 @@ const cases=[
  ['family-graph','viewFamily()'],['family-list','viewFamily()',"UI.familyMode='list'"],
  ['residences','viewResidences()'],['residence-selected','viewResidences()','UI.sel=c.id'],
  ['officials','officialsRoster()'],['official','viewOfficial()',"UI.sel=c.id+':father'"],
+ ['officials-all','officialsRoster()',"UI.officialsFilter='all'"],
+ ['officials-away','officialsRoster()',"houseOf(c).father.away=true;UI.officialsFilter='away'"],
+ ['officials-gone','officialsRoster()',"houseOf(c).father.alive=false;UI.officialsFilter='gone'"],
+ ['officials-from-government','officialsRoster()',"UI.pageFrom={officials:'government'}"],
+ ['residences-from-harem','viewResidences()',"UI.pageFrom={residences:'harem'}"],
  ['official-retired','viewOfficial()',"houseOf(c).father.retired=true;UI.sel=c.id+':father'"],
  ['official-deceased','viewOfficial()',"houseOf(c).father.alive=false;UI.sel=c.id+':father'"],
  ['queen','viewConsort()','UI.sel=empress().id'],
@@ -43,7 +48,7 @@ function signature(html){
   if(!/^<(button|input|select|option)\b/.test(token))continue;
   const attrs=Object.fromEntries([...token.matchAll(/([\w-]+)="([^"]*)"/g)].map(m=>[m[1],decode(m[2])]));
   const kind=token.match(/^<(\w+)/)[1];
-  if(attrs.onclick||attrs.onchange||attrs.onkeydown||kind==='option'||kind==='input')controls.push({kind,...Object.fromEntries(Object.entries(attrs).filter(([k])=>['onclick','onchange','onkeydown','value','type','accept','name','id'].includes(k))),disabled:/\sdisabled(?:\s|>|=)/.test(token),selected:/\sselected(?:\s|>|=)/.test(token)});
+  if(attrs.onclick||attrs.onchange||attrs.onkeydown||kind==='option'||kind==='input')controls.push({kind,...Object.fromEntries(Object.entries(attrs).filter(([k])=>['onclick','onchange','onkeydown','value','type','accept','name','id','aria-pressed'].includes(k))),disabled:/\sdisabled(?:\s|>|=)/.test(token),selected:/\sselected(?:\s|>|=)/.test(token)});
  }
  return {controls,text};
 }

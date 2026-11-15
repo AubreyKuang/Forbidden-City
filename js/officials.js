@@ -116,11 +116,7 @@ function officialFamilyLine(c){
   const h=houseOf(c);if(!h)return '';
   return `<div class="official-family-links">${officialRoles(h).filter(r=>!r.startsWith('relative')).map(role=>{const p=officialPerson(h,role);return p?`<div>${officialKinLabel(h,role)}：${officialLink(c,role)} <span class="hint">${esc(p.office||p.post)} · ${officialStatus(p)}${p.death?' · '+esc(p.death.d||'日期未详'):''}</span></div>`:'';}).join('')}${natalFamilyLinks(c)}</div>`;
 }
-function officialsRoster(){
-  const entries=officialEntries(),dead=entries.filter(x=>!officialAlive(x.p));
-  const cards=items=>items.map(({c,h,p,role,key})=>`<button class="card portrait-card official-card${!p.alive?' deceased':''}" onclick="A.go('official','${key}')">${porImg(p,76)}<span><strong>${esc(p.name)}</strong><small>${esc(p.office||p.post)} · ${officialStatus(p)}</small><small>${esc(fullName(c))}的${officialKinLabel(h,role)}</small><span class="person-link">查看履历与往来 →</span></span></button>`).join('');
-  return `${pageHeading('朝臣与外家','按实际人物归档，同父姐妹共用父兄履历。可从家族树、妃嫔详情或此处进入。',`<button class="btn quiet sm" onclick="A.go('government')">← 返回理政</button>`)}<div class="grid portrait-grid">${cards(entries.filter(x=>officialAlive(x.p)))||'<p>暂无在世亲眷。</p>'}</div>${dead.length?`<h3>故人名录</h3><div class="grid portrait-grid">${cards(dead)}</div>`:''}`;
-}
+function officialsRoster(){return typeof officialsTable==='function'?officialsTable():'<h2>官员表</h2><p class="hint">页面已更新，请刷新后查看。</p>';}
 function officialActionReady(e,action){
   if(!e||S.over)return false;const p=e.p;
   if(action==='honor')return !officialAlive(p)&&!p.memorialHonor;
@@ -145,7 +141,7 @@ function viewOfficial(){
     ${p.report?`<section class="detail-section"><h3>待阅回奏</h3><p>${esc(p.report.text)}</p><button class="btn jade" onclick="A.officialReport('${key}')">阅看回奏</button></section>`:''}
     ${p.commission?detailSection('当前差事',`<p>${esc(p.commission.title)} · ${Math.max(0,p.commission.due-S.turn)}个月后回奏</p>`):''}
     ${detailSection('家族往来',kin.map(x=>`<button class="btn quiet sm" onclick="A.go('consort',${x.id})">${esc(fullName(x))} · ${role==='father'?'女儿':'姐妹'}${x.alive?'':' · 已故'}</button>`).join(' ')+otherRoles.map(r=>`<p>${r==='father'?'父亲':role==='father'?'儿子':'兄弟'}：${officialLink(c,r)} · ${officialStatus(officialPerson(h,r))}</p>`).join(''))}
-    ${detailSection('娘家手足',natalFamilyLinks(c))}${h.relatives?.includes(p)?natalLifePanel(c,p):''}${detailSection('个人履历与纪事',detailStory(p))}`;
+    ${typeof kinCourtPanel==='function'?kinCourtPanel(e):''}${detailSection('娘家手足',natalFamilyLinks(c))}${h.relatives?.includes(p)?natalLifePanel(c,p):''}${detailSection('个人履历与纪事',detailStory(p))}`;
 }
 function officialConversation(e,topic){
   const {c,p,role,h}=e,kin=p.parentRelativeId?'姨母':role==='father'?'女儿':officialKinLabel(h,role)==='弟弟'?'姐姐':'妹妹';

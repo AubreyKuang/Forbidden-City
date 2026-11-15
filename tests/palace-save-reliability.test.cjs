@@ -6,6 +6,8 @@ const start=b=>b.run('A.start();drain();');
 // Close the browser during a month-end scene, then make the transcript unreplayable.
 // 'version' makes the transcript unsupported up front; 'replay' lets it start and then
 // diverge mid-way, as an update that changes a scene's random draws would.
+// The blocked actions below spend energy at once (a spa visit), so the rollback does not
+// depend on which conversation a month's random draws happen to open first.
 function stranded(kind='version'){
   const b=boot();start(b);b.run('A.endMonth()');assert.ok(b.run('modalOpen'));
   const data=JSON.parse(b.storage.get(KEY));
@@ -37,7 +39,7 @@ test('a transcript that diverges mid-replay gets the same way out',()=>{
   n.run('choose(1)');assert.deepEqual(JSON.parse(n.run('downloaded')).pendingActions,transcript,'the backup must carry the transcript exactly as saved');
   const raw=n.storage.get(KEY);n.run('choose(2)');const energy=n.run('E().energy');
   const warn=console.warn;let replays=0;console.warn=(...a)=>{if(String(a[0]).includes('Pending scene recovery'))replays++;else warn(...a);};
-  try{n.run('A.chat(2)');}finally{console.warn=warn;}
+  try{n.run("A.out('spa')");}finally{console.warn=warn;}
   assert.equal(replays,0,'a rollback must not replay the broken transcript again');
   assert.equal(n.run('E().energy'),energy);assert.equal(n.storage.get(KEY),raw);assert.equal(n.run('curEv.title'),'未完事件无法续接');
   n.run('choose(0);drain()');assert.equal(n.run('PalaceActions.blocked'),false);
@@ -48,7 +50,7 @@ test('a transcript that diverges mid-replay gets the same way out',()=>{
 test('postponing the decision keeps the original save and brings the choice back',()=>{
   const {n}=stranded();const raw=n.storage.get(KEY);
   n.run('choose(2)');assert.equal(n.run('modalOpen'),false);
-  const energy=n.run('E().energy');n.run('A.chat(2)');
+  const energy=n.run('E().energy');n.run("A.out('spa')");
   assert.equal(n.run('E().energy'),energy);assert.equal(n.storage.get(KEY),raw);
   assert.equal(n.run('curEv.title'),'未完事件无法续接');
 });

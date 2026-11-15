@@ -94,7 +94,10 @@ function boot(seed,mode){
     }
    }
    if(S.over)break;
-   phase='monthly';act='endMonth';if(S.turn===began){A.endMonth();drain();}
+   phase='monthly';act='endMonth';
+   // The spent-energy pause runs on a UI timer; this harness has none, so finish the pause directly.
+   if(exhaustedMonthNotice){const pause=exhaustedMonthNotice;clearExhaustedMonthNotice();A.completeExhaustedMonth(pause.gen,pause.turn);drain();}
+   if(S.turn===began){A.endMonth();drain();}
    const monthly=events.slice(evStart).filter(e=>e.phase==='monthly');
    months.push({turn:S.turn,events:monthly.length,titles:monthly.map(e=>e.title),choiceEvents:monthly.filter(e=>e.choices.length>1).length,allEvents:events.length-evStart,health:E().health,treasury:E().treasury,people:E().people,prestige:E().prestige,roster:roster(),children: kidsAlive().map(k=>({id:k.id,name:k.name,age:kidAge(k),sex:k.sex,lit:k.lit,mar:k.mar,vir:k.vir,love:k.love}))});
    if(S.turn!==began+1&&!S.over)throw Error('turn did not advance');

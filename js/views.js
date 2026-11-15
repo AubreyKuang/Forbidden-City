@@ -48,9 +48,16 @@ function rememberPersonRoute(view,id){
 function personBackButton(fallback){
   const source=personBackStack.at(-1);
   const view=source?.state===S?source.view:fallback;
-  const label={residences:'宫室分配',officials:'朝臣名录',official:'父兄详情',consort:'妃嫔详情',kid:'皇嗣详情',princess:'公主府',palace:'宫殿',place:'上一地点'}[view]||
+  const label={residences:'宫室分配',officials:'官员表',official:'父兄详情',consort:'妃嫔详情',kid:'皇嗣详情',princess:'公主府',palace:'宫殿',place:'上一地点'}[view]||
     MENU.find(([id])=>id===view)?.[1]||'上一页';
   return `<button class="btn quiet sm detail-back" onclick="A.backPerson('${fallback}')">← 返回${esc(label)}</button>`;
+}
+// List pages reached from several places return to the page that opened them.
+const PAGE_ORIGIN_VIEWS=['officials','residences'];
+const PAGE_BACK_LABEL={home:'御书房',government:'治国理政',map:'宫城',harem:'后宫',family:'家族',kids:'皇嗣'};
+function pageBackButton(page,fallback){
+  const from=UI.pageFrom?.[page],target=PAGE_BACK_LABEL[from]?from:fallback;
+  return `<button class="btn quiet sm detail-back" onclick="A.go('${target}')">← 返回${PAGE_BACK_LABEL[target]}</button>`;
 }
 A.backPerson=function(fallback){
   const source=personBackStack.pop();
