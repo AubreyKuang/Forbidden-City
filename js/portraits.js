@@ -288,10 +288,11 @@ function ordinaryOfficialPortrait(person){
 // One pool for court officers and consorts' relatives. Identity is assigned once,
 // using local seeded randomness so adding artwork never shifts gameplay rolls.
 function assignCourtOfficialPortrait(person,bloc,{mature=person.age>=40,house={},peers=[],brother=false}={}){
+  if(person.storyPerson==='xiean')return;
   if(person.jinyiwei&&dedicatedJinyiweiPortraitsActive())return assignJinyiweiPortrait(person);
   if(ALL_OFFICIAL_PORTRAITS.includes(person.artPortrait)&&!(journalContentVersion()>=19&&!person.jinyiwei&&JINYIWEI_PORTRAITS.includes(person.artPortrait)))return;
   const basePool=OFFICIAL_PORTRAITS[bloc==='army'?'army':'civil'][mature?'mature':'young'];
-  // Preserve pending v19 (and earlier) scenes; new brothers may use the approved white portrait.
+  // Preserve pending v20 (and earlier) scenes; new brothers may use the approved white portrait.
   const pool=brother&&!mature&&journalContentVersion()>=21?[...basePool,...BROTHER_ONLY_PORTRAITS]:basePool;
   const cells=dedicatedJinyiweiPortraitsActive()?pool:pool.filter(cell=>!SHARED_OFFICIAL_PORTRAITS.includes(cell));
   const usage=new Map(cells.map(cell=>[cell,0])),seen=new Set();
@@ -403,10 +404,10 @@ function childPortraitCell(child){
 
 function portraitCell(x){
   if(x?.appearance)x=x.appearance;
-  if(journalContentVersion()>=21&&(x?.storyPerson==='xiean'||x?.personId&&(S?.scholars||[]).some(p=>p.id===x.personId&&p.storyPerson==='xiean')))return STORY_NPC_PORTRAITS.capitalNoble;
   const override=(x==='emp'?E():x)?.portraitOverride;
   if(Number.isInteger(override)&&override>=0&&override<PORTRAIT_COUNT&&!(journalContentVersion()>=19&&!x.jinyiwei&&JINYIWEI_PORTRAITS.includes(override)))return override;
   if(x==='emp')return emperorPortraitCell(E());
+  if(x.storyPerson==='xiean'||x.personId&&S?.scholars?.some(p=>p.id===x.personId&&p.storyPerson==='xiean'))return STORY_NPC_PORTRAITS.capitalNoble;
   if(x.jinyiwei)return jinyiweiPortraitCell(x);
   if(x.official!==undefined)return journalContentVersion()>=19&&JINYIWEI_PORTRAITS.includes(x.artPortrait)?ordinaryOfficialPortrait(x):ALL_OFFICIAL_PORTRAITS.includes(x.artPortrait)?x.artPortrait:FAMILY_PORTRAIT_START+12+x.official;
   if(x.isMom)return 9;

@@ -1,5 +1,5 @@
 /* Family facts create intentions. Prayer stays within the palace and does not decide medical outcomes. */
-const palacePrayersActive=()=>!!S&&!S.over&&journalContentVersion()>=21;
+const palacePrayersActive=()=>!!S&&!S.over&&journalContentVersion()>=22;
 function prayerKin(c,state=S){
  const house=c.house,list=[];
  if(house){for(const role of ['father',...brotherRoles(house)]){const p=house[role];if(p)list.push({p,relation:role==='father'?'父亲':p.age>=c.age?'兄长':'弟弟'});}
