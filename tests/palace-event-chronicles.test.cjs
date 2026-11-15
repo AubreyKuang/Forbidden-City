@@ -40,6 +40,7 @@ test('reserved partners and novice needleworkers do not inherit another persons 
 });
 test('rank requests fit motivation; family requests bind a real living available brother',()=>{
  const w=world();w.run(`for(const p of harem())p.trait='淡泊';assert.equal(HAREM.find(f=>f.name==='ambition')(),null);
+ var house=houseOf(a);house.brother||={name:a.sur+'怀远',age:28,post:'知县',alive:true};house.brother.career='official';house.brother.post='知县';a.fam.p=50;initializeOfficialHouse(a,house,[a]);
  var create=HAREM.find(f=>f.name==='family'),e=create();assert.ok(e);assert.doesNotMatch(e.text,/幼弟今年中了举/);e.choices[0].f();
  var p=officialEntries().find(e=>e.p.commission);assert.ok(p);assert.match(e.text,new RegExp(p.p.name));assert.ok(p.p.story.some(s=>s.t.includes('奉旨')));
  for(const e of officialEntries())if(e.role!=='father')e.p.alive=false;assert.equal(create(),null);`);

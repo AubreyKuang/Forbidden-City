@@ -41,12 +41,12 @@ function dockIcon(key){
   return `<img class="dock-icon px" src="${dockImages.get(key)}" alt="" aria-hidden="true">`;
 }
 function renderMenu(){const m=$('#menu');if(!S){m.innerHTML='';m.hidden=true;return}m.hidden=false;
-  const current={residences:'harem',officials:'home',official:'home',jewelry:'home',relative:'family',palace:'map',place:'map',banquet:'map',consort:'harem',kid:'kids',princess:'out'}[UI.view]||UI.view;
+  const current={residences:'harem',officials:'home',official:'home',jewelry:'home',natal:'family',relative:'family',palace:'map',place:'map',banquet:'map',consort:'harem',kid:'kids',princess:'out'}[UI.view]||UI.view;
   m.innerHTML=MENU.map(([k,l])=>`<button class="btn${current===k?' on':''}" ${current===k?'aria-current="page"':''} onclick="${k==='court'?'A.court()':`A.go('${k}')`}">${dockIcon(k)}<span>${l}</span></button>`).join('');
 }
 let panelRoute;
 let personBackStack=[];
-const PERSON_DETAIL_VIEWS=['consort','kid','relative','official'];
+const PERSON_DETAIL_VIEWS=['consort','kid','relative','official','natal'];
 function rememberPersonRoute(view,id){
   if(!PERSON_DETAIL_VIEWS.includes(view)){personBackStack=[];return;}
   if(!PERSON_DETAIL_VIEWS.includes(UI.view)||personBackStack.at(-1)?.state!==S)personBackStack=[];
@@ -76,7 +76,7 @@ function renderPanel(){
   const p=$('#panel'),v=UI.view;
   const route=JSON.stringify([v,UI.sel]);
   if(!S)p.innerHTML=v==='new'?viewNew():viewTitle();
-  else p.innerHTML=({residences:viewResidences,officials:officialsRoster,official:viewOfficial,jewelry:viewJewelryVault,relative:viewRoyalRelative,family:viewFamily,map:viewMap,palace:viewPalace,place:viewPlace,banquet:viewBanquet,home:viewHome,harem:viewHarem,consort:viewConsort,cards:viewCards,xx:viewXX,kids:viewKids,kid:viewKid,princess:viewPrincessEstate,out:viewOut,log:viewLog,sys:viewSys}[v]||viewHome)();
+  else p.innerHTML=({residences:viewResidences,officials:officialsRoster,official:viewOfficial,jewelry:viewJewelryVault,natal:viewNatalRelative,relative:viewRoyalRelative,family:viewFamily,map:viewMap,palace:viewPalace,place:viewPlace,banquet:viewBanquet,home:viewHome,harem:viewHarem,consort:viewConsort,cards:viewCards,xx:viewXX,kids:viewKids,kid:viewKid,princess:viewPrincessEstate,out:viewOut,log:viewLog,sys:viewSys}[v]||viewHome)();
   if(S&&v==='xx')rememberSelectionBlurt(selectionCurrent());
   if(route!==panelRoute){p.scrollTop=0;panelRoute=route;}
 }
@@ -149,7 +149,7 @@ function familyGraphSVG(){
     group.fathers.get(id).indices.push(index);
   });
   const col=190,cardWidth=168,W=people.length*col+24;
-  const clanY=12,clanHeight=54,houseY=98,houseHeight=56+44*Math.max(1,...people.map(c=>brotherRoles(houseOf(c)).length)),consortY=houseY+houseHeight+38,consortHeight=82;
+  const clanY=12,clanHeight=54,houseY=98,houseHeight=56+44*Math.max(1,...people.map(c=>brotherRoles(houseOf(c)).length+natalPeople(c.house).length)),consortY=houseY+houseHeight+38,consortHeight=82;
   const childY=consortY+128,childHeight=66,childStep=childHeight+12;
   const H=childY+Math.max(0,...people.map(c=>kids.get(c.id)?.length||0))*childStep+12;
   const x=i=>12+col*(i+.5),blood='#996a48',consortBottom=consortY+consortHeight;
@@ -172,7 +172,7 @@ function familyGraphSVG(){
         const military=stance==='army'?1:0;
         const kin=(person,role,office)=>person?`<button class="graph-kin-person${!person.alive?' deceased':''}" onclick="A.go('official','${c.id}:${role}')" aria-label="查看${esc(person.name)}">${porImg(person,34)}${label(person.name,`${role==='father'?(indices.length>1?'父亲 · 亲姐妹同父':'父亲'):officialKinLabel(h,role)} · ${officialStatus(person)} · ${office}`)}</button>`:'';
         cards+=`<div class="graph-card graph-house" data-father-id="${c.fatherId}" data-person-id="${esc(father.id)}" style="${at(cx,houseY,houseHeight)};--house-color:${color}">
-          ${kin(father,'father',father.office)}${brotherRoles(h).map(role=>kin(h[role],role,h[role].post)).join('')}${brotherRoles(h).length?'':'<small>无兄长</small>'}</div>`;
+          ${kin(father,'father',father.office)}${brotherRoles(h).map(role=>kin(h[role],role,h[role].post)).join('')}${natalPeople(h).map(p=>`<button class="graph-kin-person" onclick="A.go('natal','${c.id}:${p.id}')" aria-label="查看${esc(p.name)}">${porImg(natalPortrait(p),34)}${label(p.name,natalLabel(c,p)+' · '+natalAge(p)+'岁 · '+natalStatus(p))}</button>`).join('')}</div>`;
         // One shared trunk and sibling rail; every daughter connects directly below her father.
         wires+=`<g class="paternal-links" data-parent-id="${esc(father.id)}">${line(cx,houseY+houseHeight,cx,consortY-19,blood)}${line(x(indices[0]),consortY-19,x(indices.at(-1)),consortY-19,blood)}
           ${indices.map(index=>`<path data-child-id="${people[index].id}" d="M${x(index)} ${consortY-19} V${consortY}" stroke="${blood}" stroke-width="1.8"><title>${esc(father.name)}之女 ${esc(fullName(people[index]))}</title></path>`).join('')}</g>`;
@@ -277,7 +277,7 @@ function viewHarem(){
   const sec=(t,arr)=>arr.length?`<h3>${t}（${arr.length}）</h3><div class="grid portrait-grid">${arr.map(consortCard).join('')}</div>`:'';
   const dead=S.consorts.filter(c=>!c.alive||c.gone);
   return `<h2>后宫</h2><p class="hint">点击妃嫔查看详情、互动与她的故事。各位分名额：嫔6、妃4、贵妃2、皇贵妃1、皇后1。</p><div class="acts"><button class="btn jade" onclick="A.openResidence()">宫室分配 · 主位与同住</button></div>${facHTML()}
-   ${sec('中宫',g(c=>c.rank===8))}${sec('妃位',g(c=>c.rank>=5&&c.rank<8))}${sec('嫔位',g(c=>c.rank===4))}${sec('小主',g(c=>c.rank<4))}${sec('回家省亲',all.filter(c=>c.homeLeave&&!c.cold))}${sec('寺中修行',all.filter(c=>c.templeStay&&!c.cold))}${sec('冷宫',all.filter(c=>c.cold))}${sec('贴身宫女',maids().filter(m=>m.near))}${sec('承恩宫女',maids().filter(m=>!m.near))}
+   ${sec('中宫',g(c=>c.rank===8))}${sec('妃位',g(c=>c.rank>=5&&c.rank<8))}${sec('嫔位',g(c=>c.rank===4))}${sec('小主',g(c=>c.rank<4))}${sec('回家省亲',all.filter(c=>c.homeLeave&&!c.cold))}${sec('寺中修行',all.filter(c=>c.templeStay&&!c.cold))}${sec('冷宫',all.filter(c=>c.cold))}${sec('贴身宫女',maids().filter(m=>m.near))}
    ${dead.length?`<h3>故人</h3><div class="hint">${dead.map(c=>`<button class="btn sm" onclick="A.go('consort',${c.id})">${esc(fullName(c))}${c.gone?'（出宫）':'（已故）'}</button>`).join(' ')}</div>`:''}`}
 function detailSection(title,content){
   return content?`<section class="detail-section"><h3>${title}</h3><div class="detail-content">${content}</div></section>`:'';
@@ -302,7 +302,7 @@ function viewConsort(){
   const st=(l,v,hid)=>hid?`<div class="bar"><span>${l}</span><i></i><em>??</em></div>`:bar(l,v,'#8e6f57');
   let acts='', management='', penalties='';
   if(act&&c.maid){
-    acts+=`<button class="btn" onclick="A.night(${c.id})" ${c.preg?'disabled':''}>召幸<small>${c.preg?'有孕在身':'精力-1'}</small></button>`;
+    acts+=`<button class="btn" onclick="A.night(${c.id})" ${c.preg||c.cardWithdrawn?'disabled':''}>召幸<small>${c.cardWithdrawn?'绿头牌已撤':c.preg?'有孕在身':'精力-1'}</small></button>`;
     acts+=`<button class="btn primary" onclick="A.chat(${c.id})">闲话家常<small>精力-1</small></button>`;
     acts+=`<button class="btn jade" onclick="A.gift(${c.id})">赏赐<small>国库-20</small></button>`;
     management+=`<button class="btn" onclick="A.raiseMaid(${c.id},1)">册封为答应</button><button class="btn" onclick="A.raiseMaid(${c.id},0)">册封为官女子</button><button class="btn" onclick="A.maidNear(${c.id})">${c.near?'遣回尚衣局':'调到身边'}</button>`;
@@ -310,7 +310,7 @@ function viewConsort(){
   } else if(act&&(c.templeStay||c.homeLeave)){
     // Temple status and return actions have their own section below.
   } else if(act&&!c.cold){
-    acts+=`<button class="btn" onclick="A.night(${c.id})" ${c.preg?'disabled':''}>召幸侍寝<small>${c.preg?'有孕在身':'精力-1'}</small></button>`;
+    acts+=`<button class="btn" onclick="A.night(${c.id})" ${c.preg||c.cardWithdrawn?'disabled':''}>召幸侍寝<small>${c.cardWithdrawn?'绿头牌已撤':c.preg?'有孕在身':'精力-1'}</small></button>`;
     acts+=`<button class="btn primary" onclick="A.chat(${c.id})">闲话家常<small>精力-1</small></button>`;
     acts+=`<button class="btn jade" onclick="A.gift(${c.id})">赏赐<small>礼物 · 内库珍饰</small></button>`;
     management+=momVisitButton(c);
@@ -330,6 +330,8 @@ function viewConsort(){
     acts+=`<button class="btn primary" onclick="A.uncold(${c.id})">放出冷宫</button>`;
     penalties+=`<button class="btn danger" onclick="A.away(${c.id})">遣出宫</button>`;
   }
+  if(act&&!c.maid){acts+=`<button class="btn quiet" onclick="A.toggleGreenCard(${c.id})">${c.cardWithdrawn?'恢复绿头牌':'撤下绿头牌'}</button>`;}
+  if(act&&awaitingNoticeReason(c))management+=`<button class="btn" onclick="A.awaitingNotice(${c.id})">听她说久候的心事</button>`;
   const family=(act?visitorLine(c)+fosterLine(c)+clanLine(c)+conKidLine(c)+relLine(c):'')+houseLine(c)+fiveBrotherPanel(c);
   return `${personBackButton('harem')}
    <header class="detail-head">${porImg(c,224)}<div class="grow">
@@ -363,9 +365,9 @@ function viewConsort(){
    </div>`;
 }
 function viewCards(){
-  const h=harem().sort((a,b)=>b.rank-a.rank||b.favor-a.favor).concat(maids().filter(m=>m.near));
+  const h=harem().filter(c=>!c.cardWithdrawn).sort((a,b)=>b.rank-a.rank||b.favor-a.favor).concat(maids().filter(m=>m.near&&!m.cardWithdrawn));
   return `<h2>敬事房 · 翻牌子</h2><p class="hint">敬事房呈上绿头牌。翻谁的牌子，今夜便召谁侍寝（精力-1）。本月已侍寝 ${E().nightsMonth||0} 次，一月超过三次有损龙体。</p>
-   ${h.length?`<div class="pais">${h.map(c=>`<button class="pai" ${c.preg?'disabled':''} onclick="A.night(${c.id})"><strong>${esc(cName(c))}</strong><small>${c.preg?'有孕':'恩宠 '+rd(c.favor)}</small></button>`).join('')}</div>`:'<p class="hint">后宫空虚，先去选秀吧。</p>'}`;
+   ${h.length?`<div class="pais">${h.map(c=>`<button class="pai" ${c.preg?'disabled':''} onclick="A.night(${c.id})"><strong>${esc(cName(c))}</strong><small>${c.preg?'有孕':'恩宠 '+rd(c.favor)}</small></button>`).join('')}</div>`:'<p class="hint">暂无可翻的绿头牌。可在妃嫔详情中恢复绿头牌。</p>'}`;
 }
 function viewXX(){
   const since=S.turn-S.flags.lastXX;

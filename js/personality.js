@@ -73,7 +73,6 @@ const WISHES={
  cat:{t:'想养一只猫',btn:'送她一只狮子猫（国库-2万两）',f:c=>{chg({treasury:-2});c.t2='爱猫';c.catAbsent=false;return '雪白的狮子猫一进门就钻进了她怀里。她给它起名叫“团圆”。'}},
  fire:{t:'想看一场烟火',btn:'上元夜放烟火（国库-40万两）',f:c=>{chg({treasury:-40});harem().forEach(o=>o.mood=clamp(o.mood+5));return '火树银花不夜天。她仰着头，烟火映在她眼睛里。'}},
  poem:{t:'想要陛下亲笔写的诗',btn:'为她写一首诗（精力-1）',cond:()=>E().energy>0,f:c=>{E().energy--;return '你写了四句，字不算好，诗也平平。她却裱起来挂在了床头。'}},
- brother:{t:'想为早夭的弟弟立个牌位',btn:'准她在宫中设牌位（国库-5万两）',f:c=>{chg({treasury:-5});return '她在小佛堂里给弟弟上了一炷香，说：“他要是活着，今年该十五了。”'}},
 };
 const WOUNDS={
  quiet:'从小便习惯独自读书想事。并非受了谁的冷遇，只是觉得一段无人催促的时光，也很值得珍重。',
@@ -114,6 +113,7 @@ const woundOK=(c,w)=>w==='exile'?!!c.rescue:c.rescue?false:w==='quiet'?isSolitar
 const wishOK=(c,w)=>w==='rescueLetter'?!!c.rescue:c.rescue?false:!(w==='father'&&c.fam.p>=60);
 function grantConsortTitle(c,title){c.title=title;if(title&&c.wish==='title')c.wishDone=true;}
 function deepen(c){if(!c)return;
+  if(c.wish==='brother'){c.wish=c.rescue?'rescueLetter':'poem';c.wishKnown=false;c.wishDone=false;}
   ensureConsortFertility(c);
   if(c.t2===undefined){c.t2=pick(Object.keys(QUIRKS));c.like=pick(LIKES);let h=pick(LIKES);while(h===c.like)h=pick(LIKES);c.hate=h;c.kl=false;
     c.wish=pick(Object.keys(WISHES).filter(w=>wishOK(c,w)));c.wishKnown=false;c.wishDone=false;c.wound=pick(Object.keys(WOUNDS).filter(w=>woundOK(c,w)));c.woundKnown=false;c.mem=c.mem||[];
@@ -122,6 +122,22 @@ function deepen(c){if(!c)return;
   if(!c.wishDone&&!wishOK(c,c.wish))c.wish=pick(Object.keys(WISHES).filter(w=>wishOK(c,w)));
   c.hobby=consortHobby(c);
   if(c.wish==='title'&&c.title)c.wishDone=true}
+// Remove only the retired, invented wish; actual deaths in the family remain.
+function migrateRetiredBrotherWish(){
+  const obsolete=value=>/想为早夭的弟弟立个牌位|她在小佛堂里给弟弟上了一炷香/.test(JSON.stringify(value)||'');
+  for(const c of [...S.consorts,...(S.cands||[])]){
+    if(c.wish==='brother'){c.wish=c.rescue?'rescueLetter':'poem';c.wishKnown=false;c.wishDone=false;}
+    for(const key of ['story','mem'])if(c[key])c[key]=c[key].filter(x=>!obsolete(x));
+    if(obsolete(c.xin))c.xin={k:'平和',t:S.turn};
+  }
+  if(S.log)S.log=S.log.filter(x=>!obsolete(x));
+  if(S.npcMemory&&obsolete(S.npcMemory)){
+    const data=JSON.parse(JSON.stringify(S.npcMemory));
+    for(const [id,event] of Object.entries(data.events||{}))if(obsolete(event))delete data.events[id];
+    for(const memory of Object.values(data.people||{}))for(const key of ['short','long','life'])if(memory[key])memory[key]=memory[key].filter(x=>!obsolete(x));
+    S.npcMemory=data;
+  }
+}
 function remember(c,k,t){
   if(!c)return;
   const negative=k==='hurt'||k==='neglect';
@@ -169,7 +185,7 @@ A.chat=function(id,fromEvent=false){const c=byId(id);if((modalOpen&&!fromEvent)|
   if(NEGX.includes(xk)&&!continuityBlocksSoothing(c,xk)){const p=({'思念':.8,'委屈':.6,'惶恐':.55,'嫉恨':.25,'悲恸':.3,'怨恨':.12,'心如死灰':.1,'忧心':.2}[xk]||0)+c.aff/400;if(chance(p)){const nk=xk==='思念'?'欢喜':'释然';setXin(c,nk,'陛下陪她说了许久的话');rev+=xinOf(c)!==xk?`\n§心境：${xk} → ${xinOf(c)}`:`\n§她的心境仍是「${xk}」`}else rev+=`\n§她的心境仍是「${xk}」`}
   const s=cchg(c,{aff:routineAffection(c,c.trait==='痴情'?8:5),mood:8,favor:2});
   const moment=recordSharedMoment(c,xk);if(moment)L.push(moment);
-  story(c,`陛下驾临闲话。${L[1]}`);rememberConversation(c,voice,c.palace);setScene('harem');
+  c.lastPersonalAttention=S.turn;story(c,`陛下驾临闲话。${L[1]}`);rememberConversation(c,voice,c.palace);setScene('harem');
   pushEv({title:'闲话家常',por:c,text:L.join('\n')+rev+fx(s),choices:[ok1]})};
 A.gift=function(id){const c=byId(id);if(modalOpen||S.over||!inPalace(c))return;deepen(c);
   let opts=shuffle(LIKES).slice(0,4);if(c.kl&&!opts.includes(c.like))opts[0]=c.like;

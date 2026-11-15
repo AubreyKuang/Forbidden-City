@@ -13,7 +13,7 @@ function continuityFocus(c){
 function continuityThreads(c){return (continuityState()?.threads||[]).filter(t=>!c||t.owner===c.id||t.other===c.id);}
 function continuityOpen(t){return t&&t.stage!=='ended';}
 function continuityOfficial(t){
-  const p=byId(t.owner)?.house?.[t.role];return p?.id===t.officialId?p:null;
+  const p=officialPerson(byId(t.owner)?.house,t.role);return p?.id===t.officialId?p:null;
 }
 function continuityCast(t){
   return [byId(t.owner),t.kind==='family'?continuityOfficial(t):t.kind==='child'?kidById(t.other):byId(t.other)].filter(Boolean);

@@ -8,9 +8,11 @@ function childNeedsMother(k){
 }
 function motherOriginalRank(k){const m=byId(k.mom);return Math.max(m?.rank??0,k.birthTraits?.mother?.rank??0);}
 function fosterPetitionReason(c){
-  if(!inPalace(c)||c.maid||c.age<20||c.preg||(c.delivery&&!c.delivery.settled)||c.hp<40||
+  if(!inPalace(c)||c.maid||c.age<20||c.preg||(c.delivery&&!c.delivery.settled)||c.hp<20||
     S.children.some(k=>k.alive&&(k.mom===c.id||k.foster===c.id)))return null;
   const years=Number.isFinite(c.enteredAt)?S.turn-c.enteredAt:0;
+  if(c.trait==='体弱'&&c.hp<65&&c.rank>=3&&c.favor>=35&&years>=24&&c.lastBirth<0&&!S.children.some(k=>k.mom===c.id))return 'frail-wish';
+  if(c.hp<40)return null;
   if(c.rank>=3&&c.favor>=70&&years>=24&&(c.nights||0)>=8&&c.lastBirth<0&&!S.children.some(k=>k.mom===c.id))return 'long-wait';
   if(c.age>=30&&c.rank>=4&&c.favor>=45&&(c.fam.p>=25||c.favor>=70))return 'empty-household';
   return null;
@@ -20,9 +22,10 @@ function fosterPetitionMatch(c,k){
   const reason=fosterPetitionReason(c),m=byId(k?.mom),f=k&&fosterOf(k);
   if(!reason||!m||m===c||!childInPalace(k)||k.pendingName||kidAge(k)>=6||k.id===S.heir||
     motherOriginalRank(k)>=5||c.rank<=motherOriginalRank(k)||(f?.alive&&!f.cold&&!f.gone))return false;
-  return childNeedsMother(k)||(reason==='long-wait'&&inPalace(m));
+  return childNeedsMother(k)||(['long-wait','frail-wish'].includes(reason)&&inPalace(m));
 }
 function fosterWishWords(c,k){
+  if(fosterPetitionReason(c)==='frail-wish')return `臣妾身子弱，入宫这些年一直未能有孕。病榻边总太静，若能照看${k.name}，也想慢慢学着做母亲。可臣妾知道，不能为了自己的心愿让孩子受累；乳母、医者和生母的意思，都该先安排妥当。`;
   if(isSolitary(c))return `臣妾不惯与人热闹，却愿给${k.name}留一处灯下的位置。喜欢独坐，也并非不想有人亲近。`;
   if(['骄纵','骄矜','善妒'].includes(c.trait))return `宫里总拿有无孩子说事，臣妾也有不甘。可${k.name}若来了，总要一日一日好好养，不能只在人前争这一口气。`;
   if(c.trait==='城府')return `臣妾知道养育也牵着将来的倚仗，但不敢只求一个名分。${k.name}的起居与教养，臣妾愿实实在在担起来。`;
@@ -34,7 +37,7 @@ function fosterWishWords(c,k){
 }
 function fosterPetitionText(c,k){
   const m=byId(k.mom),reason=fosterPetitionReason(c),past=S.children.some(x=>x.mom===c.id);
-  const opening=reason==='long-wait'?`${cName(c)}入宫已${Math.floor((S.turn-c.enteredAt)/12)}年，常获召见，却一直未曾生育。她今日提起的，是${k.name}。`:
+  const opening=reason==='frail-wish'?`${cName(c)}缠绵病榻，入宫已有${Math.floor((S.turn-c.enteredAt)/12)}年，未曾生育。今日握着你的手，提起想要一个孩子，也想请养${k.name}。${c.hp<40?'医者认为她眼下尚不能承担日常照料，应先调养，再议请养。':''}`:reason==='long-wait'?`${cName(c)}入宫已${Math.floor((S.turn-c.enteredAt)/12)}年，常获召见，却一直未曾生育。她今日提起的，是${k.name}。`:
     `${cName(c)}已${c.age}岁，${past?'如今膝下无人相伴':'膝下无子'}，今日私下求见。`;
   const care=childNeedsMother(k)?`她知道孩子有乳母照料，只是${!m.alive?'生母已不在了':'生母眼下不能亲自照看'}，希望自己承担长久照护。`:
     `${fullName(m)}仍在亲自抚养孩子。她提出的是请养之愿，并非孩子无人照顾；若更换养母，生母与孩子的感受也须听见。`;
@@ -46,7 +49,7 @@ function maternalKinMatch(c,k){
     !!c.kin?.[m.id]&&c.clan===m.clan;
 }
 function petitionFoster(k,c,kin=false,consensual=false){
-  if(S.over||!(kin?maternalKinMatch(c,k):fosterPetitionMatch(c,k)))return null;
+  if(S.over||c.hp<40||!(kin?maternalKinMatch(c,k):fosterPetitionMatch(c,k)))return null;
   const m=byId(k.mom);
   if(consensual&&!motherAcceptsFoster(c,k))return null;
   const text=doFoster(k,c,{maternalKin:kin,consensual});
@@ -65,10 +68,10 @@ function fosterPetitionEvent(only=null){
   const pairs=fosterPetitionPairs(only);
   if(!pairs.length||(!only&&!chance(.08)))return null;
   const {c,k}=pick(pairs),m=byId(k.mom);
-  return {title:'愿留一盏灯',por:c,cast:[k],present:[c],cooldown:24,valid:()=>fosterPetitionMatch(c,k),
+  return {title:fosterPetitionReason(c)==='frail-wish'?'病榻心愿':'愿留一盏灯',por:c,cast:[k],present:[c],cooldown:24,valid:()=>fosterPetitionMatch(c,k),
     onQueue:()=>{S.flags.lastFosterPetition=c.lastFosterPetition=k.lastFosterPetition=S.turn;story(c,`【请养之愿】${fosterPetitionText(c,k)}`);},
     text:fosterPetitionText(c,k),choices:[
-      childNeedsMother(k)?{t:`准她抚养${k.name}`,f:()=>petitionFoster(k,c)}:{t:'先听生母的意思，再定抚养',f:()=>{if(fosterPetitionMatch(c,k)){const ev=fosterMotherDiscussion(c,k);if(ev.valid()){ev.onQueue();pushNow(ev);}}return null;}},
+      c.hp<40?{t:'先调养身体，保留请养心愿',f:()=>{story(c,`病中请求抚养${k.name}，陛下先安排调养，孩子暂不迁居，待身体允许再议。`);return '乳母仍照原有安排照看孩子；她的愿望被认真听见，也没有匆忙更换养育。';}}:childNeedsMother(k)?{t:`准她抚养${k.name}`,f:()=>petitionFoster(k,c)}:{t:'先听生母的意思，再定抚养',f:()=>{if(fosterPetitionMatch(c,k)){const ev=fosterMotherDiscussion(c,k);if(ev.valid()){ev.onQueue();pushNow(ev);}}return null;}},
       {t:childNeedsMother(k)?'暂由乳母照看，此事缓议':'维持原有抚养，此事缓议',f:()=>{story(c,`请求抚养${k.name}，陛下暂缓定夺。`);save('auto');return childNeedsMother(k)?'孩子仍由原处的乳母照护，没有更换养母。':`孩子仍随生母${fullName(m)}生活，由乳母协助照护，没有更换养母。`;}},
       {t:'婉言不允',f:()=>{story(c,`请求抚养${k.name}，未获允准。`);remember(c,'family-care','请养孩子未获准，心中失落。');save('auto');return fx(cchg(c,{mood:-5}));}}]};
 }
@@ -129,3 +132,5 @@ function kinSuccessionEvent(){
       }},
       {t:'婉拒入宫，由内廷照常安顿孩子',f:()=>{story(c,'娘家请求姐妹入宫续缘，陛下未允。');save('auto');return '家书回覆，眼下不再添新人；孩子原有的乳母与养母仍照常照护。';}}]};
 }
+
+function frailFosterVoice(c){return fosterPetitionReason(c)==='frail-wish'?voiceLine('frail-foster','她在病榻上停了片刻，说起一直放在心里的愿望。','臣妾一直未能有孕，也想要一个孩子。若有合适的孩子可请养，愿先安排好照护、听过生母的意思；不是有了名分便能算尽责。'):null;}
