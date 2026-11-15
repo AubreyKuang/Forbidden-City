@@ -131,7 +131,7 @@ A.readInkstoneEssay=function(){
   const gift=seasonJournal().inkstone,young=gift&&kidById(gift.young);
   if(S.over||modalOpen||!atSeasonPlace('ss')||!gift||!childInPalace(young)||S.turn<gift.due)return;
   const elder=kidById(gift.elder);
-  pushEv({title:'上书房 · 旧砚新文',por:young,text:`${young.name}第一次把一页文章写得工整，特意带着${gift.elderName}送的旧砚来给你看。`,choices:[
+  pushEv({title:'上书房 · 旧砚新文',illustration:'old-inkstone',por:young,text:`${young.name}第一次把一页文章写得工整，特意带着${gift.elderName}送的旧砚来给你看。`,choices:[
     {t:'让孩子把文章也送一份给手足',f:()=>{
       if(ensureSeasonJournal().inkstone!==gift)return null;
       delete S.seasonal.inkstone;

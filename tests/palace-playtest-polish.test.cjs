@@ -52,7 +52,7 @@ test('garden encounters only show a skill she actually has',()=>{
   for(const hobby of ['做点心','骑射','读书']){
     b.run(`var c=byId(2);c.hobby=${JSON.stringify(hobby)};`);
     for(let i=0;i<12;i++){
-      const text=b.run('gardenEncounterText(c)');
+      const text=b.run('gardenEncounter(c).text');
       if(hobby!=='抚琴')assert.doesNotMatch(text,/抚琴/,`${hobby}: ${text}`);
     }
   }

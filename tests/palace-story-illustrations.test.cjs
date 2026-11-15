@@ -84,3 +84,32 @@ test('a city visit shows the old school only for the school encounter',()=>{
     assert.doesNotMatch(game.run("$('#mbox').innerHTML"),/event-illustration/);
   }
 });
+
+test('the fish basin follows the feeding dialogue and restores from the same saved encounter',()=>{
+  const game=start();
+  game.force(.1,0,.6);
+  game.run("A.out('garden')");
+  assert.match(game.run('curEv.text'),/喂鱼/);
+  assert.match(game.run("$('#mbox').innerHTML"),/story-garden-fish\.webp/);
+
+  const resumed=boot(42,game.storage);
+  resumed.run("A.load('auto')");
+  assert.match(resumed.run("$('#mbox').innerHTML"),/story-garden-fish\.webp/);
+  assert.equal(resumed.run('PalaceActions.blocked'),false);
+});
+
+test('the lotus illustration follows the result where she hears the rain',()=>{
+  for(const [roll,illustrated] of [[0,true],[.99,false]]){
+    const game=start();
+    game.run(`const person=empress();person.trait='沉静';
+      const episode=PERSONAL_EPISODES.find(e=>e.title==='残荷听雨');
+      offerPersonalExperience(person,episode);
+      A.personalExperience(person.id);choose(0);nextEv();
+      S.turn=person.personalExperiences.current.due;A.personalExperience(person.id);`);
+    assert.equal(game.run('curEv.title'),'残荷听雨 · 后话');
+    assert.doesNotMatch(game.run("$('#mbox').innerHTML"),/event-illustration/);
+    game.force(roll);
+    game.run('choose(0)');
+    assert.equal(game.run("$('#mbox').innerHTML.includes('story-rain-lotus.webp')"),illustrated);
+  }
+});
