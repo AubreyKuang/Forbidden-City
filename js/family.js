@@ -176,7 +176,7 @@ const KIN_TXT={'亲姐':'亲姐姐','亲妹':'亲妹妹','堂姐':'堂姐','堂�
 function clanKey(c){return c.clan||(c.clan=c.sur+'|'+c.fam.t)}
 function clanName(key){const [s,t]=key.split('|');return `${s}氏（${t.endsWith('家')?t:t+'家'}）`}
 function clanMembers(key){return alive().filter(c=>!c.maid&&clanKey(c)===key&&!NOCLAN.includes(key.split('|')[1]))}
-const NOCLAN=['宫女','寒门','西域贡女','歌女','良家子','先帝才人','西域流寓','农家'];
+const NOCLAN=['宫女','寒门','西域贡女','歌女','良家子','先帝才人','西域流寓','农家','东瀛贵族','海西贵族'];
 const hasClan=c=>!c.maid&&!NOCLAN.includes((c.clan||'').split('|')[1]||c.fam.t);
 function clans(){const m={};alive().filter(hasClan).forEach(c=>{const k=clanKey(c);(m[k]=m[k]||[]).push(c)});return Object.entries(m).filter(([k,v])=>v.length>=2)}
 const isRival=(a,b)=>!!(a.kinRival&&a.kinRival[b.id]);

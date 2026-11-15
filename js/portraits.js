@@ -175,7 +175,7 @@ const LEGACY_DESCENDANT_VARIANTS=10;
 const DESCENDANT_VARIANTS=29;
 const EXISTING_PRINCE_VARIANTS=4;
 const EXTRA_PRINCE_VARIANTS=LEGACY_DESCENDANT_VARIANTS-EXISTING_PRINCE_VARIANTS;
-const BEAUTY_PORTRAIT_START=92, YOUNG_ROYAL_PORTRAIT_START=136, PORTRAIT_COUNT=316;
+const BEAUTY_PORTRAIT_START=92, YOUNG_ROYAL_PORTRAIT_START=136, PORTRAIT_COUNT=358;
 const PRINCESS_VARIANTS=33;
 const EXPANDED_ROYAL_START=294;
 const EMPEROR_PORTRAITS=[12,13,312,313,314,315];
@@ -194,7 +194,10 @@ const portraitSheets=[
   {start:248,rows:5,scale:4,src:'./assets/images/palace-consorts-expanded.webp?v=1',image:document.createElement('img')},
   {start:268,rows:7,scale:4,src:'./assets/images/palace-relatives-expanded.webp?v=1',image:document.createElement('img')},
   {start:294,rows:5,scale:4,src:'./assets/images/palace-royals-expanded.webp?v=1',image:document.createElement('img')},
-  {start:312,rows:1,scale:4,src:'./assets/images/palace-emperors-expanded.webp?v=1',image:document.createElement('img')}
+  {start:312,rows:1,scale:4,src:'./assets/images/palace-emperors-expanded.webp?v=1',image:document.createElement('img')},
+  {start:316,rows:6,scale:4,src:'./assets/images/palace-consorts-legends.webp?v=1',image:document.createElement('img')},
+  {start:340,rows:2,scale:4,src:'./assets/images/palace-consorts-foreign.webp?v=1',image:document.createElement('img')},
+  {start:346,rows:3,scale:4,src:'./assets/images/palace-consorts-finery.webp?v=1',image:document.createElement('img')}
 ];
 const portraitSheet=cell=>portraitSheets.slice().reverse().find(sheet=>cell>=sheet.start)||portraitSheets[0];
 function ensurePortraitSheet(cell){const sheet=portraitSheet(cell);if(!sheet.image.src)sheet.image.src=sheet.src;}
@@ -207,8 +210,10 @@ atlasCanvas.width=PORTRAIT_WIDTH;atlasCanvas.height=PORTRAIT_HEIGHT;
 const atlasInk=atlasCanvas.getContext('2d');
 const ART_CACHE=new Map();
 
-const CONSORT_PORTRAITS=[1,2,3,4,5,6,7,21,...Array.from({length:44},(_,i)=>92+i).filter(cell=>![102,103,134,135].includes(cell)),...Array.from({length:8},(_,i)=>208+i),240,241,242,243,...Array.from({length:20},(_,i)=>248+i).filter(cell=>cell!==263)];
-const WESTERN_PORTRAITS=[22,23,24,102,103,134,135,263];
+const CONSORT_PORTRAITS=[1,2,3,4,5,6,7,21,...Array.from({length:44},(_,i)=>92+i).filter(cell=>![102,103,134,135].includes(cell)),...Array.from({length:8},(_,i)=>208+i),240,241,242,243,...Array.from({length:20},(_,i)=>248+i).filter(cell=>cell!==263),...Array.from({length:24},(_,i)=>316+i),...Array.from({length:12},(_,i)=>346+i)];
+const WESTERN_PORTRAITS=[22,23,24,102,103,134,135,263,340,343];
+const EASTERN_PORTRAITS=[341,344],OVERSEAS_PORTRAITS=[342,345];
+const ALL_CONSORT_PORTRAITS=[...CONSORT_PORTRAITS,...WESTERN_PORTRAITS,...EASTERN_PORTRAITS,...OVERSEAS_PORTRAITS];
 const PORTRAIT_CLOTHES={
   1:'圆领袍',2:'齐胸襦裙',3:'宋式褙子',4:'窄袖骑装',5:'齐腰襦裙',
   6:'宋式褙子',7:'交领襦裙',10:'交领宫装',21:'宋式褙子',
@@ -226,7 +231,14 @@ for(let cell=208;cell<216;cell++)PORTRAIT_CLOTHES[cell]='盛装华服';
 ['交领襦裙','华绣宫装','齐胸襦裙','宋式褙子','窄袖骑装','交领襦裙','华绣宫装','交领襦裙',
  '披帛襦裙','宽袖交领袍','圆领骑装','冬日披风','短袄襦裙','立领长衫',
  '宋式褙子','西域锦衣','长褙甲','短衫襦裙','披帛襦裙','鹤纹圆领袍'].forEach((name,i)=>{PORTRAIT_CLOTHES[248+i]=name;});
-const consortPortraits=c=>c.fam?.t==='西域贡女'?WESTERN_PORTRAITS:CONSORT_PORTRAITS;
+['水纹褙子','锦裘披风','绛纱襦裙','牡丹华服','流云宽袖','梅纹长褙甲',
+ '玄朱曲裾','半臂披帛','织金长褙甲','茉莉短披','锦绣骑装','云肩霞裙',
+ '素衣玉簪','金黄短袄','朱绣云肩','紫绣褙甲','窄袖锦袍','玫色披肩',
+ '雪绒冬衣','抱猫春衫','青瓷礼服','绣花襦裙','绛纱灯影','碧格长褙',
+ '西域榴金锦衣','东瀛菊纹小袖','海西珍珠宫装','西域艾德莱斯锦衣','东瀛藤色重衣','海西紫金宫装',
+ '玄金流云','牡丹霓裳','玉羽流仙','翠影金枝','凤冠霞帔','绛紫珠翠',
+ '月华琼宫','敦煌流金','洛水凝碧','牡丹天香','星河紫阙','金霞映雪'].forEach((name,i)=>{PORTRAIT_CLOTHES[316+i]=name;});
+const consortPortraits=c=>c.fam?.t==='西域贡女'?WESTERN_PORTRAITS:c.fam?.t==='东瀛贵族'?EASTERN_PORTRAITS:c.fam?.t==='海西贵族'?OVERSEAS_PORTRAITS:CONSORT_PORTRAITS;
 
 const FATHER_PORTRAITS=[268,269,270,271,276,277,278,282,283,284,288,289,290];
 const BROTHER_PORTRAITS=[272,273,274,275,279,280,281,285,286,287,291,292,293];

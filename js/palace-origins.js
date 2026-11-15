@@ -35,7 +35,7 @@ A.rescuedReturn=function(id){const c=byId(id);if(modalOpen||!inPalace(c)||c.resc
 function rescuedGuestsPanel(){return (S.shelteredGuests||[]).filter(g=>!g.gone).map(g=>`<section class="personal-experience"><h3>宫中客舍 · ${esc(fullName(g))}</h3><p>成年异乡来客 · 自愿暂住，尚未册封</p><p>${esc(rescueVoice(g).lines[0])}</p><button class="btn jade" onclick="A.rescuedGuest(${g.id})">探问近况与去留</button>${journeyPanel(g)}</section>`).join('');}
 
 /* Prejudice belongs to actors and institutions; it is not a truth about origins. */
-const outsiderConsort=c=>!!c.rescue||['西域贡女','西域流寓'].includes(c.fam.t);
+const outsiderConsort=c=>!!c.rescue||['西域贡女','西域流寓','东瀛贵族','海西贵族'].includes(c.fam.t);
 function originAttitude(a,b){
  if(a===b||!inPalace(a)||!inPalace(b))return null;
  const outsider=outsiderConsort(b),gap=a.fam.p-b.fam.p;
