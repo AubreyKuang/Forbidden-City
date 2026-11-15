@@ -19,7 +19,7 @@ DEST.mkdir(parents=True, exist_ok=True)
 
 def capture(name):
     target = f'https://aubreykuang.github.io/Forbidden-City/docs/qa/gouyi-gallery/{name}.html?revision={REVISION}'
-    request = urllib.request.Request('https://image.thum.io/get/noanimate/allowJPG/width/1200/crop/1100/' + target,
+    request = urllib.request.Request('https://image.thum.io/get/noanimate/allowJPG/width/1200/crop/1200/' + target,
                                      headers={'User-Agent': 'Forbidden-City-Documentation'})
     with urllib.request.urlopen(request, timeout=55) as response:
         data = response.read()
