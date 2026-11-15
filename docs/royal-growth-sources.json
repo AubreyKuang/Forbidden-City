@@ -1,0 +1,189 @@
+{
+  "frame": [
+    448,
+    560
+  ],
+  "columns": 4,
+  "portraits": [
+    {
+      "id": 380,
+      "atlas": "palace-royal-growth.webp",
+      "source": "exec-4f7e7073-2bce-450f-930a-e9927bb36237.png",
+      "cell": 0,
+      "crop": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "sex": "f",
+      "variant": 33,
+      "stage": 0
+    },
+    {
+      "id": 381,
+      "atlas": "palace-royal-growth.webp",
+      "source": "exec-4f7e7073-2bce-450f-930a-e9927bb36237.png",
+      "cell": 1,
+      "crop": [
+        512,
+        0,
+        1024,
+        512
+      ],
+      "sex": "f",
+      "variant": 33,
+      "stage": 1
+    },
+    {
+      "id": 382,
+      "atlas": "palace-royal-growth.webp",
+      "source": "exec-4f7e7073-2bce-450f-930a-e9927bb36237.png",
+      "cell": 2,
+      "crop": [
+        1024,
+        0,
+        1536,
+        512
+      ],
+      "sex": "f",
+      "variant": 33,
+      "stage": 2
+    },
+    {
+      "id": 383,
+      "atlas": "palace-royal-growth.webp",
+      "source": "exec-4f7e7073-2bce-450f-930a-e9927bb36237.png",
+      "cell": 3,
+      "crop": [
+        0,
+        512,
+        512,
+        1024
+      ],
+      "sex": "f",
+      "variant": 34,
+      "stage": 0
+    },
+    {
+      "id": 384,
+      "atlas": "palace-royal-growth.webp",
+      "source": "exec-4f7e7073-2bce-450f-930a-e9927bb36237.png",
+      "cell": 4,
+      "crop": [
+        512,
+        512,
+        1024,
+        1024
+      ],
+      "sex": "f",
+      "variant": 34,
+      "stage": 1
+    },
+    {
+      "id": 385,
+      "atlas": "palace-royal-growth.webp",
+      "source": "exec-4f7e7073-2bce-450f-930a-e9927bb36237.png",
+      "cell": 5,
+      "crop": [
+        1024,
+        512,
+        1536,
+        1024
+      ],
+      "sex": "f",
+      "variant": 34,
+      "stage": 2
+    },
+    {
+      "id": 386,
+      "atlas": "palace-royal-growth.webp",
+      "source": "exec-5bd022bd-093f-4864-ac65-012cbedab20b.png",
+      "cell": 0,
+      "crop": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "sex": "m",
+      "variant": 29,
+      "stage": 0
+    },
+    {
+      "id": 387,
+      "atlas": "palace-royal-growth.webp",
+      "source": "exec-5bd022bd-093f-4864-ac65-012cbedab20b.png",
+      "cell": 1,
+      "crop": [
+        512,
+        0,
+        1024,
+        512
+      ],
+      "sex": "m",
+      "variant": 29,
+      "stage": 1
+    },
+    {
+      "id": 388,
+      "atlas": "palace-royal-growth.webp",
+      "source": "exec-5bd022bd-093f-4864-ac65-012cbedab20b.png",
+      "cell": 2,
+      "crop": [
+        1024,
+        0,
+        1536,
+        512
+      ],
+      "sex": "m",
+      "variant": 29,
+      "stage": 2
+    },
+    {
+      "id": 389,
+      "atlas": "palace-royal-growth.webp",
+      "source": "exec-5bd022bd-093f-4864-ac65-012cbedab20b.png",
+      "cell": 3,
+      "crop": [
+        0,
+        512,
+        512,
+        1024
+      ],
+      "sex": "m",
+      "variant": 30,
+      "stage": 0
+    },
+    {
+      "id": 390,
+      "atlas": "palace-royal-growth.webp",
+      "source": "exec-5bd022bd-093f-4864-ac65-012cbedab20b.png",
+      "cell": 4,
+      "crop": [
+        512,
+        512,
+        1024,
+        1024
+      ],
+      "sex": "m",
+      "variant": 30,
+      "stage": 1
+    },
+    {
+      "id": 391,
+      "atlas": "palace-royal-growth.webp",
+      "source": "exec-5bd022bd-093f-4864-ac65-012cbedab20b.png",
+      "cell": 5,
+      "crop": [
+        1024,
+        512,
+        1536,
+        1024
+      ],
+      "sex": "m",
+      "variant": 30,
+      "stage": 2
+    }
+  ]
+}
