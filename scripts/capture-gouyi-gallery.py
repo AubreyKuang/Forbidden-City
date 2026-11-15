@@ -10,15 +10,19 @@ import hashlib
 import json
 import subprocess
 import urllib.request
+import argparse
 
 ROOT = Path(__file__).resolve().parent.parent
-NAMES = ['meeting', 'profile', 'inquiry', 'lamplight', 'friendship', 'rivalry', 'chronicle', 'reading']
+parser = argparse.ArgumentParser()
+parser.add_argument('--gallery', choices=['gouyi', 'royal-heart'], default='gouyi')
+args = parser.parse_args()
+NAMES = ['meeting', 'profile', 'inquiry', 'lamplight', 'friendship', 'rivalry', 'chronicle', 'reading'] if args.gallery == 'gouyi' else ['young', 'adult', 'refusal', 'marriage', 'chronicle', 'check']
 REVISION = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
-DEST = ROOT / 'docs/screenshots/gouyi'
+DEST = ROOT / 'docs/screenshots' / args.gallery
 DEST.mkdir(parents=True, exist_ok=True)
 
 def capture(name):
-    target = f'https://aubreykuang.github.io/Forbidden-City/docs/qa/gouyi-gallery/{name}.html?revision={REVISION}'
+    target = f'https://aubreykuang.github.io/Forbidden-City/docs/qa/{args.gallery}-gallery/{name}.html?revision={REVISION}'
     request = urllib.request.Request('https://image.thum.io/get/noanimate/allowJPG/width/1200/crop/1200/' + target,
                                      headers={'User-Agent': 'Forbidden-City-Documentation'})
     with urllib.request.urlopen(request, timeout=55) as response:
@@ -43,4 +47,4 @@ if __name__ == '__main__':
               'method': 'Remote browser rendering of the real game with disposable public demo saves',
               'provider': 'https://www.thum.io/documentation/api/url',
               'interactiveAcceptance': False, 'captures': captures}
-    (ROOT / 'docs/qa/gouyi-screenshots.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
+    (ROOT / f'docs/qa/{args.gallery}-screenshots.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')

@@ -1,0 +1,102 @@
+{
+  "revision": "cc5101a96b46d952a231509548ede227226c20b0",
+  "capturedAt": "2026-11-15T23:20:07.408432+00:00",
+  "method": "Remote browser rendering of the real game with disposable public demo saves",
+  "provider": "https://www.thum.io/documentation/api/url",
+  "interactiveAcceptance": false,
+  "captures": [
+    {
+      "scene": "meeting",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/gouyi-gallery/meeting.html?revision=cc5101a96b46d952a231509548ede227226c20b0",
+      "file": "docs/screenshots/gouyi/meeting.jpg",
+      "bytes": 150577,
+      "sha256": "ce601a1b4471dbd1ffb3bfc042e162ddf3f75bb341f311b6f563359cf8384756",
+      "visualReview": "passed",
+      "dimensions": [
+        1200,
+        1200
+      ]
+    },
+    {
+      "scene": "profile",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/gouyi-gallery/profile.html?revision=cc5101a96b46d952a231509548ede227226c20b0",
+      "file": "docs/screenshots/gouyi/profile.jpg",
+      "bytes": 250334,
+      "sha256": "24e7906b9e91bcf31f4c5625cae823660e058ab1224b05009e8a39c8fc25670f",
+      "visualReview": "passed",
+      "dimensions": [
+        1200,
+        1200
+      ]
+    },
+    {
+      "scene": "inquiry",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/gouyi-gallery/inquiry.html?revision=cc5101a96b46d952a231509548ede227226c20b0&capture=portrait-retry",
+      "file": "docs/screenshots/gouyi/inquiry.jpg",
+      "bytes": 168708,
+      "sha256": "7f70f484ea57fb8de892ad9cf0c971ba4e0eafec0961661e53adfc55664b714e",
+      "visualReview": "pending"
+    },
+    {
+      "scene": "lamplight",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/gouyi-gallery/lamplight.html?revision=cc5101a96b46d952a231509548ede227226c20b0",
+      "file": "docs/screenshots/gouyi/lamplight.jpg",
+      "bytes": 170274,
+      "sha256": "a05b5201885f2a357c50aafc8ac92c8cb24048a372a7fd72d6b7fdd1eb4f38dc",
+      "visualReview": "passed",
+      "dimensions": [
+        1200,
+        1200
+      ]
+    },
+    {
+      "scene": "friendship",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/gouyi-gallery/friendship.html?revision=cc5101a96b46d952a231509548ede227226c20b0",
+      "file": "docs/screenshots/gouyi/friendship.jpg",
+      "bytes": 141247,
+      "sha256": "f98b4219aa552c146a884b648f580f3d3fb45915898bd3fd562e0ccd2517b10e",
+      "visualReview": "passed",
+      "dimensions": [
+        1200,
+        1200
+      ]
+    },
+    {
+      "scene": "rivalry",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/gouyi-gallery/rivalry.html?revision=cc5101a96b46d952a231509548ede227226c20b0",
+      "file": "docs/screenshots/gouyi/rivalry.jpg",
+      "bytes": 150809,
+      "sha256": "8764a3ca70798bff6f36af357f6312db984c782ba44794000489759c96dd1d2b",
+      "visualReview": "passed",
+      "dimensions": [
+        1200,
+        1200
+      ]
+    },
+    {
+      "scene": "chronicle",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/gouyi-gallery/chronicle.html?revision=cc5101a96b46d952a231509548ede227226c20b0",
+      "file": "docs/screenshots/gouyi/chronicle.jpg",
+      "bytes": 273950,
+      "sha256": "85d73352d7b17855634eaea3314ba0b6c034593b964fad7e957857107d3340d4",
+      "visualReview": "passed",
+      "dimensions": [
+        1200,
+        1200
+      ]
+    },
+    {
+      "scene": "reading",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/gouyi-gallery/reading.html?revision=cc5101a96b46d952a231509548ede227226c20b0",
+      "file": "docs/screenshots/gouyi/reading.jpg",
+      "bytes": 157155,
+      "sha256": "b0b3c6c7d5c6319e2da5f7b57db69b633b6311e1b748ee27d1a08fde299f927e",
+      "visualReview": "passed",
+      "dimensions": [
+        1200,
+        1200
+      ]
+    }
+  ],
+  "reviewedAt": "2026-11-15T23:37:58.997680+00:00"
+}

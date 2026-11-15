@@ -449,7 +449,7 @@ function viewKid(){
    <div class="detail-vitals">${bar('才学',k.lit,'#617991')}${bar('武艺',k.mar,'#92504a')}${bar('品德',k.vir,'#517369')}</div>
    ${pageChapters('child',[
     ['now','近况与心事',childDispositionPanel(k)+immortalPanel(k)+continuityPanel(k)+
-      (k.alive?initiativeHTML(k):'')+detailSection('少年心事',youthPanel(k))+
+      (k.alive?initiativeHTML(k):'')+detailSection(a>=20?'婚事与心意':'少年心事',youthPanel(k))+
       detailSection('护国寺祈福',childTemplePanel(k))],
     ['care','教养与封号',detailSection('教养与抚养',care)+
       detailSection('封号与储位',titles?`<div class="acts">${titles}</div>`:'')+
