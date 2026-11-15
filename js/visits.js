@@ -15,7 +15,8 @@ A.out=function(kind){ if(!useE())return; const e=E();
   else if(kind==='city'){setScene('city');
     if(!S.flags.marketRescueSeen&&chance(.18)){const rescue=marketRescueEvent();if(rescue){pushEv(rescue);return;}}
     if(!legacyPendingAction()&&chance(.8)){const encounter=incognitoEvent();if(encounter){pushEv(encounter);return;}}
-    const ev=pick(['girl','tea','porridge','assassin','girl']);
+    let ev=pick(['girl','tea','porridge','assassin','girl']);
+    if(ev==='girl'&&!newConsortEventAllowed())ev=pick(['tea','porridge']);
     if(ev==='girl'){const g=makeGirl({fam:pick([{t:'寒门',p:5},{t:'书香门第',p:15},{t:'皇商',p:30}]),age:ri(16,19)});
       const t=pick([`街角书肆里，一位姑娘正与掌柜争论一句诗的出处，句句有据，掌柜哑口无言。`,`桥头一个卖花的姑娘不小心把花篮撞翻在你脚边，抬头一笑，你怔了一怔。`,`茶楼上有位姑娘凭栏而立，正在吹一支竹笛，曲调清越。`]);
       pushEv({title:'市井奇缘',por:g,text:`${t}\n随从打听到，她名唤${fullName(g)}，${g.fam.t}出身，年方${g.age}。`,choices:[
@@ -43,6 +44,7 @@ function maidEvent(where){
   if(!maidEncounterReady())return null;
   const known=maids().filter(m=>!m.near&&!m.preg&&!m.cardWithdrawn&&inPalace(m)&&m.nights>0);
   if(known.length&&chance(.4))return returningMaidEvent(pick(known),where);
+  if(!newConsortEventAllowed())return null;
   const g=makeGirl({fam:{t:'宫女',p:3},age:ri(16,19)});
   return {title:'宫女',maidEncounter:true,por:g,text:`${where}的花径上，一个小宫女正低头扫落花，口中轻轻哼着家乡的小调。你问她名字，她慌忙跪下：“奴婢${fullName(g)}。”`,choices:[
     {t:'今夜召她侍寝（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{g.maid=true;g.near=false;g.palace='尚衣局';g.favor=20;g.aff=25;S.consorts.push(g);deepen(g);story(g,`本是${where}一带当差的宫女，被陛下看中。`);maidNight(g);return null}},
@@ -100,6 +102,7 @@ function dowagerProposal(d){
   const childless=eligible.find(c=>c.lastBirth<0&&!S.children.some(k=>k.mom===c.id));
   const sister=neglected||childless;
   if(kin.length&&!sister)return null;
+  if(!newConsortEventAllowed())return null;
   const reason=sister?(neglected?'久未承宠，独居宫中':'入宫已有两年，膝下仍无子女'):'';
   const g=makeGirl({sur:d.sur,fam:{...d.fam},age:sister?Math.min(ri(16,19),sister.age-1):ri(16,19)});
   g.clan=d.clan;

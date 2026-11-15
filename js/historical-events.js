@@ -59,15 +59,15 @@ const HIST=[
  ()=>{const em=empress();if(!em)return null;const c=harem().filter(c=>c!==em&&c.favor>em.favor+20).sort((a,b)=>b.favor-a.favor)[0];if(!c)return null;return {title:'却坐',present:[em,c],ref:'袁盎却坐（西汉·汉文帝与慎夫人）',por:c,text:`御花园设宴，内侍照例把${cName(c)}的席位与皇后并排摆着。一位老臣上前，把她的席子往下挪了一格：“尊卑有序。陛下宠她，才更不能害她——陛下没听说过‘人彘’吗？”`,choices:[
    {t:'“爱卿说得对。”',f:()=>{relAdd(c,em,-6);return fx(cchg(em,{aff:8}),cchg(c,{mood:-12}),chg({prestige:3}))}},
    {t:'“朕的家事。”把席子挪回去',f:()=>{relAdd(c,em,-10);return fx(cchg(c,{mood:10}),cchg(em,{mood:-15,aff:-5}),chg({prestige:-3}))}}]}},
- ()=>{if(!S.flags.bless||S.turn-S.flags.bless>1||S.flags.ganye)return null;const g=makeGirl({fam:{t:'先帝才人',p:20},trait:'城府',age:ri(22,25)});g.scheme=88;g.looks=clamp(g.looks+10);g.talent=clamp(g.talent+10);
+ ()=>{if(!S.flags.bless||S.turn-S.flags.bless>1||S.flags.ganye||!newConsortEventAllowed())return null;const g=makeGirl({fam:{t:'先帝才人',p:20},trait:'城府',age:ri(22,25)});g.scheme=88;g.looks=clamp(g.looks+10);g.talent=clamp(g.talent+10);
    return {title:'感业寺',ref:'武则天感业寺为尼（唐）',por:g,text:`护国寺后院，一个削发的女子正在扫落叶。方丈说，她是先帝的才人${fullName(g)}，先帝驾崩后依例出家。她抬头看你，眼神不像个出家人。`,choices:[
    {t:'接她回宫，封为昭仪……不，封为贵人',f:()=>{S.flags.ganye=1;addConsort(g,3,'先帝才人，于护国寺被陛下接回宫');log('帝接先帝才人回宫，朝野哗然。',1);return fx(chg({prestige:-8}))}},
    {t:'转身离开',f:()=>{S.flags.ganye=1;return '你走出很远，回头时，她还站在那里。'}}]}},
- ()=>{if(S.flags.zifu)return null;const g=makeGirl({fam:{t:'歌女',p:2},trait:pick(['温婉','痴情','活泼'])});g.looks=clamp(g.looks+8);
+ ()=>{if(S.flags.zifu||!newConsortEventAllowed())return null;const g=makeGirl({fam:{t:'歌女',p:2},trait:pick(['温婉','痴情','活泼'])});g.looks=clamp(g.looks+8);
    return {title:'平阳府',ref:'卫子夫平阳公主府献歌（西汉·汉武帝）',por:g,text:`你去长公主府上赴宴。席间一个歌女唱了一曲《清平调》，满座寂然。长公主笑着说：“陛下若喜欢，就带回去。”`,choices:[
    {t:'带回宫',f:()=>{S.flags.zifu=1;addConsort(g,1,'原是长公主府上的歌女，被陛下带回宫');g.aff=35;g.favor=40;return fx(chg({prestige:-2}))}},
    {t:'谢过长公主，独自回宫',f:()=>{S.flags.zifu=1;return '那歌声在你耳边绕了好几天。'}}]}},
- ()=>{if(!S.cands.length||S.flags.painter===S.flags.lastXX)return null;S.flags.painter=S.flags.lastXX;const g=makeGirl();g.looks=clamp(95);g.fam={t:'良家子',p:12};
+ ()=>{if(!S.cands.length||S.flags.painter===S.flags.lastXX||!newConsortEventAllowed())return null;S.flags.painter=S.flags.lastXX;const g=makeGirl();g.looks=clamp(95);g.fam={t:'良家子',p:12};
    return {title:'画师',ref:'毛延寿索贿，误画王昭君（西汉·汉元帝）',por:g,text:`选秀的画像呈上来，你翻到一张平平无奇的脸。一个老嬷嬷忍不住说：“陛下，这位姑娘本人，比画上好看十倍——她不肯给画师送银子。”`,choices:[
    {t:'召来一看，画师下狱',f:()=>{S.cands.push(g);log('宫廷画师索贿篡改秀女画像，下狱问罪。',1);return `她走进殿来，满殿生光。${fx(chg({people:2}))}\n§她已加入本次选秀`}},
    {t:'“画像就是画像。”',f:()=>'你翻过了那一页。'}]}},
