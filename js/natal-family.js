@@ -5,8 +5,8 @@ function initializeNatalFamily(c,h,family){
   const copies=family.map(x=>x.house).filter(x=>x&&x!==h);
   const previous=copies.find(x=>x.natal);if(!h.natal&&previous){h.natal=JSON.parse(JSON.stringify(previous.natal));h.relatives=JSON.parse(JSON.stringify(previous.relatives||[]));}
   if(!h.natal){
-    h.natal={version:1,created:S.turn,motherBorn:S.turn-(c.age+20+voiceHash(h.father.id)%5)*12,births:0};h.relatives=[];
-    const seed=voiceHash(h.father.id+':other-siblings'),roll=seed%100,count=roll<30?0:roll<70?1:roll<93?2:3;
+    h.natal={version:1,created:S.turn,motherBorn:S.turn-(c.age+20+familyHash(h.father.id)%5)*12,births:0};h.relatives=[];
+    const seed=familyHash(h.father.id+':other-siblings'),roll=seed%100,count=roll<30?0:roll<70?1:roll<93?2:3;
     for(let i=0;i<count;i++){
       const n=voiceHash(seed+':'+i),sex=n%3===0?'m':'f';
       const age=sex==='m'||h.fiveBrothers?Math.max(1,c.age-2-i*3):Math.max(1,c.age+(n%2?3:-4)-i*2);
@@ -25,14 +25,20 @@ function initializeNatalFamily(c,h,family){
   }
   for(const member of family)h.natal.memberBorn[member.id]??=S.turn-member.age*12-(S.month-1);
 }
+// Brothers get their own temperament words; older saves gave them the sisters' list.
+// Temperament has its own hash: the seed also decides sex, and reusing it tied brothers to two traits.
+const NATAL_TRAITS_F=['温婉','活泼','沉静','才女','爽直','聪慧'],NATAL_TRAITS_M=['温厚','活泼','沉静','有文才','爽直','聪慧'];
+const natalTrait=p=>p.sex==='m'?({才女:'有文才',温婉:'温厚'})[p.trait]||p.trait:p.trait;
 function addNatalPerson(c,h,sex,age,seed,birth=true){
   const names=sex==='f'?GIRLA.flatMap(a=>GIRLB.map(b=>a+b)):BROTHER_NAMES;
   const used=new Set([h.father.name,...brotherRoles(h).map(r=>h[r].name),...(h.relatives||[]).map(p=>p.name),...S.consorts.map(fullName)]);
-  let given=names[seed%names.length];for(let i=0;i<names.length&&used.has(c.sur+given);i++)given=names[(seed+i+1)%names.length];
+  // Children avoid the characters of their father's given name (避讳).
+  const taboo=new Set(newFamilyRules()?[...givenOf({sur:c.sur,name:h.father.name})]:[]),clash=g=>used.has(c.sur+g)||[...g].some(ch=>taboo.has(ch));
+  let given=names[seed%names.length];for(let i=0;i<names.length&&clash(given);i++)given=names[(seed+i+1)%names.length];
   const existing=new Set([...S.consorts,...(S.cands||[])].flatMap(x=>[x.id,...(x.house?.relatives||[]).map(r=>r.id)]));
   let id=-1-voiceHash(h.father.id+':relative:'+(h.relatives?.length||0));while(existing.has(id))id--;
   const p={id,sur:c.sur,given,name:c.sur+given,sex,age,born:S.turn-age*12-(birth?0:S.month-1),seed,alive:true,
-    trait:['温婉','活泼','沉静','才女','爽直','聪慧'][seed%6],married:age>=22&&seed%3===0,willing:seed%4!==0,story:[]};
+    trait:newFamilyRules()?(sex==='m'?NATAL_TRAITS_M:NATAL_TRAITS_F)[voiceHash(seed+':trait')%6]:NATAL_TRAITS_F[seed%6],married:age>=22&&seed%3===0,willing:seed%4!==0,story:[]};
   if(sex==='m'){p.career='student';p.education=age>=22&&seed%3===0?'举人':'书生';p.post=p.education;}
   p.seed=seed&0x7fffffff;p.rank=0;
   p.artPortrait=CONSORT_PORTRAITS[seed%CONSORT_PORTRAITS.length];
@@ -82,7 +88,8 @@ function natalMeetingEvent(c,p){
   if(!natalInPalace(c,p))return null;
   const age=natalAge(p),child=age<18;
   const scene=age<3?'由长辈抱着，在帘下听见说话声便转过头来':child?'把家中带来的小物一件件摆好，认真说着读书与起居的小事':
-    ({温婉:'把家人的问候慢慢说清，又问她近来睡得可好',活泼:'说起家乡街巷的新鲜事，听见通报便收声行礼',沉静:'在窗边陪她坐着，偶尔补上一句家中的近况',才女:'带来一本旧书，在页边留着两人都认得的批注',爽直:'先问她过得如何，见你到来便大方行礼',聪慧:'将家中近况分说明白，也留意到她欲言又止的神色'}[p.trait]);
+    ({温婉:'把家人的问候慢慢说清，又问她近来睡得可好',活泼:'说起家乡街巷的新鲜事，听见通报便收声行礼',沉静:'在窗边陪她坐着，偶尔补上一句家中的近况',才女:'带来一本旧书，在页边留着两人都认得的批注',爽直:'先问她过得如何，见你到来便大方行礼',聪慧:'将家中近况分说明白，也留意到她欲言又止的神色',
+     温厚:'把家人的问候一一带到，又叮嘱她保重身子',有文才:'带来一本旧书，在页边留着两人都认得的批注'}[natalTrait(p)]);
   return {title:'探亲相见',por:natalPortrait(p),cast:[c],present:[c],valid:()=>natalInPalace(c,p),text:`你来到${c.palace}，见${fullName(c)}的${natalLabel(c,p)}${p.name}正在探亲。${p.name}${scene}。${child?'随行长辈始终在旁照看。':''}`,choices:[
     {t:age<3?'问起家中的照料':'听她们说家中近况',f:()=>{if(!natalInPalace(c,p))return null;natalSceneRecord(c,p,`探亲时与陛下一同谈起家中近况。${fullName(c)}把这次见面记了下来。`,.4);relAdd(c,p,4);return '你听完家中的近况，将余下的时辰留给亲人相聚。';}},
     ...(natalRomanceReady(c,p)?[{t:'一见倾心，询问她是否愿意入宫',f:()=>{if(!natalRomanceReady(c,p))return null;pushNow(natalCourtshipEvent(c,p));return null;}}]:[]),
@@ -119,7 +126,7 @@ function viewNatalRelative(){
   const {c,h,p}=e;if(p.consortId){UI.view='consort';UI.sel=p.consortId;return viewConsort();}
   if(p.sex==='m'&&natalAge(p)>=18){UI.view='official';UI.sel=c.id+':relative'+p.id;return viewOfficial();}
   const age=natalAge(p),living=p.alive,visited=natalInPalace(c,p);
-  return `${personBackButton('family')}<header class="detail-head">${porImg(natalPortrait(p),224)}<div class="grow"><h2>${esc(p.name)}</h2><p>${esc(fullName(c))}的${natalLabel(c,p)} · ${age}岁 · ${natalStatus(p)}</p><p>${age<6?'尚在幼年':esc(p.trait)}</p></div></header>
+  return `${personBackButton('family')}<header class="detail-head">${porImg(natalPortrait(p),224)}<div class="grow"><h2>${esc(p.name)}</h2><p>${esc(fullName(c))}的${natalLabel(c,p)} · ${age}岁 · ${natalStatus(p)}</p><p>${age<6?'尚在幼年':esc(natalTrait(p))}</p></div></header>
     <div class="acts">${living?`<button class="btn" onclick="A.natalLetter(${c.id},${p.id})" ${S.turn-(p.lastLetter??-99)>=3&&E().energy>0?'':'disabled'}>${age<3?'赐衣问安':'赐书问候'}<small>精力−1 · 每三个月一次</small></button>`:''}
     ${natalVisitReady(c,p)?`<button class="btn" onclick="A.natalVisit(${c.id},${p.id})">准入宫探亲</button>`:''}${visited?`<button class="btn primary" onclick="A.natalMeet(${c.id},${p.id})">探亲相见</button><span>约${p.visit.until-S.turn}个月后归家</span>`:''}</div>
     ${detailSection('家族往来',`<p>${p.parentRelativeId?'母亲':'父亲'}：${p.parentRelativeId?`<button class="btn quiet" onclick="A.go('natal','${c.id}:${p.parentRelativeId}')">${esc(h.relatives.find(x=>x.id===p.parentRelativeId)?.name||'家中长辈')}</button>`:officialLink(c,'father')}</p><button class="btn quiet" onclick="A.go('consort',${c.id})">${esc(fullName(c))}</button>`+natalFamilyLinks(c))}

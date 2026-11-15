@@ -269,8 +269,13 @@ function drawMap(){const s=season(),family=gardenFamilyMoment(),scenes=initiativ
   if(mapParts.length<want&&chance(.5))mapParts.push({x:R()*MW,y:-2,vx:s===3?.1:.4,vy:s===3?.35:.3,t:R()*6,c:s===0?'#edb7bd':s===2?pick(['#c99557','#bd7c51']):'#ffffff'});
   mapParts.forEach(p=>{p.t+=.2;p.x+=p.vx+Math.sin(p.t)*.3;p.y+=p.vy;mapOval(p.x,p.y,.45,s===3?.45:.2,p.c);});mapParts=mapParts.filter(p=>p.y<MH&&p.x<MW);
 }
-function meetConsort(c){if(!c||!c.alive||c.gone)return;setScene('harem');
-  const t=npcRoutineText(c,NPC.get(c.id));
+// Routed through A.* like arrivals, so the encounter is journaled and survives a refresh.
+// The routine line is passed in because walker positions are not part of the save.
+A.meetOnRoad=function(id,routine){meetConsort(byId(id),routine);};
+function meetConsort(c,routine){if(!c||!c.alive||c.gone)return;
+  if(typeof PalaceActions!=='undefined'&&!PalaceActions.busy)return A.meetOnRoad(c.id,npcRoutineText(c,NPC.get(c.id)));
+  setScene('harem');
+  const t=routine||npcRoutineText(c,NPC.get(c.id));
   pushEv({title:'宫道偶遇',por:c,text:`你在宫道上遇见了${cName(c)}，她${t}。`,choices:[
     {t:'闲话家常（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{A.chat(c.id,true);return null}},
     {t:'今夜召她侍寝（精力-1）',cond:()=>E().energy>0&&!c.preg,why:c.preg?'她有孕在身':'精力不足',f:()=>{nightWith(c);return null}},
