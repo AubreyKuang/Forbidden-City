@@ -47,9 +47,10 @@ function lifeProposal(c){
 function lifeProjectReady(c,p=c?.personalLife?.project){
  if(!p||p.gen!==S.gen||!inPalace(c))return false;
  if(p.child&&!familyVisitAllowed(kidById(p.child),c))return false;
- if(p.partner&&!inPalace(byId(p.partner)))return false;
+ if(p.partner&&(!inPalace(byId(p.partner))||p.dispute||lifeCooperationBroken(c,byId(p.partner))))return false;
  return true;
 }
+function lifeCooperationBroken(c,o){return !o||relGet(c,o)<0||isRival(c,o)||isRival(o,c)||lifeFriendScore(c,o)<0;}
 function lifeProposalMatches(c,proposal){
  const current=lifeProposal(c);
  return byId(c.id)===c&&!!current&&['title','kind','child','hobby','cause','preferred'].every(key=>current[key]===proposal[key]);
@@ -92,7 +93,8 @@ function lifeFinish(c,p,mode){
  log(text);return text;
 }
 function lifeProjectEvent(c){
- const p=c.personalLife?.project,proposal=p||lifeProposal(c);if(!proposal||p&&!lifeProjectReady(c,p))return null;
+ const p=c.personalLife?.project,proposal=p||lifeProposal(c);if(p?.partner&&(p.dispute||lifeCooperationBroken(c,byId(p.partner))))return lifeDisputeEvent(c,p);
+ if(!proposal||p&&!lifeProjectReady(c,p))return null;
  let done=false;const choice=(t,fn,cond)=>({t,cond,f:()=>{if(done||!inPalace(c)||cond&&!cond())return null;const r=fn();if(r)done=true;return r;}});
  if(!p){const partner=lifePartners(c)[0];return {title:'她想留下的东西',por:c,text:`${proposal.cause}\n“${proposal.wish}”\n打算做：${proposal.title}。约三个月得闲整理，不占每月精力；相处或合编需要相关人物在场。`,present:[c],valid:()=>lifeProposalMatches(c,proposal),choices:[
   choice('留在身边，按她的步调做 · 精力1',()=>lifeStart(c,proposal,'private'),()=>!!lifeProposal(c)),
@@ -143,6 +145,9 @@ function personalLifeTick(){
    const reason=!c.alive||other&&!other.alive?'参与者离世':'参与者离宫';
    lifeRecord([c,other].filter(p=>p?.alive&&!p.gone),'craft',p.title,`「${p.title}」因${reason}停在未完成处，原稿收好，没有让旁人接替。`,p.cause);delete c.personalLife.project;c.personalLife.finished=S.turn;continue;
   }
+  if(p.partner&&!p.dispute&&lifeCooperationBroken(c,other)){
+   p.dispute={turn:S.turn};lifeRecord([c,other],'craft',p.title,`${fullName(c)}与${fullName(other)}因近来的嫌隙暂停合编《${p.title}》，各自收好原稿。已经写下的名字不改，也没有另找人顶替。`,p.cause);
+  }
   if(p.lastTick===S.turn||p.progress>=3||!lifeProjectReady(c,p)||c.hp<40||other?.hp<40)continue;
   p.lastTick=S.turn;p.progress++;
   if(p.child){const k=kidById(p.child),small=kidAge(k)<3;recordFamilyTime(k,c,'记亲子手记',small?`听见${fullName(c)}熟悉的声音，在她身边慢慢安静下来。`:`和${fullName(c)}一起挑了一件小事写进手记。`,`与${k.name}把相见的一天记下来。`);lifeRecord([c,k],'family','亲子手记',`${fullName(c)}在获准与${k.name}相见的日子记下手记的第${p.progress}页，${small?'把孩子新添的小动作细细写下来':'孩子也挑了一件想留下的小事'}。`,p.cause);}
@@ -152,7 +157,7 @@ function personalLifeTick(){
  // At most one quiet exchange per month, including repeated calls after load.
  if(S.flags.lifeQuietTurn!==S.turn){
   for(const c of harem()){
-   const entry=Object.entries(c.personalLife?.links||{}).find(([id,l])=>{const o=byId(+id);return l.trust>=8&&S.turn-l.lastHelp>=8&&inPalace(o)&&socialPair(c,o);});
+   const entry=Object.entries(c.personalLife?.links||{}).find(([id,l])=>{const o=byId(+id);return l.trust>=8&&S.turn-l.lastHelp>=8&&inPalace(o)&&socialPair(c,o)&&!lifeCooperationBroken(c,o);});
    if(!entry)continue;const [id,l]=entry,o=byId(+id),reverse=o.personalLife?.links?.[c.id];
    // Alternate who offers help; actual cooperation matters more than a high friendship number.
    const giver=l.helps%2?o:c,receiver=giver===c?o:c;if(giver.hp<40)continue;
@@ -166,7 +171,7 @@ function personalLifeTick(){
  if(S.flags.lifeQuietTurn!==S.turn){
   for(const c of harem()){
    const w=c.personalLife?.works.find(w=>w.mode==='public'&&!w.readBy&&S.turn-w.turn>=2);
-   if(!w)continue;const reader=harem().find(o=>!w.authors.some(a=>a.id===o.id)&&consortHobby(o)===w.hobby&&socialPair(c,o));if(!reader)continue;
+   if(!w||w.incomplete)continue;const reader=harem().find(o=>!w.authors.some(a=>a.id===o.id)&&consortHobby(o)===w.hobby&&socialPair(c,o)&&!lifeCooperationBroken(c,o));if(!reader)continue;
    for(const author of w.authors){const copy=byId(author.id)?.personalLife?.works.find(x=>x.id===w.id);if(copy)copy.readBy=reader.id;}
    const text=`${fullName(reader)}读到${w.authors.map(a=>a.name).join('、')}署名传阅的《${w.title}》，拿其中一页来与${fullName(c)}核对心得。两人因这本册子多了一次实际来往。`;
    lifeRecord([c,reader],'craft',w.title,text,w.source,['原来她也用得上这一本。',`读过《${w.title}》，才知道她在这些小处花过心思。`]);relAdd(c,reader,4);log(text);S.flags.lifeQuietTurn=S.turn;break;

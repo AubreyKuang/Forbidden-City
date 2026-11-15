@@ -60,7 +60,8 @@ function startOfficialContinuity(e,outcome,task){
   const active=continuityThreads().find(t=>t.kind==='family'&&t.officialId===p.id&&continuityOpen(t));
   if(active)return;
   if(continuityThreads().some(t=>t.kind==='family'&&t.officialId===p.id&&t.outcome===outcome&&S.turn-t.origin<36))return;
-  const cause=`${dateStr()}，${role==='father'?'父亲':'兄长'}${p.name}${outcome==='death'?'去世。'+(p.death?.reason||''): `奉差「${task}」${outcome==='success'?'办结':'未尽如期'}。`}`;
+  const kin=role==='father'?'父亲':role.startsWith('relative')?natalLabel(c,p):officialKinLabel(e.h,role);
+  const cause=`${dateStr()}，${kin}${p.name}${outcome==='death'?'去世。'+(p.death?.reason||''): `奉差「${task}」${outcome==='success'?'办结':'未尽如期'}。`}`;
   const t=continuityStart('family',c,null,`${p.id}:${S.turn}:${outcome}`,{officialId:p.id,role,outcome,task,cause});
   if(t&&outcome!=='success')(c.personalConcerns||={})[t.key]={kind:outcome==='death'?'grief':'family',text:outcome==='death'?`仍在整理${p.name}留下的家事。`:`惦记${p.name}差事的善后。`,source:t.id};
 }

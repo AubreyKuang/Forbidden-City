@@ -61,7 +61,7 @@ function careVisitorPanel(k,only=null){
 }
 
 // An existing, willing adult sister is a concrete follow-up, not an optional ambient roll.
-function maternalSisterCandidates(m){return (m?.house?.relatives||[]).filter(p=>p.alive&&p.sex==='f'&&!p.consortId&&!p.married&&!p.declined&&p.willing&&natalAge(p)>=18&&!p.visit);}
+function maternalSisterCandidates(m){return (m?.house?.relatives||[]).filter(p=>!p.parentRelativeId&&p.alive&&p.sex==='f'&&!p.consortId&&!p.married&&!p.declined&&p.willing&&natalAge(p)>=18&&!p.visit);}
 function maternalSisterSource(m,manual=false){
  const status=m?.maternalArrival?.status;
  return !!(!S.over&&maternalAbsent(m)&&!m.maid&&!m.kinSuccessor&&kinCareChildren(m).length&&

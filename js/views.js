@@ -285,16 +285,8 @@ function detailSection(title,content){
 function detailFold(title,content){
   return content?`<details class="detail-fold"><summary>${title}</summary><div class="detail-content">${content}</div></details>`:'';
 }
-function detailStory(person){
-  const entries=person.story.slice().reverse().map(s=>{
-    const e=s.event;
-    const context=e&&!e.embedded?detailFold('回看事由与处理',`<p>${esc(e.title)} · ${esc(e.participants.map(p=>p.name).join('、'))}</p><p>${esc(e.situation)}</p><p>陛下回应：${esc(e.choice)}</p>${e.outcome?`<p>${esc(e.outcome)}</p>`:''}`):'';
-    return `<li><time>${esc(s.d)}</time>${esc(s.t)}${context}</li>`;
-  });
-  if(!entries.length)return '<p class="hint">尚无记载。</p>';
-  const list=items=>`<ul class="story">${items.join('')}</ul>`;
-  return list(entries.slice(0,6))+(entries.length>6?detailFold(`翻阅更早的纪事（${entries.length-6}条）`,list(entries.slice(6))):'');
-}
+function detailStory(person){return chronicleReader(person);}
+
 function viewConsort(){
   const c=byId(UI.sel);if(!c)return viewHarem();
   const act=c.alive&&!c.gone;
@@ -344,7 +336,7 @@ function viewConsort(){
    ${acts?`<div class="detail-actions" role="group" aria-label="人物操作"><span class="detail-action-label" aria-hidden="true">人物操作</span><div class="acts">${acts}</div></div>`:''}
    <div class="detail-vitals">${bar('恩宠',c.favor)}${bar('心情',c.mood,'#517369')}${bar('情分',c.aff,'#936375')}</div>
    <div class="detail-stack">
-    ${deliveryMemorialPanel(c)}${continuityPanel(c)}${personalLifePanel(c)}
+    ${birthCarePanel(c)}${deliveryMemorialPanel(c)}${continuityPanel(c)}${personalLifePanel(c)}${detailSection('人和事的后续',cohortLifePanel(c)+parentEpisodePanel(c))}
     ${detailSection('孕中祈愿',pregnancyPrayerPanel(c))}
     ${detailSection('寺中清修',consortTemplePanel(c))}
     ${detailSection('御赐珍饰',jewelryPanel(c))}

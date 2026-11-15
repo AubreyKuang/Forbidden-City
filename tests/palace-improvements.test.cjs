@@ -346,7 +346,7 @@ test('twins are registered together, resume after a partial naming reload and se
     var stats=JSON.stringify(deliveryKids(mother));save('1');load('1');migrate();assert.equal(JSON.stringify(deliveryKids(byId(motherId))),stats);`);
 });
 
-test('triplets keep unique IDs and per-sex birth order, with one maternal outcome and three foster offers',()=>{
+test('triplets keep unique IDs and per-sex birth order, with one maternal outcome and one batch care plan',()=>{
   const {run,force}=boot();
   run(`var mother=harem()[0];mother.preg=10;mother.swapRisk=false;`);
   force(.0001,.1,.1,.9,.9);
@@ -354,9 +354,9 @@ test('triplets keep unique IDs and per-sex birth order, with one maternal outcom
     assert.equal(new Set(kids.map(k=>k.id)).size,3);assert.equal(kids[1].ord,kids[0].ord+1);
     assert.ok(kids.every(k=>k.birthType==='三胞胎'));assert.ok(kids.every(k=>!k.birthOmen));
     kids.forEach((k,i)=>{k.name='诞'+i;k.pendingName=false});finishDelivery(mother);
-    assert.equal(mother.alive,false);assert.equal(Q.filter(e=>e.title==='抚养').length,3);
+    assert.equal(mother.alive,false);assert.equal(Q.filter(e=>e.title==='同生手足的安置').length,1);
     assert.equal(mother.story.filter(s=>s.t.includes('撒手人寰')).length,1);
-    finishDelivery(mother);assert.equal(Q.filter(e=>e.title==='抚养').length,3);`);
+    finishDelivery(mother);assert.equal(Q.filter(e=>e.title==='同生手足的安置').length,1);`);
 });
 
 test('birth omens apply a bounded one-time bonus, persist and do not rewrite old children',()=>{

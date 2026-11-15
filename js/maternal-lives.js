@@ -61,8 +61,10 @@ function maternalTick(){
 }
 function maternalConcern(c){return Object.entries(c?.maternalLife?.children||{}).map(([id,r])=>({k:kidById(Number(id)),r})).filter(x=>x.k&&x.r.kind===maternalStatus(x.k,c)&&x.r.kind!=='near').sort((a,b)=>(b.r.kind==='death')-(a.r.kind==='death')||b.r.since-a.r.since)[0];}
 function maternalUnsettled(c){const x=maternalConcern(c);return !!(x&&['death','missing','closed'].includes(x.r.kind)&&(S.turn-x.r.since<12||x.r.care<3));}
+function maternalVoiceUrgent(c){const x=maternalConcern(c);return !!x&&(S.turn-x.r.since<3||maternalUnsettled(c)&&(S.turn-x.r.since<12||c.mood<35||['悲恸','心如死灰'].includes(xinOf(c))));}
 function maternalVoice(c){
  const x=maternalConcern(c);
+ if(x&&!maternalVoiceUrgent(c)){const {k,r}=x;return voiceLine('maternal-'+r.kind,`她说起${k.name}，仍记得那些细小的往事。`,r.kind==='death'?`${k.name}从未从臣妾心里离开。如今也能说些别的事了，想孩子的时候，仍愿有人一起记着。`:`${k.name}${childHasLeftPalace(k)?'有自己的日子':'如今另有照料'}，臣妾仍有牵挂。也想把自己的日子过好，等能相见时再听孩子说说近况。`);}
  if(x){const {k,r}=x;return voiceLine('maternal-'+r.kind,r.retreat?`她近来${r.retreat}，提到${k.name}才抬起眼。`:`说起${k.name}，她停了许久。`,r.kind==='death'?`${k.name}不在了。${maternalStyle(c)[4]}。有人肯记得孩子，臣妾心里会暖一点，却不能就这样不想了。`:r.kind==='missing'?`${k.name}还没找到，臣妾不能当作孩子已经不在。哪怕只有一点线索，也请告诉臣妾。`:`臣妾知道${k.name}还好好活着，可不能日日相见，终究难熬。${maternalStyle(c)[3]}。`);}
  const k=maternalChildren(c).find(k=>k.alive&&!k.pendingName&&familyVisitAllowed(k,c));
  return k?voiceLine('maternal-near',`说到${k.name}，她露出与待旁人不同的神情。`,maternalStyle(c)[kidAge(k)<3?0:kidAge(k)<12?1:2]+'。'):null;
