@@ -131,7 +131,7 @@ function dowagerPartialityEvent(d=ensureDowager()){
   if(!top||top.clan===d.clan||top.favor<70||!kin||kin.clan!==d.clan||top.favor-kin.favor<25)return null;
   const disliked=top.virtue<45||(d.dislikes||[]).includes(top.id);
   if(!disliked)return null;
-  return {title:'慈宁宫 · 莫独偏一人',por:dowagerPerson(d),cast:[top,kin],present:[],valid:()=>d.alive&&inPalace(top)&&inPalace(kin),
+  return {title:'慈宁宫 · 莫独偏一人',por:dowagerPerson(d),present:[],valid:()=>d.alive&&inPalace(top)&&inPalace(kin),
     text:`${d.name}提起${cName(top)}，语气淡了些：“${top.virtue<45?'她处事还欠周全，哀家原就不大放心':'哀家与她素来不投契'}。你近来偏宠她太过，也该少些独往。${cName(kin)}是哀家母家的孩子，皇帝不妨多去看她。”\n这既有劝你不独宠的意思，也藏着母族的私心。`,choices:[
       {t:'听取劝告，留意母家族女',f:()=>{story(kin,`太后劝陛下莫独宠${fullName(top)}，转而提携自己母家的她；陛下应下多留意。`);return fx(cchg(kin,{favor:3}),chg({prestige:1}));}},
       {t:'朕会兼顾，不以母族分亲疏',f:()=>{log('帝听取太后独宠之谏，未允因母族亲缘另分恩宠。');return '太后听过，没有再催。你没有因此责罚任何人。';}}

@@ -80,3 +80,7 @@ test('a relatives old link follows the same person after adulthood and palace ad
  const w=world();w.run(`var brother=addNatalPerson(c,h,'m',18,704,false);UI.view='natal';UI.sel=c.id+':'+brother.id;viewNatalRelative();assert.equal(UI.view,'official');assert.equal(officialEntry(UI.sel).p.id,brother.id);
  p.visit={host:c.id,until:99};admitNatalSister(c,p);UI.view='natal';UI.sel=c.id+':'+p.id;viewNatalRelative();assert.equal(UI.view,'consort');assert.equal(UI.sel,p.id);render();assert.match(viewConsort(),new RegExp(p.name));`);
 });
+
+test('dowager dialogue uses her current title while retaining an inherited portrait',()=>{
+ const w=world();w.run(`var d=ensureDowager();assert.equal(porName(dowagerPerson(d)),d.name);var inherited=makeDowager(c,'生母');assert.equal(porName(dowagerPerson(inherited)),inherited.name);assert.equal(portraitCell(dowagerPerson(inherited)),portraitCell(c));c.clan=d.clan;c.favor=20;var top=makeGirl({age:24});addConsort(top,4,'入宫');top.clan='other';top.favor=95;top.virtue=20;var ev=dowagerPartialityEvent(d);assert.equal(eventPortraits(ev).length,1);assert.equal(porName(eventPortraits(ev)[0]),d.name);`);
+});
