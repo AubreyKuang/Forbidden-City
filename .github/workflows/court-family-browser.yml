@@ -1,0 +1,40 @@
+name: Court family browser verification
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [qa/court-family-browser]
+
+permissions:
+  contents: read
+
+jobs:
+  chromium:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install isolated browser runtime
+        run: |
+          npm install --prefix "$RUNNER_TEMP/palace-browser" playwright@1.65.1
+          "$RUNNER_TEMP/palace-browser/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Generate disposable scenario saves
+        run: node tests/court-family-browser-fixtures.cjs
+      - name: Verify production pages in Chromium
+        env:
+          NODE_PATH: ${{ runner.temp }}/palace-browser/node_modules
+          PALACE_QA_URL: https://aubreykuang.github.io/Forbidden-City/dev.html
+          PALACE_FAIL_FAST: '1'
+        run: node tests/court-family-browser-acceptance.cjs
+      - name: Preserve browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: court-family-browser-${{ github.sha }}
+          path: |
+            docs/qa/court-family-browser-results.json
+            docs/screenshots/court-family/
+          retention-days: 14
