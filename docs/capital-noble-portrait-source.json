@@ -2,12 +2,12 @@
   "id": 433,
   "role": "capitalNoble",
   "approval": "pending",
-  "source": "exec-6365ff2b-9b14-4b03-a793-ce8137f498b8.png",
+  "source": "exec-30423af5-5c4b-4d1c-ab6d-69191f9d2f6f.png",
   "sourceSize": [
     1086,
     1448
   ],
-  "sourceSha256": "3654febe347d1821bc984e08a8cabaf13f4e887dee997f1f1f85ed5a7625cabc",
+  "sourceSha256": "0c0c0c765fd1ae3a93367750e6d0954a1ca50fb60f9853bedd9135329c2ae22b",
   "atlas": "assets/images/palace-capital-noble.webp",
   "frame": [
     448,
@@ -24,8 +24,19 @@
     8
   ],
   "head": [
-    64,
-    27,
-    27
+    61,
+    26,
+    26
+  ],
+  "revision": "朱红金鹤盛装版：俊美明朗，金玉冠、折扇与洒脱姿态",
+  "supersededSource": "exec-6365ff2b-9b14-4b03-a793-ce8137f498b8.png",
+  "characterName": "谢安",
+  "repurposedPortraits": [
+    {
+      "source": "exec-d6ee8a3b-f449-4600-a834-9e8cfff90fce.png",
+      "role": "consortBrother",
+      "artApproved": true,
+      "integrationStatus": "awaiting separate brother ID; never use as Xie An"
+    }
   ]
 }
