@@ -5,6 +5,7 @@ function gouyiEncounter(){
   g.artPortrait=STORY_CONSORT_PORTRAITS.gouyi;g.portraitOverride=422;
   delete g.solitary;delete g.timeTraveler;g.t2='念旧';g.like='字画';g.hate='兵器';g.aff=40;g.hp=82;g.willing=true;
   g.gouyi={met:S.turn,opened:false,epithet:'钩弋夫人'};
+  if(gouyiLifeActive())fixGouyiIdentity(g);
   const valid=()=>!S.flags.gouyiSeen;
   return {title:'浩荡巡狩 · 河间奇女',por:g,valid,ref:'化用《汉书·外戚传》；人物姓名与后续为架空创作。',text:'车驾巡至河间，旌旗沿河岸铺开。随行望气者说，此间有一位异于常人的女子。\n被引来的赵令仪已经二十二岁，两手自幼蜷握，旁人从未见她展掌。她不肯让人再试着掰开，只低声说：“民女不是供人取笑的奇物。”\n她抬眼看向御座，紧握的指节却轻轻动了一下。',choices:[
     {t:'屏退围观者，亲自问她是否愿意近前',f:()=>{if(!valid())return null;
@@ -19,7 +20,7 @@ function gouyiAdmission(g){
   const valid=()=>S.flags.gouyiSeen?.id===g.id&&S.flags.gouyiSeen.outcome==='相见';
   return {title:'钩弋之遇 · 掌心初开',por:g,valid,text:'你让她坐稳，等她自己将手伸出。她只在你的注视与轻扶之下，缓缓舒开双掌，指尖像初展的叶。帘外的人屏住呼吸，随行望气者将这桩奇遇称作“钩弋”。\n她没有立刻谢恩，只望着自己的掌心许久：“原来我也能这样拿住一盏茶。”\n问及去留，她愿随驾入宫，但想先说明：自己有名字，也会害怕，并不懂如何当一个祥瑞。',choices:[
     {t:'应她所愿，接入宫中册为贵人',cond:()=>rankCount(3)<RANK_CAP[3],why:'贵人名额已满',f:()=>{
-      if(!valid()||rankCount(3)>=RANK_CAP[3])return null;S.flags.gouyiSeen.outcome='入宫';addConsort(g,3,'巡狩河间，帝前展掌后自愿随驾入宫');g.arc=makeArc('gouyi',6);
+      if(!valid()||rankCount(3)>=RANK_CAP[3])return null;S.flags.gouyiSeen.outcome='入宫';if(gouyiLifeActive())g.arc=makeArc('gouyi',6);addConsort(g,3,'巡狩河间，帝前展掌后自愿随驾入宫');if(!gouyiLifeActive())g.arc=makeArc('gouyi',6);
       story(g,'【钩弋入宫】自愿随驾入宫，依本朝位分册为贵人；“钩弋夫人”只是这段奇遇的别称。她感激帝王相知，也愿往后被记住的是赵令仪。');
       return '她随驾入宫，宫室按现有规制分配。“钩弋夫人”的传说开始流传，她自己的故事也从此续写。';
     }},
