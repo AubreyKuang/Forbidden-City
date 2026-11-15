@@ -55,6 +55,7 @@ A.establishJinyiwei=function(){
       const sur=pick(SUR),given=pick(BROTHER_NAMES),seed=ri(1,2e9),faces=[273,285,286,287];
       const commander={id:`jyw-${S.gen}-${S.turn}`,name:sur+given,sur,age:ri(30,46),seed,ability:ri(55,82),trust:50,merit:20,temperament:pick(['持正','谨慎','进取']),
         office:'锦衣卫指挥使',post:'锦衣卫指挥使',career:'official',alive:true,story:[],official:3,artPortrait:faces[seed%faces.length],jinyiwei:true};
+      if(expandedOfficialPortraitsActive()){delete commander.artPortrait;assignCourtOfficialPortrait(commander,'army');}
       S.jinyiwei={established:S.turn,commander,searched:{}};story(commander,'奉旨出任锦衣卫指挥使。');
       policyNudge('civil',-3);log(`设立锦衣卫，以${commander.name}为指挥使。`,1);save('auto');
       return {text:`${commander.name}领了绣春刀与飞鱼服，叩首谢恩。${fx(chg({prestige:1}))}`,por:commander};

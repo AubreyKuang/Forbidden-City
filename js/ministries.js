@@ -18,12 +18,14 @@ const scholarById=id=>scholarList().find(p=>p.id===id);
 /* —— 新科进士：外戚之外的朝臣 —— */
 const SCHOLAR_ORIGINS=['寒门','书香门第','耕读之家','盐商之后','军户子弟'];
 const SCHOLAR_ESSAYS=['论漕运积弊，主张分段官运','论边储，请以屯田补军饷','论吏治，请严考成、去冗员','论水利，愿亲赴河工','论民本，引孟子“民为贵”','论盐法，请革除私引'];
-function makeScholar(rankBoost=0){
+function makeScholar(rankBoost=0,peers=[]){
   const sur=pick(SUR),given=pick([...BROTHER_NAMES,...FATHER_NAMES]),seed=ri(1,2e9);
   const civilFaces=[272,274,279,280,281];
-  return {id:`scholar-${S.gen}-${S.turn}-${S.nid++}`,name:sur+given,sur,age:ri(22,36),seed,origin:pick(SCHOLAR_ORIGINS),essay:pick(SCHOLAR_ESSAYS),
+  const person={id:`scholar-${S.gen}-${S.turn}-${S.nid++}`,name:sur+given,sur,age:ri(22,36),seed,origin:pick(SCHOLAR_ORIGINS),essay:pick(SCHOLAR_ESSAYS),
     ability:clamp(ri(48,82)+rankBoost,30,95),trust:45,merit:10,temperament:pick(OFFICIAL_TEMPERAMENTS),career:'official',alive:true,story:[],
     official:2,artPortrait:civilFaces[seed%civilFaces.length],scholar:true};
+  if(expandedOfficialPortraitsActive()){delete person.artPortrait;assignCourtOfficialPortrait(person,'civil',{peers});}
+  return person;
 }
 function scholarRecord(p,text,big=true){story(p,text);log(`${p.name}：${text}`,big?1:0);}
 // 尚书人选与表格共用的统一条目：外戚出身的用 officialEntry 键，进士出身的用 scholar: 前缀。
@@ -162,7 +164,7 @@ function examDueNow(){
 }
 function examEvent(){
   const st=ministryState(),head=ministryHead('rites'),boost=head?Math.round((head.p.ability-50)/5):0;
-  const candidates=[makeScholar(boost),makeScholar(boost),makeScholar(boost)];
+  const candidates=[];for(let i=0;i<3;i++)candidates.push(makeScholar(boost,candidates));
   // 外家子弟中已有举人功名者一同应考，能否得中看学业，不因宫中亲眷照顾。
   const kin=officialEntries().filter(e=>officialAlive(e.p)&&e.p.career==='student'&&e.p.education==='举人'&&e.p.age>=18&&e.p.age<=55&&!e.p.exiled&&!e.p.dismissed)
     .map(e=>({e,passed:chance(.35+((e.p.ability??50)-50)/200)}));

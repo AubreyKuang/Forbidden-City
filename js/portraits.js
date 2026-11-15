@@ -176,7 +176,9 @@ const ROYAL_GROWTH_SETS={f:[380,383,392,395],m:[386,389]};
 const DESCENDANT_VARIANTS=29+ROYAL_GROWTH_SETS.m.length;
 const EXISTING_PRINCE_VARIANTS=4;
 const EXTRA_PRINCE_VARIANTS=LEGACY_DESCENDANT_VARIANTS-EXISTING_PRINCE_VARIANTS;
-const BEAUTY_PORTRAIT_START=92, YOUNG_ROYAL_PORTRAIT_START=136, PORTRAIT_COUNT=398;
+const BEAUTY_PORTRAIT_START=92, YOUNG_ROYAL_PORTRAIT_START=136, PORTRAIT_COUNT=423;
+// Reserved story art never enters the random consort pools. Stable zero-based IDs.
+const STORY_CONSORT_PORTRAITS=Object.freeze({gouyi:422});
 const PRINCESS_VARIANTS=33+ROYAL_GROWTH_SETS.f.length;
 const EXPANDED_ROYAL_START=294;
 const EMPEROR_PORTRAITS=[12,13,312,313,314,315];
@@ -202,7 +204,9 @@ const portraitSheets=[
   {start:358,rows:4,scale:4,src:'./assets/images/palace-consorts-closeups.webp?v=1',image:document.createElement('img')},
   {start:371,rows:3,scale:4,src:'./assets/images/palace-consorts-flowers.webp?v=1',image:document.createElement('img')},
   {start:380,rows:3,scale:4,src:'./assets/images/palace-royal-growth.webp?v=1',image:document.createElement('img')},
-  {start:392,rows:2,scale:4,src:'./assets/images/palace-princess-petite-growth.webp?v=1',image:document.createElement('img')}
+  {start:392,rows:2,scale:4,src:'./assets/images/palace-princess-petite-growth.webp?v=1',image:document.createElement('img')},
+  {start:398,rows:6,scale:4,src:'./assets/images/palace-officials-expanded.webp?v=1',image:document.createElement('img')},
+  {start:422,rows:1,scale:4,src:'./assets/images/palace-consort-gouyi.webp?v=1',image:document.createElement('img')}
 ];
 const portraitSheet=cell=>portraitSheets.slice().reverse().find(sheet=>cell>=sheet.start)||portraitSheets[0];
 function ensurePortraitSheet(cell){const sheet=portraitSheet(cell);if(!sheet.image.src)sheet.image.src=sheet.src;}
@@ -220,6 +224,7 @@ const WESTERN_PORTRAITS=[22,23,24,102,103,134,135,263,340,343];
 const EASTERN_PORTRAITS=[341,344],OVERSEAS_PORTRAITS=[342,345];
 const ALL_CONSORT_PORTRAITS=[...CONSORT_PORTRAITS,...WESTERN_PORTRAITS,...EASTERN_PORTRAITS,...OVERSEAS_PORTRAITS];
 const PORTRAIT_CLOTHES={
+  422:'钩弋夫人·青玉云纹汉衣',
   1:'圆领袍',2:'齐胸襦裙',3:'宋式褙子',4:'窄袖骑装',5:'齐腰襦裙',
   6:'宋式褙子',7:'交领襦裙',10:'交领宫装',21:'宋式褙子',
   22:'西域舞衣',23:'西域舞衣',24:'西域舞衣'
@@ -247,10 +252,38 @@ for(let cell=208;cell<216;cell++)PORTRAIT_CLOTHES[cell]='盛装华服';
 ['山茶绯玉','梅花雪霁','海棠春酣','幽兰碧岫','紫藤烟霞·近景','虞美人绛绡','紫藤烟霞·半身','牡丹国色·近景','牡丹国色·半身'].forEach((name,i)=>{PORTRAIT_CLOTHES[371+i]=name;});
 const consortPortraits=c=>(c.rescue||['西域贡女','西域流寓'].includes(c.fam?.t))?WESTERN_PORTRAITS:c.fam?.t==='东瀛贵族'?EASTERN_PORTRAITS:c.fam?.t==='海西贵族'?OVERSEAS_PORTRAITS:CONSORT_PORTRAITS;
 
-const FATHER_PORTRAITS=[268,269,270,271,276,277,278,282,283,284,288,289,290];
-const BROTHER_PORTRAITS=[272,273,274,275,279,280,281,285,286,287,291,292,293];
+const LEGACY_FATHER_PORTRAITS=[268,269,270,271,276,277,278,282,283,284,288,289,290];
+const LEGACY_BROTHER_PORTRAITS=[272,273,274,275,279,280,281,285,286,287,291,292,293];
+const OFFICIAL_PORTRAITS={
+  civil:{young:[272,274,275,279,280,281,291,292,293,398,399,400,402,410,411,412,413,414,415],mature:[268,270,271,276,277,278,288,289,290,401,403]},
+  army:{young:[273,285,286,287,404,405,406,408,416,417,418,419,420,421],mature:[269,282,283,284,407,409]}
+};
+const FATHER_PORTRAITS=[...LEGACY_FATHER_PORTRAITS,401,403,407,409];
+const BROTHER_PORTRAITS=[...LEGACY_BROTHER_PORTRAITS,398,399,400,402,404,405,406,408,410,411,412,413,414,415,416,417,418,419,420,421];
+function expandedOfficialPortraitsActive(){return journalContentVersion()>=12;}
+// One pool for court officers and consorts' relatives. Identity is assigned once,
+// using local seeded randomness so adding artwork never shifts gameplay rolls.
+function assignCourtOfficialPortrait(person,bloc,{mature=person.age>=40,house={},peers=[]}={}){
+  if([...FATHER_PORTRAITS,...BROTHER_PORTRAITS].includes(person.artPortrait))return;
+  const cells=OFFICIAL_PORTRAITS[bloc==='army'?'army':'civil'][mature?'mature':'young'];
+  const usage=new Map(cells.map(cell=>[cell,0])),seen=new Set();
+  const people=[...(S?.consorts||[]),...(S?.cands||[])].flatMap(c=>Object.values(c.house||{}));
+  people.push(...Object.values(house),...(S?.scholars||[]),S?.jinyiwei?.commander,...peers);
+  for(const p of people){
+    if(!p||typeof p!=='object'||p===person||!p.id||seen.has(p.id))continue;
+    seen.add(p.id);const cell=p.portraitOverride??p.artPortrait;
+    if(usage.has(cell))usage.set(cell,usage.get(cell)+1);
+  }
+  const start=Math.floor(mulberry32(person.seed||7)()*cells.length);
+  let best=cells[start];
+  for(let i=1;i<cells.length;i++){const cell=cells[(start+i)%cells.length];if(usage.get(cell)<usage.get(best))best=cell;}
+  person.artPortrait=best;
+}
 function assignOfficialPortrait(person,house,role){
-  const father=role==='father',cells=father?FATHER_PORTRAITS:BROTHER_PORTRAITS;
+  const father=role==='father';
+  if(expandedOfficialPortraitsActive())return assignCourtOfficialPortrait(person,house.bloc,{mature:father,house});
+  // A saved version 11 (or earlier) pending scene must recreate its original faces.
+  const cells=father?LEGACY_FATHER_PORTRAITS:LEGACY_BROTHER_PORTRAITS;
   if(cells.includes(person.artPortrait))return;
   const preferred=house.bloc==='army'?(father?[269,282,283,284]:[273,285,286,287]):
     house.bloc==='civil'?(father?[268,270,276,277,278]:[272,274,279,280,281]):
@@ -281,6 +314,7 @@ function emperorPortraitCell(e){
 }
 
 function assignConsortPortrait(c){
+  if(Object.values(STORY_CONSORT_PORTRAITS).includes(c.artPortrait))return;
   const cells=consortPortraits(c);
   if(cells.includes(c.artPortrait))return;
   const usage=new Map(cells.map(cell=>[cell,0]));
@@ -347,6 +381,7 @@ function portraitCell(x){
   if(x.isMom)return 9;
   if(x.maid)return CONSORT_PORTRAITS.includes(x.artPortrait)?x.artPortrait:CONSORT_PORTRAITS[Math.floor(mulberry32(x.seed||7)()*CONSORT_PORTRAITS.length)];
   if(x.sex)return childPortraitCell(x);
+  if(Object.values(STORY_CONSORT_PORTRAITS).includes(x.artPortrait))return x.artPortrait;
   const cells=consortPortraits(x);
   return cells.includes(x.artPortrait)?x.artPortrait:cells[Math.floor(mulberry32(x.seed||7)()*cells.length)];
 }
@@ -357,6 +392,7 @@ function portraitJewelry(rank,id){return JEWELRY[id]|| (rank===8?JEWELRY.phoenix
 // Coordinates are in the stable 112 × 140 portrait tile: brow centre and head width.
 // Half-length paintings need much smaller ornaments than the original close-ups.
 const PORTRAIT_HEADS={
+  422:[51,38,27],
   248:[47,39,34],249:[59,40,34],250:[65,39,32],251:[66,38,32],252:[60,39,34],253:[54,39,34],254:[59,38,34],255:[59,39,34],
   256:[57,28,23],257:[50,31,27],258:[60,31,27],259:[56,31,27],260:[62,29,27],261:[65,30,25],262:[58,30,27],263:[59,31,27],264:[56,28,25],265:[60,28,26],266:[61,27,26],267:[50,29,27],
   316:[56,24,24],317:[56,24,24],318:[58,25,24],319:[60,25,24],320:[54,37,25],321:[60,24,23],322:[58,22,23],323:[53,24,23],324:[56,24,24],325:[58,26,24],
@@ -365,7 +401,7 @@ const PORTRAIT_HEADS={
   346:[56,28,23],347:[58,29,23],348:[58,25,23],349:[59,26,23],350:[56,28,23],351:[60,25,23],352:[57,26,23],353:[57,27,23],354:[62,27,23],355:[62,25,23],356:[56,26,23],357:[60,26,23],
   363:[53,29,27],364:[59,29,27],365:[52,30,27],366:[53,31,27],371:[55,29,27],372:[50,31,27],373:[56,30,27],377:[59,29,27],379:[54,28,27]
 };
-const PAINTED_CROWNS=new Set([98,105,109,114,120,130,131,208,209,210,211,212,213,214,215,256,346,347,349,350,351,353,355,358,359,360,361,362,371,376,378,379]);
+const PAINTED_CROWNS=new Set([98,105,109,114,120,130,131,208,209,210,211,212,213,214,215,256,346,347,349,350,351,353,355,358,359,360,361,362,371,376,378,379,422]);
 function portraitHead(cell){return PORTRAIT_HEADS[cell]||[56,42,38];}
 function portraitFrame(cell,bust=false){
   if(!bust)return [0,0,PORTRAIT_WIDTH,PORTRAIT_HEIGHT];
