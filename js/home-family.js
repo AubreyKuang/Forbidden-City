@@ -24,8 +24,10 @@ const HOME_LEAVE_STYLES={
 const homeLeaveStyle=c=>HOME_LEAVE_STYLES[isSolitary(c)?'孤高':c.trait]||HOME_LEAVE_STYLES.温婉;
 const homeMother=c=>c?.homeLife?.mother;
 const homeWorryActive=c=>!!(c?.alive&&!c.gone&&homeMother(c)?.status==='ill');
-function homeRecord(c,text,emotion=0,other){
- story(c,text);remember(c,emotion<0?'hurt':'care',text);
+// Worry about family is not a grievance against the emperor. Only an explicit
+// refusal from him (byEmperor) leaves a hurt that colours later conversations.
+function homeRecord(c,text,emotion=0,other,byEmperor=false){
+ story(c,text);if(emotion>=0)remember(c,'care',text);else if(byEmperor)remember(c,'hurt',text);
  NPCMemory.record(S,{type:'home-family',time:S.turn,participants:[c.id,...(other?[other.id]:[])],outcome:text},[{person:c.id,subject:other?.id||'family',interpretation:text,emotion,impact:75}]);
 }
 function homeSetFeeling(c,k,why){if(!['悲恸','心如死灰','怨恨'].includes(xinOf(c)))setXin(c,k,why);}
