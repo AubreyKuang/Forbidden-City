@@ -1,0 +1,2 @@
+// This entire demo page uses disposable memory; it cannot read or replace a player's save.
+(()=>{const items=new Map();Object.defineProperty(globalThis,'localStorage',{value:{getItem:k=>items.get(String(k))??null,setItem:(k,v)=>items.set(String(k),String(v)),removeItem:k=>items.delete(String(k)),clear:()=>items.clear(),key:i=>[...items.keys()][i]??null,get length(){return items.size;}},configurable:false});})();
