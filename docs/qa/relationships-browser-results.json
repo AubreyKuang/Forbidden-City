@@ -1,0 +1,655 @@
+{
+  "url": "http://127.0.0.1:8428/dev.html",
+  "started": "2026-11-15T21:29:01.717Z",
+  "runs": [
+    {
+      "name": "selection-both",
+      "viewport": "desktop",
+      "reloads": [
+        "imported",
+        "candidate-4",
+        "candidate-5",
+        "conversation-pending",
+        "conversation-recorded",
+        "batch-complete"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 740,
+          "content": 740
+        },
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 940,
+          "content": 940
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "selection-first",
+      "viewport": "desktop",
+      "reloads": [
+        "imported",
+        "candidate-4",
+        "candidate-5",
+        "conversation-pending",
+        "conversation-recorded",
+        "batch-complete"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 740,
+          "content": 740
+        },
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 940,
+          "content": 940
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "selection-second",
+      "viewport": "desktop",
+      "reloads": [
+        "imported",
+        "candidate-4",
+        "candidate-5",
+        "conversation-pending",
+        "conversation-recorded",
+        "batch-complete"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 740,
+          "content": 740
+        },
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 940,
+          "content": 940
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "selection-neither",
+      "viewport": "desktop",
+      "reloads": [
+        "imported",
+        "candidate-4",
+        "candidate-5",
+        "batch-complete"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 940,
+          "content": 940
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "selection-rival",
+      "viewport": "desktop",
+      "reloads": [
+        "imported",
+        "candidate-4",
+        "candidate-5",
+        "batch-complete"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 940,
+          "content": 940
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "sister",
+      "viewport": "desktop",
+      "reloads": [
+        "imported",
+        "courtship",
+        "admission"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 850,
+          "content": 850
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "married-sister",
+      "viewport": "desktop",
+      "reloads": [
+        "imported"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 850,
+          "content": 850
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "crowns",
+      "viewport": "desktop",
+      "reloads": [
+        "imported",
+        "wear-goldphoenix",
+        "wear-peony",
+        "restore-default"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 850,
+          "content": 850
+        }
+      ],
+      "errors": [],
+      "passed": true,
+      "headpieces": [
+        {
+          "cell": "0",
+          "x": 20.85,
+          "y": 6.474000000000004,
+          "width": 70.3,
+          "height": 70.3,
+          "badge": false
+        },
+        {
+          "cell": "2",
+          "x": 20.85,
+          "y": 6.474000000000004,
+          "width": 70.3,
+          "height": 70.3,
+          "badge": false
+        },
+        {
+          "cell": "3",
+          "x": 3.1799999999999997,
+          "y": 18.591999999999995,
+          "width": 42.56,
+          "height": 42.56,
+          "badge": false
+        }
+      ]
+    },
+    {
+      "name": "daughter",
+      "viewport": "desktop",
+      "reloads": [
+        "imported",
+        "maternal-history"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 740,
+          "content": 740
+        },
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 940,
+          "content": 940
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "son",
+      "viewport": "desktop",
+      "reloads": [
+        "imported",
+        "naming-1",
+        "maternal-history"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 740,
+          "content": 740
+        },
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 940,
+          "content": 940
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "twins",
+      "viewport": "desktop",
+      "reloads": [
+        "imported",
+        "naming-1",
+        "naming-2",
+        "maternal-history"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 740,
+          "content": 740
+        },
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 940,
+          "content": 940
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "marriage",
+      "viewport": "desktop",
+      "reloads": [
+        "imported",
+        "marriage-petition",
+        "wedding",
+        "family-dialogue",
+        "family-memories"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 850,
+          "content": 850
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "marriage-legacy",
+      "viewport": "desktop",
+      "reloads": [
+        "imported",
+        "family-dialogue",
+        "family-memories"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 850,
+          "content": 850
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "selection-both",
+      "viewport": "mobile",
+      "reloads": [
+        "imported",
+        "candidate-4",
+        "candidate-5",
+        "conversation-pending",
+        "conversation-recorded",
+        "batch-complete"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 366,
+          "content": 366
+        },
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "selection-first",
+      "viewport": "mobile",
+      "reloads": [
+        "imported",
+        "candidate-4",
+        "candidate-5",
+        "conversation-pending",
+        "conversation-recorded",
+        "batch-complete"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 366,
+          "content": 366
+        },
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "selection-second",
+      "viewport": "mobile",
+      "reloads": [
+        "imported",
+        "candidate-4",
+        "candidate-5",
+        "conversation-pending",
+        "conversation-recorded",
+        "batch-complete"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 366,
+          "content": 366
+        },
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "selection-neither",
+      "viewport": "mobile",
+      "reloads": [
+        "imported",
+        "candidate-4",
+        "candidate-5",
+        "batch-complete"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "selection-rival",
+      "viewport": "mobile",
+      "reloads": [
+        "imported",
+        "candidate-4",
+        "candidate-5",
+        "batch-complete"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "sister",
+      "viewport": "mobile",
+      "reloads": [
+        "imported",
+        "courtship",
+        "admission"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "married-sister",
+      "viewport": "mobile",
+      "reloads": [
+        "imported"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "crowns",
+      "viewport": "mobile",
+      "reloads": [
+        "imported",
+        "wear-goldphoenix",
+        "wear-peony",
+        "restore-default"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true,
+      "headpieces": [
+        {
+          "cell": "0",
+          "x": 20.85,
+          "y": 6.474000000000004,
+          "width": 70.3,
+          "height": 70.3,
+          "badge": false
+        },
+        {
+          "cell": "2",
+          "x": 20.85,
+          "y": 6.474000000000004,
+          "width": 70.3,
+          "height": 70.3,
+          "badge": false
+        },
+        {
+          "cell": "3",
+          "x": 3.1799999999999997,
+          "y": 18.591999999999995,
+          "width": 42.56,
+          "height": 42.56,
+          "badge": false
+        }
+      ]
+    },
+    {
+      "name": "daughter",
+      "viewport": "mobile",
+      "reloads": [
+        "imported",
+        "maternal-history"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 366,
+          "content": 366
+        },
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "son",
+      "viewport": "mobile",
+      "reloads": [
+        "imported",
+        "naming-1",
+        "maternal-history"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 366,
+          "content": 366
+        },
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "twins",
+      "viewport": "mobile",
+      "reloads": [
+        "imported",
+        "naming-1",
+        "naming-2",
+        "maternal-history"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 366,
+          "content": 366
+        },
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "marriage",
+      "viewport": "mobile",
+      "reloads": [
+        "imported",
+        "marriage-petition",
+        "wedding",
+        "family-dialogue",
+        "family-memories"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "marriage-legacy",
+      "viewport": "mobile",
+      "reloads": [
+        "imported",
+        "family-dialogue",
+        "family-memories"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    }
+  ],
+  "browser": "157.0.8103.78",
+  "finished": "2026-11-15T21:30:06.566Z",
+  "summary": {
+    "cases": 26,
+    "passed": 26,
+    "reloads": 102
+  }
+}
