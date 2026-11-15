@@ -138,7 +138,7 @@ const ARCS={
     {t:'亲自搭梯子去取',f:()=>{aNext(c,1,2,5);story(c,'纸鸢落在乾清宫屋脊上，陛下亲自搭梯子替她取了下来。');return `御前的太监吓得跪了一地。你把纸鸢递给她时，她笑得比春光还亮。${fx(cchg(c,{aff:10,mood:15}),chg({prestige:-1}))}`}},
     {t:'“一只纸鸢而已，再做一只便是。”',f:()=>{aNext(c,1,3,6);return fx(cchg(c,{mood:-5}))}}]},
   (c,f)=>c.aff<45?null:{text:`宫外正在筹备灯会。${cName(c)}${c.trait==='淡泊'?'轻声问起':'扯着你的袖子说'}：“听说灯会有一条街那么长，臣妾也想亲自走一回。”`,choices:[
-    {t:'微服带她出宫（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{E().energy--;renderTop();f.out=1;aNext(c,2,3,6);story(c,'上元夜，陛下微服带她出宫看灯。她买了一盏兔子灯，一路舍不得放下。');return `你们在人潮里走散了一回，找到她时，她正举着一盏兔子灯站在桥头四处张望。${fx(cchg(c,{aff:15,mood:20}))}`}},
+    {t:'微服带她出宫（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{E().energy--;renderTop();f.out=1;aNext(c,2,3,6);story(c,'上元夜，陛下微服带她出宫看灯。她买了一盏兔子灯，一路舍不得放下。');return {illustration:'lantern-street',text:`你沿桥栏找去，见一盏兔子灯搁在石栏上，两只纸糊的耳朵被风吹得直颤。她正踮脚四望，见是你，赶忙攥紧了你的袖口。\n“这一回，换臣妾牵着您。”${fx(cchg(c,{aff:15,mood:20}))}`}}},
     {t:'在宫里为她办一场灯会（国库-40万两）',f:()=>{aNext(c,2,3,6);harem().forEach(o=>{if(o!==c&&TRAITS[o.trait].jealous){o.mood=clamp(o.mood-6);relAdd(o,c,-8)}});return fx(chg({treasury:-40}),cchg(c,{aff:8,mood:15}))}},
     {t:'宫规不许',f:()=>{aNext(c,2,4,8);return fx(cchg(c,{mood:-10}))}}]},
   (c,f)=>{if(c.aff>=65){c.bond=true;aEnd(c,'知己',f.out?'那盏兔子灯一直挂在她的床头。她说，陛下是这宫里唯一懂她的人。':'她说，陛下是这宫里唯一懂她的人。');return {text:`${cName(c)}亲手扎了一只新纸鸢送你，上面画着两个牵手的小人。${'\n'}§她的恩宠从此不再衰减`,choices:[ok1]}}

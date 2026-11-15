@@ -11,9 +11,10 @@ const GARDEN_HOBBY_SCENES={
   对弈:n=>`${n}独自在石桌上摆一局残棋，一手执黑一手执白，正想得出神。`,
   品茶:n=>`${n}在亭中温杯煮水，见你过来，先分了一盏新茶给你。`
 };
+const gardenRainLine=n=>`细雨忽至，你与${n}在回廊下躲雨，说了许多话。`;
 function gardenEncounterText(c){
   const n=cName(c),own=GARDEN_HOBBY_SCENES[consortHobby(c)];
-  return pick([own?.(n),`${n}正在亭中扑蝶，见你来了，红着脸躲到柱子后面。`,`${n}在池边喂鱼，鱼儿聚了一大片。她笑着分了你一把鱼食。`,`细雨忽至，你与${n}在回廊下躲雨，说了许多话。`].filter(Boolean));
+  return pick([own?.(n),`${n}正在亭中扑蝶，见你来了，红着脸躲到柱子后面。`,`${n}在池边喂鱼，鱼儿聚了一大片。她笑着分了你一把鱼食。`,gardenRainLine(n)].filter(Boolean));
 }
 const SPA_COST=60;
 A.out=function(kind){ if(!useE())return; const e=E();
@@ -21,7 +22,7 @@ A.out=function(kind){ if(!useE())return; const e=E();
     const h=harem();
     const roll=R();
     if(roll<.5&&h.length){const c=pick(h);const t=gardenEncounterText(c);
-      story(c,`与陛下在御花园偶遇。${t}`);pushEv({title:'御花园偶遇',por:c,text:t+fx(cchg(c,{favor:6,aff:6,mood:10})),choices:[{t:'今夜便召她侍寝',cond:()=>E().energy>0&&!c.preg,why:c.preg?'她有孕在身':'精力不足',f:()=>{nightWith(c);return null}},{t:'与她作别'}]});}
+      story(c,`与陛下在御花园偶遇。${t}`);pushEv({title:'御花园偶遇',illustration:season()===0&&t!==gardenRainLine(cName(c))?'spring-garden':undefined,por:c,text:t+fx(cchg(c,{favor:6,aff:6,mood:10})),choices:[{t:'今夜便召她侍寝',cond:()=>E().energy>0&&!c.preg,why:c.preg?'她有孕在身':'精力不足',f:()=>{nightWith(c);return null}},{t:'与她作别'}]});}
     else {
       const encounter=roll>=.5&&roll<.6?maidEvent('御花园'):null;
       if(encounter){pushEv(encounter);return;}
@@ -195,7 +196,7 @@ function visitorTick(c){const v=c.visitor;if(!v)return;if(!inPalace(c)){delete c
   c.mood=clamp(c.mood+3);
   if(S.turn>=v.until){story(c,`母亲${v.name}出宫回家了，临走前拉着她的手说了很久的话。`);toast(`${cName(c)}的母亲出宫回家了`);delete c.visitor;if(chance(.4))setXin(c,'思念','母亲出宫回家')}}
 function visitorEvent(){const vs=alive().filter(c=>c.visitor&&inPalace(c)&&S.turn-(c.visitor.ev===undefined?-9:c.visitor.ev)>=2);if(!vs.length)return null;const c=pick(vs),v=c.visitor,m=momObj(c);v.ev=S.turn;deepen(c);
-  if(!c.woundKnown&&chance(.5))return {title:'母女夜话',por:m,text:`你路过${c.palace}，听见${v.name}在屋里低声叮嘱女儿：“……娘知道你心里苦。可这宫里不比家里，凡事要忍。”\n后来你才知道，${cName(c)}${WOUNDS[c.wound].replace(/^。/,'')}`,choices:[
+  if(!c.woundKnown&&chance(.5))return {title:'母女夜话',illustration:'mother-window',por:m,text:`你路过${c.palace}，听见${v.name}在屋里低声叮嘱女儿：“……娘知道你心里苦。可这宫里不比家里，凡事要忍。”\n后来你才知道，${cName(c)}${WOUNDS[c.wound].replace(/^。/,'')}`,choices:[
     {t:'进去坐坐',f:()=>{c.woundKnown=true;remember(c,'care','母亲在宫时陛下来坐');story(c,'母亲在宫时，陛下进来坐了坐，第一次听她说起从前的事。');return fx(cchg(c,{aff:8,mood:8}))}},
     {t:'悄悄走开',f:()=>{c.woundKnown=true;return '你没有进去。'}}]};
   return {title:'谢恩',por:m,text:`${v.name}求见陛下，跪下谢恩：“小女自幼${pick(['娇惯','体弱','心思重','性子倔'])}，在宫里承蒙陛下照拂，民妇感激不尽。”`,choices:[

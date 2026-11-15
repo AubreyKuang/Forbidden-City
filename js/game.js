@@ -127,6 +127,15 @@ function eventCast(people,event){
   return people.length>1?`<div class="event-cast" aria-label="${event?.personalStory?'故事相关人物':'事件在场人物'}">${people.map(person=>
     `<figure>${porImg(person,104)}<figcaption>${esc(label(person))}</figcaption></figure>`).join('')}</div>`:'';
 }
+const EVENT_ILLUSTRATIONS={
+  'spring-garden':'几瓣海棠落进池里，贴着水纹慢慢打转。你沿回廊走过去，隔着花枝看见一个熟悉的身影。',
+  'mother-window':'竹影在窗纸上轻轻摇。你正要让人通传，忽听里面有人低低唤了一声她的乳名。',
+  'lantern-street':'沿街的灯一盏盏亮起。桥头人潮一挤，你伸手去牵她，掌心只擦过一点衣袖。'
+};
+function eventIllustration(key){
+  if(!Object.hasOwn(EVENT_ILLUSTRATIONS,key))return '';
+  return `<figure class="event-illustration" data-illustration="${key}"><img src="./assets/images/story-${key}.webp" alt="" decoding="async"><figcaption>${esc(EVENT_ILLUSTRATIONS[key])}</figcaption></figure>`;
+}
 function openModal(ev){
   if(!modalOpen&&document.activeElement?.matches('button,input,select')) modalInvoker=document.activeElement;
   modalOpen=true;curEv=ev;modalResult=null;if(ev.onShow)ev.onShow();const b=$('#mbox');
@@ -135,7 +144,7 @@ function openModal(ev){
   const choicePeople=new Set(ev.choices.filter(c=>c.portrait||c.person).map(c=>(c.portrait||c.person).id??c.person));
   const showChoicePortraits=choicePeople.size>1;
   const arrival=ev.scene==='palace-arrival';
-  let h=`<h2 class="mtitle" id="event-title" tabindex="-1">${esc(ev.title)}</h2>${ev.scene==='mourning'?mourningScene():''}${arrival?palaceArrivalHTML(ev):eventCast(people,ev)}<div class="mbody"${arrival?' hidden':''}>`;
+  let h=`<h2 class="mtitle" id="event-title" tabindex="-1">${esc(ev.title)}</h2>${ev.scene==='mourning'?mourningScene():''}${eventIllustration(ev.illustration)}${arrival?palaceArrivalHTML(ev):eventCast(people,ev)}<div class="mbody"${arrival?' hidden':''}>`;
   if(people.length===1)h+=`<div class="mpor">${porImg(people[0],112)}<div>${esc(porName(people[0]))}</div></div>`;
   h+=`<div class="mtext">${ev.jewelry?`<figure class="event-jewelry">${jewelryImage(ev.jewelry,88)}<figcaption>${esc(JEWELRY[ev.jewelry]?.name||'')}</figcaption></figure>`:''}${fmt(ev.text)}${ev.ref?`<p class="ref">典出 · ${ev.refURL?`<a href="${esc(ev.refURL)}" target="_blank" rel="noopener noreferrer">${esc(ev.ref)}</a>`:esc(ev.ref)}</p>`:''}${ev.input?`<input id="minput" class="inp" maxlength="${ev.input.max||4}" value="${esc(ev.input.def||'')}" aria-label="输入">`:''}</div></div><div class="mch${showChoicePortraits?' event-choices':''}">`;
   ev.choices.forEach((c,i)=>{
@@ -167,9 +176,10 @@ function showRes(res){
   modalResult=res;
   const b=$('#mbox');
   const cast=res.por?'':eventCast(eventPortraits(curEv),curEv);
-  b.innerHTML=`<h2 class="mtitle" id="event-title">${esc(res.title||curEv.title)}</h2>${curEv.scene==='mourning'?mourningScene():''}${cast}<div class="mbody">${res.por?`<div class="mpor">${porImg(res.por,96)}</div>`:''}<div class="mtext">${fmt(res.text)}</div></div><div class="mch"><button class="btn gold" onclick="nextEv()">继续</button></div>`;
+  const illustration=eventIllustration(res.illustration);
+  b.innerHTML=`<h2 class="mtitle" id="event-title"${illustration?' tabindex="-1"':''}>${esc(res.title||curEv.title)}</h2>${curEv.scene==='mourning'?mourningScene():''}${illustration}${cast}<div class="mbody">${res.por?`<div class="mpor">${porImg(res.por,96)}</div>`:''}<div class="mtext">${fmt(res.text)}</div></div><div class="mch"><button class="btn gold" onclick="nextEv()">继续</button></div>`;
   b.scrollTop=0;renderTop();
-  $('#mbox .mch button')?.focus?.({preventScroll:true});
+  $(illustration?'#event-title':'#mbox .mch button')?.focus?.({preventScroll:true});
 }
 
 /* ============ 侍寝与互动 ============ */
