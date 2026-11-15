@@ -1,5 +1,5 @@
 /* Temporary leave retains rank, palace and every pending personal story. */
-function homeLeaveEligible(c){return !!(c&&inPalace(c)&&!c.maid&&!c.rescue&&!c.visitor&&!S.over&&c.hp>=40&&(!c.preg||c.preg<5));}
+function homeLeaveEligible(c){return !!(c&&inPalace(c)&&!c.maid&&!c.rescue&&!c.visitor&&!natalPeople(c.house).some(p=>p.visit?.host===c.id)&&!S.over&&c.hp>=40&&(!c.preg||c.preg<5));}
 function startHomeLeave(c,months=2,reason='省亲'){
  if(!homeLeaveEligible(c)||![1,2,3].includes(months))return false;
  c.homeLeave={from:S.turn,due:S.turn+months,reason};c.lastHomeLeave=S.turn;

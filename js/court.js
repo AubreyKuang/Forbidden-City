@@ -964,6 +964,7 @@ function houseOf(c){
   for(let i=0;i<count;i++){
     const role=i?'brother'+(i+1):'brother',age=youngest+(count-i-1)*2;
     root.house[role]={name:root.sur+BROTHER_NAMES[((seed>>>5)+i)%BROTHER_NAMES.length],post:posts[((seed>>>9)+i)%posts.length],age,merit:20+((seed>>>3)+i*7)%30,away:false};
+    if(voiceHash(seed+':career:'+i)%100<60){root.house[role].career='student';root.house[role].post=age>=22&&voiceHash(seed+':degree:'+i)%3===0?'举人':'书生';}
     root.house.father.age=Math.max(root.house.father.age,age+18);
   }
   if(count===5)root.house.fiveBrothers={sister:root.id,birthOrder:6};
@@ -1006,7 +1007,7 @@ function courtTick(){
         officialDeath(c,'father',h.father.commission?'奉差途中病故。':'在家中病故。');
       }}
   }
-  officialTaskTick();
+  officialTaskTick();relativeStudyTick();
 }
 // Wins and defeats share a court-wide interval; sisters share their household's interval.
 function frontierReportReady(c){
@@ -1080,11 +1081,7 @@ function factionEvent(){
     :frontierReport(c,brother,{title:'边关失利',por:c,text:`${place}急报：${brother.name}中了埋伏，折损了三百骑。武将们说胜败乃兵家常事，御史却要问罪。${cName(c)}已经两天没吃下饭。`,choices:[
       {t:'依律问责',f:()=>{brother.merit=Math.max(0,brother.merit-15);policyNudge('army',-2);policyNudge('civil',2);setXin(c,'惶恐','兄长兵败受责');officialRecord(c,role,`在${place}兵败，依律问责。`,{emotion:-.5});return fx(cchg(c,{mood:-12}),chg({people:1}))}},
       {t:'宽宥，许他戴罪立功',f:()=>{policyNudge('army',4);officialRecord(c,role,`在${place}兵败，获准戴罪立功。`);return fx(cchg(c,{mood:6,aff:5}),chg({prestige:-1}))}}]}));}
-  const dw=S.flags.dowager;
-  if(dw?.alive){const pref=harem().filter(c=>c.rank<8&&(stanceOf(c)==='dowager'||c.virtue>=70)).sort((a,b)=>b.virtue-a.virtue)[0];
-    if(pref)pool.push({title:'慈宁宫',por:pref,text:`${dw.name}召陛下用膳，席间夸${cName(pref)}温良贤淑，又说${kidsAlive().length<3?'皇家子嗣还少':'宫中孩子渐多，照应更需用心'}，“哀家看着她就喜欢”。话没说透，意思谁都明白。`,choices:[
-      {t:'遵太后之意，多去她宫里',f:()=>{story(pref,`太后在慈宁宫称许她的德行，陛下答应多来相处。`);policyNudge('dowager',5);const em=empress();if(em&&em!==pref)cchg(em,{mood:-3});return fx(cchg(pref,{favor:8,mood:8}),chg({prestige:1}))}},
-      {t:'“儿臣心里有数。”',f:()=>{story(pref,'太后在慈宁宫称许她，陛下并未因此作出多来相处的许诺。');policyNudge('dowager',-4);return fx(chg({prestige:1}))}}]});}
+  const favor=dowagerFavorEvent();if(favor)pool.push(favor);
   const rivalry=successionRivalryEvent();if(rivalry)pool.push(rivalry);
   const ev=pool.length?pick(pool):null;
   return ev?{...ev,present:ev.present||eventPortraits(ev)}:null;

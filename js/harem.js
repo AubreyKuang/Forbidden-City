@@ -90,6 +90,7 @@ const HAREM=[
    {t:`晋为${RANKS[nr]}`,cond:()=>rankCount(nr)<RANK_CAP[nr],why:`${RANKS[nr]}已满`,f:()=>{c.rank=nr;if(nr>=4&&!c.title)grantConsortTitle(c,pick(TITLES.filter(t=>!harem().some(x=>x.title===t))));story(c,`蒙恩晋为${cName(c)}。`);log(`晋${fullName(c)}为${cName(c)}。`);harem().forEach(o=>{if(o!==c&&TRAITS[o.trait].jealous){o.mood=clamp(o.mood-6);relAdd(o,c,-6)}});return fx(cchg(c,{mood:20,aff:8}))}},
    {t:'笑而不语',f:()=>fx(cchg(c,{mood:-8}))}]}},
  function family(){
+  const graduates=officialEntries().filter(e=>e.role!=='father'&&inPalace(e.c)&&canAppointRelative(e));if(graduates.length)return relativeAppointmentEvent(pick(graduates));
   const candidates=harem().flatMap(c=>{const h=houseOf(c);return h&&c.fam.p>=20?brotherRoles(h).map(role=>officialEntry(c.id+':'+role)).filter(e=>e.p.age>=18&&officialActionReady(e,'commission')):[];});
   if(!candidates.length)return null;const e=pick(candidates),{c,p,h,role}=e,taskId=h.bloc==='army'?'escort':'accounts',task=OFFICIAL_TASKS[taskId];
   return {title:'外戚请托',por:c,valid:()=>inPalace(c)&&officialActionReady(e,'commission'),text:`${cName(c)}谈起${officialKinLabel(h,role)}${p.name}：他如今任${p.office||p.post}，不知可否按本领再领一桩差事？`,choices:[
@@ -103,6 +104,7 @@ const HAREM=[
 function haremEvent(){for(const f of shuffle(HAREM)){const ev=f();if(ev&&ambientEventReady(ev))return {...ev,present:ev.present||eventPortraits(ev)}}return null}
 function pregEvent(c){if(c.maid)return {title:'喜脉',por:c,sfx:'joy',text:`太医院来报：${c.near?'御前':'尚衣局'}的宫女${fullName(c)}已有两月身孕！`,choices:[
   {t:'册为答应，迁居别宫养胎',f:()=>{promoteMaid(c,1);c.prot=true;setXin(c,'欢喜','有孕后册为答应');return fx(cchg(c,{mood:25,aff:10}))}},
+  {t:'先安心养胎，产后再议身份与抚养',f:()=>{c.prot=true;story(c,'诊出喜脉，陛下准安心养胎，暂不册封，待生产后再议孩子的抚养。');return '她仍保留原来的身份，免去劳作，由医者照料。孩子出生后再商议抚养。';}},
   {t:'仍留在身边，加派人手照料',f:()=>{c.prot=true;c.near=true;c.palace='乾清宫';story(c,'有孕后仍留在御前，加派人手照料。');return fx(cchg(c,{mood:10}))}},
   {t:'不必声张',f:()=>{story(c,'有孕之事被压了下来。');setXin(c,'委屈','有了身孕，却无人过问');return fx(cchg(c,{mood:-10}))}}]};return {title:'喜脉',por:c,sfx:'joy',text:`太医院来报：${cName(c)}已有两月身孕！`,choices:[
   {t:'加派人手悉心照料（国库-20万两）',f:()=>{c.prot=true;story(c,'诊出喜脉，陛下加派人手悉心照料。');log(`${fullName(c)}有孕。`,1);return fx(chg({treasury:-20,prestige:2}),cchg(c,{mood:20,aff:8}))}},
@@ -200,7 +202,7 @@ const maids=()=>alive().filter(c=>c.maid);
 function newMaid(where){const g=makeGirl({fam:{t:'宫女',p:3},age:ri(16,20)});g.maid=true;g.near=false;g.palace='尚衣局';g.favor=20;g.aff=20;S.consorts.push(g);deepen(g);story(g,`本是${where}的宫女，被陛下看中。`);return g}
 function promoteMaid(g,rank){g.maid=false;g.near=false;g.rank=rank;assignPalace(g);deepen(g);initRel(g);assignArc(g);S.ys.c++;
   story(g,`由宫女册封为${RANKS[rank]}，赐居${g.palace}。`);log(`宫女${fullName(g)}册封为${RANKS[rank]}。`,1)}
-function maidNight(g){if(E().energy<=0){toast('本月精力已尽');return}nightWith(g);Q.splice(1,0,afterMaidNight(g))}
+function maidNight(g){if(!inPalace(g)||g.preg||g.cardWithdrawn)return;if(E().energy<=0){toast('本月精力已尽');return}nightWith(g);Q.splice(1,0,afterMaidNight(g))}
 function afterMaidNight(g){return {title:'天明',por:g,text:`天快亮时，${g.given}已经起身，跪在床边替你理好朝服，低着头不敢看你。\n她只是个宫女，往后如何，全凭陛下一句话。`,choices:[
   {t:'封为答应',f:()=>{promoteMaid(g,1);setXin(g,'欢喜','一夜承恩，封为答应');return `她磕头谢恩，搬进了${g.palace}。${fx(cchg(g,{mood:25,aff:10}))}`}},
   {t:'封为官女子',f:()=>{promoteMaid(g,0);setXin(g,'欢喜','一夜承恩，封为官女子');return `她磕头谢恩。${fx(cchg(g,{mood:15,aff:6}))}`}},

@@ -190,7 +190,7 @@ function makeKin(c,type){c.kin=c.kin||{};c.kinRival=c.kinRival||{};const g=makeG
     g.age=Math.min(g.age,g.house.fiveBrothers?Math.max(16,(byId(g.house.fiveBrothers.sister)||c).age-1):Infinity,currentAge(g.house.father)-18,...brotherRoles(g.house).map(role=>currentAge(g.house[role])-1));
   }
   const older=type==='亲'&&g.house?.fiveBrothers?false:g.age>c.age||(g.age===c.age&&chance(.5));c.kin[g.id]=type+(older?'姐':'妹');g.kin[c.id]=type+(older?'妹':'姐');
-  if(chance(.35)){c.kinRival[g.id]=1;g.kinRival[c.id]=1}g.kinNote=`${cName(c)}的${KIN_TXT[c.kin[g.id]]}`;return g}
+  if(chance(type==='堂'?.55:.25)){c.kinRival[g.id]=1;g.kinRival[c.id]=1}g.kinNote=`${cName(c)}的${KIN_TXT[c.kin[g.id]]}`;return g}
 function clanEcho(c,t){const ms=clanMembers(clanKey(c));ms.filter(o=>o!==c).forEach(o=>{const rv=isRival(o,c);
   if(t==='up'){if(rv)setXin(o,'嫉恨',`${fullName(c)}晋了位分`,c.id);else cchg(o,{mood:6})}else{if(rv)cchg(o,{mood:5});else setXin(o,'惶恐',`同族的${fullName(c)}获罪`)}});
   ms.forEach(o=>o.fam.p=clamp(o.fam.p+(t==='up'?3:-6),0,95))}
@@ -213,7 +213,7 @@ function clanEvent(){
   }
   const h=harem().filter(c=>c.favor>=60&&c.fam.p>=15&&hasClan(c)&&!c.recommended);
   if(h.length&&chance(.5)){const c=pick(h);c.recommended=1;const g=makeKin(c,chance(.5)?'亲':'堂');
-    return {title:'家书',por:g,text:`${cName(c)}的娘家送来一封信：家中${KIN_TXT[c.kin[g.id]].replace(/^亲/,'')}${fullName(g)}今年${g.age}岁，想送进宫来陪伴姐姐。${isRival(c,g)?'\n宫女私下说，这两姐妹在家时并不和睦。':''}`,choices:[
-      {t:'接她入宫，封为常在',f:()=>{addConsort(g,2,`经${fullName(c)}娘家举荐入宫`);return fx(cchg(c,{mood:isRival(c,g)?-8:10}))}},
+    return {title:'家书',por:g,text:`${cName(c)}的娘家送来一封信：家中${KIN_TXT[c.kin[g.id]].replace(/^亲/,'')}${fullName(g)}今年${g.age}岁，想送进宫来陪伴姐姐。\n${sisterArrivalFeeling(c,g,true).text}`,choices:[
+      {t:'接她入宫，封为常在',f:()=>{addConsort(g,2,`经${fullName(c)}娘家举荐入宫`);return sisterArrivalFeeling(c,g,true).text}},
       {t:'婉拒',f:()=>{delete c.kin[g.id];return '信被原样退了回去。'}}]}}
   return null}

@@ -404,7 +404,7 @@ function viewMap(){
     :host?`<button id="map-next" class="btn sm jade" onclick="A.visitMapActivity('kn')">去坤宁宫见${esc(fullName(host))}</button>`
     :first?`<button id="map-next" class="btn sm jade" onclick="${mapLeadAction(first)}">${esc(mapLeadPlace(first))} · ${esc(first.title)} →</button>`:'';
   return `<section class="map-play" aria-label="宫城地图">
-    <header class="map-location"><h2>宫城</h2><span class="hint">${esc(nearestPlace())}</span></header>
+    <header class="map-location"><h2>宫城</h2><button class="btn sm" onclick="A.go('residences')">分配住所</button><span class="hint">${esc(nearestPlace())}</span></header>
     <div class="map-first-month">
       <span>${done?'奏折已批复':report==='本月奏折'?'奏折待批':report+'待阅'} · 余 ${E().energy} 点精力</span>
       ${next}

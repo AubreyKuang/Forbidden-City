@@ -40,6 +40,8 @@ A.out=function(kind){ if(!useE())return; const e=E();
 function maidEncounterReady(){return S.turn-(S.flags.lastMaidEncounter??-Infinity)>=4;}
 function maidEvent(where){
   if(!maidEncounterReady())return null;
+  const known=maids().filter(m=>!m.near&&!m.preg&&!m.cardWithdrawn&&inPalace(m)&&m.nights>0);
+  if(known.length&&chance(.4))return returningMaidEvent(pick(known),where);
   const g=makeGirl({fam:{t:'宫女',p:3},age:ri(16,19)});
   return {title:'宫女',maidEncounter:true,por:g,text:`${where}的花径上，一个小宫女正低头扫落花，口中轻轻哼着家乡的小调。你问她名字，她慌忙跪下：“奴婢${fullName(g)}。”`,choices:[
     {t:'今夜召她侍寝（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{g.maid=true;g.near=false;g.palace='尚衣局';g.favor=20;g.aff=25;S.consorts.push(g);deepen(g);story(g,`本是${where}一带当差的宫女，被陛下看中。`);maidNight(g);return null}},
@@ -65,6 +67,22 @@ function ensureDowager(){
   return d;
 }
 function dowagerKin(){const d=ensureDowager();return d?S.consorts.filter(c=>c.clan===d.clan&&c.alive&&!c.gone&&!c.maid):[]}
+function dowagerFavorite(d=S.flags.dowager){
+  if(!d?.alive)return null;
+  const eligible=harem().filter(c=>c.rank<8&&c.age>=18);
+  const kin=eligible.filter(c=>d.clan&&c.clan===d.clan);
+  return (kin.length?kin:eligible.filter(c=>stanceOf(c)==='dowager'||c.virtue>=70))
+    .sort((a,b)=>b.virtue-a.virtue||a.id-b.id)[0]||null;
+}
+function dowagerFavorEvent(){
+  const d=ensureDowager(),c=dowagerFavorite(d);if(!c)return null;
+  const kin=c.clan===d.clan;
+  return {title:'慈宁宫',por:c,present:[c],valid:()=>!!d.alive&&dowagerFavorite(d)===c,
+    text:`${d.name}召陛下用膳，席间先提起${cName(c)}。${kin?`“${fullName(c)}是哀家母家的孩子，性子${c.trait}，自有她的好处。皇帝得空也去看看她，别叫她独自冷清。”`:`“${c.virtue>=70?'她处事懂得礼数':'她家与慈宁宫常有往来，哀家也多留意她些'}。皇帝得空，不妨多与她说说话。”`}话里的提携之意，宫人都听得明白。`,choices:[
+      {t:'遵太后之意，多去她宫里',f:()=>{story(c,`太后在慈宁宫${kin?'念及母家亲缘，优先提携她':'称许她'}，陛下答应多来相处。`);remember(c,'care','太后在慈宁宫提起我，陛下答应多来相处。');policyNudge('dowager',5);const em=empress();if(em&&em!==c)cchg(em,{mood:-3});return fx(cchg(c,{favor:8,mood:8}),chg({prestige:1}))}},
+      {t:'“儿臣心里有数。”',f:()=>{story(c,'太后在慈宁宫提携她，陛下没有作出多来相处的许诺。');policyNudge('dowager',-4);return fx(chg({prestige:1}))}}
+    ]};
+}
 function dowagerTick(){
   for(const c of dowagerKin()){
     if(c.favor<20&&!c.cold){if(c.neglectedSince===undefined)c.neglectedSince=S.turn}
@@ -99,11 +117,25 @@ function dowagerProposal(d){
 }
 function dowagerEvent(){const d=ensureDowager();if(!d||!d.alive)return null;
   const r=R();
-  if(r<.35&&kidsAlive().length===0&&S.turn>=12) return {title:'慈宁宫',por:dowagerPerson(d),text:`${d.name}召你去慈宁宫，拉着你的手叹气：“皇帝登基也有些时日了，膝下却还空着，哀家这心里不踏实啊。”`,choices:[{t:'儿臣明白',f:()=>'太后点点头，又絮絮叨叨嘱咐了许多。'}]};
+  if(r<.35&&kidsAlive().length<3&&S.turn>=12) return {title:'慈宁宫 · 开枝散叶',por:dowagerPerson(d),text:`${d.name}拉着你的手说：“${kidsAlive().length?'宫中已有孩子，是好事，只是子嗣还少':'皇帝登基已有些时日，膝下却还空着'}。哀家也盼你开枝散叶。${harem().some(c=>c.preg)?'既有人有孕，就好生照料，莫催她们冒险。':'得空多与妃嫔相处，也要顾着她们的身子。'}”`,choices:[{t:'记下母后的嘱咐',f:()=>{log('帝在慈宁宫听太后谈起子嗣与妃嫔调养。');return '你应下常去探望，子嗣仍须看各人的身体与缘分。';}},{t:'子嗣随缘，先顾好身体',f:()=>'太后叹了口气，仍嘱咐太医院细心照料。'}]};
+  if(r<.6){const advice=dowagerPartialityEvent(d);if(advice)return advice;}
   if(r<.6){const proposal=dowagerProposal(d);if(proposal)return proposal;}
+  if(r<.8){const favor=dowagerFavorEvent();if(favor)return favor;}
   if(S.month===9) return {title:'太后千秋',por:dowagerPerson(d),text:`今日是${d.name}千秋节。`,choices:[
     {t:'大办寿宴（国库-60万两）',f:()=>fx(chg({treasury:-60,prestige:3,people:1}))},{t:'一切从简',f:()=>fx(chg({people:2}))}]};
   return null;
+}
+function dowagerPartialityEvent(d=ensureDowager()){
+  if(!d?.alive)return null;
+  const people=harem().filter(c=>c.age>=18).sort((a,b)=>b.favor-a.favor),top=people[0],kin=dowagerFavorite(d);
+  if(!top||top.clan===d.clan||top.favor<70||!kin||kin.clan!==d.clan||top.favor-kin.favor<25)return null;
+  const disliked=top.virtue<45||(d.dislikes||[]).includes(top.id);
+  if(!disliked)return null;
+  return {title:'慈宁宫 · 莫独偏一人',por:dowagerPerson(d),cast:[top,kin],present:[],valid:()=>d.alive&&inPalace(top)&&inPalace(kin),
+    text:`${d.name}提起${cName(top)}，语气淡了些：“${top.virtue<45?'她处事还欠周全，哀家原就不大放心':'哀家与她素来不投契'}。你近来偏宠她太过，也该少些独往。${cName(kin)}是哀家母家的孩子，皇帝不妨多去看她。”\n这既有劝你不独宠的意思，也藏着母族的私心。`,choices:[
+      {t:'听取劝告，留意母家族女',f:()=>{story(kin,`太后劝陛下莫独宠${fullName(top)}，转而提携自己母家的她；陛下应下多留意。`);return fx(cchg(kin,{favor:3}),chg({prestige:1}));}},
+      {t:'朕会兼顾，不以母族分亲疏',f:()=>{log('帝听取太后独宠之谏，未允因母族亲缘另分恩宠。');return '太后听过，没有再催。你没有因此责罚任何人。';}}
+    ]};
 }
 function festival(){const m=S.month,h=harem();if(!h.length)return null;
   const top=h.slice().sort((a,b)=>b.favor-a.favor).slice(0,3);
@@ -150,3 +182,12 @@ function visitorLine(c){const v=c.visitor;if(!v)return '';const left=v.until-S.t
   return `<div class="row" style="gap:10px;align-items:center;margin-top:6px;background:#fff3cf;border:2px solid var(--gold2);padding:6px 10px">${porImg(momObj(c),44)}<div class="grow">母亲 <b>${esc(v.name)}</b>（${esc(v.full)}）正在${esc(c.palace)}小住，${left>0?`还有 ${left} 个月出宫`:'本月出宫'}。<div class="hint">母亲在宫的日子，她每月心情都会好一些。</div></div></div>`}
 A.momIn=function(id){if(!S||S.over||modalOpen)return;const c=byId(id),state=momVisitState(c);if(!state.ready){toast(state.hint);return}chg({treasury:-15});momVisit(c,ri(2,3));setXin(c,'欢喜','母亲进宫来了');AU.sfx('joy');
   pushEv({title:'母亲入宫',por:momObj(c),text:`${c.visitor.name}进宫来了，要在${c.palace}住上几个月。母女俩一见面就抱头哭了。`+fx(cchg(c,{mood:20,aff:8})),choices:[ok1]});save('auto')};
+
+function returningMaidEvent(g,where){
+  return {title:'宫女 · 旧识',maidEncounter:true,por:g,present:[g],valid:()=>inPalace(g)&&g.maid&&!g.near&&!g.preg,
+    text:`在${where}，你认出仍在当差的${fullName(g)}。她曾承恩，后来回去做事，仍是初见时那张面孔。她行过礼，等你开口。`,choices:[
+      {t:'问问她近来过得如何',f:()=>{story(g,'当差时与陛下重逢，被认出是旧识，听问起近况。');return fx(cchg(g,{aff:4,mood:5}));}},
+      {t:'今夜相伴',cond:()=>E().energy>0&&!g.cardWithdrawn,f:()=>{maidNight(g);return null;}},
+      {t:'让她安心当差',f:()=>{story(g,'与陛下偶遇，仍依原例当差，未改身份。');return '她行礼退下，仍照常做事。';}}
+    ]};
+}

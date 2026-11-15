@@ -76,9 +76,10 @@ function assignPalace(c){
   autoResidence(c);reconcileResidences();
 }
 function addConsort(c,rank,why){
-  c.rank=rank; c.enteredAt=S.turn; c.enteredMonth=S.month; S.consorts.push(c); assignPalace(c); S.ys.c++; deepen(c); initRel(c); assignArc(c); acceptPastLife(c); initTimeTraveler(c); clanKey(c); if(c.kin)for(const id in c.kin){const o=byId(+id);if(o&&o.alive)relAdd(c,o,(isRival(c,o)?-30:45)-relGet(c,o))}
+  const previousKin=new Map(Object.keys(c.kin||{}).map(id=>[+id,S.rel?.[rk(c,{id:+id})]]));
+  c.rank=rank; c.enteredAt=S.turn; c.enteredMonth=S.month; S.consorts.push(c); assignPalace(c); S.ys.c++; deepen(c); initRel(c); assignArc(c); acceptPastLife(c); initTimeTraveler(c); clanKey(c); if(c.kin)for(const id in c.kin){const o=byId(+id);if(o&&o.alive)relAdd(c,o,(previousKin.get(o.id)??(isRival(c,o)?-30:45))-relGet(c,o))}
   story(c,`${why}，封为${RANKS[rank]}，赐居${c.palace}。`);
-  log(`${fullName(c)}（${c.fam.t}之女）${why}，封${RANKS[rank]}。`);houseOf(c);portraitAdmission(c);
+  log(`${fullName(c)}（${c.fam.t}之女）${why}，封${RANKS[rank]}。`);houseOf(c);portraitAdmission(c);familyAdmissionReactions(c);
 }
 
 /* ============ 弹窗与事件队列 ============ */
@@ -173,13 +174,13 @@ function showRes(res){
 
 /* ============ 侍寝与互动 ============ */
 function nightWith(c,fromEvent){
-  if(!inPalace(c)||c.preg)return;
+  if(!inPalace(c)||c.preg||c.cardWithdrawn)return;
   if(!useE()) return;
   const e=E();e.nightsMonth=(e.nightsMonth||0)+1;S.ys.n++;
   const lines=isSolitary(c)?['她合上读到一半的书，给你留出身侧的位置。夜深后仍有半晌，各自静静想着白日未尽的话。','她不说讨巧的话，只把茶递到你手里。你们谈了一回诗书，意见未必相同，她却比平日更愿意说了。']:(NIGHT[c.trait]||[]).concat(NIGHT._),line=pick(lines);
   const fm=e.style==='风流'?1.5:1;
   const s=cchg(c,{favor:10*fm*(XIN[xinOf(c)].favorMul||1),mood:10,aff:routineAffection(c,c.trait==='痴情'?9:6)});
-  c.nights++;recordImperialNight(c);S.flags.lastNight=c.id;if(c.nights===1)remember(c,'first','第一次侍寝');
+  c.nights++;c.lastPersonalAttention=S.turn;recordImperialNight(c);S.flags.lastNight=c.id;if(c.nights===1)remember(c,'first','第一次侍寝');
   const p=consortConceptionChance(c);
   if(!c.preg&&(!c.delivery||c.delivery.settled)&&S.turn-c.lastBirth>=3&&chance(p)){c.preg=1;c.pregnancyFather={kind:'emperor',gen:S.gen,mother:c.id,name:e.sur+e.name,wen:e.wen,wu:e.wu,conceived:S.turn};beginPregnancyCalendar(c);}
   harem().forEach(o=>{if(o!==c&&TRAITS[o.trait].jealous){o.mood=clamp(o.mood-2);relAdd(o,c,-3)}});
@@ -253,7 +254,7 @@ const A={
     ev.choices.push({t:'稍后再议'});
     setScene('court');pushEv(ev);
   },
-  night(id){const c=byId(id);if(!inPalace(c)||c.preg)return;nightWith(c)},
+  night(id){const c=byId(id);if(!inPalace(c)||c.preg||c.cardWithdrawn)return;nightWith(c)},
   promote(id){const c=byId(id),nr=c.rank+1;
     if(nr>=8){toast('立后请用「册立皇后」');return}
     if(rankCount(nr)>=RANK_CAP[nr]){toast(`${RANKS[nr]}之位已满（${RANK_CAP[nr]}人）`);return}
@@ -351,7 +352,7 @@ A.endMonth=function(){
   if(newYear){const y=S.ys;pushEv({title:'岁首',sfx:'chime',text:`爆竹声中一岁除。${dateStr()}，陛下${e.age}岁。\n去岁：新入宫${y.c}人，皇嗣降生${y.b}位，侍寝${y.n}次。\n国库${e.treasury}万两，威望${rd(e.prestige)}，民心${rd(e.people)}。`,choices:[{t:'新岁新气象'}]});S.ys={c:0,b:0,n:0}}
   // 事件
   if(S.month===2&&S.turn-S.flags.lastXX>=34) pushEv({title:'三年大选',sfx:'chime',text:'又到三年一度的大选之期，各地秀女已候于储秀宫。',choices:[{t:'前去看看',f:()=>{genCands();UI.view='xx';return null}},{t:'今年免了',f:()=>{S.flags.lastXX=S.turn;return fx(chg({people:2}))}}]});
-  reconcileResidences();archivePastLives();travelerLifeTick();daoLifeTick();childTempleTick();relTick();consortSocialTick();kidRelTick();clanTick();dowagerTick();initiativeTick();familyLifeTick();childLifeTick();courtTick();seasonalTick();palaceDutiesTick();palaceRomanceTick();palaceParentageTick();marriedLifeTick();personalExperienceTick();journeyTick();maternalTick();historyTick();continuityTick();
+  reconcileResidences();archivePastLives();travelerLifeTick();daoLifeTick();childTempleTick();relTick();consortSocialTick();kidRelTick();clanTick();dowagerTick();initiativeTick();familyLifeTick();childLifeTick();courtTick();natalFamilyTick();seasonalTick();palaceDutiesTick();palaceRomanceTick();palaceParentageTick();marriedLifeTick();personalExperienceTick();journeyTick();maternalTick();historyTick();continuityTick();
   const passing=dowagerPassingEvent();if(passing)pushEv(passing);
   const must=[passing?null:arcTick(),heirTick(),milestone(),parentageReportEvent(),birthSwapClueEvent(),birthSwapSearchReport(),pendingBirthSwapJustice(),pendingKinGreeting(),pendingDaoVoyage(),pendingTravelerEvent(),pendingOfficialReport(),pendingConcealedLoss()].filter(Boolean),opt=[];
   // 积压的奏折：离宫期间攒下的朝堂事务，月末一并呈上
@@ -359,7 +360,7 @@ A.endMonth=function(){
   const add=(e,p)=>{if(e&&ambientEventReady(e))opt.push([e,p+R()-ambientNovelty(e)+continuityEventScore(e)])};
   if(!passing){
   add(continuityMonthlyEvent(),9);
-  add(homeReturnSocialEvent(),8);
+  add(homeReturnSocialEvent(),8);add(natalVisitRequest(),7);add(awaitingNoticeEvent(),6);
   add(pastLifeMonthlyEvent(),6);add(pregnancyPrayerMonthlyEvent(),6);add(residencePetitionEvent(),8);add(fiveBrotherMonthlyEvent(),6);add(travelerMonthlyEvent(),8);add(recoveredSwapEvent(),8);add(fosterPetitionEvent(),8);add(kinSuccessionEvent(),8);add(parentageClueEvent(),8);
   add(jewelryTributeEvent(),7);add(jewelryRequestEvent(),7);
   add(chance(.8)?festival():null,5);add(chance(.75)?haremEvent():null,6);

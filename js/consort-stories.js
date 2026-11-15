@@ -174,7 +174,7 @@ function makeArc(id,delay){
 const RARE_ARCS={secret:.15,envoy:.25,general:.30,greed:.25};
 function everydayArc(c){
   const id=['craft','kite','love'].find(id=>ARCS[id].fit(c));
-  return makeArc(id,8+c.id%7);
+  return makeArc(id,8+Math.abs(c.id)%7);
 }
 function arcStarted(c){return c.arc.st>0||c.arc.startedAt!=null||Object.keys(c.arc.f||{}).length>0}
 function reconcileRareArcs(){
@@ -208,12 +208,12 @@ function reconcileScholarArcs(){
   const owner=recorded.find(c=>c.id===S.flags.scholarArc)||recorded[0]||
     remaining.find(c=>c.id===S.flags.scholarArc)||remaining.find(c=>c.alive&&!c.gone);
   if(owner)S.flags.scholarArc=owner.id;else delete S.flags.scholarArc;
-  for(const c of remaining)if(c!==owner&&!c.arc.done&&!arcStarted(c))c.arc=makeArc('craft',5+c.id%6);
+  for(const c of remaining)if(c!==owner&&!c.arc.done&&!arcStarted(c))c.arc=makeArc('craft',5+Math.abs(c.id)%6);
   // Only replace a reservation that never reached a scene; never transplant old choices.
   if(!owner&&scholars.length){
     const next=harem().filter(c=>ARCS.scholar.fit(c)&&(!c.arc||c.arc.id==='craft'&&!c.arc.done&&!arcStarted(c)))
       .sort((a,b)=>b.aff-a.aff||a.id-b.id)[0];
-    if(next){next.arc=makeArc('scholar',8+next.id%5);S.flags.scholarArc=next.id;}
+    if(next){next.arc=makeArc('scholar',8+Math.abs(next.id)%5);S.flags.scholarArc=next.id;}
   }
 }
 
