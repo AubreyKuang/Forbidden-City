@@ -11,6 +11,11 @@ natalRomanceReady=function(c,p){
 };
 const kinVisitsMeeting=natalMeetingEvent;
 natalMeetingEvent=function(c,p){
+  if(kinVisitsEnabled()&&natalInPalace(c,p)&&p.betrothal&&!matchStillOpen(p.betrothal.match)){
+    const m=p.betrothal.match,e=allianceEntry(m),reason=e?.p.alive===false?'已离世':e?.p.married?'已经另结婚姻':'已不适合继续议亲';
+    delete p.betrothal;p.marriageChecked=S.turn;
+    natalRecord(c,p,`${p.name}探亲时收到家中回信：原议亲对象${m.name}${reason}，原亲事作罢，婚事需另议。`,0);
+  }
   const ev=kinVisitsMeeting(c,p);if(!ev||!visitingMarriageReady(c,p))return ev;
   const b=p.betrothal;
   ev.text+=b?`\n临到告退，${p.name}说起自己的婚事：“家中正与${b.match.desc}${b.match.name}议亲，尚未成婚。民女想请陛下听听这门亲事，也请${natalLabel(c,p)==='妹妹'?'姐姐':'妹妹'}替我参详。”`:
@@ -62,7 +67,7 @@ admitNatalSister=function(c,p){
   natalRecord(c,p,`${p.name}探亲时蒙陛下有意，本人愿意留宫；宫中明告两家，原与${m.desc}${m.name}所议的婚事作罢。`,.1);
   delete p.betrothal;p.marriageChecked=S.turn;p.previousMarriageTalk={turn:S.turn,match:m,outcome:'留宫'};
   if(other){
-    story(other.p,`原与${p.name}议亲，因她探亲后愿意留宫为妃，两家收到告知，亲事作罢，未结为夫妻。`);
+    if(other.p.alive!==false)story(other.p,`原与${p.name}议亲，因她探亲后愿意留宫为妃，两家收到告知，亲事作罢，未结为夫妻。`);
     for(const member of paternalFamily(other.o).filter(x=>S.consorts.includes(x)&&x.alive))
       story(member,`【议亲生变】家中${m.name}原与${p.name}议亲，如今她留宫为妃，亲事作罢。未成姻亲，心里仍有失落。`);
     if(inPalace(c)&&inPalace(other.o))relAdd(c,other.o,-6);

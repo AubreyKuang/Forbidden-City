@@ -47,6 +47,11 @@ test('a match raised by letter can invite precisely the same sister into the pal
  var ev=betrothalEvent();assert.equal(ev.kinMarriagePerson,p.id);ev.choices.find(x=>x.t.includes('召她入宫')).f();assert.equal(curEv.title,'娘家来访');
  choose(0);assert.equal(curEv.title,'探亲相见');assert.match(curEv.text,new RegExp(p.name));assert.equal(p.visit.host,c.id);`);
 });
+test('a match lost during a visit is acknowledged before discussing another marriage, without writing new memories for the dead',()=>{
+ const b=world();b.run(`oh.brother.alive=false;var before=oh.brother.story.length;A.natalMeet(c.id,p.id);refresh();
+ assert.equal(p.betrothal,undefined);assert.ok(p.story.some(x=>x.t.includes('顾云深已离世')));assert.doesNotMatch(curEv.text,/正与.*顾云深议亲/);
+ choose(curEv.choices.findIndex(x=>x.t.includes('一见倾心')));choose(0);refresh();assert.equal(oh.brother.story.length,before);assert.ok(byId(p.id));`);
+});
 test('version 10 pending visits replay their original choices without losing the marriage',()=>{
  const save=require('./fixtures/kin-visits-legacy-v10.json');
  const b=boot(873,new Map([['chengongji_v1_auto',JSON.stringify(save)]]));b.ctx.assert=assert;
