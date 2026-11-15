@@ -4,8 +4,8 @@
 // 规则：只有在世、在任、确有职守的父兄才会出面；被举荐者须能领差；
 // 参本须有起因（宫中嫌隙或派系相争），凭实据的才算“参本”，否则只能“风闻奏事”交部核查。
 // 每个结果都同时写进双方父兄、她们在宫中的女儿/姐妹的纪事。
-// 旧存档里未完的事件按原样重放：事务日志版本 7 之前的步骤不触发这里的抽签或写入。
-const KIN_COURT_JOURNAL=7;
+// 旧存档里未完的事件按原样重放：事务日志版本 8 之前的步骤不触发这里的抽签或写入。
+const KIN_COURT_JOURNAL=8;
 const KIN_COURT_FRIEND=35, KIN_COURT_FOE=-35;
 const KIN_COURT_EVENT_GAP=8, KIN_COURT_TICK_GAP=4, KIN_COURT_PAIR_GAP=12, KIN_COURT_PERSON_GAP=8;
 const KIN_COURT_TASKS={army:['border','drills','escort'],civil:['dikes','granaries','accounts','schools','water']};

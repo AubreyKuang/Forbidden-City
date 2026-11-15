@@ -14,7 +14,7 @@ function applyBirthOmen(k,id){
 }
 function birthTags(k){
   const omen=BIRTH_OMENS[k.birthOmen];
-  return `${multipleBadge(k)}${omen?`<span class="tag y" title="出生时${omen.label}+${omen.bonus}">${omen.name} · ${omen.label}+${omen.bonus}</span>`:''}${k.birthTrouble?`<span class="tag">${esc({frail:'初生体弱',quake:'出生时地动',drought:'出生逢旱'}[k.birthTrouble])}</span>`:''}`;
+  return `${immortalTags(k)}${multipleBadge(k)}${omen?`<span class="tag y" title="出生时${omen.label}+${omen.bonus}">${omen.name} · ${omen.label}+${omen.bonus}</span>`:''}${k.birthTrouble?`<span class="tag">${esc({frail:'初生体弱',quake:'出生时地动',drought:'出生逢旱'}[k.birthTrouble])}</span>`:''}`;
 }
 function deliveryKids(c){return (c.delivery?.children||[]).map(kidById).filter(Boolean)}
 function pendingDelivery(){return S.consorts.find(c=>c.delivery&&!c.delivery.settled&&(c.delivery.lossPending||deliveryKids(c).some(k=>k.pendingName)))}

@@ -10,7 +10,7 @@ function daoMaster(){
   return {...DAO_MASTERS[cell%4],daoMaster:true,alive:true};
 }
 function daoEligible(p){
-  const localChild=p?.alive&&!p.jailed&&!p.away&&!p.templeStay&&!p.removedFromRoyal&&p.princessMarriage!=='frontier';
+  const localChild=p?.alive&&!immortalAway(p)&&!p.jailed&&!p.away&&!p.templeStay&&!p.removedFromRoyal&&p.princessMarriage!=='frontier';
   return !S.over&&!!p&&(p.sex?localChild&&kidAge(p)>=12&&!p.pendingName:inPalace(p)&&!p.maid&&p.preg<2)&&(p.hp??100)>=40;
 }
 function daoInterest(p){
@@ -76,7 +76,7 @@ function viewDaoHall(){
   const master=daoMaster(),visitors=daoVisitors(),promises=S.children.filter(k=>daoEligible(k)&&k.daoPractice?.seaWish?.status==='promised');
   return `<section class="dao-hall"><header><p>文渊阁南 · 松风入殿</p><h2>钦安殿${backBtn}</h2></header><div class="dao-master">${porImg(master,190)}<div><span class="tag">${master.gender}国师 · ${master.temper}</span><h3>${master.name}国师</h3><blockquote>“${master.line}”</blockquote><p class="hint">讲读道经、静坐问道与宫中祈福之所。</p><div class="acts"><button class="btn gold" onclick="A.daoTeach()">请国师讲道<small>精力−1</small></button><button class="btn" onclick="A.daoRite()">为众人祈福<small>国库−20 · 精力−1</small></button></div></div></div></section>
     ${promises.map(k=>`<div class="card"><div class="grow"><strong>与${esc(k.name)}的东海之约</strong><p>已经答应带孩子去看海，可沿岸观潮、访舟人。</p><button class="btn jade" onclick="A.daoSea(${k.id})">相携赴东海<small>国库−50 · 精力−2 · 每年一次</small></button></div></div>`).join('')}
-    ${pregnancyPrayerHall()}
+    ${pregnancyPrayerHall()}${immortalHall()}
     <h3>此刻在殿中听讲</h3>${visitors.length?`<div class="grid">${visitors.map(p=>`<button class="card portrait-card" onclick="A.daoTalk(${p.id})">${porImg(p,92)}<div class="grow"><strong>${esc(porName(p))}</strong><p>${esc(daoReading(p).title)} · ${p.daoPractice?.visits>=6?'常来听讲':'临窗读书'}</p><span class="person-link">听听心中所想 →</span></div></button>`).join('')}</div>`:'<p class="hint">此刻没有常规听讲的来客，不同性情的人会在往后的日子来访。</p>'}`;
 }
 A.daoTeach=function(){
@@ -100,7 +100,7 @@ A.daoSea=function(id){
 function daoCoastEvent(k){
   const valid=()=>k?.alive&&k.daoPractice?.seaWish?.status==='travelling';
   const end=(kind)=>{if(!valid())return null;const line={tide:'父皇陪自己看了一日海潮。未见仙山，却听见舟人讲星路与潮汐，才知书外天地辽阔。',boat:'父皇请老舟人讲海上的传闻。远处雾影散后只是岛山，仙人未得见，心中仍留一片远方。',shore:'父皇陪自己沿岸访人家，将余下物资赠给风灾后的村落。原想寻仙，却先看见了人间。'}[kind];k.daoPractice.seaWish={status:'fulfilled',turn:S.turn,ending:kind};k.lit=clamp(k.lit+3);k.love=clamp(k.love+8);if(kind==='shore')k.vir=clamp(k.vir+3);daoRemember(k,line);log(`${kidName(k)}随帝游东海，${line}`,1);save('auto');return `${line}\n才学+3，亲近+8${kind==='shore'?'，品德+3':''}。`;};
-  return {title:'烟涛微茫',scene:'dao-coast',por:k,valid,text:`海天相接，潮声一阵阵卷过礁石。${k.name}扶着栏杆，许久没有说话。\n“在宫里读诗时，以为瀛洲只隔着几页纸。原来真正的海，这样远。”\n老舟人指向烟霭中的岛影，笑说海客的故事多，能证实的却少。`,choices:[
+  return {title:'烟涛微茫',scene:'dao-coast',illustration:'east-sea',por:k,valid,text:`海天相接，潮声一阵阵卷过礁石。${k.name}扶着栏杆，许久没有说话。\n“在宫里读诗时，以为瀛洲只隔着几页纸。原来真正的海，这样远。”\n老舟人指向烟霭中的岛影，笑说海客的故事多，能证实的却少。`,choices:[
     {t:'一起观潮，听舟人讲星路',f:()=>end('tide')},{t:'问问那些仙人的传说',f:()=>end('boat')},{t:'往沿海村落走一走',f:()=>end('shore')}]};
 }
 function pendingDaoVoyage(){const k=S.children.find(k=>k.alive&&k.daoPractice?.seaWish?.status==='travelling');return k?daoCoastEvent(k):null;}

@@ -141,6 +141,7 @@ function consortVoicePool(c){
   return pool;
 }
 function childVoicePool(k){
+  const mountain=immortalVoice(k);if(mountain)return [mountain];
   const a=kidAge(k),who=k.sex==='f'?'她':'他',self=k.sex==='f'?'女儿':'儿臣';
   if(k.templeStay)return [voiceLine('temple-letter',a<6?'乳母从护国寺寄来起居簿。':'护国寺送来的信笺上，还带着淡淡的檀香。',a<6?'孩子饮食安稳，夜里由乳母轮值照护。请宫中亲人宽心。':`寺里的钟声晨昏都听得见。我把今日的字课夹在信里，也想问问，母亲可安好。`)];
   if(k.removedFromRoyal)return [voiceLine('new-home','府中送来了孩子的近况。',a<6?'孩子由府中乳母照护，已慢慢习惯新的住处。':'在这里也有自己的书案和灯。惦记宫中的母亲，想托人带一声问候。')];
