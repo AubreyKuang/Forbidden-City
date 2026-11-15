@@ -73,7 +73,7 @@ function natalFamilyLinks(c){
 function natalVisitReady(c,p){return inPalace(c)&&!c.maid&&p.alive&&!p.consortId&&!p.visit&&(p.sex==='f'||natalAge(p)<13)&&
   S.turn-(p.lastVisit??-99)>=12&&!mourningActive()&&!natalPeople(c.house).some(x=>x.visit);}
 function natalInPalace(c,p){return !!p.visit&&p.visit.host===c.id&&S.turn<p.visit.until&&p.alive&&inPalace(c)&&!p.consortId;}
-function natalRomanceReady(c,p){return !p.parentRelativeId&&natalInPalace(c,p)&&p.sex==='f'&&natalAge(p)>=18&&!p.married&&!p.declined;}
+function natalRomanceReady(c,p){return !p.parentRelativeId&&natalInPalace(c,p)&&p.sex==='f'&&natalAge(p)>=18&&!p.married&&!p.betrothal&&!p.declined;}
 function natalVisitEvent(c,p){
   if(!natalVisitReady(c,p))return null;
   const response=sisterArrivalFeeling(c,p,false);

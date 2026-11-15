@@ -99,3 +99,17 @@ test('every answer to a match leaves a note in the consort\'s own chronicle',()=
  for(const i of [0,1]){var q=sister(poor,21,900+i);q.married=false;delete q.spouse;q.marriageChecked=S.turn-12;startBetrothal(poor,q);
   var ev=null;for(let k=0;k<20&&!ev;k++){ev=betrothalEvent();if(ev&&!ev.text.includes(q.name))ev=null;}var n=poor.story.length;ev.choices[i].f();assert.ok(poor.story.length>n);assert.ok(poor.story.at(-1).t.includes(q.name));}`);
 });
+
+test('only humble backgrounds count as commoners; the dowager\'s kin and foreign nobility stay noble houses',()=>{
+ const b=world();
+ b.run(`for(const fam of ['太后母家','平反忠臣之后','东瀛贵族','海西贵族','皇商']){const g=addGirl(fam);assert.equal(familyIsNoble(g),true,fam);assert.notEqual(houseOf(g).father.career,'commoner',fam);
+  for(const r of brotherRoles(houseOf(g)))assert.notEqual(houseOf(g)[r].career,'commoner',fam);}
+ for(const fam of ['寒门','农家','歌女','宫女','书香门第','县令','太医院院判'])assert.equal(familyIsNoble(addGirl(fam)),false,fam);
+ var g=addGirl('太后母家'),p=sister(g,33,555);p.married=false;delete p.spouse;kinMarriageTick();assert.notEqual(p.spouse.kind,'commoner');`);
+});
+
+test('a sister already in marriage talks cannot be taken into the palace',()=>{
+ const b=world();
+ b.run(`var g=addGirl('吏部尚书'),p=sister(g,21,321);p.married=false;delete p.spouse;natalInPalace=()=>true;
+ assert.equal(natalRomanceReady(g,p),true);p.marriageChecked=S.turn-12;startBetrothal(g,p);assert.equal(natalRomanceReady(g,p),false);`);
+});

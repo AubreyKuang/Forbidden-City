@@ -25,7 +25,8 @@ test('the triennial palace examination names three graduates, and kin with a jur
  assert.equal(S.scholars.length,3);assert.equal(chosen.examRank,"状元");assert.equal(chosen.office,"翰林院修撰");
  assert.deepEqual(S.scholars.map(p=>p.examRank).sort(),['探花','榜眼','状元'].sort());
  for(const p of S.scholars){assert.ok(p.story.some(x=>x.t.includes('殿试')));assert.equal(officialServing(p),true);}
- assert.ok(['进士','举人'].includes(kin.brother.education));assert.ok(kin.brother.story.some(x=>/会试/.test(x.t)));
+ assert.ok(['进士','举人'].includes(kin.brother.education));
+ assert.equal(officialStatus(kin.brother),kin.brother.education==='进士'?'进士 · 候选授官':'候选 · 尚未授官','a new jinshi is shown awaiting appointment, not studying at home');assert.ok(kin.brother.story.some(x=>/会试/.test(x.t)));
  assert.ok(a.story.some(x=>/会试/.test(x.t)),'the consort hears how her brother fared');
  assert.equal(ev.choices[0].f(),null,'the list cannot be published twice');
  S.month=4;assert.equal(examDueNow(),false);S.year=5;S.month=3;assert.equal(examDueNow(),false);S.year=7;assert.equal(examDueNow(),true);`);

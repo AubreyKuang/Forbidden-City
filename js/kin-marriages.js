@@ -10,9 +10,11 @@ function kinMarriageActive(){
 }
 // Ids repeat between playthroughs; #25's familyHash mixes in this reign's seed for new games and is plain voiceHash for older ones.
 const marriageHash=key=>typeof familyHash==='function'?familyHash(key):voiceHash(key);
-const NOBLE_FAMS=['内阁首辅','镇国大将军','吏部尚书','两江总督','户部侍郎','翰林学士','知府','皇商'];
+// Humble households are listed; every other background (great ministers, the dowager's kin,
+// restored loyal families, foreign nobility…) counts as a noble house.
+const HUMBLE_FAMS=['寒门','农家','良家子','宫女','歌女','书香门第','县令','太医院院判','西域流寓'];
 const familyTitle=c=>String(paternalFamily(c)[0]?.fam?.t||c?.fam?.t||'').replace(/（获罪）/g,'');
-const familyIsNoble=c=>NOBLE_FAMS.includes(familyTitle(c));
+const familyIsNoble=c=>!HUMBLE_FAMS.includes(familyTitle(c));
 function humbleKind(c){
   const t=familyTitle(c);
   return t==='太医院院判'?'physician':t==='县令'?'magistrate':t==='书香门第'?'scholar':['寒门','农家','良家子'].includes(t)?'farm':'commoner';
