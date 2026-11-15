@@ -460,7 +460,7 @@ function porName(x){ if(x?.dowagerName)return x.dowagerName; if(x?.official!==un
 
 function courtSpecialPortrait(person,size=64){
   const master=!!person.daoMaster,cell=master?person.cell:person.courtCraneCell;
-  const name=master?person.name+'国师':person.name||'宫中来客';
+  const name=master?person.name+(person.daoTitle||'国师'):person.name||'宫中来客';
   const src='./assets/images/'+(master?'palace-daoist-portraits.png':'palace-court-crane-portraits.png');
   return `<svg class="por palace-portrait court-special-portrait" role="img" aria-label="${esc(name)}" width="${size}" height="${size*1.25}" viewBox="${cell%2*561} ${Math.floor(cell/2)*701} 561 701" overflow="hidden"><image href="${src}" width="1122" height="1402"/></svg>`;
 }
