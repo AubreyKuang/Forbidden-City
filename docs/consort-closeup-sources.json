@@ -1,0 +1,165 @@
+{
+  "frame": [
+    448,
+    560
+  ],
+  "columns": 4,
+  "portraits": [
+    {
+      "id": 358,
+      "atlas": "palace-consorts-closeups.webp",
+      "source": "exec-18ac34e0-90f8-45c1-be2d-1413c18b6aad.png",
+      "cell": 0,
+      "crop": [
+        51,
+        0,
+        461,
+        512
+      ]
+    },
+    {
+      "id": 359,
+      "atlas": "palace-consorts-closeups.webp",
+      "source": "exec-18ac34e0-90f8-45c1-be2d-1413c18b6aad.png",
+      "cell": 2,
+      "crop": [
+        1075,
+        0,
+        1485,
+        512
+      ]
+    },
+    {
+      "id": 360,
+      "atlas": "palace-consorts-closeups.webp",
+      "source": "exec-18ac34e0-90f8-45c1-be2d-1413c18b6aad.png",
+      "cell": 3,
+      "crop": [
+        51,
+        512,
+        461,
+        1024
+      ]
+    },
+    {
+      "id": 361,
+      "atlas": "palace-consorts-closeups.webp",
+      "source": "exec-18ac34e0-90f8-45c1-be2d-1413c18b6aad.png",
+      "cell": 4,
+      "crop": [
+        563,
+        512,
+        973,
+        1024
+      ]
+    },
+    {
+      "id": 362,
+      "atlas": "palace-consorts-closeups.webp",
+      "source": "exec-18ac34e0-90f8-45c1-be2d-1413c18b6aad.png",
+      "cell": 5,
+      "crop": [
+        1075,
+        512,
+        1485,
+        1024
+      ]
+    },
+    {
+      "id": 363,
+      "atlas": "palace-consorts-closeups.webp",
+      "source": "exec-c722316b-2d03-47c2-91e6-74784eb0d5cf.png",
+      "cell": 0,
+      "crop": [
+        88,
+        0,
+        568,
+        600
+      ]
+    },
+    {
+      "id": 364,
+      "atlas": "palace-consorts-closeups.webp",
+      "source": "exec-c722316b-2d03-47c2-91e6-74784eb0d5cf.png",
+      "cell": 1,
+      "crop": [
+        744,
+        0,
+        1224,
+        600
+      ]
+    },
+    {
+      "id": 365,
+      "atlas": "palace-consorts-closeups.webp",
+      "source": "exec-c722316b-2d03-47c2-91e6-74784eb0d5cf.png",
+      "cell": 2,
+      "crop": [
+        88,
+        600,
+        567,
+        1199
+      ]
+    },
+    {
+      "id": 366,
+      "atlas": "palace-consorts-closeups.webp",
+      "source": "exec-c722316b-2d03-47c2-91e6-74784eb0d5cf.png",
+      "cell": 3,
+      "crop": [
+        744,
+        600,
+        1223,
+        1199
+      ]
+    },
+    {
+      "id": 367,
+      "atlas": "palace-consorts-closeups.webp",
+      "source": "exec-cd8a972e-c7eb-4491-aec9-cbda05b29ab4.png",
+      "cell": 0,
+      "crop": [
+        88,
+        0,
+        568,
+        600
+      ]
+    },
+    {
+      "id": 368,
+      "atlas": "palace-consorts-closeups.webp",
+      "source": "exec-cd8a972e-c7eb-4491-aec9-cbda05b29ab4.png",
+      "cell": 1,
+      "crop": [
+        744,
+        0,
+        1224,
+        600
+      ]
+    },
+    {
+      "id": 369,
+      "atlas": "palace-consorts-closeups.webp",
+      "source": "exec-cd8a972e-c7eb-4491-aec9-cbda05b29ab4.png",
+      "cell": 2,
+      "crop": [
+        88,
+        600,
+        567,
+        1199
+      ]
+    },
+    {
+      "id": 370,
+      "atlas": "palace-consorts-closeups.webp",
+      "source": "exec-cd8a972e-c7eb-4491-aec9-cbda05b29ab4.png",
+      "cell": 3,
+      "crop": [
+        744,
+        600,
+        1223,
+        1199
+      ]
+    }
+  ]
+}
