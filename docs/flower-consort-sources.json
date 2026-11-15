@@ -1,0 +1,117 @@
+{
+  "frame": [
+    448,
+    560
+  ],
+  "columns": 4,
+  "portraits": [
+    {
+      "id": 371,
+      "atlas": "palace-consorts-flowers.webp",
+      "source": "exec-b585dfcb-67fe-450f-8716-b277976e9001.png",
+      "cell": 0,
+      "crop": [
+        0,
+        0,
+        465,
+        602
+      ]
+    },
+    {
+      "id": 372,
+      "atlas": "palace-consorts-flowers.webp",
+      "source": "exec-b585dfcb-67fe-450f-8716-b277976e9001.png",
+      "cell": 1,
+      "crop": [
+        465,
+        0,
+        906,
+        602
+      ]
+    },
+    {
+      "id": 373,
+      "atlas": "palace-consorts-flowers.webp",
+      "source": "exec-b585dfcb-67fe-450f-8716-b277976e9001.png",
+      "cell": 2,
+      "crop": [
+        906,
+        0,
+        1374,
+        602
+      ]
+    },
+    {
+      "id": 374,
+      "atlas": "palace-consorts-flowers.webp",
+      "source": "exec-b585dfcb-67fe-450f-8716-b277976e9001.png",
+      "cell": 3,
+      "crop": [
+        0,
+        608,
+        461,
+        1145
+      ]
+    },
+    {
+      "id": 375,
+      "atlas": "palace-consorts-flowers.webp",
+      "source": "exec-b585dfcb-67fe-450f-8716-b277976e9001.png",
+      "cell": 4,
+      "crop": [
+        461,
+        608,
+        914,
+        1145
+      ]
+    },
+    {
+      "id": 376,
+      "atlas": "palace-consorts-flowers.webp",
+      "source": "exec-b585dfcb-67fe-450f-8716-b277976e9001.png",
+      "cell": 5,
+      "crop": [
+        914,
+        608,
+        1374,
+        1145
+      ]
+    },
+    {
+      "id": 377,
+      "atlas": "palace-consorts-flowers.webp",
+      "source": "exec-80e7110c-58fb-412a-84df-4d07a502c9f3.png",
+      "cell": 0,
+      "crop": [
+        0,
+        0,
+        1122,
+        1402
+      ]
+    },
+    {
+      "id": 378,
+      "atlas": "palace-consorts-flowers.webp",
+      "source": "exec-99514c14-0a21-4bde-867b-04a2b6916e16.png",
+      "cell": 0,
+      "crop": [
+        0,
+        0,
+        804,
+        992
+      ]
+    },
+    {
+      "id": 379,
+      "atlas": "palace-consorts-flowers.webp",
+      "source": "exec-99514c14-0a21-4bde-867b-04a2b6916e16.png",
+      "cell": 1,
+      "crop": [
+        804,
+        0,
+        1586,
+        992
+      ]
+    }
+  ]
+}

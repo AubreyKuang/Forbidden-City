@@ -3,6 +3,7 @@ const {test}=require('node:test');
 const {boot}=require('./playtest-harness.cjs');
 const manifest=require('../docs/consort-gallery-sources.json');
 const closeups=require('../docs/consort-closeup-sources.json');
+const flowers=require('../docs/flower-consort-sources.json');
 function game(){const g=boot();g.ctx.assert=assert;g.run('A.newGame();A.start();drain();');return g;}
 
 test('all approved consort designs are reachable without repeats before a pool is exhausted',()=>{
@@ -17,10 +18,12 @@ test('all approved consort designs are reachable without repeats before a pool i
       assert.equal(new Set(faces).size,pools[n].length);
       for(var cell of pools[n])assert.ok(faces.includes(cell));
     }
-    for(var cell=316;cell<371;cell++)assert.ok(ALL_CONSORT_PORTRAITS.includes(cell));
+    for(var cell=316;cell<380;cell++)assert.ok(ALL_CONSORT_PORTRAITS.includes(cell));
   `);
   assert.deepEqual(manifest.portraits.map(p=>p.id),Array.from({length:42},(_,i)=>316+i));
   assert.equal(new Set(manifest.portraits.map(p=>p.source+':'+p.cell)).size,42);
+  assert.deepEqual(flowers.portraits.map(p=>p.id),Array.from({length:9},(_,i)=>371+i));
+  assert.equal(new Set(flowers.portraits.map(p=>p.source+':'+p.cell)).size,9);
   assert.deepEqual(closeups.portraits.map(p=>p.id),Array.from({length:13},(_,i)=>358+i));
   assert.deepEqual(closeups.portraits.slice(0,5).map(p=>[p.source,p.cell]),
     [0,2,3,4,5].map(cell=>['exec-18ac34e0-90f8-45c1-be2d-1413c18b6aad.png',cell]));

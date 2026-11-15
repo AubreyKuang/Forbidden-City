@@ -175,7 +175,7 @@ const LEGACY_DESCENDANT_VARIANTS=10;
 const DESCENDANT_VARIANTS=29;
 const EXISTING_PRINCE_VARIANTS=4;
 const EXTRA_PRINCE_VARIANTS=LEGACY_DESCENDANT_VARIANTS-EXISTING_PRINCE_VARIANTS;
-const BEAUTY_PORTRAIT_START=92, YOUNG_ROYAL_PORTRAIT_START=136, PORTRAIT_COUNT=371;
+const BEAUTY_PORTRAIT_START=92, YOUNG_ROYAL_PORTRAIT_START=136, PORTRAIT_COUNT=380;
 const PRINCESS_VARIANTS=33;
 const EXPANDED_ROYAL_START=294;
 const EMPEROR_PORTRAITS=[12,13,312,313,314,315];
@@ -198,7 +198,8 @@ const portraitSheets=[
   {start:316,rows:6,scale:4,src:'./assets/images/palace-consorts-legends.webp?v=1',image:document.createElement('img')},
   {start:340,rows:2,scale:4,src:'./assets/images/palace-consorts-foreign.webp?v=1',image:document.createElement('img')},
   {start:346,rows:3,scale:4,src:'./assets/images/palace-consorts-finery.webp?v=1',image:document.createElement('img')},
-  {start:358,rows:4,scale:4,src:'./assets/images/palace-consorts-closeups.webp?v=1',image:document.createElement('img')}
+  {start:358,rows:4,scale:4,src:'./assets/images/palace-consorts-closeups.webp?v=1',image:document.createElement('img')},
+  {start:371,rows:3,scale:4,src:'./assets/images/palace-consorts-flowers.webp?v=1',image:document.createElement('img')}
 ];
 const portraitSheet=cell=>portraitSheets.slice().reverse().find(sheet=>cell>=sheet.start)||portraitSheets[0];
 function ensurePortraitSheet(cell){const sheet=portraitSheet(cell);if(!sheet.image.src)sheet.image.src=sheet.src;}
@@ -211,7 +212,7 @@ atlasCanvas.width=PORTRAIT_WIDTH;atlasCanvas.height=PORTRAIT_HEIGHT;
 const atlasInk=atlasCanvas.getContext('2d');
 const ART_CACHE=new Map();
 
-const CONSORT_PORTRAITS=[1,2,3,4,5,6,7,21,...Array.from({length:44},(_,i)=>92+i).filter(cell=>![102,103,134,135].includes(cell)),...Array.from({length:8},(_,i)=>208+i),240,241,242,243,...Array.from({length:20},(_,i)=>248+i).filter(cell=>cell!==263),...Array.from({length:24},(_,i)=>316+i),...Array.from({length:25},(_,i)=>346+i)];
+const CONSORT_PORTRAITS=[1,2,3,4,5,6,7,21,...Array.from({length:44},(_,i)=>92+i).filter(cell=>![102,103,134,135].includes(cell)),...Array.from({length:8},(_,i)=>208+i),240,241,242,243,...Array.from({length:20},(_,i)=>248+i).filter(cell=>cell!==263),...Array.from({length:24},(_,i)=>316+i),...Array.from({length:25},(_,i)=>346+i),...Array.from({length:9},(_,i)=>371+i)];
 const WESTERN_PORTRAITS=[22,23,24,102,103,134,135,263,340,343];
 const EASTERN_PORTRAITS=[341,344],OVERSEAS_PORTRAITS=[342,345];
 const ALL_CONSORT_PORTRAITS=[...CONSORT_PORTRAITS,...WESTERN_PORTRAITS,...EASTERN_PORTRAITS,...OVERSEAS_PORTRAITS];
@@ -240,6 +241,7 @@ for(let cell=208;cell<216;cell++)PORTRAIT_CLOTHES[cell]='盛装华服';
  '玄金流云','牡丹霓裳','玉羽流仙','翠影金枝','凤冠霞帔','绛紫珠翠',
  '月华琼宫','敦煌流金','洛水凝碧','牡丹天香','星河紫阙','金霞映雪'].forEach((name,i)=>{PORTRAIT_CLOTHES[316+i]=name;});
 ['朱金凤华','翠金云肩','海棠珠绣','紫晶莲纹','玄金团花','月白银枝','桂月玉兔','茉莉初雪','玉兰雪裘','月白银枝·近景','桂月珠华·近景','茉莉初雪·近景','玉兰雪裘·近景'].forEach((name,i)=>{PORTRAIT_CLOTHES[358+i]=name;});
+['山茶绯玉','梅花雪霁','海棠春酣','幽兰碧岫','紫藤烟霞·近景','虞美人绛绡','紫藤烟霞·半身','牡丹国色·近景','牡丹国色·半身'].forEach((name,i)=>{PORTRAIT_CLOTHES[371+i]=name;});
 const consortPortraits=c=>c.fam?.t==='西域贡女'?WESTERN_PORTRAITS:c.fam?.t==='东瀛贵族'?EASTERN_PORTRAITS:c.fam?.t==='海西贵族'?OVERSEAS_PORTRAITS:CONSORT_PORTRAITS;
 
 const FATHER_PORTRAITS=[268,269,270,271,276,277,278,282,283,284,288,289,290];
