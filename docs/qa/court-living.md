@@ -50,4 +50,13 @@ node tests/court-living-browser-acceptance.cjs
 
 ## 线上核验
 
-发布后检查 GitHub Pages 的对应提交，以及入口、脚本、样式和立绘资源是否与该提交逐字节一致。线上交互另用正式页面复跑定向流程；本地通过不代替线上通过。
+游戏提交 `d8982467b047e06361d4e9ca33113b4b215918ec` 已推送 `main`，[GitHub Pages 部署成功](https://github.com/AubreyKuang/Forbidden-City/actions/runs/43774597535)。正式／测试入口、全部游戏脚本、样式及抽检立绘共 **133 项线上资源**均返回 HTTP 200，并与本地提交逐字节一致，见[资源校验记录](court-living-production-resources.json)。
+
+正式页面另完成 **18 / 18 个桌面／手机场景、60 次刷新恢复比对**：姐妹探花指婚、剧情妃图鉴到入宫、家谱图与列表、宫殿故事直达、锦衣卫私情查证后续、小产调养、公主／姐妹赐婚及独自探望。没有页面脚本错误。线上导入使用隔离浏览器与演示存档，不接触玩家本机存档。
+
+- [宫廷生活线上交互记录](court-living-production-browser.json)
+- [官员婚姻线上交互记录](official-marriage-production-browser.json)
+- [正式页面截图](../screenshots/court-living-production/)
+- [正式页面婚姻截图](../screenshots/official-marriages-production/)
+
+![姐妹指婚的真实身份](../screenshots/court-living-production/exam-sister-desktop.jpg)

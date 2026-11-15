@@ -686,7 +686,7 @@ NPC 记忆区分客观事件与人物主观理解。同一场争执，受助者�
 
 妃嫔的娘家按**父亲 → 兄弟姐妹 → 他们的孩子**展开，两层分支可独立收起。两家联姻所生的孩子列在实际父亲名下；母亲档案仍能查看孩子，孩子也能分别进入父母档案。家谱、纪事和婚后生活共用同一个人物，不会复制出两个孩子。
 
-<img src="docs/screenshots/court-living/family-tree-desktop.jpg" alt="两层家族分支：沈明远与魏婉华的女儿列在父亲名下，母亲分支保留子女去向" width="900">
+<img src="docs/screenshots/court-living-production/family-tree-desktop.jpg" alt="两层家族分支：沈明远与魏婉华的女儿列在父亲名下，母亲分支保留子女去向" width="900">
 
 <img src="docs/screenshots/showcase-family.jpg" alt="太后母家系谱：林氏亲姐妹共用一位父亲，下接各自的皇嗣，另显示太后与皇帝" width="860">
 
@@ -817,7 +817,7 @@ NPC 记忆区分客观事件与人物主观理解。同一场争执，受助者�
 
 在任官员档案有「议婚 / 赐婚」入口。人选包括**满十五岁的公主、现有家族的成年女子和礼部访得的具名女子**；先看名帖，分别问意，再决定赐婚。已有配偶者不列入，同族世家可以联姻；改议亲事须向原议亲之家说明。婚后保留原官职、真实配偶和亲族关系，可读夫妻纪事，半年一次问候婚后近况。公主与妃嫔姐妹各按自己的身份显示，不共用称谓。
 
-<img src="docs/screenshots/official-marriages/candidate-princess-desktop.jpg" alt="为在任官员择配：阅看公主名帖并分别询问心意" width="860">
+<img src="docs/screenshots/official-marriages-production/candidate-princess-desktop.jpg" alt="为在任官员择配：阅看公主名帖并分别询问心意" width="860">
 
 锦衣卫可间隔数月带回来自旧案、实际回奏的巡访线索，选择循线查证、继续留意或封存。领案到回报都记入指挥使纪事，查实后才通知关联人物；不会把传言直接写成罪名。
 
@@ -1061,7 +1061,7 @@ NPC 记忆区分客观事件与人物主观理解。同一场争执，受助者�
 
 **御书房 → 剧情妃图鉴**集中展示固定姓名、专属立绘、典故、触发路线与相遇条件，并标明尚未相遇、归家或已经入宫。目前收录钩弋夫人 **赵令仪**；可从图鉴前往出巡，入宫后直接查看她的真实经历。
 
-<img src="docs/screenshots/court-living/codex-desktop.jpg" alt="御书房剧情妃图鉴：赵令仪的固定姓名、422号立绘、典故与触发方法" width="900">
+<img src="docs/screenshots/court-living-production/codex-desktop.jpg" alt="御书房剧情妃图鉴：赵令仪的固定姓名、422号立绘、典故与触发方法" width="900">
 
 「出巡 → 浩荡巡狩」可遇见固定剧情妃 **赵令仪**：化用河间奇女在帝前展开双掌的典故。**每局姓名固定为赵令仪，主性格沉静、小性子念旧，专属立绘固定 422 号**，不会随机改名或附上穿越身世。初遇二十二岁，可自愿入宫为贵人，也可获资助归家。
 
