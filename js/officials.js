@@ -119,7 +119,7 @@ function officialFamilyLine(c){
 function officialsRoster(){
   const entries=officialEntries(),dead=entries.filter(x=>!officialAlive(x.p));
   const cards=items=>items.map(({c,h,p,role,key})=>`<button class="card portrait-card official-card${!p.alive?' deceased':''}" onclick="A.go('official','${key}')">${porImg(p,76)}<span><strong>${esc(p.name)}</strong><small>${esc(p.office||p.post)} · ${officialStatus(p)}</small><small>${esc(fullName(c))}的${officialKinLabel(h,role)}</small><span class="person-link">查看履历与往来 →</span></span></button>`).join('');
-  return `<h2>朝臣与外家</h2><p class="hint">按实际人物归档，同父姐妹共用父兄履历。可从家族树、妃嫔详情或此处进入。</p><div class="grid portrait-grid">${cards(entries.filter(x=>officialAlive(x.p)))||'<p>暂无在世亲眷。</p>'}</div>${dead.length?`<h3>故人名录</h3><div class="grid portrait-grid">${cards(dead)}</div>`:''}`;
+  return `${pageHeading('朝臣与外家','按实际人物归档，同父姐妹共用父兄履历。可从家族树、妃嫔详情或此处进入。',`<button class="btn quiet sm" onclick="A.go('government')">← 返回理政</button>`)}<div class="grid portrait-grid">${cards(entries.filter(x=>officialAlive(x.p)))||'<p>暂无在世亲眷。</p>'}</div>${dead.length?`<h3>故人名录</h3><div class="grid portrait-grid">${cards(dead)}</div>`:''}`;
 }
 function officialActionReady(e,action){
   if(!e||S.over)return false;const p=e.p;
@@ -141,7 +141,7 @@ function viewOfficial(){
   const actions=!officialAlive(p)?act('honor','赐祭抚恤',20):p.exiled||p.dismissed?'':act('talk',p.away||p.commission||p.retired?'赐书问候':'召见议事')+act('commission','委派差事')+act('reward','论功赏赐',20)+(p.retired?act('recall','征召复出'):p.age>=55?act('retire','准予致仕'): '');
   const hint=!officialAlive(p)?'故人的履历与家族关系继续保留；抚恤仅可办理一次。':p.exiled||p.dismissed?'获罪期间不再召见、领差或受赏，既有处置留在履历中。':'问候每三个月一次；差事有回奏与冷却；赏赐须有新增功绩且间隔一年。致仕须满五十五岁，复出须未满七十岁且致仕满一年。';
   return `${personBackButton('officials')}<header class="detail-head">${porImg(p,224)}<div class="grow"><p>${role==='father'?'外家长辈':'外家子弟'} · ${esc(blocName(h.bloc))}</p><h2>${esc(p.name)}</h2><p>${esc(p.office||p.post)}${p.honor?' · '+esc(p.honor):''}</p><p>${p.age}岁 · <strong>${officialStatus(p)}</strong> · ${esc(p.temperament)}</p>${p.death?`<p class="official-death">${esc(p.death.d||'日期未详')} · ${esc(p.death.reason)}</p>`:''}${p.retired?'<p class="hint">不再承接官差；仍可书信问候。</p>':''}</div></header>
-    <div class="detail-vitals">${bar('才干',p.ability)}${bar('功绩',p.merit)}${bar('信任',p.trust)}</div><div class="detail-actions"><div class="acts">${actions}${canAppointRelative(e)?`<button class="btn jade" onclick="A.appointRelative('${key}')">核验科名与授官</button>`:''}</div><p class="hint">${hint}</p></div>
+    <div class="detail-vitals">${bar('才干',p.ability)}${bar('功绩',p.merit)}${bar('信任',p.trust)}</div><div class="detail-actions" role="group" aria-label="朝臣往来"><span class="detail-action-label">召见与任用</span><div class="acts">${actions}${canAppointRelative(e)?`<button class="btn jade" onclick="A.appointRelative('${key}')">核验科名与授官</button>`:''}</div><p class="hint">${hint}</p></div>
     ${p.report?`<section class="detail-section"><h3>待阅回奏</h3><p>${esc(p.report.text)}</p><button class="btn jade" onclick="A.officialReport('${key}')">阅看回奏</button></section>`:''}
     ${p.commission?detailSection('当前差事',`<p>${esc(p.commission.title)} · ${Math.max(0,p.commission.due-S.turn)}个月后回奏</p>`):''}
     ${detailSection('家族往来',kin.map(x=>`<button class="btn quiet sm" onclick="A.go('consort',${x.id})">${esc(fullName(x))} · ${role==='father'?'女儿':'姐妹'}${x.alive?'':' · 已故'}</button>`).join(' ')+otherRoles.map(r=>`<p>${r==='father'?'父亲':role==='father'?'儿子':'兄弟'}：${officialLink(c,r)} · ${officialStatus(officialPerson(h,r))}</p>`).join(''))}
