@@ -176,9 +176,11 @@ const ROYAL_GROWTH_SETS={f:[380,383,392,395],m:[386,389]};
 const DESCENDANT_VARIANTS=29+ROYAL_GROWTH_SETS.m.length;
 const EXISTING_PRINCE_VARIANTS=4;
 const EXTRA_PRINCE_VARIANTS=LEGACY_DESCENDANT_VARIANTS-EXISTING_PRINCE_VARIANTS;
-const BEAUTY_PORTRAIT_START=92, YOUNG_ROYAL_PORTRAIT_START=136, PORTRAIT_COUNT=433;
+const BEAUTY_PORTRAIT_START=92, YOUNG_ROYAL_PORTRAIT_START=136, PORTRAIT_COUNT=434;
 // Reserved story art never enters the random consort pools. Stable zero-based IDs.
 const STORY_CONSORT_PORTRAITS=Object.freeze({gouyi:422});
+// Dedicated story characters are bound with portraitOverride, outside random pools.
+const STORY_NPC_PORTRAITS=Object.freeze({capitalNoble:433});
 const PRINCESS_VARIANTS=33+ROYAL_GROWTH_SETS.f.length;
 const EXPANDED_ROYAL_START=294;
 const EMPEROR_PORTRAITS=[12,13,312,313,314,315];
@@ -208,7 +210,8 @@ const portraitSheets=[
   {start:398,rows:6,scale:4,src:'./assets/images/palace-officials-expanded.webp?v=1',image:document.createElement('img')},
   {start:422,rows:1,scale:4,src:'./assets/images/palace-consort-gouyi.webp?v=1',image:document.createElement('img')},
   {start:423,rows:2,scale:4,src:'./assets/images/palace-jinyiwei.webp?v=1',image:document.createElement('img')},
-  {start:429,rows:1,scale:4,src:'./assets/images/palace-officials-selected.webp?v=1',image:document.createElement('img')}
+  {start:429,rows:1,scale:4,src:'./assets/images/palace-officials-selected.webp?v=1',image:document.createElement('img')},
+  {start:433,rows:1,scale:4,src:'./assets/images/palace-capital-noble.webp?v=1',image:document.createElement('img')}
 ];
 const portraitSheet=cell=>portraitSheets.slice().reverse().find(sheet=>cell>=sheet.start)||portraitSheets[0];
 function ensurePortraitSheet(cell){const sheet=portraitSheet(cell);if(!sheet.image.src)sheet.image.src=sheet.src;}
@@ -411,6 +414,7 @@ function portraitJewelry(rank,id){return JEWELRY[id]|| (rank===8?JEWELRY.phoenix
 // Coordinates are in the stable 112 × 140 portrait tile: brow centre and head width.
 // Half-length paintings need much smaller ornaments than the original close-ups.
 const PORTRAIT_HEADS={
+  433:[64,27,27],
   422:[51,38,27],
   248:[47,39,34],249:[59,40,34],250:[65,39,32],251:[66,38,32],252:[60,39,34],253:[54,39,34],254:[59,38,34],255:[59,39,34],
   256:[57,28,23],257:[50,31,27],258:[60,31,27],259:[56,31,27],260:[62,29,27],261:[65,30,25],262:[58,30,27],263:[59,31,27],264:[56,28,25],265:[60,28,26],266:[61,27,26],267:[50,29,27],

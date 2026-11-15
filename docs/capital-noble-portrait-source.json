@@ -1,0 +1,31 @@
+{
+  "id": 433,
+  "role": "capitalNoble",
+  "approval": "pending",
+  "source": "exec-6365ff2b-9b14-4b03-a793-ce8137f498b8.png",
+  "sourceSize": [
+    1086,
+    1448
+  ],
+  "sourceSha256": "3654febe347d1821bc984e08a8cabaf13f4e887dee997f1f1f85ed5a7625cabc",
+  "atlas": "assets/images/palace-capital-noble.webp",
+  "frame": [
+    448,
+    560
+  ],
+  "columns": 4,
+  "tile": 0,
+  "size": [
+    414,
+    552
+  ],
+  "offset": [
+    17,
+    8
+  ],
+  "head": [
+    64,
+    27,
+    27
+  ]
+}
