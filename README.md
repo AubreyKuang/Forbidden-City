@@ -409,6 +409,12 @@ NPC 记忆区分客观事件与人物主观理解。同一场争执，受助者�
 
 请养针对六岁前、尚无合适养母的皇嗣，参照双方位分，排除储君及妃位以上生母的孩子。若生母仍在亲自养育，先听她的意思：她可能不舍，也可能因照护吃力且信任对方而愿意商量。可保留原安排，或决定另定抚养；协商同意后准生母探望，执意抱养则保留生母的伤心与关系后果。乳母照护、亲生身份与人物既有记忆不会凭空抹去。人物页符合条件时也可点「听她谈抚养孩子」。
 
+| 多年未育的请养之愿 | 生母也有自己的心意 |
+|:---:|:---:|
+| <a href="docs/screenshots/showcase-foster-long-wait.png"><img src="docs/screenshots/showcase-foster-long-wait.png" alt="二十六岁、入宫四年而未育的孤高妃子，请求给明月留一处灯下的位置" width="420"></a> | <a href="docs/screenshots/showcase-foster-mother-voice.png"><img src="docs/screenshots/showcase-foster-mother-voice.png" alt="生母表达不舍，皇帝可以保留原抚养或另定安排" width="420"></a> |
+
+[请养与受孕差异验证](docs/qa/foster-fertility.md)记录了分支检查、存档恢复和线上实际操作。
+
 | 无子妃嫔主动请养 | 新人初见，先问姐姐的孩子 |
 |:---:|:---:|
 | <a href="docs/screenshots/showcase-foster-petition.jpg"><img src="docs/screenshots/showcase-foster-petition.jpg" alt="三十九岁的陆妃请求抚养失去生母的幼女，玩家可以允准、暂缓或婉拒" width="400"></a> | <a href="docs/screenshots/showcase-kin-arrival.jpg"><img src="docs/screenshots/showcase-kin-arrival.jpg" alt="高位妃嫔去世后，其妹妹入宫的初次问安便提到姐姐和孩子，请求亲族照护" width="400"></a> |
@@ -688,7 +694,7 @@ NPC 记忆区分客观事件与人物主观理解。同一场争执，受助者�
 
 女性共用图库有 **151 张立绘**，包括不同眉眼、发髻、襦裙、宋式褙子、圆领袍、骑装、西域锦衣，以及取意金陵十二钗的成年佳人与盛装华服。披发、编发、高髻和低髻配合执书、持笛、执扇、回眸、抱臂等不同姿态，另有披帛、立领长衫与冬日披风，以及抱猫、刺绣、提灯、执棋等姿态。盛装造型取意历代礼服与神妃仙子，包含凤冠霞帔、云肩珠翠、牡丹霓裳、月华琼宫等十二种华服。异域来客分别使用西域锦衣、东瀛重衣和海西宫装及相应面容，通过使臣来朝相见；不会混入普通世家秀女的随机形象。另有五张彩色华服胸像、四张白衣半身像与四张白衣近景胸像，画面聚焦眉眼、发冠与上半身服饰，包含朱金凤华、翠金云肩、海棠珠绣、紫晶莲纹、玄金团花，以及月白银枝、桂月玉兔、茉莉初雪和玉兰雪裘。白衣半身造型保留腰胯附近的构图，呈现手部、衣袖和披帛，近景版本则突出眉眼与发饰。花系造型将山茶、梅花、海棠、幽兰、紫藤、虞美人和牡丹融入发饰、配色与刺绣，共有九张近景／半身立绘，其中紫藤和牡丹各有同一人物的大头与半身版本。服饰与人物是架空创作，不复刻演员或具体影视装束。妃嫔、皇子选妃候选人和婚后的王妃共用这套图库；选妃名帖确定后，婚后与继位为后都保留原来的脸。分配会优先避开当前宫中与待选名帖已经使用的形象。
 
-皇子有 **31 套成长形象**，公主有 **31 套成长形象、35 种成年造型**。完整成长形象均覆盖襁褓、孩童和长成后三阶段，共 186 张；公主另外四张成年造型在十八岁起使用，幼年沿用对应的成长形象。每套沿用相近眉眼与服饰意象，能认出同一个孩子长大后的样子。风格包含清雅、英气、温润与礼服造型，公主包括披发、半披发、侧辫、双丫髻、珠冠与花冠，也有青玉铃兰与绯桃流金两种近景成长套图；皇子包含月白松风与玄金星阙造型。存档保留已经分配的人物形象。
+皇子有 **29 套成长形象**，公主有 **29 套成长形象、33 种成年造型**。完整成长形象均覆盖襁褓、孩童和长成后三阶段，共 174 张；公主另外四张成年造型在十八岁起使用，幼年沿用对应的成长形象。每套沿用相近眉眼与服饰意象，能认出同一个孩子长大后的样子。风格包含清雅、英气、温润与礼服造型，公主包括披发、半披发、侧辫、双丫髻、珠冠与花冠。存档保留已经分配的人物形象。
 
 父兄图库区分 **13 张成熟父亲与 13 张青年兄长立绘**，并保留四张原版文武父兄形象。文臣、武将、商贾、医者和寒门书生有不同衣着与气质；新人物优先分配未使用的面容，同父姐妹共用同一位父亲、同一组兄长的形象，存读档与身故都保留其面容。主控皇帝有六张立绘，包含原版两张以及温润青年、英武青年、威严壮年与儒雅长者；新帝随年龄使用对应的青年、成熟形象，皇子继位仍保留原脸。
 
@@ -905,7 +911,6 @@ node tests/palace-flow.cjs
 | `assets/images/palace-consorts-closeups.webp`、`scripts/build-consort-closeups.py`、`docs/consort-closeup-sources.json` | 五张彩色胸像与八张白衣近景／半身像、裁切打包与稳定编号清单 |
 | `assets/images/palace-consorts-flowers.webp`、`scripts/build-flower-consorts.py`、`docs/flower-consort-sources.json` | 七种花意的九张妃子立绘、裁切打包与稳定编号清单 |
 | `scripts/build-consort-gallery.py`、`docs/consort-gallery-sources.json` | 新妃子图集打包、原图裁切与稳定编号清单 |
-| `assets/images/palace-royal-growth.webp`、`scripts/build-royal-growth.py`、`docs/royal-growth-sources.json` | 公主与皇子各两套近景成长立绘，包含幼年、孩童与长成后三阶段 |
 | `assets/images/palace-*-expanded.webp` | 妃嫔、父兄、三阶段皇嗣与皇帝的独立高清图集 |
 | `scripts/build-expanded-portraits.py`、`docs/expanded-portrait-sources.json` | 按真实留白裁切并打包立绘，记录稳定编号、原图与裁切位置 |
 | `scripts/build-experience-catalog.cjs` | 从游戏定义生成个人经历完整图鉴 |
