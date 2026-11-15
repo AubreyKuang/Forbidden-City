@@ -14,7 +14,7 @@ for(const c of cases)test(`layout preserves information and action availability:
   remaining.splice(i,1);
  }
  // Match longest fragments first so a short name cannot consume a longer phrase.
- let text=after.text.join(' ');
+ let text=after.text.join(' ').replace(/ · 家族立场：/g,' · ').replace(/ · (?:原任)?[正从][一二三四五六七八九]品/g,'').replace(/ · (?:尚未授官|无官品|未定品)/g,'').replace('妃嫔娘家、地方铨选或科举','妃嫔娘家或科举');
  for(const fragment of [...before.text].sort((a,b)=>b.length-a.length)){
   assert.ok(text.includes(fragment),`Missing text: ${fragment}`);
   text=text.replace(fragment,'');

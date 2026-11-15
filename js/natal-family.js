@@ -30,7 +30,7 @@ function initializeNatalFamily(c,h,family){
 const NATAL_TRAITS_F=['温婉','活泼','沉静','才女','爽直','聪慧'],NATAL_TRAITS_M=['温厚','活泼','沉静','有文才','爽直','聪慧'];
 const natalTrait=p=>p.sex==='m'?({才女:'有文才',温婉:'温厚'})[p.trait]||p.trait:p.trait;
 function addNatalPerson(c,h,sex,age,seed,birth=true){
-  const names=sex==='f'?GIRLA.flatMap(a=>GIRLB.map(b=>a+b)):BROTHER_NAMES;
+  const names=sex==='f'?GIRLA.flatMap(a=>GIRLB.map(b=>a+b)):(courtNamesActive()?COURT_GIVEN:BROTHER_NAMES);
   const used=new Set([h.father.name,...brotherRoles(h).map(r=>h[r].name),...(h.relatives||[]).map(p=>p.name),...S.consorts.map(fullName)]);
   // Children avoid the characters of their father's given name (避讳).
   const taboo=new Set(newFamilyRules()?[...givenOf({sur:c.sur,name:h.father.name})]:[]),clash=g=>used.has(c.sur+g)||[...g].some(ch=>taboo.has(ch));
@@ -131,7 +131,7 @@ function viewNatalRelative(){
     ${natalVisitReady(c,p)?`<button class="btn" onclick="A.natalVisit(${c.id},${p.id})">准入宫探亲</button>`:''}${visited?`<button class="btn primary" onclick="A.natalMeet(${c.id},${p.id})">探亲相见</button><span>约${p.visit.until-S.turn}个月后归家</span>`:''}</div>
     ${typeof natalAdmissionPanel==='function'?natalAdmissionPanel(c,p):''}
     ${detailSection('家族往来',`<p>${p.parentRelativeId?'母亲':'父亲'}：${p.parentRelativeId?`<button class="btn quiet" onclick="A.go('natal','${c.id}:${p.parentRelativeId}')">${esc(h.relatives.find(x=>x.id===p.parentRelativeId)?.name||'家中长辈')}</button>`:officialLink(c,'father')}</p><button class="btn quiet" onclick="A.go('consort',${c.id})">${esc(fullName(c))}</button>`+natalFamilyLinks(c))}
-    ${natalLifePanel(c,p)}${detailSection('人物纪事',detailStory(p))}`;
+    ${natalFatherPanel(p)}${natalLifePanel(c,p)}${detailSection('人物纪事',detailStory(p))}`;
 }
 A.natalVisit=function(id,relative){if(modalOpen)return;const e=natalEntry(id,relative);if(e)pushEv(natalVisitEvent(e.c,e.p));};
 A.natalMeet=function(id,relative){if(modalOpen)return;const e=natalEntry(id,relative);if(e)pushEv(natalMeetingEvent(e.c,e.p));};

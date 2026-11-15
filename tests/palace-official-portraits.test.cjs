@@ -51,7 +51,7 @@ test('new exam candidates have distinct civilian faces and retain them through a
   const faces=JSON.parse(b.run('JSON.stringify(curEv.cast.map(p=>[p.id,p.artPortrait]))'));
   b=reload(b);assert.deepEqual(JSON.parse(b.run('JSON.stringify(curEv.cast.map(p=>[p.id,p.artPortrait]))')),faces);
   b.run('choose(0);');b=reload(b);
-  assert.deepEqual(JSON.parse(b.run('JSON.stringify(S.scholars.map(p=>[p.id,p.artPortrait]))')).sort(),faces.sort());
+  assert.deepEqual(JSON.parse(b.run('JSON.stringify(S.scholars.filter(p=>p.examRank).map(p=>[p.id,p.artPortrait]))')).sort(),faces.sort());
 });
 
 test('new commanders use dedicated Jinyiwei portraits and retain the saved result across reloads',()=>{
@@ -101,7 +101,7 @@ for(const fixture of [...legacy.cases,...legacy13.cases])test('unmodified versio
   assert.equal(b.run('curEv.title'),fixture.save.pendingActions.pending.title);
   assert.equal(b.run('PalaceActions.contentVersion'),fixture.save.pendingActions.version);
   if(fixture.name==='commander')assert.equal(b.run('S.jinyiwei.commander.artPortrait'),fixture.save.jinyiwei.commander.artPortrait);
-  if(fixture.name==='examination')assert.deepEqual(JSON.parse(b.run('JSON.stringify(S.scholars.map(p=>p.artPortrait))')),fixture.save.scholars.map(p=>p.artPortrait));
+  if(fixture.name==='examination')assert.deepEqual(JSON.parse(b.run('JSON.stringify(S.scholars.filter(p=>p.examRank).map(p=>p.artPortrait))')),fixture.save.scholars.filter(p=>p.examRank).map(p=>p.artPortrait));
   b.run('if(modalResult)nextEv();else choose(curEv.choices.findIndex(c=>!c.cond||c.cond()));');
-  b=reload(b);b.run('drain();assert.equal(PalaceActions.contentVersion,15);');
+  b=reload(b);b.run('drain();assert.equal(PalaceActions.contentVersion,16);');
 });

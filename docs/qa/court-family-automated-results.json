@@ -1,0 +1,27 @@
+{
+  "date": "2026-11-15T22:22:12.110713+00:00",
+  "node": "22.18.0",
+  "journalVersion": 15,
+  "mergedRemote": "acc7e0f",
+  "tests": {
+    "command": "node --test tests/*.test.cjs",
+    "total": 1175,
+    "passed": 1175,
+    "failed": 0,
+    "durationMs": 30518.983959
+  },
+  "flow": {
+    "command": "node tests/palace-flow.cjs",
+    "months": 60,
+    "passed": true
+  },
+  "fixtures": {
+    "count": 12,
+    "generated": true
+  },
+  "browser": {
+    "status": "blocked-before-launch",
+    "passed": 0,
+    "note": "See court-family-browser-results.json; automated logic checks are not browser acceptance."
+  }
+}

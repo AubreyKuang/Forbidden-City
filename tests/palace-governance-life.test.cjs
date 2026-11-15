@@ -70,7 +70,7 @@ test('appointment changes one real officer, blocks conflicting duties and recall
  const key=b.run('key');b=reload(b);b.run(`while(modalOpen)nextEv();var e=officialEntry('${key}');assert.equal(e.p.office,'江南知府');S.turn+=6;postingTick();assert.match(e.p.report.title,/半年考课/);assert.ok(e.c.familyDuty.task.includes('半年考课'));`);
 });
 for(const id of ['dikes','granaries','schools','water','pay','drills'])test(`government mission ${id} has its own result, family recollection and durable effects`,()=>{
- const b=world();b.run(`var id='${id}',t=OFFICIAL_TASKS[id],e=officialEntries()[0];e.h.bloc=t.army?'army':'civil';e.p.career='official';e.p.age=40;e.p.retired=false;e.p.ability=95;delete e.p.report;delete e.p.commission;E().treasury=1000;
+ const b=world();b.run(`var id='${id}',t=OFFICIAL_TASKS[id],e=officialEntries()[0];e.h.bloc=t.army?'army':'civil';e.p.office=e.p.post=t.army?'参将':'知府';e.p.career='official';e.p.age=40;e.p.retired=false;e.p.ability=95;delete e.p.report;delete e.p.commission;E().treasury=1000;
   assignOfficialTask(e,id);assert.equal(e.p.commission.id,id);e.p.commission.outcome='success';S.turn=e.p.commission.due;officialTaskTick();assert.match(e.p.report.text,new RegExp(t.success));assert.ok(e.c.story.some(s=>s.t.includes(t.title)&&s.t.includes(e.p.name)));var n=e.p.merit;officialTaskTick();assert.equal(e.p.merit,n);
   if(id==='dikes')assert.equal(floodDikeReady(),true);if(id==='granaries')assert.equal(grainReserveReady(),true);`);
 });
@@ -102,7 +102,7 @@ for(const fixture of legacyFixtures.cases)test(`pre-upgrade ${fixture.name} cont
  b.run("if(modalResult)nextEv();else choose(curEv.choices.findIndex(c=>!c.cond||c.cond()))");
  b=reload(b);b.run('drain();assert.equal(PalaceActions.legacy,false);');
  assert.equal(b.run('S.turn'),fixture.save.turn,'finishing a version 2 scene retains the original month');
- b.run("E().energy=1;A.out('spa');assert.equal(PalaceActions.payload().pendingActions.version,15)");
+ b.run("E().energy=1;A.out('spa');assert.equal(PalaceActions.payload().pendingActions.version,16)");
  b=reload(b);b.run('var previousTurn=S.turn;choose(0);tick(1500);assert.equal(S.turn,previousTurn+1);');
 });
 test('the old commission cancellation index still cancels instead of assigning a new mission',()=>{

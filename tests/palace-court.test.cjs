@@ -568,6 +568,7 @@ test('local grain credit delivers immediately and deducts its balance once after
 test('local grain credit can extend once and retains the fee for either settlement route',()=>{
   for(const grain of [false,true])boot().run(`
     S.turn=8;S.month=9;
+    initiativeTick=()=>{}; // Household gifts are tested separately; isolate grain-debt accounting.
     S.flags.localGrainPaymentTurn=8;
     Object.assign(E(),{treasury:0,energy:0,people:56});
     const option=text=>curEv.choices.findIndex(c=>c.t.includes(text));
@@ -639,6 +640,7 @@ test('an interest-free grain grace period consumes the memorial and cannot be ex
 test('paying a due local grain balance with stock consumes half a reserve and saves exactly once',()=>{
   for(const half of [false,true])boot().run(`
     S.turn=8;S.month=9;
+    initiativeTick=()=>{}; // Household gifts are tested separately; isolate grain-debt accounting.
     S.flags.localGrainPaymentTurn=8;
     Object.assign(E(),{treasury:19,energy:0,people:56});
     const option=()=>curEv.choices.findIndex(c=>c.t.includes('以半批仓粮抵'));

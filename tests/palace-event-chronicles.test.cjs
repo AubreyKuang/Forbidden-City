@@ -62,7 +62,7 @@ test('chronicle context and names survive saves and repeated result clicks',()=>
 test('a failed write keeps the consequence and its chronicle together, once',()=>{
  const w=world();w.run(`A.auditQuirk=id=>pushEv(QEV.擅厨艺(byId(id)));PalaceActions.install();var id=a.id;A.auditQuirk(id);var before=JSON.stringify(a.story),energy=E().energy;`);
  const set=w.storage.set;w.storage.set=()=>{throw Error('quota');};
- w.run(`choose(0);a=byId(id);var after=JSON.stringify(a.story),spent=E().energy;assert.notEqual(after,before);assert.ok(a.story.at(-1).event?.choice);assert.ok(modalResult);
+ w.run(`choose(0);a=byId(id);var after=JSON.stringify(a.story),spent=E().energy;assert.notEqual(after,before);assert.ok(a.story.some(s=>s.event?.title===curEv.title&&s.event?.choice));assert.ok(modalResult);
   choose(0);assert.equal(JSON.stringify(a.story),after);assert.equal(E().energy,spent);`);w.storage.set=set;
  w.run(`nextEv();assert.equal(lastAutoSaveError,'');A.load('auto');assert.equal(JSON.stringify(byId(id).story),after);assert.equal(E().energy,spent);`);
 });

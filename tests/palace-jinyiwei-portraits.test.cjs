@@ -4,6 +4,7 @@ const {boot}=require('./playtest-harness.cjs');
 const {withClock}=require('./test-clock.cjs');
 const manifest=require('../docs/jinyiwei-portrait-sources.json');
 const legacy=require('./fixtures/jinyiwei-portraits-legacy-v14.json');
+const legacy15=require('./fixtures/jinyiwei-portraits-legacy-v15.json');
 function game(seed=831,storage=new Map()){
   const b=withClock(boot(seed,storage));b.ctx.assert=assert;return b;
 }
@@ -68,15 +69,16 @@ test('only the four selected older pictures enter the general scholar and brothe
   b=reload(b);b.run(`var p=houseOf(harem()[0]).brother;assert.equal(portraitCell(p),432);p.age=60;assignOfficialPortrait(p,{bloc:'army'},'brother');assert.equal(portraitCell(p),432);`);
 });
 
-for(const fixture of legacy.cases)test('version 14 '+fixture.name+' resumes without rewriting saved portraits',()=>{
+for(const fixture of [...legacy.cases,...legacy15.cases])test('version '+fixture.save.pendingActions.version+' '+fixture.name+' resumes without rewriting saved portraits',()=>{
   let b=game(901,new Map([['chengongji_v1_auto',JSON.stringify(fixture.save)]]));
-  b.run("A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,14);");
+  b.run("A.load('auto');assert.equal(PalaceActions.blocked,false);");
   assert.equal(b.run('curEv.title'),fixture.save.pendingActions.pending.title);
+  assert.equal(b.run('PalaceActions.contentVersion'),fixture.save.pendingActions.version);
   if(fixture.name==='commander'){
     assert.equal(b.run('S.jinyiwei.commander.artPortrait'),fixture.save.jinyiwei.commander.artPortrait);
     b.run('assert.ok(JINYIWEI_PORTRAITS.includes(portraitCell(S.jinyiwei.commander)));');
   }
   if(fixture.name==='examination')assert.deepEqual(JSON.parse(b.run('JSON.stringify(S.scholars.map(p=>p.artPortrait))')),fixture.save.scholars.map(p=>p.artPortrait));
   b.run('if(modalResult)nextEv();else choose(curEv.choices.findIndex(c=>!c.cond||c.cond()));');
-  b=reload(b);b.run('drain();assert.equal(PalaceActions.contentVersion,15);');
+  b=reload(b);b.run('drain();assert.equal(PalaceActions.contentVersion,16);');
 });

@@ -18,13 +18,13 @@ const scholarById=id=>scholarList().find(p=>p.id===id);
 /* —— 新科进士：外戚之外的朝臣 —— */
 const SCHOLAR_ORIGINS=['寒门','书香门第','耕读之家','盐商之后','军户子弟'];
 const SCHOLAR_ESSAYS=['论漕运积弊，主张分段官运','论边储，请以屯田补军饷','论吏治，请严考成、去冗员','论水利，愿亲赴河工','论民本，引孟子“民为贵”','论盐法，请革除私引'];
-function makeScholar(rankBoost=0,peers=[]){
-  const sur=pick(SUR),given=pick([...BROTHER_NAMES,...FATHER_NAMES]),seed=ri(1,2e9);
+function makeScholar(rankBoost=0,reserved=[]){
+  const sur=pick(courtNamesActive()?COURT_SURNAMES:SUR),given=courtNamesActive()?courtGivenName(sur,ri(0,2e9),{used:new Set([...courtUsedNames(),...reserved.map(p=>p.name)]),reservedGiven:new Set(reserved.map(p=>givenOf(p)))}):pick([...BROTHER_NAMES,...FATHER_NAMES]),seed=ri(1,2e9);
   const civilFaces=[272,274,279,280,281];
   const person={id:`scholar-${S.gen}-${S.turn}-${S.nid++}`,name:sur+given,sur,age:ri(22,36),seed,origin:pick(SCHOLAR_ORIGINS),essay:pick(SCHOLAR_ESSAYS),
     ability:clamp(ri(48,82)+rankBoost,30,95),trust:45,merit:10,temperament:pick(OFFICIAL_TEMPERAMENTS),career:'official',alive:true,story:[],
     official:2,artPortrait:civilFaces[seed%civilFaces.length],scholar:true};
-  if(expandedOfficialPortraitsActive()){delete person.artPortrait;assignCourtOfficialPortrait(person,'civil',{peers});}
+  if(expandedOfficialPortraitsActive()){delete person.artPortrait;assignCourtOfficialPortrait(person,'civil',{peers:reserved});}
   return person;
 }
 function scholarRecord(p,text,big=true){story(p,text);log(`${p.name}：${text}`,big?1:0);}
@@ -58,7 +58,7 @@ function ministryHead(id){
 function ministryHeldBy(p){return Object.keys(MINISTRIES).find(id=>ministryHead(id)?.p===p)||null;}
 function ministryCandidates(id){
   const m=MINISTRIES[id];if(!m)return [];
-  const kin=officialEntries().filter(e=>officialServing(e.p)&&e.p.career!=='student'&&e.p.ability>=55&&(e.h.bloc==='army')===m.army).map(e=>({p:e.p,key:e.key,e,bloc:e.h.bloc}));
+  const kin=officialEntries().filter(e=>officialServing(e.p)&&e.p.career!=='student'&&e.p.ability>=55&&officialMilitary(e.p,e.h)===m.army).map(e=>({p:e.p,key:e.key,e,bloc:e.h.bloc}));
   // 新科进士须在翰林院历练两年以上，方可出掌一部。
   const scholars=m.army?[]:scholarList().filter(p=>officialServing(p)&&p.ability>=55&&S.turn-(p.appointedTurn??S.turn)>=24).map(p=>({p,key:'scholar:'+p.id,scholar:true,bloc:'civil'}));
   return [...kin,...scholars].filter(x=>!ministryHeldBy(x.p));
@@ -146,8 +146,8 @@ A.ministryAppoint=function(id){
       cond:()=>E().energy>=1&&officialServing(x.p)&&!ministryHeldBy(x.p),why:'精力不足或已不在任',f:()=>{
         if(!useE())return null;
         const st=ministryState(),old=ministryHead(id);st.heads[id]=x.key;
-        if(old&&old.p!==x.p){old.p.office='内阁学士';old.p.post=old.p.office;courtPersonRecord(old,`卸任${m.name}尚书，改任内阁学士。`);}
-        x.p.office=`${m.name}尚书`;x.p.post=x.p.office;x.p.trust=clamp(x.p.trust+3);
+        if(old&&old.p!==x.p){if(careersActive())careerSetOffice(old,'内阁学士','卸任尚书，改授新职');else{old.p.office='内阁学士';old.p.post=old.p.office;}courtPersonRecord(old,`卸任${m.name}尚书，改任内阁学士。`);}
+        if(careersActive())careerSetOffice(x,`${m.name}尚书`,'奉旨出掌六部');else{x.p.office=`${m.name}尚书`;x.p.post=x.p.office;}x.p.trust=clamp(x.p.trust+3);
         courtPersonRecord(x,`奉旨出任${m.name}尚书。`);
         if(!x.scholar){policyNudge('kin',3);policyNudge('civil',-2);officialFamilyReaction(x.e,'transfer',`出任${m.name}尚书`);}
         else policyNudge('civil',2);
@@ -182,6 +182,7 @@ function examEvent(){
       else officialRecord(e.c,e.role,'会试未第，仍以举人身份候选。');
     }
     record.top=order.map(p=>p.id);
+    if(careersActive()&&examMarriageCandidates(order[2]).length)pushEv(examMarriageEvent(order[2]));
     return `金榜张挂：状元${order[0].name}、榜眼${order[1].name}、探花${order[2].name}。${kin.filter(x=>x.passed).length?`\n外家子弟${kin.filter(x=>x.passed).map(x=>x.e.p.name).join('、')}亦中进士，候选授官。`:''}${fx(chg({prestige:2,people:1}))}`;
   };
   const byAbility=()=>candidates.slice().sort((a,b)=>b.ability-a.ability);
@@ -206,18 +207,18 @@ function viewMinistries(){
       <div class="acts"><button class="btn sm jade" onclick="A.ministryAct('${id}')" ${ministryReady(id)?'':'disabled'}>${m.action}<small>精力−1${m.cost?' · 国库−'+m.cost:''}${why?' · '+why:''}</small></button>
       <button class="btn sm" onclick="A.ministryAppoint('${id}')">${head?'改任尚书':'任命尚书'}</button></div></article>`;
   };
-  const scholars=scholarList().slice().reverse();
+  const scholars=scholarList().filter(p=>!p.registrySource).slice().reverse();
   return `<button class="btn quiet sm detail-back" onclick="A.go('government')">← 返回治国理政</button><h2>六部</h2><p class="hint">尚书由在任且才干 55 以上的官员出任，一人不兼两部。各部每年可办一件大事，成败看尚书才干。</p>
     <div class="grid ministry-grid">${Object.entries(MINISTRIES).map(card).join('')}</div>
-    ${detailSection('新科进士',scholars.length?`<ul class="story">${scholars.map(p=>`<li><button class="person-link" onclick="A.go('scholar','${p.id}')">${esc(p.name)}</button> · ${esc(p.examYear?`${p.examRank}`:'')} · ${esc(p.office)} · ${officialStatus(p)} · 才干${rd(p.ability)}</li>`).join('')}</ul>`:`<p class="hint">尚无科举出身的朝臣。${nextExamLabel()}。</p>`)}`;
+    ${detailSection('新科进士',scholars.length?`<ul class="story">${scholars.map(p=>`<li><button class="person-link" onclick="A.go('scholar','${p.id}')">${esc(p.name)}</button> · ${esc(p.examYear?`${p.examRank}`:'')} · ${esc(officialOfficeLabel(p))} · ${officialStatus(p)} · 才干${rd(p.ability)}</li>`).join('')}</ul>`:`<p class="hint">尚无科举出身的朝臣。${nextExamLabel()}。</p>`)}`;
 }
 function viewScholar(){
   const p=scholarById(UI.sel);if(!p)return viewMinistries();
   const held=ministryHeldBy(p),ready=officialServing(p)&&S.turn-(p.lastAudience??-99)>=3&&E().energy>=1;
-  return `${personBackButton('ministries')}<header class="detail-head">${porImg(p,224)}<div class="grow"><p>科举出身 · ${esc(p.origin)}</p><h2>${esc(p.name)}</h2><p>${esc(p.office)}${held?'':''}</p><p>${p.age}岁 · <strong>${officialStatus(p)}</strong> · ${esc(p.temperament)} · ${esc(p.examYear?`${p.examRank}`:'')}</p></div></header>
+  return `${personBackButton('ministries')}<header class="detail-head">${porImg(p,224)}<div class="grow"><p>${p.registrySource==='local'?'地方官':p.registrySource==='family'?'外朝家族':'科举出身'} · ${esc(p.origin)}</p><h2>${esc(p.name)}</h2><p>${esc(officialOfficeLabel(p))}${held?'':''}</p><p>${p.age}岁 · <strong>${officialStatus(p)}</strong> · ${esc(p.temperament)} · ${esc(p.examYear?`${p.examRank}`:'')}</p></div></header>
     <div class="detail-vitals">${bar('才干',p.ability)}${bar('功绩',p.merit)}${bar('信任',p.trust)}</div>
     <div class="detail-actions"><div class="acts"><button class="btn primary" onclick="A.scholarTalk('${p.id}')" ${ready?'':'disabled'}>召见垂询<small>精力 −1</small></button></div><p class="hint">问候每三个月一次。翰林院历练满两年、才干 55 以上可出任文职各部尚书。</p></div>
-    ${detailSection('殿试策论',`<p>${esc(p.essay)}。</p>`)}${detailSection('个人履历与纪事',detailStory(p))}`;
+    ${p.report?detailSection('待阅回奏',`<p>${esc(p.report.text)}</p><button class="btn jade" onclick="A.officialReport('scholar:${p.id}')">阅看回奏</button>`):''}${officialBrothersPanel({p,key:'scholar:'+p.id,scholar:true})}${officialSpousePanel({p,key:'scholar:'+p.id,scholar:true})}${detailSection('家族亲缘',careerKinHTML({p,key:'scholar:'+p.id,scholar:true}))}${detailSection(p.registrySource==='local'?'任内职责':'殿试策论',`<p>${esc(p.essay)}。</p>`)}${detailSection('个人履历与纪事',detailStory(p))}`;
 }
 A.scholarTalk=function(id){
   const p=scholarById(id);if(modalOpen||!p||!officialServing(p)||S.turn-(p.lastAudience??-99)<3||!useE())return;

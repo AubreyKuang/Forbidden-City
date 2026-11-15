@@ -9,7 +9,7 @@ function initializeRelativeCareer(p,role){
 function canAppointRelative(e){return !!e&&officialAlive(e.p)&&e.p.career==='student'&&e.p.age>=18&&['举人','进士'].includes(e.p.education)&&!e.p.exiled&&!e.p.dismissed;}
 function appointRelative(e){
   if(!canAppointRelative(e)||!useE())return null;
-  const {c,p,role}=e;p.career='official';p.post='候补知县';p.appointedAt=S.turn;p.merit=0;
+  const {c,p,role}=e;p.career='official';p.post='候补知县';if(journalContentVersion()>=15)p.office=p.post;p.appointedAt=S.turn;p.merit=0;
   officialRecord(c,role,'经核验科名，奉旨授候补知县，自此开始任官。',{emotion:.6});
   officialFamilyReaction(e,'assigned','候补知县');return `${p.name}奉旨授候补知县。此前只有${p.education}功名，并无官职。`;
 }

@@ -269,7 +269,7 @@ const FATHER_PORTRAITS=[...LEGACY_FATHER_PORTRAITS,401,403,407,409];
 const BROTHER_PORTRAITS=[...LEGACY_BROTHER_PORTRAITS,398,399,400,402,404,405,406,408,410,411,412,413,414,415,416,417,418,419,420,421,...SHARED_OFFICIAL_PORTRAITS];
 const ALL_OFFICIAL_PORTRAITS=[...FATHER_PORTRAITS,...BROTHER_PORTRAITS,...JINYIWEI_PORTRAITS];
 function expandedOfficialPortraitsActive(){return journalContentVersion()>=14;}
-function dedicatedJinyiweiPortraitsActive(){return journalContentVersion()>=15;}
+function dedicatedJinyiweiPortraitsActive(){return journalContentVersion()>=16;}
 function jinyiweiPortraitCell(person){
   if(JINYIWEI_PORTRAITS.includes(person.artPortrait))return person.artPortrait;
   // Render older guards in the new uniform without mutating a saved transcript.
