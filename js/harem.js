@@ -50,7 +50,7 @@ const HAREM=[
    {t:'亲自赶去守着她（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{E().energy--;renderTop();return chance(.82)?(story(b,'失足滑倒，陛下亲自守了一夜，母子平安。'),`你守了她整整一夜，天亮时她终于安稳睡去。${fx(cchg(b,{mood:5,aff:15}))}`):lose()}}]}},
  function wugu(){const h=harem();if(h.length<3)return null;const a=h.find(c=>!isSolitary(c)&&c.scheme>=72);if(!a)return null;const v=h.filter(c=>c!==a&&c.rank!==8).sort((x,y)=>relGet(a,x)-relGet(a,y))[0];if(!v)return null;
   return {title:'巫蛊之祸',present:[a,v],por:v,sfx:'gong',text:`宫人在${cName(v)}床下搜出一个布偶，背后写着陛下的生辰八字，扎满银针。\n${cName(v)}哭喊冤枉。`,choices:[
-   {t:'人赃并获，打入冷宫',f:()=>{v.cold=true;v.palace='冷宫';story(v,'被指行巫蛊之术，打入冷宫。她至死喊冤。');setXin(v,'怨恨','被诬行巫蛊','emp');log(`${fullName(v)}以巫蛊罪打入冷宫。`,1);S.flags.wronged={v:v.id,a:a.id};return fx(cchg(v,{mood:-50,aff:-20}))}},
+   {t:'人赃并获，打入冷宫',f:()=>{v.cold=true;v.palace='冷宫';story(v,'被指行巫蛊之术，打入冷宫。她始终喊冤。');setXin(v,'怨恨','被诬行巫蛊','emp');log(`${fullName(v)}以巫蛊罪打入冷宫。`,1);S.flags.wronged={v:v.id,a:a.id};return fx(cchg(v,{mood:-50,aff:-20}))}},
    {t:'此事蹊跷，暗中彻查',f:()=>{if(chance(.4+E().prestige/250+allyBonus(v))){a.known=true;pushNow(punishEv(a,v,'栽赃巫蛊'));return '密查之下，发现布偶上的针脚与某宫绣娘如出一辙……'}story(v,'被卷入巫蛊疑案，虽未定罪，却也百口莫辩。');return `查不出头绪，${cName(v)}从此惶惶不可终日。${fx(cchg(v,{mood:-15}))}`}},
    {t:'当众焚毁布偶，严禁议论',f:()=>{story(v,'被卷入巫蛊疑案，陛下当众焚毁布偶，力保她清白。');return `${fx(cchg(v,{aff:12,mood:5}),chg({prestige:-1}))}`}}]}},
  function birthday(){const eligible=harem().filter(c=>c.rank<8&&birthMonth(c)===S.month);if(!eligible.length)return null;const c=pick(eligible);return {title:'芳辰',por:c,text:`今日是${cName(c)}的生辰。`,choices:[
@@ -82,16 +82,20 @@ const HAREM=[
    {t:`判给${cName(b)}`,person:b,f:()=>{rememberQuarrel(a,b,b.id);return fx(cchg(b,{mood:10}),cchg(a,{mood:-10,aff:-3}))}},
    {t:'各赏一匹，息事宁人',f:()=>{rememberQuarrel(a,b);return fx(chg({treasury:-15}),cchg(a,{mood:4}),cchg(b,{mood:4}))}}]}},
  function coldPlea(){const cs=alive().filter(c=>c.cold);if(!cs.length)return null;const c=pick(cs);const w=S.flags.wronged&&S.flags.wronged.v===c.id;
-  return {title:'冷宫来信',por:c,present:[],valid:()=>c.alive&&!c.gone&&c.cold,text:w?`冷宫里的${fullName(c)}托一个老宫女捎来血书：“巫蛊一事，实乃有人栽赃。求陛下明察！”`:`冷宫里的${fullName(c)}托人送来一方旧帕，上面绣着当年你赐她的一句诗。`,choices:[
+  return {title:'冷宫来信',por:c,present:[],valid:()=>c.alive&&!c.gone&&c.cold,text:w?`冷宫里的${fullName(c)}托一个老宫女捎来血书：“巫蛊一事，实乃有人栽赃。求陛下明察！”`:`冷宫里的${fullName(c)}托人送来一方旧帕，上面绣着近况，问你是否还愿意来看一眼。`,choices:[
    {t:'放她出冷宫',f:()=>{A.uncold(c.id);if(w){const a=byId(S.flags.wronged.a);S.flags.wronged=null;if(a&&a.alive&&!a.cold){a.known=true;pushNow(punishEv(a,c,'栽赃巫蛊'))}}return `${fullName(c)}出了冷宫，形容憔悴，却仍向你深深一拜。`}},
    {t:'置之不理',f:()=>fx(cchg(c,{mood:-10}))}]}},
- function ambition(){const cs=harem().filter(c=>c.favor>=60&&c.rank<7&&c.rank>=1);if(!cs.length)return null;const c=pick(cs);const nr=c.rank+1;
-  return {title:'求晋位分',por:c,text:`${cName(c)}依偎在你身边，娇声道：“臣妾伺候陛下也有些日子了……”言下之意，是想晋一晋位分。`,choices:[
+ function ambition(){const cs=harem().filter(c=>!isSolitary(c)&&!['淡泊','沉静'].includes(c.trait)&&!['悲恸','心如死灰'].includes(xinOf(c))&&c.favor>=60&&c.rank<7&&c.rank>=1);if(!cs.length)return null;const c=pick(cs);const nr=c.rank+1;
+  return {title:'求晋位分',por:c,text:`${cName(c)}${['骄纵','骄矜','痴情'].includes(c.trait)?'靠近你，提起入宫以来的相处':'行礼后，谈起入宫以来料理过的事务'}：“臣妾想问，眼下是否够得上晋一晋位分？”`,choices:[
    {t:`晋为${RANKS[nr]}`,cond:()=>rankCount(nr)<RANK_CAP[nr],why:`${RANKS[nr]}已满`,f:()=>{c.rank=nr;if(nr>=4&&!c.title)grantConsortTitle(c,pick(TITLES.filter(t=>!harem().some(x=>x.title===t))));story(c,`蒙恩晋为${cName(c)}。`);log(`晋${fullName(c)}为${cName(c)}。`);harem().forEach(o=>{if(o!==c&&TRAITS[o.trait].jealous){o.mood=clamp(o.mood-6);relAdd(o,c,-6)}});return fx(cchg(c,{mood:20,aff:8}))}},
    {t:'笑而不语',f:()=>fx(cchg(c,{mood:-8}))}]}},
- function family(){const c=officialC(20);if(!c)return null;return {title:'外戚请托',por:c,text:`${cName(c)}小心翼翼地开口：家中幼弟今年中了举，不知陛下可否赏个差事？`,choices:[
-   {t:'准，授七品官',f:()=>{c.fam.p=Math.min(95,c.fam.p+8);story(c,'陛下恩准，她的幼弟入朝为官。');return fx(chg({prestige:-2}),cchg(c,{aff:10,mood:12}))}},
-   {t:'朝廷选官自有法度',f:()=>fx(cchg(c,{mood:-6}),chg({people:1}))}]}},
+ function family(){
+  const candidates=harem().flatMap(c=>{const h=houseOf(c);return h&&c.fam.p>=20?brotherRoles(h).map(role=>officialEntry(c.id+':'+role)).filter(e=>e.p.age>=18&&officialActionReady(e,'commission')):[];});
+  if(!candidates.length)return null;const e=pick(candidates),{c,p,h,role}=e,taskId=h.bloc==='army'?'escort':'accounts',task=OFFICIAL_TASKS[taskId];
+  return {title:'外戚请托',por:c,valid:()=>inPalace(c)&&officialActionReady(e,'commission'),text:`${cName(c)}谈起${officialKinLabel(h,role)}${p.name}：他如今任${p.office||p.post}，不知可否按本领再领一桩差事？`,choices:[
+   {t:`按本领委派${task.title} · 精力−1 · 国库−${task.cost}`,cond:()=>E().energy>0&&E().treasury>=task.cost,why:'精力或国库不足',f:()=>assignOfficialTask(e,taskId)},
+   {t:'朝廷用人自有法度，暂不另派差事',f:()=>{story(c,`为${officialKinLabel(h,role)}${p.name}请求差事，陛下暂未允准，没有改变他原有的任职。`);return fx(cchg(c,{mood:-3}),chg({people:1}));}}]};
+ },
  function crave(){const c=harem().find(c=>c.preg>=2&&!concealedPregnancy(c));if(!c)return null;return {title:'害喜',por:c,text:`${cName(c)}害喜得厉害，什么都吃不下，只念叨着家乡的青梅。`,choices:[
    {t:'命人八百里快马送青梅',f:()=>{story(c,'孕中想吃家乡的青梅，陛下命人快马送来。');return fx(chg({treasury:-10,people:-1}),cchg(c,{mood:18,aff:10}))}},
    {t:'让御膳房想想办法',f:()=>fx(cchg(c,{mood:6}))}]}},

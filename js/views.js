@@ -286,7 +286,11 @@ function detailFold(title,content){
   return content?`<details class="detail-fold"><summary>${title}</summary><div class="detail-content">${content}</div></details>`:'';
 }
 function detailStory(person){
-  const entries=person.story.slice().reverse().map(s=>`<li><time>${esc(s.d)}</time>${esc(s.t)}</li>`);
+  const entries=person.story.slice().reverse().map(s=>{
+    const e=s.event;
+    const context=e&&!e.embedded?detailFold('回看事由与处理',`<p>${esc(e.title)} · ${esc(e.participants.map(p=>p.name).join('、'))}</p><p>${esc(e.situation)}</p><p>陛下回应：${esc(e.choice)}</p>${e.outcome?`<p>${esc(e.outcome)}</p>`:''}`):'';
+    return `<li><time>${esc(s.d)}</time>${esc(s.t)}${context}</li>`;
+  });
   if(!entries.length)return '<p class="hint">尚无记载。</p>';
   const list=items=>`<ul class="story">${items.join('')}</ul>`;
   return list(entries.slice(0,6))+(entries.length>6?detailFold(`翻阅更早的纪事（${entries.length-6}条）`,list(entries.slice(6))):'');

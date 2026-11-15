@@ -1082,9 +1082,9 @@ function factionEvent(){
       {t:'宽宥，许他戴罪立功',f:()=>{policyNudge('army',4);officialRecord(c,role,`在${place}兵败，获准戴罪立功。`);return fx(cchg(c,{mood:6,aff:5}),chg({prestige:-1}))}}]}));}
   const dw=S.flags.dowager;
   if(dw?.alive){const pref=harem().filter(c=>c.rank<8&&(stanceOf(c)==='dowager'||c.virtue>=70)).sort((a,b)=>b.virtue-a.virtue)[0];
-    if(pref)pool.push({title:'慈宁宫',por:pref,text:`${dw.name}召陛下用膳，席间夸${cName(pref)}温良贤淑，又叹皇家子嗣单薄，“哀家看着她就喜欢”。话没说透，意思谁都明白。`,choices:[
-      {t:'遵太后之意，多去她宫里',f:()=>{policyNudge('dowager',5);const em=empress();if(em&&em!==pref)cchg(em,{mood:-3});return fx(cchg(pref,{favor:8,mood:8}),chg({prestige:1}))}},
-      {t:'“儿臣心里有数。”',f:()=>{policyNudge('dowager',-4);return fx(chg({prestige:1}))}}]});}
+    if(pref)pool.push({title:'慈宁宫',por:pref,text:`${dw.name}召陛下用膳，席间夸${cName(pref)}温良贤淑，又说${kidsAlive().length<3?'皇家子嗣还少':'宫中孩子渐多，照应更需用心'}，“哀家看着她就喜欢”。话没说透，意思谁都明白。`,choices:[
+      {t:'遵太后之意，多去她宫里',f:()=>{story(pref,`太后在慈宁宫称许她的德行，陛下答应多来相处。`);policyNudge('dowager',5);const em=empress();if(em&&em!==pref)cchg(em,{mood:-3});return fx(cchg(pref,{favor:8,mood:8}),chg({prestige:1}))}},
+      {t:'“儿臣心里有数。”',f:()=>{story(pref,'太后在慈宁宫称许她，陛下并未因此作出多来相处的许诺。');policyNudge('dowager',-4);return fx(chg({prestige:1}))}}]});}
   const rivalry=successionRivalryEvent();if(rivalry)pool.push(rivalry);
   const ev=pool.length?pick(pool):null;
   return ev?{...ev,present:ev.present||eventPortraits(ev)}:null;

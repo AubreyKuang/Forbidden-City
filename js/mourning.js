@@ -46,10 +46,10 @@ function dowagerFuneralEvent(d=S.flags.dowager){
     const m=d.mourning;if(!m||m.handled)return null;
     const cost=simple?20:80;if(E().treasury<cost&&!simple)return '国库不足，仍请从简安排。';
     m.handled=true;m.rite=simple?'从简尽礼':'厚葬守孝';
-    const women=mourningCast();women.forEach(c=>{cchg(c,{aff:simple?2:5,mood:5});remember(c,'family',`陛下为${d.name}${m.rite}，并让家中姐妹相伴守灵。`);});
+    const women=mourningCast();women.forEach(c=>{cchg(c,{aff:simple?2:5,mood:5});const text=`陛下为${d.name}${m.rite}，亲临送别。她${women.length>1?'与家中姐妹相伴':'留在灵前'}守灵。`;story(c,text);remember(c,'family',text);});
     log(`为${d.name}${m.rite}，母族妃嫔相伴守灵。`,1);
     const paid=Math.min(Math.max(0,E().treasury),cost);
-    const result=`灵前香烟缓缓升起。${women.length?women.map(cName).join('、')+'靠在一起，哭声渐渐低了。':'宫人默默换过灯烛。'}你在素帷前停了很久。${fx(chg({treasury:-paid,people:simple?2:4,prestige:2}))}`;
+    const result=`灵前香烟缓缓升起。${women.length?women.map(cName).join('、')+(women.length>1?'相伴守在灵前，殿中渐渐安静下来。':'静静守在灵前。'):'宫人默默换过灯烛。'}你在素帷前停了很久。${fx(chg({treasury:-paid,people:simple?2:4,prestige:2}))}`;
     save('auto');return result;
   };
   return {title:'太后崩逝 · 宫中举哀',scene:'mourning',sfx:'sad',cast:kin.slice(0,3),

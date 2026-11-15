@@ -133,11 +133,11 @@ const ARCS={
       {t:'令其退赃，不再追究',f:()=>{aEnd(c,'退赃','兄长退还了赃款，此事不了了之。');return fx(chg({treasury:100,people:-2}),cchg(c,{mood:-10,aff:5}))}},
       {t:'压下此案',f:()=>{c.fam.p=Math.min(95,c.fam.p+15);aEnd(c,'外戚','此案被压下，她的娘家越发骄横。');return fx(chg({people:-8,prestige:-3}),cchg(c,{aff:15,mood:10}))}}]}}]},
  kite:{name:'纸鸢',fit:c=>!isSolitary(c)&&['活泼','骄矜','淡泊','善妒'].includes(c.trait),stages:[
-  (c,f)=>c.aff<30?null:{text:`御花园里，${cName(c)}放的纸鸢断了线，晃晃悠悠落在了乾清宫的屋脊上。她站在宫墙下，急得直跺脚。`,choices:[
+  (c,f)=>c.aff<30?null:{text:`御花园里，${cName(c)}放的纸鸢断了线，晃晃悠悠落在了乾清宫的屋脊上。她站在宫墙下，${c.trait==='淡泊'?'静静看了一会儿，说舍不得上面的旧画':'急得直跺脚'}。`,choices:[
     {t:'命小太监爬上去取',f:()=>{aNext(c,1,2,5);return fx(cchg(c,{mood:8}))}},
     {t:'亲自搭梯子去取',f:()=>{aNext(c,1,2,5);story(c,'纸鸢落在乾清宫屋脊上，陛下亲自搭梯子替她取了下来。');return `御前的太监吓得跪了一地。你把纸鸢递给她时，她笑得比春光还亮。${fx(cchg(c,{aff:10,mood:15}),chg({prestige:-1}))}`}},
     {t:'“一只纸鸢而已，再做一只便是。”',f:()=>{aNext(c,1,3,6);return fx(cchg(c,{mood:-5}))}}]},
-  (c,f)=>c.aff<45?null:{text:`上元将近。${cName(c)}扯着你的袖子：“听说宫外的灯会有一条街那么长……臣妾长这么大，还没逛过呢。”`,choices:[
+  (c,f)=>c.aff<45?null:{text:`宫外正在筹备灯会。${cName(c)}${c.trait==='淡泊'?'轻声问起':'扯着你的袖子说'}：“听说灯会有一条街那么长，臣妾也想亲自走一回。”`,choices:[
     {t:'微服带她出宫（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{E().energy--;renderTop();f.out=1;aNext(c,2,3,6);story(c,'上元夜，陛下微服带她出宫看灯。她买了一盏兔子灯，一路舍不得放下。');return `你们在人潮里走散了一回，找到她时，她正举着一盏兔子灯站在桥头四处张望。${fx(cchg(c,{aff:15,mood:20}))}`}},
     {t:'在宫里为她办一场灯会（国库-40万两）',f:()=>{aNext(c,2,3,6);harem().forEach(o=>{if(o!==c&&TRAITS[o.trait].jealous){o.mood=clamp(o.mood-6);relAdd(o,c,-8)}});return fx(chg({treasury:-40}),cchg(c,{aff:8,mood:15}))}},
     {t:'宫规不许',f:()=>{aNext(c,2,4,8);return fx(cchg(c,{mood:-10}))}}]},

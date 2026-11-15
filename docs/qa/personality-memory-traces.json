@@ -1,0 +1,2988 @@
+{
+  "note": "真实脚本局。events 为选择时捕获的增量；people 保留选中人物的完整纪事与最终可召回记忆。",
+  "events": [
+    {
+      "mode": "balanced",
+      "seed": 101,
+      "event": {
+        "turn": 86,
+        "date": "永宁八年五月",
+        "title": "生母",
+        "choice": "准柳答应平日探望",
+        "hasEffect": true,
+        "text": "柳答应趁皇后去请安，偷偷去看了婉姝。孩子怯生生地往乳母身后躲。皇后回来撞见，两人在廊下僵持着。",
+        "actors": [
+          {
+            "id": 17,
+            "name": "柳音",
+            "trait": "持重",
+            "t2": "记仇",
+            "age": 23,
+            "xin": "怨恨",
+            "alive": true,
+            "cold": false,
+            "gone": false,
+            "temple": false,
+            "homeLeave": false
+          },
+          {
+            "id": 36,
+            "name": "婉姝",
+            "age": 0,
+            "xin": null,
+            "alive": true,
+            "cold": false,
+            "gone": false,
+            "temple": false,
+            "homeLeave": false
+          },
+          {
+            "id": 1,
+            "name": "纪念",
+            "trait": "聪慧",
+            "t2": "好读史",
+            "age": 25,
+            "xin": "欢喜",
+            "alive": true,
+            "cold": false,
+            "gone": false,
+            "temple": false,
+            "homeLeave": false
+          }
+        ],
+        "records": [
+          {
+            "id": 1,
+            "name": "纪念",
+            "entries": [
+              {
+                "d": "永宁八年五月",
+                "t": "准生母柳音平日探望婉姝，养育安排仍由纪念承接。"
+              }
+            ]
+          },
+          {
+            "id": 17,
+            "name": "柳音",
+            "entries": [
+              {
+                "d": "永宁八年五月",
+                "t": "准生母柳音平日探望婉姝，养育安排仍由纪念承接。"
+              },
+              {
+                "d": "永宁八年五月",
+                "t": "【心境·感激】准她每月看望孩子。"
+              }
+            ]
+          },
+          {
+            "id": 36,
+            "name": "婉姝",
+            "entries": [
+              {
+                "d": "永宁八年五月",
+                "t": "准生母柳音平日探望婉姝，养育安排仍由纪念承接。"
+              }
+            ]
+          }
+        ],
+        "result": "\n§柳答应：心情+15 情分+6　皇后：心情-5",
+        "unrecorded": [],
+        "personalityChanges": []
+      }
+    },
+    {
+      "mode": "balanced",
+      "seed": 101,
+      "event": {
+        "turn": 98,
+        "date": "永宁九年五月",
+        "title": "猫祸",
+        "choice": "让裴芷贵人赔一件新衣",
+        "hasEffect": true,
+        "text": "裴芷贵人养的猫溜进永和宫，抓破了云官女子一件新做的蜀锦衣裳。云官女子拿着破衣裳来请你评理。",
+        "actors": [
+          {
+            "id": 33,
+            "name": "裴芷蓉",
+            "trait": "活泼",
+            "t2": "爱猫",
+            "age": 20,
+            "xin": "释然",
+            "alive": true,
+            "cold": false,
+            "gone": false,
+            "temple": false,
+            "homeLeave": false
+          },
+          {
+            "id": 11,
+            "name": "云清",
+            "trait": "骄矜",
+            "t2": "信佛",
+            "age": 24,
+            "xin": "思念",
+            "alive": true,
+            "cold": false,
+            "gone": false,
+            "temple": false,
+            "homeLeave": false
+          }
+        ],
+        "records": [
+          {
+            "id": 11,
+            "name": "云清",
+            "entries": [
+              {
+                "d": "永宁九年五月",
+                "t": "【猫祸 · 裴芷蓉、云清】裴芷贵人养的猫溜进永和宫，抓破了云官女子一件新做的蜀锦衣裳。云官女子拿着破衣裳来请你评理。\n陛下回应：让裴芷贵人赔一件新衣。",
+                "event": {
+                  "title": "猫祸",
+                  "participants": [
+                    {
+                      "id": 33,
+                      "name": "裴芷蓉"
+                    },
+                    {
+                      "id": 11,
+                      "name": "云清"
+                    }
+                  ],
+                  "situation": "裴芷贵人养的猫溜进永和宫，抓破了云官女子一件新做的蜀锦衣裳。云官女子拿着破衣裳来请你评理。",
+                  "choice": "让裴芷贵人赔一件新衣",
+                  "outcome": "",
+                  "embedded": true
+                }
+              }
+            ]
+          },
+          {
+            "id": 33,
+            "name": "裴芷蓉",
+            "entries": [
+              {
+                "d": "永宁九年五月",
+                "t": "【猫祸 · 裴芷蓉、云清】裴芷贵人养的猫溜进永和宫，抓破了云官女子一件新做的蜀锦衣裳。云官女子拿着破衣裳来请你评理。\n陛下回应：让裴芷贵人赔一件新衣。",
+                "event": {
+                  "title": "猫祸",
+                  "participants": [
+                    {
+                      "id": 33,
+                      "name": "裴芷蓉"
+                    },
+                    {
+                      "id": 11,
+                      "name": "云清"
+                    }
+                  ],
+                  "situation": "裴芷贵人养的猫溜进永和宫，抓破了云官女子一件新做的蜀锦衣裳。云官女子拿着破衣裳来请你评理。",
+                  "choice": "让裴芷贵人赔一件新衣",
+                  "outcome": "",
+                  "embedded": true
+                }
+              }
+            ]
+          }
+        ],
+        "result": "\n§裴芷贵人：心情-5　云官女子：心情+6",
+        "unrecorded": [],
+        "personalityChanges": []
+      }
+    },
+    {
+      "mode": "balanced",
+      "seed": 404,
+      "event": {
+        "turn": 88,
+        "date": "永宁八年七月",
+        "title": "护短",
+        "choice": "赞皇后仗义",
+        "hasEffect": true,
+        "text": "云官女子在长街上训斥柔嫔，皇后恰好路过，二话不说挡在前头：“要罚她，先罚我。”",
+        "actors": [
+          {
+            "id": 1,
+            "name": "楚萱念",
+            "trait": "城府",
+            "t2": "护短",
+            "age": 25,
+            "xin": "平和",
+            "alive": true,
+            "cold": false,
+            "gone": false,
+            "temple": false,
+            "homeLeave": false
+          },
+          {
+            "id": 4,
+            "name": "云月晚",
+            "trait": "将门",
+            "t2": "擅骑射",
+            "age": 23,
+            "xin": "平和",
+            "alive": true,
+            "cold": false,
+            "gone": false,
+            "temple": false,
+            "homeLeave": false
+          },
+          {
+            "id": 11,
+            "name": "云霜芙",
+            "trait": "骄纵",
+            "t2": "擅骑射",
+            "age": 23,
+            "xin": "平和",
+            "alive": true,
+            "cold": false,
+            "gone": false,
+            "temple": false,
+            "homeLeave": false
+          }
+        ],
+        "records": [
+          {
+            "id": 1,
+            "name": "楚萱念",
+            "entries": [
+              {
+                "d": "永宁八年七月",
+                "t": "【护短 · 楚萱念、云月晚、云霜芙】云官女子在长街上训斥柔嫔，皇后恰好路过，二话不说挡在前头：“要罚她，先罚我。”\n陛下回应：赞皇后仗义。",
+                "event": {
+                  "title": "护短",
+                  "participants": [
+                    {
+                      "id": 1,
+                      "name": "楚萱念"
+                    },
+                    {
+                      "id": 4,
+                      "name": "云月晚"
+                    },
+                    {
+                      "id": 11,
+                      "name": "云霜芙"
+                    }
+                  ],
+                  "situation": "云官女子在长街上训斥柔嫔，皇后恰好路过，二话不说挡在前头：“要罚她，先罚我。”",
+                  "choice": "赞皇后仗义",
+                  "outcome": "",
+                  "embedded": true
+                }
+              }
+            ]
+          },
+          {
+            "id": 4,
+            "name": "云月晚",
+            "entries": [
+              {
+                "d": "永宁八年七月",
+                "t": "【护短 · 楚萱念、云月晚、云霜芙】云官女子在长街上训斥柔嫔，皇后恰好路过，二话不说挡在前头：“要罚她，先罚我。”\n陛下回应：赞皇后仗义。",
+                "event": {
+                  "title": "护短",
+                  "participants": [
+                    {
+                      "id": 1,
+                      "name": "楚萱念"
+                    },
+                    {
+                      "id": 4,
+                      "name": "云月晚"
+                    },
+                    {
+                      "id": 11,
+                      "name": "云霜芙"
+                    }
+                  ],
+                  "situation": "云官女子在长街上训斥柔嫔，皇后恰好路过，二话不说挡在前头：“要罚她，先罚我。”",
+                  "choice": "赞皇后仗义",
+                  "outcome": "",
+                  "embedded": true
+                }
+              }
+            ]
+          },
+          {
+            "id": 11,
+            "name": "云霜芙",
+            "entries": [
+              {
+                "d": "永宁八年七月",
+                "t": "【护短 · 楚萱念、云月晚、云霜芙】云官女子在长街上训斥柔嫔，皇后恰好路过，二话不说挡在前头：“要罚她，先罚我。”\n陛下回应：赞皇后仗义。",
+                "event": {
+                  "title": "护短",
+                  "participants": [
+                    {
+                      "id": 1,
+                      "name": "楚萱念"
+                    },
+                    {
+                      "id": 4,
+                      "name": "云月晚"
+                    },
+                    {
+                      "id": 11,
+                      "name": "云霜芙"
+                    }
+                  ],
+                  "situation": "云官女子在长街上训斥柔嫔，皇后恰好路过，二话不说挡在前头：“要罚她，先罚我。”",
+                  "choice": "赞皇后仗义",
+                  "outcome": "",
+                  "embedded": true
+                }
+              }
+            ]
+          }
+        ],
+        "result": "\n§皇后：情分+4　柔嫔：心情+8　云官女子：心情-10",
+        "unrecorded": [],
+        "personalityChanges": []
+      }
+    },
+    {
+      "mode": "balanced",
+      "seed": 404,
+      "event": {
+        "turn": 84,
+        "date": "永宁八年三月",
+        "title": "太后崩逝 · 宫中举哀",
+        "choice": "厚葬守孝，亲赴慈宁宫送别（国库-80）",
+        "hasEffect": true,
+        "text": "慈宁宫传来长长的哭声。掌事姑姑跪在御前，几次哽咽，才说出：“太后……去了。”\n宫门撤去彩饰，换上素幡。太后生前常坐的榻边，只剩一盏未熄的灯。\n卢歌贵人跪在灵前哭成了泪人，攥着太后生前赐的帕子，宫人劝了几回都不肯起身。\n卢柔贵人跪在灵前哭成了泪人，攥着太后生前赐的帕子，宫人劝了几回都不肯起身。\n卢答应摘了满头珠翠，伏在灵前哭得直不起身。平日的骄矜此刻全没了。\n请陛下安排丧仪。本月宫中暂停宴饮。",
+        "actors": [
+          {
+            "id": 12,
+            "name": "卢歌",
+            "trait": "将门",
+            "t2": "爱哭",
+            "age": 25,
+            "xin": "悲恸",
+            "alive": true,
+            "cold": false,
+            "gone": false,
+            "temple": false,
+            "homeLeave": false
+          },
+          {
+            "id": 19,
+            "name": "卢柔",
+            "trait": "淡泊",
+            "t2": "擅厨艺",
+            "age": 22,
+            "xin": "悲恸",
+            "alive": true,
+            "cold": false,
+            "gone": false,
+            "temple": false,
+            "homeLeave": false
+          },
+          {
+            "id": 28,
+            "name": "卢澜晚",
+            "trait": "骄矜",
+            "t2": "贪睡",
+            "age": 19,
+            "xin": "悲恸",
+            "alive": true,
+            "cold": false,
+            "gone": false,
+            "temple": false,
+            "homeLeave": false
+          }
+        ],
+        "records": [
+          {
+            "id": 12,
+            "name": "卢歌",
+            "entries": [
+              {
+                "d": "永宁八年三月",
+                "t": "陛下为太后厚葬守孝，亲临送别。她与家中姐妹相伴守灵。"
+              }
+            ]
+          },
+          {
+            "id": 19,
+            "name": "卢柔",
+            "entries": [
+              {
+                "d": "永宁八年三月",
+                "t": "陛下为太后厚葬守孝，亲临送别。她与家中姐妹相伴守灵。"
+              }
+            ]
+          },
+          {
+            "id": 28,
+            "name": "卢澜晚",
+            "entries": [
+              {
+                "d": "永宁八年三月",
+                "t": "陛下为太后厚葬守孝，亲临送别。她与家中姐妹相伴守灵。"
+              }
+            ]
+          },
+          {
+            "id": 38,
+            "name": "卢若",
+            "entries": [
+              {
+                "d": "永宁八年三月",
+                "t": "陛下为太后厚葬守孝，亲临送别。她与家中姐妹相伴守灵。"
+              }
+            ]
+          }
+        ],
+        "result": "灵前香烟缓缓升起。卢歌贵人、卢柔贵人、卢答应、卢若贵人相伴守在灵前，殿中渐渐安静下来。你在素帷前停了很久。\n§国库-80万两　民心+4　威望+2",
+        "unrecorded": [],
+        "personalityChanges": []
+      }
+    }
+  ],
+  "people": [
+    {
+      "mode": "balanced",
+      "seed": 101,
+      "person": {
+        "id": 17,
+        "name": "柳音",
+        "trait": "持重",
+        "t2": "记仇",
+        "alive": true,
+        "story": [
+          {
+            "d": "永宁三年二月",
+            "t": "本是长街一带当差的宫女，被陛下看中。"
+          },
+          {
+            "d": "永宁三年二月",
+            "t": "奉召侍寝。窗外细雨潺潺，帐内温香软玉。"
+          },
+          {
+            "d": "永宁三年二月",
+            "t": "侍寝翌日，陛下另赏了一对白玉镯子。"
+          },
+          {
+            "d": "永宁三年二月",
+            "t": "由宫女册封为答应，赐居景仁宫。"
+          },
+          {
+            "d": "永宁三年二月",
+            "t": "【心境·欢喜】一夜承恩，封为答应。"
+          },
+          {
+            "d": "永宁三年三月",
+            "t": "【日常往来】与纪念在御花园坐下来聊了半晌，相处之后比从前更亲近些。"
+          },
+          {
+            "d": "永宁三年八月",
+            "t": "陛下驾临闲话。“臣妾可以把事情讲明白。至于心里怎样想，暂且留给自己罢。”"
+          },
+          {
+            "d": "永宁三年八月",
+            "t": "陛下驾临闲话。“有些规矩已经懂了，有些人却还没有懂。人心比规矩难记。”"
+          },
+          {
+            "d": "永宁三年八月",
+            "t": "陛下驾临闲话。“从前凡事只听着，如今也渐渐有了自己的想法，只怕说得不周全。”"
+          },
+          {
+            "d": "永宁三年九月",
+            "t": "奉召侍寝。更漏声声，她伏在你怀里睡熟了。"
+          },
+          {
+            "d": "永宁三年九月",
+            "t": "侍寝翌日，陛下另赏了一对白玉镯子。"
+          },
+          {
+            "d": "永宁三年十月",
+            "t": "对陛下说出心愿：想学骑马。"
+          },
+          {
+            "d": "永宁三年十月",
+            "t": "陛下驾临闲话。“这话不便在人前说。陛下若肯听，臣妾便把缘由从头讲明。”"
+          },
+          {
+            "d": "永宁三年腊月",
+            "t": "陛下驾临闲话。“从前怕多言，今日怕不说。臣妾有一点不同的看法。”"
+          },
+          {
+            "d": "永宁四年五月",
+            "t": "【个人经历·秋扇重画】她先收好旧扇，不急着证明什么。"
+          },
+          {
+            "d": "永宁四年七月",
+            "t": "陛下驾临闲话。“许多话，早年不敢说，后来不愿说。今日还要再想一想。”"
+          },
+          {
+            "d": "永宁四年七月",
+            "t": "第一次对陛下说起入宫前的往事。"
+          },
+          {
+            "d": "永宁四年七月",
+            "t": "陛下驾临闲话。“相识已久，不等于事事知心。陛下若真想知道，便请慢些问。”"
+          },
+          {
+            "d": "永宁四年八月",
+            "t": "【日常往来】与纪念在御花园坐下来聊了半晌，相处之后比从前更亲近些。"
+          },
+          {
+            "d": "永宁四年九月",
+            "t": "【心境·思念】陛下许久未来。"
+          },
+          {
+            "d": "永宁五年正月",
+            "t": "【日常往来】与纪念在御花园坐下来聊了半晌，相处之后比从前更亲近些。"
+          },
+          {
+            "d": "永宁五年三月",
+            "t": "陛下驾临闲话。“许多话，早年不敢说，后来不愿说。今日还要再想一想。”"
+          },
+          {
+            "d": "永宁五年九月",
+            "t": "【日常往来】与纪念在御花园坐下来聊了半晌，相处之后比从前更亲近些。"
+          },
+          {
+            "d": "永宁五年腊月",
+            "t": "【日常往来】与纪念在御花园坐下来聊了半晌，相处之后比从前更亲近些。"
+          },
+          {
+            "d": "永宁五年腊月",
+            "t": "【心境·忧心】收到母亲重病的家书，正在等候病况。"
+          },
+          {
+            "d": "永宁五年腊月",
+            "t": "【家中病讯】母亲病重，不能远行。她逐项写下要问医者的话，纸写满了，心里仍没有底。担忧从这封信起留在心里。"
+          },
+          {
+            "d": "永宁五年腊月",
+            "t": "母亲重病，陛下派太医赴家诊治，未让病人远行入宫。她感激这份照应，病况未明，仍在担忧。"
+          },
+          {
+            "d": "永宁六年二月",
+            "t": "【心境·释然】母亲病势暂稳，仍在调养。"
+          },
+          {
+            "d": "永宁六年二月",
+            "t": "【病况回音】家中来信报母亲病势暂稳，仍需调养。派去的太医留下后续照护嘱咐；她终于松了一口气，却不把暂稳当成已经痊愈。"
+          },
+          {
+            "d": "永宁六年六月",
+            "t": "【家书报安】家中确认母亲已经能起身料理些轻省事，仍遵医嘱休养。她将报安信与最初的病讯一同收好，心里的重担才渐渐落下。"
+          },
+          {
+            "d": "永宁六年六月",
+            "t": "【日常往来】与纪念在御花园坐下来聊了半晌，相处之后比从前更亲近些。"
+          },
+          {
+            "d": "永宁六年九月",
+            "t": "【日常往来】与许岚清在御花园坐下来聊了半晌，相处之后比从前更亲近些。"
+          },
+          {
+            "d": "永宁七年二月",
+            "t": "【个人经历·怨稿封存】她销去副本，只留下自己的那一份。"
+          },
+          {
+            "d": "永宁七年三月",
+            "t": "【心境·思念】陛下许久未来。"
+          },
+          {
+            "d": "永宁七年六月",
+            "t": "奉召侍寝。更漏声声，她伏在你怀里睡熟了。"
+          },
+          {
+            "d": "永宁七年六月",
+            "t": "侍寝翌日，陛下另赏了一对白玉镯子。"
+          },
+          {
+            "d": "永宁七年七月",
+            "t": "诊出喜脉，陛下加派人手悉心照料。"
+          },
+          {
+            "d": "永宁七年十月",
+            "t": "柳音孕5月，到钦安殿问国师这一胎男女，得「熊罴入梦」。你陪她听完解签，又问她将来最想带孩子做什么。她说了几件极小的事：听雨、认花，还有亲手做一只不会扎手的玩具。"
+          },
+          {
+            "d": "永宁七年腊月",
+            "t": "孕中想吃家乡的青梅，陛下命人快马送来。",
+            "event": {
+              "title": "害喜",
+              "participants": [
+                {
+                  "id": 17,
+                  "name": "柳音"
+                }
+              ],
+              "situation": "柳答应害喜得厉害，什么都吃不下，只念叨着家乡的青梅。",
+              "choice": "命人八百里快马送青梅",
+              "outcome": "",
+              "embedded": false
+            }
+          },
+          {
+            "d": "永宁八年三月",
+            "t": "【心境·欢喜】诞下皇嗣。"
+          },
+          {
+            "d": "永宁八年三月",
+            "t": "诞下次公主 婉姝，陛下分别赐名。"
+          },
+          {
+            "d": "永宁八年三月",
+            "t": "柳音抱着婉姝，又想起孕中「熊罴入梦」的旧笺。当日签意与眼前的孩子不同，她仍将旧笺收好：“原来你不按签上的路来，倒更叫人记得。”"
+          },
+          {
+            "d": "永宁八年三月",
+            "t": "【心境·怨恨】亲生的婉姝被抱给了纪念。"
+          },
+          {
+            "d": "永宁八年三月",
+            "t": "亲生的婉姝被抱去给纪念抚养。"
+          },
+          {
+            "d": "永宁八年三月",
+            "t": "【抱养分居·婉姝】婉姝如今由另一位母亲抚养。她照旧把该办的事办完，独处时才卸下撑着的神色。"
+          },
+          {
+            "d": "永宁八年四月",
+            "t": "【怨毒 · 柳音】有宫人密报：柳答应最近常在小佛堂里待到深夜，佛龛下压着一张写了皇后生辰的黄纸。\n陛下回应：召她来，把话说开。\n她一句也不肯认。",
+            "event": {
+              "title": "怨毒",
+              "participants": [
+                {
+                  "id": 17,
+                  "name": "柳音"
+                }
+              ],
+              "situation": "有宫人密报：柳答应最近常在小佛堂里待到深夜，佛龛下压着一张写了皇后生辰的黄纸。",
+              "choice": "召她来，把话说开",
+              "outcome": "她一句也不肯认。",
+              "embedded": true
+            }
+          },
+          {
+            "d": "永宁八年五月",
+            "t": "做了一件对弈手记，陛下愿等她慢慢完成。",
+            "event": {
+              "title": "相伴有凭",
+              "participants": [
+                {
+                  "id": 17,
+                  "name": "柳音"
+                }
+              ],
+              "situation": "你来到景仁宫，她把你们下过的一局棋记在小册上，在一着旁边留了空白。",
+              "choice": "等她愿意时再看",
+              "outcome": "她没有被催促，反倒愿意多说几句自己的打算。",
+              "embedded": false
+            }
+          },
+          {
+            "d": "永宁八年五月",
+            "t": "准生母柳音平日探望婉姝，养育安排仍由纪念承接。"
+          },
+          {
+            "d": "永宁八年五月",
+            "t": "【心境·感激】准她每月看望孩子。"
+          },
+          {
+            "d": "永宁八年八月",
+            "t": "【日常往来】与纪念在御花园坐下来聊了半晌，相处之后比从前更亲近些。"
+          },
+          {
+            "d": "永宁八年九月",
+            "t": "陛下领了她的照应，也记着让她休息。",
+            "event": {
+              "title": "相伴有凭",
+              "participants": [
+                {
+                  "id": 17,
+                  "name": "柳音"
+                }
+              ],
+              "situation": "近来你操劳，御医嘱咐静养。她把要紧与可缓的事务分开，替你空出一段真正能休息的时辰。\n案边放着先前的对弈手记。",
+              "choice": "谢过她，也让她好好休息",
+              "outcome": "",
+              "embedded": false
+            }
+          },
+          {
+            "d": "永宁八年冬月",
+            "t": "【日常往来】与纪念在御花园坐下来聊了半晌，相处之后比从前更亲近些。"
+          },
+          {
+            "d": "永宁八年冬月",
+            "t": "奉召侍寝。窗外细雨潺潺，帐内温香软玉。"
+          },
+          {
+            "d": "永宁八年冬月",
+            "t": "侍寝翌日，陛下另赏了一对白玉镯子。"
+          },
+          {
+            "d": "永宁八年腊月",
+            "t": "诊出喜脉，陛下加派人手悉心照料。"
+          },
+          {
+            "d": "永宁九年正月",
+            "t": "【心境·欢喜】「相伴有凭」同心。"
+          },
+          {
+            "d": "永宁九年正月",
+            "t": "【相伴有凭·同心】以对弈手记记下相伴的约定。不是一次冒险，而是愿意在平常日子里彼此照应。",
+            "event": {
+              "title": "相伴有凭",
+              "participants": [
+                {
+                  "id": 17,
+                  "name": "柳音"
+                }
+              ],
+              "situation": "收拾旧物时，柳答应又翻出对弈手记。她记得当时你没有催她。\n她问：往后的日子里，是否还能留下一点只属于彼此的工夫？",
+              "choice": "约定常来，也听她自己的打算",
+              "outcome": "她把对弈手记重新放到常用的匣子里。",
+              "embedded": false
+            }
+          },
+          {
+            "d": "永宁九年三月",
+            "t": "【个人经历·旧账有情】她保留账簿，提醒自己不忘来处。"
+          },
+          {
+            "d": "永宁九年五月",
+            "t": "陛下驾临闲话。“臣妾知道婉姝还好好活着，可不能日日相见，终究难熬。照旧把该办的事办完，独处时才卸下撑着的神色。”"
+          },
+          {
+            "d": "永宁九年八月",
+            "t": "【心境·欢喜】诞下皇嗣。"
+          },
+          {
+            "d": "永宁九年八月",
+            "t": "诞下四公主 令姝，陛下分别赐名。"
+          },
+          {
+            "d": "永宁九年八月",
+            "t": "陛下驳回灾异之说，令姝仍按原安排照料。"
+          },
+          {
+            "d": "永宁九年八月",
+            "t": "【心境·怨恨】亲生的令姝被抱给了纪念。"
+          },
+          {
+            "d": "永宁九年八月",
+            "t": "亲生的令姝被抱去给纪念抚养。"
+          },
+          {
+            "d": "永宁九年八月",
+            "t": "【抱养分居·令姝】令姝如今由另一位母亲抚养。她照旧把该办的事办完，独处时才卸下撑着的神色。"
+          },
+          {
+            "d": "永宁九年冬月",
+            "t": "【日常往来】与谢琬芷在御花园坐下来聊了半晌，相处之后比从前更亲近些。"
+          },
+          {
+            "d": "永宁十年五月",
+            "t": "奉召侍寝。窗外细雨潺潺，帐内温香软玉。"
+          },
+          {
+            "d": "永宁十年五月",
+            "t": "侍寝翌日，陛下另赏了一对白玉镯子。"
+          },
+          {
+            "d": "永宁十年八月",
+            "t": "【怨毒 · 柳音】有宫人密报：柳答应最近常在小佛堂里待到深夜，佛龛下压着一张写了皇后生辰的黄纸。\n陛下回应：召她来，把话说开。\n她一句也不肯认。",
+            "event": {
+              "title": "怨毒",
+              "participants": [
+                {
+                  "id": 17,
+                  "name": "柳音"
+                }
+              ],
+              "situation": "有宫人密报：柳答应最近常在小佛堂里待到深夜，佛龛下压着一张写了皇后生辰的黄纸。",
+              "choice": "召她来，把话说开",
+              "outcome": "她一句也不肯认。",
+              "embedded": true
+            }
+          }
+        ],
+        "memories": [
+          {
+            "sources": [
+              "event-404",
+              "event-420",
+              "event-442",
+              "event-467",
+              "event-570"
+            ],
+            "sequence": 570,
+            "time": 116,
+            "type": "family-time",
+            "subject": "36",
+            "interpretation": "婉姝在身边。哼着旧曲哄孩子入睡，孩子一直攥着她的衣袖。 面对婉姝，她先理清照护轮值，再亲手掖好被角。",
+            "emotion": 0.8,
+            "confidence": 1,
+            "importance": 72,
+            "channel": "participant",
+            "firstTime": 84,
+            "firstSequence": 404,
+            "occurrences": 5
+          },
+          {
+            "sources": [
+              "event-81",
+              "event-134",
+              "event-356",
+              "event-448",
+              "event-542"
+            ],
+            "sequence": 542,
+            "time": 110,
+            "type": "gift",
+            "subject": "emperor",
+            "interpretation": "侍寝翌日收到一对白玉镯子",
+            "emotion": 0.85,
+            "confidence": 1,
+            "importance": 75,
+            "channel": "participant",
+            "firstTime": 23,
+            "firstSequence": 81,
+            "occurrences": 5
+          },
+          {
+            "sources": [
+              "event-514"
+            ],
+            "sequence": 514,
+            "time": 105,
+            "type": "family-time",
+            "subject": "43",
+            "interpretation": "令姝在身边。哼着旧曲哄孩子入睡，孩子一直攥着她的衣袖。 面对令姝，她先理清照护轮值，再亲手掖好被角。",
+            "emotion": 0.8,
+            "confidence": 1,
+            "importance": 72,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-507"
+            ],
+            "sequence": 507,
+            "time": 104,
+            "type": "consort_social",
+            "subject": "40",
+            "interpretation": "与谢琬芷在御花园坐下来聊了半晌。",
+            "emotion": 0.65,
+            "confidence": 1,
+            "importance": 62,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-495"
+            ],
+            "sequence": 495,
+            "time": 101,
+            "type": "maternal-life",
+            "subject": "43",
+            "interpretation": "令姝如今由另一位母亲抚养。她照旧把该办的事办完，独处时才卸下撑着的神色。",
+            "emotion": -0.8,
+            "confidence": 1,
+            "importance": 73,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-405",
+              "event-494"
+            ],
+            "sequence": 494,
+            "time": 101,
+            "type": "child",
+            "subject": "emperor",
+            "interpretation": "生下孩子",
+            "emotion": 0.85,
+            "confidence": 1,
+            "importance": 75,
+            "channel": "participant",
+            "firstTime": 84,
+            "firstSequence": 405,
+            "occurrences": 2
+          },
+          {
+            "sources": [
+              "event-481"
+            ],
+            "sequence": 481,
+            "time": 98,
+            "type": "personal-conversation",
+            "subject": "emperor",
+            "interpretation": "陛下听我说话：臣妾知道婉姝还好好活着，可不能日日相见，终究难熬。照旧把该办的事办完，独处时才卸下撑着的神色。",
+            "emotion": 0.5,
+            "confidence": 1,
+            "importance": 44,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-480"
+            ],
+            "sequence": 480,
+            "time": 98,
+            "type": "shared-moment",
+            "subject": "emperor",
+            "interpretation": "她少说了一句客套，多问了一句你的真心。你认真答了。",
+            "emotion": 0.85,
+            "confidence": 1,
+            "importance": 68,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-468"
+            ],
+            "sequence": 468,
+            "time": 96,
+            "type": "personal-experience",
+            "subject": "emperor",
+            "interpretation": "旧账有情：她保留账簿，提醒自己不忘来处。",
+            "emotion": 0.85,
+            "confidence": 1,
+            "importance": 68,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-459"
+            ],
+            "sequence": 459,
+            "time": 94,
+            "type": "shared-moment",
+            "subject": "emperor",
+            "interpretation": "一同保管对弈手记，约定把彼此的打算认真听完。",
+            "emotion": 0.85,
+            "confidence": 1,
+            "importance": 68,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-84",
+              "event-177",
+              "event-252",
+              "event-288",
+              "event-430",
+              "event-445"
+            ],
+            "sequence": 445,
+            "time": 92,
+            "type": "consort_social",
+            "subject": "1",
+            "interpretation": "与纪念在御花园坐下来聊了半晌。",
+            "emotion": 0.6500000000000001,
+            "confidence": 1,
+            "importance": 62,
+            "channel": "participant",
+            "firstTime": 24,
+            "firstSequence": 84,
+            "occurrences": 8
+          },
+          {
+            "sources": [
+              "event-417"
+            ],
+            "sequence": 417,
+            "time": 86,
+            "type": "care",
+            "subject": "emperor",
+            "interpretation": "准我平日去看婉姝",
+            "emotion": 0.85,
+            "confidence": 1,
+            "importance": 68,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-407"
+            ],
+            "sequence": 407,
+            "time": 84,
+            "type": "maternal-life",
+            "subject": "36",
+            "interpretation": "婉姝如今由另一位母亲抚养。她照旧把该办的事办完，独处时才卸下撑着的神色。",
+            "emotion": -0.8,
+            "confidence": 1,
+            "importance": 73,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-406"
+            ],
+            "sequence": 406,
+            "time": 84,
+            "type": "pregnancy-prayer",
+            "subject": "emperor",
+            "interpretation": "柳音抱着婉姝，又想起孕中「熊罴入梦」的旧笺。当日签意与眼前的孩子不同，她仍将旧笺收好：“原来你不按签上的路来，倒更叫人记得。”",
+            "emotion": 0.5,
+            "confidence": 1,
+            "importance": 49,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-379"
+            ],
+            "sequence": 379,
+            "time": 79,
+            "type": "pregnancy-prayer",
+            "subject": "emperor",
+            "interpretation": "柳音孕5月，到钦安殿问国师这一胎男女，得「熊罴入梦」。你陪她听完解签，又问她将来最想带孩子做什么。她说了几件极小的事：听雨、认花，还有亲手做一只不会扎手的玩具。",
+            "emotion": 0.5,
+            "confidence": 1,
+            "importance": 57,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-328"
+            ],
+            "sequence": 328,
+            "time": 71,
+            "type": "personal-experience",
+            "subject": "emperor",
+            "interpretation": "怨稿封存：她销去副本，只留下自己的那一份。",
+            "emotion": 0.85,
+            "confidence": 1,
+            "importance": 68,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-302"
+            ],
+            "sequence": 302,
+            "time": 66,
+            "type": "consort_social",
+            "subject": "18",
+            "interpretation": "与许岚清在御花园坐下来聊了半晌。",
+            "emotion": 0.65,
+            "confidence": 1,
+            "importance": 62,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-287"
+            ],
+            "sequence": 287,
+            "time": 63,
+            "type": "home-family",
+            "subject": "family",
+            "interpretation": "【家书报安】家中确认母亲已经能起身料理些轻省事，仍遵医嘱休养。她将报安信与最初的病讯一同收好，心里的重担才渐渐落下。",
+            "emotion": 0.55,
+            "confidence": 1,
+            "importance": 55,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-286"
+            ],
+            "sequence": 286,
+            "time": 63,
+            "type": "care",
+            "subject": "emperor",
+            "interpretation": "【家书报安】家中确认母亲已经能起身料理些轻省事，仍遵医嘱休养。她将报安信与最初的病讯一同收好，心里的重担才渐渐落下。",
+            "emotion": 0.85,
+            "confidence": 1,
+            "importance": 68,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-266"
+            ],
+            "sequence": 266,
+            "time": 59,
+            "type": "home-family",
+            "subject": "family",
+            "interpretation": "【病况回音】家中来信报母亲病势暂稳，仍需调养。派去的太医留下后续照护嘱咐；她终于松了一口气，却不把暂稳当成已经痊愈。",
+            "emotion": 0.25,
+            "confidence": 1,
+            "importance": 44,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-265"
+            ],
+            "sequence": 265,
+            "time": 59,
+            "type": "care",
+            "subject": "emperor",
+            "interpretation": "【病况回音】家中来信报母亲病势暂稳，仍需调养。派去的太医留下后续照护嘱咐；她终于松了一口气，却不把暂稳当成已经痊愈。",
+            "emotion": 0.85,
+            "confidence": 1,
+            "importance": 68,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-257"
+            ],
+            "sequence": 257,
+            "time": 57,
+            "type": "home-family",
+            "subject": "family",
+            "interpretation": "母亲重病，陛下派太医赴家诊治，未让病人远行入宫。她感激这份照应，病况未明，仍在担忧。",
+            "emotion": 0.25,
+            "confidence": 1,
+            "importance": 44,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-256"
+            ],
+            "sequence": 256,
+            "time": 57,
+            "type": "care",
+            "subject": "emperor",
+            "interpretation": "母亲重病，陛下派太医赴家诊治，未让病人远行入宫。她感激这份照应，病况未明，仍在担忧。",
+            "emotion": 0.85,
+            "confidence": 1,
+            "importance": 75,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-255"
+            ],
+            "sequence": 255,
+            "time": 57,
+            "type": "home-family",
+            "subject": "family",
+            "interpretation": "【家中病讯】母亲病重，不能远行。她逐项写下要问医者的话，纸写满了，心里仍没有底。担忧从这封信起留在心里。",
+            "emotion": -0.7,
+            "confidence": 1,
+            "importance": 67,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-254"
+            ],
+            "sequence": 254,
+            "time": 57,
+            "type": "hurt",
+            "subject": "emperor",
+            "interpretation": "【家中病讯】母亲病重，不能远行。她逐项写下要问医者的话，纸写满了，心里仍没有底。担忧从这封信起留在心里。",
+            "emotion": -0.9,
+            "confidence": 1,
+            "importance": 77,
+            "channel": "participant",
+            "landmark": true
+          },
+          {
+            "sources": [
+              "event-214"
+            ],
+            "sequence": 214,
+            "time": 48,
+            "type": "personal-conversation",
+            "subject": "emperor",
+            "interpretation": "陛下听我说话：许多话，早年不敢说，后来不愿说。今日还要再想一想。",
+            "emotion": 0.5,
+            "confidence": 1,
+            "importance": 44,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-213"
+            ],
+            "sequence": 213,
+            "time": 48,
+            "type": "shared-moment",
+            "subject": "emperor",
+            "interpretation": "一局棋停在难处，你们各说了一种解法，留待下回来试。",
+            "emotion": 0.85,
+            "confidence": 1,
+            "importance": 68,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-176"
+            ],
+            "sequence": 176,
+            "time": 40,
+            "type": "personal-conversation",
+            "subject": "emperor",
+            "interpretation": "陛下听我说话：相识已久，不等于事事知心。陛下若真想知道，便请慢些问。",
+            "emotion": 0.5,
+            "confidence": 1,
+            "importance": 44,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-175"
+            ],
+            "sequence": 175,
+            "time": 40,
+            "type": "personal-conversation",
+            "subject": "emperor",
+            "interpretation": "陛下听我说话：许多话，早年不敢说，后来不愿说。今日还要再想一想。",
+            "emotion": 0.5,
+            "confidence": 1,
+            "importance": 44,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-174"
+            ],
+            "sequence": 174,
+            "time": 40,
+            "type": "shared-moment",
+            "subject": "emperor",
+            "interpretation": "她把犹豫已久的一个判断说了出来，你先听完了理由。",
+            "emotion": 0.85,
+            "confidence": 1,
+            "importance": 68,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-164"
+            ],
+            "sequence": 164,
+            "time": 38,
+            "type": "personal-experience",
+            "subject": "emperor",
+            "interpretation": "秋扇重画：她先收好旧扇，不急着证明什么。",
+            "emotion": 0.85,
+            "confidence": 1,
+            "importance": 75,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-144"
+            ],
+            "sequence": 144,
+            "time": 33,
+            "type": "personal-conversation",
+            "subject": "emperor",
+            "interpretation": "陛下听我说话：从前怕多言，今日怕不说。臣妾有一点不同的看法。",
+            "emotion": 0.5,
+            "confidence": 1,
+            "importance": 44,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-140"
+            ],
+            "sequence": 140,
+            "time": 31,
+            "type": "personal-conversation",
+            "subject": "emperor",
+            "interpretation": "陛下听我说话：这话不便在人前说。陛下若肯听，臣妾便把缘由从头讲明。",
+            "emotion": 0.5,
+            "confidence": 1,
+            "importance": 44,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-139"
+            ],
+            "sequence": 139,
+            "time": 31,
+            "type": "shared-moment",
+            "subject": "emperor",
+            "interpretation": "你们将一条传闻的来龙去脉理清，约定未查明前不传出去。",
+            "emotion": 0.85,
+            "confidence": 1,
+            "importance": 75,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-125"
+            ],
+            "sequence": 125,
+            "time": 29,
+            "type": "personal-conversation",
+            "subject": "emperor",
+            "interpretation": "陛下听我说话：从前凡事只听着，如今也渐渐有了自己的想法，只怕说得不周全。",
+            "emotion": 0.5,
+            "confidence": 1,
+            "importance": 44,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-124"
+            ],
+            "sequence": 124,
+            "time": 29,
+            "type": "personal-conversation",
+            "subject": "emperor",
+            "interpretation": "陛下听我说话：有些规矩已经懂了，有些人却还没有懂。人心比规矩难记。",
+            "emotion": 0.5,
+            "confidence": 1,
+            "importance": 44,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-123"
+            ],
+            "sequence": 123,
+            "time": 29,
+            "type": "personal-conversation",
+            "subject": "emperor",
+            "interpretation": "陛下听我说话：臣妾可以把事情讲明白。至于心里怎样想，暂且留给自己罢。",
+            "emotion": 0.5,
+            "confidence": 1,
+            "importance": 52,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-80"
+            ],
+            "sequence": 80,
+            "time": 23,
+            "type": "first",
+            "subject": "emperor",
+            "interpretation": "第一次侍寝",
+            "emotion": 0.85,
+            "confidence": 1,
+            "importance": 75,
+            "channel": "participant",
+            "landmark": true
+          }
+        ]
+      }
+    },
+    {
+      "mode": "balanced",
+      "seed": 404,
+      "person": {
+        "id": 1,
+        "name": "楚萱念",
+        "trait": "城府",
+        "t2": "护短",
+        "alive": true,
+        "story": [
+          {
+            "d": "永宁元年三月",
+            "t": "潜邸时奉先帝之命嫁与陛下为嫡妻。新帝登基，册为皇后，入主坤宁宫。"
+          },
+          {
+            "d": "永宁元年三月",
+            "t": "奉召侍寝。她替你揉着太阳穴，说的每一句话都恰到好处。"
+          },
+          {
+            "d": "永宁元年三月",
+            "t": "侍寝翌日，陛下另赏了一对白玉镯子。"
+          },
+          {
+            "d": "永宁元年四月",
+            "t": "诊出喜脉，陛下加派人手悉心照料。"
+          },
+          {
+            "d": "永宁元年四月",
+            "t": "【金屋 · 楚萱念】皇后翻到“金屋藏娇”的旧事，掩卷问你：“若是臣妾问起一个安稳的归处，陛下会怎样答？”\n陛下回应：“愿给你一个安稳的归处。”。",
+            "event": {
+              "title": "金屋",
+              "participants": [
+                {
+                  "id": 1,
+                  "name": "楚萱念"
+                }
+              ],
+              "situation": "皇后翻到“金屋藏娇”的旧事，掩卷问你：“若是臣妾问起一个安稳的归处，陛下会怎样答？”",
+              "choice": "“愿给你一个安稳的归处。”",
+              "outcome": "",
+              "embedded": true
+            }
+          },
+          {
+            "d": "永宁元年四月",
+            "t": "孕中想吃家乡的青梅，陛下命人快马送来。",
+            "event": {
+              "title": "害喜",
+              "participants": [
+                {
+                  "id": 1,
+                  "name": "楚萱念"
+                }
+              ],
+              "situation": "皇后害喜得厉害，什么都吃不下，只念叨着家乡的青梅。",
+              "choice": "命人八百里快马送青梅",
+              "outcome": "",
+              "embedded": false
+            }
+          },
+          {
+            "d": "永宁元年五月",
+            "t": "第一次对陛下说起入宫前的往事。"
+          },
+          {
+            "d": "永宁元年五月",
+            "t": "陛下驾临闲话。“从前怕多言，今日怕不说。臣妾有一点不同的看法。”"
+          },
+          {
+            "d": "永宁元年六月",
+            "t": "楚萱念孕4月，到钦安殿问国师这一胎男女，得「虺蛇游庭」。你陪她听完解签，又问她将来最想带孩子做什么。她说了几件极小的事：听雨、认花，还有亲手做一只不会扎手的玩具。"
+          },
+          {
+            "d": "永宁元年腊月",
+            "t": "【心境·欢喜】诞下皇嗣。"
+          },
+          {
+            "d": "永宁元年腊月",
+            "t": "诞下皇长子 怀钧，陛下分别赐名。"
+          },
+          {
+            "d": "永宁元年腊月",
+            "t": "楚萱念抱着怀钧，又想起孕中「虺蛇游庭」的旧笺。当日签意与眼前的孩子不同，她仍将旧笺收好：“原来你不按签上的路来，倒更叫人记得。”"
+          },
+          {
+            "d": "永宁元年腊月",
+            "t": "与云月晚之间的门第争执：皇后以旧例为由，将云贵人应有的席次挪后，又故意不把礼仪安排说全。陛下查明份例与当事人的做法，要求依身份与实际行事相待，不许以出身、口音夺去应有待遇。云贵人记得这次是非被说清。"
+          },
+          {
+            "d": "永宁二年三月",
+            "t": "【日常往来】与云月晚在御花园坐下来聊了半晌，相处之后比从前更亲近些。"
+          },
+          {
+            "d": "永宁二年三月",
+            "t": "奉召侍寝。红烛帐暖，一夜春宵。"
+          },
+          {
+            "d": "永宁二年三月",
+            "t": "侍寝翌日，陛下另赏了一对白玉镯子。"
+          },
+          {
+            "d": "永宁二年四月",
+            "t": "诊出喜脉，陛下加派人手悉心照料。"
+          },
+          {
+            "d": "永宁二年五月",
+            "t": "【中宫奏事 · 楚萱念、崔婉蘅】皇后奏道：“崔贵人恃宠而骄，屡次请安迟到，臣妾请陛下准许依宫规罚她抄经百遍。”\n陛下回应：后宫之事，皇后做主。",
+            "event": {
+              "title": "中宫奏事",
+              "participants": [
+                {
+                  "id": 1,
+                  "name": "楚萱念"
+                },
+                {
+                  "id": 2,
+                  "name": "崔婉蘅"
+                }
+              ],
+              "situation": "皇后奏道：“崔贵人恃宠而骄，屡次请安迟到，臣妾请陛下准许依宫规罚她抄经百遍。”",
+              "choice": "后宫之事，皇后做主",
+              "outcome": "",
+              "embedded": true
+            }
+          },
+          {
+            "d": "永宁二年七月",
+            "t": "【请安迟了 · 楚歌、楚萱念】楚答应又睡过了头，晨昏定省迟了半个时辰。皇后罚她在坤宁宫外站了一炷香。\n陛下回应：后宫之事，皇后做主。",
+            "event": {
+              "title": "请安迟了",
+              "participants": [
+                {
+                  "id": 13,
+                  "name": "楚歌"
+                },
+                {
+                  "id": 1,
+                  "name": "楚萱念"
+                }
+              ],
+              "situation": "楚答应又睡过了头，晨昏定省迟了半个时辰。皇后罚她在坤宁宫外站了一炷香。",
+              "choice": "后宫之事，皇后做主",
+              "outcome": "",
+              "embedded": true
+            }
+          },
+          {
+            "d": "永宁二年八月",
+            "t": "【投靠 · 许兰棠、楚萱念】有宫人看见，许贵人近来常往坤宁宫跑，给皇后送这送那。看样子是想找个靠山。\n陛下回应：由她去。\n许贵人从此成了皇后身边的人。",
+            "event": {
+              "title": "投靠",
+              "participants": [
+                {
+                  "id": 5,
+                  "name": "许兰棠"
+                },
+                {
+                  "id": 1,
+                  "name": "楚萱念"
+                }
+              ],
+              "situation": "有宫人看见，许贵人近来常往坤宁宫跑，给皇后送这送那。看样子是想找个靠山。",
+              "choice": "由她去",
+              "outcome": "许贵人从此成了皇后身边的人。",
+              "embedded": true
+            }
+          },
+          {
+            "d": "永宁二年九月",
+            "t": "对陛下说出心愿：想要一个属于自己的封号。"
+          },
+          {
+            "d": "永宁二年九月",
+            "t": "陛下驾临闲话。“把照护的人逐一问清，亲手试过被褥才放心。”"
+          },
+          {
+            "d": "永宁二年腊月",
+            "t": "【日常往来】与卢歌在御花园坐下来聊了半晌，相处之后比从前更亲近些。"
+          },
+          {
+            "d": "永宁二年腊月",
+            "t": "【个人经历·盛景预备】她把忧虑写下，不把想象当成预言。"
+          },
+          {
+            "d": "永宁二年腊月",
+            "t": "诞下长公主 温玥，陛下分别赐名。"
+          },
+          {
+            "d": "永宁三年三月",
+            "t": "【日常往来】与卢歌在御花园坐下来聊了半晌，相处之后比从前更亲近些。"
+          },
+          {
+            "d": "永宁三年三月",
+            "t": "奉召侍寝。她温柔小意，滴水不漏，你却总觉得看不透她眼底的心思。"
+          },
+          {
+            "d": "永宁三年三月",
+            "t": "侍寝翌日，陛下另赏了一对白玉镯子。"
+          },
+          {
+            "d": "永宁三年四月",
+            "t": "诊出喜脉，陛下加派人手悉心照料。"
+          },
+          {
+            "d": "永宁三年六月",
+            "t": "与楚歌之间的门第争执：皇后以旧例为由，将楚答应应有的席次挪后，又故意不把礼仪安排说全。陛下查明份例与当事人的做法，要求依身份与实际行事相待，不许以出身、口音夺去应有待遇。楚答应记得这次是非被说清。"
+          },
+          {
+            "d": "永宁三年六月",
+            "t": "其父被误革，原始账目呈上后才复职。她仍记得那道急旨。"
+          },
+          {
+            "d": "永宁三年七月",
+            "t": "孕中想吃家乡的青梅，陛下命人快马送来。",
+            "event": {
+              "title": "害喜",
+              "participants": [
+                {
+                  "id": 1,
+                  "name": "楚萱念"
+                }
+              ],
+              "situation": "皇后害喜得厉害，什么都吃不下，只念叨着家乡的青梅。",
+              "choice": "命人八百里快马送青梅",
+              "outcome": "",
+              "embedded": false
+            }
+          },
+          {
+            "d": "永宁三年冬月",
+            "t": "悄悄去看了云月晚，免得她独自捱着。"
+          },
+          {
+            "d": "永宁三年腊月",
+            "t": "诞下次公主 婉姝，陛下分别赐名。"
+          },
+          {
+            "d": "永宁三年腊月",
+            "t": "奉召侍寝。她替你揉着太阳穴，说的每一句话都恰到好处。"
+          },
+          {
+            "d": "永宁三年腊月",
+            "t": "侍寝翌日，陛下另赏了一对白玉镯子。"
+          },
+          {
+            "d": "永宁四年三月",
+            "t": "【新衣 · 楚萱念】皇后心情极好，派人来请陛下去看她新裁的衣裳，说用的是今年江南新进的料子。\n陛下回应：去看看。",
+            "event": {
+              "title": "新衣",
+              "participants": [
+                {
+                  "id": 1,
+                  "name": "楚萱念"
+                }
+              ],
+              "situation": "皇后心情极好，派人来请陛下去看她新裁的衣裳，说用的是今年江南新进的料子。",
+              "choice": "去看看",
+              "outcome": "",
+              "embedded": true
+            }
+          },
+          {
+            "d": "永宁四年三月",
+            "t": "【请安迟了 · 楚歌、楚萱念】楚答应又睡过了头，晨昏定省迟了半个时辰。皇后罚她在坤宁宫外站了一炷香。\n陛下回应：后宫之事，皇后做主。",
+            "event": {
+              "title": "请安迟了",
+              "participants": [
+                {
+                  "id": 13,
+                  "name": "楚歌"
+                },
+                {
+                  "id": 1,
+                  "name": "楚萱念"
+                }
+              ],
+              "situation": "楚答应又睡过了头，晨昏定省迟了半个时辰。皇后罚她在坤宁宫外站了一炷香。",
+              "choice": "后宫之事，皇后做主",
+              "outcome": "",
+              "embedded": true
+            }
+          },
+          {
+            "d": "永宁四年四月",
+            "t": "【日常往来】与云月晚在御花园坐下来聊了半晌，相处之后比从前更亲近些。"
+          },
+          {
+            "d": "永宁四年四月",
+            "t": "陛下驾临闲话。“这话不便在人前说。陛下若肯听，臣妾便把缘由从头讲明。”"
+          },
+          {
+            "d": "永宁四年六月",
+            "t": "与云月晚之间的门第争执：皇后以旧例为由，将云贵人应有的席次挪后，又故意不把礼仪安排说全。陛下查明份例与当事人的做法，要求依身份与实际行事相待，不许以出身、口音夺去应有待遇。云贵人记得这次是非被说清。"
+          },
+          {
+            "d": "永宁四年八月",
+            "t": "【日常往来】与云月晚在御花园坐下来聊了半晌，相处之后比从前更亲近些。"
+          },
+          {
+            "d": "永宁四年十月",
+            "t": "陛下将皇次子 怀璟交给她抚养。"
+          },
+          {
+            "d": "永宁四年十月",
+            "t": "【心境·欢喜】得以抚养怀璟。"
+          },
+          {
+            "d": "永宁四年十月",
+            "t": "陛下驾临闲话。“那一日的事，臣妾记得。一局棋停在难处，我们各说了一种解法，留待下回来试。”"
+          },
+          {
+            "d": "永宁四年腊月",
+            "t": "【日常往来】与云月晚在御花园坐下来聊了半晌，相处之后比从前更亲近些。"
+          },
+          {
+            "d": "永宁五年正月",
+            "t": "做了一件对弈手记，陛下愿等她慢慢完成。",
+            "event": {
+              "title": "相伴有凭",
+              "participants": [
+                {
+                  "id": 1,
+                  "name": "楚萱念"
+                }
+              ],
+              "situation": "你来到坤宁宫，她把你们下过的一局棋记在小册上，在一着旁边留了空白。",
+              "choice": "等她愿意时再看",
+              "outcome": "她没有被催促，反倒愿意多说几句自己的打算。",
+              "embedded": false
+            }
+          },
+          {
+            "d": "永宁五年正月",
+            "t": "奉召侍寝。她温柔小意，滴水不漏，你却总觉得看不透她眼底的心思。"
+          },
+          {
+            "d": "永宁五年正月",
+            "t": "侍寝翌日，陛下另赏了一对白玉镯子。"
+          },
+          {
+            "d": "永宁五年二月",
+            "t": "【投靠 · 阿依娜、楚萱念】有宫人看见，阿常在近来常往坤宁宫跑，给皇后送这送那。看样子是想找个靠山。\n陛下回应：由她去。\n阿常在从此成了皇后身边的人。",
+            "event": {
+              "title": "投靠",
+              "participants": [
+                {
+                  "id": 21,
+                  "name": "阿依娜"
+                },
+                {
+                  "id": 1,
+                  "name": "楚萱念"
+                }
+              ],
+              "situation": "有宫人看见，阿常在近来常往坤宁宫跑，给皇后送这送那。看样子是想找个靠山。",
+              "choice": "由她去",
+              "outcome": "阿常在从此成了皇后身边的人。",
+              "embedded": true
+            }
+          },
+          {
+            "d": "永宁五年二月",
+            "t": "准生母云霜芙平日探望怀璟，养育安排仍由楚萱念承接。"
+          },
+          {
+            "d": "永宁五年四月",
+            "t": "【中宫奏事 · 楚萱念、许兰棠】皇后奏道：“许贵人恃宠而骄，屡次请安迟到，臣妾请陛下准许依宫规罚她抄经百遍。”\n陛下回应：后宫之事，皇后做主。",
+            "event": {
+              "title": "中宫奏事",
+              "participants": [
+                {
+                  "id": 1,
+                  "name": "楚萱念"
+                },
+                {
+                  "id": 5,
+                  "name": "许兰棠"
+                }
+              ],
+              "situation": "皇后奏道：“许贵人恃宠而骄，屡次请安迟到，臣妾请陛下准许依宫规罚她抄经百遍。”",
+              "choice": "后宫之事，皇后做主",
+              "outcome": "",
+              "embedded": true
+            }
+          },
+          {
+            "d": "永宁五年五月",
+            "t": "陛下领了她的照应，也记着让她休息。",
+            "event": {
+              "title": "相伴有凭",
+              "participants": [
+                {
+                  "id": 1,
+                  "name": "楚萱念"
+                }
+              ],
+              "situation": "近来你操劳，御医嘱咐静养。她把要紧与可缓的事务分开，替你空出一段真正能休息的时辰。\n案边放着先前的对弈手记。",
+              "choice": "谢过她，也让她好好休息",
+              "outcome": "",
+              "embedded": false
+            }
+          },
+          {
+            "d": "永宁五年五月",
+            "t": "陛下将皇三子 怀珩交给她抚养。"
+          },
+          {
+            "d": "永宁五年五月",
+            "t": "【心境·欢喜】得以抚养怀珩。"
+          },
+          {
+            "d": "永宁五年七月",
+            "t": "【日常往来】与许兰棠在御花园坐下来聊了半晌，相处之后比从前更亲近些。"
+          },
+          {
+            "d": "永宁五年九月",
+            "t": "【个人经历·旧账有情】她保留账簿，提醒自己不忘来处。"
+          },
+          {
+            "d": "永宁五年十月",
+            "t": "与阿依娜之间的门第争执：皇后以旧例为由，将阿常在应有的席次挪后，又故意不把礼仪安排说全。陛下查明份例与当事人的做法，要求依身份与实际行事相待，不许以出身、口音夺去应有待遇。阿常在记得这次是非被说清。"
+          },
+          {
+            "d": "永宁五年冬月",
+            "t": "【心境·欢喜】「相伴有凭」同心。"
+          },
+          {
+            "d": "永宁五年冬月",
+            "t": "【相伴有凭·同心】以对弈手记记下相伴的约定。不是一次冒险，而是愿意在平常日子里彼此照应。",
+            "event": {
+              "title": "相伴有凭",
+              "participants": [
+                {
+                  "id": 1,
+                  "name": "楚萱念"
+                }
+              ],
+              "situation": "收拾旧物时，皇后又翻出对弈手记。她记得当时你没有催她。\n她问：往后的日子里，是否还能留下一点只属于彼此的工夫？",
+              "choice": "约定常来，也听她自己的打算",
+              "outcome": "她把对弈手记重新放到常用的匣子里。",
+              "embedded": false
+            }
+          },
+          {
+            "d": "永宁五年腊月",
+            "t": "与陛下在御花园偶遇。你远远听见琴声，循声而去，原来是皇后在水榭抚琴。"
+          },
+          {
+            "d": "永宁六年二月",
+            "t": "【日常往来】与阿依娜在御花园坐下来聊了半晌，相处之后比从前更亲近些。"
+          },
+          {
+            "d": "永宁六年五月",
+            "t": "【日常往来】与阿依娜在御花园坐下来聊了半晌，相处之后比从前更亲近些。"
+          },
+          {
+            "d": "永宁六年七月",
+            "t": "奉召侍寝。她温柔小意，滴水不漏，你却总觉得看不透她眼底的心思。"
+          },
+          {
+            "d": "永宁六年七月",
+            "t": "侍寝翌日，陛下另赏了一对白玉镯子。"
+          },
+          {
+            "d": "永宁六年八月",
+            "t": "诊出喜脉，陛下加派人手悉心照料。"
+          },
+          {
+            "d": "永宁六年冬月",
+            "t": "陛下驾临闲话。“话说得直些，也许不好听。可既然信得过，便不该只挑好听的说。”"
+          },
+          {
+            "d": "永宁七年正月",
+            "t": "温玥的身世开始核查，起居记录与证词待核；尚未定案，也未改变孩子身份。"
+          },
+          {
+            "d": "永宁七年二月",
+            "t": "关于温玥的身世疑云得以澄清。"
+          },
+          {
+            "d": "永宁七年四月",
+            "t": "【心境·欢喜】诞下皇嗣。"
+          },
+          {
+            "d": "永宁七年四月",
+            "t": "诞下皇五子 怀祁，陛下分别赐名。"
+          },
+          {
+            "d": "永宁七年六月",
+            "t": "奉召侍寝。她温柔小意，滴水不漏，你却总觉得看不透她眼底的心思。"
+          },
+          {
+            "d": "永宁七年六月",
+            "t": "侍寝翌日，陛下另赏了一对白玉镯子。"
+          },
+          {
+            "d": "永宁七年七月",
+            "t": "陛下驾临闲话。“花开在明处，根却藏在土里。臣妾看事情，总想多看一层。”"
+          },
+          {
+            "d": "永宁七年九月",
+            "t": "【日常往来】与许兰棠在御花园坐下来聊了半晌，相处之后比从前更亲近些。"
+          },
+          {
+            "d": "永宁七年九月",
+            "t": "与陛下在御花园偶遇。你远远听见琴声，循声而去，原来是皇后在水榭抚琴。"
+          },
+          {
+            "d": "永宁七年冬月",
+            "t": "悄悄去看了卢歌，免得她独自捱着。"
+          },
+          {
+            "d": "永宁七年冬月",
+            "t": "与阿依娜之间的门第争执：皇后以旧例为由，将阿常在应有的席次挪后，又故意不把礼仪安排说全。陛下查明份例与当事人的做法，要求依身份与实际行事相待，不许以出身、口音夺去应有待遇。阿常在记得这次是非被说清。"
+          },
+          {
+            "d": "永宁八年正月",
+            "t": "【请安迟了 · 卢澜晚、楚萱念】卢答应又睡过了头，晨昏定省迟了半个时辰。皇后罚她在坤宁宫外站了一炷香。\n陛下回应：后宫之事，皇后做主。",
+            "event": {
+              "title": "请安迟了",
+              "participants": [
+                {
+                  "id": 28,
+                  "name": "卢澜晚"
+                },
+                {
+                  "id": 1,
+                  "name": "楚萱念"
+                }
+              ],
+              "situation": "卢答应又睡过了头，晨昏定省迟了半个时辰。皇后罚她在坤宁宫外站了一炷香。",
+              "choice": "后宫之事，皇后做主",
+              "outcome": "",
+              "embedded": true
+            }
+          },
+          {
+            "d": "永宁八年二月",
+            "t": "【日常往来】与卢歌在御花园坐下来聊了半晌，相处之后比从前更亲近些。"
+          },
+          {
+            "d": "永宁八年五月",
+            "t": "【投靠 · 崔婉蘅、楚萱念】有宫人看见，崔贵人近来常往坤宁宫跑，给皇后送这送那。看样子是想找个靠山。\n陛下回应：由她去。\n崔贵人从此成了皇后身边的人。",
+            "event": {
+              "title": "投靠",
+              "participants": [
+                {
+                  "id": 2,
+                  "name": "崔婉蘅"
+                },
+                {
+                  "id": 1,
+                  "name": "楚萱念"
+                }
+              ],
+              "situation": "有宫人看见，崔贵人近来常往坤宁宫跑，给皇后送这送那。看样子是想找个靠山。",
+              "choice": "由她去",
+              "outcome": "崔贵人从此成了皇后身边的人。",
+              "embedded": true
+            }
+          },
+          {
+            "d": "永宁八年六月",
+            "t": "【日常往来】与云月晚在御花园坐下来聊了半晌，相处之后比从前更亲近些。"
+          },
+          {
+            "d": "永宁八年七月",
+            "t": "皇长子 怀钧把自己的办法说完，楚萱念答应先看孩子试做，遇到难处再帮忙。"
+          },
+          {
+            "d": "永宁八年七月",
+            "t": "【护短 · 楚萱念、云月晚、云霜芙】云官女子在长街上训斥柔嫔，皇后恰好路过，二话不说挡在前头：“要罚她，先罚我。”\n陛下回应：赞皇后仗义。",
+            "event": {
+              "title": "护短",
+              "participants": [
+                {
+                  "id": 1,
+                  "name": "楚萱念"
+                },
+                {
+                  "id": 4,
+                  "name": "云月晚"
+                },
+                {
+                  "id": 11,
+                  "name": "云霜芙"
+                }
+              ],
+              "situation": "云官女子在长街上训斥柔嫔，皇后恰好路过，二话不说挡在前头：“要罚她，先罚我。”",
+              "choice": "赞皇后仗义",
+              "outcome": "",
+              "embedded": true
+            }
+          },
+          {
+            "d": "永宁八年腊月",
+            "t": "【日常往来】与许兰棠在御花园坐下来聊了半晌，相处之后比从前更亲近些。"
+          },
+          {
+            "d": "永宁九年四月",
+            "t": "【日常往来】与崔婉蘅在御花园坐下来聊了半晌，相处之后比从前更亲近些。"
+          },
+          {
+            "d": "永宁九年四月",
+            "t": "陛下将皇六子 怀珣交给她抚养。"
+          },
+          {
+            "d": "永宁九年四月",
+            "t": "【心境·欢喜】得以抚养怀珣。"
+          },
+          {
+            "d": "永宁九年五月",
+            "t": "【中宫奏事 · 楚萱念、许兰棠】皇后奏道：“许贵人恃宠而骄，屡次请安迟到，臣妾请陛下准许依宫规罚她抄经百遍。”\n陛下回应：后宫之事，皇后做主。",
+            "event": {
+              "title": "中宫奏事",
+              "participants": [
+                {
+                  "id": 1,
+                  "name": "楚萱念"
+                },
+                {
+                  "id": 5,
+                  "name": "许兰棠"
+                }
+              ],
+              "situation": "皇后奏道：“许贵人恃宠而骄，屡次请安迟到，臣妾请陛下准许依宫规罚她抄经百遍。”",
+              "choice": "后宫之事，皇后做主",
+              "outcome": "",
+              "embedded": true
+            }
+          },
+          {
+            "d": "永宁九年七月",
+            "t": "【日常往来】与云月晚在御花园坐下来聊了半晌，相处之后比从前更亲近些。"
+          },
+          {
+            "d": "永宁九年八月",
+            "t": "悄悄去看了卢歌，免得她独自捱着。"
+          },
+          {
+            "d": "永宁九年十月",
+            "t": "与云月晚一同宴请陛下，三人说笑到月上中天。",
+            "event": {
+              "title": "姐妹情深",
+              "participants": [
+                {
+                  "id": 1,
+                  "name": "楚萱念"
+                },
+                {
+                  "id": 4,
+                  "name": "云月晚"
+                }
+              ],
+              "situation": "皇后与柔嫔约在坤宁宫小聚，派人来请陛下。",
+              "choice": "前往",
+              "outcome": "",
+              "embedded": false
+            }
+          },
+          {
+            "d": "永宁九年冬月",
+            "t": "【日常往来】与阿依娜在御花园坐下来聊了半晌，相处之后比从前更亲近些。"
+          },
+          {
+            "d": "永宁九年冬月",
+            "t": "与云霜芙之间的门第争执：皇后以旧例为由，将云官女子应有的席次挪后，又故意不把礼仪安排说全。陛下查明份例与当事人的做法，要求依身份与实际行事相待，不许以出身、口音夺去应有待遇。云官女子记得这次是非被说清。"
+          },
+          {
+            "d": "永宁十年正月",
+            "t": "太子 怀钧讲了做成与做坏的地方。楚萱念听完才提建议，下一回仍给孩子留了选择的余地。"
+          },
+          {
+            "d": "永宁十年五月",
+            "t": "太子 怀钧又来找楚萱念练习投壶。这次先说了想改的地方，母亲没有急着接过手。"
+          },
+          {
+            "d": "永宁十年七月",
+            "t": "【日常往来】与卢歌在御花园坐下来聊了半晌，相处之后比从前更亲近些。"
+          },
+          {
+            "d": "永宁十年冬月",
+            "t": "【日常往来】与卢歌在御花园坐下来聊了半晌，相处之后比从前更亲近些。"
+          },
+          {
+            "d": "永宁十年腊月",
+            "t": "与楚歌之间的门第争执：皇后以旧例为由，将楚答应应有的席次挪后，又故意不把礼仪安排说全。陛下查明份例与当事人的做法，要求依身份与实际行事相待，不许以出身、口音夺去应有待遇。楚答应记得这次是非被说清。"
+          },
+          {
+            "d": "永宁十一年二月",
+            "t": "【护短 · 楚萱念、崔婉蘅、云霜芙】云官女子在长街上训斥崔贵人，皇后恰好路过，二话不说挡在前头：“要罚她，先罚我。”\n陛下回应：赞皇后仗义。",
+            "event": {
+              "title": "护短",
+              "participants": [
+                {
+                  "id": 1,
+                  "name": "楚萱念"
+                },
+                {
+                  "id": 2,
+                  "name": "崔婉蘅"
+                },
+                {
+                  "id": 11,
+                  "name": "云霜芙"
+                }
+              ],
+              "situation": "云官女子在长街上训斥崔贵人，皇后恰好路过，二话不说挡在前头：“要罚她，先罚我。”",
+              "choice": "赞皇后仗义",
+              "outcome": "",
+              "embedded": true
+            }
+          }
+        ],
+        "memories": [
+          {
+            "sources": [
+              "event-370",
+              "event-397",
+              "event-547",
+              "event-566",
+              "event-596",
+              "event-624"
+            ],
+            "sequence": 624,
+            "time": 120,
+            "type": "family-time",
+            "subject": "18",
+            "interpretation": "温玥在身边。孩子主动来找她说话。她放下手中的事，听孩子从头讲完。 面对温玥，她先教孩子看清处境，夜里又怕自己教得太早。",
+            "emotion": 0.7999999999999999,
+            "confidence": 1,
+            "importance": 64,
+            "channel": "participant",
+            "firstTime": 70,
+            "firstSequence": 370,
+            "occurrences": 11
+          },
+          {
+            "sources": [
+              "event-519",
+              "event-543",
+              "event-562",
+              "event-589",
+              "event-619"
+            ],
+            "sequence": 619,
+            "time": 119,
+            "type": "family-time",
+            "subject": "25",
+            "interpretation": "怀珩在身边。孩子主动来找她说话。她放下手中的事，听孩子从头讲完。 面对怀珩，她先教孩子看清处境，夜里又怕自己教得太早。",
+            "emotion": 0.8,
+            "confidence": 1,
+            "importance": 64,
+            "channel": "participant",
+            "firstTime": 99,
+            "firstSequence": 519,
+            "occurrences": 5
+          },
+          {
+            "sources": [
+              "event-300",
+              "event-330",
+              "event-539",
+              "event-559",
+              "event-581",
+              "event-614"
+            ],
+            "sequence": 614,
+            "time": 118,
+            "type": "family-time",
+            "subject": "14",
+            "interpretation": "怀钧在身边。孩子主动来找她说话。她放下手中的事，听孩子从头讲完。 面对怀钧，她先教孩子看清处境，夜里又怕自己教得太早。",
+            "emotion": 0.8,
+            "confidence": 1,
+            "importance": 64,
+            "channel": "participant",
+            "firstTime": 58,
+            "firstSequence": 300,
+            "occurrences": 13
+          },
+          {
+            "sources": [
+              "event-604"
+            ],
+            "sequence": 604,
+            "time": 116,
+            "type": "family-time",
+            "subject": "22",
+            "interpretation": "怀璟在身边。两人绕了池子一圈，孩子终于肯告诉她近来在愁什么。 面对怀璟，她先教孩子看清处境，夜里又怕自己教得太早。",
+            "emotion": 0.8,
+            "confidence": 1,
+            "importance": 64,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-101",
+              "event-119",
+              "event-432",
+              "event-572",
+              "event-603"
+            ],
+            "sequence": 603,
+            "time": 116,
+            "type": "consort_social",
+            "subject": "12",
+            "interpretation": "与卢歌在御花园坐下来聊了半晌。",
+            "emotion": 0.65,
+            "confidence": 1,
+            "importance": 62,
+            "channel": "participant",
+            "firstTime": 21,
+            "firstSequence": 101,
+            "occurrences": 5
+          },
+          {
+            "sources": [
+              "event-567"
+            ],
+            "sequence": 567,
+            "time": 110,
+            "type": "personal-continuity",
+            "subject": "14",
+            "interpretation": "太子 怀钧又来找楚萱念练习投壶。这次先说了想改的地方，母亲没有急着接过手。",
+            "emotion": 0.35,
+            "confidence": 1,
+            "importance": 49,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-552"
+            ],
+            "sequence": 552,
+            "time": 106,
+            "type": "personal-continuity",
+            "subject": "14",
+            "interpretation": "与太子 怀钧一起听孩子说心事之后，又听到了孩子的打算。太子 怀钧讲了做成与做坏的地方。楚萱念听完才提建议，下一回仍给孩子留了选择的余地。",
+            "emotion": 0.35,
+            "confidence": 1,
+            "importance": 49,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-305",
+              "event-324",
+              "event-542"
+            ],
+            "sequence": 542,
+            "time": 104,
+            "type": "consort_social",
+            "subject": "21",
+            "interpretation": "与阿依娜在御花园坐下来聊了半晌。",
+            "emotion": 0.65,
+            "confidence": 1,
+            "importance": 62,
+            "channel": "participant",
+            "firstTime": 59,
+            "firstSequence": 305,
+            "occurrences": 3
+          },
+          {
+            "sources": [
+              "event-530"
+            ],
+            "sequence": 530,
+            "time": 101,
+            "type": "palace_support",
+            "subject": "12",
+            "interpretation": "悄悄去看了卢歌，免得她独自捱着。",
+            "emotion": 0.55,
+            "confidence": 1,
+            "importance": 57,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-60",
+              "event-189",
+              "event-213",
+              "event-236",
+              "event-457",
+              "event-521"
+            ],
+            "sequence": 521,
+            "time": 100,
+            "type": "consort_social",
+            "subject": "4",
+            "interpretation": "与云月晚在御花园坐下来聊了半晌。",
+            "emotion": 0.65,
+            "confidence": 1,
+            "importance": 62,
+            "channel": "participant",
+            "firstTime": 12,
+            "firstSequence": 60,
+            "occurrences": 6
+          },
+          {
+            "sources": [
+              "event-429",
+              "event-458",
+              "event-480",
+              "event-502"
+            ],
+            "sequence": 502,
+            "time": 97,
+            "type": "family-time",
+            "subject": "20",
+            "interpretation": "婉姝在身边。孩子主动来找她说话。她放下手中的事，听孩子从头讲完。 面对婉姝，她先教孩子看清处境，夜里又怕自己教得太早。",
+            "emotion": 0.8,
+            "confidence": 1,
+            "importance": 64,
+            "channel": "participant",
+            "firstTime": 82,
+            "firstSequence": 429,
+            "occurrences": 4
+          },
+          {
+            "sources": [
+              "event-501"
+            ],
+            "sequence": 501,
+            "time": 97,
+            "type": "consort_social",
+            "subject": "2",
+            "interpretation": "与崔婉蘅在御花园坐下来聊了半晌。",
+            "emotion": 0.65,
+            "confidence": 1,
+            "importance": 62,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-391",
+              "event-493"
+            ],
+            "sequence": 493,
+            "time": 96,
+            "type": "family-time",
+            "subject": "32",
+            "interpretation": "怀祁在身边。哼着旧曲哄孩子入睡，孩子一直攥着她的衣袖。 面对怀祁，她把照护的人逐一问清，亲手试过被褥才放心。",
+            "emotion": 0.8,
+            "confidence": 1,
+            "importance": 72,
+            "channel": "participant",
+            "firstTime": 74,
+            "firstSequence": 391,
+            "occurrences": 2
+          },
+          {
+            "sources": [
+              "event-268",
+              "event-411",
+              "event-482"
+            ],
+            "sequence": 482,
+            "time": 93,
+            "type": "consort_social",
+            "subject": "5",
+            "interpretation": "与许兰棠在御花园坐下来聊了半晌。",
+            "emotion": 0.65,
+            "confidence": 1,
+            "importance": 62,
+            "channel": "participant",
+            "firstTime": 52,
+            "firstSequence": 268,
+            "occurrences": 3
+          },
+          {
+            "sources": [
+              "event-478"
+            ],
+            "sequence": 478,
+            "time": 91,
+            "type": "family-time",
+            "subject": "22",
+            "interpretation": "怀璟在身边。两人绕了池子一圈，孩子终于肯告诉她近来在愁什么。 面对怀璟，她先教孩子看清处境，夜里又怕自己教得太早。",
+            "emotion": 0.8,
+            "confidence": 1,
+            "importance": 64,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-463"
+            ],
+            "sequence": 463,
+            "time": 88,
+            "type": "personal-continuity",
+            "subject": "14",
+            "interpretation": "与皇长子 怀钧一起听孩子说心事之后，又听到了孩子的打算。皇长子 怀钧把自己的办法说完，楚萱念答应先看孩子试做，遇到难处再帮忙。",
+            "emotion": 0.35,
+            "confidence": 1,
+            "importance": 56,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-420"
+            ],
+            "sequence": 420,
+            "time": 80,
+            "type": "palace_support",
+            "subject": "12",
+            "interpretation": "悄悄去看了卢歌，免得她独自捱着。",
+            "emotion": 0.55,
+            "confidence": 1,
+            "importance": 64,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-265",
+              "event-318",
+              "event-408"
+            ],
+            "sequence": 408,
+            "time": 77,
+            "type": "family-time",
+            "subject": "25",
+            "interpretation": "怀珩在身边。哼着旧曲哄孩子入睡，孩子一直攥着她的衣袖。 面对怀珩，她把照护的人逐一问清，亲手试过被褥才放心。",
+            "emotion": 0.8000000000000002,
+            "confidence": 1,
+            "importance": 72,
+            "channel": "participant",
+            "firstTime": 51,
+            "firstSequence": 265,
+            "occurrences": 3
+          },
+          {
+            "sources": [
+              "event-406"
+            ],
+            "sequence": 406,
+            "time": 76,
+            "type": "personal-conversation",
+            "subject": "emperor",
+            "interpretation": "陛下听我说话：花开在明处，根却藏在土里。臣妾看事情，总想多看一层。",
+            "emotion": 0.5,
+            "confidence": 1,
+            "importance": 44,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-405"
+            ],
+            "sequence": 405,
+            "time": 76,
+            "type": "shared-moment",
+            "subject": "emperor",
+            "interpretation": "她把犹豫已久的一个判断说了出来，你先听完了理由。",
+            "emotion": 0.85,
+            "confidence": 1,
+            "importance": 68,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-5",
+              "event-62",
+              "event-169",
+              "event-243",
+              "event-340",
+              "event-398"
+            ],
+            "sequence": 398,
+            "time": 75,
+            "type": "gift",
+            "subject": "emperor",
+            "interpretation": "侍寝翌日收到一对白玉镯子",
+            "emotion": 0.8499999999999999,
+            "confidence": 1,
+            "importance": 75,
+            "channel": "participant",
+            "firstTime": 0,
+            "firstSequence": 5,
+            "occurrences": 7
+          },
+          {
+            "sources": [
+              "event-396"
+            ],
+            "sequence": 396,
+            "time": 75,
+            "type": "family-time",
+            "subject": "14",
+            "interpretation": "又和怀钧一起做了「端午结百索」，孩子还记得上回的小细节。",
+            "emotion": 0.8,
+            "confidence": 1,
+            "importance": 64,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-44",
+              "event-104",
+              "event-168",
+              "event-383"
+            ],
+            "sequence": 383,
+            "time": 73,
+            "type": "child",
+            "subject": "emperor",
+            "interpretation": "生下孩子",
+            "emotion": 0.85,
+            "confidence": 1,
+            "importance": 75,
+            "channel": "participant",
+            "firstTime": 9,
+            "firstSequence": 44,
+            "occurrences": 4
+          },
+          {
+            "sources": [
+              "event-374"
+            ],
+            "sequence": 374,
+            "time": 71,
+            "type": "saved",
+            "subject": "emperor",
+            "interpretation": "身世流言经核查澄清，未凭猜测定罪。",
+            "emotion": 0.85,
+            "confidence": 1,
+            "importance": 75,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-231",
+              "event-253",
+              "event-295",
+              "event-373"
+            ],
+            "sequence": 373,
+            "time": 71,
+            "type": "family-time",
+            "subject": "22",
+            "interpretation": "怀璟在身边。哼着旧曲哄孩子入睡，孩子一直攥着她的衣袖。 面对怀璟，她把照护的人逐一问清，亲手试过被褥才放心。",
+            "emotion": 0.8,
+            "confidence": 1,
+            "importance": 72,
+            "channel": "participant",
+            "firstTime": 44,
+            "firstSequence": 231,
+            "occurrences": 4
+          },
+          {
+            "sources": [
+              "event-359"
+            ],
+            "sequence": 359,
+            "time": 68,
+            "type": "personal-conversation",
+            "subject": "emperor",
+            "interpretation": "陛下听我说话：话说得直些，也许不好听。可既然信得过，便不该只挑好听的说。",
+            "emotion": 0.5,
+            "confidence": 1,
+            "importance": 44,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-15",
+              "event-358"
+            ],
+            "sequence": 358,
+            "time": 68,
+            "type": "shared-moment",
+            "subject": "emperor",
+            "interpretation": "你们将一条传闻的来龙去脉理清，约定未查明前不传出去。",
+            "emotion": 0.85,
+            "confidence": 1,
+            "importance": 75,
+            "channel": "participant",
+            "firstTime": 2,
+            "firstSequence": 15,
+            "occurrences": 2
+          },
+          {
+            "sources": [
+              "event-166",
+              "event-186",
+              "event-219",
+              "event-244",
+              "event-277",
+              "event-341"
+            ],
+            "sequence": 341,
+            "time": 65,
+            "type": "family-time",
+            "subject": "20",
+            "interpretation": "婉姝在身边。哼着旧曲哄孩子入睡，孩子一直攥着她的衣袖。 面对婉姝，她把照护的人逐一问清，亲手试过被褥才放心。",
+            "emotion": 0.7999999999999999,
+            "confidence": 1,
+            "importance": 72,
+            "channel": "participant",
+            "firstTime": 33,
+            "firstSequence": 166,
+            "occurrences": 7
+          },
+          {
+            "sources": [
+              "event-335"
+            ],
+            "sequence": 335,
+            "time": 64,
+            "type": "family-time",
+            "subject": "18",
+            "interpretation": "温玥在身边。两人绕了池子一圈，孩子终于肯告诉她近来在愁什么。 面对温玥，她先教孩子看清处境，夜里又怕自己教得太早。",
+            "emotion": 0.8,
+            "confidence": 1,
+            "importance": 64,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-291"
+            ],
+            "sequence": 291,
+            "time": 56,
+            "type": "shared-moment",
+            "subject": "emperor",
+            "interpretation": "一同保管对弈手记，约定把彼此的打算认真听完。",
+            "emotion": 0.85,
+            "confidence": 1,
+            "importance": 68,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-278"
+            ],
+            "sequence": 278,
+            "time": 54,
+            "type": "personal-experience",
+            "subject": "emperor",
+            "interpretation": "旧账有情：她保留账簿，提醒自己不忘来处。",
+            "emotion": 0.85,
+            "confidence": 1,
+            "importance": 68,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-102",
+              "event-120",
+              "event-190",
+              "event-210",
+              "event-237",
+              "event-273"
+            ],
+            "sequence": 273,
+            "time": 53,
+            "type": "family-time",
+            "subject": "18",
+            "interpretation": "温玥在身边。哼着旧曲哄孩子入睡，孩子一直攥着她的衣袖。 面对温玥，她把照护的人逐一问清，亲手试过被褥才放心。",
+            "emotion": 0.7999999999999999,
+            "confidence": 1,
+            "importance": 72,
+            "channel": "participant",
+            "firstTime": 21,
+            "firstSequence": 102,
+            "occurrences": 9
+          },
+          {
+            "sources": [
+              "event-264"
+            ],
+            "sequence": 264,
+            "time": 51,
+            "type": "family-time",
+            "subject": "14",
+            "interpretation": "又和怀钧一起做了「端午结百索」，孩子还记得上回的小细节。",
+            "emotion": 0.8,
+            "confidence": 1,
+            "importance": 64,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-242"
+            ],
+            "sequence": 242,
+            "time": 46,
+            "type": "family-time",
+            "subject": "14",
+            "interpretation": "怀钧在身边。两人绕了池子一圈，孩子终于肯告诉她近来在愁什么。 面对怀钧，她先教孩子看清处境，夜里又怕自己教得太早。",
+            "emotion": 0.8,
+            "confidence": 1,
+            "importance": 64,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-230"
+            ],
+            "sequence": 230,
+            "time": 43,
+            "type": "personal-conversation",
+            "subject": "emperor",
+            "interpretation": "陛下听我说话：那一日的事，臣妾记得。一局棋停在难处，我们各说了一种解法，留待下回来试。",
+            "emotion": 0.5,
+            "confidence": 1,
+            "importance": 44,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-229"
+            ],
+            "sequence": 229,
+            "time": 43,
+            "type": "shared-moment",
+            "subject": "emperor",
+            "interpretation": "她少说了一句客套，多问了一句你的真心。你认真答了。",
+            "emotion": 0.85,
+            "confidence": 1,
+            "importance": 68,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-43",
+              "event-61",
+              "event-152",
+              "event-181",
+              "event-200",
+              "event-214"
+            ],
+            "sequence": 214,
+            "time": 41,
+            "type": "family-time",
+            "subject": "14",
+            "interpretation": "怀钧在身边。哼着旧曲哄孩子入睡，孩子一直攥着她的衣袖。 面对怀钧，她把照护的人逐一问清，亲手试过被褥才放心。",
+            "emotion": 0.7999999999999999,
+            "confidence": 1,
+            "importance": 72,
+            "channel": "participant",
+            "firstTime": 9,
+            "firstSequence": 43,
+            "occurrences": 11
+          },
+          {
+            "sources": [
+              "event-194"
+            ],
+            "sequence": 194,
+            "time": 37,
+            "type": "personal-conversation",
+            "subject": "emperor",
+            "interpretation": "陛下听我说话：这话不便在人前说。陛下若肯听，臣妾便把缘由从头讲明。",
+            "emotion": 0.5,
+            "confidence": 1,
+            "importance": 44,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-193"
+            ],
+            "sequence": 193,
+            "time": 37,
+            "type": "shared-moment",
+            "subject": "emperor",
+            "interpretation": "一局棋停在难处，你们各说了一种解法，留待下回来试。",
+            "emotion": 0.85,
+            "confidence": 1,
+            "importance": 68,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-161"
+            ],
+            "sequence": 161,
+            "time": 32,
+            "type": "palace_support",
+            "subject": "4",
+            "interpretation": "悄悄去看了云月晚，免得她独自捱着。",
+            "emotion": 0.55,
+            "confidence": 1,
+            "importance": 64,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-103"
+            ],
+            "sequence": 103,
+            "time": 21,
+            "type": "personal-experience",
+            "subject": "emperor",
+            "interpretation": "盛景预备：她把忧虑写下，不把想象当成预言。",
+            "emotion": 0.85,
+            "confidence": 1,
+            "importance": 75,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-90"
+            ],
+            "sequence": 90,
+            "time": 18,
+            "type": "personal-conversation",
+            "subject": "emperor",
+            "interpretation": "陛下听我说话：把照护的人逐一问清，亲手试过被褥才放心。",
+            "emotion": 0.5,
+            "confidence": 1,
+            "importance": 44,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-89"
+            ],
+            "sequence": 89,
+            "time": 18,
+            "type": "shared-moment",
+            "subject": "emperor",
+            "interpretation": "她把犹豫已久的一个判断说了出来，你先听完了理由。",
+            "emotion": 0.85,
+            "confidence": 1,
+            "importance": 68,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-45"
+            ],
+            "sequence": 45,
+            "time": 9,
+            "type": "pregnancy-prayer",
+            "subject": "emperor",
+            "interpretation": "楚萱念抱着怀钧，又想起孕中「虺蛇游庭」的旧笺。当日签意与眼前的孩子不同，她仍将旧笺收好：“原来你不按签上的路来，倒更叫人记得。”",
+            "emotion": 0.5,
+            "confidence": 1,
+            "importance": 49,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-20"
+            ],
+            "sequence": 20,
+            "time": 3,
+            "type": "pregnancy-prayer",
+            "subject": "emperor",
+            "interpretation": "楚萱念孕4月，到钦安殿问国师这一胎男女，得「虺蛇游庭」。你陪她听完解签，又问她将来最想带孩子做什么。她说了几件极小的事：听雨、认花，还有亲手做一只不会扎手的玩具。",
+            "emotion": 0.5,
+            "confidence": 1,
+            "importance": 57,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-16"
+            ],
+            "sequence": 16,
+            "time": 2,
+            "type": "personal-conversation",
+            "subject": "emperor",
+            "interpretation": "陛下听我说话：从前怕多言，今日怕不说。臣妾有一点不同的看法。",
+            "emotion": 0.5,
+            "confidence": 1,
+            "importance": 52,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-10"
+            ],
+            "sequence": 10,
+            "time": 1,
+            "type": "care",
+            "subject": "emperor",
+            "interpretation": "今日读到金屋旧事，陛下许她安稳的归处",
+            "emotion": 0.85,
+            "confidence": 1,
+            "importance": 75,
+            "channel": "participant"
+          },
+          {
+            "sources": [
+              "event-4"
+            ],
+            "sequence": 4,
+            "time": 0,
+            "type": "first",
+            "subject": "emperor",
+            "interpretation": "第一次侍寝",
+            "emotion": 0.85,
+            "confidence": 1,
+            "importance": 75,
+            "channel": "participant",
+            "landmark": true
+          }
+        ]
+      }
+    }
+  ],
+  "impeachmentReplay": [
+    {
+      "mode": "explorer",
+      "seed": 101,
+      "event": {
+        "turn": 3,
+        "date": "永宁元年六月",
+        "title": "御史弹劾",
+        "choice": "罚俸一年，以儆效尤（精力 −1）",
+        "hasEffect": true,
+        "text": "御史弹劾纪修远截留赈银八十万两，呈上的抄账记着只入库二十万两。库房摘要记着入库一百万两。\n两份账目不合。若即日下旨，只能先采信御史的抄账。",
+        "actors": [
+          {
+            "id": 1,
+            "name": "纪念",
+            "trait": "聪慧",
+            "t2": "好读史",
+            "age": 18,
+            "xin": "平和",
+            "alive": true,
+            "cold": false,
+            "gone": false,
+            "temple": false,
+            "homeLeave": false
+          }
+        ],
+        "records": [
+          {
+            "id": 1,
+            "name": "纪念",
+            "entries": [
+              {
+                "d": "永宁元年六月",
+                "t": "【御史弹劾 · 纪念】御史弹劾纪修远截留赈银八十万两，呈上的抄账记着只入库二十万两。库房摘要记着入库一百万两。\n两份账目不合。若即日下旨，只能先采信御史的抄账。\n陛下回应：罚俸一年，以儆效尤。",
+                "event": {
+                  "title": "御史弹劾",
+                  "participants": [
+                    {
+                      "id": 1,
+                      "name": "纪念"
+                    }
+                  ],
+                  "situation": "御史弹劾纪修远截留赈银八十万两，呈上的抄账记着只入库二十万两。库房摘要记着入库一百万两。\n两份账目不合。若即日下旨，只能先采信御史的抄账。",
+                  "choice": "罚俸一年，以儆效尤",
+                  "outcome": "",
+                  "embedded": true
+                }
+              }
+            ]
+          }
+        ],
+        "result": "\n§民心+2　皇后：心情-8",
+        "unrecorded": [],
+        "personalityChanges": []
+      }
+    },
+    {
+      "mode": "explorer",
+      "seed": 202,
+      "event": {
+        "turn": 44,
+        "date": "永宁四年冬月",
+        "title": "御史弹劾",
+        "choice": "封存账册，下月复审（精力 −1）",
+        "hasEffect": true,
+        "text": "御史弹劾顾怀瑾截留赈银八十万两，呈上的抄账记着只入库二十万两。库房摘要记着入库二十万两。\n两份账目相符。原始签押尚未调来。",
+        "actors": [
+          {
+            "id": 2,
+            "name": "顾念",
+            "trait": "贪财",
+            "t2": "贪睡",
+            "age": 22,
+            "xin": "平和",
+            "alive": true,
+            "cold": false,
+            "gone": false,
+            "temple": false,
+            "homeLeave": false
+          }
+        ],
+        "records": [
+          {
+            "id": 2,
+            "name": "顾念",
+            "entries": [
+              {
+                "d": "永宁四年冬月",
+                "t": "【御史弹劾 · 顾念】御史弹劾顾怀瑾截留赈银八十万两，呈上的抄账记着只入库二十万两。库房摘要记着入库二十万两。\n两份账目相符。原始签押尚未调来。\n陛下回应：封存账册，下月复审。\n账册已封存。下月可在月度奏折查看查账回奏。",
+                "event": {
+                  "title": "御史弹劾",
+                  "participants": [
+                    {
+                      "id": 2,
+                      "name": "顾念"
+                    }
+                  ],
+                  "situation": "御史弹劾顾怀瑾截留赈银八十万两，呈上的抄账记着只入库二十万两。库房摘要记着入库二十万两。\n两份账目相符。原始签押尚未调来。",
+                  "choice": "封存账册，下月复审",
+                  "outcome": "账册已封存。下月可在月度奏折查看查账回奏。",
+                  "embedded": true
+                }
+              }
+            ]
+          }
+        ],
+        "result": "账册已封存。下月可在月度奏折查看查账回奏。",
+        "unrecorded": [],
+        "personalityChanges": []
+      }
+    }
+  ]
+}

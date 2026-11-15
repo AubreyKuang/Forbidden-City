@@ -50,12 +50,12 @@ const HIST=[
  ()=>{const c=alive().find(c=>c.cold);if(!c)return null;return {title:'长门赋',present:[],valid:()=>c.alive&&!c.gone&&c.cold,ref:'陈皇后千金买《长门赋》（西汉·汉武帝）',por:c,text:`冷宫里的${fullName(c)}拿出最后一点体己，托人求当世第一才子写了一篇赋，辗转送到你案头。\n“夫何一佳人兮，步逍遥以自虞……”`,choices:[
    {t:'读完，去冷宫看她',f:()=>{A.uncold(c.id);story(c,'一篇赋，换回了陛下的一次探望。');return '你去了冷宫。她瘦得几乎认不出来。'}},
    {t:'赋是好赋',f:()=>fx(cchg(c,{mood:-10}))}]}},
- ()=>{const c=harem().filter(c=>c.aff>=40).sort((a,b)=>b.aff-a.aff)[0];if(!c)return null;return {title:'当熊',ref:'冯媛挡熊（西汉·汉元帝）',por:c,text:`南苑观兽，一头黑熊忽然冲出栅栏，直扑御座。左右嫔妃尖叫四散，只有${cName(c)}一步挡在你身前。`,choices:[
+ ()=>{const c=harem().filter(c=>!c.bond&&c.hp>=50&&c.aff>=60).sort((a,b)=>b.aff-a.aff)[0];if(!c)return null;return {title:'当熊',ref:'冯媛挡熊（西汉·汉元帝）',por:c,text:`南苑观兽，一头黑熊忽然冲出栅栏，直扑御座。左右嫔妃尖叫四散，只有${cName(c)}一步挡在你身前。`,choices:[
    {t:'“你不怕么？”',f:()=>{c.bond=true;remember(c,'care','挡熊护驾');story(c,'南苑观兽，黑熊出槛，她挡在陛下身前。她说：“熊得一人便会停下，臣妾怕它伤了陛下。”');log(`南苑熊出槛，${fullName(c)}挺身护驾。`,1);return `侍卫一拥而上，制住了熊。她这才腿一软：“熊抓到一个人就会停下，臣妾怕它伤了陛下。”${fx(cchg(c,{aff:20,favor:15}))}\n§她的恩宠从此不再衰减`}}]}},
- ()=>{const c=harem().find(c=>c.rank===8)||harem().find(c=>c.story.some(s=>s.t.includes('潜邸')));if(!c||c.goldAsked)return null;return {title:'金屋',ref:'汉武帝“金屋藏娇”（西汉）',por:c,text:`${cName(c)}翻出一张发黄的纸，上面是你小时候歪歪扭扭的字：“若得阿娇作妇，当作金屋贮之。”\n“陛下还记得吗？”`,choices:[
-   {t:'“记得。”',f:()=>{c.goldAsked=true;remember(c,'care','金屋之约');return fx(cchg(c,{aff:12,mood:15}))}},
+ ()=>{const c=harem().find(c=>c.rank===8)||harem().find(c=>c.story.some(s=>s.t.includes('潜邸')));if(!c||c.goldAsked)return null;return {title:'金屋',ref:'汉武帝“金屋藏娇”（西汉）',por:c,text:`${cName(c)}翻到“金屋藏娇”的旧事，掩卷问你：“若是臣妾问起一个安稳的归处，陛下会怎样答？”`,choices:[
+   {t:'“愿给你一个安稳的归处。”',f:()=>{c.goldAsked=true;remember(c,'care','今日读到金屋旧事，陛下许她安稳的归处');return fx(cchg(c,{aff:12,mood:15}))}},
    {t:'真给她修一座金屋（国库-200万两）',f:()=>{c.goldAsked=true;log('帝为皇后修金屋。',1);return fx(chg({treasury:-200,people:-4}),cchg(c,{aff:20,mood:30}))}},
-   {t:'“小孩子的话，哪能当真。”',f:()=>{c.goldAsked=true;remember(c,'hurt','金屋之约不作数');return fx(cchg(c,{mood:-15,aff:-6}))}}]}},
+   {t:'“不过是书中旧事，不必当真。”',f:()=>{c.goldAsked=true;remember(c,'hurt','说起安稳归处，陛下只当书中旧事');return fx(cchg(c,{mood:-15,aff:-6}))}}]}},
  ()=>{const em=empress();if(!em)return null;const c=harem().filter(c=>c!==em&&c.favor>em.favor+20).sort((a,b)=>b.favor-a.favor)[0];if(!c)return null;return {title:'却坐',present:[em,c],ref:'袁盎却坐（西汉·汉文帝与慎夫人）',por:c,text:`御花园设宴，内侍照例把${cName(c)}的席位与皇后并排摆着。一位老臣上前，把她的席子往下挪了一格：“尊卑有序。陛下宠她，才更不能害她——陛下没听说过‘人彘’吗？”`,choices:[
    {t:'“爱卿说得对。”',f:()=>{relAdd(c,em,-6);return fx(cchg(em,{aff:8}),cchg(c,{mood:-12}),chg({prestige:3}))}},
    {t:'“朕的家事。”把席子挪回去',f:()=>{relAdd(c,em,-10);return fx(cchg(c,{mood:10}),cchg(em,{mood:-15,aff:-5}),chg({prestige:-3}))}}]}},
@@ -86,14 +86,14 @@ const HIST=[
    ...(m&&m.alive?[{t:`顺藤摸瓜，查到${cName(m)}`,f:()=>{relAdd(m,byId(h.mom),-30);pushNow(punishEv(m,byId(h.mom),'谋害储君'));return '口供一层层往上，查到了一个你不想查到的地方……'}}]:[]),
    {t:'以“疯癫”结案',f:()=>`那汉子被斩了。朝中议论了很久。${fx(chg({prestige:-2}))}`}]}},
  ()=>{const ks=kidsAlive().filter(k=>childInPalace(k)&&k.sex==='m'&&kidAge(k)>=10&&kidAge(k)<=20);if(ks.length<2||S.flags.qibu)return null;S.flags.qibu=1;const [a,b]=ks;
-   return {title:'七步诗',present:[a,b],ref:'曹植七步诗（三国·魏）',por:b,text:`${kidName(a)}与${kidName(b)}在家宴上争执起来。${a.name}冷笑：“你不是自诩才子么？七步之内作一首诗，作不出来，就别在父皇面前显摆。”`,choices:[
+   return {title:'七步诗',cast:[a,b],present:[a,b],ref:'曹植七步诗（三国·魏）',por:b,text:`${kidName(a)}与${kidName(b)}在家宴上争执起来。${a.name}冷笑：“你不是自诩才子么？七步之内作一首诗，作不出来，就别在父皇面前显摆。”`,choices:[
    {t:`让${b.name}作诗`,f:()=>{b.lit=clamp(b.lit+5);a.vir=clamp(a.vir-3);kstory(b,'家宴上七步成诗：“本是同根生，相煎何太急。”');return `${b.name}走了七步，开口道：“煮豆燃豆萁，豆在釜中泣。本是同根生，相煎何太急。”满座无声。${a.name}的脸一阵红一阵白。`}},
    {t:'“兄弟之间，作什么诗。”',f:()=>{a.vir=clamp(a.vir+3);b.vir=clamp(b.vir+3);return '两人低下了头。'}}]}},
  ()=>{const ks=kidsAlive().filter(k=>childInPalace(k)&&kidAge(k)>=4&&kidAge(k)<=8);if(!ks.length||S.flags.lizi)return null;S.flags.lizi=1;const k=pick(ks);
-   return {title:'让梨',present:[k],ref:'孔融让梨（东汉）',por:k,text:`中秋家宴，宫人端上一盘梨。${kidName(k)}挑了一个最小的。你问为什么，孩子说：“我小，应该吃小的。”`,choices:[
+   return {title:'让梨',present:[k],ref:'孔融让梨（东汉）',por:k,text:`家宴上，宫人端上一盘梨。${kidName(k)}挑了一个最小的。你问为什么，孩子说：“我小，应该吃小的。”`,choices:[
    {t:'当众夸奖',f:()=>{k.vir=clamp(k.vir+6);k.love=clamp(k.love+6);kstory(k,`${kidAge(k)}岁时家宴让梨，父皇当众夸奖。`);return '§品德+6　父爱+6'}}]}},
  ()=>{const ks=kidsAlive().filter(k=>childInPalace(k)&&kidAge(k)>=6&&kidAge(k)<=10);if(ks.length<2||S.flags.gang)return null;S.flags.gang=1;const [a,b]=shuffle(ks);
-   return {title:'砸缸',present:[a,b],ref:'司马光砸缸（北宋）',por:a,text:`御花园里，${b.name}爬上太平缸玩耍，一失足掉进了缸里。旁的孩子都吓跑了，${kidName(a)}搬起一块石头，把缸砸破了。`,choices:[
+   return {title:'砸缸',cast:[a,b],present:[a,b],ref:'司马光砸缸（北宋）',por:a,text:`御花园里，${b.name}爬上太平缸玩耍，一失足掉进了缸里。旁的孩子都吓跑了，${kidName(a)}搬起一块石头，把缸砸破了。`,choices:[
    {t:'重赏',f:()=>{a.lit=clamp(a.lit+5);a.vir=clamp(a.vir+3);kstory(a,`${kidAge(a)}岁时砸缸救了${b.name}。`);kstory(b,`${kidAge(b)}岁时掉进太平缸，被${a.name}砸缸救起。`);return '§才学+5　品德+3'}}]}},
 ];
 function histEvent(){if(S.flags.dan&&S.turn-S.flags.dan>=8&&!S.flags.danBad){S.flags.danBad=1;return {title:'丹毒',ref:'历代帝王服丹中毒',sfx:'gong',text:'你近来口渴心燥，夜不能寐，背上生了毒疮。太医战战兢兢地说，是丹药里的铅汞积在了体内。',choices:[{t:'把方士抓来',f:()=>{log('帝服丹中毒，诛方士。',1);return fx(chg({health:-20}))}}]}}

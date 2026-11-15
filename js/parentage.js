@@ -57,7 +57,7 @@ function consortParentagePanel(c){
 function beginParentageInquiry(k){
   if(!parentageReady(k)||k.parentage.status!=='suspected'||!useE())return null;
   k.parentage.status='investigating';k.parentage.due=S.turn+1;
-  kstory(k,'奉旨核查身世，调阅起居记录并分别问询随侍。');save('auto');
+  kstory(k,'奉旨核查身世，调阅起居记录并分别问询随侍。');const mother=byId(k.mom);if(mother?.alive)story(mother,`${k.name}的身世开始核查，起居记录与证词待核；尚未定案，也未改变孩子身份。`);save('auto');
   return k.birthSwap?'接生与产房记录、起居簿、宫门值簿及稳婆证词分别封存。将核实产妇是否实际分娩、原来孩子的生父和去向，以及谁主使、谁知情；次月回奏。':'起居簿、宫门值簿与随侍证词分别封存，次月回奏。调查期间不改孩子身份，也可先安排去护国寺静养。';
 }
 function bloodRitualEvent(k){
@@ -182,7 +182,7 @@ function parentageClueEvent(){
   return {title:'起居簿外的疑问',por:m,cast:[k],cooldown:36,
     valid:()=>!S.over&&inPalace(m)&&(!clue.informant||inPalace(byId(clue.informant)))&&(shown?parentageReady(k):parentageClueCandidates().includes(k)),onQueue:reveal,onShow:reveal,text:clue.text,
     choices:[{t:'调卷问询，不凭传言定罪',f:()=>{pushNow(parentageInquiryEvent(k));return null;}},
-      {t:'暂不追究，维持原来的照护',f:()=>{save('auto');return '未改母子身份，也未作有罪处置。若日后要查，可从孩子详情调阅此事。';}}]};
+      {t:'暂不追究，维持原来的照护',f:()=>{const text=`关于${k.name}的身世传闻，陛下决定暂不追究，未改母子身份与原有照护，也未据传言定罪。`;kstory(k,text);if(m?.alive)story(m,text);save('auto');return '未改母子身份，也未作有罪处置。若日后要查，可从孩子详情调阅此事。';}}]};
 }
 function parentageClearEvent(k){
   const p=k.parentage,m=byId(k.mom);

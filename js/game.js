@@ -187,7 +187,7 @@ function nightWith(c,fromEvent){
   log(`召${cName(c)}侍寝。`);
   setScene('night');
   pushNow({title:'春宵',por:c,sfx:'chime',text:`是夜，敬事房传${cName(c)}侍寝。\n${line}${fx(s)}`,choices:[
-    {t:'翌日赏赐（国库-10万两）',f:()=>{AU.sfx('coin');return `你命人送去一对白玉镯子。${fx(chg({treasury:-10}),cchg(c,{mood:8,aff:2}))}`}},
+    {t:'翌日赏赐（国库-10万两）',f:()=>{AU.sfx('coin');story(c,'侍寝翌日，陛下另赏了一对白玉镯子。');remember(c,'gift','侍寝翌日收到一对白玉镯子');return `你命人送去一对白玉镯子。${fx(chg({treasury:-10}),cchg(c,{mood:8,aff:2}))}`}},
     {t:'就此作罢'}]});
 }
 const A={

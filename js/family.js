@@ -125,10 +125,12 @@ function currentFamilyMoment() {
 
 A.familyVisitRule = function(id, rule) {
   const k = kidById(id);
-  if (S.over || !childInPalace(k) || !k.foster || !inPalace(byId(k.mom)) || !['open','closed'].includes(rule)) return;
+  if (S.over || !childInPalace(k) || !k.foster || !inPalace(byId(k.mom)) || !inPalace(fosterOf(k)) || !['open','closed'].includes(rule)) return;
   if (k.visitRule === rule) return;
   k.visitRule = rule;
   const mother = byId(k.mom);
+  const line=rule==='open'?`准生母${fullName(mother)}平日探望${k.name}，养育安排仍由${fullName(fosterOf(k))}承接。`:`暂缓生母${fullName(mother)}私下探望${k.name}，并未改变生母身份。`;
+  for(const person of [k,mother,fosterOf(k)].filter((p,i,all)=>p&&all.indexOf(p)===i))(person.sex?kstory:story)(person,line);
   remember(mother, rule === 'open' ? 'care' : 'hurt', rule === 'open' ? `准我平日去看${k.name}` : `暂缓我私下探望${k.name}`);
   log(rule === 'open' ? `准${fullName(mother)}平日探望${k.name}。` : `暂缓${fullName(mother)}私下探望${k.name}。`);
   render();

@@ -324,6 +324,12 @@
 
 ### 记忆如何保留
 
+人物页的「人物纪事」按年月保留她经历过的事情。争执、赏罚、小性子、心境、家事与皇嗣互动的记录会写明具体人物、事情起因和你的回应；已有简短纪事的事件，可展开「回看事由与处理」查看当时的情境与结果。多人共同经历的事情，会分别留在相关人物页；打开确认框不等于已经执行决定。
+
+| 随性情回应的日常事件 | 从纪事回看具体人与事 |
+|:---:|:---:|
+| <img src="docs/screenshots/showcase-event-personality.jpg" alt="猫祸中的持重皇后按实际损伤要求赔补，两位当事人同场显示" width="430"> | <img src="docs/screenshots/showcase-event-chronicle.jpg" alt="人物纪事保留年月、沈知微与秦婉柔的姓名、猫祸起因及送猫出宫的选择" width="430"> |
+
 NPC 记忆区分客观事件与人物主观理解。同一场争执，受助者与被责罚者会留下不同感受；记忆包含来源事件、情绪、确信程度与获知方式，影响后续闲谈和人际判断。闲聊提起朋友间的具体往事时引用实际记录；没有共同经历时，只表达眼下的亲疏与看法。
 
 这套记忆由本地 JavaScript 规则生成，**不需要大模型服务或 API 密钥**。每人最多保留 **96 条短期记忆、160 条长期记忆与 24 条旧事摘要**，随存档保存，旧档自动衔接。
@@ -865,7 +871,7 @@ python3 -m http.server 8000
 python3 scripts/build-dev.py
 ```
 
-使用支持内置测试运行器的 Node.js 执行：
+使用 Node.js 22 或更新版本执行：
 
 ```sh
 node --test tests/*.test.cjs
@@ -879,6 +885,8 @@ node tests/palace-flow.cjs
 宫室、换婴、家谱与五兄之妹的回归及浏览器记录见 [宫室与亲族验收](docs/qa/family-households-validation.md)。
 
 人物连续经历的分支、出席与刷新检查见 `tests/palace-continuity.test.cjs`；完整试玩和浏览器证据见 [人物故事验证](docs/qa/character-continuity-validation.md)。
+
+性格与记事审计可运行 `node tests/audit-personality-memory.cjs`：默认六种玩法、四个种子，每局最多 120 个月，记录每次事件、当事人的性情、选择和新增纪事，并导出人物经历。`PALACE_AUDIT_DIR`、`PALACE_MODES`、`PALACE_SEEDS`、`PALACE_MONTHS` 可调整输出与样本。自动标记的漏记候选需要区分实际决定、打开子菜单及背景人物；定向回归与样本复盘见 [性格与人物纪事验收](docs/qa/personality-memory-validation.md)。
 
 前尘梦回的资格、传代、读档与线上交互见 [前尘支线验收](docs/qa/past-lives-validation.md)。
 
@@ -921,6 +929,8 @@ node tests/palace-flow.cjs
 | `assets/images/palace-coronation.webp`、`assets/images/palace-selection.webp` | 登基与选秀场景素材 |
 | `docs/screenshots/` | 实机截图 |
 | `tests/` | 模块回归与完整流程验证 |
+| `js/event-chronicles.js` | 日常事件的当事人、原情境、选择与结果记录，不自动扩散人物私有知识 |
+| `tests/palace-event-chronicles.test.cjs` | 性情与小性子组合、多人记事、真实旧事、存读档及失败回滚 |
 | `tests/palace-residences-swaps.test.cjs` | 宫室容量与迁移、同住换宫、换婴动机、小产隐瞒与读档续接回归 |
 
 ### 游戏模块
