@@ -124,11 +124,11 @@ test('pages render real people without gaps',()=>{
  A.go('government');assert.match(viewGovernment(),/六部/);assert.match(viewGovernment(),/锦衣卫/);`);
 });
 
-const legacy=require('./fixtures/offices-legacy-v7.json');
-for(const fixture of legacy.cases)test('version 7 month-end transcript still replays exactly: '+fixture.name,()=>{
+const legacy=require('./fixtures/offices-legacy-v8.json');
+for(const fixture of legacy.cases)test('version 8 month-end transcript still replays exactly: '+fixture.name,()=>{
  const game=save=>{const b=withClock(boot(311,new Map([['chengongji_v1_auto',JSON.stringify(save)]])));b.ctx.assert=assert;return b;};
  let b=game(fixture.save);b.run("A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(S.scholars,undefined);");
- const relabelled=JSON.parse(JSON.stringify(fixture.save));relabelled.pendingActions.version=8;
+ const relabelled=JSON.parse(JSON.stringify(fixture.save));relabelled.pendingActions.version=9;
  b=game(relabelled);b.run("A.load('auto');assert.equal(PalaceActions.blocked,true);");
 });
 

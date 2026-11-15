@@ -11,9 +11,9 @@ const PRINCESS_MATCHES = {
 };
 
 const archivedPrincesses=()=>S.princessRelatives||[];
-const estatePrincesses=()=>[...kidsAlive().filter(k=>k.estate),...archivedPrincesses()];
-const princessById=id=>kidById(id)||archivedPrincesses().find(k=>k.id===id);
-const canOpenPrincess=k=>k?.alive&&!k.templeStay&&!k.removedFromRoyal&&k.sex==='f'&&kidAge(k)>=15&&!k.jailed;
+const estatePrincesses=()=>[...kidsAlive().filter(k=>k.estate),...archivedPrincesses()].filter(k=>!immortalAway(k));
+const princessById=id=>{const k=kidById(id)||archivedPrincesses().find(k=>k.id===id);return immortalAway(k)?undefined:k;};
+const canOpenPrincess=k=>k?.alive&&!immortalAway(k)&&!k.templeStay&&!k.removedFromRoyal&&k.sex==='f'&&kidAge(k)>=15&&!k.jailed;
 const princessPursuit=k=>k.lit>=Math.max(45,k.mar+7)?'books':k.mar>=45?'archery':'near';
 
 function princessMemory(k,type,text,location='公主府',emotion=.7){
@@ -25,16 +25,16 @@ function princessMemory(k,type,text,location='公主府',emotion=.7){
 
 function princessOpening(k){
   const pursuit=princessPursuit(k);
-  return {title:'公主开府来信',por:k,text:`${kidName(k)}亲手递来一封信。\n「${PRINCESS_PURSUITS[pursuit].wish}」\n她已相中一处府邸，请你准她自理府中事务。`,choices:[
+  return {title:'公主开府来信',por:k,valid:()=>canOpenPrincess(k)&&!k.estate,text:`${kidName(k)}亲手递来一封信。\n「${PRINCESS_PURSUITS[pursuit].wish}」\n她已相中一处府邸，请你准她自理府中事务。`,choices:[
     {t:'准她开府，由她自理',f:()=>{
-      if(k.estate)return null;
+      if(!canOpenPrincess(k)||k.estate)return null;
       k.estate={pursuit,opened:S.turn,stage:'proposal',nextVisit:S.turn+2,route:k.princessMarriage||(k.married?'married':'independent')};
       princessMemory(k,'princess_estate','获准开府，可以自行安排府中事务。');
       log(`${kidName(k)}开府，设于京城。`,1);
       save('auto');
       return '她谢了恩，请你得空去府里看一看。';
     }},
-    {t:'三个月后再议',f:()=>{k.estateDeferred=S.turn+3;save('auto');return '她把府邸的图样留在御案上，等日后再谈。';}}
+    {t:'三个月后再议',f:()=>{if(!canOpenPrincess(k)||k.estate)return null;k.estateDeferred=S.turn+3;save('auto');return '她把府邸的图样留在御案上，等日后再谈。';}}
   ]};
 }
 

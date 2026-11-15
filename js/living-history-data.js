@@ -56,7 +56,7 @@ const LIVING_STORIES=[
     choices:[
       {label:'补齐当值饭食，写明轮班时辰',cost:4,stats:{virtue:3,aff:3},result:'她让人按班次送饭，没有让一排宫人跪在席前谢恩。',later:'下一回晚席结束，值夜与用饭的时辰已错开。她没收到夸张的谢辞，只看见门边那盏灯依旧稳稳亮着。',memory:'照应一个人容易，让每个当值的人都有饭吃才算办妥。'},
       {label:'先温好这一餐，请她听听缺在哪',stats:{aff:3,talent:2},result:'她听宫人说起换班太迟、食盒不够，记下了几件能改的小事。',later:'食盒没有变精美，饭却能趁热吃了。她说自己起初以为只缺一碗饭，原来缺的是有人肯问。',memory:'没有急着替别人决定缺什么，听完才知道该补哪里。'}]},
-  {id:'snow-friend',title:'雪停以前',kind:'consort',place:'wy',source:'snow',months:[11,12,1],fit:c=>historyTrait(c,'淡泊','沉静')&&!c.preg,
+  {id:'snow-friend',title:'雪停以前',illustration:'snow-painting',kind:'consort',place:'wy',source:'snow',months:[11,12,1],fit:c=>historyTrait(c,'淡泊','沉静')&&!c.preg,
     other:{kind:'consort',min:18,fit:o=>!o.preg,with:(o,c)=>relGet(o,c)>=25},
     begin:(c,o)=>`${cName(c)}想趁雪景送一卷画给${cName(o)}，走到廊边又停住：“若她正在安睡，留画便好，不必非见着。”随侍怕这样的拜访显得失礼。`,
     choices:[
@@ -83,7 +83,7 @@ const LIVING_STORIES=[
     choices:[
       {label:'并存异说，请她标明各自出处',stats:{talent:3,aff:3},result:'她把确定的事、说法分歧和自己的推想各列一栏。',later:'新抄本没有一个痛快的定论，却多了可追查的线索。她不再把“看透人心”当成不需要证据的本事。',memory:'我仍会留心人的用意，也要记得自己的猜测不是证据。'},
       {label:'先讨论记史者的处境，暂缓评断',stats:{talent:2,mood:3},result:'你们没有给书中人断是非，先读了记史者的生平。',later:'她把原先写满的一页评语重写了，删去几个斩钉截铁的字。这件事没有让她少想，只让她想得慢些。',memory:'不急着下断语，并不等于没有主见。'}]},
-  {id:'bitter-plum',title:'树上的李子',kind:'child',min:6,max:10,place:'yh',source:'plum',months:[5,6,7],fit:k=>historyTemper(k,'好奇','审慎'),
+  {id:'bitter-plum',title:'树上的李子',illustration:'plum-lattice',kind:'child',min:6,max:10,place:'yh',source:'plum',months:[5,6,7],fit:k=>historyTemper(k,'好奇','审慎'),
     begin:k=>`${k.name}看着无人摘的李子，想起王戎的故事，说它大概很酸。园丁却说这树是新移来的，尚未有人尝过。孩子望着你，想知道该信书还是信自己的眼睛。`,
     choices:[
       {label:'请园丁取熟果，陪孩子核对猜测',stats:{lit:3,love:3},result:'果子入口先酸后甜。孩子把原先写的“必定”划成了“可能”。',later:'再见陌生果树，孩子先问是否熟透、能不能食用，再谈自己的猜测。那本小册开始出现“还不知道”几个字。',memory:'猜对很高兴，发现猜错也能多知道一件事。'},

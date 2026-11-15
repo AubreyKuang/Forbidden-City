@@ -84,7 +84,7 @@ function pastLifeEvent(c){
     cchg(c,{aff:kind==='close'?-2:4,mood:kind==='close'?-2:6});pastLifeRecord(c,line);save('auto');
     return line+`\n她说：“${kind==='close'?'臣妾知道了。以后便说眼前的事。':stage===2?'那就从今日这一盏茶开始吧。':'您肯听，臣妾便不急着把一切想明白。'}”`;
   };
-  return {title:['梦里回廊','前尘有名','此生如何相认'][stage],por:c,present:[c],valid,text:pastLifeText(c),choices:[
+  return {title:['梦里回廊','前尘有名','此生如何相认'][stage],illustration:stage===0?'dream-corridor':undefined,por:c,present:[c],valid,text:pastLifeText(c),choices:[
     {t:stage===2?'愿与她续缘，也珍重今生 · 精力−1':'屏退宫人，听她慢慢讲 · 精力−1',cond:()=>E().energy>0,why:'本月精力不足',f:()=>finish(stage===2?'renew':'listen')},
     ...(stage===2?[{t:'不问前世，只珍惜眼前的人 · 精力−1',cond:()=>E().energy>0,why:'本月精力不足',f:()=>finish('present')}]:[]),
     {t:'请她收起旧梦，此后不再追问 · 精力−1',cond:()=>E().energy>0,why:'本月精力不足',f:()=>finish('close')},
