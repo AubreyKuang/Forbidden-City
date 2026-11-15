@@ -4,6 +4,8 @@ const {boot}=require('./playtest-harness.cjs');
 const {withClock}=require('./test-clock.cjs');
 const manifest=require('../docs/official-portrait-sources.json');
 const legacy=require('./fixtures/official-portraits-legacy-v11.json');
+const legacy13=require('./fixtures/official-portraits-legacy-v13.json');
+const gouyi=require('../docs/gouyi-portrait-source.json');
 function game(seed=831,storage=new Map()){
   const b=withClock(boot(seed,storage));b.ctx.assert=assert;return b;
 }
@@ -62,6 +64,14 @@ test('new commanders use military portraits suited to age and retain the saved r
   assert.equal(b.run('S.jinyiwei.commander.artPortrait'),face);
 });
 
+test('frontier generals outside the harem also share the military pool without immediately repeating',()=>{
+  const b=game();b.run(`A.start();drain();S.consorts=[];S.cands=[];S.flags.frontierHouses=[];
+    var generals=Array.from({length:OFFICIAL_PORTRAITS.army.mature.length},()=>frontierCreateGeneral().p);
+    assert.equal(new Set(generals.map(p=>p.artPortrait)).size,generals.length);
+    for(var p of generals)assert.ok(OFFICIAL_PORTRAITS.army.mature.includes(p.artPortrait));
+  `);
+});
+
 test('new coronations replay with the expanded family portraits',()=>{
   let b=game();b.run('A.start();');
   const faces=b.run('JSON.stringify(S.consorts.map(c=>Object.values(c.house||{}).map(p=>p?.artPortrait)))');
@@ -69,12 +79,29 @@ test('new coronations replay with the expanded family portraits',()=>{
   assert.equal(b.run('JSON.stringify(S.consorts.map(c=>Object.values(c.house||{}).map(p=>p?.artPortrait)))'),faces);
 });
 
-for(const fixture of legacy.cases)test('unmodified version 11 '+fixture.name+' keeps its saved faces and pending decisions',()=>{
+test('Gouyi is permanently ID 422, renders through either portrait field and stays out of every random pool',()=>{
+  assert.equal(gouyi.portraits[0].id,422);assert.equal(gouyi.portraits[0].key,'gouyi');
+  let b=game();b.run(`A.start();drain();
+    assert.equal(STORY_CONSORT_PORTRAITS.gouyi,422);assert.equal(ALL_CONSORT_PORTRAITS.includes(422),false);
+    var c=harem()[0];c.artPortrait=STORY_CONSORT_PORTRAITS.gouyi;assignConsortPortrait(c);
+    assert.equal(portraitCell(c),422);assert.match(porImg(c,96),/data-portrait-cell="422"/);
+    c.rank=8;assert.equal(portraitCell(c),422);assert.ok(fittedPortraitJewelry(422,8));
+    assert.equal(portraitCell({portraitOverride:422}),422);
+    assert.equal(portraitSheet(422).start,422);assert.deepEqual(portraitTile(422,portraitSheet(422)),[0,0]);
+    save('auto');
+  `);
+  b=reload(b);b.run(`var c=harem()[0];assignConsortPortrait(c);assert.equal(portraitCell(c),422);
+    for(var i=0;i<200;i++){var p=makeGirl();assert.notEqual(p.artPortrait,422);}
+  `);
+});
+
+for(const fixture of [...legacy.cases,...legacy13.cases])test('unmodified version '+fixture.save.pendingActions.version+' '+fixture.name+' keeps its saved faces and pending decisions',()=>{
   let b=game(901,new Map([['chengongji_v1_auto',JSON.stringify(fixture.save)]]));
-  b.run("A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,11);");
+  b.run("A.load('auto');assert.equal(PalaceActions.blocked,false);");
   assert.equal(b.run('curEv.title'),fixture.save.pendingActions.pending.title);
+  assert.equal(b.run('PalaceActions.contentVersion'),fixture.save.pendingActions.version);
   if(fixture.name==='commander')assert.equal(b.run('S.jinyiwei.commander.artPortrait'),fixture.save.jinyiwei.commander.artPortrait);
-  if(fixture.name==='examination')assert.deepEqual(JSON.parse(b.run('JSON.stringify(S.scholars.map(p=>p.artPortrait))')),fixture.save.scholars.map(p=>p.artPortrait));
+  if(fixture.name==='examination')assert.deepEqual(JSON.parse(b.run('JSON.stringify(S.scholars.filter(p=>p.examRank).map(p=>p.artPortrait))')),fixture.save.scholars.filter(p=>p.examRank).map(p=>p.artPortrait));
   b.run('if(modalResult)nextEv();else choose(curEv.choices.findIndex(c=>!c.cond||c.cond()));');
-  b=reload(b);b.run('drain();assert.equal(PalaceActions.contentVersion,12);');
+  b=reload(b);b.run('drain();assert.equal(PalaceActions.contentVersion,15);');
 });

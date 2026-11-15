@@ -100,7 +100,7 @@ assert.ok(ambientTurns.size>0);
 // The same court can play differently when a character's situation or education changes.
 const actor=harem()[0]||makeGirl({trait:'温婉'});
 // Start this isolated personality scenario without children whose caregivers were removed.
-S.consorts=[actor];S.children=[];actor.trait='温婉';actor.t2='嗜甜';actor.alive=true;actor.gone=false;actor.cold=false;actor.maid=false;
+S.consorts=[actor];S.children=[];actor.trait='温婉';actor.t2='嗜甜';actor.solitary=null;actor.alive=true;actor.gone=false;actor.cold=false;actor.maid=false;
 delete actor.initiative;delete actor.qcd;delete S.flags.ambientRecent?.['牙疼'];delete S.flags.ambientPeople?.['牙疼'];
 S.flags.initiativeTurns={};E().health=70;E().energy=4;
 const discardedQuirk=quirkEvent();assert.ok(discardedQuirk);assert.equal(actor.qcd,undefined);
@@ -382,16 +382,16 @@ assert.match($('#panel').innerHTML,/detail-vitals/);
   mom.preg=9;mom.lastBirth=-99;mom.trait='温婉';mom.swapRisk=false;
   const kidsBefore=S.children.length,turnBefore=S.turn;
   A.endMonth();
-  assert.equal(curEv.title,'弄璋弄瓦');
+  const bornCount=deliveryKids(mom).length;assert.ok(bornCount>=1&&bornCount<=3);assert.ok(curEv.input,'birth opens the naming scene');
   assert.match($('#mbox').innerHTML,/诞下/);
   assert.equal(mom.preg,0,'pregnancy flag clears at delivery');
   assert.equal(mom.lastBirth,turnBefore+1,'lastBirth recorded for the new month');
-  assert.equal(S.children.length,kidsBefore+1,'child exists from delivery');
+  assert.equal(S.children.length,kidsBefore+bornCount,'every child exists from delivery');
   assert.equal(S.children[kidsBefore].mom,mom.id);
   assert.doesNotMatch(viewCards(),/有孕/,'翻牌子 card no longer shows 有孕 before naming');
   const savedBirth=JSON.parse(localStorage.getItem('chengongji_v1_auto'));
   assert.equal(savedBirth.consorts.find(c=>c.id===mom.id).preg,0,'autosave has flag cleared');
-  assert.equal(savedBirth.children.length,kidsBefore+1,'autosave has the child');
+  assert.equal(savedBirth.children.length,kidsBefore+bornCount,'autosave has every child');
   const suggested=curEv.input.def;
   choose(0);
   if($('#mbox').innerHTML.includes('onclick="nextEv()"'))nextEv();

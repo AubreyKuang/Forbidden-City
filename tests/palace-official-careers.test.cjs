@@ -46,3 +46,24 @@ test('first-child wishes cover either gender, exclude deceased predecessors, and
 test('first-child wishes resume and a later pregnancy cannot reuse an old wish',()=>{let b=world();b.run(`S.children=[];c.preg=4;c.xin={k:'平和',t:S.turn};c.pregnancyCalendar={conceived:S.turn-4,term:10,nights:[],medical:[]};A.firstChildWish(c.id);choose(0);save('auto');`);b=reload(b);b.run(`var c=S.consorts.find(c=>c.given==='知微');assert.ok(c.firstChildWish);assert.equal(c.story.filter(s=>s.t.includes('【孕中盼望】')).length,1);drain();var k=makeKid(c,'m','承安');c.delivery={firstWishKey:'different',settled:true};assert.equal(pregnancyPrayerBirthEcho(c,[k]),'');assert.equal(c.firstChildWish.settled,undefined);c.delivery.firstWishKey=c.firstChildWish.key;pregnancyPrayerBirthEcho(c,[k]);assert.equal(c.firstChildWish.settled,true);assert.equal(c.story.filter(s=>s.t.includes('孕愿回音')).length,1);`);});
 const legacy={cases:[...require('./fixtures/careers-legacy-v10.json').cases,...require('./fixtures/careers-legacy-v11.json').cases]};
 for(const f of legacy.cases)test('v'+f.save.pendingActions.version+' pending scene remains replayable: '+f.name,()=>{const b=boot(711,new Map([['chengongji_v1_auto',JSON.stringify(f.save)]]));b.ctx.assert=assert;b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);`);assert.equal(b.run('curEv.title'),f.save.pendingActions.pending.title);});
+
+for(const f of require('./fixtures/careers-legacy-v14.json').cases)test('real v14 '+f.name+' restores and finishes under v15',()=>{
+ let b=boot(711,new Map([['chengongji_v1_auto',JSON.stringify(f.save)]]));b.ctx.assert=assert;
+ b.run("A.load('auto');assert.equal(PalaceActions.blocked,false);");assert.equal(b.run('curEv.title'),f.save.pendingActions.pending.title);
+ b.run('if(modalResult)nextEv();else choose(curEv.choices.findIndex(c=>!c.cond||c.cond()));');b=reload(b);
+ b.run('drain();assert.equal(PalaceActions.contentVersion,15);');
+});
+
+test('a military household student is not a general; civil appointment determines his actual duties',()=>{const b=world();b.run(`
+ h.bloc='army';h.brother={name:'林少卿',age:20,alive:true,career:'student',education:'书生',post:'书生',ability:80,merit:0,story:[]};houseOf(c);var son=officialEntry(c.id+':brother');UI.sel=son.key;
+ assert.match(viewOfficial(),/外家子弟 · 家族立场：武将/);assert.match(viewOfficial(),/书生 · 尚未授官/);assert.equal(officialMilitary(son.p,h),false);assert.equal(officialActionReady(son,'commission'),false);assert.equal(canAppointRelative(son),false);
+ son.p.education='举人';assert.ok(appointRelative(son));assert.equal(son.p.office,'候补知县');assert.equal(officialMilitary(son.p,h),false);
+ son.p.office=son.p.post='清河知县';son.p.ability=80;son.p.merit=50;assert.equal(h.bloc,'army');assert.equal(careerTarget({p:son.p,e:son},'promote')[1],'翰林院修撰');assert.ok(ministryCandidates('personnel').some(x=>x.p===son.p));assert.ok(!ministryCandidates('war').some(x=>x.p===son.p));
+ assert.doesNotMatch(officialConversation(son,'service'),/边关不只有捷报/);assert.equal(assignOfficialTask(son,'border'),null);assert.ok(assignOfficialTask(son,'accounts'));delete son.p.commission;
+ assert.equal(frontierDispatch(son),null);son.p.office=son.p.post='参将';son.p.lastCommission=-99;assert.equal(officialMilitary(son.p,h),true);assert.equal(assignOfficialTask(son,'accounts'),null);assert.ok(assignOfficialTask(son,'border'));
+`);});
+test('a frontier military promotion also records a modest family rise without duplicating the reward',()=>{const b=world();b.run(`
+ c.fam.t='县令';h.bloc='army';p.office=p.post='参将';var old=p.story.length;var r={id:'rise-border',gen:S.gen,outcome:'victory',commander:frontierRef(e)};
+ assert.ok(frontierReward(r,'promotion'));assert.equal(p.office,'副将');assert.equal(p.post,p.office);assert.equal(c.familyRise.personId,p.id);assert.equal(p.careerHistory.length,1);
+ var saved=JSON.stringify(S);assert.equal(frontierReward(r,'promotion'),null);assert.equal(JSON.stringify(S),saved);
+`);});

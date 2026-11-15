@@ -11,6 +11,7 @@ function initializeOutsideBrothers(){
     p.officialFamilyId ||= 'outside-family:'+p.id;
     const b=makeScholar();b.sur=p.sur;b.name=p.sur+courtGivenName(p.sur,b.seed);b.age=Math.max(18,p.age-ri(3,7));b.registrySource='family';b.siblingsChecked=true;b.officialFamilyId=p.officialFamilyId;b.origin='外朝家族';b.ageTrackedAt=S.turn;
     b.career=chance(.5)?'student':'official';b.education=b.career==='student'?'举人':'进士';b.office=b.career==='student'?'举人':'翰林院编修';b.post=b.office;b.merit=b.career==='student'?0:20;b.appointedTurn=S.turn;
+    if(expandedOfficialPortraitsActive()){delete b.artPortrait;assignCourtOfficialPortrait(b,'civil');}
     S.scholars.push(b);story(p,`【家中手足】弟弟${b.name}，${b.age}岁，${b.career==='student'?'已有举人功名，尚未授官':'现任翰林院编修'}。`);story(b,`【家中手足】兄长${p.name}在朝任职，自己也有学业与仕途的打算。`);
   }
 }

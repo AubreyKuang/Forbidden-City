@@ -1,0 +1,679 @@
+{
+  "url": "http://127.0.0.1:8428/dev.html",
+  "started": "2026-11-15T21:58:05.478Z",
+  "runs": [
+    {
+      "name": "daughter",
+      "viewport": "desktop",
+      "reloads": [
+        "imported",
+        "reward-pending",
+        "request",
+        "daughter-audience",
+        "admitted",
+        "reward-settled"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 740,
+          "content": 740
+        },
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 740,
+          "content": 740
+        },
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 850,
+          "content": 850
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "unwilling",
+      "viewport": "desktop",
+      "reloads": [
+        "imported",
+        "reward-pending",
+        "request",
+        "daughter-audience",
+        "reward-settled"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 740,
+          "content": 740
+        },
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 740,
+          "content": 740
+        },
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 850,
+          "content": 850
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "family-daughter",
+      "viewport": "desktop",
+      "reloads": [
+        "imported",
+        "reward-pending",
+        "request",
+        "daughter-audience",
+        "admitted",
+        "reward-settled"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 740,
+          "content": 740
+        },
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 740,
+          "content": 740
+        },
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 850,
+          "content": 850
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "promotion",
+      "viewport": "desktop",
+      "reloads": [
+        "imported",
+        "reward-pending",
+        "request",
+        "reward-settled"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 740,
+          "content": 740
+        },
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 850,
+          "content": 850
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "silver",
+      "viewport": "desktop",
+      "reloads": [
+        "imported",
+        "reward-pending",
+        "request",
+        "reward-settled"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 740,
+          "content": 740
+        },
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 850,
+          "content": 850
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "defer",
+      "viewport": "desktop",
+      "reloads": [
+        "imported",
+        "reward-pending",
+        "reward-deferred",
+        "reward-settled"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 740,
+          "content": 740
+        },
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 850,
+          "content": 850
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "defeat",
+      "viewport": "desktop",
+      "reloads": [
+        "imported"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 850,
+          "content": 850
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "cleared",
+      "viewport": "desktop",
+      "reloads": [
+        "imported",
+        "cleared-result",
+        "maternal-history"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 740,
+          "content": 740
+        },
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 940,
+          "content": 940
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "arrivals",
+      "viewport": "desktop",
+      "reloads": [
+        "imported",
+        "reselection-pending",
+        "new-selection"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 940,
+          "content": 940
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "expired",
+      "viewport": "desktop",
+      "reloads": [
+        "imported",
+        "reselection-pending",
+        "new-selection"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 940,
+          "content": 940
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "officials",
+      "viewport": "desktop",
+      "reloads": [
+        "imported",
+        "official-table"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 1240,
+          "content": 1240
+        },
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 940,
+          "content": 940
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "dowager-praise",
+      "viewport": "desktop",
+      "reloads": [
+        "imported",
+        "dowager-answer",
+        "same-month-quiet"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 850,
+          "content": 850
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "dowager-chat",
+      "viewport": "desktop",
+      "reloads": [
+        "imported",
+        "dowager-answer",
+        "same-month-quiet"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 850,
+          "content": 850
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "daughter",
+      "viewport": "mobile",
+      "reloads": [
+        "imported",
+        "reward-pending",
+        "request",
+        "daughter-audience",
+        "admitted",
+        "reward-settled"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 366,
+          "content": 366
+        },
+        {
+          "width": 390,
+          "document": 390,
+          "box": 366,
+          "content": 366
+        },
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "unwilling",
+      "viewport": "mobile",
+      "reloads": [
+        "imported",
+        "reward-pending",
+        "request",
+        "daughter-audience",
+        "reward-settled"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 366,
+          "content": 366
+        },
+        {
+          "width": 390,
+          "document": 390,
+          "box": 366,
+          "content": 366
+        },
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "family-daughter",
+      "viewport": "mobile",
+      "reloads": [
+        "imported",
+        "reward-pending",
+        "request",
+        "daughter-audience",
+        "admitted",
+        "reward-settled"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 366,
+          "content": 366
+        },
+        {
+          "width": 390,
+          "document": 390,
+          "box": 366,
+          "content": 366
+        },
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "promotion",
+      "viewport": "mobile",
+      "reloads": [
+        "imported",
+        "reward-pending",
+        "request",
+        "reward-settled"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 366,
+          "content": 366
+        },
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "silver",
+      "viewport": "mobile",
+      "reloads": [
+        "imported",
+        "reward-pending",
+        "request",
+        "reward-settled"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 366,
+          "content": 366
+        },
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "defer",
+      "viewport": "mobile",
+      "reloads": [
+        "imported",
+        "reward-pending",
+        "reward-deferred",
+        "reward-settled"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 366,
+          "content": 366
+        },
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "defeat",
+      "viewport": "mobile",
+      "reloads": [
+        "imported"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "cleared",
+      "viewport": "mobile",
+      "reloads": [
+        "imported",
+        "cleared-result",
+        "maternal-history"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 366,
+          "content": 366
+        },
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "arrivals",
+      "viewport": "mobile",
+      "reloads": [
+        "imported",
+        "reselection-pending",
+        "new-selection"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "expired",
+      "viewport": "mobile",
+      "reloads": [
+        "imported",
+        "reselection-pending",
+        "new-selection"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "officials",
+      "viewport": "mobile",
+      "reloads": [
+        "imported",
+        "official-table"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        },
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "dowager-praise",
+      "viewport": "mobile",
+      "reloads": [
+        "imported",
+        "dowager-answer",
+        "same-month-quiet"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "dowager-chat",
+      "viewport": "mobile",
+      "reloads": [
+        "imported",
+        "dowager-answer",
+        "same-month-quiet"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "officials",
+      "viewport": "tablet",
+      "reloads": [
+        "imported",
+        "official-table"
+      ],
+      "layouts": [
+        {
+          "width": 820,
+          "document": 820,
+          "box": 756,
+          "content": 756
+        },
+        {
+          "width": 820,
+          "document": 820,
+          "box": 756,
+          "content": 756
+        }
+      ],
+      "errors": [],
+      "passed": true
+    }
+  ],
+  "browser": "157.0.8103.78",
+  "finished": "2026-11-15T21:59:37.051Z",
+  "summary": {
+    "cases": 27,
+    "passed": 27,
+    "reloads": 96
+  }
+}

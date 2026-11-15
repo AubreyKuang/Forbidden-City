@@ -5,7 +5,7 @@ const GRADE_NAMES=['正一品','从一品','正二品','从二品','正三品','
 // 官名沿用游戏的架空朝制；品序以清制为参照。爵位、科名与营生不充作官品。
 const CIVIL_CAREERS=[[1,'内阁大学士'],[2,'协办大学士'],[3,'户部侍郎'],[4,'内阁学士'],[5,'大理寺卿'],[6,'光禄寺卿'],[7,'道员'],[8,'知府'],[9,'同知'],[10,'知州'],[11,'通判'],[12,'翰林院修撰'],[13,'知县'],[14,'州同'],[15,'县丞'],[17,'主簿'],[18,'巡检']];
 const ARMY_CAREERS=[[1,'镇国大将军'],[2,'提督'],[3,'总兵'],[4,'副将'],[5,'参将'],[6,'游击'],[7,'都司'],[9,'守备'],[10,'守御所千总'],[11,'千总'],[13,'把总'],[14,'外委千总'],[15,'外委把总']];
-const OFFICE_GRADES={...Object.fromEntries([...CIVIL_CAREERS,...ARMY_CAREERS].map(([g,n])=>[n,g])),内阁首辅:1,河道总督:2,太医院院判:11,锦衣卫指挥使:5,通政司参议:9,京营统领:3,县令:13,翰林院编修:13,翰林学士:4,两江总督:2,监察御史:14,盐运使:6,苏州织造:9,太医院吏目:18,游击将军:6,骁骑校尉:11};
+const OFFICE_GRADES={...Object.fromEntries([...CIVIL_CAREERS,...ARMY_CAREERS].map(([g,n])=>[n,g])),内阁首辅:1,河道总督:2,太医院院判:11,锦衣卫指挥使:5,骠骑将军:2,通政司参议:9,京营统领:3,县令:13,翰林院编修:13,翰林学士:4,两江总督:2,监察御史:14,盐运使:6,苏州织造:9,太医院吏目:18,游击将军:6,骁骑校尉:11};
 function officialGrade(p){
   if(!p||['student','commoner'].includes(p.career))return null;
   const title=p.office||p.post||'';
@@ -18,6 +18,15 @@ function officialGrade(p){
 }
 function officialGradeLabel(p){const g=officialGrade(p);return g?GRADE_NAMES[g-1]:p?.career==='student'?'尚未授官':p?.career==='commoner'?'无官品':(p?.office||p?.post||'').startsWith('候补')?'候补 · 未实授':'未定品';}
 function officialOfficeLabel(p){return `${p.office||p.post||'未任职'} · ${!officialAlive(p)||p.retired||p.dismissed||p.exiled?'原任':''}${officialGradeLabel(p)}`;}
+// Family allegiance can remain military while a son studies or holds a civil office.
+function officialMilitary(p,h){
+  if(!careersActive())return h?.bloc==='army';
+  if(!p||['student','commoner'].includes(p.career))return false;
+  const title=p.office||p.post||'';
+  if(/总兵|提督|将军|参将|副将|游击|都司|守备|千总|把总|校尉|统领|指挥使/.test(title))return true;
+  if(officialGrade(p)||/^候补/.test(title))return false;
+  return h?.bloc==='army';
+}
 function careerPeople(){return [...officialEntries().map(e=>({p:e.p,key:e.key,e,bloc:e.h.bloc})),...scholarList().map(p=>({p,key:'scholar:'+p.id,scholar:true,bloc:'civil'}))];}
 function careerLink(person){return `<button class="person-link" onclick="A.go('${person.scholar?'scholar':'official'}','${person.scholar?person.p.id:person.key}')">${esc(person.p.name)} ↗</button>`;}
 function careerEligible(p){return officialServing(p)&&p.age>=18&&!reliefSuspended(p)&&!!officialGrade(p);}
@@ -92,6 +101,7 @@ function ensureLocalOfficers(){
       const roots=officialEntries().filter(e=>e.role==='father'&&officialAlive(e.p)&&familyIsNoble(e.c));
       if(roots.length){const root=pick(roots);p.sur=root.c.sur;p.name=p.sur+courtGivenName(p.sur,p.seed);p.age=Math.max(30,Math.min(65,root.p.age+ri(-8,8)));p.courtKin=[{fatherId:root.p.id,type:'branch',detail:`谱牒记载：与${root.p.name}出自同族旁支，分房多年，非亲兄弟`}];}
     }
+    if(expandedOfficialPortraitsActive()){delete p.artPortrait;assignCourtOfficialPortrait(p,'civil');}
     S.scholars.push(p);scholarRecord(p,`吏部核录：现任${officialOfficeLabel(p)}，在${region}办差。${careerKinText({p,scholar:true,key:'scholar:'+p.id})}。`,false);
   }
 }

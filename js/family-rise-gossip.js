@@ -2,11 +2,28 @@
 const familyRiseSetOffice=careerSetOffice;
 careerSetOffice=function(person,title,reason){
   const before=officialGrade(person.p),from=officialOfficeLabel(person.p),result=familyRiseSetOffice(person,title,reason),after=officialGrade(person.p);
+  recordFamilyRise(person,before,from,after);
+  return result;
+};
+function recordFamilyRise(person,before,from,after){
   if(careersActive()&&person.e&&before&&after&&after<before){
     for(const c of paternalFamily(person.e.c).filter(inPalace)){
       if(!/^(县令|知县|寒门|农家|良家子|书香门第)$/.test(c.fam?.t||''))continue;
       c.familyRise={key:person.key,personId:person.p.id,name:person.p.name,kin:officialKinLabel(person.e.h,person.e.role,c),from,to:officialOfficeLabel(person.p),turn:S.turn};
       c.familyRiseRanks ||= [];
+    }
+  }
+}
+const familyRiseFrontierReward=frontierReward;
+frontierReward=function(r,kind){
+  const e=r&&frontierEntry(r.commander),before=e&&officialGrade(e.p),from=e&&officialOfficeLabel(e.p);
+  const result=familyRiseFrontierReward(r,kind);
+  if(careersActive()&&result&&kind==='promotion'&&e){
+    const after=officialGrade(e.p);
+    if(before&&after&&after<before){
+      e.p.office=e.p.post=e.p.office||e.p.post;e.p.lastCareerChange=S.turn;
+      (e.p.careerHistory ||= []).push({turn:S.turn,d:dateStr(),from,to:officialOfficeLabel(e.p),reason:'北境军功擢升'});
+      recordFamilyRise({p:e.p,key:e.key,e},before,from,after);
     }
   }
   return result;

@@ -862,7 +862,9 @@ button.family-room-person{cursor:pointer}button.family-room-person:hover{color:#
   #mbox:has(.event-illustration) .mbody{flex-direction:row;align-items:flex-start;gap:10px}
   #mbox:has(.event-illustration) .mpor{width:56px}
   .event-illustration figcaption{padding-inline:12px}
+}
 /* Officials table: a table on wide screens, labelled cards on phones. */
+@media(min-width:761px){#app[data-layout="game"][data-view="officials"] #panel{width:min(calc(100% - 32px),1240px)}}
 .official-filters{margin:8px 0}
 .official-table-wrap{overflow-x:auto;border:1px solid var(--paper2);border-radius:8px;background:var(--paperhi)}
 .official-table{width:100%;border-collapse:collapse;font-size:13px;line-height:1.5}
@@ -873,9 +875,9 @@ button.family-room-person{cursor:pointer}button.family-room-person:hover{color:#
 .official-table .official-name{display:inline-flex;align-items:center;gap:6px;font-weight:600}
 .official-table .official-name .por{flex:none;width:36px;height:auto}
 .official-kin{display:flex;flex-direction:column;align-items:flex-start;gap:2px;margin-top:2px}
-.official-name span,.official-table .tag,.official-table td:nth-child(2),.official-table td:nth-child(5){white-space:nowrap}
+.official-name span,.official-table .tag,.official-table td[data-label="年龄"],.official-table td[data-label="性格"],.official-table td[data-label="官职"],.official-table td[data-label="状态"]{white-space:nowrap}
 .official-nums{white-space:nowrap;font-variant-numeric:tabular-nums}
-.official-table td:nth-child(3){min-width:8.5em}.official-table td:nth-child(7) .person-link{white-space:nowrap}
+.official-table td[data-label="家族 · 宫中"]{min-width:8.5em}.official-table td[data-label="皇嗣"] .person-link{white-space:nowrap}
 .official-deed{min-width:180px;max-width:280px;color:var(--ink2)}
 .story li.tie-foe{border-left-color:#86766e}
 .story li.tie-friend{border-left-color:var(--jade)}

@@ -58,7 +58,7 @@ function ministryHead(id){
 function ministryHeldBy(p){return Object.keys(MINISTRIES).find(id=>ministryHead(id)?.p===p)||null;}
 function ministryCandidates(id){
   const m=MINISTRIES[id];if(!m)return [];
-  const kin=officialEntries().filter(e=>officialServing(e.p)&&e.p.career!=='student'&&e.p.ability>=55&&(e.h.bloc==='army')===m.army).map(e=>({p:e.p,key:e.key,e,bloc:e.h.bloc}));
+  const kin=officialEntries().filter(e=>officialServing(e.p)&&e.p.career!=='student'&&e.p.ability>=55&&officialMilitary(e.p,e.h)===m.army).map(e=>({p:e.p,key:e.key,e,bloc:e.h.bloc}));
   // 新科进士须在翰林院历练两年以上，方可出掌一部。
   const scholars=m.army?[]:scholarList().filter(p=>officialServing(p)&&p.ability>=55&&S.turn-(p.appointedTurn??S.turn)>=24).map(p=>({p,key:'scholar:'+p.id,scholar:true,bloc:'civil'}));
   return [...kin,...scholars].filter(x=>!ministryHeldBy(x.p));

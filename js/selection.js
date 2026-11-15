@@ -119,10 +119,15 @@ function selectionCohortHTML(c){
   const peers=S.consorts.filter(o=>sameSelectionCohort(c,o));
   return `<div>入宫同批 · ${esc(c.selectionCohort.date)}${peers.length?' · '+peers.map(o=>`${parentLink(o.id)}${!o.alive?'（已故）':''}`).join('、'):' · 本批仅她一人留选'}</div>`;
 }
+function selectionArrivalsRecent(){
+  const s=S.selection;if(s?.phase!=='arrivals')return false;
+  const started=Number.isFinite(s.finishedAt)?s.finishedAt:(s.accepted||[]).map(byId).find(c=>Number.isFinite(c?.selectionCohort?.turn))?.selectionCohort.turn;
+  return Number.isFinite(started)&&S.turn>=started&&S.turn-started<2;
+}
 function viewSelectionArrivals(){
   const members=(S.selection?.accepted||[]).map(byId).filter(Boolean);
-  return `${selectionDiscussionPanel()}<section class="story-scene selection-scene"><header><p>储秀宫 · ${esc(S.selection.date||'选秀礼毕')}</p><h2>新妃安顿</h2></header><button class="btn" onclick="A.go('harem')">回后宫</button></section>
-    <p class="hint">本批名单已定，共留选 ${members.length} 人。看看各人的反应，也可待她们安顿后再去问候。</p>
+  return `${selectionDiscussionPanel()}<section class="story-scene selection-scene"><header><p>储秀宫 · ${esc(S.selection.date||'选秀礼毕')}</p><h2>新妃安顿</h2></header><div class="acts"><button class="btn" onclick="A.go('harem')">回后宫</button><button class="btn gold" onclick="A.xxDecree()">重新选秀</button></div></section>
+    <p class="hint">本批名单已定，共留选 ${members.length} 人。安顿页保留本月和下月；此后仍可在人物纪事中回看入宫经历。也可随时重新选秀，未满三年仍有国库与民心代价。</p>
     <div class="grid portrait-grid">${members.map(c=>`<article class="card" style="display:block"><div class="row">${porImg(c,76)}<div><h3>${esc(fullName(c))}</h3><p>${esc(c.palace)} · ${esc(c.trait)} ${solitaryTag(c)}</p></div></div>
     <p>${esc(c.entryAdjustment?.reaction||'她的留选记在这一批名册中。')}</p>
     ${(c.entryAdjustment?.acquaintances||[]).length?`<p class="hint">一同入宫时相识：${c.entryAdjustment.acquaintances.map(id=>parentLink(id)).join('、')}。</p>`:''}

@@ -21,12 +21,12 @@ const COURT=[
   if(off)ch.push({t:`命${cName(off)}之父（${off.fam.t}）督办`,cond:()=>officialServing(houseOf(off)?.father),why:'已不在任或另有差事',f:()=>{if(chance(.6)){officialRecord(off,'father','奉旨督办黄河赈灾，颇有成效。',{emotion:.6});return `差事办得漂亮。${fx(chg({treasury:-150,people:6,prestige:2}),cchg(off,{aff:8,mood:10}))}`}
     officialRecord(off,'father','督办赈灾不力，遭御史弹劾。',{emotion:-.5});return `赈灾银两被层层克扣，灾情反而加重。${fx(chg({treasury:-200,people:-5}),cchg(off,{mood:-12}))}`}});
   return {title:'黄河决堤',person:off?.id,text:`工部急奏：${['开春冰凌壅塞，春汛骤涨','入夏以来暴雨连绵','入秋以来秋雨不止','入冬以来凌汛壅塞'][season()]}，黄河于开封段决口，良田万顷尽成泽国，灾民流离失所。`,choices:ch}},
- brief=>{const e=E();const gen=harem().find(c=>(brief?c.id===brief.person:c.trait==='将门')&&officialRoles(houseOf(c)).some(role=>officialServing(houseOf(c)?.[role])&&houseOf(c).bloc==='army'));const ch=[
+ brief=>{const e=E();const gen=harem().find(c=>(brief?c.id===brief.person:c.trait==='将门')&&officialRoles(houseOf(c)).some(role=>officialServing(houseOf(c)?.[role])&&officialMilitary(houseOf(c)?.[role],houseOf(c))));const ch=[
    {t:'遣大将出征',f:()=>{if(chance(S.flags.wolf?.35:.6)){log('北狄犯边，王师击退之。');return `王师告捷。${fx(chg({treasury:-300,prestige:5}))}`}return `前线失利，丢了两座城池。${fx(chg({treasury:-300,prestige:-5,people:-5}))}`}},
    {t:'御驾亲征',f:()=>{const p=.35+e.wu/180;if(chance(p)){log('北狄犯边，帝御驾亲征，大破敌军。',1);return `你身先士卒，三战三捷，狄戎远遁漠北。${fx(chg({prestige:12,people:5,treasury:-300}))}`}
      log('帝亲征北狄失利，负伤而还。',1);return `大军中伏，你虽突围而出，却身负箭伤。${fx(chg({prestige:-10,health:-10,treasury:-400}))}`}},
    {t:'遣使议和，岁赐金帛',f:()=>{log('与北狄议和，岁赐金帛。');return `边境暂安，朝中却有人暗讽软弱。${fx(chg({treasury:-150,prestige:-6}))}`}}];
-  if(gen){const h=houseOf(gen),role=brotherRole(h,officialServing)||'father',p=h[role];ch.push({t:`命${cName(gen)}之${role==='father'?'父':'兄'}${p.name}领兵`,cond:()=>officialServing(p),why:'已不在任或另有差事',f:()=>{if(!officialServing(p))return null;if(chance(.75)){p.merit=clamp(p.merit+15);officialRecord(gen,role,'领兵出征北境，大胜而归。',{emotion:.7});return `军报送达，${p.name}得胜归来。${fx(chg({treasury:-250,prestige:8}),cchg(gen,{aff:12,mood:15}))}`}
+  if(gen){const h=houseOf(gen),role=brotherRole(h,p=>officialServing(p)&&officialMilitary(p,h))||'father',p=h[role];ch.push({t:`命${cName(gen)}之${role==='father'?'父':'兄'}${p.name}领兵`,cond:()=>officialServing(p),why:'已不在任或另有差事',f:()=>{if(!officialServing(p))return null;if(chance(.75)){p.merit=clamp(p.merit+15);officialRecord(gen,role,'领兵出征北境，大胜而归。',{emotion:.7});return `军报送达，${p.name}得胜归来。${fx(chg({treasury:-250,prestige:8}),cchg(gen,{aff:12,mood:15}))}`}
     officialDeath(gen,role,'领兵出征北境，中伏战死沙场。','battle');return `兵败。${p.name}战死沙场，讣报已送达家中。${fx(chg({treasury:-300,prestige:-6}))}`}});}
   return {title:'北境告急',person:gen?.id,sfx:'gong',text:'八百里加急：北狄铁骑南下，连破两道关隘，边民死伤无数。'+(S.flags.wolf?'\n各路诸侯想起骊山那场烽火，援军来得很慢。':''),choices:ch}},
  ()=>({title:'殿试',text:'三年一度的殿试之期已到，三百贡士候于殿外。',choices:[
@@ -1018,7 +1018,7 @@ function courtTick(){
     if(seen.has(h))continue;
     seen.add(h);
     for(const role of brotherRoles(h)){const p=h[role];
-      if(officialServing(p))p.merit=clamp(p.merit+(h.bloc==='army'?(E().wu-50)/40:.3)+R()*.6);
+      if(officialServing(p))p.merit=clamp(p.merit+(officialMilitary(p,h)?(E().wu-50)/40:.3)+R()*.6);
       if(S.month===1&&officialAlive(p))p.age++;
     }
     if(S.month===1&&h.father.alive){h.father.age++;

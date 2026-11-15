@@ -79,7 +79,7 @@ test('commission death remains in the family tree and condolence cannot pay twic
  var merit=p.merit;courtTick();assert.equal(p.merit,merit);`);
 });
 test('civil officials cannot receive military commissions; treasury and unfinished reports gate new work',()=>{
- const {run}=boot();run(household);run(`h.bloc='civil';var e=officialEntry(key);assert.equal(assignOfficialTask(e,'border'),null);assert.equal(E().energy,4);
+ const {run}=boot();run(household);run(`h.bloc='civil';p.office=p.post='知府';var e=officialEntry(key);assert.equal(assignOfficialTask(e,'border'),null);assert.equal(E().energy,4);
  E().treasury=14;assert.equal(assignOfficialTask(e,'accounts'),null);assert.equal(E().energy,4);E().treasury=100;
  p.report={text:'待阅'};assert.equal(assignOfficialTask(e,'accounts'),null);delete p.report;p.retired=true;assert.equal(assignOfficialTask(e,'accounts'),null);
  p.retired=false;p.reliefResumeTurn=S.turn+3;assert.equal(assignOfficialTask(e,'accounts'),null);`);

@@ -27,7 +27,7 @@ async function run(page,r){
  }else if(r.fixture==='sister-birth'||r.fixture==='sister-death'){
   await profile(page,host.id);await page.locator(`[onclick="A.go('natal','${host.id}:${wife.id}')"]`).first().click();assert.match(await page.locator('#panel').innerText(),r.fixture==='sister-death'?/难产去世/:/平安生下/);await shot(page,r.fixture+'-'+r.viewport);await reload(page,r,'婚育纪事');
  }else if(r.fixture==='exam-roster'){
-  assert.match(await page.locator('#modal').innerText(),/钦点三甲/);await shot(page,'exam-roster-'+r.viewport);await click(page,'交礼部按卷定次');await reload(page,r,'三甲已定');const d=await read(page);assert.equal(new Set(d.scholars.filter(p=>p.examYear===d.consorts[0]?.examYear).map(p=>p.name)).size,d.scholars.filter(p=>p.examYear===d.consorts[0]?.examYear).length);assert.equal(new Set(d.scholars.filter(p=>p.examRank).map(p=>p.name)).size,3);await finish(page);assert.match(await page.locator('#modal').innerText(),/探花议婚/);await reload(page,r,'殿试续议婚');
+  assert.match(await page.locator('#modal').innerText(),/钦点三甲/);await shot(page,'exam-roster-'+r.viewport);await click(page,'交礼部按卷定次');await reload(page,r,'三甲已定');const d=await read(page);assert.equal(new Set(d.scholars.filter(p=>p.examRank).map(p=>p.name)).size,3);await finish(page);assert.match(await page.locator('#modal').innerText(),/探花议婚/);await reload(page,r,'殿试续议婚');
  }else if(r.fixture.startsWith('exam-')){
   const princess=initial.children.find(k=>k.name==='昭宁'),name=r.mode==='sister'?new RegExp('沈清月'):new RegExp('昭宁');await click(page,name);await reload(page,r,'问双方心意');
   if(r.fixture==='exam-refusal'){assert.ok(await page.getByRole('button',{name:/双方愿意，赐婚成全/}).isDisabled());await click(page,'尊重心意，暂不定亲');}

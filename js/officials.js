@@ -136,7 +136,7 @@ function viewOfficial(){
   const act=(action,label,cost=0)=>`<button class="btn ${action==='talk'?'primary':''}" onclick="A.officialAct('${key}','${action}')" ${officialActionReady(e,action)?'':'disabled'}>${label}<small>${action==='commission'?'选择差事与所需银两':`精力 −1${cost?' · 国库 −'+cost:''}`}</small></button>`;
   const actions=!officialAlive(p)?act('honor','赐祭抚恤',20):p.exiled||p.dismissed?'':p.career==='commoner'?act('talk','召见问候'):act('talk',p.away||p.commission||p.retired?'赐书问候':'召见议事')+act('commission','委派差事')+act('reward','论功赏赐',20)+(p.retired?act('recall','征召复出'):p.age>=55?act('retire','准予致仕'): '');
   const hint=!officialAlive(p)?'故人的履历与家族关系继续保留；抚恤仅可办理一次。':p.career==='commoner'?`以${p.post||p.office||'营生'}为业的平民，不承接官差；问候每三个月一次。`:p.exiled||p.dismissed?'获罪期间不再召见、领差或受赏，既有处置留在履历中。':'问候每三个月一次；差事有回奏与冷却；赏赐须有新增功绩且间隔一年。致仕须满五十五岁，复出须未满七十岁且致仕满一年。';
-  return `${personBackButton('officials')}<header class="detail-head">${porImg(p,224)}<div class="grow"><p>${role==='father'?'外家长辈':'外家子弟'} · ${esc(blocName(h.bloc))}</p><h2>${esc(p.name)}</h2><p>${esc(officialOfficeLabel(p))}${p.honor?' · '+esc(p.honor):''}</p><p>${p.age}岁 · <strong>${officialStatus(p)}</strong> · ${esc(p.temperament)}</p>${p.death?`<p class="official-death">${esc(p.death.d||'日期未详')} · ${esc(p.death.reason)}</p>`:''}${p.retired?'<p class="hint">不再承接官差；仍可书信问候。</p>':''}</div></header>
+  return `${personBackButton('officials')}<header class="detail-head">${porImg(p,224)}<div class="grow"><p>${role==='father'?'外家长辈':'外家子弟'} · 家族立场：${esc(blocName(h.bloc))}</p><h2>${esc(p.name)}</h2><p>${esc(officialOfficeLabel(p))}${p.honor?' · '+esc(p.honor):''}</p><p>${p.age}岁 · <strong>${officialStatus(p)}</strong> · ${esc(p.temperament)}</p>${p.death?`<p class="official-death">${esc(p.death.d||'日期未详')} · ${esc(p.death.reason)}</p>`:''}${p.retired?'<p class="hint">不再承接官差；仍可书信问候。</p>':''}</div></header>
     <div class="detail-vitals">${bar('才干',p.ability)}${bar('功绩',p.merit)}${bar('信任',p.trust)}</div><div class="detail-actions" role="group" aria-label="朝臣往来"><span class="detail-action-label">召见与任用</span><div class="acts">${actions}${canAppointRelative(e)?`<button class="btn jade" onclick="A.appointRelative('${key}')">核验科名与授官</button>`:''}</div><p class="hint">${hint}</p></div>
     ${p.report?`<section class="detail-section"><h3>待阅回奏</h3><p>${esc(p.report.text)}</p><button class="btn jade" onclick="A.officialReport('${key}')">阅看回奏</button></section>`:''}
     ${p.commission?detailSection('当前差事',`<p>${esc(p.commission.title)} · ${Math.max(0,p.commission.due-S.turn)}个月后回奏</p>`):''}
@@ -159,7 +159,7 @@ function officialConversation(e,topic){
     if(p.career==='student')return `“如今仍以${p.education}身份在家读书，尚未任官。愿凭学业应选，不敢将科名说成任上的功绩。”`;
     if(p.retired)return '“离了公署才知，乡间一条断桥，能让百姓绕上半日。臣虽归田，仍愿把亲眼所见写给陛下。”';
     if(p.commission)return `“${p.commission.title}尚未办结，臣不敢先报全功。待簿册与实情一一核对，再据实回奏。”`;
-    if(h.bloc==='army')return '“边关不只有捷报。马料、棉衣、伤兵的归途，少顾一样，便要士卒拿命去填。”';
+    if(officialMilitary(p,h))return '“边关不只有捷报。马料、棉衣、伤兵的归途，少顾一样，便要士卒拿命去填。”';
     return {持正:'“账上多一分虚报，百姓便少一口口粮。臣宁可奏折不好看，也不敢把亏空写成丰年。”',谨慎:'“地方回报尚有出入。臣愿多走几处乡里，不以一纸漂亮文书请功。”',进取:'“积弊并非一日能除。请许臣先办成一件，再凭实绩论用人。”',圆融:'“各司有各司的难处。臣愿把争议摊在案上，请众人对着同一本账说话。”'}[p.temperament];
   }
   return {持正:'“臣的亲眷在宫中，越该守住公私之界。若臣失职，请陛下照章问责。”',谨慎:'“位高一分，责任便重一分。臣不求骤升，只求交来的差事能够交代。”',进取:'“臣愿在任上留下能查验的事，不愿世人只记得臣是哪位娘娘的父兄。”',圆融:'“一家受恩，旁人难免多看几眼。臣当收束门客，不使家声成为宫里的牵累。”'}[p.temperament];
@@ -196,7 +196,7 @@ const OFFICIAL_TASKS={
   drills:{title:'轮训边镇守军',army:true,cost:55,months:3,risk:.005,brief:'轮换疲军、修整烽燧，兼顾驻地百姓。',success:'轮换与烽燧演练完成，疲军得到休整，军纪申明不得侵扰沿途百姓。',failure:'换防衔接不畅，部分烽燧仍缺人手，须另列补训清单。'}
 };
 function assignOfficialTask(e,id){
-  const task=OFFICIAL_TASKS[id];if(!task||!officialActionReady(e,'commission')||task.army!==(e.h.bloc==='army')||E().treasury<task.cost||!useE())return null;
+  const task=OFFICIAL_TASKS[id];if(!task||!officialActionReady(e,'commission')||task.army!==officialMilitary(e.p,e.h)||E().treasury<task.cost||!useE())return null;
   const p=e.p;chg({treasury:-task.cost});p.lastCommission=S.turn;
   const roll=R(),success=.35+p.ability/200+p.trust/500;
   p.commission={id,title:task.title,due:S.turn+task.months,started:S.turn,contact:e.c.id,wasAway:!!p.away,outcome:roll<task.risk?'death':roll<success?'success':'setback'};
@@ -248,7 +248,7 @@ A.officialAct=function(key,action){
   const e=officialEntry(key);if(modalOpen||!officialActionReady(e,action))return;const {c,p,role,h}=e;
   const valid=()=>officialActionReady(e,action),cost=['honor','reward'].includes(action)?20:0;
   if(action==='commission')return pushEv({title:'委派差事 · '+p.name,por:p,valid,text:'按其履历选择差事，领命后会在数月内回奏。边关军务有低概率遇伏伤亡。',choices:[
-    ...Object.entries(OFFICIAL_TASKS).filter(([id,t])=>t.army===(h.bloc==='army')&&(!legacyPendingAction()||['border','escort','accounts','public'].includes(id))).map(([id,t])=>({t:`${t.title} · ${t.months}个月 · 精力−1 · 国库−${t.cost}`,cond:()=>E().energy>=1&&E().treasury>=t.cost,why:'精力或国库不足',f:()=>assignOfficialTask(e,id)})),{t:'暂不委派'}]});
+    ...Object.entries(OFFICIAL_TASKS).filter(([id,t])=>t.army===officialMilitary(p,h)&&(!legacyPendingAction()||['border','escort','accounts','public'].includes(id))).map(([id,t])=>({t:`${t.title} · ${t.months}个月 · 精力−1 · 国库−${t.cost}`,cond:()=>E().energy>=1&&E().treasury>=t.cost,why:'精力或国库不足',f:()=>assignOfficialTask(e,id)})),{t:'暂不委派'}]});
   if((p.career==='student'||p.career==='commoner')&&action!=='talk')return false;
   if(action==='talk')return pushEv({title:(p.away||p.commission||p.retired?'赐书问候':'召见议事')+' · '+p.name,por:p,valid,text:p.away||p.commission||p.retired?'内侍备好御札，可写下想问的话。':'内侍引他入殿。他行礼后，等候你开口。',choices:[
     ...[['service',p.career==='commoner'?'问生计与年景':p.career==='student'?'问学业与科名':'问任上见闻'],['family','问家中近况'],['duty','谈公私与用人']].map(([topic,t])=>({t:t+' · 精力−1',cond:()=>E().energy>=1,why:'精力不足',f:()=>{

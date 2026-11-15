@@ -35,7 +35,7 @@ const maritalScholarRecord=scholarRecord;
 scholarRecord=function(p,text,big){const result=maritalScholarRecord(p,text,big);if(careersActive())maritalCourtEcho({p,key:'scholar:'+p.id,scholar:true},text);return result;};
 const maritalBaseMarriage=marrySister;
 marrySister=function(c,p,match,options={}){
-  if(careersActive()&&p.widow&&!p.widow.authorized)return false;
+  if(careersActive()&&(p.married||p.widow&&!p.widow.authorized))return false;
   if(careersActive()){
     if(p.widow){(p.marriageHistory ||= []).push({...p.widow});delete p.widow;}
     p.marriageImperial=/奉旨|赐婚/.test(options.source||'');
@@ -64,7 +64,7 @@ function natalStayLabel(p){
   return host&&natalInPalace(host,p)?`正在宫中小住 · ${host.palace} · 约${Math.max(0,p.visit.until-S.turn)}个月后归家`:'';
 }
 const maritalNatalStatus=natalStatus;
-natalStatus=function(p){return !p.alive?maritalNatalStatus(p):natalStayLabel(p)||(p.widow?(p.widow.authorized?'丧偶 · 获准重新议亲':'守寡'):maritalNatalStatus(p));};
+natalStatus=function(p){return !p.alive?maritalNatalStatus(p):(natalStayLabel(p)?`${maritalNatalStatus(p)} · ${natalStayLabel(p)}${p.widow?' · 守寡':''}`:(p.widow?(p.widow.authorized?'丧偶 · 获准重新议亲':'守寡'):maritalNatalStatus(p)));};
 const maritalNatalReady=natalVisitReady;
 natalVisitReady=function(c,p){
   if(!careersActive()||!p.widow)return maritalNatalReady(c,p);
