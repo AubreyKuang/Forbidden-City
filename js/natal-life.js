@@ -14,7 +14,7 @@ function natalLifeTick(){
    if(age>=18&&!life.adult){life.adult=S.turn;natalLifeRecord(c,[p],'家中也有前程',`${p.name}已到成年，家书里说起自己的打算：${p.sex==='m'?'先把学业与生计安排踏实；有功名也须依程序候选，并非自然有官可做':'想有自己擅长的事情，也愿按自己的心意考虑婚事'}。`);}
    if(age<18||S.turn-(life.last??life.adult??S.turn)<24||life.year===S.year)continue;life.year=S.year;
    if(!chance(.16))continue;
-   if(p.sex==='f'&&!p.married&&age>=20&&age<=40&&p.seed%3!==0){
+   if(p.sex==='f'&&!p.married&&!p.betrothal&&age>=20&&age<=40&&p.seed%3!==0){
     const sur=SUR[(p.seed>>>3)%SUR.length];p.spouse={id:`spouse:${p.id}`,sur,name:sur+BROTHER_NAMES[p.seed%BROTHER_NAMES.length],born:S.turn-(age+1)*12,alive:true};p.married=true;life.last=S.turn;
     natalLifeRecord(c,[p],'手足成家',`${p.name}与${p.spouse.name}相识相知，双方亲自点头后成婚。她托家书报来喜讯，也说婚后仍要留时间做自己喜欢的事。`,['姻缘是自己的日子，不是为了给宫中的亲人分宠。']);
    }else if(p.married&&p.sex==='f'&&age>=21&&age<=38&&(life.children||0)<2&&S.turn-(life.lastBirth??life.adult)>=24){
@@ -28,7 +28,7 @@ function natalLifeTick(){
  }
 }
 function natalLifePanel(c,p){const l=p.lifeCourse,children=houseOf(c).relatives.filter(x=>x.parentRelativeId===p.id);
- return detailSection('家中的日子',`${p.spouse?`<p>配偶：${esc(p.spouse.name)} · ${Math.max(18,Math.floor((S.turn-p.spouse.born)/12))}岁</p>`:''}${l?.path?`<p>近况：${esc(l.path)}</p>`:''}${children.map(x=>`<button class="btn quiet" onclick="A.go('natal','${c.id}:${x.id}')">${esc(x.name)} · ${x.sex==='m'?'儿子':'女儿'} · ${natalAge(x)}岁</button>`).join('')}${l?.path||p.married?`<button class="btn" onclick="A.natalLifeTalk(${c.id},${p.id})" ${S.turn-(l?.talk??-99)<6?'disabled':''}>回信问问近况<small>精力1 · 每半年一次</small></button>`:''}`);
+ return detailSection('家中的日子',`${p.spouse?`<p>配偶：${esc(p.spouse.name)}${p.spouse.desc?' · '+esc(p.spouse.desc):''} · ${Math.max(18,Math.floor((S.turn-p.spouse.born)/12))}岁</p>`:''}${typeof natalMarriageLine==='function'?natalMarriageLine(p):''}${l?.path?`<p>近况：${esc(l.path)}</p>`:''}${children.map(x=>`<button class="btn quiet" onclick="A.go('natal','${c.id}:${x.id}')">${esc(x.name)} · ${x.sex==='m'?'儿子':'女儿'} · ${natalAge(x)}岁</button>`).join('')}${l?.path||p.married||p.betrothal?`<button class="btn" onclick="A.natalLifeTalk(${c.id},${p.id})" ${S.turn-(l?.talk??-99)<6?'disabled':''}>回信问问近况<small>精力1 · 每半年一次</small></button>`:''}`);
 }
 A.natalLifeTalk=function(id,relative){const e=natalEntry(id,relative);if(modalOpen||!e||!inPalace(e.c)||!e.p.alive||e.p.consortId)return;const {c,p}=e;
  const valid=()=>inPalace(c)&&p.alive&&!p.consortId&&S.turn-(p.lifeCourse?.talk??-99)>=6;

@@ -51,7 +51,7 @@ function natalPortrait(p){
   const age=natalAge(p);
   return age<18?{...p,courtGuest:true}:p.sex==='m'?{...p,official:2}:{...p,sex:undefined,age,courtGuest:false};
 }
-function natalStatus(p){return !p.alive?'已故':p.consortId?'已入宫':p.visit?'入宫探亲':natalAge(p)<6?'家中幼儿':natalAge(p)<18?'在家读书':p.married?'已婚':'居于娘家';}
+function natalStatus(p){return !p.alive?'已故':p.consortId?'已入宫':p.visit?'入宫探亲':natalAge(p)<6?'家中幼儿':natalAge(p)<18?'在家读书':p.married?'已婚':p.betrothal?'议亲中':p.career==='commoner'?p.post:'居于娘家';}
 function natalEntry(id,relative){const c=byId(+id),h=c&&houseOf(c),p=h?.relatives?.find(p=>p.id===+relative);return p?{c,h,p}:null;}
 function natalRecord(c,p,text,emotion=0){
   story(p,text);

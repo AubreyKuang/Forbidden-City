@@ -6,7 +6,7 @@ const brotherRole=(h,predicate=()=>true)=>brotherRoles(h).find(role=>predicate(h
 const officialKinLabel=(h,role,member)=>role==='father'?'父亲':role.startsWith('relative')?(member?natalLabel(member,officialPerson(h,role)):officialPerson(h,role).parentRelativeId?(officialPerson(h,role).sex==='m'?'外甥':'外甥女'):officialPerson(h,role).born<Math.min(...Object.values(h.natal.memberBorn))?'兄长':'弟弟'):brotherRoles(h).length<2?'兄长':({brother:'长兄',brother2:'二兄',brother3:'三兄',brother4:'四兄',brother5:'五兄'}[role]||'兄长');
 const OFFICIAL_TEMPERAMENTS=['持正','谨慎','进取','圆融'];
 const officialAlive=p=>!!p&&p.alive!==false;
-const officialServing=p=>officialAlive(p)&&p.career!=='student'&&!p.retired&&!p.commission&&!p.incognitoCase&&!p.exiled&&!p.dismissed;
+const officialServing=p=>officialAlive(p)&&p.career!=='student'&&p.career!=='commoner'&&!p.retired&&!p.commission&&!p.incognitoCase&&!p.exiled&&!p.dismissed;
 function initializeOfficialHouse(c,h,family){
   for(const other of family.map(x=>x.house).filter(Boolean))for(const role of brotherRoles(other))h[role]??=other[role];
   initializeNatalFamily(c,h,family);
@@ -56,7 +56,7 @@ function officialEntry(key){
 }
 function officialStatus(p){
   if(!officialAlive(p))return p.death?.kind==='battle'?'阵亡':'已故';
-  return p.exiled?'流放':p.dismissed?'革职':p.career==='student'?(p.education==='举人'?'候选 · 尚未授官':'在家读书'):p.commission||p.incognitoCase?'奉差在外':p.retired?'致仕归乡':p.away?'外任':'在任';
+  return p.exiled?'流放':p.dismissed?'革职':p.career==='commoner'?(p.post||p.office||'平民'):p.career==='student'?(p.education==='举人'?'候选 · 尚未授官':'在家读书'):p.commission||p.incognitoCase?'奉差在外':p.retired?'致仕归乡':p.away?'外任':'在任';
 }
 function officialRecord(c,role,text,{family=true,emotion=0}={}){
   const h=houseOf(c),p=officialPerson(h,role);if(!p)return;
@@ -122,7 +122,7 @@ function officialActionReady(e,action){
   if(action==='honor')return !officialAlive(p)&&!p.memorialHonor;
   if(!officialAlive(p))return false;
   if(p.exiled||p.dismissed)return false;
-  if(p.career==='student'&&action!=='talk')return false;
+  if((p.career==='student'||p.career==='commoner')&&action!=='talk')return false;
   if(action==='talk')return S.turn-(p.lastAudience??-99)>=3;
   if(action==='reward')return !p.report&&p.merit>=50&&p.merit>(p.rewardedMerit??0)&&S.turn-(p.lastReward??-99)>=12;
   if(action==='retire')return !p.retired&&!p.commission&&!p.incognitoCase&&p.age>=55;
@@ -155,6 +155,7 @@ function officialConversation(e,topic){
     return `“${kin}入宫前${p.temperament==='谨慎'?'总怕行差踏错':'也会在家中檐下听雨'}。臣只盼她记得本心，不因一时荣辱忘了从前。”`;
   }
   if(topic==='service'){
+    if(p.career==='commoner')return `“草民在乡里${p.post||p.office||'谋生'}，不敢妄议朝政。只是年景好坏、柴米价钱，草民倒说得上几句。”`;
     if(p.career==='student')return `“如今仍以${p.education}身份在家读书，尚未任官。愿凭学业应选，不敢将科名说成任上的功绩。”`;
     if(p.retired)return '“离了公署才知，乡间一条断桥，能让百姓绕上半日。臣虽归田，仍愿把亲眼所见写给陛下。”';
     if(p.commission)return `“${p.commission.title}尚未办结，臣不敢先报全功。待簿册与实情一一核对，再据实回奏。”`;
@@ -248,9 +249,9 @@ A.officialAct=function(key,action){
   const valid=()=>officialActionReady(e,action),cost=['honor','reward'].includes(action)?20:0;
   if(action==='commission')return pushEv({title:'委派差事 · '+p.name,por:p,valid,text:'按其履历选择差事，领命后会在数月内回奏。边关军务有低概率遇伏伤亡。',choices:[
     ...Object.entries(OFFICIAL_TASKS).filter(([id,t])=>t.army===(h.bloc==='army')&&(!legacyPendingAction()||['border','escort','accounts','public'].includes(id))).map(([id,t])=>({t:`${t.title} · ${t.months}个月 · 精力−1 · 国库−${t.cost}`,cond:()=>E().energy>=1&&E().treasury>=t.cost,why:'精力或国库不足',f:()=>assignOfficialTask(e,id)})),{t:'暂不委派'}]});
-  if(p.career==='student'&&action!=='talk')return false;
+  if((p.career==='student'||p.career==='commoner')&&action!=='talk')return false;
   if(action==='talk')return pushEv({title:(p.away||p.commission||p.retired?'赐书问候':'召见议事')+' · '+p.name,por:p,valid,text:p.away||p.commission||p.retired?'内侍备好御札，可写下想问的话。':'内侍引他入殿。他行礼后，等候你开口。',choices:[
-    ...[['service',p.career==='student'?'问学业与科名':'问任上见闻'],['family','问家中近况'],['duty','谈公私与用人']].map(([topic,t])=>({t:t+' · 精力−1',cond:()=>E().energy>=1,why:'精力不足',f:()=>{
+    ...[['service',p.career==='commoner'?'问生计与年景':p.career==='student'?'问学业与科名':'问任上见闻'],['family','问家中近况'],['duty','谈公私与用人']].map(([topic,t])=>({t:t+' · 精力−1',cond:()=>E().energy>=1,why:'精力不足',f:()=>{
       if(!valid()||!useE())return null;p.lastAudience=S.turn;p.trust=clamp(p.trust+4);const line=officialConversation(e,topic);
       officialRecord(c,role,`陛下${p.away||p.commission||p.retired?'赐书垂询':'召见'}。${line}`,{family:topic==='family',emotion:.4});save('auto');return {text:line,por:p};
     }})),{t:'改日再谈'}]});

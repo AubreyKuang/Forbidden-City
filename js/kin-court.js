@@ -308,7 +308,7 @@ function officialFilterMatch(p,filter){
 function officialsTable(){
   const filter=OFFICIAL_FILTERS.some(([id])=>id===UI.officialsFilter)?UI.officialsFilter:'serving';
   const bloc=UI.officialsBloc||'all';
-  const entries=officialEntries(),scholars=typeof scholarList==='function'?scholarList():[],blocs=[...new Set([...entries.map(e=>e.h.bloc||'none'),...(scholars.length?['civil']:[])])];
+  const entries=officialEntries().filter(e=>e.p.career!=='commoner'),scholars=typeof scholarList==='function'?scholarList():[],blocs=[...new Set([...entries.map(e=>e.h.bloc||'none'),...(scholars.length?['civil']:[])])];
   const rows=entries.filter(e=>officialFilterMatch(e.p,filter)&&(bloc==='all'||(e.h.bloc||'none')===bloc))
     .sort((a,b)=>(officialAlive(b.p)-officialAlive(a.p))||((b.role==='father')-(a.role==='father'))||(b.p.merit-a.p.merit));
   const row=e=>{
