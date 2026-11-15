@@ -264,6 +264,7 @@ assert.equal(banquetKind('emperor').ready,true);
 // A seasonal scene outranks a routine, and resolves differently after a player choice.
 A.start();drain();
 const primary=empress(), friend=S.consorts[1];
+delete primary.solitary;delete friend.solitary; // This fixture specifically tests voluntary social visits.
 primary.trait='骄纵';primary.favor=70;primary.t2='护短';primary.like='点心';
 friend.trait='温婉';friend.t2='擅厨艺';friend.mood=70;friend.like='点心'; // Keep the unrelated painting routine out of this seasonal scenario.
 const pupil=makeKid(primary,'f','明仪');pupil.born-=9*12;pupil.lit=42;pupil.policy='读书';
