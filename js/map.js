@@ -410,14 +410,15 @@ function viewMap(){
       ${next}
       ${S.flags.lastMonthReview?'<button class="btn sm" onclick="A.go(\'log\')">上月回顾</button>':''}
     </div>
+    <section class="map-month-notices" aria-label="本月宫中消息">${mourningNotice()}${mapActivityPanel(leads)}${princessMapNotice()}${birthdayBanquetButtons()}${proudDemandNotice()}</section>
     <div id="mapwrap"></div>
     <div id="map-guide-preview" aria-live="polite"></div>
     <div class="map-dock">
       <button id="map-guide-toggle" class="btn sm" aria-pressed="false" onclick="A.toggleMapGuide()">地点用途与玩法</button>
       <details class="map-brief" ${UI.mapBriefOpen?'open':''} ontoggle="UI.mapBriefOpen=this.open">
-        <summary>宫中动向</summary>
+        <summary>宫中事务与常平仓</summary>
         <div class="map-brief-content">
-          ${mourningNotice()}${mapActivityPanel(leads)}${princessMapNotice()}${birthdayBanquetButtons()}${proudDemandNotice()}
+
           ${floodDikeReady()?'<p class="hint">黄河险堤已加固。日后一次直接赈济可少花 '+FLOOD_DIKE_SAVING+' 万两。</p>':''}
           <p class="hint">${grainReserveReady()?`常平仓有${grainReserveLabel()}备荒粮。遇到蝗灾月奏时可发放，免耗精力。`:'常平仓暂无备荒粮，可以向粮商买半批。'}</p>
           ${Number.isInteger(S.flags.localGrainPaymentTurn)?`<p class="hint">赈粮尾款 ${localGrainBalance()} 万两，将于${localGrainPaymentDue()?'本月底':'下月底'}结清。${localGrainPaymentDue()&&grainReserveReady()?'可到常平仓以粮抵款。':''}${localGrainExtensionAvailable()?'可在常平仓展期一次。':''}</p>`:''}

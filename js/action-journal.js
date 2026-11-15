@@ -2,7 +2,7 @@
    never from serialized JavaScript. Each command owns its random draws and answers.
    The saved world remains the authority; replay is checked before it is displayed. */
 const PalaceActions=(()=>{
-  const version=3, excluded=new Set(['save','load','rewind','downloadSave','readSaveFile','undoImport','newGame','chronicleFilter','chronicleSearch','chronicleClear','chronicleThread']);
+  const version=4, excluded=new Set(['save','load','rewind','downloadSave','readSaveFile','undoImport','newGame','chronicleFilter','chronicleSearch','chronicleClear','chronicleThread']);
   const actions=new Map();
   let blocked=false,snapshotRequested=false,journal=null,depth=0,replaying=false,step=null,cursor=0,answer=0,saving=0,fields=null;
   const clone=x=>JSON.parse(JSON.stringify(x));
@@ -51,7 +51,7 @@ const PalaceActions=(()=>{
     }
   }
   function valid(j){
-    return !!j&&[2,version].includes(j.version)&&(j.base===null||validPalaceSave(j.base))&&!j.base?.pendingActions&&
+    return !!j&&[2,3,version].includes(j.version)&&(j.base===null||validPalaceSave(j.base))&&!j.base?.pendingActions&&
       record(j.ui)&&(j.draft===undefined||typeof j.draft==='string'&&j.draft.length<=128)&&Array.isArray(j.steps)&&j.steps.length>0&&j.steps.length<=2048&&j.steps.every(s=>
         record(s)&&((s.name==='choose'&&s.args?.length===2&&Number.isInteger(s.args[0]))||
           (s.name==='next'&&s.args?.length===0)||actions.has(s.name))&&
@@ -98,6 +98,6 @@ const PalaceActions=(()=>{
       A[name]=function(...args){return run(name,args,()=>fn.apply(this,args));};
     }
   }
-  return {random,input,keepInput,payload,run,restore,valid,install,get legacy(){return journal?.version===2;},get blocked(){return blocked;},requestSnapshot(){snapshotRequested=true;},get busy(){return depth>0;},get replaying(){return replaying;},reset(){journal=null;blocked=false;}};
+  return {random,input,keepInput,payload,run,restore,valid,install,get contentVersion(){return journal?.version??version;},get legacy(){return journal?.version===2;},get blocked(){return blocked;},requestSnapshot(){snapshotRequested=true;},get busy(){return depth>0;},get replaying(){return replaying;},reset(){journal=null;blocked=false;}};
 })();
 PalaceActions.install();
