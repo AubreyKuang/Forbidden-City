@@ -1,6 +1,10 @@
 /* All mutations happen in actions or the monthly tick; proposals and views are pure. */
 function lifeState(c){return c.personalLife||(c.personalLife={works:[],links:{}});}
-function lifeBoundary(c){const b=c?.personalLife?.boundary;return b?.gen===S.gen&&!b.resolved?b:null;}
+// Older saves recorded family news and a relative's arrival as grievances; neither involved the emperor.
+const LIFE_FAMILY_NEWS=/^【(家中病讯|病况回音|家书报安|归家闲话)】/;
+function lifeBoundary(c){const b=c?.personalLife?.boundary;if(b&&!b.acknowledged&&(LIFE_FAMILY_NEWS.test(b.cause||'')||b.cause===c.sisterArrival?.text))return null;return b?.gen===S.gen&&!b.resolved?b:null;}
+// Name the grievance briefly, as she would bring it up, without the chronicle's heading.
+function lifeCause(text){const t=String(text||'').replace(/^【[^】]*】/,'').split(/[。！？]/)[0].trim();return t.length>24?t.slice(0,24)+'…':t;}
 function lifeRecord(people,kind,title,text,source='',thoughts=[]){
  const cast=[...new Set(people.filter(p=>p&&p.alive!==false))];
  const names=cast.map(p=>({id:p.id,name:p.sex?p.name:fullName(p)}));
@@ -13,7 +17,7 @@ function lifeRecord(people,kind,title,text,source='',thoughts=[]){
    emotion:thoughts[i]?.emotion??.45,impact:75,channel:'participant'})));
 }
 function lifeHurt(c,text){
- const l=lifeState(c);l.boundary={gen:S.gen,cause:text,date:dateStr(),turn:S.turn,acknowledged:false,respect:0};
+ const l=lifeState(c);l.boundary={gen:S.gen,cause:lifeCause(text),date:dateStr(),turn:S.turn,acknowledged:false,respect:0};
 }
 function lifeRespect(c){
  const b=lifeBoundary(c);if(!b?.acknowledged||b.lastRespect===S.turn)return;
