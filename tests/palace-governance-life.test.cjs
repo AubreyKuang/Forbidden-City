@@ -17,8 +17,9 @@ test('last court action keeps its decision and only advances after the result is
 test('a non-dialog action also advances; rejected actions and reading do not consume a month',()=>{
  const b=world();b.run("E().energy=1;A.taxPlan('light');assert.equal(S.turn,0);tick(1500);assert.equal(S.turn,1);while(modalOpen)nextEv();E().energy=0;delete S.flags.exhaustedTurn;A.taxPlan('regular');A.go('government');assert.equal(S.turn,1);assert.equal(governance().tax,'light');");
 });
-test('save failure rolls back exhausted energy and its eventual month transition',()=>{
- const b=world();b.run("E().energy=1;var original=S.turn,coins=E().treasury;localStorage.setItem=()=>{throw Error('quota')};A.out('spa');assert.equal(S.turn,original);assert.equal(E().energy,1);assert.equal(E().treasury,coins);assert.equal(S.flags.exhaustedTurn,undefined);");
+test('a failed write keeps the last energy spent and saves it when storage returns',()=>{
+ const b=world();b.run("E().energy=1;var coins=E().treasury,write=localStorage.setItem;localStorage.setItem=()=>{throw Error('quota')};A.out('spa');assert.equal(E().treasury,coins-60);assert.equal(E().energy,0);assert.ok(lastAutoSaveError);");
+ b.run("localStorage.setItem=write;assert.equal(save('auto'),true);var saved=JSON.parse(localStorage.getItem(SKEY+'auto'));assert.equal(saved.emp.treasury,coins-60);assert.equal(saved.emp.energy,0);");
 });
 test('unsettled birth is handled before an exhausted month can advance',()=>{
  const b=world();b.run(`var c=harem()[1];c.preg=10;birthEvent(c);E().energy=0;S.flags.exhaustedTurn=S.turn;A.resumeBirth(c.id);
@@ -101,7 +102,7 @@ for(const fixture of legacyFixtures.cases)test(`pre-upgrade ${fixture.name} cont
  b.run("if(modalResult)nextEv();else choose(curEv.choices.findIndex(c=>!c.cond||c.cond()))");
  b=reload(b);b.run('drain();assert.equal(PalaceActions.legacy,false);');
  assert.equal(b.run('S.turn'),fixture.save.turn,'finishing a version 2 scene retains the original month');
- b.run("E().energy=1;A.out('spa');assert.equal(PalaceActions.payload().pendingActions.version,5)");
+ b.run("E().energy=1;A.out('spa');assert.equal(PalaceActions.payload().pendingActions.version,6)");
  b=reload(b);b.run('var previousTurn=S.turn;choose(0);tick(1500);assert.equal(S.turn,previousTurn+1);');
 });
 test('the old commission cancellation index still cancels instead of assigning a new mission',()=>{

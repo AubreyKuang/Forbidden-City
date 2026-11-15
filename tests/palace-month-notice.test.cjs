@@ -34,12 +34,12 @@ test('an unsettled choice and its result remain readable without a running count
  choose(0);assert.ok(modalResult);tick(10000);assert.equal(S.turn,0);
  nextEv();assert.equal($('#month-notice').hidden,false);tick(1500);assert.equal(S.turn,1);`);
 });
-test('failed month autosave rolls back once and does not loop a hidden transition',()=>{
+test('a failed month autosave keeps the one transition, does not loop, and saves when storage returns',()=>{
  const b=game();b.run(`E().energy=1;A.taxPlan('light');var persist=localStorage.setItem;
  localStorage.setItem=()=>{throw Error('quota')};tick(1500);
- assert.equal(S.turn,0);assert.equal(E().energy,0);assert.equal($('#month-notice').hidden,true);
- assert.equal($('#app').inert,false);tick(10000);assert.equal(S.turn,0);
- localStorage.setItem=persist;A.go('home');tick(1500);assert.equal(S.turn,1);`);
+ assert.equal(S.turn,1);assert.ok(lastAutoSaveError);assert.equal($('#month-notice').hidden,true);
+ assert.equal($('#app').inert,false);tick(10000);assert.equal(S.turn,1);
+ localStorage.setItem=persist;A.go('home');assert.equal(lastAutoSaveError,'');assert.equal(JSON.parse(localStorage.getItem(SKEY+'auto')).turn,1);`);
 });
 test('a completed month with pending scenes restores the version 4 transcript',()=>{
  let b=game();b.run("E().energy=1;A.taxPlan('light');tick(1500);assert.ok(modalOpen);assert.equal(S.turn,1);");
