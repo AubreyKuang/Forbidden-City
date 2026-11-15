@@ -862,4 +862,28 @@ button.family-room-person{cursor:pointer}button.family-room-person:hover{color:#
   #mbox:has(.event-illustration) .mbody{flex-direction:row;align-items:flex-start;gap:10px}
   #mbox:has(.event-illustration) .mpor{width:56px}
   .event-illustration figcaption{padding-inline:12px}
+/* Officials table: a table on wide screens, labelled cards on phones. */
+.official-filters{margin:8px 0}
+.official-table-wrap{overflow-x:auto;border:1px solid var(--paper2);border-radius:8px;background:var(--paperhi)}
+.official-table{width:100%;border-collapse:collapse;font-size:13px;line-height:1.5}
+.official-table th{position:sticky;top:0;background:var(--paper2);color:var(--ink);text-align:left;font-weight:600;padding:8px 10px;white-space:nowrap}
+.official-table td{border-top:1px solid var(--paper2);padding:8px 10px;vertical-align:top}
+.official-table td small{display:block;color:var(--ink2);font-size:11px}
+.official-table tr.deceased td{color:var(--mut)}
+.official-table .official-name{display:inline-flex;align-items:center;gap:6px;font-weight:600}
+.official-table .official-name .por{flex:none;width:36px;height:auto}
+.official-kin{display:flex;flex-direction:column;align-items:flex-start;gap:2px;margin-top:2px}
+.official-name span,.official-table .tag,.official-table td:nth-child(2),.official-table td:nth-child(5){white-space:nowrap}
+.official-nums{white-space:nowrap;font-variant-numeric:tabular-nums}
+.official-table td:nth-child(3){min-width:8.5em}.official-table td:nth-child(7) .person-link{white-space:nowrap}
+.official-deed{min-width:180px;max-width:280px;color:var(--ink2)}
+.story li.tie-foe{border-left-color:#86766e}
+.story li.tie-friend{border-left-color:var(--jade)}
+@media(max-width:760px){
+  .official-table-wrap{border:0;background:none;overflow:visible}
+  .official-table thead{display:none}
+  .official-table,.official-table tbody,.official-table tr,.official-table td{display:block;width:auto}
+  .official-table tr{background:var(--paperhi);border:1px solid var(--paper2);border-radius:8px;margin:0 0 10px;padding:6px 10px}
+  .official-table td{border:0;padding:4px 0;display:grid;grid-template-columns:7.5em 1fr;gap:8px;max-width:none;min-width:0}
+  .official-table td::before{content:attr(data-label);color:var(--ink2);font-size:11px;padding-top:2px}
 }

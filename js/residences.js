@@ -102,7 +102,7 @@ function residenceSummary(name){
 function viewResidences(){
   const c=byId(UI.sel),selected=inPalace(c)&&c.rank!==8?c:null;
   const waiting=S.consorts.filter(x=>residenceMember(x)&&x.palace===PALACE_WAITING),sides=PALACES.reduce((n,p)=>n+palaceSides(p).length,0),heads=PALACES.filter(p=>palaceHost(p)).length;
-  return `<h2>宫室分配${backBtn}</h2><p class="hint">坤宁宫为皇后独居。十二宫各设一名主位（嫔位及以上）和三处侧殿。晋位不等于另获一宫，主位满额时可暂居侧殿。迁居需精力1。</p>
+  return `${pageBackButton('residences','map')}<h2>宫室分配</h2><p class="hint">坤宁宫为皇后独居。十二宫各设一名主位（嫔位及以上）和三处侧殿。晋位不等于另获一宫，主位满额时可暂居侧殿。迁居需精力1。</p>
     <p>主位 ${heads}/12 · 侧殿 ${sides}/36 · 待安置 ${waiting.length} 人。空主位须嫔位及以上才能入住；无合适余位时暂居掖庭，身份不变。</p>
     ${waiting.length?`<section class="residence-palace"><h3>掖庭待安置</h3><p>选中人物查看可用宫室；没有合法余位时，保留待安置身份，不挤占中宫或增加侧殿名额。</p>${waiting.map(x=>`<button class="btn" onclick="A.openResidence(${x.id})">安排${esc(fullName(x))} · ${esc(cName(x))}</button>`).join('')}</section>`:''}
     <div class="residence-picker" aria-label="选择安排住处的妃嫔">${harem().filter(x=>x.rank!==8).map(x=>`<button class="btn ${x===selected?'primary':''}" aria-pressed="${x===selected}" onclick="A.openResidence(${x.id})">${esc(fullName(x))} · ${esc(cName(x))}</button>`).join('')}</div>
