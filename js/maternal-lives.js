@@ -47,7 +47,7 @@ function maternalTick(){
   if(!old||old.kind!==kind){
    const r=state.children[k.id]={kind,since:S.turn,care:0,lastCare:-99,history:old?.history||[]};
    if(kind!=='near'||old&&old.kind!=='near'){
-    const text=kind==='near'?`${k.name}重新回到身边，她仍记得分开的日子。`:kind==='death'?`${k.name}已离世。她${maternalStyle(c)[4]}。`:kind==='missing'?`${k.name}下落未明，她仍等着寻回的消息，不肯把失散当作死别。`:`${k.name}${kind==='away'?`如今在${childWhereabouts(k)}`:kind==='closed'?'被抱养后暂不能私下探望':'如今由另一位母亲抚养'}。她${maternalStyle(c)[3]}。`;
+    const text=kind==='near'?`${k.name}重新回到身边，她仍记得分开的日子。`:kind==='death'?`${k.name}已离世。她${maternalStyle(c)[4].replace(/^她/,'')}。`:kind==='missing'?`${k.name}下落未明，她仍等着寻回的消息，不肯把失散当作死别。`:`${k.name}${kind==='away'?`如今在${childWhereabouts(k)}`:kind==='closed'?'被抱养后暂不能私下探望':'如今由另一位母亲抚养'}。她${maternalStyle(c)[3].replace(/^她/,'')}。`;
     r.history.push({turn:S.turn,kind,text});maternalRecord(c,k,r,text,kind==='near'?.6:-.8);
     if(old&&['death','missing','closed'].includes(kind)){cchg(c,{mood:isSolitary(c)?-12:-6});setXin(c,kind==='death'?'悲恸':'思念',`${k.name}：${MATERNAL_STATUS[kind]}`);}
    }
