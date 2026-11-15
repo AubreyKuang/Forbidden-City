@@ -22,8 +22,9 @@ function palaceParentageTick(){
       romanceEligible(k,c)&&romanceAdults(k,c)&&c.age<=45&&!c.preg&&(!c.delivery||c.delivery.settled)&&
       S.turn-c.lastBirth>=18&&c.aff<65&&!c.bond&&relGet(k,c)>=20;
   });
-  if(!pairs.length||!chance(.025))return;
+  if(!pairs.length)return;
   const pair=pick(pairs),{prince:k,consort:c}=romancePeople(pair);
+  if(!chance(Math.min(.06,.025*consortFertilityBase(c)/.18*consortFertilityFactor(c))))return;
   c.preg=1;c.pregnancyFather={kind:'prince',id:k.id,gen:S.gen,name:E().sur+k.name,wen:k.lit,wu:k.mar,mother:c.id,
     conceived:S.turn,princeAge:kidAge(k),motherAge:c.age,pair:pair.key,hidden:pair.status==='active'};
   beginPregnancyCalendar(c);

@@ -114,6 +114,7 @@ const woundOK=(c,w)=>w==='exile'?!!c.rescue:c.rescue?false:w==='quiet'?isSolitar
 const wishOK=(c,w)=>w==='rescueLetter'?!!c.rescue:c.rescue?false:!(w==='father'&&c.fam.p>=60);
 function grantConsortTitle(c,title){c.title=title;if(title&&c.wish==='title')c.wishDone=true;}
 function deepen(c){if(!c)return;
+  ensureConsortFertility(c);
   if(c.t2===undefined){c.t2=pick(Object.keys(QUIRKS));c.like=pick(LIKES);let h=pick(LIKES);while(h===c.like)h=pick(LIKES);c.hate=h;c.kl=false;
     c.wish=pick(Object.keys(WISHES).filter(w=>wishOK(c,w)));c.wishKnown=false;c.wishDone=false;c.wound=pick(Object.keys(WOUNDS).filter(w=>woundOK(c,w)));c.woundKnown=false;c.mem=c.mem||[];
     if(isSolitary(c)){const quirks=['畏寒','念旧','爱猫','好读史','贪睡','直言','怕雷'];c.t2=quirks[(c.seed>>>0)%quirks.length];if(solitaryDao(c)&&c.like==='佛经')c.like='诗书';if(c.hate===c.like)c.hate='珠翠';}}

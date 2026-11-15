@@ -7,37 +7,90 @@ function childNeedsMother(k){
   return !f||!f.alive||f.cold||f.gone;
 }
 function motherOriginalRank(k){const m=byId(k.mom);return Math.max(m?.rank??0,k.birthTraits?.mother?.rank??0);}
-function fosterPetitioner(c){
-  return inPalace(c)&&!c.maid&&c.age>=30&&c.rank>=4&&c.favor>=45&&!c.preg&&
-    (c.fam.p>=25||c.favor>=70)&&!S.children.some(k=>k.alive&&(k.mom===c.id||k.foster===c.id));
+function fosterPetitionReason(c){
+  if(!inPalace(c)||c.maid||c.age<20||c.preg||(c.delivery&&!c.delivery.settled)||c.hp<40||
+    S.children.some(k=>k.alive&&(k.mom===c.id||k.foster===c.id)))return null;
+  const years=Number.isFinite(c.enteredAt)?S.turn-c.enteredAt:0;
+  if(c.rank>=3&&c.favor>=70&&years>=24&&(c.nights||0)>=8&&c.lastBirth<0&&!S.children.some(k=>k.mom===c.id))return 'long-wait';
+  if(c.age>=30&&c.rank>=4&&c.favor>=45&&(c.fam.p>=25||c.favor>=70))return 'empty-household';
+  return null;
 }
-function fosterPetitionMatch(c,k){return fosterPetitioner(c)&&childNeedsMother(k)&&motherOriginalRank(k)<5&&c.rank>motherOriginalRank(k);}
+function fosterPetitioner(c){return !!fosterPetitionReason(c);}
+function fosterPetitionMatch(c,k){
+  const reason=fosterPetitionReason(c),m=byId(k?.mom),f=k&&fosterOf(k);
+  if(!reason||!m||m===c||!childInPalace(k)||k.pendingName||kidAge(k)>=6||k.id===S.heir||
+    motherOriginalRank(k)>=5||c.rank<=motherOriginalRank(k)||(f?.alive&&!f.cold&&!f.gone))return false;
+  return childNeedsMother(k)||(reason==='long-wait'&&inPalace(m));
+}
+function fosterWishWords(c,k){
+  if(isSolitary(c))return `臣妾不惯与人热闹，却愿给${k.name}留一处灯下的位置。喜欢独坐，也并非不想有人亲近。`;
+  if(['骄纵','骄矜','善妒'].includes(c.trait))return `宫里总拿有无孩子说事，臣妾也有不甘。可${k.name}若来了，总要一日一日好好养，不能只在人前争这一口气。`;
+  if(c.trait==='城府')return `臣妾知道养育也牵着将来的倚仗，但不敢只求一个名分。${k.name}的起居与教养，臣妾愿实实在在担起来。`;
+  if(['才女','聪慧','好学'].includes(c.trait))return `想教${k.name}识字，也想听孩子问些书上没有的问题。臣妾愿慢慢学着照料，不敢说有几本书便会做母亲。`;
+  if(['将门','爽直'].includes(c.trait))return `臣妾想照看${k.name}，不绕弯子。孩子原来的亲缘不能抹去，该担的照护，臣妾也不会只说不做。`;
+  if(c.trait==='痴情')return `臣妾曾盼着与陛下有自己的孩子。如今念着${k.name}，也愿把这份心意放进每日照料里，不是拿孩子去换恩宠。`;
+  if(c.trait==='体弱')return `臣妾身子弱些，若照料${k.name}，会先把乳母、起居安排妥当，不肯为了自己的心愿逞强。`;
+  return `臣妾想在${k.name}睡前留一盏灯，病了有人守着，长大时有人听他说话。孩子若不习惯，也愿慢慢等。`;
+}
+function fosterPetitionText(c,k){
+  const m=byId(k.mom),reason=fosterPetitionReason(c),past=S.children.some(x=>x.mom===c.id);
+  const opening=reason==='long-wait'?`${cName(c)}入宫已${Math.floor((S.turn-c.enteredAt)/12)}年，常获召见，却一直未曾生育。她今日提起的，是${k.name}。`:
+    `${cName(c)}已${c.age}岁，${past?'如今膝下无人相伴':'膝下无子'}，今日私下求见。`;
+  const care=childNeedsMother(k)?`她知道孩子有乳母照料，只是${!m.alive?'生母已不在了':'生母眼下不能亲自照看'}，希望自己承担长久照护。`:
+    `${fullName(m)}仍在亲自抚养孩子。她提出的是请养之愿，并非孩子无人照顾；若更换养母，生母与孩子的感受也须听见。`;
+  return `${opening}\n“${fosterWishWords(c,k)}”\n${relGet(c,k)>=25?`她也记得与${k.name}已有的来往，并非随意指一个孩子。\n`:''}${care}`;
+}
 function maternalKinMatch(c,k){
   const m=byId(k.mom);
   return inPalace(c)&&!c.maid&&childNeedsMother(k)&&m&&c.kinArrival?.mother===m.id&&
     !!c.kin?.[m.id]&&c.clan===m.clan;
 }
-function petitionFoster(k,c,kin=false){
+function petitionFoster(k,c,kin=false,consensual=false){
   if(S.over||!(kin?maternalKinMatch(c,k):fosterPetitionMatch(c,k)))return null;
-  const m=byId(k.mom),text=doFoster(k,c,{maternalKin:kin});
+  const m=byId(k.mom);
+  if(consensual&&!motherAcceptsFoster(c,k))return null;
+  const text=doFoster(k,c,{maternalKin:kin,consensual});
+  if(consensual){k.visitRule='open';kstory(k,`生母与${fullName(c)}商议后安排抚养，准生母照常探望，宗谱仍保留生母。`);}
   NPCMemory.record(S,{type:'family-care',time:S.turn,participants:[c.id,k.id,...(m?.alive?[m.id]:[])],outcome:`${fullName(c)}获准抚养${k.name}。`},[
     {person:c.id,subject:k.id,interpretation:kin?'我请求照顾姐妹留下的孩子，陛下准了。':'膝下无子的我请求照顾这个孩子，陛下准了。',emotion:.85,impact:90},
     {person:k.id,subject:c.id,interpretation:`由${fullName(c)}承担日常抚养，生母仍是${k.momName}。`,emotion:.5,impact:90},
-    ...(m?.alive?[{person:m.id,subject:c.id,interpretation:kin?'我的姐妹获准照看孩子，虽不能亲自养育，心中略有安慰。':'我不能亲自照看孩子，孩子被交给别的妃嫔抚养。',emotion:kin?.4:-.6,impact:90}]:[])
+    ...(m?.alive?[{person:m.id,subject:c.id,interpretation:kin?'我的姐妹获准照看孩子，虽不能亲自养育，心中略有安慰。':consensual?'我与她商议了抚养安排，仍能照常探望孩子。':inPalace(m)?'我仍想亲自照看孩子，却奉旨将孩子交给另一位妃嫔。':'我不能亲自照看孩子，孩子被交给别的妃嫔抚养。',emotion:kin||consensual?.4:-.6,impact:90}]:[])
   ]);save('auto');return text;
 }
-function fosterPetitionEvent(){
-  if(S.over||mourningActive()||S.turn-(S.flags.lastFosterPetition??-99)<24)return null;
-  const pairs=harem().filter(c=>S.turn-(c.lastFosterPetition??-99)>=36).flatMap(c=>S.children.filter(k=>fosterPetitionMatch(c,k)&&S.turn-(k.lastFosterPetition??-99)>=24).map(k=>({c,k})));
-  if(!pairs.length||!chance(.08))return null;
+function fosterPetitionPairs(only=null){
+  if(S.over||mourningActive()||S.turn-(S.flags.lastFosterPetition??-99)<24)return [];
+  return harem().filter(c=>(!only||c===only)&&S.turn-(c.lastFosterPetition??-99)>=36).flatMap(c=>S.children.filter(k=>fosterPetitionMatch(c,k)&&S.turn-(k.lastFosterPetition??-99)>=24).map(k=>({c,k})));
+}
+function fosterPetitionEvent(only=null){
+  const pairs=fosterPetitionPairs(only);
+  if(!pairs.length||(!only&&!chance(.08)))return null;
   const {c,k}=pick(pairs),m=byId(k.mom);
   return {title:'愿留一盏灯',por:c,cast:[k],present:[c],cooldown:24,valid:()=>fosterPetitionMatch(c,k),
-    onQueue:()=>{S.flags.lastFosterPetition=c.lastFosterPetition=k.lastFosterPetition=S.turn;},
-    text:`${cName(c)}膝下无子，已${c.age}岁，今日私下求见。\n“臣妾知道${k.name}有乳母照料，只是${!m.alive?'生母已不在了':'生母眼下不能亲自照看'}，终究少一个长久惦记的人。臣妾的位分与宫中用度尚能照应，想请陛下将孩子交给臣妾抚养。”\n她问的是${k.name}，并未借此讨取旁人的尊位。`,choices:[
-      {t:`准她抚养${k.name}`,f:()=>petitionFoster(k,c)},
-      {t:'暂由乳母照看，此事缓议',f:()=>{story(c,`请求抚养${k.name}，陛下暂缓定夺。`);save('auto');return '孩子仍由原处的乳母照护，没有更换养母。';}},
+    onQueue:()=>{S.flags.lastFosterPetition=c.lastFosterPetition=k.lastFosterPetition=S.turn;story(c,`【请养之愿】${fosterPetitionText(c,k)}`);},
+    text:fosterPetitionText(c,k),choices:[
+      childNeedsMother(k)?{t:`准她抚养${k.name}`,f:()=>petitionFoster(k,c)}:{t:'先听生母的意思，再定抚养',f:()=>{if(fosterPetitionMatch(c,k)){const ev=fosterMotherDiscussion(c,k);if(ev.valid()){ev.onQueue();pushNow(ev);}}return null;}},
+      {t:childNeedsMother(k)?'暂由乳母照看，此事缓议':'维持原有抚养，此事缓议',f:()=>{story(c,`请求抚养${k.name}，陛下暂缓定夺。`);save('auto');return childNeedsMother(k)?'孩子仍由原处的乳母照护，没有更换养母。':`孩子仍随生母${fullName(m)}生活，由乳母协助照护，没有更换养母。`;}},
       {t:'婉言不允',f:()=>{story(c,`请求抚养${k.name}，未获允准。`);remember(c,'family-care','请养孩子未获准，心中失落。');save('auto');return fx(cchg(c,{mood:-5}));}}]};
 }
+function motherAcceptsFoster(c,k){
+  const m=byId(k.mom);
+  return inPalace(m)&&relGet(m,c)>=55&&(m.hp<55||S.children.filter(x=>x.alive&&(x.foster||x.mom)===m.id&&kidAge(x)<6).length>=3);
+}
+function fosterMotherDiscussion(c,k){
+  const m=byId(k.mom),agrees=motherAcceptsFoster(c,k);
+  const voice=agrees?`“臣妾眼下确实有些照顾不周，与${fullName(c)}也信得过。若让我照常看望，孩子慢慢适应，臣妾愿商量。”`:
+    isSolitary(m)?`“臣妾与旁人疏淡，却不舍${k.name}。这孩子在臣妾膝前时，是不一样的。请让我们仍在一处。”`:
+    `“臣妾知道她盼孩子，可${k.name}也是臣妾放不下的人。臣妾仍想亲自养着，请陛下成全。”`;
+  const valid=()=>fosterPetitionMatch(c,k)&&inPalace(m);
+  return {title:'生母的心意',por:m,cast:[c,k],present:[m,c],valid,
+    onQueue:()=>{story(m,`【请养之议】${fullName(c)}请求抚养${k.name}。${voice}`);story(c,`【生母回应】${fullName(m)}谈到${k.name}：${voice}`);},
+    text:`你请${fullName(m)}说出自己的意思，并未因请养者得宠就立刻抱走孩子。\n${voice}\n孩子的生母身份始终保留。`,choices:[
+      {t:agrees?'按所议安排抚养，准生母探望':'仍旨令交予她抚养',f:()=>valid()?petitionFoster(k,c,false,agrees):null},
+      {t:'留在生母身边，日后慢慢往来',f:()=>{if(!valid())return null;const text=`${k.name}仍随生母${fullName(m)}生活；陛下没有因请养者得宠而立即改变抚养。日后往来仍由双方商量。`;story(c,text);story(m,text);kstory(k,text);remember(c,'family-care',text);save('auto');return text;}},
+      {t:'暂缓定夺',f:()=>{if(!valid())return null;story(c,`听取${fullName(m)}的意思后，抚养${k.name}之议暂缓。`);save('auto');return '原有照护安排不变。';}}]};
+}
+A.fosterWish=function(id){if(modalOpen)return;const c=byId(id),ev=c&&fosterPetitionEvent(c);if(ev)pushEv(ev);};
+function fosterWishButton(c){return fosterPetitionPairs(c).length?`<button class="btn sm" onclick="A.fosterWish(${c.id})">听她谈抚养孩子</button>`:'';}
 function kinSuccessionSource(c){
   return c&&!c.maid&&c.rank>=5&&c.age>=20&&hasClan(c)&&(!c.alive||c.cold||c.gone)&&!c.kinSuccessor;
 }
