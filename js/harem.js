@@ -34,7 +34,7 @@ const HAREM=[
   const cs=h.filter(c=>!isSolitary(c)&&c!==top&&(TRAITS[c.trait].jealous||c.scheme>70)&&c.favor<top.favor-8);if(!cs.length)return null;const a=pick(cs);
   return {title:'醋海生波',present:[a,top],por:a,text:`${cName(a)}前来请安，言语间颇有怨怼：\n“陛下近日总往${top.palace}去，想来${cName(top)}那儿的茶，是比别处香些。”`,choices:[
    {t:'温言安抚',f:()=>{story(a,'向陛下诉了几句委屈，陛下温言安抚，她心中稍霁。');return fx(cchg(a,{mood:12,aff:4}))}},
-   {t:'今夜便宿在她宫里',cond:()=>E().energy>0&&!a.preg,why:'精力不足',f:()=>{nightWith(a);return null}},
+   {t:'今夜便宿在她宫里',cond:()=>E().energy>0&&!a.preg&&(!consortRecoveryActive()||!consortNightReason(a)),why:(consortRecoveryActive()&&consortNightReason(a))||('精力不足'),f:()=>{nightWith(a);return null}},
    {t:'冷言训诫：“后宫当以和睦为先。”',f:()=>{story(a,'因妒生怨，遭陛下训诫，回宫后闭门不出。');a.scheme=clamp(a.scheme+3);return fx(cchg(a,{mood:-15,aff:-6,favor:-3}))}}]}},
  function musk(){const h=harem();const sc=h.filter(c=>!isSolitary(c)&&c.scheme>=65&&(c.mood<70||c.scheme>=80));if(!sc.length)return null;const a=pick(sc);
   const ts=h.filter(c=>c!==a&&(c.favor>=a.favor||c.preg));if(!ts.length)return null;const b=ts.sort((x,y)=>relGet(a,x)-relGet(a,y))[0];
@@ -43,7 +43,7 @@ const HAREM=[
      story(b,'香囊一案不了了之，她从此饮食起居分外小心。');return `线索断在一名投井的小太监身上，此案只得不了了之。${fx(cchg(b,{mood:-10}))}`}},
    {t:'加赏安抚，不予深究',f:()=>{story(b,'香囊一案，陛下并未深究。');a.scheme=clamp(a.scheme+3);return `${fx(chg({treasury:-20}),cchg(b,{mood:4,aff:-3}))}`}}]}},
  function slip(){const h=harem();const b=h.find(c=>c.preg>=3&&!c.prot&&!concealedPregnancy(c));if(!b)return null;const a=h.find(c=>!isSolitary(c)&&c!==b&&c.scheme>=60);if(!a)return null;
-  const lose=()=>{b.preg=0;delete b.pregnancyFather;delete b.pregnancyCalendar;story(b,'在御花园失足滑倒，腹中骨肉没能保住。');setXin(b,'悲恸','腹中骨肉没能保住');log(`${fullName(b)}失足小产。`,1);AU.sfx('sad');
+  const lose=()=>{b.preg=0;beginConsortRecovery(b,'loss');delete b.pregnancyFather;delete b.pregnancyCalendar;story(b,'在御花园失足滑倒，腹中骨肉没能保住。');setXin(b,'悲恸','腹中骨肉没能保住');log(`${fullName(b)}失足小产。`,1);AU.sfx('sad');
     if(chance(.5+E().prestige/300)){a.known=true;pushNow(punishEv(a,b,'石阶泼油、致人小产'))}
     return `太医跪了一地：“臣等无能……”${fx(cchg(b,{mood:-40,aff:3}))}`};
   return {title:'石阶惊变',present:[a,b],por:b,sfx:'err',text:`${cName(b)}在御花园赏花时，石阶上不知被谁泼了桐油，失足滑倒，腹痛不止！`,choices:[
@@ -64,7 +64,7 @@ const HAREM=[
    {t:'回赠一首诗',f:()=>{story(c,`以诗相邀，陛下回赠一诗。她将诗笺珍藏在妆奁里。`);return fx(cchg(c,{aff:5,mood:6}))}},
    {t:'置之不理',f:()=>fx(cchg(c,{mood:-8}))}]}},
  function ill(){const cs=harem().filter(c=>c.trait==='体弱'||chance(.15));if(!cs.length)return null;const c=pick(cs);
-  return {title:'病榻',por:c,text:`${cName(c)}偶感风寒，连日高烧不退。`,choices:[
+  return {title:'病榻',por:c,onShow:()=>{if(consortRecoveryActive())c.illnessRecovery={turn:S.turn,until:S.turn+2};},text:`${cName(c)}偶感风寒，连日高烧不退。`,choices:[
    {t:'宣太医诊治',f:()=>{story(c,'染了风寒，太医悉心诊治，渐渐痊愈。');return fx(chg({treasury:-10}),cchg(c,{mood:5}))}},
    {t:'亲自探视（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{E().energy--;renderTop();remember(c,'care','病中探视');story(c,'卧病在床，陛下亲自来看她，还喂了她一口药。');return fx(cchg(c,{mood:20,aff:15}))}},
    {t:'不必理会',f:()=>{if(c.trait==='体弱'&&chance(.25)){c.alive=false;story(c,'病势沉重，无人问津，于一个雪夜香消玉殒。');log(`${fullName(c)}病逝。`,1);AU.sfx('sad');return `数日后，${c.palace}传来噩耗：${fullName(c)}病逝了。`}story(c,'病了半月，陛下未曾过问。');remember(c,'neglect','病中无人过问');return fx(cchg(c,{mood:-15,aff:-8}))}}]}},
@@ -215,7 +215,7 @@ HAREM.push(
  function defect(){const f=factions();if(!f.L.length)return null;const pool=f.neutral.filter(c=>!isSolitary(c)&&c.rank<=3&&c.favor<35);if(!pool.length)return null;const c=pick(pool),l=pick(f.L);
   return {title:'投靠',cast:[c,l],text:`有宫人看见，${cName(c)}近来常往${l.palace}跑，给${cName(l)}送这送那。看样子是想找个靠山。`,choices:[
    {t:'由她去',f:()=>{relAdd(c,l,25);story(c,`投靠了${fullName(l)}。`);return `${cName(c)}从此成了${cName(l)}身边的人。`}},
-   {t:'召她侍寝，让她不必依附旁人',cond:()=>E().energy>0&&!c.preg,why:'精力不足',f:()=>{nightWith(c);return null}},
+   {t:'召她侍寝，让她不必依附旁人',cond:()=>E().energy>0&&!c.preg&&(!consortRecoveryActive()||!consortNightReason(c)),why:(consortRecoveryActive()&&consortNightReason(c))||('精力不足'),f:()=>{nightWith(c);return null}},
    {t:`提点${cName(l)}：后宫不许结党`,f:()=>{relAdd(c,l,-10);return fx(cchg(l,{mood:-8,aff:-3}))}}]}},
  function poisonHeir(){if(!S.heir)return null;const h=kidById(S.heir);if(!childInPalace(h))return null;const hm=byId(h.mom);
   const sus=harem().filter(c=>!isSolitary(c)&&c.id!==h.mom&&c.scheme>=65&&S.children.some(k=>k.mom===c.id&&k.sex==='m'&&k.alive&&k.id!==h.id));if(!sus.length)return null;const a=pick(sus);
@@ -229,7 +229,7 @@ const maids=()=>alive().filter(c=>c.maid);
 function newMaid(where){const g=makeGirl({fam:{t:'宫女',p:3},age:ri(16,20)});g.maid=true;g.near=false;g.palace='尚衣局';g.favor=20;g.aff=20;S.consorts.push(g);deepen(g);story(g,`本是${where}的宫女，被陛下看中。`);return g}
 function promoteMaid(g,rank){g.maid=false;g.near=false;g.rank=rank;assignPalace(g);deepen(g);initRel(g);assignArc(g);S.ys.c++;
   story(g,`由宫女册封为${RANKS[rank]}，赐居${g.palace}。`);log(`宫女${fullName(g)}册封为${RANKS[rank]}。`,1)}
-function maidNight(g){if(!inPalace(g)||g.preg||g.cardWithdrawn)return;if(E().energy<=0){toast('本月精力已尽');return}nightWith(g);Q.splice(1,0,afterMaidNight(g))}
+function maidNight(g){if(!inPalace(g)||g.preg||g.cardWithdrawn||consortRecoveryActive()&&consortNightReason(g))return;if(E().energy<=0){toast('本月精力已尽');return}nightWith(g);Q.splice(1,0,afterMaidNight(g))}
 function afterMaidNight(g){return {title:'天明',por:g,text:`天快亮时，${g.given}已经起身，跪在床边替你理好朝服，低着头不敢看你。\n她只是个宫女，往后如何，全凭陛下一句话。`,choices:[
   {t:'封为答应',f:()=>{promoteMaid(g,1);setXin(g,'欢喜','一夜承恩，封为答应');return `她磕头谢恩，搬进了${g.palace}。${fx(cchg(g,{mood:25,aff:10}))}`}},
   {t:'封为官女子',f:()=>{promoteMaid(g,0);setXin(g,'欢喜','一夜承恩，封为官女子');return `她磕头谢恩。${fx(cchg(g,{mood:15,aff:6}))}`}},
@@ -251,7 +251,7 @@ function teaMaid(){if(maids().filter(m=>m.near).length>=4||!newConsortEventAllow
    {t:'赏她一碟点心，让她去歇着',f:()=>'她捧着点心退下了。'}]}}
 function nearMaidEvent(){const m=maids().filter(m=>m.near&&!m.preg);if(!m.length)return null;const g=pick(m);
   return {title:'贴身宫女',por:g,text:pick([`${g.given}替你更衣时，发现你朝服里衬磨破了一个小口，连夜拿回去补好了，针脚细得几乎看不出来。`,`你午睡醒来，${g.given}正坐在脚踏上打扇，扇了一个时辰，手臂都酸了也没停。`,`${g.given}记得你喝茶要七分烫，批折子时要燃沉水香，咳嗽了要加一勺川贝。`]),choices:[
-   {t:'今夜留她（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{nightWith(g);return null}},
+   {t:'今夜留她（精力-1）',cond:()=>E().energy>0&&(!consortRecoveryActive()||!consortNightReason(g)),why:(consortRecoveryActive()&&consortNightReason(g))||('精力不足'),f:()=>{nightWith(g);return null}},
    {t:'封为答应',f:()=>{promoteMaid(g,1);setXin(g,'欢喜','从贴身宫女册封为答应');return fx(cchg(g,{mood:25,aff:8}))}},
    {t:'赏她一对银镯',f:()=>fx(chg({treasury:-2}),cchg(g,{mood:10,aff:4}))}]}}
 A.raiseMaid=function(id,rank){const g=byId(id);promoteMaid(g,rank);setXin(g,'欢喜',`由宫女册封为${RANKS[rank]}`);cchg(g,{mood:20,aff:6});AU.sfx('joy');toast(`已册封为${RANKS[rank]}`);render()};

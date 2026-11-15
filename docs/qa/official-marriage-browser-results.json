@@ -1,0 +1,667 @@
+{
+  "url": "http://127.0.0.1:8428/dev.html",
+  "started": "2026-11-15T23:20:59.716Z",
+  "runs": [
+    {
+      "name": "princess",
+      "viewport": "desktop",
+      "reloads": [
+        "导入后",
+        "议婚入口",
+        "人选名帖",
+        "双方回笺",
+        "婚仪结果",
+        "成婚后"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 740,
+          "content": 740
+        },
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 850,
+          "content": 850
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "princess-entry",
+      "viewport": "desktop",
+      "reloads": [
+        "导入后",
+        "议婚入口",
+        "人选名帖",
+        "双方回笺",
+        "婚仪结果",
+        "成婚后"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 740,
+          "content": 740
+        },
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 850,
+          "content": 850
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "family",
+      "viewport": "desktop",
+      "reloads": [
+        "导入后",
+        "议婚入口",
+        "人选名帖",
+        "双方回笺",
+        "婚仪结果",
+        "成婚后"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 740,
+          "content": 740
+        },
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 850,
+          "content": 850
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "guest",
+      "viewport": "desktop",
+      "reloads": [
+        "导入后",
+        "议婚入口",
+        "人选名帖",
+        "双方回笺",
+        "婚仪结果",
+        "成婚后"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 740,
+          "content": 740
+        },
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 850,
+          "content": 850
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "refusal",
+      "viewport": "desktop",
+      "reloads": [
+        "导入后",
+        "议婚入口",
+        "人选名帖",
+        "双方回笺"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 740,
+          "content": 740
+        },
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 850,
+          "content": 850
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "betrothal",
+      "viewport": "desktop",
+      "reloads": [
+        "导入后",
+        "议婚入口",
+        "人选名帖",
+        "双方回笺",
+        "旧约改议",
+        "婚仪结果",
+        "成婚后"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 740,
+          "content": 740
+        },
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 850,
+          "content": 850
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "same-family",
+      "viewport": "desktop",
+      "reloads": [
+        "导入后",
+        "议婚入口",
+        "人选名帖",
+        "双方回笺",
+        "婚仪结果",
+        "成婚后"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 740,
+          "content": 740
+        },
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 850,
+          "content": 850
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "married",
+      "viewport": "desktop",
+      "reloads": [
+        "导入后"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 850,
+          "content": 850
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "letter",
+      "viewport": "desktop",
+      "reloads": [
+        "导入后",
+        "家书待阅",
+        "婚事纪事"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 850,
+          "content": 850
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "child-alone",
+      "viewport": "desktop",
+      "reloads": [
+        "导入后",
+        "探望答复",
+        "探望结束"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 740,
+          "content": 740
+        },
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 940,
+          "content": 940
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "child-company",
+      "viewport": "desktop",
+      "reloads": [
+        "导入后",
+        "探望答复",
+        "探望结束"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 740,
+          "content": 740
+        },
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 940,
+          "content": 940
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "infant-alone",
+      "viewport": "desktop",
+      "reloads": [
+        "导入后",
+        "探望答复",
+        "探望结束"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 740,
+          "content": 740
+        },
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 940,
+          "content": 940
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "guard",
+      "viewport": "desktop",
+      "reloads": [
+        "导入后"
+      ],
+      "layouts": [
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 850,
+          "content": 850
+        },
+        {
+          "width": 1440,
+          "document": 1440,
+          "box": 850,
+          "content": 850
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "princess",
+      "viewport": "mobile",
+      "reloads": [
+        "导入后",
+        "议婚入口",
+        "人选名帖",
+        "双方回笺",
+        "婚仪结果",
+        "成婚后"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 366,
+          "content": 366
+        },
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "princess-entry",
+      "viewport": "mobile",
+      "reloads": [
+        "导入后",
+        "议婚入口",
+        "人选名帖",
+        "双方回笺",
+        "婚仪结果",
+        "成婚后"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 366,
+          "content": 366
+        },
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "family",
+      "viewport": "mobile",
+      "reloads": [
+        "导入后",
+        "议婚入口",
+        "人选名帖",
+        "双方回笺",
+        "婚仪结果",
+        "成婚后"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 366,
+          "content": 366
+        },
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "guest",
+      "viewport": "mobile",
+      "reloads": [
+        "导入后",
+        "议婚入口",
+        "人选名帖",
+        "双方回笺",
+        "婚仪结果",
+        "成婚后"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 366,
+          "content": 366
+        },
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "refusal",
+      "viewport": "mobile",
+      "reloads": [
+        "导入后",
+        "议婚入口",
+        "人选名帖",
+        "双方回笺"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 366,
+          "content": 366
+        },
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "betrothal",
+      "viewport": "mobile",
+      "reloads": [
+        "导入后",
+        "议婚入口",
+        "人选名帖",
+        "双方回笺",
+        "旧约改议",
+        "婚仪结果",
+        "成婚后"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 366,
+          "content": 366
+        },
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "same-family",
+      "viewport": "mobile",
+      "reloads": [
+        "导入后",
+        "议婚入口",
+        "人选名帖",
+        "双方回笺",
+        "婚仪结果",
+        "成婚后"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 366,
+          "content": 366
+        },
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "married",
+      "viewport": "mobile",
+      "reloads": [
+        "导入后"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "letter",
+      "viewport": "mobile",
+      "reloads": [
+        "导入后",
+        "家书待阅",
+        "婚事纪事"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "child-alone",
+      "viewport": "mobile",
+      "reloads": [
+        "导入后",
+        "探望答复",
+        "探望结束"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 366,
+          "content": 366
+        },
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "child-company",
+      "viewport": "mobile",
+      "reloads": [
+        "导入后",
+        "探望答复",
+        "探望结束"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 366,
+          "content": 366
+        },
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "infant-alone",
+      "viewport": "mobile",
+      "reloads": [
+        "导入后",
+        "探望答复",
+        "探望结束"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 366,
+          "content": 366
+        },
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "guard",
+      "viewport": "mobile",
+      "reloads": [
+        "导入后"
+      ],
+      "layouts": [
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        },
+        {
+          "width": 390,
+          "document": 390,
+          "box": 374,
+          "content": 374
+        }
+      ],
+      "errors": [],
+      "passed": true
+    }
+  ],
+  "browser": "157.0.8103.78",
+  "finished": "2026-11-15T23:22:51.954Z",
+  "passed": true
+}

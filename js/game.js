@@ -196,6 +196,7 @@ function showRes(res){
 /* ============ 侍寝与互动 ============ */
 function nightWith(c,fromEvent){
   if(!inPalace(c)||c.preg||c.cardWithdrawn)return;
+  if(consortRecoveryActive()&&consortNightReason(c)){toast(consortNightReason(c));return;}
   if(!useE()) return;
   const e=E();e.nightsMonth=(e.nightsMonth||0)+1;S.ys.n++;
   const lines=isSolitary(c)?['她合上读到一半的书，给你留出身侧的位置。夜深后仍有半晌，各自静静想着白日未尽的话。','她不说讨巧的话，只把茶递到你手里。你们谈了一回诗书，意见未必相同，她却比平日更愿意说了。']:(NIGHT[c.trait]||[]).concat(NIGHT._),line=familyScenesEnabled()?nightVoice(c):pick(lines);

@@ -895,3 +895,23 @@ button.family-room-person{cursor:pointer}button.family-room-person:hover{color:#
 .ministry-head{display:flex;gap:10px;align-items:center}
 .ministry-head h3{margin:0}.ministry-head h3 small{font-weight:400;color:var(--ink2);font-size:12px}
 .ministry-head .por{flex:none;width:56px;height:auto}
+
+/* Father → siblings → their children; expansion preserves the royal branches below. */
+.graph-house:has(.family-house-tree){display:block;padding:4px 6px;overflow:visible}
+.family-house-tree{min-width:0;pointer-events:auto}
+.family-tree-row{display:flex;align-items:center;gap:3px;min-height:58px;position:relative}
+.family-tree-row>.graph-kin-person{flex:1;min-width:0;border:0;background:transparent;text-align:left;color:inherit;cursor:pointer;padding:3px 0}
+.family-tree-branches,.family-tree-descendants{margin-left:10px;padding-left:9px;border-left:1px solid #b69770}
+.family-tree-branch{position:relative;min-height:62px}
+.family-tree-descendants>.family-tree-row{min-height:60px}
+.family-tree-branch:before,.family-tree-descendants>.family-tree-row:before{content:"";position:absolute;left:-9px;top:28px;width:9px;border-top:1px solid #b69770}
+.family-fold{flex:none;width:26px;min-height:34px;border:1px solid #bda482;border-radius:4px;background:#f1e2c7;color:#593b2a;cursor:pointer;font:inherit;pointer-events:auto}
+.family-fold small{display:block;font-size:9px}.family-fold:focus-visible{outline:2px solid #946440;outline-offset:2px}
+.family-married-hint{display:block;color:#735941;font-size:10px;line-height:1.3;padding:0 0 4px 3px}
+.family-house-tree .graph-person small{font-size:10px;line-height:1.25}
+.paternal-branch>.family-house-tree{max-width:400px}
+
+.story-consort-card{display:grid;grid-template-columns:minmax(150px,200px) minmax(0,1fr);gap:22px;padding:18px;border:1px solid #c8ad87;background:#fff8e9;border-radius:10px}
+.story-consort-picture{display:flex;align-items:center;flex-direction:column;gap:10px}.story-consort-picture>.por{max-width:100%;height:auto}
+.story-consort-copy h3{margin-top:0}.story-consort-copy dl{margin:14px 0}.story-consort-copy dt{font-weight:700;color:#735336;margin-top:14px}.story-consort-copy dd{margin:5px 0 0;line-height:1.8}
+@media(max-width:600px){.story-consort-card{grid-template-columns:1fr;padding:14px;gap:14px}.story-consort-picture>.por{width:176px}}

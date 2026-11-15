@@ -2,11 +2,11 @@
 const examGroomReady=p=>careersActive()&&p?.examRank==='探花'&&officialServing(p)&&p.age>=18&&!p.married&&!p.spouse&&!p.spouseRelative&&!p.royalSpouseId&&!p.betrothal;
 function examMarriageCandidates(p){
   if(!examGroomReady(p))return [];
-  const out=S.children.filter(k=>k.sex==='f'&&kidAge(k)>=18&&Math.abs(kidAge(k)-p.age)<=15&&marriageReady(k)&&!k.betrothal).map(k=>({p:k,kind:'princess',key:'princess:'+k.id})),seen=new Set();
+  const out=S.children.filter(k=>k.sex==='f'&&kidAge(k)>=(journalContentVersion()>=19?15:18)&&(journalContentVersion()>=19||Math.abs(kidAge(k)-p.age)<=15)&&marriageReady(k)&&!k.betrothal).map(k=>({p:k,kind:'princess',key:'princess:'+k.id})),seen=new Set();
   for(const c of harem())for(const sister of natalPeople(houseOf(c))){
     if(seen.has(sister.id))continue;seen.add(sister.id);
     if(sister.sex!=='f'||!sister.alive||sister.parentRelativeId||sister.consortId||natalAge(sister)<18||Math.abs(natalAge(sister)-p.age)>15||sister.married||sister.spouse||sister.betrothal||sister.widow||sister.natalPregnancy)continue;
-    if(p.courtKin?.some(edge=>edge.fatherId===houseOf(c).father.id))continue;
+    if(journalContentVersion()<19&&p.courtKin?.some(edge=>edge.fatherId===houseOf(c).father.id))continue;
     out.push({p:sister,c,kind:'sister',key:'sister:'+sister.id});
   }
   return out;
@@ -14,7 +14,7 @@ function examMarriageCandidates(p){
 function examMarriageEvent(p){
   if(!examGroomReady(p))return null;const options=examMarriageCandidates(p);
   return {title:'金榜之后 · 探花议婚',por:p,valid:()=>examGroomReady(p),text:`新科探花${p.name}，${p.age}岁，${p.origin}出身，现授${officialOfficeLabel(p)}。礼部核过婚籍，他尚未婚配。\n若有合适的人选，可以分别问过双方心意，再定婚事。已有婚约的人不列入名册。`,choices:[
-    ...options.map(x=>({t:x.kind==='princess'?`问问${kidName(x.p)}的心意`:`问问${fullName(x.c)}的${natalLabel(x.c,x.p)}${x.p.name}`,person:x.p,f:()=>{if(!examMarriageCandidates(p).some(o=>o.key===x.key))return null;pushNow(examMarriageReview(p,x.key));return null;}})),
+    ...options.map(x=>({t:x.kind==='princess'?`问问${kidName(x.p)}的心意`:`问问${fullName(x.c)}的${natalLabel(x.c,x.p)}${x.p.name}`,person:x.kind==='sister'?natalPortrait(x.p):x.p,f:()=>{if(!examMarriageCandidates(p).some(o=>o.key===x.key))return null;pushNow(examMarriageReview(p,x.key));return null;}})),
     {t:'金榜是喜事，婚事留待日后',f:()=>{scholarRecord(p,'殿试后礼部提及婚事，陛下暂未指婚，仍由本人日后再议。');return '未定婚约，日后仍可从探花的档案里商议。';}}
   ]};
 }
@@ -22,7 +22,7 @@ function examMarriageReview(groom,key){
   const x=examMarriageCandidates(groom).find(x=>x.key===key);if(!x)return null;
   const bride=x.p,willing=bride.willing!==false&&groom.willing!==false,cost=x.kind==='princess'?50:10;
   const valid=()=>examMarriageCandidates(groom).some(o=>o.key===key),name=x.kind==='princess'?kidName(bride):bride.name;
-  return {title:'探花指婚 · 先问心意',por:bride,cast:[groom],valid,text:`${name}，${x.kind==='princess'?kidAge(bride):natalAge(bride)}岁。礼部让二人分别谈了家世与日后的打算。\n${willing?`${groom.name}愿意议亲；${name}也愿意与他相知，说金榜固然可喜，更想看婚后的相处。`:`${bride.willing===false?name:groom.name}表示眼下无意这门婚事，不能将不情愿写成谢恩。`}\n${x.kind==='sister'?`${fullName(x.c)}会收到亲事的消息，家族名册和双方纪事都会保留这门姻亲。`:'成婚后探花保留原有官职与履历，另记驸马身份，不因成亲凭空升官。'}`,choices:[
+  return {title:'探花指婚 · 先问心意',por:x.kind==='sister'?natalPortrait(bride):bride,cast:[groom],valid,text:`${name}，${x.kind==='princess'?kidAge(bride):natalAge(bride)}岁。${x.kind==='sister'?`她是${fullName(x.c)}的${natalLabel(x.c,bride)}。`:''}礼部让二人分别谈了家世与日后的打算。\n${willing?`${groom.name}愿意议亲；${name}也愿意与他相知，说金榜固然可喜，更想看婚后的相处。`:`${bride.willing===false?name:groom.name}表示眼下无意这门婚事，不能将不情愿写成谢恩。`}\n${x.kind==='sister'?`${fullName(x.c)}会收到亲事的消息，家族名册和双方纪事都会保留这门姻亲。`:'成婚后探花保留原有官职与履历，另记驸马身份，不因成亲凭空升官。'}`,choices:[
     {t:`双方愿意，赐婚成全 · 国库−${cost}`,cond:()=>willing&&valid()&&E().treasury>=cost,why:willing?'国库不足或人选处境已变':'本人尚无此意',f:()=>{
       if(!valid()||!willing||E().treasury<cost)return null;
       if(x.kind==='sister'){

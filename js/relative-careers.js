@@ -1,6 +1,16 @@
 /* A degree is a qualification, not an office. Every request names a real person. */
 const STUDENT_POSTS=['书生','秀才','举人','国子监生'];
-const officialPerson=(h,role)=>role?.startsWith('relative')?h?.relatives?.find(p=>p.id===Number(role.slice(8))):h?.[role];
+const officialPerson=(h,role)=>{
+  if(!role?.startsWith('relative'))return h?.[role];
+  const id=Number(role.slice(8)),own=h?.relatives?.find(p=>p.id===id);
+  if(own||!h||typeof layeredFamilyActive!=='function'||!layeredFamilyActive())return own;
+  // A paternal-tree link can point at the same child record kept with its birth history.
+  const men=new Set([h.father?.id,...brotherRoles(h).map(r=>h[r].id),...(h.relatives||[]).filter(p=>p.sex==='m').map(p=>p.id)]);
+  for(const c of S.consorts){const p=c.house?.relatives?.find(p=>p.id===id);if(!p)continue;
+    const mother=c.house.relatives.find(m=>m.id===p.parentRelativeId);
+    if(men.has(p.fatherId??mother?.spouse?.personId))return p;
+  }
+};
 function initializeRelativeCareer(p,role){
   if(role==='father')return;
   if(!p.career)p.career=STUDENT_POSTS.includes(p.post)?'student':'official';

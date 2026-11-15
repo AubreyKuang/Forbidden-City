@@ -169,6 +169,7 @@ function careerReportsHTML(){
 
 /* 身在前朝，也记挂宫里的女儿与姐妹。比较实际变化，绝不把读档当作新事件。 */
 function courtFamilyLifeTick(previous){
+  repairFamilyConcernWording();
   if(!careersActive()||!previous||previous.gen!==S.gen)return;
   const before=new Map((previous.consorts||[]).map(c=>[c.id,c]));
   for(const c of S.consorts){
@@ -183,10 +184,14 @@ function courtFamilyLifeTick(previous){
       if(person.p.palaceConcerns?.[key]===stamp)continue;
       (person.p.palaceConcerns ||= {})[key]=stamp;
       const sober=['持正','谨慎'].includes(person.p.temperament),fact={death:'去世',cold:'被迁入冷宫',demoted:`由${RANKS[old.rank]}降为${RANKS[c.rank]}`,birth:`诞育${newborn.map(k=>kidName(k)).join('、')}`,pregnancy:'有孕的消息传到家中',favored:'近来颇得圣眷',neglected:'近来少有召见',released:'获准离开冷宫'}[kind];
-      const quote={death:'旧信还收在匣中，今后却再也等不到她的回信了。',cold:'臣不敢以家事乱国法，只求她有衣御寒、有药可医。',demoted:sober?'臣会写信劝她自省。只是做家人的，到底免不了担心。':'臣想听听她的近况。她性子里的委屈，可有人肯听？',birth:'母子可都平安？家中已备下小衣裳，只盼她好好将养。',pregnancy:'她打小就不肯轻易说难受。还望御医多问一句，别让她独自硬撑。',favored:sober?'家中自是欢喜，也会劝她慎言守礼，不可仗着圣眷失了分寸。':'听说她过得顺遂，家中悬着的心才放下。',neglected:'家书只说一切都好。臣却怕她报喜不报忧，把失落都藏着。',released:'知道她离了冷宫，臣一夜未眠，总算能往家里报个平安。'}[kind];
+      let quote={death:'旧信还收在匣中，今后却再也等不到她的回信了。',cold:'臣不敢以家事乱国法，只求她有衣御寒、有药可医。',demoted:sober?'臣会写信劝她自省。只是做家人的，到底免不了担心。':'臣想听听她的近况。她性子里的委屈，可有人肯听？',birth:'母子可都平安？家中已备下小衣裳，只盼她好好将养。',pregnancy:'她打小就不肯轻易说难受。还望御医多问一句，别让她独自硬撑。',favored:sober?'家中自是欢喜，也会劝她慎言守礼，不可仗着圣眷失了分寸。':'听说她过得顺遂，家中悬着的心才放下。',neglected:'家书只说一切都好。臣却怕她报喜不报忧，把失落都藏着。',released:'知道她离了冷宫，臣一夜未眠，总算能往家里报个平安。'}[kind];
+      if(familyJusticeActive()&&['cold','demoted','death'].includes(kind)){
+        const context=familyPenaltyContext(c,old);
+        if(kind!=='death'||context.known==='guilty')quote=familyPenaltyQuote(person.p,context);
+      }
       const text=`【宫中牵挂】得知${fullName(c)}${fact}，${person.p.name}道：“${quote}”`;
       story(person.p,text);log(text);person.p.palaceConcern={c:c.id,kind,turn:S.turn,quote};
-      if(c.alive&&!c.gone){const line=`【娘家来信】${r.label}${person.p.name}得知自己${fact}，托人传话：“${quote}”`;story(c,line);NPCMemory.record(S,{type:'family-concern',time:S.turn,participants:[c.id,person.p.id],object:fact},[{person:c.id,subject:person.p.id,interpretation:line,emotion:kind==='favored'||kind==='birth'?.4:-.4,impact:75}]);}
+      if(c.alive&&!c.gone){const line=`【娘家来信】${r.label}${person.p.name}得知${familyJusticeActive()?fullName(c):'自己'}${fact}，托人传话：“${quote}”`;story(c,line);NPCMemory.record(S,{type:'family-concern',time:S.turn,participants:[c.id,person.p.id],object:fact},[{person:c.id,subject:person.p.id,interpretation:line,emotion:kind==='favored'||kind==='birth'?.4:-.4,impact:75}]);}
     }
   }
 }

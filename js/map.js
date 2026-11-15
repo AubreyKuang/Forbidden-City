@@ -113,7 +113,7 @@ function goDirect(p){emp.path=[];emp.arrive=null;emp.x=p.d[0];emp.y=p.d[1];arriv
 A.arrivePlace=function(id){const p=PLACES.find(p=>p.id===id);if(p)arrive(p);};
 function arrive(p){if(typeof PalaceActions!=='undefined'&&!PalaceActions.busy)return A.arrivePlace(p.id);S.pos={x:p.d[0],y:p.d[1]};setScene(p.sc);AU.sfx('page');
   if(p.k==='view')UI.view=p.v;else if(p.k==='palace'){UI.view='palace';UI.sel=p.p;preparePalaceLife(p.p)}else{UI.view='place';UI.sel=p.id}
-  render();if(p.k==='palace')pushEv(palaceArrivalEvent(p.p))}
+  render();if(p.k==='palace')pushEv(palaceActiveSceneEvent(p)||palaceArrivalEvent(p.p))}
 function nearestPlace(){const p=PLACES.find(p=>S.pos&&p.d[0]===S.pos.x&&p.d[1]===S.pos.y);return p?p.n+'门前':'宫道上'}
 function mapTick(){if(!S||UI.view!=='map'||modalOpen||exhaustedMonthNotice)return;
   if(emp.path.length){const done=stepTo(emp,3.5);emp.trail.push([emp.x,emp.y]);if(emp.trail.length>5)emp.trail.shift();
@@ -278,7 +278,7 @@ function meetConsort(c,routine){if(!c||!c.alive||c.gone)return;
   const t=routine||npcRoutineText(c,NPC.get(c.id));
   pushEv({title:'宫道偶遇',por:c,text:`你在宫道上遇见了${cName(c)}，她${t}。`,choices:[
     {t:'闲话家常（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{A.chat(c.id,true);return null}},
-    {t:'今夜召她侍寝（精力-1）',cond:()=>E().energy>0&&!c.preg,why:c.preg?'她有孕在身':'精力不足',f:()=>{nightWith(c);return null}},
+    {t:'今夜召她侍寝（精力-1）',cond:()=>E().energy>0&&!c.preg&&(!consortRecoveryActive()||!consortNightReason(c)),why:(consortRecoveryActive()&&consortNightReason(c))||(c.preg?'她有孕在身':'精力不足'),f:()=>{nightWith(c);return null}},
     {t:'赏她一支簪子（国库-10万两）',f:()=>fx(chg({treasury:-10}),cchg(c,{mood:10,aff:3}))},
     {t:'点头作别'}]})}
 MAPC.addEventListener('click',e=>{if(!S||exhaustedMonthNotice)return;const r=MAPC.getBoundingClientRect(),mx=(e.clientX-r.left)/r.width*MW,my=(e.clientY-r.top)/r.height*MH;
