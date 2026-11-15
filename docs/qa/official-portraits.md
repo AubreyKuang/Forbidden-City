@@ -27,7 +27,8 @@
 - 钩弋夫人固定为 `STORY_CONSORT_PORTRAITS.gouyi === 422`，
   `artPortrait` 与 `portraitOverride` 均可使用，任何随机池都不会抽到她。
   对接方式见 `../gouyi-portrait.md`。本次没有添加或修改她的剧情。
-- 最新生成的六位锦衣卫专用图尚待用户确认，未包含在本次发布中。
+- 当次发布未包含六位锦衣卫专用图；后续用户已采用服饰修正版，
+  固定编号与旧版四张公子的选用情况见 `../jinyiwei-portraits.md`。
 
 ## 验证
 

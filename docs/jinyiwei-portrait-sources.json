@@ -1,0 +1,149 @@
+{
+  "frame": [
+    448,
+    560
+  ],
+  "columns": 4,
+  "portraits": [
+    {
+      "id": 423,
+      "atlas": "palace-jinyiwei.webp",
+      "source": "exec-365cbf96-f794-4fa0-bb92-9561cfa9c56c.png",
+      "cell": 0,
+      "crop": [
+        0,
+        0,
+        512,
+        510
+      ],
+      "usage": "jinyiwei",
+      "label": "玄黑金绣"
+    },
+    {
+      "id": 424,
+      "atlas": "palace-jinyiwei.webp",
+      "source": "exec-365cbf96-f794-4fa0-bb92-9561cfa9c56c.png",
+      "cell": 1,
+      "crop": [
+        512,
+        0,
+        1024,
+        510
+      ],
+      "usage": "jinyiwei",
+      "label": "朱红金绣"
+    },
+    {
+      "id": 425,
+      "atlas": "palace-jinyiwei.webp",
+      "source": "exec-365cbf96-f794-4fa0-bb92-9561cfa9c56c.png",
+      "cell": 2,
+      "crop": [
+        1024,
+        0,
+        1536,
+        510
+      ],
+      "usage": "jinyiwei",
+      "label": "藏青银绣"
+    },
+    {
+      "id": 426,
+      "atlas": "palace-jinyiwei.webp",
+      "source": "exec-365cbf96-f794-4fa0-bb92-9561cfa9c56c.png",
+      "cell": 3,
+      "crop": [
+        0,
+        510,
+        512,
+        1024
+      ],
+      "usage": "jinyiwei",
+      "label": "墨绿金绣"
+    },
+    {
+      "id": 427,
+      "atlas": "palace-jinyiwei.webp",
+      "source": "exec-365cbf96-f794-4fa0-bb92-9561cfa9c56c.png",
+      "cell": 4,
+      "crop": [
+        512,
+        510,
+        1024,
+        1024
+      ],
+      "usage": "jinyiwei",
+      "label": "月白金绣"
+    },
+    {
+      "id": 428,
+      "atlas": "palace-jinyiwei.webp",
+      "source": "exec-365cbf96-f794-4fa0-bb92-9561cfa9c56c.png",
+      "cell": 5,
+      "crop": [
+        1024,
+        510,
+        1536,
+        1024
+      ],
+      "usage": "jinyiwei",
+      "label": "绛紫金绣"
+    },
+    {
+      "id": 429,
+      "atlas": "palace-officials-selected.webp",
+      "source": "exec-a0e084cb-7206-4c65-a8ca-1bfd2d3ba03c.png",
+      "cell": 0,
+      "crop": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "usage": "official-brother",
+      "label": "玄黑束发"
+    },
+    {
+      "id": 430,
+      "atlas": "palace-officials-selected.webp",
+      "source": "exec-a0e084cb-7206-4c65-a8ca-1bfd2d3ba03c.png",
+      "cell": 1,
+      "crop": [
+        512,
+        0,
+        1024,
+        512
+      ],
+      "usage": "official-brother",
+      "label": "朱红官帽"
+    },
+    {
+      "id": 431,
+      "atlas": "palace-officials-selected.webp",
+      "source": "exec-a0e084cb-7206-4c65-a8ca-1bfd2d3ba03c.png",
+      "cell": 2,
+      "crop": [
+        1024,
+        0,
+        1536,
+        512
+      ],
+      "usage": "official-brother",
+      "label": "藏青披发"
+    },
+    {
+      "id": 432,
+      "atlas": "palace-officials-selected.webp",
+      "source": "exec-a0e084cb-7206-4c65-a8ca-1bfd2d3ba03c.png",
+      "cell": 4,
+      "crop": [
+        512,
+        512,
+        1024,
+        1024
+      ],
+      "usage": "official-brother",
+      "label": "月白披发"
+    }
+  ]
+}

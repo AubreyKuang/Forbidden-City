@@ -54,9 +54,9 @@ test('new exam candidates have distinct civilian faces and retain them through a
   assert.deepEqual(JSON.parse(b.run('JSON.stringify(S.scholars.map(p=>[p.id,p.artPortrait]))')).sort(),faces.sort());
 });
 
-test('new commanders use military portraits suited to age and retain the saved result across reloads',()=>{
+test('new commanders use dedicated Jinyiwei portraits and retain the saved result across reloads',()=>{
   let b=game();b.run(`A.start();drain();E().energy=4;E().treasury=900;A.establishJinyiwei();choose(0);
-    var p=S.jinyiwei.commander;assert.ok(OFFICIAL_PORTRAITS.army[p.age>=40?'mature':'young'].includes(p.artPortrait));
+    var p=S.jinyiwei.commander;assert.ok(JINYIWEI_PORTRAITS.includes(p.artPortrait));
   `);
   const face=b.run('S.jinyiwei.commander.artPortrait');b=reload(b);
   assert.equal(b.run('S.jinyiwei.commander.artPortrait'),face);
@@ -103,5 +103,5 @@ for(const fixture of [...legacy.cases,...legacy13.cases])test('unmodified versio
   if(fixture.name==='commander')assert.equal(b.run('S.jinyiwei.commander.artPortrait'),fixture.save.jinyiwei.commander.artPortrait);
   if(fixture.name==='examination')assert.deepEqual(JSON.parse(b.run('JSON.stringify(S.scholars.map(p=>p.artPortrait))')),fixture.save.scholars.map(p=>p.artPortrait));
   b.run('if(modalResult)nextEv();else choose(curEv.choices.findIndex(c=>!c.cond||c.cond()));');
-  b=reload(b);b.run('drain();assert.equal(PalaceActions.contentVersion,14);');
+  b=reload(b);b.run('drain();assert.equal(PalaceActions.contentVersion,15);');
 });
