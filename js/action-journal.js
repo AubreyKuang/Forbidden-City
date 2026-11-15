@@ -2,7 +2,7 @@
    never from serialized JavaScript. Each command owns its random draws and answers.
    The saved world remains the authority; replay is checked before it is displayed. */
 const PalaceActions=(()=>{
-  const version=2, excluded=new Set(['save','load','rewind','downloadSave','readSaveFile','undoImport','newGame','chronicleFilter','chronicleSearch','chronicleClear','chronicleThread']);
+  const version=3, excluded=new Set(['save','load','rewind','downloadSave','readSaveFile','undoImport','newGame','chronicleFilter','chronicleSearch','chronicleClear','chronicleThread']);
   const actions=new Map();
   let blocked=false,snapshotRequested=false,journal=null,depth=0,replaying=false,step=null,cursor=0,answer=0,saving=0,fields=null;
   const clone=x=>JSON.parse(JSON.stringify(x));
@@ -13,7 +13,7 @@ const PalaceActions=(()=>{
     if(replaying){if(cursor>=step.rolls.length)throw Error('Missing recorded roll');return step.rolls[cursor++];}
     const value=Math.random();step.rolls.push(value);return value;
   }
-  function settle(){maternalTick();if(S)syncChildDisgrace();}
+  function settle(previous){maternalTick();if(S){syncChildDisgrace();if(journal?.version>=3)settleExhaustedMonth(previous);}}
   function input(selector){return fields?fields[selector]:$(selector)?.value;}
   function payload(){return {...S,pendingActions:journal||S?.pendingActions};}
   function run(name,args,fn){
@@ -34,7 +34,7 @@ const PalaceActions=(()=>{
     globalThis.confirm=message=>{const value=ask(message);step?.answers.push(value);return value;};
     try{return fn();}
     finally{
-      try{if(S){settle();if(modalOpen)render();}}
+      try{if(S){settle(before);if(modalOpen)render();}}
       finally{globalThis.confirm=ask;save=persist;depth--;step=null;}
       if(journal)journal.pending=stamp();
       if(!modalOpen&&!Q.length)journal=null;
@@ -51,7 +51,7 @@ const PalaceActions=(()=>{
     }
   }
   function valid(j){
-    return !!j&&j.version===version&&(j.base===null||validPalaceSave(j.base))&&!j.base?.pendingActions&&
+    return !!j&&[2,version].includes(j.version)&&(j.base===null||validPalaceSave(j.base))&&!j.base?.pendingActions&&
       record(j.ui)&&(j.draft===undefined||typeof j.draft==='string'&&j.draft.length<=128)&&Array.isArray(j.steps)&&j.steps.length>0&&j.steps.length<=2048&&j.steps.every(s=>
         record(s)&&((s.name==='choose'&&s.args?.length===2&&Number.isInteger(s.args[0]))||
           (s.name==='next'&&s.args?.length===0)||actions.has(s.name))&&
@@ -65,16 +65,17 @@ const PalaceActions=(()=>{
     const saved=S,ui=clone(UI),ask=globalThis.confirm,sound=AU.sfx,persist=save;
     try{
       if(!valid(j))throw Error('Unsupported pending actions');
-      replaying=true;depth++;S=j.base?clone(j.base):null;Object.assign(UI,j.ui);
+      replaying=true;depth++;journal=clone(j);S=j.base?clone(j.base):null;Object.assign(UI,j.ui);
       AU.sfx=()=>{};
       for(const command of j.steps){
+        const previous=S?{turn:S.turn,gen:S.gen,emp:{energy:E().energy}}:null;
         step=command;cursor=0;answer=0;saving=0;fields=command.fields||null;Object.assign(UI,command.ui);
         save=slot=>{const entry=command.saves[saving++];if(!entry||entry.slot!==slot)throw Error('Changed save');return entry.ok;};
         globalThis.confirm=()=>{if(answer>=command.answers.length)throw Error('Missing answer');return command.answers[answer++];};
         if(command.name==='choose')choose(...command.args);
         else if(command.name==='next')nextEv();
         else actions.get(command.name)(...command.args);
-        if(S){settle();if(modalOpen)render();}
+        if(S){settle(previous);if(modalOpen)render();}
         if(cursor!==command.rolls.length||answer!==command.answers.length||saving!==command.saves.length)throw Error('Changed action');
       }
       // Position can change through walking between commands; it is not a decision.
@@ -97,6 +98,6 @@ const PalaceActions=(()=>{
       A[name]=function(...args){return run(name,args,()=>fn.apply(this,args));};
     }
   }
-  return {random,input,keepInput,payload,run,restore,valid,install,get blocked(){return blocked;},requestSnapshot(){snapshotRequested=true;},get busy(){return depth>0;},get replaying(){return replaying;},reset(){journal=null;blocked=false;}};
+  return {random,input,keepInput,payload,run,restore,valid,install,get legacy(){return journal?.version===2;},get blocked(){return blocked;},requestSnapshot(){snapshotRequested=true;},get busy(){return depth>0;},get replaying(){return replaying;},reset(){journal=null;blocked=false;}};
 })();
 PalaceActions.install();

@@ -15,6 +15,9 @@ function boot(seedValue=4242){
   const ctx=vm.createContext({Math:math,document,localStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v)},
     requestAnimationFrame:noop,setTimeout:noop,setInterval:noop,getComputedStyle:()=>({getPropertyValue:()=>'sans-serif'}),console,assert,confirm:()=>true,Date});
   runGameScripts(ctx);
+  // These accounting cases isolate one month's transactions. Calendar exhaustion
+  // and real automatic settlement are covered without stubs in palace-governance-life.
+  vm.runInContext('settleExhaustedMonth=()=>{}',ctx);
   vm.runInContext(`var drain=()=>{for(let i=0;modalOpen&&i<150;i++){if($('#mbox').innerHTML.includes('onclick="nextEv()"'))nextEv();else choose(curEv.choices.findIndex(c=>!c.cond||c.cond()));}};
     A.newGame();A.start();drain();`,ctx);
   return {ctx,storage,setRoll:value=>{roll=value;},run:code=>vm.runInContext(code,ctx)};
@@ -554,7 +557,7 @@ test('local grain credit delivers immediately and deducts its balance once after
   A.endMonth();while(modalOpen)nextEv();
   const review=S.flags.lastMonthReview;
   assert.equal(review.localGrainPayment,80);
-  assert.equal(E().treasury,treasury+review.inc-review.exp);
+  assert.equal(E().treasury,treasury+review.inc-review.exp+(treasuryReceipt('tax')?.turn===S.turn?treasuryReceipt('tax').amount:0));
   assert.equal(load('auto'),true);
   assert.equal(S.flags.localGrainPaymentTurn,undefined);
   assert.equal(localGrainPaymentDue(),false);
@@ -597,7 +600,7 @@ test('local grain credit can extend once and retains the fee for either settleme
     A.endMonth();while(modalOpen)nextEv();
     const review=S.flags.lastMonthReview;
     assert.equal(review.localGrainPayment,${grain} ? undefined : 100);
-    assert.equal(E().treasury,treasury+review.inc-review.exp);
+    assert.equal(E().treasury,treasury+review.inc-review.exp+(treasuryReceipt('tax')?.turn===S.turn?treasuryReceipt('tax').amount:0));
     assert.equal(load('auto'),true);
     assert.equal(S.flags.localGrainPaymentExtended,undefined);
     assert.equal(S.flags.localGrainPaymentTurn,undefined);
@@ -671,7 +674,7 @@ test('paying a due local grain balance with stock consumes half a reserve and sa
     A.endMonth();while(modalOpen)nextEv();
     const review=S.flags.lastMonthReview;
     assert.equal(review.localGrainPayment,undefined);
-    assert.equal(E().treasury,review.inc-review.exp);
+    assert.equal(E().treasury,review.inc-review.exp+(treasuryReceipt('tax')?.turn===S.turn?treasuryReceipt('tax').amount:0));
   `);
 });
 

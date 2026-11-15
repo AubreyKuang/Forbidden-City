@@ -6,7 +6,7 @@ const brotherRole=(h,predicate=()=>true)=>brotherRoles(h).find(role=>predicate(h
 const officialKinLabel=(h,role,member)=>role==='father'?'父亲':role.startsWith('relative')?(member?natalLabel(member,officialPerson(h,role)):officialPerson(h,role).parentRelativeId?(officialPerson(h,role).sex==='m'?'外甥':'外甥女'):officialPerson(h,role).born<Math.min(...Object.values(h.natal.memberBorn))?'兄长':'弟弟'):brotherRoles(h).length<2?'兄长':({brother:'长兄',brother2:'二兄',brother3:'三兄',brother4:'四兄',brother5:'五兄'}[role]||'兄长');
 const OFFICIAL_TEMPERAMENTS=['持正','谨慎','进取','圆融'];
 const officialAlive=p=>!!p&&p.alive!==false;
-const officialServing=p=>officialAlive(p)&&p.career!=='student'&&!p.retired&&!p.commission&&!p.exiled&&!p.dismissed;
+const officialServing=p=>officialAlive(p)&&p.career!=='student'&&!p.retired&&!p.commission&&!p.incognitoCase&&!p.exiled&&!p.dismissed;
 function initializeOfficialHouse(c,h,family){
   for(const other of family.map(x=>x.house).filter(Boolean))for(const role of brotherRoles(other))h[role]??=other[role];
   initializeNatalFamily(c,h,family);
@@ -56,7 +56,7 @@ function officialEntry(key){
 }
 function officialStatus(p){
   if(!officialAlive(p))return p.death?.kind==='battle'?'阵亡':'已故';
-  return p.exiled?'流放':p.dismissed?'革职':p.career==='student'?(p.education==='举人'?'候选 · 尚未授官':'在家读书'):p.commission?'奉差在外':p.retired?'致仕归乡':p.away?'外任':'在任';
+  return p.exiled?'流放':p.dismissed?'革职':p.career==='student'?(p.education==='举人'?'候选 · 尚未授官':'在家读书'):p.commission||p.incognitoCase?'奉差在外':p.retired?'致仕归乡':p.away?'外任':'在任';
 }
 function officialRecord(c,role,text,{family=true,emotion=0}={}){
   const h=houseOf(c),p=officialPerson(h,role);if(!p)return;
@@ -81,6 +81,7 @@ function officialFamilyReaction(e,kind,task){
    death:[`${who}去世，听到讣报后的悲伤一直压在心上；家中旧物与未说完的话都还在。`,`${who}不在了。家里还有他的旧信，臣妾总想起从前以为不急着说的那些话。`,'悲恸',0,0],
    honor:[`${who}身后获赐祭抚恤，她感激家人没有被遗忘，悲伤却不能由恩赏抵消。`,`${who}身后得到照拂，臣妾记着。只是祭文读过，还是会想，若他还能亲自读到，该多好。`,'感激',3,2],
    retire:[`${who}获准致仕归乡，她挂念家人今后的起居，也稍松了口气。`,`${who}卸了差务，臣妾盼他在家好好歇息。家里的日子，也该有人问一问。`,'释然',1,3],
+   transfer:[`${who}${task}。她想到家书今后该寄往哪里，也惦记新任上的责任。`,formal?`${who}${task}，臣妾记下了。任上所需请按公务核给，别叫家里的情分坏了用人的规矩。`:`${who}${task}，以后家书的去处也变了。臣妾替他高兴，也怕他一路奔波，只盼有封平安的信。`,'思念',1,2],
    recall:[`${who}奉诏复出，她感激朝廷仍记得家人的才干，也担心操劳。`,`${who}重受任用，臣妾感激，也盼他量力而行，不要连自己的身体都忘了。`,'感激',2,2]
   };
   const a=lines[kind];if(!a)continue;
@@ -128,7 +129,7 @@ function officialActionReady(e,action){
   if(p.career==='student'&&action!=='talk')return false;
   if(action==='talk')return S.turn-(p.lastAudience??-99)>=3;
   if(action==='reward')return !p.report&&p.merit>=50&&p.merit>(p.rewardedMerit??0)&&S.turn-(p.lastReward??-99)>=12;
-  if(action==='retire')return !p.retired&&!p.commission&&p.age>=55;
+  if(action==='retire')return !p.retired&&!p.commission&&!p.incognitoCase&&p.age>=55;
   if(action==='recall')return !!p.retired&&p.age<70&&S.turn-(p.retiredAt??-99)>=12;
   if(action==='commission')return officialServing(p)&&!p.report&&!reliefSuspended(p)&&p.age<70&&S.turn-(p.lastCommission??-99)>=6;
   return false;
@@ -189,7 +190,13 @@ const OFFICIAL_TASKS={
   border:{title:'巡边整饬军备',army:true,cost:30,months:3,risk:.025},
   escort:{title:'护送边关粮道',army:true,cost:20,months:2,risk:.01},
   accounts:{title:'核查地方钱粮',army:false,cost:15,months:2,risk:0},
-  public:{title:'巡察民间疾苦',army:false,cost:15,months:3,risk:0}
+  public:{title:'巡察民间疾苦',army:false,cost:15,months:3,risk:0},
+  dikes:{title:'岁修河堤',army:false,cost:90,months:4,risk:0,brief:'勘验险段，完工后可抵御一次黄河决口的赈济开支。',success:'险段堤岸已复修，工部验明土石与工料。下次黄河赈济可少拨一笔修复银。',failure:'河工工料账有缺，险段尚未验收，不能按完工减免赈款。'},
+  granaries:{title:'整修常平仓',army:false,cost:100,months:3,risk:0,brief:'修仓补粮，完工后留一批备荒粮。',success:'漏雨仓顶修妥，新粮入仓验讫，留一批备荒粮供灾年调拨。',failure:'入仓粮湿损偏多，尚未达到储备标准，暂不计作可用备荒粮。'},
+  schools:{title:'清查学田与乡学',army:false,cost:45,months:3,risk:0,brief:'核清学田租入，让乡学恢复授课。',success:'侵占学田的账已清理，束脩和修缮费交给乡学，停课的几处学舍重新开门。',failure:'几处学田契书未能核清，乡学暂以旧款维持，仍须复核。'},
+  water:{title:'疏通农渠',army:false,cost:60,months:4,risk:0,brief:'按农时修渠，引水入田，减少争水。',success:'农渠通水，沿线各村按田亩议定放水次序，争水的旧案也有了凭据。',failure:'两村水界未议定，渠道虽已开挖，尚不能贸然放水。'},
+  pay:{title:'清核军饷与抚恤',army:true,cost:45,months:2,risk:0,brief:'核对军籍，补发欠饷，不以空名冒领。',success:'军籍、饷册和领款手印核对相符，欠饷与抚恤分发到本人及遗属。',failure:'饷册出现空名，兵部封存可疑账目，未核实的款项暂不发放。'},
+  drills:{title:'轮训边镇守军',army:true,cost:55,months:3,risk:.005,brief:'轮换疲军、修整烽燧，兼顾驻地百姓。',success:'轮换与烽燧演练完成，疲军得到休整，军纪申明不得侵扰沿途百姓。',failure:'换防衔接不畅，部分烽燧仍缺人手，须另列补训清单。'}
 };
 function assignOfficialTask(e,id){
   const task=OFFICIAL_TASKS[id];if(!task||!officialActionReady(e,'commission')||task.army!==(e.h.bloc==='army')||E().treasury<task.cost||!useE())return null;
@@ -206,6 +213,16 @@ function officialTaskTick(){
     if(j.outcome==='death'){text=`奉差${j.title}途中遇伏，率部断后，力战身亡。`;officialDeath(familyContact.c,role,text,'battle');}
     else{
       text=j.outcome==='success'?`${j.title}已办结，簿册与实地核验相符，相关善后也已安排。`:`${j.title}未尽如期，回奏列明了调度疏漏，并请朝廷复核善后。`;
+      const task=OFFICIAL_TASKS[j.id];
+      const outcomeKey=j.outcome==='success'?'success':'failure';
+      if(task?.[outcomeKey])text=j.title+'：'+task[outcomeKey];
+      if(j.outcome==='success'){
+        if(j.id==='dikes')S.flags.floodDikeGen=S.gen;
+        if(j.id==='granaries'){S.flags.grainReserveGen=S.gen;delete S.flags.grainReserveHalf;}
+        if(j.id==='schools'){E().wen=clamp(E().wen+2);chg({prestige:2});}
+        if(j.id==='water')chg({people:3});
+        if(j.id==='pay'||j.id==='drills')chg({prestige:3});
+      }
       p.merit=clamp(p.merit+(j.outcome==='success'?12:-6));chg({people:j.outcome==='success'?3:-1});officialRecord(c,role,text,{emotion:j.outcome==='success'?.5:-.3});
       officialFamilyReaction(familyContact,j.outcome,j.title);
     }
@@ -234,7 +251,7 @@ A.officialAct=function(key,action){
   const e=officialEntry(key);if(modalOpen||!officialActionReady(e,action))return;const {c,p,role,h}=e;
   const valid=()=>officialActionReady(e,action),cost=['honor','reward'].includes(action)?20:0;
   if(action==='commission')return pushEv({title:'委派差事 · '+p.name,por:p,valid,text:'按其履历选择差事，领命后会在数月内回奏。边关军务有低概率遇伏伤亡。',choices:[
-    ...Object.entries(OFFICIAL_TASKS).filter(([,t])=>t.army===(h.bloc==='army')).map(([id,t])=>({t:`${t.title} · ${t.months}个月 · 精力−1 · 国库−${t.cost}`,cond:()=>E().energy>=1&&E().treasury>=t.cost,why:'精力或国库不足',f:()=>assignOfficialTask(e,id)})),{t:'暂不委派'}]});
+    ...Object.entries(OFFICIAL_TASKS).filter(([id,t])=>t.army===(h.bloc==='army')&&(!legacyPendingAction()||['border','escort','accounts','public'].includes(id))).map(([id,t])=>({t:`${t.title} · ${t.months}个月 · 精力−1 · 国库−${t.cost}`,cond:()=>E().energy>=1&&E().treasury>=t.cost,why:'精力或国库不足',f:()=>assignOfficialTask(e,id)})),{t:'暂不委派'}]});
   if(p.career==='student'&&action!=='talk')return false;
   if(action==='talk')return pushEv({title:(p.away||p.commission||p.retired?'赐书问候':'召见议事')+' · '+p.name,por:p,valid,text:p.away||p.commission||p.retired?'内侍备好御札，可写下想问的话。':'内侍引他入殿。他行礼后，等候你开口。',choices:[
     ...[['service',p.career==='student'?'问学业与科名':'问任上见闻'],['family','问家中近况'],['duty','谈公私与用人']].map(([topic,t])=>({t:t+' · 精力−1',cond:()=>E().energy>=1,why:'精力不足',f:()=>{

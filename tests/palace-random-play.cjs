@@ -13,7 +13,8 @@ function boot(seed,mode){
  runGameScripts(ctx);
  vm.runInContext(`
  var events=[],months=[],actions=[],errors=[],phase='setup',act='setup',prng=mulberry32(seed^0xaabbccdd),currentRecord=null;
- var originalOpen=openModal;openModal=function(ev){originalOpen(ev);currentRecord={turn:S?.turn,date:S?dateStr():null,phase,act,title:ev.title,text:ev.text,choices:ev.choices.map(c=>c.t),actors:eventPortraits(ev).filter(x=>typeof x==='object').map(c=>({id:c.id,name:c.sex?c.name:fullName(c),trait:c.trait,t2:c.t2,age:c.sex?kidAge(c):c.age,aff:c.aff,favor:c.favor,mood:c.mood,xin:c.sex?null:xinOf(c),alive:c.alive,gone:c.gone,cold:c.cold,temple:!!c.templeStay,rank:c.rank}))};events.push(currentRecord)};
+ var originalOpen=openModal;openModal=function(ev){originalOpen(ev);currentRecord={turn:S?.turn,date:S?dateStr():null,phase,act,title:ev.title,text:ev.text,choices:ev.choices.map(c=>c.t),actors:eventPortraits(ev).filter(x=>typeof x==='object').map(c=>({id:c.id,name:c.official!==undefined?c.name:c.sex?c.name:fullName(c),trait:c.trait,t2:c.t2,age:c.sex?kidAge(c):c.age,aff:c.aff,favor:c.favor,mood:c.mood,xin:c.sex?null:xinOf(c),alive:c.alive,gone:c.gone,cold:c.cold,temple:!!c.templeStay,rank:c.rank}))};events.push(currentRecord)};
+ var autoMonth=A.endMonth;A.endMonth=function(){phase='monthly';return autoMonth.apply(this,arguments);};
  var originalRes=showRes;showRes=function(res){if(currentRecord)currentRecord.result=typeof res==='string'?res:res.text;originalRes(res)};
  function drain(){for(let n=0;modalOpen&&n<150;n++){
    if($('#mbox').innerHTML.includes('onclick="nextEv()"')){nextEv();continue;}
@@ -30,7 +31,7 @@ function boot(seed,mode){
    else chosen=opts.find(x=>!(/处死|赐死|打入冷宫|废为|杖毙|重杖|斩|不必|训斥|重新开局|稍后再议|自尽/.test(x.c.t)))||opts.at(-1);
    currentRecord.choice=chosen.c.t;if(curEv.input)$('#minput').value=curEv.input.def||'安';choose(chosen.i);
  }if(modalOpen)throw Error('modal loop exceeds 150');}
- function call(label,fn){act=label;const before=E().energy;fn();drain();actions.push({turn:S.turn,label,spent:before-E().energy});}
+ function call(label,fn){act=label;const before=E().energy,start=S.turn;fn();drain();actions.push({turn:S.turn,label,spent:Math.max(0,before-(S.turn===start?E().energy:0)),autoMonths:S.turn-start});}
  function roster(){return S.consorts.map(c=>({id:c.id,name:fullName(c),trait:c.trait,t2:c.t2,age:c.age,alive:c.alive,gone:c.gone,cold:c.cold,temple:!!c.templeStay,aff:c.aff,favor:c.favor,mood:c.mood,xin:xinOf(c),kids:S.children.filter(k=>k.mom===c.id).length}))}
  A.start();drain();
  for(const id of S.cands.slice(0,3).map(c=>c.id)){A.xxTake(id);drain();}A.xxEnd();
@@ -40,9 +41,17 @@ function boot(seed,mode){
   try{
    if(mode!=='skip'){
     call('court',()=>A.court());
-    for(let n=0;n<8&&E().energy>0&&!S.over;n++){
+    for(let n=0;n<8&&S.turn===began&&E().energy>0&&!S.over;n++){
      const before=E().energy,hs=harem(),cs=hs.filter(c=>!c.preg),kids=kidsAlive().filter(k=>!k.pendingName&&!k.jailed),c=hs[Math.floor(prng()*hs.length)];
      if(mode==='explorer')call('out',()=>A.out(['garden','city','hunt','temple','spa'][Math.floor(prng()*5)]));
+     else if(mode==='governance'){
+      const post=Object.keys(GOVERNMENT_POSTS).find(id=>officialEntries().some(e=>canTransfer(e,id)));
+      if(E().health<60)call('spa',()=>A.out('spa'));
+      else if(n===0&&S.turn%4===0&&post)call('transfer',()=>A.postCandidates(post));
+      else if(n===0&&S.turn%3===0)call('governmentTask',()=>A.governmentTask(Object.keys(OFFICIAL_TASKS)[S.turn%Object.keys(OFFICIAL_TASKS).length]));
+      else if(n<2)call('incognito',()=>A.out('city'));
+      else if(c)call('familyChat',()=>A.chat(c.id));
+     }
      else if(mode==='lives'){
       const finished=hs.find(p=>p.personalLife?.project?.progress>=3&&lifeProjectReady(p)),boundary=hs.find(p=>lifeBoundary(p)&&!lifeBoundary(p).acknowledged),ritual=hs.find(p=>lifeRitualReady(p)&&!lifeBoundary(p));
       const giver=hs.find(p=>(p.personalLife?.works||[]).some(w=>kids.some(k=>lifeGiftReady(p,k,w)))),starter=c&&lifeProposal(c)?c:null;
@@ -85,8 +94,8 @@ function boot(seed,mode){
     }
    }
    if(S.over)break;
-   phase='monthly';act='endMonth';const monthlyStart=events.length;A.endMonth();drain();
-   const monthly=events.slice(monthlyStart);
+   phase='monthly';act='endMonth';if(S.turn===began){A.endMonth();drain();}
+   const monthly=events.slice(evStart).filter(e=>e.phase==='monthly');
    months.push({turn:S.turn,events:monthly.length,titles:monthly.map(e=>e.title),choiceEvents:monthly.filter(e=>e.choices.length>1).length,allEvents:events.length-evStart,health:E().health,treasury:E().treasury,people:E().people,prestige:E().prestige,roster:roster(),children: kidsAlive().map(k=>({id:k.id,name:k.name,age:kidAge(k),sex:k.sex,lit:k.lit,mar:k.mar,vir:k.vir,love:k.love}))});
    if(S.turn!==began+1&&!S.over)throw Error('turn did not advance');
    for(const [k,v] of Object.entries(E()))if(typeof v==='number'&&!Number.isFinite(v))throw Error('nonfinite emperor '+k);

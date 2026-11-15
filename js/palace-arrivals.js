@@ -53,6 +53,7 @@ function palaceArrivalEvent(name,id){
   const ev={title:`驾临${name}`,scene:'palace-arrival',por:c,present:together?[together.a,together.b]:[c],valid,arrival:{name,c,welcome,together},
     text:`你穿过宫门，沿回廊来到${name}。\n${together?together.text+'\n':''}${welcome.stage}\n“${welcome.text}”`,
     onShow:()=>{
+      noteHaremVisit(c);
       if(together)recordCohab(together);
       // Greetings cost nothing and cannot farm affection or paid-conversation milestones.
       if(c.palaceWelcome?.turn!==S.turn){

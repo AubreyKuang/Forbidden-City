@@ -104,6 +104,7 @@ function consortVoicePool(c){
   const frail=frailFosterVoice(c);if(frail&&!['悲恸','心如死灰','怨恨'].includes(x))return [frail];
   const duty=officialFamilyVoice(c);if(duty)return [duty];
   if(['悲恸','心如死灰','怨恨','惶恐'].includes(x)||c.hp<40)return [consortEmotionalVoice(c,x)];
+  const selection=selectionConcernVoice(c);if(selection)return [selection];
   const concern=motherConcernVoice(c);if(concern&&(c.childConcern?.value??35)>=30)return [concern];
   if(['怨恨','惶恐'].includes(x)||(c.aff<20&&!isSolitary(c)&&consortVoicePhase(c)!=='first'))return [voiceLine('distance','她行过礼，仍立在一步之外。',['臣妾听着。只是有些话，还不知该从哪里说起。','陛下肯来，臣妾领情。只是心里的结，不是一句话就能解开的。'])];
 

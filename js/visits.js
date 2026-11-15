@@ -14,6 +14,7 @@ A.out=function(kind){ if(!useE())return; const e=E();
   }
   else if(kind==='city'){setScene('city');
     if(!S.flags.marketRescueSeen&&chance(.18)){const rescue=marketRescueEvent();if(rescue){pushEv(rescue);return;}}
+    if(!legacyPendingAction()&&chance(.8)){const encounter=incognitoEvent();if(encounter){pushEv(encounter);return;}}
     const ev=pick(['girl','tea','porridge','assassin','girl']);
     if(ev==='girl'){const g=makeGirl({fam:pick([{t:'寒门',p:5},{t:'书香门第',p:15},{t:'皇商',p:30}]),age:ri(16,19)});
       const t=pick([`街角书肆里，一位姑娘正与掌柜争论一句诗的出处，句句有据，掌柜哑口无言。`,`桥头一个卖花的姑娘不小心把花篮撞翻在你脚边，抬头一笑，你怔了一怔。`,`茶楼上有位姑娘凭栏而立，正在吹一支竹笛，曲调清越。`]);
@@ -102,13 +103,17 @@ function dowagerProposal(d){
   const reason=sister?(neglected?'久未承宠，独居宫中':'入宫已有两年，膝下仍无子女'):'';
   const g=makeGirl({sur:d.sur,fam:{...d.fam},age:sister?Math.min(ri(16,19),sister.age-1):ri(16,19)});
   g.clan=d.clan;
-  const text=sister?`${d.name}说：“${fullName(sister)}${reason}，哀家想着，让她的堂妹${fullName(g)}入宫，也好有个说话的伴儿。皇帝意下如何？”`:
-    `${d.name}说：“哀家母族有位姑娘${fullName(g)}，性子${g.trait}，模样也周正，皇帝看看？”`;
-  return {title:'太后荐人',por:g,text,onShow:()=>{d.lastOffer=S.turn;d.cooldown=24},choices:[
+  const cousin=g.age>E().age?'表姐':'表妹',adoptive=d.relation?.includes('嫡母');
+  const relation=adoptive?'嫡母母家的'+cousin:'母族'+cousin;
+  if(!legacyPendingAction()){g.imperialKin={gen:S.gen,relation,via:d.fullName||d.name,blood:!adoptive};g.kinNote=`陛下的${relation}`;}
+  const preface=`${d.name}先叫人取来母家的家书，说：“这次想同你说的，是哀家母家晚辈${fullName(g)}。${adoptive?'她是你嫡母娘家的亲眷，按礼是你的'+cousin+'，并非生母那边的血亲':'按母族辈分，她是你的'+cousin}。她长在宫外，尚未见过你，不能只凭一句亲戚就叫她贸然入宫。”\n待你问起，太后才展开画像，细说她年方${g.age}、性子${g.trait}。\n`;
+  const text=preface+(sister?`“${fullName(sister)}${reason}，她又是${fullName(sister)}的堂妹。若你愿意见见，也好让她们有个说话的伴儿。”`:
+    '“皇帝若愿意，可按宫中的礼数见一见；不愿添人，哀家也不强求。”');
+  return {title:'太后荐人',por:g,...(legacyPendingAction()?{}:{cast:[dowagerPerson(d)]}),text,onShow:()=>{d.lastOffer=S.turn;d.cooldown=24},choices:[
     {t:'准她入宫，封为贵人',f:()=>{
       if(S.consorts.some(c=>c.id===g.id))return '她已经入宫了。';
-      if(sister){g.kin={[sister.id]:'堂姐'};g.kinRival={};sister.kin=sister.kin||{};sister.kin[g.id]='堂妹';g.kinNote=`${fullName(sister)}的堂妹`;}
-      addConsort(g,3,'由太后举荐入宫');
+      if(sister){g.kin={[sister.id]:'堂姐'};g.kinRival={};sister.kin=sister.kin||{};sister.kin[g.id]='堂妹';g.kinNote=(legacyPendingAction()?'':g.kinNote+'；')+`${fullName(sister)}的堂妹`;}
+      addConsort(g,3,legacyPendingAction()?'由太后举荐入宫':`由太后举荐入宫，先说明是陛下的${relation}，再依礼相见`);
       remember(g,'family',sister?`太后因${fullName(sister)}${reason}，举荐我入宫与堂姐相伴。`:'太后举荐我入宫，陛下准许，封为贵人。');
       if(sister){story(sister,`太后因她${reason}，举荐堂妹${fullName(g)}入宫相伴。`);remember(sister,'family',`陛下准许太后举荐的堂妹${fullName(g)}入宫，与我作伴。`);}
       return '太后点头，嘱咐她入宫后恪守宫规。'+fx(chg({prestige:1}));}},

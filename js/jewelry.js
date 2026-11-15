@@ -1,7 +1,7 @@
 /* Saved imperial gifts; transparent ornaments layer over the unchanged paintings. */
 const JEWELRY_ART='./assets/images/palace-headpieces.png?v=1';
 const JEWELRY={
-  phoenix:{name:'九凤点翠冠',cell:0,box:[16,-2,80,80],desc:'金凤衔珠，翠羽舒展，珠串垂于两鬓。'},
+  phoenix:{name:'九凤点翠冠',cell:0,box:[16,-8,80,80],desc:'金凤衔珠，翠羽舒展，珠串垂于两鬓。'},
   blossoms:{name:'花树珠翠冠',cell:1,box:[14,-2,80,80],desc:'花枝攒成轻冠，珠玉错落，繁而不重。'},
   goldphoenix:{name:'金凤衔珠冠',cell:2,box:[16,-1,72,72],desc:'一凤舒翼，细金尾羽间缀着红珠。'},
   peony:{name:'牡丹花簪',cell:3,box:[0,3,48,48],desc:'粉白牡丹压鬓，金叶间垂着两点珠光。'},

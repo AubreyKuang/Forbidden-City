@@ -544,13 +544,13 @@ function monthlyFloodEvent(brief){
     if(!consort)continue;
     const audited=!available;
     const father=houseOf(consort).father;
-    event.cast.push(consort);
+    event.cast.push(father);
     const odds=audited?FLOOD_AUDITED_ODDS:specialty===need?80:55;
     const cost=terms.cost+(audited?FLOOD_AUDIT_COST:0);
     const failureCost=cost+50;
     if(audited)event.text+=`\n本次暂无可直接督办的对口官员。可由户部监办，准${father.name}只办此案，原停办期限照旧。`;
     event.choices.push({
-      t:audited?`户部监办，准${father.name}协办 · ${terms.label}`:`命${father.name}督办 · ${terms.label}`,person:consort.id,
+      t:audited?`户部监办，准${father.name}协办 · ${terms.label}`:`命${father.name}督办 · ${terms.label}`,person:consort.id,portrait:father,
       preview:`成功率 ${odds}% · 成功花 ${cost} 万两，民心 +${terms.people}，威望 +2，家族势力 +5，家眷情分 +8、心情 +10 · 失利花 ${failureCost} 万两，民心 −5，家眷心情 −12`+
         (audited?` · 两种结果均含 ${FLOOD_AUDIT_COST} 万两核账费，原停办期限照旧`:''),
       cond:()=>officialServing(father)&&E().treasury>=failureCost,why:`须有在任官员及 ${failureCost} 万两备款`,
@@ -653,7 +653,7 @@ function impeachmentEvent(brief){
       S.flags.impeachmentReview={gen:S.gen,turn:S.turn+1,file};
       return '账册已封存。下月可在月度奏折查看查账回奏。';
     }});
-  return {title:review?'御史弹劾 · 查账回奏':'御史弹劾',person:consort.id,por:consort,
+  return {title:review?'御史弹劾 · 查账回奏':'御史弹劾',person:consort.id,por:legacyPendingAction()?consort:houseOf(consort).father,...(legacyPendingAction()?{}:{chroniclePeople:[consort]}),
     valid:()=>!!impeachmentSubject(file.person),text:report+'\n'+(review?finding:evidence),choices};
 }
 

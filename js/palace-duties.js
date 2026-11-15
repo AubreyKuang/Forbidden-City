@@ -90,6 +90,9 @@ A.assignDuanwu=function(){
             if(!canManageFeast(lead)||!canManageFeast(gifts)||S.month!==4||duanwuWork()?.stage==='preparing'||E().treasury<20)return null;
             chg({treasury:-20});
             S.duanwuWork={gen:S.gen,year:S.year,stage:'preparing',tables:lead.id,gifts:gifts.id,due:S.turn+1};
+            if(!legacyPendingAction())palaceSupportMemory(lead,gifts,'duanwu_assigned','御花园','端午宫务分派',
+              `奉旨与${fullName(gifts)}合办端午，自己主理宴席，由她筹备节礼；内务府拨下二十万两，约定五月查验。`,
+              `奉旨与${fullName(lead)}合办端午，自己筹备节礼，由她主理宴席；内务府拨下二十万两，约定五月查验。`,.35,.35);
             log(`端午宫务交由${fullName(lead)}与${fullName(gifts)}筹备。`);
             save('auto');
             return '内务府已拨下备办银两。五月到御花园看筹备结果。';

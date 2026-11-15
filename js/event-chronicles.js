@@ -1,6 +1,6 @@
-/* Older ambient scenes keep a replayable account of the decision. Only the
-   explicitly displayed participants receive it; `present` can contain secret
-   suspects and is deliberately never used as a list of people who know. */
+/* Older ambient scenes keep a replayable account of the decision. Displayed
+   participants and explicit chroniclePeople receive it; `present` can contain
+   secret suspects and is never used as a list of people who know. */
 function chronicleText(text){return String(text||'').split('\n').filter(line=>!line.startsWith('§')).join('\n').trim();}
 function chronicleEvent(ev){
   if(!ev||ev.chronicled)return ev;
@@ -10,14 +10,14 @@ function chronicleEvent(ev){
     const perform=choice.f;
     return {...choice,f:function(...args){
       if(resolved||!eventStillValid(ev)||choice.cond&&!choice.cond())return null;
-      const people=eventPortraits(ev).filter(p=>p&&typeof p==='object'&&p.alive!==false);
+      const people=[...new Set([...eventPortraits(ev),...(ev.chroniclePeople||[])])].filter(p=>p&&typeof p==='object'&&p.alive!==false);
       const before=new Map(people.map(p=>[p,p.story?.length||0]));
-      const names=people.map(p=>({id:p.id,name:p.sex?p.name:fullName(p)}));
+      const names=people.map(p=>({id:p.id,name:p.sex||!legacyPendingAction()&&p.official!==undefined?p.name:fullName(p)}));
       const situation=chronicleText(ev.text),decision=choice.t.replace(/\s*[（(·]\s*(?:精力|国库).*$/,'');
       const result=perform.apply(this,args);resolved=true;
       const outcome=chronicleText(typeof result==='string'?result:result?.text);
       for(const p of people){
-        if(!S.consorts.includes(p)&&!S.children.includes(p))continue;
+        if(!S.consorts.includes(p)&&!S.children.includes(p)&&(legacyPendingAction()||p.official===undefined))continue;
         const entries=(p.story||[]).slice(before.get(p));
         let entry=entries.find(e=>!e.t.startsWith('【心境')),embedded=false;
         if(!entry){
