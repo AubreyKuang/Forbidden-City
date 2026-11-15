@@ -45,3 +45,7 @@ PALACE_QA_URL=https://aubreykuang.github.io/Forbidden-City/dev.html node tests/c
 本次另验证：将门书生的家族立场与本人身份分开，科名不能冒充官职；授文职后不能仅凭武将家世承接军务。北境军功升官也同步实际职名与家族升迁记忆。
 
 线上素材检查：24 位官员图集与钩弋图集均返回 HTTP 200，下载内容与已批准素材逐字节一致。这是资源检查，不代替浏览器画面验收。
+
+## 发布核验
+
+游戏代码提交 `d9eac4a` 已推送 main，[GitHub Pages 部署成功](https://github.com/AubreyKuang/Forbidden-City/actions/runs/43768946446)。正式／测试入口、事务日志、官员逻辑、钩弋剧情、立绘分配脚本及两张图集共 9 项线上资源均 HTTP 200，下载内容与该提交逐字节一致。明细见 [线上资源核验](court-family-production-results.json)。浏览器交互与截图仍是上文所列未完成项。

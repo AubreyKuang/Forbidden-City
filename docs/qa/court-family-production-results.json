@@ -1,0 +1,75 @@
+{
+  "checkedAt": "2026-11-15T22:24:00.210536+00:00",
+  "commit": "d9eac4a7296e7e94390259ad3828afdaf47a7caa",
+  "deployment": {
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/AubreyKuang/Forbidden-City/actions/runs/43768946446"
+  },
+  "checks": [
+    {
+      "file": "index.html",
+      "status": 200,
+      "bytes": 9139,
+      "match": true,
+      "sha256": "1d4983b6cdea2102a9e34e5be07790f94cde80e6c48cddf26f7ccb9811473cca"
+    },
+    {
+      "file": "dev.html",
+      "status": 200,
+      "bytes": 9367,
+      "match": true,
+      "sha256": "7f1ed687849725be144bf77ea983e1871c903faf21ff223d36510cc4bd7a4861"
+    },
+    {
+      "file": "js/action-journal.js",
+      "status": 200,
+      "bytes": 8847,
+      "match": true,
+      "sha256": "85312898f51781fb21c70cea8f52e3541e43baba72bb2c127cf319f6bb29e06a"
+    },
+    {
+      "file": "js/official-careers.js",
+      "status": 200,
+      "bytes": 26859,
+      "match": true,
+      "sha256": "310ef28b24e07572d9db5fc31d982f7c865a3a0b0cd2bda7ad992b4651a6b653"
+    },
+    {
+      "file": "js/officials.js",
+      "status": 200,
+      "bytes": 29800,
+      "match": true,
+      "sha256": "5c3c9614d1273b8fc1fe03f987c01e7ac04bf7010c0dbb9e95b6a93233a8cd90"
+    },
+    {
+      "file": "js/gouyi-consort.js",
+      "status": 200,
+      "bytes": 8504,
+      "match": true,
+      "sha256": "4caa2d558bd87ec65aab0d0585e210de93057fd07b282a3a87bae08b43d12827"
+    },
+    {
+      "file": "js/portraits.js",
+      "status": 200,
+      "bytes": 40791,
+      "match": true,
+      "sha256": "ea2a8fa7325f6805ed167fbc53ba55a0f6d032f2cf2e952c0d208716b7ffced5"
+    },
+    {
+      "file": "assets/images/palace-officials-expanded.webp",
+      "status": 200,
+      "bytes": 2294726,
+      "match": true,
+      "sha256": "883e5163610d092af5f21365d16553c88e35b344230d3b2a38fc8f5bd088483a"
+    },
+    {
+      "file": "assets/images/palace-consort-gouyi.webp",
+      "status": 200,
+      "bytes": 110610,
+      "match": true,
+      "sha256": "44014a2fdaecc32aacccd10907507a82ca6063aa92c9aa957199fa45b2df08f3"
+    }
+  ],
+  "browser": "Not completed; see court-family-browser-results.json."
+}
