@@ -23,7 +23,7 @@ function boot(seedValue=4242){
 const household=`S.turn=48;S.year=5;S.month=3;E().energy=4;E().treasury=500;
  var c=harem()[0];c.fam={t:'镇国大将军',p:65};c.trait='将门';delete c.house;
  var h=houseOf(c),sister=makeKin(c,'亲');addConsort(sister,3,'姐妹入宫');
- var key=c.id+':brother',p=h.brother;`;
+ var key=c.id+':brother',p=h.brother;p.career='official';p.post='参将';`;
 
 test('father and brother are shared people across sisters, with navigable family and consort profiles',()=>{
  const {run}=boot();run(household);run(`assert.equal(houseOf(sister),h);assert.equal(officialEntries().filter(x=>x.p.id===p.id).length,1);

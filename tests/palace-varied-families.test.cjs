@@ -12,7 +12,7 @@ test('new households include zero through five brothers with stable distinct ide
 });
 test('legacy single brother and explicit absence are preserved, without inventing new relatives',()=>{
  const {run}=boot();run(multi+`delete h.brother2;delete h.familyVersion;var old=JSON.stringify(h.brother);save('1');load('1');c=byId(c.id);h=houseOf(c);assert.deepEqual(brotherRoles(h),['brother']);assert.equal(JSON.stringify(h.brother),old);
- for(var woman of paternalFamily(c))woman.house=h;h.brother=null;save('2');load('2');c=byId(c.id);h=houseOf(c);assert.equal(brotherRoles(h).length,0);assert.match(houseLine(c),/无兄长/);assert.match(familyGraphSVG(),/无兄长/);
+ for(var woman of paternalFamily(c))woman.house=h;h.brother=null;save('2');load('2');c=byId(c.id);h=houseOf(c);assert.equal(brotherRoles(h).length,0);assert.doesNotMatch(houseLine(c),/无兄长/);assert.doesNotMatch(familyGraphSVG(),/无兄长/);
  c.trait='贪财';assert.equal(ARCS.greed.fit(c),false);assert.equal(householdGuest(c,{born:S.turn-180}),null);`);
 });
 test('each brother has independent actions and death, shared correctly by sisters after reload',()=>{

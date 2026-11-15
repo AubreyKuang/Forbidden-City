@@ -315,9 +315,10 @@ arrive(PLACES.find(p=>p.id==='ss'));
 assert.match($('#panel').innerHTML,/上书房备笔砚/);
 assert.match($('#panel').innerHTML,/查看皇嗣/);
 // Several talented consorts must not receive the same scholar storyline.
-A.start();drain();
+// Isolate the reservation from randomly generated opening consorts.
+A.start();drain();S.consorts=[];S.cands=[];delete S.flags.scholarArc;
 const poet=makeGirl({trait:'才女',fam:FAMS[5]});
-addConsort(poet,3,'入宫');
+delete poet.solitary;addConsort(poet,3,'入宫');
 const musician=makeGirl({trait:'才女',fam:FAMS[5]});
 addConsort(musician,3,'入宫');
 musician.like='琴谱';
