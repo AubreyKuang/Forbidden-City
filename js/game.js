@@ -417,7 +417,7 @@ function succeed(h){
     S.consorts=[];S.children=[];S.rel={};S.courtPolicy={};S.courtPolicyTurn=null;S.heir=null;S.cands=[];S.gen++;S.year=1;S.over=false;S.genChar=GEN_CHARS[(GEN_CHARS.indexOf(S.genChar)+1)%GEN_CHARS.length];
     delete S.selection;if(!legacyPendingAction())S.flags.haremAttendance={gen:S.gen,turn:S.turn};S.flags.lastXX=-99;delete S.flags.lastProudDemand;delete S.flags.scholarArc;delete S.flags.rareArcOwners;delete S.flags.arcPacing;delete S.flags.xinPacing;delete S.flags.lastLiteraryGathering;delete S.lastGardenBanquet;S.gardenPlans=[];seasonalTick();S.emp.energy=maxEnergy();
     log(`━━ 第${cnNum(S.gen)}代 ━━ ${v}元年，新帝${S.emp.sur}${h.name}登基，尊${S.flags.dowager.fullName||S.flags.dowager.name}为${S.flags.dowager.name}${S.flags.birthDowager?.alive?`，另尊生母${S.flags.birthDowager.fullName}为皇太后`:""}。`,1);
-    if(S.emp.age>=15){const em=marriageEmpress(h)||makeGirl({fam:pick(FAMS.slice(0,4)),trait:pick(['温婉','聪慧','城府','骄矜'])});em.favor=35;em.aff=30;addConsort(em,8,h.spouse?'潜邸嫡妻，随新帝登基册立':'新帝登基，奉遗诏册立');}
+    if(S.emp.age>=15){const em=marriageEmpress(h)||makeGirl({fam:pick(FAMS.slice(0,4)),trait:pick(['温婉','聪慧','城府','骄矜'])});em.favor=35;em.aff=30;if(h.spouse)em.knownBeforeAccession=true;addConsort(em,8,h.spouse?'潜邸嫡妻，随新帝登基册立':'新帝登基，奉遗诏册立');}
     inheritHousehold(h,empress());inheritLifeKeepsakes(h);S.ys={c:0,b:0,n:0};UI.kidsResidence='palace';
     migrate();UI.view='map';AU.sfx('gong');
     return {title:'新朝家人',por:dowagerPerson(S.flags.dowager),text:`${v}元年，新帝登基，大赦天下。\n${S.flags.dowager.fullName||S.flags.dowager.name}${S.flags.dowager.alive?'尊为'+S.flags.dowager.name+'，居慈宁宫。':'已故，尊谥存于宗谱。'}${S.flags.birthDowager?.alive?'\n生母'+S.flags.birthDowager.fullName+'亦尊为皇太后。':''}\n潜邸妻儿与亲族的往来，由此接入新朝。`}}}]});
@@ -431,7 +431,7 @@ A.start=function(){
   const style=fv('input[name=f-style]:checked')||'勤政';
   S={v:1,emp:{sur,name,era,age:18,birthMonth:3,health:90,prestige:50,people:60,treasury:800,energy:3,nightsMonth:0,style,wen:50,wu:50,seed:ri(1,2e9)},
     year:1,month:3,turn:0,consorts:[],children:[],cands:[],log:[],nid:1,gen:1,heir:null,genChar:pick(GEN_CHARS),
-    flags:{lastXX:-99,dowager:{name:'太后',alive:true},peek:0,openingCourt:true},history:[],ys:{c:0,b:0,n:0},over:false};
+    flags:{lastXX:-99,dowager:{name:'太后',alive:true},peek:0,openingCourt:true,familyRules:2},history:[],ys:{c:0,b:0,n:0},over:false};
   const e=S.emp;
   e.imperialPortrait=style==='尚武'?1:style==='文雅'?0:e.seed%2;
   if(style==='勤政'){e.prestige=58;e.people=65}if(style==='风流')e.health=84;if(style==='尚武'){e.wu=80;e.prestige=55}if(style==='文雅')e.wen=80;

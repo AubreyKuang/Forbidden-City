@@ -74,7 +74,7 @@ const HAREM=[
    {t:'准奏，皇后贤德',f:()=>{story(em,'率六宫节俭用度，陛下赞其贤德。');harem().forEach(c=>{if(c!==em)c.mood=clamp(c.mood-3)});return fx(chg({treasury:60,prestige:2}),cchg(em,{aff:6}))}},
    {t:'不必委屈了六宫',f:()=>fx(cchg(em,{aff:2}))}]};
   const tgt=harem().filter(c=>c!==em).sort((a,b)=>b.favor-a.favor)[0];if(!tgt)return null;
-  return {title:'中宫奏事',cast:[em,tgt],text:`皇后奏道：“${cName(tgt)}恃宠而骄，屡次请安迟到，臣妾请陛下准许依宫规罚她抄经百遍。”`,choices:[
+  return {title:'中宫奏事',cast:[em,tgt],text:`皇后奏道：“${cName(tgt)}${tgt.favor>=60&&tgt.favor>=em.favor+10?'恃宠而骄，':'近来'}屡次请安迟到，臣妾请陛下准许依宫规罚她抄经百遍。”`,choices:[
    {t:'后宫之事，皇后做主',person:em,f:()=>{story(tgt,'被皇后以宫规责罚，抄经百遍。');return fx(cchg(em,{aff:6,mood:8}),cchg(tgt,{mood:-15}))}},
    {t:'替她说两句好话',person:tgt,f:()=>{story(em,`陛下袒护${fullName(tgt)}，她面上不显，心里却记下了。`);em.scheme=clamp(em.scheme+3);return fx(cchg(em,{mood:-12,aff:-4}),cchg(tgt,{aff:5}))}}]}},
  function quarrel(){const h=harem().filter(c=>c.rank<8);if(h.length<2)return null;const [a,b]=shuffle(h);

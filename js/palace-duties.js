@@ -31,10 +31,10 @@ function courtFriendshipEvent(){
       if(!inPalace(c)||!inPalace(friend))return '两人已经各自离开。';
       relAdd(c,friend,gain);
       palaceSupportMemory(c,friend,'palace_support',c.palace,mode,aView,bView,aEmotion,bEmotion);
-      return aView+'\n'+fx(cchg(c,{mood}),cchg(friend,{mood:mode==='公开'&&cautious?-5:3}));
+      return `${name}后来说：“${aView}”\n`+fx(cchg(c,{mood}),cchg(friend,{mood:mode==='公开'&&cautious?-5:3}));
     };
     return {title:'旧友来访',cast:[c,friend],onShow:()=>{c.lastFriendshipTest=S.turn;},
-      text:`${name}近来闭门少见人，${ally}还是带了她爱吃的点心来。${cautious?'她愿意私下照顾旧友，提到是否在众人面前开口，却沉默了。':'她愿在下回请安时说明自己所知，也等着陛下拿主意。'}`,
+      text:`${name}近来闭门少见人${c.xin?.why?`——${String(c.xin.why).replace(/[。，；]+$/,'')}`:''}。${ally}还是带了她爱吃的点心来。${cautious?'她愿意私下照顾旧友，提到是否在众人面前开口，却沉默了。':'她愿在下回请安时说明自己所知，也等着陛下拿主意。'}`,
       choices:[
         {t:'准她们私下照应',f:finish('私下',7,8,`${ally}来陪我，她仍肯在这时登门。`,`悄悄去看了${name}，免得她独自捱着。`,.7,.55)},
         {t:'请她在请安时说清所知',f:finish('公开',cautious?-5:12,10,

@@ -248,6 +248,13 @@ function continuityTick(){
       }
       else text=`${kidName(other)}又来找${fullName(c)}${FAMILY_ACTIVITIES[other.personalPractice?.project||t.project].title}。${t.followup==='listen'?'这次先说了想改的地方，母亲没有急着接过手。':'孩子先照着上次的办法练完，再把自己的新想法拿给母亲看。'}`;
       continuityRecord(t,text);t.stage='ended';t.ended=S.turn;if(t.kind==='family')continuityResolveConcern(t);
+    }else if(t.stage==='working'&&S.turn-t.due>=12&&continuityAvailable(t)){
+      // A follow-up the player keeps postponing finishes on her own terms instead of waiting forever.
+      const text=t.kind==='duty'?`${fullName(c)}等不到再议，便与${fullName(other)}按先前说定的分工把花样册做完了。`:
+        t.kind==='family'?`${fullName(c)}没有再等，照先前的打算与家里通了信，关于${other.name}的事就此安顿下来。`:
+        `${fullName(c)}和${kidName(other)}没有再等，照上回说好的办法练了下去。`;
+      continuityRecord(t,text);t.stage='ended';t.ended=S.turn;
+      if(t.kind==='family')continuityResolveConcern(t);
     }else if(t.stage==='invitation'&&S.turn-t.origin>=12&&continuityAvailable(t)){
       const text=t.kind==='duty'?`${fullName(c)}没有继续等批复，先整理了自己的花样册；与${fullName(other)}的旧事仍按原来的结案记录。`:
         t.kind==='family'?`${fullName(c)}与家人自行安顿了关于${other.name}的书信，未借此改变朝廷原来的处置。`:

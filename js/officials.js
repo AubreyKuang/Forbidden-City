@@ -18,7 +18,7 @@ function initializeOfficialHouse(c,h,family){
       p.story=[...(p.story||[]),...(other.story||[])].filter((x,i,a)=>a.findIndex(y=>y.d===x.d&&y.t===x.t)===i);
       p.report||=other.report;p.commission||=other.commission;
     }
-    const seed=voiceHash(h.father.id+':'+role);
+    const seed=familyHash(h.father.id+':'+role);
     initializeRelativeCareer(p,role);
     p.id||=role==='father'?h.father.id:h.father.id+':'+role;p.seed??=seed;
     // Existing relatives retain their original face; new people use the expanded cast.

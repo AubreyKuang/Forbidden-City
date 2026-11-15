@@ -38,6 +38,13 @@ COURT.push(
    {t:'封她为公主，风光出塞',f:()=>{log('宫女王嫱自请和亲，封公主出塞。',1);return `她辞行那天，你才第一次见到她——竟是满宫都没见过的绝色。听说宫廷画师给她的画像上，点了一颗丧夫落泪痣。${fx(chg({prestige:6,people:5}))}`}},
    {t:'不和亲',f:()=>fx(chg({prestige:-2}))}]}),
 );
+function palaceCoupEvent(){
+   // An attempt on the emperor's life is a turning point, not a recurring scene: at most once a reign,
+   // never in the first three years. The roll is drawn first so other events keep their random sequence.
+   const quiet=chance(.98);if(quiet||S.turn<36||S.flags.palaceCoupGen===S.gen)return null;S.flags.palaceCoupGen=S.gen;
+   const previous=byId(S.flags.lastNight),last=inPalace(previous)?previous:null;return {title:'宫变',ref:'壬寅宫变（明·嘉靖）',sfx:'gong',text:`深夜，十几个宫女趁你熟睡，用黄绫勒住了你的脖子。绳结打成了死扣，没能勒紧。一个胆小的宫女跑去坤宁宫报了信。${last&&last.alive?`\n那夜，你宿在${cName(last)}宫里。`:''}`,choices:[
+   {t:'彻查主谋',f:()=>{log('宫女十余人夜谋弑君，事败伏诛。',1);return `她们说，是受不了宫里动辄打死人的日子。${fx(chg({health:-12,prestige:-4}))}\n§你下令宫中不得再虐打宫人`}},
+   ...(last&&last.alive&&!last.cold?[{t:`迁怒${cName(last)}：她宫里出的事`,f:()=>{last.alive=false;story(last,'宫变那夜陛下宿在她宫中，事后被以“知情不报”赐死。她至死喊冤。');log(`${fullName(last)}因宫变牵连被赐死。`,1);AU.sfx('sad');return `后来查明，她毫不知情。${fx(chg({health:-12,people:-6}))}`}}]:[])]}}
 const HIST=[
  ()=>{const c=harem().find(c=>c.virtue>=65&&c.rank>=3);if(!c)return null;return {title:'辞辇',ref:'班婕妤辞辇（西汉·汉成帝）',por:c,text:`你要去上林苑，让${cName(c)}与你同坐御辇。她却跪下推辞：“臣妾看古时的画像，贤君身边都是名臣，只有末代之君身边才坐着宠妃。”`,choices:[
    {t:'“得此贤妃，朕之幸也。”',f:()=>{story(c,'辞辇不坐，陛下赞她贤德。');log(`${fullName(c)}辞辇。`,1);return fx(cchg(c,{aff:8}),chg({prestige:3}))}},{t:'“扫兴。”',f:()=>fx(cchg(c,{mood:-8}))}]}},
@@ -78,9 +85,7 @@ const HIST=[
  ()=>{const lost=S.children.find(k=>k.lost&&S.turn-k.born>=60);if(!lost||!chance(.25))return null;return {title:'陈州少年',ref:'狸猫换太子·认母（宋·民间传说）',text:`开封府送来一个少年，说他是当年产房里被宫女寇珠藏在妆盒里、偷偷送出宫的那个孩子，在陈州一户人家长大。他手里有一块刻着生辰的玉锁。`,choices:[
    {t:'认回皇子',f:()=>{lost.lost=false;lost.alive=true;kstory(lost,'流落民间多年，终于被认回宫中。');log(`流落民间的${kidName(lost)}被认回宫中。`,1);const m=byId(lost.mom);if(m&&m.alive){if(m.cold){m.cold=false;assignPalace(m)}cchg(m,{mood:50,aff:20});story(m,'失散多年的孩子回来了。她抱着孩子，哭得说不出话。')}AU.sfx('joy');return fx(chg({people:5}))}},
    {t:'恐是冒认，赏他银两打发走',f:()=>{lost.lost=false;return '少年走了。后来再也没有人提起他。'}}]}},
- ()=>{if(chance(.85))return null;const previous=byId(S.flags.lastNight),last=inPalace(previous)?previous:null;return {title:'宫变',ref:'壬寅宫变（明·嘉靖）',sfx:'gong',text:`深夜，十几个宫女趁你熟睡，用黄绫勒住了你的脖子。绳结打成了死扣，没能勒紧。一个胆小的宫女跑去坤宁宫报了信。${last&&last.alive?`\n那夜，你宿在${cName(last)}宫里。`:''}`,choices:[
-   {t:'彻查主谋',f:()=>{log('宫女十余人夜谋弑君，事败伏诛。',1);return `她们说，是受不了宫里动辄打死人的日子。${fx(chg({health:-12,prestige:-4}))}\n§你下令宫中不得再虐打宫人`}},
-   ...(last&&last.alive&&!last.cold?[{t:`迁怒${cName(last)}：她宫里出的事`,f:()=>{last.alive=false;story(last,'宫变那夜陛下宿在她宫中，事后被以“知情不报”赐死。她至死喊冤。');log(`${fullName(last)}因宫变牵连被赐死。`,1);AU.sfx('sad');return `后来查明，她毫不知情。${fx(chg({health:-12,people:-6}))}`}}]:[])]}},
+ palaceCoupEvent,
  ()=>{const h=S.heir&&kidById(S.heir);if(!childInPalace(h)||kidAge(h)<8||S.flags.ting)return null;S.flags.ting=1;const rv=kidsAlive().find(k=>k.sex==='m'&&k!==h&&(k.sup||0)>20);const m=rv&&byId(rv.mom);
    return {title:'梃击案',ref:'梃击案（明·万历）',por:h,sfx:'gong',text:`一个手持枣木棍的汉子闯进东宫，打伤了守门太监，被侍卫拿下。他一口咬定是有人许他“打进去，有吃有穿”。${m&&m.alive?`\n有人说，他进宫前去过${cName(m)}娘家的庄子。`:''}`,choices:[
    ...(m&&m.alive?[{t:`顺藤摸瓜，查到${cName(m)}`,f:()=>{relAdd(m,byId(h.mom),-30);pushNow(punishEv(m,byId(h.mom),'谋害储君'));return '口供一层层往上，查到了一个你不想查到的地方……'}}]:[]),

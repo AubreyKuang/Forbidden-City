@@ -27,7 +27,10 @@ function familyAdmissionReactions(g){
     if(relGet(c,g)<=-25){(c.kinRival||={})[g.id]=1;(g.kinRival||={})[c.id]=1;}
     c.sisterArrival={other:g.id,turn:S.turn,kind:feeling.kind,text:feeling.text};
     story(c,`【姐妹入宫】${feeling.text}`);story(g,`【姐妹初见】${feeling.text}`);
-    remember(c,feeling.delta<0?'hurt':'family',feeling.text);
+    // An old rift with the newcomer is between the two of them, not a grievance against the emperor.
+    if(feeling.delta<0)NPCMemory.record(S,{type:'family',time:S.turn,location:c.palace,participants:[c.id,g.id],outcome:feeling.text},
+      [{person:c.id,subject:g.id,interpretation:feeling.text,emotion:-.6,impact:80}]);
+    else remember(c,'family',feeling.text);
     if(feeling.delta<0&&!['悲恸','心如死灰'].includes(xinOf(c)))setXin(c,'委屈',`家中另送${fullName(g)}入宫，心中不安`);
   }
 }

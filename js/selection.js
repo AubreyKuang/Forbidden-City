@@ -6,6 +6,18 @@ function entryManner(c){
   if(['淡泊','沉静'].includes(c.trait))return 'quiet';
   return 'nervous';
 }
+// What she says after showing her skill depends on the skill, and on how well it went.
+const SELECTION_REPLIES={
+  读书:['书里那一句，臣女想了许久，才敢这样解。','臣女读得还浅，只是喜欢一句一句慢慢想。'],
+  抚琴:['这支曲子在家弹过许多遍，今日弦音倒比平日还稳。','指法还生，只是这支曲子，臣女是真心喜欢。'],
+  刺绣:['这一处配色改过三回，才觉得像了。','针脚还不够匀，臣女回去再细细练。'],
+  侍花:['花和人一样，急不得。臣女只是肯等。','臣女只懂些粗浅的养法，多半是跟家里老花匠学的。'],
+  做点心:['火候差一分便不是这个味道，臣女守着灶看了许多回。','样子不算精巧，味道倒是家里人都夸过的。'],
+  投壶:['手稳了，壶口反倒显得宽了。','十投能中五六，臣女还想再练。'],
+  骑射:['家中兄长教的站法，臣女一日也没敢落下。','臣女力气还小，弓只拉得开大半。'],
+  对弈:['这局残棋，臣女解了三个晚上。','臣女棋力平平，只是不肯轻易认输。'],
+  品茶:['水要将沸未沸时才好，臣女守了一盏茶的工夫。','臣女也说不清好在哪里，只觉得这一盏清些。']
+};
 function selectionSpeech(c){
   const manner=entryManner(c),hobby=consortHobby(c);
   const lines={
@@ -19,7 +31,7 @@ function selectionSpeech(c){
   const skill=c.talent>=70?'举止渐渐舒展，讲到熟悉之处，眼中有了光。':c.talent<40?'中途出了个小差错，她停下来重新试过，没有勉强夸口。':'虽不算出众，倒看得出平日用过心。';
   const blurt=travelerSelectionBlurt(c);
   return {manner,stage:blurt?.stage||lines[manner][0],line:blurt?.line||lines[manner][1],talent:(acts[hobby]||acts.读书)+skill,
-    reply:c.talent<40?'臣女还没学得很好。若有机会，想把这一处再练明白。':manner==='bold'?'这才是臣女平日最拿手的。陛下可愿再看一回？':'在家练时不觉得，今日才知道，心定下来，手才能稳。'};
+    reply:c.talent<40?'臣女还没学得很好。若有机会，想把这一处再练明白。':manner==='bold'?'这才是臣女平日最拿手的。陛下可愿再看一回？':(SELECTION_REPLIES[hobby]||SELECTION_REPLIES.读书)[c.talent>=70?0:1]};
 }
 function selectionCurrent(){
   const session=S.selection;
@@ -43,13 +55,26 @@ function sameSelectionCohort(a,b){return !!(a!==b&&a?.selectionCohort?.id&&a.sel
 function cohortAffinity(a,b){
   return sameSelectionCohort(a,b)&&socialPair(a,b)&&!isRival(a,b)&&!isRival(b,a)&&relGet(a,b)>=0&&consortCompatibility(a,b)>=0;
 }
+// Many temperaments arrive nervous; each still shows it in her own way.
+const NERVOUS_REACTIONS={
+  温婉:'她谢过恩，先回身扶起跪得久了的同伴，才随宫人出殿。一路上低声向引路的姑姑道谢。',
+  好学:'她把位分与宫规一条条默记在心，出殿时还向嬷嬷问清了几处不认得的宫名。',
+  体弱:'她跪得久了，起身时晃了一下，被宫人扶住。她轻声道了谢，仍把脊背挺得笔直。',
+  贪财:'她听清了位分，又悄悄打听每月的份例几何，心里算清楚了，才松下一口气。',
+  才女:'出殿时她回望了一眼殿中悬着的匾额，默念了两遍上头的字，才跟上引路的宫人。',
+  痴情:'名字留下的那一刻，她抬眼望了御座一眼，又慌忙垂下，耳根红了一路。',
+  巧手:'她把方才紧张时揉皱的帕子悄悄抚平叠好，出了殿门才长长舒了一口气。',
+  善妒:'她向同来的几人一一道喜，笑意只到嘴角，出殿前又回头看了一眼名册上各人的位分。',
+  好客:'一出殿门，她便拉着同来的几人互道住处，约好得空时彼此走动。',
+  骄矜:'她谢恩时仪态一丝不乱，出了殿门才悄悄问身边宫人，自己的位分在同批中排第几。'
+};
 function newcomerReaction(c){
   return {
     solitary:'她向同来的几人依礼道别，将书匣交给宫人，独自认了回宫的路。有人邀她晚间闲坐，她温言辞谢，并无怠慢之意。',
     careful:'她将名册上的位分与各宫住处听得仔细，先请教了明日请安的次序，才松开一直捏着的袖边。',
     bold:'她听清封位便抬起眼，谢恩的声音清亮。转身时又回望了一眼殿门，盼着往后还能常被记起。',
     quiet:'她随宫人走过长廊，瞧见窗外的一枝新绿，脚步便慢下来。行李里那卷旧书，终于有地方安放了。',
-    nervous:'直到名册合上，她才确信自己的名字留了下来。走出殿门时眼眶微红，悄悄向同来的几人点了点头。'
+    nervous:NERVOUS_REACTIONS[c.trait]||'直到名册合上，她才确信自己的名字留了下来。走出殿门时眼眶微红，悄悄向同来的几人点了点头。'
   }[c.entryAdjustment?.manner||entryManner(c)];
 }
 function finishSelection(){
@@ -102,7 +127,7 @@ function viewSelectionArrivals(){
     <p>${esc(c.entryAdjustment?.reaction||'她的留选记在这一批名册中。')}</p>
     ${(c.entryAdjustment?.acquaintances||[]).length?`<p class="hint">一同入宫时相识：${c.entryAdjustment.acquaintances.map(id=>parentLink(id)).join('、')}。</p>`:''}
     <div class="acts">${!inPalace(c)?'<span class="hint">目前不在宫中</span>':c.entryAdjustment?.settled?'<span class="tag g">已问候</span>':S.turn-c.entryAdjustment?.turn>=6?'<span class="hint">已渐渐住惯</span>':`<button class="btn gold sm" onclick="A.xxWelcome(${c.id})">去问候她</button>`}<button class="btn sm" onclick="A.go('consort',${c.id})">人物纪事与近况</button></div></article>`).join('')}</div>
-    <div class="acts"><button class="btn" onclick="A.xxDecree()">另开选秀</button></div>`;
+`;
 }
 A.xxWelcome=function(id){if(modalOpen)return;const c=byId(id);if(c)pushEv(newcomerWelcomeEvent(c));};
 function viewSelectionAudience(){
