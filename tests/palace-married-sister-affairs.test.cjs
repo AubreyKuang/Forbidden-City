@@ -25,8 +25,8 @@ test('an adult marked married in the old household can open the visible private 
 });
 
 test('an adult married sister can be approached at home or through her palace visit',()=>{
-  const w=world();w.run(`assert.match(marriedSisterVisitButton(other,sister),/到她的住所求见/);var energy=E().energy;Math.random=()=>0;A.marriedSisterVisit(hostId,wifeId);assert.match(curEv.text,/平日所住/);assert.match(curEv.text,/吃了一惊/);choose(1);assert.equal(E().energy,energy);
-    sister.visit={host:hostId,from:S.turn,until:S.turn+2};assert.match(marriedSisterVisitButton(other,sister),/在宫中私下求见/);A.natalMeet(hostId,wifeId);option('请她到偏厅');assert.match(curEv.text,new RegExp(other.palace));Math.random=()=>.99;choose(0);drain();assert.equal(sister.marriedSisterAffair.meetings,1);assert.equal(E().energy,energy-1);assert.match(marriedSisterVisitButton(other,sister),/disabled/);S.turn++;sister.born=S.turn-17*12;assert.equal(marriedSisterVisitButton(other,sister),'');`);
+  const w=world();w.run(`assert.match(marriedSisterVisitButton(other,sister),/到她的住所求见/);var energy=E().energy;Math.random=()=>0;A.marriedSisterVisit(hostId,wifeId);assert.match(curEv.text,/平日所住/);assert.match(curEv.text,/吃了一惊/);assert.match(curEv.choices[0].t,/私下承宠/);choose(1);assert.equal(E().energy,energy);assert.equal(sister.natalPregnancy,undefined);assert.equal(sister.marriedSisterAffair.meetings,0);
+    sister.visit={host:hostId,from:S.turn,until:S.turn+2};assert.match(marriedSisterVisitButton(other,sister),/在宫中私下求见/);A.natalMeet(hostId,wifeId);option('请她到偏厅');assert.match(curEv.text,new RegExp(other.palace));Math.random=()=>.99;choose(0);drain();assert.equal(sister.marriedSisterAffair.meetings,1);assert.match(sister.story.at(-1).t,/私下承宠.*偏厅/);assert.equal(E().energy,energy-1);assert.match(marriedSisterVisitButton(other,sister),/disabled/);S.turn++;sister.born=S.turn-17*12;assert.equal(marriedSisterVisitButton(other,sister),'');`);
 });
 
 test('refusal stays refusal and coercion has consequences while withdrawing remains available',()=>{

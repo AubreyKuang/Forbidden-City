@@ -12,4 +12,26 @@ test('new-maid night and morning arrangements reload without adding a second per
 test('monthly encounter checks its twenty-five-percent gate and six-month cooldown',()=>{const w=world();w.run(`S.flags.lastMaidEncounter=60;S.turn=65;Math.random=()=>0;assert.equal(monthlyMaidEvent(),null);S.turn=66;Math.random=()=>.25;assert.equal(monthlyMaidEvent(),null);`);});
 
 test('monthly gate accepts just under 25 percent and garden includes its full quarter interval',()=>{const w=world();w.force(.249);w.run(`assert.ok(monthlyMaidEvent());`);w.force(.749);w.run(`A.out('garden');assert.equal(curEv.title,'宫女');choose(2);drain();S.turn+=5;assert.equal(maidEncounterReady(),false);S.turn++;assert.equal(maidEncounterReady(),true);`);w.force(.75);w.run(`A.out('garden');assert.equal(curEv.title,'御花园');`);});
-test('genuine published v29 garden encounter keeps its old cooldown until completion',()=>{const payload=require('./fixtures/maid-encounter-legacy-v29.json'),w=boot(229,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));w.ctx.assert=assert;w.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,29);assert.equal(curEv.title,'宫女');choose(2);drain();assert.equal(PalaceActions.contentVersion,47);S.turn+=5;assert.equal(maidEncounterReady(),false);S.turn++;assert.equal(maidEncounterReady(),true);`);});
+test('genuine published v29 garden encounter keeps its old cooldown until completion',()=>{const payload=require('./fixtures/maid-encounter-legacy-v29.json'),w=boot(229,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));w.ctx.assert=assert;w.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,29);assert.equal(curEv.title,'宫女');choose(2);drain();assert.equal(PalaceActions.contentVersion,48);S.turn+=5;assert.equal(maidEncounterReady(),false);S.turn++;assert.equal(maidEncounterReady(),true);`);});
+
+test('a pregnancy after sending a maid back is announced once in the new month and survives reload',()=>{
+ const w=world();w.run('A.maidAudience();choose(0);');
+ w.force(.2376181826,.6413819692,.5583668493,.8159323614,.0499424019,.6126509556,.0678740593,.3046474559);w.run(`choose(0);var g=maids()[0],id=g.id,start=S.turn;assert.equal(g.preg,1);
+ choose(1);assert.equal(curEv.title,'天明');choose(3);drain();
+ assert.equal(g.maid,true);assert.equal(g.near,false);assert.equal(g.palace,'尚衣局');assert.equal(g.maidReturnedAt,start);assert.doesNotMatch(consortNightReason(g),/孕/);
+ assert.ok(!g.story.some(x=>x.t.includes('诊出身孕')));assert.ok(!S.log.some(x=>x.t.includes('尚衣局来报')));
+ save('auto');A.load('auto');assert.equal(PalaceActions.blocked,false);
+ A.endMonth();assert.equal(S.turn,start+1);assert.equal(curEv.title,'尚衣局来报 · 喜脉');
+ assert.match(curEv.text,/上月侍寝.*回了尚衣局/);
+ assert.equal(byId(id).story.find(x=>x.t.startsWith('【尚衣局来报】')).d,dateStr());
+ save('auto');A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(curEv.title,'尚衣局来报 · 喜脉');
+ assert.equal(S.log.filter(x=>x.t.includes('尚衣局来报')).length,1);choose(1);drain();
+ assert.equal(byId(id).prot,true);assert.equal(byId(id).maid,true);assert.equal(byId(id).preg,2);`);
+});
+
+test('sending a maid back without conception does not manufacture a pregnancy report',()=>{
+ const w=world();w.run('A.maidAudience();choose(0);');
+ w.force(.95,.95);w.run(`choose(0);var g=maids()[0];assert.equal(g.preg,0);choose(1);choose(3);drain();
+ assert.equal(g.maidReturnedAt,undefined);A.endMonth();assert.ok(![curEv,...Q].some(x=>x?.title.includes('尚衣局来报')));
+ drain();assert.equal(g.preg,0);assert.ok(!S.log.some(x=>x.t.includes('尚衣局来报')));`);
+});

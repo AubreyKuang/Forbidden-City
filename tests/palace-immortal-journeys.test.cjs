@@ -97,3 +97,38 @@ test('letters never add new living experiences to deceased mothers',()=>{
 for(const fixture of JSON.parse(fs.readFileSync(__dirname+'/fixtures/immortal-journeys-v6.json','utf8')))test('real v6 '+fixture.mode+' pending action retains its original draws and scene',()=>{
  const b=boot();b.ctx.assert=assert;b.ctx.fixture=fixture.save;b.run(`S=fixture;assert.equal(PalaceActions.restore(S.pendingActions),true);assert.equal(PalaceActions.contentVersion,6);assert.equal(immortalEnabled(),false);drain();assert.equal(immortalEnabled(),true);`);
 });
+
+test('old and new discoveries add one round of personal and maternal-family notes',()=>{
+ const b=world('m');b.run(`var h=houseOf(m);h.father.alive=true;
+ h.brother={id:'dao-uncle',name:'顾明修',alive:true,temperament:'谨慎',story:[]};
+ immortalDiscover(k);assert.match(h.father.story.at(-1).t,/外孙清和.*水灵根/);
+ assert.match(h.brother.story.at(-1).t,/外甥清和.*水灵根/);
+ delete k.immortal.familyHeard;h.father.story=[];h.brother.story=[];S.turn++;
+ immortalTick();immortalTick();assert.equal(h.father.story.filter(x=>x.t.includes('宫中灵根')).length,1);
+ assert.equal(h.brother.story.filter(x=>x.t.includes('宫中灵根')).length,1);
+ assert.equal(k.story.filter(x=>x.t.includes('灵根之后')).length,1);assert.equal(m.story.filter(x=>x.t.includes('灵根之后')).length,1);`);
+});
+
+test('a refusal queues one real appeal next month, survives reload and permits a qualified departure',()=>{
+ const b=world('m',18);b.run(`immortalDiscover(k);var id=k.id;PalaceActions.reset();
+ A.immortalTalk(id);assert.match(curEv.title,/山门之约/);
+ choose(curEv.choices.findIndex(c=>c.t.includes('皇子不可远行')));drain();
+ assert.equal(k.immortal.stage,'closed');assert.equal(immortalTravelPetition(k),null);
+ A.endMonth();for(var i=0;modalOpen&&curEv.title!=='皇子远行 · 再请圣裁'&&i<30;i++){
+   if(modalResult)nextEv();else choose(curEv.choices.findLastIndex(c=>!c.cond||c.cond()));
+ }
+ assert.equal(curEv.title,'皇子远行 · 再请圣裁');
+ save('auto');A.load('auto');assert.equal(PalaceActions.blocked,false);
+ assert.equal(curEv.title,'皇子远行 · 再请圣裁');var before=E().treasury;
+ choose(0);assert.equal(royalById(id).immortal.stage,'learning');assert.equal(E().treasury,before-30);
+ assert.ok(royalById(id).story.some(x=>x.t.includes('远行获准')));
+ assert.ok(byId(royalById(id).mom).story.some(x=>x.t.includes('远行获准')));`);
+});
+
+test('an heir cannot depart through the appeal and a second refusal settles it',()=>{
+ const b=world('m',18);b.run(`immortalDiscover(k);S.heir=k.id;PalaceActions.reset();A.immortalTalk(k.id);
+ choose(1);drain();S.turn++;var event=immortalTravelPetition(k);
+ assert.equal(event.choices[0].cond(),false);pushEv(event);choose(1);drain();
+ assert.equal(k.immortal.stage,'closed');assert.equal(immortalTravelPetition(k),null);
+ assert.match(k.story.at(-1).t,/仍不准.*离京/);`);
+});

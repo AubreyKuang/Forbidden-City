@@ -364,9 +364,17 @@ A.endMonth=function(){
   S.flags.lastMonthReview={date:monthDate,inc,exp,court,...(courts?{courts}:{}),people:continuityReview(people),...(hongjianIncome?{hongjianIncome}:{}),...(localGrainPayment?{localGrainPayment}:{})};
   recordHaremCourtMonth();
   // 后宫
+  const returnedMaidNotices=[];
   for(const c of alive()){
     if(!c.cold){c.favor=clamp(c.favor-(c.bond?0:c.trait==='淡泊'?1:2));if(c.favor<25)c.mood=clamp(c.mood-3);else if(c.favor>60)c.mood=clamp(c.mood+1)}else c.mood=clamp(c.mood-3);
-    if(c.preg>0){concealedLossTick(c);c.preg++;if(c.preg===2)pushEv(pregEvent(c));if(c.preg>=(c.pregnancyCalendar?.term||10))pushEv(birthEvent(c))}
+    if(c.preg>0){
+      concealedLossTick(c);c.preg++;
+      if(c.preg===2){
+        if(returnedMaidPregnancy(c))returnedMaidNotices.push(c);
+        else pushEv(pregEvent(c));
+      }
+      if(c.preg>=(c.pregnancyCalendar?.term||10))pushEv(birthEvent(c));
+    }
   }
   if(typeof settleHaremStewardReward==='function'){
     const stewardship=settleHaremStewardReward();if(stewardship)S.flags.lastMonthReview.stewardship=stewardship;
@@ -382,6 +390,7 @@ A.endMonth=function(){
     log('查账回奏未获批复，弹劾案已归档。');
   }
   if(S.month>12){S.month=1;S.year++;e.age++;newYear=true;alive().forEach(c=>c.age++)}
+  for(const maid of returnedMaidNotices)pushEv(pregEvent(maid));
   annualBirthOmenTick();
   const revenue=legacyPendingAction()?null:annualRevenueTick();
   if(!legacyPendingAction()){postingTick();incognitoTick();}

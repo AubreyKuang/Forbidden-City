@@ -116,10 +116,25 @@ const HAREM=[
    {t:'让御膳房想想办法',f:()=>fx(cchg(c,{mood:6}))}]}},
 ];
 function haremEvent(){for(const f of shuffle(HAREM)){const ev=f();if(ev&&ambientEventReady(ev))return {...ev,present:ev.present||eventPortraits(ev)}}return null}
-function pregEvent(c){if(c.maid)return {title:'喜脉',por:c,sfx:'joy',text:`太医院来报：${c.near?'御前':'尚衣局'}的宫女${fullName(c)}已有两月身孕！`,choices:[
+function returnedMaidPregnancy(c){
+  return journalContentVersion()>=48&&c.maid&&!c.near&&c.preg===2&&Number.isInteger(c.maidReturnedAt)&&
+    c.maidReturnedAt===c.pregnancyCalendar?.conceived;
+}
+function pregEvent(c){
+  const returned=returnedMaidPregnancy(c);
+  if(c.maid)return {title:returned?'尚衣局来报 · 喜脉':'喜脉',por:c,sfx:'joy',
+    text:returned?`上月侍寝后，宫女${fullName(c)}领赏回了尚衣局，仍照原来当差。近来她总觉得乏力，尚衣局请太医来诊，这才确认她已有身孕。\n太医递上脉案，敬事房也呈上了上月的侍寝记录。她在局里等候安置，尚未受封。`:
+      `太医院来报：${c.near?'御前':'尚衣局'}的宫女${fullName(c)}已有两月身孕！`,
+    onShow:returned?()=>{
+      if(!returnedMaidPregnancy(c))return;
+      delete c.maidReturnedAt;
+      story(c,'【尚衣局来报】上月承恩后回局当差，本月经太医诊出身孕，尚未受封，等候安置。');
+      log(`尚衣局来报：宫女${fullName(c)}上月承恩后回局当差，本月诊出喜脉。`,1);
+    }:undefined,
+    choices:[
   {t:'册为答应，迁居别宫养胎',f:()=>{promoteMaid(c,1);c.prot=true;setXin(c,'欢喜','有孕后册为答应');return fx(cchg(c,{mood:25,aff:10}))}},
   {t:'先安心养胎，产后再议身份与抚养',f:()=>{c.prot=true;story(c,'诊出喜脉，陛下准安心养胎，暂不册封，待生产后再议孩子的抚养。');return '她仍保留原来的身份，免去劳作，由医者照料。孩子出生后再商议抚养。';}},
-  {t:'仍留在身边，加派人手照料',f:()=>{c.prot=true;c.near=true;c.palace='乾清宫';story(c,'有孕后仍留在御前，加派人手照料。');return fx(cchg(c,{mood:10}))}},
+  {t:returned?'调到御前，加派人手照料':'仍留在身边，加派人手照料',f:()=>{c.prot=true;c.near=true;c.palace='乾清宫';story(c,'有孕后仍留在御前，加派人手照料。');return fx(cchg(c,{mood:10}))}},
   {t:'不必声张',f:()=>{story(c,'有孕之事被压了下来。');setXin(c,'委屈','有了身孕，却无人过问');return fx(cchg(c,{mood:-10}))}}]};return {title:'喜脉',por:c,sfx:'joy',text:`太医院来报：${cName(c)}已有两月身孕！`,choices:[
   {t:'加派人手悉心照料（国库-20万两）',f:()=>{c.prot=true;story(c,'诊出喜脉，陛下加派人手悉心照料。');log(`${fullName(c)}有孕。`,1);return fx(chg({treasury:-20,prestige:2}),cchg(c,{mood:20,aff:8}))}},
   {t:'晋她一级位分',cond:()=>c.rank<7&&rankCount(c.rank+1)<RANK_CAP[c.rank+1],why:'位分已满',f:()=>{c.rank++;if(c.rank>=4&&!c.title)grantConsortTitle(c,pick(TITLES.filter(t=>!harem().some(x=>x.title===t))));story(c,`诊出喜脉，晋为${cName(c)}。`);log(`${fullName(c)}有孕，晋为${cName(c)}。`,1);return fx(chg({prestige:2}),cchg(c,{mood:25,aff:6}))}},
@@ -270,7 +285,7 @@ function afterMaidNight(g){return {title:'天明',por:g,text:`天快亮时，${g
   {t:'封为答应',f:()=>{promoteMaid(g,1);setXin(g,'欢喜','一夜承恩，封为答应');return `她磕头谢恩，搬进了${g.palace}。${fx(cchg(g,{mood:25,aff:10}))}`}},
   {t:'封为官女子',f:()=>{promoteMaid(g,0);setXin(g,'欢喜','一夜承恩，封为官女子');return `她磕头谢恩。${fx(cchg(g,{mood:15,aff:6}))}`}},
   {t:'留在身边，做贴身宫女',f:()=>{g.near=true;g.palace='乾清宫';story(g,'承恩后未受册封，留在御前做贴身宫女，随时侍奉在侧。');return `她留在了乾清宫，每日为你奉茶研墨。${fx(cchg(g,{aff:8}))}\n§「后宫」页的「贴身宫女」里能找到她，翻牌子时也有她`}},
-  {t:'赏些银子，让她回去当差',f:()=>{g.near=false;g.palace='尚衣局';story(g,'承恩一夜，次日被打发回尚衣局当差。');setXin(g,'委屈','承恩一夜，次日便被打发回去');return `她谢了恩，回去了。宫里没有人再提起那一夜。${fx(cchg(g,{mood:-10}))}`}}]}}
+  {t:'赏些银子，让她回去当差',f:()=>{g.near=false;g.palace='尚衣局';if(journalContentVersion()>=48&&g.preg===1)g.maidReturnedAt=S.turn;story(g,'承恩一夜，次日被打发回尚衣局当差。');setXin(g,'委屈','承恩一夜，次日便被打发回去');return `她谢了恩，回去了。宫里没有人再提起那一夜。${fx(cchg(g,{mood:-10}))}`}}]}}
 function monthlyMaidEvent(){
   if(!maidEncounterReady()||!chance(journalContentVersion()>=30?.25:.12))return null;
   const pool=[()=>maidEvent('长街')];

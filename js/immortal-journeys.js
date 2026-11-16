@@ -42,6 +42,10 @@ function immortalMotherFeeling(c,k,kind){
  if(kind==='news')return isSolitary(c)?`她听完${k.name}的消息，很久没说话，独自把旧衣领抚平，眼底却有难得的笑意。`:
  ['骄纵','骄矜','好客'].includes(c.trait)?`她忍不住向熟人说起${k.name}的近况，言语带着骄傲；回到房里，又惦记${role}几时能再有音信。`:
  `她记住${k.name}的每一句消息，既欣慰又想念。山门里的名望再高，在她心里仍是${role}。`;
+ if(journalContentVersion()>=48){
+  if(kind==='discovery')return `她问清${k.name}显出的灵根，又等孩子亲自讲完。听到新本事固然高兴，她也惦念往后若要拜师，孩子平日还有谁照应。`;
+  if(kind==='petition')return `她记下${k.name}此次能不能远行的答复，打算等孩子安静下来，再陪他把心里未说完的话讲完。`;
+ }
  return `她得知${k.name}的问道心愿，心里既惊讶又牵挂，盼自己还能参与孩子往后的日子。`;
 }
 function immortalRecord(k,title,text,kind='news'){
@@ -60,11 +64,55 @@ function immortalRecord(k,title,text,kind='news'){
    {person:c.id,subject:k.id,interpretation:feeling,emotion:kind==='departure'?-.5:.6,impact:80}]);
  }
 }
+function immortalMaternalDiscovery(k){
+ const r=k.immortal;
+ if(journalContentVersion()<48||r.familyHeard)return;
+ r.familyHeard=true;
+ const m=byId(k.mom)||familyHostById(k.mom);
+ if(!m)return;
+ const h=houseOf(m),child=k.sex==='m'?'外孙':'外孙女',kind=k.sex==='m'?'外甥':'外甥女';
+ const father=h?.father,brothers=h?brotherRoles(h).map(role=>officialPerson(h,role)).filter(officialAlive):[];
+ if(officialAlive(father)){
+  const feeling=m.fam.p<20?'他从未见过这样的事，只盼孩子能平安长成，也怕女儿独自揣着心事，写了几句寻常家话问她。':'他嘱咐家里把消息稳稳收着，先问清师承和孩子本人的心意，莫因一桩奇事就替外孙辈拿主意。';
+  story(father,`【宫中灵根】听说${child}${k.name}被国师辨出${r.root}。${feeling}`);
+ }
+ for(const brother of brothers){
+  const feeling=brother.temperament==='谨慎'||brother.temperament==='持正'?'他请人打听山门和送信的路，想着日后若真远行，至少该知道到哪儿报平安。':'他替孩子欢喜，又惦念姐妹听见这事时可有人陪着说话，打算给她寄一封家书。';
+  story(brother,`【宫中灵根】听说姐妹的孩子、自己的${kind}${k.name}显出${r.root}。${feeling}`);
+ }
+}
+function immortalTravelRefused(k){
+ if(journalContentVersion()<48||k.sex!=='m'||k.immortal.travelAppeal)return;
+ k.immortal.travelAppeal={due:S.turn+1};
+}
+function immortalTravelPetition(k){
+ const r=k?.immortal,appeal=r?.travelAppeal;
+ if(journalContentVersion()<48||k?.sex!=='m'||!appeal||appeal.resolved||S.turn<appeal.due||
+    !immortalLocal(k)||!['invited','closed'].includes(r.stage)||mourningActive())return null;
+ const mother=byId(k.mom),speaker=inPalace(mother)?mother:k,sect=IMMORTAL_SECTS[r.route];
+ const valid=()=>!appeal.resolved&&k.immortal===r&&['invited','closed'].includes(r.stage)&&immortalLocal(k)&&
+    !mourningActive()&&(speaker===k||inPalace(speaker));
+ const finish=(title,text,change)=>{
+  if(!valid())return null;
+  appeal.resolved=true;change();immortalRecord(k,title,text,'petition');save('auto');return text;
+ };
+ return {title:'皇子远行 · 再请圣裁',por:speaker,cast:[k],present:speaker===k?[]:[speaker],valid,
+  text:`上次${k.name}的山门远行未获允准。${speaker===k?`${k.name}亲自来求见，想请父皇再听一听他的打算。`:`${fullName(mother)}替${k.name}求见：“臣妾舍不得他远行，也想请陛下再听一听他的打算。”`}\n${k.name}道：“${IMMORTAL_VOICES[childDisposition(k)]}若父皇仍觉得不妥，我愿先留下，只请把我的心愿记着。”`,
+  choices:[
+   {t:`改主意，准赴${sect.place} · 国库−30`,cond:()=>valid()&&immortalCanLeave(k)&&E().treasury>=30,
+    why:'须满十六岁、身体康健，无储位及家室牵绊，国库足三十万两',f:()=>{
+     if(!immortalCanLeave(k)||E().treasury<30)return null;
+     return finish('远行获准',`听过这回求情，陛下改了主意，准${k.name}随师启程。`,()=>{r.stage='invited';chg({treasury:-30});immortalDepart(k);});
+    }},
+   {t:'仍不准远行，留在京中',f:()=>finish('仍留京中',`陛下听过求情，仍不准${k.name}离京。侍从撤下行装，他把未寄出的拜师帖收回书匣。`,()=>{r.stage='closed';})},
+   {t:'先留京修习，半年后再议',f:()=>finish('暂缓远行',`陛下准${k.name}继续在京修习，远行一事待半年后再议。他把想问仙师的话先抄在册中。`,()=>{r.stage='invited';r.due=S.turn+6;})}
+  ]};
+}
 function immortalDiscover(k){
  if(!immortalEnabled()||!immortalLocal(k)||kidAge(k)<12||k.immortal||!immortalRoot(k)||daoInterest(k)<=0)return false;
  initImmortalTalent(k);
  k.immortal={root:k.immortalTalent,route:k.mar>k.lit||['好胜','爽直'].includes(childDisposition(k))?'sword':'cloud',stage:'noticed',since:S.turn,due:S.turn,history:[],merit:0,rank:0,lastLetter:-99};
- immortalRecord(k,'灵根初显',`钦安殿试拂玉磬时，${k.name}指下亮起一线清光，竟与殿外松风相应。国师辨为${k.immortal.root}，记入问道册；仍须慢慢学习，未曾许诺长生。`,'discovery');return true;
+ immortalRecord(k,'灵根初显',`钦安殿试拂玉磬时，${k.name}指下亮起一线清光，竟与殿外松风相应。国师辨为${k.immortal.root}，记入问道册；仍须慢慢学习，未曾许诺长生。`,'discovery');immortalMaternalDiscovery(k);return true;
 }
 function immortalDepart(k){
  if(!immortalCanLeave(k)||!['noticed','invited'].includes(k.immortal?.stage))return false;
@@ -99,6 +147,7 @@ function immortalNews(k){
  const v=variants[trait];return {topic:v[0],text:`${d.name}的消息由${r.merit%2?'行商':'游方道人'}带回。${v[1]}`,benefit:v[2]};
 }
 function immortalEvent(k){
+ const appeal=immortalTravelPetition(k);if(appeal)return appeal;
  const r=k?.immortal;if(!immortalEnabled()||!r||!k.alive||k.pendingName||k.jailed||k.removedFromRoyal||S.over||S.turn<r.due)return null;
  const stage=r.stage,d=IMMORTAL_SECTS[r.route],master=immortalMaster(k);let done=false;
  const valid=()=>!done&&k.alive&&!k.pendingName&&!k.jailed&&!k.removedFromRoyal&&!S.over&&k.immortal===r&&r.stage===stage&&S.turn>=r.due&&(!['noticed','invited'].includes(stage)||immortalLocal(k));
@@ -109,8 +158,9 @@ function immortalEvent(k){
   const reason=kidAge(k)<16?'年纪尚小，可先留在宫中读书练习，十六岁后再谈远行。':S.heir===k.id?'东宫有监国与储位之责，须先另定储君，才能远行。':k.married||k.spouse?'已有婚姻与家室，眼下先在京问道，不径自舍家入山。':k.hp<50?'身体尚弱，先休养，再谈入山。':'';
   return {...base,cast:[k,master],title:'仙师来访 · 山门之约',text:`${d.master}${d.title}受国师相邀来访，衣袂带着松间清气。谈及${k.name}的${r.root}，道长说：“${d.line}”\n${k.name}答道：“${IMMORTAL_VOICES[childDisposition(k)]}”\n${k.sex==='m'&&k.birthTraits?.mother?.rank===8?'身为嫡出的皇子，他又问起宗室责任，久久没有立即作答。\n':''}${reason||'若准启程，须一年学艺、一年历练后再谈去留；以后可以归来，也可以长留山门。'}`,choices:[
    {t:`准随师赴${d.place} · 国库−30`,cond:()=>immortalCanLeave(k)&&E().treasury>=30,why:reason||'国库不足',f:()=>{if(!valid()||E().treasury<30||!immortalCanLeave(k))return null;done=true;chg({treasury:-30});immortalDepart(k);save('auto');return `${k.name}已随师启程。送别与亲人的心绪，分别记在人物纪事里。`;}},
-   {t:'先留宫中习道，半年后再谈',f:()=>finish('宫中留课',`${k.name}留在京中随师读书习剑，尚未离宫。想远行的心愿被认真留下，半年后再议。`,()=>{r.stage='invited';r.due=S.turn+6;k.lit=clamp(k.lit+2);})},
-   {t:'愿留此间，不走入山这条路',f:()=>finish('各有归处',`${k.name}与仙师谈过以后，决定保留问道的兴趣，在人间走自己的路。灵根没有消失，山门之约到此收存。`,()=>{r.stage='closed';})}
+   {t:'先留宫中习道，半年后再谈',f:()=>finish('宫中留课',`${k.name}留在京中随师读书习剑，尚未离宫。想远行的心愿被认真留下，半年后再议。`,()=>{r.stage='invited';r.due=S.turn+6;k.lit=clamp(k.lit+2);immortalTravelRefused(k);})},
+   {t:'愿留此间，不走入山这条路',f:()=>finish('各有归处',`${k.name}与仙师谈过以后，决定保留问道的兴趣，在人间走自己的路。灵根没有消失，山门之约到此收存。`,()=>{r.stage='closed';})},
+   ...(journalContentVersion()>=48&&k.sex==='m'?[{t:'皇子不可远行，留在京中',f:()=>finish('远行未允',`陛下不准${k.name}随师远行，令他暂留京中。行囊仍搁在床边，他还想找个时机把未说完的话讲给父皇听。`,()=>{r.stage='closed';immortalTravelRefused(k);},'petition')}]:[])
   ]};
  }
  if(stage==='learning')return {...base,title:'山中来信 · 第一场历练',text:`${k.name}在${d.name}学艺已有一年。${r.route==='sword'?'来信说，华山石阶走了无数遍，终于能让剑锋带起一缕清光。':'来信说，终于能听辨山泉中的灵息，也学会在夜里独守一盏灯。'}\n师门将安排下山历练，孩子记起家中的教导，写信来谈自己想守住什么。`,choices:[
@@ -132,6 +182,16 @@ function immortalEvent(k){
 }
 function immortalTick(){
  if(!immortalEnabled()||S.over)return;
+ if(journalContentVersion()>=48)for(const k of immortalPeople()){
+  if(!k.alive||!S.children.includes(k))continue;
+  immortalMaternalDiscovery(k);
+  const r=k.immortal;
+  if(r.discoveryReflected||S.turn<=r.since||!['noticed','invited','closed'].includes(r.stage))continue;
+  r.discoveryReflected=true;
+  kstory(k,`【灵根之后】国师辨出${r.root}之后，${k.sex==='m'?'他':'她'}把那日在钦安殿听见的风声记了下来。${IMMORTAL_VOICES[childDisposition(k)]}`);
+  const mother=byId(k.mom);
+  if(mother?.alive)story(mother,`【灵根之后】她听说${k.name}还收着问道的手记。此事渐渐安静下来，她仍想找个机会问问孩子，知道自己有灵根后，最惦记的是什么。`);
+ }
  const p=S.flags.immortalPace||={last:-99,lastOffer:-99};
  if(S.turn-p.last<6||mourningActive())return;
  p.last=S.turn;
@@ -139,7 +199,11 @@ function immortalTick(){
  if(candidates.length&&chance(.35))immortalDiscover(pick(candidates));
 }
 function pendingImmortalEvent(){
- if(!immortalEnabled()||S.over||mourningActive()||S.turn-(S.flags.immortalPace?.lastOffer??-99)<3)return null;
+ if(!immortalEnabled()||S.over||mourningActive())return null;
+ if(journalContentVersion()>=48){
+  const appeal=immortalPeople().map(immortalTravelPetition).find(Boolean);if(appeal)return appeal;
+ }
+ if(S.turn-(S.flags.immortalPace?.lastOffer??-99)<3)return null;
  const k=immortalPeople().filter(k=>k.alive&&S.turn>=(k.immortal.due??Infinity)).sort((a,b)=>a.immortal.due-b.immortal.due).find(k=>immortalEvent(k));
  const ev=k&&immortalEvent(k);return ev?{...ev,onQueue:()=>{(S.flags.immortalPace||={last:-99}).lastOffer=S.turn;}}:null;
 }

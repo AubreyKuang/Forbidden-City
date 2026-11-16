@@ -12,12 +12,13 @@ function marriedSisterVisitButton(c,p){
   if(!marriedSisterAvailable(c,p))return '';
   if(affair?.coerced)return '<p class="hint">她请家人谢绝私下求见。</p>';
   const exhausted=affair?.lastMeeting===S.turn;
-  return `<button class="btn primary" onclick="A.marriedSisterVisit(${c.id},${p.id})" ${exhausted?'disabled':''}>${natalInPalace(c,p)?'在宫中私下求见':'到她的住所求见'}${exhausted?'<small>本月已经见过</small>':''}</button>`;
+  return `<button class="btn primary" onclick="A.marriedSisterVisit(${c.id},${p.id})" ${exhausted?'disabled':''}>${natalInPalace(c,p)?'在宫中私下求见':'到她的住所求见'}${exhausted?'<small>本月已经见过</small>':''}</button>${journalContentVersion()>=48?'<p class="hint">求见只会先问她的心意。</p>':''}`;
 }
 
 function marriedSisterEncounter(c,p){
   if(!marriedSisterAvailable(c,p)||p.marriedSisterAffair?.coerced||p.marriedSisterAffair?.lastMeeting===S.turn)return null;
   p.spouse ||= initialNatalSpouse(p,natalAge(p));
+  const direct=journalContentVersion()>=48;
   const gen=S.gen,turn=S.turn,spouse=p.spouse,inPalaceNow=natalInPalace(c,p);
   const affair=p.marriedSisterAffair?.spouseId===spouse.id?p.marriedSisterAffair:(p.marriedSisterAffair={
     spouseId:spouse.id,receptive:p.willing!==false&&chance(['活泼','爽直'].includes(p.trait)? .48 : .32),meetings:0
@@ -30,6 +31,7 @@ function marriedSisterEncounter(c,p){
     '她亲自来开门，先问上次那句迟迟没说完的话，你还记不记得。',
     '她望着窗外想了半晌：“总有片刻想见你。可一想到明日，我还有自己的家要回去。”'
   ][Math.min(affair.meetings,2)]:'她听懂了你的来意，退开一步道：“请陛下回去。妾身不愿单独留下。”';
+  const consent=direct&&affair.receptive?'\n她遣开随侍，道：“妾身愿留在这里承宠。若陛下也愿意，今夜请留下。”':'';
   const settle=coerced=>{
     if(!valid()||!useE())return null;
     affair.lastMeeting=S.turn;
@@ -39,15 +41,17 @@ function marriedSisterEncounter(c,p){
       story(p,'【不愿再见】她已明言拒绝，皇帝仍强令她留下。此后她托家人谢绝皇帝私下求见。');
     }else{
       affair.meetings++;
-      story(p,`【私下相会】她自己答应在${inPalaceNow?c.palace:'住处'}与你见面。${answer}`);
+      story(p,direct?`【私下承宠】她愿意与你私下相会，在${inPalaceNow?c.palace+'偏厅':'自己的住处'}承宠。离开后，她将这件事藏在心里。`:
+        `【私下相会】她自己答应在${inPalaceNow?c.palace:'住处'}与你见面。${answer}`);
     }
     if(natalPregnancyReady(p)&&chance(.28))beginNatalPregnancy(c,p,{unconfirmed:true});
     if(!coerced&&affair.meetings>=3&&!p.natalPregnancy&&S.turn-(affair.lastRequest??-99)>=12)pushEv(marriedSisterAdmissionRequest(c,p,affair));
     return coerced?'她的拒绝没有得到尊重。离开后，她请家人此后替她挡下私召。\n§精力−1 · 威望−8 · 民心−3':
+      direct?`今夜，${p.name}自愿在${inPalaceNow?c.palace+'偏厅':'住处'}承宠。${inPalaceNow?'过后她理好衣裳，回到姐妹处，仍按原定日子归家。':'天明前她亲自送你出门，转身回到原来的家中。'}\n§精力−1`:
       '这次相会过去后，她仍照自己的安排回去，临别说想再见你一面。\n§精力−1';
   };
-  return {title:'私下求见 · '+p.name,por:natalPortrait(p),valid,text:`${opening}\n${answer}`,choices:[
-    ...(affair.receptive?[{t:'依她心意留下相会 · 精力−1',cond:()=>E().energy>0,f:()=>settle(false)}]:[
+  return {title:'私下求见 · '+p.name,por:natalPortrait(p),valid,text:`${opening}\n${answer}${consent}`,choices:[
+    ...(affair.receptive?[{t:direct?'她愿意，私下承宠 · 精力−1':'依她心意留下相会 · 精力−1',cond:()=>E().energy>0,f:()=>settle(false)}]:[
       {t:'违她意愿，强令留下',cond:()=>E().energy>0,f:()=>{
         if(valid())pushNow({title:'她已拒绝',por:natalPortrait(p),valid,danger:true,
           text:'她已经当面拒绝。强留会使她受到伤害，也会损及朝廷声望。',choices:[
