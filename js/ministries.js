@@ -228,6 +228,16 @@ const ministriesBaseTick=courtTick;
 courtTick=function(...args){const result=ministriesBaseTick.apply(this,args);examTick();return result;};
 
 /* —— 页面 —— */
+function examSchedulePanel(showMinistries=true){
+  if(!S)return '';
+  const last=(S.ministries?.exams||[]).findLast(x=>x.gen===S.gen&&x.top?.length);
+  const winner=last?scholarById(last.top[0]):null;
+  return `<section class="detail-section exam-schedule" aria-label="科举日程"><h3>科举日程</h3>
+    <p>正科 · <strong>${esc(examIntervalLabel(regularExamInterval()))}</strong></p>
+    <p>${esc(nextExamLabel())}。</p>
+    <p class="hint">到期转入三月时自动呈上殿试，无须先任命礼部尚书。${winner?`最近一科：${esc(cnNum(last.year))}年${last.enke?'恩科':'正科'}，状元${esc(winner.name)}。`:''}</p>
+    <div class="acts"><button class="btn sm gold" onclick="A.examSchedule()" ${S.over?'disabled':''}>调整科举周期</button>${showMinistries?`<button class="btn sm" onclick="A.go('ministries')">礼部与新科进士</button>`:''}</div></section>`;
+}
 function viewMinistries(){
   const card=([id,m])=>{
     const head=ministryHead(id),used=S.ministries?.used?.[id],wait=used==null?0:Math.max(0,MINISTRY_GAP-(S.turn-used));
@@ -240,7 +250,7 @@ function viewMinistries(){
       <button class="btn sm" onclick="A.ministryAppoint('${id}')">${head?'改任尚书':'任命尚书'}</button>${schedules?`<button class="btn sm" onclick="A.examSchedule()" ${S.over?'disabled':''}>调整正科周期</button>`:''}</div></article>`;
   };
   const scholars=scholarList().filter(p=>!p.registrySource).slice().reverse();
-  return `<button class="btn quiet sm detail-back" onclick="A.go('government')">← 返回治国理政</button><h2>六部</h2><p class="hint">尚书由在任且才干 55 以上的官员出任，一人不兼两部。各部每年可办一件大事，成败看尚书才干。</p>
+  return `<button class="btn quiet sm detail-back" onclick="A.go('government')">← 返回治国理政</button><h2>六部</h2>${examSchedulePanel(false)}<p class="hint">尚书由在任且才干 55 以上的官员出任，一人不兼两部。各部每年可办一件大事，成败看尚书才干。</p>
     <div class="grid ministry-grid">${Object.entries(MINISTRIES).map(card).join('')}</div>
     ${detailSection('新科进士',scholars.length?`<ul class="story">${scholars.map(p=>`<li><button class="person-link" onclick="A.go('scholar','${p.id}')">${esc(p.name)}</button> · ${esc(p.examYear?`${p.examRank}`:'')} · ${esc(officialOfficeLabel(p))} · ${officialStatus(p)} · 才干${rd(p.ability)}</li>`).join('')}</ul>`:`<p class="hint">尚无科举出身的朝臣。${nextExamLabel()}。</p>`)}`;
 }
