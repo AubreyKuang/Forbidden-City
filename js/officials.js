@@ -6,7 +6,7 @@ const brotherRole=(h,predicate=()=>true)=>brotherRoles(h).find(role=>predicate(h
 const officialKinLabel=(h,role,member)=>role==='father'?'父亲':role.startsWith('relative')?(member?natalLabel(member,officialPerson(h,role)):officialPerson(h,role).parentRelativeId?(officialPerson(h,role).sex==='m'?'外甥':'外甥女'):officialPerson(h,role).born<Math.min(...Object.values(h.natal.memberBorn))?'兄长':'弟弟'):brotherRoles(h).length<2?'兄长':({brother:'长兄',brother2:'二兄',brother3:'三兄',brother4:'四兄',brother5:'五兄'}[role]||'兄长');
 const OFFICIAL_TEMPERAMENTS=['持正','谨慎','进取','圆融'];
 const officialAlive=p=>!!p&&p.alive!==false;
-const officialServing=p=>officialAlive(p)&&p.career!=='student'&&p.career!=='commoner'&&!p.retired&&!p.commission&&!p.incognitoCase&&!p.exiled&&!p.dismissed;
+const officialServing=p=>officialAlive(p)&&p.career!=='student'&&p.career!=='commoner'&&!p.retired&&!p.commission&&!p.incognitoCase&&!p.yiAudit&&!p.exiled&&!p.dismissed;
 function initializeOfficialHouse(c,h,family){
   for(const other of family.map(x=>x.house).filter(Boolean))for(const role of brotherRoles(other))h[role]??=other[role];
   initializeNatalFamily(c,h,family);

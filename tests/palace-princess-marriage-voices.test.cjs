@@ -141,10 +141,10 @@ test('hobbies use recorded preferences and building a voice consumes neither gam
 
 for(const name of ['opening','review','return'])test('published v46 '+name+' resumes its original words and effects before new dialogue activates',()=>{
  const payload=require('./fixtures/princess-voices-legacy-v46.json')[name],b=boot(82,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));b.ctx.assert=assert;
- b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,46);assert.equal(S.children[0].marriageVoiceMemory,undefined);drain();assert.equal(PalaceActions.contentVersion,60);assert.equal(PalaceActions.blocked,false);`);
+ b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,46);assert.equal(S.children[0].marriageVoiceMemory,undefined);drain();assert.equal(PalaceActions.contentVersion,61);assert.equal(PalaceActions.blocked,false);`);
 });
 
 for(const name of ['opening','review','married'])test('published v47 '+name+' keeps the existing royal-family and married-life behavior when reloaded',()=>{
  const payload=require('./fixtures/princess-voices-legacy-v47.json')[name],b=boot(82,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));b.ctx.assert=assert;
- b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,47);assert.equal(S.children[0].marriageVoiceMemory,undefined);drain();assert.equal(PalaceActions.contentVersion,60);assert.equal(PalaceActions.blocked,false);var k=S.children[0];assert.equal(k.household.nextNews-k.household.started,2);`);
+ b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,47);assert.equal(S.children[0].marriageVoiceMemory,undefined);drain();assert.equal(PalaceActions.contentVersion,61);assert.equal(PalaceActions.blocked,false);var k=S.children[0];assert.equal(k.household.nextNews-k.household.started,2);`);
 });

@@ -6,6 +6,9 @@
 
 **[进入游戏](https://aubreykuang.github.io/Forbidden-City/)** · **[测试版与金手指](https://aubreykuang.github.io/Forbidden-City/dev.html)**
 
+**义田与赈粮**。赈粮、盘仓或复耕的具名奏绩获准留任推行后，可以试办义田。首收之后每年十月收半批租粮，义仓最多积存两批。水灾、蝗灾可按奏折直接调拨。在「常平仓 → 查阅义田簿」可择无亲缘牵连的大臣调查疑账，两个月后听回奏。处置和相关妃嫔、皇嗣的反应会留在原案。 [钱公辅《义田记》](https://zh.wikisource.org/zh-hans/義田記)
+
+
 原生 HTML / CSS / JavaScript · Canvas 宫城与古风立绘 · Web Audio 配乐 · 浏览器本地存档 · 桌面与手机布局
 
 <img src="docs/screenshots/showcase-palace-housing.png" alt="宫城主地图：顶部可直接分配住所，地图包含东西六宫、御花园与钦安殿" width="960">

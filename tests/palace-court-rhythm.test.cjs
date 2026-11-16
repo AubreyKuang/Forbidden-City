@@ -43,7 +43,7 @@ for(const version of [26,28,29])for(const name of ['annual-tags','residence-requ
  w.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,${version});`);
  if(name==='annual-tags')w.run(`assert.equal(S.children.find(k=>k.name==='清宁').lit,56);`);
  if(name==='dowager-repeat')w.run(`assert.match(curEv.text,/今日已经说过一回话/);`);
- w.run(`drain();assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,60);`);
+ w.run(`drain();assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,61);`);
 });
 test('third and later greetings always turn to companionship, even on the highest random roll',()=>{
  const w=world();w.run(`var d=ensureDowager();d.conversations={topics:{},recent:[],visits:{turn:S.turn,count:2},lastTurn:S.turn};Math.random=()=>.999;var heard=new Set();for(var i=0;i<12;i++){E().energy=20;A.greet();assert.ok(curEv.dowagerTopic.startsWith('company:'));assert.ok(!heard.has(curEv.text));heard.add(curEv.text);drain();}E().energy=20;A.greet();assert.doesNotMatch(curEv.text,/今日已经说过一回话|先前的话已说过/);assert.equal(d.conversations.visits.count,15);`);

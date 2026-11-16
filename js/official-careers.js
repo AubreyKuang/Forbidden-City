@@ -154,7 +154,7 @@ function careerReportEvent(person){
     if(kind==='accountable'||kind==='demote')p.trust=clamp(p.trust-5);
     const text=`【御批】${r.title}：${r.text} 批复：${decision}${decision.endsWith('。')?'':'。'}`;
     (p.reportHistory ||= []).push({turn:S.turn,d:dateStr(),...r,decision});
-    courtPersonRecord(person,text);careerFamilyEcho(person,kind==='commend'?'reward':kind,`${r.title}：${r.text} 批复：${decision}`);
+    courtPersonRecord(person,text);if(kind==='commend')proposeYiLand(person,r);careerFamilyEcho(person,kind==='commend'?'reward':kind,`${r.title}：${r.text} 批复：${decision}`);
     if(person.e&&['reward','accountable','promote','demote','central','commend'].includes(kind))officialFamilyReaction(person.e,['promote','central','commend'].includes(kind)?'reward':kind==='demote'?'accountable':kind,r.title+'；'+decision);save('auto');return text;
   };
   const choice=(direction,label)=>{const to=target(direction);return {t:to?`${label} → ${to[1]} · ${GRADE_NAMES[to[0]-1]}`:`${label}（暂不符合条件）`,cond:()=>!!target(direction),why:'须在任、未转任他职，升任需才干50、功绩30，升贬间隔半年且未到品序边界',f:()=>finish(direction)};};
