@@ -1,5 +1,7 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
+const {readFileSync}=require('node:fs');
+const {join}=require('node:path');
 const {boot}=require('./playtest-harness.cjs');
 
 function start(){
@@ -38,7 +40,7 @@ test('the city lanterns appear only after taking her out of the palace',()=>{
     game.run(`const c=empress();c.aff=50;c.arc={id:'kite',st:1,t:S.turn,f:{}};
       const ev=ARCS.kite.stages[1](c,c.arc.f);
       pushEv({...ev,title:ARCS.kite.name,por:c});`);
-    assert.doesNotMatch(game.run("$('#mbox').innerHTML"),/event-illustration/);
+    assert.match(game.run("$('#mbox').innerHTML"),/story-festival-lantern-making\.webp/);
     game.run(`choose(${choice})`);
     const result=game.run("$('#mbox').innerHTML");
     if(choice===0){
@@ -103,7 +105,7 @@ test('West Lake appears only in the result of accompanying her south',()=>{
     game.run(`const c=empress();c.trait='体弱';c.aff=50;c.arc={id:'ill',st:1,t:S.turn,f:{tell:1}};
       E().treasury=500;E().health=80;pushEv(arcTick());`);
     assert.equal(game.run('curEv.title'),'续命汤');
-    assert.doesNotMatch(game.run("$('#mbox').innerHTML"),/event-illustration/);
+    assert.match(game.run("$('#mbox').innerHTML"),/story-illness-rest-window\.webp/);
     game.run(`choose(${choice})`);
     assert.equal(game.run('c.arc.st'),2);
     if(choice===0){
@@ -162,16 +164,18 @@ test('the lotus illustration follows the result where she hears the rain',()=>{
   }
 });
 
-test('the overturned cup belongs to the banquet, not the other scholar stages',()=>{
+test('each scholar chapter displays its own scene at the scheduled popup',()=>{
   const game=start();
   game.run(`const c=empress();c.trait='才女';c.aff=70;
-    c.arc={id:'scholar',st:1,t:S.turn,f:{}};pushEv(arcTick());`);
+    c.arc={id:'scholar',st:0,t:S.turn,f:{}};pushEv(arcTick());`);
+  assert.match(game.run("$('#mbox').innerHTML"),/story-scholar-exam-papers\.webp/);
+  game.run('choose(0);nextEv();S.turn=c.arc.t;pushEv(arcTick())');
   assert.match(game.run('curEv.text'),/翻了酒盏/);
   assert.match(game.run("$('#mbox').innerHTML"),/story-qionglin-spilled-cup\.webp/);
   game.run('choose(1);nextEv()');
   assert.equal(game.run('c.arc.st'),2);
-  game.run("pushEv({...ARCS.scholar.stages[2](c,c.arc.f),title:'故人诗',por:c})");
-  assert.doesNotMatch(game.run("$('#mbox').innerHTML"),/event-illustration/);
+  game.run('S.turn=c.arc.t;pushEv(arcTick())');
+  assert.match(game.run("$('#mbox').innerHTML"),/story-scholar-gate-letter\.webp/);
 });
 
 test('the tilted wooden boat is shown on the first attempt only',()=>{
@@ -244,27 +248,13 @@ test('the meadow illustration belongs to grass play and clears after answering',
   assert.doesNotMatch(game.run("$('#mbox').innerHTML"),/event-illustration/);
 });
 
-test('fallen petals are shown at the beginning of the personal story',()=>{
-  const game=start();
-  game.run(`const c=empress();c.trait='沉静';
-    offerPersonalExperience(c,PERSONAL_EPISODES.find(episode=>episode.title==='花下拾香'));
-    A.personalExperience(c.id);`);
-  assert.equal(game.run('curEv.title'),'花下拾香');
-  assert.match(game.run("$('#mbox').innerHTML"),/story-fallen-petals-after-rain\.webp/);
-  game.run('choose(0);nextEv();S.turn=c.personalExperiences.current.due;A.personalExperience(c.id)');
-  assert.equal(game.run('curEv.title'),'花下拾香 · 后话');
-  assert.doesNotMatch(game.run("$('#mbox').innerHTML"),/event-illustration/);
-});
-
 test('a quiet garden walk uses the correct seasonal illustration',()=>{
-  for(const [month,image] of [[2,null],[5,'summer-lotus-walk'],[8,'autumn-osmanthus-walk'],[11,null]]){
+  for(const [month,image] of [[2,'spring-crabapple-walk'],[5,'summer-lotus-walk'],[8,'autumn-osmanthus-walk'],[11,'winter-plum-walk']]){
     const game=start();
     game.force(.95);
     game.run(`S.month=${month};A.out('garden')`);
     assert.equal(game.run('curEv.title'),'御花园');
-    const html=game.run("$('#mbox').innerHTML");
-    if(image)assert.ok(html.includes(`story-${image}.webp`));
-    else assert.doesNotMatch(html,/event-illustration/);
+    assert.ok(game.run("$('#mbox').innerHTML").includes(`story-${image}.webp`));
   }
 });
 
@@ -303,4 +293,75 @@ test('the second cup belongs to the middle chapter of West Window Chess',()=>{
   game.run('choose(0);nextEv();S.turn=c.journeys.current.due;A.journeyTalk(c.id)');
   assert.equal(game.run('curEv.title'),'西窗残局 · 残局与新局');
   assert.doesNotMatch(game.run("$('#mbox').innerHTML"),/event-illustration/);
+});
+
+test('the flower image appears only for a spring orchid that has actually bloomed',()=>{
+  for(const [like,plot,flowerName,illustrated] of [
+    ['花草','shade','春兰',true],['花草','sun','春兰',false],['读书','sun','芍药',false]
+  ]){
+    const game=start();
+    game.run(`UI.view='place';UI.sel='yh';S.month=2;
+      harem().forEach(c=>{c.like='读书';});empress().like='${like}';empress().aff=60;
+      A.plantPalaceFlower('${plot}');A.seePalaceFlower();`);
+    assert.equal(game.run('modalOpen'),false);
+    game.run('S.turn=springFlower().due;S.month=1;S.year++;A.seePalaceFlower()');
+    assert.equal(game.run('curEv.title'),'御花园第一株花');
+    assert.ok(game.run('curEv.text').includes(flowerName));
+    assert.equal(game.run("$('#mbox').innerHTML.includes('story-spring-orchid-bloom.webp')"),illustrated);
+  }
+});
+
+for(const [title,image] of [
+  ['花下拾香','fallen-petals-after-rain'],['芍药小憩','peony-corridor-rest'],['柳絮去留','floating-willow-catkins']
+]){
+  test(`${title} is illustrated at the beginning of the personal story`,()=>{
+    const game=start();
+    game.run(`const c=empress();c.trait='沉静';
+      offerPersonalExperience(c,PERSONAL_EPISODES.find(episode=>episode.title===${JSON.stringify(title)}));
+      A.personalExperience(c.id);`);
+    assert.equal(game.run('curEv.title'),title);
+    assert.ok(game.run("$('#mbox').innerHTML").includes(`story-${image}.webp`));
+    game.run('choose(0);nextEv();S.turn=c.personalExperiences.current.due;A.personalExperience(c.id)');
+    assert.equal(game.run('curEv.title'),`${title} · 后话`);
+    assert.doesNotMatch(game.run("$('#mbox').innerHTML"),/event-illustration/);
+  });
+}
+
+test('all illustrated consort arc chapters can render their registered image',()=>{
+  const game=start();
+  const chapters=[
+    ['general', ['frontier-family-letter','frontier-pass-evening','palace-stone-threshold','palace-snow-stairs'], {act:'recall'}],
+    ['craft', ['craft-repaired-book','craft-repaired-book'], {craft:0}],
+    ['craft', ['craft-pavilion-qin','craft-pavilion-qin'], {craft:1,shared:true}],
+    ['craft', ['craft-flower-album','craft-flower-album'], {craft:2}],
+    ['secret', ['secret-old-scroll','secret-old-scroll','palace-stone-threshold','secret-old-scroll']],
+    ['ill', ['illness-rest-window','kunlun-snow-fungus','willow-by-pillow'], {seek:true,trip:true}],
+    ['envoy', ['western-envoy-bell','western-palace-screen','palace-stone-threshold'], {v:'listen'}],
+    ['ambition', ['palace-stone-threshold','queen-palace-incense','palace-stone-threshold']],
+    ['greed', ['city-market-window','city-storehouse-ledger']],
+    ['kite', ['kite-roof-ridge','festival-lantern-making','kite-by-the-window']],
+    ['love', ['quiet-palace-keepsakes','illness-rest-window','quiet-palace-keepsakes'], {shared:true}],
+    ['gouyi', ['gouyi-study-window','palace-stone-threshold','gouyi-go-stone']],
+  ];
+  game.run('const arcSubject=harem().find(c=>c!==empress());S.month=6;');
+  for(const [id,images,flags={}] of chapters){
+    assert.equal(game.run(`ARCS.${id}.stages.length`),images.length,id);
+    for(const [stage,key] of images.entries()){
+      game.force(.99);
+      game.run(`{
+        const c=arcSubject;
+        Object.assign(c,{rank:3,alive:true,aff:85,nights:4,arc:{id:'${id}',st:${stage},t:S.turn,f:${JSON.stringify(flags)}}});
+        const ev=ARCS.${id}.stages[${stage}](c,c.arc.f);
+        pushEv({...ev,title:ev?.title||ARCS.${id}.name,por:c});
+      }`);
+      assert.ok(game.run("$('#mbox').innerHTML").includes(`story-${key}.webp`),`${id} chapter ${stage+1}`);
+      game.run('drain()');
+    }
+  }
+
+  const registered=Object.keys(game.run('EVENT_ILLUSTRATIONS'));
+  for(const key of registered){
+    const file=readFileSync(join(__dirname,'..','assets','images',`story-${key}.webp`));
+    assert.equal(file.toString('ascii',8,12),'WEBP',key);
+  }
 });

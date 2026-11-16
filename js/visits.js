@@ -32,7 +32,7 @@ A.out=function(kind){ if(!useE())return; const e=E();
     else {
       const encounter=roll>=.5&&roll<(journalContentVersion()>=30?.75:.6)?maidEvent('御花园'):null;
       if(encounter){pushEv(encounter);return;}
-      const period=season(),illustration=[undefined,'summer-lotus-walk','autumn-osmanthus-walk',undefined][period];
+      const period=season(),illustration=['spring-crabapple-walk','summer-lotus-walk','autumn-osmanthus-walk','winter-plum-walk'][period];
       const s=chg({health:2});pushEv({title:'御花园',illustration,text:`${['春日融融，百花争艳。','荷风送香，蝉鸣阵阵。','丹桂飘香，层林尽染。','红梅映雪，暗香浮动。'][period]}你独自走了一圈，心旷神怡。${fx(s)}`,choices:[{t:'回宫'}]});
     }
   }

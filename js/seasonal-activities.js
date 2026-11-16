@@ -12,7 +12,7 @@ const ALTERNATE_LANTERN_CLUES=[
 const lanternClue=stop=>S.year%2?stop:ALTERNATE_LANTERN_CLUES[LANTERN_STOPS.indexOf(stop)];
 const FLOWER_SEEDS={
   peony:{name:'芍药',plot:'sun',hint:'她说这株喜亮，最好能晒到半日太阳。'},
-  orchid:{name:'春兰',plot:'shade',hint:'她请你给它找处有树影的地方，正午别直晒。'}
+  orchid:{name:'春兰',plot:'shade',illustration:'spring-orchid-bloom',hint:'她请你给它找处有树影的地方，正午别直晒。'}
 };
 const seasonJournal=()=>S.seasonal||{};
 const ensureSeasonJournal=()=>S.seasonal ||= {};
@@ -100,7 +100,7 @@ A.seePalaceFlower=function(){
     else{flower.seen=true;if(donor?.alive&&!donor.gone){cchg(donor,{mood:bloom?7:2});seasonalMemory([donor],'garden_flower','御花园',text);}log(text,bloom);}
     save('auto');return null;
   };
-  pushEv({title:'御花园第一株花',por:donor?.alive&&!donor.gone?donor:undefined,text,choices:bloom?
+  pushEv({title:'御花园第一株花',illustration:bloom?plant.illustration:undefined,por:donor?.alive&&!donor.gone?donor:undefined,text,choices:bloom?
     [{t:'留下这张花签',f:finish(false)}]:[{t:'移栽，等来年开花',f:finish(true)},{t:'留下花签，改日再种',f:finish(false)}]});
 };
 function palaceFlowerPanel(){

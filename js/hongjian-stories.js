@@ -1,10 +1,10 @@
 const HONGJIAN_CHAPTERS=[
  {title:'算盘与宫牌',summary:'入宫的行李里，一边是册封衣冠，一边是磨旧的算盘。她要安顿铺中伙计，也想确认自己仍能写诗、经营；你的答复决定私账与宫中采买怎样分开。'},
  {title:'三份报价',summary:'同样的纸料，进宫的报价却贵了许多。她发现省银不只靠砍价，更在于验货、按期付款与不拖欠工钱。比较报价和逐单核验会带来不同的长期收益。'},
- {title:'风声不作证',summary:'有人把她的经营本事说成以商邀宠。若有实际相处的妃嫔提出疑问，两人会当面谈清；你可以公开账目，也可暂缓经营，不能凭传闻定罪。'},
+ {title:'风声不作证',illustration:'palace-stone-threshold',summary:'有人把她的经营本事说成以商邀宠。若有实际相处的妃嫔提出疑问，两人会当面谈清；你可以公开账目，也可暂缓经营，不能凭传闻定罪。'},
  {title:'一纸欠款',summary:'雨损货船，供货工坊急需周转。她希望为赈济采买稳住货源，又不愿把风险都压给工人。垫付病粮工钱、拆分订单与暂不接单各有后果。'},
  {title:'留给谁的本事',summary:'她愿教皇嗣看懂一张粮价单，分清账上盈利与百姓是否吃得起饭。没有合适皇嗣在场时，就编成算例留在书房，不虚构孩子。'},
- {title:'千金不抵一夜灯',summary:'生意有了章法，她却不想每次相见都在报账。灯下那首没有写完的诗，是她对相伴的期待；你如何回应，会留在此后的闲谈里。'}
+ {title:'千金不抵一夜灯',illustration:'hongjian-poem-at-dusk',summary:'生意有了章法，她却不想每次相见都在报账。灯下那首没有写完的诗，是她对相伴的期待；你如何回应，会留在此后的闲谈里。'}
 ];
 function hongjianRecord(c,title,text,choice,outcome,peers=[]){
  const people=[c,...peers].filter((x,i,a)=>x&&a.indexOf(x)===i&&x.alive!==false),event={title,participants:people.map(x=>({id:x.id,name:x.sex?kidName(x):fullName(x)})),situation:text,choice,outcome};
@@ -14,7 +14,7 @@ function hongjianRecord(c,title,text,choice,outcome,peers=[]){
 function hongjianScene(c,title,text,options,peers=[],advance=true){
  const stage=c.arc.st;let done=false;
  const valid=()=>!done&&hongjianAvailable(c)&&c.arc.st===stage&&peers.every(x=>S.children.includes(x)?childCanVisitCourt(x):inPalace(x));
- return {title:'红笺入宫 · '+title,por:c,cast:[c,...peers],present:[c],valid,text,choices:options.map(o=>({t:o.t,cond:()=>valid()&&(!o.cond||o.cond()),why:o.why||'眼下条件不符',f:()=>{
+ return {title:'红笺入宫 · '+title,illustration:advance?HONGJIAN_CHAPTERS[stage]?.illustration:undefined,por:c,cast:[c,...peers],present:[c],valid,text,choices:options.map(o=>({t:o.t,cond:()=>valid()&&(!o.cond||o.cond()),why:o.why||'眼下条件不符',f:()=>{
   if(!valid()||o.cond&&!o.cond())return null;done=true;const result=o.f();
   if(advance){c.arc.st++;c.arc.t=S.turn+3;if(c.arc.st>=HONGJIAN_CHAPTERS.length){c.arc.done=true;c.arc.end='红笺有归处';c.arc.t=1e9;c.hongjian.lastDaily=S.turn;}}
   else c.hongjian.lastDaily=S.turn;
