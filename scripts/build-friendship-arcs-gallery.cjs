@@ -11,7 +11,7 @@ for(const name of ['gift','favor','distance','chronicle','repair','reunion']){
  if(name==='reunion')b.run(`friendshipTalkEvent(a,b).choices[0].f();S.turn=arc.pending.due-1;`);
  b.run(`PalaceActions.reset();`);
  const payload=b.run('JSON.stringify(PalaceActions.payload())').replace(/</g,'\\u003c');
- const html=source.replace('<meta charset="utf-8">','<meta charset="utf-8">\n<base href="../../../">\n<meta name="robots" content="noindex">\n<script src="./docs/qa/gouyi-gallery/memory-storage.js"></script>')+`\n<script type="application/json" id="friendship-save">${payload}</script>\n<script type="application/json" id="friendship-scene">${JSON.stringify(name)}</script>\n<script defer src="./docs/qa/friendship-arcs-gallery/bootstrap.js"></script>\n`;
+ const html=source.replace('<meta charset="utf-8">','<meta charset="utf-8">\n<base href="../../../">\n<link rel="preload" as="image" href="./assets/images/palace-consorts-legends.webp?v=1">\n<meta name="robots" content="noindex">\n<script src="./docs/qa/gouyi-gallery/memory-storage.js"></script>')+`\n<script type="application/json" id="friendship-save">${payload}</script>\n<script type="application/json" id="friendship-scene">${JSON.stringify(name)}</script>\n<script defer src="./docs/qa/friendship-arcs-gallery/bootstrap.js"></script>\n`;
  fs.writeFileSync(path.join(out,name+'.html'),html);
 }
 console.log('Built six friendship browser cases');
