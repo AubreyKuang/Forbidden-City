@@ -193,6 +193,8 @@ const EVENT_ILLUSTRATIONS={
   'hezhong-river-bank':'河间的晨雾正在散，风把几根芦苇压向水边。',
   'gouyi-go-stone':'棋盘边有一颗白子，伏在这一格安静的日光里。',
   'gouyi-study-window':'她写到一半停下来。方窗外，枝头的粉花晃了晃。',
+  'hongjian-paper-shop':'窗棂的影子斜过去，刚好落在那叠新笺的纸边。',
+  'hongjian-willow-rain':'柳叶尖上的雨珠坠下来，水面荡开小小一圈光。',
   'hongjian-poem-at-dusk':'傍晚的光从半开的窗进来，照到小笺折起的那一角。',
   'quiet-palace-keepsakes':'窗边的浅匣安安静静，外头的树影慢慢移过来。',
   'western-moon-window':'窗前静得只剩月色，远处的屋瓦也淡了下去。'
