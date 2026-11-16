@@ -2,6 +2,10 @@
 const DEV={
   target:'emp',draft:null,source:null,patch:null,
   clone:value=>JSON.parse(JSON.stringify(value)),
+  persist(before){
+    return SaveManager.save(SaveManager.getStorage(),SKEY+'auto',{...PalaceActions.payload(),savedAt:Date.now()},validPalaceSave,
+      {alongside:before?[[SKEY+'dev-backup',JSON.stringify(before)]]:[]});
+  },
   record(key=DEV.target){
     if(!S)return null;
     if(key==='emp')return E();if(key==='world')return S;if(key==='dowager')return S.flags.dowager;
@@ -86,7 +90,6 @@ const DEV={
     if(!['month','year'].includes(unit)||!Number.isInteger(amount)||amount<1)throw Error('请输入正整数月数或年数');
     const months=amount*(unit==='year'?12:1);if(months>1200)throw Error('单次最多跳过一百年');
     const before=DEV.clone(S),years=Math.floor((S.month-1+months)/12);
-    localStorage.setItem(SKEY+'dev-backup',JSON.stringify(before));
     try{
       S.turn+=months;S.year+=years;S.month=(S.month-1+months)%12+1;
       for(const p of [E(),...S.consorts,...S.cands])if(p.alive!==false)p.age+=years;
@@ -94,40 +97,42 @@ const DEV={
       // born-based children, spouses and descendants age automatically with S.turn.
       // This is a debug calendar/age jump; it never chooses story outcomes for the user.
       POR.clear();ART_CACHE.clear();resetMapPosition(S.pos||{x:100,y:82});
-      if(!save('auto'))throw Error('存档失败，时间快进已撤回');
+      if(!DEV.persist(before))throw Error('存档失败，时间快进已撤回');
       render();DEV.refresh();DEV.message(`已跳过${amount}${unit==='year'?'年':'个月'}，现为${dateStr()}。人物年龄已同步，可回退。`);
     }catch(error){S=before;render();throw error;}
   },
   applyPatch(key,patch){
     if(modalOpen)throw Error('请先处理当前游戏事件，再修改属性');
     const next=DEV.validate(key,patch),before=DEV.clone(S);
-    localStorage.setItem(SKEY+'dev-backup',JSON.stringify(before));
     try{
       if(key==='world')S=next;else Object.assign(DEV.record(key),next);
       if(key.startsWith('kid:')&&Object.hasOwn(patch,'age')&&kidAge(DEV.record(key))<16)delete DEV.record(key).princeEstate;
       S.children.forEach(reconcilePrinceResidence);alive().forEach(reconcileMotherConcern);
       reconcileResidences();reconcilePalaceRomance();POR.clear();ART_CACHE.clear();resetMapPosition(S.pos||{x:100,y:82});
-      if(!save('auto'))throw Error('自动存档失败，修改已撤回');
+      if(!DEV.persist(before))throw Error('自动存档失败，修改已撤回');
       render();return next;
     }catch(error){S=before;render();throw error;}
   },
   restore(){
     if(modalOpen)throw Error('请先处理当前游戏事件');
-    const raw=localStorage.getItem(SKEY+'dev-backup');if(!raw)throw Error('尚无可回退的修改');
+    const raw=SaveManager.getStorage().getItem(SKEY+'dev-backup');if(!raw)throw Error('尚无可回退的修改');
     const backup=JSON.parse(raw);if(!validPalaceSave(backup))throw Error('备份不可读取');
     const before=S;S=backup;if(!save('auto')){S=before;throw Error('存档失败，未回退');}
     POR.clear();ART_CACHE.clear();resetMapPosition(S.pos||{x:100,y:82});render();DEV.refresh();DEV.message('已回退到上次修改之前。');
   },
   copyProduction(){
     if(modalOpen)throw Error('请先处理当前游戏事件');
-    const copy=SaveManager.load(localStorage,'chengongji_v1_auto',validPalaceSave,migratePalaceSave);
+    const copy=SaveManager.load(SaveManager.getStorage(),'chengongji_v1_auto',validPalaceSave,migratePalaceSave);
     if(!copy)throw Error('没有可复制的正式版自动存档，可先新开一局');
-    if(S)localStorage.setItem(SKEY+'dev-backup',JSON.stringify(S));
-    const before=S;S=copy;if(!save('auto')){S=before;throw Error('测试存档保存失败');}
+    const before=S;S=copy;if(!DEV.persist(before)){S=before;throw Error('测试存档保存失败');}
     migrate();UI.view='map';render();DEV.refresh();DEV.message('已载入正式版自动存档的副本。');
   },
-  message(text){$('#dev-status').textContent=text;},
-  safely(fn){try{fn()}catch(e){DEV.message(e.message)}},
+  message(text){
+    const storage=SaveManager.getStorage();
+    if(storage?.pending){$('#dev-status').textContent='修改已生效，正在写入测试存档…';storage.flush().then(ok=>{$('#dev-status').textContent=ok?text:palaceSaveError('auto');});}
+    else $('#dev-status').textContent=text;
+  },
+  safely(fn){try{if(palaceStorageOpening&&!PalaceStorage.store)throw Error('存档仍在读取，请稍后再试');fn()}catch(e){DEV.message(e.message)}},
   open(){ $('#dev-panel').hidden=false;DEV.refresh(); },
   close(){ $('#dev-panel').hidden=true; },
   refresh(){

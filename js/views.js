@@ -497,6 +497,7 @@ function viewLog(){
    <ul class="story" style="max-height:560px">${L.map(l=>`<li class="${l.b?'big':''}"><time>${esc(l.d)}</time>${esc(l.t)}</li>`).join('')}</ul>`}
 function viewSys(){
   return `${pageHeading('存档','存档保存在本浏览器中；每月结束时会自动存档。剧情选择后也会保存，未完事件可继续。')}
+   <p class="hint">${SaveManager.getStorage()?.kind==='indexeddb'?'已启用大容量本机存档；旧存档自动接续，人物纪事完整保留。':'当前浏览器使用兼容存档，请定期下载备份文件。'} 请等「正在写入」结束后再关闭页面。</p>
    <section class="save-section" aria-label="浏览器存档"><div class="save-slots">
    ${['1','2','3'].map(s=>`<article class="save-slot"><div class="save-slot-info"><b>存档${s}</b><span class="hint">${esc(slotInfo(s)||'空')}</span></div><div class="save-slot-actions"><button class="btn sm gold" onclick="A.save('${s}')">保存</button><button class="btn sm" onclick="A.load('${s}')">读取</button></div></article>`).join('')}
    <article class="save-slot"><div class="save-slot-info"><b>自动存档</b><span id="auto-save-summary" class="hint">${esc(slotInfo('auto')||'空')}</span><small id="auto-save-status" role="status" title="${esc(lastAutoSaveError)}">${esc(autoSaveStatusText())}</small></div><div class="save-slot-actions"><button class="btn sm" onclick="A.load('auto')">读取</button><button class="btn sm" onclick="A.save('auto')">立即保存</button></div></article>
