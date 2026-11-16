@@ -50,10 +50,10 @@ function journeyEvent(c){
  const stage=r.stage,def=CHARACTER_JOURNEYS[r.id],valid=()=>inPalace(c)&&c.journeys?.current===r&&r.stage===stage&&S.turn>=r.due;
  if(!def)return null;
  if(!journeyCastValid(c,r))return {title:def.name+' · 时移事易',por:c,present:[c],valid,text:`${r.binding.childName||r.binding.personName||'当初的人'}如今的处境已经不同。她没有把旧约移交给另一个人，想将这段尚未说完的事留在纪事里。`,choices:[{t:'听她说完，保留未竟之事',f:()=>{if(!valid())return null;const text='人物处境变化，原来的约定停在此处，没有虚构会面或替换参与者。';journeyEnd(c,r,text,'未竟');save('auto');return text;}}]};
- const chapter=def.chapters[stage];
- return {title:def.name+' · '+chapter[0],por:c,present:[c],valid,ref:def.source,text:journeyText(c,r,chapter[1]),choices:[...chapter[2].map((label,i)=>({t:label+' · 精力−1',cond:()=>E().energy>0,f:()=>{
+ const [heading,scene,labels,outcomes,illustration]=def.chapters[stage];
+ return {title:def.name+' · '+heading,illustration,por:c,present:[c],valid,ref:def.source,text:journeyText(c,r,scene),choices:[...labels.map((label,i)=>({t:label+' · 精力−1',cond:()=>E().energy>0,f:()=>{
   if(!valid()||!journeyCastValid(c,r)||!useE())return null;
-  let text=journeyText(c,r,chapter[3][i]);r.choices.push(i);r.notes.push(text);cchg(c,{aff:i===0?4:1,mood:i===0?3:1});
+  let text=journeyText(c,r,outcomes[i]);r.choices.push(i);r.notes.push(text);cchg(c,{aff:i===0?4:1,mood:i===0?3:1});
   if(stage===2){
    const followed=r.choices.filter(v=>v===0).length>=2&&i===0;
    if(r.id==='distantHome'){
