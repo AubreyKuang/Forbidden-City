@@ -7,7 +7,12 @@ function familyTreeRegistry(){
   const men=houses.flatMap(({c,h})=>[{c,h,p:h.father,role:'father'},...brotherRoles(h).map(role=>({c,h,p:h[role],role})),...natalPeople(h).filter(p=>p.sex==='m').map(p=>({c,h,p,role:'relative'+p.id}))]);
   const menById=new Map(men.map(e=>[String(e.p.id),e]));
   const nodes=relatives.map(e=>{
-    const motherId=e.p.motherRelativeId??e.p.parentRelativeId,mother=relatives.find(x=>x.p.id===motherId&&x.p.sex==='f');
+    const motherId=e.p.motherRelativeId??e.p.parentRelativeId;
+    let mother=relatives.find(x=>x.p.id===motherId&&x.p.sex==='f');
+    if(!mother&&marriedSisterAffairsActive()&&motherId!=null){
+      const host=houses.find(({h})=>h.relatives?.some(p=>p.id===motherId&&p.consortId));
+      if(host)mother={...host,p:host.h.relatives.find(p=>p.id===motherId)};
+    }
     const spouse=mother?.p.spouse;
     const sameMarriage=spouse&&(!e.p.fatherName||e.p.fatherName===spouse.name)&&
       (e.p.fatherId==null||e.p.fatherId===spouse.id||e.p.fatherId===`spouse:${motherId}`);
@@ -35,7 +40,11 @@ A.familyTreeToggle=function(id,person,defaultOpen=false){
 function familyTreeEntries(c,registry=familyTreeRegistry()){
   const h=houseOf(c);if(!h)return [];
   const top=[...brotherRoles(h).map(role=>({p:h[role],role,c,h})),...natalPeople(h).filter(p=>!p.parentRelativeId&&!p.motherRelativeId).map(p=>({p,c,h}))];
-  return top.map(e=>({...e,children:familyTreeChildren(e.p,registry)}));
+  return top.map(e=>{
+    const children=familyTreeChildren(e.p,registry);
+    if(marriedSisterAffairsActive()&&e.p.sex==='f')children.push(...registry.nodes.filter(n=>n.mother?.p.id===e.p.id&&n.parent!==e.p.id));
+    return {...e,children};
+  });
 }
 function familyHouseHeight(c){
   const h=houseOf(c);if(!h)return 68;
@@ -46,7 +55,7 @@ function familyHouseHeight(c){
 function familyTreePerson(c,p,role,relation,list=false){
   if(list&&!role&&p.sex==='m'&&natalAge(p)>=18)role='relative'+p.id;
   const target=role?`'official','${c.id}:${role}'`:`'natal','${c.id}:${p.id}'`,age=role?p.age:natalAge(p),status=role?officialStatus(p):natalStatus(p);
-  return `<button class="graph-kin-person${p.alive===false?' deceased':''}" onclick="A.go(${target})" aria-label="查看${esc(p.name)}">${porImg(role?p:natalPortrait(p),34)}<span class="graph-person"><strong>${esc(p.name)}</strong><small>${esc(relation)} · ${role?esc(status)+' · '+esc(p.office||p.post||''):age+'岁 · '+esc(status)}</small>${role?`<small>${age}岁 · ${esc(officialOfficeLabel(p))}</small>`:''}</span></button>`;
+  return `<button class="graph-kin-person${p.alive===false?' deceased':''}" onclick="A.go(${target})" aria-label="查看${esc(p.name)}">${porImg(role?p:natalPortrait(p),34)}<span class="graph-person"><strong>${esc(p.name)}</strong><small>${esc(relation)} · ${role?esc(status)+' · '+esc(p.office||p.post||''):age+'岁 · '+esc(status)}${p.unconfirmedParentage?' '+unconfirmedParentageTag(p):''}</small>${role?`<small>${age}岁 · ${esc(officialOfficeLabel(p))}</small>`:''}</span></button>`;
 }
 function familyHouseTree(c,list=false){
   const h=houseOf(c);if(!h)return '';
@@ -54,7 +63,7 @@ function familyHouseTree(c,list=false){
   const toggle=(p,count,defaultOpen=false)=>`<button class="family-fold" aria-expanded="${familyTreeExpanded(c,p.id,defaultOpen)}" aria-label="${familyTreeExpanded(c,p.id,defaultOpen)?'收起':'展开'}${esc(p.name)}的${defaultOpen?'家人':'子女'}" onclick="A.familyTreeToggle(${c.id},'${p.id}',${defaultOpen})">${familyTreeExpanded(c,p.id,defaultOpen)?'−':'+'}${count?`<small>${count}</small>`:''}</button>`;
   return `<div class="family-house-tree"><div class="family-tree-row">${familyTreePerson(c,h.father,'father',paternalFamily(c).filter(x=>S.consorts.includes(x)).length>1?'父亲 · 亲姐妹同父':'父亲',list)}${entries.length?toggle(h.father,entries.length,true):''}</div>${open?`<div class="family-tree-branches">${entries.map(e=>{
     const expanded=familyTreeExpanded(c,e.p.id),label=e.role?officialKinLabel(h,e.role,c):natalLabel(c,e.p);
-    return `<div class="family-tree-branch" data-relative-id="${e.p.id}"><div class="family-tree-row">${familyTreePerson(c,e.p,e.role,label,list)}${e.children.length?toggle(e.p,e.children.length):''}</div>${expanded&&e.children.length?`<div class="family-tree-descendants">${e.children.map(n=>`<div class="family-tree-row" data-family-child-id="${n.p.id}">${familyTreePerson(n.home,n.p,null,n.p.sex==='m'?'儿子':'女儿',list)}</div>`).join('')}</div>`:''}</div>`;
+    return `<div class="family-tree-branch" data-relative-id="${e.p.id}"><div class="family-tree-row">${familyTreePerson(c,e.p,e.role,label,list)}${e.children.length?toggle(e.p,e.children.length):''}</div>${expanded&&e.children.length?`<div class="family-tree-descendants">${e.children.map(n=>`<div class="family-tree-row" data-family-child-id="${n.p.id}">${familyTreePerson(n.mother?.p.id===e.p.id?n.c:n.home,n.p,null,n.p.sex==='m'?'儿子':'女儿',list)}</div>`).join('')}</div>`:''}</div>`;
   }).join('')}</div>`:''}</div>`;
 }
 const treeNatalEntry=natalEntry;
@@ -74,7 +83,9 @@ natalLabel=function(c,p){
 function natalParentLinks(c,p){
   if(!layeredFamilyActive()||!p.parentRelativeId)return `<p>${p.parentRelativeId?'母亲':'父亲'}：${p.parentRelativeId?`<button class="btn quiet" onclick="A.go('natal','${c.id}:${p.parentRelativeId}')">${esc(c.house.relatives.find(x=>x.id===p.parentRelativeId)?.name||'家中长辈')}</button>`:officialLink(c,'father')}</p>`;
   const n=familyTreeRegistry().nodes.find(n=>n.p.id===p.id),mother=n?.mother,father=n?.father;
-  return `<p>父亲：${father?officialLink(father.c,father.role):esc(p.fatherName||mother?.p.spouse?.name||'未详录')}</p><p>母亲：${mother?`<button class="person-link" onclick="A.go('natal','${mother.c.id}:${mother.p.id}')">${esc(mother.p.name)}</button>`:'未详录'}</p>${father?`<p class="hint">家谱列于父亲${esc(father.p.name)}名下，母系亲缘与原有纪事保留。</p>`:''}`;
+  const motherLink=mother?(mother.p.consortId?`<button class="person-link" onclick="A.go('consort',${mother.p.consortId})">${esc(mother.p.name)}</button>`:`<button class="person-link" onclick="A.go('natal','${mother.c.id}:${mother.p.id}')">${esc(mother.p.name)}</button>`):'未详录';
+  const label=p.unconfirmedParentage?'婚籍所载父亲':'父亲';
+  return `<p>${label}：${father?officialLink(father.c,father.role):esc(p.fatherName||mother?.p.spouse?.name||'未详录')}</p><p>母亲：${motherLink}</p>${father?`<p class="hint">${marriedSisterAffairsActive()?'家谱保留父母两侧的亲缘入口。':`家谱列于父亲${esc(father.p.name)}名下，母系亲缘与原有纪事保留。`}</p>`:''}`;
 }
 
 function familyAgeNote(p){

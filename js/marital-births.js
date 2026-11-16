@@ -22,11 +22,12 @@ function natalPregnancyReady(p){
   if(natalAge(p)<20||natalAge(p)>40||(p.lifeCourse?.children||0)>=2||S.turn-(p.lifeCourse?.lastBirth??-99)<24)return false;
   return !p.spouse.personId||officialAlive(maritalFather(p)?.p);
 }
-function beginNatalPregnancy(c,p){
+function beginNatalPregnancy(c,p,{unconfirmed=false}={}){
   if(!natalPregnancyReady(p))return false;
   const bond=ensureMaritalBond(p),father=maritalFather(p);
   p.natalPregnancy={conceived:S.turn,due:S.turn+9,fatherId:father?.p.id||p.spouse.id,fatherName:father?.p.name||p.spouse.name,fatherSur:p.spouse.sur,
     sex:chance(.5)?'m':'f',seed:ri(1,2e9),difficult:chance(.015)};
+  if(unconfirmed){p.natalPregnancy.unconfirmed=true;(p.lifeCourse||={}).last=S.turn;return true;}
   (p.lifeCourse ||= {}).last=S.turn;p.maritalMood=bond.kind==='affectionate'?'有喜，也盼着他的照料':bond.kind==='respectful'?'欢喜中谨慎将养':'有孕后更盼有人听她说话';
   const thoughts={affectionate:`${p.spouse.name}读信时喜得又看一遍，叮嘱自己再忙也要问她饮食安睡。`,respectful:`${p.spouse.name}依礼备下补养之物，请家中细照料，关切仍说得含蓄。`,distant:`${p.spouse.name}听说要做父亲，心中有喜，也不知该怎样亲近妻子，回信写得拘谨。`};
   natalMarriageNotice(c,p,'外家有喜',`${p.name}诊出有孕，给${fullName(c)}写信报喜，也说起初次等孩子的忐忑。`,thoughts[bond.kind]);return true;
@@ -35,7 +36,9 @@ function natalPregnancyTick(){
   if(!careersActive())return;
   const seen=new Set();for(const c of S.consorts){const h=houseOf(c);if(!h||seen.has(h.father.id))continue;seen.add(h.father.id);
     for(const p of natalPeople(h).slice()){
-      const preg=p.natalPregnancy;if(!preg||!p.alive||p.consortId||S.turn<preg.due)continue;
+      const preg=p.natalPregnancy;if(!preg||!p.alive||p.consortId)continue;
+      if(marriedSisterAffairsActive())noteMarriedSisterPregnancy(p,preg);
+      if(S.turn<preg.due)continue;
       const child=addNatalPerson(c,h,preg.sex,0,preg.seed,false);child.parentRelativeId=p.id;child.fatherId=preg.fatherId;child.fatherName=preg.fatherName;child.sur=preg.fatherSur||c.sur;child.name=child.sur+child.given;child.born=S.turn;child.age=0;
       const life=p.lifeCourse ||= {};life.children=(life.children||0)+1;life.lastBirth=S.turn;life.last=S.turn;
       const bond=ensureMaritalBond(p),father=maritalFather(p,preg),sex=child.sex==='m'?'男孩':'女孩';
@@ -46,14 +49,15 @@ function natalPregnancyTick(){
         natalMarriageNotice(c,p,'外家产厄',`${p.name}生下${sex}${child.name}后难产去世，孩子幸而平安。家族名册保留她的姓名、婚姻与死因。`,grief,-.9,preg);
         if(father&&officialAlive(father.p)){father.p.widower={wifeId:p.id,name:p.name,turn:S.turn};father.p.married=false;father.p.householdMood='丧妻悲恸';}
         for(const sister of paternalFamily(c).filter(x=>S.consorts.includes(x)&&x.alive)){cchg(sister,{mood:-15});if(!['心如死灰','怨恨'].includes(xinOf(sister)))setXin(sister,'悲恸',`娘家姐妹${p.name}难产去世`);}
-        story(child,`生母${p.name}生产后去世，由家中长辈照料。父亲${preg.fatherName}。`);
+        story(child,`生母${p.name}生产后去世，由家中长辈照料。${preg.unconfirmed?'婚籍所载父亲':'父亲'}${preg.fatherName}。`);
       }else{
         bond.wife=clamp(bond.wife+(bond.kind==='distant'?2:5));bond.husband=clamp(bond.husband+(bond.kind==='distant'?3:6));
         p.maritalMood=bond.kind==='distant'?'添了孩子，也仍在学着相处':'喜得孩子，渐渐安心';p.mood=clamp((p.mood??65)+10);
         const joy=bond.kind==='affectionate'?`${preg.fatherName}既欢喜又心疼，先问妻子是否安稳，再小心去看襁褓。`:bond.kind==='respectful'?`${preg.fatherName}郑重道了一声辛苦，照礼备好报喜与谢医之事。`:`${preg.fatherName}见了襁褓才有为父的真切，向妻子道谢时仍显得生涩。`;
         natalMarriageNotice(c,p,'外家添丁',`${p.name}平安生下${sex}${child.name}，将母子平安的家书寄给${fullName(c)}。${father&&!officialAlive(father.p)?'这是亡夫留下的遗腹子，欢喜里也有缺席的悲伤。':''}`,joy,.6,preg);
-        story(child,`生于${p.name}与${preg.fatherName}之家，是外家子女，不列皇嗣。`);
+        story(child,preg.unconfirmed?`由${p.name}在宫外生下，按外家子女入册。`:`生于${p.name}与${preg.fatherName}之家，是外家子女，不列皇嗣。`);
       }
+      if(preg.unconfirmed)noteMarriedSisterChild(p,child);
       (p.pregnancyHistory ||= []).push({...preg,childId:child.id,born:S.turn,outcome:preg.difficult?'maternal-death':'safe'});delete p.natalPregnancy;
     }
   }
@@ -80,6 +84,7 @@ officialSpousePanel=function(person){
   return birthsSpousePanel(person)+(widow?detailSection('亡妻',`<p>${host?`<button class="person-link" onclick="A.go('natal','${host.id}:${widow.wifeId}')">${esc(widow.name)} ↗</button>`:esc(widow.name)} · 难产去世。${esc(person.p.householdMood||'')}</p>`):'')+(children.length?detailSection('家中子女',children.map(({c,p})=>`<button class="person-link" onclick="A.go('natal','${c.id}:${p.id}')">${esc(p.name)} · ${natalAge(p)}岁 · ${p.sex==='m'?'儿子':'女儿'}</button>`).join(' ')):'');
 };
 function natalFatherPanel(p){
+  if(p.unconfirmedParentage)return detailSection('身世未明','<p>关于生父的疑问尚无定论。原有亲缘依家籍保留。</p>');
   if(!p.fatherId)return '';const father=careerPeople().find(x=>x.p.id===p.fatherId);
   return detailSection('父系亲缘',`<p>父亲：${father?careerLink(father):esc(p.fatherName||'家中未详录')}${father?' · '+esc(officialStatus(father.p)):''}</p>`);
 }
