@@ -48,3 +48,46 @@ test('missing a month or establishing a pregnancy ends the continuous attempt co
     noteImperialFertilityAttempt(.2,false);assert.equal(E().fertilityReview.months,1);
     noteImperialFertilityAttempt(.2,true);assert.equal(E().fertilityReview.months,0);assert.equal(imperialFertilityEvent(),null);`);
 });
+
+test('consultation adds a once-only adoption visit that survives reloading the pending scene',()=>{
+  let b=world();b.ctx.assert=assert;
+  b.run(`E().fertilityReview={profile:'none',diagnosed:S.turn-1};registerImperialCollateralWard();
+    A.palaceWard();choose(0);nextEv();assert.equal(curEv.title,'太医院回访 · 宗亲入继');
+    assert.equal(S.heir,null);save('auto');`);
+  b=boot(902,b.storage);b.ctx.assert=assert;
+  b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(curEv.title,'太医院回访 · 宗亲入继');drain();
+    var review=E().fertilityReview,ward=kidById(review.adoptionFollowup);
+    assert.equal(ward.foster,empress().id);
+    for(const person of [review.physician,empress(),ward])assert.equal(person.story.filter(e=>e.t.includes('会诊后续·入继')).length,1);
+    assert.match(imperialFertilityPanel(),/院使.*的纪事/);A.go('home');assert.equal(modalOpen,false);
+    assert.equal(S.log.filter(e=>e.t.includes('会诊后续·入继')).length,1);`);
+});
+
+test('after successful treatment, both children in a birth are named before the physician reports',()=>{
+  const b=world();b.ctx.assert=assert;
+  b.run(`E().fertilityReview={profile:'none',diagnosed:S.turn-4,searchDue:S.turn};registerImperialCollateralWard();A.palaceWard();choose(0);drain();`);
+  b.force(.001);
+  b.run(`var review=E().fertilityReview,ward=kidById(review.adoptionFollowup);ward.born=S.turn-8*12;
+    pushEv(imperialFertilityEvent());drain();assert.equal(review.improvedAt,S.turn);
+    var mother=empress();mother.preg=10;mother.pregnancyFather={kind:'emperor',gen:S.gen,mother:mother.id,conceived:S.turn,name:E().name,wen:E().wen,wu:E().wu};S.turn+=10;`);
+  b.force(.015,.1,.9);
+  b.run(`pushEv(birthEvent(mother));assert.equal(deliveryKids(mother).length,2);mother.delivery.difficult=false;
+    choose(0,'顺安');nextEv();assert.equal(review.birthFollowup,undefined);
+    choose(0,'嘉和');nextEv();while(modalOpen&&curEv.title!=='太医院回访 · 新嗣入册'){if(modalResult)nextEv();else choose(curEv.choices.findIndex(c=>!c.cond||c.cond()));}
+    assert.equal(curEv.title,'太医院回访 · 新嗣入册');assert.match(curEv.text,/顺安、嘉和/);
+    for(const person of [review.physician,mother,ward,...deliveryKids(mother)])assert.equal(person.story.filter(e=>e.t.includes('寻医后续·诞育')).length,1);
+    drain();A.go('home');assert.equal(modalOpen,false);assert.equal(S.heir,null);
+    assert.equal(S.log.filter(e=>e.t.includes('寻医后续·诞育')).length,1);`);
+});
+
+test('resumed consultations distinguish an old successful search from an unsuccessful one and other parentage',()=>{
+  const b=world();b.ctx.assert=assert;
+  b.run(`var review=E().fertilityReview={profile:'low',diagnosed:S.turn-12,searched:true,outcome:'访来的医者会同太医院复诊，眼下仍无可用的办法。'};
+    a.pregnancyFather={kind:'emperor',gen:S.gen,mother:a.id,conceived:S.turn-10,name:E().name,wen:60,wu:60};
+    var daughter=makeKid(a,'f','清安');
+    A.go('home');assert.equal(modalOpen,false);
+    review.outcome=IMPERIAL_PHYSICIAN_SUCCESS;daughter.birthTraits.father.kind='prince';A.go('home');assert.equal(modalOpen,false);
+    daughter.birthTraits.father.kind='emperor';daughter.birthSwap={occurred:true};A.go('home');assert.equal(modalOpen,false);
+    delete daughter.birthSwap;A.go('home');assert.equal(curEv.title,'太医院回访 · 新嗣入册');
+    assert.equal(review.birthFollowup,daughter.id);drain();assert.equal(review.adoptionFollowup,undefined);`);
+});
