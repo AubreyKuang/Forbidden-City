@@ -978,6 +978,26 @@ test('ambient cooldown follows the event across different women, persists, and e
     S.turn+=6;assert.equal(ambientEventReady({title:'争执',cast:[byId(a.id)]}),true);
     var grave={title:'香囊疑案',por:byId(a.id)};rememberAmbientEvent(grave);S.turn+=23;assert.equal(ambientEventReady({...grave,por:byId(b.id)}),false);S.turn++;assert.equal(ambientEventReady(grave),true);`);
 });
+test('a consort teaching a child appears once per pair and other pairs wait two years',()=>{
+  const {run}=boot();
+  run(`var [mother,caregiver]=harem(),other=makeGirl(),k=makeKid(mother,'f','明昭');
+    other.rank=2;S.consorts.push(other);assignPalace(other);
+    k.born=S.turn-60;S.children=[k];S.rel={};
+    relAdd(caregiver,k,45);
+    var event=relEvent();assert.equal(event.title,'别宫的娘娘');assert.equal(k.otherConsortCareSeen,undefined);
+    event.onQueue=()=>rememberAmbientEvent(event);pushEv(event);assert.equal(k.otherConsortCareSeen[caregiver.id],true);drain();
+    var childId=k.id,caregiverId=caregiver.id,otherId=other.id;
+    save('auto');A.load('auto');drain();
+    k=kidById(childId);caregiver=byId(caregiverId);other=byId(otherId);
+    assert.equal(k.otherConsortCareSeen[caregiver.id],true);
+    relAdd(caregiver,k,45-relGet(caregiver,k));
+    S.turn+=23;relAdd(other,k,-45);assert.equal(relEvent().title,'奚落');
+    relAdd(other,k,90);assert.equal(relEvent(),null);
+    S.turn++;event=relEvent();assert.equal(event.title,'别宫的娘娘');assert.equal(event.por,other);
+    relAdd(other,k,-45);assert.equal(relEvent(),null);
+    Object.defineProperty(PalaceActions,'contentVersion',{get:()=>35});
+    assert.equal(relEvent().por,caregiver);`);
+});
 test('new pastimes obey traits, season, attendance and actual choice consequences only once',()=>{
   const {run}=boot();run(`var [a,b]=harem();a.trait='巧手';b.trait='好学';a.palace='景仁宫';a.talent=60;relAdd(a,b,30-relGet(a,b));
     S.month=7;assert.equal(PALACE_INITIATIVES.needleMoon.match(a),true);S.month=8;assert.equal(PALACE_INITIATIVES.needleMoon.match(a),false);S.month=7;
