@@ -4,6 +4,30 @@ function world(trait='内敛'){
 }
 function reload(b){const n=boot(929,b.storage);n.ctx.assert=assert;n.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);`);return n;}
 
+test('a finished estate in an older save can open a borrowing room and read its reply after reloading',()=>{
+ let b=world();b.run(`k.pendingName=false;k.estate={pursuit:'books',stage:'done',route:'independent',nextVisit:0};save('auto');`);
+ b=reload(b);b.run(`var k=S.children.find(k=>k.name==='淑月');A.go('princess',k.id);
+  assert.match(viewPrincessEstate(),/设书案供人借阅/);
+  A.princessFollowup(k.id);choose(0);drain();assert.equal(E().treasury,490);
+  assert.equal(k.estate.followup.due,S.turn+2);A.princessFollowup(k.id);assert.equal(modalOpen,false);
+  S.turn+=2;A.princessFollowup(k.id);save('auto');`);
+ b=reload(b);b.run(`var k=S.children.find(k=>k.name==='淑月');assert.match(curEv.title,/公主府回信/);
+  choose(0);drain();assert.equal(k.lit,93);
+  assert.ok(k.story.some(x=>x.t.includes('第一册借出去')));assert.ok(S.log.some(x=>x.t.includes('办成了「设书案供人借阅」')));
+  A.princessFollowup(k.id);assert.equal(modalOpen,false);assert.equal(k.lit,93);`);
+});
+
+test('a capital estate visit records family greetings once and remote estates only offer letters',()=>{
+ const b=world();b.run(`k.pendingName=false;k.love=50;k.estate={pursuit:'near',stage:'done',route:'independent',nextVisit:0};
+  var mother=byId(k.mom),energy=E().energy;A.princessEstateCall(k.id);choose(1);drain();assert.equal(E().energy,energy-1);
+  assert.ok(k.story.some(x=>x.t.includes('府中相见')));assert.ok(mother.story.some(x=>x.t.includes('公主府问安')));
+  assert.ok(S.log.some(x=>x.t.includes('府中探望')));assert.equal(k.estate.nextCall,S.turn+4);
+  A.princessEstateCall(k.id);assert.equal(modalOpen,false);
+  S.turn+=4;k.estate.route='frontier';k.princessMarriage='frontier';UI.sel=k.id;
+  assert.doesNotMatch(viewPrincessEstate(),/到公主府探望/);assert.match(viewPrincessEstate(),/读北境家书/);
+  A.princessEstateCall(k.id);assert.equal(modalOpen,false);A.princessVisit(k.id);assert.equal(curEv.title,'北境家书');drain();`);
+});
+
 test('automatic estate invitations get one 30% draw while manual opening stays available',()=>{
  let b=world();b.force(.30);b.run(`
   assert.equal(princessMilestone(k),null);assert.equal(k.estateInvitationChecked,true);

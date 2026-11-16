@@ -1,8 +1,11 @@
 /* 公主开府、议婚、府中事务与还宫 */
 const PRINCESS_PURSUITS = {
-  books: {title:'整理一部书', wish:'我想把宫里旧书校清楚，抄一部留给弟妹。', result:'校成的书已经装订好，她在第一页写上了帮忙校对的人。', stat:'lit'},
-  archery: {title:'办一场女骑赛', wish:'我想请城中善骑的女子来比试，也给初学的人留一场。', result:'女骑赛已办完。她将第一支彩箭带回，说要留给当初教她骑马的人。', stat:'mar'},
-  near: {title:'安一座近宫的府', wish:'我想住得离宫门近些，时常能回来看看母亲，也请弟妹到府里坐坐。', result:'府里的小厅已经布置好，她在窗前留了一张母亲从前喜欢的椅子。', stat:'vir'}
+  books: {title:'整理一部书', wish:'我想把宫里旧书校清楚，抄一部留给弟妹。', result:'校成的书已经装订好，她在第一页写上了帮忙校对的人。', stat:'lit',
+    next:{title:'设书案供人借阅',wish:'校完的书若全锁在柜里，未免可惜。我想腾出两间屋子，把可借的抄本登记下来，供附近读书人借阅。',result:'书案开张后，第一册借出去的是一本旧游记。还书的人夹回一张纸，补上了书里漏写的一个地名。她把纸留下，夹进了底本。'}},
+  archery: {title:'办一场女骑赛', wish:'我想请城中善骑的女子来比试，也给初学的人留一场。', result:'女骑赛已办完。她将第一支彩箭带回，说要留给当初教她骑马的人。', stat:'mar',
+    next:{title:'开设女骑习场',wish:'上回看赛的人里，有几个说自己连缰绳都不会拿。我想请教习每旬带一场，从牵马和上鞍开始教。',result:'习场办了起来。头一批学员里有个姑娘先前连马都不敢牵，如今已能独自绕场一圈。她请教习把这个名字记在第一册。'}},
+  near: {title:'安一座近宫的府', wish:'我想住得离宫门近些，时常能回来看看母亲，也请弟妹到府里坐坐。', result:'府里的小厅已经布置好，她在窗前留了一张母亲从前喜欢的椅子。', stat:'vir',
+    next:{title:'编一册亲眷手记',wish:'我想请各房亲眷寄来自己记得的小事，连同旧菜谱、旧书签一道抄下来。等他们来府上，就放在小厅慢慢翻。',result:'手记整订好了。一页写着家宴上做过的点心，另一页夹着旧书签的摹本。各房都收到一册，府里还留着一册，可以随时添写。'}}
 };
 const PRINCESS_MATCHES = {
   official:{name:'重臣之子', note:'他的家人能在朝中照应她，她担心婚后很难拒绝娘家的请托。'},
@@ -11,7 +14,7 @@ const PRINCESS_MATCHES = {
 };
 
 const archivedPrincesses=()=>S.princessRelatives||[];
-const estatePrincesses=()=>[...kidsAlive().filter(k=>k.estate),...archivedPrincesses()].filter(k=>!immortalAway(k));
+const estatePrincesses=()=>[...kidsAlive().filter(k=>k.estate),...archivedPrincesses()].filter(k=>k.alive&&k.estate&&!immortalAway(k));
 const princessById=id=>{const k=kidById(id)||archivedPrincesses().find(k=>k.id===id);return immortalAway(k)?undefined:k;};
 const canOpenPrincess=k=>k?.alive&&!immortalAway(k)&&!k.templeStay&&!k.removedFromRoyal&&k.sex==='f'&&kidAge(k)>=15&&!k.jailed;
 const princessPursuit=k=>k.lit>=Math.max(45,k.mar+7)?'books':k.mar>=45?'archery':'near';
@@ -223,8 +226,9 @@ function archivePrincessEstates(heir){
   S.princessRelatives=[...archivedPrincesses(),...estates.map(k=>({...k,estate:{...k.estate},reign:S.gen,kinship:(journalContentVersion()>=45?royalBirthOrder(k,heir)<0:k.born<=heir.born)?'皇姐':'皇妹'}))];
 }
 const princessKinship=k=>journalContentVersion()>=45?royalKinship(k):k.reign===S.gen-1?k.kinship||'先帝之女':'宗亲';
+const princessFollowupDue=e=>!!e.followup&&e.followup.finished===undefined&&S.turn>=e.followup.due;
 function princessMapNotice(){
-  const k=estatePrincesses().find(p=>p.estate.stage==='proposal'||(p.estate.stage==='working'&&S.turn>=p.estate.due));
+  const k=estatePrincesses().find(({estate:e})=>e.stage==='proposal'||e.stage==='working'&&S.turn>=e.due||princessFollowupDue(e));
   return k?`<div class="season-map-leads">${esc(k.name)}的府上送了信。 <button class="btn sm" onclick="A.go('princess',${k.id})">去公主府读信</button></div>`:'';
 }
 function princessEstatePanel(){
@@ -236,27 +240,86 @@ function princessEstatePanel(){
 function princessLetterLabel(estate){
   if(estate.stage==='proposal')return '府中有一封新信';
   if(estate.stage==='working')return S.turn>=estate.due?'送来了办成的消息':'府中正在筹办';
+  if(princessFollowupDue(estate))return '续办的事已有回音';
+  if(estate.followup&&estate.followup.finished===undefined)return '续办的事正在筹备';
   return S.turn>=estate.nextVisit?'可邀她回宫':'府中日常';
+}
+function princessFollowupPanel(k,project){
+  const e=k.estate,f=e.followup;
+  if(e.stage!=='done')return '';
+  const due=princessFollowupDue(e),finished=f?.finished!==undefined;
+  const status=finished?project.result:!f?project.wish:due?'府里送来了办成这件事的回信。':`${f.mode} · 约 ${f.due-S.turn} 个月后有回音`;
+  return detailSection(project.title,`<p>${esc(status)}</p>${!finished&&(!f||due)?`<button class="btn ${due?'gold':'jade'}" onclick="A.princessFollowup(${k.id})">${due?'读续办回信':'商议这件事'}</button>`:''}`);
+}
+const princessEstateLocal=k=>!k.away&&k.estate.route!=='frontier'&&k.princessMarriage!=='frontier'&&(!k.estate.location||k.estate.location==='京城');
+const princessEstateVisitReady=k=>!S.over&&!!k?.alive&&!!k.estate&&princessEstateLocal(k)&&!k.jailed&&!k.templeStay&&!k.removedFromRoyal&&S.turn>=(k.estate.nextCall??0);
+function princessEstateFamilyPanel(k){
+  const e=k.estate,local=princessEstateLocal(k),wait=Math.max(0,(e.nextVisit??0)-S.turn);
+  const callWait=Math.max(0,(e.nextCall??0)-S.turn);
+  const frontier=(k.princessMarriage||e.route)==='frontier';
+  return detailSection('探望与家书',`<div class="acts">${local?`<button class="btn jade" onclick="A.princessEstateCall(${k.id})" ${princessEstateVisitReady(k)&&E().energy>0?'':'disabled'}>到公主府探望<small>${callWait?`还需 ${callWait} 个月`:'精力 −1'}</small></button>`:''}
+    ${local||frontier?`<button class="btn" onclick="A.princessVisit(${k.id})" ${wait?'disabled':''}>${local?'请她回宫探亲':'读北境家书'}${wait?`<small>还需 ${wait} 个月</small>`:''}</button>`:''}</div>`);
 }
 function viewPrincessEstate(){
   const k=princessById(UI.sel),e=k?.estate;
   if(!k?.alive||!e)return viewOut();
   const plan=PRINCESS_PURSUITS[e.pursuit];
   const ready=e.stage==='working'&&S.turn>=e.due;
-  const message=e.stage==='proposal'?plan.wish:ready?plan.result:e.stage==='working'?`府上说还需 ${e.due-S.turn} 个月。`:'她已办成这件事，近来常把府中的消息寄到宫里。';
-  const local=(e.route||k.princessMarriage)!=='frontier';
+  const message=e.stage==='proposal'?plan.wish:ready||e.stage==='done'?plan.result:`${e.mode||'府中正在筹办'} · 约 ${e.due-S.turn} 个月后有回音`;
+  const local=princessEstateLocal(k);
   const mother=k.reign&&familyHostById(k.mom);
   const motherLink=mother?.familyArchive?`<button class="person-link" onclick="A.go('consort',${mother.id})">${esc(k.momName||fullName(mother))}</button>`:outsideMotherLink(k);
   return `<button class="btn quiet sm" onclick="A.go('out')">← 返回出巡</button>
-    <header class="detail-head">${porImg(k,112)}<div class="grow"><p>${k.reign?princessKinship(k)+' · ':''}${local?'京城府邸':'北境来信'}</p><h2>${esc(kidName(k))} · 公主府</h2><p>生母 ${motherLink}</p></div></header>
-    <section class="palace-activity"><h3>${plan.title}</h3><p>${esc(message)}</p><div class="acts">
-    ${e.stage==='proposal'||ready?`<button class="btn gold" onclick="A.princessLetter(${k.id})">${ready?'读她的回信':'读府中来信'}</button>`:''}
-    ${S.turn>=e.nextVisit?`<button class="btn jade" onclick="A.princessVisit(${k.id})">${local?'请她回宫探亲':'写信邀她还宫'}</button>`:''}</div></section>
-    ${xieCapitalEstate(k)?detailSection('婚事与心意',youthPanel(k)):''}
-    ${marriagePanel(k)}
-    ${householdPanel(k)}
-    ${detailSection('府中记事',detailStory(k))}`;
+    <header class="detail-head">${porImg(k,112)}<div class="grow"><p>${k.reign?princessKinship(k)+' · ':''}${kidAge(k)}岁 · ${local?'京城府邸':esc(royalKinContactPlace(k,'letter'))}</p><h2>${esc(kidName(k))} · 公主府</h2><p>生母 ${motherLink}</p></div></header>
+    ${pageChapters('princess-estate',[
+      ['projects','府务',detailSection(plan.title,`<p>${esc(message)}</p>${e.stage==='proposal'||ready?`<button class="btn gold" onclick="A.princessLetter(${k.id})">${ready?'读她的回信':'读府中来信'}</button>`:''}`)+princessFollowupPanel(k,plan.next)],
+      ['family','亲眷与婚配',princessEstateFamilyPanel(k)+(xieCapitalEstate(k)?detailSection('婚事与心意',youthPanel(k)):'')+marriagePanel(k)+householdPanel(k)],
+      ['chronicle','府中记事',detailStory(k)]
+    ])}`;
 }
+A.princessFollowup=function(id){
+  const k=princessById(id),e=k?.estate,plan=PRINCESS_PURSUITS[e?.pursuit],f=e?.followup;
+  const valid=()=>!S.over&&princessById(id)===k&&k.alive&&k.estate===e&&e.stage==='done'&&e.followup===f;
+  if(modalOpen||!plan||!valid()||f&&!princessFollowupDue(e))return;
+  const {title,wish,result}=plan.next;
+  if(f){
+    const ready=()=>valid()&&princessFollowupDue(e);
+    pushEv({title:`公主府回信 · ${title}`,por:k,text:result,valid:ready,choices:[{t:'记入起居注',f:()=>{
+      if(!ready())return null;
+      f.finished=S.turn;k[plan.stat]=clamp(k[plan.stat]+3);
+      princessMemory(k,'princess_result',`【${title}】${result}`);
+      log(`${kidName(k)}办成了「${title}」。`,1);return result;
+    }},{t:'稍后再读'}]});
+    return;
+  }
+  const support=(mode,months,cost)=>()=>{
+    if(!valid()||E().treasury<cost)return null;
+    if(cost)chg({treasury:-cost});
+    e.followup={mode,due:S.turn+months};
+    const line=`为${kidName(k)}商定「${title}」：${mode}，约 ${months} 个月后有回音。`;
+    princessMemory(k,'princess_project',line);log(line);return line;
+  };
+  pushEv({title:`公主府来信 · ${title}`,por:k,text:`「${wish}」`,valid,choices:[
+    {t:'拨十万两相助',cond:()=>E().treasury>=10,why:'国库不足',f:support('拨银相助',2,10)},
+    {t:'交给她自己筹办',f:support('自行筹办',4,0)},{t:'改日再商量'}]});
+};
+A.princessEstateCall=function(id){
+  const k=princessById(id);
+  const valid=()=>princessById(id)===k&&princessEstateVisitReady(k)&&E().energy>0;
+  if(modalOpen||!valid())return;
+  const finish=topic=>()=>{
+    if(!valid()||!useE())return null;
+    const e=k.estate,plan=PRINCESS_PURSUITS[e.pursuit];
+    e.nextCall=S.turn+4;k.love=clamp(k.love+4);
+    const mother=k.reign?null:byId(k.mom);
+    const line=topic==='home'?`两人在府中叙家常。${royalKinWords(k,'home')}${inPalace(mother)?`她又问起${cName(mother)}的近况，托你捎一声问候。`:''}`:
+      `她取来府中的簿册，谈起「${e.followup?plan.next.title:plan.title}」。${e.followup?.finished!==undefined||e.stage==='done'&&!e.followup?'她翻给你看当时留下的几页记录，说起其中一处改过几次的安排。':'她指给你看已经办妥的事，又在还待张罗的几处画了圈。'}`;
+    if(topic==='home'&&inPalace(mother))story(mother,`【公主府问安】${kidName(k)}托陛下捎来一句问候。她听完，随后也让宫人替自己问问女儿近来可好。`);
+    princessMemory(k,'princess_estate_call',`【府中相见】${line}`);log(`赴${kidName(k)}府中探望。${line}`);return line;
+  };
+  pushEv({title:'公主府 · 到府探望',por:k,text:`${kidName(k)}亲自迎你进府，吩咐人换了新茶。`,valid,choices:[
+    {t:'问问府里的事 · 精力−1',f:finish('project')},{t:'坐下说说家常 · 精力−1',f:finish('home')},{t:'改日再来'}]});
+};
 A.princessLetter=function(id){
   const k=princessById(id),e=k?.estate;
   if(S.over||modalOpen||!k?.alive||!e)return;
