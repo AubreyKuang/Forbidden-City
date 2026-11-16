@@ -21,4 +21,10 @@ NODE_PATH=/path/to/playwright/node_modules node tests/exam-schedule-browser-acce
 
 使用真实按钮新开一局，在理政页直接调整周期；另通过文件导入四年二月的测试档，再点击结束本月触发殿试。桌面 1440×1000、手机 390×844 共 4 场景、10 次刷新恢复全部通过。报告：[本地验收](exam-schedule-local-browser-results.json)。
 
-正式站验证及截图在部署后补充。
+正式入口的 4 场景、10 次刷新恢复全部通过：[正式站报告](exam-schedule-production-browser-results.json)。测试版入口同样通过 4 场景、10 次刷新：[测试版报告](exam-schedule-dev-browser-results.json)。正式站脚本已与 `85e9649` 核对一致。
+
+| 六部页顶部独立入口 | 周期选项 |
+| --- | --- |
+| ![六部入口](../screenshots/exam-schedule/schedule-mobile-ministries.jpg) | ![四种周期](../screenshots/exam-schedule/schedule-mobile-options.jpg) |
+
+![按期呈上殿试](../screenshots/exam-schedule/due-desktop-examination.jpg)

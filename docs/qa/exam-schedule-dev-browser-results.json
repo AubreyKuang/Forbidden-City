@@ -1,0 +1,71 @@
+{
+  "url": "http://127.0.0.1:8428/dev.html",
+  "started": "2026-11-16T04:11:59.735Z",
+  "runs": [
+    {
+      "name": "schedule",
+      "viewport": "desktop",
+      "reloads": 2,
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "due",
+      "viewport": "desktop",
+      "reloads": 3,
+      "errors": [],
+      "passed": true,
+      "graduates": [
+        {
+          "name": "阎明谦",
+          "rank": "状元",
+          "office": "翰林院修撰"
+        },
+        {
+          "name": "邢铎",
+          "rank": "榜眼",
+          "office": "翰林院编修"
+        },
+        {
+          "name": "曹惟敬",
+          "rank": "探花",
+          "office": "翰林院编修"
+        }
+      ]
+    },
+    {
+      "name": "schedule",
+      "viewport": "mobile",
+      "reloads": 2,
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "due",
+      "viewport": "mobile",
+      "reloads": 3,
+      "errors": [],
+      "passed": true,
+      "graduates": [
+        {
+          "name": "孔定安",
+          "rank": "状元",
+          "office": "翰林院修撰"
+        },
+        {
+          "name": "方景明",
+          "rank": "榜眼",
+          "office": "翰林院编修"
+        },
+        {
+          "name": "魏元晖",
+          "rank": "探花",
+          "office": "翰林院编修"
+        }
+      ]
+    }
+  ],
+  "browser": "157.0.8103.78",
+  "finished": "2026-11-16T04:12:15.721Z",
+  "passed": true
+}
