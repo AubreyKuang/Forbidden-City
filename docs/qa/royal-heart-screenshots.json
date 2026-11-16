@@ -1,0 +1,209 @@
+{
+  "revision": "aaa46977d97133471e08f532820300d870906528",
+  "capturedAt": "2026-11-16T00:19:09.568729+00:00",
+  "method": "Remote browser rendering of the real game with disposable public demo saves",
+  "provider": "https://www.thum.io/documentation/api/url",
+  "interactiveAcceptance": false,
+  "captures": [
+    {
+      "scene": "young",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/royal-heart-gallery/young.html?revision=aaa46977d97133471e08f532820300d870906528",
+      "file": "docs/screenshots/royal-heart/young.jpg",
+      "bytes": 138617,
+      "sha256": "8bc78a2541ab9278ed0a0d783e4a42485582c87caeed8c3def6f41c5faf90431",
+      "visualReview": "passed",
+      "revision": "aaa46977d97133471e08f532820300d870906528",
+      "reviewedAt": "2026-11-16T00:23:41.884508+00:00",
+      "dimensions": [
+        1200,
+        1200
+      ]
+    },
+    {
+      "scene": "adult",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/royal-heart-gallery/adult.html?revision=aaa46977d97133471e08f532820300d870906528",
+      "file": "docs/screenshots/royal-heart/adult.jpg",
+      "bytes": 146538,
+      "sha256": "acf8c6ac9fea5ab07313472a3d6f09267a4f7c58a783ea05698b119486f5274d",
+      "visualReview": "passed",
+      "revision": "aaa46977d97133471e08f532820300d870906528",
+      "reviewedAt": "2026-11-16T00:23:41.884508+00:00",
+      "dimensions": [
+        1200,
+        1200
+      ]
+    },
+    {
+      "scene": "refusal",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/royal-heart-gallery/refusal.html?revision=aaa46977d97133471e08f532820300d870906528",
+      "file": "docs/screenshots/royal-heart/refusal.jpg",
+      "bytes": 148979,
+      "sha256": "53c4cc3028636d1e791abf845e6d192ef5a1cdf54fcc3362293dff3b82b6d6ed",
+      "visualReview": "passed",
+      "revision": "aaa46977d97133471e08f532820300d870906528",
+      "reviewedAt": "2026-11-16T00:23:41.884508+00:00",
+      "dimensions": [
+        1200,
+        1200
+      ]
+    },
+    {
+      "scene": "marriage",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/royal-heart-gallery/marriage.html?revision=c4a29e0482028fec55fa76bb30cb290996cc9172",
+      "file": "docs/screenshots/royal-heart/marriage.jpg",
+      "bytes": 249445,
+      "sha256": "dca6aedc27b3cdd4d0d3dcb2ada77229d057b2b0e9742657bb12bece3cafab3d",
+      "visualReview": "passed",
+      "revision": "c4a29e0482028fec55fa76bb30cb290996cc9172",
+      "reviewedAt": "2026-11-16T00:23:41.884508+00:00",
+      "dimensions": [
+        1200,
+        1200
+      ]
+    },
+    {
+      "scene": "chronicle",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/royal-heart-gallery/chronicle.html?revision=aaa46977d97133471e08f532820300d870906528",
+      "file": "docs/screenshots/royal-heart/chronicle.jpg",
+      "bytes": 295158,
+      "sha256": "330323a0bcf987fe5d70aedf9b5557d5ad611c447a2ab237c2eae7546b8c62b3",
+      "visualReview": "passed",
+      "revision": "aaa46977d97133471e08f532820300d870906528",
+      "reviewedAt": "2026-11-16T00:23:41.884508+00:00",
+      "dimensions": [
+        1200,
+        1200
+      ]
+    },
+    {
+      "scene": "check",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/royal-heart-gallery/check.html?revision=a5e8b08544e9571ce61f459107cbb8b5dff5f314",
+      "file": "docs/screenshots/royal-heart/check.jpg",
+      "bytes": 256000,
+      "sha256": "3d0d1d3a41dfcf39f8f45a8a945dea6e7e23be2484b3e254d57ea75d570b547d",
+      "visualReview": "passed",
+      "revision": "a5e8b08544e9571ce61f459107cbb8b5dff5f314",
+      "reviewedAt": "2026-11-16T00:27:06.116494+00:00",
+      "dimensions": [
+        1200,
+        1200
+      ],
+      "matchesPreviouslyReviewedImage": true
+    },
+    {
+      "scene": "intervention",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/royal-heart-gallery/intervention.html?revision=aaa46977d97133471e08f532820300d870906528",
+      "file": "docs/screenshots/royal-heart/intervention.jpg",
+      "bytes": 253370,
+      "sha256": "1bf51a565dac9f4fc9334c1057d7e3b770727bcd7771adb84c00d72da91e654a",
+      "visualReview": "passed",
+      "revision": "aaa46977d97133471e08f532820300d870906528",
+      "reviewedAt": "2026-11-16T00:23:41.884508+00:00",
+      "dimensions": [
+        1200,
+        1200
+      ]
+    },
+    {
+      "scene": "romance-check",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/royal-heart-gallery/romance-check.html?revision=a5e8b08544e9571ce61f459107cbb8b5dff5f314",
+      "file": "docs/screenshots/royal-heart/romance-check.jpg",
+      "bytes": 253444,
+      "sha256": "1217e06b44b55f72ad6169a399a95f1e28f5ff8cc0912afedf2f10955b9b5bf7",
+      "visualReview": "passed",
+      "revision": "a5e8b08544e9571ce61f459107cbb8b5dff5f314",
+      "reviewedAt": "2026-11-16T00:27:06.116494+00:00",
+      "dimensions": [
+        1200,
+        1200
+      ],
+      "matchesPreviouslyReviewedImage": true
+    },
+    {
+      "scene": "proposal",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/royal-heart-gallery/proposal.html?revision=aaa46977d97133471e08f532820300d870906528",
+      "file": "docs/screenshots/royal-heart/proposal.jpg",
+      "bytes": 146146,
+      "sha256": "d0b364b323ac7edc23726dc081a12bf97f90e57994b7431f79a2c51ddbc972f9",
+      "visualReview": "passed",
+      "revision": "aaa46977d97133471e08f532820300d870906528",
+      "reviewedAt": "2026-11-16T00:23:41.884508+00:00",
+      "dimensions": [
+        1200,
+        1200
+      ]
+    },
+    {
+      "scene": "proposal-check",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/royal-heart-gallery/proposal-check.html?revision=a5e8b08544e9571ce61f459107cbb8b5dff5f314",
+      "file": "docs/screenshots/royal-heart/proposal-check.jpg",
+      "bytes": 250997,
+      "sha256": "07e7b51e3ca6e58ccc15a87743da3ec49939646c1eedb6cf44abf84a2a78eda1",
+      "visualReview": "passed",
+      "revision": "a5e8b08544e9571ce61f459107cbb8b5dff5f314",
+      "reviewedAt": "2026-11-16T00:27:06.116494+00:00",
+      "dimensions": [
+        1200,
+        1200
+      ],
+      "matchesPreviouslyReviewedImage": true
+    },
+    {
+      "scene": "betrothal-check",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/royal-heart-gallery/betrothal-check.html?revision=a5e8b08544e9571ce61f459107cbb8b5dff5f314",
+      "file": "docs/screenshots/royal-heart/betrothal-check.jpg",
+      "bytes": 260109,
+      "sha256": "847b3ebdb61f13ae4cb6ff4e82fb0dd623a771a63715ee2427a23b09bc59582c",
+      "visualReview": "passed",
+      "revision": "a5e8b08544e9571ce61f459107cbb8b5dff5f314",
+      "reviewedAt": "2026-11-16T00:27:06.116494+00:00",
+      "dimensions": [
+        1200,
+        1200
+      ],
+      "matchesPreviouslyReviewedImage": true
+    },
+    {
+      "scene": "family",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/royal-heart-gallery/family.html?revision=aaa46977d97133471e08f532820300d870906528",
+      "file": "docs/screenshots/royal-heart/family.jpg",
+      "bytes": 141607,
+      "sha256": "fef244278053c6d8a1f7295a15cb4ee4fd466f2f15a9e9e5daabbe24c0a0c679",
+      "visualReview": "passed",
+      "revision": "aaa46977d97133471e08f532820300d870906528",
+      "reviewedAt": "2026-11-16T00:23:41.884508+00:00",
+      "dimensions": [
+        1200,
+        1200
+      ]
+    },
+    {
+      "scene": "single",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/royal-heart-gallery/single.html?revision=c4a29e0482028fec55fa76bb30cb290996cc9172",
+      "file": "docs/screenshots/royal-heart/single.jpg",
+      "bytes": 254313,
+      "sha256": "bf3f621964a51c39c3a2d10a6dc3b2f4bcc30951a31e5aa58fc351f4153ae801",
+      "visualReview": "passed",
+      "revision": "c4a29e0482028fec55fa76bb30cb290996cc9172",
+      "reviewedAt": "2026-11-16T00:23:41.884508+00:00",
+      "dimensions": [
+        1200,
+        1200
+      ]
+    }
+  ],
+  "latestRetakeRevision": "c4a29e0482028fec55fa76bb30cb290996cc9172",
+  "browserInPageChecks": {
+    "status": "passed",
+    "scenarios": [
+      "check",
+      "romance-check",
+      "betrothal-check",
+      "proposal-check"
+    ],
+    "scope": "Actual DOM choice clicks in a browser, reciprocal person state, rendered portrait cell 433, separation and betrothal rules, save/load replay; green pass strips visually inspected.",
+    "fullInteractiveAcceptance": false,
+    "mergedRuntimeRevision": "a5e8b08544e9571ce61f459107cbb8b5dff5f314"
+  },
+  "mergedRuntimeRevision": "a5e8b08544e9571ce61f459107cbb8b5dff5f314"
+}

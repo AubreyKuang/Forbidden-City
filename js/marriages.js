@@ -1,5 +1,5 @@
 /* 皇嗣议婚：入口、固定名帖与皇子赐婚。公主仍沿用开府和旧日相识路线。 */
-const marriageEligible=k=>!!(k?.alive&&!immortalAway(k)&&!k.templeStay&&!k.removedFromRoyal&&S.children.includes(k)&&kidAge(k)>=15&&!k.jailed&&!k.married&&!k.pendingName&&!S.over);
+const marriageEligible=k=>!!(k?.alive&&!immortalAway(k)&&!k.templeStay&&!k.removedFromRoyal&&S.children.includes(k)&&kidAge(k)>=15&&!k.jailed&&!k.married&&!k.pendingName&&!S.over&&(journalContentVersion()<22||!k.betrothal));
 const marriageReady=k=>marriageEligible(k)&&S.turn>=(k.marriageAfter??0);
 const PRINCE_MATCHES={
   scholar:{name:'书香人家',note:'她喜欢校书作画，希望婚后还能保留自己的书房。',stat:'lit',gain:5},

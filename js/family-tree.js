@@ -83,6 +83,6 @@ function familyAgeNote(p){
  return `<small class="family-age">${p.alive===false?'享年 ':''}${value}</small>`;
 }
 function familyRememberDeathAges(previous){
- if(!S||PalaceActions.blocked||journalContentVersion()<22||!previous||previous.gen!==S.gen)return;
+ if(!S||PalaceActions.blocked||journalContentVersion()<24||!previous||previous.gen!==S.gen)return;
  for(const k of S.children)if(k.alive===false&&!Number.isFinite(k.deathAgeMonths)&&previous.children?.some(p=>p.id===k.id&&p.alive))k.deathAgeMonths=Math.max(0,S.turn-k.born);
 }

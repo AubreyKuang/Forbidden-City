@@ -18,7 +18,7 @@ function birthTags(k){
 }
 function deliveryKids(c){return (c.delivery?.children||[]).map(kidById).filter(Boolean)}
 function pendingDelivery(){return S.consorts.find(c=>c.delivery&&!c.delivery.settled&&(c.delivery.lossPending||deliveryKids(c).some(k=>k.pendingName)))}
-function gouyiBirthBlessing(c){return journalContentVersion()>=22&&!!c?.gouyi;}
+function gouyiBirthBlessing(c){return journalContentVersion()>=24&&!!c?.gouyi;}
 function birthOmenChance(c){return gouyiBirthBlessing(c)?.6:.03;}
 function birthEvent(c){
   if(c.delivery&&!c.delivery.settled)return birthNamingEvent(c);

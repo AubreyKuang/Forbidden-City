@@ -1,0 +1,137 @@
+{
+  "approval": "approved",
+  "source": "exec-5ab77e70-0662-4364-9a2d-63ba83da0a8a.png",
+  "sourceSize": [
+    1536,
+    1024
+  ],
+  "sourceSha256": "be420a639c3ffa2fc6140aa4ceb074cfcaac670e6d18dd080719cad6cf1bee37",
+  "atlas": "assets/images/palace-fenghua-people.webp",
+  "frame": [
+    448,
+    560
+  ],
+  "columns": 4,
+  "portraits": [
+    {
+      "id": 435,
+      "key": "shangguanLantai",
+      "name": "上官兰台",
+      "sourceCell": 0,
+      "sourceCrop": [
+        42,
+        4,
+        485,
+        508
+      ],
+      "size": [
+        440,
+        501
+      ],
+      "offset": [
+        4,
+        59
+      ]
+    },
+    {
+      "id": 436,
+      "key": "gaoHuaibi",
+      "name": "高怀璧",
+      "sourceCell": 1,
+      "sourceCrop": [
+        533,
+        0,
+        998,
+        512
+      ],
+      "size": [
+        440,
+        484
+      ],
+      "offset": [
+        4,
+        76
+      ]
+    },
+    {
+      "id": 437,
+      "key": "jiShuye",
+      "name": "嵇叔夜",
+      "sourceCell": 2,
+      "sourceCrop": [
+        1041,
+        6,
+        1513,
+        512
+      ],
+      "size": [
+        440,
+        472
+      ],
+      "offset": [
+        4,
+        88
+      ]
+    },
+    {
+      "id": 438,
+      "key": "xueHongjian",
+      "name": "薛红笺",
+      "sourceCell": 3,
+      "sourceCrop": [
+        48,
+        513,
+        477,
+        1024
+      ],
+      "size": [
+        440,
+        524
+      ],
+      "offset": [
+        4,
+        36
+      ]
+    },
+    {
+      "id": 439,
+      "key": "sunYunxiu",
+      "name": "孙云岫",
+      "sourceCell": 4,
+      "sourceCrop": [
+        515,
+        512,
+        997,
+        1024
+      ],
+      "size": [
+        440,
+        467
+      ],
+      "offset": [
+        4,
+        93
+      ]
+    },
+    {
+      "id": 440,
+      "key": "liuZhaoshuang",
+      "name": "柳照霜",
+      "sourceCell": 5,
+      "sourceCrop": [
+        1042,
+        512,
+        1484,
+        1024
+      ],
+      "size": [
+        440,
+        510
+      ],
+      "offset": [
+        4,
+        50
+      ]
+    }
+  ]
+}

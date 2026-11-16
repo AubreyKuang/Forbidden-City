@@ -18,10 +18,10 @@ function gouyiEncounter(){
 }
 function gouyiAdmission(g){
   const valid=()=>S.flags.gouyiSeen?.id===g.id&&S.flags.gouyiSeen.outcome==='相见';
-  const fallback=()=>journalContentVersion()>=22&&rankCount(3)>=RANK_CAP[3];
+  const fallback=()=>journalContentVersion()>=24&&rankCount(3)>=RANK_CAP[3];
   const canAdmit=()=>fallback()?rankCount(2)<RANK_CAP[2]:rankCount(3)<RANK_CAP[3];
   return {title:'钩弋之遇 · 掌心初开',por:g,valid,text:'你让她坐稳，等她自己将手伸出。她只在你的注视与轻扶之下，缓缓舒开双掌，指尖像初展的叶。帘外的人屏住呼吸，随行望气者将这桩奇遇称作“钩弋”。\n她没有立刻谢恩，只望着自己的掌心许久：“原来我也能这样拿住一盏茶。”\n问及去留，她愿随驾入宫，但想先说明：自己有名字，也会害怕，并不懂如何当一个祥瑞。',choices:[
-    {t:fallback()?'应她所愿，接入宫中册为瑞常在':'应她所愿，接入宫中册为贵人',cond:canAdmit,why:journalContentVersion()>=22?'贵人与常在名额均已满':'贵人名额已满',f:()=>{
+    {t:fallback()?'应她所愿，接入宫中册为瑞常在':'应她所愿，接入宫中册为贵人',cond:canAdmit,why:journalContentVersion()>=24?'贵人与常在名额均已满':'贵人名额已满',f:()=>{
       if(!valid()||!canAdmit())return null;const rank=fallback()?2:3;if(rank===2)grantConsortTitle(g,'瑞');S.flags.gouyiSeen.outcome='入宫';if(gouyiLifeActive())g.arc=makeArc('gouyi',6);addConsort(g,rank,rank===2?'巡狩河间，帝前展掌后自愿随驾入宫；贵人位满，赐号瑞':'巡狩河间，帝前展掌后自愿随驾入宫');if(!gouyiLifeActive())g.arc=makeArc('gouyi',6);
       story(g,`【钩弋入宫】自愿随驾入宫，${rank===2?'贵人名额已满，册为瑞常在':'依本朝位分册为贵人'}；“钩弋夫人”只是这段奇遇的别称。她感激帝王相知，也愿往后被记住的是赵令仪。`);
       return '她随驾入宫，宫室按现有规制分配。“钩弋夫人”的传说开始流传，她自己的故事也从此续写。';

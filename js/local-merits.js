@@ -1,6 +1,6 @@
 /* New reports keep the evidence, rating and recommended office in the save.
    Pending reports from older editions continue through their original decisions. */
-const localMeritsActive=()=>!!S&&!S.over&&journalContentVersion()>=22&&!PalaceActions.blocked;
+const localMeritsActive=()=>!!S&&!S.over&&journalContentVersion()>=24&&!PalaceActions.blocked;
 const LOCAL_MERIT_TASKS=[
   {id:'water',title:'堤工安澜',unit:'段险堤',target:12,department:'工部',good:['堤工逐段验收，工料与民夫工簿相符，沿河村落已安然度汛。','汛前修固险段，乡老与河工联名回报，沿岸田庐未受水患。'],great:'另设巡堤与报汛章程，邻县沿用之后也保住了秋粮。',bad:['上游涨水冲坏未完工段，须补运石料，原定工期未能赶上。','复勘发现两处护岸仍不牢固，已退回重修，暂不准销账。']},
   {id:'grain',title:'赈济有方',unit:'户灾民',target:600,department:'户部',good:['赈册逐户核验，老弱有人送粮，受灾人家已领足口粮。','设粥棚并分批发放种粮，灾户签领与仓册相合，没有另派杂费。'],great:'以工代赈修好了村渠，灾户既得口粮，又赶上复耕，流民陆续归乡。',bad:['山路阻断，偏远灾村尚有口粮未送到，请求改走水路补运。','赈册漏列了新迁来的灾户，须重核名单、补发口粮。']},
@@ -16,7 +16,7 @@ const LOCAL_MERIT_TASKS=[
   {id:'public-order',title:'乡里安业',unit:'处巡防铺',target:12,department:'刑部',good:['调整夜巡与报案轮值，盗案依证查办，乡民夜行安稳些了。','撤去扰民的私设哨卡，捕役按册巡防，失窃物件陆续归还。'],great:'破获跨县盗案而未株连无辜，邻县联防有了章程，商旅与乡民皆称便。',bad:['数处巡铺轮值仍有缺额，夜巡不能全线衔接，须补齐人手。','跨县案牍往返延误，赃物尚未全部追回，仍需会同邻县查访。']}
 ];
 Object.assign(OFFICE_GRADES,{'通政使司副使':7});
-const localMeritReport=r=>localMeritsActive()&&r?.kind==='local'&&r.edition===22;
+const localMeritReport=r=>localMeritsActive()&&r?.kind==='local'&&r.edition===24;
 function localMeritOdds(p){return clamp(.68+((p.ability??50)-50)*.004+((p.trust??45)-45)*.0015,.35,.94);}
 function localCentralOffice(p,department){
   const grade=officialGrade(p);
@@ -40,7 +40,7 @@ createLocalReport=function(person){
   const evidence=pick(good?task.good:task.bad)+(rating==='exceptional'?task.great:rating==='excellent'?'复核另见乡民具结与收支明册，办事稳妥，未额外加派。':'');
   const quote=good?{持正:'民生有了着落，才算没有辜负这一任。',谨慎:'诸项已复核，臣仍留册备查，不敢以一时成绩自满。',进取:'臣愿把奏效的办法整理出来，若蒙任用，也愿多担些事。',圆融:'此事赖官民同心，臣愿将其中办法说清，让旁处少走弯路。'}[p.temperament]||'臣将核验册一并呈上，请陛下查阅。':'臣将未竟之处据实呈报，愿补办善后。';
   const people=good?(rating==='exceptional'?3:rating==='excellent'?2:1):0,revenue=good?(task.revenue||0)*(rating==='exceptional'?2:1):0;
-  p.lastLocalReport=S.turn;p.report={id:`local-${p.id}-${S.turn}`,edition:22,kind:'local',taskId:task.id,department:task.department,title:`${region} · ${task.title}`,office:p.office||p.post,turn:S.turn,outcome:good?'success':'setback',rating,region,target:task.target,done,unit:task.unit,verified:true,benefits:{people,treasury:revenue},
+  p.lastLocalReport=S.turn;p.report={id:`local-${p.id}-${S.turn}`,edition:24,kind:'local',taskId:task.id,department:task.department,title:`${region} · ${task.title}`,office:p.office||p.post,turn:S.turn,outcome:good?'success':'setback',rating,region,target:task.target,done,unit:task.unit,verified:true,benefits:{people,treasury:revenue},
     text:`${p.name}呈报${task.title}：定额${task.target}${task.unit}，核实完成${done}${task.unit}。${evidence}\n考课：${label}。${p.name}道：“${quote}”${good?`\n实绩所及：民心＋${people}${revenue?`，正税入库＋${revenue}万两`:''}（已入账）。`:''}`};
   p.merit=clamp((p.merit??0)+(rating==='exceptional'?22:rating==='excellent'?14:good?8:-5));
   if(good)chg({people,treasury:revenue});
