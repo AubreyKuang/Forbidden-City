@@ -1,0 +1,85 @@
+{
+  "revision": "c4a29e0482028fec55fa76bb30cb290996cc9172",
+  "verifiedAt": "2026-11-16T00:23:01.628019+00:00",
+  "deployment": "https://github.com/AubreyKuang/Forbidden-City/actions/runs/43779890034",
+  "checks": [
+    {
+      "file": "index.html",
+      "status": 200,
+      "matchesLocal": true,
+      "sha256": "33a2562f33302921dbc636e542176f9e6c20521233fadfe30b8b61f8b4ae4bac"
+    },
+    {
+      "file": "dev.html",
+      "status": 200,
+      "matchesLocal": true,
+      "sha256": "22ed847b439258d88bc337606429f2b9a46b90921d27f395653926755e8fd713"
+    },
+    {
+      "file": "js/portraits.js",
+      "status": 200,
+      "matchesLocal": true,
+      "sha256": "973a788f503cf95524d9cbc782fbbc44d784d405be591412460b981d151fd518"
+    },
+    {
+      "file": "js/royal-heart.js",
+      "status": 200,
+      "matchesLocal": true,
+      "sha256": "55498a885e417729dd75f9ec19dedfd548a95a4003e9133f50e13015e870a174"
+    },
+    {
+      "file": "js/xie-romance.js",
+      "status": 200,
+      "matchesLocal": true,
+      "sha256": "e17593b70f5815a6557767c4af605544d4202d49e3ea470efe784e8eec69de4d"
+    },
+    {
+      "file": "js/action-journal.js",
+      "status": 200,
+      "matchesLocal": true,
+      "sha256": "3ccdcd93c91f04afd94152d20a367469dc026934434a2ce4832c0ab8167b2f22"
+    },
+    {
+      "file": "js/marriages.js",
+      "status": 200,
+      "matchesLocal": true,
+      "sha256": "c57670f5b9989d44ecace732e2b2a8aa7288760d0a84e6414e650ed63658e1de"
+    },
+    {
+      "file": "docs/qa/royal-heart-gallery/bootstrap.js",
+      "status": 200,
+      "matchesLocal": true,
+      "sha256": "03ade6006d0b9bdc91b8b27dc6d37fa47ff49507ba5afd2d78e539f32121a76f"
+    },
+    {
+      "file": "docs/qa/royal-heart-gallery/check.html",
+      "status": 200,
+      "matchesLocal": true,
+      "sha256": "48d8715581aba64d77a3dfa4b5c782b56c7e1a5237aa802a804e11a4f92cda78"
+    },
+    {
+      "file": "docs/qa/royal-heart-gallery/romance-check.html",
+      "status": 200,
+      "matchesLocal": true,
+      "sha256": "e3c4f62ea425fb565faf4d03b6905fdc94bb42663b55eb86dbdd3915be8684a1"
+    },
+    {
+      "file": "docs/qa/royal-heart-gallery/betrothal-check.html",
+      "status": 200,
+      "matchesLocal": true,
+      "sha256": "4502e385698f08f8bc525a6187725d92a475fd3cb97c1cec598dbaefc557cae1"
+    },
+    {
+      "file": "docs/qa/royal-heart-gallery/proposal-check.html",
+      "status": 200,
+      "matchesLocal": true,
+      "sha256": "3908da43d5dfd5e6e643c009fd33a94ad265e57793f6c5078561244b2d9f0be9"
+    },
+    {
+      "file": "assets/images/palace-capital-noble.webp",
+      "status": 200,
+      "matchesLocal": true,
+      "sha256": "5f85267c804722e8362c1e258bea4125bd0c0aacf4022a1e53d853aff0db29c8"
+    }
+  ]
+}
