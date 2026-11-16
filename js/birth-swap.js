@@ -29,6 +29,7 @@ function applySwapOutsideParents(k,s){
     // The child presented to the court is always a boy; the original girl's biology stays in the sealed case.
     if(k.sex!=='m'){k.sex='m';k.ord=S.children.filter(x=>x!==k&&x.sex==='m').length+1;k.name=suggestName('m');delete k.portraitVariant;assignChildPortrait(k);}
     k.alive=true;delete k.birthOmen;delete k.birthTrouble;
+    if(birthLabelsActive()){delete k.birthLabels;delete k.birthLabelYears;delete k.birthLabelEvents;}
     k.story=[{d:dateStr(),t:`产房报称${s.claimedMotherName}诞下一名男婴，按皇子入册，亲缘待后续查证。`}];
     k.lit=clamp(s.externalMother.talent*.6+s.externalFather.wen*.25);k.mar=clamp(s.externalFather.wu*.3+ri(0,15));
     k.vir=clamp(s.externalMother.virtue*.7+ri(0,12));k.amb=clamp(s.externalMother.scheme*.65+ri(0,18));

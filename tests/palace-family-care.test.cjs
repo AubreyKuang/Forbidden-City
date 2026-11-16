@@ -117,7 +117,7 @@ test('execution needs its separate confirmation and clears heir and in-palace el
     UI.sel=baby.id;assert.match(viewKid(),/奉旨赐死/);assert.doesNotMatch(viewKid(),/已夭折/);`);
 });
 test('birth advice is one-time, does not overwrite good omens and does not blame an infant for disaster',()=>{
-  const {run,force}=boot();run(`var c=harem()[0],k=makeKid(c,'f','明宁');k.hp=52;`);force(0);run(`assert.equal(rollBirthTempleAdvice([k],null),k.id);assert.equal(k.birthTrouble,'frail');assert.equal(rollBirthTempleAdvice([k],null),null);
+  const {run,force}=boot();run(`var c=harem()[0],k=makeKid(c,'f','明宁');k.hp=52;`);force(0);run(`assert.ok(applyBirthLabels(k,['frail']));assert.equal(k.birthTrouble,'frail');assert.equal(rollBirthTempleAdvice([k],null),null);
     pushEv(birthTempleAdviceEvent(k));assert.match(curEv.text,/不作剃度/);choose(2);drain();assert.equal(k.templeStay,undefined);assert.ok(k.templeAdviceHandled);assert.equal(birthTempleAdviceEvent(k),null);
     S.turn+=40;assert.equal(rollBirthTempleAdvice([k],'red'),null);`);
   for(const kind of ['quake','drought']){const x=boot();x.run(`var c=harem()[0],k=makeKid(c,'m','承宁');k.birthTrouble='${kind}';pushEv(birthTempleAdviceEvent(k));choose(0);drain();assert.ok(k.templeStay);assert.ok(c.childConcern);assert.ok(k.templeAdviceHandled);`);}

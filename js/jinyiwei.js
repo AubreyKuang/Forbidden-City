@@ -30,7 +30,7 @@ function palaceCaseWrap(ev){
   const data={kind:'harem',title:ev.title,crime:spec.crime,culprit:a.id,victim:b&&S.consorts.includes(b)?b.id:null,victimName:b?fullName(b):null};
   ev.choices=ev.choices.map(choice=>!choice.f?choice:{...choice,f:function(...args){
     const result=choice.f.apply(this,args);
-    const exposed=Q.some(e=>e.title==='真相大白'&&e.cast?.[0]===a);
+    const exposed=Q.some(e=>e.title==='真相大白'&&e.cast?.[0]===a)||(journalContentVersion()>=39&&curEv?.title==='真相大白'&&curEv.cast?.[0]===a);
     if(!exposed&&result!==null)openPalaceCase({...data,note:choice.t});
     return result;
   }});

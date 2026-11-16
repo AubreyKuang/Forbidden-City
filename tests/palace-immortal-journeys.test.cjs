@@ -5,7 +5,7 @@ function world(sex='f',age=16){
  b.run(`A.start();drain();S.turn=300;S.year=26;S.month=4;E().age=45;E().energy=30;E().treasury=2000;S.children=[];
  var m=makeGirl({age:40,trait:'才女'});addConsort(m,3,'入宫');m.aff=85;m.hp=90;m.enteredAt=100;m.solitary={path:'both'};
  var f=makeGirl({age:39,trait:'温婉'});addConsort(f,3,'入宫');var k=makeKid(m,sex,'清和');k.born=S.turn-age*12;k.hp=90;k.amb=10;k.lit=70;k.mar=30;k.pendingName=false;k.immortalTalent='水灵根';k.foster=f.id;
- k.daoPractice={path:'dao',visits:6};PalaceActions.reset();`);return b;
+ k.temperament='内敛';k.daoPractice={path:'dao',visits:6};PalaceActions.reset();`);return b;
 }
 test('stable spiritual potential favors daughters, rarely sons and still fewer sons born to the empress',()=>{
  const b=world();b.run(`var counts=[];

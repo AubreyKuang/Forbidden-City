@@ -333,7 +333,7 @@ test('birth probabilities include rare multiples and independent sexes without a
 test('twins are registered together, resume after a partial naming reload and settle only once',()=>{
   const {run,force}=boot();
   run(`var mother=harem()[0];mother.trait='温婉';mother.preg=10;mother.mood=20;mother.aff=20;mother.favor=20;mother.rank=4;mother.swapRisk=false;var before=S.children.length;`);
-  force(.01,.1,.9,.01,.1); // twins, boy/girl, omen, red skies
+  force(.01,.1,.9,.01,.1,0,.9); // twins, boy/girl, label gate, good, red skies, no second label
   run(`var ev=birthEvent(mother);mother.delivery.difficult=false;assert.equal(ev.title,'龙凤呈祥');assert.equal(S.children.length,before+2);
     var kids=deliveryKids(mother),ids=kids.map(k=>k.id);assert.equal(kids[0].birthGroup,kids[1].birthGroup);
     assert.equal(kids[0].born,kids[1].born);assert.ok(kids.every(k=>k.birthOmen==='red'));assert.equal(mother.preg,0);

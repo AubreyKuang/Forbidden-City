@@ -24,6 +24,7 @@ function annualBirthOmenTick(){
   for(const k of S.children){
     const months=S.turn-k.born,age=Math.floor(months/12);
     if(!k.alive||k.pendingName||!Number.isInteger(months)||months<12||months%12!==0)continue;
+    if(birthLabelsActive()&&Array.isArray(k.birthLabels)){annualBirthLabels(k,age);continue;}
     const effects=[[BIRTH_OMENS[k.birthOmen],'birthOmenYear']];
     if(journalContentVersion()>=37)effects.push([BIRTH_TROUBLES[k.birthTrouble],'birthTroubleYear']);
     for(const [effect,yearKey] of effects){
@@ -35,6 +36,7 @@ function annualBirthOmenTick(){
   }
 }
 function birthTags(k){
+  if(birthLabelsActive()&&Array.isArray(k.birthLabels))return immortalTags(k)+multipleBadge(k)+birthLabelsHTML(k);
   const omen=BIRTH_OMENS[k.birthOmen],trouble=BIRTH_TROUBLES[k.birthTrouble];
   const effect=omen&&(journalContentVersion()>=30?birthOmenEffect(omen):`${omen.label}+${omen.bonus}`);
   const troubleEffect=journalContentVersion()>=37&&trouble?.stat?` · ${birthOmenEffect(trouble)}`:'';
@@ -43,30 +45,32 @@ function birthTags(k){
 function deliveryKids(c){return (c.delivery?.children||[]).map(kidById).filter(Boolean)}
 function pendingDelivery(){return S.consorts.find(c=>c.delivery&&!c.delivery.settled&&(c.delivery.lossPending||deliveryKids(c).some(k=>k.pendingName)))}
 function gouyiBirthBlessing(c){return journalContentVersion()>=24&&!!c?.gouyi;}
-function birthOmenChance(c){return gouyiBirthBlessing(c)?(journalContentVersion()>=25?.8:.6):(journalContentVersion()>=37?.09:.03);}
+function birthOmenChance(c){return gouyiBirthBlessing(c)?(journalContentVersion()>=25?.8:.6):(journalContentVersion()>=37&&!birthLabelsActive()?.09:.03);}
 function birthEvent(c){
   if(c.delivery&&!c.delivery.settled)return birthNamingEvent(c);
   if(c.preg<(c.pregnancyCalendar?.term||10))return null;
   if(concealedPregnancy(c))return concealedDeliveryEvent(c);
   const count=rollBirthCount(),sexes=Array.from({length:count},()=>chance(.5)?'m':'f');
-  const kind=birthType(sexes),omen=chance(birthOmenChance(c))?pick(Object.keys(BIRTH_OMENS)):null;
+  const kind=birthType(sexes),labels=birthLabelsActive()?rollBirthLabels(c):null;
+  const omen=labels?labels.find(id=>BIRTH_OMENS[id])||null:chance(birthOmenChance(c))?pick(Object.keys(BIRTH_OMENS)):null;
   const children=sexes.map(sex=>makeKid(c,sex,suggestName(sex)));
   registerMultipleBirth(children);
   const prayerKey=currentPregnancyPrayer(c)?.key,firstWishKey=careersActive()&&c.firstChildWish?.key===pregnancyPrayerKey(c)?c.firstChildWish.key:null;
   delete c.pregnancyFather;delete c.pregnancyCalendar;
-  c.delivery={children:children.map(k=>k.id),kind,omen,date:dateStr(),turn:S.turn,...(prayerKey?{prayerKey}:{}),...(firstWishKey?{firstWishKey}:{}),settled:false,
+  c.delivery={children:children.map(k=>k.id),kind,omen,...(labels?{labels}:{}),date:dateStr(),turn:S.turn,...(prayerKey?{prayerKey}:{}),...(firstWishKey?{firstWishKey}:{}),settled:false,
     difficult:chance(c.trait==='体弱'?.12:.03),originalLoss:count===1&&!!c.swapPlot&&!c.swapPlot.settled&&chance(.02),swap:false,templeAdvice:rollBirthTempleAdvice(children,omen)};
   c.preg=0;c.prot=false;c.swapRisk=false;c.lastBirth=S.turn+1;
   children.forEach((k,i)=>{
     k.pendingName=true;k.birthOrder=i+1;
     if(kind){k.birthType=kind;k.birthGroup=children[0].id;}
     kstory(k,`降生于${c.palace}，生母${k.momName}${kind?`，${multipleIdentity(k).name}，${['先降生','随后降生','最后降生'][i]}`:''}。`);
-    if(omen)applyBirthOmen(k,omen);
+    if(labels)applyBirthLabels(k,labels);else if(omen)applyBirthOmen(k,omen);
   });
   settleBirthSwap(c,children[0]);
-  if(children[0].birthSwap?.occurred)c.delivery.omen=null;
+  if(children[0].birthSwap?.occurred){c.delivery.omen=null;if(labels)c.delivery.labels=[];}
   if(c.delivery.originalLoss&&!children[0].birthSwap?.occurred){
     const k=children[0];k.alive=false;k.pendingName=false;k.name='未命名';k.deathReason='出生时已无生息';delete k.birthOmen;delete k.birthTrouble;
+    if(labels){delete k.birthLabels;delete k.birthLabelYears;delete k.birthLabelEvents;c.delivery.labels=[];}
     c.delivery.lossPending=true;c.delivery.omen=null;c.delivery.templeAdvice=null;
   }
   return birthNamingEvent(c);
@@ -75,10 +79,11 @@ function birthNamingEvent(c){
   if(c.delivery?.lossPending)return birthLossEvent(c);
   const children=deliveryKids(c),k=children.find(k=>k.pendingName);if(!k)return null;
   const kind=c.delivery.kind,identity=multipleIdentity(k),omen=BIRTH_OMENS[c.delivery.omen];
+  const labelText=Array.isArray(c.delivery.labels)?birthLabelDeliveryText(c.delivery):omen?`\n${omen.text}\n§${omen.name}：本胎皇嗣${journalContentVersion()>=30?'自周岁起，'+birthOmenEffect(omen):'出生时'+omen.label+'+'+omen.bonus}`:'';
   const report=kind?`${cName(c)}于${c.palace}诞下${cnNum(children.length)}位皇嗣，${identity?.detail||kind}，宫人贺作“${identity?.name||kind}”。`:
     c.delivery.concealedLoss?`${c.palace}报来喜讯，称${cName(c)}诞下一位小皇子，请陛下赐名。`:`${cName(c)}于${c.palace}临盆，阵痛一日一夜，诞下一位${k.sex==='m'?'小皇子':'小公主'}。`;
   return {title:identity?.name||kind||'弄璋弄瓦',por:c,cast:children,sfx:'joy',
-    text:`${report}${omen?`\n${omen.text}\n§${omen.name}：本胎皇嗣${journalContentVersion()>=30?'自周岁起，'+birthOmenEffect(omen):'出生时'+omen.label+'+'+omen.bonus}`:''}\n${kind?`请为${['先降生','随后降生','最后降生'][k.birthOrder-1]||'这位'}的${k.sex==='m'?'小皇子':'小公主'}赐名`:'请陛下赐名'}（不含姓氏）：`,
+    text:`${report}${labelText}\n${kind?`请为${['先降生','随后降生','最后降生'][k.birthOrder-1]||'这位'}的${k.sex==='m'?'小皇子':'小公主'}赐名`:'请陛下赐名'}（不含姓氏）：`,
     input:{def:k.name,max:3},choices:[{t:'赐名',f:value=>{
       if(!k.pendingName)return null;
       const name=(value||k.name).trim().slice(0,3)||k.name;
@@ -130,6 +135,7 @@ function finishDelivery(c){
     if(k.parentage)follow.push(parentageInquiryEvent(k));
   }
   if(delivery.templeAdvice){const advice=birthTempleAdviceEvent(kidById(delivery.templeAdvice));if(advice)follow.push(advice);}
+  if(birthLabelsActive()&&Array.isArray(delivery.labels))follow.push(...birthLabelFollowups(children));
   text+=pregnancyPrayerBirthEcho(c,children);
   Q.unshift(...follow);return text+(delivery.kind?'\n孩子们的档案中已记下同生手足，可听国师贺生，日后也能看他们一起长大的故事。':'')+fx(effect);
 }
@@ -141,7 +147,8 @@ function recordDeliveryOutcome(c,{loss=false,date,legacy=false}={}){
  if(!children.length)return;
  const birthDate=date||d.date||dateStr(),names=children.map(k=>({id:k.id,name:k.name,sex:k.sex}));
  const label=children.map(k=>`${k.sex==='m'?'皇子':'公主'}${k.name==='未命名'?'（未及赐名）':k.name}`).join('、');
- const text=`${fullName(c)}${d.concealedLoss?'被宫中报称生产，':'于'+(c.palace||'宫中')+'临盆，'}${loss?'产下的孩子出生时已无生息':`诞下${label}${d.kind?`（${d.kind}）`:''}，${children.length>1?'孩子们分别':'孩子'}获陛下赐名`}。${fatal?'生产后突发血崩，太医救治无效，撒手人寰，因产后血崩薨逝。':loss?'按礼安葬孩子，太医继续照看产妇。':d.concealedLoss?'报喜与赐名已入册，亲缘仍以查证结果为准。':'产后平安，继续调养。'}${gouyiBirthBlessing(c)&&!loss&&BIRTH_OMENS[d.omen]?`诞生时见「${BIRTH_OMENS[d.omen].name}」，与孩子的诞生纪事一同记下。`:''}`;
+ let text=`${fullName(c)}${d.concealedLoss?'被宫中报称生产，':'于'+(c.palace||'宫中')+'临盆，'}${loss?'产下的孩子出生时已无生息':`诞下${label}${d.kind?`（${d.kind}）`:''}，${children.length>1?'孩子们分别':'孩子'}获陛下赐名`}。${fatal?'生产后突发血崩，太医救治无效，撒手人寰，因产后血崩薨逝。':loss?'按礼安葬孩子，太医继续照看产妇。':d.concealedLoss?'报喜与赐名已入册，亲缘仍以查证结果为准。':'产后平安，继续调养。'}${gouyiBirthBlessing(c)&&!loss&&BIRTH_OMENS[d.omen]?`诞生时见「${BIRTH_OMENS[d.omen].name}」，与孩子的诞生纪事一同记下。`:''}`;
+ if(birthLabelsActive()&&d.labels?.length&&!loss)text+='本胎出生禀赋：'+d.labels.map(id=>BIRTH_LABELS[id].name).join('、')+'。';
  d.outcome={date:birthDate,children:names,kind:d.kind||'单胎',loss,fatal,cause:fatal?'产后血崩':null,text};
  if(fatal){c.deathReason='产后血崩';c.deathRecord={date:birthDate,cause:'产后血崩',text,children:names};}
  // An older build may already have the shorter line. Enrich it in place.
@@ -162,6 +169,7 @@ function deliveryMemorialPanel(c){
  return detailSection('终事 · 生产与离世',`<p><strong>${esc(d.date)} · ${esc(d.cause)}</strong></p><p>${esc(d.text)}</p><div class="acts">${d.children.filter(p=>kidById(p.id)).map(p=>`<button class="btn sm" onclick="A.go('kid',${p.id})">查看${esc(p.name)}的经历</button>`).join('')}</div>`);
 }
 function rollBirthTempleAdvice(children,omen){
+  if(birthLabelsActive())return null; // All new labels share the single 3% / 80% draw.
   if(omen||S.turn-(S.flags.lastBirthTempleAdvice??-99)<36)return null;
   const frail=children.find(k=>k.hp<=60),blessed=children.some(k=>gouyiBirthBlessing(byId(k.mom))),kind=frail&&chance(.3)?'frail':!blessed&&chance(.01)?pick(['quake','drought']):null;
   if(!kind)return null;
