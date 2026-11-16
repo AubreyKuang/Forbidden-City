@@ -83,7 +83,7 @@ function royalKinship(k){
 function listedRoyalKin(){
   const cohorts=new Map(),current=new Set(S.children.map(k=>k.id));
   for(const k of royalHouseholds()){
-    if(current.has(k.id)||k.princelySuccession||k.princeAdoptionOrigin)continue;
+    if(current.has(k.id)||k.princelySuccession||k.princeAdoptionOrigin||k.royalRegisterBranch)continue;
     if(!cohorts.has(k.reign))cohorts.set(k.reign,[]);
     cohorts.get(k.reign).push(k);
   }

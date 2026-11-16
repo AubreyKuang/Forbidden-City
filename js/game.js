@@ -267,7 +267,10 @@ function nightWith(c,fromEvent){
   const s=cchg(c,{favor:10*fm*(XIN[xinOf(c)].favorMul||1),mood:10,aff:routineAffection(c,c.trait==='痴情'?9:6)});
   c.nights++;noteHaremVisit(c,'night');c.lastPersonalAttention=S.turn;recordImperialNight(c);S.flags.lastNight=c.id;if(c.nights===1)remember(c,'first','第一次侍寝');
   const p=consortConceptionChance(c);
-  if(!c.preg&&(!c.delivery||c.delivery.settled)&&S.turn-c.lastBirth>=3&&chance(p)){c.preg=1;c.pregnancyFather={kind:'emperor',gen:S.gen,mother:c.id,name:e.sur+e.name,wen:e.wen,wu:e.wu,conceived:S.turn};beginPregnancyCalendar(c);}
+  if(!c.preg&&(!c.delivery||c.delivery.settled)&&S.turn-c.lastBirth>=3){
+    const conceived=chance(p*imperialFertilityMultiplier());noteImperialFertilityAttempt(p,conceived);
+    if(conceived){c.preg=1;c.pregnancyFather={kind:'emperor',gen:S.gen,mother:c.id,name:e.sur+e.name,wen:e.wen,wu:e.wu,conceived:S.turn};beginPregnancyCalendar(c);}
+  }
   harem().forEach(o=>{if(o!==c&&TRAITS[o.trait].jealous){o.mood=clamp(o.mood-2);relAdd(o,c,-3)}});
   story(c,`奉召侍寝。${line}`);
   log(`召${cName(c)}侍寝。`);
@@ -473,6 +476,7 @@ A.endMonth=function(){
   reconcileResidences();archivePastLives();travelerLifeTick();daoLifeTick();immortalTick();royalTravelTick();travelInstitutionTick();childTempleTick();relTick();consortSocialTick();kidRelTick();clanTick();dowagerTick();initiativeTick();familyLifeTick();childLifeTick(true);courtTick();yiLandTick();natalFamilyTick();seasonalTick();palaceDutiesTick();palaceRomanceTick();palaceParentageTick();marriedLifeTick();royalKinContactTick();personalExperienceTick();journeyTick();maternalTick();historyTick();continuityTick();personalLifeTick();livedRelationshipsTick();
   const passing=dowagerPassingEvent();if(passing)pushEv(passing);
   const princeSuccession=princeSuccessionTick();
+  const fertilityReview=imperialFertilityEvent();
   princeAdoptionContactTick();
   const orphan=palaceOrphanEvent();
   const comingOfAge=royalComingOfAgeEvent();
@@ -480,6 +484,7 @@ A.endMonth=function(){
   const must=[passing?null:haremRemonstranceEvent(),passing?null:pendingImmortalEvent(),passing?null:pendingRoyalTravelEvent(),passing?null:pendingTravelInstitutionEvent(),passing?null:pendingRoyalSchoolRevision(),passing?null:pendingLocalChronicleReview(),passing?null:pendingClassicStory(),passing?null:pendingYiLandEvent(),passing?null:arcTick(),heirTick(),milestone(),parentageReportEvent(),birthSwapClueEvent(),birthSwapSearchReport(),pendingBirthSwapJustice(),pendingKinGreeting(),pendingMaternalKinCare(),pendingMaternalSisterArrival(),pendingDaoVoyage(),pendingTravelerEvent(),pendingOfficialReport(),pendingConcealedLoss(),...(legacyPendingAction()?[]:[pendingIncognitoReport(),passing?null:jingtishiEvent(),passing?null:selectionCouncilEvent()]),passing||typeof pendingHaremStewardEvent!=='function'?null:pendingHaremStewardEvent(),...(familyGardenActive()&&!passing?[familyGardenMonthlyEvent(),familyGardenDisputeEvent()]:[])].filter(Boolean),opt=[];
   if(comingOfAge)must.unshift(comingOfAge);
   if(princeSuccession)must.push(princeSuccession);
+  if(fertilityReview)must.push(fertilityReview);
   if(orphan)must.push(orphan);
   if(fiefDockets)must.push(fiefDockets);
   // 积压的奏折：离宫期间攒下的朝堂事务，月末一并呈上

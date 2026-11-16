@@ -291,6 +291,7 @@ function viewHome(){
    ${pageChapters('home',[
      ['recent','近事',`<ul class="story">${recent.map(l=>`<li class="${l.b?'big':''}"><time>${esc(l.d)}</time>${esc(l.t)}</li>`).join('')||'<li>尚无记载</li>'}</ul>`],
      ['royal-kin','皇亲列表',palaceAdoptionPanel()+royalKinRosterPanel()],
+     ['fertility','太医院会诊',imperialFertilityPanel()],
      ['court','朝堂与外家',courtBlocHTML()],
      ['stewardship','协理六宫',typeof haremStewardPanel==='function'?haremStewardPanel():''],
      ['story-consorts','剧情妃图鉴',storyConsortCodex()],
