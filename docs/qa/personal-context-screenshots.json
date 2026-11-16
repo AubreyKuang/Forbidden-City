@@ -1,0 +1,63 @@
+{
+  "revision": "e1f042a65e454cef0f9415c4d06a64afbf4a4474",
+  "capturedAt": "2026-11-16T01:44:03.780445+00:00",
+  "method": "Remote browser rendering of the real game with disposable public demo saves",
+  "provider": "https://www.thum.io/documentation/api/url",
+  "interactiveAcceptance": false,
+  "captures": [
+    {
+      "scene": "profile",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/personal-context-gallery/profile.html?revision=e1f042a65e454cef0f9415c4d06a64afbf4a4474",
+      "file": "docs/screenshots/personal-context/profile.jpg",
+      "bytes": 256219,
+      "sha256": "acdd8a009a10659b1cf353969c592208d7f037a5a21b0e9e09042cef39d0e071",
+      "visualReview": "passed",
+      "browserAssertions": "passed"
+    },
+    {
+      "scene": "past",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/personal-context-gallery/past.html?revision=e1f042a65e454cef0f9415c4d06a64afbf4a4474",
+      "file": "docs/screenshots/personal-context/past.jpg",
+      "bytes": 129731,
+      "sha256": "3ec15f3f46a2c932a46b2722bf3c353a4897bb9e44b0c825595470c8679694cf",
+      "visualReview": "passed",
+      "browserAssertions": "passed"
+    },
+    {
+      "scene": "prayer",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/personal-context-gallery/prayer.html?revision=e1f042a65e454cef0f9415c4d06a64afbf4a4474",
+      "file": "docs/screenshots/personal-context/prayer.jpg",
+      "bytes": 160475,
+      "sha256": "0527ef6a537328b1d11a6f8ee4eb20962642730c90b6b06cfa44a9816835b697",
+      "visualReview": "passed",
+      "browserAssertions": "passed"
+    },
+    {
+      "scene": "foster",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/personal-context-gallery/foster.html?revision=e1f042a65e454cef0f9415c4d06a64afbf4a4474",
+      "file": "docs/screenshots/personal-context/foster.jpg",
+      "bytes": 164168,
+      "sha256": "dc083bc2eb68f718f2b87bad7d219b4172c4713409375e3a0ea3ff0c47b9ce26",
+      "visualReview": "passed",
+      "browserAssertions": "passed"
+    },
+    {
+      "scene": "succession",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/personal-context-gallery/succession.html?revision=e1f042a65e454cef0f9415c4d06a64afbf4a4474",
+      "file": "docs/screenshots/personal-context/succession.jpg",
+      "bytes": 227537,
+      "sha256": "c9ce95253e9bd1fe5289c3821f089fe183b1e1c42408c7b7ae922b09aa35156a",
+      "visualReview": "passed",
+      "browserAssertions": "passed"
+    },
+    {
+      "scene": "official",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/personal-context-gallery/official.html?revision=e1f042a65e454cef0f9415c4d06a64afbf4a4474",
+      "file": "docs/screenshots/personal-context/official.jpg",
+      "bytes": 246305,
+      "sha256": "e2e7cd614829fd51bba515bde9bb1f432e92e8f3b3df221d8a3f422b3f6d6420",
+      "visualReview": "passed",
+      "browserAssertions": "passed"
+    }
+  ]
+}

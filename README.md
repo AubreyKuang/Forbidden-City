@@ -1411,4 +1411,8 @@ node tests/palace-flow.cjs
 
 新帝生母之父标为外祖父，生母兄弟标为舅父；再传一代时，先帝的舅父改标舅祖，不把所有外戚都称作本朝国舅。太后会记下父兄任职、受赏、受责与离世的消息。旧妃以先朝宫眷身份留在家谱，不进入新帝后宫。已有旧档可从仍存的先朝档案恢复具名家人；未曾记录或已被旧版删去的资料不凭空补造。
 
+| 赵令仪的专属往事与旧事入口 | 传代后仍可查看母家与先朝亲族 |
+| --- | --- |
+| <img src="docs/screenshots/personal-context/profile.jpg" alt="赵令仪旧档往事恢复，人物页新增听河间旧事入口" width="430"> | <img src="docs/screenshots/personal-context/succession.jpg" alt="传代后的太后母家、外祖父与国舅仍保留原官职和人物主页" width="430"> |
+
 详细验证见[人物往事与跨代亲族](docs/qa/personal-context.md)。
