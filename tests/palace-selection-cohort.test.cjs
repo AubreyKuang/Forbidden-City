@@ -30,6 +30,31 @@ test('unfinished selection survives saving and loading, and optional greetings s
     save('1');load('1');assert.equal(byId(ids[0]).entryAdjustment.answer,'reassured');
     assert.match(viewSelectionArrivals(),/已问候/);`);
 });
+test('the major chronicle waits for a single finalized roster with the original admission ranks',()=>{
+ const {run}=setup();
+ run(`var [accepted,dropped,later]=S.cands.map(fullName);UI.logF='big';
+   A.xxTake(ids[0]);choose(curEv.choices.length-1);drain();assert.ok(!viewLog().includes(accepted));
+   take(ids[0]);A.xxDrop(ids[1]);save('auto');A.load('auto');
+   assert.ok(!viewLog().includes(accepted));
+   assert.ok(!S.log.some(e=>e.t.includes('选秀入宫，封')));
+   byId(ids[0]).rank=3;A.xxTake(ids[2]);choose(2);drain();
+   A.xxEnd();A.xxEnd();save('auto');A.load('auto');
+   var rosters=S.log.filter(e=>e.t.startsWith('选秀定榜'));
+   assert.equal(rosters.length,1);assert.equal(rosters[0].b,1);
+   assert.ok(rosters[0].t.includes(accepted+'封答应')&&rosters[0].t.includes(later+'封常在'));
+   assert.ok(!viewLog().includes(dropped));assert.ok(viewLog().includes(rosters[0].t));`);
+});
+test('older admission rows are grouped by their actual closing record, even in the same month',()=>{
+ const {run}=setup();
+ run(`var start='元年正月，开选秀，各地秀女入宫待选。',end='选秀礼毕，留选1人。可到储秀宫查看新妃安顿。';
+   S.log=[];log(start,1);log('李春和（寒门之女）元年正月选秀入宫，封答应。',1);log(end);
+   log(start,1);log('顾秋娘（世家之女）元年正月选秀入宫，封贵人。');log(end);
+   log(start,1);log('沈采薇（农家之女）元年正月选秀入宫，封常在。',1);
+   var saved=JSON.stringify(S.log),rows=selectionChronicle(S.log).filter(e=>e.b);
+   assert.equal(rows.length,2);assert.match(rows[0].t,/李春和封答应/);assert.match(rows[1].t,/顾秋娘封贵人/);
+   assert.ok(!selectionChronicle(S.log).some(e=>e.t.includes('沈采薇')));
+   assert.equal(JSON.stringify(S.log),saved);`);
+});
 test('cohort acquaintance is reciprocal, recorded, bounded, and not rerolled by render or reload',()=>{
   const {run,force}=setup(5);
   run(`ids.forEach(take);for(let i=0;i<ids.length;i++)for(let j=i+1;j<ids.length;j++)S.rel[rk(byId(ids[i]),byId(ids[j]))]=5;`);
@@ -59,6 +84,8 @@ test('month ending finalizes the batch even with no remaining candidates and lea
   const {run}=setup(1);
   run(`take(ids[0]);assert.equal(S.cands.length,0);A.endMonth();drain();
     assert.equal(S.selection.phase,'arrivals');assert.equal(byId(ids[0]).entryAdjustment.pendingBatch,false);
+    var rosters=S.log.filter(e=>e.t.startsWith('选秀定榜'));
+    assert.equal(rosters.length,1);assert.ok(rosters[0].t.includes(fullName(byId(ids[0]))+'封答应'));
     assert.match(viewXX(),/新妃安顿/);assert.ok(byId(ids[0]).story.some(s=>s.t.includes('【选秀礼毕】')));`);
 });
 test('separate batches in the same month stay distinct and rejected-only selections close cleanly',()=>{

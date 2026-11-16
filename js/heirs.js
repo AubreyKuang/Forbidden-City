@@ -52,8 +52,69 @@ A.kidHeir=function(id){const k=kidById(id);if(!k?.alive||k.removedFromRoyal||k.t
       const m=byId(k.mom);if(m&&m.alive){cchg(m,{mood:25,aff:10});story(m,`其子${k.name}被立为太子。`)}
       harem().forEach(o=>{if(o.id!==k.mom&&o.scheme>60)o.mood=clamp(o.mood-12)});AU.sfx('gong');
       return `东宫大典，百官朝贺。${fx(s)}`}},{t:'再想想'}]})};
-A.kidTitle=function(id){const k=kidById(id);if(!k?.alive||immortalAway(k))return;pushEv({title:k.sex==='m'?'封王':'公主封号',por:k,text:k.sex==='m'?'请拟王号（一至二字）：':'请为公主拟封号（二字）：',input:{def:k.sex==='m'?pick(['睿','恭','诚','和','裕','庆','端','宁'])+'亲王':pick(['昭阳','长乐','永安','和静','宁华','嘉柔']),max:4},
+A.kidTitle=function(id){const k=kidById(id);if(!k?.alive||immortalAway(k))return;if(journalContentVersion()>=40){pushEv(royalChildTitleEvent(k));return;}pushEv({title:k.sex==='m'?'封王':'公主封号',por:k,text:k.sex==='m'?'请拟王号（一至二字）：':'请为公主拟封号（二字）：',input:{def:k.sex==='m'?pick(['睿','恭','诚','和','裕','庆','端','宁'])+'亲王':pick(['昭阳','长乐','永安','和静','宁华','嘉柔']),max:4},
   choices:[{t:'赐封',f:v=>{k.title=v+(k.sex==='f'&&!v.endsWith('公主')?'公主':'');if(k.sex==='m'&&kidAge(k)>=16)openPrinceEstate(k);kstory(k,`受封为${k.title}。`);log(`封${k.name}为${k.title}。`);return `${k.name}叩谢父皇恩典，自此称${k.title}。`}},{t:'作罢'}]})};
+function royalChildTitleReady(k){
+  return k?.alive&&!k.pendingName&&!k.removedFromRoyal&&!k.templeStay&&!k.jailed&&!immortalAway(k);
+}
+function royalChildTitleEvent(k){
+  if(!royalChildTitleReady(k))return null;
+  const gen=S.gen,prince=k.sex==='m',young=kidAge(k)<16,suffix=prince?'亲王':'公主';
+  const valid=()=>S.gen===gen&&royalChildTitleReady(k);
+  const suggested=k.title?.endsWith(suffix)?k.title:pick(prince?['睿','恭','诚','和','裕','庆','端','宁']:['昭阳','长乐','永安','和静','宁华','嘉柔']);
+  return {title:prince?(young?'皇子赐封号':'封王'):'公主赐封号',por:k,valid,
+    text:`请为${k.name}拟一至二字的封号。${young?'礼成后仍照原来的安排起居、读书。':''}`,
+    input:{def:suggested,max:4},choices:[{t:'赐封',f:value=>{
+      if(!valid())return null;
+      const title=(value.endsWith(suffix)?value.slice(0,-suffix.length):value).trim();
+      if(!title||title.length>2)return '请另拟一至二字的封号。';
+      const previous=k.title;
+      if(previous===title+suffix)return `${k.name}已受封为${previous}。`;
+      k.title=title+suffix;
+      if(prince&&!young)openPrinceEstate(k);
+      if(!previous)k.love=clamp(k.love+6);
+      recordRoyalChildTitle(k,previous);
+      return `礼部按旨记下封号，自此称${k.title}。${previous?'':'\n§父爱+6'}`;
+    }},{t:'作罢'}]};
+}
+function royalTitleMaternalFamily(home,house,mother,k){
+  if(!house)return [];
+  const roots=familyUpbringing(home);
+  const modest=['humble','farm'].includes(roots.group)||roots.means==='modest';
+  const prominent=roots.means==='ample'||roots.power>=55;
+  const grandchild=k.sex==='m'?'外孙':'外孙女',nephew=k.sex==='m'?'外甥':'外甥女';
+  const father=modest?`得知${grandchild}有了封号，他很替女儿高兴。把喜信收好后，又去盘算下一季的生计，只盼家中能靠自己的手站稳，少让她在宫里牵挂。`:
+    prominent?`他把${grandchild}受封的消息读了两遍。女儿在宫里有喜事，他也想把娘家的事情料理稳妥，好让她受了委屈时还有家人可依靠。`:
+      `他在家中记下${grandchild}的封号，提笔给女儿贺喜，也问她近日过得可安稳。`;
+  const motherBorn=mother.sex?mother.born:house.natal?.memberBorn?.[mother.id]??S.turn-mother.age*12;
+  const siblings=[...brotherRoles(house).map(role=>[house[role],'妹妹']),...natalPeople(house)
+    .filter(p=>p.sex==='m'&&!p.parentRelativeId&&!p.motherRelativeId).map(p=>[p,p.born>=motherBorn?'姐姐':'妹妹'])];
+  return [[house.father,father],...siblings.map(([p,sister])=>[p,
+    modest?(sister==='姐姐'?`听了${nephew}受封的喜讯，他把未读完的书又翻开。盼自己发奋读书，多学些本事，往后也能替姐姐分担家里的事，少叫她牵挂。`:
+      `他为${nephew}受封高兴，又想到该把眼前的差事和生计做实，少叫妹妹为娘家分心。`):
+      prominent?`他为${nephew}欢喜，也把${sister}这些年的处境想了一遍。家中该有能料理事的人，她若受了委屈，才有地方把话说出来。`:
+        `他抄下${nephew}的新封号，备一封贺信托人转交，末尾又问了${sister}的近况。`])];
+}
+function recordRoyalChildTitle(k,previous){
+  const origin=k.outsideFamilyOrigin,host=origin&&familyHostById(origin.host);
+  const mother=byId(k.mom)||(host&&natalEntry(host.id,k.mom)?.p);
+  const home=mother&&(mother.sex?host:mother),house=home&&houseOf(home);
+  const title=previous?'改赐封号':'皇嗣受封',news=previous?`${k.name}由「${previous}」改封为「${k.title}」。`:`陛下亲自为${k.name}择定封号「${k.title}」。`;
+  const entries=[
+    [k,kidAge(k)<3?'礼部将封号和受封日期一同载入名册。':'听礼官念出自己的封号，记得那是父皇亲自选的字。'],
+    [mother,previous?'她把更改的日期写进家书，也把旧日的称呼留在记事里。':'她把赐号的诏书读了又读，欢喜之余，想起孩子初取名时的情形。'],
+    ...royalTitleMaternalFamily(home,house,mother,k)
+  ].filter(([p],index,all)=>p&&p.alive!==false&&all.findIndex(([person])=>person?.id===p.id)===index);
+  const people=entries.map(([p])=>({id:p.id,name:p.name||fullName(p)}));
+  const thread=`royal-title:${S.gen}:${k.id}:${S.turn}:${k.title}`;
+  for(const [person,reaction] of entries){
+    person.story||=[];
+    story(person,`【${title}】${news}${reaction}`);
+    Object.assign(person.story.at(-1),{thread,life:{kind:'family',title,turn:S.turn,gen:S.gen,people,source:'礼部封号记录'}});
+  }
+  if(!previous&&mother&&mother.alive!==false)mother.mood=clamp((mother.mood??65)+6);
+  log(`【${title}】${news}`,1);
+}
 
 /* ============ 皇嗣事件 ============ */
 function kcd(k,t,n=24){k.cd=k.cd||{};if(S.turn-(k.cd[t]===undefined?-99:k.cd[t])<n)return false;k.cd[t]=S.turn;return true}
@@ -82,8 +143,8 @@ function milestone(){
   for(const k of kidsAlive()){if(k.templeStay||immortalAway(k))continue;const a=kidAge(k);
     if(k.sex==='f'){const event=princessMilestone(k);if(event)return event;}
     if(k.sex==='m'&&a>=16&&!k.adult){k.adult=true;if(S.heir===k.id)continue;return {title:'皇子成年',por:k,valid:()=>k.alive&&!immortalAway(k)&&!k.templeStay&&!k.jailed,text:`${kidName(k)}年满十六，按祖制当封王开府。`,choices:[
-      {t:'封亲王，留京辅政',f:()=>{if(!k.alive||immortalAway(k))return null;openPrinceEstate(k);A.kidTitle(k.id);k.amb=clamp(k.amb+10);return null}},
-      {t:'封王，就藩地方',f:()=>{if(!k.alive||immortalAway(k))return null;k.away=true;k.title=pick(['晋','楚','燕','蜀','吴','齐'])+'王';k.amb=clamp(k.amb-10);kstory(k,`受封${k.title}，就藩地方。`);log(`封${k.name}为${k.title}，就藩。`);return `${k.name}辞别父皇，前往封地。`}}]}}
+      {t:'封亲王，留京辅政',f:()=>{if(!k.alive||immortalAway(k))return null;openPrinceEstate(k);const keepTitle=journalContentVersion()>=40&&k.title?.endsWith('亲王');if(!keepTitle)A.kidTitle(k.id);k.amb=clamp(k.amb+10);return keepTitle?`${k.name}沿用「${k.title}」封号，留京开府。`:null}},
+      {t:'封王，就藩地方',f:()=>{if(!k.alive||immortalAway(k))return null;k.away=true;if(journalContentVersion()<40||!k.title?.endsWith('亲王'))k.title=pick(['晋','楚','燕','蜀','吴','齐'])+'王';k.amb=clamp(k.amb-10);kstory(k,`受封${k.title}，就藩地方。`);log(`封${k.name}为${k.title}，就藩。`);return `${k.name}辞别父皇，前往封地。`}}]}}
   }
   return null;
 }

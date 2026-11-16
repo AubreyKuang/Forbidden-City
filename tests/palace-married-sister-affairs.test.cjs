@@ -13,6 +13,17 @@ function askToEnter(w){
     A.marriedSisterVisit(hostId,wifeId);choose(0);nextEv();assert.equal(curEv.title,'她问能否留下');`);
 }
 
+test('an adult marked married in the old household can open the visible private visit before the spouse is filled in',()=>{
+ const w=base();w.ctx.assert=assert;
+ w.run(`sister.married=true;sister.willing=true;sister.visit={host:other.id,from:S.turn,until:S.turn+2};
+   UI.sel=other.id+':'+sister.id;var panel=viewNatalRelative();
+   assert.ok(panel.includes('<h3>私下求见</h3>'));assert.match(panel,/在宫中私下求见/);assert.equal(sister.spouse,undefined);
+   PalaceActions.reset();A.marriedSisterVisit(other.id,sister.id);
+   assert.match(curEv.title,/私下求见/);assert.match(curEv.text,/偏厅/);assert.equal(sister.spouse.id,'spouse:'+sister.id);`);
+ const reloaded=boot(17,w.storage);reloaded.ctx.assert=assert;
+ reloaded.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.match(curEv.title,/私下求见/);`);
+});
+
 test('an adult married sister can be approached at home or through her palace visit',()=>{
   const w=world();w.run(`assert.match(marriedSisterVisitButton(other,sister),/到她的住所求见/);var energy=E().energy;Math.random=()=>0;A.marriedSisterVisit(hostId,wifeId);assert.match(curEv.text,/平日所住/);assert.match(curEv.text,/吃了一惊/);choose(1);assert.equal(E().energy,energy);
     sister.visit={host:hostId,from:S.turn,until:S.turn+2};assert.match(marriedSisterVisitButton(other,sister),/在宫中私下求见/);A.natalMeet(hostId,wifeId);option('请她到偏厅');assert.match(curEv.text,new RegExp(other.palace));Math.random=()=>.99;choose(0);drain();assert.equal(sister.marriedSisterAffair.meetings,1);assert.equal(E().energy,energy-1);assert.match(marriedSisterVisitButton(other,sister),/disabled/);S.turn++;sister.born=S.turn-17*12;assert.equal(marriedSisterVisitButton(other,sister),'');`);

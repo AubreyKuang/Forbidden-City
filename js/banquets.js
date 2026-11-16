@@ -130,6 +130,7 @@ function viewBanquet() {
     ${draft.kind==='empress'?`<p class="hint">寿星皇后 · ${esc(banquetGuestFamily(feast.host,children))}</p>`:''}
     <div class="acts"><button class="btn ${draft.all?'on':''}" aria-pressed="${draft.all}" onclick="A.banquetInviteAll(true)">全员宴请</button>
     <button class="btn ${!draft.all?'on':''}" aria-pressed="${!draft.all}" onclick="A.banquetInviteAll(false)">自选宾客</button></div>
+    ${draft.kind==='garden'&&people.length?banquetSeating(draft.all?banquetTables(people):[people]):''}
     ${draft.all
       ? `<p class="hint">全邀在宫的妃嫔、宫人与皇嗣，共 ${people.length} 位，其中${banquetChildCount(people.filter(p=>p.sex))}。按家人分桌，幼童可观礼。</p>`
       : `<h3>座次</h3><p class="hint">自选至多四位宾客。相邻两人同玩一轮。${draft.kind==='empress'?'皇后为寿星，自动入席。':''}</p>
@@ -169,6 +170,19 @@ function banquetTables(people) {
   return tables;
 }
 
+function banquetSeating(tables) {
+  return `<div class="garden-table-layout" aria-label="宴席座次">${tables.map((people,index)=>`
+    <section class="garden-table" aria-label="第 ${index+1} 桌">
+      <div class="garden-table-heading">${tables.length>1?`<strong>第 ${index+1} 桌</strong>`:''}
+        ${index===0?`<div class="garden-table-host">${porImg('emp',42)}<span>主位 · 陛下</span></div>`:''}</div>
+      <div class="garden-table-top" aria-hidden="true"><span></span><span></span><span></span></div>
+      <ol class="garden-table-seats" role="list" aria-label="宾客席次">${people.map((p,i)=>
+        `<li class="garden-table-seat" data-seat-person="${p.id}">
+          ${porImg(p,48)}<span><small>第 ${i+1} 席</small><strong>${esc(familyName(p))}</strong></span>
+        </li>`).join('')}</ol>
+    </section>`).join('')}</div>`;
+}
+
 function banquetTalent(p, toss) {
   if (p.sex) return toss ? p.mar : p.lit;
   if (toss) return p.trait === '将门' || p.t2 === '擅骑射' ? 80 : 35;
@@ -183,7 +197,7 @@ A.holdBanquet = function() {
   if (problem) {toast(problem);return}
   const activity=GARDEN_ACTIVITIES[draft.activity];
   const tables=draft.all?banquetTables(people):[people];
-  pushEv({ title:`${feast.title} · ${activity.label}`, cast:people.slice(0,4),
+  pushEv({ title:`${feast.title} · ${activity.label}`, cast:people.slice(0,4), gardenTables:draft.kind==='garden'?tables:null,
     text:`${people.length} 位宾客入席，分 ${tables.length} 桌。\n${activity.prompt}`,
     choices:[...activity.moves.map((move,i)=>({t:move.label, primary:i===0, f:()=>{
       playBanquet(draft,feast,people,tables,move);
@@ -252,7 +266,7 @@ function playBanquet(draft,feast,people,tables,move) {
   arrive(gardenPlace());
   const demand=proudBanquetGuest(people);
   if (demand) pushNow(proudDemandEvent(demand,people));
-  pushNow({title:`${feast.title} · ${label}`, cast:people.slice(0,4),
+  pushNow({title:`${feast.title} · ${label}`, cast:people.slice(0,4), gardenTables:draft.kind==='garden'?tables:null,
     text:`§${result}${promise}\n${lines.slice(0,6).join('\n')}`, choices:[ok1]});
 }
 

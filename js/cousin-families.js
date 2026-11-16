@@ -1,16 +1,18 @@
 /* Recorded cousins share a clan, not a father. Keep both paternal households. */
-const cousinFamiliesActive=()=>!!S&&journalContentVersion()>=40;
+const cousinFamiliesActive=()=>!!S&&journalContentVersion()>=42;
 function reconcileCousinFamilies(extra=[]){
  if(!cousinFamiliesActive())return;
  const people=[...new Map([...familyOriginPeople(),...extra].filter(c=>c&&!c.maid).map(c=>[c.id,c])).values()],by=new Map(people.map(c=>[String(c.id),c]));
- const groups=[],seen=new Set();
+ const groups=[],seen=new Set(),neighbors=new Map(people.map(c=>[c.id,new Set()]));
+ for(const c of people)for(const [id,kind] of Object.entries(c.kin||{})){
+  const other=by.get(id);if(!other||other===c||other.sur!==c.sur||!/^[亲堂][姐妹]$/.test(kind))continue;
+  neighbors.get(c.id).add(other);neighbors.get(other.id).add(c);
+ }
  for(const c of people){
-  if(seen.has(c.id))continue;
+  if(seen.has(c.id)||!neighbors.get(c.id).size)continue;
   const group=[c];seen.add(c.id);
-  for(let n=0;n<group.length;n++)for(const other of people){
-   if(seen.has(other.id)||other.sur!==group[n].sur)continue;
-   if(![group[n].kin?.[other.id],other.kin?.[group[n].id]].some(k=>/^[亲堂][姐妹]$/.test(k||'')))continue;
-   group.push(other);seen.add(other.id);
+  for(let n=0;n<group.length;n++)for(const other of neighbors.get(group[n].id)){
+   if(seen.has(other.id))continue;group.push(other);seen.add(other.id);
   }
   if(group.length>1)groups.push(group);
  }

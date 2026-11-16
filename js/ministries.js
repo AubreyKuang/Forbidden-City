@@ -49,7 +49,7 @@ const MINISTRIES={
 };
 const MINISTRY_GAP=12;
 function initializeMinistryRoster(){
-  if(journalContentVersion()<40||S.ministries?.foundingRoster)return;
+  if(journalContentVersion()<42||S.ministries?.foundingRoster)return;
   const st=ministryState();st.foundingRoster=true;S.scholars ||= [];
   for(const [id,m] of Object.entries(MINISTRIES)){
     const incumbent=ministryHead(id);

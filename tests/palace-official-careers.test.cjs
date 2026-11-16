@@ -38,6 +38,22 @@ test('mother family distress and joy enter both known people and survive pending
  b=reload(b);b.run(`var c=S.consorts.find(c=>c.given==='知微'),p=houseOf(c).father;assert.equal(p.story.filter(s=>s.t.includes('被迁入冷宫')).length,1);assert.match(officialConversation(officialEntry(c.id+':father'),'family'),/有衣御寒|依例照料起居/);drain();A.uncold(c.id);assert.ok(p.story.some(s=>s.t.includes('获准离开冷宫')));`);
 });
 test('pregnancy and birth are different news; favor and demotion are not generic congratulations',()=>{const b=world();b.run(`var old=JSON.parse(JSON.stringify(S));c.preg=3;courtFamilyLifeTick(old);assert.equal(p.palaceConcern.kind,'pregnancy');old=JSON.parse(JSON.stringify(S));var k=makeKid(c,'f','清和');courtFamilyLifeTick(old);assert.equal(p.palaceConcern.kind,'birth');old=JSON.parse(JSON.stringify(S));c.rank=2;courtFamilyLifeTick(old);assert.equal(p.palaceConcern.kind,'demoted');old=JSON.parse(JSON.stringify(S));c.favor=80;courtFamilyLifeTick(old);assert.equal(p.palaceConcern.kind,'favored');`);});
+test('sisters at home and in the palace keep their own reactions to promotion and cold-palace news',()=>{
+ const b=world();
+ b.run(`var home=houseOf(c),sister=addNatalPerson(c,home,'f',22,821,false);
+   var niece=addNatalPerson(c,home,'f',13,3255,false);niece.parentRelativeId=sister.id;
+   var other=makeGirl({sur:c.sur,given:'清婉',age:23,fam:c.fam});other.fatherId=c.fatherId;addConsort(other,2,'入宫');
+   c.upbringing={title:'吏部尚书',group:'noble',power:78,means:'ample'};
+   relAdd(c,sister,70-relGet(c,sister));relAdd(c,other,-10-relGet(c,other));
+   var old=JSON.parse(JSON.stringify(S));c.rank=5;courtFamilyLifeTick(old);courtFamilyLifeTick(old);
+   assert.match(p.palaceConcern.quote,/娘家可以依仗/);
+   assert.match(sister.palaceConcern.quote,/真替她欢喜/);assert.match(other.palaceConcern.quote,/新位分有新规矩/);
+   assert.equal(niece.palaceConcern,undefined);assert.equal(sister.story.filter(e=>e.life?.title==='宫中牵挂').length,1);
+   old=JSON.parse(JSON.stringify(S));c.cold=true;courtFamilyLifeTick(old);
+   assert.equal(sister.palaceConcern.kind,'cold');assert.match(sisterPalaceConcernPanel(sister),/御寒/);
+   assert.equal(sister.story.filter(e=>e.life?.title==='宫中牵挂').length,2);
+   old=JSON.parse(JSON.stringify(S));c.cold=false;courtFamilyLifeTick(old);assert.equal(sister.palaceConcern.kind,'released');`);
+});
 test('brother envy uses a real capable elder brother and never invents a sibling',()=>{const b=world();b.run(`for(const role of brotherRoles(h))delete h[role];h.relatives=[];
  var other=makeGirl({sur:'许',given:'清容',age:25,fam:{t:'吏部尚书',p:70}});addConsort(other,3,'入宫');var oh=houseOf(other);oh.brother={name:'许长风',age:30,post:'知府',career:'official',alive:true,merit:60,ability:80};houseOf(other);
  var ctx=brotherSupportContext(c);assert.equal(ctx.p.name,'许长风');assert.match(brotherSupportLine(c,ctx),/自幼没有兄长/);A.brotherSupport(c.id);choose(0);assert.ok(c.story.some(s=>s.t.includes('杨国忠')));drain();assert.equal(brotherSupportContext(c),null);
@@ -51,7 +67,7 @@ for(const f of require('./fixtures/careers-legacy-v14.json').cases)test('real v1
  let b=boot(711,new Map([['chengongji_v1_auto',JSON.stringify(f.save)]]));b.ctx.assert=assert;
  b.run("A.load('auto');assert.equal(PalaceActions.blocked,false);");assert.equal(b.run('curEv.title'),f.save.pendingActions.pending.title);
  b.run('if(modalResult)nextEv();else choose(curEv.choices.findIndex(c=>!c.cond||c.cond()));');b=reload(b);
- b.run('drain();assert.equal(PalaceActions.contentVersion,40);');
+ b.run('drain();assert.equal(PalaceActions.contentVersion,42);');
 });
 
 test('a military household student is not a general; civil appointment determines his actual duties',()=>{const b=world();b.run(`

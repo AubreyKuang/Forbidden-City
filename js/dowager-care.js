@@ -1,5 +1,5 @@
 /* Private dates make the last years a continuous story; dialogue never predicts a death date. */
-const dowagerCareActive=()=>!!S&&journalContentVersion()>=40;
+const dowagerCareActive=()=>!!S&&journalContentVersion()>=42;
 const OPENING_QUEEN_KIN_CHANCE=.25;
 function initializeDowagerOpening(){
  if(!dowagerCareActive()||S.flags.openingQueenKinChecked)return;

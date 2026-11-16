@@ -410,6 +410,38 @@ test('banquet controls expose the selected mode and activity and accept only one
     A.banquetInviteAll(false);assert.match(viewBanquet(),/已选：自选宾客/);A.banquetInviteAll(true);
     A.holdBanquet();choose(0);drain();assert.equal(queen.birthFeastYear,S.year);assert.equal(banquetKind('empress').ready,false);`);
 });
+test('small banquet portraits follow the real table grouping and manual seat order',()=>{
+  const {run}=boot();
+  run(`var [mother,guest]=harem(),child=makeKid(mother,'f','明昭');child.born=S.turn-72;
+    A.openBanquet();A.banquetGuest(mother.id);A.banquetGuest(guest.id);A.banquetGuest(child.id);
+    A.banquetMove(2,-1);
+    var seats=html=>[...html.matchAll(/data-seat-person="(-?\\d+)"/g)].map(m=>+m[1]);
+    assert.deepEqual(seats(viewBanquet()),[mother.id,child.id,guest.id]);
+    assert.match(viewBanquet(),/garden-table-top/);
+    A.holdBanquet();assert.deepEqual(seats($('#mbox').innerHTML),[mother.id,child.id,guest.id]);choose(3);drain();
+    A.banquetInviteAll(true);assert.deepEqual(seats(viewBanquet()),banquetTables(banquetGuests(true)).flat().map(p=>p.id));`);
+});
+test('young royal children can receive a title with distinct family records and keep it at adulthood',()=>{
+  const {run}=boot();
+  run(`var [mother,other]=harem();
+    mother.upbringing={title:'内阁首辅',group:'noble',power:90,means:'ample'};
+    other.upbringing={title:'寒门',group:'humble',power:5,means:'limited'};
+    var h=houseOf(mother),modest=houseOf(other);
+    h.brother={id:'royal-title-uncle',name:'沈长年',alive:true,story:[]};
+    var junior=addNatalPerson(other,modest,'m',12,82,false);
+    var k=makeKid(mother,'m','承安'),g=makeKid(other,'f','昭宁');
+    k.born=S.turn-72;g.born=S.turn-24;delete k.pendingName;delete g.pendingName;
+    UI.sel=k.id;assert.match(viewKid(),/赐封号/);UI.sel=g.id;assert.match(viewKid(),/赐封号/);
+    PalaceActions.reset();A.kidTitle(k.id);assert.equal(curEv.title,'皇子赐封号');choose(0,'安');drain();
+    assert.equal(k.title,'安亲王');assert.equal(k.princeEstate,undefined);assert.equal(k.love,56);
+    assert.match(k.story.at(-1).t,/亲自/);assert.match(mother.story.at(-1).t,/欢喜/);
+    assert.match(h.father.story.at(-1).t,/依靠/);assert.match(h.brother.story.at(-1).t,/委屈/);
+    A.kidTitle(k.id);choose(0,'安亲王');drain();assert.equal(k.love,56);
+    assert.equal(k.story.filter(s=>s.life?.title==='皇嗣受封').length,1);
+    A.kidTitle(g.id);choose(0,'永宁公主');drain();assert.equal(g.title,'永宁公主');assert.match(modest.father.story.at(-1).t,/外孙女.*牵挂/);assert.match(junior.story.at(-1).t,/外甥女.*发奋读书/);
+    S.turn=k.born+16*12;pushEv(milestone());assert.equal(curEv.title,'皇子成年');choose(0);drain();
+    assert.ok(k.princeEstate);assert.equal(k.title,'安亲王');`);
+});
 
 test('father and brother merit can promote or reward the right consort with rank and treasury guards',()=>{
   const {run}=boot();

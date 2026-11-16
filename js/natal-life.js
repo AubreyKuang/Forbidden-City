@@ -6,16 +6,20 @@ function natalLifeRecord(c,people,title,text,thoughts=[]){
  livedRecord(cast,'family',title,natalLifeThread(people[0]),text,cast.map(p=>thoughts[people.indexOf(p)]||
   (people.includes(p)?'家中的日子也有自己的打算。':relGet(c,people[0])<0?'虽未亲厚，仍留意家中消息。':'隔着宫门，仍想知道家人过得怎样。')));
 }
+function initialNatalSpouse(p,age){
+ const sur=SUR[(p.seed>>>3)%SUR.length];
+ return {id:`spouse:${p.id}`,sur,name:sur+BROTHER_NAMES[p.seed%BROTHER_NAMES.length],born:S.turn-(age+1)*12,alive:true};
+}
 function natalLifeTick(){
  const seen=new Set();for(const c of S.consorts){const h=houseOf(c);if(!h||seen.has(h)||!c.alive||c.gone)continue;seen.add(h);
   for(const p of natalPeople(h).slice()){
    if(!p.alive||p.exiled||p.visit||p.consortId)continue;const age=natalAge(p),life=p.lifeCourse||=( {} );
-   if(p.married&&!p.spouse&&age>=18){const sur=SUR[(p.seed>>>3)%SUR.length];p.spouse={id:`spouse:${p.id}`,sur,name:sur+BROTHER_NAMES[p.seed%BROTHER_NAMES.length],born:S.turn-(age+1)*12,alive:true};}
+   if(p.married&&!p.spouse&&age>=18)p.spouse=initialNatalSpouse(p,age);
    if(age>=18&&!life.adult){life.adult=S.turn;natalLifeRecord(c,[p],'家中也有前程',`${p.name}已到成年，家书里说起自己的打算：${p.sex==='m'?'先把学业与生计安排踏实；有功名也须依程序候选，并非自然有官可做':'想有自己擅长的事情，也愿按自己的心意考虑婚事'}。`);}
    if(age<18||S.turn-(life.last??life.adult??S.turn)<24||life.year===S.year)continue;life.year=S.year;
    if(!chance(.16))continue;
    if(p.sex==='f'&&(!careersActive()||!p.widow)&&!p.married&&!p.betrothal&&age>=20&&age<=40&&p.seed%3!==0){
-    const sur=SUR[(p.seed>>>3)%SUR.length];p.spouse={id:`spouse:${p.id}`,sur,name:sur+BROTHER_NAMES[p.seed%BROTHER_NAMES.length],born:S.turn-(age+1)*12,alive:true};p.married=true;life.last=S.turn;
+    p.spouse=initialNatalSpouse(p,age);p.married=true;life.last=S.turn;
     natalLifeRecord(c,[p],'手足成家',`${p.name}与${p.spouse.name}相识相知，双方亲自点头后成婚。她托家书报来喜讯，也说婚后仍要留时间做自己喜欢的事。`,['姻缘是自己的日子，不是为了给宫中的亲人分宠。']);
    }else if(p.married&&(!careersActive()||!p.widow&&p.spouse?.alive!==false&&(!p.spouse?.personId||officialAlive(careerPeopleForMarriage(p.spouse.personId)?.p)))&&p.sex==='f'&&age>=21&&age<=38&&(life.children||0)<2&&S.turn-(life.lastBirth??life.adult)>=24){
     if(careersActive()){beginNatalPregnancy(c,p);continue;}
