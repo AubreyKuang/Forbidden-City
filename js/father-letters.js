@@ -2,7 +2,7 @@
 const fatherLettersActive=()=>journalContentVersion()>=33;
 function fatherLetterPerson(c){return c?.house?.father||null;}
 function queenOfficialHouse(c){
- if(journalContentVersion()<37||c?.rank!==8)return false;
+ if(journalContentVersion()<38||c?.rank!==8)return false;
  const roots=familyUpbringing(c);
  return !!(officialGrade({office:roots.title})||/官宦/.test(roots.title)||roots.group==='noble'&&officialGrade(fatherLetterPerson(c)));
 }
