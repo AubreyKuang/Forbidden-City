@@ -176,11 +176,11 @@ const ROYAL_GROWTH_SETS={f:[380,383,392,395],m:[386,389]};
 const DESCENDANT_VARIANTS=29+ROYAL_GROWTH_SETS.m.length;
 const EXISTING_PRINCE_VARIANTS=4;
 const EXTRA_PRINCE_VARIANTS=LEGACY_DESCENDANT_VARIANTS-EXISTING_PRINCE_VARIANTS;
-const BEAUTY_PORTRAIT_START=92, YOUNG_ROYAL_PORTRAIT_START=136, PORTRAIT_COUNT=435;
+const BEAUTY_PORTRAIT_START=92, YOUNG_ROYAL_PORTRAIT_START=136, PORTRAIT_COUNT=441;
 // Reserved story art never enters the random consort pools. Stable zero-based IDs.
 const STORY_CONSORT_PORTRAITS=Object.freeze({gouyi:422});
 // Dedicated story characters are bound with portraitOverride, outside random pools.
-const STORY_NPC_PORTRAITS=Object.freeze({capitalNoble:433});
+const STORY_NPC_PORTRAITS=Object.freeze({capitalNoble:433,shangguanLantai:435,gaoHuaibi:436,jiShuye:437,xueHongjian:438,sunYunxiu:439,liuZhaoshuang:440});
 const PRINCESS_VARIANTS=33+ROYAL_GROWTH_SETS.f.length;
 const EXPANDED_ROYAL_START=294;
 const EMPEROR_PORTRAITS=[12,13,312,313,314,315];
@@ -212,7 +212,8 @@ const portraitSheets=[
   {start:423,rows:2,scale:4,src:'./assets/images/palace-jinyiwei.webp?v=1',image:document.createElement('img')},
   {start:429,rows:1,scale:4,src:'./assets/images/palace-officials-selected.webp?v=1',image:document.createElement('img')},
   {start:433,rows:1,scale:4,src:'./assets/images/palace-capital-noble.webp?v=1',image:document.createElement('img')},
-  {start:434,rows:1,scale:4,src:'./assets/images/palace-brother-jade-white.webp?v=1',image:document.createElement('img')}
+  {start:434,rows:1,scale:4,src:'./assets/images/palace-brother-jade-white.webp?v=1',image:document.createElement('img')},
+  {start:435,rows:2,scale:4,src:'./assets/images/palace-fenghua-people.webp?v=1',image:document.createElement('img')}
 ];
 const portraitSheet=cell=>portraitSheets.slice().reverse().find(sheet=>cell>=sheet.start)||portraitSheets[0];
 function ensurePortraitSheet(cell){const sheet=portraitSheet(cell);if(!sheet.image.src)sheet.image.src=sheet.src;}
@@ -288,7 +289,7 @@ function ordinaryOfficialPortrait(person){
 // One pool for court officers and consorts' relatives. Identity is assigned once,
 // using local seeded randomness so adding artwork never shifts gameplay rolls.
 function assignCourtOfficialPortrait(person,bloc,{mature=person.age>=40,house={},peers=[],brother=false}={}){
-  if(person.storyPerson==='xiean')return;
+  if(person.storyPerson==='xiean'||STORY_NPC_PORTRAITS[person.fenghuaKey]!==undefined)return;
   if(person.jinyiwei&&dedicatedJinyiweiPortraitsActive())return assignJinyiweiPortrait(person);
   if(ALL_OFFICIAL_PORTRAITS.includes(person.artPortrait)&&!(journalContentVersion()>=19&&!person.jinyiwei&&JINYIWEI_PORTRAITS.includes(person.artPortrait)))return;
   const basePool=OFFICIAL_PORTRAITS[bloc==='army'?'army':'civil'][mature?'mature':'young'];
@@ -408,6 +409,8 @@ function portraitCell(x){
   if(Number.isInteger(override)&&override>=0&&override<PORTRAIT_COUNT&&!(journalContentVersion()>=19&&!x.jinyiwei&&JINYIWEI_PORTRAITS.includes(override)))return override;
   if(x==='emp')return emperorPortraitCell(E());
   if(x.storyPerson==='xiean'||x.personId&&S?.scholars?.some(p=>p.id===x.personId&&p.storyPerson==='xiean'))return STORY_NPC_PORTRAITS.capitalNoble;
+  const fixedStoryFace=STORY_NPC_PORTRAITS[x.fenghuaKey]??(x.personId?STORY_NPC_PORTRAITS[S?.scholars?.find(p=>p.id===x.personId)?.fenghuaKey]:undefined);
+  if(fixedStoryFace!==undefined)return fixedStoryFace;
   if(x.jinyiwei)return jinyiweiPortraitCell(x);
   if(x.official!==undefined)return journalContentVersion()>=19&&JINYIWEI_PORTRAITS.includes(x.artPortrait)?ordinaryOfficialPortrait(x):ALL_OFFICIAL_PORTRAITS.includes(x.artPortrait)?x.artPortrait:FAMILY_PORTRAIT_START+12+x.official;
   if(x.isMom)return 9;
@@ -426,6 +429,7 @@ function portraitJewelry(rank,id){return JEWELRY[id]|| (rank===8?JEWELRY.phoenix
 const PORTRAIT_HEADS={
   433:[61,26,26],
   434:[62,26,26],
+  435:[55,40,25],436:[64,40,25],437:[61,42,25],438:[55,44,25],439:[62,48,26],440:[65,41,24],
   422:[51,38,27],
   248:[47,39,34],249:[59,40,34],250:[65,39,32],251:[66,38,32],252:[60,39,34],253:[54,39,34],254:[59,38,34],255:[59,39,34],
   256:[57,28,23],257:[50,31,27],258:[60,31,27],259:[56,31,27],260:[62,29,27],261:[65,30,25],262:[58,30,27],263:[59,31,27],264:[56,28,25],265:[60,28,26],266:[61,27,26],267:[50,29,27],
