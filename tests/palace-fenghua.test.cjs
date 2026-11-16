@@ -132,3 +132,9 @@ test('Jinyiwei receives a pending clue only while a serving commander exists',()
  let b=game();b.run(`A.establishJinyiwei();choose(0);drain();var p=createFenghuaPerson('liuZhaoshuang');A.fenghuaVisit('liuZhaoshuang');choose(1);save('auto');`);b=reload(b);
  b.run(`assert.match(S.jinyiwei.commander.story.at(-1).t,/可核实线索/);assert.ok(!(S.palaceCases||[]).some(x=>x.culprit==='liuZhaoshuang'));drain();var p=fenghuaPerson('liuZhaoshuang');p.fenghua.stage=0;S.jinyiwei.commander.dismissed=true;assert.equal(fenghuaStoryEvent(p).choices[1].cond(),false);`);
 });
+
+for(const [scene,fixture] of Object.entries(require('./fixtures/fenghua-legacy-v22.json')))test('published version 22 '+scene+' resumes without adding a guest or changing its draws',()=>{
+ const b=game(new Map([['chengongji_v1_auto',JSON.stringify(fixture)]]));b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,22);assert.equal(fenghuaActive(),false);assert.equal(S.fenghua,undefined);`);
+ assert.equal(b.run('curEv.title'),fixture.pendingActions.pending.title);
+ b.run(`drain();assert.equal(PalaceActions.contentVersion,23);assert.equal(fenghuaActive(),true);assert.equal(PalaceActions.blocked,false);`);
+});
