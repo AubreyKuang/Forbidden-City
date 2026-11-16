@@ -91,5 +91,5 @@ for(const fixture of [...legacy.cases,...legacy15.cases])test('version '+fixture
   }
   if(fixture.name==='examination')assert.deepEqual(JSON.parse(b.run('JSON.stringify(S.scholars.map(p=>p.artPortrait))')),fixture.save.scholars.map(p=>p.artPortrait));
   b.run('if(modalResult)nextEv();else choose(curEv.choices.findIndex(c=>!c.cond||c.cond()));');
-  b=reload(b);b.run('drain();assert.equal(PalaceActions.contentVersion,24);');
+  b=reload(b);b.run('drain();assert.equal(PalaceActions.contentVersion,25);');
 });
