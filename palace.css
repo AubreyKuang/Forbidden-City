@@ -915,3 +915,9 @@ button.family-room-person{cursor:pointer}button.family-room-person:hover{color:#
 .story-consort-picture{display:flex;align-items:center;flex-direction:column;gap:10px}.story-consort-picture>.por{max-width:100%;height:auto}
 .story-consort-copy h3{margin-top:0}.story-consort-copy dl{margin:14px 0}.story-consort-copy dt{font-weight:700;color:#735336;margin-top:14px}.story-consort-copy dd{margin:5px 0 0;line-height:1.8}
 @media(max-width:600px){.story-consort-card{grid-template-columns:1fr;padding:14px;gap:14px}.story-consort-picture>.por{width:176px}}
+
+/* Names and ages share one compact row on both family views. */
+.graph-consort .graph-person,.graph-child .graph-person{flex:1}
+.family-name-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px;min-width:0}
+.family-name-row strong{min-width:0;overflow-wrap:anywhere}
+.family-name-row .family-age{flex-shrink:0;font-size:11px;font-weight:400;color:#806b5e;white-space:nowrap;margin:0}

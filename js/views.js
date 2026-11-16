@@ -153,7 +153,7 @@ function familyGraphSVG(){
   const x=i=>12+col*(i+.5),blood='#996a48',consortBottom=consortY+consortHeight;
   const line=(x1,y1,x2,y2,color)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="1.8"/>`;
   const at=(cx,y,height)=>`--graph-x:${cx}px;--graph-y:${y}px;--graph-card-height:${height}px`;
-  const label=(name,role)=>`<span class="graph-person"><strong>${esc(name)}</strong><small>${esc(role)}</small></span>`;
+  const label=(name,role,p)=>`<span class="graph-person"><span class="family-name-row"><strong>${esc(name)}</strong>${p?familyAgeNote(p):''}</span><small>${esc(role)}</small></span>`;
   let backgrounds='',wires='',cards='';
   for(const group of groups.values()){
     const left=x(group.indices[0]),right=x(group.indices.at(-1)),center=(left+right)/2;
@@ -185,7 +185,7 @@ function familyGraphSVG(){
   }
   people.forEach((c,i)=>{
     const cx=x(i),children=kids.get(c.id)||[],rail=cx-col/2+8;
-    cards+=`<button class="graph-card graph-consort${c.rank===8?' graph-crown':''}" style="${at(cx,consortY,consortHeight)}" onclick="A.go('consort',${c.id})">${porImg(c,52)}${label(fullName(c),cName(c))}</button>`;
+    cards+=`<button class="graph-card graph-consort${c.rank===8?' graph-crown':''}" style="${at(cx,consortY,consortHeight)}" onclick="A.go('consort',${c.id})">${porImg(c,52)}${label(fullName(c),cName(c),c)}</button>`;
     if(children.length){
       const last=childY+(children.length-1)*childStep+childHeight/2;
       wires+=`<path d="M${cx} ${consortBottom} v12 H${rail} V${last}" fill="none" stroke="${blood}" stroke-width="1.8"/>`;
@@ -193,7 +193,7 @@ function familyGraphSVG(){
     children.forEach((k,j)=>{
       const y=childY+j*childStep,foster=k.foster!==k.mom&&fosterOf(k),role=S.heir===k.id?'皇太子':k.sex==='m'?'皇子':'公主';
       wires+=line(rail,y+childHeight/2,cx-cardWidth/2,y+childHeight/2,blood);
-      cards+=`<button class="graph-card graph-child${S.heir===k.id?' graph-crown':''}" style="${at(cx,y,childHeight)}" onclick="A.go('kid',${k.id})">${porImg(k,44)}${label(k.name,role+(foster?' · 由'+fullName(foster)+'抚养':''))}</button>`;
+      cards+=`<button class="graph-card graph-child${S.heir===k.id?' graph-crown':''}" style="${at(cx,y,childHeight)}" onclick="A.go('kid',${k.id})">${porImg(k,44)}${label(k.name,role+(foster?' · 由'+fullName(foster)+'抚养':''),k)}</button>`;
     });
   });
   const legend=COURT_BLOCS.map(b=>`<span class="tag" style="border-color:${BLOC_COLOR[b.id]};color:${BLOC_COLOR[b.id]}">${b.name}</span>`).join('');
@@ -239,10 +239,10 @@ function viewFamily(){
   const childLine=k=>{
     const foster=k.foster!==k.mom&&fosterOf(k);
     return `<li><button class="btn quiet family-person" onclick="A.go('kid',${k.id})">${porImg(k,52)}
-      <span><strong>${esc(kidName(k))}</strong>${foster?`<small class="hint">由${esc(fullName(foster))}抚养</small>`:''}${multipleIdentity(k)?`<small class="hint">${esc(multipleIdentity(k).name)}</small>`:''}</span></button></li>`;
+      <span><span class="family-name-row"><strong>${esc(kidName(k))}</strong>${familyAgeNote(k)}</span>${foster?`<small class="hint">由${esc(fullName(foster))}抚养</small>`:''}${multipleIdentity(k)?`<small class="hint">${esc(multipleIdentity(k).name)}</small>`:''}</span></button></li>`;
   };
   const member=c=>`<li><button class="btn quiet family-person" onclick="A.go('consort',${c.id})">${porImg(c,60)}
-    <span><strong>${esc(fullName(c))}</strong><small class="hint">${esc(!c.alive?'已故':c.gone?'已出宫':cName(c))}</small></span></button>
+    <span><span class="family-name-row"><strong>${esc(fullName(c))}</strong>${familyAgeNote(c)}</span><small class="hint">${esc(!c.alive?'已故':c.gone?'已出宫':cName(c))}</small></span></button>
     ${kidsByMother.has(c.id)?`<ul>${kidsByMother.get(c.id).map(childLine).join('')}</ul>`:''}</li>`;
   const branch=(label,people,force='')=>{
     const childCount=people.reduce((sum,c)=>sum+(kidsByMother.get(c.id)?.length||0),0),fathers=new Map();
@@ -369,7 +369,7 @@ function viewConsort(){
     ['now','近况与心事',
       birthCarePanel(c)+deliveryMemorialPanel(c)+
       actionGroup('听她说说',conversations)+
-      detailSection('近况与性情',`<p class="hint">${esc(TRAITS[c.trait].d)} · 侍寝 ${c.nights} 次</p>${act?xinDetail(c)+deepLine(c):''}<div class="stats">${st('容貌',c.looks)}${st('才情',c.talent)}${st('德行',c.virtue)}${st('心机',c.scheme,!c.known)}</div>`)+
+      detailSection('近况与性情',`<p class="hint">${esc(TRAITS[c.trait]?.d||'性情沿用旧日记载。')} · 侍寝 ${c.nights||0} 次</p>${act?xinDetail(c)+deepLine(c):''}<div class="stats">${st('容貌',c.looks)}${st('才情',c.talent)}${st('德行',c.virtue)}${st('心机',c.scheme,!c.known)}</div>`)+
       continuityPanel(c)+personalLifePanel(c)+detailSection('人和事的后续',cohortLifePanel(c)+parentEpisodePanel(c))+
       detailSection('孕中祈愿',pregnancyPrayerPanel(c))+detailSection('寺中清修',consortTemplePanel(c))+
       (act&&!c.cold?initiativeHTML(c):'')],

@@ -250,5 +250,5 @@ function arcTick(){
     }
     if(c.arc.t<=S.turn)c.arc.t=S.turn+1}
   return null}
-function arcLine(c){if(!c.arc)return '';const a=ARCS[c.arc.id],name=c.arc.id==='craft'&&c.arc.f.craft!==undefined?consortCraft(c).title:a.name;
-  return `<div style="margin-top:4px">经历「${name}」：${c.arc.done?`<span class="tag y">结局·${esc(c.arc.end)}</span>`:`第${cnNum(c.arc.st+1)}幕<span class="hint">（情分越高越容易推进）</span>`}</div>`}
+function arcLine(c){if(!c.arc)return '';const a=ARCS[c.arc.id],name=c.arc.id==='craft'&&c.arc.f?.craft!==undefined?consortCraft(c).title:a?.name||c.arc.name||'旧日经历';
+  return `<div style="margin-top:4px">经历「${esc(name)}」：${c.arc.done?`<span class="tag y">结局·${esc(c.arc.end)}</span>`:`第${cnNum(c.arc.st+1)}幕<span class="hint">（情分越高越容易推进）</span>`}</div>`}

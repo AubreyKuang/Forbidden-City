@@ -18,12 +18,14 @@ function birthTags(k){
 }
 function deliveryKids(c){return (c.delivery?.children||[]).map(kidById).filter(Boolean)}
 function pendingDelivery(){return S.consorts.find(c=>c.delivery&&!c.delivery.settled&&(c.delivery.lossPending||deliveryKids(c).some(k=>k.pendingName)))}
+function gouyiBirthBlessing(c){return journalContentVersion()>=22&&!!c?.gouyi;}
+function birthOmenChance(c){return gouyiBirthBlessing(c)?.6:.03;}
 function birthEvent(c){
   if(c.delivery&&!c.delivery.settled)return birthNamingEvent(c);
   if(c.preg<(c.pregnancyCalendar?.term||10))return null;
   if(concealedPregnancy(c))return concealedDeliveryEvent(c);
   const count=rollBirthCount(),sexes=Array.from({length:count},()=>chance(.5)?'m':'f');
-  const kind=birthType(sexes),omen=chance(.03)?pick(Object.keys(BIRTH_OMENS)):null;
+  const kind=birthType(sexes),omen=chance(birthOmenChance(c))?pick(Object.keys(BIRTH_OMENS)):null;
   const children=sexes.map(sex=>makeKid(c,sex,suggestName(sex)));
   registerMultipleBirth(children);
   const prayerKey=currentPregnancyPrayer(c)?.key,firstWishKey=careersActive()&&c.firstChildWish?.key===pregnancyPrayerKey(c)?c.firstChildWish.key:null;
@@ -115,7 +117,7 @@ function recordDeliveryOutcome(c,{loss=false,date,legacy=false}={}){
  if(!children.length)return;
  const birthDate=date||d.date||dateStr(),names=children.map(k=>({id:k.id,name:k.name,sex:k.sex}));
  const label=children.map(k=>`${k.sex==='m'?'皇子':'公主'}${k.name==='未命名'?'（未及赐名）':k.name}`).join('、');
- const text=`${fullName(c)}${d.concealedLoss?'被宫中报称生产，':'于'+(c.palace||'宫中')+'临盆，'}${loss?'产下的孩子出生时已无生息':`诞下${label}${d.kind?`（${d.kind}）`:''}，${children.length>1?'孩子们分别':'孩子'}获陛下赐名`}。${fatal?'生产后突发血崩，太医救治无效，撒手人寰，因产后血崩薨逝。':loss?'按礼安葬孩子，太医继续照看产妇。':d.concealedLoss?'报喜与赐名已入册，亲缘仍以查证结果为准。':'产后平安，继续调养。'}`;
+ const text=`${fullName(c)}${d.concealedLoss?'被宫中报称生产，':'于'+(c.palace||'宫中')+'临盆，'}${loss?'产下的孩子出生时已无生息':`诞下${label}${d.kind?`（${d.kind}）`:''}，${children.length>1?'孩子们分别':'孩子'}获陛下赐名`}。${fatal?'生产后突发血崩，太医救治无效，撒手人寰，因产后血崩薨逝。':loss?'按礼安葬孩子，太医继续照看产妇。':d.concealedLoss?'报喜与赐名已入册，亲缘仍以查证结果为准。':'产后平安，继续调养。'}${gouyiBirthBlessing(c)&&!loss&&BIRTH_OMENS[d.omen]?`诞生时见「${BIRTH_OMENS[d.omen].name}」，与孩子的诞生纪事一同记下。`:''}`;
  d.outcome={date:birthDate,children:names,kind:d.kind||'单胎',loss,fatal,cause:fatal?'产后血崩':null,text};
  if(fatal){c.deathReason='产后血崩';c.deathRecord={date:birthDate,cause:'产后血崩',text,children:names};}
  // An older build may already have the shorter line. Enrich it in place.
@@ -137,7 +139,7 @@ function deliveryMemorialPanel(c){
 }
 function rollBirthTempleAdvice(children,omen){
   if(omen||S.turn-(S.flags.lastBirthTempleAdvice??-99)<36)return null;
-  const frail=children.find(k=>k.hp<=60),kind=frail&&chance(.3)?'frail':chance(.01)?pick(['quake','drought']):null;
+  const frail=children.find(k=>k.hp<=60),blessed=children.some(k=>gouyiBirthBlessing(byId(k.mom))),kind=frail&&chance(.3)?'frail':!blessed&&chance(.01)?pick(['quake','drought']):null;
   if(!kind)return null;
   const k=frail&&kind==='frail'?frail:children[0];k.birthTrouble=kind;S.flags.lastBirthTempleAdvice=S.turn;
   const text={frail:'初生体弱，太医叮嘱仔细养护。',quake:'出生当夜京畿地动，宫人议论纷纷。',drought:'出生时京畿久旱，宫中有人将灾异附会于新生儿。'}[kind];

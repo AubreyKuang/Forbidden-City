@@ -70,3 +70,19 @@ function natalParentLinks(c,p){
   const n=familyTreeRegistry().nodes.find(n=>n.p.id===p.id),mother=n?.mother,father=n?.father;
   return `<p>父亲：${father?officialLink(father.c,father.role):esc(p.fatherName||mother?.p.spouse?.name||'未详录')}</p><p>母亲：${mother?`<button class="person-link" onclick="A.go('natal','${mother.c.id}:${mother.p.id}')">${esc(mother.p.name)}</button>`:'未详录'}</p>${father?`<p class="hint">家谱列于父亲${esc(father.p.name)}名下，母系亲缘与原有纪事保留。</p>`:''}`;
 }
+
+function familyAgeNote(p){
+ let months;
+ if(p.sex){
+  if(p.alive!==false)months=S.turn-p.born;
+  else if(Number.isFinite(p.deathAgeMonths))months=p.deathAgeMonths;
+  else if(Number.isFinite(p.death?.turn))months=p.death.turn-p.born;
+  else {const text=(p.story||[]).findLast(s=>/薨逝|夭折|去世|身亡/.test(s.t))?.t||'',match=text.match(/(?:享年|年仅|年)(\d+)岁/);if(match)months=+match[1]*12;}
+ }else if(Number.isFinite(p.age))months=p.age*12;
+ const value=Number.isFinite(months)?(months<12?Math.max(0,months)+'个月':Math.floor(months/12)+'岁'):'未详';
+ return `<small class="family-age">${p.alive===false?'享年 ':''}${value}</small>`;
+}
+function familyRememberDeathAges(previous){
+ if(!S||PalaceActions.blocked||journalContentVersion()<22||!previous||previous.gen!==S.gen)return;
+ for(const k of S.children)if(k.alive===false&&!Number.isFinite(k.deathAgeMonths)&&previous.children?.some(p=>p.id===k.id&&p.alive))k.deathAgeMonths=Math.max(0,S.turn-k.born);
+}

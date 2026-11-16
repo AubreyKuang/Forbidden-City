@@ -1,0 +1,750 @@
+{
+  "url": "http://127.0.0.1:8428/dev.html",
+  "started": "2026-11-16T00:26:05.318Z",
+  "runs": [
+    {
+      "name": "company",
+      "viewport": "desktop",
+      "reloads": [
+        "导入与刷新",
+        "回应与纪事"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "rumor",
+      "viewport": "desktop",
+      "reloads": [
+        "导入与刷新",
+        "回应与纪事"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "birth",
+      "viewport": "desktop",
+      "reloads": [
+        "导入与刷新",
+        "回应与纪事"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "loss",
+      "viewport": "desktop",
+      "reloads": [
+        "导入与刷新",
+        "回应与纪事"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "dao-lifespan",
+      "viewport": "desktop",
+      "reloads": [
+        "导入与刷新",
+        "问道回应"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "dao-cycles",
+      "viewport": "desktop",
+      "reloads": [
+        "导入与刷新",
+        "问道回应"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "dao-rebirth",
+      "viewport": "desktop",
+      "reloads": [
+        "导入与刷新",
+        "问道回应"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "prayer-dao",
+      "viewport": "desktop",
+      "reloads": [
+        "导入与刷新",
+        "问候前",
+        "问候与人物纪事"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "prayer-buddha",
+      "viewport": "desktop",
+      "reloads": [
+        "导入与刷新",
+        "问候前",
+        "问候与人物纪事"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "prayer-home",
+      "viewport": "desktop",
+      "reloads": [
+        "导入与刷新",
+        "问候前",
+        "问候与人物纪事"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "prayer-sister",
+      "viewport": "desktop",
+      "reloads": [
+        "导入与刷新",
+        "问候前",
+        "问候与人物纪事"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "outing",
+      "viewport": "desktop",
+      "reloads": [
+        "导入与刷新",
+        "皇嗣回应与母亲消息"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "permission",
+      "viewport": "desktop",
+      "reloads": [
+        "导入与刷新",
+        "皇嗣回应与母亲消息"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "codex-unseen",
+      "viewport": "desktop",
+      "reloads": [
+        "导入与刷新",
+        "只读图鉴"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "xie-marriage",
+      "viewport": "desktop",
+      "reloads": [
+        "导入与刷新",
+        "赐婚与双方纪事",
+        "谢安婚后档案"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "family-ages",
+      "viewport": "desktop",
+      "reloads": [
+        "导入与刷新",
+        "家族年龄列表"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "companions-friends",
+      "viewport": "desktop",
+      "reloads": [
+        "导入与刷新",
+        "结伴回应与双方纪事"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "companions-rivals",
+      "viewport": "desktop",
+      "reloads": [
+        "导入与刷新",
+        "结伴回应与双方纪事"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "local-sound",
+      "viewport": "desktop",
+      "reloads": [
+        "导入与刷新",
+        "实绩批复与家人纪事"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "local-excellent",
+      "viewport": "desktop",
+      "reloads": [
+        "导入与刷新",
+        "实绩批复与家人纪事"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "local-exceptional",
+      "viewport": "desktop",
+      "reloads": [
+        "导入与刷新",
+        "实绩批复与家人纪事"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "local-setback",
+      "viewport": "desktop",
+      "reloads": [
+        "导入与刷新",
+        "实绩批复与家人纪事"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "legacy-gouyi",
+      "viewport": "desktop",
+      "reloads": [
+        "导入与刷新",
+        "旧档从后宫打开人物档案",
+        "旧档从宫殿与图鉴进入"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "gouyi-guiren",
+      "viewport": "desktop",
+      "reloads": [
+        "导入与刷新",
+        "钩弋册封与位分"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "gouyi-rui",
+      "viewport": "desktop",
+      "reloads": [
+        "导入与刷新",
+        "钩弋册封与位分"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "gouyi-birth",
+      "viewport": "desktop",
+      "reloads": [
+        "导入与刷新",
+        "双生祥瑞与母子纪事"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "company",
+      "viewport": "mobile",
+      "reloads": [
+        "导入与刷新",
+        "回应与纪事"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "rumor",
+      "viewport": "mobile",
+      "reloads": [
+        "导入与刷新",
+        "回应与纪事"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "birth",
+      "viewport": "mobile",
+      "reloads": [
+        "导入与刷新",
+        "回应与纪事"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "loss",
+      "viewport": "mobile",
+      "reloads": [
+        "导入与刷新",
+        "回应与纪事"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "dao-lifespan",
+      "viewport": "mobile",
+      "reloads": [
+        "导入与刷新",
+        "问道回应"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "dao-cycles",
+      "viewport": "mobile",
+      "reloads": [
+        "导入与刷新",
+        "问道回应"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "dao-rebirth",
+      "viewport": "mobile",
+      "reloads": [
+        "导入与刷新",
+        "问道回应"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "prayer-dao",
+      "viewport": "mobile",
+      "reloads": [
+        "导入与刷新",
+        "问候前",
+        "问候与人物纪事"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "prayer-buddha",
+      "viewport": "mobile",
+      "reloads": [
+        "导入与刷新",
+        "问候前",
+        "问候与人物纪事"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "prayer-home",
+      "viewport": "mobile",
+      "reloads": [
+        "导入与刷新",
+        "问候前",
+        "问候与人物纪事"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "prayer-sister",
+      "viewport": "mobile",
+      "reloads": [
+        "导入与刷新",
+        "问候前",
+        "问候与人物纪事"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "outing",
+      "viewport": "mobile",
+      "reloads": [
+        "导入与刷新",
+        "皇嗣回应与母亲消息"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "permission",
+      "viewport": "mobile",
+      "reloads": [
+        "导入与刷新",
+        "皇嗣回应与母亲消息"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "codex-unseen",
+      "viewport": "mobile",
+      "reloads": [
+        "导入与刷新",
+        "只读图鉴"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "xie-marriage",
+      "viewport": "mobile",
+      "reloads": [
+        "导入与刷新",
+        "赐婚与双方纪事",
+        "谢安婚后档案"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "family-ages",
+      "viewport": "mobile",
+      "reloads": [
+        "导入与刷新",
+        "家族年龄列表"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "companions-friends",
+      "viewport": "mobile",
+      "reloads": [
+        "导入与刷新",
+        "结伴回应与双方纪事"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "companions-rivals",
+      "viewport": "mobile",
+      "reloads": [
+        "导入与刷新",
+        "结伴回应与双方纪事"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "local-sound",
+      "viewport": "mobile",
+      "reloads": [
+        "导入与刷新",
+        "实绩批复与家人纪事"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "local-excellent",
+      "viewport": "mobile",
+      "reloads": [
+        "导入与刷新",
+        "实绩批复与家人纪事"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "local-exceptional",
+      "viewport": "mobile",
+      "reloads": [
+        "导入与刷新",
+        "实绩批复与家人纪事"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "local-setback",
+      "viewport": "mobile",
+      "reloads": [
+        "导入与刷新",
+        "实绩批复与家人纪事"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "legacy-gouyi",
+      "viewport": "mobile",
+      "reloads": [
+        "导入与刷新",
+        "旧档从后宫打开人物档案",
+        "旧档从宫殿与图鉴进入"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "gouyi-guiren",
+      "viewport": "mobile",
+      "reloads": [
+        "导入与刷新",
+        "钩弋册封与位分"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "gouyi-rui",
+      "viewport": "mobile",
+      "reloads": [
+        "导入与刷新",
+        "钩弋册封与位分"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 390,
+        "width": 390
+      }
+    },
+    {
+      "name": "gouyi-birth",
+      "viewport": "mobile",
+      "reloads": [
+        "导入与刷新",
+        "双生祥瑞与母子纪事"
+      ],
+      "errors": [],
+      "passed": true,
+      "layout": {
+        "viewport": 390,
+        "width": 390
+      }
+    }
+  ],
+  "browser": "157.0.8103.78",
+  "finished": "2026-11-16T00:28:12.070Z",
+  "passed": true,
+  "recheckNote": "旧档宫殿入口包含迎驾对话；修正测试路径，点击“查看她的详细信息”后重测桌面和手机。"
+}

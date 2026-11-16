@@ -1,5 +1,5 @@
 /* Family facts create intentions. Prayer stays within the palace and does not decide medical outcomes. */
-const palacePrayersActive=()=>!!S&&!S.over&&journalContentVersion()>=22;
+const palacePrayersActive=()=>!!S&&!PalaceActions.blocked&&!S.over&&journalContentVersion()>=22;
 function prayerKin(c,state=S){
  const house=c.house,list=[];
  if(house){for(const role of ['father',...brotherRoles(house)]){const p=house[role];if(p)list.push({p,relation:role==='father'?'父亲':p.age>=c.age?'兄长':'弟弟'});}
@@ -57,7 +57,7 @@ function palacePrayerPanel(place,c){
  return detailSection(place==='home'?'本宫寄愿':place==='buddha'?'偏殿佛堂 · 为家人寄愿':'灯下寄愿',available.map(p=>`<article class="card">${porImg(p,92)}<div class="grow"><strong>${esc(fullName(p))}</strong><p>${place==='home'?'正在本宫静养，灯旁放着一封家信。':'正在灯前祈愿，似有家事挂心。'}</p><button class="btn jade" onclick="A.prayerGreeting(${p.id})">上前问候 · 精力−1</button></div></article>`).join(''));
 }
 const prayerChildLifeTick=childLifeTick;
-childLifeTick=function(){const result=prayerChildLifeTick();palacePrayerTick();return result;};
+childLifeTick=function(monthly=false){const result=prayerChildLifeTick();if(monthly)palacePrayerTick();return result;};
 const prayerViewPlace=viewPlace;
 viewPlace=function(){const html=prayerViewPlace();return !palacePrayersActive()?html:html+(UI.sel==='cn'?palacePrayerPanel('buddha'):UI.sel==='qa'?palacePrayerPanel('dao'):'');};
 const prayerConsortView=viewConsort;

@@ -73,6 +73,7 @@ function careerFamilyEcho(person,kind,text){
   for(const r of careerKin(person).filter(r=>r.c.alive&&!r.c.gone)){
     const c=r.c,formal=isSolitary(c)||['持重','淡泊','聪慧','才女','好学','刚烈'].includes(c.trait),proud=['骄纵','骄矜','城府','善妒'].includes(c.trait);
     const quotes=kind==='promote'||kind==='reward'?[formal?'他能凭实绩立身，臣妾替他高兴。更盼他记得，升了一阶，也多担了一分责。':proud?'这回总算有人看见他的本事了。臣妾也想把这份好消息告诉家里。':'多谢陛下记得他的辛苦。家书送到，家里该能安心些了。',3]:kind==='demote'||kind==='accountable'?[formal?'臣妾心里自然不好受。可任上有疏漏，总该把该补的事补好。':proud?'这折子只写了他的过失么？臣妾想再看看原委……若真是他的错，也不敢瞒。':'臣妾怕家里撑不住，也怕他从此一蹶不振。只盼还有补过的机会。',-4]:['臣妾已听说这份回奏。任上好坏，还请陛下照实情裁断。',0];
+    if(kind==='central'){quotes[0]=formal?'他在地方做成了实事，如今调入中央，臣妾替他欣慰。也愿他仍记着百姓的日子，担好新的差事。':proud?'他做成的事总算让朝中看见了！想到往后能在京中任职，臣妾心里自然欢喜。':'听说他因任上的功劳调回京中，臣妾很高兴。只盼新差事虽重，他也能好好照顾自己。';quotes[1]=4;}
     const relation=r.type==='blood'?'':`（${r.label}，${r.detail}）`,line=`【前朝家书】${person.p.name}${relation}：${text} 她道：“${quotes[0]}”`;
     story(c,line);cchg(c,{mood:quotes[1]*(r.type==='blood'?1:.5)});
     c.careerNews={personId:person.p.id,key:person.key,turn:S.turn,quote:quotes[0],kind};
@@ -141,20 +142,24 @@ function careerReportEvent(person){
     if(['promote','demote'].includes(kind)&&!target(kind))return null;
     if(kind==='reward'&&(!ready()||E().treasury<15))return null;
     if(kind==='accountable'&&!ready())return null;
-    const appointment=['promote','demote'].includes(kind)?target(kind):null;
-    const labels={promote:'实绩卓著，准予升任',demote:'实绩不称，降职任用',reward:'嘉奖实绩，赏银十五万两',accountable:'申斥疏漏，责令补报善后',record:'阅毕，存档备考'};
+    if(kind==='central'&&(!ready()||!localCentralTarget(person)))return null;
+    if(kind==='commend'&&(!ready()||!localMeritReport(r)||r.outcome!=='success'))return null;
+    const appointment=kind==='central'?localCentralTarget(person):['promote','demote'].includes(kind)?target(kind):null;
+    const labels={promote:'实绩卓著，准予升任',central:'地方殊绩，破格擢入中央',commend:'下诏褒奖，留任推行善政',demote:'实绩不称，降职任用',reward:'嘉奖实绩，赏银十五万两',accountable:'申斥疏漏，责令补报善后',record:'阅毕，存档备考'};
     let decision=labels[kind];delete p.report;
     if(appointment)decision=careerSetOffice(person,appointment[1],decision);
     if(kind==='reward'){chg({treasury:-15});p.trust=clamp(p.trust+5);p.lastReward=S.turn;p.rewardedMerit=p.merit;}
+    if(kind==='commend')p.trust=clamp(p.trust+3);
     if(kind==='accountable'||kind==='demote')p.trust=clamp(p.trust-5);
     const text=`【御批】${r.title}：${r.text} 批复：${decision}${decision.endsWith('。')?'':'。'}`;
     (p.reportHistory ||= []).push({turn:S.turn,d:dateStr(),...r,decision});
-    courtPersonRecord(person,text);careerFamilyEcho(person,kind,`${r.title}：${r.text} 批复：${decision}`);
-    if(person.e&&['reward','accountable','promote','demote'].includes(kind))officialFamilyReaction(person.e,kind==='promote'?'reward':kind==='demote'?'accountable':kind,r.title+'；'+decision);save('auto');return text;
+    courtPersonRecord(person,text);careerFamilyEcho(person,kind==='commend'?'reward':kind,`${r.title}：${r.text} 批复：${decision}`);
+    if(person.e&&['reward','accountable','promote','demote','central','commend'].includes(kind))officialFamilyReaction(person.e,['promote','central','commend'].includes(kind)?'reward':kind==='demote'?'accountable':kind,r.title+'；'+decision);save('auto');return text;
   };
   const choice=(direction,label)=>{const to=target(direction);return {t:to?`${label} → ${to[1]} · ${GRADE_NAMES[to[0]-1]}`:`${label}（暂不符合条件）`,cond:()=>!!target(direction),why:'须在任、未转任他职，升任需才干50、功绩30，升贬间隔半年且未到品序边界',f:()=>finish(direction)};};
   return {title:(r.kind==='local'?'地方实绩 · ':'外臣回奏 · ')+r.title,por:p,valid,text:`${p.name} · ${officialOfficeLabel(p)}\n${r.text}\n亲缘：${careerKinText(person)}\n${sameOffice()?'据实绩批复；亲缘不替代考课。':'此折出自原任，现职已变，只存录原任表现。'}`,choices:[
     ...(r.outcome==='success'?[{t:'嘉奖实绩 · 国库−15',cond:()=>ready()&&E().treasury>=15,why:'须在任且国库充足',f:()=>finish('reward')},choice('promote','升职')]:[ {t:'申斥，责令补报善后',cond:ready,why:'须在任且未转任',f:()=>finish('accountable')},choice('demote','降职')]),
+    ...(localMeritReport(r)&&r.outcome==='success'?[{t:'下诏褒奖，留任推行善政',cond:ready,why:'须在原任且可办差',f:()=>finish('commend')},...(r.rating==='exceptional'?[{t:`破格擢入中央 → ${localCentralOffice(p,r.department)} · ${officialGradeLabel({office:localCentralOffice(p,r.department)})}`,cond:()=>ready()&&!!localCentralTarget(person),why:'须仍在原任，才干75、功绩65，距上次调任至少半年',f:()=>finish('central')}]:[])]:[]),
     {t:'阅毕，存档备考',f:()=>finish('record')} ]};
 }
 const careersBaseReport=officialReportEvent;

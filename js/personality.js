@@ -155,10 +155,10 @@ function rememberQuarrel(a,b,winner){
       interpretation:`我与${fullName(other)}争蜀锦，${winner===person.id?'陛下判给了我':winner===other.id?'陛下判给了她':'陛下各赏一匹'}`
     })));
 }
-function deepLine(c){deepen(c);if(c.wish==='title'&&c.title&&!c.wishDone){c.wishDone=true}const w=WISHES[c.wish];
+function deepLine(c){deepen(c);if(c.wish==='title'&&c.title&&!c.wishDone){c.wishDone=true}const w=WISHES[c.wish]||{t:'旧日心愿，原记暂未详',unknown:true};
   return `<div style="margin-top:4px">小性子：<span class="tag">${c.t2}</span>　喜好：${c.kl?`<span class="tag g">${c.like}</span>不喜<span class="tag r">${c.hate}</span>`:'<span class="hint">多闲谈才知道</span>'}</div>
   <div>平日消遣：<span class="tag">${esc(c.hobby)}</span></div>
-  <div>心愿：${c.wishKnown?`${esc(w.t)}${c.wishDone?' <span class="tag y">已成全</span>':w.btn?` <button class="btn sm jade" onclick="A.wish(${c.id})" ${inPalace(c)?'':'disabled'}>${esc(w.btn)}</button>`:' <span class="hint">（生下孩子便成全了）</span>'}`:`<span class="hint">${c.aff>=50?'情分已够，多闲谈几次，她也许会说出心愿':'情分到 50 以后，闲谈时她也许会说'}</span>`}</div>
+  <div>心愿：${c.wishKnown?`${esc(w.t)}${c.wishDone?' <span class="tag y">已成全</span>':w.unknown?'':w.btn?` <button class="btn sm jade" onclick="A.wish(${c.id})" ${inPalace(c)?'':'disabled'}>${esc(w.btn)}</button>`:' <span class="hint">（生下孩子便成全了）</span>'}`:`<span class="hint">${c.aff>=50?'情分已够，多闲谈几次，她也许会说出心愿':'情分到 50 以后，闲谈时她也许会说'}</span>`}</div>
   ${c.woundKnown?`<div>往事：${esc(WOUNDS[c.wound])}</div>`:`<div class="hint">往事：${c.aff>=65?'情分已够，多闲谈几次，她也许会对你说起':'情分到 65 以后，她也许会对你说起'}</div>`}`}
 A.chat=function(id,fromEvent=false){const c=byId(id);if((modalOpen&&!fromEvent)||!inPalace(c))return;const home=homeCareEvent(c)||solitaryQuietEvent(c);if(home){(fromEvent?pushNow:pushEv)(home);return;}const arrival=kinArrivalGreeting(c)||newcomerWelcomeEvent(c);if(arrival){(fromEvent?pushNow:pushEv)(arrival);return;}const past=pastLifeEvent(c);if(past){(fromEvent?pushNow:pushEv)(past);return;}initTimeTraveler(c);const quiet=solitaryEvent(c);if(quiet){(fromEvent?pushNow:pushEv)(quiet);return;}const oldWorld=travelerConfessionEvent(c);if(oldWorld){if(useE())(fromEvent?pushNow:pushEv)(oldWorld);return;}if(!useE())return;if(!legacyPendingAction()){noteHaremVisit(c);c.lastPersonalAttention=S.turn;}deepen(c);const L=[];const xk=xinOf(c),opening=consortVoicePhase(c)==='first';
   const voice=characterVoice(c,'talk');L.push(voice.stage);L.push(`“${voice.text}”`);

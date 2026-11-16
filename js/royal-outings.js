@@ -38,7 +38,7 @@ function royalOutingEvent(){
 }
 A.royalOuting=function(id){if(modalOpen||!palacePrayersActive()||S.royalOutings?.pending?.child!==id)return;const ev=royalOutingEvent();if(ev)pushEv(ev);};
 const outingLifeTick=childLifeTick;
-childLifeTick=function(){const result=outingLifeTick();royalOutingTick();return result;};
+childLifeTick=function(monthly=false){const result=outingLifeTick(monthly);if(monthly)royalOutingTick();return result;};
 const outingYouthEvent=youthEvent;
 youthEvent=function(){return palacePrayersActive()&&royalOutingEvent()||outingYouthEvent();};
 const outingYouthPanel=youthPanel;

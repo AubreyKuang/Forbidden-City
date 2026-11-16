@@ -1,5 +1,5 @@
 /* The dowager remembers actual births, losses, visits and publicly established facts. */
-const dowagerLivingActive=()=>!!S&&journalContentVersion()>=22;
+const dowagerLivingActive=()=>!!S&&!PalaceActions.blocked&&journalContentVersion()>=22;
 function dowagerLiving(d=ensureDowager()){
  if(!d)return null;
  if(!d.household||d.household.gen!==S.gen)d.household={gen:S.gen,seen:{},news:[],bonds:{},publicCases:{},lastTick:-1};
