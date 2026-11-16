@@ -1,5 +1,5 @@
 /* Recorded cousins share a clan, not a father. Keep both paternal households. */
-const cousinFamiliesActive=()=>!!S&&journalContentVersion()>=42;
+const cousinFamiliesActive=()=>!!S&&journalContentVersion()>=43;
 function reconcileCousinFamilies(extra=[]){
  if(!cousinFamiliesActive())return;
  const people=[...new Map([...familyOriginPeople(),...extra].filter(c=>c&&!c.maid).map(c=>[c.id,c])).values()],by=new Map(people.map(c=>[String(c.id),c]));

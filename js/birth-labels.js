@@ -1,5 +1,5 @@
 /* One saved birth draw owns the whole label set. Growth stories never reroll it. */
-const BIRTH_LABEL_JOURNAL=42;
+const BIRTH_LABEL_JOURNAL=43;
 const birthLabelsActive=()=>journalContentVersion()>=BIRTH_LABEL_JOURNAL;
 const BIRTH_LABEL_STATS={lit:'才学',mar:'武艺',vir:'品德',hp:'体魄',amb:'野心'};
 const BIRTH_LABEL_RULES={ordinary:.03,gouyi:.8,weak:.3,good:.75,double:.1};

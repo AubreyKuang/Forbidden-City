@@ -64,7 +64,7 @@ function useE(){ if(!S||S.over) return false; if(E().energy<=0){toast('本月精
 /* ============ 人物生成 ============ */
 function makeGirl(o={}){
   const trait=o.trait||pickConsortTrait(), T=TRAITS[trait], fam=o.fam||pickW(FAMS);
-  let g1=pick(GIV),g2=pick(GIV),nameRerolls=0; while(g2===g1){g2=pick(GIV);if(journalContentVersion()>=42&&++nameRerolls>=32&&g2===g1)g2=GIV[(GIV.indexOf(g1)+1)%GIV.length];}
+  let g1=pick(GIV),g2=pick(GIV),nameRerolls=0; while(g2===g1){g2=pick(GIV);if(journalContentVersion()>=43&&++nameRerolls>=32&&g2===g1)g2=GIV[(GIV.indexOf(g1)+1)%GIV.length];}
   const sur=o.sur||pick(SUR.filter(x=>!S||x!==S.emp.sur));
   const girl={id:S.nid++, sur, given:o.given||(chance(.45)?g1:g1+g2), age:o.age||ri(16,19), trait, fam,
     looks:clamp(ri(40,88)+(T.looks||0)), talent:clamp(ri(30,85)+(T.talent||0)), virtue:clamp(ri(30,85)+(T.virtue||0)), scheme:clamp(ri(15,75)+(T.scheme||0)),

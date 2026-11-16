@@ -124,7 +124,8 @@ function careerTick(){
     const years=Math.max(0,Math.floor((S.turn-p.ageTrackedAt)/12));p.age+=years;p.ageTrackedAt+=years*12;
     if(p.age>=70&&!p.retired&&!p.commission&&!p.report){p.retired=true;scholarRecord(p,'年逾七十，依例致仕归乡。');}
   }
-  if(S.turn-(S.flags.lastLocalReport??0)<3)return;
+  const localReportInterval=journalContentVersion()>=42?6:3;
+  if(S.turn-(S.flags.lastLocalReport??0)<localReportInterval)return;
   const pool=careerPeople().filter(localReportEligible).sort((a,b)=>(a.p.lastLocalReport??-99)-(b.p.lastLocalReport??-99));
   if(pool.length){createLocalReport(pool[0]);S.flags.lastLocalReport=S.turn;}
 }
@@ -169,7 +170,7 @@ pendingOfficialReport=function(){return careersBasePending()||(careersActive()?c
 const careersBaseRead=A.officialReport;
 A.officialReport=function(key){if(!careersActive()||!String(key).startsWith('scholar:'))return careersBaseRead(key);if(!modalOpen)pushEv(careerReportEvent(courtPerson(key)));};
 function careerReportsHTML(){
-  const pending=careerPeople().filter(x=>x.p.report);return detailSection('具名回奏',`<p class="hint">地方每三个月择一员呈报，个人至少间隔半年。回奏保留实绩、御批与亲眷反应。</p>${pending.map(x=>`<article class="card" style="display:block;cursor:default"><p>${careerLink(x)} · ${esc(officialOfficeLabel(x.p))}</p><p>${esc(x.p.report.text)}</p><button class="btn jade" onclick="A.officialReport('${x.key}')">批阅 · ${esc(x.p.report.title)}</button></article>`).join('')||'<p class="hint">暂无待批的具名回奏。</p>'}`);
+  const pending=careerPeople().filter(x=>x.p.report);return detailSection('具名回奏',`<p class="hint">地方实绩每半年至多由一名符合条件的地方官呈报。回奏保留实绩、御批与亲眷反应。</p>${pending.map(x=>`<article class="card" style="display:block;cursor:default"><p>${careerLink(x)} · ${esc(officialOfficeLabel(x.p))}</p><p>${esc(x.p.report.text)}</p><button class="btn jade" onclick="A.officialReport('${x.key}')">批阅 · ${esc(x.p.report.title)}</button></article>`).join('')||'<p class="hint">暂无待批的具名回奏。</p>'}`);
 }
 
 /* 身在前朝，也记挂宫里的女儿与姐妹。比较实际变化，绝不把读档当作新事件。 */

@@ -30,8 +30,14 @@ test('local reports store concrete evidence once, use persistent people and surv
  const before=b.run("JSON.stringify(careerPeople().find(x=>x.p.registrySource==='local').p.report)");b=reload(b);assert.equal(b.run("JSON.stringify(careerPeople().find(x=>x.p.registrySource==='local').p.report)"),before);
  b.run(`choose(2);assert.ok(careerPeople().find(x=>x.p.registrySource==='local').p.reportHistory.length);`);b=reload(b);b.run(`assert.equal(careerPeople().find(x=>x.p.registrySource==='local').p.reportHistory.length,1);`);
 });
-test('monthly reports respect the overall and per-person intervals and officials really age',()=>{const b=world();b.run(`ensureLocalOfficers();S.flags.lastLocalReport=S.turn;var first=scholarList().find(p=>p.registrySource==='local'),age=first.age;careerTick();assert.ok(!first.report);S.turn+=3;careerTick();var pending=careerPeople().filter(x=>x.p.report);assert.equal(pending.length,1);var saved=JSON.stringify(S);careerTick();assert.equal(JSON.stringify(S),saved);
- S.turn+=9;careerTick();assert.equal(first.age,age+1);assert.equal(scholarList().filter(p=>p.registrySource==='local').length,3);`);});
+test('local reports are six months apart across officials and officials still age',()=>{const b=world();b.run(`ensureLocalOfficers();S.flags.lastLocalReport=S.turn;var first=scholarList().find(p=>p.registrySource==='local'),age=first.age;
+ for(var elapsed=0;elapsed<6;elapsed++,S.turn++){careerTick();assert.ok(careerPeople().every(x=>!x.p.report));}
+ careerTick();var pending=careerPeople().filter(x=>x.p.report);assert.equal(pending.length,1);
+ assert.equal(S.flags.lastLocalReport,S.turn);var saved=JSON.stringify(S);careerTick();assert.equal(JSON.stringify(S),saved);
+ delete pending[0].p.report;S.turn+=5;careerTick();assert.equal(localReportEligible(pending[0]),false);
+ assert.ok(careerPeople().every(x=>!x.p.report));S.turn++;careerTick();
+ assert.equal(careerPeople().filter(x=>x.p.report).length,1);assert.equal(S.flags.lastLocalReport,S.turn);
+ assert.equal(first.age,age+1);assert.equal(scholarList().filter(p=>p.registrySource==='local').length,3);`);});
 test('promoting a minister clears his actual ministry and records the new post',()=>{const b=world();b.run(`var oldHead=ministryHead('personnel');oldHead.p.office=oldHead.p.post='内阁学士';S.ministries.heads.personnel=person.key;p.office=p.post='吏部尚书';assert.equal(ministryHead('personnel').p,p);report();careerReportEvent(person).choices.find(x=>x.t.startsWith('升职')).f();assert.equal(p.office,'内阁大学士');assert.notEqual(ministryHead('personnel')?.p,p);`);});
 test('surname alone is not kinship; explicit branch ancestry is shown and reacts',()=>{const b=world();b.run(`var o=makeScholar();o.sur=c.sur;o.name=c.sur+'远山';o.office='知县';o.age=40;S.scholars=[o];var x=courtPerson('scholar:'+o.id);assert.equal(careerKin(x).length,0);o.courtKin=[{fatherId:p.id,type:'branch',detail:'与父亲同族分房多年'}];assert.equal(careerKin(x)[0].type,'branch');careerFamilyEcho(x,'reward','修堤得赏');assert.ok(c.story.some(s=>s.t.includes('远房族')));`);});
 test('mother family distress and joy enter both known people and survive pending-scene reload',()=>{let b=world();b.run(`c.rank=3;A.cold(c.id);choose(0);assert.ok(p.story.some(s=>s.t.includes('被迁入冷宫')));assert.ok(c.story.some(s=>s.t.includes('娘家来信')));save('auto');`);
@@ -67,7 +73,7 @@ for(const f of require('./fixtures/careers-legacy-v14.json').cases)test('real v1
  let b=boot(711,new Map([['chengongji_v1_auto',JSON.stringify(f.save)]]));b.ctx.assert=assert;
  b.run("A.load('auto');assert.equal(PalaceActions.blocked,false);");assert.equal(b.run('curEv.title'),f.save.pendingActions.pending.title);
  b.run('if(modalResult)nextEv();else choose(curEv.choices.findIndex(c=>!c.cond||c.cond()));');b=reload(b);
- b.run('drain();assert.equal(PalaceActions.contentVersion,42);');
+ b.run('drain();assert.equal(PalaceActions.contentVersion,43);');
 });
 
 test('a military household student is not a general; civil appointment determines his actual duties',()=>{const b=world();b.run(`
