@@ -1,0 +1,65 @@
+{
+  "revision": "4227686915083e09ddca7a0424d819a277e0774a",
+  "capturedAt": "2026-11-16T02:10:47.856896+00:00",
+  "method": "Remote browser rendering of the real game with disposable public demo saves",
+  "provider": "https://www.thum.io/documentation/api/url",
+  "interactiveAcceptance": false,
+  "captures": [
+    {
+      "scene": "noble",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/family-bearing-gallery/noble.html?revision=4227686915083e09ddca7a0424d819a277e0774a",
+      "file": "docs/screenshots/family-bearing/noble.jpg",
+      "bytes": 163406,
+      "sha256": "b8bea88b8abdd889fe8f48a83b3b6812d544905c7c7ade84346943c14ffb3843",
+      "visualReview": "passed",
+      "browserAssertions": "passed"
+    },
+    {
+      "scene": "humble",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/family-bearing-gallery/humble.html?revision=4227686915083e09ddca7a0424d819a277e0774a",
+      "file": "docs/screenshots/family-bearing/humble.jpg",
+      "bytes": 167284,
+      "sha256": "0746b86ad1ec1c761293fa4f5fc86417e8d8fa66204c76b1ff280639ae99fbb6",
+      "visualReview": "passed",
+      "browserAssertions": "passed"
+    },
+    {
+      "scene": "proud",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/family-bearing-gallery/proud.html?revision=7616ee3ff5787f3e839689fbe2d97f5a042d0780",
+      "file": "docs/screenshots/family-bearing/proud.jpg",
+      "bytes": 160907,
+      "sha256": "5791b36ca79b339a4dd701e782f762c27a617bf934afac3b0da52ff602b7e0ce",
+      "visualReview": "text-and-controls-passed-portrait-incomplete",
+      "revision": "7616ee3ff5787f3e839689fbe2d97f5a042d0780",
+      "browserAssertions": "passed",
+      "note": "Initial browser run passed all dialogue and replay assertions. The screenshot captured the portrait before it painted; it is kept as diagnostic evidence and is not used as a showcase image."
+    },
+    {
+      "scene": "merchant",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/family-bearing-gallery/merchant.html?revision=4227686915083e09ddca7a0424d819a277e0774a",
+      "file": "docs/screenshots/family-bearing/merchant.jpg",
+      "bytes": 170924,
+      "sha256": "c35264715f473b7c34275931d553df594963c562b93ab8ed00b775d4d2751b1a",
+      "visualReview": "passed",
+      "browserAssertions": "passed"
+    },
+    {
+      "scene": "allowance",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/family-bearing-gallery/allowance.html?revision=4227686915083e09ddca7a0424d819a277e0774a",
+      "file": "docs/screenshots/family-bearing/allowance.jpg",
+      "bytes": 142145,
+      "sha256": "cc8ed40548f831d01171e18d04d00caf7ff2aefe293eb709038f4364f1b0938e",
+      "visualReview": "passed",
+      "browserAssertions": "passed"
+    },
+    {
+      "scene": "growth",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/family-bearing-gallery/growth.html?revision=4227686915083e09ddca7a0424d819a277e0774a",
+      "file": "docs/screenshots/family-bearing/growth.jpg",
+      "bytes": 146230,
+      "sha256": "8710b2ab30ddd4d80c0131e4d88a2a3229f52266ac74c33948a4d939aee994f8",
+      "visualReview": "passed",
+      "browserAssertions": "passed"
+    }
+  ]
+}

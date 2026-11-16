@@ -1003,6 +1003,8 @@ NPC 记忆区分客观事件与人物主观理解。同一场争执，受助者�
 
 父兄图库区分 **13 张成熟父亲与 13 张青年兄长立绘**，并保留四张原版文武父兄形象。文臣、武将、商贾、医者和寒门书生有不同衣着与气质；新人物优先分配未使用的面容，同父姐妹共用同一位父亲、同一组兄长的形象，存读档与身故都保留其面容。主控皇帝有六张立绘，包含原版两张以及温润青年、英武青年、威严壮年与儒雅长者；新帝随年龄使用对应的青年、成熟形象，皇子继位仍保留原脸。
 
+太后另有 **18张专用半身立绘（441–458号）**，包含礼服、常服与年轻太后三组。仅初代未指定形象的太后使用新图库；传代后，先帝皇后与生母各自保留原立绘，旧存档也不会被新图覆盖。编号与规则见[太后立绘说明](docs/dowager-portraits.md)。
+
 点进妃嫔或皇嗣详情后，主立绘在桌面以 224 × 280 显示，手机以 176 × 220 居中显示。人物图集按需加载，详情、事件、家族与测试面板使用同一人物形象。
 
 清雅人物图集包含四张妃嫔与四张成年公主立绘，每格 **448 × 560**，透明背景保留发丝、服饰与古画设色。
@@ -1214,6 +1216,8 @@ node tests/palace-flow.cjs
 
 另可运行 `node tests/palace-random-play.cjs`：默认以五种玩法、四个固定种子试玩二十局，逐局输出事件、选择、月份与人物记录到 `/tmp/palace-playtest-results/`。`PALACE_PLAYTEST_DIR` 可更改输出位置，`PALACE_MONTHS` 可更改每局月份上限。设置 `PALACE_MODES=relationships` 可试玩宫务合作、父兄差事与母子教养优先的策略；`PALACE_MODES=lives` 会尝试人物计划、作品取舍、旧约与传承。重启读档回归在 `tests/palace-playtest-fixes.test.cjs` 中，覆盖普通队列、结果页、选择只结算一次、输入、迎驾、岁首快照与写入失败；`tests/palace-save-reliability.test.cjs` 覆盖无法续接时的放下与备份、存储写满时让出快照空间，以及完全无法写入时继续游玩。
 
+孩子变故与连续探望、赐婚自动对话、派系和宫女入口见 [家庭反应验收](docs/qa/family-reactions.md)；年度标签、迁宫间隔与慈宁宫日常见 [宫廷日常验收](docs/qa/court-rhythm.md)。
+
 宫室、换婴、家谱与五兄之妹的回归及浏览器记录见 [宫室与亲族验收](docs/qa/family-households-validation.md)。
 
 人物连续经历的分支、出席与刷新检查见 `tests/palace-continuity.test.cjs`；完整试玩和浏览器证据见 [人物故事验证](docs/qa/character-continuity-validation.md)。
@@ -1352,6 +1356,8 @@ node tests/palace-flow.cjs
 | `js/multiple-births-data.js` | 10 组同生手足场景、20 条回应、国师瑞梦与典故出处 |
 | `js/living-history-data.js` | 27 组故事、54 条回应及后话、史料类型与来源 |
 | `js/living-history.js` | 参与筛选、地点发现、保存续接、双方记忆与节奏 |
+| `js/child-consequences.js` | 家庭变故的自动反应、多人求情、分龄心绪与连续探望 |
+| `js/maid-audience.js` | 翻牌子内主动召见、固定当值人选与宫女留侍 |
 | `js/child-life.js` | 同窗场景、孩子求情、关系变化与记忆 |
 | `js/child-household.js` | 幼儿住处、母子场景、陪伴与访问间隔 |
 | `js/youth.js` | 少年争辩、心意、具名公子与成年议婚衔接 |
@@ -1430,5 +1436,9 @@ node tests/palace-flow.cjs
 新妃的家世会体现在觐见、安顿、迎驾、闲聊和人物纪事里。高门女子熟悉礼数与精致用度；清贫书香、寒门女子更留心观察、学礼与零用；皇商之女不缺银钱，却仍须另学宫规。温婉者的谨慎、骄矜者的自尊、活泼者的直问和孤高者的独处各有写法。
 
 入宫半年后不再反复扮演初来乍到；位分、恩宠与安置照应会改变她当下对用度的顾虑，原本的家世与习惯仍保留。新妃安顿时可给手头紧的人另赐一次安置银，她的领受与心情写入纪事。生活小事低频出现，姐妹在宫外也使用符合自己身份的记事。
+
+| 高门女子的从容 | 寒门女子的观察与打算 |
+| --- | --- |
+| <img src="docs/screenshots/family-bearing/noble.jpg" alt="高门女子熟悉器物与礼数，仍愿意另学宫规" width="430"> | <img src="docs/screenshots/family-bearing/humble.jpg" alt="寒门女子暗记落杯与起身次序，打算零用，可以获得安置照应" width="430"> |
 
 [完整内容与资料参考](docs/character-experiences/family-bearing.md) · [验证说明](docs/qa/family-bearing.md)

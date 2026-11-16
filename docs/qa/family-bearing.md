@@ -15,17 +15,21 @@ python3 scripts/capture-gouyi-gallery.py --gallery family-bearing
 
 ## 线上浏览器场景
 
+六个场景均通过线上页面内交互断言与存读档检查。五张展示截图完整；骄矜场景的首次截图保留了通过状态与完整文字，但立绘截取不完整，仅作诊断证据，不用于内容展示。
+
 六份公开虚构存档只使用隔离的临时存储。页面在真实浏览器内点击新妃安顿、安置银与闲聊按钮，检查文字、扣款、纪事和未完事件续接。绿色条表示断言通过，红色条表示失败；保存截图后再逐张检查。
 
-| 场景 | 核对内容 |
-| --- | --- |
-| 高门温婉 | 熟悉礼数与精致用度，不默认傲慢 |
-| 寒门温婉 | 暗记礼序、留意月例，按真实背景说话 |
-| 寒门骄矜 | 手头紧仍保留自尊与自己的体面 |
-| 皇商聪慧 | 有财力，但仍需学习宫中礼序 |
-| 安置照应 | 实际点选、只扣一次、六个月用度缓解、纪事与读档 |
-| 三年以后 | 晋位后的从容、真实生活纪事进入分段闲聊 |
+| 场景 | 核对内容 | 截图 |
+| --- | --- | --- |
+| 高门温婉 | 熟悉礼数与精致用度，不默认傲慢 | [截图](../screenshots/family-bearing/noble.jpg) |
+| 寒门温婉 | 暗记礼序、留意月例，按真实背景说话 | [截图](../screenshots/family-bearing/humble.jpg) |
+| 寒门骄矜 | 手头紧仍保留自尊与自己的体面 | [截图](../screenshots/family-bearing/proud.jpg) |
+| 皇商聪慧 | 有财力，但仍需学习宫中礼序 | [截图](../screenshots/family-bearing/merchant.jpg) |
+| 安置照应 | 实际点选、只扣一次、六个月用度缓解、纪事与读档 | [截图](../screenshots/family-bearing/allowance.jpg) |
+| 三年以后 | 晋位后的从容、真实生活纪事进入分段闲聊 | [截图](../screenshots/family-bearing/growth.jpg) |
 
 当前没有可连接的本地浏览器扩展或云桌面控制工具，因此采用远程浏览器截图与页面内交互断言。此结果不等于完整的本地 Playwright 鼠标、键盘验收。
 
 [浏览器场景逻辑](family-bearing-gallery/bootstrap.js) · [人物内容与资料参考](../character-experiences/family-bearing.md)
+
+[截图与浏览器记录](family-bearing-screenshots.json) · [线上资源核对](family-bearing-production.json)
