@@ -1,5 +1,5 @@
 /* One saved identity per authored guest; views never create people or draw lots. */
-const FENGHUA_VERSION=22;
+const FENGHUA_VERSION=23;
 const FENGHUA_PEOPLE=Object.freeze({
  shangguanLantai:{name:'上官兰台',sur:'上官',given:'兰台',gender:'f',age:25,portrait:435,role:'掌书女官',temperament:'明敏自持',principle:'愿凭文章受信任，也愿为自己的判断负责。',entry:'recruit',route:'御书房 → 风华人物 → 举行女官选拔',intro:'女史选拔的卷子送到御前。她没有抢着呈上华丽辞句，却圈出诏稿中一处会让灾县多缴钱粮的误字：“这一个字，落到百姓头上便不是文章了。”',summary:'从一次校书，到署名与担责，再到皇嗣的第一篇文章。'},
  gaoHuaibi:{name:'高怀璧',sur:'高',given:'怀璧',gender:'m',age:26,portrait:436,role:'边关功臣',temperament:'温厚而有锋芒',principle:'容貌留给旁人议论，功劳必须还给真正流血的人。',entry:'merit',route:'近两年收到边关捷报后 → 御书房 → 风华人物 → 召见有功将士',intro:'随得胜军队回京的有功将士中，有一位年轻游击。高怀璧卸下护面，殿中短暂一静。他却先递上一册阵亡者名簿：“臣的名字可以后写，他们的不能漏。”',summary:'请功册上的无名者、伤后的选择，以及面对盛名时如何安身。'},

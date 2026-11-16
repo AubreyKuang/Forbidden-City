@@ -68,7 +68,7 @@ youthPanel=function(k){
  const pending=heartPendingValid()&&heartState().pending.child===k.id;
  const last=k.heartHopes?.last,x=k.xieAdmiration;
  return html+(pending?`<p>有几句关于将来的心事，还想与你说。</p><button class="btn jade" onclick="A.royalHeart(${k.id})">听听${kidAge(k)<20?'年少心事':'如今的婚事想法'}</button>`:'')+
-  (last?`<p class="hint">曾谈起：“${esc(last.quote)}”</p>`:'')+(x?`<p>曾读谢安的诗 · ${esc({admired:'尚未议婚',declined:'心意未成',forced:'后来奉旨成婚'}[x.outcome]||'少年时的欣赏')}</p>`:'');
+  (last?`<p class="hint">曾谈起：“${esc(last.quote)}”</p>`:'')+(x?`<p>曾读谢安的诗 · ${esc({admired:'尚未议婚',declined:'心意未成',forced:'后来奉旨成婚',mutual:'后来两心相许'}[x.outcome]||'少年时的欣赏')}</p>`:'');
 };
 const heartVoicePool=childVoicePool;
 childVoicePool=function(k){
@@ -101,7 +101,7 @@ function xieHouseHTML(p){
 }
 function xieRumorEvent(p){
  if(!xiePresent(p))return null;
- const married=p.married,news=p.xiean.widowed?'有人提议替丧妻的他再说一门亲事。他温和谢绝，仍将亡妻留下的书笺收在身边。':married?'近来诗会上少见他久坐，有人听见他辞席时说家中还有人等。':pick([
+ const married=p.married,news=p.xiean.engagement?'书肆里已传开他与公主订婚的消息。婚期尚未到，二人仍各居原处；他照旧写诗，也认真守着婚约的分寸。':p.xiean.widowed?'有人提议替丧妻的他再说一门亲事。他温和谢绝，仍将亡妻留下的书笺收在身边。':married?'近来诗会上少见他久坐，有人听见他辞席时说家中还有人等。':pick([
   '书肆掌柜说，他在曲水诗会上写了一首春江诗，满座停杯。几位姑娘借买诗笺又问一遍作者是谁。',
   '茶客说有人愿替他引荐官职，他却笑称自己不过“酒囊饭袋”，只肯拿新诗换一壶酒。',
   '有人说曾见他与佩剑的江湖客同舟，也有人反驳不过是旧友。说话的人都拿不出实据。']);
@@ -141,18 +141,18 @@ function xieAdmirerReady(k){
 }
 function xieAdmirationEvent(k,d){
  const p=xieAn();if(!xieAdmirerReady(k)||heartState()?.pending!==d)return null;
- const adult=kidAge(k)>=18,style=childDisposition(k),lines={
+ const adult=kidAge(k)>=(xieRomanceActive()?15:18),discuss=xieRomanceActive()||adult,style=childDisposition(k),lines={
   好奇:'他诗里写的山河，真是亲眼见过的吗？我想知道传闻之外，他究竟是怎样的人。',好胜:'人人都夸他的诗。我先是不服，读了又读，倒想听他看看我的文章。',仁厚:'我喜欢的倒不只那首诗。听说他会替落魄的书生留一碗热饭，不知是不是真的。',
   内敛:'这首诗我已读过许多遍……我没有见过他，只是读到那一句，觉得心里有人轻轻应了一声。',爽直:'他的诗我喜欢，人还没有见过。若真有机会，我想当面听听，别总靠旁人猜。',灵动:'若能听他讲一次江上的故事，一定很有趣！我连该问什么都想好了。',审慎:'大家都说他好，可我不愿只凭传闻动心。能不能先知道他怎样待人？',自矜:'我原不爱凑诗坛的热闹。这首却留在案上许多天，想放下，又总去翻。'};
  let done=false;const valid=()=>!done&&heartState()?.pending===d&&xieAdmirerReady(k);
  const settle=mode=>{
-  if(!valid())return null;done=true;delete heartState().pending;k.lastHeart=S.turn;k.xieAdmiration={personId:p.id,turn:S.turn,outcome:mode==='release'?'declined':'admired'};
+  if(!valid()||mode==='ask'&&xieRomanceActive()&&!xieCanPursue(k,p))return null;done=true;delete heartState().pending;k.lastHeart=S.turn;k.xieAdmiration={personId:p.id,turn:S.turn,outcome:mode==='release'?'declined':'admired'};
   const text=mode==='release'?'父皇笑说这份心意也许错付，劝她把传闻与眼前的人分开，暂不议婚。':mode==='ask'?'父皇答应先听谢安本人的意思，尚未定亲，也未许诺一定成全。':'父皇陪她读诗，答应不拿这份欣赏取笑她，也不急着拿去议婚。';
   heartRecord(k,adult?'诗名与心意':'读诗怀想',`她说：“${lines[style]}”${text}`,mode==='release'?'原来诗中人未必会成为同行人。难过仍在，也想保留一点自己的体面。':'这份欣赏终于说出口了，往后怎样，还不能只靠想象。');
   if(mode==='ask')pushNow(xieMarriageRefusal(k,p));return text;
  };
- return chronicleEvent({title:adult?'诗名与心意':'读诗怀想',por:k,present:[k],valid,text:`${kidName(k)}案头多了一卷谢安的诗。她${style==='内敛'?'收了又展开，终于低声说':style==='灵动'?'眼睛发亮地说':'翻到留了书签的那一页'}：“${lines[style]}”\n${adult?'她愿意让你问问他的心意，还没有婚约。':'她尚在长成，这次只是读诗与欣赏，不安排与成年人的婚事。'}`,choices:[
-  {t:'陪她读诗，认真听完',f:()=>settle('listen')},...(adult?[{t:'召谢安，先问他是否愿意议婚',f:()=>settle('ask')}]:[]),{t:'一笑了之，劝女儿别把诗名当知己',f:()=>settle('release')}]});
+ return chronicleEvent({title:adult?'诗名与心意':'读诗怀想',por:k,present:[k],valid,text:`${kidName(k)}案头多了一卷谢安的诗。她${style==='内敛'?'收了又展开，终于低声说':style==='灵动'?'眼睛发亮地说':'翻到留了书签的那一页'}：“${lines[style]}”\n${adult?'她愿意让你问问他的心意，还没有婚约。':xieRomanceActive()?'她尚未满十五岁；即使议定亲事，也只订婚，待成年后再成婚。':'她尚在长成，这次只是读诗与欣赏，不安排与成年人的婚事。'}`,choices:[
+  {t:'陪她读诗，认真听完',f:()=>settle('listen')},...(discuss&&(!xieRomanceActive()||xieCanPursue(k,p))?[{t:'召谢安，先问他是否愿意议婚',f:()=>settle('ask')}]:[]),{t:'一笑了之，劝女儿别把诗名当知己',f:()=>settle('release')}]});
 }
 function xieMarriageReady(k,p=xieAn()){
  return xieAdmirerReady(k)&&kidAge(k)>=18&&k.xieAdmiration?.personId===p?.id&&k.xieAdmiration.outcome==='admired'&&S.turn>=(k.marriageAfter??0);
@@ -189,30 +189,32 @@ const XIE_COUPLE_WORDS={
  quiet:[['各读一卷','两人各自读书，许久无话。她指出他诗里一个太满的字，他认真改了，转过来请她再看一遍。','她不因我是谢安便说句句都好。这样的直言，值得珍重。','不必时时找话，也能安稳地坐在同一盏灯下。'],['雨声与旧谱','雨夜误了赴宴，两人索性留在廊下理旧谱。他先问她想读哪一册，没有替她挑好所有事情。','相处可以留白。她肯说想法的时候，我愿认真听。','他给我留了说话的位置，也给我留了不说话的自在。']]
 };
 function xieLifeTick(){
- let p=xieAn();if(!p){if(S.turn>=6&&!mourningActive()&&S.children.some(k=>heartReady(k)&&kidAge(k)<20)&&chance(.045))createXieAn();return;}
+ let p=xieAn();if(!p){if(S.turn>=6&&!mourningActive()&&S.children.some(k=>heartReady(k)&&kidAge(k)<(xieRomanceActive()?26:20))&&chance(.045))createXieAn();return;}
  if(!officialAlive(p))return;
  const pair=xieCouple();
  if(pair){
   const {k,m}=pair;if(!k.alive){if(!p.xiean.widowed){p.xiean.widowed={turn:S.turn,name:k.name};scholarRecord(p,`【长留旧人】妻子${k.name}去世。他收好她的旧物，仍亲自料理身后与家中事务。面对再娶的劝说，只道：“此生已有过一位妻子。”此后不再娶妻，也不纳妾。`);}return;}
   if(!m||!householdActive(k)||!xiePresent(p)||k.away||k.hp<45||k.templeStay)return;
   if(m.joinedAt==null&&S.turn>=m.separateUntil){m.joinedAt=S.turn;m.affection=clamp(m.affection+8);k.spouse.trust=Math.max(45,k.spouse.trust);
-   xieCoupleRecord(p,k,'一年相知','分房满一年，两人认真商量过后，愿意搬到同一处起居。谢安仍待她温柔，未把夫妻之礼当成催生的承诺。','这一年照应与交谈是真实的，往后仍该慢慢珍重。','不只是当年那道旨意了，这一次我们都说了愿意。');}
+   xieCoupleRecord(p,k,'一年相知','分房满一年，两人认真商量过后，愿意搬到同一处起居。谢安仍待她温柔，未把夫妻之礼当成催生的承诺。','这一年照应与交谈是真实的，往后仍该慢慢珍重。',m.origin==='proposal'?'当初答应了他的提亲，如今也愿与他共度每一个寻常清晨。':'不只是当年那道旨意了，这一次我们都说了愿意。');}
   if(S.turn-m.last<3||mourningActive()||!chance(.42))return;m.last=S.turn;
   const style=childDisposition(k),kind=['灵动','爽直','好奇','好胜'].includes(style)?'lively':['仁厚','审慎'].includes(style)?'gentle':'quiet';
-  const row=XIE_COUPLE_WORDS[kind][m.news++%2];m.affection=clamp(m.affection+(kind==='lively'?9:6));k.spouse.trust=clamp(k.spouse.trust+5);
+ if(xieRomanceActive()&&xieLateReady(pair)){xieRememberLate(pair);return;}
+ const row=XIE_COUPLE_WORDS[kind][m.news++%2];m.affection=clamp(m.affection+(kind==='lively'?9:6));k.spouse.trust=clamp(k.spouse.trust+5);
   xieCoupleRecord(p,k,row[0],`${k.name}与谢安：${row[1]}`,row[2],row[3]);
   if(m.affection>=60&&!m.loveRemembered){m.loveRemembered=S.turn;
    const words=kind==='lively'?'那日她晚回来片刻，他才发现自己一直在听门外的脚步声。她笑问等了多久，他不再拿诗句搪塞，只答想早些见她。':kind==='gentle'?'她照常留了灯，他在门边站了一会儿，主动说起今日最想告诉她的一件小事。平常的问候里，终于有了藏不住的依恋。':'两人读到同一处，几乎同时抬眼。他忽然明白，自己眷恋的不只是安静，而是与她共享这份安静。';
-   xieCoupleRecord(p,k,'始知相思',words,'成婚时说过并无此意，并非假话；如今渐生牵挂，也不是帝命能赐来的。','从前担心只得礼数，原来这些日子的相伴，也慢慢成了他的心事。');
+   xieCoupleRecord(p,k,'始知相思',words,m.startedWithLove?'成婚前已盼与她相伴，如今才知日常的牵挂，还能一日深过一日。':m.origin==='proposal'?'提亲时已盼与她相伴，如今才知日常的牵挂，还能一日深过一日。':'成婚时说过并无此意，并非假话；如今渐生牵挂，也不是帝命能赐来的。',m.startedWithLove||m.origin==='proposal'?'曾经的辞婚已是旧事，如今的相伴，也日日有新的欢喜。':'从前担心只得礼数，原来这些日子的相伴，也慢慢成了他的心事。');
   }return;
  }
- if(p.married||p.xiean.widowed||!xiePresent(p)||mourningActive()||S.turn-p.xiean.lastNews<6||!chance(.25))return;
+ if(p.married||p.xiean.widowed||xieRomanceActive()&&p.betrothal||!xiePresent(p)||mourningActive()||S.turn-p.xiean.lastNews<6||!chance(.25))return;
  p.xiean.lastNews=S.turn;const news=[
   '曲水诗会上，他没有接众人拟好的颂辞题，改写江边等船的小贩。满座初静，继而争相传抄；他将润笔留给了抄书的寒士。',
   '一位贵女托人请他题诗。他认真题了一首山水诗，也明言并非情笺，不愿让礼貌成为无意的许诺。',
   '酒楼传言他与江湖剑客夜谈。他只承认旧友来访，旁人猜测的门派与势力，仍无人查实。',
   '世家长辈劝他以声名求仕。他笑称酒囊饭袋，回去却把朋友新作上的错字逐一改好；避的是官场，并非不肯认真待人。'];
- scholarRecord(p,'【京华诗事】'+news[p.xiean.newsIndex++%news.length]);
+ const pool=xieRomanceActive()&&p.xiean.path?.kind==='free'?XIE_FREE_WORDS:news;
+ scholarRecord(p,'【京华诗事】'+pool[p.xiean.newsIndex++%pool.length]);
 }
 const xieConceive=householdCanConceive;
 householdCanConceive=function(k,partner){
@@ -220,7 +222,7 @@ householdCanConceive=function(k,partner){
  return xieConceive(k,partner);
 };
 function xieEncourageReady(pair=xieCouple()){
- return royalHeartActive()&&pair&&pair.k.alive&&householdActive(pair.k)&&xiePresent(pair.p)&&!pair.k.away&&kidAge(pair.k)>=18&&pair.m?.joinedAt==null&&S.turn-pair.m.at>=3&&S.turn-(pair.m.lastEncourage??-99)>=3;
+ return royalHeartActive()&&pair&&pair.k.alive&&householdActive(pair.k)&&xiePresent(pair.p)&&!pair.k.away&&kidAge(pair.k)>=(xieRomanceActive()?15:18)&&pair.m?.joinedAt==null&&S.turn-pair.m.at>=3&&S.turn-(pair.m.lastEncourage??-99)>=3;
 }
 A.xieEncourage=function(){
  const pair=xieCouple();if(modalOpen||!xieEncourageReady(pair))return;const {p,k,m}=pair,parent=S.children.includes(k)?'父皇':'陛下';let done=false;
