@@ -103,5 +103,5 @@ for(const fixture of [...legacy.cases,...legacy13.cases])test('unmodified versio
   if(fixture.name==='commander')assert.equal(b.run('S.jinyiwei.commander.artPortrait'),fixture.save.jinyiwei.commander.artPortrait);
   if(fixture.name==='examination')assert.deepEqual(JSON.parse(b.run('JSON.stringify(S.scholars.filter(p=>p.examRank).map(p=>p.artPortrait))')),fixture.save.scholars.filter(p=>p.examRank).map(p=>p.artPortrait));
   b.run('if(modalResult)nextEv();else choose(curEv.choices.findIndex(c=>!c.cond||c.cond()));');
-  b=reload(b);b.run('drain();assert.equal(PalaceActions.contentVersion,56);');
+  b=reload(b);b.run('drain();assert.equal(PalaceActions.contentVersion,57);');
 });

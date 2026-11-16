@@ -87,3 +87,42 @@ test('the original household son succeeds after a death report and keeps the fie
     assert.equal(royalById(son.id),son);assert.equal(son.away,true);assert.equal(royalHouseholds().filter(x=>x.id===son.id).length,1);
     assert.equal(S.children.includes(son),false);assert.ok(son.story.some(x=>x.t.includes('袭爵')));`);
 });
+
+test('a predeceased heir is reported once and the throne can designate another son',()=>{
+  const game=princeWorld();game.run(`openPrinceEstate(prince);prince.married=true;prince.spouse={...marriageCandidate(prince,'scholar'),marriedAt:0};
+    var first={id:'first-son',name:'景和',sex:'m',born:S.turn-10*12,alive:true,hp:0,seed:17,mother:prince.spouse.id,father:prince.id};
+    var second={...first,id:'second-son',name:'景宁',born:S.turn-8*12,hp:90};ensureMarriedLife(prince).children.push(first,second);
+    prince.princeEstate.succession={heir:first.id,nominated:first.id};var report=princeSuccessionTick();
+    assert.match(report.text,/景和先于王爷离世，请旨重新册立世子/);
+    assert.equal(first.alive,false);assert.equal(princeSuccessionTick(),null);assert.equal(princeHeir(prince),undefined);
+    A.princeReviewSuccession(prince.id);assert.equal(curEv.title,'长史奏报 · 另立世子');choose(0);drain();
+    assert.equal(princeHeir(prince),second);assert.ok(prince.story.some(x=>x.t.includes('另立世子')));
+    assert.ok(prince.spouse.story.some(x=>x.t.includes('世子讣报')));assert.equal(S.log.filter(x=>x.t.includes('世子讣报')).length,1);`);
+});
+
+test('adoption retains the original child and parents through inheritance and a cold reload',()=>{
+  let game=princeWorld();game.run(`prince.away=true;prince.princeEstate={location:'太原',opened:0};
+    prince.married=true;prince.spouse={...marriageCandidate(prince,'scholar'),marriedAt:0};ensureMarriedLife(prince);
+    var brother=makeKid(a,'m','承宁');brother.pendingName=false;brother.born=prince.born;openPrinceEstate(brother);
+    brother.married=true;brother.spouse={...marriageCandidate(brother,'scholar'),marriedAt:0};var h=ensureMarriedLife(brother);
+    var nephew={id:'grand-adoption',name:'景修',sex:'m',born:S.turn-6*12,alive:true,hp:90,seed:31,mother:brother.spouse.id,father:brother.id};h.children.push(nephew);
+    assert.match(princeSuccessionTick().text,/议请过继/);A.princeReviewAdoption(prince.id);choose(0);drain();
+    assert.equal(princeHeir(prince),nephew);assert.equal(princeSons(brother).length,0);assert.equal(princeSons(prince).length,1);
+    for(const p of [nephew,brother,brother.spouse,prince,prince.spouse])assert.ok(p.story.some(x=>x.t.includes('王府过继')));
+    assert.equal(S.log.filter(x=>x.t.includes('【王府过继】')).length,1);assert.equal(nephew.father,brother.id);save('auto');`);
+  game=boot(82,game.storage);game.ctx.assert=assert;game.run(`A.load('auto');var p=S.children.find(k=>k.name==='承安'),b=S.children.find(k=>k.name==='承宁'),son=b.household.children[0];
+    assert.equal(princeHeir(p),son);p.alive=false;princeSuccessionTick();A.princeReviewSuccession(p.id);choose(0);drain();
+    assert.equal(royalById(son.id),son);assert.equal(princeEstatePlace(son),'太原');assert.ok(b.spouse.story.some(x=>x.t.includes('亲生儿子')||x.t.includes('惦记孩子在嗣府')));
+    S.children=S.children.filter(k=>k!==b);inheritHousehold(b,harem()[0]);assert.equal(royalById(son.id),son);assert.equal(S.children.some(k=>k.name===son.name),false);
+    assert.equal(princeBiologicalParents(son).mother.id,b.spouse.id);`);
+});
+
+test('a sonless deceased prince can receive a posthumous heir from a brother',()=>{
+  const game=princeWorld();game.run(`prince.away=true;prince.princeEstate={location:'开封',opened:0};prince.alive=false;
+    var brother=makeKid(a,'m','承宁');brother.pendingName=false;brother.born=prince.born;
+    brother.married=true;brother.spouse={...marriageCandidate(brother,'scholar'),marriedAt:0};
+    var son={id:'grand-posthumous',name:'景修',sex:'m',born:S.turn-6*12,alive:true,seed:17,mother:brother.spouse.id,father:brother.id};
+    ensureMarriedLife(brother).children.push(son);assert.match(princeSuccessionTick().text,/请择嗣承袭/);
+    A.princeReviewAdoption(prince.id);assert.match(curEv.choices[0].t,/过继并承袭/);choose(0);drain();
+    assert.equal(princeEstatePlace(son),'开封');assert.equal(princeProbate(prince),false);assert.equal(S.log.filter(x=>x.t.includes('【袭爵】')).length,1);`);
+});

@@ -22,7 +22,8 @@ function viewPrinceEstate(){
   const k=princeEstateById(UI.sel);if(!k)return viewOut();
   const id=royalActionArg(k.id);
   const local=!k.away, mother=k.reign&&familyHostById(k.mom);
-  const father=k.princelySuccession&&royalById(k.princelySuccession.father),estateMother=father&&princeSonMother(father,k);
+  const father=k.princelySuccession&&royalById(k.princelySuccession.father),birth=princeAdoptionActive()&&k.princeAdoption?princeBiologicalParents(k):null;
+  const estateMother=birth?.mother||(father&&princeSonMother(father,k));
   const motherLink=estateMother?`<button class="person-link" onclick="A.princeFamilyMemo(${id},${royalActionArg(estateMother.id)})">${esc(estateMother.name)}</button>`:mother?.familyArchive?`<button class="person-link" onclick="A.go('consort',${mother.id})">${esc(k.momName||fullName(mother))}</button>`:outsideMotherLink(k);
   const caption=local?'京中开府':princeFief(k)?`就藩 · ${princeFief(k)}`:'已就藩 · 藩地未载';
   const wait=princeMoveWait(k);
@@ -30,7 +31,7 @@ function viewPrinceEstate(){
     ${!local&&!princeFief(k)&&princeMoveReady(k)?`<button class="btn" onclick="A.princeRegisterFief(${id})">补录藩地</button>`:''}</div>`:'';
   const state=!k.alive?'王爷薨逝，府中治丧，暂由长史理事。':!princeEstateAvailable(k)?`${childWhereabouts(k)} · 暂停王府往来`:k.royalKinContact?.pending?'家书已经寄出，等收到回信后再议行止。':!local&&wait?`回京还需等 ${wait} 个月。`:local?'在京居住，可到府探望，也可另议出京就藩。':'藩邸由王府料理，地方政务仍归有司。';
   return `<button class="btn quiet sm" onclick="A.go('out')">← 返回出巡</button>
-    <header class="detail-head">${porImg(k,112)}<div class="grow"><p>${esc(caption)} · ${k.alive?kidAge(k)+'岁':'已薨'}</p><h2>${esc(princeEstateLabel(k))}</h2><p>${esc(k.reign?`${royalKinship(k)} ${k.name}`:k.name)} · 生母 ${motherLink}</p></div></header>
+    <header class="detail-head">${porImg(k,112)}<div class="grow"><p>${esc(caption)} · ${k.alive?kidAge(k)+'岁':'已薨'}</p><h2>${esc(princeEstateLabel(k))}</h2><p>${esc(k.reign?`${royalKinship(k)} ${k.name}`:k.name)}${birth?.father?` · 生父 <button class="person-link" onclick="A.princeFamilyMemo(${id},${royalActionArg(birth.father.id)})">${esc(birth.father.name)}</button>`:''} · 生母 ${motherLink}</p></div></header>
     ${pageChapters('prince-estate',[
       ['residence','居处与藩务',detailSection('居处',`<p>${esc(state)}</p>${res}`)],
       ['dockets','长史奏报',princeDocketPanel(k)],
