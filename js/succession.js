@@ -1,5 +1,22 @@
 /* Keep identities, families and portraits when the point of view changes reign. */
-function dowagerPerson(d){return {...(d?.portrait||{isMom:true,seed:91}),dowagerName:d?.name||'太后',alive:!!d?.alive};}
+function dowagerPerson(d){
+  // Rendering must never overwrite a predecessor's saved appearance or roll RNG.
+  let portrait=d?.portrait;
+  if(!portrait&&d?.personId!=null){
+    const previous=(S?.retainedFamilies||[]).find(c=>c.id===d.personId)||
+      [...(S?.previousCourts||[])].reverse().flatMap(court=>court.consorts||[]).find(c=>c.id===d.personId)||
+      (S?.consorts||[]).find(c=>c.id===d.personId);
+    if(previous)portrait={...previous,portraitOverride:portraitCell(previous),rank:8};
+  }
+  if(!portrait){
+    const seed=Number.isFinite(d?.seed)?d.seed:Number.isFinite(S?.emp?.seed)?S.emp.seed:91;
+    const explicit=d?.portraitOverride??d?.artPortrait;
+    const inherited=d?.personId!=null||(S?.gen||1)>1;
+    portrait={isMom:true,seed,portraitOverride:Number.isInteger(explicit)&&explicit>=0&&explicit<PORTRAIT_COUNT?explicit:
+      inherited?9:DOWAGER_PORTRAITS[(seed>>>0)%DOWAGER_PORTRAITS.length]};
+  }
+  return {...portrait,dowagerName:d?.name||'太后',alive:!!d?.alive};
+}
 function makeDowager(c,relation){
   return {name:c?`${c.sur}太后`:'太后',fullName:c?fullName(c):'',personId:c?.id,relation,
     age:c?.age,atTurn:S.turn,portrait:c?{...JSON.parse(JSON.stringify(c)),portraitOverride:portraitCell(c),rank:8}:undefined,
