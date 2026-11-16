@@ -13,16 +13,16 @@ test('the second tag is unique and belongs to the same category, with opposed am
  const b=world();b.force(0,.1,.4,0,.8);b.run(`var good=rollBirthLabels(a);assert.equal(good.length,2);assert.ok(good.every(id=>BIRTH_LABELS[id].kind==='good'));`);
  b.force(0,.9,0,0,.9);b.run(`var bad=rollBirthLabels(a);assert.equal(bad.length,2);assert.ok(bad.every(id=>BIRTH_LABELS[id].kind==='bad'));assert.notEqual(bad[0],bad[1]);assert.ok(!birthLabelPool(a,'good',['sharp']).some(x=>x.id==='serene'));assert.ok(!birthLabelPool(a,'good',['serene']).some(x=>x.id==='sharp'));var k=makeKid(a,'m','守一');assert.equal(applyBirthLabels(k,['red','frail']),false);assert.equal(applyBirthLabels(k,['red','red']),false);assert.equal(applyBirthLabels(k,['sharp','serene']),false);assert.equal(k.birthLabels,undefined);`);
 });
-test('seeded population samples stay near the fixed total rate, and frail mothers alter the bad pool rather than the total',()=>{
+test('seeded population samples stay near the fixed total rate, and frail mothers have exactly thirty percent health labels',()=>{
  const b=world();const result=JSON.parse(b.run(`JSON.stringify((()=>{
   const out={};for(const [name,mother] of Object.entries({ordinary:a,weak:{trait:'体弱'},gouyi:{gouyi:true,trait:'体弱'}})){
-   const counts={n:100000,tagged:0,good:0,bad:0,double:0,frail:0};
-   for(let n=0;n<counts.n;n++){const ids=rollBirthLabels(mother);assert.ok(ids.length<=2);assert.equal(new Set(ids).size,ids.length);if(!ids.length)continue;counts.tagged++;counts[BIRTH_LABELS[ids[0]].kind]++;if(ids.length===2)counts.double++;if(ids.includes('frail'))counts.frail++;assert.ok(ids.every(id=>BIRTH_LABELS[id].kind===BIRTH_LABELS[ids[0]].kind));assert.ok(!(ids.includes('sharp')&&ids.includes('serene')));}
+   const counts={n:100000,tagged:0,good:0,bad:0,double:0,frail:0,health:0};
+   for(let n=0;n<counts.n;n++){const ids=rollBirthLabels(mother);assert.ok(ids.length<=2);assert.equal(new Set(ids).size,ids.length);if(!ids.length)continue;counts.tagged++;counts[BIRTH_LABELS[ids[0]].kind]++;if(ids.length===2)counts.double++;if(ids.includes('frail'))counts.frail++;if(ids.some(id=>BIRTH_HEALTH_LABELS.includes(id)))counts.health++;assert.ok(ids.every(id=>BIRTH_LABELS[id].kind===BIRTH_LABELS[ids[0]].kind));assert.ok(!(ids.includes('sharp')&&ids.includes('serene')));}
    out[name]=counts;
   }return out;
  })())`));
- for(const name of ['ordinary','weak']){const c=result[name];assert.ok(Math.abs(c.tagged/c.n-.03)<.002);assert.ok(Math.abs(c.good/c.tagged-.75)<.04);assert.ok(Math.abs(c.double/c.tagged-.1)<.025);}
- assert.ok(Math.abs(result.gouyi.tagged/result.gouyi.n-.8)<.005);assert.equal(result.gouyi.bad,0);assert.equal(result.gouyi.frail,0);assert.ok(Math.abs(result.gouyi.double/result.gouyi.n-.08)<.004);assert.ok(result.weak.frail>result.ordinary.frail*1.4);
+ for(const name of ['ordinary']){const c=result[name];assert.ok(Math.abs(c.tagged/c.n-.03)<.002);assert.ok(Math.abs(c.good/c.tagged-.75)<.04);assert.ok(Math.abs(c.double/c.tagged-.1)<.025);}
+ assert.ok(Math.abs(result.gouyi.tagged/result.gouyi.n-.8)<.005);assert.equal(result.gouyi.bad,0);assert.equal(result.gouyi.frail,0);assert.ok(Math.abs(result.gouyi.double/result.gouyi.n-.08)<.004);assert.ok(Math.abs(result.weak.health/result.weak.n-.3)<.005);assert.ok(Math.abs(result.weak.tagged/result.weak.n-.321)<.005);assert.ok(result.weak.frail>result.weak.health*.7);assert.equal(result.gouyi.health,0);
  console.log('Birth label sample:',JSON.stringify(result));
 });
 for(const id of ['red','star','rainbow','purple','qilin','dual','dragon','snow','early','fragile','sharp','serene','frail','quake','drought'])test(id+' has its own age-appropriate event and writes both participants once',()=>{

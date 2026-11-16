@@ -2,7 +2,8 @@
 const BIRTH_LABEL_JOURNAL=40;
 const birthLabelsActive=()=>journalContentVersion()>=BIRTH_LABEL_JOURNAL;
 const BIRTH_LABEL_STATS={lit:'才学',mar:'武艺',vir:'品德',hp:'体魄',amb:'野心'};
-const BIRTH_LABEL_RULES={ordinary:.03,gouyi:.8,good:.75,double:.1};
+const BIRTH_LABEL_RULES={ordinary:.03,gouyi:.8,weak:.3,good:.75,double:.1};
+const BIRTH_HEALTH_LABELS=['frail','fragile'];
 const BIRTH_LABELS={
  red:{name:'赤霞映阙',kind:'good',effects:{hp:6},age:0,title:'赤霞映阙 · 殿窗初红',scene:'第一声啼哭传出时，暮霞将殿窗映得通红。乳母抱着襁褓，让人放轻脚步，生怕惊着这份新来的安宁。'},
  star:{name:'文星流彩',kind:'good',effects:{lit:6},age:0,title:'文星流彩 · 银痕过阁',scene:'值夜宫人说，孩子降生那一刻，一道流星掠过文渊阁，像夜空中落下的一笔银墨。掌事将时辰写入诞生簿，盼孩子日后能与书卷相亲。'},
@@ -48,10 +49,17 @@ function birthLabelPool(c,kind,except=[]){
    .map(id=>({id,w:id==='frail'&&c?.trait==='体弱'?3:1}));
 }
 function rollBirthLabels(c){
- const blessed=gouyiBirthBlessing(c);
+ const blessed=gouyiBirthBlessing(c),weak=!blessed&&c?.trait==='体弱';
+ // Constitution is decided first and owns the whole bad set; never add a good omen to it.
+ if(weak&&chance(BIRTH_LABEL_RULES.weak)){
+   const ids=[pickW([{id:'frail',w:3},{id:'fragile',w:1}]).id];
+   if(chance(BIRTH_LABEL_RULES.double))ids.push(pickW(birthLabelPool(c,'bad',ids)).id);
+   return ids;
+ }
  if(!chance(blessed?BIRTH_LABEL_RULES.gouyi:BIRTH_LABEL_RULES.ordinary))return [];
- const kind=blessed||chance(BIRTH_LABEL_RULES.good)?'good':'bad',ids=[pickW(birthLabelPool(c,kind)).id];
- if(chance(BIRTH_LABEL_RULES.double))ids.push(pickW(birthLabelPool(c,kind,ids)).id);
+ // The remaining 70% cannot roll a health label again and inflate the promised 30%.
+ const excluded=weak?BIRTH_HEALTH_LABELS:[],kind=blessed||chance(BIRTH_LABEL_RULES.good)?'good':'bad',ids=[pickW(birthLabelPool(c,kind,excluded)).id];
+ if(chance(BIRTH_LABEL_RULES.double))ids.push(pickW(birthLabelPool(c,kind,[...excluded,...ids])).id);
  return ids;
 }
 function applyBirthLabels(k,ids){

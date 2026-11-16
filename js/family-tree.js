@@ -53,9 +53,10 @@ function familyTreeEntries(c,registry=familyTreeRegistry()){
 }
 function familyHouseHeight(c){
   const h=houseOf(c);if(!h)return 68;
-  if(!familyTreeExpanded(c,h.father.id,true))return 68;
+  const kinHeight=cousinFatherEntries(c).length?48+48*cousinFatherEntries(c).length:0;
+  if(!familyTreeExpanded(c,h.father.id,true))return 68+kinHeight;
   const registry=familyTreeRegistry();
-  return 68+familyTreeEntries(c,registry).reduce((n,e)=>n+62+(familyTreeExpanded(c,e.p.id)?e.children.length*60:0),0);
+  return 68+kinHeight+familyTreeEntries(c,registry).reduce((n,e)=>n+62+(familyTreeExpanded(c,e.p.id)?e.children.length*60:0),0);
 }
 function familyTreePerson(c,p,role,relation,list=false){
   const royal=!!p.outsideFamilyOrigin;
@@ -70,7 +71,7 @@ function familyHouseTree(c,list=false){
   return `<div class="family-house-tree"><div class="family-tree-row">${familyTreePerson(c,h.father,'father',paternalFamily(c).filter(x=>S.consorts.includes(x)).length>1?'父亲 · 亲姐妹同父':'父亲',list)}${entries.length?toggle(h.father,entries.length,true):''}</div>${open?`<div class="family-tree-branches">${entries.map(e=>{
     const expanded=familyTreeExpanded(c,e.p.id),label=e.role?officialKinLabel(h,e.role,c):natalLabel(c,e.p);
     return `<div class="family-tree-branch" data-relative-id="${e.p.id}"><div class="family-tree-row">${familyTreePerson(c,e.p,e.role,label,list)}${e.children.length?toggle(e.p,e.children.length):''}</div>${expanded&&e.children.length?`<div class="family-tree-descendants">${e.children.map(n=>`<div class="family-tree-row" data-family-child-id="${n.p.id}">${familyTreePerson(n.mother?.p.id===e.p.id?n.c:n.home,n.p,null,n.p.sex==='m'?'儿子':'女儿',list)}</div>`).join('')}</div>`:''}</div>`;
-  }).join('')}</div>`:''}</div>`;
+  }).join('')}</div>`:''}${cousinFatherLinks(c)}</div>`;
 }
 const treeNatalEntry=natalEntry;
 natalEntry=function(id,relative){

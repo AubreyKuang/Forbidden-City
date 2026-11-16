@@ -166,7 +166,7 @@ function familyGraphSVG(){
     const left=x(group.indices[0]),right=x(group.indices.at(-1)),center=(left+right)/2;
     backgrounds+=`<rect x="${left-col/2+3}" y="4" width="${right-left+col-6}" height="${H-8}" rx="9" fill="#fffaec" fill-opacity=".48" stroke="#cbb594"/>`;
     cards+=`<div class="graph-card graph-clan${group.key===maternal?' maternal-clan':''}" data-clan="${esc(group.key)}" style="${at(center,clanY,clanHeight)};width:${Math.min(320,right-left+cardWidth)}px">
-      ${label(group.label,group.key===maternal?'太后母家 · 同族系谱':group.fathers.size>1?'同族 · 按父亲分房':'父系家谱')}</div>`;
+      ${label(group.label,(cousinFamiliesActive()?'在宫妃嫔 '+clanPalaceCount(group.key)+' 人 · ':'')+(group.key===maternal?'太后母家 · 同族系谱':group.fathers.size>1?'同族 · 按父亲分房':'父系家谱'))}</div>`;
     const branches=[...group.fathers.values()];
     const fatherX=branch=>(x(branch.indices[0])+x(branch.indices.at(-1)))/2;
     wires+=`<path d="M${center} ${clanY+clanHeight} V80 M${fatherX(branches[0])} 80 H${fatherX(branches.at(-1))}" fill="none" stroke="#a68b68" stroke-dasharray="4 3"/>`;
