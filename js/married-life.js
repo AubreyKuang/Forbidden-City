@@ -34,6 +34,7 @@ function marriageMeeting(k,p,back){
 }
 const royalHouseholds=()=>[...new Map([...(S.royalRelatives||[]),...archivedPrincesses(),...S.children].map(k=>[k.id,k])).values()];
 const royalById=id=>royalHouseholds().find(k=>k.id===id);
+const richerPrincessMarriage=k=>k.sex==='f'&&journalContentVersion()>=47;
 function ensureMarriedLife(k){
   if(!k?.married||!k.spouse)return null;
   const p=k.spouse;
@@ -45,7 +46,7 @@ function ensureMarriedLife(k){
   k.marriageNature ||= marriageNature(k);p.marriageNature ||= marriageNature(p);
   k.story ||= [];
   p.trust ??= clamp(marriageFit(k,p).score+(p.marriageTalk?.trust||0));
-  k.household ||= {version:1,started:p.marriedAt,children:[],concubines:[],pregnancies:[],history:[],seen:{},lastTick:S.turn,lastBirth:-99,lastEvent:S.turn,nextNews:S.turn+4,lastNewsKind:null};
+  k.household ||= {version:1,started:p.marriedAt,children:[],concubines:[],pregnancies:[],history:[],seen:{},lastTick:S.turn,lastBirth:-99,lastEvent:S.turn,nextNews:S.turn+(richerPrincessMarriage(k)?2:4),lastNewsKind:null};
   k.household.nextNews ??= S.turn+4;
   if(!k.household.lastBirthByMother){
     k.household.lastBirthByMother={};
@@ -164,7 +165,28 @@ function recordHouseholdNews(k){
   if(p.fatherName)choices.push({id:'inlaws',delta:2,text:`${p.fatherName}家来信问安，${p.name}与${k.name}一同回信。两家旧习不同，他们把节礼的轻重提前商量清楚。`});
   if(h.children.length){const baby=h.children.find(c=>c.alive!==false);if(baby)choices.push({id:'child',delta:3,text:kidAge(baby)<1?`${k.name}与${p.name}轮流照看${baby.name}，才发觉小儿一个笑容也能让两人说上半日。`:`${baby.name}渐渐有了自己的脾气。${k.name}与${p.name}起初各有教法，后来约好先听孩子说完。`});}
   if(h.pregnancies.length)choices.push({id:'expecting',delta:3,text:`小家近来为将添的孩子收拾起居。${k.name}与${p.name}把旁的安排放慢，先顾好饮食与休息。`});
-  const news=pick(choices.filter(n=>n.id!==h.lastNewsKind));h.lastNewsKind=news.id;
+  const richer=richerPrincessMarriage(k);
+  const record=richer&&k.officialMarriageId&&officialMarriageRecord(k.officialMarriageId);
+  const groom=richer&&(record?officialMarriagePerson(record.groom)?.p:scholarById(p.scholarId));
+  if(groom?.away){
+    choices.splice(0,choices.length,
+      {id:'routeLetter',delta:2,text:`驸马${p.name}自任所寄来平安信。${k.name}在回信里画了院中开花的树，好让他看看家里的春色。`},
+      {id:'budgetLetter',delta:good?3:1,text:`公主与驸马${p.name}隔着两地对府账。她在信尾另写了几行家常，叫他忙完公务再慢慢回。`},
+      {id:'parcel',delta:3,text:`驸马${p.name}从任所托人捎来一包当地茶叶。${k.name}留了半包，另半包打算等他回来一起尝。`},
+      {id:'missedLetter',delta:1,text:`等了几日才收到驸马${p.name}的来信。${k.name}读出他近来忙碌，便约好以后只要报声平安，长信可以过些时候再写。`},
+      {id:'seasonLetter',delta:3,text:`换季前，${k.name}把新做的衣裳和一封家书送往驸马${p.name}的任所，也问他打算何时归家。`});
+  }else if(richer){
+    choices.push(
+      {id:'accounts',delta:good?3:1,text:`公主与驸马${p.name}${good?'合对府中账目，把余下的银钱留作冬衣与药费。':'对着府账各有主意，约好先记下急用的两笔，余下的下次再议。'}`},
+      {id:'errands',delta:2,text:`驸马${p.name}外出前问她想捎些什么。她托他带回市上的时令点心，两人把剩下一包留给府里的乳母。`},
+      {id:'festival',delta:3,text:`府中备节礼时，${k.name}与驸马${p.name}先各写了一份名单，再并作一份。两家亲眷都收到了他们合写的问候。`},
+      {id:'respite',delta:good?4:1,text:`驸马${p.name}近来心事重。${k.name}${good?'留灯等他说完，第二天也替他把几桩琐事接了过去。':'看出他想静一会儿，等饭后才慢慢问起。'}`},
+      {id:'repair',delta:2,text:`府中小院雨后漏了檐沟。${k.name}与驸马${p.name}分头寻匠人、理开销，修妥那天一同把旧竹椅搬了回来。`});
+    if(p.trust<55)choices.push({id:'amends',delta:3,text:`前几日为登门的客人拌了嘴，${k.name}和驸马${p.name}各说了一遍自己在意的事，约好下次先由两人商量。`});
+  }
+  const recent=richer?h.recentNews||[]:[h.lastNewsKind];
+  const news=pick(choices.filter(n=>n.id!==h.lastNewsKind&&!recent.includes(n.id)));h.lastNewsKind=news.id;
+  if(richer)h.recentNews=[...recent.slice(-2),news.id];
   p.trust=clamp(p.trust+news.delta);h.harmony=clamp((h.harmony??60)+news.delta);
   householdRecord(k,'household_daily',news.text);
 }
@@ -177,7 +199,7 @@ function marriedLifeTick(){
     if(!householdActive(k)){h.pending=null;continue;}
     if(h.echo&&S.turn>=h.echo.due){k.spouse.trust=clamp(k.spouse.trust+h.echo.trust);householdRecord(k,'household_echo','两个月后，府中回信：'+h.echo.text);delete h.echo;}
     if(h.project&&S.turn>=h.project.due){const project=h.project;delete h.project;k[project.stat]=clamp(k[project.stat]+4);k.spouse.trust=clamp(k.spouse.trust+5);householdRecord(k,'household_project',project.title+'办成，两人各自做了擅长的一部分。');}
-    if(S.turn>=h.nextNews){recordHouseholdNews(k);h.nextNews=S.turn+ri(4,7);}
+    if(S.turn>=h.nextNews){recordHouseholdNews(k);h.nextNews=S.turn+(richerPrincessMarriage(k)?ri(2,4):ri(4,7));}
     // Keep the household roll rare; a second eligible partner can conceive in the same month.
     const partners=householdPeople(k).filter(p=>householdCanConceive(k,p));
     if(partners.length&&chance(.045)){

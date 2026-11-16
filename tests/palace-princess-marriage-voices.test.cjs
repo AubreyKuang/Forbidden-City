@@ -47,6 +47,7 @@ test('mother context follows a recorded, current family incident and never inven
  const b=world();b.run(`
   var m=byId(k.mom);k.familyFeeling={mother:m.id,kind:'death',turn:S.turn};
   assert.doesNotMatch(princessMarriageContext(k),/已故/);m.alive=false;assert.ok(princessMarriageContext(k).includes(fullName(m)));assert.match(princessMarriageContext(k),/若她还在/);
+  for(var trait of Object.keys(CHILD_DISPOSITIONS)){k.temperament=trait;var voice=princessMarriageVoice(k);assert.equal(voice.quote,PRINCESS_MARRIAGE_CONCERNS[trait]);assert.ok(voice.emotion<0);assert.doesNotMatch(voice.text,/忍不住|点子|猜灯谜/);}
   m.alive=true;m.cold=true;k.familyFeeling.kind='cold';assert.match(princessMarriageContext(k),/冷宫.*按宫规/);
   m.cold=false;assert.doesNotMatch(princessMarriageContext(k),/冷宫/);m.gone=true;k.familyFeeling.kind='departure';assert.match(princessMarriageContext(k),/离宫/);
   S.turn+=13;assert.doesNotMatch(princessMarriageContext(k),/离宫|已故|冷宫/);
@@ -91,5 +92,10 @@ test('hobbies use recorded preferences and building a voice consumes neither gam
 
 for(const name of ['opening','review','return'])test('published v46 '+name+' resumes its original words and effects before new dialogue activates',()=>{
  const payload=require('./fixtures/princess-voices-legacy-v46.json')[name],b=boot(82,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));b.ctx.assert=assert;
- b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,46);assert.equal(S.children[0].marriageVoiceMemory,undefined);drain();assert.equal(PalaceActions.contentVersion,47);assert.equal(PalaceActions.blocked,false);`);
+ b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,46);assert.equal(S.children[0].marriageVoiceMemory,undefined);drain();assert.equal(PalaceActions.contentVersion,48);assert.equal(PalaceActions.blocked,false);`);
+});
+
+for(const name of ['opening','review','married'])test('published v47 '+name+' keeps the existing royal-family and married-life behavior when reloaded',()=>{
+ const payload=require('./fixtures/princess-voices-legacy-v47.json')[name],b=boot(82,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));b.ctx.assert=assert;
+ b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,47);assert.equal(S.children[0].marriageVoiceMemory,undefined);drain();assert.equal(PalaceActions.contentVersion,48);assert.equal(PalaceActions.blocked,false);var k=S.children[0];assert.equal(k.household.nextNews-k.household.started,2);`);
 });

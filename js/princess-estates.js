@@ -17,7 +17,7 @@ const canOpenPrincess=k=>k?.alive&&!immortalAway(k)&&!k.templeStay&&!k.removedFr
 const princessPursuit=k=>k.lit>=Math.max(45,k.mar+7)?'books':k.mar>=45?'archery':'near';
 
 // Marriage hopes belong to the person, not to the estate's current project.
-const princessMarriageVoicesActive=()=>journalContentVersion()>=47;
+const princessMarriageVoicesActive=()=>journalContentVersion()>=48;
 const PRINCESS_MARRIAGE_VOICES={
   灵动:{stage:'把名帖摊在案上，忍不住先说了自己的主意',lines:[
     '我想找个肯接我的话、也会逗我笑的人。总是我说十句，他只答一句，日子多闷呀。',
@@ -65,6 +65,16 @@ const PRINCESS_MARRIAGE_INTERESTS={
   riding:['她问婚后还能否练骑射，不愿将弓马一并收进嫁妆箱。','她希望能在护卫随行时出门走走，也愿听对方说自己想去的地方。','谈到骑射，她想先约一回校场相看；肯认真相处，比刻意让她赢更好。'],
   kindness:['她想在府里养些花木，闲时亲手照料，不把日子全交给管事安排。','她惦记的是一日三餐、冷暖起居，盼婚后这些小事也有人一起商量。','她想把新家安顿得舒适些，亲人来坐坐时，不必始终拘着礼数。']
 };
+const PRINCESS_MARRIAGE_CONCERNS={
+  灵动:'近来没什么心思说笑。若要相看，能否先容我缓一缓，不必催着我作答？',
+  好奇:'从前只想问他见过什么，如今更想知道，遇上难处时他会怎样面对。',
+  好胜:'我会把自己的日子撑起来，却不想在心绪未定时，匆匆作一辈子的决定。',
+  仁厚:'家里的牵挂还放不下。我盼将来身边的人肯体谅，也愿听听他的难处。',
+  内敛:'有些心事我一时说不清。请先不要替我作答，等我慢慢想明白。',
+  爽直:'我如今心里难受，就不装作欢喜。婚事可以谈，但请别催我立刻点头。',
+  审慎:'近来事情多，我想先把家里的安排问清，再认真考虑自己的婚事。',
+  自矜:'我会守好该守的礼数。只是心里还没有平复，不愿匆忙答应，让彼此为难。'
+};
 const PRINCESS_MATCH_QUESTIONS={
   official:{灵动:'家里规矩多不多？我能不能按自己的意思安排一场小宴？',好奇:'先别只说他父亲的官职，他自己这些年做过什么？',好胜:'我想听他的本事，不想只听他能靠谁。',仁厚:'家里若有人仗势欺人，他会不会劝阻？',内敛:'婚后要常去各家应酬吗？有些时候，我想留在自己府里。',爽直:'娘家若托他办不合规矩的事，他敢不敢说不？',审慎:'两家的请托、府中账目和人手归谁管，先说明白吧。',自矜:'这门亲事之外，他愿意怎样认识我这个人？'},
   frontier:{灵动:'北境的节庆是什么模样？我想听实话，也要知道怎样给宫里寄信。',好奇:'路上要走多久，那里的风俗又怎样？别只说山川壮阔。',好胜:'我会骑射，却没去过边地。他可别因为这点本领，就说我什么都适应。',仁厚:'若远行，随我去的人怎样安顿？我不愿他们的难处没人问。',内敛:'人生地疏，能否留下熟悉的随侍，让我慢慢适应？',爽直:'来往的路和日后的安排说清楚，我再回答愿不愿意。',审慎:'路程、气候、府中人手和家书往来，都要有确切安排。',自矜:'我愿先听他的想法，但不能只把我当作盟约上的一个名字。'},
@@ -74,13 +84,20 @@ function princessMarriageLine(k,pool,salt){
   const offset=voiceHash(`princess-marriage:${k.seed||k.id}:${k.id}:${salt}`);
   return pool[(offset+Math.floor(S.turn/6))%pool.length];
 }
-function princessMarriageContext(k){
+function princessMarriageFamilyConcern(k){
   const feeling=k.familyFeeling,m=feeling&&byId(feeling.mother);
-  if(m&&S.turn-feeling.turn<=12&&S.turn>=feeling.turn){
-    const name=fullName(m);
-    if(feeling.kind==='death'&&!m.alive)return `提到已故的${name}，她的声音低了些：“若她还在，也想听听她的意见。”`;
-    if(feeling.kind==='cold'&&m.alive&&m.cold)return `她仍牵挂冷宫中的${name}，问日后是否还能按宫规传信、送些衣物。`;
-    if(feeling.kind==='departure'&&m.alive&&m.gone)return `她惦记离宫的${name}，希望婚后仍能依规问安，知道彼此的近况。`;
+  if(m&&S.turn-feeling.turn<=12&&S.turn>=feeling.turn&&(
+    feeling.kind==='death'&&!m.alive||feeling.kind==='cold'&&m.alive&&m.cold||feeling.kind==='departure'&&m.alive&&m.gone))
+    return {mother:m,kind:feeling.kind};
+  return null;
+}
+function princessMarriageContext(k){
+  const concern=princessMarriageFamilyConcern(k);
+  if(concern){
+    const name=fullName(concern.mother);
+    if(concern.kind==='death')return `提到已故的${name}，她的声音低了些：“若她还在，也想听听她的意见。”`;
+    if(concern.kind==='cold')return `她仍牵挂冷宫中的${name}，问日后是否还能按宫规传信、送些衣物。`;
+    return `她惦记离宫的${name}，希望婚后仍能依规问安，知道彼此的近况。`;
   }
   const guest=rememberedMatch(k);
   if(guest)return `她又提起少年时相识的${guest.name}，想先听听他如今的心意，并没有把旧日相识当作已经定下的亲事。`;
@@ -95,15 +112,16 @@ function princessMarriageContext(k){
   return princessMarriageLine(k,PRINCESS_MARRIAGE_INTERESTS[hobby]||PRINCESS_MARRIAGE_INTERESTS.kindness,'interest');
 }
 function princessMarriageVoice(k){
-  const rule=PRINCESS_MARRIAGE_VOICES[childDisposition(k)],quote=princessMarriageLine(k,rule.lines,'wish'),context=princessMarriageContext(k);
-  return {quote,context,text:`${kidName(k)}${rule.stage}。\n“${quote}”\n${context}`};
+  const trait=childDisposition(k),rule=PRINCESS_MARRIAGE_VOICES[trait],concern=princessMarriageFamilyConcern(k);
+  const quote=concern?PRINCESS_MARRIAGE_CONCERNS[trait]:princessMarriageLine(k,rule.lines,'wish'),context=princessMarriageContext(k);
+  return {quote,context,emotion:concern?-.3:.3,text:`${kidName(k)}${concern?'谈起婚事，仍有放不下的心事':rule.stage}。\n“${quote}”\n${context}`};
 }
 function rememberPrincessMarriageVoice(k,voice){
   if(!marriageReady(k))return;
   const key=voice.quote+'|'+voice.context,previous=k.marriageVoiceMemory;
   if(previous?.key===key&&S.turn-previous.turn<6)return;
   k.marriageVoiceMemory={key,turn:S.turn};
-  princessMemory(k,'princess_marriage_wish',`【议亲心意】向父皇说起：“${voice.quote}”${voice.context}`,'宫中',.3);
+  princessMemory(k,'princess_marriage_wish',`【议亲心意】向父皇说起：“${voice.quote}”${voice.context}`,'宫中',voice.emotion);
 }
 function princessMatchVoice(k,id){
   const question=PRINCESS_MATCH_QUESTIONS[id]?.[childDisposition(k)];

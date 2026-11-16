@@ -6,3 +6,12 @@ test('a consort sister keeps her name and family identity in the tanhua list and
 test('an actual princess retains her royal title in the same review',()=>{
  const b=setup();b.run(`k.willing=true;var ev=examMarriageReview(scholar,'princess:'+k.id);assert.match(porName(ev.por),/公主/);assert.ok(!porName(ev.por).includes('undefined'));ev.choices[0].f();assert.equal(scholar.royalSpouseId,k.id);assert.match(scholar.story.at(-1).t,/驸马/);`);
 });
+
+test('an exam-ranked groom sends real career news and a single obituary to an archived princess',()=>{
+ const b=setup();b.run(`k.willing=true;examMarriageReview(scholar,'princess:'+k.id).choices[0].f();
+ S.royalRelatives=[{...k,reign:S.gen}];S.children=[];S.gen++;var wife=royalById(k.id);
+ scholarRecord(scholar,'调任吏部，明日赴任。');assert.match(wife.story.at(-1).t,/驸马近况.*姚允执.*调任吏部/);
+ assert.match(officialSpousePanel(courtPerson('scholar:'+scholar.id)),/A.go\\('relative'/);
+ scholar.alive=false;scholarRecord(scholar,'奉差途中去世。');scholarRecord(scholar,'奏报去世。');
+ assert.equal(wife.story.filter(x=>x.t.includes('驸马讣报')).length,1);assert.equal(householdLiving(wife),false);`);
+});

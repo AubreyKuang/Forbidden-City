@@ -1170,6 +1170,26 @@ test('study roster preserves ten living siblings at accession and re-labels them
     assert.match(royalRelativesPanel(),/清宁/);`);
 });
 
+test('archived local and distant relatives use audiences and letters, with persistent mirrored diaries',()=>{
+  const {run}=boot();run(`var m=empress(),heir=makeKid(m,'m','承宁'),brother=makeKid(m,'m','承安'),sister=makeKid(m,'f','明昭');
+    heir.born=-240;brother.born=-264;sister.born=-216;brother.princeEstate={location:'京城'};sister.princessMarriage='frontier';
+    var bid=brother.id,sid=sister.id;succeed(heir);choose(0);drain();E().energy=10;PalaceActions.reset();save('auto');
+    assert.match(royalKinRosterPanel(),/召见[\\s\\S]*寄家书/);assert.equal(royalKinContactMode(royalById(bid)),'visit');
+    A.royalKinContact(bid);assert.match(curEv.text,/皇兄承安/);choose(2);drain();assert.equal(E().energy,10);
+    A.royalKinContact(bid);choose(0);drain();assert.equal(E().energy,9);
+    assert.equal(S.log.filter(x=>x.t.includes('【皇亲召见】')).length,1);assert.match(royalById(bid).story.at(-1).t,/御书房.*皇兄承安/);
+    A.royalKinContact(bid);assert.equal(modalOpen,false);
+    A.royalKinContact(sid);assert.match(curEv.text,/北境/);choose(1);drain();assert.equal(E().energy,8);
+    assert.match(royalById(sid).story.at(-1).t,/寄皇亲家书/);royalKinContactTick();
+    assert.equal(royalById(sid).royalKinContact.reply,undefined);save('auto');A.load('auto');assert.equal(PalaceActions.blocked,false);
+    S.turn++;royalKinContactTick();royalKinContactTick();
+    assert.equal(S.log.filter(x=>x.t.includes('【皇亲回信】')).length,1);
+    assert.match(royalById(sid).story.at(-1).t,/皇亲回信.*明昭.*萧承宁/);assert.match(royalKinRosterPanel(),/读回信/);
+    PalaceActions.reset();A.royalKinReply(sid);save('auto');A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(curEv.title,'皇亲回信');
+    choose(0);drain();assert.equal(royalById(sid).royalKinContact.reply.unread,false);
+    assert.equal(S.log.filter(x=>x.t.includes('【皇亲回信】')).length,1);`);
+});
+
 test('residential palace guides show actual names or an empty residence instead of repeated instructions',()=>{
   const {run}=boot();run(`var p=PLACES.find(p=>p.id==='kn'),queen=empress();var html=placeGuideHTML(p);assert.match(html,new RegExp(fullName(queen)));assert.doesNotMatch(html,/可以做什么|闲话、赏赐|探望居住/);queen.cold=true;assert.match(placeGuideHTML(p),/暂时无人居住/);`);
 });

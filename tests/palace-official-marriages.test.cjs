@@ -90,3 +90,22 @@ test('a real v14 pending princess marriage retains old choices and recorded rand
  const data=require('./fixtures/official-marriage-legacy-v14.json'),b=boot(821,new Map([['chengongji_v1_auto',JSON.stringify(data)]]));b.ctx.assert=assert;
  b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(curEv.title,'公主婚事');assert.ok(!curEv.choices.some(x=>x.t.includes('从在任官员')));choose(0);assert.equal(curEv.title,'灯下谈婚事');choose(0);assert.ok(modalResult);save('auto');A.load('auto');assert.equal(PalaceActions.blocked,false);drain();assert.equal(S.officialMarriages,undefined);`);
 });
+
+test('real groom posting and report reach the same princess through succession without mirroring duplicate news',()=>{
+ const b=setup();b.run(`officialMarriageConfirm(ref,kr,agree(ref,kr));var person=courtPerson(key),groom=person.p;
+ careerSetOffice(person,'江南知府','奉旨赴任');assert.match(k.story.at(-1).t,/驸马近况.*沈明远.*江南知府/);
+ assert.equal(k.household.history.at(-1).type,'spouse_court_news');assert.doesNotMatch(groom.story.at(-1).t,/驸马近况/);
+ S.royalRelatives=[{...k,reign:S.gen}];S.children=[];S.gen++;var princess=royalById(k.id),text='【御批】河堤回奏有疏漏，责令补报。';
+ courtPersonRecord(person,text);courtPersonRecord(person,text);
+ assert.equal(princess.story.filter(x=>x.t.includes('河堤回奏')).length,1);assert.match(princess.story.at(-1).t,/问清原委/);
+ assert.match(officialMarriagePanel(key),/A.go\\('relative'/);
+ S.turn++;recordHouseholdNews(princess);assert.match(princess.story.at(-1).t,/信|任所/);`);
+});
+
+test('princess household chronicles arrive sooner and rotate through several distinct topics',()=>{
+ const b=setup();b.run(`officialMarriageConfirm(ref,kr,agree(ref,kr));assert.equal(k.household.nextNews,S.turn+2);
+ for(var i=0;i<25;i++){S.turn++;marriedLifeTick();}
+ var news=k.household.history.filter(x=>x.type==='household_daily');
+ assert.ok(news.length>=6);assert.ok(new Set(news.map(x=>x.t)).size>=4);assert.ok(news.every((x,i)=>!i||x.turn-news[i-1].turn<=4));
+ assert.equal(k.household.recentNews.length,3);assert.equal(new Set(k.household.recentNews).size,3);`);
+});
