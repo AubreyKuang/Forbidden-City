@@ -53,3 +53,252 @@ for(const mode of ['meet','courage','leave'])test('player intervention '+mode+' 
 for(const [name,payload] of Object.entries(require('./fixtures/xie-romance-legacy-v21.json')))test('genuine version 21 '+name+' remains exact',()=>{const b=boot(11,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));b.ctx.assert=assert;b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,21);assert.equal(xieAn().xiean.path,undefined);drain();assert.equal(PalaceActions.blocked,false);`);});
 test('an actual old declined save can start the new aftermath after its old scene finishes',()=>{const payload=require('./fixtures/xie-romance-legacy-v21.json').declined,b=boot(11,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));b.ctx.assert=assert;b.run(`A.load('auto');drain();xieLifeTick();assert.ok(xieAn().xiean.path);assert.ok(xieAn().xiean.pursuerId);`);});
 test('general poetry admiration does not fabricate a refusal or a new courtship',()=>{const b=w();b.run(`k.xieAdmiration.outcome='declined';xieLifeTick();assert.equal(p.xiean.path,undefined);assert.equal(p.xiean.pursuerId,undefined);`);});
+
+
+test('meeting Xie An early leaves time for a daughter born three years later to start the route',()=>{
+ const b=w();
+ b.run(`
+  k.born=S.turn+36;S.turn=k.born+12*12;careerTick();
+  assert.equal(kidAge(k),12);assert.equal(p.age,36);
+  assert.ok(xieAdmirerReady(k));assert.ok(xieMarriageRefusal(k,p));
+  p.age=45;assert.ok(xieAdmirerReady(k));
+  p.age=46;assert.equal(xieAdmirerReady(k),false);
+ `);
+});
+
+test('opening her capital estate preserves a pending meeting, including after a cold reload',()=>{
+ let b=declined();
+ b.run(`
+  path.pending='meeting';PalaceActions.reset();pushEv(princessOpening(k));choose(0);drain();
+  assert.ok(k.estate);assert.ok(!childInPalace(k));assert.ok(xiePathAvailable(p,k));
+  assert.match(xieRomancePanel(p),/赴诗会，重新相识/);
+  A.xieAfterRefusal();choose(2);assert.match(modalResult.text,/档案继续/);
+  save('auto');
+ `);
+ b=boot(100,b.storage);b.ctx.assert=assert;
+ b.run(`
+  A.load('auto');assert.equal(PalaceActions.blocked,false);nextEv();
+  var p=xieAn(),k=xiePathTarget(p);assert.ok(k.estate);
+  A.xieAfterRefusal();choose(0);drain();assert.equal(p.xiean.path.stage,1);
+  p.xiean.path.pending='knowing';k.away=true;
+  assert.equal(xiePathEvent(),null);assert.match(xieRomancePanel(p),/不便相见/);
+  k.away=false;assert.equal(xiePathEvent().title,'渐识卿心');
+ `);
+});
+
+test('a betrothed princess in a capital estate can marry once they can meet',()=>{
+ const b=w();
+ b.run(`
+  k.born=S.turn-14*12;xieMarriageRefusal(k,p).choices[0].f();
+  S.turn+=12;princessOpening(k).choices[0].f();
+  assert.ok(k.estate&&!k.married);xieBetrothalTick(p);
+  assert.ok(k.married&&p.married);assert.equal(k.betrothal,undefined);
+ `);
+});
+
+test('a princess can discover Xie An from her estate without admitting unrelated hopes there',()=>{
+ const b=w();b.force(0,0,0);
+ b.run(`
+  delete k.xieAdmiration;princessOpening(k).choices[0].f();
+  assert.equal(heartReady(k),false);
+  royalHeartTick();assert.equal(heartState().pending.kind,'xiean');
+  assert.ok(heartPendingValid());assert.match(heartEvent(k).text,/谢安的诗/);
+ `);
+});
+
+test('the letter is playable separately from the invitation and preserves her final choice',()=>{
+ const b=declined();
+ b.run(`
+  S.turn++;A.xieBridge('courage');choose(0);drain();
+  assert.match(xieRomancePanel(p),/读谢安的回笺/);
+  A.xieAfterRefusal();assert.equal(curEv.title,'一页回笺');choose(0);
+  assert.match(modalResult.text,/诗里没有的事/);drain();
+  assert.equal(path.stage,1);assert.equal(path.meetingSource,undefined);
+  path.pending='answer';A.xieAfterRefusal();choose(1);
+  assert.match(modalResult.text,/当年盼你点头是真的/);
+  assert.match(modalResult.text,/谢殿下相告/);assert.equal(path.kind,'free');
+ `);
+});
+
+test('the list and profile distinguish voluntary marriage from falling in love after an imperial betrothal',()=>{
+ const b=declined();
+ b.run(`
+  path.pending='answer';xiePathEvent().choices[0].f();UI.sel=p.id;
+  assert.match(viewScholar(),/疏朗自持 · 两心相许/);
+  assert.match(officialsTable(),/21岁 · 两心相许/);
+  assert.doesNotMatch(officialsTable(),/曾奉旨尚主/);
+ `);
+ const forced=w();
+ forced.run(`
+  k.born=S.turn-14*12;xieMarriageRefusal(k,p).choices[0].f();
+  p.xiean.engagement.affection=65;S.turn+=12;xieBetrothalTick(p);UI.sel=p.id;
+  assert.match(viewScholar(),/奉旨尚主 · 婚前已相知/);
+  assert.match(officialsTable(),/奉旨尚主 · 婚前已相知/);
+ `);
+});
+
+test('the audience and its result keep the same large portrait and updated register',()=>{
+ const b=w();
+ b.run(`
+  A.xieAudience();assert.match(curEv.text,/谢安愧不敢当/);
+  assert.match($('#mbox').innerHTML,/event-portrait-featured[^]*data-portrait-cell="433"[^]*width="210"/);
+  choose(1);assert.match(modalResult.text,/谢安写得几首诗/);
+  assert.doesNotMatch(modalResult.text,/草民/);
+  assert.match($('#mbox').innerHTML,/event-portrait-featured[^]*data-portrait-cell="433"[^]*width="210"/);
+ `);
+});
+
+test('the next chronicle gives the couple one private step between knowing and the proposal',()=>{
+ const b=declined(false,'内敛');
+ b.run(`
+  path.stage=2;k.estate={pursuit:'books'};S.turn++;xiePathTick(p);xiePathTick(p);
+  assert.equal(path.pending,undefined);
+  assert.equal(p.story.filter(s=>s.t.includes('【一页留白】')).length,1);
+  assert.equal(k.story.filter(s=>s.t.includes('【一页留白】')).length,1);
+  assert.match(p.story.at(-1).t,/有人肯接下去/);
+  assert.match(k.story.at(-1).t,/没催我交卷/);
+ `);
+ nextStage(b);
+ b.run(`
+  const ev=xiePathEvent();
+  assert.equal(ev.title,'谢安主动提亲');
+  assert.match(ev.text,/从前辞婚，谢安确无此意/);
+  assert.doesNotMatch(ev.text,/草民|容我/);
+  assert.equal(k.story.filter(s=>s.t.includes('【一页留白】')).length,1);
+ `);
+});
+
+test('betrothal rotates new scenes without creating a household or altering affection per scene',()=>{
+ const b=w();
+ b.run(`k.born=S.turn-12*12;xieMarriageRefusal(k,p).choices[0].f();`);
+ for(let month=0;month<4;month++){
+  b.force(0);
+  b.run(`S.turn+=6;xieBetrothalTick(p);`);
+ }
+ b.run(`
+  assert.equal(p.xiean.engagement.affection,18+4*12);
+  assert.ok(!k.spouse&&!k.household);
+  for(const [title] of XIE_BETROTHAL_CHRONICLES){
+   assert.ok(p.story.some(e=>e.t.includes(title)));
+   assert.ok(k.story.some(e=>e.t.includes(title)));
+  }
+ `);
+});
+
+test('a marriage diary uses the new temperament row even while separated and later expands family conversations',()=>{
+ for(const [trait,title] of [['灵动','城南问路'],['审慎','请帖上的空白'],['自矜','借卷有约']]){
+  const b=w(trait);b.force(0,0);
+  b.run(`
+   xieMarriageRefusal(k,p).choices[0].f();var m=p.xiean.marriage;
+   S.turn+=3;xieLifeTick();assert.equal(m.news,1);
+   S.turn+=3;xieLifeTick();assert.equal(m.news,2);
+   assert.equal(m.joinedAt,null);assert.ok(p.story.at(-1).t.includes('${title}'));assert.ok(k.story.at(-1).t.includes('${title}'));
+  `);
+ }
+ const b=mature();
+ b.run(`
+  m.lateNews=3;A.xieFamilyTalk();choose(0);
+  assert.match(modalResult.text,/把饭吃热/);
+  assert.ok(p.story.some(e=>e.t.includes('【饭凉以前】')));
+  assert.ok(k.story.some(e=>e.t.includes('【饭凉以前】')));
+ `);
+});
+
+test('the first two marriage chronicles arrive by month eight despite missed rolls',()=>{
+ const b=w('审慎');b.force(.99,.99,.99,.99);
+ b.run(`
+  xieMarriageRefusal(k,p).choices[0].f();var m=p.xiean.marriage;
+  for(var month=1;month<=8;month++){S.turn++;xieLifeTick();assert.equal(m.news,Math.floor(month/4));}
+  assert.ok(k.story.at(-1).t.includes('【请帖上的空白】'));
+  assert.ok(p.story.at(-1).t.includes('【请帖上的空白】'));
+  assert.equal(m.joinedAt,null);
+ `);
+});
+
+test('the early marriage deadline waits for both to be available',()=>{
+ const b=w('审慎');b.force(.99,.99);
+ b.run(`
+  xieMarriageRefusal(k,p).choices[0].f();var m=p.xiean.marriage;
+  S.turn+=4;k.away=true;xieLifeTick();assert.equal(m.news,0);
+  k.away=false;S.turn++;xieLifeTick();assert.equal(m.news,1);
+  S.turn+=4;p.away=true;xieLifeTick();assert.equal(m.news,1);
+  p.away=false;S.turn++;xieLifeTick();assert.equal(m.news,2);
+  assert.equal(m.joinedAt,null);
+ `);
+});
+
+test('upgrading a marriage keeps prior entries and carries the swapped order across reload',()=>{
+ for(const previousCount of [1,2]){
+  let b=w('审慎');
+  b.run(`
+   xieMarriageRefusal(k,p).choices[0].f();var m=p.xiean.marriage;
+   var old=XIE_COUPLE_WORDS.gentle;
+   for(var [title,previousText,his,hers] of old.slice(0,${previousCount})){
+    S.turn+=3;m.last=S.turn;m.news++;xieCoupleRecord(p,k,title,previousText,his,hers);
+   }
+   save('auto');
+  `);
+  b=boot(31,b.storage);b.ctx.assert=assert;b.force(previousCount===1?.99:0);
+  b.run(`
+   A.load('auto');assert.equal(PalaceActions.blocked,false);
+   var {p,k,m}=xieCouple();S.turn+=4;xieLifeTick();
+   assert.ok(k.story.at(-1).t.includes('【请帖上的空白】'));save('auto');
+  `);
+  b=boot(32,b.storage);b.ctx.assert=assert;b.force(0);
+  b.run(`
+   A.load('auto');assert.equal(PalaceActions.blocked,false);
+   var {p,k,m}=xieCouple();S.turn+=3;xieLifeTick();
+   assert.ok(k.story.at(-1).t.includes(${JSON.stringify(previousCount===1?'【回信中的名字】':'【账簿上一行字】')}));
+   for(const person of [p,k]){
+    assert.equal(person.story.filter(s=>s.t.includes('【请帖上的空白】')).length,1);
+    assert.equal(person.story.filter(s=>s.t.includes('【回信中的名字】')).length,1);
+   }
+  `);
+ }
+});
+
+test('after parting each goes on with a life of their own and the princess remembers it once',()=>{
+ const b=declined(false,'审慎');
+ b.run(`
+  path.pending='answer';xiePathEvent().choices[1].f();
+  k.estate={pursuit:'books'};k.away=true;S.turn+=6;xiePathTick(p);
+  assert.ok(!path.partingRemembered);
+  k.away=false;xiePathTick(p);S.turn++;xiePathTick(p);
+  assert.equal(k.story.filter(e=>e.t.includes('【又添一席】')).length,1);
+  assert.ok(!p.story.some(e=>e.t.includes('【又添一席】')));
+  p.xiean.newsIndex=XIE_FREE_WORDS.length;S.turn+=6;
+ `);
+ b.force(0);
+ b.run(`xieLifeTick();assert.match(p.story.at(-1).t,/城南书肆要替他印集/);assert.equal(xieMarriageReady(k),false);`);
+});
+
+test('an open capital estate supports each interactive stage through the scene queue and replay',()=>{
+ let b=declined();
+ b.run(`
+  princessOpening(k).choices[0].f();S.turn++;PalaceActions.reset();
+  assert.ok(k.estate&&!childInPalace(k));
+  A.xieBridge('courage');assert.equal(curEv.title,'鼓励她说出心意');choose(0);drain();
+  A.xieAfterRefusal();assert.equal(curEv.title,'一页回笺');choose(0);drain();
+  path.pending='knowing';PalaceActions.reset();
+  A.xieAfterRefusal();assert.equal(curEv.title,'渐识卿心');choose(0);drain();
+  path.pending='proposal';PalaceActions.reset();A.xieAfterRefusal();choose(0);
+  assert.equal(curEv.title,'迟来的心意 · 公主的答复');save('auto');
+ `);
+ b=boot(100,b.storage);b.ctx.assert=assert;
+ b.run(`
+  A.load('auto');assert.equal(PalaceActions.blocked,false);
+  assert.equal(curEv.title,'迟来的心意 · 公主的答复');
+  choose(0);drain();assert.ok(xieCouple().k.estate&&xieCouple().k.married);
+ `);
+});
+
+test('estate visits cover late family talk without opening scenes for people away from the capital',()=>{
+ const b=mature();
+ b.run(`
+  princessOpening(k).choices[0].f();PalaceActions.reset();
+  assert.ok(k.estate&&!childInPalace(k));k.away=true;
+  A.xieFamilyTalk();assert.equal(modalOpen,false);k.away=false;
+  A.xieFamilyTalk();assert.match(curEv.title,/归处有灯/);choose(0);drain();
+  assert.ok(p.story.some(e=>e.t.includes('【不期而遇的归处】')));
+ `);
+});

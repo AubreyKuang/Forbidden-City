@@ -2,10 +2,16 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const {boot}=require('./playtest-harness.cjs');
 const start=b=>b.run('A.start();drain();');
 const snapshot=b=>b.run('JSON.stringify({world:{...S,savedAt:undefined,saveVersion:undefined},title:curEv?.title,text:curEv?.text,choices:curEv?.choices.map(c=>c.t),queue:Q.map(e=>e.title),result:modalResult})');
-function reload(b){const next=boot(999999,b.storage);next.run("A.load('auto')");assert.ok(!next.messages.some(s=>s.includes('无法在当前版本续接')),'pending scene replay failed');const expected=JSON.parse(snapshot(b)),actual=JSON.parse(snapshot(next));
+function reload(b){
+ const next=boot(999999,b.storage);next.run("A.load('auto')");
+ assert.ok(!next.messages.some(s=>s.includes('无法在当前版本续接')),'pending scene replay failed');
+ const expectedSnapshot=snapshot(b),actualSnapshot=snapshot(next);
+ if(actualSnapshot===expectedSnapshot)return next;
  // Legacy migration may fill absent metadata after the final modal closes.
+ const expected=JSON.parse(expectedSnapshot),actual=JSON.parse(actualSnapshot);
  const project=(a,e)=>e&&typeof e==='object'?Object.fromEntries(Object.entries(e).map(([k,v])=>[k,project(a?.[k],v)])):a;
- assert.deepEqual(project(actual,expected),project(expected,expected));return next;}
+ assert.deepEqual(project(actual,expected),project(expected,expected));return next;
+}
 
 test('fresh runtime restores the exact first-month queue, result and choice effects once',()=>{
  let b=boot();start(b);b.run('A.endMonth()');assert.ok(b.run('modalOpen'));b=reload(b);
