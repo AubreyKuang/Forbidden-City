@@ -335,6 +335,8 @@ body{background:#181b20;padding-block:14px;color:var(--ink)}
   body{padding:0}
   #app[data-layout]{height:100dvh;min-height:0;border-radius:0}
   #app #top{padding:8px 10px;gap:6px 10px}
+  #app #snd{min-width:36px}
+  #snd-label{display:none}
   .hud-controls{margin-left:auto;gap:5px}
   .hud-stats{order:3;flex-basis:100%;gap:4px}
   #top .st{font-size:11px;padding:2px 5px}

@@ -2,7 +2,7 @@
 function bar(l,v,c){v=rd(v);return `<div class="bar"><span>${l}</span><i><b style="width:${clamp(v)}%;${c?`background:${c}`:''}"></b></i><em>${v}</em></div>`}
 function renderTop(){
   const t=$('#top');
-  const sound=`<span class="music-controls"><button id="snd" class="btn sm${AU.on?' on':''}" aria-pressed="${AU.on}" onclick="AU.toggle()">${AU.on?'♪ 声音：开':'♪ 开启声音'}</button>
+  const sound=`<span class="music-controls"><button id="snd" class="btn sm${AU.on?' on':''}" aria-pressed="${AU.on}" aria-labelledby="snd-label" onclick="AU.toggle()"><span aria-hidden="true">♪</span> <span id="snd-label">${AU.on?'声音：开':'开启声音'}</span></button>
     <select id="music-track" aria-label="背景配乐" onchange="AU.selectTrack(this.value)">${Object.entries(PALACE_MUSIC).map(([id,track])=>
       `<option value="${id}"${AU.track===id?' selected':''}>${track.name}</option>`).join('')}</select></span>`;
   if(!S){t.innerHTML=`<span class="brand">宸宫纪</span><span class="sp"></span>${sound}`;return}

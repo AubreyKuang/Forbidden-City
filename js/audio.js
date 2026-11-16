@@ -88,7 +88,8 @@ const AU={track:savedMusicTrack(),musicDry:null,musicWet:null,ctx:null,on:false,
     const now=this.ctx.currentTime;
     this.master.gain.cancelScheduledValues(now);
     this.master.gain.setTargetAtTime(this.on?1:0,now,.06);
-    $('#snd').textContent=this.on?'♪ 声音：开':'♪ 开启声音'; $('#snd').classList.toggle('on',this.on);$('#snd').setAttribute('aria-pressed',this.on);
+    $('#snd-label').textContent=this.on?'声音：开':'开启声音';
+    $('#snd').classList.toggle('on',this.on);$('#snd').setAttribute('aria-pressed',this.on);
     if(this.on){this.resetMusicBus();this.step=0;this.next=now+.16;this.timer=setInterval(()=>this.sched(),100);this.sched()} else {clearInterval(this.timer);this.timer=null;} },
   resetMusicBus(){
     const now=this.ctx.currentTime;
