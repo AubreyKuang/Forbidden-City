@@ -183,7 +183,15 @@ function princessMatchReview(k,id){
 }
 function princessMilestone(k){
   if(!canOpenPrincess(k))return null;
-  if(!k.estate&&S.turn>=(k.estateDeferred??0))return princessOpening(k);
+  if(!k.estate){
+    if(journalContentVersion()<53){if(S.turn>=(k.estateDeferred??0))return princessOpening(k);}
+    else if(k.estateDeferred===undefined){
+      if(k.estateInvitationChecked)return null;
+      k.estateInvitationChecked=true;
+      return chance(.30)?princessOpening(k):null;
+    }
+  }
+  if(journalContentVersion()>=53&&!marriageReady(k))return null;
   if(!k.married&&(!k.asked||k.marriageAfter!==undefined)&&S.turn>=(k.marriageAfter??0)){
     const event=princessMarriage(k);
     return {...event,onShow:()=>{event.onShow?.();k.asked=true;delete k.marriageAfter;}};
@@ -205,7 +213,7 @@ function princessActions(k,showEstate=true){
   if(!canOpenPrincess(k))return '';
   const canRead=S.turn>=(k.estateDeferred??0);
   return `<div class="acts">${k.estate?(showEstate?`<button class="btn jade" onclick="A.go('princess',${k.id})">公主府</button>`:''):
-    `<button class="btn jade" onclick="A.openPrincess(${k.id})" ${canRead?'':'disabled'}>开府来信${canRead?'':'<small>她暂且搁下了此事</small>'}</button>`}
+    `<button class="btn jade" onclick="A.openPrincess(${k.id})" ${canRead?'':'disabled'}>${journalContentVersion()>=53?'商议开府':'开府来信'}${canRead?'':'<small>她暂且搁下了此事</small>'}</button>`}
     ${showEstate?'':marriageButton(k)}</div>`;
 }
 
@@ -237,11 +245,14 @@ function viewPrincessEstate(){
   const ready=e.stage==='working'&&S.turn>=e.due;
   const message=e.stage==='proposal'?plan.wish:ready?plan.result:e.stage==='working'?`府上说还需 ${e.due-S.turn} 个月。`:'她已办成这件事，近来常把府中的消息寄到宫里。';
   const local=(e.route||k.princessMarriage)!=='frontier';
+  const mother=k.reign&&familyHostById(k.mom);
+  const motherLink=mother?.familyArchive?`<button class="person-link" onclick="A.go('consort',${mother.id})">${esc(k.momName||fullName(mother))}</button>`:outsideMotherLink(k);
   return `<button class="btn quiet sm" onclick="A.go('out')">← 返回出巡</button>
-    <header class="detail-head">${porImg(k,112)}<div class="grow"><p>${k.reign?princessKinship(k)+' · ':''}${local?'京城府邸':'北境来信'}</p><h2>${esc(kidName(k))} · 公主府</h2><p>生母 ${esc(k.momName)}</p></div></header>
+    <header class="detail-head">${porImg(k,112)}<div class="grow"><p>${k.reign?princessKinship(k)+' · ':''}${local?'京城府邸':'北境来信'}</p><h2>${esc(kidName(k))} · 公主府</h2><p>生母 ${motherLink}</p></div></header>
     <section class="palace-activity"><h3>${plan.title}</h3><p>${esc(message)}</p><div class="acts">
     ${e.stage==='proposal'||ready?`<button class="btn gold" onclick="A.princessLetter(${k.id})">${ready?'读她的回信':'读府中来信'}</button>`:''}
     ${S.turn>=e.nextVisit?`<button class="btn jade" onclick="A.princessVisit(${k.id})">${local?'请她回宫探亲':'写信邀她还宫'}</button>`:''}</div></section>
+    ${xieCapitalEstate(k)?detailSection('婚事与心意',youthPanel(k)):''}
     ${marriagePanel(k)}
     ${householdPanel(k)}
     ${detailSection('府中记事',detailStory(k))}`;

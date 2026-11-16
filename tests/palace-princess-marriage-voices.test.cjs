@@ -4,6 +4,31 @@ function world(trait='内敛'){
 }
 function reload(b){const n=boot(929,b.storage);n.ctx.assert=assert;n.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);`);return n;}
 
+test('automatic estate invitations get one 30% draw while manual opening stays available',()=>{
+ let b=world();b.force(.30);b.run(`
+  assert.equal(princessMilestone(k),null);assert.equal(k.estateInvitationChecked,true);
+  S.turn++;assert.equal(princessMilestone(k),null);
+  var other=makeKid(harem()[0],'f','昭宁');other.born=k.born;`);
+ b.force(.299);b.run(`assert.equal(princessMilestone(other).title,'公主开府来信');
+  assert.equal(princessMilestone(other),null);save('auto');`);
+ b=reload(b);b.run(`var k=S.children.find(k=>k.name==='淑月');assert.equal(princessMilestone(k),null);A.openPrincess(k.id);assert.equal(curEv.title,'公主开府来信');choose(0);drain();assert.ok(k.estate);`);
+});
+
+test('the current month reports all newly adult royal children together and only once',()=>{
+ const b=world();b.run(`
+  k.born=S.turn+1-15*12;
+  var son=makeKid(harem()[0],'m','承安');son.born=k.born;
+  var earlier=makeKid(harem()[0],'f','过月');earlier.born=k.born-1;
+  S.jinyiwei={commander:{id:'jyw-age',name:'程秉直',alive:true,career:'official',official:3,seed:10}};
+  A.endMonth();
+  var reports=[curEv,...Q].filter(e=>e?.title==='锦衣卫奏报 · 皇嗣成年');assert.equal(reports.length,1);
+  assert.match(reports[0].text,/皇子：.*承安/);assert.match(reports[0].text,/公主：.*淑月/);
+  assert.doesNotMatch(reports[0].text,/过月/);drain();
+  assert.equal(S.log.filter(x=>x.t.includes('奏报本月皇嗣成年')).length,1);
+  A.endMonth();drain();assert.equal(S.log.filter(x=>x.t.includes('奏报本月皇嗣成年')).length,1);
+ `);
+});
+
 test('equally literate princesses have eight distinct voices instead of eight requests to copy books',()=>{
  const b=world();b.run(`
   var texts=[],original=JSON.stringify(S);
@@ -92,10 +117,10 @@ test('hobbies use recorded preferences and building a voice consumes neither gam
 
 for(const name of ['opening','review','return'])test('published v46 '+name+' resumes its original words and effects before new dialogue activates',()=>{
  const payload=require('./fixtures/princess-voices-legacy-v46.json')[name],b=boot(82,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));b.ctx.assert=assert;
- b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,46);assert.equal(S.children[0].marriageVoiceMemory,undefined);drain();assert.equal(PalaceActions.contentVersion,52);assert.equal(PalaceActions.blocked,false);`);
+ b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,46);assert.equal(S.children[0].marriageVoiceMemory,undefined);drain();assert.equal(PalaceActions.contentVersion,53);assert.equal(PalaceActions.blocked,false);`);
 });
 
 for(const name of ['opening','review','married'])test('published v47 '+name+' keeps the existing royal-family and married-life behavior when reloaded',()=>{
  const payload=require('./fixtures/princess-voices-legacy-v47.json')[name],b=boot(82,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));b.ctx.assert=assert;
- b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,47);assert.equal(S.children[0].marriageVoiceMemory,undefined);drain();assert.equal(PalaceActions.contentVersion,52);assert.equal(PalaceActions.blocked,false);var k=S.children[0];assert.equal(k.household.nextNews-k.household.started,2);`);
+ b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,47);assert.equal(S.children[0].marriageVoiceMemory,undefined);drain();assert.equal(PalaceActions.contentVersion,53);assert.equal(PalaceActions.blocked,false);var k=S.children[0];assert.equal(k.household.nextNews-k.household.started,2);`);
 });
