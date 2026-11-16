@@ -1,5 +1,5 @@
 /* 皇嗣议婚：入口、固定名帖与皇子赐婚。公主仍沿用开府和旧日相识路线。 */
-const marriageEligible=k=>!!(k?.alive&&!immortalAway(k)&&!k.templeStay&&!k.removedFromRoyal&&S.children.includes(k)&&kidAge(k)>=15&&!k.jailed&&!k.married&&!k.pendingName&&!S.over&&(journalContentVersion()<22||!k.betrothal));
+const marriageEligible=k=>!!(k?.alive&&!immortalAway(k)&&!k.templeStay&&!k.removedFromRoyal&&(S.children.includes(k)||princeSuccessionActive()&&k.princelySuccession)&&kidAge(k)>=15&&!k.jailed&&!k.married&&!k.pendingName&&!S.over&&(journalContentVersion()<22||!k.betrothal));
 const marriageReady=k=>marriageEligible(k)&&S.turn>=(k.marriageAfter??0);
 const PRINCE_MATCHES={
   scholar:{name:'书香人家',note:'她喜欢校书作画，希望婚后还能保留自己的书房。',stat:'lit',gain:5},
@@ -35,7 +35,7 @@ function marriageStatus(k){
   return '已满十五岁 · 可以议婚';
 }
 function marriageButton(k,small=false){
-  return marriageEligible(k)?`<button class="btn ${small?'sm ':''}gold" onclick="A.kidMarriage(${k.id})" ${marriageReady(k)?'':'disabled'}>议婚 / 赐婚${marriageReady(k)?' →':`<small>还需${k.marriageAfter-S.turn}个月</small>`}</button>`:'';
+  return marriageEligible(k)?`<button class="btn ${small?'sm ':''}gold" onclick="A.kidMarriage(${royalActionArg(k.id)})" ${marriageReady(k)?'':'disabled'}>议婚 / 赐婚${marriageReady(k)?' →':`<small>还需${k.marriageAfter-S.turn}个月</small>`}</button>`:'';
 }
 function spouseAppearance(k){
   const spouse=k?.spouse;if(!spouse)return null;
@@ -78,7 +78,7 @@ function princeMatchReview(k,route){
   ]};
 }
 A.kidMarriage=function(id){
-  const k=kidById(id);if(modalOpen||!marriageReady(k))return;
+  const k=kidById(id)||(princeSuccessionActive()?royalById(id):null);if(modalOpen||!marriageReady(k))return;
   if(k.sex==='f'){A.princessMarriage(id);return;}
   pushEv(princeMarriage(k));save('auto');
 };

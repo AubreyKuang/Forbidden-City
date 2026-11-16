@@ -56,5 +56,9 @@ test('tags appear in the live card, detail and selection audience without extra 
 for(const key of ['month','birth','ill'])test('genuine v54 '+key+' resumes with original health and random outcomes',()=>{
  const payload=require('./fixtures/consort-traits-legacy-v54.json')[key],b=boot(17001,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));b.ctx.assert=assert;
  b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,54);assert.equal(consortTraitsActive(),false);
- drain();A.go('harem');assert.equal(PalaceActions.contentVersion,55);assert.ok(S.consorts.every(c=>Number.isFinite(c.hp)));`);
+ drain();A.go('harem');assert.equal(PalaceActions.contentVersion,57);assert.ok(S.consorts.every(c=>Number.isFinite(c.hp)));`);
+});
+test('genuine published v56 scene finishes before activating health and distinctions',()=>{
+ const payload=require('./fixtures/consort-traits-legacy-v56.json').month,b=boot(17001,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));b.ctx.assert=assert;
+ b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,56);assert.equal(consortTraitsActive(),false);drain();A.go('harem');assert.equal(PalaceActions.contentVersion,57);assert.ok(S.consorts.every(c=>Number.isFinite(c.hp)));`);
 });
