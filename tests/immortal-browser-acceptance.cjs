@@ -56,7 +56,7 @@ async function jump(page,months){
 async function openPerson(page,id,type){
  await page.locator('#menu').getByRole('button',{name:type==='kid'?'皇嗣':type==='relative'?'家族':'后宫',exact:true}).click();
  const selector=`[onclick="A.go('${type}',${id})"]`;
-  if(type==='kid'&&!await page.locator(selector).count())await page.getByRole('button',{name:/^已出宫/}).click();
+  if(type==='kid'&&!await page.locator(selector).count())await page.getByRole('button',{name:/^宫外/}).click();
  await page.locator(selector).first().click();
 }
 async function check(page,name,choice,run,viewport){
