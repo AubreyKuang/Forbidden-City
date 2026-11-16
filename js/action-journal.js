@@ -6,7 +6,19 @@ const PalaceActions=(()=>{
   const actions=new Map();
   let blocked=false,snapshotRequested=false,journal=null,depth=0,replaying=false,step=null,cursor=0,answer=0,saving=0,fields=null;
   const clone=x=>JSON.parse(JSON.stringify(x));
-  const world=s=>{const copy={...s};delete copy.pendingActions;delete copy.savedAt;delete copy.saveVersion;return copy;};
+  const world=s=>{
+    const copy={...s};delete copy.pendingActions;delete copy.savedAt;delete copy.saveVersion;
+    // Portrait snapshots are not a second live court register. JSON cannot retain
+    // aliases to the canonical household, so ignore this redundant display cache.
+    if(s?.retainedFamilies?.length&&s.flags){
+      copy.flags={...s.flags};
+      for(const key of ['dowager','birthDowager']){
+        const d=s.flags[key],c=s.retainedFamilies.find(c=>c.id===d?.personId);
+        if(c?.house&&d?.portrait?.house){const portrait={...d.portrait};delete portrait.house;copy.flags[key]={...d,portrait};}
+      }
+    }
+    return copy;
+  };
   const stamp=()=>({title:curEv?.title||null,result:!!modalResult,queue:Q.map(e=>e.title)});
   function random(){
     if(!step)return Math.random();

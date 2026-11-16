@@ -19,7 +19,7 @@ function reconcileRetainedFamilies(){
     const id=c.house.father.id;if(!houses.has(id))houses.set(id,c.house);else c.house=houses.get(id);
   }
   for(const d of [S.flags.dowager,S.flags.birthDowager]){
-    const c=hosts.get(d?.personId);if(c&&d.portrait)d.portrait.house=c.house;
+    const c=hosts.get(d?.personId);if(c&&d.portrait)d.portrait.house=JSON.parse(JSON.stringify(c.house));
   }
 }
 function retainAccessionFamilies(h){
@@ -85,7 +85,7 @@ officialRecord=function(c,role,text,options){
     const p=officialPerson(c.house,role),kin=officialKinLabel(c.house,role,mother);
     const feeling=!officialAlive(p)?'讣信送到，她抚着旧信许久未语，家中少了一人，尊位也不能减轻这份失落。':/降|疏漏|失职|革职|流放|未尽/.test(text)?'她心中忧虑，盼先查清实情，也叮嘱家人承担应尽的责任。':/赏|升|擢|办结|嘉奖/.test(text)?'她为家人欣慰，又嘱咐得意时更须谨慎，不可倚仗宫中亲缘。':'她记下家人的近况，关切任上的辛劳，也盼往后平安来信。';
     const entry=`【母家消息·${p.name}】${kin}${p.name}：${text}${feeling}`;
-    story(mother,entry);if(d.portrait)d.portrait.story=mother.story;
+    story(mother,entry);if(d.portrait)d.portrait.story=JSON.parse(JSON.stringify(mother.story));
     NPCMemory.record(S,{type:'dowager-family',time:S.turn,participants:[mother.id,p.id],outcome:entry},[{person:mother.id,subject:p.id,interpretation:entry,emotion:!officialAlive(p)?-.8:.4,impact:70}]);
   }
 };

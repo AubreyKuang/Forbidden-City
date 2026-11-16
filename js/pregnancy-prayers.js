@@ -81,7 +81,7 @@ function pregnancyPrayerMemory(c,text,location){
 function pregnancyPrayerEvent(c){
   if(!pregnancyPrayerEligible(c))return null;
   const prior=currentPregnancyPrayer(c);
-  if(prior)return {title:'重读孕中祈愿',por:c,text:`${prior.date}，${prior.master}国师为这一胎留下「${PREGNANCY_LOTS.find(l=>l.id===prior.lot)?.name||'平安'}」。\n${savedPrayerWish(prior)}\n${prior.reading||''}\n${prior.text}`,choices:[{t:'收好祈愿笺'}]};
+  if(prior)return {title:'重读孕中祈愿',por:c,text:`${prior.date}，${prior.master}国师为这一胎留下「${PREGNANCY_LOTS.find(l=>l.id===prior.lot)?.name||'平安'}」。\n${savedPrayerWish(prior)}\n${prior.reading||''}\n${personalContextActive()&&prior.wish?(prior.text||'').replace(prior.wish+'\n',''):prior.text}`,choices:[{t:'收好祈愿笺'}]};
   const wish=pregnancyPrayerWish(c),key=pregnancyPrayerKey(c),lot=pregnancyPrayerLot(c),home=pregnancyPrayerHome(c),master=daoMaster();
   const valid=()=>pregnancyPrayerEligible(c)&&pregnancyPrayerKey(c)===key&&!currentPregnancyPrayer(c);
   const settle=kind=>{
