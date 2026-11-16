@@ -210,7 +210,7 @@ consortVoicePool=function(c){
   return pool;
 };
 
-const gouyiCrownActive=()=>journalContentVersion()>=38;
+const gouyiCrownActive=()=>journalContentVersion()>=39;
 const GOUYI_CROWN_SCENES=[
   (k,m,arc)=>{
     const together=inPalace(m);

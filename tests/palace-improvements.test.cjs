@@ -941,15 +941,15 @@ test('expanded portrait atlases keep legacy identities, stable growth and every 
     }
     var before=S.children.map(portraitCell);S=JSON.parse(JSON.stringify(S));assert.deepEqual(S.children.map(portraitCell),before);
     for(let cell=0;cell<PORTRAIT_COUNT;cell++){const sheet=portraitSheet(cell),xy=portraitTile(cell,sheet);assert.ok(xy[0]>=0&&xy[0]<448);assert.ok(xy[1]>=0&&xy[1]<sheet.rows*140);}
-    assert.equal(ALL_CONSORT_PORTRAITS.length,151);
-    assert.equal(new Set(ALL_CONSORT_PORTRAITS).size,151);
+    assert.equal(ALL_CONSORT_PORTRAITS.length,181);
+    assert.equal(new Set(ALL_CONSORT_PORTRAITS).size,181);
     assert.equal(portraitSheet(239).src,'./assets/images/palace-royal-regalia.webp?v=1');`);
 });
 test('prince brides share the expanded portrait pool without duplicate faces or changes after marriage and succession',()=>{
   const {run}=boot(880);run(`var mother=harem()[0];S.children=[];var faces=[];
     for(let i=0;i<12;i++){
       const k=makeKid(mother,'m','承'+i);k.born=S.turn-240;
-      for(const route of Object.keys(PRINCE_MATCHES)){const p=marriageCandidate(k,route);faces.push(portraitCell(p));assert.ok(CONSORT_PORTRAITS.includes(portraitCell(p)));assert.equal(marriageCandidate(k,route),p);}
+      for(const route of Object.keys(PRINCE_MATCHES)){const p=marriageCandidate(k,route);faces.push(portraitCell(p));assert.ok(NEW_DOMESTIC_CONSORT_PORTRAITS.includes(portraitCell(p)));assert.equal(marriageCandidate(k,route),p);}
     }
     assert.equal(new Set(faces).size,36);assert.ok(faces.some(cell=>cell>=208));
     var prince=S.children[0],bride=marriageCandidate(prince,'scholar'),face=portraitCell(bride);
@@ -1112,7 +1112,7 @@ test('residential palace guides show actual names or an empty residence instead 
 });
 
 test('new portrait sheet appends only, keeps four princess options and shared consort choices',()=>{
-  const {run}=boot();run(`assert.equal(PORTRAIT_COUNT,459);assert.equal(portraitSheet(240).scale,4);for(var cell=240;cell<244;cell++)assert.ok(CONSORT_PORTRAITS.includes(cell));
+  const {run}=boot();run(`assert.equal(PORTRAIT_COUNT,489);assert.equal(portraitSheet(240).scale,4);for(var cell=240;cell<244;cell++)assert.ok(CONSORT_PORTRAITS.includes(cell));
     var k=makeKid(harem()[0],'f','明昭');for(var v=26;v<30;v++){k.portraitVariant=v;k.born=S.turn-216;assert.equal(portraitCell(k),244+v-26);k.born=S.turn-72;assert.ok(portraitCell(k)<240);}
     assert.equal(portraitSheet(239).src,'./assets/images/palace-royal-regalia.webp?v=1');`);
 });
