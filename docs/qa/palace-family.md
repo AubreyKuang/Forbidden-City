@@ -48,8 +48,10 @@
 ## 结果与复跑
 
 - 本地桌面和手机共 **52 个场景、116 次刷新读档**。结构化结果见 [浏览器记录](palace-family-browser-results.json)。
-- 截图见 [palace-family](../screenshots/palace-family/)。README 使用实际页面截图，并按功能介绍内容。
-- 合并后 **1,712 项自动测试全部通过**；60 个月连续游玩脚本通过。线上验收另行记录。
+- 截图见 [palace-family](../screenshots/palace-family/)，已替换为正式站点截图。README 按功能介绍内容，不写更新日志。
+- 正式页面、138 个脚本及相关样式／专属立绘共 142 个资源与本地内容逐一核对，见 [资源校验](palace-family-production-assets.json)。
+- 线上验收提交为 `474cdbc`。随后仅调整地方官入京后的出身标签，追加相关 73 项测试通过；最终部署再次核验资源。
+- 合并后 **1,712 项自动测试全部通过**；60 个月连续游玩脚本通过。正式站点另完成 **52 个场景、116 次刷新读档，零浏览器异常、零横向溢出**，见 [线上记录](palace-family-production-results.json)。
 
 ```sh
 node --test tests/*.test.cjs
