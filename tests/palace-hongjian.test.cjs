@@ -36,12 +36,11 @@ test('rank-cap fallback, age and real consent conditions are enforced',()=>{
 });
 
 for(const branch of [0,1])test('all six palace chapters and ongoing visits resume before and after choice '+branch,()=>{
- const illustrations=[null,null,'palace-stone-threshold',null,null,'hongjian-poem-at-dusk',null];
+ const paperShop='hongjian-paper-shop';
+ const illustrations=[paperShop,paperShop,'palace-stone-threshold','hongjian-willow-rain',paperShop,'hongjian-poem-at-dusk',paperShop];
  let b=admit();for(let stage=0;stage<illustrations.length;stage++){
   b.run(`S.turn+=3;E().energy=20;PalaceActions.reset();A.hongjianStory(p.id);assert.ok(modalOpen);save('auto');`);b=reload(b);
-  const markup=b.run("$('#mbox').innerHTML"), image=illustrations[stage];
-  if(image)assert.ok(markup.includes(`story-${image}.webp`));
-  else assert.doesNotMatch(markup,/event-illustration/);
+  assert.ok(b.run("$('#mbox').innerHTML").includes(`story-${illustrations[stage]}.webp`));
   const title=b.run('curEv.title');b.run(`choose(${branch});assert.ok(modalResult);save('auto');`);b=reload(b);assert.equal(b.run('curEv.title'),title);
   b.run(`drain();assert.equal(p.arc.st,${Math.min(stage+1,6)});`);
  }
