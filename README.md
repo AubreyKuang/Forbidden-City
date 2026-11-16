@@ -1524,4 +1524,4 @@ node tests/palace-flow.cjs
 
 [完整内容与资料参考](docs/character-experiences/family-bearing.md) · [验证说明](docs/qa/family-bearing.md)
 
-选秀堂姐妹入宫后，家族图与列表展示在宫人数、两房父亲的亲兄弟关系，入宫结果和双方纪事同步记录。
+选秀堂姐妹入宫后，家族图与列表展示在宫人数，按父亲分房。两房父亲的关系可在官员详情的「兄弟与提携」查看，入宫结果和双方纪事同步记录。
