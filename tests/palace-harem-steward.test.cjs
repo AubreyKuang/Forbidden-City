@@ -51,8 +51,8 @@ for(const choice of [0,1])test('the three-month stewardship report has independe
  b.run(`var p=fenghuaPerson('xueHongjian');choose(${choice});assert.equal(p.stewardship.terms[0].reportDone,true);save('auto');`);b=reload(b);b.run(`var p=fenghuaPerson('xueHongjian');assert.equal(p.stewardship.terms[0].reportDone,true);assert.equal(haremStewardReport(),null);`);
 });
 for(const [scene,payload] of Object.entries(require('./fixtures/hongjian-legacy-v26.json')))test('published v26 '+scene+' retains its exact scene before enabling v27',()=>{
- let b=world(new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,26);assert.equal(haremStewardEnabled(),false);assert.equal(hongjianContent(),false);drain();assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,34);`);
+ let b=world(new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,26);assert.equal(haremStewardEnabled(),false);assert.equal(hongjianContent(),false);drain();assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,35);`);
 });
 for(const [scene,payload] of Object.entries(require('./fixtures/hongjian-legacy-v27.json')))test('published v27 '+scene+' retains its exact scene before enabling v28',()=>{
- let b=world(new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,27);assert.equal(haremStewardEnabled(),false);assert.equal(hongjianContent(),false);drain();assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,34);`);
+ let b=world(new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,27);assert.equal(haremStewardEnabled(),false);assert.equal(hongjianContent(),false);drain();assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,35);`);
 });

@@ -8,7 +8,7 @@ function game(){const g=boot();g.ctx.assert=assert;g.run('A.newGame();A.start();
 
 test('all approved consort designs are reachable without repeats before a pool is exhausted',()=>{
   const {run}=game();run(`
-    var pools=[CONSORT_PORTRAITS,WESTERN_PORTRAITS,EASTERN_PORTRAITS,OVERSEAS_PORTRAITS];
+    var pools=[NEW_DOMESTIC_CONSORT_PORTRAITS,WESTERN_PORTRAITS,EASTERN_PORTRAITS,OVERSEAS_PORTRAITS];
     var families=['翰林学士','西域贡女','东瀛贵族','海西贵族'];
     for(var n=0;n<pools.length;n++){
       S.consorts=[];S.cands=[];var faces=[];

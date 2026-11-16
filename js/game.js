@@ -70,7 +70,7 @@ function makeGirl(o={}){
     looks:clamp(ri(40,88)+(T.looks||0)), talent:clamp(ri(30,85)+(T.talent||0)), virtue:clamp(ri(30,85)+(T.virtue||0)), scheme:clamp(ri(15,75)+(T.scheme||0)),
     rank:0, palace:'', favor:ri(5,15), mood:65, aff:ri(10,25), preg:0, prot:false, lastBirth:-99, alive:true, cold:false, gone:false,
     seed:ri(1,2e9), title:'', story:[], nights:0, known:false};
-  assignConsortPortrait(girl);initSolitary(girl);ensureConsortFertility(girl);
+  assignConsortPortrait(girl,true);initSolitary(girl);ensureConsortFertility(girl);
   return girl;
 }
 function assignPalace(c){
