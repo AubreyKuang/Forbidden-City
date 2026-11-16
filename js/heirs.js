@@ -178,11 +178,24 @@ function kidRelTick(){const ks=kidsAlive(),h=harem();
       if(S.heir&&(S.heir===o.id||S.heir===k.id)&&o.sex==='m'&&k.sex==='m')d-=.4;
       relAdd(o,k,d-relGet(o,k)*.01)}}}
 function relEvent(){const ks=shuffle(kidsAlive().filter(childInPalace)),h=harem();if(!ks.length)return null;
+  const limitCareVisits=journalContentVersion()>=36;
   const evs=[
-   ()=>{for(const k of ks){if(kidAge(k)<3||kidAge(k)>12)continue;const c=h.find(c=>!raisers(k).includes(c)&&relGet(c,k)>=40);if(!c)continue;const m=byId(k.mom);
-     return {title:'别宫的娘娘',present:[c,k],por:c,text:`${cName(c)}常把${kidName(k)}叫到${c.palace}，教${k.sex==='m'?'他':'她'}描红、给${k.sex==='m'?'他':'她'}做点心。孩子一去就是大半天，回来嘴里全是“${c.sur}娘娘说……”`,choices:[
+   ()=>{for(const k of ks){
+     if(kidAge(k)<3||kidAge(k)>12)continue;
+     const family=raisers(k);
+     const c=h.find(c=>!family.includes(c)&&relGet(c,k)>=40&&(!limitCareVisits||!k.otherConsortCareSeen?.[c.id]));
+     if(!c)continue;
+     const m=byId(k.mom);
+     const event={title:'别宫的娘娘',present:[c,k],por:c,text:`${cName(c)}常把${kidName(k)}叫到${c.palace}，教${k.sex==='m'?'他':'她'}描红、给${k.sex==='m'?'他':'她'}做点心。孩子一去就是大半天，回来嘴里全是“${c.sur}娘娘说……”`,choices:[
        {t:`让${cName(c)}多照看这孩子`,f:()=>{relAdd(c,k,10);k.vir=clamp(k.vir+2);k.lit=clamp(k.lit+2);let s=cchg(c,{aff:4,mood:8});if(m&&m.alive&&m!==c&&relGet(m,c)<10){relAdd(m,c,-8);s+='　'+cchg(m,{mood:-8});}return fx(s)+'\n§孩子才学+2　品德+2'}},
-       {t:'孩子还是多陪陪自己的母亲',cond:()=>familyVisitAllowed(k,m),why:'生母眼下无法自由与孩子相处',f:()=>{if(m&&m.alive)relAdd(m,k,5);return fx(cchg(c,{mood:-5}))}}]}}return null},
+       {t:'孩子还是多陪陪自己的母亲',cond:()=>familyVisitAllowed(k,m),why:'生母眼下无法自由与孩子相处',f:()=>{if(m&&m.alive)relAdd(m,k,5);return fx(cchg(c,{mood:-5}))}}]};
+     if(limitCareVisits){
+       event.cooldown=24;
+       if(!ambientEventReady(event))return null;
+       event.onShow=()=>{(k.otherConsortCareSeen ||= {})[c.id]=true;};
+     }
+     return event;
+   }return null},
    ()=>{for(const k of ks){if(kidAge(k)<4||kidAge(k)>14)continue;const c=h.find(c=>!raisers(k).includes(c)&&relGet(c,k)<=-40);if(!c)continue;const m=byId(k.mom);const low=m&&(m.maid||m.rank<=1||m.fam.t==='宫女');
      return {title:'奚落',present:[c,k],por:k,text:`御花园里，${cName(c)}当着一众宫人的面对${kidName(k)}说：“${low?'宫女生的孩子，也配在这里放纸鸢？':'你母妃没教过你规矩么？'}”孩子红着眼眶跑开了。`,choices:[
        {t:`当众训斥${cName(c)}`,f:()=>{relAdd(c,k,-5);k.love=clamp(k.love+8);setXin(c,'委屈','因奚落皇嗣被训斥');if(m&&m.alive)relAdd(m,c,-10);return fx(cchg(c,{mood:-12,favor:-5}))+'\n§孩子父爱+8'}},

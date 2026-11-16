@@ -362,7 +362,7 @@ function assignConsortPortrait(c,newlyCreated=false){
   // Older pending scenes and missing-art migrations retain the original seed mapping.
   // Strict true matters: Array.forEach passes a numeric index to this function.
   const base=consortPortraits(c);
-  const cells=newlyCreated===true&&journalContentVersion()>=36&&base===CONSORT_PORTRAITS?NEW_DOMESTIC_CONSORT_PORTRAITS:base;
+  const cells=newlyCreated===true&&journalContentVersion()>=37&&base===CONSORT_PORTRAITS?NEW_DOMESTIC_CONSORT_PORTRAITS:base;
   if(cells.includes(c.artPortrait))return;
   const usage=new Map(cells.map(cell=>[cell,0]));
   const relatives=(S.children||[]).flatMap(k=>[k.spouse,...Object.values(k.marriageCandidates||{})]).filter(Boolean).map(p=>p.appearance).filter(Boolean);
