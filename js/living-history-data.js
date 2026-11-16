@@ -88,7 +88,7 @@ const LIVING_STORIES=[
     choices:[
       {label:'请园丁取熟果，陪孩子核对猜测',stats:{lit:3,love:3},result:'果子入口先酸后甜。孩子把原先写的“必定”划成了“可能”。',later:'再见陌生果树，孩子先问是否熟透、能不能食用，再谈自己的猜测。那本小册开始出现“还不知道”几个字。',memory:'猜对很高兴，发现猜错也能多知道一件事。'},
       {label:'把疑问留在册上，等园丁回报',stats:{lit:2,vir:2},result:'孩子暂时没有摘果，在册中画下树的位置，请园丁择熟时来报。',later:'园丁报来果味，孩子添在原来的猜测旁，没有偷偷擦掉错处。等待也成了一次认认真真的观察。',memory:'我没有马上得到答案，也没有把问题忘了。'}]},
-  {id:'boat-weight',title:'木舟上的刻线',kind:'child',min:7,max:12,place:'ss',source:'chong',fit:k=>historyTemper(k,'好奇','灵动')&&k.lit>=35,
+  {id:'boat-weight',title:'木舟上的刻线',illustration:'child-wooden-boat',kind:'child',min:7,max:12,place:'ss',source:'chong',fit:k=>historyTemper(k,'好奇','灵动')&&k.lit>=35,
     begin:k=>`${k.name}读了称象故事，想用水盆里的木舟称一块假山石。石头放上去，舟歪了，画好的水线也不平。孩子把袖子卷起，还想再试。`,
     choices:[
       {label:'换轻石调平，分批称量再相加',stats:{lit:4,love:2},result:'教习看着孩子调平木舟，再用小石分批替换；重物与池岸仍由大人照看。',later:'孩子拿来两张不同的数目，主动说第一回的船没有放平。这回记下了误差，也记下怎样重做。',memory:'知道故事里的办法，还要知道自己哪里没做对。'},

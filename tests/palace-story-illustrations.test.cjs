@@ -161,3 +161,72 @@ test('the lotus illustration follows the result where she hears the rain',()=>{
     assert.equal(game.run("$('#mbox').innerHTML.includes('story-rain-lotus.webp')"),illustrated);
   }
 });
+
+test('the overturned cup belongs to the banquet, not the other scholar stages',()=>{
+  const game=start();
+  game.run(`const c=empress();c.trait='才女';c.aff=70;
+    c.arc={id:'scholar',st:1,t:S.turn,f:{}};pushEv(arcTick());`);
+  assert.match(game.run('curEv.text'),/翻了酒盏/);
+  assert.match(game.run("$('#mbox').innerHTML"),/story-qionglin-spilled-cup\.webp/);
+  game.run('choose(1);nextEv()');
+  assert.equal(game.run('c.arc.st'),2);
+  game.run("pushEv({...ARCS.scholar.stages[2](c,c.arc.f),title:'故人诗',por:c})");
+  assert.doesNotMatch(game.run("$('#mbox').innerHTML"),/event-illustration/);
+});
+
+test('the tilted wooden boat is shown on the first attempt only',()=>{
+  const game=start();
+  game.run(`S.turn=120;E().energy=4;const k=makeKid(empress(),'f','昭宁');
+    Object.assign(k,{born:S.turn-8*12,lit:70,hp:90,pendingName:false,temperament:'好奇'});
+    offerHistory(k,LIVING_STORIES.find(rule=>rule.id==='boat-weight'));A.historyScene(k.id,true);`);
+  assert.equal(game.run('curEv.title'),'木舟上的刻线');
+  assert.match(game.run("$('#mbox').innerHTML"),/story-child-wooden-boat\.webp/);
+  game.run('choose(0);nextEv();S.turn=k.livingHistory.current.due;A.historyScene(k.id,true)');
+  assert.equal(game.run('curEv.title'),'木舟上的刻线 · 后来');
+  assert.doesNotMatch(game.run("$('#mbox').innerHTML"),/event-illustration/);
+});
+
+test('the Huashan steps appear only when a Huashan apprentice departs',()=>{
+  for(const [route,choice,illustrated] of [['sword',0,true],['sword',1,false],['cloud',0,false]]){
+    const game=start();
+    game.run(`S.turn=300;E().treasury=500;const k=makeKid(empress(),'f','昭宁');
+      Object.assign(k,{born:S.turn-18*12,hp:90,pendingName:false,lit:70,mar:30,
+        temperament:'内敛',immortalTalent:'水灵根',daoPractice:{path:'dao',visits:6}});
+      immortalDiscover(k);k.immortal.route='${route}';A.immortalTalk(k.id);`);
+    assert.equal(game.run('curEv.title'),'仙师来访 · 山门之约');
+    assert.doesNotMatch(game.run("$('#mbox').innerHTML"),/event-illustration/);
+    game.run(`choose(${choice})`);
+    assert.equal(game.run("$('#mbox').innerHTML.includes('story-huashan-stone-steps.webp')"),illustrated);
+    assert.equal(game.run('k.immortal.stage'),choice===0?'learning':'invited');
+    assert.equal(game.run('E().treasury'),choice===0?470:500);
+  }
+});
+
+test('accepting a Huashan appeal shows the same departure image once',()=>{
+  const game=start();
+  game.run(`S.turn=300;E().treasury=500;const k=makeKid(empress(),'m','承安');
+    Object.assign(k,{born:S.turn-18*12,hp:90,pendingName:false,lit:70,mar:85,
+      temperament:'好胜',immortalTalent:'金灵根',daoPractice:{path:'dao',visits:6}});
+    immortalDiscover(k);k.immortal.stage='closed';immortalTravelRefused(k);
+    S.turn=k.immortal.travelAppeal.due;A.immortalTalk(k.id);`);
+  assert.equal(game.run('curEv.title'),'皇子远行 · 再请圣裁');
+  game.run('choose(0);choose(0)');
+  assert.match(game.run("$('#mbox').innerHTML"),/辞阙入山 · 华山.*story-huashan-stone-steps\.webp/);
+  assert.equal(game.run('k.immortal.stage'),'learning');
+  assert.equal(game.run('E().treasury'),470);
+});
+
+test('the adult follow-up shows the Huashan steps when the old promise leads to departure',()=>{
+  const game=start();
+  game.run(`S.turn=300;E().treasury=500;const k=makeKid(empress(),'f','昭宁');
+    Object.assign(k,{born:S.turn-15*12,hp:90,pendingName:false,lit:70,mar:85,
+      temperament:'好胜',immortalTalent:'金灵根',daoPractice:{path:'dao',visits:6}});
+    immortalDiscover(k);A.immortalTalk(k.id);choose(1);nextEv();
+    S.turn+=12;A.immortalTalk(k.id);`);
+  assert.equal(game.run('curEv.title'),'山门再约 · 成年问志');
+  assert.doesNotMatch(game.run("$('#mbox').innerHTML"),/event-illustration/);
+  game.run('choose(0)');
+  assert.match(game.run("$('#mbox').innerHTML"),/story-huashan-stone-steps\.webp/);
+  assert.equal(game.run('k.immortal.stage'),'learning');
+  assert.equal(game.run('E().treasury'),470);
+});

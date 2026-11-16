@@ -146,7 +146,10 @@ const EVENT_ILLUSTRATIONS={
   'old-teabowl':'她指腹沿着盏口慢慢转了一圈，那一处釉面早已磨得温润。日光里，茶还冒着细细的热气。',
   'west-lake-rain':'船篷还滴着水，天光已从云缝里落到湖上。她靠在你肩头，望了许久。',
   'rain-corridor-umbrella':'天光透过伞纸，照出浅浅的伞骨。你这边没沾着雨，她的衣袖却湿了一角。',
-  'liuxi-broken-bridge':'断桥下水正急，渡船贴着岸。'
+  'liuxi-broken-bridge':'断桥下水正急，渡船贴着岸。',
+  'qionglin-spilled-cup':'酒沿着桌缝淌下去。方才那句诗，谁也没有接。',
+  'child-wooden-boat':'小舟一歪，墨线一头沉到水里。孩子凑得更近了。',
+  'huashan-stone-steps':'山雾掠过石阶。转过一道弯，前头又露出几级。'
 };
 function eventIllustration(key){
   if(!Object.hasOwn(EVENT_ILLUSTRATIONS,key))return '';

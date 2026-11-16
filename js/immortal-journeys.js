@@ -106,7 +106,8 @@ function immortalTravelPetition(k){
    {t:`改主意，准赴${sect.place} · 国库−30`,cond:()=>valid()&&immortalCanLeave(k)&&E().treasury>=30,
     why:'须满十六岁、身体康健，无储位及家室牵绊，国库足三十万两',f:()=>{
      if(!immortalCanLeave(k)||E().treasury<30)return null;
-     return finish('远行获准',`听过这回求情，陛下改了主意，准${k.name}随师启程。`,()=>{r.stage='invited';chg({treasury:-30});immortalDepart(k);});
+     const text=finish('远行获准',`听过这回求情，陛下改了主意，准${k.name}随师启程。`,()=>{r.stage='invited';chg({treasury:-30});immortalDepart(k);});
+     return immortalDepartureResult(k,text);
     }},
    {t:'仍不准远行，留在京中',f:()=>finish('仍留京中',`陛下听过求情，仍不准${k.name}离京。侍从撤下行装，他把未寄出的拜师帖收回书匣。`,()=>{r.stage='closed';})},
    {t:immortalPalaceLessonsEnabled()&&kidAge(k)<16?'先在京修习，成年后再议启程':'先留京修习，半年后再议',f:()=>finish('暂缓远行',immortalPalaceLessonsEnabled()?`${k.name}把想问仙师的话先抄在册中，继续在京修习。半年后听课业近况，${kidAge(k)<16?'满十六岁再谈启程':'往后仍可重议远行'}。`:`陛下准${k.name}继续在京修习，远行一事待半年后再议。他把想问仙师的话先抄在册中。`,()=>{r.stage='invited';if(immortalPalaceLessonsEnabled())immortalPalaceStay(k);else r.due=S.turn+6;})}
@@ -123,6 +124,10 @@ function immortalDepart(k){
  const r=k.immortal,d=IMMORTAL_SECTS[r.route];r.stage='learning';r.departed=S.turn;r.due=S.turn+12;r.rank=0;
  delete k.initiative;k.tutor=false;
  immortalRecord(k,'辞阙入山',`${k.name}拜${d.master}${d.title}为师，随行前往${d.place}的${d.name}。皇家随侍护送至山门，往后依门规学艺，送信的驿路已经约定。${IMMORTAL_VOICES[childDisposition(k)]}`,'departure');return true;
+}
+function immortalDepartureResult(k,text){
+ return text&&k.immortal.route==='sword'&&k.immortal.stage==='learning'
+  ?{title:'辞阙入山 · 华山',illustration:'huashan-stone-steps',text}:text;
 }
 function immortalReturn(k){
  if(!k?.alive||!immortalAway(k)||k.jailed||k.removedFromRoyal)return false;
@@ -194,7 +199,7 @@ function immortalPalaceEvent(k,reconsider=false){
  if(kidAge(k)>=16&&(!r.adultDiscussed||reconsider)){
   const reason=S.heir===k.id?'东宫仍有储位之责，须先另定储君，才能远行。':k.married||k.spouse?'已有婚姻与家室，眼下先在京修习，不径自舍家入山。':sick?'身体尚弱，先休养，不能即刻远行。':'师门愿接续旧约；若准启程，将从一年学艺、一年历练做起。';
   return {...base,title:reconsider?'山门再约 · 重议行程':'山门再约 · 成年问志',text:`${k.name}${reconsider?'又提起先前留下的山门之约':'已满十六岁，国师取出当年暂留京中时记下的山门之约'}。${d.master}${d.title}托书问起近况，先前的师承与课业仍在，不须重新拜会。\n${k.name}道：“${IMMORTAL_VOICES[childDisposition(k)]}只是今日，我想把去留再认真想一遍。”\n${reason}`,choices:[
-   {t:`准随师赴${d.place} · 国库−30`,cond:()=>valid()&&immortalCanLeave(k)&&E().treasury>=30,why:'须身体康健，无储位及家室牵绊，国库足三十万两',f:()=>{if(!valid()||!immortalCanLeave(k)||E().treasury<30)return null;done=true;r.adultDiscussed=true;chg({treasury:-30});immortalDepart(k);save('auto');return `${k.name}接续旧约随师启程，在京修习的经历一并留在纪事里。`;}},
+   {t:`准随师赴${d.place} · 国库−30`,cond:()=>valid()&&immortalCanLeave(k)&&E().treasury>=30,why:'须身体康健，无储位及家室牵绊，国库足三十万两',f:()=>{if(!valid()||!immortalCanLeave(k)||E().treasury<30)return null;done=true;r.adultDiscussed=true;chg({treasury:-30});immortalDepart(k);save('auto');return immortalDepartureResult(k,`${k.name}接续旧约随师启程，在京修习的经历一并留在纪事里。`);}},
    {t:'继续在京修习，半年后听近况',f:()=>finish('留京续课',`${k.name}暂不启程，继续在京修习；半年后听新的课业近况，远行的心愿仍可再谈。`,()=>immortalPalaceStay(k))},
    {t:'商定留在人间，收存山门之约',f:()=>finish('各有归处',`${k.name}与父皇谈过后，决定保留问道兴趣，在人间走自己的路。师承与在京修习的经历没有抹去，山门之约到此收存。`,()=>{r.stage='closed';r.adultDiscussed=true;})}
   ]};
@@ -226,7 +231,7 @@ function immortalEvent(k){
   if(!immortalLocal(k))return null;
   const reason=kidAge(k)<16?'年纪尚小，可先留在宫中读书练习，十六岁后再谈远行。':S.heir===k.id?'东宫有监国与储位之责，须先另定储君，才能远行。':k.married||k.spouse?'已有婚姻与家室，眼下先在京问道，不径自舍家入山。':k.hp<50?'身体尚弱，先休养，再谈入山。':'';
   return {...base,cast:[k,master],title:'仙师来访 · 山门之约',text:`${d.master}${d.title}受国师相邀来访，衣袂带着松间清气。谈及${k.name}的${r.root}，道长说：“${d.line}”\n${k.name}答道：“${IMMORTAL_VOICES[childDisposition(k)]}”\n${k.sex==='m'&&k.birthTraits?.mother?.rank===8?'身为嫡出的皇子，他又问起宗室责任，久久没有立即作答。\n':''}${reason||'若准启程，须一年学艺、一年历练后再谈去留；以后可以归来，也可以长留山门。'}`,choices:[
-   {t:`准随师赴${d.place} · 国库−30`,cond:()=>immortalCanLeave(k)&&E().treasury>=30,why:reason||'国库不足',f:()=>{if(!valid()||E().treasury<30||!immortalCanLeave(k))return null;done=true;chg({treasury:-30});immortalDepart(k);save('auto');return `${k.name}已随师启程。送别与亲人的心绪，分别记在人物纪事里。`;}},
+   {t:`准随师赴${d.place} · 国库−30`,cond:()=>immortalCanLeave(k)&&E().treasury>=30,why:reason||'国库不足',f:()=>{if(!valid()||E().treasury<30||!immortalCanLeave(k))return null;done=true;chg({treasury:-30});immortalDepart(k);save('auto');return immortalDepartureResult(k,`${k.name}已随师启程。送别与亲人的心绪，分别记在人物纪事里。`);}},
    {t:immortalPalaceLessonsEnabled()?(kidAge(k)<16?'留宫中习道，成年后再议启程':'先留宫中习道，半年后听近况'):'先留宫中习道，半年后再谈',f:()=>finish('宫中留课',immortalPalaceLessonsEnabled()?`${k.name}留在京中随师读书习剑，尚未离宫。半年后听新的修习近况，${kidAge(k)<16?'满十六岁再谈启程':'远行的心愿仍被认真留下'}。`:`${k.name}留在京中随师读书习剑，尚未离宫。想远行的心愿被认真留下，半年后再议。`,()=>{r.stage='invited';if(immortalPalaceLessonsEnabled())immortalPalaceStay(k);else r.due=S.turn+6;k.lit=clamp(k.lit+2);if(!immortalPalaceLessonsEnabled()||kidAge(k)>=16)immortalTravelRefused(k);},immortalPalaceLessonsEnabled()?'palace-study':'news')},
    {t:'愿留此间，不走入山这条路',f:()=>finish('各有归处',`${k.name}与仙师谈过以后，决定保留问道的兴趣，在人间走自己的路。灵根没有消失，山门之约到此收存。`,()=>{r.stage='closed';})},
    ...(journalContentVersion()>=49&&k.sex==='m'?[{t:'皇子不可远行，留在京中',f:()=>finish('远行未允',`陛下不准${k.name}随师远行，令他暂留京中。行囊仍搁在床边，他还想找个时机把未说完的话讲给父皇听。`,()=>{r.stage='closed';immortalTravelRefused(k);},'petition')}]:[])
