@@ -1,0 +1,29 @@
+const fs=require('node:fs/promises'),path=require('node:path'),assert=require('node:assert/strict'),{chromium}=require('playwright'),{boot}=require('./playtest-harness.cjs');
+const url=process.env.PALACE_QA_URL||'http://127.0.0.1:8428/',shots=process.env.PALACE_SHOTS||'/tmp/exam-schedule-shots',output=process.env.PALACE_BROWSER_RESULTS||'/tmp/exam-schedule-browser.json';
+const b=boot(202);b.run(`A.start();drain();S.year=4;S.month=2;S.turn=35;S.ministries={heads:{},used:{},exams:[]};for(const c of S.consorts){c.fam={t:'寒门',p:10};delete c.house;houseOf(c);}PalaceActions.reset();`);
+const fixture=Buffer.from(b.run('JSON.stringify(PalaceActions.payload())'));
+const report={url,started:new Date().toISOString(),runs:[]};
+async function ready(p){await p.waitForFunction(()=>!SaveManager.getStorage()?.pending);}
+async function read(p){return p.evaluate(()=>JSON.parse(JSON.stringify({year:S.year,month:S.month,turn:S.turn,interval:regularExamInterval(),exams:S.ministries?.exams,scholars:S.scholars,title:modalOpen?curEv.title:null,result:modalResult,cast:curEv?.cast?.map(x=>x.id),blocked:PalaceActions.blocked})));}
+async function reload(p,r){await ready(p);const before=await read(p);await p.reload();await p.getByRole('button',{name:/^读取自动存档/}).click();await p.waitForFunction(()=>!!S);assert.deepEqual(await read(p),before);r.reloads++;}
+async function next(p){await p.locator('#modal .mch button:not([disabled])').first().click();}
+async function drain(p){for(let n=0;n<100;n++){if(!await p.locator('#modal').isVisible())return;await next(p);}throw Error('queue did not finish');}
+async function government(p){await p.locator('#menu').getByRole('button',{name:'理政',exact:true}).click();await p.locator('.exam-schedule').waitFor();}
+async function shot(p,r,suffix){await p.waitForFunction(()=>document.querySelector('#toast').childElementCount===0);await p.evaluate(()=>document.fonts.ready);await p.screenshot({path:path.join(shots,r.name+'-'+r.viewport+'-'+suffix+'.jpg'),type:'jpeg',quality:85});}
+(async()=>{await fs.mkdir(shots,{recursive:true});const browser=await chromium.launch({headless:true,executablePath:process.env.PALACE_CHROME||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});report.browser=browser.version();try{
+ for(const [viewport,size] of [['desktop',{width:1440,height:1000}],['mobile',{width:390,height:844}]])for(const name of ['schedule','due']){
+  const ctx=await browser.newContext({viewport:size}),p=await ctx.newPage(),r={name,viewport,reloads:0,errors:[],passed:false};report.runs.push(r);p.setDefaultTimeout(15000);p.on('dialog',d=>d.accept());p.on('pageerror',e=>r.errors.push(e.message));
+  try{
+   await p.goto(url);await p.getByRole('button',{name:'新开一局',exact:true}).click();await p.getByRole('button',{name:'登基',exact:true}).click();await p.getByRole('button',{name:'进入宫城',exact:true}).click();await government(p);
+   if(name==='schedule'){
+    const card=p.locator('.exam-schedule');assert.match(await card.innerText(),/每三年一科/);assert.match(await card.innerText(),/四年三月/);const button=p.getByRole('button',{name:'调整科举周期',exact:true});const box=await button.boundingBox();assert.ok(box.y>=0&&box.y+box.height<size.height);await shot(p,r,'entry');await button.click();assert.equal((await read(p)).title,'礼部 · 科举日程');for(const choice of ['每年一科','每三年一科','每五年一科','每十年一科'])assert.equal(await p.getByRole('button',{name:new RegExp('^'+choice)}).count(),1);await shot(p,r,'options');await p.getByRole('button',{name:/^每五年一科/}).click();await reload(p,r);assert.equal((await read(p)).interval,5);await drain(p);await government(p);assert.match(await card.innerText(),/六年三月/);await reload(p,r);await government(p);assert.match(await card.innerText(),/每五年一科/);
+   }else{
+    await p.locator('#menu').getByRole('button',{name:'存档',exact:true}).click();await p.locator('#save-file').setInputFiles({name:'before-exam.json',mimeType:'application/json',buffer:fixture});await p.waitForFunction(()=>S?.year===4);await ready(p);await government(p);assert.match(await p.locator('.exam-schedule').innerText(),/四年三月/);assert.equal(await p.evaluate(()=>!!ministryHead('rites')),false);
+    await p.getByRole('button',{name:'结束本月 ▸',exact:true}).click();for(let n=0;n<25&&(await read(p)).month===2;n++)await p.locator('#modal .mch button:not([disabled])').last().click();for(let n=0;n<100&&(await read(p)).title!=='殿试 · 钦点三甲';n++)await next(p);assert.equal((await read(p)).month,3);assert.equal((await read(p)).cast.length,3);await shot(p,r,'examination');await reload(p,r);await p.getByRole('button',{name:'交礼部按卷定次',exact:true}).click();await reload(p,r);await drain(p);await government(p);const state=await read(p);assert.equal(state.exams.length,1);r.graduates=state.scholars.filter(x=>x.examRank).map(x=>({name:x.name,rank:x.examRank,office:x.office}));assert.deepEqual(r.graduates.map(x=>x.rank).sort(),['探花','榜眼','状元'].sort());assert.match(await p.locator('.exam-schedule').innerText(),/七年三月/);assert.match(await p.locator('.exam-schedule').innerText(),/最近一科：四年正科/);await shot(p,r,'result');await reload(p,r);
+   }
+   const dims=await p.evaluate(()=>({width:document.documentElement.scrollWidth,viewport:innerWidth}));assert.ok(dims.width<=dims.viewport+1);assert.deepEqual(r.errors,[]);r.passed=true;console.log('PASS',viewport,name);
+  }catch(e){r.failure=e.stack;r.body=await p.locator('body').innerText().catch(()=>null);console.error('FAIL',viewport,name,e.message);await shot(p,r,'failure').catch(()=>{});}
+  await ctx.close();await fs.writeFile(output,JSON.stringify(report,null,2));
+ }
+ }finally{await browser.close();report.finished=new Date().toISOString();report.passed=report.runs.every(r=>r.passed);await fs.writeFile(output,JSON.stringify(report,null,2));if(!report.passed)process.exitCode=1;}
+})().catch(e=>{console.error(e);process.exitCode=1;});

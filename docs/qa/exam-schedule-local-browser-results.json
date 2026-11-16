@@ -1,0 +1,71 @@
+{
+  "url": "http://127.0.0.1:8428/",
+  "started": "2026-11-16T04:07:06.963Z",
+  "runs": [
+    {
+      "name": "schedule",
+      "viewport": "desktop",
+      "reloads": 2,
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "due",
+      "viewport": "desktop",
+      "reloads": 3,
+      "errors": [],
+      "passed": true,
+      "graduates": [
+        {
+          "name": "曹承允",
+          "rank": "状元",
+          "office": "翰林院修撰"
+        },
+        {
+          "name": "薛允和",
+          "rank": "榜眼",
+          "office": "翰林院编修"
+        },
+        {
+          "name": "程国桢",
+          "rank": "探花",
+          "office": "翰林院编修"
+        }
+      ]
+    },
+    {
+      "name": "schedule",
+      "viewport": "mobile",
+      "reloads": 2,
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "due",
+      "viewport": "mobile",
+      "reloads": 3,
+      "errors": [],
+      "passed": true,
+      "graduates": [
+        {
+          "name": "尹济安",
+          "rank": "状元",
+          "office": "翰林院修撰"
+        },
+        {
+          "name": "徐云深",
+          "rank": "榜眼",
+          "office": "翰林院编修"
+        },
+        {
+          "name": "沈尚义",
+          "rank": "探花",
+          "office": "翰林院编修"
+        }
+      ]
+    }
+  ],
+  "browser": "157.0.8103.78",
+  "finished": "2026-11-16T04:07:21.852Z",
+  "passed": true
+}

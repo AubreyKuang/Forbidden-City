@@ -228,6 +228,16 @@ const ministriesBaseTick=courtTick;
 courtTick=function(...args){const result=ministriesBaseTick.apply(this,args);examTick();return result;};
 
 /* —— 页面 —— */
+function examSchedulePanel(){
+  if(!S||journalContentVersion()<33)return '';
+  const last=(S.ministries?.exams||[]).findLast(x=>x.gen===S.gen&&x.top?.length);
+  const winner=last?scholarById(last.top[0]):null;
+  return `<section class="detail-section exam-schedule" aria-label="科举日程"><h3>科举日程</h3>
+    <p>正科 · <strong>${esc(examIntervalLabel(regularExamInterval()))}</strong></p>
+    <p>${esc(nextExamLabel())}。</p>
+    <p class="hint">到期转入三月时自动呈上殿试，无须先任命礼部尚书。${winner?`最近一科：${esc(cnNum(last.year))}年${last.enke?'恩科':'正科'}，状元${esc(winner.name)}。`:''}</p>
+    <div class="acts"><button class="btn sm gold" onclick="A.examSchedule()" ${S.over?'disabled':''}>调整科举周期</button><button class="btn sm" onclick="A.go('ministries')">礼部与新科进士</button></div></section>`;
+}
 function viewMinistries(){
   const card=([id,m])=>{
     const head=ministryHead(id),used=S.ministries?.used?.[id],wait=used==null?0:Math.max(0,MINISTRY_GAP-(S.turn-used));
