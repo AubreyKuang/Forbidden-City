@@ -102,7 +102,7 @@ function deliverHouseholdChild(k,pregnancy){
   const used=new Set(royalHouseholds().flatMap(r=>(r.household?.children||[]).map(c=>c.given)));
   const name=pick(names.filter(n=>!used.has(n)).length?names.filter(n=>!used.has(n)):names)+ (names.every(n=>used.has(n))?pick(sex==='m'?BOYC:GIV):'');
   const baby={id:`grand-${S.gen}-${k.id}-${h.children.length+1}`,courtGuest:true,name:sur+name,given:name,sur,sex,
-    born:S.turn,alive:true,seed:ri(1,2e9),portraitVariant:ri(0,DESCENDANT_VARIANTS-1),
+    born:S.turn,alive:true,seed:ri(1,2e9),portraitVariant:ri(0,(journalContentVersion()>=59?portraitVariantCount({sex}):31)-1),
     mother:pregnancy.mother,motherName:woman.name,father:pregnancy.father,fatherName:k.sex==='m'?k.name:p.name,
     lit:clamp(k.lit*.5+(p.appearance?.talent||50)*.35+ri(0,10)),vir:clamp(k.vir*.5+(p.appearance?.virtue||50)*.35+ri(0,10)),mar:clamp(k.mar*.55+ri(4,20)),hp:ri(65,95),amb:ri(15,50)};
   h.children.push(baby);h.lastBirth=S.turn;h.lastBirthByMother[woman.id]=S.turn;

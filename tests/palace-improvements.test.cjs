@@ -1195,7 +1195,7 @@ test('residential palace guides show actual names or an empty residence instead 
 });
 
 test('new portrait sheet appends only, keeps four princess options and shared consort choices',()=>{
-  const {run}=boot();run(`assert.equal(PORTRAIT_COUNT,489);assert.equal(portraitSheet(240).scale,4);for(var cell=240;cell<244;cell++)assert.ok(CONSORT_PORTRAITS.includes(cell));
+  const {run}=boot();run(`assert.equal(PORTRAIT_COUNT,501);assert.equal(portraitSheet(240).scale,4);for(var cell=240;cell<244;cell++)assert.ok(CONSORT_PORTRAITS.includes(cell));
     var k=makeKid(harem()[0],'f','明昭');for(var v=26;v<30;v++){k.portraitVariant=v;k.born=S.turn-216;assert.equal(portraitCell(k),244+v-26);k.born=S.turn-72;assert.ok(portraitCell(k)<240);}
     assert.equal(portraitSheet(239).src,'./assets/images/palace-royal-regalia.webp?v=1');`);
 });

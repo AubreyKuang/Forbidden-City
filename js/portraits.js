@@ -172,11 +172,11 @@ const youngRoyalAtlas=document.createElement('img');
 const FAMILY_PORTRAIT_START=28;
 const DESCENDANT_PORTRAIT_START=44;
 const LEGACY_DESCENDANT_VARIANTS=10;
-const ROYAL_GROWTH_SETS={f:[380,383,392,395],m:[386,389]};
+const ROYAL_GROWTH_SETS={f:[380,383,392,395,489,492],m:[386,389,495,498]};
 const DESCENDANT_VARIANTS=29+ROYAL_GROWTH_SETS.m.length;
 const EXISTING_PRINCE_VARIANTS=4;
 const EXTRA_PRINCE_VARIANTS=LEGACY_DESCENDANT_VARIANTS-EXISTING_PRINCE_VARIANTS;
-const BEAUTY_PORTRAIT_START=92, YOUNG_ROYAL_PORTRAIT_START=136, PORTRAIT_COUNT=489;
+const BEAUTY_PORTRAIT_START=92, YOUNG_ROYAL_PORTRAIT_START=136, PORTRAIT_COUNT=501;
 // Opening-generation dowagers only. Inherited empresses keep their saved faces.
 const DOWAGER_PORTRAITS=Object.freeze(Array.from({length:18},(_,i)=>441+i));
 // Reserved story art never enters the random consort pools. Stable zero-based IDs.
@@ -188,6 +188,8 @@ const EXPANDED_ROYAL_START=294;
 const EMPEROR_PORTRAITS=[12,13,312,313,314,315];
 const EMPEROR_PORTRAIT_LABELS={12:'原版青年',13:'原版壮年',312:'温润青年',313:'英武青年',314:'威严壮年',315:'儒雅长者'};
 const portraitVariantCount=child=>child.sex==='f'?PRINCESS_VARIANTS:DESCENDANT_VARIANTS;
+// Published pending births must replay their original identity allocation.
+const portraitCreationVariantCount=child=>journalContentVersion()>=59?portraitVariantCount(child):(child.sex==='f'?37:31);
 const portraitSheets=[
   {start:0,rows:7,scale:2,src:'./assets/images/palace-portraits-b.webp?v=original-hd-1',image:portraitAtlas},
   {start:FAMILY_PORTRAIT_START,rows:4,scale:2,src:'./assets/images/palace-family.webp?v=original-hd-1',image:familyAtlas},
@@ -223,7 +225,8 @@ const portraitSheets=[
   {start:465,rows:2,scale:4,src:'./assets/images/palace-consorts-colors-two.webp?v=1',image:document.createElement('img')},
   {start:471,rows:2,scale:4,src:'./assets/images/palace-consorts-ruqun-pink-green.webp?v=1',image:document.createElement('img')},
   {start:477,rows:2,scale:4,src:'./assets/images/palace-consorts-ruqun-varied.webp?v=1',image:document.createElement('img')},
-  {start:483,rows:2,scale:4,src:'./assets/images/palace-consorts-ruqun-legends.webp?v=1',image:document.createElement('img')}
+  {start:483,rows:2,scale:4,src:'./assets/images/palace-consorts-ruqun-legends.webp?v=1',image:document.createElement('img')},
+  {start:489,rows:3,scale:4,src:'./assets/images/palace-royal-growth-colors.webp?v=1',image:document.createElement('img')}
 ];
 const portraitSheet=cell=>portraitSheets.slice().reverse().find(sheet=>cell>=sheet.start)||portraitSheets[0];
 function ensurePortraitSheet(cell){const sheet=portraitSheet(cell);if(!sheet.image.src)sheet.image.src=sheet.src;}
@@ -390,7 +393,7 @@ function childPortraitVariant(child){
 function assignChildPortrait(child){
   // New adult faces share four childhood sets; keep young siblings distinct too.
   const existing=S.children.filter(k=>k.sex===child.sex);
-  const count=portraitVariantCount(child),youngCount=count-(child.sex==='f'?4:0),usage=Array(count).fill(0),youngUsage=Array(youngCount).fill(0);
+  const count=portraitCreationVariantCount(child),youngCount=count-(child.sex==='f'?4:0),usage=Array(count).fill(0),youngUsage=Array(youngCount).fill(0);
   const young=v=>child.sex==='f'?(v>=30?v-4:v>=26?v-26:v):v;
   existing.forEach(k=>{const v=childPortraitVariant(k);if(v<count){usage[v]++;youngUsage[young(v)]++;}});
   const score=v=>usage[v]+(existing.length<youngCount?youngUsage[young(v)]*(existing.length+1):0);
