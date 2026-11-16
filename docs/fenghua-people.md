@@ -32,7 +32,7 @@
 - 怀璧是 `S.scholars` 中带 `fenghuaKey` 的同一位军功官；其余未入宫者在 `S.fenghua.people`。红笺入宫时转为正式数字编号妃嫔，保留相识进度、选择、故事与438立绘，从宫外数组移除，原字符串编号作为纪事别名保存。
 - 个人页显示主线进度、近况、相见冷却、原有官员履历或婚姻入口，以及可筛选、可回看前因后续的纪事。实际共同参与者才记下对应事件。
 - 核心逻辑在 `js/fenghua-people.js`，剧情在 `js/fenghua-stories.js`；它们在 `xie-romance.js` 之后、`action-journal.js` 之前加载。
-- 初次上线使用操作日志版本23，本次扩充使用版本27，兼容已发布的25、26版未完事件。旧版未完事件继续使用旧规则，结束后才启用新人物抽选。版本21真实基线存档由未改动的 `b147c6e` 生成，保存在 `tests/fixtures/fenghua-legacy-v21.json`。已发布的版本22（`aaa4697`）另保存了登基、微服与召见谢安三个真实未完场景，见 `tests/fixtures/fenghua-legacy-v22.json`。
+- 初次上线使用操作日志版本23，本次扩充使用版本28，兼容已发布的25、26、27版未完事件。旧版未完事件继续使用旧规则，结束后才启用新人物抽选。版本21真实基线存档由未改动的 `b147c6e` 生成，保存在 `tests/fixtures/fenghua-legacy-v21.json`。已发布的版本22（`aaa4697`）另保存了登基、微服与召见谢安三个真实未完场景，见 `tests/fixtures/fenghua-legacy-v22.json`。
 
 ## 专属资源
 

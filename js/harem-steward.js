@@ -1,5 +1,5 @@
 /* One current appointment; honor is settled once at the end of an actual month. */
-const haremStewardEnabled=()=>!!S&&journalContentVersion()>=27;
+const haremStewardEnabled=()=>!!S&&journalContentVersion()>=28;
 const haremStewardActive=()=>haremStewardEnabled()&&!S.over;
 const haremStewardRecord=()=>S&&S.flags?.haremSteward?.gen===S.gen?S.flags.haremSteward:null;
 const haremStewardPerson=()=>{const a=haremStewardRecord();return a?byId(a.id):null;};

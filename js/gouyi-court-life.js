@@ -156,3 +156,56 @@ consortVoicePool=function(c){
   }
   return pool;
 };
+
+/* Original memories, separate from the encounter arc and the four temple inquiries. */
+const GOUYI_PAST_CHAPTERS=[
+  {title:'宽袖藏春',text:'赵令仪整理衣袖时，忽然提起河间的旧衣。\n“小时候，家里把袖口改得宽些，免得勒疼手腕。后来我却总往下拉，连春日出门也不肯露出来。”她望着袖缘，静了片刻，“有人只是好奇，多问两句，并无恶意。可一条街走下来，竟没有人问我看见什么花。”\n她轻轻笑了一下：“那年河边的杏花开得很好，我到如今还记得。”',
+    choices:[
+      {t:'问她河间的杏花是什么样',reply:'她说花开在低低的土墙外，风来时，白瓣会落在浅水里。说到这里，她忘了往下拽袖口，只顾比量那一树花的高低。',thought:'原来这一段旧事里，也可以先记得杏花。'},
+      {t:'告诉她，不想答的话便不必答',reply:'她垂眼理平袖口：“臣妾知道陛下肯听。若哪日不想说，也想这样安静坐一会儿。”她把未说完的话留住，没有再勉强自己。',thought:'我愿亲近，也仍能留下一点自己的清静。'}]},
+  {title:'窗下候茶',text:'案上的茶香散开，赵令仪想起从前窗下的一张小几。\n“旁人说起我，总觉得那些年月只剩一桩怪事。其实也有寻常日子。茶盏放稳了，我便坐在窗边，听水滚过几回，看日影移到哪一块砖上。”\n她低头嗅了嗅杯沿：“我那时就喜欢闻茶香。雨天尤其好，街上少有人经过，坐一下午，也没有谁来催着看我的手。”',
+    choices:[
+      {t:'陪她慢慢喝完这一盏',reply:'你没有唤人换更名贵的茶，只陪她等热气渐渐淡下去。她说起河间春雨落在檐上的声音，语气比平日舒展。',thought:'宫中的茶也可以喝得这样慢，像窗下的那个下午。'},
+      {t:'问她如今想怎样布置窗前',reply:'她想了想，只要一张稳当的小几，添一枝应时的花。“不必让人站着伺候，”她补了一句，“臣妾想自己待一会儿，再讲给您听。”',thought:'想留下的并非旧屋，而是可以自在度过的时辰。'}]},
+  {title:'车驾之后',text:'说起入宫那日，赵令仪先想起的却不是仪仗。\n“河间相见后，臣妾坐了许久，怕一动，刚才那一刻便像梦一样散了。后来听见车外有人唤我的名字，才觉得自己真的还在这里。”\n她将手轻轻放在你身旁：“他们一路都在说钩弋。臣妾既欢喜，又有些怕——怕陛下记得奇遇，却觉得奇遇过去，便再没有什么可听。”\n“如今能把这些小事说出来，臣妾才觉得，那日不是故事的结尾。”',
+    choices:[
+      {t:'告诉令仪，往后的寻常日子也愿意听',reply:'你唤她的名字，问她明日想做什么。她没有再谈祥瑞，只说想将今日这盏茶的滋味记下来，等你有空时再温一回。',thought:'相遇之外，原来还有许多值得被记得的日子。'},
+      {t:'陪她把河间旧事按自己的意思记下',reply:'她一边回想，一边让人依她的话录下，不添玉钩，也不添贵命。说到车外那一声名字时，她特地让人留了一行。',thought:'这回写下的是我记得的往事，不是旁人替我续的传说。'}]}
+];
+function gouyiPastReady(c){
+  const d=c?.gouyi?.past;
+  return personalContextActive()&&gouyiLifeEligible(c)&&c.aff>=65&&(d?.stage||0)<GOUYI_PAST_CHAPTERS.length&&S.turn-(d?.last??-99)>=3;
+}
+function gouyiPastPanel(c){
+  if(!personalContextActive()||!c?.gouyi)return '';
+  const d=c.gouyi.past,done=(d?.stage||0)>=GOUYI_PAST_CHAPTERS.length;
+  if(done)return `<button class="btn sm" onclick="A.gouyiPast(${c.id})">重读河间旧事</button>`;
+  if(!inPalace(c))return '';
+  const ready=gouyiPastReady(c),hint=c.aff<65?'情分到65后，她愿慢慢说起':d&&S.turn-d.last<3?'上回的旧事刚说过，过些日子再听':'听她说起入宫前后的寻常日子 · 精力−1';
+  return `<button class="btn sm" onclick="A.gouyiPast(${c.id})" ${ready?'':'disabled'}>听令仪讲河间旧事<small>${esc(hint)}</small></button>`;
+}
+function gouyiPastEvent(c){
+  if(!personalContextActive()||!c?.gouyi)return null;
+  const d=c.gouyi.past,stage=d?.stage||0;
+  if(stage>=GOUYI_PAST_CHAPTERS.length)return {title:'重读河间旧事',por:c,text:(d.history||[]).map(h=>`${h.date} · ${h.title}\n${h.text}`).join('\n\n'),choices:[{t:'收好旧记'}]};
+  if(!gouyiPastReady(c))return null;
+  const chapter=GOUYI_PAST_CHAPTERS[stage],gen=S.gen;
+  const valid=()=>gen===S.gen&&gouyiPastReady(c)&&(c.gouyi.past?.stage||0)===stage;
+  return {title:'河间旧事 · '+chapter.title,por:c,valid,text:chapter.text,choices:[...chapter.choices.map((option,choice)=>({t:option.t+' · 精力−1',cond:()=>valid()&&E().energy>0,f:()=>{
+    if(!valid()||!useE())return null;
+    const past=c.gouyi.past||=( {stage:0,history:[]} );
+    const text=`【河间旧事·${chapter.title}】${chapter.text}\n${option.reply}`;
+    past.stage++;past.last=S.turn;past.history.push({title:chapter.title,turn:S.turn,date:dateStr(),choice,text});
+    c.wound='gouyi';c.woundKnown=true;
+    livedRecord([c],'self',chapter.title,`gouyi-past:${S.gen}:${c.id}`,text,[option.thought]);
+    cchg(c,{aff:4,mood:5});log(`赵令仪与帝谈起河间旧事「${chapter.title}」。`);
+    return option.reply;
+  }})),{t:'留待她下回愿意时再说'}]};
+}
+A.gouyiPast=function(id){if(!modalOpen)pushEv(gouyiPastEvent(byId(id)));};
+const gouyiPastVoicePool=consortVoicePool;
+consortVoicePool=function(c){
+  const pool=gouyiPastVoicePool(c),d=c?.gouyi?.past;
+  if(personalContextActive()&&d?.stage&&gouyiLifeEligible(c))pool.push(voiceLine('gouyi-past','她望了一眼窗前，又将茶盏向你推近些。',d.stage===1?'陛下还记得臣妾说的河间杏花么？从前总想将袖子拉低，那日讲着花，倒忘了。':d.stage===2?'这几日听雨，臣妾又想起窗下候茶的旧日。如今也有人肯陪着，慢慢喝完一盏。':'从前以为河间那一次便用尽了奇遇。如今才知道，一起喝茶、说说旧事，也会叫人盼着明日。'));
+  return pool;
+};

@@ -85,10 +85,10 @@ test('rumor witnesses and the arithmetic student are the real available people',
 test('old biographies and admission references survive succession without admitting the same woman to her child',()=>{
  const b=admit();b.run(`var id=p.id,old=p.hongjian.previousId,k=makeKid(p,'m','明珩');k.pendingName=false;k.born=S.turn-20*12;inheritDowager(k);S.consorts=[];S.gen++;
  var archived=fenghuaPerson('xueHongjian');assert.equal(archived.id,id);assert.equal(createFenghuaPerson('xueHongjian'),archived);assert.equal(hongjianMonthlyIncome(archived),0);assert.equal(hongjianCanInvite(archived),false);assert.match(storyConsortCodex(),/前朝经历/);UI.sel='xueHongjian';assert.match(viewFenghuaPerson(),/前朝经历/);
- S.previousCourts=[];assert.equal(fenghuaEntryReady('xueHongjian'),false);assert.equal(createFenghuaPerson('xueHongjian'),null);assert.match(storyConsortCodex(),/旧事存于起居注/);`);
+ S.previousCourts=[];assert.equal(fenghuaPerson('xueHongjian'),S.retainedFamilies.find(c=>c.id===id));assert.equal(fenghuaEntryReady('xueHongjian'),false);S.retainedFamilies=[];assert.equal(createFenghuaPerson('xueHongjian'),null);assert.match(storyConsortCodex(),/旧事存于起居注/);`);
 });
 
 for(const [scene,fixture] of Object.entries(require('./fixtures/hongjian-legacy-v25.json')))test('genuine version 25 '+scene+' finishes unchanged before enabling admission',()=>{
  let b=world(new Map([['chengongji_v1_auto',JSON.stringify(fixture)]]));b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,25);assert.equal(hongjianContent(),false);`);assert.equal(b.run('curEv.title'),fixture.pendingActions.pending.title);
- b.run(`drain();assert.equal(PalaceActions.contentVersion,27);assert.equal(hongjianContent(),true);assert.equal(PalaceActions.blocked,false);`);
+ b.run(`drain();assert.equal(PalaceActions.contentVersion,28);assert.equal(hongjianContent(),true);assert.equal(PalaceActions.blocked,false);`);
 });

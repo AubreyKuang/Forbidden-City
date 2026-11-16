@@ -1,5 +1,5 @@
 /* Hongjian keeps one identity when her city story becomes a palace story. */
-const HONGJIAN_VERSION=27;
+const HONGJIAN_VERSION=28;
 const hongjianContent=()=>!!S&&journalContentVersion()>=HONGJIAN_VERSION;
 const hongjianActive=()=>hongjianContent()&&!S.over;
 const hongjianAdmitted=c=>!!c?.hongjian;

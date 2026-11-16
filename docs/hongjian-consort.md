@@ -45,6 +45,6 @@
 - `js/hongjian-stories.js`：六段正式妃嫔剧情与后续日常。
 - `js/fenghua-guides.js`：六位人物的详细只读故事介绍。
 - `js/harem-steward.js`：实际任命、交接、每月恩宠、红笺自荐与宫务回奏。
-- 操作日志版本27。未改动的已发布 `9f5be0f`（版本25）和 `d598dbc`（版本26）生成真实未完事件基线，分别在 `tests/fixtures/hongjian-legacy-v25.json` 与 `hongjian-legacy-v26.json`。旧事件结束后才启用新规则。
+- 操作日志版本28。未改动的已发布 `9f5be0f`（版本25）、`d598dbc`（版本26）和 `e1f042a`（版本27）生成真实未完事件基线，保存在 `tests/fixtures/hongjian-legacy-v25.json`、`hongjian-legacy-v26.json`、`hongjian-legacy-v27.json`。旧事件结束后才启用新规则。继位后的红笺优先使用仍在更新的先朝家族人物，保留新的家书与亲属消息，不回退为旧快照。
 
 不改已批准立绘或资源编号。

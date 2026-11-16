@@ -932,7 +932,7 @@ function sameFather(a,b){
     left.name===right.name&&left.office===right.office);
 }
 function paternalFamily(c){
-  const people=[...new Set([...(S?.consorts||[]),...(S?.cands||[]),c])].filter(p=>p&&!p.maid);
+  const people=[...new Set([...(typeof familyCourtHosts==='function'?familyCourtHosts():(S?.consorts||[])),...(S?.cands||[]),c])].filter(p=>p&&!p.maid);
   const relatives=new Set([c]);
   let changed=true;
   while(changed){
@@ -1012,8 +1012,9 @@ function courtEcho(id){
 }
 // 每月：兄长攒军功或政绩，父亲渐老，偶有致仕或病故
 function courtTick(){
+  retainedFamilyAgeTick();
   const seen=new Set();
-  for(const c of S.consorts){
+  for(const c of familyCourtHosts()){
     const h=houseOf(c);if(!h)continue;
     if(seen.has(h))continue;
     seen.add(h);

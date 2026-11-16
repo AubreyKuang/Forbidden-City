@@ -10,7 +10,7 @@ const FENGHUA_PEOPLE=Object.freeze({
 });
 const fenghuaReadable=()=>!!S&&journalContentVersion()>=FENGHUA_VERSION;
 const fenghuaActive=()=>fenghuaReadable()&&!S.over;
-const fenghuaAll=()=>[...(S?.fenghua?.people||[]),...(S?.scholars||[]).filter(p=>p.fenghuaKey),...(S?.consorts||[]).filter(p=>p.hongjian),...(S?.previousCourts||[]).flatMap(court=>court.consorts||[]).filter(p=>p.hongjian)].filter((p,i,a)=>a.findIndex(x=>x.id===p.id)===i);
+const fenghuaAll=()=>[...(S?.fenghua?.people||[]),...(S?.scholars||[]).filter(p=>p.fenghuaKey),...(S?.consorts||[]).filter(p=>p.hongjian),...(S?.retainedFamilies||[]).filter(p=>p.hongjian),...(S?.previousCourts||[]).flatMap(court=>court.consorts||[]).filter(p=>p.hongjian)].filter((p,i,a)=>a.findIndex(x=>x.id===p.id)===i);
 const fenghuaPerson=key=>fenghuaAll().find(p=>p.fenghuaKey===key);
 function fenghuaState(){const s=S.fenghua ||= {lastCity:-99};s.people ||= [];s.attempts ||= {};return s;}
 const fenghuaPresent=p=>fenghuaActive()&&!!p&&!p.hongjian&&p.alive!==false&&!p.exiled&&!p.dismissed&&!p.commission&&!p.incognitoCase&&!p.away&&S.turn>=(p.fenghua?.awayUntil??-1);

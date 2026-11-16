@@ -201,7 +201,7 @@ function visitorTick(c){const v=c.visitor;if(!v)return;if(!inPalace(c)){delete c
   c.mood=clamp(c.mood+3);
   if(S.turn>=v.until){story(c,`母亲${v.name}出宫回家了，临走前拉着她的手说了很久的话。`);toast(`${cName(c)}的母亲出宫回家了`);delete c.visitor;if(chance(.4))setXin(c,'思念','母亲出宫回家')}}
 function visitorEvent(){const vs=alive().filter(c=>c.visitor&&inPalace(c)&&S.turn-(c.visitor.ev===undefined?-9:c.visitor.ev)>=2);if(!vs.length)return null;const c=pick(vs),v=c.visitor,m=momObj(c);v.ev=S.turn;deepen(c);
-  if(!c.woundKnown&&chance(.5))return {title:'母女夜话',illustration:'mother-window',por:m,text:`你路过${c.palace}，听见${v.name}在屋里低声叮嘱女儿：“……娘知道你心里苦。可这宫里不比家里，凡事要忍。”\n后来你才知道，${cName(c)}${WOUNDS[c.wound].replace(/^。/,'')}`,choices:[
+  if(!c.woundKnown&&chance(.5))return {title:'母女夜话',illustration:'mother-window',por:m,text:`你路过${c.palace}，听见${v.name}在屋里低声叮嘱女儿：“……娘知道你心里苦。可这宫里不比家里，凡事要忍。”\n后来你才知道，${cName(c)}${consortPastText(c).replace(/^。/,'')}`,choices:[
     {t:'进去坐坐',f:()=>{c.woundKnown=true;remember(c,'care','母亲在宫时陛下来坐');story(c,'母亲在宫时，陛下进来坐了坐，第一次听她说起从前的事。');return fx(cchg(c,{aff:8,mood:8}))}},
     {t:'悄悄走开',f:()=>{c.woundKnown=true;return '你没有进去。'}}]};
   return {title:'谢恩',por:m,text:`${v.name}求见陛下，跪下谢恩：“小女自幼${pick(['娇惯','体弱','心思重','性子倔'])}，在宫里承蒙陛下照拂，民妇感激不尽。”`,choices:[
