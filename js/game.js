@@ -323,7 +323,8 @@ A.endMonth=function(){
   const delivery=pendingDelivery();if(delivery){A.resumeBirth(delivery.id);return;}
   // 财政
   const localGrainPayment=localGrainPaymentDue()?localGrainBalance():0;
-  const inc=rd(45+e.people*1.1+(S.flags.canal?25:0)),exp=alive().reduce((s,c)=>s+(c.cold?1:STIPEND[c.rank]),0)+kidsAlive().reduce((s,k)=>s+3+(k.tutor?5:0),0)+localGrainPayment;
+  const hongjianIncome=typeof settleHongjianIncome==='function'?settleHongjianIncome():0;
+  const inc=rd(45+e.people*1.1+(S.flags.canal?25:0))+hongjianIncome,exp=alive().reduce((s,c)=>s+(c.cold?1:STIPEND[c.rank]),0)+kidsAlive().reduce((s,k)=>s+3+(k.tutor?5:0),0)+localGrainPayment;
   e.treasury+=inc-exp;
   if(localGrainPayment){
     clearLocalGrainPayment();
@@ -348,7 +349,7 @@ A.endMonth=function(){
     const latest=c.story?.findLast(entry=>entry.d===monthDate);
     return latest&&!(S.turn===0&&latest===c.story[0])?[{id:c.id,text:latest.t}]:[];
   });
-  S.flags.lastMonthReview={date:monthDate,inc,exp,court,people:continuityReview(people),...(localGrainPayment?{localGrainPayment}:{})};
+  S.flags.lastMonthReview={date:monthDate,inc,exp,court,people:continuityReview(people),...(hongjianIncome?{hongjianIncome}:{}),...(localGrainPayment?{localGrainPayment}:{})};
   recordHaremCourtMonth();
   // 后宫
   for(const c of alive()){

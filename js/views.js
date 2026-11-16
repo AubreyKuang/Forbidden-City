@@ -367,7 +367,7 @@ function viewConsort(){
    <div class="detail-vitals">${bar('恩宠',c.favor)}${bar('心情',c.mood,'#517369')}${bar('情分',c.aff,'#936375')}</div>
    ${pageChapters('consort',[
     ['now','近况与心事',
-      birthCarePanel(c)+deliveryMemorialPanel(c)+
+      birthCarePanel(c)+deliveryMemorialPanel(c)+(typeof hongjianPanel==='function'?hongjianPanel(c):'')+
       actionGroup('听她说说',conversations)+
       detailSection('近况与性情',`<p class="hint">${esc(TRAITS[c.trait]?.d||'性情沿用旧日记载。')} · 侍寝 ${c.nights||0} 次</p>${act?xinDetail(c)+deepLine(c):''}<div class="stats">${st('容貌',c.looks)}${st('才情',c.talent)}${st('德行',c.virtue)}${st('心机',c.scheme,!c.known)}</div>`)+
       continuityPanel(c)+personalLifePanel(c)+detailSection('人和事的后续',cohortLifePanel(c)+parentEpisodePanel(c))+
@@ -479,6 +479,7 @@ function viewLog(){
   return `${pageHeading('起居注')}<div class="log-filter" role="group" aria-label="纪事筛选与留存"><button class="btn sm ${UI.logF==='all'?'on':''}" onclick="UI.logF='all';render()">全部</button><button class="btn sm ${UI.logF==='big'?'on':''}" onclick="UI.logF='big';render()">只看大事</button><button class="btn sm" onclick="A.logCard()">保存上月纪念卡</button></div>
    ${month?`<section class="month-record"><h3>${esc(month.date)}回顾</h3>
     <p>月入 ${esc(month.inc)} 万两 · 支出 ${esc(month.exp)} 万两</p>
+    ${month.hongjianIncome?`<p>月入含薛红笺经营增益 ${month.hongjianIncome} 万两。</p>`:''}
     ${month.localGrainPayment?`<p>支出含赈粮尾款 ${esc(month.localGrainPayment)} 万两。</p>`:''}
     ${month.court?`<p><strong>${esc(month.court.title)}</strong> · ${esc(month.court.choice)}</p>${fmt(month.court.text)}${month.court.child?link(month.court.child,true):link(month.court.person)}`:''}
     ${month.people.map(person=>`<p>${esc(person.text)} ${link(person.id)}</p>`).join('')}

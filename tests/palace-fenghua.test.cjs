@@ -5,10 +5,10 @@ const keys=['shangguanLantai','gaoHuaibi','jiShuye','xueHongjian','sunYunxiu','l
 function game(storage){const b=boot(432,storage);b.ctx.assert=assert;if(!storage)b.run(`A.start();drain();E().energy=10;E().treasury=900;S.turn=60;S.year=6;S.month=1;PalaceActions.reset();`);return b;}
 function reload(b){const c=game(b.storage);c.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);`);return c;}
 
-test('six fixed guests are separate from plot consorts and viewing does not create people or roll',()=>{
+test('five fixed guests are separate from Hongjian and other plot consorts and viewing does not create people or roll',()=>{
  const b=game();b.run(`var before=JSON.stringify(S);Math.random=()=>{throw Error('view rolled')};
- var html=fenghuaCodex();assert.equal((html.match(/data-fenghua=/g)||[]).length,7);assert.match(html,/不入后宫/);assert.doesNotMatch(html,/undefined|NaN/);
- assert.match(storyConsortCodex(),/赵令仪/);assert.doesNotMatch(storyConsortCodex(),/上官兰台|薛红笺/);
+ var html=fenghuaCodex();assert.equal((html.match(/data-fenghua=/g)||[]).length,6);assert.match(html,/不入后宫/);assert.doesNotMatch(html,/undefined|NaN/);
+ assert.match(storyConsortCodex(),/赵令仪/);assert.doesNotMatch(storyConsortCodex(),/上官兰台/);assert.match(storyConsortCodex(),/薛红笺/);assert.doesNotMatch(html,/data-fenghua="xueHongjian"/);
  assert.equal(JSON.stringify(S),before);assert.equal(fenghuaAll().length,0);
  for(var d of Object.values(FENGHUA_PEOPLE))for(var pool of [ALL_CONSORT_PORTRAITS,ALL_OFFICIAL_PORTRAITS,EMPEROR_PORTRAITS,BROTHER_PORTRAITS])assert.ok(!pool.includes(d.portrait));`);
 });
@@ -103,7 +103,7 @@ test('departure has a real return date and personal chronicle threads work with 
 
 test('a genuine version 21 pending scene resumes its old world before enabling version 22',()=>{
  const fixture=require('./fixtures/fenghua-legacy-v21.json'),b=game(new Map([['chengongji_v1_auto',JSON.stringify(fixture)]]));
- b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,21);assert.equal(fenghuaActive(),false);assert.equal(S.fenghua,undefined);drain();assert.equal(PalaceActions.contentVersion,25);assert.equal(fenghuaActive(),true);`);
+ b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,21);assert.equal(fenghuaActive(),false);assert.equal(S.fenghua,undefined);drain();assert.equal(PalaceActions.contentVersion,26);assert.equal(fenghuaActive(),true);`);
 });
 
 for(const key of ['shangguanLantai','gaoHuaibi'])test(key+' first audience reloads before and after admission',()=>{
@@ -136,5 +136,5 @@ test('Jinyiwei receives a pending clue only while a serving commander exists',()
 for(const [scene,fixture] of Object.entries(require('./fixtures/fenghua-legacy-v22.json')))test('published version 22 '+scene+' resumes without adding a guest or changing its draws',()=>{
  const b=game(new Map([['chengongji_v1_auto',JSON.stringify(fixture)]]));b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,22);assert.equal(fenghuaActive(),false);assert.equal(S.fenghua,undefined);`);
  assert.equal(b.run('curEv.title'),fixture.pendingActions.pending.title);
- b.run(`drain();assert.equal(PalaceActions.contentVersion,25);assert.equal(fenghuaActive(),true);assert.equal(PalaceActions.blocked,false);`);
+ b.run(`drain();assert.equal(PalaceActions.contentVersion,26);assert.equal(fenghuaActive(),true);assert.equal(PalaceActions.blocked,false);`);
 });
