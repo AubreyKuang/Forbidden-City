@@ -18,7 +18,7 @@ function boot(seedValue=4242){
   // These accounting cases isolate one month's transactions. Calendar exhaustion
   // and real automatic settlement are covered without stubs in palace-governance-life.
   vm.runInContext('settleExhaustedMonth=()=>{}',ctx);
-  vm.runInContext(`var drain=()=>{for(let i=0;modalOpen&&i<150;i++){if($('#mbox').innerHTML.includes('onclick="nextEv()"'))nextEv();else choose(curEv.choices.findIndex(c=>!c.cond||c.cond()));}};
+  vm.runInContext(`var previewNextCourt=()=>{const previous=S.flags.monthlyCourt.index,treasury=E().treasury,energy=E().energy;A.court();assert.equal(modalOpen,true);assert.notEqual(S.flags.monthlyCourt.index,previous);assert.equal(E().treasury,treasury);assert.equal(E().energy,energy);choose(curEv.choices.length-1);assert.equal(modalOpen,false);};var drain=()=>{for(let i=0;modalOpen&&i<150;i++){if($('#mbox').innerHTML.includes('onclick="nextEv()"'))nextEv();else choose(curEv.choices.findIndex(c=>!c.cond||c.cond()));}};
     A.newGame();A.start();drain();`,ctx);
   return {ctx,storage,setRoll:value=>{roll=value;},run:code=>vm.runInContext(code,ctx)};
 }
@@ -62,7 +62,7 @@ test('adopting one bloc pleases consorts of that stance and stings its rival blo
   assert.equal(run(`harem()[1].mood`),47);
 });
 
-test('monthly court can be previewed repeatedly, including after loading, and resolved once',()=>{
+test('each monthly brief previews repeatedly across reloads, resolves once, then presents a different brief',()=>{
   const {run}=boot();
   run(`
     E().energy=1;
@@ -78,8 +78,7 @@ test('monthly court can be previewed repeatedly, including after loading, and re
     choose(0);
     assert.equal(E().energy,0);
     assert.equal(S.flags.monthlyCourt.done,true);
-    drain();A.court();
-    assert.equal(modalOpen,false);
+    drain();previewNextCourt();
     S.turn++;
     A.court();
     assert.equal(S.flags.monthlyCourt.turn,S.turn);
@@ -450,7 +449,7 @@ test('a harvest tops up exactly half a reserve and restores full locust relief a
     choose(topup);assert.equal(halfGrainReserve(),true);
     E().energy=1;choose(topup);drain();assert.equal(load('auto'),true);
     assert.deepEqual([E().treasury,E().energy,E().people,grainReserveReady(),halfGrainReserve()],[120,0,51,true,false]);
-    A.court();assert.equal(modalOpen,false);
+    previewNextCourt();
     S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index:LOCUST_INDEX};
     A.court();choose(option('发放常平仓储粮'));drain();
     assert.deepEqual([E().people,E().energy,grainReserveReady()],[57,0,false]);
@@ -501,7 +500,7 @@ test('locust relief can use half a full reserve for free and save the rest for a
     assert.match(curEv.choices[split].preview,/民心 \\+3.*留半批/);
     choose(split);drain();assert.equal(load('auto'),true);
     assert.deepEqual([E().people,E().treasury,E().energy,halfGrainReserve(),S.flags.monthlyCourt.done],[53,0,0,true,true]);
-    A.court();assert.equal(modalOpen,false);
+    previewNextCourt();
     S.turn++;
     locust();assert.equal(option('就近发半批'),-1);
     choose(option('发放常平仓储粮'));drain();assert.equal(load('auto'),true);
@@ -527,7 +526,7 @@ test('locust relief can purchase locally at low stock without changing the wareh
         E().energy=1;choose(buy);drain();assert.equal(load('auto'),true);
         assert.deepEqual([E().treasury,E().energy,E().people,grainReserveReady(),halfGrainReserve(),S.flags.grainPurchaseTurn],
           [0,0,56,'${stock}'==='half','${stock}'==='half',undefined]);
-        A.court();assert.equal(modalOpen,false);
+        previewNextCourt();
       }
     `);
   }
@@ -625,7 +624,7 @@ test('an interest-free grain grace period consumes the memorial and cannot be ex
   assert.deepEqual([E().energy,S.flags.monthlyCourt,S.flags.localGrainPaymentTurn],[1,brief,8]);
   save=write;A.court();choose(option('改批粮商免息宽限'));drain();assert.equal(load('auto'),true);
   assert.deepEqual([E().energy,E().treasury,S.flags.monthlyCourt.done,S.flags.localGrainPaymentTurn,localGrainBalance()],[0,0,true,9,80]);
-  A.court();assert.equal(modalOpen,false);
+  previewNextCourt();
   A.endMonth();while(modalOpen)nextEv();
   assert.match(S.flags.lastMonthReview.court.choice,/免息宽限/);
   assert.equal(S.flags.lastMonthReview.localGrainPayment,undefined);
@@ -730,7 +729,7 @@ test('a locust memorial can consume the arriving grain order and leaves full sto
     save=write;A.court();choose(option());drain();assert.equal(load('auto'),true);
     assert.deepEqual([E().treasury,E().energy,E().people,grainReserveReady(),halfGrainReserve(),S.flags.monthlyCourt.done,
       S.flags.autumnGrainOrder,S.flags.grainPurchaseTurn,S.flags.grainReliefTurn],[0,0,66,true,false,true,undefined,S.turn,S.turn]);
-    A.court();assert.equal(modalOpen,false);
+    previewNextCourt();
   `);
 });
 
@@ -752,7 +751,7 @@ test('splitting locust relief spends half a reserve and the grain order in one s
     save=write;A.court();choose(option());drain();assert.equal(load('auto'),true);
     assert.deepEqual([E().treasury,E().energy,E().people,grainReserveReady(),halfGrainReserve(),S.flags.monthlyCourt.done,
       S.flags.autumnGrainOrder,S.flags.grainPurchaseTurn,S.flags.grainReliefTurn],[0,0,69,${!half},${!half},true,undefined,S.turn,S.turn]);
-    A.court();assert.equal(modalOpen,false);
+    previewNextCourt();
   `);
 });
 
@@ -941,7 +940,7 @@ test('promised locust grain can be delivered, cancelled, or missed exactly once'
         assert.deepEqual([E().treasury,E().energy,E().people,halfGrainReserve()],[35,0,before-4,true]);
       }
       assert.equal(load('auto'),true);
-      A.court();assert.equal(modalOpen,false);
+      previewNextCourt();
     }
     assert.equal(S.flags.locustRelief,undefined);
   `);
@@ -980,8 +979,7 @@ test('relief delegation trades treasury and some relief for a free action, once 
     assert.equal(E().energy,1);
     assert.equal(E().treasury,0);
     assert.equal(E().people,56);
-    drain();save('1');load('1');A.court();
-    assert.equal(modalOpen,false);
+    drain();save('1');load('1');previewNextCourt();
     assert.equal(E().treasury,0);
   `);
 });
@@ -1023,8 +1021,7 @@ test('monthly flood names both specialists and persists the need that determines
       assert.equal(c.fam.p,${need==='shelter'?65:60});
       assert.equal(byId(grainId).fam.p,otherPower);
       assert.equal(S.flags.monthlyCourt.result.person,shelterId);
-      drain();save('1');load('1');A.court();
-      assert.equal(modalOpen,false);
+      drain();save('1');load('1');previewNextCourt();
     `);
   }
 });
@@ -1111,8 +1108,7 @@ test('flood installments postpone half the cost and consume the next monthly mem
     assert.equal(E().energy,0);
     assert.equal(E().people,55);
     assert.equal(E().prestige,52);
-    drain();save('1');load('1');A.court();
-    assert.equal(modalOpen,false);
+    drain();save('1');load('1');previewNextCourt();
     assert.equal(E().treasury,0);
     assert.equal(S.flags.floodRelief,undefined);
   `);
@@ -1148,7 +1144,7 @@ test('prebooked freight discounts only the first grain follow-up and survives re
         assert.match(curEv.choices[option('调常平仓粮')].preview,/−50 万两/);
       }else{
         assert.equal(floodReliefDue(),false);
-        A.court();assert.equal(modalOpen,false);
+        previewNextCourt();
       }
     `);
   }
@@ -1268,8 +1264,7 @@ test('a sealed impeachment keeps the same evidence across months and saves, then
     choose(0);
     assert.equal(E().prestige,before+1);
     assert.equal(S.flags.monthlyCourt.done,true);
-    drain();A.court();
-    assert.equal(modalOpen,false);
+    drain();previewNextCourt();
   `);
 });
 
@@ -1316,8 +1311,7 @@ test('a proven case can direct fifty of the eighty recovered taels to relief and
     assert.deepEqual([E().treasury,E().people,E().prestige,E().energy],[30,55,51,0]);
     assert.deepEqual([byId(id).fam.t,byId(id).fam.p,byId(id).mood],[title,power,38]);
     assert.equal(S.flags.monthlyCourt.done,true);
-    A.court();
-    assert.equal(modalOpen,false);
+    previewNextCourt();
   `);
 });
 
@@ -1402,7 +1396,7 @@ test('emergency relief oversight is limited to a matching vacancy and charges fo
       assert.deepEqual([E().treasury,E().people,E().prestige,E().energy],[before-${spent},${people},${prestige},0]);
       assert.equal(houseOf(byId(id)).father.reliefResumeTurn,term);
       assert.equal(S.flags.monthlyCourt.done,true);
-      A.court();assert.equal(modalOpen,false);
+      previewNextCourt();
     `);
   }
 });
