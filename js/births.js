@@ -8,14 +8,14 @@ function rollBirthCount(roll=R()){return roll<.001?3:roll<.021?2:1}
 function birthType(sexes){return sexes.length===3?'三胞胎':sexes.length===2?(sexes[0]===sexes[1]?'双胞胎':'龙凤胎'):''}
 function applyBirthOmen(k,id){
   if(k.birthOmen||!BIRTH_OMENS[id])return;
-  if(journalContentVersion()>=29){k.birthOmen=id;k.birthOmenYear=0;const omen=BIRTH_OMENS[id];kstory(k,`【${omen.name}】${omen.text}自周岁起，${birthOmenEffect(omen)}。`);return;}
+  if(journalContentVersion()>=30){k.birthOmen=id;k.birthOmenYear=0;const omen=BIRTH_OMENS[id];kstory(k,`【${omen.name}】${omen.text}自周岁起，${birthOmenEffect(omen)}。`);return;}
   const omen=BIRTH_OMENS[id];k.birthOmen=id;k[omen.stat]=clamp(k[omen.stat]+omen.bonus);
   if(k.birthTraits)k.birthTraits.initial[omen.stat]=k[omen.stat];
   kstory(k,`【${omen.name}】${omen.text}出生时${omen.label}+${omen.bonus}。`);
 }
 function birthOmenEffect(omen){return `每年${omen.label}${omen.bonus>=0?'+':''}${omen.bonus}`;}
 function annualBirthOmenTick(){
-  if(journalContentVersion()<29)return;
+  if(journalContentVersion()<30)return;
   for(const k of S.children){
     const omen=BIRTH_OMENS[k.birthOmen],months=S.turn-k.born,age=Math.floor(months/12);
     if(!k.alive||k.pendingName||!omen||!Number.isInteger(months)||months<12||months%12!==0||k.birthOmenYear>=age)continue;
@@ -26,8 +26,8 @@ function annualBirthOmenTick(){
 }
 function birthTags(k){
   const omen=BIRTH_OMENS[k.birthOmen];
-  const effect=omen&&(journalContentVersion()>=29?birthOmenEffect(omen):`${omen.label}+${omen.bonus}`);
-  return `${immortalTags(k)}${multipleBadge(k)}${omen?`<span class="tag y" title="${journalContentVersion()>=29?'周岁起，每逢生辰结算一次；属性范围0—100。':'出生时'+effect}">${omen.name} · ${effect}</span>`:''}${k.birthTrouble?`<span class="tag">${esc({frail:'初生体弱',quake:'出生时地动',drought:'出生逢旱'}[k.birthTrouble])}</span>`:''}`;
+  const effect=omen&&(journalContentVersion()>=30?birthOmenEffect(omen):`${omen.label}+${omen.bonus}`);
+  return `${immortalTags(k)}${multipleBadge(k)}${omen?`<span class="tag y" title="${journalContentVersion()>=30?'周岁起，每逢生辰结算一次；属性范围0—100。':'出生时'+effect}">${omen.name} · ${effect}</span>`:''}${k.birthTrouble?`<span class="tag">${esc({frail:'初生体弱',quake:'出生时地动',drought:'出生逢旱'}[k.birthTrouble])}</span>`:''}`;
 }
 function deliveryKids(c){return (c.delivery?.children||[]).map(kidById).filter(Boolean)}
 function pendingDelivery(){return S.consorts.find(c=>c.delivery&&!c.delivery.settled&&(c.delivery.lossPending||deliveryKids(c).some(k=>k.pendingName)))}
@@ -67,7 +67,7 @@ function birthNamingEvent(c){
   const report=kind?`${cName(c)}于${c.palace}诞下${cnNum(children.length)}位皇嗣，${identity?.detail||kind}，宫人贺作“${identity?.name||kind}”。`:
     c.delivery.concealedLoss?`${c.palace}报来喜讯，称${cName(c)}诞下一位小皇子，请陛下赐名。`:`${cName(c)}于${c.palace}临盆，阵痛一日一夜，诞下一位${k.sex==='m'?'小皇子':'小公主'}。`;
   return {title:identity?.name||kind||'弄璋弄瓦',por:c,cast:children,sfx:'joy',
-    text:`${report}${omen?`\n${omen.text}\n§${omen.name}：本胎皇嗣${journalContentVersion()>=29?'自周岁起，'+birthOmenEffect(omen):'出生时'+omen.label+'+'+omen.bonus}`:''}\n${kind?`请为${['先降生','随后降生','最后降生'][k.birthOrder-1]||'这位'}的${k.sex==='m'?'小皇子':'小公主'}赐名`:'请陛下赐名'}（不含姓氏）：`,
+    text:`${report}${omen?`\n${omen.text}\n§${omen.name}：本胎皇嗣${journalContentVersion()>=30?'自周岁起，'+birthOmenEffect(omen):'出生时'+omen.label+'+'+omen.bonus}`:''}\n${kind?`请为${['先降生','随后降生','最后降生'][k.birthOrder-1]||'这位'}的${k.sex==='m'?'小皇子':'小公主'}赐名`:'请陛下赐名'}（不含姓氏）：`,
     input:{def:k.name,max:3},choices:[{t:'赐名',f:value=>{
       if(!k.pendingName)return null;
       const name=(value||k.name).trim().slice(0,3)||k.name;

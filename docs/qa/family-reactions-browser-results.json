@@ -1,0 +1,139 @@
+{
+  "url": "http://127.0.0.1:8428/index.html",
+  "started": "2026-11-16T02:20:13.652Z",
+  "runs": [
+    {
+      "name": "cold",
+      "viewport": "desktop",
+      "reloads": 6,
+      "errors": [],
+      "passed": true,
+      "visits": [
+        "孩子眼圈有些红，慢慢说起心里的牵挂。\n“我挑了件厚些的衣裳，想托人问问能不能送去。只盼母妃起居安稳。”\n§父爱+10　品德+2",
+        "孩子把手里的东西收好，向你挪近了一点。\n“昨晚写了一封信，改了好几遍。只写了近况，没有替母妃辩解。”\n§父爱+10　才学+2",
+        "孩子今日安静了些，愿意和你说几句近况。\n“宫人说起母妃时，我还是忍不住停下来听。父皇，她近来可好？”\n§父爱+10　品德+2"
+      ]
+    },
+    {
+      "name": "old-cold",
+      "viewport": "desktop",
+      "reloads": 4,
+      "errors": [],
+      "passed": true,
+      "visits": [
+        "孩子眼圈有些红，慢慢说起心里的牵挂。\n“我挑了件厚些的衣裳，想托人问问能不能送去。只盼母妃起居安稳。”\n§父爱+10　武艺+2",
+        "孩子把手里的东西收好，向你挪近了一点。\n“昨晚写了一封信，改了好几遍。只写了近况，没有替母妃辩解。”\n§父爱+10　才学+2",
+        "孩子今日安静了些，愿意和你说几句近况。\n“宫人说起母妃时，我还是忍不住停下来听。父皇，她近来可好？”\n§父爱+10　才学+2"
+      ]
+    },
+    {
+      "name": "marriage",
+      "viewport": "desktop",
+      "reloads": 3,
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "maid",
+      "viewport": "desktop",
+      "reloads": 4,
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "factions",
+      "viewport": "desktop",
+      "reloads": 2,
+      "errors": [],
+      "passed": true,
+      "factions": [
+        {
+          "name": "陆明华",
+          "members": [
+            "林春华"
+          ]
+        },
+        {
+          "name": "许清容",
+          "members": [
+            "林夕月"
+          ]
+        },
+        {
+          "name": "沈知微",
+          "members": [
+            "林朝云"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "cold",
+      "viewport": "mobile",
+      "reloads": 6,
+      "errors": [],
+      "passed": true,
+      "visits": [
+        "孩子眼圈有些红，慢慢说起心里的牵挂。\n“我挑了件厚些的衣裳，想托人问问能不能送去。只盼母妃起居安稳。”\n§父爱+10　品德+2",
+        "孩子把手里的东西收好，向你挪近了一点。\n“昨晚写了一封信，改了好几遍。只写了近况，没有替母妃辩解。”\n§父爱+10　品德+2",
+        "孩子今日安静了些，愿意和你说几句近况。\n“宫人说起母妃时，我还是忍不住停下来听。父皇，她近来可好？”\n§父爱+10　才学+2"
+      ]
+    },
+    {
+      "name": "old-cold",
+      "viewport": "mobile",
+      "reloads": 4,
+      "errors": [],
+      "passed": true,
+      "visits": [
+        "孩子眼圈有些红，慢慢说起心里的牵挂。\n“我挑了件厚些的衣裳，想托人问问能不能送去。只盼母妃起居安稳。”\n§父爱+10　品德+2",
+        "孩子把手里的东西收好，向你挪近了一点。\n“昨晚写了一封信，改了好几遍。只写了近况，没有替母妃辩解。”\n§父爱+10　品德+2",
+        "孩子今日安静了些，愿意和你说几句近况。\n“宫人说起母妃时，我还是忍不住停下来听。父皇，她近来可好？”\n§父爱+10　品德+2"
+      ]
+    },
+    {
+      "name": "marriage",
+      "viewport": "mobile",
+      "reloads": 3,
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "maid",
+      "viewport": "mobile",
+      "reloads": 4,
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "factions",
+      "viewport": "mobile",
+      "reloads": 2,
+      "errors": [],
+      "passed": true,
+      "factions": [
+        {
+          "name": "陆明华",
+          "members": [
+            "林春华"
+          ]
+        },
+        {
+          "name": "许清容",
+          "members": [
+            "林夕月"
+          ]
+        },
+        {
+          "name": "沈知微",
+          "members": [
+            "林朝云"
+          ]
+        }
+      ]
+    }
+  ],
+  "browser": "157.0.8103.78",
+  "finished": "2026-11-16T02:20:31.737Z",
+  "passed": true
+}

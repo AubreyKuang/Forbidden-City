@@ -1026,7 +1026,7 @@ test('personal speech is stable, side-effect free, and every temperament has its
 test('speech respects death, grief, confinement, newborn ages and real gifts',()=>{
   const {run}=boot();run(`var c=harem()[0];c.aff=60;c.xin={k:'悲恸'};assert.equal(characterVoice(c).key,'grief');c.cold=true;assert.equal(characterVoice(c).key,'cold');c.alive=false;assert.equal(characterVoice(c),null);
     c.alive=true;c.cold=false;c.xin={k:'平和'};assert.ok(!consortVoicePool(c).some(v=>v.key==='gift'));remember(c,'gift','字画');assert.ok(consortVoicePool(c).some(v=>v.key==='gift'));S.turn+=3;assert.ok(!consortVoicePool(c).some(v=>v.key==='gift'));
-    var k=makeKid(c,'f','清月');assert.equal(characterVoice(k).text,'');k.born=S.turn-72;c.cold=true;assert.equal(characterVoice(k).key,'mother-away');c.cold=false;k.away=true;assert.equal(characterVoice(k).letter,true);
+    var k=makeKid(c,'f','清月');assert.equal(characterVoice(k).text,'');k.born=S.turn-72;c.cold=true;assert.equal(characterVoice(k).key,'family-after');c.cold=false;k.away=true;assert.equal(characterVoice(k).letter,true);
     k.jailed=true;assert.equal(characterVoice(k).key,'confined');`);
 });
 

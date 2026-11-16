@@ -1,5 +1,5 @@
 /* Family news belongs to the event itself, not to the next paid visit. */
-function childConsequencesActive(){return !!S&&!PalaceActions.blocked&&journalContentVersion()>=29;}
+function childConsequencesActive(){return !!S&&!PalaceActions.blocked&&journalContentVersion()>=30;}
 function childMotherClose(k,m){
   return k.mom===m.id||k.foster===m.id||
     (k.motherBonds?.[m.id]?.trust>=55||relGet(k,m)>=40||k.careVisitors?.[m.id]&&childTrust(k,m)>=45);
@@ -80,7 +80,8 @@ function childMotherConsequenceEvent(n){
       mode==='care'?`陛下准向${fullName(mother)}送去衣食与平安口信，原来的处分仍保留。`:
       mode==='wait'?'陛下先命随侍妥善照料孩子，未改变原来的安排。':n.kind==='death'?'陛下听孩子们说完，安排熟悉的随侍照料，没有催他们马上止住悲伤。':'陛下听完孩子们的心事，解释处置须论是非，也让他们知道照护不会被遗忘。';
     if(mode==='release'){mother.rank=0;A.uncold(mother.id);}
-    if(mode==='care'){mother.childCarePermission={turn:S.turn,children:group.map(k=>k.id)};story(mother,`孩子们为她求情，陛下准送衣食与平安口信。${text}`);}
+    if(group.length)story(mother,`${group.map(k=>k.name).join('、')}为自己求情。${text}`);
+    if(mode==='care'){mother.childCarePermission={turn:S.turn,children:group.map(k=>k.id)};mother.mood=clamp(mother.mood+5);}
     for(const k of people){
       if(k.familyFeeling?.source===n.id)k.familyFeeling.heard=true;
       k.love=clamp(k.love+(mode==='wait'?-2:5));
@@ -108,12 +109,13 @@ function childMotherConsequenceEvent(n){
 function childConsequenceFeeling(k){
   if(!childConsequencesActive())return null;
   const f=k.familyFeeling,m=f&&byId(f.mother);
-  if(f&&S.turn-f.turn<(f.kind==='death'?12:6)&&!(f.kind==='cold'&&!m?.cold)&&!(f.kind==='departure'&&!m?.gone))return f;
+  if(f&&(S.turn-f.turn<(f.kind==='death'?12:6)||f.kind==='cold'&&m?.cold||f.kind==='departure'&&m?.gone)&&!(f.kind==='cold'&&!m?.cold)&&!(f.kind==='departure'&&!m?.gone))return f;
   const care=byId(k.foster||k.mom);
   if(f)return null;
   return care?.alive&&(care.cold||care.gone)?{mother:care.id,kind:care.cold?'cold':'departure',turn:S.turn,visits:k.familyVisitCount||0,heard:true}:null;
 }
 function childConsequenceVoice(k){
+  if(k.jailed)return null;
   const f=childConsequenceFeeling(k);if(!f)return null;
   const m=byId(f.mother);if(!m)return null;
   const age=kidAge(k),nature=childDisposition(k),address=f.address||childMotherAddress(k,m),loss=f.kind==='death',away=childHasLeftPalace(k),count=f.visits||0;
@@ -150,9 +152,19 @@ function childConsequenceVoice(k){
     `我知道要听清是非，也知道不能一味护短。可心里惦记${address}，一时还放不下。`
   ]);
   if(!young)lines.push(quiet?'有些话一开口就怕落泪，所以写下来了。父皇不必催，我会慢慢说。':warm?'我也惦记着比我小的孩子，想陪他们待一会儿，免得各自难过。':bright?'原想出去跑一跑，心里也许就松快些。回来才发觉，还是想有人听我说话。':'平日爱做的事，今天也提不起精神。再过些时候，我想慢慢拾起来。');
+  if(!loss&&S.turn-f.turn>=6)lines=young?[
+    `今日学的新字，我想也写给${address}看看。`,
+    `我玩了一会儿，已经没有总哭了。还是想知道${address}好不好。`,
+    `父皇，我把自己的东西收好了。能请人告诉${address}吗？`
+  ]:[`课业和日常都已慢慢习惯。若有${address}的平安消息，还是请人告诉我。`,
+    `今日读到一句话，想起${address}从前也说过，便抄在了信里。`,
+    '刚才和同窗说了件趣事，心里松快了些。日子还是要认真过。',
+    `给${address}的信已经写好，只报了近况，也问了她的起居。`,
+    '父皇肯来，我很高兴。今日先说说新学的功课，好不好？'];
+  if(away)lines=lines.map(t=>t.replaceAll('父皇肯来','收到父皇的信').replaceAll('和您坐一会儿','在信里和您说几句话').replaceAll('父皇能陪我坐一会儿吗','父皇能再写一封信给我吗'));
   const distant=childTrust(k,m)<45;
   if(distant)lines=[`我与${address}相处得不多，听到这件事还是有些不安。如今的安排能再告诉我吗？`,`听人说起${address}从前的事，我才知道，有些事自己一直不清楚。`,'今日功课如常。只是听到宫人议论，心里还会想一想。'];
-  const stage=away?`${childWhereabouts(k)}送来一封信，孩子只写了近来的心事。`:count%3===0?'孩子眼圈有些红，慢慢说起心里的牵挂。':count%3===1?'孩子把手里的东西收好，向你挪近了一点。':'孩子今日安静了些，愿意和你说几句近况。';
+  const stage=away?`${childWhereabouts(k)}送来一封信，孩子只写了近来的心事。`:!loss&&S.turn-f.turn>=6?'孩子已恢复日常起居，谈话间仍有一份牵挂。':count%3===0?'孩子眼圈有些红，慢慢说起心里的牵挂。':count%3===1?'孩子把手里的东西收好，向你挪近了一点。':'孩子今日安静了些，愿意和你说几句近况。';
   return voiceLine('family-after',stage,lines[count%lines.length]);
 }
 function visitChildAfterConsequence(k){
@@ -161,5 +173,5 @@ function visitChildAfterConsequence(k){
   k.love=clamp(k.love+10);const stat=pick(['lit','mar','vir']);k[stat]=clamp(k[stat]+2);
   kstory(k,`${childHasLeftPalace(k)?'父皇收到近况并回信':'父皇探望'}。${text}`);
   rememberConversation(k,{key:voice.key,stage:voice.stage,text,letter:childHasLeftPalace(k)},childWhereabouts(k));
-  setScene('harem');pushEv({title:childHasLeftPalace(k)?'皇嗣家书':'探望皇嗣',por:k,text:voice.stage+(voice.lines.length?'\n“'+text+'”':'')+fx(`父爱+10　${{lit:'才学',mar:'武艺',vir:'品德'}[stat]}+2`),choices:[{t:childHasLeftPalace(k)?'回信安慰，嘱咐好好照料':'轻声安慰，陪孩子坐一会儿'}]});return true;
+  setScene('harem');pushEv({title:childHasLeftPalace(k)?'皇嗣家书':'探望皇嗣',por:k,cast:[],text:voice.stage+(voice.lines.length?'\n“'+text+'”':'')+(childHasLeftPalace(k)?'\n你在回信中回应了孩子的牵挂，嘱咐随侍妥善照料。':'')+fx(`父爱+10　${{lit:'才学',mar:'武艺',vir:'品德'}[stat]}+2`),choices:[{t:childHasLeftPalace(k)?'回信安慰，嘱咐好好照料':'轻声安慰，陪孩子坐一会儿'}]});return true;
 }
