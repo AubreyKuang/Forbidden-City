@@ -31,7 +31,7 @@ const ARCS={
   (c,f)=>c.aff<45?null:{text:`今科状元的殿试文章里，引了一句诗：“${f.poem=pick(POEMS)}”\n你记得，这句诗曾写在${cName(c)}送你的花笺上。`,choices:[
     {t:'召她来问个明白',f:()=>{f.asked=1;aNext(c,1,4,7);story(c,'陛下问起她与新科状元的旧事。她坦白入宫前曾与他有过诗书往来。');return `她跪下，坦白入宫前曾与他在诗社相识，有过几回诗书往来。“发乎情，止乎礼，此后再无联系。”${fx(cchg(c,{aff:3}))}`}},
     {t:'不动声色',f:()=>{aNext(c,1,4,7);return '你把那篇文章放在了一边。'}}]},
-  (c,f)=>({text:`琼林宴上，状元奉旨献诗。他念到一半，${cName(c)}失手打翻了酒盏，满座寂然。`,choices:[
+  (c,f)=>({illustration:'qionglin-spilled-cup',text:`琼林宴上，状元奉旨献诗。他念到一半，${cName(c)}失手打翻了酒盏，满座寂然。`,choices:[
     {t:'笑说“诗好，连娘娘都听醉了”',f:()=>{aNext(c,2,4,7);return fx(cchg(c,{aff:6}))}},
     {t:'冷眼看着',f:()=>{aNext(c,2,4,7);return fx(cchg(c,{mood:-10}))}},
     {t:'当晚召她侍寝',cond:()=>E().energy>0&&!c.preg&&(!consortRecoveryActive()||!consortNightReason(c)),why:(consortRecoveryActive()&&consortNightReason(c))||('精力不足'),f:()=>{aNext(c,2,4,7);nightWith(c);return null}}]}),
