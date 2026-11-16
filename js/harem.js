@@ -1,8 +1,10 @@
 /* ============ 选秀 ============ */
 function genCands(n=6){finishSelection();S.cands=[];for(let i=0;i<n;i++)S.cands.push(makeGirl());{const kc=harem().filter(c=>c.fam.p>=15&&hasClan(c));if(kc.length&&chance(.4))S.cands[0]=makeKin(pick(kc),chance(.6)?'堂':'亲')}S.cands.forEach(c=>{deepen(c);initTimeTraveler(c);});assignPastLifeCandidates();S.selection={phase:'audience',current:S.cands[0]?.id,performed:[]};selectionBatch();captureSelectionCourt();S.flags.peek=3;S.flags.lastXX=S.turn;log(`${dateStr()}，开选秀，各地秀女入宫待选。`,journalContentVersion()<41)}
 A.xxDecree=function(){
+  if(selectionSkipTimingActive()&&(modalOpen||S.over||S.cands.length))return;
+  reconcileSelectionTiming();
   const since=S.turn-S.flags.lastXX;
-  if(since>=36){genCands();AU.sfx('chime');A.go('xx');return}
+  if(selectionFreeReady()){genCands();AU.sfx('chime');A.go('xx');return}
   pushEv({title:'下旨选秀',text:`距上次选秀不过${Math.floor(since/12)}年${since%12}月。\n若此时再开选秀，恐有大臣进谏“劳民伤财”。（国库-100万两，民心-4）`,choices:[
     {t:'朕意已决',f:()=>{const s=chg({treasury:-100,people:-4});genCands();UI.view='xx';return `圣旨下达，各地秀女陆续进京。${fx(s)}`}},{t:'作罢'}]});
 };

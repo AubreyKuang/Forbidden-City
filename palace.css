@@ -923,3 +923,12 @@ button.family-room-person{cursor:pointer}button.family-room-person:hover{color:#
 .family-name-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px;min-width:0}
 .family-name-row strong{min-width:0;overflow-wrap:anywhere}
 .family-name-row .family-age{flex-shrink:0;font-size:11px;font-weight:400;color:#806b5e;white-space:nowrap;margin:0}
+
+/* A whole clan can be hidden while its heading remains available to restore it. */
+.graph-clan:has(.family-visibility){justify-content:space-between;text-align:left;gap:6px}
+.graph-clan:has(.family-visibility) .graph-person{flex:1;min-width:0}
+.family-visibility{pointer-events:auto;flex-shrink:0;white-space:nowrap;min-height:36px;padding:5px 8px}
+.family-branch[data-family-key]>summary{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.family-branch[data-family-key]>summary .family-visibility{margin-left:auto}
+.family-branch.family-hidden>summary{color:var(--muted,#806b5e)}
+.tag.dowager-kin-tag{background:#e4e4e2;color:#5c5c59;border:1px solid #c6c6c2}

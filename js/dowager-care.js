@@ -1,6 +1,12 @@
 /* Private dates make the last years a continuous story; dialogue never predicts a death date. */
 const dowagerCareActive=()=>!!S&&journalContentVersion()>=43;
 const OPENING_QUEEN_KIN_CHANCE=.25;
+function dowagerKinTag(c){
+ if(!c||c.maid)return '';
+ const dowagers=[S.flags.dowager,S.flags.birthDowager].filter(Boolean);
+ const kin=dowagers.some(d=>d.personId!==c.id&&(d.clan&&c.clan===d.clan||d===S.flags.dowager&&c.dowagerKin?.gen===S.gen));
+ return kin?'<span class="tag dowager-kin-tag">太后族亲</span>':'';
+}
 function initializeDowagerOpening(){
  if(!dowagerCareActive()||S.flags.openingQueenKinChecked)return;
  S.flags.openingQueenKinChecked=true;

@@ -15,10 +15,19 @@ function daoEligible(p){
 }
 function daoInterest(p){
   if(p.t2==='信佛'||p.like==='佛经')return 0;
-  if(p.daoPractice?.path==='dao')return 3;
+  if(p.daoPractice?.path==='dao'&&(!daoIntentActive()||p.sex||daoInclined(p)))return 3;
   if(solitaryDao(p))return 2;
   return p.sex?(p.amb<=30?2:p.lit>=70?1:0):['淡泊','沉静'].includes(p.trait)?2:['好学','聪慧'].includes(p.trait)||p.mood<35?1:0;
 }
+function daoIntentActive(){return journalContentVersion()>=53;}
+function daoInclined(p){
+ if(p.t2==='信佛'||p.like==='佛经')return false;
+ if(p.sex)return p.daoPractice?.path==='dao'||p.amb<=30;
+ if(solitaryDao(p))return true;
+ const chance=['淡泊','沉静'].includes(p.trait)?.45:['好学','聪慧'].includes(p.trait)?.18:.025;
+ return mulberry32(voiceHash('dao-intent:'+String(p.seed||p.id)))()<chance;
+}
+function daoDevoted(p){return (p.daoPractice?.visits||0)>=6&&(!daoIntentActive()||p.sex||daoInclined(p));}
 function daoVisitors(){
   return [...S.consorts,...S.children].filter(daoEligible).filter(p=>{
     const interest=daoInterest(p),roll=mulberry32((p.seed||p.id)^Math.imul(S.turn+1,7823))();
@@ -28,7 +37,7 @@ function daoVisitors(){
 function recordDaoVisit(p){
   p.daoPractice||={path:'dao',visits:0};const d=p.daoPractice;
   if(d.lastVisit===S.turn)return;
-  d.lastVisit=S.turn;d.visits++;d.path='dao';
+  d.lastVisit=S.turn;d.visits++;d.path=daoIntentActive()&&!p.sex&&!daoInclined(p)?'visits':'dao';
   if(d.visits===1||d.visits%6===0)(p.sex?kstory:story)(p,`来到钦安殿听讲、读书，${d.visits===1?'初识清修日常':'已有自己的问道心得'}。`);
 }
 function daoLifeTick(){
@@ -47,7 +56,7 @@ const DAO_READINGS=[
 function daoReading(p){return DAO_READINGS[((p.daoPractice?.talks||0)+(p.seed||p.id))%DAO_READINGS.length];}
 function daoPracticePanel(p){
   const d=p.daoPractice;if(!d)return '';
-  return `<p><span class="tag">${d.visits>=6?'潜心问道':'向道初识'}</span> 曾到钦安殿 ${d.visits} 次${p.sex&&p.amb<=30?' · 性情淡泊':''}</p>${d.lastLine?`<p class="hint">${esc(d.lastLine)}</p>`:''}`;
+  return `<p><span class="tag">${daoDevoted(p)?'潜心问道':daoIntentActive()&&!p.sex&&!daoInclined(p)?'听讲经历':'向道初识'}</span> 曾到钦安殿 ${d.visits} 次${p.sex&&p.amb<=30?' · 性情淡泊':''}</p>${d.lastLine?`<p class="hint">${esc(d.lastLine)}</p>`:''}`;
 }
 function daoRemember(p,line){
   (p.sex?kstory:story)(p,line);p.daoPractice||={path:'dao',visits:0};p.daoPractice.lastLine=line;
@@ -108,6 +117,6 @@ function daoLifeVoice(p){
   if(!p.daoPractice)return null;const sea=p.daoPractice.seaWish;
   if(sea?.status==='fulfilled')return voiceLine('sea-memory','说起那次东海之行，眼里又有了光。','那日没有寻到仙人，可潮声到今日还记得。若问什么最难得，我想，是有人肯陪着去看。');
   if(sea?.status==='promised')return voiceLine('sea-promise','书页里夹着一张小小的海图。','东海的约定，还记得么？我把诗又读了一遍，仍想亲眼看看。');
-  if(p.daoPractice.visits<3)return null;
+  if(p.daoPractice.visits<3||daoIntentActive()&&!p.sex&&(!daoInclined(p)||S.turn-(p.daoPractice.lastVisit??-99)>12))return null;
   return voiceLine('dao-life','案上多了一卷从钦安殿借来的书。',p.sex?['儿臣又去听国师讲书了。以前只盼事事赶在旁人前头，如今也想知道，自己究竟喜欢什么。','殿前松风很轻，书里的天地很远。读完回来，却觉得宫里的灯也很好。']:['今日在钦安殿静坐，倒没有刻意想什么。出来时看见枝头一片新叶，心里忽然松了些。','书中说逍遥，臣妾却还惦记故人。想来问道，也不必把心变成石头。']);
 }

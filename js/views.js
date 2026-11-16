@@ -107,7 +107,7 @@ function viewNew(){
   </form>`}
 function consortCard(c){
   const tags=[xinTag(c),c.visitor?'<span class="tag y">母亲在宫</span>':'',c.preg>=2?'<span class="tag r">有孕</span>':'',c.cold?'<span class="tag k">冷宫</span>':'',c.rank===8?'<span class="tag y">中宫</span>':''].join('');
-  return `<button class="card portrait-card" onclick="A.go('consort',${c.id})">${porImg(c,84)}<div class="grow"><div class="nm">${esc(cName(c))}</div><div>${esc(fullName(c))} · ${c.age}岁 · ${c.homeLeave?'娘家 · 暂离宫中':c.templeStay?'护国寺':esc(c.palace)}</div><div>${tags}<span class="tag">${c.trait}</span>${solitaryTag(c)}</div>${bar('恩宠',c.favor)}${bar('心情',c.mood,'#4f9078')}</div></button>`}
+  return `<button class="card portrait-card" onclick="A.go('consort',${c.id})">${porImg(c,84)}<div class="grow"><div class="nm">${esc(cName(c))}</div><div>${esc(fullName(c))} · ${c.age}岁 · ${c.homeLeave?'娘家 · 暂离宫中':c.templeStay?'护国寺':esc(c.palace)}</div><div>${tags}<span class="tag">${c.trait}</span>${solitaryTag(c)}${dowagerKinTag(c)}</div>${bar('恩宠',c.favor)}${bar('心情',c.mood,'#4f9078')}</div></button>`}
 
 function dowagerFamilyPanel(){
   const d=ensureDowager();
@@ -145,7 +145,7 @@ function familyGraphSVG(){
   if(!people.length)return '<p class="hint">目前没有入宫的妃嫔。</p>';
   const groups=new Map();
   people.forEach((c,index)=>{
-    const key=hasClan(c)?clanKey(c):'house-'+(c.fatherId??c.id);
+    const key=familyGroupKey(c);
     if(!groups.has(key))groups.set(key,{key,label:hasClan(c)?clanName(key):c.sur+'家',fathers:new Map(),indices:[]});
     const group=groups.get(key),father=houseOf(c)?.father;
     group.indices.push(index);
@@ -153,20 +153,28 @@ function familyGraphSVG(){
     if(!group.fathers.has(id))group.fathers.set(id,{father,person:c,indices:[]});
     group.fathers.get(id).indices.push(index);
   });
-  const col=layeredFamilyActive()?286:190,cardWidth=layeredFamilyActive()?264:168,W=people.length*col+24;
-  const clanY=12,clanHeight=54,houseY=98,houseHeight=layeredFamilyActive()?Math.max(68,...people.map(familyHouseHeight)):56+44*Math.max(1,...people.map(c=>brotherRoles(houseOf(c)).length+natalPeople(c.house).length)),consortY=houseY+houseHeight+38,consortHeight=82;
+  const positions=new Map();let columns=0;
+  for(const group of groups.values()){
+    group.hidden=familyGroupHidden(group.key);group.start=columns;
+    if(group.hidden)columns++;else for(const index of group.indices)positions.set(index,columns++);
+    group.end=columns-1;
+  }
+  const shown=people.filter((c,i)=>positions.has(i));
+  const col=layeredFamilyActive()?286:190,cardWidth=layeredFamilyActive()?264:168,W=columns*col+24;
+  const clanY=12,clanHeight=familyVisibilityActive()?64:54,houseY=98,houseHeight=layeredFamilyActive()?Math.max(68,...shown.map(familyHouseHeight)):56+44*Math.max(1,...shown.map(c=>brotherRoles(houseOf(c)).length+natalPeople(c.house).length)),consortY=houseY+houseHeight+38,consortHeight=82;
   const childY=consortY+128,childHeight=66,childStep=childHeight+12;
-  const H=childY+Math.max(0,...people.map(c=>kids.get(c.id)?.length||0))*childStep+12;
-  const x=i=>12+col*(i+.5),blood='#996a48',consortBottom=consortY+consortHeight;
+  const H=shown.length?childY+Math.max(0,...shown.map(c=>kids.get(c.id)?.length||0))*childStep+12:clanY+clanHeight+12;
+  const x=i=>12+col*(positions.get(i)+.5),blood='#996a48',consortBottom=consortY+consortHeight;
   const line=(x1,y1,x2,y2,color)=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="1.8"/>`;
   const at=(cx,y,height)=>`--graph-x:${cx}px;--graph-y:${y}px;--graph-card-height:${height}px`;
   const label=(name,role,p)=>`<span class="graph-person"><span class="family-name-row"><strong>${esc(name)}</strong>${p?familyAgeNote(p):''}</span><small>${esc(role)}</small></span>`;
   let backgrounds='',wires='',cards='';
   for(const group of groups.values()){
-    const left=x(group.indices[0]),right=x(group.indices.at(-1)),center=(left+right)/2;
-    backgrounds+=`<rect x="${left-col/2+3}" y="4" width="${right-left+col-6}" height="${H-8}" rx="9" fill="#fffaec" fill-opacity=".48" stroke="#cbb594"/>`;
+    const left=12+col*(group.start+.5),right=12+col*(group.end+.5),center=(left+right)/2;
+    backgrounds+=`<rect x="${left-col/2+3}" y="4" width="${right-left+col-6}" height="${group.hidden?clanY+clanHeight+4:H-8}" rx="9" fill="#fffaec" fill-opacity=".48" stroke="#cbb594"/>`;
     cards+=`<div class="graph-card graph-clan${group.key===maternal?' maternal-clan':''}" data-clan="${esc(group.key)}" style="${at(center,clanY,clanHeight)};width:${Math.min(320,right-left+cardWidth)}px">
-      ${label(group.label,(cousinFamiliesActive()?'在宫妃嫔 '+(hasClan(people[group.indices[0]])?clanPalaceCount(group.key):group.indices.filter(i=>people[i].alive&&!people[i].gone&&!people[i].maid).length)+' 人 · ':'')+(group.key===maternal?'太后母家 · 同族系谱':group.fathers.size>1?'同族 · 按父亲分房':'父系家谱'))}</div>`;
+      ${label(group.label,(cousinFamiliesActive()?'在宫妃嫔 '+(hasClan(people[group.indices[0]])?clanPalaceCount(group.key):group.indices.filter(i=>people[i].alive&&!people[i].gone&&!people[i].maid).length)+' 人 · ':'')+(group.key===maternal?'太后母家 · 同族系谱':group.fathers.size>1?'同族 · 按父亲分房':'父系家谱'))}${familyVisibilityButton(group.key,group.label)}</div>`;
+    if(group.hidden)continue;
     const branches=[...group.fathers.values()];
     const fatherX=branch=>(x(branch.indices[0])+x(branch.indices.at(-1)))/2;
     wires+=`<path d="M${center} ${clanY+clanHeight} V80 M${fatherX(branches[0])} 80 H${fatherX(branches.at(-1))}" fill="none" stroke="#a68b68" stroke-dasharray="4 3"/>`;
@@ -185,12 +193,14 @@ function familyGraphSVG(){
     }
   }
   for(let i=0;i<people.length;i++)for(let j=i+1;j<people.length;j++){
+    if(!positions.has(i)||!positions.has(j))continue;
     const a=people[i],b=people[j],v=relGet(a,b);
     if(Math.abs(v)<30)continue;
     const x1=x(i),x2=x(j),lift=consortBottom+21+Math.min(34,(x2-x1)/12);
     wires+=`<path d="M${x1} ${consortBottom} Q${(x1+x2)/2} ${lift} ${x2} ${consortBottom}" fill="none" stroke="${v>0?'#4f9078':'#b8473c'}" stroke-width="${1+Math.abs(v)/40}" ${v>0?'':'stroke-dasharray="4 3"'}><title>${esc(fullName(a))} 与 ${esc(fullName(b))}：${v>0?(socialPair(a,b)?'亲近':'敬重'):'不和'}</title></path>`;
   }
   people.forEach((c,i)=>{
+    if(!positions.has(i))return;
     const cx=x(i),children=kids.get(c.id)||[],rail=cx-col/2+8;
     cards+=`<button class="graph-card graph-consort${c.rank===8?' graph-crown':''}" style="${at(cx,consortY,consortHeight)}" onclick="A.go('consort',${c.id})">${porImg(c,52)}${label(fullName(c),!c.alive?'已故':c.gone?'已出宫':cName(c),c)}</button>`;
     if(children.length){
@@ -239,7 +249,8 @@ function viewFamily(){
   }
   for(const c of S.consorts){
     if(c.maid&&!kidsByMother.has(c.id))continue;
-    const key=hasClan(c)?clanKey(c):null;
+    if(familyVisibilityActive())houseOf(c);
+    const key=familyVisibilityActive()?familyGroupKey(c):hasClan(c)?clanKey(c):null;
     if(!byClan.has(key))byClan.set(key,[]);
     byClan.get(key).push(c);
   }
@@ -251,16 +262,16 @@ function viewFamily(){
   const member=c=>`<li><button class="btn quiet family-person" onclick="A.go('consort',${c.id})">${porImg(c,60)}
     <span><span class="family-name-row"><strong>${esc(fullName(c))}</strong>${familyAgeNote(c)}</span><small class="hint">${esc(!c.alive?'已故':c.gone?'已出宫':cName(c))}</small></span></button>
     ${kidsByMother.has(c.id)?`<ul>${kidsByMother.get(c.id).map(childLine).join('')}</ul>`:''}</li>`;
-  const branch=(label,people,force='')=>{
+  const branch=(label,people,force='',key='')=>{
     const childCount=people.reduce((sum,c)=>sum+(kidsByMother.get(c.id)?.length||0),0),fathers=new Map();
     for(const c of people){const house=houseOf(c);const key=house?.father.id??c.id;if(!fathers.has(key))fathers.set(key,[]);fathers.get(key).push(c);}
-    return `<details class="family-branch"><summary><strong>${esc(label)}</strong><span class="hint">${people.length} 人 · ${childCount} 位皇嗣${force}</span></summary>
-      ${[...fathers.values()].map(sisters=>{const father=houseOf(sisters[0])?.father;
+    return `<details class="family-branch${familyGroupHidden(key)?' family-hidden':''}" data-family-key="${esc(key)}"><summary><strong>${esc(label)}</strong><span class="hint">${people.length} 人 · ${childCount} 位皇嗣${force}</span>${familyVisibilityButton(key,label)}</summary>
+      ${familyGroupHidden(key)?'':[...fathers.values()].map(sisters=>{const father=houseOf(sisters[0])?.father;
         return `<section class="paternal-branch">${father?(layeredFamilyActive()?familyHouseTree(sisters[0],true):officialFamilyLine(sisters[0]))+(sisters.length>1?'<p class="hint">亲姐妹同父，共用父兄履历。</p>':''):''}<ul>${sisters.map(member).join('')}</ul></section>`;
       }).join('')}</details>`;
   };
   const branches=[...byClan].sort(([a],[b])=>Number(a==null)-Number(b==null)).map(([key,people])=>
-    branch(key?clanName(key):'未列家族',people,key?` · 势力 ${Math.max(...people.map(c=>rd(c.fam.p)))}`:'')).join('');
+    branch(familyVisibilityActive()?(hasClan(people[0])?clanName(key):people[0].sur+'家'):key?clanName(key):'未列家族',people,hasClan(people[0])?` · 势力 ${Math.max(...people.map(c=>rd(c.fam.p)))}`:'',key||'')).join('');
   const unlisted=S.children.filter(k=>!byId(k.mom)&&!k.birthSwap?.confirmed);
   return `${pageHeading('家族关系树')}<div class="acts view-switch" role="group" aria-label="家族查看方式"><button class="btn sm" onclick="A.familyMode('graph')">关系图</button><button class="btn sm on">家族列表</button></div><p class="hint">皇嗣列在生母名下，另标养母。点名字可查看人物。</p>
     ${dowagerFamilyPanel()}${branches||'<p class="hint">目前没有入宫的妃嫔。</p>'}${outsideBirthFamilyPanel()}${royalRelativesPanel()}
@@ -367,7 +378,7 @@ function viewConsort(){
    <header class="detail-head">${porImg(c,224)}<div class="grow">
     <p>${esc(fullName(c))} · ${c.age}岁 · ${c.alive?c.gone?'已出宫':c.homeLeave?'娘家 · 暂离宫中':c.templeStay?'护国寺':esc(residenceLabel(c)):esc(c.deathReason||'已故')}</p>
     <h2>${esc(cName(c))}</h2>${consortHomePlace(c)?`<button class="btn sm jade" onclick="A.visitConsortHome(${c.id})">去宫里看看 →</button>`:''}
-    <p>${esc(c.fam.t)} · ${esc(c.trait)} ${solitaryTag(c)}${c.preg>=2?` <span class="tag r">有孕${c.preg}月</span>`:''}</p>
+    <p>${esc(c.fam.t)} · ${esc(c.trait)} ${solitaryTag(c)}${dowagerKinTag(c)}${c.preg>=2?` <span class="tag r">有孕${c.preg}月</span>`:''}</p>
     ${dowagerCareActive()&&c.dowagerKin?.gen===S.gen?`<p class="hint">太后母家侄女 · 陛下的母族表亲；潜邸时奉先帝之命成婚。</p>`:c.imperialKin?`<p class="hint">入宫亲缘 · ${esc(c.imperialKin.relation)}，经${esc(c.imperialKin.via)}引见。</p>`:''}
     ${PORTRAIT_CLOTHES[portraitCell(c)]?`<p>衣着 · ${PORTRAIT_CLOTHES[portraitCell(c)]}</p>`:''}
     ${characterVoiceHTML(c)}${daoPracticePanel(c)}
@@ -408,9 +419,9 @@ function viewCards(){
    ${h.length?`<div class="pais">${h.map(c=>`<button class="pai" ${consortNightReason(c)?'disabled':''} onclick="A.night(${c.id})"><strong>${esc(cName(c))}</strong><small>${consortNightReason(c)||'恩宠 '+rd(c.favor)}</small></button>`).join('')}</div>`:'<p class="hint">暂无可翻的绿头牌。可在妃嫔详情中恢复绿头牌。</p>'}${maidAudiencePanel()}`;
 }
 function viewXX(){
-  const since=S.turn-S.flags.lastXX;
+  const last=selectionLastHeldTurn(),since=S.turn-last;
   if(selectionArrivalsRecent())return viewSelectionArrivals();
-  if(!S.cands.length&&(!S.selection||S.selection.phase==='arrivals')) return `<h2>选秀</h2><p>距上次选秀：${S.flags.lastXX<0?'从未':`${Math.floor(since/12)}年${since%12}月`}。三年一度大选可在二月自动举行；也可随时下旨，但未满三年会耗费国库、有损民心。</p>
+  if(!S.cands.length&&(!S.selection||S.selection.phase==='arrivals')) return `<h2>选秀</h2><p>距上次选秀：${last<0?'从未':`${Math.floor(since/12)}年${since%12}月`}。三年一度大选可在二月自动举行；也可随时下旨，但未满三年会耗费国库、有损民心。</p>
     <div class="acts"><button class="btn gold" onclick="A.xxDecree()">下旨选秀</button></div>`;
   if(selectionCurrent())return viewSelectionAudience();
   return `${selectionDiscussionPanel()}<section class="story-scene selection-scene" aria-labelledby="selection-title">
@@ -420,7 +431,7 @@ function viewXX(){
    <p>已留选 ${(S.selection?.accepted||[]).length} 人${(S.selection?.accepted||[]).length?' · '+S.selection.accepted.map(id=>parentLink(id)).join('、'):''}。${S.cands.length?'名单确定后，再看她们入宫时的反应。':'候选已全部处理，请确认本批名单。'}</p>
    <p class="hint">容貌、才情一望便知；德行、心机需要暗访（剩余 ${S.flags.peek} 次）。本月结束时未选的秀女会遣返回家。</p>
    <div class="grid portrait-grid">${S.cands.map(c=>`<div class="card portrait-card" style="cursor:default;flex-direction:column">
-     <div class="row" style="gap:8px">${porImg(c,76)}<div class="grow"><div class="nm">${esc(fullName(c))}</div><div>${c.age}岁 · ${esc(c.fam.t)}之女</div>${c.kinNote?`<div><span class="tag y">${esc(c.kinNote)}</span></div>`:''}<div><span class="tag">${c.trait}</span>${solitaryTag(c)} <span class="tag">${esc(consortHobby(c))}</span></div></div></div>
+     <div class="row" style="gap:8px">${porImg(c,76)}<div class="grow"><div class="nm">${esc(fullName(c))}</div><div>${c.age}岁 · ${esc(c.fam.t)}之女</div>${c.kinNote?`<div><span class="tag y">${esc(c.kinNote)}</span></div>`:''}<div><span class="tag">${c.trait}</span>${solitaryTag(c)}${dowagerKinTag(c)} <span class="tag">${esc(consortHobby(c))}</span></div></div></div>
      ${portraitResemblanceHint(c)?`<p class="hint">${esc(portraitResemblanceHint(c))}</p>`:''}${c.pastLife?`<p class="hint">${esc(pastLifeSelectionHint(c))}</p>`:''}${bar('容貌',c.looks,'#8e6f57')}${bar('才情',c.talent,'#8e6f57')}${c.known?bar('德行',c.virtue,'#8e6f57')+bar('心机',c.scheme,'#8e6f57'):'<div class="bar"><span>德行</span><i></i><em>??</em></div><div class="bar"><span>心机</span><i></i><em>??</em></div>'}
      <div class="acts" style="margin:4px 0 0"><button class="btn sm" onclick="A.xxMeet(${c.id})">再见一面</button><button class="btn sm gold" onclick="A.xxTake(${c.id})">留牌子</button><button class="btn sm" onclick="A.xxDrop(${c.id})">撂牌子</button>${c.known?'':`<button class="btn sm jade" onclick="A.xxPeek(${c.id})">暗访</button>`}</div></div>`).join('')}</div>`}
 function parentLink(id,name){

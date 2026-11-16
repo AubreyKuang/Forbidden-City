@@ -1,5 +1,24 @@
 /* One person record, two parent links. Household branches follow a known father. */
 const layeredFamilyActive=()=>!!S&&journalContentVersion()>=19;
+function familyVisibilityActive(){return !!S&&journalContentVersion()>=53;}
+function familyGroupKey(c){return hasClan(c)?clanKey(c):'house-'+(c.fatherId??c.house?.father.id??c.id);}
+function familyGroupHidden(key){return familyVisibilityActive()&&S.flags.hiddenFamilies?.[key]===true;}
+function familyVisibilityButton(key,label){
+ if(!familyVisibilityActive())return '';
+ const hidden=familyGroupHidden(key);
+ return `<button class="btn sm family-visibility" data-family-toggle="${esc(key)}" aria-label="${hidden?'显示':'隐藏'}${esc(label)}整个家族" aria-expanded="${!hidden}" onclick="event.preventDefault();event.stopPropagation();A.familyVisibilityToggle(${esc(JSON.stringify(key))})">${hidden?'显示家族':'隐藏家族'}</button>`;
+}
+A.familyVisibilityToggle=function(key){
+ if(modalOpen||!familyVisibilityActive()||!S.consorts.some(c=>familyGroupKey(c)===key))return;
+ const panel=$('#panel'),scroll=panel.scrollTop,graph=panel.querySelector?.('.graph-wrap'),x=graph?.scrollLeft||0,y=graph?.scrollTop||0;
+ const open=new Map([...(panel.querySelectorAll?.('.family-branch[data-family-key]')||[])].map(el=>[el.dataset.familyKey,el.open]));
+ const hidden=familyGroupHidden(key);
+ if(hidden)delete S.flags.hiddenFamilies[key];else(S.flags.hiddenFamilies||={})[key]=true;
+ render();panel.scrollTop=scroll;
+ panel.querySelectorAll?.('.family-branch[data-family-key]').forEach(el=>{el.open=!familyGroupHidden(el.dataset.familyKey)&&(el.dataset.familyKey===key?hidden:!!open.get(el.dataset.familyKey));});
+ const current=panel.querySelector?.('.graph-wrap');if(current){current.scrollLeft=x;current.scrollTop=y;}
+ [...(panel.querySelectorAll?.('.family-visibility')||[])].find(el=>el.dataset.familyToggle===key)?.focus?.({preventScroll:true});
+};
 function familyTreeRegistry(){
   const houses=[],seen=new Set(),relatives=[];
   for(const c of familyCourtHosts()){const h=houseOf(c);if(!h||seen.has(h.father.id))continue;seen.add(h.father.id);houses.push({c,h});}
