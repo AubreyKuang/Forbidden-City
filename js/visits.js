@@ -32,7 +32,8 @@ A.out=function(kind){ if(!useE())return; const e=E();
     else {
       const encounter=roll>=.5&&roll<(journalContentVersion()>=30?.75:.6)?maidEvent('御花园'):null;
       if(encounter){pushEv(encounter);return;}
-      const s=chg({health:2});pushEv({title:'御花园',text:`${['春日融融，百花争艳。','荷风送香，蝉鸣阵阵。','丹桂飘香，层林尽染。','红梅映雪，暗香浮动。'][season()]}你独自走了一圈，心旷神怡。${fx(s)}`,choices:[{t:'回宫'}]});
+      const period=season(),illustration=[undefined,'summer-lotus-walk','autumn-osmanthus-walk',undefined][period];
+      const s=chg({health:2});pushEv({title:'御花园',illustration,text:`${['春日融融，百花争艳。','荷风送香，蝉鸣阵阵。','丹桂飘香，层林尽染。','红梅映雪，暗香浮动。'][period]}你独自走了一圈，心旷神怡。${fx(s)}`,choices:[{t:'回宫'}]});
     }
   }
   else if(kind==='city'){setScene('city');
@@ -60,7 +61,7 @@ A.out=function(kind){ if(!useE())return; const e=E();
       {t:'安排皇子公主来祈福',f:()=>{pushNow(templeRosterEvent('kids'));return null;}},
       {t:'安排妃嫔来祈福或清修',f:()=>{pushNow(templeRosterEvent('consorts'));return null;}},{t:'回宫'}]})}
   else if(kind==='spa'){setScene('garden');const s=chg({health:5,treasury:-SPA_COST});log('帝往西山温泉行宫休养。');
-    pushEv({title:'温泉行宫',text:`西山温泉氤氲，你静养了几日，精神好了许多。${fx(s)}`,choices:[{t:'回宫'}]})}
+    pushEv({title:'温泉行宫',illustration:'xishan-hot-spring',text:`西山温泉氤氲，你静养了几日，精神好了许多。${fx(s)}`,choices:[{t:'回宫'}]})}
 };
 function maidEncounterReady(){return S.turn-(S.flags.lastMaidEncounter??-Infinity)>=(journalContentVersion()>=30?6:4);}
 function maidEvent(where){

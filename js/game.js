@@ -151,11 +151,16 @@ const EVENT_ILLUSTRATIONS={
   'child-wooden-boat':'小舟一歪，墨线一头沉到水里。孩子凑得更近了。',
   'huashan-stone-steps':'山雾掠过石阶。转过一道弯，前头又露出几级。',
   'grass-stems-sunlit':'风过草地，几根细茎先弯了腰。孩子蹲下来，一根一根地挑。',
-  'fallen-petals-after-rain':'几片花瓣落在湿草间。枝上还有花，在薄薄的天光里轻轻摇。'
+  'fallen-petals-after-rain':'几片花瓣落在湿草间。枝上还有花，在薄薄的天光里轻轻摇。',
+  'summer-lotus-walk':'廊下凉快。一阵风过来，池边两片荷叶先动了。',
+  'autumn-osmanthus-walk':'走到桂树下，香气忽然浓了。石径上落着几粒金黄的小花。',
+  'xishan-hot-spring':'天光照进雾里，水边才一点点亮起来。',
+  'moonlit-needle':'针身闪过一点月光，彩线还没捻好。',
+  'west-window-second-tea':'靠近你的那盏茶，还冒着热气。'
 };
 function eventIllustration(key){
   if(!Object.hasOwn(EVENT_ILLUSTRATIONS,key))return '';
-  return `<figure class="event-illustration" data-illustration="${key}"><img src="./assets/images/story-${key}.webp" alt="" decoding="async"><figcaption>${esc(EVENT_ILLUSTRATIONS[key])}</figcaption></figure>`;
+  return `<figure class="event-illustration" data-illustration="${key}"><img src="./assets/images/story-${key}.webp" alt="" decoding="async" onload="this.classList.add('event-illustration-loaded')"><figcaption>${esc(EVENT_ILLUSTRATIONS[key])}</figcaption></figure>`;
 }
 function openModal(ev){
   if(!modalOpen&&document.activeElement?.matches('button,input,select')) modalInvoker=document.activeElement;
