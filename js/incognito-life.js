@@ -1,6 +1,6 @@
 /* Street encounters retain an accountable case, rather than instant verdicts. */
 const INCOGNITO_SCENES={
-  bridge:{title:'断桥旁的渡钱',place:'柳溪渡口',army:false,cost:45,months:3,
+  bridge:{title:'断桥旁的渡钱',illustration:'liuxi-broken-bridge',place:'柳溪渡口',army:false,cost:45,months:3,
     scene:'老桥塌了一半，挑菜进城的农人只好绕到渡口。船家说水急难行，菜贩却拿出一叠层层加收的渡钱票，问这桥究竟还修不修。',
     action:'核验渡钱，修复便桥',success:'工部复验新桥，挑菜的农人已经能走过河。重复征收的渡钱退还原主，桥边立着工料账。',failure:'桥墩下的淤泥比预计更深，原定工期未完。渡口虽已停收重复的票钱，过河仍不方便。'},
   school:{title:'私塾门前的旧书',illustration:'school-window',place:'城南私塾',army:false,cost:30,months:2,

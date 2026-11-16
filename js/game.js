@@ -143,7 +143,10 @@ const EVENT_ILLUSTRATIONS={
   'red-plum-snow':'她说最难调的是雪光里的那一点红。笔尖只重半分，枝旁的雪也像添了颜色。',
   'rain-lotus':'廊下静了好一会儿，才听见一滴雨敲在卷起的荷叶上。紧接着，满池都是轻轻接上的声响。',
   'old-inkstone':'晨光擦过砚角，那一处磨得最亮。新写的纸页搁在旁边，墨迹还湿，孩子舍不得拿手去碰。',
-  'old-teabowl':'她指腹沿着盏口慢慢转了一圈，那一处釉面早已磨得温润。日光里，茶还冒着细细的热气。'
+  'old-teabowl':'她指腹沿着盏口慢慢转了一圈，那一处釉面早已磨得温润。日光里，茶还冒着细细的热气。',
+  'west-lake-rain':'船篷还滴着水，天光已从云缝里落到湖上。她靠在你肩头，望了许久。',
+  'rain-corridor-umbrella':'天光透过伞纸，照出浅浅的伞骨。你这边没沾着雨，她的衣袖却湿了一角。',
+  'liuxi-broken-bridge':'断桥下水正急，渡船贴着岸。'
 };
 function eventIllustration(key){
   if(!Object.hasOwn(EVENT_ILLUSTRATIONS,key))return '';

@@ -81,7 +81,10 @@ const ARCS={
       {t:'派人去昆仑取药（国库-120万两）',f:()=>{f.herb=1;aNext(c,2,4,7);return fx(chg({treasury:-120}))}},
       {t:'恐是江湖骗子，作罢',f:()=>{aNext(c,2,6,10);return '你命人把郎中送出了城。'}}]};
     if(f.tell)return {text:`${cName(c)}靠在窗边，望着南方：“陛下，臣妾想去江南。”`,choices:[
-      {t:'陪她南巡（国库-150万两，龙体-3）',f:()=>{f.trip=1;story(c,'陛下陪她南下。烟雨西湖，她靠在陛下肩头，说这是她这辈子最好的日子。');aNext(c,2,3,6);return fx(chg({treasury:-150,health:-3,people:3}),cchg(c,{aff:30,mood:40}))}},
+      {t:'陪她南巡（国库-150万两，龙体-3）',f:()=>{
+        f.trip=1;story(c,'陛下陪她南下。烟雨西湖，她靠在陛下肩头，说这是她这辈子最好的日子。');aNext(c,2,3,6);
+        return {title:'烟雨西湖',illustration:'west-lake-rain',text:`她轻声说：“这是臣妾这辈子最好的日子。”${fx(chg({treasury:-150,health:-3,people:3}),cchg(c,{aff:30,mood:40}))}`};
+      }},
       {t:'宫规森严，不能出京',f:()=>{aNext(c,2,4,8);return fx(cchg(c,{mood:-15}))}}]};
     aNext(c,2,4,8);return {text:`${cName(c)}从宫人的窃窃私语里知道了自己的病情。她没有哭闹，只是把你送她的东西一件件收进了箱子里。`,choices:[{t:'去看她',f:()=>fx(cchg(c,{mood:-10,aff:-5}))}]}},
   (c,f)=>{if(f.herb&&chance(.7)){c.trait='温婉';aEnd(c,'回春','雪灵芝入药，她的心疾竟慢慢好了。她开始学骑马，虽然总是摔下来。');return {text:'昆仑雪灵芝送到了。三个月后，太医惊喜地禀报：她的脉象平稳了。',choices:[{t:'太好了',f:()=>fx(cchg(c,{aff:20,mood:30}))}]}}

@@ -85,6 +85,54 @@ test('a city visit shows the old school only for the school encounter',()=>{
   }
 });
 
+test('the broken bridge appears at the ferry before choosing a case officer',()=>{
+  const game=start();
+  game.run('S.flags.marketRescueSeen=true;S.flags.xieCityAttempt=S.turn;fenghuaState().lastCity=S.turn');
+  game.force(.1,.01);
+  game.run("A.out('city')");
+  assert.equal(game.run('curEv.title'),'微服 · 断桥旁的渡钱');
+  assert.match(game.run("$('#mbox').innerHTML"),/story-liuxi-broken-bridge\.webp/);
+  game.run('choose(0)');
+  assert.equal(game.run('curEv.title'),'民情交办 · 柳溪渡口');
+  assert.doesNotMatch(game.run("$('#mbox').innerHTML"),/event-illustration/);
+});
+
+test('West Lake appears only in the result of accompanying her south',()=>{
+  for(const choice of [0,1]){
+    const game=start();
+    game.run(`const c=empress();c.trait='体弱';c.aff=50;c.arc={id:'ill',st:1,t:S.turn,f:{tell:1}};
+      E().treasury=500;E().health=80;pushEv(arcTick());`);
+    assert.equal(game.run('curEv.title'),'续命汤');
+    assert.doesNotMatch(game.run("$('#mbox').innerHTML"),/event-illustration/);
+    game.run(`choose(${choice})`);
+    assert.equal(game.run('c.arc.st'),2);
+    if(choice===0){
+      assert.match(game.run("$('#mbox').innerHTML"),/烟雨西湖.*story-west-lake-rain\.webp/);
+      assert.equal(game.run('c.arc.f.trip'),1);
+      assert.equal(game.run('E().treasury'),350);
+      assert.equal(game.run('E().health'),77);
+    }else{
+      assert.doesNotMatch(game.run("$('#mbox').innerHTML"),/event-illustration/);
+      assert.equal(game.run('c.arc.f.trip'),undefined);
+    }
+  }
+});
+
+test('the umbrella belongs to the first chapter, including after reloading it',()=>{
+  const game=start();
+  game.run(`S.turn=300;const c=empress();c.trait='温婉';c.age=28;c.aff=60;c.hp=90;c.enteredAt=100;
+    A.journeyBegin(c.id,'rainUmbrella');save('1');`);
+  assert.equal(game.run('curEv.title'),'雨廊一伞 · 伞下半步');
+  assert.match(game.run("$('#mbox').innerHTML"),/story-rain-corridor-umbrella\.webp/);
+
+  const resumed=boot(42,game.storage);
+  resumed.run("A.load('1')");
+  assert.match(resumed.run("$('#mbox').innerHTML"),/story-rain-corridor-umbrella\.webp/);
+  resumed.run(`choose(0);nextEv();const c=empress();S.turn=c.journeys.current.due;A.journeyTalk(c.id);`);
+  assert.equal(resumed.run('curEv.title'),'雨廊一伞 · 还伞的人');
+  assert.doesNotMatch(resumed.run("$('#mbox').innerHTML"),/event-illustration/);
+});
+
 test('the fish basin follows the feeding dialogue and restores from the same saved encounter',()=>{
   const game=start();
   game.force(.1,0,.6);
