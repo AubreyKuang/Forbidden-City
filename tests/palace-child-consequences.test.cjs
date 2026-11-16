@@ -16,6 +16,30 @@ test('real punishment pending scene, reply and subsequent visits replay exactly 
 test('release does not create a second demotion incident and stops cold-palace talk',()=>{
  const w=world();cold(w);w.run(`choose(2);drain();assert.equal(a.cold,false);assert.equal(a.rank,0);assert.equal(S.flags.childFamilyIncidents.length,1);assert.equal(childConsequenceVoice(elder),null);`);
 });
+test('a childless consort may take over care after the foster mother has spent two months in the cold palace',()=>{
+ const w=world();cold(w);w.run(`choose(0);drain();
+   var willing=makeGirl({sur:'陆',given:'静华',age:26});addConsort(willing,3,'入宫');willing.hp=90;
+   var mother=foster.mom;foster.visitRule='closed';
+   S.turn++;assert.equal(coldFosterPetitionEvent(),null);
+   S.turn++;var offer=coldFosterPetitionEvent();assert.equal(offer.por,willing);assert.equal(foster.foster,a.id);
+   pushEv(offer);assert.equal(curEv.title,'请养 · 冷宫之后');choose(0);drain();
+   assert.equal(foster.mom,mother);assert.equal(foster.foster,willing.id);assert.equal(foster.visitRule,'closed');
+   assert.ok(foster.story.some(e=>e.t.includes('陆静华抚养')));
+   assert.ok(a.story.some(e=>e.t.includes('改由陆静华抚养')));
+   assert.equal(coldFosterPetitionEvent(),null);`);
+});
+test('a close friend may petition once during a cold-palace stay and arrange aid without release',()=>{
+ const w=world();cold(w);w.run(`choose(0);drain();S.children=[];
+   relAdd(b,a,65-relGet(b,a));assert.equal(coldFriendPetitionEvent(),null);
+   S.turn++;Math.random=()=>.99;assert.equal(coldFriendPetitionEvent(),null);
+   Math.random=()=>0;var event=coldFriendPetitionEvent();pushEv(event);
+   assert.equal(curEv.title,'为冷宫旧友求情');assert.equal(curEv.por,b);
+   assert.deepEqual(curEv.present.map(p=>p.id),[b.id]);var rank=a.rank;
+   choose(0);drain();assert.equal(a.cold,true);assert.equal(a.rank,rank);
+   assert.ok(a.story.some(e=>e.t.includes('托宫人送衣食')));
+   assert.ok(b.story.some(e=>e.t.includes('托宫人送衣食')));
+   assert.equal(coldFriendPetitionEvent(),null);assert.equal(event.choices[1].f(),null);`);
+});
 test('a refused probability still records every affected child, without any forced plea',()=>{
  const w=world();w.run(`Math.random=()=>.999;A.cold(a.id);choose(0);nextEv();assert.equal(curEv.title,'母亲遭逢变故');assert.equal(S.flags.childFamilyIncidents[0].pleaders.length,0);assert.equal(a.childDisgrace.checked,true);choose(0);drain();assert.equal(motherAppealEvent(),null);`);
 });
@@ -37,12 +61,12 @@ test('profile reading is pure and sorrow gradually leaves everyday speech',()=>{
 test('departure produces immediate concern without asserting an offense',()=>{
  const w=world();w.run(`Math.random=()=>0;A.away(a.id);choose(0);nextEv();assert.match(curEv.text,/离宫/);assert.match(curEv.text,/只求父皇容人传个平安/);assert.doesNotMatch(curEv.text,/没有过错/);`);
 });
-test('genuine published v29 punishment finishes unchanged, then old-save visit dialogue improves',()=>{const payload=require('./fixtures/child-cold-legacy-v29.json'),w=boot(229,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));w.ctx.assert=assert;w.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,29);assert.equal(S.flags.childFamilyIncidents,undefined);drain();var k=S.children.find(k=>k.name==='清宁');A.kidVisit(k.id);assert.equal(PalaceActions.contentVersion,42);assert.match(curEv.text,/厚些的衣裳/);`);});
+test('genuine published v29 punishment finishes unchanged, then old-save visit dialogue improves',()=>{const payload=require('./fixtures/child-cold-legacy-v29.json'),w=boot(229,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));w.ctx.assert=assert;w.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,29);assert.equal(S.flags.childFamilyIncidents,undefined);drain();var k=S.children.find(k=>k.name==='清宁');A.kidVisit(k.id);assert.equal(PalaceActions.contentVersion,43);assert.match(curEv.text,/厚些的衣裳/);`);});
 for(const [name,change,kind] of [['demotion',"a.rank=1;story(a,'石阶泼油事发，被降为答应，禁足宫中。')",'demotion'],['discipline',"story(a,'争执失礼，罚俸三月，禁足宫中。')",'punishment']])test(name+' records the child reaction as soon as the incident settles',()=>{const w=world();w.run(`var prev=JSON.parse(JSON.stringify(S));${change};childMotherConsequences(prev);assert.equal(elder.familyFeeling.kind,'${kind}');assert.ok(elder.story.some(s=>s.familyIncident?.kind==='${kind}'));`);});
 test('every remote visit stays a letter, including later topics',()=>{const w=world();cold(w);w.run(`drain();elder.away=true;for(var i=0;i<7;i++){A.kidVisit(elder.id);assert.equal(curEv.title,'皇嗣家书');assert.doesNotMatch(curEv.text,/父皇肯来|和您坐一会儿|你的衣袖|你坐近|向你挪近/);drain();}`);});
 test('petitioners lead the popup and identical infant reactions share one short line',()=>{
  const w=world();w.run(`var other=makeKid(a,'f','静姝');other.pendingName=false;other.born=S.turn-5;`);cold(w);w.run(`assert.match(curEv.text.split('\\n')[0],/清宁、清和、明仪、玉宁一同来御前求情/);assert.equal(curEv.cast.map(k=>k.id).join(','),[elder,little,foster,friend].map(k=>k.id).join(','));assert.equal(curEv.text.split('尚不明白大人的处置').length-1,1);assert.ok(curEv.text.includes(baby.name+'、静姝：'));assert.doesNotMatch(curEv.text,/清宁：|清和：|明仪：/);for(var k of [baby,other])assert.match(k.story.find(s=>s.familyIncident?.kind==='cold').t,/尚不明白大人的处置/);`);
 });
 test('a genuine v31 pending petition keeps its original words through reload',()=>{
- const payload=require('./fixtures/child-plea-legacy-v31.json'),w=boot(123,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));w.ctx.assert=assert;w.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,31);assert.match(curEv.text,/消息传到了孩子们那里/);drain();assert.equal(PalaceActions.contentVersion,42);`);
+ const payload=require('./fixtures/child-plea-legacy-v31.json'),w=boot(123,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));w.ctx.assert=assert;w.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,31);assert.match(curEv.text,/消息传到了孩子们那里/);drain();assert.equal(PalaceActions.contentVersion,43);`);
 });

@@ -1055,8 +1055,12 @@ test('residence tabs use actual departure, retain their selection, and omit nurs
     adult.born=away.born=girl.born=far.born=S.turn-240;adult.married=true;away.away=true;girl.estate={};far.princessMarriage='frontier';
     A.go('kids');UI.kidsResidence='palace';var html=viewKids();assert.match(html,/小公主/);assert.match(html,/留宫皇子/);assert.doesNotMatch(html,/就藩皇子|开府公主|远嫁公主|随生母.*同住/);
     A.kidsResidence('out');html=viewKids();assert.match(html,/就藩皇子/);assert.match(html,/开府公主/);assert.match(html,/远嫁公主/);assert.doesNotMatch(html,/小公主/);
-    A.go('kid',away.id);A.backPerson('kids');assert.equal(UI.kidsResidence,'out');assert.equal(childInPalace(adult),true);
-    baby.alive=false;assert.match(viewKids(),/已故与失踪/);`);
+    A.kidsKind('m');html=viewKids();assert.match(html,/就藩皇子/);assert.doesNotMatch(html,/开府公主|远嫁公主/);
+    A.kidsResidence('palace');html=viewKids();assert.match(html,/留宫皇子/);assert.doesNotMatch(html,/小公主|就藩皇子/);
+    A.kidsKind('f');html=viewKids();assert.match(html,/小公主/);assert.doesNotMatch(html,/留宫皇子/);
+    A.kidsResidence('out');html=viewKids();assert.match(html,/开府公主/);assert.match(html,/远嫁公主/);assert.doesNotMatch(html,/就藩皇子/);
+    A.go('kid',girl.id);A.backPerson('kids');assert.equal(UI.kidsResidence,'out');assert.equal(UI.kidsKind,'f');assert.equal(childInPalace(adult),true);
+    baby.alive=false;assert.match(viewKids(),/已故与失踪/);A.kidsKind('m');assert.doesNotMatch(viewKids(),/已故与失踪/);`);
 });
 
 test('husband portraits survive ordinary and acquaintance marriages and incomplete legacy saves',()=>{

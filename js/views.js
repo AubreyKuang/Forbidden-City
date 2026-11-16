@@ -432,14 +432,24 @@ A.kidsResidence=function(group){
   if(!['palace','out'].includes(group))return;
   UI.kidsResidence=group;AU.sfx('click');render();
 };
+const KIDS_KIND_FILTERS=[['all','全部'],['m','皇子'],['f','公主']];
+A.kidsKind=function(kind){
+  if(!KIDS_KIND_FILTERS.some(([id])=>id===kind))return;
+  UI.kidsKind=kind;AU.sfx('click');render();
+};
 function viewKids(){
-  const living=S.children.filter(k=>k.alive),past=S.children.filter(k=>!k.alive);
+  const living=S.children.filter(k=>k.alive);
   const groups={palace:living.filter(k=>!childHasLeftPalace(k)),out:living.filter(childHasLeftPalace)};
   const selected=UI.kidsResidence==='out'?'out':'palace';
+  const [kind,kindLabel]=KIDS_KIND_FILTERS.find(([id])=>id===UI.kidsKind)||KIDS_KIND_FILTERS[0];
+  const matches=k=>kind==='all'||k.sex===kind;
+  const visible=groups[selected].filter(matches),past=S.children.filter(k=>!k.alive&&matches(k));
+  const residenceLabel=selected==='palace'?'宫中':'宫外';
   const grid=ks=>`<div class="grid portrait-grid">${ks.map(childListCard).join('')}</div>`;
   return `${pageHeading('皇嗣','',`<button class="btn jade" onclick="A.visitMapActivity('ss')">去上书房看看 →</button>`)}${pendingBirthPanel()}${S.children.length?`
-    <div class="residence-tabs" role="group" aria-label="皇嗣居处">${[['palace','宫内'],['out','已出宫']].map(([id,label])=>`<button class="btn ${selected===id?'primary on':''}" aria-pressed="${selected===id}" onclick="A.kidsResidence('${id}')">${label}<span>${groups[id].length}</span></button>`).join('')}</div>
-    <section aria-label="${selected==='palace'?'宫内皇嗣':'已出宫皇嗣'}">${groups[selected].length?grid(groups[selected]):`<p class="hint">${selected==='palace'?'目前没有住在宫内的皇子公主。':'尚无皇子公主出宫。'}</p>`}</section>
+    <div class="residence-tabs" role="group" aria-label="皇嗣居处">${[['palace','宫中'],['out','宫外']].map(([id,label])=>`<button class="btn ${selected===id?'primary on':''}" aria-pressed="${selected===id}" onclick="A.kidsResidence('${id}')">${label}<span>${groups[id].length}</span></button>`).join('')}</div>
+    <div class="acts official-filters" role="group" aria-label="皇嗣类别">${KIDS_KIND_FILTERS.map(([id,label])=>`<button class="btn sm ${kind===id?'on':''}" aria-pressed="${kind===id}" onclick="A.kidsKind('${id}')">${label}</button>`).join('')}</div>
+    <section aria-label="${residenceLabel}皇嗣">${visible.length?grid(visible):`<p class="hint">${residenceLabel}暂无${kind==='all'?'皇嗣':kindLabel}。</p>`}</section>
     ${past.length?`<details class="past-children"><summary>已故与失踪 · ${past.length}</summary>${grid(past)}</details>`:''}`:'<p class="hint">膝下尚无子嗣。多召幸妃嫔，或去护国寺祈福。</p>'}`;
 }
 function viewKid(){

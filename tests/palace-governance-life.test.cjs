@@ -102,7 +102,7 @@ for(const fixture of legacyFixtures.cases)test(`pre-upgrade ${fixture.name} cont
  b.run("if(modalResult)nextEv();else choose(curEv.choices.findIndex(c=>!c.cond||c.cond()))");
  b=reload(b);b.run('drain();assert.equal(PalaceActions.legacy,false);');
  assert.equal(b.run('S.turn'),fixture.save.turn,'finishing a version 2 scene retains the original month');
- b.run("E().energy=1;A.out('spa');assert.equal(PalaceActions.payload().pendingActions.version,42)");
+ b.run("E().energy=1;A.out('spa');assert.equal(PalaceActions.payload().pendingActions.version,43)");
  b=reload(b);b.run('var previousTurn=S.turn;choose(0);tick(1500);assert.equal(S.turn,previousTurn+1);');
 });
 test('the old commission cancellation index still cancels instead of assigning a new mission',()=>{

@@ -21,6 +21,7 @@ function fosterPetitionReason(c){
 function fosterPetitioner(c){return !!fosterPetitionReason(c);}
 function fosterPetitionMatch(c,k){
   const reason=fosterPetitionReason(c),m=byId(k?.mom),f=k&&fosterOf(k);
+  if(journalContentVersion()>=43&&f?.alive&&f.cold)return false;
   if(!reason||!m||m===c||!childInPalace(k)||k.pendingName||kidAge(k)>=6||k.id===S.heir||
     motherOriginalRank(k)>=5||c.rank<=motherOriginalRank(k)||(f?.alive&&!f.cold&&!f.gone))return false;
   return childNeedsMother(k)||(['long-wait','frail-wish'].includes(reason)&&inPalace(m));
@@ -119,6 +120,74 @@ function fosterMotherDiscussion(c,k){
       {t:agrees?'按所议安排抚养，准生母探望':'仍旨令交予她抚养',f:()=>valid()?petitionFoster(k,c,false,agrees):null},
       {t:'留在生母身边，日后慢慢往来',f:()=>{if(!valid())return null;const text=`${k.name}仍随生母${fullName(m)}生活；陛下没有因请养者得宠而立即改变抚养。日后往来仍由双方商量。`;story(c,text);story(m,text);kstory(k,text);remember(c,'family-care',text);save('auto');return text;}},
       {t:'暂缓定夺',f:()=>{if(!valid())return null;story(c,`听取${fullName(m)}的意思后，抚养${k.name}之议暂缓。`);save('auto');return '原有照护安排不变。';}}]};
+}
+function coldPetitionEpisode(m,months){
+  const episode=m?.childDisgrace;
+  return m?.alive&&!m.gone&&m.cold&&episode?.active&&S.turn-episode.turn>=months?episode:null;
+}
+function coldFosterPetitioner(c,k){
+  return inPalace(c)&&!c.maid&&c.rank>=2&&c.hp>=40&&c.id!==k.mom&&
+    !S.children.some(other=>other.alive&&(other.mom===c.id||other.foster===c.id));
+}
+function coldFosterPetitionEvent(){
+  if(journalContentVersion()<43||S.over||mourningActive())return null;
+  const offers=[];
+  for(const k of S.children){
+    if(!k.foster||!childInPalace(k)||k.pendingName||kidAge(k)>=14)continue;
+    const old=fosterOf(k),episode=coldPetitionEpisode(old,2);
+    if(!episode||episode.fosterPetitions?.[k.id])continue;
+    const c=harem().filter(c=>coldFosterPetitioner(c,k)).sort((a,b)=>relGet(b,k)-relGet(a,k))[0];
+    if(c)offers.push({k,c,old,episode});
+  }
+  if(!offers.length||!chance(.22))return null;
+  const {k,c,old,episode}=pick(offers);
+  let done=false;
+  const valid=()=>!done&&!S.over&&!mourningActive()&&coldPetitionEpisode(old,2)===episode&&
+    k.foster===old.id&&childInPalace(k)&&!k.pendingName&&kidAge(k)<14&&coldFosterPetitioner(c,k);
+  const title='请养 · 冷宫之后';
+  return {title,por:c,cast:[k,old],present:[c],valid,
+    onShow:()=>{(episode.fosterPetitions||={})[k.id]=true;story(c,`【${title}】她得知${fullName(old)}入冷宫已过两个月，请求亲自照看${k.name}。`);},
+    text:`${fullName(old)}入冷宫已满两个月，${k.name}的起居暂由宫人照料。${fullName(c)}膝下没有孩子，这日道：“臣妾愿接手照料。乳母和孩子熟悉的物件仍可留着，等孩子慢慢住惯。”`,
+    choices:[
+      {t:`准她接手抚养${k.name}`,f:()=>{if(!valid())return null;done=true;return doFoster(k,c);}},
+      {t:'仍由乳母和随侍照料',f:()=>{if(!valid())return null;done=true;story(c,`【${title}】她的请养未获允准，孩子仍按眼下的安排照料。`);return `乳母和随侍继续照看${k.name}，抚养关系照旧。`;}}
+    ]};
+}
+function coldFriendPetitionEvent(){
+  if(journalContentVersion()<43||S.over||mourningActive())return null;
+  const offers=[];
+  for(const fallen of S.consorts){
+    const episode=coldPetitionEpisode(fallen,1);
+    if(!episode||episode.friendPetition)continue;
+    const c=harem().filter(c=>!c.maid&&inPalace(c)&&c.hp>=40&&relGet(c,fallen)>=40&&!isRival(c,fallen))
+      .sort((a,b)=>relGet(b,fallen)-relGet(a,fallen))[0];
+    if(c)offers.push({fallen,c,episode});
+  }
+  if(!offers.length||!chance(.07))return null;
+  const {fallen,c,episode}=pick(offers);
+  const title='为冷宫旧友求情';
+  let done=false;
+  const valid=()=>!done&&!S.over&&!mourningActive()&&coldPetitionEpisode(fallen,1)===episode&&
+    inPalace(c)&&c.hp>=40&&relGet(c,fallen)>=40&&!isRival(c,fallen);
+  const finish=mode=>{
+    if(!valid())return null;
+    done=true;
+    const text=mode==='release'?`${fullName(c)}为${fullName(fallen)}陈情。陛下准她出冷宫，以官女子身份安置。`:
+      mode==='supplies'?`陛下准${fullName(c)}托宫人送衣食给${fullName(fallen)}，原处分照旧。`:
+        `${fullName(c)}为${fullName(fallen)}陈情，陛下听完后维持原处分。`;
+    if(mode==='release'){fallen.rank=0;A.uncold(fallen.id);}
+    if(mode==='supplies'){fallen.mood=clamp(fallen.mood+5);relAdd(c,fallen,4);}
+    livedRecord(mode==='decline'?[c]:[c,fallen],'bond',title,`cold-friend:${S.gen}:${fallen.id}:${episode.turn}`,`【${title}】${text}`);
+    return text;
+  };
+  const guilty=fallen.discipline?.gen===S.gen&&fallen.discipline.turn===episode.turn&&fallen.discipline.verdict==='guilty';
+  return {title,por:c,cast:[fallen],present:[c],valid,onShow:()=>{episode.friendPetition=true;},
+    text:`${fullName(c)}求见时带着一包新做的冬衣，提起在冷宫的${fullName(fallen)}。\n“${guilty?'她的过错既已查实，臣妾也盼她认错。':'臣妾未亲见当日的事，只记得从前与她交好。'}可否准人送些衣食？若陛下愿听她陈情，也盼给她一个说话的机会。”`,
+    choices:[
+      {t:'准人送衣食，原处分照旧',f:()=>finish('supplies')},
+      {t:'准她出冷宫，降为官女子',f:()=>finish('release')},
+      {t:'听完她的话，维持原处分',f:()=>finish('decline')}
+    ]};
 }
 A.fosterWish=function(id){if(modalOpen)return;const c=byId(id),ev=c&&fosterPetitionEvent(c);if(ev)pushEv(ev);};
 function fosterWishButton(c){return maternalSisterArrivalButton(c)+maternalKinCareButton(c)+(fosterPetitionPairs(c).length?`<button class="btn sm" onclick="A.fosterWish(${c.id})">听她谈抚养孩子</button>`:'');}
