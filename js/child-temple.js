@@ -7,7 +7,7 @@ function childWhereabouts(k){
   if(k.parentage?.decision==='household')return '生父皇子府';
   if(k.jailed)return '宗人府';
   if(k.princessMarriage==='frontier')return '北境';
-  if(k.away)return '封地';
+  if(k.away)return princeFief(k)||'封地';
   if(k.estate)return k.sex==='f'?'公主府':'皇子府';
   if(k.princeEstate)return '京中皇子府';
   return '宫中';

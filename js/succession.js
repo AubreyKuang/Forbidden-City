@@ -89,7 +89,8 @@ function listedRoyalKin(){
     return Array.isArray(ids)?eligible.filter(k=>ids.includes(k.id)):eligible.slice(0,ROYAL_KIN_PER_REIGN);
   });
 }
-function royalKinContactMode(k){
+function royalKinContactMode(k,estateContact=false){
+  if(estateContact)return princeEstateAvailable(k)?k.away?'letter':'visit':'';
   if(!k?.alive||!k.reign||k.removedFromRoyal||k.pendingName||k.jailed||k.gone)return '';
   const estate=k.princeEstate||k.estate;
   return k.away||k.princessMarriage==='frontier'||estate?.route==='frontier'||immortalAway(k)||k.templeStay||
@@ -97,6 +98,7 @@ function royalKinContactMode(k){
 }
 function royalKinContactPlace(k,mode){
   if(k.princessMarriage==='frontier'||k.estate?.route==='frontier')return '北境';
+  if(k.away&&princeFief(k)&&!immortalAway(k)&&!k.templeStay)return princeFief(k);
   return k.away||immortalAway(k)||k.templeStay?childWhereabouts(k):k.princeEstate?.location||k.estate?.location||
     (mode==='visit'?'京城':'外地');
 }
@@ -104,12 +106,13 @@ function royalKinContactReady(k){
   const contact=k.royalKinContact;
   return !S.over&&S.turn-(contact?.last??-99)>=2&&!contact?.pending&&!contact?.reply?.unread;
 }
-function royalKinContactButtons(k){
-  const mode=royalKinContactMode(k);
+function royalKinContactButtons(k,estateContact=false){
+  const mode=royalKinContactMode(k,estateContact);
   if(!mode||journalContentVersion()<47||S.over)return '';
   const pending=k.royalKinContact?.pending,unread=k.royalKinContact?.reply?.unread;
-  const button=unread?`<button class="btn sm jade" onclick="A.royalKinReply(${k.id})">读回信</button>`:
-    `<button class="btn sm jade" onclick="A.royalKinContact(${k.id})" ${royalKinContactReady(k)?'':'disabled'}>${mode==='visit'?'召见':'寄家书'}<small>${pending?'等候回信':!royalKinContactReady(k)?'近期已经问候':'精力−1'}</small></button>`;
+  const args=estateContact?`${k.id},true`:k.id;
+  const button=unread?`<button class="btn sm jade" onclick="A.royalKinReply(${args})">读回信</button>`:
+    `<button class="btn sm jade" onclick="A.royalKinContact(${args})" ${royalKinContactReady(k)?'':'disabled'}>${mode==='visit'?(estateContact?'到王府探望':'召见'):'寄家书'}<small>${pending?'等候回信':!royalKinContactReady(k)?'近期已经问候':'精力−1'}</small></button>`;
   return `<div class="acts"><span class="hint">${esc(royalKinContactPlace(k,mode))}</span>${button}</div>`;
 }
 function royalKinWords(k,topic){
@@ -121,31 +124,33 @@ function royalKinWords(k,topic){
   return age<10?'“这些日子我学着自己理书匣，想让您知道我也能管好自己的东西了。”':
     childDisposition(k)==='内敛'?'“起居都好。近来读得几页闲书，原想找个时候与陛下说说。”':'“近来出门走了走，起居都好。也惦记陛下案牍繁重，可还有工夫歇一歇？”';
 }
-function recordRoyalKinContact(k,title,text){
-  princessMemory(k,'royal-kin-contact',`【${title}】${text}`,'御书房');
+function recordRoyalKinContact(k,title,text,location='御书房'){
+  princessMemory(k,'royal-kin-contact',`【${title}】${text}`,location);
   log(`【${title}】${text}`);
 }
-A.royalKinContact=function(id){
+A.royalKinContact=function(id,estateContact=false){
   if(modalOpen||journalContentVersion()<47)return;
-  const k=listedRoyalKin().find(k=>k.id===id),mode=royalKinContactMode(k);
+  const k=estateContact?princeEstateById(id):listedRoyalKin().find(k=>k.id===id),mode=royalKinContactMode(k,estateContact);
   if(!mode||!royalKinContactReady(k))return;
-  const relation=royalKinship(k),where=royalKinContactPlace(k,mode),visit=mode==='visit';
-  const valid=()=>royalKinContactMode(k)===mode&&royalKinContactReady(k);
+  const relation=estateContact&&!k.reign?'':royalKinship(k),where=estateContact?princeEstatePlace(k):royalKinContactPlace(k,mode),visit=mode==='visit';
+  const valid=()=>royalKinContactMode(k,estateContact)===mode&&royalKinContactReady(k);
   const finish=topic=>{
     if(!valid()||!useE())return null;
     const contact=k.royalKinContact||={};
     contact.last=S.turn;
     if(visit){
-      const line=`陛下在御书房召见${relation}${k.name}，${topic==='home'?'谈起家常':'问了近况'}。${royalKinWords(k,topic)}`;
-      recordRoyalKinContact(k,'皇亲召见',line);return line;
+      const lead=estateContact?`陛下到王府看望${relation}${k.name}`:`陛下在御书房召见${relation}${k.name}`;
+      const line=`${lead}，${topic==='home'?'谈起家常':'问了近况'}。${royalKinWords(k,topic)}`;
+      recordRoyalKinContact(k,estateContact?'王府探望':'皇亲召见',line,estateContact?'王府':'御书房');return line;
     }
     const sender=E().sur+E().name;
     contact.pending={due:S.turn+1,sender,topic};
+    if(estateContact)contact.pending.estate=true;
     const line=`${sender}遣人往${where}给${relation}${k.name}寄家书，${topic==='home'?'问候家中起居':'问候近来的平安'}。`;
-    recordRoyalKinContact(k,'寄皇亲家书',line);return '家书已寄出，预计下月有回音。';
+    recordRoyalKinContact(k,estateContact?'寄王府家书':'寄皇亲家书',line,estateContact?where:'御书房');return '家书已寄出，预计下月有回音。';
   };
-  pushEv({title:visit?'御书房 · 召见皇亲':'皇亲家书',por:k,valid,
-    text:visit?`你打算召${relation}${k.name}来御书房，想同${k.sex==='m'?'他':'她'}说些什么？`:`${relation}${k.name}如今在${where}，你提笔写信问候。`,
+  pushEv({title:estateContact?(visit?'王府 · 到府探望':'王府家书'):visit?'御书房 · 召见皇亲':'皇亲家书',por:k,valid,
+    text:visit?(estateContact?`${relation}${k.name}在厅中迎你，请你坐下用茶。`:`你打算召${relation}${k.name}来御书房，想同${k.sex==='m'?'他':'她'}说些什么？`):`${relation}${k.name}如今在${where}，你提笔写信问候。`,
     choices:[
       {t:visit?'问问近况':'写信问安',cond:()=>E().energy>0,why:'精力不足',f:()=>finish('well')},
       {t:visit?'说说家常':'写信问问家中',cond:()=>E().energy>0,why:'精力不足',f:()=>finish('home')},
@@ -158,18 +163,19 @@ function royalKinContactTick(){
     const contact=k.royalKinContact,letter=contact?.pending;
     if(!letter||S.turn<letter.due)continue;
     delete contact.pending;
-    const mode=royalKinContactMode(k);
+    const mode=royalKinContactMode(k,!!letter.estate);
     if(!mode)continue;
-    const text=`${royalKinship(k)}${k.name}回复${letter.sender}所寄的家书：${royalKinWords(k,letter.topic)}`;
+    const relation=letter.estate&&!k.reign?'':royalKinship(k);
+    const text=`${relation}${k.name}回复${letter.sender}所寄的家书：${royalKinWords(k,letter.topic)}`;
     contact.reply={text,unread:true};
-    recordRoyalKinContact(k,'皇亲回信',text);
+    recordRoyalKinContact(k,letter.estate?'王府回信':'皇亲回信',text,letter.estate?princeEstatePlace(k):'御书房');
   }
 }
-A.royalKinReply=function(id){
+A.royalKinReply=function(id,estateContact=false){
   if(modalOpen||S.over||journalContentVersion()<47)return;
-  const k=listedRoyalKin().find(k=>k.id===id),reply=k?.royalKinContact?.reply;
-  if(!reply?.unread||!royalKinContactMode(k))return;
-  pushEv({title:'皇亲回信',por:k,text:reply.text,choices:[{t:'收好回信',f:()=>{reply.unread=false;return null;}}]});
+  const k=estateContact?princeEstateById(id):listedRoyalKin().find(k=>k.id===id),reply=k?.royalKinContact?.reply;
+  if(!reply?.unread||!royalKinContactMode(k,estateContact))return;
+  pushEv({title:estateContact?'王府回信':'皇亲回信',por:k,text:reply.text,choices:[{t:'收好回信',f:()=>{reply.unread=false;return null;}}]});
 };
 function royalRelativeCards(relatives){
   if(!relatives.length)return '';
@@ -194,5 +200,5 @@ function royalKinRosterPanel(){
 }
 function viewRoyalRelative(){
   const k=royalById(UI.sel);if(!k)return viewFamily();
-  return `${personBackButton('family')}<header class="detail-head">${porImg(k,224)}<div class="grow"><h2>${esc(k.name)}</h2><p>${esc(royalKinship(k))} · ${kidAge(k)}岁</p><p>生母 ${esc(k.momName||'未记载')}</p></div></header>${listedRoyalKin().includes(k)?royalKinContactButtons(k):''}${immortalPanel(k)}${marriagePanel(k)}${householdPanel(k)}${detailSection('亲族纪事',detailStory(k))}`;
+  return `${personBackButton('family')}<header class="detail-head">${porImg(k,224)}<div class="grow"><h2>${esc(k.name)}</h2><p>${esc(royalKinship(k))} · ${kidAge(k)}岁</p><p>生母 ${esc(k.momName||'未记载')}</p>${princeEstateLink(k)}</div></header>${listedRoyalKin().includes(k)?royalKinContactButtons(k):''}${immortalPanel(k)}${marriagePanel(k)}${householdPanel(k)}${detailSection('亲族纪事',detailStory(k))}`;
 }
