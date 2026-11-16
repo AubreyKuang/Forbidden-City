@@ -8,7 +8,7 @@ for(const [name,spec] of Object.entries(cases)){
  if(name==='growth')b.run(`S.turn+=36;c.rank=6;c.entryAdjustment.settled=true;recordOriginLife(c,c,6);c.chatThread={turn:S.turn,moodKey:JSON.stringify([xinOf(c),c.xin?.why,lifeBoundary(c)?.cause,continuityConcern(c)?.text]),seen:consortChatTopics(c).filter(t=>t.id!=='family-bearing').map(t=>t.id)};`);
  b.run(`PalaceActions.reset();`);
  const payload=b.run('JSON.stringify(PalaceActions.payload())').replace(/</g,'\\u003c');
- const html=source.replace('<meta charset="utf-8">','<meta charset="utf-8">\n<base href="../../../">\n<meta name="robots" content="noindex">\n<script src="./docs/qa/gouyi-gallery/memory-storage.js"></script>')+`\n<script type="application/json" id="bearing-save">${payload}</script>\n<script type="application/json" id="bearing-scene">${JSON.stringify(name)}</script>\n<script defer src="./docs/qa/family-bearing-gallery/bootstrap.js"></script>\n`;
+ const html=source.replace('<meta charset="utf-8">','<meta charset="utf-8">\n<base href="../../../">\n<meta name="robots" content="noindex">\n<script src="./docs/qa/gouyi-gallery/memory-storage.js"></script>')+`\n<img hidden src="./assets/images/palace-consort-half-02.webp?v=1" alt="">\n<img hidden src="./assets/images/palace-beauties.webp?v=1" alt="">\n<script type="application/json" id="bearing-save">${payload}</script>\n<script type="application/json" id="bearing-scene">${JSON.stringify(name)}</script>\n<script defer src="./docs/qa/family-bearing-gallery/bootstrap.js"></script>\n`;
  fs.writeFileSync(path.join(out,name+'.html'),html);
 }
 console.log('Built six family bearing browser cases');
