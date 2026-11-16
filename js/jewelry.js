@@ -25,7 +25,7 @@ function grantJewelry(c,id,reason='御前赏赐',{reactions=true}={}){
   vault.stock[id]--;
   const gift=receiveJewelry(c,id,reason);
   jewelryRecord(`${fullName(c)}获赐${JEWELRY[id].name}，内库销去一件。`);
-  if(reactions&&journalContentVersion()>=32)jewelryGiftReactions(c,JEWELRY[id].name,gift);
+  if(reactions&&journalContentVersion()>=33)jewelryGiftReactions(c,JEWELRY[id].name,gift);
   save('auto');return true;
 }
 function receiveJewelry(c,id,reason){

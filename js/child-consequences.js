@@ -91,6 +91,24 @@ function childMotherConsequenceEvent(n){
     return text;
   };
   const body=()=>{
+    if(journalContentVersion()>=32){
+      const fact=`${fullName(mother)}${{death:'离世',cold:'入冷宫',departure:'离宫',demotion:'降位',punishment:'受罚'}[n.kind]}`,lines=[];
+      if(group.length){
+        lines.push(`${fact}后，${group.map(label).join('、')}${group.every(childCanVisitCourt)?group.length>1?'一同来御前求情。':'来御前求情。':'托人递来求情的书信。'}`);
+        const lead=group[0],address=n.addresses?.[lead.id]||childMotherAddress(lead,mother);
+        lines.push(kidAge(lead)<6?`“父皇，能替我问问${address}吃饭了吗？我还想给她带些点心。”`:n.kind==='departure'?`“儿臣惦记${address}，只求父皇容人传个平安的消息。”`:`“儿臣不敢说${address}没有过错，只求父皇顾念，别让她无人照料。”`);
+        const friends=group.filter(k=>!childMotherClose(k,mother));if(friends.length)lines.push(`${friends.map(label).join('、')}是陪交好的孩子前来，想把他们的担忧说给你听。`);
+      }else lines.push(`${fact}，孩子们各有牵挂。`);
+      const reactions=new Map();
+      for(const k of children.filter(k=>!group.includes(k))){
+        const raw=childIncidentReaction(k,mother,n.kind,n.addresses?.[k.id]);
+        const brief=kidAge(k)<3?raw:childTrust(k,mother)<45?(n.kind==='death'?'听闻噩耗，向随侍问起她从前的事。':'听闻变故有些不安，向随侍问起如今的安排。'):n.kind==='death'?'惦念旧日相处，仍需熟悉的人陪伴。':'惦记她的起居，暂由随侍安抚。';
+        const place=childCanVisitCourt(k)||kidAge(k)<3&&childInPalace(k)?'':`（${childWhereabouts(k)}传来的消息）`;
+        const key=place+'：'+brief;reactions.set(key,[...(reactions.get(key)||[]),label(k)]);
+      }
+      if(reactions.size)lines.push([...reactions].map(([line,names])=>names.join('、')+line).join('\n'));
+      return lines.join('\n\n');
+    }
     const lines=children.map(k=>`${label(k)}${childCanVisitCourt(k)||kidAge(k)<3&&childInPalace(k)?'':'（'+childWhereabouts(k)+'传来的消息）'}：${childIncidentReaction(k,mother,n.kind,n.addresses?.[k.id])}`);
     if(group.length){
       lines.push(`${group.map(label).join('、')}${group.every(childCanVisitCourt)?group.length>1?'一同来御前求情。':'来御前求情。':'托人递来求情的书信。'}`);
@@ -100,7 +118,8 @@ function childMotherConsequenceEvent(n){
     return `${fullName(mother)}${{death:'离世',cold:'入冷宫',departure:'离宫',demotion:'降位',punishment:'受罚'}[n.kind]}的消息传到了孩子们那里。\n`+lines.join('\n');
   };
   const title=n.kind==='death'?'亲人离世之后':group.length>1?'孩子们一同求情':group.length?'孩子的求情':'母亲遭逢变故';
-  const ev={title,por:children.find(k=>!k.pendingName)||children[0],cast:people.filter(k=>!k.pendingName).slice(0,4),present:[],valid,text:'',onShow:()=>{ev.text=body();},choices:[
+  const focus=journalContentVersion()>=32&&group.length?group:people;
+  const ev={title,por:focus.find(k=>!k.pendingName)||children[0],cast:focus.filter(k=>!k.pendingName).slice(0,4),present:[],valid,text:'',onShow:()=>{ev.text=body();},choices:[
     {t:group.length?'听完求情，说明缘由并安抚':'陪孩子说一会儿，安排照料',f:()=>finish('comfort')},
     ...(group.length&&mother.alive?[{t:'准送衣食与口信，原处分保留',f:()=>finish('care')},...(mother.cold?[{t:'念其孝心，准出冷宫，降为官女子',cond:()=>mother.alive&&mother.cold,f:()=>finish('release')}]:[])]:[]),
     {t:'先由随侍照料，稍后再陪伴',f:()=>finish('wait')}

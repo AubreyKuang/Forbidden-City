@@ -95,7 +95,7 @@ function nextExamLabel(){
   return examPending()?`恩科定于${S.ministries.examDue===S.turn?'本月末':'下月末'}。${regular}`:regular;
 }
 A.examSchedule=function(){
-  if(journalContentVersion()<32||!S||S.over||modalOpen)return;
+  if(journalContentVersion()<33||!S||S.over||modalOpen)return;
   const gen=S.gen,turn=S.turn;
   pushEv({title:'礼部 · 科举日程',text:`现行正科${examIntervalLabel(regularExamInterval())}。${nextExamLabel()}。\n正科按本朝年次排定，逢期在三月举行殿试。恩科仍可单独奏开。`,
     valid:()=>!S.over&&S.gen===gen&&S.turn===turn,choices:[
@@ -158,7 +158,7 @@ function ministryResult(id,head,success){
 A.ministryAct=function(id){
   if(modalOpen||!ministryReady(id))return;
   const m=MINISTRIES[id],head=ministryHead(id),odds=Math.round(ministryOdds(id)*100);
-  const brief=id==='rites'&&journalContentVersion()>=32?`下月加开一科殿试，钦点三甲。奏开恩科须距上一科至少两年。现行正科${examIntervalLabel(regularExamInterval())}。`:m.brief;
+  const brief=id==='rites'&&journalContentVersion()>=33?`下月加开一科殿试，钦点三甲。奏开恩科须距上一科至少两年。现行正科${examIntervalLabel(regularExamInterval())}。`:m.brief;
   pushEv({title:`${m.name} · ${m.action}`,por:head.p,valid:()=>ministryHead(id)?.p===head.p,
     text:`${brief}\n主事：${m.name}尚书${head.p.name}（才干${rd(head.p.ability)}），把握约${odds}%。`,choices:[
       {t:`准行 · 精力−1${m.cost?' · 国库−'+m.cost:''}`,cond:()=>ministryReady(id),why:'精力或国库不足，或本部年内已办过',f:()=>{
@@ -190,7 +190,7 @@ function examDueNow(){
   if(!courtOfficesActive())return false;
   const st=S.ministries;
   if(st?.examDue===S.turn)return true;
-  const interval=journalContentVersion()>=32?regularExamInterval():3;
+  const interval=journalContentVersion()>=33?regularExamInterval():3;
   return S.month===3&&regularExamYear(S.year,interval)&&!examHeldThisReign(S.year);
 }
 function examEvent(){
@@ -231,7 +231,7 @@ courtTick=function(...args){const result=ministriesBaseTick.apply(this,args);exa
 function viewMinistries(){
   const card=([id,m])=>{
     const head=ministryHead(id),used=S.ministries?.used?.[id],wait=used==null?0:Math.max(0,MINISTRY_GAP-(S.turn-used));
-    const schedules=id==='rites'&&journalContentVersion()>=32;
+    const schedules=id==='rites'&&journalContentVersion()>=33;
     const why=!head?'尚书空缺':wait?`${wait}个月后可再办`:id==='rites'&&(examPending()||S.turn-lastExamTurn()<24)?'两科之间须隔两年':id==='works'&&S.flags.floodDikeGen===S.gen?'河工已修固':E().energy<1?'精力不足':E().treasury<m.cost?'国库不足':'';
     return `<article class="card ministry-card"><div class="ministry-head">${head?porImg(head.p,56):''}<div><h3>${m.name}<small> · ${m.duty}</small></h3>
       <p>${head?`尚书 ${head.scholar?`<button class="person-link" onclick="A.go('scholar','${head.p.id}')">${esc(head.p.name)}</button>`:officialLink(head.e.c,head.e.role)} · 才干${rd(head.p.ability)}`:'<span class="hint">尚书空缺</span>'}</p></div></div>

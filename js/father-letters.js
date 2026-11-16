@@ -1,5 +1,5 @@
 /* Private money and private family letters. No invented father, office, or shared mind. */
-const fatherLettersActive=()=>journalContentVersion()>=32;
+const fatherLettersActive=()=>journalContentVersion()>=33;
 function fatherLetterPerson(c){return c?.house?.father||null;}
 function fatherLetterRoots(c){
  if(!fatherLettersActive()||!c||c.maid||c.rescue||!fatherLetterPerson(c))return false;

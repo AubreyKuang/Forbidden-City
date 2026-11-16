@@ -53,7 +53,7 @@ function officialFraternityTick(){
 }
 function recordBrotherExchange(a,b,text){
   courtPersonRecord(a,text);
-  courtPersonRecord(b,text,{family:journalContentVersion()<32||!a.e||!b.e||a.e.h!==b.e.h});
+  courtPersonRecord(b,text,{family:journalContentVersion()<33||!a.e||!b.e||a.e.h!==b.e.h});
 }
 const fraternityCareerTick=careerTick;
 careerTick=function(){const result=fraternityCareerTick();officialFraternityTick();return result;};

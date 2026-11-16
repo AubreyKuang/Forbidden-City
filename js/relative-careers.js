@@ -34,7 +34,7 @@ function relativeAppointmentEvent(e){
 }
 A.appointRelative=function(key){if(modalOpen)return;const ev=relativeAppointmentEvent(officialEntry(key));if(ev)pushEv(ev);};
 function relativeStudyTick(){
-  const examYear=journalContentVersion()>=32?regularExamYear(S.year+1):S.year%3===0;
+  const examYear=journalContentVersion()>=33?regularExamYear(S.year+1):S.year%3===0;
   if(S.month!==9||!examYear)return;
   for(const e of officialEntries()){
     const {p,c,role}=e;if(!officialAlive(p)||p.career!=='student'||p.age<18||p.age>55||p.education==='举人'||p.lastExamYear===S.year)continue;

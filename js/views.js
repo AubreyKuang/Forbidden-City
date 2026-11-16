@@ -133,7 +133,7 @@ function familyGraphSVG(){
   S.consorts.forEach(houseOf);
   const maternal=S.flags.dowager?.clan;
   const people=S.consorts.filter(c=>(c.alive&&!c.gone&&!c.maid)||kids.has(c.id));
-  if(layeredFamilyActive()){
+  if(journalContentVersion()>=33&&layeredFamilyActive()){
     const represented=new Set(people.map(c=>c.house?.father.id));
     for(const {father} of familyTreeRegistry().nodes){
       if(!father||represented.has(father.h.father.id)||!S.consorts.includes(father.c))continue;
@@ -496,10 +496,10 @@ function viewLog(){
    ${S.history.length?`<p class="hint">历代：${S.history.map(h=>esc(`${h.shi?h.miao+h.shi+'皇帝':h.miao} ${h.sur}${h.name}（${h.era}，在位${h.yrs}年）`)).join('；')}</p>`:''}
    <ul class="story" style="max-height:560px">${L.map(l=>`<li class="${l.b?'big':''}"><time>${esc(l.d)}</time>${esc(l.t)}</li>`).join('')}</ul>`}
 function viewSys(){
-  return `${pageHeading('存档','存档保存在本浏览器中；每月结束时会自动存档。')}
+  return `${pageHeading('存档','存档保存在本浏览器中；每月结束时会自动存档。剧情选择后也会保存，未完事件可继续。')}
    <section class="save-section" aria-label="浏览器存档"><div class="save-slots">
    ${['1','2','3'].map(s=>`<article class="save-slot"><div class="save-slot-info"><b>存档${s}</b><span class="hint">${esc(slotInfo(s)||'空')}</span></div><div class="save-slot-actions"><button class="btn sm gold" onclick="A.save('${s}')">保存</button><button class="btn sm" onclick="A.load('${s}')">读取</button></div></article>`).join('')}
-   <article class="save-slot"><div class="save-slot-info"><b>自动</b><span class="hint">${esc(slotInfo('auto')||'空')}</span></div><div class="save-slot-actions"><button class="btn sm" onclick="A.load('auto')">读取</button></div></article>
+   <article class="save-slot"><div class="save-slot-info"><b>自动存档</b><span id="auto-save-summary" class="hint">${esc(slotInfo('auto')||'空')}</span><small id="auto-save-status" role="status" title="${esc(lastAutoSaveError)}">${esc(autoSaveStatusText())}</small></div><div class="save-slot-actions"><button class="btn sm" onclick="A.load('auto')">读取</button><button class="btn sm" onclick="A.save('auto')">立即保存</button></div></article>
    </div></section>
    <section class="save-section"><h3>文件备份</h3><p class="hint">下载一个 JSON 文件留存；换浏览器时选择此文件恢复。备份不会复制到剪贴板。</p><div class="acts"><button class="btn sm gold" onclick="A.downloadSave()">下载备份文件</button><button class="btn sm" onclick="document.getElementById('save-file').click()">选择备份文件导入</button><input id="save-file" type="file" accept=".json,application/json" hidden onchange="A.readSaveFile(this)">${palaceImportBackup()?'<button class="btn sm" onclick="A.undoImport()">恢复导入前的进度</button>':''}</div></section>
    ${rewindHTML()}

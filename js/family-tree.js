@@ -11,7 +11,9 @@ function familyTreeRegistry(){
     const spouse=mother?.p.spouse;
     const sameMarriage=spouse&&(!e.p.fatherName||e.p.fatherName===spouse.name)&&
       (e.p.fatherId==null||e.p.fatherId===spouse.id||e.p.fatherId===`spouse:${motherId}`);
-    const father=menById.get(String(e.p.fatherId))||(sameMarriage?menById.get(String(spouse.personId)):null);
+    const father=journalContentVersion()>=33
+      ?menById.get(String(e.p.fatherId))||(sameMarriage?menById.get(String(spouse.personId)):null)
+      :men.find(x=>x.p.id===(e.p.fatherId??spouse?.personId));
     const fatherId=father?.p.id??e.p.fatherId??spouse?.personId;
     return {...e,mother,father,fatherId,parent:father?.p.id??(mother?mother.p.id:e.p.parentRelativeId),home:father?.c||e.c};
   });

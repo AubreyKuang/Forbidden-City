@@ -2,7 +2,7 @@
 const natalAge=p=>p.consortId?byId(p.consortId)?.age||p.age:Math.max(0,Math.floor((((p.alive===false?p.death?.turn:S.turn)??S.turn)-p.born)/12));
 function natalPeople(h){return (h?.relatives||[]).filter(p=>!p.consortId);}
 function smallNatalHousehold(c){
-  return journalContentVersion()>=32&&['humble','farm'].includes(familyUpbringing(c).group);
+  return journalContentVersion()>=33&&['humble','farm'].includes(familyUpbringing(c).group);
 }
 function initializeNatalFamily(c,h,family){
   const copies=family.map(x=>x.house).filter(x=>x&&x!==h);

@@ -201,7 +201,7 @@ A.gift=function(id){const c=byId(id);if(modalOpen||S.over||!inPalace(c))return;d
   let opts=shuffle(LIKES).slice(0,4);if(c.kl&&!opts.includes(c.like))opts[0]=c.like;
   pushEv({title:'赏赐',por:c,text:`赏${cName(c)}些什么好？日常礼物每样国库-20万两${c.maid?'':'，也可挑选内库已有的珍饰'}。${c.kl?`\n你记得她喜欢${c.like}，不喜${c.hate}。`:'\n你还不知道她喜欢什么。'}`,choices:[...opts.map(g=>({t:GIFTN[g],cond:()=>E().treasury>=20,f:()=>giveGift(c,g)})),...(!c.maid?[{t:'选一件内库首饰',f:()=>{A.jewelryChoose(c.id);return null;}}]:[]),{t:'算了'}]})};
 function giveGift(c,g){if(S.over||!inPalace(c)||E().treasury<20)return null;chg({treasury:-20});AU.sfx('coin');if(g==='绸缎')c.robeC=pick(RPAL[rTier(c.rank)]);
-  if(g==='珠翠'&&journalContentVersion()>=32)jewelryGiftReactions(c,GIFTN[g]);
+  if(g==='珠翠'&&journalContentVersion()>=33)jewelryGiftReactions(c,GIFTN[g]);
   if(g===c.like){c.kl=true;remember(c,'gift',GIFTN[g]);if(!continuityBlocksSoothing(c,xinOf(c)))setXin(c,'欢喜',`得了心爱的${g}`);story(c,`陛下赏了${GIFTN[g]}，正是她心头所好。`);return `她眼睛一亮，捧在手里看了又看。${fx(cchg(c,{mood:25,aff:routineAffection(c,8)}))}\n§你记住了：她喜欢${g}`}
   if(g===c.hate){story(c,`陛下赏了${GIFTN[g]}，并非她的喜好；她谢恩时颇为勉强。`);return `她谢了恩，笑容却有些勉强。宫女悄悄说，主子向来不喜${g}。${fx(cchg(c,{mood:-5}))}`;}
   const big=c.trait==='贪财'&&(g==='珠翠'||g==='绸缎');story(c,`陛下赏了${GIFTN[g]}。`);return `她欢欢喜喜地谢了恩。${fx(cchg(c,{mood:big?20:10,aff:routineAffection(c,3)}))}`}

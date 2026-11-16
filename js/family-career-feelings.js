@@ -12,7 +12,7 @@ function familyCareerReaction(p,kind){
   return proud?{feeling:'委屈',delta:-7,line:'怎么偏偏又轮到自己家倒霉？心里不服，也怕旁人借机看轻；仍想先看清原委，不能把猜测当作有人陷害。',small:'赴亲友的约之前反复挑衣，最后收起鲜亮的一件；听见别人谈任官，也少接了几句话。'}:careful?{feeling:'惶恐',delta:-7,line:'父亲被贬，最怕家中跟着受牵连。反复问新任在何处，往后的用度和来往该怎样收束。',small:'夜里又翻了一回家书，把家中的用度重新算过，想问父亲是否平安，却怕催得太急。'}:study?{feeling:'忧心',delta:-5,line:'心里难受，却也想知道任上究竟出了什么差错。若有疏失，盼父亲还能补过，不能只怨旁人。',small:'提笔时想替父亲辩白，写了两行又停下，改问事情原委与如今起居。'}:{feeling:'惶恐',delta:-6,line:'听完消息，先担心父亲能不能撑住。家中的体面仿佛忽然薄了一层，只盼还有重新安顿的机会。',small:'饭菜放凉了才回过神来，托家人捎一件御寒的衣物，盼下一封信能说平安。'};
 }
 function familyCareerRecord(p,father,text,emotion,followup=false,publicText){
-  const previous=journalContentVersion()>=32&&publicText&&p.story.findLast(e=>e.d===dateStr()&&e.t===`父亲${father.name}：${publicText}`);
+  const previous=journalContentVersion()>=33&&publicText&&p.story.findLast(e=>e.d===dateStr()&&e.t===`父亲${father.name}：${publicText}`);
   if(!previous)story(p,text);
   Object.assign(previous||p.story.at(-1),{t:text,thread:`father-career:${S.gen}:${father.id}`,life:{kind:'family',title:followup?'家书之后的小事':'父亲升黜后的心绪',turn:S.turn,gen:S.gen,people:[{id:p.id,name:p.name||fullName(p)},{id:father.id,name:father.name}]}});
   NPCMemory.record(S,{type:'father-career-feeling',time:S.turn,participants:[p.id,father.id],outcome:text},[{person:p.id,subject:father.id,interpretation:text,emotion,impact:60}]);
@@ -28,7 +28,7 @@ function reflectFatherCareer(person,before,from,after,publicText){
     const reaction=familyCareerReaction(p,kind),consort=S.consorts.includes(p);
     p.familyCareerNews={key,turn:S.turn,fatherId:father.id,fatherName:father.name,fatherKey:person.key,from,to,kind,...reaction,followupDue:chance(.5)?S.turn+2:null};
     p.mood=clamp((p.mood??65)+reaction.delta);
-    if(consort&&!['悲恸','心如死灰','怨恨'].includes(xinOf(p)))setXin(p,kind==='promote'?'欢喜':reaction.feeling==='委屈'?'委屈':reaction.feeling==='忧心'?'忧心':'惶恐',`父亲${father.name}由${from}${kind==='promote'?'升任':'贬任'}${to}`,null,{record:journalContentVersion()<32});
+    if(consort&&!['悲恸','心如死灰','怨恨'].includes(xinOf(p)))setXin(p,kind==='promote'?'欢喜':reaction.feeling==='委屈'?'委屈':reaction.feeling==='忧心'?'忧心':'惶恐',`父亲${father.name}由${from}${kind==='promote'?'升任':'贬任'}${to}`,null,{record:journalContentVersion()<33});
     const text=`【父亲升黜·${reaction.feeling}】家书传来：父亲${father.name}由${from}${kind==='promote'?'升任':'贬任'}${to}。${reaction.line}`;
     familyCareerRecord(p,father,text,reaction.delta/10,false,publicText);
   }
@@ -44,7 +44,7 @@ function familyCareerFollowup(){
   for(const e of officialEntries().filter(e=>e.role==='father'))for(const p of familyCareerChildren({p:e.p,key:e.key,e})){
     if(seen.has(p.id))continue;seen.add(p.id);const n=currentFamilyCareerNews(p);
     if(!n||!n.followupDue||n.followupDone||S.turn<n.followupDue)continue;n.followupDone=true;
-    const recap=journalContentVersion()<32?`想到父亲${n.fatherName}由${n.from}${n.kind==='promote'?'升任':'贬任'}${n.to}，`:'';
+    const recap=journalContentVersion()<33?`想到父亲${n.fatherName}由${n.from}${n.kind==='promote'?'升任':'贬任'}${n.to}，`:'';
     familyCareerRecord(p,e.p,`【家书之后的小事】${recap}${n.small}`,n.delta/20,true);
   }
 }

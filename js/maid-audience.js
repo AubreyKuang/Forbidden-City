@@ -6,7 +6,7 @@ function maidAudiencePanel(){
  return `<section class="detail-section"><h3>宫女留侍</h3><p class="hint">可召见当值宫女，也可再见承恩后回去当差的旧识。召见不耗精力，决定留侍时耗精力一。</p><button class="btn jade" onclick="A.maidAudience()">召见宫女</button></section>`;
 }
 function maidAudienceMenu(){
- const list=maidAudienceRoster(),randomOld=journalContentVersion()>=32;
+ const list=maidAudienceRoster(),randomOld=journalContentVersion()>=33;
  const oldChoices=randomOld?(list.length?[{t:'召见一位旧识宫女',f:()=>{
   const available=maidAudienceRoster();if(maidAudienceActive()&&available.length)pushNow(maidAudienceMeeting(pick(available)));
   return null;

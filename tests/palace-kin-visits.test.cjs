@@ -60,11 +60,10 @@ test('version 10 pending visits replay their original choices without losing the
 });
 function friends(){const b=world();b.run(`delete p.visit;var g=makeGirl({sur:'许',given:'清容',age:22,trait:'温婉',fam:{t:'礼部侍郎',p:50}});g.solitary=null;delete g.timeTraveler;delete c.timeTraveler;
  g.kin={};c.kin={};var tie=makeOldFriendTie(g,c);assert.ok(tie);S.cands=[g];S.selection={phase:'audience',current:g.id,performed:[]};selectionBatch();PalaceActions.reset();`);return b;}
-test('childhood ties fit both ages and precede the resident entering court; older residents have household ties',()=>{
+test('childhood ties fit both ages and precede the resident entering court; large age gaps cannot acquire a household tie instead',()=>{
  const b=friends();b.run(`assert.equal(tie.kind,'childhood');assert.ok(tie.metTurn<c.enteredAt);
  for(const a of [c,g]){var age=a.age-(S.turn-tie.metTurn)/12;assert.ok(age>=5&&age<=14);}
- c.age=60;c.enteredAt=-420;delete g.oldCourtFriend;var late=makeOldFriendTie(g,c);assert.equal(late.kind,'households');assert.equal(late.metTurn,undefined);
- assert.doesNotMatch(late.memory,/小时候|幼时/);`);
+ c.age=60;c.enteredAt=-420;delete g.oldCourtFriend;var late=makeOldFriendTie(g,c);assert.equal(late,null);`);
 });
 test('old friends are visible before selection, survive reload and create reciprocal history and links only when admitted',()=>{
  const b=friends();b.run(`assert.match(viewSelectionAudience(),/旧缘/);A.xxRoster();assert.match(viewXX(),/自幼相识/);

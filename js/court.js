@@ -835,7 +835,7 @@ function monthlyCourtEvent(){
     candidates.unshift(IMPEACHMENT_INDEX);
   }
   for(const index of candidates){
-    if(journalContentVersion()>=32&&index===2)continue; // 礼部日程统一安排殿试，已呈阅的旧奏折仍可批复。
+    if(journalContentVersion()>=33&&index===2)continue; // 礼部日程统一安排殿试，已呈阅的旧奏折仍可批复。
     const impeachment=index===IMPEACHMENT_INDEX?newImpeachment():null;
     const floodNeed=index===FLOOD_INDEX?(S.turn===0||chance(.5)?'grain':'shelter'):null;
     const locustRoll=index===LOCUST_INDEX?R():null;

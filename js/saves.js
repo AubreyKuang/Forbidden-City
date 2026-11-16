@@ -176,6 +176,19 @@ function palaceSaveError(slot){
   return '浏览器存储已满或不可用，眼下的进度尚未写入。可以继续玩，请下载备份文件留存。';
 }
 let lastAutoSaveError='';
+let lastAutoSaveInfo=null;
+function autoSaveStatusText(){
+  if(lastAutoSaveError)return '自动存档未写入';
+  if(!lastAutoSaveInfo)return '尚无自动存档';
+  return lastAutoSaveInfo.turn===S?.turn&&lastAutoSaveInfo.gen===S?.gen?'本月已自动保存':'上次保存：'+lastAutoSaveInfo.date;
+}
+function refreshAutoSaveStatus(){
+  const data=SaveManager.load(SaveManager.getStorage(),SKEY+'auto',validPalaceSave);
+  lastAutoSaveInfo=data?{turn:data.turn,gen:data.gen,date:dateStr(data),name:data.emp.sur+data.emp.name,count:data.consorts.filter(c=>c.alive&&!c.gone).length,savedAt:data.savedAt}:null;
+  const summary=$('#auto-save-summary');if(summary)summary.textContent=lastAutoSaveInfo?`${lastAutoSaveInfo.name}·${lastAutoSaveInfo.date}·后妃${lastAutoSaveInfo.count}`:'空';
+  const status=$('#auto-save-status');if(status){status.textContent=autoSaveStatusText();status.title=lastAutoSaveError||'每次转月和剧情选择结束后自动保存；未完事件也会保留。';}
+  if(typeof renderTop==='function')renderTop();
+}
 // When the browser store is full, rewind points and the previous-copy backup give way
 // before the playable save does.
 function writePalace(storage,key,data){
@@ -190,14 +203,13 @@ function writePalace(storage,key,data){
 }
 function save(slot){
   if(!S)return false;
-  if(typeof PalaceActions!=='undefined'){if(PalaceActions.blocked)return false;if(PalaceActions.busy)return true;}
+  if(typeof PalaceActions!=='undefined'){if(PalaceActions.blocked){if(slot==='auto'){lastAutoSaveError='未完事件尚待处理，自动存档暂未写入。请先处理「未完事件无法续接」提示，或下载现有进度。';refreshAutoSaveStatus();}return false;}if(PalaceActions.busy)return true;}
   const ok=writePalace(SaveManager.getStorage(),SKEY+slot,{...PalaceActions.payload(),savedAt:Date.now()});
   if(slot==='auto'){
     const error=ok?'':palaceSaveError(slot);
     if(error&&error!==lastAutoSaveError)toast(error);
-    const changed=error!==lastAutoSaveError;
     lastAutoSaveError=error;
-    if(changed&&typeof renderTop==='function')renderTop();
+    refreshAutoSaveStatus();
   }
   return ok;
 }
@@ -217,6 +229,7 @@ function slotInfo(slot){
   return s?`${s.emp.sur}${s.emp.name}·${dateStr(s)}·后妃${s.consorts.filter(c=>c.alive&&!c.gone).length}`:null;
 }
 function showRestoredPalace(){
+  lastAutoSaveError='';refreshAutoSaveStatus();
   Q.length=0;curEv=null;modalOpen=false;modalResult=null;
   modalInvoker=null;
   $('#modal').close?.();
@@ -226,7 +239,7 @@ function showRestoredPalace(){
   if(PalaceActions.restore(pending)){resetMapPosition(S.pos);render();return;}
   render();
   if(!PalaceActions.blocked)A.resumePendingScenes();
-  else pushEv(pendingRecoveryEvent());
+  else {lastAutoSaveError='未完事件尚待处理，自动存档暂未写入。请先处理「未完事件无法续接」提示，或下载现有进度。';refreshAutoSaveStatus();pushEv(pendingRecoveryEvent());}
 }
 // Scenes that were queued but never shown should not keep their palace-wide cooldowns.
 function releaseUnansweredCooldowns(titles){
