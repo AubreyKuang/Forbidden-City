@@ -851,6 +851,13 @@ button.family-room-person{cursor:pointer}button.family-room-person:hover{color:#
 .event-illustration img{
   position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2;
 }
+@media(prefers-reduced-motion:no-preference){
+  .event-illustration .event-illustration-loaded{animation:event-illustration-enter .56s ease-out}
+}
+@keyframes event-illustration-enter{
+  from{opacity:.55;transform:scale(1.025)}
+  to{opacity:1;transform:scale(1)}
+}
 .event-illustration[data-illustration="spring-garden"] img{object-position:left center}
 .event-illustration::before{
   content:"";position:absolute;inset:0;z-index:-1;

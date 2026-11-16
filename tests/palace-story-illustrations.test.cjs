@@ -255,3 +255,52 @@ test('fallen petals are shown at the beginning of the personal story',()=>{
   assert.equal(game.run('curEv.title'),'花下拾香 · 后话');
   assert.doesNotMatch(game.run("$('#mbox').innerHTML"),/event-illustration/);
 });
+
+test('a quiet garden walk uses the correct seasonal illustration',()=>{
+  for(const [month,image] of [[2,null],[5,'summer-lotus-walk'],[8,'autumn-osmanthus-walk'],[11,null]]){
+    const game=start();
+    game.force(.95);
+    game.run(`S.month=${month};A.out('garden')`);
+    assert.equal(game.run('curEv.title'),'御花园');
+    const html=game.run("$('#mbox').innerHTML");
+    if(image)assert.ok(html.includes(`story-${image}.webp`));
+    else assert.doesNotMatch(html,/event-illustration/);
+  }
+});
+
+test('visiting the hot spring shows its image without changing the rest benefits',()=>{
+  const game=start();
+  game.run("E().treasury=500;E().health=80;A.out('spa')");
+  assert.equal(game.run('curEv.title'),'温泉行宫');
+  assert.match(game.run("$('#mbox').innerHTML"),/story-xishan-hot-spring\.webp/);
+  assert.equal(game.run('E().treasury'),440);
+  assert.equal(game.run('E().health'),85);
+});
+
+test('the needle and silk appear only during the Qixi activity',()=>{
+  const game=start();
+  game.run(`S.month=7;E().energy=4;const [c,o]=harem();c.trait='巧手';
+    delete c.solitary;delete o.solitary;
+    const rule=PALACE_INITIATIVES.needleMoon;
+    c.initiative={id:'needleMoon',turn:S.turn,target:o.id,text:rule.text(c,o)};
+    A.seeInitiative(c.id,false);`);
+  assert.equal(game.run('curEv.title'),'月下借针');
+  assert.match(game.run("$('#mbox').innerHTML"),/story-moonlit-needle\.webp/);
+  game.run('choose(0)');
+  assert.doesNotMatch(game.run("$('#mbox').innerHTML"),/event-illustration/);
+});
+
+test('the second cup belongs to the middle chapter of West Window Chess',()=>{
+  const game=start();
+  game.run(`S.turn=300;E().energy=6;const c=empress();
+    Object.assign(c,{trait:'才女',age:28,aff:60,hp:90,enteredAt:100,solitary:{path:'both'}});
+    A.journeyBegin(c.id,'windowChess');`);
+  assert.equal(game.run('curEv.title'),'西窗残局 · 不肯让的一子');
+  assert.doesNotMatch(game.run("$('#mbox').innerHTML"),/event-illustration/);
+  game.run('choose(0);nextEv();S.turn=c.journeys.current.due;A.journeyTalk(c.id)');
+  assert.equal(game.run('curEv.title'),'西窗残局 · 窗边第二盏茶');
+  assert.match(game.run("$('#mbox').innerHTML"),/story-west-window-second-tea\.webp/);
+  game.run('choose(0);nextEv();S.turn=c.journeys.current.due;A.journeyTalk(c.id)');
+  assert.equal(game.run('curEv.title'),'西窗残局 · 残局与新局');
+  assert.doesNotMatch(game.run("$('#mbox').innerHTML"),/event-illustration/);
+});

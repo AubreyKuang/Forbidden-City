@@ -18,7 +18,7 @@ Object.assign(PALACE_INITIATIVES,{
     ]
   },
   needleMoon:{
-    title:'月下借针',place:'yh',seasonal:true,source:'needle',ref:'故宫博物院·乞巧；人物交往为游戏改编',
+    title:'月下借针',illustration:'moonlit-needle',place:'yh',seasonal:true,source:'needle',ref:'故宫博物院·乞巧；人物交往为游戏改编',
     match:c=>S.month===7&&(c.trait==='巧手'||c.t2==='好胜'||consortHobby(c)==='刺绣'),
     target:c=>pastimePartner(c),
     text:(c,o)=>`${cName(c)}已将彩线穿过几孔，${cName(o)}的线头却散了。${c.t2==='好胜'?'她捏着最快穿好的针，既想夺巧，又忍不住看向对方。':'她停下手，想教对方捻线，又怕被误会成故意相让。'}`,
