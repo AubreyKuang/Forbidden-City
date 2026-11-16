@@ -327,10 +327,18 @@ const XEV={
    {t:'今晚就去（精力-1）',cond:()=>E().energy>0&&!c.preg&&(!consortRecoveryActive()||!consortNightReason(c)),why:(consortRecoveryActive()&&consortNightReason(c))||('精力不足或她有孕'),f:()=>{setXin(c,'欢喜','陛下见了香囊便来了');nightWith(c);return null}},
    {t:'回一张纸条',f:()=>{remember(c,'care','回了她的纸条');return fx(cchg(c,{aff:4,mood:8}))}},
    {t:'收下，不回',f:()=>{setXin(c,'委屈','香囊送去，石沉大海');return fx(cchg(c,{mood:-8}))}}]},
- '委屈':c=>c.cold?null:{title:'委屈',por:c,text:`${cName(c)}宫里的掌事姑姑来求见，跪着说：“我们小主这些日子吃不下睡不着，夜里一个人对着窗户掉眼泪。奴婢斗胆，求陛下去看看她。”`,choices:[
+ '委屈':c=>{
+  if(c.cold)return null;
+  if(c.maid&&journalContentVersion()>=51){
+    if(!(c.nights>0))return null;
+    return {title:'委屈',por:c,present:[],text:`内侍来报：“陛下，曾承宠的宫女${fullName(c)}这些日子伤心，夜里曾独自落泪。”`,
+      choices:[{t:'知道了',f:()=>null}]};
+  }
+  return {title:'委屈',por:c,text:`${cName(c)}宫里的掌事姑姑来求见，跪着说：“我们小主这些日子吃不下睡不着，夜里一个人对着窗户掉眼泪。奴婢斗胆，求陛下去看看她。”`,choices:[
    {t:'去看她（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{E().energy--;renderTop();setXin(c,'释然','陛下来看她了');return fx(cchg(c,{mood:15,aff:6}))}},
    {t:'赏些东西过去',f:()=>fx(chg({treasury:-10}),cchg(c,{mood:5}))},
-   {t:'“后宫谁没受过委屈。”',f:()=>{setXin(c,'怨恨','求陛下来看她，陛下没有来','emp');return '掌事姑姑磕了个头，退下了。'}}]},
+   {t:'“后宫谁没受过委屈。”',f:()=>{setXin(c,'怨恨','求陛下来看她，陛下没有来','emp');return '掌事姑姑磕了个头，退下了。'}}]};
+ },
  '惶恐':c=>c.cold?null:({title:'惶恐',por:c,text:`${cName(c)}脱簪待罪，在乾清宫外跪了一夜：“臣妾不知做错了什么，求陛下明示。”`,choices:[
    {t:'扶她起来：“朕没有怪你。”',f:()=>{setXin(c,'感激','陛下亲手扶她起来');return fx(cchg(c,{aff:8,mood:12}))}},
    {t:'让她跪着',f:()=>{setXin(c,'委屈','在乾清宫外跪了一夜');return fx(cchg(c,{mood:-10}),chg({prestige:1}))}}]}),
