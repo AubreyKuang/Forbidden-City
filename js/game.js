@@ -76,11 +76,11 @@ function makeGirl(o={}){
 function assignPalace(c){
   autoResidence(c);reconcileResidences();
 }
-function addConsort(c,rank,why){
+function addConsort(c,rank,why,{major=false}={}){
   const previousKin=new Map(Object.keys(c.kin||{}).map(id=>[+id,S.rel?.[rk(c,{id:+id})]]));
   c.rank=rank; c.enteredAt=S.turn; c.enteredMonth=S.month; S.consorts.push(c); assignPalace(c); S.ys.c++; deepen(c); initRel(c); assignArc(c); acceptPastLife(c); initTimeTraveler(c); clanKey(c); if(c.kin)for(const id in c.kin){const o=byId(+id);if(o&&o.alive)relAdd(c,o,(previousKin.get(o.id)??(isRival(c,o)?-30:45))-relGet(c,o))}
   story(c,`${why}，封为${RANKS[rank]}，赐居${c.palace}。`);
-  log(`${fullName(c)}（${c.fam.t}之女）${why}，封${RANKS[rank]}。`);houseOf(c);portraitAdmission(c);familyAdmissionReactions(c);
+  log(`${fullName(c)}（${c.fam.t}之女）${why}，封${RANKS[rank]}。`,major);houseOf(c);portraitAdmission(c);familyAdmissionReactions(c);
 }
 
 /* ============ 弹窗与事件队列 ============ */

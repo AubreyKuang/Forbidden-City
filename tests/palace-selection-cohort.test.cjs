@@ -30,6 +30,16 @@ test('unfinished selection survives saving and loading, and optional greetings s
     save('1');load('1');assert.equal(byId(ids[0]).entryAdjustment.answer,'reassured');
     assert.match(viewSelectionArrivals(),/已问候/);`);
 });
+test('the major chronicle shows only admitted candidates, including existing entries from older saves',()=>{
+ const {run}=setup();
+ run(`var [accepted,dropped,later]=S.cands.map(fullName);UI.logF='big';
+   A.xxTake(ids[0]);choose(curEv.choices.length-1);drain();assert.ok(!viewLog().includes(accepted));
+   take(ids[0]);A.xxDrop(ids[1]);take(ids[2]);A.xxEnd();save('auto');A.load('auto');
+   var admissions=S.log.filter(e=>e.t.includes('选秀入宫，封'));
+   assert.equal(admissions.length,2);assert.ok(admissions.every(e=>e.b===1));
+   assert.ok(viewLog().includes(accepted)&&viewLog().includes(later));assert.ok(!viewLog().includes(dropped));
+   admissions[0].b=0;assert.ok(viewLog().includes(accepted));`);
+});
 test('cohort acquaintance is reciprocal, recorded, bounded, and not rerolled by render or reload',()=>{
   const {run,force}=setup(5);
   run(`ids.forEach(take);for(let i=0;i<ids.length;i++)for(let j=i+1;j<ids.length;j++)S.rel[rk(byId(ids[i]),byId(ids[j]))]=5;`);
