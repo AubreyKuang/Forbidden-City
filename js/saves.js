@@ -7,6 +7,7 @@ const SaveManager = (() => {
   let lastError = null;
 
   function getStorage() {
+    if(typeof PalaceStorage!=='undefined'&&PalaceStorage.store)return PalaceStorage.store;
     try { return globalThis.localStorage; } catch { return null; }
   }
 
@@ -22,6 +23,7 @@ const SaveManager = (() => {
 
   function status(storage, key) {
     try {
+      if(storage?.hasConflict?.(key))return 'conflict';
       const { raw, entry } = track(storage, key);
       if (raw === entry.raw ? entry.newer : versionOf(raw) > version) return 'newer';
       return raw === entry.raw ? 'ready' : 'conflict';
@@ -75,6 +77,11 @@ const SaveManager = (() => {
 
       const writes = [...alongside];
       if (backup && entry.content !== null && content !== entry.content) writes.push([key + ':backup', previous]);
+      if(storage.commit){
+        storage.commit([...writes,[key,next]]);
+        observed.set(key,{raw:next,content,newer:false});
+        return true;
+      }
       for (const [name, value] of writes) {
         const old = storage.getItem(name) ?? null;
         if (old === value) continue;
@@ -153,7 +160,8 @@ const SaveManager = (() => {
     const e = lastError;
     return !!e && (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED' || e.code === 22 || e.code === 1014);
   }
-  return { getStorage, load, save, snapshot, snapshots, dropOldestSnapshot, storeFull, restore, decode, status, version };
+  return { getStorage, load, save, snapshot, snapshots, dropOldestSnapshot, storeFull, restore, decode, status, version,
+    forget(keys){for(const key of keys)observed.delete(key);},get error(){return lastError;} };
 })();
 
 /* ============ 存档 ============ */
@@ -173,26 +181,57 @@ function palaceSaveError(slot){
   const status=SaveManager.status(SaveManager.getStorage(),SKEY+slot);
   if(status==='newer')return '此存档由新版游戏保存，请打开新版继续。';
   if(status==='conflict')return '另一标签页已更新此存档。本页已暂停覆盖，可下载备份文件后重新读取。';
-  return '浏览器存储已满或不可用，眼下的进度尚未写入。可以继续玩，请下载备份文件留存。';
+  const e=SaveManager.getStorage()?.error||SaveManager.error;
+  if(e?.name==='SaveConflictError')return '另一标签页已更新存档。本页已暂停覆盖，可下载备份文件后重新读取。';
+  if(e?.name==='QuotaExceededError'||e?.name==='NS_ERROR_DOM_QUOTA_REACHED'||e?.code===22||e?.code===1014)return '浏览器可用存储空间不足，眼下的进度尚未写入。请先下载备份文件，再释放设备空间后重试。';
+  if(e?.name==='SecurityError'||e?.name==='NotAllowedError')return '浏览器禁止了存档写入，眼下的进度尚未写入。请允许本站存储数据，或下载备份文件留存。';
+  return '存档写入失败，眼下的进度尚未写入，之前的存档仍保留。请重试保存，或下载备份文件留存。';
 }
 let lastAutoSaveError='';
 let lastAutoSaveInfo=null;
 function autoSaveStatusText(){
+  if(SaveManager.getStorage()?.pendingKey?.(SKEY+'auto'))return '正在写入自动存档…';
   if(lastAutoSaveError)return '自动存档未写入';
   if(!lastAutoSaveInfo)return '尚无自动存档';
   return lastAutoSaveInfo.turn===S?.turn&&lastAutoSaveInfo.gen===S?.gen?'本月已自动保存':'上次保存：'+lastAutoSaveInfo.date;
 }
 function refreshAutoSaveStatus(){
-  const data=SaveManager.load(SaveManager.getStorage(),SKEY+'auto',validPalaceSave);
+  const storage=SaveManager.getStorage();
+  const data=confirmedPalaceSave(storage,SKEY+'auto');
   lastAutoSaveInfo=data?{turn:data.turn,gen:data.gen,date:dateStr(data),name:data.emp.sur+data.emp.name,count:data.consorts.filter(c=>c.alive&&!c.gone).length,savedAt:data.savedAt}:null;
   const summary=$('#auto-save-summary');if(summary)summary.textContent=lastAutoSaveInfo?`${lastAutoSaveInfo.name}·${lastAutoSaveInfo.date}·后妃${lastAutoSaveInfo.count}`:'空';
   const status=$('#auto-save-status');if(status){status.textContent=autoSaveStatusText();status.title=lastAutoSaveError||'每次转月和剧情选择结束后自动保存；未完事件也会保留。';}
   if(typeof renderTop==='function')renderTop();
 }
+function confirmedPalaceSave(storage,key){
+  if(!storage?.getConfirmedItem)return SaveManager.load(storage,key,validPalaceSave);
+  if(SaveManager.status(storage,key)==='newer')return null;
+  return SaveManager.decode(storage.getConfirmedItem(key),validPalaceSave)||SaveManager.decode(storage.getConfirmedItem(key+':backup'),validPalaceSave);
+}
+function connectPalaceStorage(){
+  const storage=SaveManager.getStorage();if(!storage?.commit)return;
+  storage.onchange=change=>{
+    if(change.type==='failed'){
+      SaveManager.forget(change.keys);
+      // A failed import/manual save also needs a persistent, visible warning.
+      lastAutoSaveError=palaceSaveError('auto');toast(lastAutoSaveError);
+    }else if(change.type==='saved'&&change.keys.includes(SKEY+'auto'))lastAutoSaveError='';
+    refreshAutoSaveStatus();
+    if(change.type==='idle'&&S&&UI.view==='sys')render();
+  };
+}
+function confirmPalaceWrite(ok,message,slot='auto'){
+  if(!ok){toast(palaceSaveError(slot));return;}
+  const storage=SaveManager.getStorage();
+  if(!storage?.flush){toast(message);return;}
+  toast('正在写入存档…');
+  storage.flush().then(saved=>{toast(saved?message:palaceSaveError(slot));refreshAutoSaveStatus();});
+}
 // When the browser store is full, rewind points and the previous-copy backup give way
 // before the playable save does.
 function writePalace(storage,key,data){
   if(SaveManager.save(storage,key,data,validPalaceSave))return true;
+  if(storage?.commit)return false;
   if(!storage||!SaveManager.storeFull()||SaveManager.status(storage,key)!=='ready')return false;
   while(SaveManager.dropOldestSnapshot(storage,SKEY+'auto')){
     if(SaveManager.save(storage,key,data,validPalaceSave))return true;
@@ -225,7 +264,8 @@ function load(slot){
 function slotInfo(slot){
   const key=SKEY+slot;
   if(SaveManager.status(SaveManager.getStorage(),key)==='newer')return '需要新版游戏';
-  const s=SaveManager.load(SaveManager.getStorage(),key,validPalaceSave);
+  const storage=SaveManager.getStorage();
+  const s=confirmedPalaceSave(storage,key);
   return s?`${s.emp.sur}${s.emp.name}·${dateStr(s)}·后妃${s.consorts.filter(c=>c.alive&&!c.gone).length}`:null;
 }
 function showRestoredPalace(){
@@ -271,14 +311,25 @@ A.resumePendingScenes=function(){
   const official=pendingOfficialReport();if(official)pushEv(official);
   const loss=pendingConcealedLoss();if(loss)pushEv(loss);
 };
-A.save=function(slot){if(save(slot)){toast('已存档');AU.sfx('chime')}else toast(palaceSaveError(slot));render()};
+A.save=function(slot){const ok=save(slot);if(ok)confirmPalaceWrite(true,'已存档',slot);else toast(palaceSaveError(slot));render()};
 A.load=function(slot){
+  const storage=SaveManager.getStorage();
+  if(storage?.refresh){
+    const before=S,turn=S?.turn;
+    return storage.refresh().then(()=>{
+      if(S!==before||S?.turn!==turn){toast('进度已变化，请重新选择读取');return;}
+      SaveManager.forget([SKEY+slot]);restorePalaceSlot(slot);
+    }).catch(()=>toast('存档暂时无法读取，请重试；当前进度仍在页面中。'));
+  }
+  restorePalaceSlot(slot);
+};
+function restorePalaceSlot(slot){
   if(!load(slot)){
     toast(SaveManager.status(SaveManager.getStorage(),SKEY+slot)==='newer'?palaceSaveError(slot):'此存档为空或无法读取');
     return;
   }
   showRestoredPalace();if(!modalOpen)offlineMemorials();
-};
+}
 
 function snapshotYear(){if(typeof PalaceActions!=='undefined'){if(PalaceActions.replaying)return;if(PalaceActions.busy){PalaceActions.requestSnapshot();return;}}try{SaveManager.snapshot(SaveManager.getStorage(),SKEY+'auto',PalaceActions.payload(),validPalaceSave,{label:'y-'+S.gen+'-'+S.year,day:S.turn,date:dateStr()})}catch(e){}}
 function replacePalace(data, alongside=[]){
@@ -304,16 +355,15 @@ A.rewind=function(index, savedAt){
     if(!data)throw Error();
     if(!replacePalace(data)){toast(palaceSaveError('auto'));return;}
   }catch{toast('这份快照读不出来了');return;}
-  resetMapPosition(S.pos);showRestoredPalace();toast(`回到了${dateStr()}`);
+  resetMapPosition(S.pos);showRestoredPalace();confirmPalaceWrite(true,`已保存，回到了${dateStr()}`);
 };
 // Backups are downloaded files: never place the world state in the page or clipboard.
-const PALACE_FILE_LIMIT=8*1024*1024;
+const PALACE_FILE_LIMIT=64*1024*1024;
 A.downloadSave=function(){
   if(!S)return;
   let url;
   try{
     const blob=new Blob([JSON.stringify({...PalaceActions.payload(),saveVersion:SaveManager.version})],{type:'application/json'});
-    if(blob.size>PALACE_FILE_LIMIT){toast('备份超过八 MB，请先减少测试版中的额外数据');return;}
     url=URL.createObjectURL(blob);
     const link=document.createElement('a');link.href=url;
     link.download=`宸宫纪-${S.year}年${S.month}月.json`;
@@ -330,12 +380,12 @@ function importPalaceFileText(raw){
     const alongside=S?[[PALACE_BEFORE_IMPORT,JSON.stringify({...PalaceActions.payload(),saveVersion:SaveManager.version})]]:[];
     if(!replacePalace(data,alongside)){toast(palaceSaveError('auto'));return false;}
   }catch{toast('存档文件无效，请选择本游戏下载的 JSON 备份');return false;}
-  resetMapPosition(S.pos);showRestoredPalace();toast('已导入并保存');return true;
+  resetMapPosition(S.pos);showRestoredPalace();confirmPalaceWrite(true,'已导入并保存');return true;
 }
 let palaceFileReading=false;
 A.readSaveFile=async function(input){
   const file=input?.files?.[0];if(!file||palaceFileReading)return;
-  if(file.size>PALACE_FILE_LIMIT){input.value='';toast('文件过大，最多支持八 MB 的游戏存档');return;}
+  if(file.size>PALACE_FILE_LIMIT){input.value='';toast('文件过大，最多支持 64 MB 的游戏存档');return;}
   const previous=S,turn=S?.turn;palaceFileReading=true;
   try{
     const raw=await file.text();
@@ -345,7 +395,7 @@ A.readSaveFile=async function(input){
   finally{input.value='';palaceFileReading=false;}
 };
 function palaceImportBackup(){
-  try{return SaveManager.decode(localStorage.getItem(PALACE_BEFORE_IMPORT),validPalaceSave,migratePalaceSave);}
+  try{return SaveManager.decode(SaveManager.getStorage().getItem(PALACE_BEFORE_IMPORT),validPalaceSave,migratePalaceSave);}
   catch{return null;}
 }
 A.undoImport=function(){
@@ -354,7 +404,7 @@ A.undoImport=function(){
   try{
     if(!replacePalace(data)){toast(palaceSaveError('auto'));return;}
   }catch{toast('导入前的存档无法读取');return;}
-  resetMapPosition(S.pos);showRestoredPalace();toast('已恢复导入前的进度');
+  resetMapPosition(S.pos);showRestoredPalace();confirmPalaceWrite(true,'已保存，恢复到导入前的进度');
 };
 function migrate(resetPosition=true){if(!S)return;reconcileRetainedFamilies();reconcileSelection();S.consorts.forEach(repairDeliveryChronicle);royalHouseholds().forEach(ensureMarriedLife);ensureDowager();S.rel=S.rel||{};S.pos=S.pos||{x:100,y:82};reconcileScholarArcs();reconcileRareArcs();[...S.consorts,...(S.cands||[]),...(S.shelteredGuests||[])].forEach(assignConsortPortrait);(S.cands||[]).forEach(deepen);alive().forEach(c=>{if(!c.arc)assignArc(c);deepen(c);clanKey(c)});S.children.forEach(k=>{if(k.sup===undefined)k.sup=0;ensureChildDisposition(k)});
   migrateRetiredBrotherWish();reconcileResidences();S.consorts.forEach(houseOf);S.flags.memorials ??= 0;childLifeTick();migrateMourning();reconcilePalaceRomance();
