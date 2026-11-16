@@ -32,10 +32,10 @@ test('a true month transition saves the frail birthday deduction and never appli
  let w=world();w.run(`var k=makeKid(a,'f','清宁');k.hp=50;k.birthTrouble='frail';S.turn=71;S.month=12;PalaceActions.reset();A.endMonth();assert.equal(k.hp,48);`);const id=w.run('k.id');
  w=boot(324,w.storage);w.ctx.assert=assert;w.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(kidById(${id}).hp,48);drain();save('auto');A.load('auto');annualBirthOmenTick();assert.equal(kidById(${id}).hp,48);assert.equal(kidById(${id}).story.filter(s=>s.t.includes('禀赋岁记')).length,1);`);
 });
-for(const name of ['birth','frail-birthday'])test('published v35 '+name+' replays its original rules before adopting the new rules',()=>{
- const payload=require('./fixtures/birth-traits-legacy-v35.json')[name],w=boot(336,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));w.ctx.assert=assert;
- w.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,35);assert.equal(birthOmenChance(harem()[0]),.03);`);
+for(const version of [35,36])for(const name of ['birth','frail-birthday'])test('published v'+version+' '+name+' replays its original rules before adopting the new rules',()=>{
+ const payload=require('./fixtures/birth-traits-legacy-v'+version+'.json')[name],w=boot(336,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));w.ctx.assert=assert;
+ w.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,${version});assert.equal(birthOmenChance(harem()[0]),.03);`);
  if(name==='birth')w.run(`assert.ok(S.children.every(k=>!k.birthOmen));`);
  else w.run(`assert.equal(S.children.find(k=>k.name==='清宁').hp,50);`);
- w.run(`drain();assert.equal(PalaceActions.contentVersion,36);assert.equal(birthOmenChance(harem()[0]),.09);save('auto');A.load('auto');assert.equal(PalaceActions.blocked,false);`);
+ w.run(`drain();assert.equal(PalaceActions.contentVersion,37);assert.equal(birthOmenChance(harem()[0]),.09);save('auto');A.load('auto');assert.equal(PalaceActions.blocked,false);`);
 });

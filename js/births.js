@@ -25,7 +25,7 @@ function annualBirthOmenTick(){
     const months=S.turn-k.born,age=Math.floor(months/12);
     if(!k.alive||k.pendingName||!Number.isInteger(months)||months<12||months%12!==0)continue;
     const effects=[[BIRTH_OMENS[k.birthOmen],'birthOmenYear']];
-    if(journalContentVersion()>=36)effects.push([BIRTH_TROUBLES[k.birthTrouble],'birthTroubleYear']);
+    if(journalContentVersion()>=37)effects.push([BIRTH_TROUBLES[k.birthTrouble],'birthTroubleYear']);
     for(const [effect,yearKey] of effects){
       if(!effect?.stat||k[yearKey]>=age)continue;
       const before=k[effect.stat];k[effect.stat]=clamp(before+effect.bonus);k[yearKey]=age;
@@ -37,13 +37,13 @@ function annualBirthOmenTick(){
 function birthTags(k){
   const omen=BIRTH_OMENS[k.birthOmen],trouble=BIRTH_TROUBLES[k.birthTrouble];
   const effect=omen&&(journalContentVersion()>=30?birthOmenEffect(omen):`${omen.label}+${omen.bonus}`);
-  const troubleEffect=journalContentVersion()>=36&&trouble?.stat?` · ${birthOmenEffect(trouble)}`:'';
+  const troubleEffect=journalContentVersion()>=37&&trouble?.stat?` · ${birthOmenEffect(trouble)}`:'';
   return `${immortalTags(k)}${multipleBadge(k)}${omen?`<span class="tag y" title="${journalContentVersion()>=30?'周岁起，每逢生辰结算一次；属性范围0—100。':'出生时'+effect}">${omen.name} · ${effect}</span>`:''}${trouble?`<span class="tag"${troubleEffect?' title="周岁起，每逢生辰结算一次；属性范围0—100。"':''}>${esc(trouble.name+troubleEffect)}</span>`:''}`;
 }
 function deliveryKids(c){return (c.delivery?.children||[]).map(kidById).filter(Boolean)}
 function pendingDelivery(){return S.consorts.find(c=>c.delivery&&!c.delivery.settled&&(c.delivery.lossPending||deliveryKids(c).some(k=>k.pendingName)))}
 function gouyiBirthBlessing(c){return journalContentVersion()>=24&&!!c?.gouyi;}
-function birthOmenChance(c){return gouyiBirthBlessing(c)?(journalContentVersion()>=25?.8:.6):(journalContentVersion()>=36?.09:.03);}
+function birthOmenChance(c){return gouyiBirthBlessing(c)?(journalContentVersion()>=25?.8:.6):(journalContentVersion()>=37?.09:.03);}
 function birthEvent(c){
   if(c.delivery&&!c.delivery.settled)return birthNamingEvent(c);
   if(c.preg<(c.pregnancyCalendar?.term||10))return null;
@@ -167,7 +167,7 @@ function rollBirthTempleAdvice(children,omen){
   if(!kind)return null;
   const k=frail&&kind==='frail'?frail:children[0];k.birthTrouble=kind;S.flags.lastBirthTempleAdvice=S.turn;
   const text={frail:'初生体弱，太医叮嘱仔细养护。',quake:'出生当夜京畿地动，宫人议论纷纷。',drought:'出生时京畿久旱，宫中有人将灾异附会于新生儿。'}[kind];
-  if(kind==='frail'&&journalContentVersion()>=36){
+  if(kind==='frail'&&journalContentVersion()>=37){
     k.birthTroubleYear=0;
     kstory(k,text+(k.birthTraits?.mother?.trait==='体弱'?'生母亦素来体弱，太医叮嘱母子都应留意调养。':'')+`自周岁起，${birthOmenEffect(BIRTH_TROUBLES.frail)}，生辰时记入禀赋岁记。`);
   }else kstory(k,text);
