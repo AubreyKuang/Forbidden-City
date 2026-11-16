@@ -1,0 +1,68 @@
+{
+  "url": "http://127.0.0.1:8428/index.html",
+  "started": "2026-11-16T01:31:27.915Z",
+  "runs": [
+    {
+      "name": "chat",
+      "viewport": "desktop",
+      "reloads": 4,
+      "topics": [
+        "mood",
+        "child",
+        "relations",
+        "wish"
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "jealous",
+      "viewport": "desktop",
+      "reloads": 2,
+      "topics": [],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "love",
+      "viewport": "desktop",
+      "reloads": 2,
+      "topics": [],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "chat",
+      "viewport": "mobile",
+      "reloads": 5,
+      "topics": [
+        "mood",
+        "child",
+        "relations",
+        "warning",
+        "wish"
+      ],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "jealous",
+      "viewport": "mobile",
+      "reloads": 2,
+      "topics": [],
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "love",
+      "viewport": "mobile",
+      "reloads": 2,
+      "topics": [],
+      "errors": [],
+      "passed": true
+    }
+  ],
+  "browser": "157.0.8103.78",
+  "finished": "2026-11-16T01:31:37.471Z",
+  "passed": true
+}
