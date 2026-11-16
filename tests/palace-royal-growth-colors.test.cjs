@@ -2,7 +2,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path');
 const {boot}=require('./playtest-harness.cjs');
 const manifest=require('../docs/royal-growth-colors-sources.json');
-const legacy=require('./fixtures/royal-growth-colors-legacy-v58.json');
+const legacyCases=[require('./fixtures/royal-growth-colors-legacy-v58.json'),require('./fixtures/royal-growth-colors-legacy-v61.json')];
 function game(storage){const b=boot(724,storage);b.ctx.assert=assert;return b;}
 const sets=[['f',37,489],['f',38,492],['m',31,495],['m',32,498]];
 
@@ -59,12 +59,12 @@ test('saved old variants and missing-variant fallback retain their identities wi
   `);
 });
 
-for(const [name,payload] of Object.entries(legacy))test('genuine v58 '+name+' birth preserves its original face while replaying and then enables the new pool',()=>{
+for(const legacy of legacyCases)for(const [name,payload] of Object.entries(legacy))test('genuine v'+payload.pendingActions.version+' '+name+' birth preserves its original face while replaying and then enables the new pool',()=>{
   let b=game(new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));
-  b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,58);
+  b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,${payload.pendingActions.version});
     assert.equal(portraitCreationVariantCount({sex:'m'}),31);assert.equal(portraitCreationVariantCount({sex:'f'}),37);`);
   assert.deepEqual(JSON.parse(b.run('JSON.stringify(S.children.map(k=>[k.id,k.sex,k.portraitVariant]))')),payload.children.map(k=>[k.id,k.sex,k.portraitVariant]));
-  b.run(`drain();assert.equal(PalaceActions.contentVersion,59);assert.equal(portraitCreationVariantCount({sex:'m'}),33);assert.equal(portraitCreationVariantCount({sex:'f'}),39);save('auto');`);
+  b.run(`drain();assert.equal(PalaceActions.contentVersion,62);assert.equal(portraitCreationVariantCount({sex:'m'}),33);assert.equal(portraitCreationVariantCount({sex:'f'}),39);save('auto');`);
   b=game(b.storage);b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);`);
   assert.deepEqual(JSON.parse(b.run('JSON.stringify(S.children.map(k=>[k.id,k.sex,k.portraitVariant]))')),payload.children.map(k=>[k.id,k.sex,k.portraitVariant]));
 });

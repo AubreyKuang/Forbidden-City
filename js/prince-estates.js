@@ -36,7 +36,7 @@ function viewPrinceEstate(){
       ['residence','居处与藩务',detailSection('居处',`<p>${esc(state)}</p>${res}`)],
       ['dockets','长史奏报',princeDocketPanel(k)],
       ['succession','世子与袭爵',princeSuccessionPanel(k)],
-      ['family','家人与往来',royalKinContactButtons(k,true)+marriagePanel(k)+householdPanel(k)],
+      ['family','家人与往来',princeAdoptionContactPanel(k)+royalKinContactButtons(k,true)+marriagePanel(k)+householdPanel(k)],
       ['history','王府记事',detailStory(k)]
     ])}`;
 }

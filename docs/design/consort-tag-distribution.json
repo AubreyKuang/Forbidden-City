@@ -2,7 +2,7 @@
   "samples": 18000,
   "seeds": 30,
   "batchesPerSeed": 100,
-  "source": "Real genCands() with the two opening consorts, no admissions, ageing or stat growth; seeds 17001–17030. Special story consorts excluded.",
+  "source": "Real genCands() with two opening consorts, no admissions, ageing or stat growth; seeds 17001–17030. Special story consorts excluded.",
   "distribution": {
     "looks": {
       "present": 18000,
@@ -41,103 +41,153 @@
       "max": 99
     },
     "hp": {
-      "present": 0,
-      "missing": 18000
+      "present": 18000,
+      "missing": 0,
+      "min": 38,
+      "median": 82,
+      "p90": 93,
+      "p95": 94,
+      "max": 95
     }
-  },
-  "baseline": {
-    "looksOver85": 8.32,
-    "talentOver80": 13.53,
-    "virtueOver80": 11.54,
-    "weakPersonality": 5.31
   },
   "rules": [
     {
+      "id": "grace",
       "name": "沉鱼落雁",
-      "condition": "容貌 >90",
-      "count": 235,
+      "condition": "容貌超过90，眉目容色出众。",
+      "rawPercent": 1.31,
       "percent": 1.31
     },
     {
+      "id": "poet",
       "name": "咏絮之才",
-      "condition": "才情 ≥95",
-      "count": 246,
-      "percent": 1.37
+      "condition": "才情达到95，才思尤为出众。",
+      "rawPercent": 1.37,
+      "percent": 1.1
     },
     {
+      "id": "both",
       "name": "才貌双绝",
-      "condition": "容貌 ≥85、才情 ≥90",
-      "count": 48,
+      "condition": "容貌至少85、才情至少90，兼具才貌。",
+      "rawPercent": 0.27,
       "percent": 0.27
     },
     {
+      "id": "kind",
       "name": "蕙质兰心",
-      "condition": "德行 ≥90",
-      "count": 224,
-      "percent": 1.24
+      "condition": "德行达到90，心地温厚。",
+      "rawPercent": 1.24,
+      "percent": 1.19
     },
     {
+      "id": "hidden",
       "name": "深藏不露",
-      "condition": "心机 ≥90",
-      "count": 140,
+      "condition": "心机达到90，善于藏住自己的打算；不据此断定善恶。",
+      "rawPercent": 0.78,
       "percent": 0.78
     },
     {
+      "id": "innocent",
       "name": "赤子之心",
-      "condition": "心机 ≤10、德行 ≥75",
-      "count": 75,
+      "condition": "心机不高于10、德行至少75，待人少有机心。",
+      "rawPercent": 0.42,
       "percent": 0.42
     },
     {
+      "id": "reader",
       "name": "书卷清芬",
-      "condition": "爱好读书、才情 ≥90",
-      "count": 120,
-      "percent": 0.67
+      "condition": "平日爱好读书，才情至少90。",
+      "rawPercent": 0.67,
+      "percent": 0.61
     },
     {
+      "id": "music",
       "name": "琴心雅韵",
-      "condition": "爱好抚琴、才情 ≥90",
-      "count": 96,
-      "percent": 0.53
+      "condition": "平日爱好抚琴，才情至少90。",
+      "rawPercent": 0.53,
+      "percent": 0.46
     },
     {
+      "id": "needle",
       "name": "绣心巧手",
-      "condition": "巧手性格、爱好刺绣、才情 ≥85",
-      "count": 46,
+      "condition": "性情巧手、爱好刺绣，才情至少85。",
+      "rawPercent": 0.26,
       "percent": 0.26
     },
     {
+      "id": "paint",
       "name": "丹青妙笔",
-      "condition": "喜爱字画、才情 ≥90",
-      "count": 61,
-      "percent": 0.34
+      "condition": "喜爱字画，才情至少90。",
+      "rawPercent": 0.34,
+      "percent": 0.32
     },
     {
+      "id": "archer",
       "name": "弓马娴熟",
-      "condition": "将门性格，且擅骑射或喜爱弓马",
-      "count": 133,
+      "condition": "性情出自将门，并且擅骑射或喜爱弓马。",
+      "rawPercent": 0.74,
       "percent": 0.74
     },
     {
+      "id": "humble",
       "name": "寒门明珠",
-      "condition": "明确出身寒门、才情 ≥90",
-      "count": 44,
+      "condition": "明确出身寒门，才情至少90；不以家族势力低就判为寒门。",
+      "rawPercent": 0.24,
       "percent": 0.24
     },
     {
+      "id": "quiet",
       "name": "人淡如菊",
-      "condition": "淡泊性格、心机 ≤10、德行 ≥80",
-      "count": 45,
+      "condition": "性情淡泊、心机不高于10、德行至少80。",
+      "rawPercent": 0.25,
       "percent": 0.25
     },
     {
+      "id": "clever",
       "name": "玲珑心窍",
-      "condition": "才情 ≥90、心机 ≥70",
-      "count": 72,
-      "percent": 0.4
+      "condition": "才情至少90、心机至少70，善于琢磨人情事理。",
+      "rawPercent": 0.4,
+      "percent": 0.37
+    },
+    {
+      "id": "pretty",
+      "name": "清丽可人",
+      "condition": "容貌达到87，清丽动人。",
+      "rawPercent": 6.26,
+      "percent": 4.82
+    },
+    {
+      "id": "quick",
+      "name": "才思敏捷",
+      "condition": "才情达到85，思路敏捷。",
+      "rawPercent": 6.33,
+      "percent": 4.59
+    },
+    {
+      "id": "gentle",
+      "name": "温良恭俭",
+      "condition": "德行达到84，处事有分寸。",
+      "rawPercent": 6.09,
+      "percent": 4.71
+    },
+    {
+      "id": "careful",
+      "name": "心思缜密",
+      "condition": "心机达到75，思虑细密；不据此断定善恶。",
+      "rawPercent": 4.48,
+      "percent": 3.66
+    },
+    {
+      "id": "frail",
+      "name": "弱柳扶风",
+      "condition": "当前健康低于50，宜注意静养调护；健康恢复后不再显示。",
+      "rawPercent": 3.43,
+      "percent": 3.43
     }
   ],
-  "any": 6.99,
-  "multiple": 1.46,
-  "maximum": 4
+  "any": 25.27,
+  "visibleBeforeInquiry": 14.99,
+  "multiple": 3.96,
+  "maximum": 3,
+  "rareOnly": 6.99
 }

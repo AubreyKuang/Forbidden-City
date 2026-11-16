@@ -1,0 +1,350 @@
+{
+  "method": "20 initial consorts per court; all initial hidden attributes revealed for the conservative count; first available answers to real monthly events; no forced stat growth or new admissions; emperor health/treasury sustained; fresh-context load after 60 steps. Additional women may join through genuine events.",
+  "runs": [
+    {
+      "seed": 23001,
+      "checkpoints": [
+        {
+          "turn": 0,
+          "people": 20,
+          "tagged": 3,
+          "frail": 0,
+          "visibleTagged": 3,
+          "maxCompact": 2,
+          "minHealth": 53,
+          "maxHealth": 94
+        },
+        {
+          "turn": 12,
+          "people": 21,
+          "tagged": 4,
+          "frail": 0,
+          "visibleTagged": 4,
+          "maxCompact": 2,
+          "minHealth": 53,
+          "maxHealth": 94
+        },
+        {
+          "turn": 24,
+          "people": 21,
+          "tagged": 4,
+          "frail": 0,
+          "visibleTagged": 4,
+          "maxCompact": 2,
+          "minHealth": 53,
+          "maxHealth": 94
+        },
+        {
+          "turn": 36,
+          "people": 22,
+          "tagged": 5,
+          "frail": 1,
+          "visibleTagged": 5,
+          "maxCompact": 2,
+          "minHealth": 45,
+          "maxHealth": 94
+        },
+        {
+          "turn": 48,
+          "people": 22,
+          "tagged": 5,
+          "frail": 1,
+          "visibleTagged": 5,
+          "maxCompact": 2,
+          "minHealth": 45,
+          "maxHealth": 94
+        },
+        {
+          "turn": 60,
+          "people": 22,
+          "tagged": 5,
+          "frail": 1,
+          "visibleTagged": 5,
+          "maxCompact": 2,
+          "minHealth": 45,
+          "maxHealth": 94
+        },
+        {
+          "turn": 72,
+          "people": 23,
+          "tagged": 5,
+          "frail": 1,
+          "visibleTagged": 5,
+          "maxCompact": 2,
+          "minHealth": 45,
+          "maxHealth": 94
+        },
+        {
+          "turn": 84,
+          "people": 23,
+          "tagged": 5,
+          "frail": 1,
+          "visibleTagged": 5,
+          "maxCompact": 2,
+          "minHealth": 45,
+          "maxHealth": 94
+        },
+        {
+          "turn": 96,
+          "people": 24,
+          "tagged": 6,
+          "frail": 1,
+          "visibleTagged": 5,
+          "maxCompact": 2,
+          "minHealth": 45,
+          "maxHealth": 94
+        },
+        {
+          "turn": 108,
+          "people": 24,
+          "tagged": 6,
+          "frail": 1,
+          "visibleTagged": 5,
+          "maxCompact": 2,
+          "minHealth": 45,
+          "maxHealth": 94
+        },
+        {
+          "turn": 120,
+          "people": 24,
+          "tagged": 6,
+          "frail": 1,
+          "visibleTagged": 5,
+          "maxCompact": 2,
+          "minHealth": 45,
+          "maxHealth": 94
+        }
+      ]
+    },
+    {
+      "seed": 23002,
+      "checkpoints": [
+        {
+          "turn": 0,
+          "people": 20,
+          "tagged": 2,
+          "frail": 0,
+          "visibleTagged": 2,
+          "maxCompact": 1,
+          "minHealth": 56,
+          "maxHealth": 94
+        },
+        {
+          "turn": 12,
+          "people": 20,
+          "tagged": 2,
+          "frail": 0,
+          "visibleTagged": 2,
+          "maxCompact": 1,
+          "minHealth": 56,
+          "maxHealth": 94
+        },
+        {
+          "turn": 24,
+          "people": 19,
+          "tagged": 2,
+          "frail": 0,
+          "visibleTagged": 2,
+          "maxCompact": 1,
+          "minHealth": 56,
+          "maxHealth": 94
+        },
+        {
+          "turn": 36,
+          "people": 20,
+          "tagged": 3,
+          "frail": 1,
+          "visibleTagged": 3,
+          "maxCompact": 1,
+          "minHealth": 39,
+          "maxHealth": 94
+        },
+        {
+          "turn": 48,
+          "people": 19,
+          "tagged": 2,
+          "frail": 0,
+          "visibleTagged": 2,
+          "maxCompact": 1,
+          "minHealth": 56,
+          "maxHealth": 94
+        },
+        {
+          "turn": 60,
+          "people": 20,
+          "tagged": 2,
+          "frail": 0,
+          "visibleTagged": 2,
+          "maxCompact": 1,
+          "minHealth": 56,
+          "maxHealth": 94
+        },
+        {
+          "turn": 72,
+          "people": 19,
+          "tagged": 3,
+          "frail": 0,
+          "visibleTagged": 3,
+          "maxCompact": 1,
+          "minHealth": 56,
+          "maxHealth": 94
+        },
+        {
+          "turn": 84,
+          "people": 19,
+          "tagged": 3,
+          "frail": 0,
+          "visibleTagged": 3,
+          "maxCompact": 1,
+          "minHealth": 56,
+          "maxHealth": 94
+        },
+        {
+          "turn": 96,
+          "people": 19,
+          "tagged": 3,
+          "frail": 0,
+          "visibleTagged": 3,
+          "maxCompact": 1,
+          "minHealth": 56,
+          "maxHealth": 94
+        },
+        {
+          "turn": 108,
+          "people": 19,
+          "tagged": 3,
+          "frail": 0,
+          "visibleTagged": 3,
+          "maxCompact": 1,
+          "minHealth": 56,
+          "maxHealth": 94
+        },
+        {
+          "turn": 120,
+          "people": 19,
+          "tagged": 3,
+          "frail": 0,
+          "visibleTagged": 3,
+          "maxCompact": 1,
+          "minHealth": 56,
+          "maxHealth": 94
+        }
+      ]
+    },
+    {
+      "seed": 23003,
+      "checkpoints": [
+        {
+          "turn": 0,
+          "people": 20,
+          "tagged": 2,
+          "frail": 0,
+          "visibleTagged": 2,
+          "maxCompact": 2,
+          "minHealth": 54,
+          "maxHealth": 91
+        },
+        {
+          "turn": 12,
+          "people": 21,
+          "tagged": 2,
+          "frail": 0,
+          "visibleTagged": 2,
+          "maxCompact": 2,
+          "minHealth": 54,
+          "maxHealth": 94
+        },
+        {
+          "turn": 24,
+          "people": 21,
+          "tagged": 3,
+          "frail": 0,
+          "visibleTagged": 3,
+          "maxCompact": 2,
+          "minHealth": 54,
+          "maxHealth": 94
+        },
+        {
+          "turn": 36,
+          "people": 21,
+          "tagged": 3,
+          "frail": 0,
+          "visibleTagged": 3,
+          "maxCompact": 2,
+          "minHealth": 54,
+          "maxHealth": 94
+        },
+        {
+          "turn": 48,
+          "people": 20,
+          "tagged": 3,
+          "frail": 0,
+          "visibleTagged": 3,
+          "maxCompact": 2,
+          "minHealth": 54,
+          "maxHealth": 91
+        },
+        {
+          "turn": 60,
+          "people": 19,
+          "tagged": 4,
+          "frail": 0,
+          "visibleTagged": 4,
+          "maxCompact": 2,
+          "minHealth": 54,
+          "maxHealth": 94
+        },
+        {
+          "turn": 72,
+          "people": 19,
+          "tagged": 4,
+          "frail": 0,
+          "visibleTagged": 4,
+          "maxCompact": 2,
+          "minHealth": 54,
+          "maxHealth": 94
+        },
+        {
+          "turn": 84,
+          "people": 19,
+          "tagged": 4,
+          "frail": 0,
+          "visibleTagged": 4,
+          "maxCompact": 2,
+          "minHealth": 54,
+          "maxHealth": 94
+        },
+        {
+          "turn": 96,
+          "people": 19,
+          "tagged": 4,
+          "frail": 0,
+          "visibleTagged": 4,
+          "maxCompact": 2,
+          "minHealth": 54,
+          "maxHealth": 94
+        },
+        {
+          "turn": 108,
+          "people": 20,
+          "tagged": 5,
+          "frail": 0,
+          "visibleTagged": 5,
+          "maxCompact": 2,
+          "minHealth": 54,
+          "maxHealth": 94
+        },
+        {
+          "turn": 120,
+          "people": 19,
+          "tagged": 4,
+          "frail": 0,
+          "visibleTagged": 4,
+          "maxCompact": 2,
+          "minHealth": 54,
+          "maxHealth": 94
+        }
+      ]
+    }
+  ]
+}

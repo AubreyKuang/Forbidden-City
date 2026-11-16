@@ -36,12 +36,11 @@ test('rank-cap fallback, age and real consent conditions are enforced',()=>{
 });
 
 for(const branch of [0,1])test('all six palace chapters and ongoing visits resume before and after choice '+branch,()=>{
- const illustrations=[null,null,'palace-stone-threshold',null,null,'hongjian-poem-at-dusk',null];
+ const paperShop='hongjian-paper-shop';
+ const illustrations=[paperShop,paperShop,'palace-stone-threshold','hongjian-willow-rain',paperShop,'hongjian-poem-at-dusk',paperShop];
  let b=admit();for(let stage=0;stage<illustrations.length;stage++){
   b.run(`S.turn+=3;E().energy=20;PalaceActions.reset();A.hongjianStory(p.id);assert.ok(modalOpen);save('auto');`);b=reload(b);
-  const markup=b.run("$('#mbox').innerHTML"), image=illustrations[stage];
-  if(image)assert.ok(markup.includes(`story-${image}.webp`));
-  else assert.doesNotMatch(markup,/event-illustration/);
+  assert.ok(b.run("$('#mbox').innerHTML").includes(`story-${illustrations[stage]}.webp`));
   const title=b.run('curEv.title');b.run(`choose(${branch});assert.ok(modalResult);save('auto');`);b=reload(b);assert.equal(b.run('curEv.title'),title);
   b.run(`drain();assert.equal(p.arc.st,${Math.min(stage+1,6)});`);
  }
@@ -94,5 +93,5 @@ test('old biographies and admission references survive succession without admitt
 
 for(const [scene,fixture] of Object.entries(require('./fixtures/hongjian-legacy-v25.json')))test('genuine version 25 '+scene+' finishes unchanged before enabling admission',()=>{
  let b=world(new Map([['chengongji_v1_auto',JSON.stringify(fixture)]]));b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,25);assert.equal(hongjianContent(),false);`);assert.equal(b.run('curEv.title'),fixture.pendingActions.pending.title);
- b.run(`drain();assert.equal(PalaceActions.contentVersion,59);assert.equal(hongjianContent(),true);assert.equal(PalaceActions.blocked,false);`);
+ b.run(`drain();assert.equal(PalaceActions.contentVersion,62);assert.equal(hongjianContent(),true);assert.equal(PalaceActions.blocked,false);`);
 });

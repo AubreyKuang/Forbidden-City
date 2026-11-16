@@ -198,7 +198,7 @@ function viewSelectionArrivals(){
   const members=(S.selection?.accepted||[]).map(byId).filter(Boolean);
   return `${selectionDiscussionPanel()}<section class="story-scene selection-scene"><header><p>储秀宫 · ${esc(S.selection.date||'选秀礼毕')}</p><h2>新妃安顿</h2></header><div class="acts"><button class="btn" onclick="A.go('harem')">回后宫</button><button class="btn gold" onclick="A.xxDecree()">重新选秀</button></div></section>
     <p class="hint">本批名单已定，共留选 ${members.length} 人。安顿页保留本月和下月；此后仍可在人物纪事中回看入宫经历。也可随时重新选秀，未满三年仍有国库与民心代价。</p>
-    <div class="grid portrait-grid">${members.map(c=>`<article class="card" style="display:block"><div class="row">${porImg(c,76)}<div><h3>${esc(fullName(c))}</h3><p>${esc(c.palace)} · ${esc(c.trait)} ${solitaryTag(c)}${dowagerKinTag(c)}</p></div></div>
+    <div class="grid portrait-grid">${members.map(c=>`<article class="card" style="display:block"><div class="row">${porImg(c,76)}<div><h3>${esc(fullName(c))}</h3><p>${esc(c.palace)} · ${esc(c.trait)} ${solitaryTag(c)}${dowagerKinTag(c)}${consortTraitTags(c)}</p></div></div>
     <p>${esc(c.entryAdjustment?.reaction||'她的留选记在这一批名册中。')}</p>
     ${(c.entryAdjustment?.acquaintances||[]).length?`<p class="hint">一同入宫时相识：${c.entryAdjustment.acquaintances.map(id=>parentLink(id)).join('、')}。</p>`:''}
     <div class="acts">${!inPalace(c)?'<span class="hint">目前不在宫中</span>':c.entryAdjustment?.settled?'<span class="tag g">已问候</span>':S.turn-c.entryAdjustment?.turn>=6?'<span class="hint">已渐渐住惯</span>':`<button class="btn gold sm" onclick="A.xxWelcome(${c.id})">去问候她</button>`}<button class="btn sm" onclick="A.go('consort',${c.id})">人物纪事与近况</button></div></article>`).join('')}</div>
@@ -208,7 +208,7 @@ A.xxWelcome=function(id){if(modalOpen)return;const c=byId(id);if(c)pushEv(newcom
 function viewSelectionAudience(){
   const c=selectionCurrent();if(!c)return '';
   const speech=selectionSpeech(c),shown=S.selection?.performed?.includes(c.id);
-  return `<section class="selection-audience selection-scene" aria-label="秀女觐见"><header><div><p>储秀宫 · 依次觐见</p><h2>${esc(fullName(c))}</h2><p>${c.age}岁 · ${esc(c.fam.t)}之女</p>${solitaryTag(c)}${dowagerKinTag(c)}</div><button class="btn sm" onclick="A.xxRoster()">直接看名册</button></header>
+  return `<section class="selection-audience selection-scene" aria-label="秀女觐见"><header><div><p>储秀宫 · 依次觐见</p><h2>${esc(fullName(c))}</h2><p>${c.age}岁 · ${esc(c.fam.t)}之女</p>${solitaryTag(c)}${dowagerKinTag(c)}${consortTraitTags(c)}</div><button class="btn sm" onclick="A.xxRoster()">直接看名册</button></header>
     <div class="audience-body"><div class="audience-portrait">${porImg(c,210)}</div><div class="audience-dialogue"><p>${esc(shown?speech.talent:speech.stage)}</p><blockquote>“${esc(shown?speech.reply:speech.line)}”</blockquote><p class="hint">${esc(pastLifeSelectionHint(c))}</p>${portraitResemblanceHint(c)?`<p class="hint">${esc(portraitResemblanceHint(c))}</p>`:''}<p class="hint">${esc(c.kinNote||'')} ${shown?'已看过才艺，可继续觐见或回名册留选。':'可听她展示所长，再统一决定留谁。'}</p></div></div>
     <footer><span>${S.cands.indexOf(c)+1} / ${S.cands.length} 位候选</span><div class="acts"><button class="btn" onclick="A.xxPerform(${c.id})" ${shown?'disabled':''}>展示才艺 · ${esc(consortHobby(c))}</button><button class="btn gold" onclick="A.xxNext(${c.id})">${S.cands.indexOf(c)===S.cands.length-1?'看完，回名册留选':'请下一位'}</button></div></footer></section>${selectionDiscussionPanel()}`;
 }

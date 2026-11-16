@@ -79,9 +79,9 @@ const HAREM=[
    {t:'回赠一首诗',f:()=>{story(c,`以诗相邀，陛下回赠一诗。她将诗笺珍藏在妆奁里。`);return fx(cchg(c,{aff:5,mood:6}))}},
    {t:'置之不理',f:()=>fx(cchg(c,{mood:-8}))}]}},
  function ill(){const cs=harem().filter(c=>c.trait==='体弱'||chance(.15));if(!cs.length)return null;const c=pick(cs);
-  return {title:'病榻',por:c,onShow:()=>{if(consortRecoveryActive())c.illnessRecovery={turn:S.turn,until:S.turn+2};},text:`${cName(c)}偶感风寒，连日高烧不退。`,choices:[
-   {t:'宣太医诊治',f:()=>{story(c,'染了风寒，太医悉心诊治，渐渐痊愈。');return fx(chg({treasury:-10}),cchg(c,{mood:5}))}},
-   {t:'亲自探视（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{E().energy--;renderTop();remember(c,'care','病中探视');story(c,'卧病在床，陛下亲自来看她，还喂了她一口药。');return fx(cchg(c,{mood:20,aff:15}))}},
+  return {title:'病榻',por:c,onShow:()=>{if(consortRecoveryActive())c.illnessRecovery={turn:S.turn,until:S.turn+2};consortHealthHurt(c,'ill');},text:`${cName(c)}偶感风寒，连日高烧不退。`,choices:[
+   {t:'宣太医诊治',f:()=>{consortHealthTreat(c);story(c,'染了风寒，太医悉心诊治，渐渐痊愈。');return fx(chg({treasury:-10}),cchg(c,{mood:5}))}},
+   {t:'亲自探视（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{E().energy--;renderTop();consortHealthTreat(c,{immediate:4});remember(c,'care','病中探视');story(c,'卧病在床，陛下亲自来看她，还喂了她一口药。');return fx(cchg(c,{mood:20,aff:15}))}},
    {t:'不必理会',f:()=>{if(c.trait==='体弱'&&chance(.25)){c.alive=false;story(c,'病势沉重，无人问津，于一个雪夜香消玉殒。');log(`${fullName(c)}病逝。`,1);AU.sfx('sad');return `数日后，${c.palace}传来噩耗：${fullName(c)}病逝了。`}story(c,'病了半月，陛下未曾过问。');remember(c,'neglect','病中无人过问');return fx(cchg(c,{mood:-15,aff:-8}))}}]}},
  function homesick(){const c=pick(harem().filter(c=>!c.rescue&&c.wound!=='mom'&&!c.visitor));return c?sickMotherEvent(c):null},
  function empressReport(){const em=empress();if(!em)return null;

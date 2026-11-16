@@ -189,7 +189,7 @@ const EMPEROR_PORTRAITS=[12,13,312,313,314,315];
 const EMPEROR_PORTRAIT_LABELS={12:'原版青年',13:'原版壮年',312:'温润青年',313:'英武青年',314:'威严壮年',315:'儒雅长者'};
 const portraitVariantCount=child=>child.sex==='f'?PRINCESS_VARIANTS:DESCENDANT_VARIANTS;
 // Published pending births must replay their original identity allocation.
-const portraitCreationVariantCount=child=>journalContentVersion()>=59?portraitVariantCount(child):(child.sex==='f'?37:31);
+const portraitCreationVariantCount=child=>journalContentVersion()>=62?portraitVariantCount(child):(child.sex==='f'?37:31);
 const portraitSheets=[
   {start:0,rows:7,scale:2,src:'./assets/images/palace-portraits-b.webp?v=original-hd-1',image:portraitAtlas},
   {start:FAMILY_PORTRAIT_START,rows:4,scale:2,src:'./assets/images/palace-family.webp?v=original-hd-1',image:familyAtlas},

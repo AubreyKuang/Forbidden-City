@@ -52,7 +52,7 @@ test('conversation history prevents immediate repeated opening lines and remains
  const {run}=boot();run(`var c=harem()[1];Object.assign(c,{enteredAt:0,aff:70,favor:70,voiceVisits:0,xin:{k:'平和'}});S.turn=0;var heard=[];for(var i=0;i<3;i++){var v=characterVoice(c,'talk');heard.push(v.text);rememberConversation(c,v,c.palace);}assert.equal(new Set(heard).size,3);save('1');load('1');c=byId(c.id);assert.deepEqual(c.voiceRecent,heard);assert.equal(c.voiceVisits,3);`);
 });
 test('newcomers do not disclose deep wounds and wishes even with high initial affection',()=>{
- const {run,force}=boot();run(`var c=makeGirl();addConsort(c,1,'入宫');Object.assign(c,{aff:90,voiceVisits:0,enteredAt:S.turn,wishKnown:false,woundKnown:false,xin:{k:'平和'}});E().energy=4;`);force(...Array(30).fill(0));run(`A.chat(c.id);assert.equal(c.wishKnown,false);assert.equal(c.woundKnown,false);assert.match(curEv.text,/初见/);`);
+ const {run,force}=boot();run(`var c=makeGirl();addConsort(c,1,'入宫');Object.assign(c,{aff:90,voiceVisits:0,enteredAt:S.turn,wishKnown:false,woundKnown:false,xin:{k:'平和'}});E().energy=4;assert.equal(consortVoicePhase(c),'first');var firstStage=chatMoodVoice(c).stage;`);force(...Array(30).fill(0));run(`A.chat(c.id);assert.equal(c.wishKnown,false);assert.equal(c.woundKnown,false);assert.ok(curEv.text.includes(firstStage));`);
 });
 test('life stage never overrides acute grief, cold confinement or a temple stay',()=>{
  const {run}=boot();run(`var c=harem()[1];S.turn=180;c.enteredAt=0;c.aff=80;c.favor=80;c.xin={k:'悲恸'};assert.equal(characterVoice(c).key,'grief');c.cold=true;assert.equal(characterVoice(c).key,'cold');c.cold=false;c.templeStay={due:200};assert.equal(characterVoice(c).key,'temple-retreat');`);

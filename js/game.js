@@ -71,6 +71,7 @@ function makeGirl(o={}){
     rank:0, palace:'', favor:ri(5,15), mood:65, aff:ri(10,25), preg:0, prot:false, lastBirth:-99, alive:true, cold:false, gone:false,
     seed:ri(1,2e9), title:'', story:[], nights:0, known:false};
   assignConsortPortrait(girl,true);initSolitary(girl);ensureConsortFertility(girl);
+  if(consortTraitsActive())girl.hp=consortHealthBase(girl);
   return girl;
 }
 function assignPalace(c){
@@ -193,6 +194,8 @@ const EVENT_ILLUSTRATIONS={
   'hezhong-river-bank':'河间的晨雾正在散，风把几根芦苇压向水边。',
   'gouyi-go-stone':'棋盘边有一颗白子，伏在这一格安静的日光里。',
   'gouyi-study-window':'她写到一半停下来。方窗外，枝头的粉花晃了晃。',
+  'hongjian-paper-shop':'窗棂的影子斜过去，刚好落在那叠新笺的纸边。',
+  'hongjian-willow-rain':'柳叶尖上的雨珠坠下来，水面荡开小小一圈光。',
   'hongjian-poem-at-dusk':'傍晚的光从半开的窗进来，照到小笺折起的那一角。',
   'quiet-palace-keepsakes':'窗边的浅匣安安静静，外头的树影慢慢移过来。',
   'western-moon-window':'窗前静得只剩月色，远处的屋瓦也淡了下去。'
@@ -445,6 +448,7 @@ A.endMonth=function(){
     log('查账回奏未获批复，弹劾案已归档。');
   }
   if(S.month>12){S.month=1;S.year++;e.age++;newYear=true;alive().forEach(c=>c.age++)}
+  consortHealthTick();
   for(const maid of returnedMaidNotices)pushEv(pregEvent(maid));
   annualBirthOmenTick();
   const revenue=legacyPendingAction()?null:annualRevenueTick();
@@ -463,14 +467,17 @@ A.endMonth=function(){
   // 事件
   if(selectionSkipTimingActive()){const selectionOffer=scheduledSelectionEvent();if(selectionOffer)pushEv(selectionOffer);}
   else if(S.month===2&&S.turn-S.flags.lastXX>=34&&newConsortEventAllowed()) pushEv({title:'三年大选',sfx:'chime',text:'又到三年一度的大选之期，各地秀女已候于储秀宫。',choices:[{t:'前去看看',f:()=>{genCands();UI.view='xx';return null}},{t:'今年免了',f:()=>{S.flags.lastXX=S.turn;return fx(chg({people:2}))}}]});
-  reconcileResidences();archivePastLives();travelerLifeTick();daoLifeTick();immortalTick();childTempleTick();relTick();consortSocialTick();kidRelTick();clanTick();dowagerTick();initiativeTick();familyLifeTick();childLifeTick(true);courtTick();natalFamilyTick();seasonalTick();palaceDutiesTick();palaceRomanceTick();palaceParentageTick();marriedLifeTick();royalKinContactTick();personalExperienceTick();journeyTick();maternalTick();historyTick();continuityTick();personalLifeTick();livedRelationshipsTick();
+  reconcileResidences();archivePastLives();travelerLifeTick();daoLifeTick();immortalTick();childTempleTick();relTick();consortSocialTick();kidRelTick();clanTick();dowagerTick();initiativeTick();familyLifeTick();childLifeTick(true);courtTick();yiLandTick();natalFamilyTick();seasonalTick();palaceDutiesTick();palaceRomanceTick();palaceParentageTick();marriedLifeTick();royalKinContactTick();personalExperienceTick();journeyTick();maternalTick();historyTick();continuityTick();personalLifeTick();livedRelationshipsTick();
   const passing=dowagerPassingEvent();if(passing)pushEv(passing);
   const princeSuccession=princeSuccessionTick();
+  princeAdoptionContactTick();
+  const orphan=palaceOrphanEvent();
   const comingOfAge=royalComingOfAgeEvent();
   const fiefDockets=princeQuarterReports();
-  const must=[passing?null:haremRemonstranceEvent(),passing?null:pendingImmortalEvent(),passing?null:arcTick(),heirTick(),milestone(),parentageReportEvent(),birthSwapClueEvent(),birthSwapSearchReport(),pendingBirthSwapJustice(),pendingKinGreeting(),pendingMaternalKinCare(),pendingMaternalSisterArrival(),pendingDaoVoyage(),pendingTravelerEvent(),pendingOfficialReport(),pendingConcealedLoss(),...(legacyPendingAction()?[]:[pendingIncognitoReport(),passing?null:jingtishiEvent(),passing?null:selectionCouncilEvent()]),passing||typeof pendingHaremStewardEvent!=='function'?null:pendingHaremStewardEvent(),...(familyGardenActive()&&!passing?[familyGardenMonthlyEvent(),familyGardenDisputeEvent()]:[])].filter(Boolean),opt=[];
+  const must=[passing?null:haremRemonstranceEvent(),passing?null:pendingImmortalEvent(),passing?null:pendingYiLandEvent(),passing?null:arcTick(),heirTick(),milestone(),parentageReportEvent(),birthSwapClueEvent(),birthSwapSearchReport(),pendingBirthSwapJustice(),pendingKinGreeting(),pendingMaternalKinCare(),pendingMaternalSisterArrival(),pendingDaoVoyage(),pendingTravelerEvent(),pendingOfficialReport(),pendingConcealedLoss(),...(legacyPendingAction()?[]:[pendingIncognitoReport(),passing?null:jingtishiEvent(),passing?null:selectionCouncilEvent()]),passing||typeof pendingHaremStewardEvent!=='function'?null:pendingHaremStewardEvent(),...(familyGardenActive()&&!passing?[familyGardenMonthlyEvent(),familyGardenDisputeEvent()]:[])].filter(Boolean),opt=[];
   if(comingOfAge)must.unshift(comingOfAge);
   if(princeSuccession)must.push(princeSuccession);
+  if(orphan)must.push(orphan);
   if(fiefDockets)must.push(fiefDockets);
   // 积压的奏折：离宫期间攒下的朝堂事务，月末一并呈上
   while((S.flags.memorials||0)>0){S.flags.memorials--;const memo=factionEvent();if(memo&&!must.some(e=>e.title===memo.title))must.push(memo)}
