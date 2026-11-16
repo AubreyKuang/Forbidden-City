@@ -176,7 +176,7 @@ function consortSocialTick(){
   for(let i=0;i<available.length;i++)for(let j=i+1;j<available.length;j++){
     const a=available[i],b=available[j],relationship=relGet(a,b);
     const compatibility=consortCompatibility(a,b),cohort=cohortAffinity(a,b);
-    if(relationship<-15||isRival(a,b)||isRival(b,a)||(compatibility<3&&relationship<20&&!cohort))continue;
+    if(friendshipTense(a,b)||relationship<-15||isRival(a,b)||isRival(b,a)||(compatibility<3&&relationship<20&&!cohort))continue;
     pairs.push({a,b,w:1+Math.max(0,compatibility)+Math.min(4,Math.max(0,relationship)/10)+(cohort?3:0)});
   }
   if(!pairs.length||!chance(.65))return;
@@ -207,8 +207,8 @@ function facHTML(){const f=factions();if(!f.L.length&&!f.neutral.length)return '
   return `<section class="harem-factions" aria-label="后宫派系"><h3>派系</h3><p class="hint">随实际交情形成，可有多派，也可不入任何派系。各派并非天然互为仇敌。</p><div class="grid">${f.L.map(l=>box(esc(cName(l))+'一派',f.map[l.id])).join('')}${f.neutral.length?box('无派系',f.neutral):''}</div></section>`}
 function relLine(c){if(!c.alive||c.gone)return '';
   const h=harem().filter(o=>o!==c).map(o=>[o,relGet(c,o)]).sort((a,b)=>b[1]-a[1]);
-  const good=h.filter(x=>x[1]>=30&&socialPair(c,x[0])).slice(0,4),respect=h.filter(x=>x[1]>=30&&!socialPair(c,x[0])).slice(0,4),bad=h.filter(x=>x[1]<=-30).slice(-4),fac=c.cold?null:facOf(c);
-  return `<div>派系：${fac?(fac===c?'一派之首':esc(cName(fac))+'一派'):'无派系'}${good.length?`　交好：${good.map(([o])=>`<span class="tag g">${esc(cName(o))}</span>`).join('')}`:''}${respect.length?`　敬重：${respect.map(([o])=>`<span class="tag">${esc(cName(o))}</span>`).join('')}`:''}${bad.length?`　交恶：${bad.map(([o])=>`<span class="tag r">${esc(cName(o))}</span>`).join('')}`:''}</div>${selectionCohortHTML(c)}${consortSocialLine(c)}${friendFavorPanel(c)}`}
+  const good=h.filter(x=>x[1]>=30&&socialPair(c,x[0])&&!friendshipTense(c,x[0])).slice(0,4),respect=h.filter(x=>x[1]>=30&&!socialPair(c,x[0])).slice(0,4),bad=h.filter(x=>x[1]<=-30).slice(-4),fac=c.cold?null:facOf(c);
+  return `<div>派系：${fac?(fac===c?'一派之首':esc(cName(fac))+'一派'):'无派系'}${good.length?`　交好：${good.map(([o])=>`<span class="tag g">${esc(cName(o))}</span>`).join('')}`:''}${respect.length?`　敬重：${respect.map(([o])=>`<span class="tag">${esc(cName(o))}</span>`).join('')}`:''}${bad.length?`　交恶：${bad.map(([o])=>`<span class="tag r">${esc(cName(o))}</span>`).join('')}`:''}</div>${selectionCohortHTML(c)}${consortSocialLine(c)}${friendFavorPanel(c)}${friendshipPanel(c)}`}
 HAREM.push(
  function clash(){const f=factions();if(f.L.length<2)return null;
   const pairs=f.L.flatMap((a,i)=>f.L.slice(i+1).filter(b=>relGet(a,b)<10||isRival(a,b)||isRival(b,a)).map(b=>[a,b]));
@@ -218,7 +218,7 @@ HAREM.push(
   return {title:'派系倾轧',present:[a,b,...ma,...mb],cast:familyScenesEnabled()?[a,b,...ma,...mb]:[a,b,ma[0],mb[0]],text:`晨昏定省时，${cName(a)}一派与${cName(b)}一派为${pick(['御花园赏花的座次','内务府分发的冰例','中秋宴上谁坐陛下左手边','新入宫的小主该住哪处偏殿'])}争执不下，两边都盯着你。\n${cName(a)}身边：${ma.map(cName).join('、')||'无人'}\n${cName(b)}身边：${mb.map(cName).join('、')||'无人'}`,choices:[
    {t:`偏向${cName(a)}`,person:a,f:side(a,b,ma,mb)},{t:`偏向${cName(b)}`,person:b,f:side(b,a,mb,ma)},
    {t:'各打五十大板：“都回去抄《女诫》。”',f:()=>{[a,b,...ma,...mb].forEach(c=>cchg(c,{mood:-4}));relAdd(a,b,4);return '两边都闭了嘴，表面上总算和气了几分。'}}]}},
- function sisters(){const h=harem().filter(c=>!isSolitary(c));let best=null,bv=45;for(let i=0;i<h.length;i++)for(let j=i+1;j<h.length;j++){const v=relGet(h[i],h[j]);if(v>bv){bv=v;best=[h[i],h[j]]}}if(!best)return null;const [a,b]=best;
+ function sisters(){const h=harem().filter(c=>!isSolitary(c));let best=null,bv=45;for(let i=0;i<h.length;i++)for(let j=i+1;j<h.length;j++){const v=relGet(h[i],h[j]);if(!friendshipTense(h[i],h[j])&&v>bv){bv=v;best=[h[i],h[j]]}}if(!best)return null;const [a,b]=best;
   const pastime=CONSORT_HOBBIES[sharedConsortHobby(a,b)],place=pastime?.place==='本宫'?a.palace:pastime?.place||a.palace;
   return {title:'姐妹情深',cast:[a,b],text:`${cName(a)}与${cName(b)}约在${place}${pastime?.activity||'小聚'}，派人来请陛下。`,choices:[
    {t:'前往（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{E().energy--;renderTop();story(a,`与${fullName(b)}一同宴请陛下，三人说笑到月上中天。`);story(b,`与${fullName(a)}一同宴请陛下。`);relAdd(a,b,6);return fx(cchg(a,{aff:6,mood:8}),cchg(b,{aff:6,mood:8}))}},

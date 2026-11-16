@@ -7,7 +7,7 @@ function friendFavorState(a,b){
 }
 function friendFavorReady(a,b){
  const available=c=>inPalace(c)&&!c.maid&&!(c.hp<40)&&!(c.delivery&&!c.delivery.settled)&&!['悲恸','心如死灰','惶恐','怨恨'].includes(xinOf(c));
- return !!(!S.over&&!mourningActive()&&a!==b&&available(a)&&available(b)&&socialPair(a,b)&&relGet(a,b)>=35&&!isRival(a,b)&&!isRival(b,a)&&
+ return !!(!S.over&&!mourningActive()&&a!==b&&!friendshipTense(a,b)&&available(a)&&available(b)&&socialPair(a,b)&&relGet(a,b)>=35&&!isRival(a,b)&&!isRival(b,a)&&
   friendFavorState(a,b)&&S.turn-(S.friendFavorTalks?.[rk(a,b)]?.turn??-99)>=6&&S.turn-(S.flags.lastFriendFavorTalk??-99)>=3);
 }
 function friendFavorWords(a,b,state){
@@ -49,7 +49,7 @@ function friendFavorEvent(only=null,partner=null){
 A.friendFavorTalk=function(id,other){if(modalOpen)return;const c=byId(id),friend=byId(other);if(!c||!friend)return;const ev=friendFavorEvent(c,friend);if(ev)pushEv(ev);};
 function friendFavorPanel(c){
  const note=c.friendFavorMoment,other=note&&byId(note.other);
- const last=note&&other&&S.turn-note.turn<12?`<p class="hint">与${parentLink(other.id)}说过的话：“${esc(note.said)}”<br>她答：“${esc(note.heard)}”</p>`:'';
+ const last=note&&other&&!friendshipTense(c,other)&&S.turn-note.turn<12?`<p class="hint">与${parentLink(other.id)}说过的话：“${esc(note.said)}”<br>她答：“${esc(note.heard)}”</p>`:'';
  const friend=harem().filter(o=>o!==c&&friendFavorReady(c,o)).sort((a,b)=>relGet(c,b)-relGet(c,a))[0];
  return last+(friend?`<button class="btn sm" onclick="A.friendFavorTalk(${c.id},${friend.id})">听她与${esc(fullName(friend))}谈心</button>`:'');
 }

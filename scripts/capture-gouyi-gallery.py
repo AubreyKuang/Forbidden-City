@@ -14,13 +14,15 @@ import argparse
 
 ROOT = Path(__file__).resolve().parent.parent
 parser = argparse.ArgumentParser()
-parser.add_argument('--gallery', choices=['gouyi', 'royal-heart', 'personal-context', 'family-bearing'], default='gouyi')
+parser.add_argument('--gallery', choices=['gouyi', 'royal-heart', 'personal-context', 'family-bearing', 'friendship-arcs'], default='gouyi')
 args = parser.parse_args()
 NAMES = ['meeting', 'profile', 'inquiry', 'lamplight', 'friendship', 'rivalry', 'chronicle', 'reading'] if args.gallery == 'gouyi' else ['young', 'adult', 'refusal', 'marriage', 'chronicle', 'check', 'intervention', 'romance-check', 'proposal', 'proposal-check', 'betrothal-check', 'family', 'single']
 if args.gallery == 'personal-context':
     NAMES = ['profile', 'past', 'prayer', 'foster', 'succession', 'official']
 if args.gallery == 'family-bearing':
     NAMES = ['noble', 'humble', 'proud', 'merchant', 'allowance', 'growth']
+if args.gallery == 'friendship-arcs':
+    NAMES = ['gift', 'favor', 'distance', 'chronicle', 'repair', 'reunion']
 REVISION = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
 DEST = ROOT / 'docs/screenshots' / args.gallery
 DEST.mkdir(parents=True, exist_ok=True)
