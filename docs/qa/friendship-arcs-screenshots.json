@@ -1,0 +1,72 @@
+{
+  "revision": "6c894736355be0fb1f409243224d5b57d0c0f598",
+  "capturedAt": "2026-11-16T02:49:58.083333+00:00",
+  "method": "Remote browser rendering of the real game with disposable public demo saves",
+  "provider": "https://www.thum.io/documentation/api/url",
+  "interactiveAcceptance": false,
+  "captures": [
+    {
+      "scene": "gift",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/friendship-arcs-gallery/gift.html?revision=6c894736355be0fb1f409243224d5b57d0c0f598",
+      "file": "docs/screenshots/friendship-arcs/gift.jpg",
+      "bytes": 144996,
+      "sha256": "9b8f539010b23daa8e17cf63b26f02e962c9f7d6d86c4f359b50f7d2b0634a43",
+      "visualReview": "passed",
+      "pageAssertions": "passed",
+      "reviewNote": "绿色通过提示清晰；本人赠礼心事、三种回应及立绘完整。"
+    },
+    {
+      "scene": "favor",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/friendship-arcs-gallery/favor.html?revision=6c894736355be0fb1f409243224d5b57d0c0f598",
+      "file": "docs/screenshots/friendship-arcs/favor.jpg",
+      "bytes": 145573,
+      "sha256": "baf369e72cb3a7785fc9929f01bfbaede61b4cf3a2b873258a7f2d521b129685",
+      "visualReview": "passed",
+      "pageAssertions": "passed",
+      "reviewNote": "绿色通过提示清晰；善妒者坦承嫉妒，立绘与选项完整。"
+    },
+    {
+      "scene": "distance",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/friendship-arcs-gallery/distance.html?revision=6c894736355be0fb1f409243224d5b57d0c0f598",
+      "file": "docs/screenshots/friendship-arcs/distance.jpg",
+      "bytes": 233504,
+      "sha256": "d687789b50d663f8580157be864f1f7f99351f57609d60d4f3721280c1bafb3d",
+      "visualReview": "passed",
+      "pageAssertions": "passed",
+      "reviewNote": "绿色通过提示清晰；具名旧友、渐渐疏远、错失共同话题及倾听按钮可见。"
+    },
+    {
+      "scene": "chronicle",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/friendship-arcs-gallery/chronicle.html?revision=6c894736355be0fb1f409243224d5b57d0c0f598",
+      "file": "docs/screenshots/friendship-arcs/chronicle.jpg",
+      "bytes": 302711,
+      "sha256": "0a41786ed99a4bfcb347b4fffd689392e92ad5aadf0f1adf54f89c4ff815e77a",
+      "visualReview": "passed",
+      "pageAssertions": "passed",
+      "reviewNote": "绿色通过提示清晰；三个不同月份的恩宠、赠礼和新交事件连成一条纪事。"
+    },
+    {
+      "scene": "repair",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/friendship-arcs-gallery/repair.html?revision=6c894736355be0fb1f409243224d5b57d0c0f598",
+      "file": "docs/screenshots/friendship-arcs/repair.jpg",
+      "bytes": 135815,
+      "sha256": "2eb11eb3111b6ba23bafa17ef4f6b6ba96ada4b66c35e8c69a49acd2e6c0b306",
+      "visualReview": "passed",
+      "pageAssertions": "passed",
+      "reviewNote": "绿色通过提示清晰；分别倾听结果、一次扣款和延后约定通过断言。"
+    },
+    {
+      "scene": "reunion",
+      "url": "https://aubreykuang.github.io/Forbidden-City/docs/qa/friendship-arcs-gallery/reunion.html?revision=6c894736355be0fb1f409243224d5b57d0c0f598",
+      "file": "docs/screenshots/friendship-arcs/reunion.jpg",
+      "bytes": 241820,
+      "sha256": "c4a50d1e61def74e13667912a8a1ca70821e8dcefb57a4c42a81d16b20c9613a",
+      "visualReview": "passed",
+      "pageAssertions": "passed",
+      "reviewNote": "绿色通过提示清晰；真实月末后重拾交情，双方纪事与存读档通过断言。"
+    }
+  ],
+  "reviewedAt": "2026-11-16T02:50:34.575685+00:00",
+  "allPageAssertionsPassed": true,
+  "allImagesReviewed": true
+}
