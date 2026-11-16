@@ -54,4 +54,4 @@ node --test tests/*.test.cjs
 
 ## 线上资源
 
-游戏及演示提交 `c4a29e0` 的正式入口、新剧情、订婚规则、事务日志、433 号素材与校验页面共十三项资源，逐字节对比结果见[线上校验](royal-heart-production.json)。[Pages 部署记录](https://github.com/AubreyKuang/Forbidden-City/actions/runs/43779890034)。
+合并后的游戏及演示提交 `a5e8b08` 的正式入口、新剧情、订婚规则、事务日志、433 号素材与校验页面共十三项资源，逐字节对比结果见[线上校验](royal-heart-production.json)。[Pages 部署记录](https://github.com/AubreyKuang/Forbidden-City/actions/runs/43780315374)。
