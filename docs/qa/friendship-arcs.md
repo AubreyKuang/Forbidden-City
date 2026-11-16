@@ -17,6 +17,23 @@ python3 scripts/capture-gouyi-gallery.py --gallery friendship-arcs
 
 六个公开虚构场景使用真实游戏脚本与隔离临时存储，覆盖赠礼误会、恩宠落差、人际关系、纪事回看、调解选择、月末修复。页面实际点击界面按钮，并检查人物状态、一次扣款、双方纪事与读档。绿色条表示页面内断言通过，红色条表示失败。
 
-本次本地 Chrome 启动出现 SIGABRT；使用线上远程浏览器运行这些场景并截取证据。远程页面断言与截图不等同于完整的本地 Playwright 鼠标、键盘验收。发布后补入逐张检查结果。
+本次本地 Chrome 启动出现 SIGABRT；使用线上远程浏览器运行这些场景并截取证据。远程页面断言与截图不等同于完整的本地 Playwright 鼠标、键盘验收。六个场景的页面内交互、存读档与截图均已检查通过。
 
 [场景脚本](friendship-arcs-gallery/bootstrap.js) · [玩法与文学参考](../character-experiences/friendship-arcs.md)
+
+## 线上证据
+
+线上核对 157 个入口与脚本，内容与合并后的代码一致。六个场景均通过页面内断言；纪事场景按实际的「人物纪事」区域核对，避免误读上方「人生篇章」中的另一份列表。
+
+| 场景 | 核对结果 | 截图 |
+| --- | --- | --- |
+| 赠礼误会 | 本人心事、未在场者不出镜、打开对话后读档 | [赠礼](../screenshots/friendship-arcs/gift.jpg) |
+| 恩宠落差 | 善妒者坦承嫉妒、有了嫌隙、未完对话续接 | [恩宠](../screenshots/friendship-arcs/favor.jpg) |
+| 渐渐疏远 | 关系页显示具名旧友、过去与当下的差别 | [关系](../screenshots/friendship-arcs/distance.jpg) |
+| 人物纪事 | 按主题筛选、连看三则前因后续、本人感受、读档 | [纪事](../screenshots/friendship-arcs/chronicle.jpg) |
+| 分别倾听 | 实际点击调解选择，仅扣一次精力，双方记录后续约定 | [调解](../screenshots/friendship-arcs/repair.jpg) |
+| 再坐一回 | 执行实际月末，履行先前约定，双向纪事与重拾交情 | [后续](../screenshots/friendship-arcs/reunion.jpg) |
+
+公开场景使用虚构姓名和压缩过的准备过程，便于直接检查不同阶段；正式游戏按真实月份、实际交往与低频条件发生。它们使用隔离存储，不读取或覆盖玩家进度。
+
+[线上资源核对](friendship-arcs-production.json) · [浏览器截图记录](friendship-arcs-screenshots.json)

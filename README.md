@@ -609,6 +609,10 @@ NPC 记忆区分客观事件与人物主观理解。同一场争执，受助者�
 
 可以分别听她们解释，问是否愿意再谈，或让两人各自静一静。答应共坐后，要等几个月再看后续；深怨未解可以拒绝，修复也不会抹掉旧事。有隔阂时，同宫日常和好友邀约不会继续装作毫无芥蒂。事件低频出现，尊重性格、实际交往、病痛与离宫状态。
 
+| 好意被误读，她说出自己的心事 | 渐渐疏远，双方保留各自的记忆 |
+| --- | --- |
+| <img src="docs/screenshots/friendship-arcs/gift.jpg" alt="寒门妃嫔谈起回礼与自尊，皇帝可以分别倾听或让两人各自静一静" width="420"> | <img src="docs/screenshots/friendship-arcs/distance.jpg" alt="人物关系展示交情的来历、渐渐疏远及她本人的感受" width="420"> |
+
 [完整玩法与文学参考](docs/character-experiences/friendship-arcs.md) · [验证记录](docs/qa/friendship-arcs.md)
 
 ### 钦安殿、国师与东海之约
