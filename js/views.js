@@ -385,6 +385,7 @@ function viewConsort(){
       actionGroup('探亲与省亲',familyActions)+
       natalVisitorsPanel(c)+
       detailSection('家族与人际',`${kids.length?`<div>子女：${kids.map(k=>`<button class="btn quiet sm" onclick="A.go('kid',${k.id})">${esc(k.name)}</button>`).join(' ')}</div>`:''}${family}`)+
+      marriedSisterChildrenPanel(c)+
       (act?detailSection('与孩子的日常',consortFamilyPanel(c)):'')+
       (act?detailSection('牵挂远方的孩子',motherConcernPanel(c)):'')+
       detailSection('孩子的身世',consortParentagePanel(c))+
