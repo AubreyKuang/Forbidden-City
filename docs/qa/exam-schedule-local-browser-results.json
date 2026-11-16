@@ -1,6 +1,6 @@
 {
   "url": "http://127.0.0.1:8428/",
-  "started": "2026-11-16T04:07:06.963Z",
+  "started": "2026-11-16T04:10:19.671Z",
   "runs": [
     {
       "name": "schedule",
@@ -17,17 +17,17 @@
       "passed": true,
       "graduates": [
         {
-          "name": "曹承允",
+          "name": "乔谟",
           "rank": "状元",
           "office": "翰林院修撰"
         },
         {
-          "name": "薛允和",
+          "name": "邢文叙",
           "rank": "榜眼",
           "office": "翰林院编修"
         },
         {
-          "name": "程国桢",
+          "name": "江怀瑜",
           "rank": "探花",
           "office": "翰林院编修"
         }
@@ -48,17 +48,17 @@
       "passed": true,
       "graduates": [
         {
-          "name": "尹济安",
+          "name": "石安节",
           "rank": "状元",
           "office": "翰林院修撰"
         },
         {
-          "name": "徐云深",
+          "name": "方延章",
           "rank": "榜眼",
           "office": "翰林院编修"
         },
         {
-          "name": "沈尚义",
+          "name": "严定邦",
           "rank": "探花",
           "office": "翰林院编修"
         }
@@ -66,6 +66,6 @@
     }
   ],
   "browser": "157.0.8103.78",
-  "finished": "2026-11-16T04:07:21.852Z",
+  "finished": "2026-11-16T04:10:35.169Z",
   "passed": true
 }
