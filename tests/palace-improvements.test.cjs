@@ -359,10 +359,10 @@ test('triplets keep unique IDs and per-sex birth order, with one maternal outcom
     finishDelivery(mother);assert.equal(Q.filter(e=>e.title==='同生手足的安置').length,1);`);
 });
 
-test('birth omens apply a bounded one-time bonus, persist and do not rewrite old children',()=>{
+test('birth omens apply bounded annual effects, persist and do not rewrite untagged children',()=>{
   const {run}=boot();
-  run(`var child=makeKid(harem()[0],'f','灵昭');child.lit=98;applyBirthOmen(child,'star');assert.equal(child.lit,100);
-    applyBirthOmen(child,'star');assert.equal(child.lit,100);assert.equal(child.birthTraits.initial.lit,100);
+  run(`var child=makeKid(harem()[0],'f','灵昭');child.lit=98;var initial=child.birthTraits.initial.lit;applyBirthOmen(child,'star');assert.equal(child.lit,98);S.turn+=12;annualBirthOmenTick();assert.equal(child.lit,100);
+    applyBirthOmen(child,'star');assert.equal(child.lit,100);assert.equal(child.birthTraits.initial.lit,initial);
     assert.match(birthTags(child),/文星流彩/);var id=child.id;save('1');load('1');migrate();assert.equal(kidById(id).birthOmen,'star');
     delete kidById(id).birthOmen;var old=kidById(id).lit;migrate();assert.equal(kidById(id).lit,old);assert.equal(birthTags(kidById(id)),'');`);
 });

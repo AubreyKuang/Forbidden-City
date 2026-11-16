@@ -115,7 +115,7 @@ function viewResidences(){
     }).join('')}</div>`;
 }
 function residencePetitionFor(c){
-  if(!inPalace(c)||c.rank===8||S.turn-(c.lastResidenceRequest??-99)<36||S.turn-(c.lastResidenceMove??-99)<6)return null;
+  if(!inPalace(c)||c.rank===8||residenceRequestCooling(c)||S.turn-(c.lastResidenceMove??-99)<6)return null;
   const choices=[];
   const peers=palaceResidents(c.palace).filter(x=>x!==c),children=nurseryChildren(c.palace),own=children.filter(k=>youngChildMother(k)?.id===c.id),otherKids=children.filter(k=>youngChildMother(k)?.id!==c.id);
   const room=c.residenceRoom==='main'?'main':'side';
@@ -145,14 +145,18 @@ function residencePetitionFor(c){
   }
   return choices[0]||null;
 }
+function residenceRequestCooling(c){
+  return journalContentVersion()>=27?S.turn-Math.max(c.lastResidenceRequest??-99,S.flags.lastResidenceRequest??-99)<24:S.turn-(c.lastResidenceRequest??-99)<36;
+}
 function residencePetitionEvent(person){
-  if(!person&&(S.turn-(S.flags.lastResidenceRequest??-99)<12||!chance(.12)))return null;
+  if(!person&&(S.turn-(S.flags.lastResidenceRequest??-99)<(journalContentVersion()>=27?24:12)||!chance(.12)))return null;
   const candidates=(person?[person]:harem()).map(c=>({c,request:residencePetitionFor(c)})).filter(x=>x.request);if(!candidates.length)return null;
   const {c,request}=pick(candidates),{plan,reason,peer}=request;
-  let resolved=false;
-  const valid=()=>!resolved&&inPalace(c)&&JSON.stringify(residenceMovePlan(c,plan.to,plan.room))===JSON.stringify(plan);
+  let resolved=false,recorded=false;const current=journalContentVersion()>=27;
+  const valid=()=>!resolved&&inPalace(c)&&(!current||recorded||!residenceRequestCooling(c))&&JSON.stringify(residenceMovePlan(c,plan.to,plan.room))===JSON.stringify(plan);
+  const record=()=>{if(current&&recorded)return;recorded=true;S.flags.lastResidenceRequest=S.turn;c.lastResidenceRequest=S.turn;story(c,`【迁宫之请】${reason}请求迁往${plan.to}${plan.room==='main'?'正殿':'侧殿'}${plan.swap?'，拟与'+fullName(byId(plan.swap))+'换宫':''}。`);};
   return {title:'迁宫之请',cast:[c,peer].filter(Boolean),present:[c],valid,
-    onQueue:()=>{S.flags.lastResidenceRequest=S.turn;c.lastResidenceRequest=S.turn;story(c,`【迁宫之请】${reason}请求迁往${plan.to}${plan.room==='main'?'正殿':'侧殿'}${plan.swap?'，拟与'+fullName(byId(plan.swap))+'换宫':''}。`);},
+    onQueue:record,...(current?{onShow:record}:{}),
     text:`${cName(c)}提起居处，先看了看你的神色。\n${reason}\n她想迁往${plan.to}${plan.room==='main'?'正殿':'侧殿'}。${plan.swap?`这会让${fullName(byId(plan.swap))}换往${plan.from}正殿。`:''}`,choices:[
       {t:'准她所请 · 精力−1',cond:()=>E().energy>0,f:()=>{if(!valid())return null;const result=settleResidenceMove(c,plan,'准其迁宫之请');if(result)resolved=true;return result;}},
       {t:'仍按原居处，温言说明',f:()=>{if(!valid())return null;resolved=true;const text=`请求迁往${plan.to}，陛下以宫室已有安排为由未允。她${['骄纵','骄矜'].includes(c.trait)?'听后不快，仍惦记着想换居的缘由':'领旨仍住原处，原来的难处尚需慢慢协调'}。`;story(c,text);cchg(c,{mood:['骄纵','骄矜'].includes(c.trait)?-5:-1});save('auto');return text;}},

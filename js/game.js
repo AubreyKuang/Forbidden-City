@@ -366,6 +366,7 @@ A.endMonth=function(){
     log('查账回奏未获批复，弹劾案已归档。');
   }
   if(S.month>12){S.month=1;S.year++;e.age++;newYear=true;alive().forEach(c=>c.age++)}
+  annualBirthOmenTick();
   const revenue=legacyPendingAction()?null:annualRevenueTick();
   if(!legacyPendingAction()){postingTick();incognitoTick();}
   homeLeaveTick();
