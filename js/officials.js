@@ -45,14 +45,14 @@ function initializeOfficialHouse(c,h,family){
 }
 function officialEntries(){
   const entries=[],seen=new Set();
-  for(const c of S.consorts){const h=houseOf(c);if(!h)continue;
+  for(const c of familyCourtHosts()){const h=houseOf(c);if(!h)continue;
     for(const role of officialRoles(h)){const p=officialPerson(h,role);if(!p||seen.has(p.id))continue;seen.add(p.id);entries.push({c,h,p,role,key:c.id+':'+role});}
   }
   return entries;
 }
 function officialEntry(key){
   const [id,role]=String(key).split(':');if(role!=='father'&&!/^brother(?:[2-9]\d*)?$/.test(role)&&!/^relative-?\d+$/.test(role))return null;
-  const c=byId(Number(id)),h=c&&houseOf(c),p=officialPerson(h,role);return p?{c,h,p,role,key:c.id+':'+role}:null;
+  const c=familyHostById(id),h=c&&houseOf(c),p=officialPerson(h,role);return p?{c,h,p,role,key:c.id+':'+role}:null;
 }
 function officialStatus(p){
   if(!officialAlive(p))return p.death?.kind==='battle'?'阵亡':'已故';
@@ -205,7 +205,7 @@ function assignOfficialTask(e,id){
 function officialTaskTick(){
   for(const e of officialEntries()){
     const {p,c,role}=e,j=p.commission;if(!j||!officialAlive(p)||S.turn<j.due)continue;
-    const contact=byId(j.contact),familyContact=officialPerson(contact?.house,role)?.id===p.id?{...e,c:contact}:e;
+    const contact=familyHostById(j.contact),familyContact=officialPerson(contact?.house,role)?.id===p.id?{...e,c:contact}:e;
     delete p.commission;p.away=j.wasAway;let text;
     if(j.outcome==='death'){text=`奉差${j.title}途中遇伏，率部断后，力战身亡。`;officialDeath(familyContact.c,role,text,'battle');}
     else{

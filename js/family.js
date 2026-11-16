@@ -1,5 +1,5 @@
 /* ============ 母子日常与御花园小宴 ============ */
-const inPalace = c => c?.alive && !c.gone && !c.cold && !c.templeStay && !c.homeLeave;
+const inPalace = c => c?.alive && !c.familyArchive && !c.gone && !c.cold && !c.templeStay && !c.homeLeave;
 // Marriage alone does not move a child: a local couple may still await an estate.
 const childHasLeftPalace = k => !!(immortalAway(k) || k?.away || k?.estate || k?.princeEstate || k?.jailed || k?.templeStay || k?.removedFromRoyal || k?.princessMarriage==='frontier');
 const childInPalace = k => !!k?.alive && !childHasLeftPalace(k);

@@ -1,7 +1,7 @@
 /* 娘家姐妹嫁入另一个已知家族后，仍是有感受、有来往的人。 */
 function courtWives(person){
   const wives=[],seen=new Set();
-  for(const c of S.consorts){const h=houseOf(c);if(!h||seen.has(h.father.id))continue;seen.add(h.father.id);
+  for(const c of familyCourtHosts()){const h=houseOf(c);if(!h||seen.has(h.father.id))continue;seen.add(h.father.id);
     for(const p of natalPeople(h))if(p.sex==='f'&&p.alive&&p.married&&p.spouse?.personId===person.p.id)wives.push({c,h,p});
   }
   return wives;

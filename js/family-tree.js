@@ -2,7 +2,7 @@
 const layeredFamilyActive=()=>!!S&&journalContentVersion()>=19;
 function familyTreeRegistry(){
   const houses=[],seen=new Set(),relatives=[];
-  for(const c of S.consorts){const h=houseOf(c);if(!h||seen.has(h.father.id))continue;seen.add(h.father.id);houses.push({c,h});}
+  for(const c of familyCourtHosts()){const h=houseOf(c);if(!h||seen.has(h.father.id))continue;seen.add(h.father.id);houses.push({c,h});}
   for(const {c,h} of houses)for(const p of natalPeople(h))relatives.push({c,h,p});
   const men=houses.flatMap(({c,h})=>[{c,h,p:h.father,role:'father'},...brotherRoles(h).map(role=>({c,h,p:h[role],role})),...natalPeople(h).filter(p=>p.sex==='m').map(p=>({c,h,p,role:'relative'+p.id}))]);
   const nodes=relatives.map(e=>{
@@ -18,7 +18,7 @@ function familyTreeChildren(person,registry=familyTreeRegistry()){
 function familyTreeFoldKey(c,id){return String(houseOf(c).father.id)+':'+id;}
 function familyTreeExpanded(c,id,defaultOpen=false){return UI.familyTreeFolds?.[familyTreeFoldKey(c,id)]??defaultOpen;}
 A.familyTreeToggle=function(id,person,defaultOpen=false){
-  const c=byId(id);if(!c||!houseOf(c))return;
+  const c=familyHostById(id);if(!c||!houseOf(c))return;
   const panel=$('#panel'),branches=[...(panel.querySelectorAll?.('.family-branch')||[])].map(e=>e.open),scroll=panel.scrollTop,
     graph=panel.querySelector?.('.graph-wrap'),graphX=graph?.scrollLeft,graphY=graph?.scrollTop;
   const key=familyTreeFoldKey(c,person);(UI.familyTreeFolds ||= {})[key]=!familyTreeExpanded(c,person,defaultOpen);render();
@@ -54,7 +54,7 @@ function familyHouseTree(c,list=false){
 const treeNatalEntry=natalEntry;
 natalEntry=function(id,relative){
   const own=treeNatalEntry(id,relative);if(own||!layeredFamilyActive())return own;
-  const c=byId(+id),h=c&&houseOf(c);if(!h)return null;
+  const c=familyHostById(id),h=c&&houseOf(c);if(!h)return null;
   const node=familyTreeRegistry().nodes.find(n=>String(n.p.id)===String(relative)&&n.father?.h.father.id===h.father.id);
   return node?{c,h,p:node.p,originHost:node.c.id}:null;
 };
