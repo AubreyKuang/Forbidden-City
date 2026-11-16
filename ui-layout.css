@@ -33,6 +33,8 @@
 .chapter-body .detail-content{padding:0;gap:10px}
 .chapter-body .story{max-height:none;overflow:visible}
 .chapter-body .life-chapters h4{font-size:14px}
+.natal-visitor{display:flex;align-items:center;gap:10px;padding:6px 10px;background:#fff3cf;border:2px solid var(--gold2);border-radius:8px}
+.natal-visitor>.grow{min-width:0}
 .action-group{padding:14px 16px;background:#f4ead8;border:1px solid #dfccb0;border-radius:10px;min-width:0}
 .action-group-label{margin:0 0 10px;font-size:13px;color:#715139;font-weight:700}
 .action-group .acts{margin:0;gap:8px}

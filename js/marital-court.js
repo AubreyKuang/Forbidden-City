@@ -104,8 +104,10 @@ natalLifePanel=function(c,p){
   return maritalLifePanel(c,p)+(p.maritalMood?detailSection('婚后心绪',`<p>${esc(p.maritalMood)}${p.maritalNews?' · '+esc(p.maritalNews.text):''}</p>${person?`<p>丈夫履历：${careerLink(person)} · ${esc(officialStatus(person.p))}</p>`:''}${p.widow?`<p>亡夫：${esc(p.widow.name)} · ${p.widow.imperial?'原为赐婚':'两家旧约'}。${p.widow.authorized?'已获准依本人意愿重新议亲。':'原婚姻保留记载，尚未重新议亲。'}</p>`:''}${p.widow?.meeting?`<button class="btn" onclick="A.widowMeeting(${c.id},${p.id})">听她谈新认识的人</button>`:''}${widowFutureReady(c,p)?`<button class="btn" onclick="A.widowFuture(${c.id},${p.id})">听她谈往后婚事<small>同意重议需精力−1</small></button>`:''}`):'');
 };
 function natalVisitorsPanel(c){
+  if(!inPalace(c))return '';
   const visitors=natalPeople(houseOf(c)).filter(p=>p.visit&&p.visit.host===c.id&&natalInPalace(c,p));
-  return visitors.length?`<section class="detail-section"><h3>娘家亲眷在宫中</h3>${visitors.map(p=>`<p>${natalLabel(c,p)} <button class="person-link" onclick="A.go('natal','${c.id}:${p.id}')">${esc(p.name)} ↗</button> <span class="tag">${esc(natalStayLabel(p))}</span></p>`).join('')}</section>`:'';
+  const relatives=visitors.map(p=>`<div class="natal-visitor"><div class="grow">${natalLabel(c,p)} <button class="person-link" onclick="A.go('natal','${c.id}:${p.id}')">${esc(p.name)} ↗</button> <span class="tag">${esc(natalStayLabel(p))}</span></div></div>`).join('');
+  return detailSection('娘家亲眷在宫中',motherVisitorRow(c)+relatives);
 }
 function natalSpouseSummary(p){
   if(!p.spouse)return '';
