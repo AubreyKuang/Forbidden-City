@@ -126,7 +126,7 @@ function jinyiweiRareAlert(ev){
   Object.assign(note,{subject,turn:S.turn,urgent:!repeated});
   if(!recordJinyiweiNotice(note)||repeated)return null;
   const commander=jinyiwei().commander;
-  return {title:`锦衣卫急报 · ${note.title}`,por:commander,
+  return {title:`锦衣卫急报 · ${note.title}`,por:commander,jinyiweiNoticeKey:note.key,
     text:`${commander.name}递来密札：\n${note.text}\n密札已存。请陛下接阅原事，再决定如何处置。`,
     choices:[{t:'阅毕，查看原事'}]};
 }
@@ -154,7 +154,7 @@ function jinyiweiFeudAlert(previous){
   const feudPairs=pairs.map(pair=>pair.key).sort();
   const urgent=!notes.some(note=>note.urgent&&note.feudPairs&&note.turn===S.turn);
   const note={key:`feud:${S.turn}:${feudPairs.join(',')}`,title,text,date:dateStr(),turn:S.turn,feudPairs,urgent};
-  if(recordJinyiweiNotice(note)&&urgent)pushEv({title:'锦衣卫 · '+title,por:jinyiwei().commander,text,
+  if(recordJinyiweiNotice(note)&&urgent)pushEv({title:'锦衣卫 · '+title,por:jinyiwei().commander,text,jinyiweiNoticeKey:note.key,
     choices:[{t:'记下嫌隙，继续留意'}]});
 }
 const rareCasesSection=casesSection;

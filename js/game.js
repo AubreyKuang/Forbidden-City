@@ -244,6 +244,7 @@ function choose(i,inputValue){
   if(modalResult)return;
   if(!eventStillValid(curEv)){toast('人物处境已变，这件事已不再适用。');nextEv();return;}
   const c=curEv&&curEv.choices[i];if(!c)return;if(c.cond&&!c.cond())return;
+  if(i===0&&curEv.jinyiweiNoticeKey&&!PalaceActions.replaying)rememberJinyiweiAcknowledgement(curEv);
   const val=curEv.input?((entered||'').trim().slice(0,curEv.input.max||4)||curEv.input.def):undefined;
   AU.sfx('click');const res=c.f?c.f(val):null;
   if(res) showRes(res); else nextEv();

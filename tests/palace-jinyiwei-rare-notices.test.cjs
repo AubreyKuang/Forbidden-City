@@ -56,3 +56,37 @@ test('a real action raises only the first severe feud popup of the month and rep
     assert.equal(jinyiwei().rareNotices.at(-1).urgent,false);assert.match(casesSection(),/沈知微/);
     assert.equal(palaceCases().length,0);`);
 });
+
+for(const [title,setup,resumed] of [
+  ['锦衣卫急报 · 遇刺',`S.flags.marketRescueSeen=true;S.flags.xieCityAttempt=S.turn;
+    fenghuaState().lastCity=S.turn;A.out('city');`,'遇刺'],
+  ['锦衣卫 · 新怨密报',`S.rel[rk(q,a)]=-38;A.night(a.id);choose(1);`,null],
+])test(`${title} keeps an acknowledgement even if the autosave transaction is lost on reload`,()=>{
+  const auto='chengongji_v1_auto',game=world(),session=new Map();
+  game.force(.95,.7);game.ctx.assert=assert;
+  game.run(`setupJyw();${setup}assert.equal(curEv.title,${JSON.stringify(title)});`);
+  const durable=new Map(game.storage);
+  const attach=(browser,tabSession=session)=>{
+    browser.ctx.sessionStorage={getItem:key=>tabSession.get(key),setItem:(key,value)=>tabSession.set(key,value)};
+    browser.ctx.indexedAutosave={...browser.ctx.localStorage,getConfirmedItem:key=>durable.get(key)};
+    browser.ctx.assert=assert;
+    browser.run('SaveManager.getStorage=()=>indexedAutosave;');
+    return browser;
+  };
+  attach(game).run('choose(0);');
+  assert.equal(session.size,1);
+  assert.notEqual(game.storage.get(auto),durable.get(auto));
+  const reload=()=>attach(boot(89,new Map(durable)));
+  const check=browser=>browser.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);
+    assert.equal(curEv?.title??null,${JSON.stringify(resumed)});assert.equal(jinyiwei().rareNotices.length,1);`);
+  check(reload());
+  check(reload()); // A second reload can interrupt the recovered write as well.
+
+  const differentSlot=reload();differentSlot.storage.set('chengongji_v1_1',durable.get(auto));
+  differentSlot.run(`A.load(1);assert.equal(curEv.title,${JSON.stringify(title)});`);
+  const newRevision=JSON.parse(durable.get(auto));newRevision.savedAt+=1000;
+  const differentSave=reload();differentSave.storage.set(auto,JSON.stringify(newRevision));
+  differentSave.run(`A.load('auto');assert.equal(curEv.title,${JSON.stringify(title)});`);
+  const differentTab=attach(boot(89,new Map(durable)),new Map());
+  differentTab.run(`A.load('auto');assert.equal(curEv.title,${JSON.stringify(title)});`);
+});

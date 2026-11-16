@@ -323,12 +323,40 @@ A.load=function(slot){
   }
   restorePalaceSlot(slot);
 };
+
+// A report has one acknowledgement choice. Keep that tiny action in this tab
+// while IndexedDB commits the usual autosave. Never store the world here.
+const JINYIWEI_ACK_KEY=SKEY+'report-acknowledgements';
+function readJinyiweiAcknowledgements(){
+  try{
+    const entries=JSON.parse(sessionStorage.getItem(JINYIWEI_ACK_KEY)||'[]');
+    return Array.isArray(entries)?entries:[];
+  }catch{return [];}
+}
+function rememberJinyiweiAcknowledgement(event){
+  const storage=SaveManager.getStorage(),key=SKEY+'auto';
+  if(!storage?.getConfirmedItem)return;
+  try{
+    // SaveManager appends savedAt last. Avoid parsing a long save on this click.
+    const revision=raw=>Number(/,"savedAt":(\d+)}$/.exec(raw?.slice(-40))?.[1]);
+    const revisions=[...new Set([revision(storage.getConfirmedItem(key)),revision(storage.getItem(key))].filter(Number.isFinite))];
+    if(!revisions.length)return;
+    const recent=readJinyiweiAcknowledgements().filter(entry=>entry?.notice!==event.jinyiweiNoticeKey);
+    recent.push({notice:event.jinyiweiNoticeKey,revisions});
+    sessionStorage.setItem(JINYIWEI_ACK_KEY,JSON.stringify(recent.slice(-8)));
+  }catch{/* Standard autosave still runs if session storage is unavailable. */}
+}
+function resumeJinyiweiAcknowledgement(){
+  if(!curEv?.jinyiweiNoticeKey||PalaceActions.blocked)return;
+  if(readJinyiweiAcknowledgements().some(entry=>entry?.notice===curEv.jinyiweiNoticeKey&&
+    Array.isArray(entry.revisions)&&entry.revisions.includes(S.savedAt)))choose(0);
+}
 function restorePalaceSlot(slot){
   if(!load(slot)){
     toast(SaveManager.status(SaveManager.getStorage(),SKEY+slot)==='newer'?palaceSaveError(slot):'此存档为空或无法读取');
     return;
   }
-  showRestoredPalace();if(!modalOpen)offlineMemorials();
+  showRestoredPalace();if(slot==='auto')resumeJinyiweiAcknowledgement();if(!modalOpen)offlineMemorials();
 }
 
 function snapshotYear(){if(typeof PalaceActions!=='undefined'){if(PalaceActions.replaying)return;if(PalaceActions.busy){PalaceActions.requestSnapshot();return;}}try{SaveManager.snapshot(SaveManager.getStorage(),SKEY+'auto',PalaceActions.payload(),validPalaceSave,{label:'y-'+S.gen+'-'+S.year,day:S.turn,date:dateStr()})}catch(e){}}
