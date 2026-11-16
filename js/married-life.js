@@ -5,9 +5,11 @@ function marriageNature(p){
   if(p.marriageNature)return p.marriageNature;
   const random=mulberry32(p.seed||String(p.id||p.name).split('').reduce((n,c)=>Math.imul(n,31)+c.charCodeAt(0),7));
   const trait=p.appearance?.trait||p.trait;
-  const temperament=({温婉:'温厚',将门:'爽朗',骄矜:'好胜',沉静:'沉静',体弱:'敏感',持重:'矜持'})[trait]||COUPLE_TEMPERAMENTS[Math.floor(random()*6)];
+  let temperament=({温婉:'温厚',将门:'爽朗',骄矜:'好胜',沉静:'沉静',体弱:'敏感',持重:'矜持'})[trait]||COUPLE_TEMPERAMENTS[Math.floor(random()*6)];
   const hobby=p.quality||({scholar:'books',martial:'riding',frontier:'riding',household:'kindness'})[p.route]||p.youthIdeal||
     (Number.isFinite(p.lit)?youthIdeal(p):['books','riding','kindness'][Math.floor(random()*3)]);
+  if(princessMarriageVoicesActive()&&p.sex==='f'&&S?.children?.includes(p))
+    temperament=({好奇:'爽朗',灵动:'爽朗',爽直:'爽朗',好胜:'好胜',自矜:'好胜',仁厚:'温厚',内敛:'沉静',审慎:'矜持'})[childDisposition(p)];
   return {temperament,hobby,spending:random()<.5?'节俭':'讲究',space:random()<.5?'喜欢相伴':'需要独处'};
 }
 function marriageFit(k,p){
