@@ -14,6 +14,7 @@ const IMMORTAL_VOICES={
  自矜:'我愿从普通弟子做起。靠皇室名号借来的敬重，不算我的。'
 };
 function immortalEnabled(){return typeof PalaceActions==='undefined'||PalaceActions.contentVersion>=7;}
+function immortalPalaceLessonsEnabled(){return journalContentVersion()>=50;}
 function immortalAway(k){return !!(immortalEnabled()&&['learning','trial','sect'].includes(k?.immortal?.stage));}
 function immortalBirthChance(k){return k.sex==='f'?.24:k.birthTraits?.mother?.rank===8?.015:.06;}
 function immortalRoot(k){
@@ -34,6 +35,9 @@ function immortalMothers(k){
 }
 function immortalMotherFeeling(c,k,kind){
  const role=c.id===k.mom?'亲生的孩子':'亲手照护的孩子';
+ if(kind==='palace-study')return isSolitary(c)?`她听${k.name}讲完今日课业，默默替孩子理好书页。${role}仍在京中，来日还可以慢慢谈。`:
+ ['骄纵','骄矜','善妒','城府'].includes(c.trait)?`她替${k.name}的进益高兴，也忍不住问仙师可曾夸奖。见${role}把课业记得认真，又叮嘱不必事事争先。`:
+ `她听${k.name}说起在京修习的这件小事，既欣慰又怕${role}过于劳累，叮嘱学完也要按时用饭休息。`;
  if(kind==='departure')return isSolitary(c)?`她素来清冷，替${k.name}系紧披风时却久久不肯松手。${role}真要远行，她只低声嘱咐，想家就写信。`:
  ['骄纵','骄矜','善妒','城府'].includes(c.trait)?`她既舍不得${role}离开，也担心山门不会像宫中一样照拂。几封话说得强硬的信，末尾都添了“平安便好”。`:
  ['将门','爽直','持重'].includes(c.trait)?`她逐项问清行程，送走${role}后才发觉手心攥得生疼。口中说放心得下，夜里仍留了灯。`:
@@ -105,7 +109,7 @@ function immortalTravelPetition(k){
      return finish('远行获准',`听过这回求情，陛下改了主意，准${k.name}随师启程。`,()=>{r.stage='invited';chg({treasury:-30});immortalDepart(k);});
     }},
    {t:'仍不准远行，留在京中',f:()=>finish('仍留京中',`陛下听过求情，仍不准${k.name}离京。侍从撤下行装，他把未寄出的拜师帖收回书匣。`,()=>{r.stage='closed';})},
-   {t:'先留京修习，半年后再议',f:()=>finish('暂缓远行',`陛下准${k.name}继续在京修习，远行一事待半年后再议。他把想问仙师的话先抄在册中。`,()=>{r.stage='invited';r.due=S.turn+6;})}
+   {t:immortalPalaceLessonsEnabled()&&kidAge(k)<16?'先在京修习，成年后再议启程':'先留京修习，半年后再议',f:()=>finish('暂缓远行',immortalPalaceLessonsEnabled()?`${k.name}把想问仙师的话先抄在册中，继续在京修习。半年后听课业近况，${kidAge(k)<16?'满十六岁再谈启程':'往后仍可重议远行'}。`:`陛下准${k.name}继续在京修习，远行一事待半年后再议。他把想问仙师的话先抄在册中。`,()=>{r.stage='invited';if(immortalPalaceLessonsEnabled())immortalPalaceStay(k);else r.due=S.turn+6;})}
   ]};
 }
 function immortalDiscover(k){
@@ -146,10 +150,75 @@ function immortalNews(k){
  };
  const v=variants[trait];return {topic:v[0],text:`${d.name}的消息由${r.merit%2?'行商':'游方道人'}带回。${v[1]}`,benefit:v[2]};
 }
+// Palace lessons continue the promise to wait; they never repeat the introduction.
+const IMMORTAL_PALACE_LESSONS=[
+ {title:'一招一息',sword:'仙师托国师带来新的剑谱批注。孩子练了许久起手式，今日终于能稳稳收住木剑，偏偏下一式又乱了脚步。',cloud:'仙师托国师带来新的课业批注。孩子在钦安殿听风辨息，终于听出两声玉磬的不同，静下来时却又抓不住那一线清音。',
+  voices:['为什么越想抓住它，反而越听不清、看不准？','前一回还做不好，今日总算有一点进步。下一回我还想再试。','我学会这一点后，也想讲给还不明白的人听。','我想再试一遍，等心定下来再给父皇看。','哪里错了，就请指出来。我照着改。','原来开头这么难！可刚才那一下，我真的做到了。','我把做对和做错的几次都记下来了，想找出差别。','请照普通弟子的规矩教我，不必只挑好听的说。'],
+  choices:[['陪看课业，请国师点出诀窍','skill','父皇陪着核对课业，国师把最容易错的一处重新示范。'],['不急着求成，把根基练稳','vir','父皇没有催着显本领，约定先练熟基本功，再添新课。']]},
+ {title:'书页疑处',sword:'仙师寄来的剑论说“胜人之前先胜己”。孩子在旁边写了几行小字，想知道退让与怯懦究竟怎样分辨。',cloud:'仙师寄来的札记谈“盈虚有数”。孩子在空白处圈出一段，疑惑若事事有数，读书与助人又为了什么。',
+  voices:['一句话换个地方想，好像就不一样了。能容我再多问一句吗？','若先认定做不到，那还怎样向前？我想把这处问明白。','若有人正等着帮忙，总不能拿一句道理便走开吧？','我在这页停了好几日。今日想把没想通的地方说出来。','话说得好听也须做得到，我想听一个实在的例子。','我写了三个反问，先生看完竟笑了，说问得还算有趣。','先分清书里说的情形，再下判断，或许才不容易错。','我敬重先生，可不懂的地方也不愿装作懂了。'],
+  choices:[['一起辨明，把疑问写信请教','lit','父皇听完疑问，与孩子写下一封请教师长的信，未把不解当作不敬。'],['以宫中见闻讲清道理','vir','父皇从日常待人讲起，让孩子记住书上的道理还须在事情里体会。']]},
+ {title:'迟迟无进',sword:'这半年的木剑练习遇上了瓶颈，同一式总在转身时失准。国师收起计数的木签，让孩子先讲哪里最难。',cloud:'这半年的听息功课迟迟没有新进展。国师没有添课，只把旧札记摊开，让孩子自己说一说困在何处。',
+  voices:['从前有用的办法，为什么这回不灵了？我想换个角度试试。','我知道不能逞强，可停在这里，心里实在不甘。','旁人也会有这样的时候吧？若日后有人卡住，我想陪他慢慢练。','我没敢说，只怕让父皇觉得那些日子都白费了。','做不好就是做不好。我不想拿借口搪塞。','我一着急就乱，连平常会的也忘了，真想把这团心事解开。','我把起居与练习都对过，想先找出最该改的一处。','我不愿让先生看轻，也知道硬撑并不体面。'],
+  choices:[['拆开难处，循序练习','skill','父皇与国师把难处拆成小节，孩子记下先练哪一节，不再只盯着成败。'],['告诉孩子：一时无进并非白费','love','父皇听完挫败，没有拿旁人作比较。孩子愿意把下回的难处也说出来。']]},
+ {title:'收手有度',sword:'国师安排侍卫在宫内陪练，只用包布木剑。孩子占了上风，对方却一脚踩偏；国师当即叫停，问这一招该怎样收。',cloud:'钦安殿里，一名小内侍端水时打翻了课业墨碟。国师先叫人收拾滑地，再问孩子：方才心乱时，该先顾哪一件事。',
+  voices:['先看清别人怎么了，再想自己的功课，对吗？','我原想把这一回做好，可不能让人因此受伤。','先问问他有没有事，课业晚些再补也来得及。','我方才没说出口，其实一直担心他。','人要紧，余下的事稍后再说。','方才心里一跳，原来学会停下来也算本事。','先稳住场面、确认无人受伤，再问缘故才妥当。','若仗着身份让人不敢喊停，那不算自己的本领。'],
+  choices:[['先照应身边的人','vir','父皇赞许先顾人的分寸，孩子把这次收手记入课业册。'],['请国师教会及时收势','skill','国师重新演示如何中止一招、平复心息，孩子没有拿旁人的安危换一时输赢。']]},
+ {title:'旧物新用',sword:'练习木剑的护手松了。孩子想亲手修好，国师请宫中匠人带来工具，先教辨木纹，再教如何用力。',cloud:'案上的旧风铃断了系绳。孩子舍不得丢，国师请宫中匠人教换绳、调铃，听它为何不再发出原来的声响。',
+  voices:['原来小小一件东西，也藏着这么多道理。','我想自己做好一次，做坏了也肯重新来。','修好便不必让别人再赶做新的了。','用了这些日子，总有些舍不得换掉。','请师傅教我，从头做也无妨。','修好以后，我想留着它，看看能陪我用多少年。','我先把松动的地方查清，再动手。','手艺上我是初学，理当认真向师傅请教。'],
+  choices:[['让匠人慢慢教，亲手修妥','skill','孩子向匠人请教，亲手修好了旧物，记下其中的诀窍。'],['问问做这件东西的人','vir','父皇陪孩子听匠人讲用料与工时，孩子把做事人的辛苦也记住了。']]},
+ {title:'纸上山河',sword:'仙师寄来华山山路图，让孩子留在宫中辨认险坡与歇脚处。图上有一条近路，却没有标明雨后能否通行。',cloud:'仙师寄来云岫山水图，让孩子在宫中比对旧时雨记。两条溪道画得相近，涨水时却未必能走同一路。',
+  voices:['图上没有画的地方，怎样知道究竟是什么样？','我想走得远，也得先学会不困在半路上。','若遇上走不动的人，图上哪里能让他先歇一歇？','我想把这些地方认熟，将来写信也能说清自己在哪儿。','看着再近，走不通也白费。得先问清实情。','我画了几处想看的风景，先生却先让我找避雨的屋檐。','缺的这一段不能凭猜测补上，须向走过的人核实。','认不得便认不得，我愿先把这张图学明白。'],
+  choices:[['查旧记，补上问号','lit','孩子留在宫中查阅旧记，把不确定的路段圈出请仙师核实，没有当作亲历。'],['先替同行人留退路','vir','父皇与孩子在图上标出歇脚、避雨与求援的地方，行路也须顾及同行者。']]},
+ {title:'师札一封',sword:'云岑真人回信，既肯定先前的课业，也圈出一处贪快的毛病。孩子把信翻了几遍，想给师长一个认真答复。',cloud:'照玄道长回信，既肯定先前的课业，也圈出一处只求清静、不肯面对难题的疏漏。孩子把信翻了几遍，想给师长一个认真答复。',
+  voices:['先生说得有道理，我还有一个新问题想附在回信里。','看见那句批评时不服气，再想想，确是我该改。','先生花了心思指点我，我也想问问他近日可好。','我起先有些难过，想明白后，才把这封回信写好。','做错的地方认了，下回改好再给先生看。','信上的圈比夸我的字还多，可我竟盼着下一封了。','我把每一处批注都列出来，想请先生看改得对不对。','先生肯直言，我便不该只听赞许。'],
+  choices:[['认真回信，列清改进之处','lit','孩子逐条回应师札，既记住赞许，也留下需要改进的功课。'],['谈谈听到批评时的心情','love','父皇陪孩子说清收到批评时的心绪，再一起把回信写完。']]},
+ {title:'所学为何',sword:'国师让孩子重看最初那本剑谱，不急着添新招，只问：学会这些以后，最想用来做什么？',cloud:'国师让孩子重读最初那页问道札记，不急着讲新篇，只问：学会这些以后，最想用来做什么？',
+  voices:['我仍想看没见过的山川，也想知道那些地方的人怎样过日子。','我还是想练出真本事，只是不想再靠输赢证明所有事。','我想护住遇到难处的人。学得慢一点，也不该忘了这个。','我喜欢清静，也开始觉得，有些惦记不能全放在心里。','若遇不平，我想有本事出手，也知道怎样才算帮到了人。','想看的风景还很多，可宫中这些小事，我也舍不得忘。','把自己照应好，再把同行的人照应好，才走得长远。','我想靠自己的所学立身，也愿承担与本领相称的责任。'],
+  choices:[['留一页手记，记住今日志向','lit','父皇请孩子写下今日的志向，日后可回看，不必把前路此刻就定死。'],['以一件日常小事实践所愿','vir','孩子选定一件能在京中做到的小事，把所学用在待人处事上。']]}
+];
+const IMMORTAL_PALACE_DISPOSITIONS=['好奇','好胜','仁厚','内敛','爽直','灵动','审慎','自矜'];
+function immortalPalaceDue(k){return kidAge(k)<16?Math.min(S.turn+6,k.born+16*12):S.turn+6;}
+function immortalPalaceStay(k){
+ const r=k.immortal;r.stage='invited';r.due=immortalPalaceDue(k);
+ if(kidAge(k)>=16)r.adultDiscussed=true;
+}
+function immortalPalaceEvent(k,reconsider=false){
+ const r=k?.immortal;
+ if(!immortalPalaceLessonsEnabled()||!r||r.stage!=='invited'||!immortalLocal(k)||S.turn<r.due)return null;
+ const turn=S.turn,due=r.due,count=r.palaceLessons||0,sick=k.hp<50,d=IMMORTAL_SECTS[r.route];let done=false;
+ const valid=()=>!done&&S.turn===turn&&k.immortal===r&&r.stage==='invited'&&r.due===due&&
+  (r.palaceLessons||0)===count&&immortalLocal(k)&&sick===(k.hp<50);
+ const finish=(title,text,change)=>{if(!valid())return null;done=true;change();immortalRecord(k,title,text,'palace-study');save('auto');return text;};
+ const base={por:k,valid,ref:'原创仙侠支线 · 宫中修习'};
+ if(kidAge(k)>=16&&(!r.adultDiscussed||reconsider)){
+  const reason=S.heir===k.id?'东宫仍有储位之责，须先另定储君，才能远行。':k.married||k.spouse?'已有婚姻与家室，眼下先在京修习，不径自舍家入山。':sick?'身体尚弱，先休养，不能即刻远行。':'师门愿接续旧约；若准启程，将从一年学艺、一年历练做起。';
+  return {...base,title:reconsider?'山门再约 · 重议行程':'山门再约 · 成年问志',text:`${k.name}${reconsider?'又提起先前留下的山门之约':'已满十六岁，国师取出当年暂留京中时记下的山门之约'}。${d.master}${d.title}托书问起近况，先前的师承与课业仍在，不须重新拜会。\n${k.name}道：“${IMMORTAL_VOICES[childDisposition(k)]}只是今日，我想把去留再认真想一遍。”\n${reason}`,choices:[
+   {t:`准随师赴${d.place} · 国库−30`,cond:()=>valid()&&immortalCanLeave(k)&&E().treasury>=30,why:'须身体康健，无储位及家室牵绊，国库足三十万两',f:()=>{if(!valid()||!immortalCanLeave(k)||E().treasury<30)return null;done=true;r.adultDiscussed=true;chg({treasury:-30});immortalDepart(k);save('auto');return `${k.name}接续旧约随师启程，在京修习的经历一并留在纪事里。`;}},
+   {t:'继续在京修习，半年后听近况',f:()=>finish('留京续课',`${k.name}暂不启程，继续在京修习；半年后听新的课业近况，远行的心愿仍可再谈。`,()=>immortalPalaceStay(k))},
+   {t:'商定留在人间，收存山门之约',f:()=>finish('各有归处',`${k.name}与父皇谈过后，决定保留问道兴趣，在人间走自己的路。师承与在京修习的经历没有抹去，山门之约到此收存。`,()=>{r.stage='closed';r.adultDiscussed=true;})}
+  ]};
+ }
+ const resting=sick?(r.palaceRestLessons||0)%2:0;
+ const lesson=sick?{title:resting?'静养回札':'病中缓课',sword:resting?'孩子在宫中静养，仙师送来的回札问起睡眠与食欲，嘱咐暂不练剑。':'孩子近来身体不适，国师撤下木剑，改留两页轻省的札记，嘱咐先休息。',cloud:resting?'孩子在宫中静养，仙师送来的回札问起睡眠与食欲，嘱咐暂不添课。':'孩子近来身体不适，国师停了费神的听息功课，只留两页轻省札记，嘱咐先休息。',choices:[['陪读片刻，倦了便歇','lit','父皇陪孩子读了片刻札记，见倦便停，没有拿功课催促养病。'],['暂放课本，陪孩子说话','love','父皇放下课本，陪孩子说了会儿话，记住身子养好之前不催课业。']]}:IMMORTAL_PALACE_LESSONS[count%IMMORTAL_PALACE_LESSONS.length];
+ const index=IMMORTAL_PALACE_DISPOSITIONS.indexOf(childDisposition(k));
+ const voice=sick?['我想问的事先记下来，等有精神再慢慢学。','停课心里有些不甘，可我答应先把身子养好。','先生在担心，我不会再硬撑着练。','有人陪着坐一会儿，心里便安稳些。','练不动便歇，养好身子再来。','躺着也有好多念头，等好些了再一件件说给父皇听。','先按医嘱休息，功课的进度可以往后挪。','养病不是认输，我会听劝，不勉强自己。'][index]:lesson.voices[index];
+ return {...base,title:'宫中修习 · '+lesson.title,text:`${k.name}仍在京中修习。${lesson[r.route]}\n${k.name}道：“${voice}”`,choices:[
+  ...lesson.choices.map(([label,stat,outcome])=>{
+   const field=stat==='skill'?(r.route==='sword'?'mar':'lit'):stat;
+   return {t:label+` · ${{mar:'武艺',lit:'文采',vir:'德行',love:'亲情'}[field]}+${sick?1:2}`,f:()=>finish(lesson.title,`${k.name}在京修习：${lesson[r.route]}“${voice}”${outcome}`,()=>{
+    if(sick)r.palaceRestLessons=(r.palaceRestLessons||0)+1;else r.palaceLessons=count+1;
+    r.lastPalaceLesson=lesson.title;r.due=immortalPalaceDue(k);k[field]=clamp(k[field]+(sick?1:2));
+   })};
+  }),
+  ...(kidAge(k)>=16?[{t:'另谈先前的启程之约',f:()=>{if(!valid())return null;done=true;pushNow(immortalPalaceEvent(k,true));return null;}}]:[])
+ ]};
+}
 function immortalEvent(k){
  const appeal=immortalTravelPetition(k);if(appeal)return appeal;
  const r=k?.immortal;if(!immortalEnabled()||!r||!k.alive||k.pendingName||k.jailed||k.removedFromRoyal||S.over||S.turn<r.due)return null;
  const stage=r.stage,d=IMMORTAL_SECTS[r.route],master=immortalMaster(k);let done=false;
+ if(stage==='invited'&&immortalPalaceLessonsEnabled())return immortalPalaceEvent(k);
  const valid=()=>!done&&k.alive&&!k.pendingName&&!k.jailed&&!k.removedFromRoyal&&!S.over&&k.immortal===r&&r.stage===stage&&S.turn>=r.due&&(!['noticed','invited'].includes(stage)||immortalLocal(k));
  const finish=(title,text,change,kind='news')=>{if(!valid())return null;done=true;change();immortalRecord(k,title,text,kind);save('auto');return text;};
  const base={por:k,valid,ref:'原创仙侠支线 · 架空山门'};
@@ -158,7 +227,7 @@ function immortalEvent(k){
   const reason=kidAge(k)<16?'年纪尚小，可先留在宫中读书练习，十六岁后再谈远行。':S.heir===k.id?'东宫有监国与储位之责，须先另定储君，才能远行。':k.married||k.spouse?'已有婚姻与家室，眼下先在京问道，不径自舍家入山。':k.hp<50?'身体尚弱，先休养，再谈入山。':'';
   return {...base,cast:[k,master],title:'仙师来访 · 山门之约',text:`${d.master}${d.title}受国师相邀来访，衣袂带着松间清气。谈及${k.name}的${r.root}，道长说：“${d.line}”\n${k.name}答道：“${IMMORTAL_VOICES[childDisposition(k)]}”\n${k.sex==='m'&&k.birthTraits?.mother?.rank===8?'身为嫡出的皇子，他又问起宗室责任，久久没有立即作答。\n':''}${reason||'若准启程，须一年学艺、一年历练后再谈去留；以后可以归来，也可以长留山门。'}`,choices:[
    {t:`准随师赴${d.place} · 国库−30`,cond:()=>immortalCanLeave(k)&&E().treasury>=30,why:reason||'国库不足',f:()=>{if(!valid()||E().treasury<30||!immortalCanLeave(k))return null;done=true;chg({treasury:-30});immortalDepart(k);save('auto');return `${k.name}已随师启程。送别与亲人的心绪，分别记在人物纪事里。`;}},
-   {t:'先留宫中习道，半年后再谈',f:()=>finish('宫中留课',`${k.name}留在京中随师读书习剑，尚未离宫。想远行的心愿被认真留下，半年后再议。`,()=>{r.stage='invited';r.due=S.turn+6;k.lit=clamp(k.lit+2);immortalTravelRefused(k);})},
+   {t:immortalPalaceLessonsEnabled()?(kidAge(k)<16?'留宫中习道，成年后再议启程':'先留宫中习道，半年后听近况'):'先留宫中习道，半年后再谈',f:()=>finish('宫中留课',immortalPalaceLessonsEnabled()?`${k.name}留在京中随师读书习剑，尚未离宫。半年后听新的修习近况，${kidAge(k)<16?'满十六岁再谈启程':'远行的心愿仍被认真留下'}。`:`${k.name}留在京中随师读书习剑，尚未离宫。想远行的心愿被认真留下，半年后再议。`,()=>{r.stage='invited';if(immortalPalaceLessonsEnabled())immortalPalaceStay(k);else r.due=S.turn+6;k.lit=clamp(k.lit+2);if(!immortalPalaceLessonsEnabled()||kidAge(k)>=16)immortalTravelRefused(k);},immortalPalaceLessonsEnabled()?'palace-study':'news')},
    {t:'愿留此间，不走入山这条路',f:()=>finish('各有归处',`${k.name}与仙师谈过以后，决定保留问道的兴趣，在人间走自己的路。灵根没有消失，山门之约到此收存。`,()=>{r.stage='closed';})},
    ...(journalContentVersion()>=49&&k.sex==='m'?[{t:'皇子不可远行，留在京中',f:()=>finish('远行未允',`陛下不准${k.name}随师远行，令他暂留京中。行囊仍搁在床边，他还想找个时机把未说完的话讲给父皇听。`,()=>{r.stage='closed';immortalTravelRefused(k);},'petition')}]:[])
   ]};
@@ -215,7 +284,7 @@ function immortalTags(k){return immortalEnabled()&&k.immortal?`<span class="tag 
 function immortalPanel(k){
  if(!immortalEnabled()||!k.immortal)return '';
  const r=k.immortal,d=IMMORTAL_SECTS[r.route],ready=!!immortalEvent(k),away=immortalAway(k);
- return `<section class="personal-experience"><h3>仙缘与江湖</h3>${immortalTags(k)}<p>${esc(d.name)} · 师承 ${esc(d.master+d.title)}${away?' · '+esc(immortalRankName(k))+' · 离家'+Math.floor((S.turn-r.departed)/12)+'年':''}</p><p>${{noticed:'仙师来访，尚未离宫。',invited:'暂在京中读书习道，等待再议。',learning:'在山门学艺，第一年课业尚待完成。',trial:'随师历练，待满两年再议正式入门。',sect:'长留山门，不定归期；家书与江湖消息仍能相闻。',returned:'已经归来，保留师承与山中经历。',closed:'选择在人间生活，仍保留灵根与问道兴趣。'}[r.stage]}</p>
+ return `<section class="personal-experience"><h3>仙缘与江湖</h3>${immortalTags(k)}<p>${esc(d.name)} · 师承 ${esc(d.master+d.title)}${away?' · '+esc(immortalRankName(k))+' · 离家'+Math.floor((S.turn-r.departed)/12)+'年':''}</p><p>${{noticed:'仙师来访，尚未离宫。',invited:immortalPalaceLessonsEnabled()?(kidAge(k)<16?'在京读书习道，每半年听修习近况；满十六岁再议启程。':'在京继续修习，每半年有课业近况，仍可商议启程。'):'暂在京中读书习道，等待再议。',learning:'在山门学艺，第一年课业尚待完成。',trial:'随师历练，待满两年再议正式入门。',sect:'长留山门，不定归期；家书与江湖消息仍能相闻。',returned:'已经归来，保留师承与山中经历。',closed:'选择在人间生活，仍保留灵根与问道兴趣。'}[r.stage]}</p>
  ${k.alive&&!k.jailed&&!k.removedFromRoyal?`<div class="acts">${ready?`<button class="btn jade" onclick="A.immortalTalk(${k.id})">${away?'读山门消息':'谈谈仙缘'} →</button>`:''}${away?`<button class="btn" onclick="A.immortalLetter(${k.id})" ${S.turn-r.lastLetter<6?'disabled':''}>寄家书 · 精力−1</button><button class="btn quiet" onclick="A.immortalRecall(${k.id})">商议归来</button>`:''}</div>`:''}
  ${(r.history||[]).slice(-2).reverse().map(e=>`<p class="hint">${esc(e.d)} · ${esc(e.title)}<br>${esc(e.text)}</p>`).join('')}</section>`;
 }
