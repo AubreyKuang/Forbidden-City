@@ -29,7 +29,7 @@ A.out=function(kind){ if(!useE())return; const e=E();
     if(roll<.5&&h.length){const c=pick(h);const {text:t,illustration}=gardenEncounter(c);
       story(c,`与陛下在御花园偶遇。${t}`);pushEv({title:'御花园偶遇',illustration,por:c,text:t+fx(cchg(c,{favor:6,aff:6,mood:10})),choices:[{t:'今夜便召她侍寝',cond:()=>E().energy>0&&!c.preg&&(!consortRecoveryActive()||!consortNightReason(c)),why:(consortRecoveryActive()&&consortNightReason(c))||(c.preg?'她有孕在身':'精力不足'),f:()=>{nightWith(c);return null}},{t:'与她作别'}]});}
     else {
-      const encounter=roll>=.5&&roll<.6?maidEvent('御花园'):null;
+      const encounter=roll>=.5&&roll<(journalContentVersion()>=30?.75:.6)?maidEvent('御花园'):null;
       if(encounter){pushEv(encounter);return;}
       const s=chg({health:2});pushEv({title:'御花园',text:`${['春日融融，百花争艳。','荷风送香，蝉鸣阵阵。','丹桂飘香，层林尽染。','红梅映雪，暗香浮动。'][season()]}你独自走了一圈，心旷神怡。${fx(s)}`,choices:[{t:'回宫'}]});
     }
@@ -61,7 +61,7 @@ A.out=function(kind){ if(!useE())return; const e=E();
   else if(kind==='spa'){setScene('garden');const s=chg({health:5,treasury:-SPA_COST});log('帝往西山温泉行宫休养。');
     pushEv({title:'温泉行宫',text:`西山温泉氤氲，你静养了几日，精神好了许多。${fx(s)}`,choices:[{t:'回宫'}]})}
 };
-function maidEncounterReady(){return S.turn-(S.flags.lastMaidEncounter??-Infinity)>=4;}
+function maidEncounterReady(){return S.turn-(S.flags.lastMaidEncounter??-Infinity)>=(journalContentVersion()>=30?6:4);}
 function maidEvent(where){
   if(!maidEncounterReady())return null;
   const known=maids().filter(m=>!m.near&&!m.preg&&!m.cardWithdrawn&&inPalace(m)&&m.nights>0);

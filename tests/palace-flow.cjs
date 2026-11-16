@@ -39,13 +39,13 @@ forceRoll(.55);A.out('garden');assert.equal(curEv.title,'宫女');choose(2);drai
 const firstEncounter=S.turn;
 assert.equal(S.flags.lastMaidEncounter,firstEncounter);
 forceRoll(.55);A.out('garden');assert.equal(curEv.title,'御花园');drain();
-S.turn+=3;A.save('1');A.load('1');
+S.turn+=5;A.save('1');A.load('1');
 assert.equal(monthlyMaidEvent(),null);assert.equal(maidEvent('御花园'),null);
 S.turn++;
 forceRoll(.5);assert.equal(monthlyMaidEvent(),null);
 forceRoll(.05);const nextEncounter=monthlyMaidEvent();assert.ok(nextEncounter?.maidEncounter);
 pushEv(nextEncounter);choose(curEv.choices.length-1);drain();
-assert.equal(S.flags.lastMaidEncounter-firstEncounter,4);
+assert.equal(S.flags.lastMaidEncounter-firstEncounter,6);
 assert.equal(maidEvent('御花园'),null);
 const initial=dowagerProposal(ensureDowager());pushEv(initial);assert.match($('#mbox').innerHTML,/太后荐人/);drain();
 const elder=byId(initial.por.id);assert.ok(elder);
@@ -63,7 +63,7 @@ const beforeCourt=E().energy;A.courtPolicy('civil');assert.equal(E().energy,befo
 A.courtPolicy('army');assert.equal(E().energy,beforeCourt-1);
 assert.equal(save('3'),true);S.turn++;assert.equal(save('3'),true);
 localStorage.setItem(SKEY+'3','{invalid');A.load('3');assert.equal(S.turn,turn);
-assert.equal(S.courtPolicyTurn,turn);assert.equal(S.flags.lastMaidEncounter,firstEncounter+4);
+assert.equal(S.courtPolicyTurn,turn);assert.equal(S.flags.lastMaidEncounter,firstEncounter+6);
 const importTarget = {...S, emp:{...S.emp, name:'和安'}};
 const encodeSave = value => JSON.stringify(value);
 const preImport = S.emp.name;
@@ -88,7 +88,7 @@ let lastMaid=S.flags.lastMaidEncounter;
 const ambientTurns=new Map();
 for(let i=0;i<60;i++){
   S.emp.health=100;S.emp.people=100;S.emp.treasury=1000;A.endMonth();drain();
-  if(lastMaid!==S.flags.lastMaidEncounter){assert.ok(S.flags.lastMaidEncounter-lastMaid>=4);lastMaid=S.flags.lastMaidEncounter;}
+  if(lastMaid!==S.flags.lastMaidEncounter){assert.ok(S.flags.lastMaidEncounter-lastMaid>=6);lastMaid=S.flags.lastMaidEncounter;}
   for(const [title,seenAt] of Object.entries(S.flags.ambientRecent||{})){
     if(seenAt!==S.turn)continue;
     assert.ok(seenAt-(ambientTurns.get(title)??-Infinity)>=4,title);

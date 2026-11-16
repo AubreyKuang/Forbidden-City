@@ -359,10 +359,10 @@ test('triplets keep unique IDs and per-sex birth order, with one maternal outcom
     finishDelivery(mother);assert.equal(Q.filter(e=>e.title==='同生手足的安置').length,1);`);
 });
 
-test('birth omens apply a bounded one-time bonus, persist and do not rewrite old children',()=>{
+test('birth omens apply bounded annual effects, persist and do not rewrite untagged children',()=>{
   const {run}=boot();
-  run(`var child=makeKid(harem()[0],'f','灵昭');child.lit=98;applyBirthOmen(child,'star');assert.equal(child.lit,100);
-    applyBirthOmen(child,'star');assert.equal(child.lit,100);assert.equal(child.birthTraits.initial.lit,100);
+  run(`var child=makeKid(harem()[0],'f','灵昭');child.lit=98;var initial=child.birthTraits.initial.lit;applyBirthOmen(child,'star');assert.equal(child.lit,98);S.turn+=12;annualBirthOmenTick();assert.equal(child.lit,100);
+    applyBirthOmen(child,'star');assert.equal(child.lit,100);assert.equal(child.birthTraits.initial.lit,initial);
     assert.match(birthTags(child),/文星流彩/);var id=child.id;save('1');load('1');migrate();assert.equal(kidById(id).birthOmen,'star');
     delete kidById(id).birthOmen;var old=kidById(id).lit;migrate();assert.equal(kidById(id).lit,old);assert.equal(birthTags(kidById(id)),'');`);
 });
@@ -1026,7 +1026,7 @@ test('personal speech is stable, side-effect free, and every temperament has its
 test('speech respects death, grief, confinement, newborn ages and real gifts',()=>{
   const {run}=boot();run(`var c=harem()[0];c.aff=60;c.xin={k:'悲恸'};assert.equal(characterVoice(c).key,'grief');c.cold=true;assert.equal(characterVoice(c).key,'cold');c.alive=false;assert.equal(characterVoice(c),null);
     c.alive=true;c.cold=false;c.xin={k:'平和'};assert.ok(!consortVoicePool(c).some(v=>v.key==='gift'));remember(c,'gift','字画');assert.ok(consortVoicePool(c).some(v=>v.key==='gift'));S.turn+=3;assert.ok(!consortVoicePool(c).some(v=>v.key==='gift'));
-    var k=makeKid(c,'f','清月');assert.equal(characterVoice(k).text,'');k.born=S.turn-72;c.cold=true;assert.equal(characterVoice(k).key,'mother-away');c.cold=false;k.away=true;assert.equal(characterVoice(k).letter,true);
+    var k=makeKid(c,'f','清月');assert.equal(characterVoice(k).text,'');k.born=S.turn-72;c.cold=true;assert.equal(characterVoice(k).key,'family-after');c.cold=false;k.away=true;assert.equal(characterVoice(k).letter,true);
     k.jailed=true;assert.equal(characterVoice(k).key,'confined');`);
 });
 

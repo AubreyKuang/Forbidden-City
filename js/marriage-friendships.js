@@ -11,6 +11,16 @@ function marriageGreeting(c,o,b,later=false){
  if(['活泼','爽直','将门'].includes(c.trait))return later?'以前见面还找个由头，如今谈家事便能坐半日。你也说说你家那边的近况罢。':'这下可好，往后家书里常要读到同一对名字了！我先替他们道喜，也想同你多亲近些。';
  return later?'收到家书便会想起你。两家人的日子牵在一起，欢喜和牵挂也多了一个能说的人。':'从前是宫中相识，如今又成了姻亲。家里添一门喜事，你我往后也多走动些。';
 }
+function marriageReply(c,o,b,later=false){
+ const words=marriageGreeting(c,o,b,later);
+ if(journalContentVersion()<30||words!==marriageGreeting(o,c,b,later))return words;
+ if(marriageBondTense(c,o))return '这话我也认。同他们道喜归道喜，你我若有心结，日后再慢慢说，不让家里人为难。';
+ if(isSolitary(c)||['沉静','淡泊'].includes(c.trait))return '我记下了。贺礼已备好，家书来了也会告诉你，不必因我话少便见外。';
+ if(['活泼','爽直','将门'].includes(c.trait))return '我正想着要来找你！待家书到了，一起看看他们新婚过得如何。';
+ if(['聪慧','城府','持重'].includes(c.trait))return '亲眷之间该照应的，我会记着。至于朝中的规矩，也请两家各自守好。';
+ if(['善妒','骄纵','骄矜'].includes(c.trait))return '你肯这样说，我心里便好过些。宫中得失还是会在意，可这门亲事，我也是真心盼他们过好。';
+ return '我也替他们欢喜。回信时会叮嘱家里，多些体谅；你若惦记他们，便来同我说说。';
+}
 function registerMarriageBond(c,p,e,{legacy=false,before}={}){
  if(!marriageFriendshipsEnabled()||!c||!e||c.id===e.o.id||houseOf(c)===e.h||!p.married||!e.p.married)return null;
  const key=`${S.gen}:${p.id}:${e.p.id||e.p.name}`,bonds=S.flags.marriageBonds||={};if(bonds[key])return bonds[key];
@@ -60,7 +70,7 @@ function marriageBondEvent(b){
  if(!b||!marriageBondAvailable(b)||b.lastTalk!==null&&S.turn-b.lastTalk<6)return null;
  const [a,o]=marriageBondPeople(b),last=b.lastTalk,later=last!==null||S.turn-b.turn>=6;
  const valid=()=>marriageBondAvailable(b)&&b.lastTalk===last;
- const text=b.fact+`\n两人谈起这门亲事。\n${fullName(a)}：“${marriageGreeting(a,o,b,later)}”\n${fullName(o)}：“${marriageGreeting(o,a,b,later)}”`;
+ const text=b.fact+`\n两人谈起这门亲事。\n${fullName(a)}：“${marriageGreeting(a,o,b,later)}”\n${fullName(o)}：“${marriageReply(o,a,b,later)}”`;
  return {title:later?'姻亲家常':'姻亲道喜',por:a,cast:[o],present:[a,o],valid,text,choices:[{t:'听她们聊聊家事',f:()=>{
   if(!valid())return null;b.lastTalk=S.turn;livedRecord([a,o],'bond',later?'姻亲家常':'姻亲道喜',`marriage:${b.key}`,text);
   if(!marriageBondTense(a,o))relAdd(a,o,2);return '家中这门亲事，成了两人往来时记得的一段来处。';
@@ -75,3 +85,20 @@ const marriageFriendshipsMigrate=migrate;
 migrate=function(...args){const result=marriageFriendshipsMigrate.apply(this,args);repairMarriageBonds();return result;};
 const marriageFriendshipsTick=kinMarriageTick;
 kinMarriageTick=function(...args){if(marriageFriendshipsEnabled())repairMarriageBonds();return marriageFriendshipsTick.apply(this,args);};
+
+// An actual wedding introduces its own conversation immediately after the decree.
+// Restored historical bonds remain history, rather than becoming new weddings.
+function marriageBondConsequences(previous){
+ if(!S||PalaceActions.blocked||journalContentVersion()<30||previous?.gen!==S.gen)return;
+ for(const b of Object.values(S.flags.marriageBonds||{})){
+  if(b.legacy||b.gen!==S.gen||b.turn!==S.turn||b.lastTalk!==null||b.automaticQueued||previous.flags?.marriageBonds?.[b.key])continue;
+  const [a,o]=marriageBondPeople(b);if(!a?.alive||!o?.alive)continue;
+  let ev=marriageBondEvent(b);
+  if(!ev){
+   const valid=()=>b.lastTalk===null&&a.alive&&o.alive;
+   const text=b.fact+`\n两人眼下不能相聚，各自在收到婚书消息后向随侍谈起这门亲事。\n${fullName(a)}：“${marriageGreeting(a,o,b)}”\n${fullName(o)}：“${marriageReply(o,a,b)}”`;
+   ev={title:'姻亲喜讯',por:a,cast:[o],present:[],valid,text,choices:[{t:'记下两家的心意',f:()=>{if(!valid())return null;b.lastTalk=S.turn;livedRecord([a,o],'bond','姻亲喜讯',`marriage:${b.key}`,text);return '婚书与两人的心意一同记下，眼下的居处与禁令仍照原安排。';}}]};
+  }
+  const prior=ev.onQueue;ev.onQueue=()=>{prior?.();b.automaticQueued=true;};pushEv(ev);
+ }
+}

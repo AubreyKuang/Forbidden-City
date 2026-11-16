@@ -17,12 +17,12 @@
    reload();[a,b]=S.consorts;if(scenario==='repair')check(friendshipArc(a,b).history.filter(n=>n.title==='问过彼此的心意').length===1,'重复记录');
   }else if(scenario==='distance'){
    check(document.querySelector('.friendship-history').textContent.includes('渐渐疏远'),'疏远关系未展示');
-   reload();scroll('.friendship-history');
+   reload();A.go('consort',b.id);scroll('.friendship-history');
   }else if(scenario==='chronicle'){
    const filter=document.querySelector('select[aria-label="纪事主题"]');check(filter,'纪事主题未显示');filter.value='bond';filter.dispatchEvent(new Event('change',{bubbles:true}));
    click('#panel button','回看前因与后续');check(document.querySelector('.chronicle-tools').textContent.includes('找到3则'),'前因后续未关联');
-   check(document.querySelector('.story').textContent.includes('柳知微记下'),'缺少本人感受');reload();
-   const section=[...document.querySelectorAll('.detail-section')].find(s=>s.querySelector('h3')?.textContent==='人物纪事');check(section,'人物纪事缺失');section.scrollIntoView({block:'start'});
+   check(document.querySelector('.story').textContent.includes('柳知微记下'),'缺少本人感受');reload();A.go('consort',b.id);
+   const section=[...document.querySelectorAll('.detail-section')].find(s=>s.querySelector('h3,h4')?.textContent==='人物纪事');check(section,'人物纪事缺失');section.scrollIntoView({block:'start'});
   }else{
    const month=S.turn;A.endMonth();for(let guard=0;modalOpen&&guard<150;guard++){
     if(modalResult)nextEv();else choose(curEv.choices.findIndex(c=>!c.cond||c.cond()));

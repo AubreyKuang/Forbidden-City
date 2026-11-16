@@ -1,6 +1,6 @@
 /* Remember a real friendship before narrating its loss. Views never create a past. */
 const FRIENDSHIP_STAGES={close:'曾经交好',strained:'有了嫌隙',distant:'渐渐疏远',broken:'旧交决裂',mending:'试着修复',renewed:'重拾交情',bereaved:'旧交成追忆'};
-function friendshipArcsActive(){return journalContentVersion()>=30;}
+function friendshipArcsActive(){return journalContentVersion()>=31;}
 function friendshipKey(a,b){return `${S.gen}:${rk(a,b)}`;}
 function friendshipArc(a,b){return friendshipArcsActive()&&a&&b?S.friendshipArcs?.[friendshipKey(a,b)]:null;}
 function friendshipTense(a,b){return ['strained','distant','broken','mending'].includes(friendshipArc(a,b)?.stage);}
