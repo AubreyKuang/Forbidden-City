@@ -45,17 +45,17 @@ A.kidVisit=function(id){const k=kidById(id);if(modalOpen||!k?.alive||k.removedFr
 };
 A.kidPolicy=function(id,p){const k=kidById(id);k.policy=p;AU.sfx('click');render()};
 A.kidTutor=function(id){const k=kidById(id);k.tutor=!k.tutor;if(k.tutor){kstory(k,'陛下延请当世大儒为师。');toast('已延请太傅（每月5万两）')}render()};
-A.kidHeir=function(id){const k=kidById(id);if(!k?.alive||k.removedFromRoyal||k.templeStay||immortalAway(k)||k.sex!=='m'||kidAge(k)<5)return;const old=S.heir&&kidById(S.heir);
-  pushEv({title:'册立太子',por:k,valid:()=>k.alive&&!immortalAway(k),text:old?`太子${old.name}尚在。改立${k.name}为太子，必将引起朝野震动（威望-6）。`:`立${kidName(k)}为皇太子，昭告天下？`,choices:[
-    {t:'册立太子',f:()=>{if(!k.alive||immortalAway(k))return null;let s='';if(old){s=chg({prestige:-6});kstory(old,'被废去太子之位。');old.amb=clamp(old.amb+20)}else s=chg({prestige:5});
+A.kidHeir=function(id){const k=kidById(id);if(!k?.alive||k.removedFromRoyal||k.templeStay||royalJourneyAway(k)||k.sex!=='m'||kidAge(k)<5)return;const old=S.heir&&kidById(S.heir);
+  pushEv({title:'册立太子',por:k,valid:()=>k.alive&&!royalJourneyAway(k),text:old?`太子${old.name}尚在。改立${k.name}为太子，必将引起朝野震动（威望-6）。`:`立${kidName(k)}为皇太子，昭告天下？`,choices:[
+    {t:'册立太子',f:()=>{if(!k.alive||royalJourneyAway(k))return null;let s='';if(old){s=chg({prestige:-6});kstory(old,'被废去太子之位。');old.amb=clamp(old.amb+20)}else s=chg({prestige:5});
       S.heir=k.id;delete k.princeEstate;k.away=false;kstory(k,'被册立为皇太子，入主东宫。');{const mm=byId(k.foster||k.mom);if(mm&&mm.alive)setXin(mm,mm.scheme>=55?'野心':'欢喜',`${k.name}被立为太子`)}log(`立${k.name}为皇太子。`,1);
       const m=byId(k.mom);if(m&&m.alive){cchg(m,{mood:25,aff:10});story(m,`其子${k.name}被立为太子。`)}
       harem().forEach(o=>{if(o.id!==k.mom&&o.scheme>60)o.mood=clamp(o.mood-12)});AU.sfx('gong');
       return `东宫大典，百官朝贺。${fx(s)}`}},{t:'再想想'}]})};
-A.kidTitle=function(id){const k=kidById(id);if(!k?.alive||immortalAway(k))return;if(journalContentVersion()>=40){pushEv(royalChildTitleEvent(k));return;}pushEv({title:k.sex==='m'?'封王':'公主封号',por:k,text:k.sex==='m'?'请拟王号（一至二字）：':'请为公主拟封号（二字）：',input:{def:k.sex==='m'?pick(['睿','恭','诚','和','裕','庆','端','宁'])+'亲王':pick(['昭阳','长乐','永安','和静','宁华','嘉柔']),max:4},
+A.kidTitle=function(id){const k=kidById(id);if(!k?.alive||royalJourneyAway(k))return;if(journalContentVersion()>=40){pushEv(royalChildTitleEvent(k));return;}pushEv({title:k.sex==='m'?'封王':'公主封号',por:k,text:k.sex==='m'?'请拟王号（一至二字）：':'请为公主拟封号（二字）：',input:{def:k.sex==='m'?pick(['睿','恭','诚','和','裕','庆','端','宁'])+'亲王':pick(['昭阳','长乐','永安','和静','宁华','嘉柔']),max:4},
   choices:[{t:'赐封',f:v=>{k.title=v+(k.sex==='f'&&!v.endsWith('公主')?'公主':'');if(k.sex==='m'&&kidAge(k)>=16)openPrinceEstate(k);kstory(k,`受封为${k.title}。`);log(`封${k.name}为${k.title}。`);return `${k.name}叩谢父皇恩典，自此称${k.title}。`}},{t:'作罢'}]})};
 function royalChildTitleReady(k){
-  return k?.alive&&!k.pendingName&&!k.removedFromRoyal&&!k.templeStay&&!k.jailed&&!immortalAway(k);
+  return k?.alive&&!k.pendingName&&!k.removedFromRoyal&&!k.templeStay&&!k.jailed&&!royalJourneyAway(k);
 }
 function royalChildTitleEvent(k){
   if(!royalChildTitleReady(k))return null;
@@ -126,8 +126,8 @@ function kidEvent(){
       {t:'亲自守夜（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{E().energy--;k.love=clamp(k.love+15);k.hp=clamp(k.hp+5);kstory(k,`${a}岁时${ill[1]}，父皇亲自守了一夜。`);return '你守在床边，替孩子换了一夜的帕子。天亮时，孩子睡安稳了。'}}]}}
     if(a>=6&&k.lit>=45&&chance(.5)&&kcd(k,'bright')){const w=pick(a<12?[[ '将一篇短文讲成自己的话，还记得问不懂的字','认真讲解短文'],['核对本月纸笔领用，找到漏记的一笔','核对纸笔小账'],['画清了从住处到上书房的路','画出上学路线']]:[['近日所作策论颇有见地','策论得太傅夸赞'],['能把《资治通鉴》的汉纪一卷背得一字不差','背书一字不差'],['替太傅算清了上书房一年的笔墨账','算清笔墨账'],['画了一幅京城九门图，连城墙的垛口都没漏','画京城九门图']]);
       return {title:'上书房',por:k,text:`太傅奏报：${kidName(k)}${w[0]}。`,choices:[
-      {t:'赏文房四宝',f:()=>{k.lit=clamp(k.lit+3);k.love=clamp(k.love+5);kstory(k,`${a}岁，${w[1]}，父皇赏了文房四宝。`);return '§才学+3　父爱+5'}},
-      {t:'勉励几句，戒骄戒躁',f:()=>{k.vir=clamp(k.vir+3);kstory(k,`${a}岁，${w[1]}，父皇勉励其戒骄戒躁。`);return '§品德+3'}}]}}
+      {t:'赏文房四宝',f:()=>{k.lit=clamp(k.lit+3);k.love=clamp(k.love+5);kstory(k,`${a}岁，${w[1]}，父皇赏了文房四宝。`);noteRoyalSchoolwork(k,w[1],'gift');return '§才学+3　父爱+5'}},
+      {t:'勉励几句，戒骄戒躁',f:()=>{k.vir=clamp(k.vir+3);kstory(k,`${a}岁，${w[1]}，父皇勉励其戒骄戒躁。`);noteRoyalSchoolwork(k,w[1],'advice');return '§品德+3'}}]}}
     if(a>=6&&a<=13&&['灵动','好胜','爽直'].includes(childDisposition(k))&&chance(.4)&&kcd(k,'mis')){const w=pick([['在上书房顽皮，打碎了太傅心爱的端砚','打碎太傅的端砚'],['偷偷爬上御花园的假山掏鸟窝，被侍卫抱了下来','爬假山掏鸟窝'],['把太傅的胡子画进了课业里','把太傅画进课业'],['绕到园中池边看鱼，误了回书房的时辰','看鱼误了课时'],['在御膳房偷吃，把一屉点心都吃光了','偷吃御膳房点心']]);
       return {title:'顽童',por:k,text:`${kidName(k)}${w[0]}。`,choices:[
       {t:'罚跪一个时辰',f:()=>{k.vir=clamp(k.vir+4);k.love=clamp(k.love-5);kstory(k,`${a}岁，${w[1]}，被罚跪一个时辰。`);return '§品德+4　父爱-5'}},
@@ -154,36 +154,36 @@ function royalComingOfAgeEvent(){
     onQueue:()=>log(`${reporter}奏报本月皇嗣成年。${lists.join('；')}。`),choices:[{t:'知道了'}]};
 }
 function milestone(){
-  for(const k of kidsAlive()){if(k.templeStay||immortalAway(k))continue;const a=kidAge(k);
+  for(const k of kidsAlive()){if(k.templeStay||royalJourneyAway(k))continue;const a=kidAge(k);
     if(k.sex==='f'){const event=princessMilestone(k);if(event)return event;}
-    if(k.sex==='m'&&a>=16&&!k.adult){k.adult=true;if(S.heir===k.id)continue;return {title:'皇子成年',por:k,valid:()=>k.alive&&!immortalAway(k)&&!k.templeStay&&!k.jailed,text:`${kidName(k)}年满十六，按祖制当封王开府。`,choices:[
-      {t:'封亲王，留京辅政',f:()=>{if(!k.alive||immortalAway(k))return null;openPrinceEstate(k);const keepTitle=journalContentVersion()>=40&&k.title?.endsWith('亲王');if(!keepTitle)A.kidTitle(k.id);k.amb=clamp(k.amb+10);return keepTitle?`${k.name}沿用「${k.title}」封号，留京开府。`:null}},
-      {t:'封王，就藩地方',f:()=>{if(!k.alive||immortalAway(k))return null;k.away=true;if(journalContentVersion()<40||!k.title?.endsWith('亲王'))k.title=pick(['晋','楚','燕','蜀','吴','齐'])+'王';k.amb=clamp(k.amb-10);kstory(k,`受封${k.title}，就藩地方。`);log(`封${k.name}为${k.title}，就藩。`);return `${k.name}辞别父皇，前往封地。`}}]}}
+    if(k.sex==='m'&&a>=16&&!k.adult){k.adult=true;if(S.heir===k.id)continue;return {title:'皇子成年',por:k,valid:()=>k.alive&&!royalJourneyAway(k)&&!k.templeStay&&!k.jailed,text:`${kidName(k)}年满十六，按祖制当封王开府。`,choices:[
+      {t:'封亲王，留京辅政',f:()=>{if(!k.alive||royalJourneyAway(k))return null;openPrinceEstate(k);const keepTitle=journalContentVersion()>=40&&k.title?.endsWith('亲王');if(!keepTitle)A.kidTitle(k.id);k.amb=clamp(k.amb+10);return keepTitle?`${k.name}沿用「${k.title}」封号，留京开府。`:null}},
+      {t:'封王，就藩地方',f:()=>{if(!k.alive||royalJourneyAway(k))return null;k.away=true;if(journalContentVersion()<40||!k.title?.endsWith('亲王'))k.title=pick(['晋','楚','燕','蜀','吴','齐'])+'王';k.amb=clamp(k.amb-10);kstory(k,`受封${k.title}，就藩地方。`);log(`封${k.name}为${k.title}，就藩。`);return `${k.name}辞别父皇，前往封地。`}}]}}
   }
   return null;
 }
 
 /* ============ 夺嫡 ============ */
-function supTick(k){if(k.sex!=='m'||!k.alive||k.templeStay||immortalAway(k)||k.removedFromRoyal||k.away||k.jailed)return;if(kidAge(k)<10)return;const m=byId(k.foster||k.mom);
+function supTick(k){if(k.sex!=='m'||!k.alive||k.templeStay||royalJourneyAway(k)||k.removedFromRoyal||k.away||k.jailed)return;if(kidAge(k)<10)return;const m=byId(k.foster||k.mom);
   const d=k.amb/140+(m&&m.alive&&!m.cold?m.fam.p/220+(m.rank>=6?.25:0):0)+(S.heir===k.id?.5:0)+(k.lit+k.vir)/400-(k.amb<30?.4:0);
   k.sup=clamp((k.sup||0)+d-.25)}
 function heirTick(){
-  const sons=kidsAlive().filter(k=>k.sex==='m'&&!k.templeStay&&!immortalAway(k)&&!k.away&&!k.jailed);if(!sons.length)return null;
+  const sons=kidsAlive().filter(k=>k.sex==='m'&&!k.templeStay&&!royalJourneyAway(k)&&!k.away&&!k.jailed);if(!sons.length)return null;
   const heir=S.heir&&kidById(S.heir);
   const reb=sons.find(k=>k.id!==S.heir&&kidAge(k)>=16&&k.amb>=78&&(k.sup||0)>=65&&(E().prestige<60||E().health<45));
   if(reb&&chance(.3))return coupEvent(reb);
   if(heir&&heir.alive){const rv=sons.filter(k=>k!==heir&&kidAge(k)>=12&&(k.sup||0)>(heir.sup||0)+15&&k.amb>=60).sort((a,b)=>b.sup-a.sup)[0];
-    if(rv&&chance(.35))return {title:'储位之争',por:rv,valid:()=>rv.alive&&!immortalAway(rv),text:`朝中渐成两党：一派拥立太子${heir.name}，一派推举${kidName(rv)}。今日早朝，两边几乎当廷吵了起来。\n（太子得朝臣支持${rd(heir.sup||0)}，${rv.name}得${rd(rv.sup)}）`,choices:[
+    if(rv&&chance(.35))return {title:'储位之争',por:rv,valid:()=>rv.alive&&!royalJourneyAway(rv),text:`朝中渐成两党：一派拥立太子${heir.name}，一派推举${kidName(rv)}。今日早朝，两边几乎当廷吵了起来。\n（太子得朝臣支持${rd(heir.sup||0)}，${rv.name}得${rd(rv.sup)}）`,choices:[
       {t:'力挺太子，申斥结党之人',f:()=>{rv.sup=clamp(rv.sup-25);rv.amb=clamp(rv.amb-8);rv.love=clamp(rv.love-10);heir.sup=clamp((heir.sup||0)+10);kstory(rv,'拥立他的大臣遭父皇申斥。');return fx(chg({prestige:3}))}},
       {t:`顺应人心，改立${rv.name}`,f:()=>{A.kidHeir(rv.id);return null}},
       {t:`命${rv.name}就藩，远离京城`,cond:()=>kidAge(rv)>=14,why:'年纪尚小',f:()=>{rv.away=true;rv.title=rv.title||pick(['晋','楚','燕','蜀','吴','齐'])+'王';rv.sup=clamp(rv.sup-40);rv.amb=clamp(rv.amb-15);kstory(rv,'被命就藩，离京而去。');log(`${rv.name}就藩。`,1);const m=byId(rv.mom);if(m&&m.alive)cchg(m,{mood:-25,aff:-10});return `${rv.name}跪别父皇，出了京城。`}}]}}
   const c=sons.find(k=>k.id!==S.heir&&kidAge(k)>=12&&k.amb>=55&&!k.facAsked);
-  if(c&&chance(.3)){c.facAsked=true;const m=byId(c.mom);return {title:'皇子结党',por:c,valid:()=>c.alive&&!immortalAway(c),text:`有人密报：${kidName(c)}近来与${m?m.fam.t+'一系的':''}几位大臣过从甚密，常在府中宴饮至深夜。`,choices:[
+  if(c&&chance(.3)){c.facAsked=true;const m=byId(c.mom);return {title:'皇子结党',por:c,valid:()=>c.alive&&!royalJourneyAway(c),text:`有人密报：${kidName(c)}近来与${m?m.fam.t+'一系的':''}几位大臣过从甚密，常在府中宴饮至深夜。`,choices:[
     {t:'严加申斥',f:()=>{c.amb=clamp(c.amb-15);c.sup=clamp((c.sup||0)-15);c.love=clamp(c.love-10);kstory(c,'私结朝臣，被父皇严加申斥。');return '§野心-15　朝臣支持-15　父爱-10'}},
     {t:'默许，看他有几分本事',f:()=>{c.sup=clamp((c.sup||0)+12);c.amb=clamp(c.amb+5);return '§朝臣支持+12　野心+5'}},
     {t:'交给他一桩差事历练',f:()=>{c.lit=clamp(c.lit+4);c.mar=clamp(c.mar+4);c.sup=clamp((c.sup||0)+6);kstory(c,'奉旨办差，颇有建树。');return '§才学+4　武艺+4　朝臣支持+6'}}]}}
   return null}
-function coupEvent(k){return {title:'逼宫',por:k,valid:()=>k.alive&&!immortalAway(k),sfx:'gong',text:`三更时分，宫门外火光冲天。${kidName(k)}率府兵与九门提督的人马围住了宸极殿，递进一道“请父皇颐养天年”的折子。`,choices:[
+function coupEvent(k){return {title:'逼宫',por:k,valid:()=>k.alive&&!royalJourneyAway(k),sfx:'gong',text:`三更时分，宫门外火光冲天。${kidName(k)}率府兵与九门提督的人马围住了宸极殿，递进一道“请父皇颐养天年”的折子。`,choices:[
   {t:'调禁军平叛',f:()=>{const h=S.heir&&kidById(S.heir);const p=.35+E().prestige/180+(h&&h.alive?(h.sup||0)/400:0);
     if(chance(p)){k.jailed=true;k.sup=0;k.title='庶人';kstory(k,'起兵逼宫，兵败被擒，圈禁于宗人府。');log(`${k.name}逼宫失败，圈禁宗人府。`,1);const m=byId(k.mom);if(m&&m.alive){m.cold=true;m.palace='冷宫';story(m,'其子逼宫失败，她被打入冷宫。')}return `禁军在午门外击溃了叛军。${fx(chg({prestige:6}))}`}
     log(`${k.name}逼宫，禁军倒戈，帝被迫禅位。`,1);pushNow(abdicateEvent(k));return '禁军倒戈了。'}},

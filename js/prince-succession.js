@@ -98,7 +98,7 @@ function princeSuccessionTick(){
   for(const k of royalHouseholds().filter(princeEstateHolder)){
     const vacancy=princeHeirVacancy(k);
     if(vacancy)memorials.push({k,text:vacancy});
-    if(k.alive&&!immortalAway(k)&&kidAge(k)>=princeLifespan(k)){
+    if(k.alive&&!royalJourneyAway(k)&&kidAge(k)>=princeLifespan(k)){
       k.alive=false;k.deathReason='寿终';
     }
     const sons=princeSons(k),estate=k.princeEstate||{},adoption=princeAdoptionCandidates(k)[0];

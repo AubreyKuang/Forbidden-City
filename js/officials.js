@@ -201,7 +201,7 @@ function assignOfficialTask(e,id){
   const p=e.p;chg({treasury:-task.cost});p.lastCommission=S.turn;
   const roll=R(),success=.35+p.ability/200+p.trust/500;
   p.commission={id,title:task.title,due:S.turn+task.months,started:S.turn,contact:e.c.id,wasAway:!!p.away,outcome:roll<task.risk?'death':roll<success?'success':'setback'};
-  officialRecord(e.c,e.role,`奉旨${task.title}，约${task.months}个月后回奏。`);officialFamilyReaction(e,'assigned',task.title);save('auto');return `${p.name}领命。进展将记入其履历，并向家眷通报。`;
+  officialRecord(e.c,e.role,`奉旨${task.title}，约${task.months}个月后回奏。`);officialFamilyReaction(e,'assigned',task.title);noteCommissionChapter(e,p.commission);save('auto');return `${p.name}领命。进展将记入其履历，并向家眷通报。`;
 }
 function officialTaskTick(){
   for(const e of officialEntries()){
@@ -224,6 +224,7 @@ function officialTaskTick(){
       p.merit=clamp(p.merit+(j.outcome==='success'?12:-6));chg({people:j.outcome==='success'?3:-1});officialRecord(c,role,text,{emotion:j.outcome==='success'?.5:-.3});
       officialFamilyReaction(familyContact,j.outcome,j.title);
     }
+    noteCommissionChapter(familyContact,j,true);
     p.report={text,outcome:j.outcome,title:j.title,turn:S.turn};if(careersActive())p.report.office=p.office||p.post;
     startOfficialContinuity(familyContact,j.outcome,j.title);
   }

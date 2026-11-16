@@ -185,7 +185,8 @@ function yiLandLedger(){
   const estate=project.estate,file=estate.case;
   const stage=file?.stage==='suspected'?' · 有疑账待查':file?.stage==='investigating'?
    (file.due<=S.turn?' · 查官已回奏':` · 距核查回奏${yiLandMonths(file.due-S.turn)}`):'';
-  return `第${cnNum(project.gen)}朝所置 · 义仓实存${yiGrainLabel(estate.units)} · ${estate.manager?`由${estate.manager.name}管账`:'县署公管'}${stage}。下次秋收入簿尚有${yiLandMonths(Math.max(1,estate.nextHarvest-S.turn))}。${estate.lastRuling?'\n上案处置：'+estate.lastRuling:''}`;
+  const printed=royalTravelActive()&&S.classicStories?.works?.['relief-'+project.gen]?.press?.destination==='地方粮仓';
+  return `第${cnNum(project.gen)}朝所置 · 义仓实存${yiGrainLabel(estate.units)} · ${estate.manager?`由${estate.manager.name}管账`:'县署公管'}${stage}。下次秋收入簿尚有${yiLandMonths(Math.max(1,estate.nextHarvest-S.turn))}。${printed?'仓门已张榜新印的领粮则例。':''}${estate.lastRuling?'\n上案处置：'+estate.lastRuling:''}`;
  });
  const choices=projects.flatMap(project=>{
   const event=yiLandAuditEvent(project);
@@ -205,7 +206,7 @@ function proposeYiLand(person,report){
  if(!yiLandActive()||yiLandRegistry()[S.gen]||!['grain','granary','reclamation'].includes(report.taskId))return;
  const kin=careerKin(person).find(r=>r.type==='blood'&&r.c.alive&&!r.c.gone)?.c;
  const project={gen:S.gen,key:person.key,kin:kin?.id,due:S.turn+3,stage:'offer',office:report.office,
-  title:report.title,thread:`yi-land:${S.gen}:${report.id}`};
+  title:report.title,thread:characterRecordsActive()?localChronicleThread(report):`yi-land:${S.gen}:${report.id}`};
  (S.yiLands||={})[S.gen]=project;
  const entry=person.p.story.findLast(e=>e.t.startsWith('【御批】'));
  if(entry)entry.thread=project.thread;

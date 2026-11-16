@@ -263,7 +263,7 @@ function viewMinistries(){
   };
   const scholars=scholarList().filter(p=>!p.registrySource).slice().reverse();
   return `<button class="btn quiet sm detail-back" onclick="A.go('government')">← 返回治国理政</button><h2>六部</h2>${examSchedulePanel(false)}<p class="hint">尚书由在任且才干 55 以上的官员出任，一人不兼两部。各部每年可办一件大事，成败看尚书才干。</p>
-    <div class="grid ministry-grid">${Object.entries(MINISTRIES).map(card).join('')}</div>
+    <div class="grid ministry-grid">${Object.entries(MINISTRIES).map(card).join('')}</div>${travelFleetPanel()}
     ${detailSection('新科进士',scholars.length?`<ul class="story">${scholars.map(p=>`<li><button class="person-link" onclick="A.go('scholar','${p.id}')">${esc(p.name)}</button> · ${esc(p.examYear?`${p.examRank}`:'')} · ${esc(officialOfficeLabel(p))} · ${officialStatus(p)} · 才干${rd(p.ability)}</li>`).join('')}</ul>`:`<p class="hint">尚无科举出身的朝臣。${nextExamLabel()}。</p>`)}`;
 }
 function viewScholar(){

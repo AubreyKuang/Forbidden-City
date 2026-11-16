@@ -26,7 +26,7 @@ function initImmortalTalent(k){if(immortalEnabled()&&k.immortalTalent===undefine
 function immortalPeople(){return royalHouseholds().filter(k=>k.immortal);}
 function immortalPerson(id){return royalById(id);}
 function immortalMaster(k){const d=IMMORTAL_SECTS[k.immortal.route];return {daoMaster:true,daoTitle:d.title,cell:d.cell,name:d.master,alive:true};}
-function immortalLocal(k){return !!(k?.alive&&!k.pendingName&&!k.removedFromRoyal&&!k.jailed&&!k.away&&!k.templeStay&&k.princessMarriage!=='frontier'&&!immortalAway(k)&&S.children.includes(k)&&!S.over);}
+function immortalLocal(k){return !!(k?.alive&&!k.pendingName&&!k.removedFromRoyal&&!k.jailed&&!k.away&&!k.templeStay&&k.princessMarriage!=='frontier'&&!royalJourneyAway(k)&&S.children.includes(k)&&!S.over);}
 function immortalCanLeave(k){return immortalLocal(k)&&kidAge(k)>=16&&k.hp>=50&&!k.married&&!k.spouse&&S.heir!==k.id;}
 function immortalMothers(k){
  const people=mothersOf(k).filter(c=>c.alive);

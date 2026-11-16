@@ -6,7 +6,7 @@ const princeEstatePlace=k=>k.away?princeFief(k)||'外地封地':'京城';
 const princeEstateHolder=k=>k?.sex==='m'&&!!(k.princeEstate||k.away)&&!k.removedFromRoyal&&!k.pendingName&&S.heir!==k.id;
 const princeEstateEligible=k=>!!k?.alive&&princeEstateHolder(k);
 const princeEstateById=id=>{const k=royalById(id);return princeEstateEligible(k)||princeProbate(k)?k:null;};
-const princeEstateAvailable=k=>princeEstateEligible(k)&&!k.jailed&&!k.templeStay&&!immortalAway(k)&&!k.gone;
+const princeEstateAvailable=k=>princeEstateEligible(k)&&!k.jailed&&!k.templeStay&&!royalJourneyAway(k)&&!k.gone;
 function princeEstateLink(k){
   return princeEstateEligible(k)||princeProbate(k)?`<button class="btn sm jade" onclick="A.go('prince-estate',${royalActionArg(k.id)})">查看王府</button>`:'';
 }

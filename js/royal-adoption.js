@@ -9,9 +9,9 @@ function princeAdoptionFamily(son){
 }
 function princeAdoptionContactMode(son,family){
   const {adoptive,birthFather,birthMother}=family;
-  if(!adoptionLiving(son)||!adoptive||son.jailed||son.templeStay||immortalAway(son)||(!adoptionLiving(birthFather)&&!adoptionLiving(birthMother)))return '';
+  if(!adoptionLiving(son)||!adoptive||son.jailed||son.templeStay||royalJourneyAway(son)||(!adoptionLiving(birthFather)&&!adoptionLiving(birthMother)))return '';
   const resident=son.princelySuccession?son:adoptive;
-  const knownPlace=k=>k.away?princeFief(k):k.templeStay||immortalAway(k)?'':'京城';
+  const knownPlace=k=>k.away?princeFief(k):k.templeStay||royalJourneyAway(k)?'':'京城';
   const same=birthFather&&knownPlace(resident)&&knownPlace(resident)===knownPlace(birthFather);
   return same&&!birthFather.jailed&&(adoptionLiving(birthFather)||adoptionLiving(birthMother)&&!birthMother.away)?'visit':'letter';
 }

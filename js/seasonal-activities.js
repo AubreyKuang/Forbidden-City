@@ -124,8 +124,13 @@ A.passPalaceInkstone=function(id){
   if(S.over||modalOpen||!atSeasonPlace('ss')||seasonJournal().inkstone||!young)return;
   const {elder}=pair;
   elder.passedInkstone=true;
-  ensureSeasonJournal().inkstone={elder:elder.id,elderName:elder.name,young:young.id,due:S.turn+3};
-  relAdd(elder,young,5);seasonalMemory([elder,young],'inkstone_gift','上书房',`${elder.name}把旧砚送给了${young.name}。`);save('auto');render();
+  const gift=ensureSeasonJournal().inkstone={elder:elder.id,elderName:elder.name,young:young.id,due:S.turn+3};
+  relAdd(elder,young,5);seasonalMemory([elder,young],'inkstone_gift','上书房',`${elder.name}把旧砚送给了${young.name}。`);
+  if(characterRecordsActive()){
+   gift.thread=`inkstone:${S.gen}:${S.turn}:${young.id}`;
+   noteInkstoneChapter(gift,elder,young,false);noteInkstoneChapter(gift,young,elder,false);
+  }
+  save('auto');render();
 };
 A.readInkstoneEssay=function(){
   const gift=seasonJournal().inkstone,young=gift&&kidById(gift.young);
@@ -139,7 +144,9 @@ A.readInkstoneEssay=function(){
       const pair=elder?.alive?[elder,young]:[young];
       if(elder?.alive)relAdd(elder,young,7);
       const text=`${young.name}用旧砚写成一页文章，将抄本送给${gift.elderName}。`;
-      seasonalMemory(pair,'inkstone_essay','上书房',text);log(text,1);save('auto');return null;
+      seasonalMemory(pair,'inkstone_essay','上书房',text);
+      if(gift.thread)for(const person of pair)noteInkstoneChapter(gift,person,person===elder?young:elder,true);
+      log(text,1);save('auto');return null;
     }}
   ]});
 };
