@@ -125,7 +125,9 @@ function admitNatalSister(c,p){
   return `${fullName(g)}受封常在。她与亲人的旧交、各自心思，都随之进入宫中的新生活。`;
 }
 function viewNatalRelative(){
-  const [id,relative]=String(UI.sel).split(':'),e=natalEntry(id,relative);if(!e)return viewFamily();
+  const [id,relative]=String(UI.sel).split(':'),royal=kidById(Number(relative));
+  if(royal?.outsideFamilyOrigin){UI.view='kid';UI.sel=royal.id;return viewKid();}
+  const e=natalEntry(id,relative);if(!e)return viewFamily();
   const {c,h,p}=e;if(p.consortId){UI.view='consort';UI.sel=p.consortId;return viewConsort();}
   if(p.sex==='m'&&natalAge(p)>=18){UI.view='official';UI.sel=c.id+':relative'+p.id;return viewOfficial();}
   const age=natalAge(p),living=p.alive,visited=natalInPalace(c,p);
@@ -134,7 +136,7 @@ function viewNatalRelative(){
     ${natalVisitReady(c,p)?`<button class="btn" onclick="A.natalVisit(${c.id},${p.id})">准入宫探亲</button>`:''}${visited?`<button class="btn primary" onclick="A.natalMeet(${c.id},${p.id})">探亲相见</button><span>约${p.visit.until-S.turn}个月后归家</span>`:''}${marriedSisterVisitButton(c,p)}</div>
     ${typeof natalAdmissionPanel==='function'?natalAdmissionPanel(c,p):''}
     ${detailSection('家族往来',`${natalParentLinks(c,p)}<button class="btn quiet" onclick="A.go('consort',${c.id})">${esc(fullName(c))}</button>`+natalFamilyLinks(c))}
-    ${natalFatherPanel(p)}${natalLifePanel(c,p)}${detailSection('人物纪事',detailStory(p))}`;
+    ${natalFatherPanel(p)}${outsideParentagePanel(c,p)}${natalLifePanel(c,p)}${outsideHouseholdHusbandPanel(p)}${detailSection('人物纪事',detailStory(p))}`;
 }
 A.natalVisit=function(id,relative){if(modalOpen)return;const e=natalEntry(id,relative);if(e)pushEv(natalVisitEvent(e.c,e.p));};
 A.natalMeet=function(id,relative){if(modalOpen)return;const e=natalEntry(id,relative);if(e)pushEv(natalMeetingEvent(e.c,e.p));};

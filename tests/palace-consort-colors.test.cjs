@@ -2,7 +2,7 @@ const assert=require('node:assert/strict'),{test}=require('node:test');
 const fs=require('node:fs'),path=require('node:path');
 const {boot}=require('./playtest-harness.cjs');
 const manifest=require('../docs/consort-colors-sources.json');
-const legacy=require('./fixtures/consort-colors-legacy-v34.json');
+const legacyCases=[require('./fixtures/consort-colors-legacy-v34.json'),require('./fixtures/consort-colors-legacy-v35.json')];
 function game(storage=new Map()){const b=boot(510,storage);b.ctx.assert=assert;return b;}
 
 test('the eighteen approved portraits have distinct cells, full and bust views, and fitted jewelry',()=>{
@@ -65,17 +65,18 @@ test('a new colored consort keeps her face through promotion, saved pending succ
   b=game(b.storage);b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(portraitCell(curEv.por),466);drain();`);
 });
 
-for(const [name,data] of Object.entries(legacy))test('published v34 '+name+' retains original faces and finishes before adopting expanded creation',()=>{
+for(const legacy of legacyCases)for(const [name,data] of Object.entries(legacy))test('published v'+data.pendingActions.version+' '+name+' retains original faces and finishes before adopting expanded creation',()=>{
+  const version=data.pendingActions.version;
   let b=game(new Map([['chengongji_v1_auto',JSON.stringify(data)]]));
-  b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,34);`);
+  b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,${version});`);
   const faces=s=>[...s.consorts,...s.cands].map(c=>[c.id,c.artPortrait]);
   assert.deepEqual(JSON.parse(b.run('JSON.stringify([...S.consorts,...S.cands].map(c=>[c.id,c.artPortrait]))')),faces(data));
   if(name==='selection-before'){
     // Continue with the genuine published action's draws, independent of reload RNG.
     b.force(...legacy['selection-after'].pendingActions.steps.at(-1).rolls);
     b.run(`choose(0);save('auto');`);b=game(b.storage);
-    b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,34);`);
+    b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,${version});`);
     assert.deepEqual(JSON.parse(b.run('JSON.stringify([...S.consorts,...S.cands].map(c=>[c.id,c.artPortrait]))')),faces(legacy['selection-after']));
   }
-  b.run(`drain();assert.equal(PalaceActions.contentVersion,35);assert.equal(PalaceActions.blocked,false);`);
+  b.run(`drain();assert.equal(PalaceActions.contentVersion,36);assert.equal(PalaceActions.blocked,false);`);
 });

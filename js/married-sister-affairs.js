@@ -164,8 +164,10 @@ function admitMarriedSister(c,p,dowagerOpposed){
 
 function marriedSisterChildrenPanel(c){
   if(!marriedSisterAffairsActive()||!c.natalOrigin)return '';
-  const children=c.house?.relatives?.filter(p=>p.parentRelativeId===c.natalOrigin.relative)||[];
-  return detailSection('宫外子女',children.map(p=>`<p><button class="person-link" onclick="A.go('natal','${c.id}:${p.id}')">${esc(p.name)} ↗</button> ${unconfirmedParentageTag(p)}</p>`).join(''));
+  const children=natalChildrenOf(c,c.natalOrigin.relative);
+  const mother=c.house?.relatives?.find(p=>p.id===c.natalOrigin.relative);
+  return detailSection('原家子女',children.map(p=>`<p><button class="person-link" onclick="A.go('natal','${c.id}:${p.id}')">${esc(p.outsideFamilyOrigin?.name||p.name)} ↗</button> ${unconfirmedParentageTag(p)}</p>`).join(''))+
+    (mother?outsideHouseholdHusbandPanel(mother):'');
 }
 
 const marriedSisterOfficialView=viewOfficial;

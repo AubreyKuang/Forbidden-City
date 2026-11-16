@@ -28,7 +28,7 @@ function natalLifeTick(){
   }
  }
 }
-function natalLifePanel(c,p){const l=p.lifeCourse,children=houseOf(c).relatives.filter(x=>x.parentRelativeId===p.id);
+function natalLifePanel(c,p){const l=p.lifeCourse,children=natalChildrenOf(c,p.id);
  return detailSection('家中的日子',`${natalSpouseSummary(p)}${typeof natalMarriageLine==='function'?natalMarriageLine(p):''}${l?.path?`<p>近况：${esc(l.path)}</p>`:''}${children.map(x=>`<button class="btn quiet" onclick="A.go('natal','${c.id}:${x.id}')">${esc(x.name)} · ${x.sex==='m'?'儿子':'女儿'} · ${natalAge(x)}岁</button>`).join('')}${l?.path||p.married||p.betrothal?`<button class="btn" onclick="A.natalLifeTalk(${c.id},${p.id})" ${S.turn-(l?.talk??-99)<6?'disabled':''}>回信问问近况<small>精力1 · 每半年一次</small></button>`:''}`);
 }
 A.natalLifeTalk=function(id,relative){const e=natalEntry(id,relative);if(modalOpen||!e||!inPalace(e.c)||!e.p.alive||e.p.consortId)return;const {c,p}=e;

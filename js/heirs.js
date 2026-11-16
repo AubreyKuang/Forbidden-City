@@ -1,19 +1,25 @@
 /* ============ 皇嗣 ============ */
 function suggestName(sex){const used=new Set(S.children.map(k=>k.name));let n,t=0;do{n=sex==='m'?S.genChar+pick(BOYC):pick(GIRLA)+pick(GIRLB)}while(used.has(n)&&++t<40);return n}
-function makeKid(c,sex,name){
+function makeKid(c,sex,name,{outsideChild=null,origin=null,foster=null}={}){
   const e=E(),father=conceptionFather(c);const ord=S.children.filter(k=>k.sex===sex).length+1;
-  const k={id:S.nid++,name,sex,mom:c.id,momName:fullName(c),born:S.turn,birthMonth:S.month,ord,
+  const k={id:outsideChild?.id??S.nid++,name,sex,mom:c.id,momName:fullName(c),born:outsideChild?.born??S.turn,birthMonth:S.month,ord,
     lit:clamp(c.talent*.6+father.wen*.25+ri(-6,6)+(e.style==='文雅'?4:0)),mar:clamp(father.wu*.3+(c.trait==='将门'?18:0)+ri(0,15)+(e.style==='尚武'?8:0)),
     vir:clamp(c.virtue*.7+ri(0,12)),hp:clamp(55+ri(0,35)-(c.trait==='体弱'?15:0)),amb:clamp(c.scheme*.65+ri(0,18)),
-    love:50,sup:0,policy:'均衡',tutor:false,title:'',alive:true,married:false,adult:false,story:[],seed:ri(1,2e9)};
+    love:50,sup:0,policy:'均衡',tutor:false,title:'',alive:true,married:false,adult:false,story:outsideChild?.story||[],seed:outsideChild?.seed??ri(1,2e9)};
+  if(outsideChild){
+    k.birthMonth=((S.month-1-(S.turn-k.born)%12+12)%12)+1;k.outsideFamilyOrigin=origin;
+    k.outsideParentage=outsideChild.outsideParentage;k.adult=kidAge(k)>=15;
+    k.married=!!outsideChild.married;if(outsideChild.spouse)k.spouse=outsideChild.spouse;
+    if(foster)k.foster=foster.id;
+  }
   // Birth traits are a game rule, separate from education and the current caregiver.
   k.birthTraits={mother:{id:c.id,name:fullName(c),talent:c.talent,virtue:c.virtue,scheme:c.scheme,trait:c.trait,rank:c.rank},
     father,initial:{lit:k.lit,mar:k.mar,vir:k.vir,hp:k.hp,amb:k.amb}};
-  ensureChildDisposition(k);initImmortalTalent(k);attachChildParentage(k,father);assignChildPortrait(k);S.children.push(k);S.ys.b++;initKidRel(k);return k;
+  ensureChildDisposition(k);initImmortalTalent(k);if(!outsideChild)attachChildParentage(k,father);assignChildPortrait(k);S.children.push(k);if(!outsideChild)S.ys.b++;initKidRel(k);return k;
 }
 function childBirthPanel(k){
   const birth=k.birthTraits;if(!birth)return '';
-  return `<p>生母 ${parentLink(birth.mother.id,birth.mother.name)} · 生父 ${childFatherHTML(k)}</p>
+  return `<p>生母 ${outsideMotherLink(k)} · 生父 ${childFatherHTML(k)}</p>
     <p class="hint">才学起点受生母才情与生父文才影响。生母德行、心机分别影响品德与野心起点；将门出身影响武艺，体弱影响体魄。教养、太傅与日常活动会继续改变属性。</p>
     <div class="stats">${bar('初始才学',birth.initial.lit,'#617991')}${bar('初始品德',birth.initial.vir,'#517369')}${bar('初始武艺',birth.initial.mar,'#92504a')}</div>`;
 }
