@@ -32,7 +32,7 @@ function marriageMeeting(k,p,back){
 }
 const royalHouseholds=()=>[...new Map([...(S.royalRelatives||[]),...archivedPrincesses(),...S.children].map(k=>[k.id,k])).values()];
 const royalById=id=>royalHouseholds().find(k=>k.id===id);
-const richerPrincessMarriage=k=>k.sex==='f'&&journalContentVersion()>=46;
+const richerPrincessMarriage=k=>k.sex==='f'&&journalContentVersion()>=47;
 function ensureMarriedLife(k){
   if(!k?.married||!k.spouse)return null;
   const p=k.spouse;

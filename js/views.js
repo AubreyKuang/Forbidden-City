@@ -285,7 +285,7 @@ function viewHome(){
      ['story-consorts','剧情妃图鉴',storyConsortCodex()],
      ...(typeof fenghuaReadable==='function'&&fenghuaReadable()? [[journalContentVersion()>=24?'notable-people':'fenghua',journalContentVersion()>=24?'风华人物志':'风华人物',fenghuaCodex()]]:[]),
      ['keepsakes','家书与手稿',detailSection('从旧朝带来的家书与手稿',lifeWorksPanel(e))],
-     ['guide','起居与用度',`<p class="hint">每月有${maxEnergy()}点精力。上朝可先免费查看本月奏折，亲自批复通常花 1 点；召幸、闲谈、探望皇嗣、出巡也要花精力。赏赐、晋封、选秀不花精力。精力用完后，处理完当前事件及后续便会自动转月；也可提前点「结束本月」。侍寝后若怀上龙胎，要到下个月末太医才诊得出喜脉。每位妃嫔都有一段专属故事，情分越深越容易推进。</p>`]
+     ['guide','起居与用度',`<p class="hint">每月有${maxEnergy()}点精力。每月最多批阅三份奏折，可先免费查看；亲自批复通常花 1 点；召幸、闲谈、探望皇嗣、出巡也要花精力。赏赐、晋封、选秀不花精力。精力用完后，处理完当前事件及后续便会自动转月；也可提前点「结束本月」。侍寝后若怀上龙胎，要到下个月末太医才诊得出喜脉。每位妃嫔都有一段专属故事，情分越深越容易推进。</p>`]
    ])}`}
 
 function viewHarem(){
@@ -504,7 +504,7 @@ function viewLog(){
     ${month.hongjianIncome?`<p>月入含薛红笺经营增益 ${month.hongjianIncome} 万两。</p>`:''}
     ${month.stewardship?`<p>协理六宫：${esc(month.stewardship.name)}，本月额外恩宠 +${month.stewardship.gain}${month.stewardship.gain<10?'（上限100）':''}。</p>`:''}
     ${month.localGrainPayment?`<p>支出含赈粮尾款 ${esc(month.localGrainPayment)} 万两。</p>`:''}
-    ${month.court?`<p><strong>${esc(month.court.title)}</strong> · ${esc(month.court.choice)}</p>${fmt(month.court.text)}${month.court.child?link(month.court.child,true):link(month.court.person)}`:''}
+    ${(month.courts||(month.court?[month.court]:[])).map(court=>`<p><strong>${esc(court.title)}</strong> · ${esc(court.choice)}</p>${fmt(court.text)}${court.child?link(court.child,true):link(court.person)}`).join('')}
     ${month.people.map(person=>`<p>${esc(person.text)} ${link(person.id)}</p>`).join('')}
    </section>`:''}
    ${S.history.length?`<p class="hint">历代：${S.history.map(h=>esc(`${h.shi?h.miao+h.shi+'皇帝':h.miao} ${h.sur}${h.name}（${h.era}，在位${h.yrs}年）`)).join('；')}</p>`:''}

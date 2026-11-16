@@ -767,7 +767,52 @@ function courtEvent(){
   return ev;
 }
 
+const MONTHLY_COURT_LIMIT=3;
+const monthlyCourtBatchEnabled=()=>journalContentVersion()>=46;
+function currentCourtBrief(){
+  const brief=S.flags.monthlyCourt;
+  return brief?.turn===S.turn&&brief.gen===S.gen?brief:null;
+}
+function monthlyCourtDocket(create=false){
+  const saved=S.flags.courtDocket;
+  if(saved?.turn===S.turn&&saved.gen===S.gen)return saved;
+  const docket={turn:S.turn,gen:S.gen,completed:[],skipped:[]};
+  if(create)S.flags.courtDocket=docket;
+  return docket;
+}
+function monthlyCourtCompleted(){
+  const brief=currentCourtBrief(),prior=monthlyCourtBatchEnabled()?monthlyCourtDocket().completed:[];
+  return [...prior,...(brief?.done?[{index:brief.index,result:brief.result}]:[])];
+}
+function monthlyCourtStatus(){
+  const count=monthlyCourtCompleted().length,limit=monthlyCourtBatchEnabled()?MONTHLY_COURT_LIMIT:1;
+  return {count,limit,done:count>=limit};
+}
+function monthlyCourtButton(){
+  const {count,limit,done}=monthlyCourtStatus();
+  return `<button class="btn primary" onclick="A.court()" ${done?'disabled':''}>${done?'本月奏折已办完':'本月奏折'} · ${count}/${limit}</button>`;
+}
 function monthlyCourtEvent(){
+  if(!monthlyCourtBatchEnabled())return singleMonthlyCourtEvent();
+  if(monthlyCourtStatus().done)return null;
+  const docket=monthlyCourtDocket(true),brief=currentCourtBrief();
+  if(brief?.done){
+    docket.completed.push({index:brief.index,result:brief.result});
+    delete S.flags.monthlyCourt;
+  }
+  let event=singleMonthlyCourtEvent();
+  // A pinned subject may leave office, an heir may be appointed elsewhere, or an
+  // old save may contain an unknown index. Retire that stale brief, then select
+  // another eligible one; never consume a reply or get stuck on the same entry.
+  if(!event&&currentCourtBrief()&&!currentCourtBrief().done){
+    docket.skipped.push(currentCourtBrief().index);
+    delete S.flags.monthlyCourt;
+    event=singleMonthlyCourtEvent();
+  }
+  if(event)event.text=`本月第 ${docket.completed.length+1} 份奏折 · 每月最多 ${MONTHLY_COURT_LIMIT} 份\n`+event.text;
+  return event;
+}
+function singleMonthlyCourtEvent(){
   const brief=S.flags.monthlyCourt;
   if(brief?.turn===S.turn&&brief.gen===S.gen){
     if(brief.done)return null;
@@ -822,7 +867,9 @@ function monthlyCourtEvent(){
     return floodReliefEvent(S.flags.monthlyCourt);
   }
   const firstCaseDue=S.turn>=FIRST_IMPEACHMENT_TURN&&!S.flags.impeachmentSeen&&!brief?.impeachment;
-  const candidates=S.turn===0&&S.flags.openingCourt?[0]:shuffle(COURT.map((_,i)=>i));
+  const docket=monthlyCourtBatchEnabled()?monthlyCourtDocket():null;
+  const seen=new Set(docket?[...docket.completed.map(item=>item.index),...docket.skipped]:[]);
+  const candidates=S.turn===0&&S.flags.openingCourt&&!seen.size?[0]:shuffle(COURT.map((_,i)=>i));
   const firstHarvest=grainHarvestSeason()&&S.flags.harvestSeenGen!==S.gen;
   const firstLocust=S.year>=2&&S.month>=3&&S.month<=5&&S.flags.harvestSeenGen===S.gen&&S.flags.locustSeenGen!==S.gen;
   if(firstHarvest||firstLocust){
@@ -835,6 +882,7 @@ function monthlyCourtEvent(){
     candidates.unshift(IMPEACHMENT_INDEX);
   }
   for(const index of candidates){
+    if(seen.has(index))continue;
     if(journalContentVersion()>=33&&index===2)continue; // 礼部日程统一安排殿试，已呈阅的旧奏折仍可批复。
     const impeachment=index===IMPEACHMENT_INDEX?newImpeachment():null;
     const floodNeed=index===FLOOD_INDEX?(S.turn===0||chance(.5)?'grain':'shelter'):null;

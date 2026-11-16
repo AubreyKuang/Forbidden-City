@@ -16,7 +16,7 @@ function recordHaremCourtMonth(){
   if(!haremRestraintEnabled())return;
   const state=haremRestraintState(true),brief=S.flags.monthlyCourt;
   if(state.months.some(m=>m.turn===S.turn))return;
-  state.months.push({turn:S.turn,nights:E().nightsMonth||0,court:!!(brief?.gen===S.gen&&brief.turn===S.turn&&brief.done)});
+  state.months.push({turn:S.turn,nights:E().nightsMonth||0,court:monthlyCourtBatchEnabled()?monthlyCourtStatus().count>0:!!(brief?.gen===S.gen&&brief.turn===S.turn&&brief.done)});
   state.months=state.months.slice(-3);
 }
 function haremRestraintPanel(){

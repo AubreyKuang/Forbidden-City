@@ -131,7 +131,7 @@ A.governmentTask=function(id){
 };
 function viewGovernment(){
   const g=governance(),receipt=treasuryReceipt('tax');
-  return `${pageHeading('治国理政','用人、钱粮、民间见闻，都须有去处，也有回音。')}<div class="acts page-actions"><button class="btn primary" onclick="A.court()">本月奏折</button><button class="btn" onclick="A.go('officials')">官员表</button><button class="btn" onclick="A.go('ministries')">六部</button><button class="btn" onclick="A.go('jinyiwei')">锦衣卫</button><button class="btn" onclick="A.go('out')">微服问民情</button></div>
+  return `${pageHeading('治国理政','用人、钱粮、民间见闻，都须有去处，也有回音。')}<div class="acts page-actions">${monthlyCourtButton()}<button class="btn" onclick="A.go('officials')">官员表</button><button class="btn" onclick="A.go('ministries')">六部</button><button class="btn" onclick="A.go('jinyiwei')">锦衣卫</button><button class="btn" onclick="A.go('out')">微服问民情</button></div>
   ${typeof examSchedulePanel==='function'?examSchedulePanel():''}
   ${careerReportsHTML()}
   ${pageChapters('government',[

@@ -106,7 +106,7 @@ function royalKinContactReady(k){
 }
 function royalKinContactButtons(k){
   const mode=royalKinContactMode(k);
-  if(!mode||journalContentVersion()<46||S.over)return '';
+  if(!mode||journalContentVersion()<47||S.over)return '';
   const pending=k.royalKinContact?.pending,unread=k.royalKinContact?.reply?.unread;
   const button=unread?`<button class="btn sm jade" onclick="A.royalKinReply(${k.id})">读回信</button>`:
     `<button class="btn sm jade" onclick="A.royalKinContact(${k.id})" ${royalKinContactReady(k)?'':'disabled'}>${mode==='visit'?'召见':'寄家书'}<small>${pending?'等候回信':!royalKinContactReady(k)?'近期已经问候':'精力−1'}</small></button>`;
@@ -126,7 +126,7 @@ function recordRoyalKinContact(k,title,text){
   log(`【${title}】${text}`);
 }
 A.royalKinContact=function(id){
-  if(modalOpen||journalContentVersion()<46)return;
+  if(modalOpen||journalContentVersion()<47)return;
   const k=listedRoyalKin().find(k=>k.id===id),mode=royalKinContactMode(k);
   if(!mode||!royalKinContactReady(k))return;
   const relation=royalKinship(k),where=royalKinContactPlace(k,mode),visit=mode==='visit';
@@ -153,7 +153,7 @@ A.royalKinContact=function(id){
     ]});
 };
 function royalKinContactTick(){
-  if(!S||S.over||journalContentVersion()<46)return;
+  if(!S||S.over||journalContentVersion()<47)return;
   for(const k of royalHouseholds()){
     const contact=k.royalKinContact,letter=contact?.pending;
     if(!letter||S.turn<letter.due)continue;
@@ -166,7 +166,7 @@ function royalKinContactTick(){
   }
 }
 A.royalKinReply=function(id){
-  if(modalOpen||S.over||journalContentVersion()<46)return;
+  if(modalOpen||S.over||journalContentVersion()<47)return;
   const k=listedRoyalKin().find(k=>k.id===id),reply=k?.royalKinContact?.reply;
   if(!reply?.unread||!royalKinContactMode(k))return;
   pushEv({title:'皇亲回信',por:k,text:reply.text,choices:[{t:'收好回信',f:()=>{reply.unread=false;return null;}}]});

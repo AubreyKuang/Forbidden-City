@@ -22,8 +22,10 @@ for(const c of cases)test(`layout preserves information and action availability:
  const expected=c[0]==='family-list'?[]:[...before.text];
  const fragments=['children','children-out'].includes(c[0])?expected.map(text=>childTextChanges.get(text)??text):expected;
  for(const fragment of fragments.sort((a,b)=>b.length-a.length)){
-  assert.ok(text.includes(fragment),`Missing text: ${fragment}`);
-  text=text.replace(fragment,'');
+  // The guide now describes the three-reply quota; its other instructions remain.
+  const updated=c[0]==='home'?fragment.replace('上朝可先免费查看本月奏折，亲自批复通常花 1 点','每月最多批阅三份奏折，可先免费查看；亲自批复通常花 1 点'):fragment;
+  assert.ok(text.includes(updated),`Missing text: ${updated}`);
+  text=text.replace(updated,'');
  }
  const ids=[...html.matchAll(/\sid="([^"]+)"/g)].map(m=>m[1]);
  assert.equal(new Set(ids).size,ids.length,'Duplicate DOM IDs');

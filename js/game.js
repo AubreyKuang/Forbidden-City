@@ -230,7 +230,13 @@ const A={
   court(){
     if(!S||S.over||modalOpen)return;
     const ev=monthlyCourtEvent();
-    if(!ev){if(S.flags.monthlyCourt?.done){A.go('government');return;}toast(S.flags.monthlyCourt?.done?'本月奏折已批复。':'这份奏折已不适用。');return;}
+    if(!ev){
+      if(monthlyCourtBatchEnabled()){
+        toast(monthlyCourtStatus().done?'本月三份奏折均已批复，下月再呈新奏。':'暂无可呈阅的奏折，可继续处理其他事务。');
+        render();return;
+      }
+      if(S.flags.monthlyCourt?.done){A.go('government');return;}toast('这份奏折已不适用。');return;
+    }
     const brief=S.flags.monthlyCourt;
     const delegation=brief.floodFollowup||brief.locustFollowup||brief.locustDispatched?null:reliefDelegation(brief.index);
     const installment=brief.index===FLOOD_INDEX&&!brief.floodFollowup?stagedFloodRelief(brief):null;
@@ -333,24 +339,29 @@ A.endMonth=function(){
   }
   const monthDate=dateStr(), brief=S.flags.monthlyCourt;
   let court=brief?.turn===S.turn&&brief.gen===S.gen?brief.result:null;
+  const courts=monthlyCourtBatchEnabled()?monthlyCourtCompleted().map(item=>item.result).filter(Boolean):null;
+  if(courts&&court&&!courts.includes(court))courts.push(court);
+  if(courts&&!court)court=courts.at(-1)||null;
   if(floodReliefDue()){
     delete S.flags.floodRelief;
     const text='本月未续拨赈银，灾区粮食供给中断，民心 −3。';
     chg(FLOOD_UNFUNDED);
     log(text);
     court={title:'黄河决堤 · 赈灾回奏',choice:'未续拨',text};
+    if(courts)courts.push(court);
   }
   if(locustReliefDue()){
     delete S.flags.locustRelief;
     chg(LOCUST_UNFUNDED);
     log(LOCUST_UNFUNDED_TEXT);
     court={title:'蝗灾 · 远村补粮回奏',choice:'未按期补粮',text:LOCUST_UNFUNDED_TEXT};
+    if(courts)courts.push(court);
   }
   const people=S.consorts.flatMap(c=>{
     const latest=c.story?.findLast(entry=>entry.d===monthDate);
     return latest&&!(S.turn===0&&latest===c.story[0])?[{id:c.id,text:latest.t}]:[];
   });
-  S.flags.lastMonthReview={date:monthDate,inc,exp,court,people:continuityReview(people),...(hongjianIncome?{hongjianIncome}:{}),...(localGrainPayment?{localGrainPayment}:{})};
+  S.flags.lastMonthReview={date:monthDate,inc,exp,court,...(courts?{courts}:{}),people:continuityReview(people),...(hongjianIncome?{hongjianIncome}:{}),...(localGrainPayment?{localGrainPayment}:{})};
   recordHaremCourtMonth();
   // 后宫
   for(const c of alive()){

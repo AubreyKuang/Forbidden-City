@@ -55,12 +55,12 @@ marrySister=function(c,p,match,options){
 const examScholarView=viewScholar;
 viewScholar=function(){const html=examScholarView(),p=scholarById(UI.sel);return html+(examGroomReady(p)&&examMarriageCandidates(p).length?`<section class="detail-section"><h3>金榜姻缘</h3><button class="btn gold" onclick="A.examMarriage('${p.id}')">为探花商议婚事</button></section>`:'');};
 const examSpousePanel=officialSpousePanel;
-officialSpousePanel=function(person){const k=journalContentVersion()>=46?royalById(person.p.royalSpouseId):S.children.find(k=>k.id===person.p.royalSpouseId);return examSpousePanel(person)+(k?detailSection('尚主姻缘',`<p>妻子：<button class="person-link" onclick="A.go('${S.children.includes(k)?'kid':'relative'}',${k.id})">${esc(kidName(k))} ↗</button>${k.alive?'':' · 已故'}</p>`):'');};
+officialSpousePanel=function(person){const k=journalContentVersion()>=47?royalById(person.p.royalSpouseId):S.children.find(k=>k.id===person.p.royalSpouseId);return examSpousePanel(person)+(k?detailSection('尚主姻缘',`<p>妻子：<button class="person-link" onclick="A.go('${S.children.includes(k)?'kid':'relative'}',${k.id})">${esc(kidName(k))} ↗</button>${k.alive?'':' · 已故'}</p>`):'');};
 const examMarriagePanel=marriagePanel;
 marriagePanel=function(k){const p=k.spouse?.scholarId&&scholarById(k.spouse.scholarId);return examMarriagePanel(k)+(p?`<p>驸马履历：${careerLink(courtPerson('scholar:'+p.id))} · ${esc(officialOfficeLabel(p))} · ${officialStatus(p)}</p>`:'');};
 
 function princessGroomNews(p,text){
-  if(journalContentVersion()<46||p?.royalSpouseId==null||/^【(?:[^】]+与我的家书|婚后家书|奉旨成婚)】/.test(text))return;
+  if(journalContentVersion()<47||p?.royalSpouseId==null||/^【(?:[^】]+与我的家书|婚后家书|奉旨成婚)】/.test(text))return;
   const k=royalById(p.royalSpouseId),spouse=k?.spouse;
   if(!k?.alive||k.sex!=='f'||!k.married||spouse?.personId!==p.id)return;
   const dead=!officialAlive(p);
@@ -79,7 +79,7 @@ function princessGroomNews(p,text){
 const examScholarRecord=scholarRecord;
 scholarRecord=function(p,text,big){
   const result=examScholarRecord(p,text,big);
-  if(journalContentVersion()>=46){princessGroomNews(p,text);return result;}
+  if(journalContentVersion()>=47){princessGroomNews(p,text);return result;}
   const k=S.children.find(k=>k.id===p.royalSpouseId);
   if(careersActive()&&k?.alive&&k.spouse?.personId===p.id&&/御批|改任|升任|降职|回奏|奉差|去世|阵亡/.test(text)){
     const sad=!officialAlive(p)||/降职|失职|疏漏/.test(text),line=`【驸马家书】${p.name}：${text} ${sad?'她读完家书，心中担忧，想知道往后能怎样相扶。':'她替丈夫欣慰，也盼公务之外仍能相伴说说家常。'}`;
