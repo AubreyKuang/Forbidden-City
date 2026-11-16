@@ -238,6 +238,11 @@ function arcTick(){
   const due=harem().filter(c=>c.arc&&!c.arc.done&&S.turn>=c.arc.t).sort((a,b)=>a.arc.t-b.arc.t);
   for(const c of due){if(!officialArcEligible(c))continue;const st=ARCS[c.arc.id].stages[c.arc.st];if(!st){c.arc.done=true;continue}
     const id=c.arc.id,last=pace.byType[id];
+    if(journalContentVersion()>=26&&id==='love'){
+      if(!loveArcEligible(c))continue;
+      if(last&&S.turn-last.turn<(last.person===c.id?6:18))continue;
+      if(c.arc.st===2&&c.aff>=70&&S.turn-(pace.loveVow??-99)<24)continue;
+    }
     if(RARE_ARCS[id]&&S.turn-(pace.investigation??-99)<4)continue;
     if(last&&last.person!==c.id&&S.turn-last.turn<12)continue;
     const ev=st(c,c.arc.f);if(ev){
@@ -245,7 +250,7 @@ function arcTick(){
       ev.title=ev.title||ARCS[id].name;ev.por=ev.por||c;
       const valid=ev.valid;ev.valid=()=>inPalace(c)&&officialArcEligible(c)&&(!valid||valid());
       const queued=ev.onQueue;
-      ev.onQueue=()=>{queued?.();c.arc.startedAt??=S.turn;pace.last=S.turn;pace.byType[id]={turn:S.turn,person:c.id};if(RARE_ARCS[id])pace.investigation=S.turn;};
+      ev.onQueue=()=>{queued?.();c.arc.startedAt??=S.turn;pace.last=S.turn;pace.byType[id]={turn:S.turn,person:c.id};if(RARE_ARCS[id])pace.investigation=S.turn;if(journalContentVersion()>=26&&id==='love'&&c.arc.st===2&&c.aff>=70)pace.loveVow=S.turn;};
       return ev;
     }
     if(c.arc.t<=S.turn)c.arc.t=S.turn+1}
