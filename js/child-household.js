@@ -17,7 +17,9 @@ A.visitChildHome=function(id){
 function consortHomePlace(c){return inPalace(c)&&!c.maid?PLACES.find(p=>p.k==='palace'&&p.p===c.palace):null;}
 A.visitConsortHome=function(id){
   if(!S||S.over||modalOpen)return;
-  const destination=consortHomePlace(byId(id));if(destination)A.visitMapActivity(destination.id);
+  const destination=consortHomePlace(byId(id));if(!destination)return;
+  if(haremReturnActive()&&haremAbsence()>=HAREM_RETURN_MONTHS)A.visitMapActivity(destination.id,id);
+  else A.visitMapActivity(destination.id);
 };
 const nurseryChildren=name=>kidsAlive().filter(k=>youngChildMother(k)?.palace===name);
 function nurseryActivity(k,m){

@@ -161,12 +161,12 @@ test('the actual monthly queue offers a new lesson after six months and reloads 
  assert.equal(curEv.title,'宫中修习 · 一招一息');choose(0);assert.equal(S.children[0].immortal.palaceLessons,1);`);
 });
 
-for(const [name,payload] of Object.entries(require('./fixtures/immortal-lessons-legacy-v49.json'))){
- test('published v49 '+name+' restores its original scene before new lessons take over',()=>{
+for(const version of [49,50,51])for(const [name,payload] of Object.entries(require(`./fixtures/immortal-lessons-legacy-v${version}.json`))){
+ test('published v'+version+' '+name+' restores its original scene before new lessons take over',()=>{
   const b=boot(318,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));b.ctx.assert=assert;
-  b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,49);
+  b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,${version});
   assert.equal(immortalPalaceLessonsEnabled(),false);if(!modalResult)choose(1);drain();
-  assert.equal(PalaceActions.contentVersion,50);var k=S.children.find(k=>k.name==='昭瑶');
+  assert.equal(PalaceActions.contentVersion,52);var k=S.children.find(k=>k.name==='昭瑶');
   S.turn=k.immortal.due;A.immortalTalk(k.id);assert.match(curEv.title,/宫中修习/);
   save('auto');A.load('auto');assert.equal(PalaceActions.blocked,false);assert.match(curEv.title,/宫中修习/);`);
  });

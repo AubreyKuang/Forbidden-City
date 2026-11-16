@@ -109,12 +109,12 @@ function initiativeMapScenes() {
 function goPlace(p){AU.sfx('click');if(Math.round(emp.x)===p.d[0]&&Math.round(emp.y)===p.d[1]&&!emp.path.length){arrive(p);return}
   emp.path=planPath(Math.round(emp.x),Math.round(emp.y),p.d[0],p.d[1]);emp.arrive=()=>arrive(p)}
 // 宫名按钮是直达：点一下就到，不必等皇帝慢慢走过去（走路仍可点地图上的宫殿本身）。
-function goDirect(p){emp.path=[];emp.arrive=null;emp.x=p.d[0];emp.y=p.d[1];arrive(p)}
+function goDirect(p,resident){emp.path=[];emp.arrive=null;emp.x=p.d[0];emp.y=p.d[1];arrive(p,resident)}
 A.arrivePlace=function(id){const p=PLACES.find(p=>p.id===id);if(p)arrive(p);};
-function arrive(p){if(typeof PalaceActions!=='undefined'&&!PalaceActions.busy)return A.arrivePlace(p.id);S.pos={x:p.d[0],y:p.d[1]};setScene(p.sc);AU.sfx('page');
+function arrive(p,resident){if(typeof PalaceActions!=='undefined'&&!PalaceActions.busy)return A.arrivePlace(p.id);S.pos={x:p.d[0],y:p.d[1]};setScene(p.sc);AU.sfx('page');
   if(p.k==='view')UI.view=p.v;else if(p.k==='palace'){UI.view='palace';UI.sel=p.p;preparePalaceLife(p.p)}else{UI.view='place';UI.sel=p.id}
   if(p.id==='cn'&&dowagerLivingActive()&&S.flags.dowager?.alive)prepareDowagerCompany(ensureDowager());
-  render();if(p.k==='palace')pushEv(palaceActiveSceneEvent(p)||palaceArrivalEvent(p.p))}
+  render();if(p.k==='palace')pushEv(resident!=null?palaceArrivalEvent(p.p,resident):palaceActiveSceneEvent(p)||palaceArrivalEvent(p.p))}
 function nearestPlace(){const p=PLACES.find(p=>S.pos&&p.d[0]===S.pos.x&&p.d[1]===S.pos.y);return p?p.n+'门前':'宫道上'}
 function mapTick(){if(!S||UI.view!=='map'||modalOpen||exhaustedMonthNotice)return;
   if(emp.path.length){const done=stepTo(emp,3.5);emp.trail.push([emp.x,emp.y]);if(emp.trail.length>5)emp.trail.shift();
@@ -339,10 +339,10 @@ function mapActivityPanel(leads){
     ${activityPortraits(...lead.cast)}<button class="btn sm jade" onclick="${mapLeadAction(lead)}">${esc(lead.button||mapLeadPlace(lead)+' · '+lead.title)} →</button></article>`;
   return `<section class="map-activity-panel" aria-label="本月值得一看">${leads.slice(0,2).map(card).join('')}</section>${leads.length>2?`<div class="initiative-notices">${leads.slice(2).map(lead=>`<button class="btn sm" onclick="${mapLeadAction(lead)}">${esc(mapLeadPlace(lead))} · ${esc(lead.title)}</button>`).join('')}</div>`:''}`;
 }
-A.visitMapActivity=function(place){
+A.visitMapActivity=function(place,resident){
   if(!S||S.over||modalOpen)return;
   const destination=PLACES.find(p=>p.id===place);
-  if(destination)goDirect(destination);
+  if(destination)goDirect(destination,resident);
 };
 A.finishMonth=function(){
   if(!S||S.over||modalOpen)return;

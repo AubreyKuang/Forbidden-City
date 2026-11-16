@@ -204,7 +204,7 @@ function nightWith(c,fromEvent){
   const lines=isSolitary(c)?['她合上读到一半的书，给你留出身侧的位置。夜深后仍有半晌，各自静静想着白日未尽的话。','她不说讨巧的话，只把茶递到你手里。你们谈了一回诗书，意见未必相同，她却比平日更愿意说了。']:(NIGHT[c.trait]||[]).concat(NIGHT._),line=familyScenesEnabled()?nightVoice(c):pick(lines);
   const fm=e.style==='风流'?1.5:1;
   const s=cchg(c,{favor:10*fm*(XIN[xinOf(c)].favorMul||1),mood:10,aff:routineAffection(c,c.trait==='痴情'?9:6)});
-  c.nights++;noteHaremVisit(c);c.lastPersonalAttention=S.turn;recordImperialNight(c);S.flags.lastNight=c.id;if(c.nights===1)remember(c,'first','第一次侍寝');
+  c.nights++;noteHaremVisit(c,'night');c.lastPersonalAttention=S.turn;recordImperialNight(c);S.flags.lastNight=c.id;if(c.nights===1)remember(c,'first','第一次侍寝');
   const p=consortConceptionChance(c);
   if(!c.preg&&(!c.delivery||c.delivery.settled)&&S.turn-c.lastBirth>=3&&chance(p)){c.preg=1;c.pregnancyFather={kind:'emperor',gen:S.gen,mother:c.id,name:e.sur+e.name,wen:e.wen,wu:e.wu,conceived:S.turn};beginPregnancyCalendar(c);}
   harem().forEach(o=>{if(o!==c&&TRAITS[o.trait].jealous){o.mood=clamp(o.mood-2);relAdd(o,c,-3)}});
@@ -220,7 +220,7 @@ const A={
     if(PAGE_ORIGIN_VIEWS.includes(v)&&UI.view!==v&&!PERSON_DETAIL_VIEWS.includes(UI.view))(UI.pageFrom ||= {})[v]=UI.view;
     rememberPersonRoute(v,id);UI.view=v;UI.sel=id;
     if(v==='palace')preparePalaceLife(id);
-    if(v==='consort'&&S)noteHaremVisit(byId(id));
+    if(v==='consort'&&S&&!haremReturnActive())noteHaremVisit(byId(id));
     if(v==='consort'&&S?.turn===0&&!S.flags.firstEmpressVisit&&id===empress()?.id){
       S.flags.firstEmpressVisit=true;save('auto');
     }

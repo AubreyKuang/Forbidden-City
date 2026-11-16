@@ -12,7 +12,7 @@ test('new-maid night and morning arrangements reload without adding a second per
 test('monthly encounter checks its twenty-five-percent gate and six-month cooldown',()=>{const w=world();w.run(`S.flags.lastMaidEncounter=60;S.turn=65;Math.random=()=>0;assert.equal(monthlyMaidEvent(),null);S.turn=66;Math.random=()=>.25;assert.equal(monthlyMaidEvent(),null);`);});
 
 test('monthly gate accepts just under 25 percent and garden includes its full quarter interval',()=>{const w=world();w.force(.249);w.run(`assert.ok(monthlyMaidEvent());`);w.force(.749);w.run(`A.out('garden');assert.equal(curEv.title,'宫女');choose(2);drain();S.turn+=5;assert.equal(maidEncounterReady(),false);S.turn++;assert.equal(maidEncounterReady(),true);`);w.force(.75);w.run(`A.out('garden');assert.equal(curEv.title,'御花园');`);});
-test('genuine published v29 garden encounter keeps its old cooldown until completion',()=>{const payload=require('./fixtures/maid-encounter-legacy-v29.json'),w=boot(229,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));w.ctx.assert=assert;w.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,29);assert.equal(curEv.title,'宫女');choose(2);drain();assert.equal(PalaceActions.contentVersion,50);S.turn+=5;assert.equal(maidEncounterReady(),false);S.turn++;assert.equal(maidEncounterReady(),true);`);});
+test('genuine published v29 garden encounter keeps its old cooldown until completion',()=>{const payload=require('./fixtures/maid-encounter-legacy-v29.json'),w=boot(229,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));w.ctx.assert=assert;w.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,29);assert.equal(curEv.title,'宫女');choose(2);drain();assert.equal(PalaceActions.contentVersion,52);S.turn+=5;assert.equal(maidEncounterReady(),false);S.turn++;assert.equal(maidEncounterReady(),true);`);});
 
 test('a pregnancy after sending a maid back is announced once in the new month and survives reload',()=>{
  const w=world();w.run('A.maidAudience();choose(0);');
@@ -34,4 +34,14 @@ test('sending a maid back without conception does not manufacture a pregnancy re
  w.force(.95,.95);w.run(`choose(0);var g=maids()[0];assert.equal(g.preg,0);choose(1);choose(3);drain();
  assert.equal(g.maidReturnedAt,undefined);A.endMonth();assert.ok(![curEv,...Q].some(x=>x?.title.includes('尚衣局来报')));
  drain();assert.equal(g.preg,0);assert.ok(!S.log.some(x=>x.t.includes('尚衣局来报')));`);
+});
+
+test('only a previously favored maid has the attendant report, without a mistress or a plea for a visit',()=>{
+ const w=world();w.run(`var g=newMaid('尚衣局');g.xin={k:'委屈',t:S.turn};assert.equal(XEV.委屈(g),null);
+ g.nights=1;var ev=xinEvent();assert.equal(ev.por,g);assert.match(ev.text,/内侍来报.*曾承宠的宫女.*伤心.*落泪/);
+ assert.doesNotMatch(ev.text,/小主|姑姑|求陛下去/);assert.equal(ev.present.length,0);
+ assert.equal(ev.choices.length,1);assert.equal(ev.choices[0].t,'知道了');
+ var e=E().energy;pushEv(ev);choose(0);assert.equal(E().energy,e);
+ assert.match(g.story.at(-1).event.situation,/内侍来报/);
+ assert.match(XEV.委屈(empress()).text,/掌事姑姑.*小主/);`);
 });

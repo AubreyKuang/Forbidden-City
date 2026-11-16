@@ -14,7 +14,7 @@ const IMMORTAL_VOICES={
  自矜:'我愿从普通弟子做起。靠皇室名号借来的敬重，不算我的。'
 };
 function immortalEnabled(){return typeof PalaceActions==='undefined'||PalaceActions.contentVersion>=7;}
-function immortalPalaceLessonsEnabled(){return journalContentVersion()>=50;}
+function immortalPalaceLessonsEnabled(){return journalContentVersion()>=52;}
 function immortalAway(k){return !!(immortalEnabled()&&['learning','trial','sect'].includes(k?.immortal?.stage));}
 function immortalBirthChance(k){return k.sex==='f'?.24:k.birthTraits?.mother?.rank===8?.015:.06;}
 function immortalRoot(k){
