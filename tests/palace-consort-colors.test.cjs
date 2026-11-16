@@ -2,7 +2,7 @@ const assert=require('node:assert/strict'),{test}=require('node:test');
 const fs=require('node:fs'),path=require('node:path');
 const {boot}=require('./playtest-harness.cjs');
 const manifest=require('../docs/consort-colors-sources.json');
-const legacyCases=[require('./fixtures/consort-colors-legacy-v34.json'),require('./fixtures/consort-colors-legacy-v35.json'),require('./fixtures/consort-colors-legacy-v36.json')];
+const legacyCases=[require('./fixtures/consort-colors-legacy-v34.json'),require('./fixtures/consort-colors-legacy-v35.json'),require('./fixtures/consort-colors-legacy-v36.json'),require('./fixtures/consort-colors-legacy-v37.json')];
 function game(storage=new Map()){const b=boot(510,storage);b.ctx.assert=assert;return b;}
 
 test('the thirty approved portraits have distinct cells, full and bust views, and fitted jewelry',()=>{
@@ -78,5 +78,5 @@ for(const legacy of legacyCases)for(const [name,data] of Object.entries(legacy))
     b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,${version});`);
     assert.deepEqual(JSON.parse(b.run('JSON.stringify([...S.consorts,...S.cands].map(c=>[c.id,c.artPortrait]))')),faces(legacy['selection-after']));
   }
-  b.run(`drain();assert.equal(PalaceActions.contentVersion,37);assert.equal(PalaceActions.blocked,false);`);
+  b.run(`drain();assert.equal(PalaceActions.contentVersion,38);assert.equal(PalaceActions.blocked,false);`);
 });
