@@ -995,7 +995,7 @@ NPC 记忆区分客观事件与人物主观理解。同一场争执，受助者�
 
 ### 浏览器存档
 
-<img src="docs/screenshots/showcase-file-backup.jpg" alt="存档槽、自动存档与 JSON 文件备份" width="860">
+<img src="docs/screenshots/storage/full-legacy-desktop-saved.jpg" alt="存档槽、自动存档与 JSON 文件备份" width="860">
 
 - **三个手动存档位与转月、行动后自动存档**，记录人物、关系、记忆、活动与事件进度。自动槽显示实际保存月份及“本月已自动保存”状态，也可点“立即保存”；写入失败时明确显示未写入。
 - **大容量本机存储**：使用 IndexedDB 保存完整世界、人物纪事和未完剧情。首次打开会自动接续旧版浏览器存档，保留原始副本；正式版与测试版的存档位独立。
