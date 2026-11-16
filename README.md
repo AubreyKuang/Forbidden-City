@@ -1418,3 +1418,11 @@ node tests/palace-flow.cjs
 | <img src="docs/screenshots/personal-context/profile.jpg" alt="赵令仪旧档往事恢复，人物页新增听河间旧事入口" width="430"> | <img src="docs/screenshots/personal-context/succession.jpg" alt="传代后的太后母家、外祖父与国舅仍保留原官职和人物主页" width="430"> |
 
 详细验证见[人物往事与跨代亲族](docs/qa/personal-context.md)。
+
+## 家世与宫中立足
+
+新妃的家世会体现在觐见、安顿、迎驾、闲聊和人物纪事里。高门女子熟悉礼数与精致用度；清贫书香、寒门女子更留心观察、学礼与零用；皇商之女不缺银钱，却仍须另学宫规。温婉者的谨慎、骄矜者的自尊、活泼者的直问和孤高者的独处各有写法。
+
+入宫半年后不再反复扮演初来乍到；位分、恩宠与安置照应会改变她当下对用度的顾虑，原本的家世与习惯仍保留。新妃安顿时可给手头紧的人另赐一次安置银，她的领受与心情写入纪事。生活小事低频出现，姐妹在宫外也使用符合自己身份的记事。
+
+[完整内容与资料参考](docs/character-experiences/family-bearing.md) · [验证说明](docs/qa/family-bearing.md)

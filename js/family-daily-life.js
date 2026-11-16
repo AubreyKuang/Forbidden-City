@@ -33,9 +33,9 @@ function originLifeEligible(c,p){
 }
 function recordOriginLife(c,p,index){
   if(!careersActive()||!originLifeEligible(c,p))return null;
-  const group=originGroup(c),items=ORIGIN_VIGNETTES[group],entry=items[index],key=group+':'+index;if(!entry||S.turn-(p.originLife?.seen?.[key]??-99)<36)return null;
+  const group=originGroup(c),items=originVignettes(c),entry=items[index],key=group+':'+index;if(!entry||S.turn-(p.originLife?.seen?.[key]??-99)<36)return null;
   const life=p.originLife ||= {seen:{}};life.last=S.turn;life.seen[key]=S.turn;
-  const text=`${entry[1]}${originThought(p)}`,name=S.consorts.includes(p)?fullName(p):p.name;life.latest={title:entry[0],text,turn:S.turn,group};
+  const text=`${familyBearingActive()&&index>=4?bearingVignette(c,p,index):entry[1]}${originThought(p)}`,name=S.consorts.includes(p)?fullName(p):p.name;life.latest={title:entry[0],text,turn:S.turn,group};
   if(S.consorts.includes(p))story(p,`【家世日常·${entry[0]}】${name}${text}`);else natalRecord(c,p,`【家世日常·${entry[0]}】${name}在家书中说起：${text}`,.2);
   NPCMemory.record(S,{type:'origin-life',time:S.turn,participants:[p.id],object:entry[0]},[{person:p.id,subject:'self',interpretation:text,emotion:.2,impact:35}]);return life.latest;
 }
@@ -44,7 +44,7 @@ function originLifeTick(){
   if(S.turn-(S.flags.lastOriginLife??0)<3||!chance(.35))return;
   const pool=[],seen=new Set();for(const c of S.consorts){if(originLifeEligible(c,c))pool.push({c,p:c});const h=houseOf(c);if(!h||seen.has(h.father.id))continue;seen.add(h.father.id);
     for(const p of natalPeople(h))if(p.sex==='f'&&originLifeEligible(c,p))pool.push({c,p});}
-  if(!pool.length)return;const {c,p}=pick(pool),group=originGroup(c),options=ORIGIN_VIGNETTES[group].map((_,i)=>i).filter(i=>S.turn-(p.originLife?.seen?.[group+':'+i]??-99)>=36);
+  if(!pool.length)return;const {c,p}=pick(pool),group=originGroup(c),options=originVignettes(c).map((_,i)=>i).filter(i=>S.turn-(p.originLife?.seen?.[group+':'+i]??-99)>=36);
   if(options.length&&recordOriginLife(c,p,pick(options)))S.flags.lastOriginLife=S.turn;
 }
 function originLifeVoice(c){const m=c.originLife?.latest;return m&&S.turn-m.turn<=6?voiceLine('origin-life','她提起一件与家世和旧日生活有关的小事。',m.text):null;}
