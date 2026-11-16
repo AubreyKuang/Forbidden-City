@@ -1425,4 +1425,8 @@ node tests/palace-flow.cjs
 
 入宫半年后不再反复扮演初来乍到；位分、恩宠与安置照应会改变她当下对用度的顾虑，原本的家世与习惯仍保留。新妃安顿时可给手头紧的人另赐一次安置银，她的领受与心情写入纪事。生活小事低频出现，姐妹在宫外也使用符合自己身份的记事。
 
+| 高门女子的从容 | 寒门女子的观察与打算 |
+| --- | --- |
+| <img src="docs/screenshots/family-bearing/noble.jpg" alt="高门女子熟悉器物与礼数，仍愿意另学宫规" width="430"> | <img src="docs/screenshots/family-bearing/humble.jpg" alt="寒门女子暗记落杯与起身次序，打算零用，可以获得安置照应" width="430"> |
+
 [完整内容与资料参考](docs/character-experiences/family-bearing.md) · [验证说明](docs/qa/family-bearing.md)
