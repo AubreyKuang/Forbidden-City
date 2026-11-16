@@ -196,6 +196,9 @@ const EVENT_ILLUSTRATIONS={
   'gouyi-study-window':'她写到一半停下来。方窗外，枝头的粉花晃了晃。',
   'hongjian-paper-shop':'窗棂的影子斜过去，刚好落在那叠新笺的纸边。',
   'hongjian-willow-rain':'柳叶尖上的雨珠坠下来，水面荡开小小一圈光。',
+  'sunny-doorway-umbrella':'伞已经晾干。日光越过门槛，照亮了靠在门边的旧伞。',
+  'garden-chrysanthemum':'石沿旁还有两朵没开。日头一斜，花影就落到了墙上。',
+  'xie-homecoming-lamp':'门里还留着一盏灯，暖光顺着石阶落进院子。',
   'hongjian-poem-at-dusk':'傍晚的光从半开的窗进来，照到小笺折起的那一角。',
   'quiet-palace-keepsakes':'窗边的浅匣安安静静，外头的树影慢慢移过来。',
   'western-moon-window':'窗前静得只剩月色，远处的屋瓦也淡了下去。'

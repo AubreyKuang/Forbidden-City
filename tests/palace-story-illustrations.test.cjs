@@ -120,7 +120,7 @@ test('West Lake appears only in the result of accompanying her south',()=>{
   }
 });
 
-test('the umbrella belongs to the first chapter, including after reloading it',()=>{
+test('the rainy and sunny umbrella scenes use separate images in their own chapters',()=>{
   const game=start();
   game.run(`S.turn=300;const c=empress();c.trait='温婉';c.age=28;c.aff=60;c.hp=90;c.enteredAt=100;
     A.journeyBegin(c.id,'rainUmbrella');save('1');`);
@@ -133,6 +133,12 @@ test('the umbrella belongs to the first chapter, including after reloading it',(
   resumed.run(`choose(0);nextEv();const c=empress();S.turn=c.journeys.current.due;A.journeyTalk(c.id);`);
   assert.equal(resumed.run('curEv.title'),'雨廊一伞 · 还伞的人');
   assert.doesNotMatch(resumed.run("$('#mbox').innerHTML"),/event-illustration/);
+  resumed.run("choose(0);nextEv();S.turn=c.journeys.current.due;A.journeyTalk(c.id);save('1')");
+  assert.equal(resumed.run('curEv.title'),'雨廊一伞 · 晴日来客');
+  assert.match(resumed.run("$('#mbox').innerHTML"),/story-sunny-doorway-umbrella\.webp/);
+  const finalChapter=boot(42,resumed.storage);
+  finalChapter.run("A.load('1')");
+  assert.match(finalChapter.run("$('#mbox').innerHTML"),/story-sunny-doorway-umbrella\.webp/);
 });
 
 test('the fish basin follows the feeding dialogue and restores from the same saved encounter',()=>{
@@ -312,7 +318,7 @@ test('the flower image appears only for a spring orchid that has actually bloome
 });
 
 for(const [title,image] of [
-  ['花下拾香','fallen-petals-after-rain'],['芍药小憩','peony-corridor-rest'],['柳絮去留','floating-willow-catkins']
+  ['花下拾香','fallen-petals-after-rain'],['芍药小憩','peony-corridor-rest'],['柳絮去留','floating-willow-catkins'],['菊圃新题','garden-chrysanthemum']
 ]){
   test(`${title} is illustrated at the beginning of the personal story`,()=>{
     const game=start();
