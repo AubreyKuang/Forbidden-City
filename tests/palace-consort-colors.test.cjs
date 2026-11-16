@@ -78,5 +78,5 @@ for(const legacy of legacyCases)for(const [name,data] of Object.entries(legacy))
     b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,${version});`);
     assert.deepEqual(JSON.parse(b.run('JSON.stringify([...S.consorts,...S.cands].map(c=>[c.id,c.artPortrait]))')),faces(legacy['selection-after']));
   }
-  b.run(`drain();assert.equal(PalaceActions.contentVersion,45);assert.equal(PalaceActions.blocked,false);`);
+  b.run(`drain();assert.equal(PalaceActions.contentVersion,46);assert.equal(PalaceActions.blocked,false);`);
 });

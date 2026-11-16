@@ -768,7 +768,7 @@ function courtEvent(){
 }
 
 const MONTHLY_COURT_LIMIT=3;
-const monthlyCourtBatchEnabled=()=>journalContentVersion()>=45;
+const monthlyCourtBatchEnabled=()=>journalContentVersion()>=46;
 function currentCourtBrief(){
   const brief=S.flags.monthlyCourt;
   return brief?.turn===S.turn&&brief.gen===S.gen?brief:null;
