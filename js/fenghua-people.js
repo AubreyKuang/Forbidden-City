@@ -8,7 +8,8 @@ const FENGHUA_PEOPLE=Object.freeze({
  sunYunxiu:{name:'孙云岫',sur:'孙',given:'云岫',gender:'m',age:37,portrait:439,role:'游方医者',temperament:'温厚执拗',principle:'先看病人，再看身份；该休养的日子，谁也省不得。',entry:'city',route:'出巡 → 微服私访，药铺或义诊处偶遇；宫中有调养需要时更易听见其名',intro:'药铺前的队伍已经排到街角。孙云岫收下一个孩子递来的两枚铜钱，又把足量药材放进纸包。随从要替你清出位置，他抬起头：“急症先看，贵人也一样。”',summary:'宫门内外的一张药方、没有写进账簿的病人，以及敢不敢说实话。'},
  liuZhaoshuang:{name:'柳照霜',sur:'柳',given:'照霜',gender:'f',age:24,portrait:440,role:'江湖剑客',temperament:'爽利重诺',principle:'答应送到的人要送到，传言里没查清的事不急着定罪。',entry:'city',route:'出巡 → 微服私访，遇见护送行旅的江湖女子',intro:'桥头几人拦住一辆车，指着押车女子说她来路不明。柳照霜没有拔剑，只取出一路盖印的凭据：“若疑我是贼，先问问车上的人愿不愿跟我走。”',summary:'护送的真相、江湖旧友与宫中流言，以及一柄剑应该交给谁。'}
 });
-const fenghuaActive=()=>!!S&&!S.over&&journalContentVersion()>=FENGHUA_VERSION;
+const fenghuaReadable=()=>!!S&&journalContentVersion()>=FENGHUA_VERSION;
+const fenghuaActive=()=>fenghuaReadable()&&!S.over;
 const fenghuaAll=()=>[...(S?.fenghua?.people||[]),...(S?.scholars||[]).filter(p=>p.fenghuaKey)];
 const fenghuaPerson=key=>fenghuaAll().find(p=>p.fenghuaKey===key);
 function fenghuaState(){const s=S.fenghua ||= {lastCity:-99};s.people ||= [];s.attempts ||= {};return s;}
@@ -71,7 +72,7 @@ function fenghuaEvent(p,title,text,options,{peers=[],advance=true}={}){
  }}))};
 }
 function fenghuaCodex(){
- if(!fenghuaActive())return '';
+ if(!fenghuaReadable())return '';
  const x=(S.scholars||[]).find(p=>p.storyPerson==='xiean'),xie={name:'谢安',portrait:433,temperament:'疏朗自持',principle:'以诗名世，拒绝以诗名冒领官声。',route:'微服私访或皇嗣少年心事中听闻',summary:'召见、辞官、尚主与婚后相知。'};
  const cards=[{key:'xiean',d:xie,p:x},...Object.entries(FENGHUA_PEOPLE).map(([key,d])=>({key,d,p:fenghuaPerson(key)}))];
  return `<div class="story-consort-codex"><p class="hint">这里收录不入后宫的独立人物：名士、功臣、女官与宫外友人。可纳为妃并有后宫故事的人物另见「剧情妃图鉴」。点进已相识者可查看近况、相见与连续纪事。</p>${cards.map(({key,d,p})=>{

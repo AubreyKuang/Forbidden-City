@@ -111,7 +111,12 @@ for(const key of ['shangguanLantai','gaoHuaibi'])test(key+' first audience reloa
 });
 
 test('military roster filters and origin labels retain the real officer rather than a civil scholar',()=>{
- const b=game();b.run(`var p=createFenghuaPerson('gaoHuaibi');UI.officialsBloc='army';assert.match(officialsTable(),/高怀璧/);assert.match(officialsTable(),/军功入仕/);UI.officialsBloc='civil';assert.doesNotMatch(officialsTable(),/高怀璧/);`);
+ const b=game();b.run(`var p=createFenghuaPerson('gaoHuaibi');UI.officialsBloc='army';assert.match(officialsTable(),/高怀璧/);assert.match(officialsTable(),/军功入仕/);UI.officialsBloc='civil';assert.doesNotMatch(officialsTable(),/高怀璧/);
+ assert.equal(portraitCell({personId:p.id,official:3,artPortrait:436}),436);`);
+});
+
+test('ended reigns retain the codex and existing chronicles without allowing a new audience',()=>{
+ const b=game();b.run(`var p=createFenghuaPerson('shangguanLantai');S.over=true;assert.equal(fenghuaVisitReady(p),false);assert.match(fenghuaCodex(),/上官兰台/);assert.match(viewHome(),/风华人物/);`);
 });
 
 test('letter recipients remember the received letter without learning its private drafting conversation',()=>{
