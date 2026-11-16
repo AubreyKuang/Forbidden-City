@@ -32,7 +32,10 @@ function marriageMeeting(k,p,back){
       {t:'还需再想想，先回去',f:()=>{pushNow(back());return null;}}
     ]};
 }
-const royalHouseholds=()=>[...new Map([...(S.royalRelatives||[]),...archivedPrincesses(),...S.children].map(k=>[k.id,k])).values()];
+const royalHouseholds=()=>{
+  const roots=[...new Map([...(S.royalRelatives||[]),...archivedPrincesses(),...S.children].map(k=>[k.id,k])).values()];
+  return [...roots,...princelyDescendants(roots)];
+};
 const royalById=id=>royalHouseholds().find(k=>k.id===id);
 const richerPrincessMarriage=k=>k.sex==='f'&&journalContentVersion()>=47;
 function ensureMarriedLife(k){
@@ -231,7 +234,7 @@ function householdPanel(k){
     ${h.concubines.length?`<p>妾室：${h.concubines.map(p=>esc(p.name)+'（'+esc(marriageNature(p).temperament)+'）').join('、')}</p>`:''}
     ${h.project?`<p class="hint">${esc(h.project.title)} · 预计${Math.max(0,h.project.due-S.turn)}个月后有回音</p>`:''}
     ${h.pending?`<p class="initiative-note">府中近况：${esc(HOUSEHOLD_SCENES[h.pending.id]?.title||'待询问')}</p>`:''}
-    ${householdActive(k)?`<div class="acts"><button class="btn jade" onclick="A.householdVisit(${k.id})">${k.away||k.princessMarriage==='frontier'?'读府中来信':'探望小家'} →</button><button class="btn" onclick="A.householdProject(${k.id})" ${h.project||S.turn-(h.lastProject??-99)<12?'disabled':''}>帮两人办件事</button>${adult&&k.sex==='m'?`<button class="btn" onclick="A.householdConcubine(${k.id})" title="${esc(concubineReason||'先听皇子的想法，再决定是否准许纳妾')}" ${concubineReason?'disabled':''}>询问皇子纳妾意愿${concubineReason?`<small>${esc(concubineReason)}</small>`:''}</button>`:''}</div>`:''}
+    ${householdActive(k)?`<div class="acts"><button class="btn jade" onclick="A.householdVisit(${royalActionArg(k.id)})">${k.away||k.princessMarriage==='frontier'?'读府中来信':'探望小家'} →</button><button class="btn" onclick="A.householdProject(${royalActionArg(k.id)})" ${h.project||S.turn-(h.lastProject??-99)<12?'disabled':''}>帮两人办件事</button>${adult&&k.sex==='m'?`<button class="btn" onclick="A.householdConcubine(${royalActionArg(k.id)})" title="${esc(concubineReason||'先听皇子的想法，再决定是否准许纳妾')}" ${concubineReason?'disabled':''}>询问皇子纳妾意愿${concubineReason?`<small>${esc(concubineReason)}</small>`:''}</button>`:''}</div>`:''}
     ${adult&&h.children.length?`<div class="household-children">${h.children.map(c=>`<article>${porImg(c,56)}<div><strong>${esc(c.name)}</strong><small>${kidAge(c)}岁 · ${c.sex==='m'?'子':'女'} · 生母${esc(c.motherName)}</small></div></article>`).join('')}</div>`:''}
     </section>`;
 }

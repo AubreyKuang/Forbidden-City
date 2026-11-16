@@ -69,3 +69,21 @@ test('deferred quarterly items survive reload and funding cannot spend twice or 
     S.turn+=3;S.month=10;assert.ok(princeQuarterReports());assert.equal(princeDocketPending(prince)[0].kind,'grain');
   `);
 });
+
+test('the original household son succeeds after a death report and keeps the fief and docket on reload',()=>{
+  let game=princeWorld();game.run(`var id=prince.id;prince.away=true;prince.princeEstate={location:'西安',opened:0};
+    prince.married=true;prince.spouse={...marriageCandidate(prince,'scholar'),marriedAt:0};var h=ensureMarriedLife(prince);
+    var son={id:'grand-1-'+id+'-1',name:'承礼',sex:'m',born:S.turn-7*12,alive:true,seed:17,mother:prince.spouse.id,father:id,story:[]};h.children.push(son);
+    assert.match(princeSuccessionTick().text,/请陛下核定世子/);assert.equal(princeSuccessionTick(),null);
+    A.princeReviewSuccession(id);choose(0);drain();assert.equal(princeHeir(prince),son);
+    assert.ok(prince.spouse.story.some(x=>x.t.includes('册封世子')));S.month=4;princeQuarterReports();
+    prince.born=S.turn-95*12;assert.match(princeSuccessionTick().text,/承礼奉表请袭/);assert.equal(prince.alive,false);
+    A.go('prince-estate',id);A.princeReviewSuccession(id);assert.equal(curEv.title,'长史奏报 · 请袭王爵');choose(0);drain();
+    assert.equal(royalById(son.id),h.children[0]);assert.equal(princeEstatePlace(son),'西安');assert.equal(son.title,'睿亲王');
+    assert.equal(princeDocketPending(son).length,2);assert.equal(princeDocketPending(prince).length,0);
+    assert.match(viewPrinceEstate(),/读先王的记事/);assert.match(viewOut(),/grand-1-/);assert.equal(princeSuccessionTick(),null);
+    assert.ok(prince.story.some(x=>x.t.includes('袭爵')));assert.ok(S.log.some(x=>x.t.includes('府中庶务由长史暂理')));save('auto');`);
+  game=boot(81,game.storage);game.ctx.assert=assert;game.run(`A.load('auto');var p=S.children.find(x=>x.name==='承安'),son=p.household.children[0];
+    assert.equal(royalById(son.id),son);assert.equal(son.away,true);assert.equal(royalHouseholds().filter(x=>x.id===son.id).length,1);
+    assert.equal(S.children.includes(son),false);assert.ok(son.story.some(x=>x.t.includes('袭爵')));`);
+});

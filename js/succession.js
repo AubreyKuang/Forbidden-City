@@ -80,7 +80,7 @@ function royalKinship(k){
 function listedRoyalKin(){
   const cohorts=new Map(),current=new Set(S.children.map(k=>k.id));
   for(const k of royalHouseholds()){
-    if(current.has(k.id))continue;
+    if(current.has(k.id)||k.princelySuccession)continue;
     if(!cohorts.has(k.reign))cohorts.set(k.reign,[]);
     cohorts.get(k.reign).push(k);
   }
@@ -110,7 +110,7 @@ function royalKinContactButtons(k,estateContact=false){
   const mode=royalKinContactMode(k,estateContact);
   if(!mode||journalContentVersion()<47||S.over)return '';
   const pending=k.royalKinContact?.pending,unread=k.royalKinContact?.reply?.unread;
-  const args=estateContact?`${k.id},true`:k.id;
+  const id=royalActionArg(k.id),args=estateContact?`${id},true`:id;
   const button=unread?`<button class="btn sm jade" onclick="A.royalKinReply(${args})">读回信</button>`:
     `<button class="btn sm jade" onclick="A.royalKinContact(${args})" ${royalKinContactReady(k)?'':'disabled'}>${mode==='visit'?(estateContact?'到王府探望':'召见'):'寄家书'}<small>${pending?'等候回信':!royalKinContactReady(k)?'近期已经问候':'精力−1'}</small></button>`;
   return `<div class="acts"><span class="hint">${esc(royalKinContactPlace(k,mode))}</span>${button}</div>`;

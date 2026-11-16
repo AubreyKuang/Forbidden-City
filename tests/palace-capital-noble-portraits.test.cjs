@@ -45,5 +45,5 @@ for(const legacy of legacyCases)test('v'+legacy.pendingActions.version+' pending
   assert.equal(b.run('curEv.title'),legacy.pendingActions.pending.title);
   const faces=consorts=>consorts.map(c=>Object.values(c.house||{}).filter(p=>p&&typeof p==='object'&&p.id).map(p=>[p.id,p.artPortrait]));
   assert.deepEqual(faces(JSON.parse(b.run('JSON.stringify(S.consorts)'))),faces(legacy.consorts));
-  b.run('drain();assert.equal(PalaceActions.contentVersion,55);');
+  b.run('drain();assert.equal(PalaceActions.contentVersion,56);');
 });

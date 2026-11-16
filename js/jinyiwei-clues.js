@@ -66,3 +66,46 @@ casesSection=function(){const base=clueCasesSection();if(!careersActive()||!jiny
   const rows=(jinyiwei().clues||[]).slice().reverse(),labels={new:'待御览',assigned:'已循线查证',watching:'继续留意',shelved:'此次封存'};
   return detailSection('巡访密札',rows.length?`<ul class="story">${rows.map(x=>`<li><time>${esc(x.d)}</time><b>${esc(x.title)}</b> · ${labels[x.status]}<p>${esc(x.text)}</p>${x.status==='new'?`<button class="btn sm" onclick="A.jinyiweiClue('${x.id}')">阅看线索</button>`:''}</li>`).join('')}</ul>`:'<p class="hint">缇骑会间隔数月从未破旧案、任内回奏中带回线索。有线索才呈报，传闻须再查证。</p>')+base;
 };
+
+const JINYIWEI_RARE_NOTICES={
+  '香囊疑案':'可封存香囊和香药领用簿，先核对经手人；物件出自何处尚待查证。',
+  '石阶惊变':'值守人可先封住石阶，留存现场痕迹，分别核问当值人员。',
+  '巫蛊之祸':'先封存搜得的物件并抄录搜检时辰；物件落在何处与谁亲手放置，要分别查明。',
+  '东宫惊魂':'可核对东宫值宿簿和事发前后的入内记录，并先加强守卫。',
+  '狸猫':'禁门须核对当夜进出人口与随身包裹，眼下先查孩子的去向。',
+  '起居簿外的疑问':'起居、请脉和宫门簿可分别核对。时日有疑处也不足以推断亲缘。',
+  '襁褓上的旧结':'将涂改的产房簿页、包被和经手证词分别留存，再逐一核对。',
+  '迟来的脉案':'请先由医官封存脉案和领药簿，核对原始记录。病况与是否有人冒报须分别查证。',
+  '夹在书中的笺子':'可核对递送书卷的经手人和当值簿；私笺的来路仍须问清。',
+  '回廊相依':'可分别问当值侍从各自看见了什么，过后转述的话要另记一栏。',
+  '宫外家书 · 身世起疑':'家信中的疑问可对照婚籍与接生簿，亲缘在查明前依旧记载。',
+  '皇子结党':'可核对府门来客和留宿登记。交游本身尚不足以坐实结党。',
+  '兄弟阋墙':'宫人所述可与来往簿核对，听见的原话与转述须分开记。',
+  '储位之争':'早朝发言可按朝班与奏本核明，也可留意散朝后的来往。',
+  '逼宫':'禁门急报已有府兵集结，守门记录和令牌可用于核实带兵人。',
+  '遇刺':'扈从可封住巷口，留下目击者姓名，刺客的来路仍待查问。',
+  '出生时地动 · 不罪婴儿':'地方急报与驿传时刻可以核对；产房照护和地方灾情各有专人负责。',
+  '出生逢旱 · 久旱中的啼声':'可按州县呈报核看旱情。各地旱情已有时日，应与宫中诞育分开记。',
+  '钩弋之遇 · 掌心初开':'随驾名册可核当日引见的过程。望气者的说法只随行录存。',
+  '仙师来访 · 山门之约':'宫门可查来访名帖和引见人，至于国师所论灵根，缇骑只记其言。',
+  '江湖闻名 · 故人仙踪':'可经沿途驿站核对信牒来处与印记；江湖盛传的话须另记作风闻。'
+};
+function jinyiweiRareNotice(ev,people){
+  if(journalContentVersion()<56||!Object.hasOwn(JINYIWEI_RARE_NOTICES,ev.title)||!jinyiweiCommanderReady())return '';
+  const j=jinyiwei(),notes=j.rareNotices||=[];
+  const ids=people.map(p=>String(p.id??p.name)).sort().join(',');
+  const repeatable=['香囊疑案','石阶惊变','巫蛊之祸','东宫惊魂','逼宫','遇刺','储位之争','兄弟阋墙'].includes(ev.title);
+  const key=`${S.gen}:${ev.title}:${ids}${repeatable?':'+S.turn:''}`;
+  const text=JINYIWEI_RARE_NOTICES[ev.title];
+  if(!notes.some(n=>n.key===key)){
+    notes.push({key,title:ev.title,text,date:dateStr()});
+    const line=`【锦衣卫提示 · ${ev.title}】${text}`;
+    j.commander.story||=[];story(j.commander,line);log(line);
+  }
+  return `锦衣卫指挥使${j.commander.name}附报：${text}`;
+}
+const rareCasesSection=casesSection;
+casesSection=function(){
+  const base=rareCasesSection(),notes=jinyiwei()?.rareNotices;
+  return notes?.length?detailSection('稀有事件速报',`<ul class="story">${notes.slice(-20).reverse().map(n=>`<li><time>${esc(n.date)}</time><b>${esc(n.title)}</b><p>${esc(n.text)}</p></li>`).join('')}</ul>`)+base:base;
+};
