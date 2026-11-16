@@ -1,4 +1,5 @@
 /* Keep identities, families and portraits when the point of view changes reign. */
+const ROYAL_KIN_PER_REIGN=10;
 function dowagerPerson(d){
   // Rendering must never overwrite a predecessor's saved appearance or roll RNG.
   let portrait=d?.portrait;
@@ -35,8 +36,13 @@ function inheritDowager(h){
   S.previousCourts ||= [];
   S.previousCourts.push({gen:S.gen,turn:S.turn,emperor:{...E()},consorts:JSON.parse(JSON.stringify(S.consorts))});
   if(S.previousCourts.length>5)S.previousCourts.shift();
-  const relatives=S.children.filter(k=>k.id!==h.id).map(k=>({...k,reign:S.gen,kinship:k.born<=h.born?(k.sex==='m'?'皇兄':'皇姐'):(k.sex==='m'?'皇弟':'皇妹')}));
+  const rosterEnabled=journalContentVersion()>=45;
+  const relatives=S.children.filter(k=>k.id!==h.id).map(k=>{
+    const elder=rosterEnabled?royalBirthOrder(k,h)<0:k.born<=h.born;
+    return {...k,reign:S.gen,kinship:k.sex==='m'?(elder?'皇兄':'皇弟'):(elder?'皇姐':'皇妹')};
+  });
   S.royalRelatives=[...new Map([...(S.royalRelatives||[]),...relatives].map(k=>[k.id,k])).values()];
+  if(rosterEnabled)(S.royalKinRoster||={})[S.gen]=royalKinCandidates(relatives).slice(0,ROYAL_KIN_PER_REIGN).map(k=>k.id);
 }
 function inheritHousehold(h,queen){
   const household=h.household;if(!household||!queen)return;
@@ -61,12 +67,42 @@ function dowagerCourtPanel(){
   return [S.flags.dowager,S.flags.birthDowager].filter(Boolean).map(d=>`<section class="detail-head dowager-court">${porImg(dowagerPerson(d),160)}<div class="grow"><h3>${esc(d.name)}</h3><p>${esc(d.fullName||'')}${d.relation?' · '+esc(d.relation):''}</p>${d.age?`<p>${d.age+Math.floor((S.turn-(d.atTurn||0))/12)}岁 · ${d.alive?'慈宁宫':'已故'}</p>`:''}${d.portrait?.trait?`<p>${esc(d.portrait.trait)} · ${esc(TRAITS[d.portrait.trait]?.d||'')}</p>`:''}${d.portrait?.story?.length?`<p class="hint">往事：${esc(d.portrait.story.at(-1).t)}</p>`:''}</div></section>`).join('');
 }
 
+function royalBirthOrder(a,b){return a.born-b.born||a.id-b.id;}
+function royalKinCandidates(relatives){return relatives.filter(k=>k.alive&&!k.removedFromRoyal).sort(royalBirthOrder);}
+function royalKinship(k){
+  if(k.reign===S.gen-1)return k.kinship||'宗亲';
+  if(k.reign===S.gen-2){
+    if(k.sex==='f')return '皇姑';
+    return k.kinship==='皇兄'?'皇伯父':k.kinship==='皇弟'?'皇叔父':'宗亲';
+  }
+  return '宗亲';
+}
+function listedRoyalKin(){
+  const cohorts=new Map(),current=new Set(S.children.map(k=>k.id));
+  for(const k of royalHouseholds()){
+    if(current.has(k.id))continue;
+    if(!cohorts.has(k.reign))cohorts.set(k.reign,[]);
+    cohorts.get(k.reign).push(k);
+  }
+  return [...cohorts].flatMap(([reign,relatives])=>{
+    const eligible=royalKinCandidates(relatives),ids=S.royalKinRoster?.[reign];
+    return Array.isArray(ids)?eligible.filter(k=>ids.includes(k.id)):eligible.slice(0,ROYAL_KIN_PER_REIGN);
+  });
+}
+function royalRelativeCards(relatives){
+  return relatives.length?`<div class="grid portrait-grid">${relatives.map(k=>`<button class="card portrait-card" onclick="A.go('relative',${k.id})">${porImg(k,84)}<span class="grow"><strong>${esc(k.name)}</strong><small>${esc(royalKinship(k))} · ${kidAge(k)}岁${k.title?' · '+esc(k.title):''}${k.spouse?' · '+esc(k.spouse.name):''}</small><span>${esc(householdSummary(k))}</span></span></button>`).join('')}</div>`:'';
+}
 function royalRelativesPanel(){
-  const relatives=royalHouseholds().filter(k=>!S.children.includes(k)&&k.alive);
-  if(!relatives.length)return '';
-  return `<section class="detail-section"><h3>先朝亲族</h3><div class="grid portrait-grid">${relatives.map(k=>`<button class="card portrait-card" onclick="A.go('relative',${k.id})">${porImg(k,84)}<span class="grow"><strong>${esc(k.name)}</strong><small>${esc(k.kinship||'宗亲')} · ${kidAge(k)}岁${k.spouse?' · '+esc(k.spouse.name):''}</small><span>${esc(householdSummary(k))}</span></span></button>`).join('')}</div></section>`;
+  return detailSection('先朝亲族',royalRelativeCards(listedRoyalKin()));
+}
+function royalKinRosterPanel(){
+  const relatives=listedRoyalKin();
+  const siblings=royalRelativeCards(relatives.filter(k=>k.reign===S.gen-1));
+  const elders=royalRelativeCards(relatives.filter(k=>k.reign===S.gen-2));
+  return detailSection('兄弟姐妹',siblings)+detailSection('伯叔与姑姑',elders)||
+    '<p class="hint">目前没有在册的兄弟姐妹、伯叔或姑姑。</p>';
 }
 function viewRoyalRelative(){
   const k=royalById(UI.sel);if(!k)return viewFamily();
-  return `${personBackButton('family')}<header class="detail-head">${porImg(k,224)}<div class="grow"><h2>${esc(k.name)}</h2><p>${esc(k.kinship||'宗亲')} · ${kidAge(k)}岁</p><p>生母 ${esc(k.momName||'未记载')}</p></div></header>${immortalPanel(k)}${marriagePanel(k)}${householdPanel(k)}${detailSection('亲族纪事',detailStory(k))}`;
+  return `${personBackButton('family')}<header class="detail-head">${porImg(k,224)}<div class="grow"><h2>${esc(k.name)}</h2><p>${esc(royalKinship(k))} · ${kidAge(k)}岁</p><p>生母 ${esc(k.momName||'未记载')}</p></div></header>${immortalPanel(k)}${marriagePanel(k)}${householdPanel(k)}${detailSection('亲族纪事',detailStory(k))}`;
 }

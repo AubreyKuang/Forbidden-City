@@ -1143,6 +1143,33 @@ test('succession preserves the previous empress and birth mother portraits and i
     var snapshot=JSON.stringify(S);S=JSON.parse(snapshot);migrate();assert.equal(portraitCell(dowagerPerson(S.flags.dowager)),242);S.flags.dowager.lastOffer=S.turn;A.greet();assert.equal(portraitCell(curEv.por),242);drain();`);
 });
 
+test('study roster preserves ten living siblings at accession and re-labels them for the next emperor',()=>{
+  const {run}=boot();run(`var m=empress(),heir=makeKid(m,'m','承宁'),older=makeKid(m,'m','承和'),younger=makeKid(m,'m','承平'),aunt=makeKid(m,'f','清宁');
+    heir.born=-240;older.born=-264;younger.born=-220;aunt.born=-252;aunt.title='安宁公主';aunt.estate={pursuit:'books'};
+    aunt.story.push({d:dateStr(),t:'昔日随生母读书。'});
+    var extras=Array.from({length:9},(_,i)=>{var k=makeKid(m,i%2?'m':'f','宗亲'+i);k.born=-215+i;return k;});
+    var dead=makeKid(m,'m','早逝皇子'),removed=makeKid(m,'f','除籍公主');dead.born=-280;dead.alive=false;removed.born=-275;removed.removedFromRoyal=true;
+    var auntId=aunt.id,olderId=older.id,youngerId=younger.id,overflowId=extras[7].id;
+    S.children.reverse();A.go('home');assert.match(viewHome(),/目前没有在册/);
+    succeed(heir);choose(0);drain();assert.equal(S.royalKinRoster[1].length,10);
+    assert.equal(S.royalKinRoster[1].join(','),[older,aunt,younger,...extras.slice(0,7)].map(k=>k.id).join(','));
+    assert.equal(royalById(heir.id),undefined);assert.ok(royalById(overflowId));assert.match(royalKinRosterPanel(),/清宁[\\s\\S]*皇姐/);
+    assert.doesNotMatch(royalKinRosterPanel(),/承宁|宗亲7|早逝皇子|除籍公主/);
+    assert.match(viewHome(),/id="home-royal-kin"[^>]*>皇亲列表/);
+    A.go('home');A.go('relative',auntId);assert.match(viewRoyalRelative(),/返回御书房/);A.backPerson('family');assert.equal(UI.view,'home');
+    var face=portraitCell(royalById(auntId));save('auto');A.load('auto');assert.equal(S.royalKinRoster[1].length,10);
+    var next=makeKid(empress(),'m','景明'),sister=makeKid(empress(),'f','静嘉');next.born=S.turn-240;sister.born=S.turn-180;
+    succeed(next);choose(0);drain();var roster=royalKinRosterPanel();
+    assert.match(roster,/兄弟姐妹[\\s\\S]*静嘉[\\s\\S]*皇妹[\\s\\S]*伯叔与姑姑/);
+    assert.equal(royalKinship(royalById(olderId)),'皇伯父');assert.equal(royalKinship(royalById(youngerId)),'皇叔父');
+    assert.equal(princessKinship(princessById(auntId)),'皇姑');assert.equal(portraitCell(royalById(auntId)),face);
+    assert.match(roster,/清宁[\\s\\S]*皇姑/);assert.doesNotMatch(roster,/宗亲7/);
+    A.go('relative',auntId);assert.match(viewRoyalRelative(),/皇姑/);assert.match(viewRoyalRelative(),/昔日随生母读书/);
+    royalById(olderId).alive=false;assert.doesNotMatch(royalKinRosterPanel(),/承和|宗亲7/);
+    S.gen++;assert.equal(royalKinship(royalById(auntId)),'宗亲');assert.doesNotMatch(royalKinRosterPanel(),/清宁/);
+    assert.match(royalRelativesPanel(),/清宁/);`);
+});
+
 test('residential palace guides show actual names or an empty residence instead of repeated instructions',()=>{
   const {run}=boot();run(`var p=PLACES.find(p=>p.id==='kn'),queen=empress();var html=placeGuideHTML(p);assert.match(html,new RegExp(fullName(queen)));assert.doesNotMatch(html,/可以做什么|闲话、赏赐|探望居住/);queen.cold=true;assert.match(placeGuideHTML(p),/暂时无人居住/);`);
 });

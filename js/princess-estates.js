@@ -97,9 +97,9 @@ function princessActions(k,showEstate=true){
 function archivePrincessEstates(heir){
   const estates=kidsAlive().filter(k=>k.estate);
   if(!estates.length)return;
-  S.princessRelatives=[...archivedPrincesses(),...estates.map(k=>({...k,estate:{...k.estate},reign:S.gen,kinship:k.born<=heir.born?'皇姐':'皇妹'}))];
+  S.princessRelatives=[...archivedPrincesses(),...estates.map(k=>({...k,estate:{...k.estate},reign:S.gen,kinship:(journalContentVersion()>=45?royalBirthOrder(k,heir)<0:k.born<=heir.born)?'皇姐':'皇妹'}))];
 }
-const princessKinship=k=>k.reign===S.gen-1?k.kinship||'先帝之女':'宗亲';
+const princessKinship=k=>journalContentVersion()>=45?royalKinship(k):k.reign===S.gen-1?k.kinship||'先帝之女':'宗亲';
 function princessMapNotice(){
   const k=estatePrincesses().find(p=>p.estate.stage==='proposal'||(p.estate.stage==='working'&&S.turn>=p.estate.due));
   return k?`<div class="season-map-leads">${esc(k.name)}的府上送了信。 <button class="btn sm" onclick="A.go('princess',${k.id})">去公主府读信</button></div>`:'';
