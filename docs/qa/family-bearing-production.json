@@ -1,0 +1,933 @@
+{
+  "revision": "4227686915083e09ddca7a0424d819a277e0774a",
+  "checkedAt": "2026-11-16T02:06:09.834044+00:00",
+  "resources": [
+    {
+      "file": "index.html",
+      "status": 200,
+      "sha256": "642cd2888dec09bf3e40f96a623bb7eeadf2a4b81a87801087533ea6eaa546c3",
+      "matchesLocal": true
+    },
+    {
+      "file": "dev.html",
+      "status": 200,
+      "sha256": "feb27e47f78696f5b45fa36c57b7ed18c01ffa4ac4849d054da4da0c72b4733c",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/npc-memory.js?v=court-life-1",
+      "status": 200,
+      "sha256": "8e8fe6dcd15f150d6e83c86bf6d7c5630b38f7fd46850f25db13bc7b918c765f",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/data.js?v=court-life-1",
+      "status": 200,
+      "sha256": "da2bb4eed82a091b2240398d0b44da12043c638ae972fa0b36f1ce64f6397c10",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/game.js?v=hongjian-28-1",
+      "status": 200,
+      "sha256": "13620f00256fdb74e12ec30a45da3e3423746b7f01066ba764316502bcee77ff",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/consort-fertility.js?v=court-life-1",
+      "status": 200,
+      "sha256": "6931bad6b134f89804b0071e95b7a76eef7f1a869f81dbe3b6f8e6016598b8e5",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/event-pacing.js?v=playtest-polish-3",
+      "status": 200,
+      "sha256": "d557cba40fa1948fcc01415fb5eb07664355f4e086d3487930dadb71516fb5e7",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/audio.js?v=court-life-1",
+      "status": 200,
+      "sha256": "0236c17a6588b5db731c630a5b5535476e0e1ab5fc494dfe2d1f8652a2a3885f",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/jewelry.js?v=court-life-1",
+      "status": 200,
+      "sha256": "502a012ec63b225d16c112f414935fd1b021bf596a2ae17d1cd021cf640c36c5",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/consort-portrait-details.js?v=1",
+      "status": 200,
+      "sha256": "5f1e33fe7b401a0e00a1b6206bf0bba4e20d44842674d9265d09c5d3a8ee91c8",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/portraits.js?v=hongjian-28-1",
+      "status": 200,
+      "sha256": "17ebb5c0f5545a4a815357a55f1f92c4d07763b0783c45a54b194a2d32252d8d",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/scene.js?v=painted-seasons-1",
+      "status": 200,
+      "sha256": "835deb853e21b6df069418141712d5a5b029d60005fb12a27b06b6219378e5f2",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/saves.js?v=personal-context-27-1",
+      "status": 200,
+      "sha256": "67f30cb2bac54a28e6e45416e361c31e5c1d41e6a2536b7e38d3940c77035501",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/heirs.js?v=immortal-journeys-1",
+      "status": 200,
+      "sha256": "b457a3a5f4ac5d105f2eb173d994780d4980d69a025fb605ddb9412ff3b0f218",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/births.js?v=gouyi-omen-25-1",
+      "status": 200,
+      "sha256": "9aa2faabbc7f6c934cad78064796b0289717a8376741d7151e9560871be4d920",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/court.js?v=personal-context-27-1",
+      "status": 200,
+      "sha256": "d129c29b7401fed19d8782971d3502cfb0f585dea241d8b4e4d42684063f54cc",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/officials.js?v=personal-context-27-1",
+      "status": 200,
+      "sha256": "5115f024c7f2d96c5425c9d74d355903c2d05f2e59a53634ad4c33c30e078264",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/sibling-households.js?v=court-life-1",
+      "status": 200,
+      "sha256": "0c3996769146a4f416cb035bd8ffc8a4bce8fb63b8ffcb6d671b78400752cea5",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/residences.js?v=page-organization-2",
+      "status": 200,
+      "sha256": "3dadd2d554de33301f90e12dbebd67a81a29658c60cdbda52a1573ac8d7b2823",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/selection.js?v=selection-arrivals-2",
+      "status": 200,
+      "sha256": "a73bb3f3031dafecdbb92590280fcdb6d6a58ee103a2c01d9c52a1fddb2ad753",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/harem.js?v=recent-favor-26-1",
+      "status": 200,
+      "sha256": "3a86ac22bb7acc9ab873f36209371bd29ed731818e946d54b79784900ee0e73a",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/consort-stories.js?v=personal-talk-26-1",
+      "status": 200,
+      "sha256": "da6c5336c8622b808bf2af073203b0bc32534448faa9221772a8abef4b5b8a45",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/personality.js?v=personal-context-27-1",
+      "status": 200,
+      "sha256": "1cc26498618dc643f2eba0138cde0c0b0d3b66031a5bace12939bffc44a76391",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/visits.js?v=personal-context-27-1",
+      "status": 200,
+      "sha256": "636d7b31757616d574b9bf12dc80a9e633f3270120ea06b9b89e7a510b382e14",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/mourning.js?v=court-life-1",
+      "status": 200,
+      "sha256": "edf29716c267ab083d4f6abfed824431871d27152081f85332a15cb45a164519",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/historical-events.js?v=court-living-19",
+      "status": 200,
+      "sha256": "e333fb7ee000122e4155c93bff4361c05524227fe30d7dd11a10c8f2685d2b97",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/initiatives.js?v=court-life-1",
+      "status": 200,
+      "sha256": "a0a8480538f9b97af1d23dbf8a56953892056c3d32761de0b7dbf1a238595a68",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/court-pastimes.js?v=court-life-1",
+      "status": 200,
+      "sha256": "35035290a8d78f7483b5fbddd6e86d396d467d902066f54bc1bbfa8526354dfb",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/family.js?v=personal-context-27-1",
+      "status": 200,
+      "sha256": "672b1d40f946a9d129780ba5e8062185664510c060b0674c9e18f5b25b73072c",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/family-petitions.js?v=harem-restraint-1",
+      "status": 200,
+      "sha256": "8361774a00da197395b2fae411ac9455777c7d3cc07f386859cd2b0a0fcf4b23",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/kin-court.js?v=fenghua-23-1",
+      "status": 200,
+      "sha256": "1b6c2db343619df0086db422712ca4e0d1f0f4e596a230fa7143ffb7fd0dce68",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/maternal-kin.js?v=harem-restraint-1",
+      "status": 200,
+      "sha256": "edbade41b4af9701e8f4b06ab233de57fb14194dd9464fbebfa4392457a278a5",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/child-life.js?v=court-life-1",
+      "status": 200,
+      "sha256": "804d7346545dbe8746c1e484de8551111715c4d2e23489089802fd75c4321812",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/child-household.js?v=court-life-1",
+      "status": 200,
+      "sha256": "3d2c80c923d3b63e534645e50a557844976ee7f8e194357428b33ebe3a66b055",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/youth.js?v=royal-heart-20-1",
+      "status": 200,
+      "sha256": "9235b42f0e45e950d731c6ab92eebb40389a77b2fe282d0f8da62d335f9d3b27",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/palace-romance.js?v=court-life-1",
+      "status": 200,
+      "sha256": "722d1c60dabc0095d6efac2ce487c13f11a304546b828eaacf65af685730e793",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/child-temple.js?v=immortal-journeys-1",
+      "status": 200,
+      "sha256": "e76433fd9f951e4772a2672b19a215b2bb3dc58acd90d9e2b4a16febe2b59507",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/birth-swap.js?v=court-life-1",
+      "status": 200,
+      "sha256": "68d5641dcdfa23d0930d32f82cfc87a12303525b8603d971cb1088d521575e1e",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/concealed-pregnancy.js?v=court-life-1",
+      "status": 200,
+      "sha256": "35af0057642aa6ea336948df50d3cc92705e50381aca4e70c968f71d4a12da4c",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/parentage.js?v=parentage-feelings-1",
+      "status": 200,
+      "sha256": "32cb03e6765703726abded94b547f9e60c236f4b2d32e28228489c89e5986a38",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/banquets.js?v=court-life-1",
+      "status": 200,
+      "sha256": "0edee60778c940aa604a6ecae57890891b19f5653cdfcf1cb525596b87c236df",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/princess-estates.js?v=immortal-journeys-1",
+      "status": 200,
+      "sha256": "7753b8a1b87527eff481fd6488adad649e1f05c2cbcd14d83e329acdb4b40905",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/marriages.js?v=xie-romance-22",
+      "status": 200,
+      "sha256": "c57670f5b9989d44ecace732e2b2a8aa7288760d0a84e6414e650ed63658e1de",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/seasonal-activities.js?v=illustrated-stories-3",
+      "status": 200,
+      "sha256": "640c9579c5bee89781f624e064a194d50c0b3ad378eaaeb851fd08457341a322",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/dao-hall.js?v=immortal-journeys-1",
+      "status": 200,
+      "sha256": "f8744f1aac88a37e8393fe7bd4200f9f7d058f3e4e557d302434a4d76789deb0",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/pregnancy-prayers.js?v=personal-context-27-2",
+      "status": 200,
+      "sha256": "ecc276e809c20b405343bfa50d42db7d465f4b82fccbff4ec7c9e41ba2180dfd",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/time-travelers.js?v=court-life-1",
+      "status": 200,
+      "sha256": "148394375e24169ddf3ec8ff733512c0d554f0f47de3e9c475d574740295f768",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/map.js?v=palace-family-24-1",
+      "status": 200,
+      "sha256": "d433510b44dfa5f0f5a60bde277983c3b5e2ecff517581f3e7e17ec71464c788",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/map-guide.js?v=court-life-1",
+      "status": 200,
+      "sha256": "6efff1f3e8c28f79b84856d482069b6afb5d137f60e277b051b9b08c4a821a7d",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/palace-duties.js?v=playtest-polish-3",
+      "status": 200,
+      "sha256": "2b328ba88c2e745ee24ea049b53456f4e4a60e03eb70357cc54d9769939fa718",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/personal-experiences-data.js?v=illustrated-stories-3",
+      "status": 200,
+      "sha256": "06263288bb30a6b37988ab68401cf55c035006058d8789db7650be18c8b628c7",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/personal-experiences.js?v=illustrated-stories-3",
+      "status": 200,
+      "sha256": "bca85db9b417c7336c4d0d5ac50aad1d8918f37f5841ee50f9c254be11134a4a",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/character-voice.js?v=careers-15-1",
+      "status": 200,
+      "sha256": "0263295ec834b0b201c4b3a92942609ad9c9672e005bbc50159ccb09c47cc7ca",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/palace-arrivals.js?v=court-life-1",
+      "status": 200,
+      "sha256": "e8a3371550d921221c138933cdd4192ef07299ef9181965b35e195b47b38fb84",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/birth-swap-justice.js?v=court-life-1",
+      "status": 200,
+      "sha256": "89c6435248b376ed12a925010a16eade0afec319f958b79b46fe09632025ddd7",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/child-dispositions.js?v=court-life-1",
+      "status": 200,
+      "sha256": "934134539ee4cc2019dec0bfc9151939f92beec142ef4a0e0549b347d2676969",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/living-history-data.js?v=illustrated-stories-3",
+      "status": 200,
+      "sha256": "a2f302d8d3a46ac8b9cdb9e9e1bfe9413e617bff49ee414845ff4e2a54734664",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/living-history.js?v=illustrated-stories-2",
+      "status": 200,
+      "sha256": "c059e55ce35f5ef18996556a8d5b67706b044f1aa74db5b5000948813bb2f3ad",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/multiple-births.js?v=court-life-1",
+      "status": 200,
+      "sha256": "33bb4199468132b514bc871ebdc5f19c3b5f271c5fab0baca6ea0635adfd8456",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/multiple-births-data.js?v=court-life-1",
+      "status": 200,
+      "sha256": "91d39388db4639b403dda76e9f391a789556a2be143c2242cd440bc77e034f85",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/married-life.js?v=court-life-1",
+      "status": 200,
+      "sha256": "22d13e668f800a47bd158068c708cd00ed2494a776d29e3cc5b6009b2b51c68b",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/succession.js?v=personal-context-27-1",
+      "status": 200,
+      "sha256": "3dd67d455293f8b040125c10b338ef66905a85e77e3d83769c30c0b06573cccc",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/views.js?v=hongjian-28-1",
+      "status": 200,
+      "sha256": "ed0e9ea12bfff1ac129222d1fb6e1fd82f5006fef08550d48a3e518e9330c02d",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/companion-life.js?v=personal-talk-26-1",
+      "status": 200,
+      "sha256": "212405a77658595a1f5beed4f5994f300a9e0abbdb690b6f362fda84b3d34686",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/friendship-dialogues.js?v=court-life-1",
+      "status": 200,
+      "sha256": "b6dd51f2b78ce9012a72a5cc5dbc3d0d4fb46667922dead2eadf72945eb6e1e8",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/personal-continuity.js?v=playtest-polish-3",
+      "status": 200,
+      "sha256": "3b04e4ed5a03184161e365a42d5acaa0b266368764bbd42f0fa56e35239d917c",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/past-lives.js?v=illustrated-stories-2",
+      "status": 200,
+      "sha256": "c51a1c9ec9154d39ecd4797227771cd115fd7efd1d064bd032ae5c08956b6266",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/solitary-consorts.js?v=court-life-1",
+      "status": 200,
+      "sha256": "1af8027646e6c7ded2c42e47a08eeb24514c04802787b50e5794a2609b0151ea",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/maternal-lives.js?v=court-life-1",
+      "status": 200,
+      "sha256": "4712b60f5730117eae036dbe64fdc4a41aa0b57c450406f03d16ddfeb67a858c",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/character-journeys-data.js?v=court-life-1",
+      "status": 200,
+      "sha256": "17701de58e08b5282973ce07440744e0ad05f11e1703d321aa8477294824234e",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/character-journeys.js?v=immortal-journeys-1",
+      "status": 200,
+      "sha256": "7269521e95282b8a5e607969132d3826cc518e603458b3e68f021518c753cc6a",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/palace-origins.js?v=court-life-1",
+      "status": 200,
+      "sha256": "a4fabf58c9e4c00a6fc951b8caf0602c368506bcd0ba6e7224d09941751d5f95",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/home-leave.js?v=playtest-polish-3",
+      "status": 200,
+      "sha256": "c18803b354c1dffffb666c5d6ff2b2b74306dc76a8a4f89e55211b1969247b59",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/home-family.js?v=playtest-polish-3",
+      "status": 200,
+      "sha256": "eac1ecb1d58b8bb86d773b882bf9645bcc9ba9bd6d1e6a611baaf0a76b814bf8",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/cohabitation.js?v=court-life-1",
+      "status": 200,
+      "sha256": "30597a93f00607065a7f23e149b966fcf474569a856d112a1c7ae63e3e1e5d50",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/solitary-household.js?v=court-life-1",
+      "status": 200,
+      "sha256": "5d7e534c5b15119ae3476c8a7c073828febb3ae505c1d450c20bf7c1e799816e",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/portrait-resemblance.js?v=court-life-1",
+      "status": 200,
+      "sha256": "4398f693603deb1c633f0b30da7ddc72b4f9d8b3feed60a2d8b0642a4019d228",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/relative-careers.js?v=court-living-19",
+      "status": 200,
+      "sha256": "7e9fafc6ff0d4c1faaf909951cc1e3eea947ab61d4728ee44e2232b39087574f",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/natal-family.js?v=personal-context-27-1",
+      "status": 200,
+      "sha256": "61bb6b982fe82ca524e0d494138beaf1bfc2b67ca686bd68946054bf65a28e5a",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/sister-arrivals.js?v=playtest-polish-3",
+      "status": 200,
+      "sha256": "0cfadb4cf639fb6d38a90b720bf150e0962ae65b0a1dbf717e86e75a7f543699",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/awaiting-notice.js?v=court-living-19",
+      "status": 200,
+      "sha256": "34afc89fa65af4d62ebcb70aca3f7a5b2e74b52e33bda547ee08438ab8e9a065",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/event-chronicles.js?v=court-life-1",
+      "status": 200,
+      "sha256": "19780fea3a0a7ad3c1dc2d250614d4f3556b025af3b3ca82d3479e4ee52b1afa",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/court-names.js?v=careers-15-1",
+      "status": 200,
+      "sha256": "8185d884158fac0ec3ca6e5831c816cf8198fae56a00a986f1bef33177ee90fe",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/ministries.js?v=palace-family-24-2",
+      "status": 200,
+      "sha256": "01cbbe1664e9abc51fad68b92ea135df16b0ad37c44debcc60c805b6d2a6b51b",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/jinyiwei.js?v=careers-15-1",
+      "status": 200,
+      "sha256": "d27904b7c52bf4ef05f3c29a365f1eed6aa462c319e2b614afb34f589c9969d0",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/kin-marriages.js?v=careers-15-1",
+      "status": 200,
+      "sha256": "58e24b679f56e9b8cf7c53db50c480e8d29102c5461508a221f75f18d8ace0f4",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/personal-life-data.js?v=court-life-1",
+      "status": 200,
+      "sha256": "9b65133e0cbfc614cfea1891e9aa80d0e7d30dede2d70433db7ed77e2ff7d32d",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/personal-life.js?v=playtest-polish-3",
+      "status": 200,
+      "sha256": "55568902a09e52abfc5c45ae8366d9df152c4b658b60d252dd63fa292d480a9e",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/personal-life-views.js?v=fenghua-23-1",
+      "status": 200,
+      "sha256": "28300d19bc9a8936cd96cc204abf9d3a4f61f20ec4dd9ad8d3fd42b3031b61c1",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/lived-relationships.js?v=family-scenes-1",
+      "status": 200,
+      "sha256": "1f34d79846eedf46301c0d69b5b5de8aac32a9680273200e05082a74beab3d27",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/natal-life.js?v=careers-15-1",
+      "status": 200,
+      "sha256": "a56aa868e2c36d76159f328264e6a5f1bb45603555bfc91efc14830c7c9e351f",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/birth-care.js?v=court-life-1",
+      "status": 200,
+      "sha256": "78439592a0990046cd420738dbbdda5335df0c6902a36758dc71426a079aff3e",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/chronicle-reader.js?v=court-life-1",
+      "status": 200,
+      "sha256": "c531f892577d49b858f71d179d0d8662d35d080fe50350b6f6dfba0b19628d9e",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/governance-life.js?v=careers-15-1",
+      "status": 200,
+      "sha256": "e637b8d2bbb4933ff0409c5670c683af707289feee00a09bc42e6fd0948adaf4",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/incognito-life.js?v=illustrated-stories-2",
+      "status": 200,
+      "sha256": "253579dcc7d69f05f99be2f9eecb8924c2a987a9c8f3ba2c6ce258292a3ac9ab",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/palace-council.js?v=court-living-19",
+      "status": 200,
+      "sha256": "2999028bd0ceee856291b0a190e10f08fa579858b50c7a60a4d19c74e50fc391",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/child-family-visits.js?v=court-living-19",
+      "status": 200,
+      "sha256": "5cc9261868293aad45481f533462ea8ad61428210464a653fcb020879bf1e3bd",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/night-voices.js?v=family-scenes-1",
+      "status": 200,
+      "sha256": "0ce09469d3a3c89d9f0ddd87e7b7b1fed6221ebeb9a33fcbc67b131fc098b12f",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/harem-restraint.js?v=harem-restraint-1",
+      "status": 200,
+      "sha256": "1294af7aa73db04ed994f8f3ca94ee2a14dd6b2ad02e34bef8ada794c5a434a1",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/romance-journeys-data.js?v=immortal-journeys-1",
+      "status": 200,
+      "sha256": "2ecbb33403505cdb00bb731acee7b9e564790b7219662cea2de26b6a7b158757",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/immortal-journeys.js?v=immortal-journeys-1",
+      "status": 200,
+      "sha256": "97ced964bd02d52097a002e22f43b975d6f3c3476cdbff833c961dde2268deae",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/kin-visits.js?v=selection-friends-1",
+      "status": 200,
+      "sha256": "780faf298a82dc02c45df8f62ce8e660ea4f918a6c4d1a80bcd48a5b531b09b0",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/selection-old-friends.js?v=kin-visits-1",
+      "status": 200,
+      "sha256": "0ee82cbc7c555c6182c39c9f7fc0b43d3267afad661c15f28b630d365374ec36",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/selection-friendships.js?v=selection-friends-1",
+      "status": 200,
+      "sha256": "4a21113acc111a4064069dc03e58df06a2b3204fa4b9a92186728d8d873aa72e",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/birth-feelings.js?v=parentage-feelings-1",
+      "status": 200,
+      "sha256": "72622132f318bab9f93e34e0c1cd8702afed5757ce605a9c9940be896cd7d306",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/marriage-friendships.js?v=selection-friends-1",
+      "status": 200,
+      "sha256": "c1ddabdf8046e8791c7d523830e7fe226bed2b4fcaf3852a50d5e57f9a2e8839",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/frontier-rewards.js?v=careers-15-1",
+      "status": 200,
+      "sha256": "fcaebe80fda88460a70a97e0f3a7882fffe95f1fcdb625fbb641aa5108564230",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/dowager-conversations.js?v=dowager-conversations-1",
+      "status": 200,
+      "sha256": "cfe208abcea79bc50439691e45404dba3fd4c5f2ad682d784be1bbba89f3bb55",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/official-careers.js?v=palace-family-24-1",
+      "status": 200,
+      "sha256": "b0ced0aca0f43225c2d75f7708ea7ab3eb1fd8010079eeaf9b74e9de17b1fcd0",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/marital-court.js?v=personal-context-27-1",
+      "status": 200,
+      "sha256": "473cd477fd0185c87ccc1300e0cb26962a98c8448949dbf72878c643f1fb55b9",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/marital-births.js?v=careers-15-1",
+      "status": 200,
+      "sha256": "47c6ef250d930eeaeb9b8b8038336170ee426906796f95f4eb1148c64686253d",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/family-daily-life.js?v=family-bearing-29-1",
+      "status": 200,
+      "sha256": "ce47f13ddfae090bccf165f6d8e0d1a6e316138989f7de1d3f04f483c7933d7f",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/court-fraternity.js?v=careers-15-1",
+      "status": 200,
+      "sha256": "d913860933c5abeea0ecd4302b22f79fe4937aad4dc6a9ff3b44ae921e2140f1",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/exam-marriages.js?v=court-living-19",
+      "status": 200,
+      "sha256": "32b65aa261fe65f5d67d59c201c7bc70d32c9bd845876e05960098068695cc10",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/jinyiwei-clues.js?v=careers-15-1",
+      "status": 200,
+      "sha256": "7992cb36b1af50a078d8929d25c4a0dca2eafc1d8ba87fcaa2bd97f114ac634f",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/gouyi-consort.js?v=palace-family-24-1",
+      "status": 200,
+      "sha256": "869c3977994fb44a21b0024846a39b926c5b55aef299df65a0a32ea718876c60",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/family-rise-gossip.js?v=careers-15-1",
+      "status": 200,
+      "sha256": "2341a2366f4b7b5f25e3632abdb578781ca40012d72d67ac45d2fdc4ff0c034a",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/gouyi-court-life.js?v=personal-context-27-1",
+      "status": 200,
+      "sha256": "d77bb4550d092f54f318fccfebb19481de82793d8e22ac6f620b2d42361e7c7a",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/gouyi-history.js?v=gouyi-reading-18-1",
+      "status": 200,
+      "sha256": "1dced266717d3f497f54d86a4b6847157a81832df2aaffc3341cb94534cb5ff5",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/official-marriages.js?v=personal-context-27-1",
+      "status": 200,
+      "sha256": "bdff659f5a9688d4b88969e633a699ce9a655a2f55db7e69e7636fe54bbe35dd",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/family-career-feelings.js?v=family-career-feelings-1",
+      "status": 200,
+      "sha256": "9bb8ef0e05c4e2a22467a5e87b58894c0eb77cf274a3e7b0f50f9ef6687e6af8",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/jinyiwei-secrets.js?v=jinyiwei-secrets-1",
+      "status": 200,
+      "sha256": "1799481e2229784afddc853946224ec70b71a5ee3dbe94b8c4fa0749e460b897",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/story-consort-codex.js?v=hongjian-28-1",
+      "status": 200,
+      "sha256": "a5baf56876767c4c0d56bb0d8a1662b7e2d0f725f5dfe7941c74030d6e833aa2",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/palace-scene-entry.js?v=palace-scene-entry-1",
+      "status": 200,
+      "sha256": "5f8456b57a63304eb1e969f9f6d693a4ab53dda1786f776de2f33b952483621b",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/family-tree.js?v=personal-context-27-1",
+      "status": 200,
+      "sha256": "360467a27a8281a2d1ebcaa25d76d5bf63da5effa7050c73bc70e06bbeb394d9",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/family-concern-justice.js?v=family-concern-justice-1",
+      "status": 200,
+      "sha256": "3402ac24bf37291211522b4dcb178d91176b857ecf30ad39f55227d4349d95d1",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/consort-recovery.js?v=consort-recovery-1",
+      "status": 200,
+      "sha256": "0fc58b7db22bb27dce0279181cb63ae8face1a67268a23027397d4ba7285952c",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/dowager-household.js?v=palace-family-24-1",
+      "status": 200,
+      "sha256": "a862df115eb85bece10b36dd1d6941fd02fbf42dc6d47a760c84fd0b93b7d8a3",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/royal-heart.js?v=xie-romance-22",
+      "status": 200,
+      "sha256": "55498a885e417729dd75f9ec19dedfd548a95a4003e9133f50e13015e870a174",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/xie-romance.js?v=xie-romance-22",
+      "status": 200,
+      "sha256": "e17593b70f5815a6557767c4af605544d4202d49e3ea470efe784e8eec69de4d",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/fenghua-people.js?v=hongjian-28-1",
+      "status": 200,
+      "sha256": "095ad654fa467a2ebdaa3e66f338ce537c4c99fda5b9d2d57f4dd9a7cb7c8f44",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/fenghua-stories.js?v=fenghua-23-1",
+      "status": 200,
+      "sha256": "f3b6d9820dce74cf753624080d5cdc3ddd87169a6de04cc3905276408da5b146",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/cining-quiet-life.js?v=palace-family-24-1",
+      "status": 200,
+      "sha256": "624f85ad69b5306ac9db50cd94d516e5c6989b198a6d304b9db3bab87d2a9ee8",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/palace-family-prayers.js?v=palace-family-24-1",
+      "status": 200,
+      "sha256": "5cae51ee4b36e554a04d625ed83d614b7afdcb9d6ba6f0213e2ee1ed0136a0b9",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/royal-outings.js?v=palace-family-24-1",
+      "status": 200,
+      "sha256": "30ec11e10e81d0ea8462aa0ef665899df1775ad8060f5ded63dbefe3a1c56711",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/child-companions.js?v=palace-family-24-1",
+      "status": 200,
+      "sha256": "b5f0eaf35c819adcbb597a3bdc66ba40645256e28f4c5baead29d010b6409b3e",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/notable-people-codex.js?v=palace-family-24-1",
+      "status": 200,
+      "sha256": "423604b983c1d8f7b21a8adf713803e88b03d3c9bb398ef775ce4f761903ceaf",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/local-merits.js?v=palace-family-24-1",
+      "status": 200,
+      "sha256": "da313f267e9756c40f052cf5b3cc5873d2e346acaa18a73b5645666fc39e3bc8",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/consort-chat.js?v=personal-context-27-1",
+      "status": 200,
+      "sha256": "a570aad840fa93cc2db50e0f0635f5ee51e9921fa6cbe4607a85f2aedb52c617",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/retained-families.js?v=personal-context-27-2",
+      "status": 200,
+      "sha256": "ff6ec8036a5c18c51283f866e76dd311216577632f95db97ed632129986ba462",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/hongjian-consort.js?v=hongjian-28-1",
+      "status": 200,
+      "sha256": "7ff81b4863aa2b8d534db19275d83a9a34e9755bdd5816a8e19bb80f20054dbb",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/hongjian-stories.js?v=hongjian-28-1",
+      "status": 200,
+      "sha256": "76bc0617e54432fb5544f96333ddfc52400bde50b1c6bbcf24e8b678662f181b",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/fenghua-guides.js?v=hongjian-28-1",
+      "status": 200,
+      "sha256": "7f8d3908aaa0b6a4263309ac29b38de69452adfe94556a60adc4c2bedfd9ee77",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/harem-steward.js?v=hongjian-28-1",
+      "status": 200,
+      "sha256": "f5482412f6632ce05950122cf9bbce3cfac1289c5f72433fbee96f492b9680aa",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/family-bearing.js?v=family-bearing-29-1",
+      "status": 200,
+      "sha256": "fa5ada430c1d4d42cef2a62a335c1a2674ec1601bedab8458be91a12607afb12",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/action-journal.js?v=family-bearing-29-1",
+      "status": 200,
+      "sha256": "1ab54d8a37784bd00c47447dd020c0a51251d5281596ba86d036168f507c95ef",
+      "matchesLocal": true
+    },
+    {
+      "file": "js/main.js?v=court-life-1",
+      "status": 200,
+      "sha256": "3bea550357bc0d06f93056a25ac829ab47dbb55c3fd8a5cbe1bc72e593b3fbd9",
+      "matchesLocal": true
+    },
+    {
+      "file": "docs/qa/family-bearing-gallery/bootstrap.js",
+      "status": 200,
+      "sha256": "a267e9f6529a5d405eff8ef055f25cd0eba485f87ef7ac16b585f3afb0aeaa38",
+      "matchesLocal": true
+    },
+    {
+      "file": "docs/qa/family-bearing-gallery/noble.html",
+      "status": 200,
+      "sha256": "50c4d0e4177b5983cc7311146bcd0851396ee81cfe4b8b1fbbff4e8ecd36f41e",
+      "matchesLocal": true
+    },
+    {
+      "file": "docs/qa/family-bearing-gallery/humble.html",
+      "status": 200,
+      "sha256": "832afadef4d5ad26f22681874f2e95144caccbf8bf8bfefe6986d539ac19f091",
+      "matchesLocal": true
+    },
+    {
+      "file": "docs/qa/family-bearing-gallery/proud.html",
+      "status": 200,
+      "sha256": "47c9e0d28bcc354b387ba48682deca02d0ee6e94dbeba966ac500e62ee59255d",
+      "matchesLocal": true
+    },
+    {
+      "file": "docs/qa/family-bearing-gallery/merchant.html",
+      "status": 200,
+      "sha256": "8d4e7f7d4be241abdac0e123c98f92a03ee74b6745d1dcee9858e8dea2be1fad",
+      "matchesLocal": true
+    },
+    {
+      "file": "docs/qa/family-bearing-gallery/allowance.html",
+      "status": 200,
+      "sha256": "6cd9b037e22ae34872f908e9cb2aab6d8f2bd448d868b1fed04c6b19c96f913b",
+      "matchesLocal": true
+    },
+    {
+      "file": "docs/qa/family-bearing-gallery/growth.html",
+      "status": 200,
+      "sha256": "45dc7095dddcea9e91980d4d8975bb1fe58efb4c88779907de21f6e0562fb9ca",
+      "matchesLocal": true
+    }
+  ],
+  "allMatch": true,
+  "previousRevision": "7616ee3ff5787f3e839689fbe2d97f5a042d0780",
+  "galleryRecheckedAt": "2026-11-16T02:11:58.150177+00:00"
+}
