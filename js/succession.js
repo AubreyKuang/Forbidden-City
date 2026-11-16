@@ -90,7 +90,15 @@ function listedRoyalKin(){
   });
 }
 function royalRelativeCards(relatives){
-  return relatives.length?`<div class="grid portrait-grid">${relatives.map(k=>`<button class="card portrait-card" onclick="A.go('relative',${k.id})">${porImg(k,84)}<span class="grow"><strong>${esc(k.name)}</strong><small>${esc(royalKinship(k))} · ${kidAge(k)}岁${k.title?' · '+esc(k.title):''}${k.spouse?' · '+esc(k.spouse.name):''}</small><span>${esc(householdSummary(k))}</span></span></button>`).join('')}</div>`:'';
+  if(!relatives.length)return '';
+  const cards=relatives.map(k=>{
+    const household=householdSummary(k);
+    return `<button class="card portrait-card" onclick="A.go('relative',${k.id})">${porImg(k,84)}<span class="grow">
+      <strong class="nm">${esc(k.name)}</strong><br>
+      <small>${esc(royalKinship(k))} · ${kidAge(k)}岁${k.title?' · '+esc(k.title):''}${k.spouse?' · '+esc(k.spouse.name):''}</small>
+      ${household?`<br><span>${esc(household)}</span>`:''}</span></button>`;
+  });
+  return `<div class="grid portrait-grid">${cards.join('')}</div>`;
 }
 function royalRelativesPanel(){
   return detailSection('先朝亲族',royalRelativeCards(listedRoyalKin()));
