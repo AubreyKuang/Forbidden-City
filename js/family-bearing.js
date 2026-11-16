@@ -1,5 +1,5 @@
 /* Upbringing, present means and confidence are separate. Views do not roll dice. */
-const familyBearingActive=()=>journalContentVersion()>=28;
+const familyBearingActive=()=>journalContentVersion()>=29;
 function familyUpbringing(c){
   if(c.upbringing)return c.upbringing;
   const title=String(c.fam?.t||''),power=c.fam?.p||0;

@@ -178,7 +178,7 @@ const EXISTING_PRINCE_VARIANTS=4;
 const EXTRA_PRINCE_VARIANTS=LEGACY_DESCENDANT_VARIANTS-EXISTING_PRINCE_VARIANTS;
 const BEAUTY_PORTRAIT_START=92, YOUNG_ROYAL_PORTRAIT_START=136, PORTRAIT_COUNT=441;
 // Reserved story art never enters the random consort pools. Stable zero-based IDs.
-const STORY_CONSORT_PORTRAITS=Object.freeze({gouyi:422});
+const STORY_CONSORT_PORTRAITS=Object.freeze({gouyi:422,hongjian:438});
 // Dedicated story characters are bound with portraitOverride, outside random pools.
 const STORY_NPC_PORTRAITS=Object.freeze({capitalNoble:433,shangguanLantai:435,gaoHuaibi:436,jiShuye:437,xueHongjian:438,sunYunxiu:439,liuZhaoshuang:440});
 const PRINCESS_VARIANTS=33+ROYAL_GROWTH_SETS.f.length;
