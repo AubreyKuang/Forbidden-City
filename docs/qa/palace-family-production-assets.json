@@ -1,7 +1,7 @@
 {
   "url": "https://aubreykuang.github.io/Forbidden-City/",
-  "commit": "474cdbcb6b8a02b92b8c871bc4145071e51d986e",
-  "verifiedAt": "2026-11-16T00:36:06.541Z",
+  "commit": "377445a3f5058d29c72f250cfafacb5537eee226",
+  "verifiedAt": "2026-11-16T00:40:34.208Z",
   "indexMatches": true,
   "resources": [
     {
@@ -586,10 +586,10 @@
       "matchesLocal": true
     },
     {
-      "file": "./js/ministries.js?v=official-marriages-1",
+      "file": "./js/ministries.js?v=palace-family-24-2",
       "status": 200,
-      "bytes": 19684,
-      "sha256": "3377bc174ff46d9065ce1f1b6f69b101aa727ed90133868cfd5535f8326bff17",
+      "bytes": 19714,
+      "sha256": "01cbbe1664e9abc51fad68b92ea135df16b0ad37c44debcc60c805b6d2a6b51b",
       "matchesLocal": true
     },
     {
