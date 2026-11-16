@@ -481,8 +481,7 @@ function viewOut(){
 function viewLog(){
   // A month divider with nothing recorded after it is noise; keep only dividers that head real entries.
   const divider=l=>/^—— .+ ——$/.test(l?.t||'');
-  const major=l=>l.b||l.t.includes('选秀入宫，封');
-  const L=S.log.filter(l=>UI.logF==='all'||major(l)).filter((l,i,all)=>!divider(l)||(all[i+1]&&!divider(all[i+1]))).reverse();
+  const L=selectionChronicle(S.log).filter(l=>UI.logF==='all'||l.b).filter((l,i,all)=>!divider(l)||(all[i+1]&&!divider(all[i+1]))).reverse();
   const month=S.flags.lastMonthReview;
   const link=(id,child=false)=>{
     const person=child?kidById(id):byId(id);
@@ -498,7 +497,7 @@ function viewLog(){
     ${month.people.map(person=>`<p>${esc(person.text)} ${link(person.id)}</p>`).join('')}
    </section>`:''}
    ${S.history.length?`<p class="hint">历代：${S.history.map(h=>esc(`${h.shi?h.miao+h.shi+'皇帝':h.miao} ${h.sur}${h.name}（${h.era}，在位${h.yrs}年）`)).join('；')}</p>`:''}
-   <ul class="story" style="max-height:560px">${L.map(l=>`<li class="${major(l)?'big':''}"><time>${esc(l.d)}</time>${esc(l.t)}</li>`).join('')}</ul>`}
+   <ul class="story" style="max-height:560px">${L.map(l=>`<li class="${l.b?'big':''}"><time>${esc(l.d)}</time>${esc(l.t)}</li>`).join('')}</ul>`}
 function viewSys(){
   return `${pageHeading('存档','存档保存在本浏览器中；每月结束时会自动存档。剧情选择后也会保存，未完事件可继续。')}
    <p class="hint">${SaveManager.getStorage()?.kind==='indexeddb'?'已启用大容量本机存档；旧存档自动接续，人物纪事完整保留。':'当前浏览器使用兼容存档，请定期下载备份文件。'} 请等「正在写入」结束后再关闭页面。</p>

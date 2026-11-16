@@ -77,6 +77,35 @@ function newcomerReaction(c){
     nervous:NERVOUS_REACTIONS[c.trait]||'直到名册合上，她才确信自己的名字留了下来。走出殿门时眼眶微红，悄悄向同来的几人点了点头。'
   }[c.entryAdjustment?.manner||entryManner(c)];
 }
+function selectionSummary(admissions,total=admissions.length){
+  return `选秀定榜，共留选${total}人入宫。${admissions.map(({name,rank})=>`${name}封${rank}`).join('、')}。`;
+}
+function selectionInitialRank(c){
+  const admission=/选秀入宫，封为([^，。]+)，赐居/;
+  return c.story.find(entry=>admission.test(entry.t))?.t.match(admission)?.[1]??RANKS[c.rank];
+}
+function selectionChronicle(entries){
+  let admissions=[];
+  return entries.flatMap(entry=>{
+    if(entry.t.endsWith('，开选秀，各地秀女入宫待选。')){
+      admissions=[];
+      return [{...entry,b:0}];
+    }
+    const admission=entry.t.match(/^(.+?)（.*之女）.*选秀入宫，封([^。]+)。$/);
+    if(admission){
+      admissions.push({name:admission[1],rank:admission[2]});
+      return [];
+    }
+    if(entry.t.startsWith('选秀定榜，')||entry.t==='选秀礼毕，本次未留新人。')admissions=[];
+    const total=entry.t.match(/^选秀礼毕，留选(\d+)人。可到储秀宫查看新妃安顿。$/);
+    if(total){
+      const roster=admissions;
+      admissions=[];
+      if(roster.length)return [{...entry,t:selectionSummary(roster,+total[1]),b:1}];
+    }
+    return [entry];
+  });
+}
 function finishSelection(){
   const s=S.selection;
   if(s?.phase==='arrivals'||(!s&&!S.cands.length))return false;
@@ -112,7 +141,9 @@ function finishSelection(){
       [[a,b],[b,a]].map(([c,o])=>({person:c.id,subject:o.id,emotion:.55,impact:55,interpretation:`与${fullName(o)}同批入宫，${activity}。`})));
   }
   finishSelectionCourt(s,members);
-  log(`选秀礼毕，留选${members.length}人。可到储秀宫查看新妃安顿。`);return true;
+  if(journalContentVersion()>=41)log(selectionSummary(members.map(c=>({name:fullName(c),rank:selectionInitialRank(c)}))),1);
+  else log(`选秀礼毕，留选${members.length}人。可到储秀宫查看新妃安顿。`);
+  return true;
 }
 function selectionCohortHTML(c){
   if(!c.selectionCohort)return '';
