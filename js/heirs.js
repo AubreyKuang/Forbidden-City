@@ -29,6 +29,7 @@ function growKid(k){
   {const fm=fosterOf(k);if(fm&&fm.alive){if(fm.virtue>65)k.vir+=.15;if(fm.talent>65)k.lit+=.15;if(fm.scheme>65)k.amb+=.12}}['lit','mar','vir','hp','amb','love'].forEach(s=>k[s]=clamp(k[s]));supTick(k);
 }
 A.kidVisit=function(id){const k=kidById(id);if(modalOpen||!k?.alive||k.removedFromRoyal||k.jailed||k.pendingName||!useE())return;
+  if(visitChildAfterConsequence(k))return;
   if(familyScenesEnabled()&&childInPalace(k)){visitChildTogether(k);return;}
   const voice=characterVoice(k,'talk'),away=childHasLeftPalace(k);
   k.love=clamp(k.love+10);const st=pick(['lit','mar','vir']);k[st]=clamp(k[st]+2);

@@ -58,7 +58,7 @@ function natalPortrait(p){
   return age<18?{...p,courtGuest:true}:p.sex==='m'?{...p,official:2}:{...p,sex:undefined,age,courtGuest:false};
 }
 function natalStatus(p){return !p.alive?'已故':p.consortId?'已入宫':p.visit?'入宫探亲':natalAge(p)<6?'家中幼儿':natalAge(p)<18?'在家读书':p.married?'已婚':p.betrothal?'议亲中':p.career==='commoner'?p.post:'居于娘家';}
-function natalEntry(id,relative){const c=byId(+id),h=c&&houseOf(c),p=h?.relatives?.find(p=>p.id===+relative);return p?{c,h,p}:null;}
+function natalEntry(id,relative){const c=familyHostById(id),h=c&&houseOf(c),p=h?.relatives?.find(p=>p.id===+relative);return p?{c,h,p}:null;}
 function natalRecord(c,p,text,emotion=0){
   story(p,text);
   for(const member of paternalFamily(c).filter(x=>S.consorts.includes(x)&&x.alive)){
@@ -136,11 +136,11 @@ function viewNatalRelative(){
 A.natalVisit=function(id,relative){if(modalOpen)return;const e=natalEntry(id,relative);if(e)pushEv(natalVisitEvent(e.c,e.p));};
 A.natalMeet=function(id,relative){if(modalOpen)return;const e=natalEntry(id,relative);if(e)pushEv(natalMeetingEvent(e.c,e.p));};
 A.natalLetter=function(id,relative){if(modalOpen)return;const e=natalEntry(id,relative);if(!e||!e.p.alive||e.p.consortId||S.turn-(e.p.lastLetter??-99)<3||!useE())return;
-  e.p.lastLetter=S.turn;const young=natalAge(e.p)<3;const text=young?`赐衣问安，家中代${e.p.name}回报起居平安。`:`陛下赐书问候${e.p.name}，也让${fullName(e.c)}捎去自己的话。`;
+  e.p.lastLetter=S.turn;const young=natalAge(e.p)<3;const text=young?`赐衣问安，家中代${e.p.name}回报起居平安。`:e.c.familyArchive?`陛下赐书问候${e.p.name}，家中回报近日起居。`:`陛下赐书问候${e.p.name}，也让${fullName(e.c)}捎去自己的话。`;
   natalRecord(e.c,e.p,text,.4);relAdd(e.c,e.p,3);pushEv({title:'家中回音',por:natalPortrait(e.p),text,choices:[ok1]});};
 function natalFamilyTick(){
   const seen=new Set();
-  for(const c of S.consorts){const h=houseOf(c);if(!h||seen.has(h))continue;seen.add(h);
+  for(const c of familyCourtHosts()){const h=houseOf(c);if(!h||seen.has(h))continue;seen.add(h);
     for(const p of natalPeople(h)){
       if(p.alive)p.age=natalAge(p);
       if(p.visit&&(S.turn>=p.visit.until||!inPalace(byId(p.visit.host)))){const host=byId(p.visit.host)||c;delete p.visit;natalRecord(host,p,`${p.name}探亲结束，平安归家。${fullName(host)}将来访时留下的小物收好。`,.2);}

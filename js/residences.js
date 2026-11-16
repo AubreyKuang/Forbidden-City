@@ -146,13 +146,13 @@ function residencePetitionFor(c){
   return choices[0]||null;
 }
 function residenceRequestCooling(c){
-  return journalContentVersion()>=27?S.turn-Math.max(c.lastResidenceRequest??-99,S.flags.lastResidenceRequest??-99)<24:S.turn-(c.lastResidenceRequest??-99)<36;
+  return journalContentVersion()>=29?S.turn-Math.max(c.lastResidenceRequest??-99,S.flags.lastResidenceRequest??-99)<24:S.turn-(c.lastResidenceRequest??-99)<36;
 }
 function residencePetitionEvent(person){
-  if(!person&&(S.turn-(S.flags.lastResidenceRequest??-99)<(journalContentVersion()>=27?24:12)||!chance(.12)))return null;
+  if(!person&&(S.turn-(S.flags.lastResidenceRequest??-99)<(journalContentVersion()>=29?24:12)||!chance(.12)))return null;
   const candidates=(person?[person]:harem()).map(c=>({c,request:residencePetitionFor(c)})).filter(x=>x.request);if(!candidates.length)return null;
   const {c,request}=pick(candidates),{plan,reason,peer}=request;
-  let resolved=false,recorded=false;const current=journalContentVersion()>=27;
+  let resolved=false,recorded=false;const current=journalContentVersion()>=29;
   const valid=()=>!resolved&&inPalace(c)&&(!current||recorded||!residenceRequestCooling(c))&&JSON.stringify(residenceMovePlan(c,plan.to,plan.room))===JSON.stringify(plan);
   const record=()=>{if(current&&recorded)return;recorded=true;S.flags.lastResidenceRequest=S.turn;c.lastResidenceRequest=S.turn;story(c,`【迁宫之请】${reason}请求迁往${plan.to}${plan.room==='main'?'正殿':'侧殿'}${plan.swap?'，拟与'+fullName(byId(plan.swap))+'换宫':''}。`);};
   return {title:'迁宫之请',cast:[c,peer].filter(Boolean),present:[c],valid,

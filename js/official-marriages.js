@@ -5,7 +5,7 @@ const officialMarriageAge=p=>Number.isFinite(p.born)?natalAge(p):p.age||0;
 function officialMarriageRef(person){return {key:person.key,id:person.p.id,gen:S.gen};}
 function officialMarriagePerson(ref){
   if(!ref)return null;
-  const current=(ref.gen===S.gen||String(ref.key).startsWith('scholar:'))&&courtPerson(ref.key);
+  const current=(ref.gen===S.gen||retainedFamiliesActive()&&!!familyHostById(String(ref.key).split(':')[0])||String(ref.key).startsWith('scholar:'))&&courtPerson(ref.key);
   if(current?.p?.id===ref.id)return current;
   const [cid,role]=String(ref.key).split(':'),court=(S.previousCourts||[]).find(c=>c.gen===ref.gen);
   const c=court?.consorts.find(c=>String(c.id)===cid),p=c?.house&&officialPerson(c.house,role);
@@ -21,7 +21,7 @@ function officialMarriageWomen(){
 function officialMarriageBride(ref){
   if(ref.kind==='princess'){const p=royalById(ref.id);return p?{...ref,p}:null;}
   if(ref.kind==='guest'){const p=S.officialMarriages?.guests.find(p=>p.id===ref.id);return p?{...ref,p}:null;}
-  if(ref.gen===S.gen){const e=natalEntry(ref.host,ref.id);if(e)return {...ref,...e};}
+  if(ref.gen===S.gen||retainedFamiliesActive()&&familyHostById(ref.host)){const e=natalEntry(ref.host,ref.id);if(e)return {...ref,...e};}
   const c=(S.previousCourts||[]).find(c=>c.gen===ref.gen)?.consorts.find(c=>c.id===ref.host),p=c?.house?.relatives?.find(p=>p.id===ref.id);
   return p?{...ref,p,c,h:c.house,archived:true}:null;
 }

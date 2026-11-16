@@ -2,18 +2,30 @@
    never from serialized JavaScript. Each command owns its random draws and answers.
    The saved world remains the authority; replay is checked before it is displayed. */
 const PalaceActions=(()=>{
-  const version=27, excluded=new Set(['save','load','rewind','downloadSave','readSaveFile','undoImport','newGame','officialsFilter','officialsBloc','chronicleFilter','chronicleSearch','chronicleClear','chronicleThread']);
+  const version=29, excluded=new Set(['save','load','rewind','downloadSave','readSaveFile','undoImport','newGame','officialsFilter','officialsBloc','chronicleFilter','chronicleSearch','chronicleClear','chronicleThread']);
   const actions=new Map();
   let blocked=false,snapshotRequested=false,journal=null,depth=0,replaying=false,step=null,cursor=0,answer=0,saving=0,fields=null;
   const clone=x=>JSON.parse(JSON.stringify(x));
-  const world=s=>{const copy={...s};delete copy.pendingActions;delete copy.savedAt;delete copy.saveVersion;return copy;};
+  const world=s=>{
+    const copy={...s};delete copy.pendingActions;delete copy.savedAt;delete copy.saveVersion;
+    // Portrait snapshots are not a second live court register. JSON cannot retain
+    // aliases to the canonical household, so ignore this redundant display cache.
+    if(s?.retainedFamilies?.length&&s.flags){
+      copy.flags={...s.flags};
+      for(const key of ['dowager','birthDowager']){
+        const d=s.flags[key],c=s.retainedFamilies.find(c=>c.id===d?.personId);
+        if(c?.house&&d?.portrait?.house){const portrait={...d.portrait};delete portrait.house;copy.flags[key]={...d,portrait};}
+      }
+    }
+    return copy;
+  };
   const stamp=()=>({title:curEv?.title||null,result:!!modalResult,queue:Q.map(e=>e.title)});
   function random(){
     if(!step)return Math.random();
     if(replaying){if(cursor>=step.rolls.length)throw Error('Missing recorded roll');return step.rolls[cursor++];}
     const value=Math.random();step.rolls.push(value);return value;
   }
-  function settle(previous){courtFamilyLifeTick(previous);queenHeirFeelings(previous);familyRiseTick(previous);maternalTick();dowagerFamilyChanges(previous);palacePrayerChanges(previous);familyRememberDeathAges(previous);if(S){syncChildDisgrace();if(journal?.version>=3)settleExhaustedMonth(previous);}}
+  function settle(previous){courtFamilyLifeTick(previous);queenHeirFeelings(previous);familyRiseTick(previous);maternalTick();dowagerFamilyChanges(previous);palacePrayerChanges(previous);familyRememberDeathAges(previous);if(S){if(typeof haremStewardChanges==='function')haremStewardChanges();syncChildDisgrace();childMotherConsequences(previous);marriageBondConsequences(previous);if(journal?.version>=3)settleExhaustedMonth(previous);}}
   function input(selector){return fields?fields[selector]:$(selector)?.value;}
   function payload(){return {...S,pendingActions:journal||S?.pendingActions};}
   function run(name,args,fn){
@@ -59,7 +71,7 @@ const PalaceActions=(()=>{
     }
   }
   function valid(j){
-    return !!j&&[2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,version].includes(j.version)&&(j.base===null||validPalaceSave(j.base))&&!j.base?.pendingActions&&
+    return !!j&&[2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,version].includes(j.version)&&(j.base===null||validPalaceSave(j.base))&&!j.base?.pendingActions&&
       record(j.ui)&&(j.draft===undefined||typeof j.draft==='string'&&j.draft.length<=128)&&Array.isArray(j.steps)&&j.steps.length>0&&j.steps.length<=2048&&j.steps.every(s=>
         record(s)&&(s.monthNotice===undefined||typeof s.monthNotice==='boolean')&&((s.name==='choose'&&s.args?.length===2&&Number.isInteger(s.args[0]))||
           (s.name==='next'&&s.args?.length===0)||actions.has(s.name))&&

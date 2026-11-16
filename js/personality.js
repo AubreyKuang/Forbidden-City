@@ -83,6 +83,14 @@ const WOUNDS={
  lost:'小时候被拐子拐走过，三天后才被找回来，至今不敢一个人走夜路。',
  scorn:'因为出身低，选秀时被嬷嬷当众嘲笑过，她一直记得那天。',
 };
+// Read-only fallback for incomplete old saves; never invent a replacement childhood.
+const personalContextActive=()=>typeof PalaceActions==='undefined'||PalaceActions.contentVersion>=27;
+const GOUYI_PAST='自幼双手蜷握，她习惯把手藏在宽袖里。旁人记得的是奇症，她记得的却是河间窗下的雨声、茶香，还有不被追问的片刻清静。巡狩相见时，陛下先屏退围观者，等她愿意伸手，双掌才在御前缓缓舒开。她珍惜那日的相知，也一直想弄清缘由，更盼别人记住赵令仪这个名字。';
+function consortPastText(c){
+  if(!personalContextActive()&&typeof WOUNDS[c.wound]==='string')return WOUNDS[c.wound];
+  if(c.gouyi)return GOUYI_PAST;
+  return c.wound!=='gouyi'&&Object.hasOwn(WOUNDS,c.wound)&&typeof WOUNDS[c.wound]==='string'?WOUNDS[c.wound]:'她的旧事还未说详，留待她愿意时，慢慢亲口讲起。';
+}
 const MEMT={
  first:['她忽然问你，还记不记得她第一次侍寝那晚。她说自己紧张得一夜没敢翻身。'],
  hurt:['她低头拨着茶盏：“那年的事，臣妾早不怪陛下了。”可她的手在发抖。','“那天臣妾在廊下站了一夜。”她说得很轻，像在说别人的事。'],
@@ -159,7 +167,7 @@ function deepLine(c){deepen(c);if(c.wish==='title'&&c.title&&!c.wishDone){c.wish
   return `<div style="margin-top:4px">小性子：<span class="tag">${c.t2}</span>　喜好：${c.kl?`<span class="tag g">${c.like}</span>不喜<span class="tag r">${c.hate}</span>`:'<span class="hint">多闲谈才知道</span>'}</div>
   <div>平日消遣：<span class="tag">${esc(c.hobby)}</span></div>
   <div>心愿：${c.wishKnown?`${esc(w.t)}${c.wishDone?' <span class="tag y">已成全</span>':w.unknown?'':w.btn?` <button class="btn sm jade" onclick="A.wish(${c.id})" ${inPalace(c)?'':'disabled'}>${esc(w.btn)}</button>`:' <span class="hint">（生下孩子便成全了）</span>'}`:`<span class="hint">${c.aff>=50?'情分已够，多闲谈几次，她也许会说出心愿':'情分到 50 以后，闲谈时她也许会说'}</span>`}</div>
-  ${c.woundKnown?`<div>往事：${esc(WOUNDS[c.wound])}</div>`:`<div class="hint">往事：${c.aff>=65?'情分已够，多闲谈几次，她也许会对你说起':'情分到 65 以后，她也许会对你说起'}</div>`}`}
+  ${c.woundKnown?`<div>往事：${esc(consortPastText(c))}</div>`:`<div class="hint">往事：${c.aff>=65?'情分已够，多闲谈几次，她也许会对你说起':'情分到 65 以后，她也许会对你说起'}</div>`}${typeof gouyiPastPanel==='function'?gouyiPastPanel(c):''}`}
 A.chat=function(id,fromEvent=false){const c=byId(id);if((modalOpen&&!fromEvent)||!inPalace(c))return;const home=homeCareEvent(c)||solitaryQuietEvent(c);if(home){(fromEvent?pushNow:pushEv)(home);return;}const arrival=kinArrivalGreeting(c)||newcomerWelcomeEvent(c);if(arrival){(fromEvent?pushNow:pushEv)(arrival);return;}const past=pastLifeEvent(c);if(past){(fromEvent?pushNow:pushEv)(past);return;}initTimeTraveler(c);const quiet=solitaryEvent(c);if(quiet){(fromEvent?pushNow:pushEv)(quiet);return;}const oldWorld=travelerConfessionEvent(c);if(oldWorld){if(useE())(fromEvent?pushNow:pushEv)(oldWorld);return;}if(!useE())return;if(!legacyPendingAction()){noteHaremVisit(c);c.lastPersonalAttention=S.turn;}deepen(c);if(journalContentVersion()>=26)return layeredConsortChat(c);const L=[];const xk=xinOf(c),opening=consortVoicePhase(c)==='first';
   const voice=characterVoice(c,'talk');L.push(voice.stage);L.push(`“${voice.text}”`);
   const familyTalk=fiveBrotherChat(c);if(familyTalk)L.push(familyTalk);
@@ -181,7 +189,7 @@ A.chat=function(id,fromEvent=false){const c=byId(id);if((modalOpen&&!fromEvent)|
   let rev='';
   if(!c.kl&&chance(.35)){c.kl=true;rev+=`\n她随口说起，自己最喜欢${c.like}，最烦${c.hate}。`}
   if(!opening&&c.aff>=50&&!c.wishKnown&&chance(.5)){c.wishKnown=true;rev+=`\n她犹豫了很久，小声说出一个心愿：${WISHES[c.wish].t}。`;story(c,`对陛下说出心愿：${WISHES[c.wish].t}。`)}
-  else if(!opening&&c.aff>=65&&!c.woundKnown&&chance(.5)){c.woundKnown=true;rev+=`\n夜深了，她第一次说起从前的事：${WOUNDS[c.wound]}`;story(c,'第一次对陛下说起入宫前的往事。')}
+  else if(!opening&&c.aff>=65&&!c.woundKnown&&chance(.5)){c.woundKnown=true;rev+=`\n夜深了，她第一次说起从前的事：${consortPastText(c)}`;story(c,'第一次对陛下说起入宫前的往事。')}
   const sch=harem().filter(x=>x!==c&&x.scheme>=65&&!x.known);
   if(!opening&&c.aff>=50&&sch.length&&chance(.25)){const x=pick(sch);x.known=true;rev+=`\n她压低声音：“${cName(x)}那边，陛下还是留个心眼好。”（${cName(x)}的心机已显露：${rd(x.scheme)}）`}
   if(NEGX.includes(xk)&&!continuityBlocksSoothing(c,xk)){const p=({'思念':.8,'委屈':.6,'惶恐':.55,'嫉恨':.25,'悲恸':.3,'怨恨':.12,'心如死灰':.1,'忧心':.2}[xk]||0)+c.aff/400;if(chance(p)){const nk=xk==='思念'?'欢喜':'释然';setXin(c,nk,'陛下陪她说了许久的话');rev+=xinOf(c)!==xk?`\n§心境：${xk} → ${xinOf(c)}`:`\n§她的心境仍是「${xk}」`}else rev+=`\n§她的心境仍是「${xk}」`}

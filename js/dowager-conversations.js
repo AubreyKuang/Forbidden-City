@@ -10,7 +10,7 @@ function trackDowagerTalk(d,ev,key,{months=6,praise=null}={}){
   if(shown)return;shown=true;onShow?.();const h=d.conversations||={topics:{},recent:[]};h.topics||={};h.topics[key]=S.turn;
   if(praise){h.topics.praise=S.turn;h.topics['praise:'+praise.id]=S.turn;}
   h.lastTurn=S.turn;h.recent=[...(h.recent||[]),key].slice(-4);
-  if(journalContentVersion()>=27)h.visits={turn:S.turn,count:h.visits?.turn===S.turn?h.visits.count+1:1};
+  if(journalContentVersion()>=29)h.visits={turn:S.turn,count:h.visits?.turn===S.turn?h.visits.count+1:1};
  },choices:ev.choices.map(choice=>({...choice,f:()=>{if(answered||!d.alive)return null;answered=true;return choice.f?.();}}))};
 }
 const dowagerEarlierFavor=dowagerFavorEvent;
@@ -34,7 +34,7 @@ function dowagerConversationTopics(d){
   {key:'governance',title:'听取直言',line:E().people<40?'奏折上说百姓安居，未必家家都好。你多听一句不中听的话，也许便少一户人家受苦。':E().treasury<150?'国库的银子有去处，百姓的辛苦也该有回音。慈宁宫这里从简便好，不必为了哀家添排场。':'哀家不替你断朝政，只劝一句：肯把难处当面说清的人，未必是不敬你。用人也要容人说话。',answer:'记下母后的劝诫',result:'你记下她的劝诫，具体政务仍待御前逐件处置。'},
   {key:'palace-life',title:'宫人的日子',line:'来请安的人只怕礼数有错，连捧茶的手都绷着。规矩要有，也要让人能喘口气。哀家这里，茶凉些不妨事。',answer:'听她说起日常琐事',result:'她说起值夜、换季与添衣的小事，叮嘱宫里照例妥善安排。'}
  ];
- if(journalContentVersion()>=27)pool.push(
+ if(journalContentVersion()>=29)pool.push(
   {key:'tea-taste',title:'茶里的滋味',line:'你尝尝这盏茶，先别听宫人说它名贵不名贵。合自己的口味，才算喝得舒坦。哀家如今也懒得样样都随别人。',answer:'同母后细尝这一盏茶',result:'你们说起浓淡与回甘，各自说了喜欢的滋味。'},
   {key:'old-recipes',title:'旧日食谱',line:'翻到一页旧食谱，字都淡了，还写着少放些糖。人到后来，记得的常是这些小事。你有什么滋味，一想起便觉得亲切？',answer:'和母后说说熟悉的滋味',result:'你同太后说起熟悉的饭食，宫人把旧食谱重新收好。'},
   {key:'half-read-book',title:'书里的人情',line:'哀家昨日翻书，见书里的人一句话不肯说开，倒生出许多误会。活了一把年纪，还是觉得，亲近的人也该把话好好说。',answer:'听她说说书中的人情',result:'你们从书中的误会说到相处，约定有心事便慢慢讲。'},
@@ -53,7 +53,7 @@ function dowagerEverydayEvent(d){
  const recent=d.conversations?.recent||[],topics=dowagerConversationTopics(d);
  let ready=topics.filter(t=>dowagerTopicReady(d,t.key)&&!recent.includes(t.key));
  if(!ready.length)ready=topics.filter(t=>dowagerTopicReady(d,t.key));
- if(journalContentVersion()>=27){const unheard=ready.filter(t=>d.conversations?.topics?.[t.key]===undefined);if(unheard.length)ready=unheard;if(!ready.length)return dowagerCompanionEvent(d,true);}
+ if(journalContentVersion()>=29){const unheard=ready.filter(t=>d.conversations?.topics?.[t.key]===undefined);if(unheard.length)ready=unheard;if(!ready.length)return dowagerCompanionEvent(d,true);}
  if(!ready.length)return {title:'慈宁宫 · 静坐',por:dowagerPerson(d),valid:()=>d.alive,text:'先前的话已说过，太后这回只留你坐坐。窗外风过，宫人轻轻续上茶水。',choices:[{t:'陪她静坐片刻'}]};
  const topic=pick(ready),k=topic.child&&kidById(topic.child),m=topic.mother&&byId(topic.mother);let answered=false;
  const record=()=>{if(answered)return null;answered=true;log(`${d.name}与帝闲谈「${topic.title}」：${topic.result}`);
@@ -92,9 +92,9 @@ const dowagerEarlierEvent=dowagerEvent;
 dowagerEvent=function(){
  if(!dowagerTalksEnabled())return dowagerEarlierEvent();
  const d=ensureDowager();if(!d?.alive)return null;
- if(journalContentVersion()>=27&&d.feeling?.kind==='悲恸')return dowagerCompanionEvent(d,true);
- if(journalContentVersion()<27&&d.conversations?.lastTurn===S.turn)return {title:'慈宁宫 · 静坐',por:dowagerPerson(d),valid:()=>d.alive,text:'今日已经说过一回话，太后这次没有再提先前的事，只叫宫人续茶，留你静坐片刻。',choices:[{t:'陪她坐一会'}]};
- if(journalContentVersion()>=27&&d.conversations?.visits?.turn===S.turn&&d.conversations.visits.count>=2&&chance(.7)){const company=dowagerCompanionEvent(d);if(company)return company;}
+ if(journalContentVersion()>=29&&d.feeling?.kind==='悲恸')return dowagerCompanionEvent(d,true);
+ if(journalContentVersion()<29&&d.conversations?.lastTurn===S.turn)return {title:'慈宁宫 · 静坐',por:dowagerPerson(d),valid:()=>d.alive,text:'今日已经说过一回话，太后这次没有再提先前的事，只叫宫人续茶，留你静坐片刻。',choices:[{t:'陪她坐一会'}]};
+ if(journalContentVersion()>=29&&d.conversations?.visits?.turn===S.turn&&d.conversations.visits.count>=2&&chance(.7)){const company=dowagerCompanionEvent(d);if(company)return company;}
  if(S.month===9&&dowagerTopicReady(d,'birthday',12))return trackDowagerTalk(d,{title:'太后千秋',por:dowagerPerson(d),text:`今日是${d.name}千秋节。她说：“年年添一岁，只盼一家人各自安好。你肯来坐坐，哀家便欢喜。”`,choices:[{t:'大办寿宴（国库-60万两）',f:()=>fx(chg({treasury:-60,prestige:3,people:1}))},{t:'一切从简',f:()=>fx(chg({people:2}))}]},'birthday',{months:12});
  const r=R();
  if(r<.1){const favor=dowagerFavorEvent();if(favor)return favor;}

@@ -137,6 +137,7 @@ function factions(){if(familyScenesEnabled())return palaceFactions();const L=lea
     if(best)map[best.id].push(c);else neutral.push(c)});
   return {L,map,neutral}}
 function palaceFactions(){
+ if(journalContentVersion()>=29)return favoredPalaceFactions();
  const h=harem(),L=[],map={},assigned=new Set();
  const power=c=>c.rank*20+c.favor+c.scheme*.5;
  const candidates=h.filter(c=>!isSolitary(c)&&(c.rank>=5||c.rank===4&&c.favor>=45)).sort((a,b)=>power(b)-power(a)||a.id-b.id);
@@ -146,6 +147,28 @@ function palaceFactions(){
   if(!members.length)continue;
   L.push(leader);map[leader.id]=members;[leader,...members].forEach(c=>assigned.add(c.id));
  }
+ return {L,map,neutral:h.filter(c=>!assigned.has(c.id))};
+}
+function favoredPalaceFactions(){
+ const h=harem(),prior=S.flags.palaceFactionState?.gen===S.gen?S.flags.palaceFactionState.members:{},map={},L=[],assigned=new Set();
+ const candidates=h.filter(c=>!isSolitary(c)&&(c.rank>=5||c.rank===4&&c.favor>=45||c.favor>=60||prior[c.id]===c.id&&c.favor>=45))
+  .sort((a,b)=>(b.rank*20+b.favor)-(a.rank*20+a.favor)||a.id-b.id);
+ const eligible=new Set(candidates.map(c=>c.id));for(const c of candidates)map[c.id]=[];
+ const allied=(a,b)=>a!==b&&socialPair(a,b)&&relGet(a,b)>=30&&!isRival(a,b)&&!isRival(b,a);
+ const score=(c,l)=>relGet(c,l)+l.favor*.08+(prior[c.id]===l.id?4:0)+(c.clan&&c.clan===l.clan?3:0);
+ const best=(c,people)=>people.filter(l=>allied(c,l)).sort((a,b)=>score(c,b)-score(c,a)||a.id-b.id)[0];
+ // Reserve potential leaders first. Each supporter chooses her closest actual
+ // ally, so an empress cannot consume another woman's entire circle by rank.
+ for(const c of h.filter(c=>!eligible.has(c.id))){const leader=best(c,candidates);if(leader){map[leader.id].push(c);assigned.add(c.id);}}
+ for(const c of candidates)if(map[c.id].length){L.push(c);assigned.add(c.id);}
+ for(const c of candidates){
+  if(assigned.has(c.id))continue;
+  const leader=best(c,L);
+  if(leader){map[leader.id].push(c);assigned.add(c.id);continue;}
+  const partner=best(c,candidates.filter(o=>!assigned.has(o.id)));
+  if(partner){L.push(c);map[c.id].push(partner);assigned.add(c.id);assigned.add(partner.id);}
+ }
+ for(const c of candidates)if(!L.includes(c))delete map[c.id];
  return {L,map,neutral:h.filter(c=>!assigned.has(c.id))};
 }
 function palaceFactionTick(){
@@ -204,7 +227,7 @@ function consortSocialLine(c){
 }
 function facHTML(){const f=factions();if(!f.L.length&&!f.neutral.length)return '';
   const box=(t,arr)=>`<div class="card" style="cursor:default;flex-direction:column"><div class="nm">${t}</div><div>${arr.length?arr.map(c=>`<span class="tag">${esc(cName(c))}</span>`).join(''):'<span class="hint">尚无依附者</span>'}</div></div>`;
-  return `<section class="harem-factions" aria-label="后宫派系"><h3>派系</h3><p class="hint">随实际交情形成，可有多派，也可不入任何派系。各派并非天然互为仇敌。</p><div class="grid">${f.L.map(l=>box(esc(cName(l))+'一派',f.map[l.id])).join('')}${f.neutral.length?box('无派系',f.neutral):''}</div></section>`}
+  return `<section class="harem-factions" aria-label="后宫派系"><h3>派系</h3><p class="hint">${journalContentVersion()>=29?'高位或得宠的妃嫔可凭实际交好组织一派；成员更看重交情，也会保留原来的归属。':'随实际交情形成，可有多派，也可不入任何派系。'}各派并非天然互为仇敌。</p><div class="grid">${f.L.map(l=>box(esc(cName(l))+'一派',f.map[l.id])).join('')}${f.neutral.length?box('无派系',f.neutral):''}</div></section>`}
 function relLine(c){if(!c.alive||c.gone)return '';
   const h=harem().filter(o=>o!==c).map(o=>[o,relGet(c,o)]).sort((a,b)=>b[1]-a[1]);
   const good=h.filter(x=>x[1]>=30&&socialPair(c,x[0])).slice(0,4),respect=h.filter(x=>x[1]>=30&&!socialPair(c,x[0])).slice(0,4),bad=h.filter(x=>x[1]<=-30).slice(-4),fac=c.cold?null:facOf(c);

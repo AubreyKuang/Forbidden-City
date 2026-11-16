@@ -75,3 +75,20 @@ const marriageFriendshipsMigrate=migrate;
 migrate=function(...args){const result=marriageFriendshipsMigrate.apply(this,args);repairMarriageBonds();return result;};
 const marriageFriendshipsTick=kinMarriageTick;
 kinMarriageTick=function(...args){if(marriageFriendshipsEnabled())repairMarriageBonds();return marriageFriendshipsTick.apply(this,args);};
+
+// An actual wedding introduces its own conversation immediately after the decree.
+// Restored historical bonds remain history, rather than becoming new weddings.
+function marriageBondConsequences(previous){
+ if(!S||PalaceActions.blocked||journalContentVersion()<29||previous?.gen!==S.gen)return;
+ for(const b of Object.values(S.flags.marriageBonds||{})){
+  if(b.legacy||b.gen!==S.gen||b.turn!==S.turn||b.lastTalk!==null||b.automaticQueued||previous.flags?.marriageBonds?.[b.key])continue;
+  const [a,o]=marriageBondPeople(b);if(!a?.alive||!o?.alive)continue;
+  let ev=marriageBondEvent(b);
+  if(!ev){
+   const valid=()=>b.lastTalk===null&&a.alive&&o.alive;
+   const text=b.fact+`\n两人眼下不能相聚，各自在收到婚书消息后向随侍谈起这门亲事。\n${fullName(a)}：“${marriageGreeting(a,o,b)}”\n${fullName(o)}：“${marriageGreeting(o,a,b)}”`;
+   ev={title:'姻亲喜讯',por:a,cast:[o],present:[],valid,text,choices:[{t:'记下两家的心意',f:()=>{if(!valid())return null;b.lastTalk=S.turn;livedRecord([a,o],'bond','姻亲喜讯',`marriage:${b.key}`,text);return '婚书与两人的心意一同记下，眼下的居处与禁令仍照原安排。';}}]};
+  }
+  const prior=ev.onQueue;ev.onQueue=()=>{prior?.();b.automaticQueued=true;};pushEv(ev);
+ }
+}

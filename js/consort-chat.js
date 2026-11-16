@@ -47,7 +47,8 @@ function consortChatTopics(c){
     return {key:'wish',stage:known?'她又提起自己的心愿。':'她犹豫片刻，说出了自己的心愿。',text:wish.t+'。'};
   });
   if(!c.kl)add('likes',()=>{c.kl=true;return {key:'likes',stage:'她说起自己的喜好。',text:`臣妾最喜欢${c.like}，不大喜欢${c.hate}。`};});
-  if(!opening&&c.aff>=65&&!c.woundKnown&&WOUNDS[c.wound])add('past',()=>{c.woundKnown=true;story(c,'第一次对陛下说起入宫前的往事。');return {key:'past',stage:'她第一次慢慢说起从前的事。',text:WOUNDS[c.wound],narrative:true};});
+  if(!opening&&c.aff>=65&&!c.woundKnown&&(WOUNDS[c.wound]||personalContextActive()&&c.gouyi))add('past',()=>{c.woundKnown=true;story(c,'第一次对陛下说起入宫前的往事。');return {key:'past',stage:'她第一次慢慢说起从前的事。',text:consortPastText(c),narrative:true};});
+  if(personalContextActive()&&c.gouyi?.past?.stage&&gouyiLifeEligible(c))add('gouyi-past',()=>chatVoiceFrom(c,consortVoicePool(c).find(v=>v.key==='gouyi-past')));
   const ongoing=continuityThreads(c).filter(continuityOpen).at(-1);
   if(ongoing&&continuityAvailable(ongoing))add('ongoing',()=>({key:'ongoing',stage:'她接着谈起近来牵挂的事。',text:ongoing.history.at(-1)?.text||continuityDesire(ongoing),narrative:true}));
   const schemers=harem().filter(o=>o!==c&&o.scheme>=65&&!o.known);

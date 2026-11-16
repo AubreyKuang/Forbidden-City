@@ -38,10 +38,10 @@ test('repeated dowager conversation counts and chosen words survive reload witho
 test('Cining greeting action precedes the long court panel and is absent after the dowager dies',()=>{
  const w=world();w.run(`UI.sel='cn';var html=viewPlace();assert.match(html,/<header class="cining-heading">/);assert.equal(html.split('onclick="A.greet()"').length-1,1);assert.ok(html.indexOf('onclick="A.greet()"')<html.indexOf('</header>'));S.flags.dowager.alive=false;assert.ok(!viewPlace().includes('onclick="A.greet()"'));`);
 });
-for(const name of ['annual-tags','residence-request','dowager-repeat'])test('genuine version 26 '+name+' action resumes before new rules activate',()=>{
- const payload=require('./fixtures/'+name+'-legacy-v26.json'),w=boot(912,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));w.ctx.assert=assert;
- w.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,26);`);
+for(const version of [26,28])for(const name of ['annual-tags','residence-request','dowager-repeat'])test('genuine version '+version+' '+name+' action resumes before new rules activate',()=>{
+ const payload=require('./fixtures/'+name+'-legacy-v'+version+'.json'),w=boot(912,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));w.ctx.assert=assert;
+ w.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,${version});`);
  if(name==='annual-tags')w.run(`assert.equal(S.children.find(k=>k.name==='清宁').lit,56);`);
  if(name==='dowager-repeat')w.run(`assert.match(curEv.text,/今日已经说过一回话/);`);
- w.run(`drain();assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,27);`);
+ w.run(`drain();assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,29);`);
 });
