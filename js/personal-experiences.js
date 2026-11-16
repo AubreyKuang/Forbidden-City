@@ -60,6 +60,7 @@ function endPersonalExperience(c,episode,result,outcome){
   h.seen[episode.id]=S.turn;h.lastEnd=S.turn;h.history.push({id:episode.id,title:episode.title,turn:S.turn,d:dateStr(),outcome,t:result});
   if(h.history.length>24)h.history.shift();delete h.current;
   story(c,`【个人经历·${episode.title}】${result}`);
+  recordConsortPractice(c,episode,outcome);
   remember(c,'personal-experience',`${episode.title}：${result}`);
 }
 function personalExperienceEvent(c){

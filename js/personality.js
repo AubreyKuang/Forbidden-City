@@ -129,7 +129,8 @@ function deepen(c){if(!c)return;
   if(!woundOK(c,c.wound))c.wound=pick(Object.keys(WOUNDS).filter(w=>woundOK(c,w)));
   if(!c.wishDone&&!wishOK(c,c.wish))c.wish=pick(Object.keys(WISHES).filter(w=>wishOK(c,w)));
   c.hobby=consortHobby(c);
-  if(c.wish==='title'&&c.title)c.wishDone=true}
+  if(c.wish==='title'&&c.title)c.wishDone=true;
+  ensureConsortHealth(c);ensureConsortDistinctions(c);}
 // Remove only the retired, invented wish; actual deaths in the family remain.
 function migrateRetiredBrotherWish(){
   const obsolete=value=>/想为早夭的弟弟立个牌位|她在小佛堂里给弟弟上了一炷香/.test(JSON.stringify(value)||'');

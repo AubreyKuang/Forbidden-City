@@ -71,6 +71,7 @@ function makeGirl(o={}){
     rank:0, palace:'', favor:ri(5,15), mood:65, aff:ri(10,25), preg:0, prot:false, lastBirth:-99, alive:true, cold:false, gone:false,
     seed:ri(1,2e9), title:'', story:[], nights:0, known:false};
   assignConsortPortrait(girl,true);initSolitary(girl);ensureConsortFertility(girl);
+  if(consortTraitsActive())girl.hp=consortHealthBase(girl);
   return girl;
 }
 function assignPalace(c){
@@ -403,6 +404,7 @@ A.endMonth=function(){
     log('查账回奏未获批复，弹劾案已归档。');
   }
   if(S.month>12){S.month=1;S.year++;e.age++;newYear=true;alive().forEach(c=>c.age++)}
+  consortHealthTick();
   for(const maid of returnedMaidNotices)pushEv(pregEvent(maid));
   annualBirthOmenTick();
   const revenue=legacyPendingAction()?null:annualRevenueTick();

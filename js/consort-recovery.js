@@ -5,6 +5,7 @@ function beginConsortRecovery(c,kind,turn=S.turn,hidden=false){
   const old=c.recovery;
   if(old&&old.kind===kind&&old.turn===turn)return;
   c.recovery={kind,turn,until:turn+3};
+  consortHealthHurt(c,kind,turn);
   if(!hidden)story(c,`${kind==='birth'?'生产后':'小产后'}由医官安排静养，三个月内暂停侍寝，日常探望与照料仍照常。`);
 }
 function recentRecoveryStory(c,re,months){
@@ -36,6 +37,7 @@ function consortNightReason(c){
   const r=consortRecovery(c);
   if(r)return `${r.kind==='birth'?'产后':'小产后'}调养 · 还需${Math.min(3,r.until-S.turn)}个月`;
   if(consortRecoveryActive()&&c.delivery&&!c.delivery.settled)return '产事尚待安顿';
+  if(consortTraitsActive()&&c.hp<35)return '身体虚弱，宜先调养';
   return '';
 }
 function bearGuardEligible(c){
