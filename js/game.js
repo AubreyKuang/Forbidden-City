@@ -127,8 +127,15 @@ function eventPortraits(ev){
 }
 function eventCast(people,event){
   const label=person=>event?.personalStory&&S.consorts.includes(person)?fullName(person)+' · '+cName(person):porName(person);
-  return people.length>1?`<div class="event-cast" aria-label="${event?.personalStory?'故事相关人物':'事件在场人物'}">${people.map(person=>
-    `<figure>${porImg(person,104)}<figcaption>${esc(label(person))}</figcaption></figure>`).join('')}</div>`:'';
+  const featured=people.some(person=>person.storyPerson==='xiean');
+  return people.length>1?`<div class="event-cast${featured?' event-cast-featured':''}" aria-label="${event?.personalStory?'故事相关人物':'事件在场人物'}">${people.map(person=>{
+    const lead=person.storyPerson==='xiean';
+    return `<figure${lead?' class="event-portrait-lead"':''}>${porImg(person,lead?210:featured?160:104)}<figcaption>${esc(label(person))}</figcaption></figure>`;
+  }).join('')}</div>`:'';
+}
+function eventPortrait(person,size,caption){
+  const featured=person.storyPerson==='xiean';
+  return `<div class="mpor${featured?' event-portrait-featured':''}">${porImg(person,featured?210:size)}${caption||featured?`<div>${esc(porName(person))}</div>`:''}</div>`;
 }
 const EVENT_ILLUSTRATIONS={
   'spring-garden':'几瓣海棠落进池里，贴着水纹慢慢打转。你沿回廊走过去，隔着花枝看见一个熟悉的身影。',
@@ -205,7 +212,7 @@ function openModal(ev){
   const showChoicePortraits=choicePeople.size>1;
   const arrival=ev.scene==='palace-arrival';
   let h=`<h2 class="mtitle" id="event-title" tabindex="-1">${esc(ev.title)}</h2>${ev.scene==='mourning'?mourningScene():''}${eventIllustration(ev.illustration)}${arrival?palaceArrivalHTML(ev):ev.gardenTables?banquetSeating(ev.gardenTables):eventCast(people,ev)}<div class="mbody"${arrival?' hidden':''}>`;
-  if(people.length===1&&!ev.gardenTables)h+=`<div class="mpor">${porImg(people[0],112)}<div>${esc(porName(people[0]))}</div></div>`;
+  if(people.length===1&&!ev.gardenTables)h+=eventPortrait(people[0],112,true);
   h+=`<div class="mtext">${ev.jewelry?`<figure class="event-jewelry">${jewelryImage(ev.jewelry,88)}<figcaption>${esc(JEWELRY[ev.jewelry]?.name||'')}</figcaption></figure>`:''}${fmt(ev.text)}${rareNotice?`<p class="hint">${esc(rareNotice)}</p>`:''}${ev.ref?`<p class="ref">典出 · ${ev.refURL?`<a href="${esc(ev.refURL)}" target="_blank" rel="noopener noreferrer">${esc(ev.ref)}</a>`:esc(ev.ref)}</p>`:''}${ev.input?`<input id="minput" class="inp" maxlength="${ev.input.max||4}" value="${esc(ev.input.def||'')}" aria-label="输入">`:''}</div></div><div class="mch${showChoicePortraits?' event-choices':''}">`;
   ev.choices.forEach((c,i)=>{
     const ok=!c.cond||c.cond();
@@ -235,9 +242,11 @@ function showRes(res){
   if(typeof res==='string') res={text:res};
   modalResult=res;
   const b=$('#mbox');
-  const cast=res.por?'':eventCast(eventPortraits(curEv),curEv);
+  const people=eventPortraits(curEv);
+  const cast=res.por?'':eventCast(people,curEv);
+  const portrait=res.por||(people.length===1&&people[0].storyPerson==='xiean'?people[0]:null);
   const illustration=eventIllustration(res.illustration);
-  b.innerHTML=`<h2 class="mtitle" id="event-title"${illustration?' tabindex="-1"':''}>${esc(res.title||curEv.title)}</h2>${curEv.scene==='mourning'?mourningScene():''}${illustration}${cast}<div class="mbody">${res.por?`<div class="mpor">${porImg(res.por,96)}</div>`:''}<div class="mtext">${fmt(res.text)}</div></div><div class="mch"><button class="btn gold" onclick="nextEv()">继续</button></div>`;
+  b.innerHTML=`<h2 class="mtitle" id="event-title"${illustration?' tabindex="-1"':''}>${esc(res.title||curEv.title)}</h2>${curEv.scene==='mourning'?mourningScene():''}${illustration}${cast}<div class="mbody">${portrait?eventPortrait(portrait,96,false):''}<div class="mtext">${fmt(res.text)}</div></div><div class="mch"><button class="btn gold" onclick="nextEv()">继续</button></div>`;
   b.scrollTop=0;renderTop();
   $(illustration?'#event-title':'#mbox .mch button')?.focus?.({preventScroll:true});
 }

@@ -534,6 +534,19 @@ button.portrait-card{align-items:center}
 .event-cast figure{flex:0 1 104px;min-width:0;max-width:calc((100% - 30px)/4);margin:0;text-align:center}
 .event-cast .por{display:block;width:100%;height:auto;margin:0 auto;background:#fff6df86}
 .event-cast figcaption{margin-top:5px;color:#624435;font-size:12px;line-height:1.4;overflow-wrap:anywhere}
+.event-portrait-featured{width:min(210px,55vw);max-width:100%;padding:6px 0}
+.event-portrait-featured .por{display:block;width:100%;height:auto;margin:0 auto 6px;background:none;border:0}
+.event-cast.event-cast-featured{align-items:end;gap:16px}
+.event-cast.event-cast-featured figure{flex-basis:160px;max-width:calc((100% - 16px)/2)}
+.event-cast.event-cast-featured .event-portrait-lead{flex-basis:210px}
+.event-cast-featured .por{background:none;border:0}
+@media(min-width:740px){
+  #mbox:has(>.event-cast-featured){
+    display:grid;grid-template-columns:minmax(0,390px) minmax(0,1fr);gap:16px;align-items:center;
+  }
+  #mbox:has(>.event-cast-featured)>:not(.event-cast-featured,.mbody){grid-column:1/-1}
+  #mbox>.event-cast-featured{margin:0}
+}
 .mch.event-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));margin-top:16px}
 .mch.event-choices>.btn:not(.event-person-choice){grid-column:1/-1}
 .mch .btn.event-person-choice{display:flex;align-items:center;gap:10px;padding:8px 10px}
@@ -543,7 +556,11 @@ button.portrait-card{align-items:center}
 @media(max-width:460px){
   .event-cast{gap:6px;padding-inline:6px}
   .event-cast figure{flex-basis:86px;max-width:calc((100% - 18px)/4)}
-  .event-cast:has(figure:nth-child(2):last-child) figure{max-width:40%}
+  .event-cast:not(.event-cast-featured):has(figure:nth-child(2):last-child) figure{max-width:40%}
+  .event-portrait-featured{width:min(175px,52vw)}
+  .event-cast.event-cast-featured{gap:10px;flex-wrap:nowrap}
+  .event-cast.event-cast-featured figure{max-width:44%}
+  .event-cast.event-cast-featured .event-portrait-lead{max-width:53%}
   .mch.event-choices{gap:6px}
   .mch .btn.event-person-choice{gap:6px;padding:7px}
   .event-person-choice .por{width:36px}
