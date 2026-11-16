@@ -33,7 +33,7 @@ function brotherNominationEvent(person,brother){
       p.career='official';p.office=p.post='候补知县';p.appointedTurn=S.turn;p.merit=0;result='核验科名后授候补知县，仍候实缺，并非直接升为高官';
     }else if(approved){p.trust=clamp(p.trust+2);result='收入吏部考察册，仍须凭新的任内实绩决定升迁';}
     else result='举荐暂未采纳，仍按通常铨选程序候选，不因亲缘直接授职';
-    const text=`${elder.name}举荐自己的${p.age>elder.age?'兄长':'弟弟'}${p.name}。陛下${result}。`;courtPersonRecord(person,text);courtPersonRecord(brother,text);return text;
+    const text=`${elder.name}举荐自己的${p.age>elder.age?'兄长':'弟弟'}${p.name}。陛下${result}。`;recordBrotherExchange(person,brother,text);return text;
   };
   return {title:'兄弟举荐 · '+elder.name,por:elder,cast:[p],valid,text:`${elder.name}呈请考察${p.age>elder.age?'兄长':'弟弟'}${p.name}，并附上${p.career==='student'?p.education+'科名':'现任'+officialOfficeLabel(p)+'的履历'}。\n亲兄弟可以举荐，仍须核验资格；没有新的实绩，不能凭一句家书连跳数级。`,choices:[
     {t:p.career==='student'?'核验科名，授候补缺 · 精力−1':'收录考察，待实绩再议升迁 · 精力−1',cond:()=>E().energy>0,why:'精力不足',f:()=>settle(true)},
@@ -49,7 +49,11 @@ function officialFraternityTick(){
   const options=careerPeople().filter(x=>careerEligible(x.p)&&S.turn-(x.p.lastBrotherLesson??-99)>=12).flatMap(x=>officialBrothers(x).filter(b=>officialAlive(b.p)&&b.p.age<x.p.age).map(b=>[x,b]));
   if(!options.length)return;const [a,b]=pick(options);S.flags.lastFraternity=S.turn;a.p.lastBrotherLesson=S.turn;
   const text=`${a.p.name}给弟弟${b.p.name}写信，${a.p.temperament==='进取'?'鼓励他把学问用在实事上，先做出能核验的成绩':'叮嘱他认真读书、办事，不拿兄长的名字向人求方便'}。${b.p.career==='student'?'弟弟仍只有科名，未因此取得官职。':'弟弟回信说起任上的疑难，愿再请教。'}`;
-  courtPersonRecord(a,text);courtPersonRecord(b,text);b.p.ability=clamp(b.p.ability+1);
+  recordBrotherExchange(a,b,text);b.p.ability=clamp(b.p.ability+1);
+}
+function recordBrotherExchange(a,b,text){
+  courtPersonRecord(a,text);
+  courtPersonRecord(b,text,{family:journalContentVersion()<32||!a.e||!b.e||a.e.h!==b.e.h});
 }
 const fraternityCareerTick=careerTick;
 careerTick=function(){const result=fraternityCareerTick();officialFraternityTick();return result;};

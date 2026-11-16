@@ -835,6 +835,7 @@ function monthlyCourtEvent(){
     candidates.unshift(IMPEACHMENT_INDEX);
   }
   for(const index of candidates){
+    if(journalContentVersion()>=32&&index===2)continue; // 礼部日程统一安排殿试，已呈阅的旧奏折仍可批复。
     const impeachment=index===IMPEACHMENT_INDEX?newImpeachment():null;
     const floodNeed=index===FLOOD_INDEX?(S.turn===0||chance(.5)?'grain':'shelter'):null;
     const locustRoll=index===LOCUST_INDEX?R():null;
@@ -978,7 +979,7 @@ function houseOf(c){
   const posts=BROTHER_POSTS[bloc||'none'];
   root.house={bloc,familyVersion:2,
     father:{name:root.sur+(newFamilyRules()?fatherGivenName(seed,family):FATHER_NAMES[seed%FATHER_NAMES.length]),office:root.fam?.t||'寒门',age:42+seed%17,alive:true},brother:null};
-  const roll=voiceHash('siblings:'+seed)%100,count=roll<30?0:roll<75?1:roll<93?2:roll<98?3:roll<99?4:5;
+  const roll=voiceHash('siblings:'+seed)%100,count=smallNatalHousehold(root)?Number(roll<30):roll<30?0:roll<75?1:roll<93?2:roll<98?3:roll<99?4:5;
   const youngest=Math.max(...family.map(p=>p.age||18))+2;
   for(let i=0;i<count;i++){
     const role=i?'brother'+(i+1):'brother',age=youngest+(count-i-1)*2;

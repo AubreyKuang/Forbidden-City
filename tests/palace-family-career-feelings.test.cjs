@@ -26,3 +26,6 @@ test('later demotion supersedes old congratulatory voices even if a new private 
 test('official postings in the same grade and silver rewards do not invent a parental promotion',()=>{
  const b=setup();b.force(...Array(20).fill(0));b.run(`careerSetOffice(dad,'临安知县','平调');assert.equal(h.brother.familyCareerNews,undefined);assert.equal(sister2.familyCareerNews,undefined);`);
 });
+test('a daughter’s personal account replaces the generic promotion entry and the follow-up does not repeat the appointment',()=>{
+ const b=setup();b.force(...Array(30).fill(0));b.run(`var from=officialOfficeLabel(dad.p);var text=careerSetOffice(dad,'知府','实绩升任');var to=officialOfficeLabel(dad.p);var entries=()=>c.story.filter(e=>e.t.includes(from)&&e.t.includes(to));assert.equal(entries().length,1);assert.match(entries()[0].t,/家书传来/);story(c,'父亲'+dad.p.name+'：'+text);assert.equal(chronicleVisibleEntries(c.story).filter(({e})=>e.t.includes(from)&&e.t.includes(to)).length,1);S.turn+=2;familyCareerFollowup();assert.doesNotMatch(c.story.at(-1).t,/改任|升任/);`);
+});

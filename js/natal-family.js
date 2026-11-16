@@ -1,6 +1,9 @@
 /* Named siblings remain people before, during and after a palace visit. */
 const natalAge=p=>p.consortId?byId(p.consortId)?.age||p.age:Math.max(0,Math.floor((((p.alive===false?p.death?.turn:S.turn)??S.turn)-p.born)/12));
 function natalPeople(h){return (h?.relatives||[]).filter(p=>!p.consortId);}
+function smallNatalHousehold(c){
+  return journalContentVersion()>=32&&['humble','farm'].includes(familyUpbringing(c).group);
+}
 function initializeNatalFamily(c,h,family){
   const copies=family.map(x=>x.house).filter(x=>x&&x!==h);
   const previous=copies.find(x=>x.natal);if(!h.natal&&previous){h.natal=JSON.parse(JSON.stringify(previous.natal));h.relatives=JSON.parse(JSON.stringify(previous.relatives||[]));}
@@ -8,7 +11,7 @@ function initializeNatalFamily(c,h,family){
     h.natal={version:1,created:S.turn,motherBorn:S.turn-(c.age+20+familyHash(h.father.id)%5)*12,births:0};h.relatives=[];
     const seed=familyHash(h.father.id+':other-siblings'),roll=seed%100,count=roll<30?0:roll<70?1:roll<93?2:3;
     for(let i=0;i<count;i++){
-      const n=voiceHash(seed+':'+i),sex=n%3===0?'m':'f';
+      const n=voiceHash(seed+':'+i),sex=n%3===0&&!smallNatalHousehold(c)?'m':'f';
       const age=sex==='m'||h.fiveBrothers?Math.max(1,c.age-2-i*3):Math.max(1,c.age+(n%2?3:-4)-i*2);
       addNatalPerson(c,h,sex,age,n,false);
     }
@@ -150,7 +153,8 @@ function natalFamilyTick(){
     const motherAge=Math.floor((S.turn-n.motherBorn)/12),family=paternalFamily(c);
     if(!n.pregnancy&&n.births<2&&c.alive&&!c.gone&&officialAlive(h.father)&&h.father.age<65&&motherAge>=20&&motherAge<=42&&
       !family.some(x=>x.wound==='mom'||['ill','recovering'].includes(homeMother(x)?.status))&&S.turn-(n.lastBirth??n.created)>=24&&chance(.003)){
-      n.pregnancy={due:S.turn+9,sex:chance(.5)?'f':'m',seed:ri(1,2e9)};
+      const hasBrother=smallNatalHousehold(c)&&(brotherRoles(h).length||h.relatives.some(p=>p.sex==='m'&&!p.parentRelativeId));
+      n.pregnancy={due:S.turn+9,sex:chance(.5)||hasBrother?'f':'m',seed:ri(1,2e9)};
       for(const member of family.filter(x=>x.alive&&S.consorts.includes(x)))story(member,'【娘家喜讯】家中来信，母亲有孕，正安心养护；她盼着平安的消息。');
     }
   }

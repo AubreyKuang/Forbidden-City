@@ -43,5 +43,5 @@ for(const version of [26,28,29])for(const name of ['annual-tags','residence-requ
  w.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,${version});`);
  if(name==='annual-tags')w.run(`assert.equal(S.children.find(k=>k.name==='清宁').lit,56);`);
  if(name==='dowager-repeat')w.run(`assert.match(curEv.text,/今日已经说过一回话/);`);
- w.run(`drain();assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,31);`);
+ w.run(`drain();assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,32);`);
 });

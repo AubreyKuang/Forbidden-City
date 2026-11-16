@@ -6,9 +6,13 @@ function maidAudiencePanel(){
  return `<section class="detail-section"><h3>宫女留侍</h3><p class="hint">可召见当值宫女，也可再见承恩后回去当差的旧识。召见不耗精力，决定留侍时耗精力一。</p><button class="btn jade" onclick="A.maidAudience()">召见宫女</button></section>`;
 }
 function maidAudienceMenu(){
- const list=maidAudienceRoster();
- return {title:'敬事房 · 宫女留侍',text:'敬事房另呈当值名册。你可以先见一面、听她说话，再决定今夜是否留侍。已有的宫女仍保留原来的经历与姓名。',choices:[
-  ...list.map(g=>({t:`${fullName(g)} · ${g.near?'御前当差':'尚衣局旧识'}${consortNightReason(g)?' · '+consortNightReason(g):''}`,f:()=>{if(inPalace(g)&&g.maid)pushNow(maidAudienceMeeting(g));return null;}})),
+ const list=maidAudienceRoster(),randomOld=journalContentVersion()>=32;
+ const oldChoices=randomOld?(list.length?[{t:'召见一位旧识宫女',f:()=>{
+  const available=maidAudienceRoster();if(maidAudienceActive()&&available.length)pushNow(maidAudienceMeeting(pick(available)));
+  return null;
+ }}]:[]):list.map(g=>({t:`${fullName(g)} · ${g.near?'御前当差':'尚衣局旧识'}${consortNightReason(g)?' · '+consortNightReason(g):''}`,f:()=>{if(inPalace(g)&&g.maid)pushNow(maidAudienceMeeting(g));return null;}}));
+ return {title:'敬事房 · 宫女留侍',text:randomOld?'可以召见一位当值宫女，也可以让敬事房请一位旧识过来，见面后再决定今夜是否留侍。':'敬事房另呈当值名册。你可以先见一面、听她说话，再决定今夜是否留侍。已有的宫女仍保留原来的经历与姓名。',choices:[
+  ...oldChoices,
   {t:'召见一位当值宫女',cond:()=>E().energy>0,why:'本月精力已尽',f:()=>{if(!maidAudienceActive()||E().energy<=0)return null;
    let slot=S.flags.maidAudience;
    if(slot?.gen!==S.gen||slot.turn!==S.turn){slot=S.flags.maidAudience={gen:S.gen,turn:S.turn,person:makeGirl({fam:{t:'宫女',p:3},age:ri(18,24)})};}

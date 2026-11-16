@@ -34,8 +34,8 @@ function courtPerson(key){
   if(String(key).startsWith('scholar:')){const p=scholarById(String(key).slice(8));return p?{p,key,scholar:true,bloc:'civil'}:null;}
   const e=officialEntry(key);return e?{p:e.p,key,e,bloc:e.h.bloc}:null;
 }
-function courtPersonRecord(person,text){
-  if(person.scholar)scholarRecord(person.p,text);else officialRecord(person.e.c,person.e.role,text);
+function courtPersonRecord(person,text,options){
+  if(person.scholar)scholarRecord(person.p,text);else officialRecord(person.e.c,person.e.role,text,options);
 }
 
 /* —— 六部 —— */
@@ -48,6 +48,9 @@ const MINISTRIES={
   works:{name:'工部',duty:'营缮河工',army:false,action:'督修河工',cost:120,brief:'由部里直接督修黄河险段，修成可抵一次决口的赈济开支。'}
 };
 const MINISTRY_GAP=12;
+const EXAM_INTERVALS=[1,3,5,10];
+const regularExamInterval=()=>EXAM_INTERVALS.includes(S.ministries?.examInterval)?S.ministries.examInterval:3;
+const examIntervalLabel=years=>years===1?'每年一科':`每${cnNum(years)}年一科`;
 function ministryHead(id){
   const title=`${MINISTRIES[id].name}尚书`,holds=x=>x&&officialServing(x.p)&&x.p.office===title;
   // 调任他职即视为卸任本部；未经任命时，家世本就官居此职的父兄即是现任尚书。
@@ -74,11 +77,37 @@ function ministryReady(id){
 }
 function lastExamTurn(){return S.ministries?.exams?.at(-1)?.turn??-99;}
 function examPending(){return Number.isFinite(S.ministries?.examDue)&&S.ministries.examDue>=S.turn;}
-function nextExamLabel(){
-  if(examPending())return `恩科定于${S.ministries.examDue===S.turn?'本月末':'下月末'}`;
-  let y=S.year,m=S.month;for(let i=0;i<40;i++){m++;if(m>12){m=1;y++;}if(m===3&&y>1&&(y-1)%3===0)break;}
-  return `下一次正科：${y-S.year?`${y-S.year}年后`:'今年'}三月`;
+function regularExamYear(year,interval=regularExamInterval()){
+  return year>1&&(year-1)%interval===0;
 }
+function examHeldThisReign(year){return (S.ministries?.exams||[]).some(x=>x.gen===S.gen&&x.year===year);}
+function nextRegularExamDate(interval=regularExamInterval()){
+  const firstYear=Math.max(2,S.year+(S.month>=3?1:0));
+  let year=1+Math.ceil((firstYear-1)/interval)*interval;
+  const due=examPending()?S.ministries.examDue:null;
+  const enkeYear=due===null?null:S.year+Math.floor((S.month-1+due-S.turn)/12);
+  const enkeMonth=due===null?null:(S.month-1+due-S.turn)%12+1;
+  while(examHeldThisReign(year)||(year===enkeYear&&enkeMonth<=3))year+=interval;
+  return dateStr({...S,year,month:3});
+}
+function nextExamLabel(){
+  const regular=`下一次正科：${nextRegularExamDate()}`;
+  return examPending()?`恩科定于${S.ministries.examDue===S.turn?'本月末':'下月末'}。${regular}`:regular;
+}
+A.examSchedule=function(){
+  if(journalContentVersion()<32||!S||S.over||modalOpen)return;
+  const gen=S.gen,turn=S.turn;
+  pushEv({title:'礼部 · 科举日程',text:`现行正科${examIntervalLabel(regularExamInterval())}。${nextExamLabel()}。\n正科按本朝年次排定，逢期在三月举行殿试。恩科仍可单独奏开。`,
+    valid:()=>!S.over&&S.gen===gen&&S.turn===turn,choices:[
+      ...EXAM_INTERVALS.map(years=>({t:examIntervalLabel(years),
+        cond:()=>years!==regularExamInterval(),why:'现行周期',preview:`下次正科 ${nextRegularExamDate(years)}`,
+        f:()=>{
+          if(S.gen!==gen||S.turn!==turn||S.over||years===regularExamInterval())return null;
+          ministryState().examInterval=years;
+          const notice=`礼部奉旨改定正科为${examIntervalLabel(years)}。${nextExamLabel()}。`;
+          log(notice,1);return notice;
+        }})),{t:'沿用现行周期'}]});
+};
 function ministryResult(id,head,success){
   const p=head.p,name=p.name;
   if(id==='personnel'){
@@ -129,8 +158,9 @@ function ministryResult(id,head,success){
 A.ministryAct=function(id){
   if(modalOpen||!ministryReady(id))return;
   const m=MINISTRIES[id],head=ministryHead(id),odds=Math.round(ministryOdds(id)*100);
+  const brief=id==='rites'&&journalContentVersion()>=32?`下月加开一科殿试，钦点三甲。奏开恩科须距上一科至少两年。现行正科${examIntervalLabel(regularExamInterval())}。`:m.brief;
   pushEv({title:`${m.name} · ${m.action}`,por:head.p,valid:()=>ministryHead(id)?.p===head.p,
-    text:`${m.brief}\n主事：${m.name}尚书${head.p.name}（才干${rd(head.p.ability)}），把握约${odds}%。`,choices:[
+    text:`${brief}\n主事：${m.name}尚书${head.p.name}（才干${rd(head.p.ability)}），把握约${odds}%。`,choices:[
       {t:`准行 · 精力−1${m.cost?' · 国库−'+m.cost:''}`,cond:()=>ministryReady(id),why:'精力或国库不足，或本部年内已办过',f:()=>{
         if(!ministryReady(id)||!useE())return null;
         ministryState().used[id]=S.turn;const success=chance(ministryOdds(id));
@@ -155,12 +185,13 @@ A.ministryAppoint=function(id){
       }})),{t:'暂不任命'}]});
 };
 
-/* —— 科举：三年一科，三月殿试；礼部可奏开恩科 —— */
+/* —— 正科三月殿试；礼部可奏开恩科 —— */
 function examDueNow(){
   if(!courtOfficesActive())return false;
   const st=S.ministries;
   if(st?.examDue===S.turn)return true;
-  return S.month===3&&S.year>1&&(S.year-1)%3===0&&!(st?.exams||[]).some(x=>x.gen===S.gen&&x.year===S.year);
+  const interval=journalContentVersion()>=32?regularExamInterval():3;
+  return S.month===3&&regularExamYear(S.year,interval)&&!examHeldThisReign(S.year);
 }
 function examEvent(){
   const st=ministryState(),head=ministryHead('rites'),boost=head?Math.round((head.p.ability-50)/5):0;
@@ -200,12 +231,13 @@ courtTick=function(...args){const result=ministriesBaseTick.apply(this,args);exa
 function viewMinistries(){
   const card=([id,m])=>{
     const head=ministryHead(id),used=S.ministries?.used?.[id],wait=used==null?0:Math.max(0,MINISTRY_GAP-(S.turn-used));
+    const schedules=id==='rites'&&journalContentVersion()>=32;
     const why=!head?'尚书空缺':wait?`${wait}个月后可再办`:id==='rites'&&(examPending()||S.turn-lastExamTurn()<24)?'两科之间须隔两年':id==='works'&&S.flags.floodDikeGen===S.gen?'河工已修固':E().energy<1?'精力不足':E().treasury<m.cost?'国库不足':'';
     return `<article class="card ministry-card"><div class="ministry-head">${head?porImg(head.p,56):''}<div><h3>${m.name}<small> · ${m.duty}</small></h3>
       <p>${head?`尚书 ${head.scholar?`<button class="person-link" onclick="A.go('scholar','${head.p.id}')">${esc(head.p.name)}</button>`:officialLink(head.e.c,head.e.role)} · 才干${rd(head.p.ability)}`:'<span class="hint">尚书空缺</span>'}</p></div></div>
-      <p class="hint">${m.brief}${id==='rites'?` ${nextExamLabel()}。`:''}</p>
+      <p class="hint">${schedules?`正科${examIntervalLabel(regularExamInterval())}，三月殿试。${nextExamLabel()}。可另奏开恩科。`:m.brief+(id==='rites'?` ${nextExamLabel()}。`:'')}</p>
       <div class="acts"><button class="btn sm jade" onclick="A.ministryAct('${id}')" ${ministryReady(id)?'':'disabled'}>${m.action}<small>精力−1${m.cost?' · 国库−'+m.cost:''}${why?' · '+why:''}</small></button>
-      <button class="btn sm" onclick="A.ministryAppoint('${id}')">${head?'改任尚书':'任命尚书'}</button></div></article>`;
+      <button class="btn sm" onclick="A.ministryAppoint('${id}')">${head?'改任尚书':'任命尚书'}</button>${schedules?`<button class="btn sm" onclick="A.examSchedule()" ${S.over?'disabled':''}>调整正科周期</button>`:''}</div></article>`;
   };
   const scholars=scholarList().filter(p=>!p.registrySource).slice().reverse();
   return `<button class="btn quiet sm detail-back" onclick="A.go('government')">← 返回治国理政</button><h2>六部</h2><p class="hint">尚书由在任且才干 55 以上的官员出任，一人不兼两部。各部每年可办一件大事，成败看尚书才干。</p>
