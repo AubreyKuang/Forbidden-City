@@ -33,3 +33,9 @@ Chrome实际界面点击，导入独立样本；不修改浏览器中的游戏�
 报告：[family-reactions-browser-results.json](family-reactions-browser-results.json)。截图：[family-reactions](../screenshots/family-reactions/)。脚本：`tests/family-reactions-browser-fixtures.cjs`、`tests/family-reactions-browser-acceptance.cjs`。
 
 慈宁宫、年岁标签与迁宫的另6组场景、22次刷新见[宫廷日常验收](court-rhythm.md)。
+
+## 正式站复验
+
+2026-11-16，代码提交`4e60c22`已由GitHub Pages成功部署。线上入口与16个关联资源逐一字节比对一致；本页全部浏览器场景在正式站再次通过，人物、精力、队列、结果与刷新读档均一致，0页面错误。README及本页截图取自正式站。
+
+线上报告：[family-reactions-production.json](family-reactions-production.json)；[资源核对](court-release-assets.json)。

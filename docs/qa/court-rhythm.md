@@ -24,3 +24,9 @@
 版本26、28、29的原始程序分别生成真实未完事件存档，未通过改写当前版本号伪造兼容样本。版本28基线为`76fc6d6`，版本29基线为`4227686`。年岁标签、迁宫请求、太后重复请安均保持旧文案、旧随机数及结算，结束后进入版本30。
 
 截图在 [court-rhythm](../screenshots/court-rhythm/)。生成与验收脚本为 `tests/court-rhythm-browser-fixtures.cjs`、`tests/court-rhythm-browser-acceptance.cjs`。
+
+## 正式站复验
+
+2026-11-16，代码提交`4e60c22`已由GitHub Pages成功部署。线上入口与16个关联资源逐一字节比对一致；本页全部浏览器场景在正式站再次通过，人物、精力、队列、结果与刷新读档均一致，0页面错误。README及本页截图取自正式站。
+
+线上报告：[court-rhythm-production.json](court-rhythm-production.json)；[资源核对](court-release-assets.json)。
