@@ -3,6 +3,26 @@ function w(trait='灵动'){const b=world();b.ctx.assert=assert;b.run(`var k=make
 function declined(alone=false,trait){const b=w(trait);b.force(alone?0:.99);b.run(`xieMarriageRefusal(k,p).choices[1].f();var path=p.xiean.path;`);return b;}
 function mature(trait='灵动'){const b=w(trait);b.run(`xieMarriageRefusal(k,p).choices[0].f();var m=p.xiean.marriage;S.turn+=24;m.affection=80;m.loveRemembered=S.turn-1;m.joinedAt=S.turn-12;`);return b;}
 function nextStage(b){b.run('S.turn+=3;');b.force(0);b.run('xiePathTick(p);');}
+test('an existing independent estate can start and finish the Xie An route after reload',()=>{
+ let b=w();b.run(`delete k.xieAdmiration;A.openPrincess(k.id);choose(0);drain();save('auto');`);
+ b=boot(89,b.storage);b.ctx.assert=assert;b.run(`A.load('auto');var k=S.children[0],p=xieAn();assert.equal(childInPalace(k),false);assert.ok(xieAdmirerReady(k));assert.equal(p.age,21);assert.match(p.story[0].t,/二十一岁/);S.turn++;`);
+ b.force(0,0,0);b.run(`royalHeartTick();assert.equal(heartState().pending.kind,'xiean');
+  A.go('princess',k.id);assert.match(viewPrincessEstate(),/听听年少心事/);assert.match(viewPrincessEstate(),/生母 <button/);
+  A.royalHeart(k.id);assert.equal(curEv.title,'诗名与心意');choose(0);drain();assert.match(viewPrincessEstate(),/再问谢安的婚事/);
+  A.xieMarriage(k.id);assert.equal(curEv.title,'谢安辞婚');choose(1);drain();S.turn++;E().energy=10;
+  A.xieBridge('meet');assert.equal(curEv.title,'为他们留一次相遇');choose(0);drain();
+  A.xieAfterRefusal();assert.equal(curEv.title,'旧诗之外，重新相识');choose(0);drain();`);
+ b.run(`S.turn+=3;`);b.force(0);b.run(`xiePathTick(p);A.xieAfterRefusal();assert.equal(curEv.title,'渐识卿心');choose(0);drain();S.turn+=3;`);
+ b.force(0);b.run(`xiePathTick(p);A.xieAfterRefusal();assert.equal(curEv.title,'谢安主动提亲');choose(0);assert.equal(curEv.title,'迟来的心意 · 公主的答复');choose(0);drain();assert.equal(k.spouse.personId,p.id);assert.equal(k.estate.route,'xiean');`);
+});
+test('Xie An estate eligibility still rejects other marriages, betrothal and absence from the capital',()=>{
+ const b=w();b.run(`var estate={pursuit:'books',route:'independent'};k.estate=estate;
+  assert.ok(xieAdmirerReady(k));k.estate.route='frontier';assert.equal(xieAdmirerReady(k),false);
+  k.estate.route='independent';k.away=true;assert.equal(xieAdmirerReady(k),false);k.away=false;
+  k.betrothal={name:'别人'};assert.equal(xieAdmirerReady(k),false);delete k.betrothal;
+  k.married=true;assert.equal(xieAdmirerReady(k),false);
+ `);
+});
 for(const age of [11,12,14,15,20,25,26])test('new pursuit starts only at ages 12 through 25: '+age,()=>{const b=w();b.run(`k.born=S.turn-${age}*12;assert.equal(!!xieMarriageRefusal(k,p),${age>=12&&age<=25});`);});
 for(const origin of ['forced','proposal'])test('under fifteen '+origin+' creates only reciprocal engagement, not a household',()=>{const b=w();b.run(`k.born=S.turn-14*12;`);if(origin==='forced')b.run(`xieMarriageRefusal(k,p).choices[0].f();`);else{b.force(.99);b.run(`xieMarriageRefusal(k,p).choices[1].f();p.xiean.path.pending='answer';xiePathEvent().choices[0].f();`);}b.run(`assert.ok(!k.married&&!p.married&&!k.spouse&&!k.household);assert.equal(k.betrothal.personId,p.id);assert.equal(p.betrothal.personId,k.id);assert.equal(p.xiean.marriage,undefined);assert.ok(!heartReady(k));assert.ok(!xieBridgeReady());assert.equal(xieMarriageRefusal(k,p),null);UI.sel=k.id;assert.match(viewKid(),/已订婚/);assert.match(marriagePanel(k),/尚非夫妻/);UI.sel=p.id;assert.match(viewScholar(),/已订婚/);var at=S.turn;S.turn+=11;`);b.force(.99);b.run(`xieBetrothalTick(p);assert.ok(!k.married);S.turn=at+12;assert.equal(kidAge(k),15);assert.equal(marriageReady(k),false);xieBetrothalTick(p);assert.ok(k.married&&p.married);assert.equal(k.betrothal,undefined);assert.equal(p.betrothal,undefined);assert.equal(p.xiean.marriage.at,S.turn);assert.equal(p.xiean.marriage.joinedAt,${origin==='forced'?'null':'S.turn'});assert.equal(p.xiean.marriage.separateUntil,${origin==='forced'?'S.turn+12':'null'});assert.equal(householdCanConceive(k,k.spouse),false);`);});
 test('forced betrothal that grew into affection does not impose separation at the wedding',()=>{const b=w();b.run(`k.born=S.turn-14*12;xieMarriageRefusal(k,p).choices[0].f();p.xiean.engagement.affection=65;S.turn+=12;xieBetrothalTick(p);assert.equal(p.xiean.marriage.joinedAt,S.turn);assert.equal(p.xiean.marriage.separateUntil,null);assert.ok(p.xiean.marriage.startedWithLove);assert.ok(k.story.some(s=>s.t.includes('成婚，不设一年分房'))||k.story.some(s=>s.t.includes('婚后共同生活，不设一年分房')));`);});

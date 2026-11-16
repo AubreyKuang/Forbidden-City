@@ -28,7 +28,7 @@ Object.assign(PALACE_INITIATIVES,{
     ]
   },
   grassNames:{
-    title:'斗草辨芳名',place:'yh',seasonal:true,source:'grass',ref:'取意清宫旧藏《婴戏图册·斗草图》',
+    title:'斗草辨芳名',illustration:'grass-stems-sunlit',place:'yh',seasonal:true,source:'grass',ref:'取意清宫旧藏《婴戏图册·斗草图》',
     match:c=>[4,5].includes(S.month)&&(['活泼','爽直','好学'].includes(c.trait)||consortHobby(c)==='侍花'),
     target:c=>kidsAlive().find(k=>kidAge(k)>=4&&kidAge(k)<=11&&childInPalace(k)&&familyVisitAllowed(k,c)),
     text:(c,k)=>`${k.name}拿来两根草茎，要比谁的更结实。${c.trait==='好学'?'她先问每片叶子叫什么，孩子急得把整束草往身后藏。':'她故意挑了一根细的，孩子却说不许相让，输赢要自己试。'}`,

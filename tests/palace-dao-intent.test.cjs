@@ -30,7 +30,7 @@ test('children’s existing Daoist and immortal paths retain their potential and
  const b=world();b.run(`var k=makeKid(c,'f','昭瑶');k.born=S.turn-156;k.pendingName=false;k.hp=90;k.daoPractice={path:'dao',visits:6};k.immortalTalent='冰灵根';
  assert.equal(daoInterest(k),3);assert.match(daoPracticePanel(k),/潜心问道/);assert.equal(immortalDiscover(k),true);`);
 });
-test('published v52 monthly attendance replays unchanged before the corrected labels activate',()=>{
- const payload=require('./fixtures/selection-and-dao-legacy-v52.json').daoMonth,b=boot(593,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));b.ctx.assert=assert;
- b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,52);assert.equal(daoIntentActive(),false);drain();assert.equal(PalaceActions.contentVersion,53);assert.equal(daoIntentActive(),true);`);
+for(const version of [52,53])test('published v'+version+' monthly attendance replays unchanged before the corrected labels activate',()=>{
+ const payload=require('./fixtures/selection-and-dao-legacy-v'+version+'.json').daoMonth,b=boot(593,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));b.ctx.assert=assert;
+ b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,${version});assert.equal(daoIntentActive(),false);drain();assert.equal(PalaceActions.contentVersion,54);assert.equal(daoIntentActive(),true);`);
 });

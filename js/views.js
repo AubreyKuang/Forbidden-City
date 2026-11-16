@@ -421,7 +421,7 @@ function viewCards(){
 function viewXX(){
   const last=selectionLastHeldTurn(),since=S.turn-last;
   if(selectionArrivalsRecent())return viewSelectionArrivals();
-  if(!S.cands.length&&(!S.selection||S.selection.phase==='arrivals')) return `<h2>选秀</h2><p>距上次选秀：${last<0?'从未':`${Math.floor(since/12)}年${since%12}月`}。三年一度大选可在二月自动举行；也可随时下旨，但未满三年会耗费国库、有损民心。</p>
+  if(!S.cands.length&&(!S.selection||S.selection.phase==='arrivals')) return `<h2>选秀</h2><p>距上次选秀：${last<0?'从未':`${Math.floor(since/12)}年${since%12}月`}。三年一度大选可在二月自动举行；${selectionSkipTimingActive()&&selectionFreeReady()?'目前可依例下旨开选，无须承担提前选秀的国库与民心代价。':'也可随时下旨，但未满三年会耗费国库、有损民心。'}</p>
     <div class="acts"><button class="btn gold" onclick="A.xxDecree()">下旨选秀</button></div>`;
   if(selectionCurrent())return viewSelectionAudience();
   return `${selectionDiscussionPanel()}<section class="story-scene selection-scene" aria-labelledby="selection-title">

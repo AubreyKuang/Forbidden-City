@@ -19,7 +19,7 @@ function daoInterest(p){
   if(solitaryDao(p))return 2;
   return p.sex?(p.amb<=30?2:p.lit>=70?1:0):['淡泊','沉静'].includes(p.trait)?2:['好学','聪慧'].includes(p.trait)||p.mood<35?1:0;
 }
-function daoIntentActive(){return journalContentVersion()>=53;}
+function daoIntentActive(){return journalContentVersion()>=54;}
 function daoInclined(p){
  if(p.t2==='信佛'||p.like==='佛经')return false;
  if(p.sex)return p.daoPractice?.path==='dao'||p.amb<=30;

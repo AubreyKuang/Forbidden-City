@@ -1,7 +1,11 @@
 /* Private hopes belong to a person and a season of life, not to every unmarried girl alike. */
 const royalHeartActive=()=>!!S&&!S.over&&journalContentVersion()>=20;
 const heartStage=k=>kidAge(k)<16?'early':kidAge(k)<20?'young':'adult';
-const heartReady=k=>royalHeartActive()&&S.children.includes(k)&&childCanVisitCourt(k)&&kidAge(k)>=12&&!k.pendingName&&!k.married&&!k.spouse&&!k.betrothal&&k.hp>=45;
+const heartSingleChild=k=>royalHeartActive()&&S.children.includes(k)&&kidAge(k)>=12&&!k.pendingName&&!k.married&&!k.spouse&&!k.betrothal&&k.hp>=45;
+const heartReady=k=>heartSingleChild(k)&&childCanVisitCourt(k);
+const xieCapitalEstate=k=>journalContentVersion()>=53&&!!k?.estate&&k.sex==='f'&&k.estate.route!=='frontier'&&k.princessMarriage!=='frontier';
+const xieCanMeetPrincess=k=>childCanVisitCourt(k)||(xieCapitalEstate(k)&&canOpenPrincess(k)&&!k.away);
+const xieHeartReady=k=>heartSingleChild(k)&&k.sex==='f'&&xieCanMeetPrincess(k);
 const HEART_WORDS={
  好奇:{early:['书里只写他们相逢，却没写后来怎样过日子。喜欢一个人，是不是也会有许多不知道的事？','若两个人总有不同的想法，还能成为最亲近的人吗？'],young:['若有一天喜欢了谁，我想先听听那个人怎样看世界，不只看别人夸了些什么。','诗里的相逢总像命中注定。可真正相处，是不是还要一件一件地认识？'],adult:['从前总想知道谁会来，如今更想知道，两个人能否容得下彼此改变。','婚事可以慢一点。我还想看看天下，也想知道自己究竟适合怎样的日子。']},
  好胜:{early:['若有个人骑射胜过我，我大概会不服气……可也会想再见一回，再比一场。','我想以后有人夸我，是因为我做得好，不是因为不得不夸。'],young:['我盼那个人能与我并肩，而不是事事让着我。可若总在较劲，会不会把人推远？','有时见别人被人放在心上，我也会羡慕。只是这件事，似乎不能靠赢一场来得到。'],adult:['我不想把成婚的早晚也当成输赢。能一道做事、也容得下我失败的人，才值得等。','本领和体面我自己挣。婚事若只为了让旁人说一句般配，未免太累。']},
@@ -20,10 +24,10 @@ function heartTopic(k){
 }
 function heartRecord(k,title,text,thought,emotion=.4){
  kstory(k,`【${title}】${text} 心中所想：${thought}`);
- NPCMemory.record(S,{type:'royal-heart',time:S.turn,location:'宫中',participants:[k.id],object:title},[{person:k.id,subject:E().id,interpretation:thought,emotion,impact:65}]);
+ NPCMemory.record(S,{type:'royal-heart',time:S.turn,location:xieCapitalEstate(k)?'公主府':'宫中',participants:[k.id],object:title},[{person:k.id,subject:E().id,interpretation:thought,emotion,impact:65}]);
 }
 function heartPendingValid(d=heartState()?.pending){
- const k=d&&kidById(d.child);return !!(d&&heartReady(k)&&heartStage(k)===d.stage&&(d.kind!=='xiean'||xieAdmirerReady(k)));
+ const k=d&&kidById(d.child);return !!(d&&(d.kind==='xiean'?xieAdmirerReady(k):heartReady(k))&&heartStage(k)===d.stage);
 }
 function heartEvent(k,d=heartState()?.pending){
  if(!d||d.child!==k?.id||!heartPendingValid(d))return null;
@@ -49,9 +53,9 @@ function royalHeartTick(){
  if(state.pending&&!heartPendingValid())delete state.pending;
  xieLifeTick();
  if(state.pending||mourningActive()||S.turn-state.lastEvent<4)return;
- const people=S.children.filter(k=>heartReady(k)&&S.turn-(k.lastHeart??-99)>=10);if(!people.length||!chance(.28))return;
+ const people=S.children.filter(k=>S.turn-(k.lastHeart??-99)>=10&&(heartReady(k)||!k.xieAdmiration&&xieAdmirerReady(k)));if(!people.length||!chance(.28))return;
  const k=pick(people),xie=xieAdmirerReady(k)&&!k.xieAdmiration&&chance({好奇:.55,好胜:.25,仁厚:.35,内敛:.5,爽直:.35,灵动:.65,审慎:.18,自矜:.4}[childDisposition(k)]);
- const topic=xie?null:heartTopic(k);if(!xie&&!topic)return;
+ const topic=xie||!heartReady(k)?null:heartTopic(k);if(!xie&&!topic)return;
  state.pending={kind:xie?'xiean':'hope',child:k.id,stage:heartStage(k),topic,turn:S.turn};state.lastEvent=S.turn;
 }
 const heartChildTick=childLifeTick;
@@ -87,11 +91,12 @@ function createXieAn(){
  const house={id:root?'capital-'+root.p.id:`capital-xie-${S.gen}-${S.nid}`,name:root?`${root.c.sur}氏${root.h.title||'世家'}`:pick(['乌衣谢氏','临川谢氏','会稽谢氏']),seat:'上京',
   relation:root?(root.c.sur==='谢'?'谱载同宗旁支':'谱载母族外亲'):'本家子弟',rootKey:root?.key,rootId:root?.p.id};
  (S.capitalHouses ||= []).push(house);
- const p=makeScholar();Object.assign(p,{name:'谢安',sur:'谢',age:22,ageTrackedAt:S.turn,origin:house.name,registrySource:'story',storyPerson:'xiean',siblingsChecked:true,
+ const age=journalContentVersion()>=53?21:22;
+ const p=makeScholar();Object.assign(p,{name:'谢安',sur:'谢',age,ageTrackedAt:S.turn,origin:house.name,registrySource:'story',storyPerson:'xiean',siblingsChecked:true,
   temperament:'疏朗自持',ability:92,merit:0,trust:40,career:'commoner',office:'布衣诗客',post:'布衣诗客',essay:'以诗名动上京，不应仕进',education:null,artPortrait:433,
   xiean:{houseId:house.id,met:S.turn,lastNews:S.turn,newsIndex:0,noConcubines:true,noRemarriage:true},willing:false});
  (S.scholars ||= []).push(p);
- scholarRecord(p,`【京华初闻】${house.name}的${house.relation}谢安，二十二岁，以诗名动上京。${root?`家谱与${root.p.name}一房已有记载，非凭同姓攀附。`:'这一房独立登记，并非哪位妃嫔的父兄。'}他不愿以诗名求官，尚未婚配。`);
+ scholarRecord(p,`【京华初闻】${house.name}的${house.relation}谢安，${age===21?'二十一':'二十二'}岁，以诗名动上京。${root?`家谱与${root.p.name}一房已有记载，非凭同姓攀附。`:'这一房独立登记，并非哪位妃嫔的父兄。'}他不愿以诗名求官，尚未婚配。`);
  return p;
 }
 const xieHouse=p=>(S.capitalHouses||[]).find(h=>h.id===p?.xiean?.houseId);
@@ -151,7 +156,8 @@ function xieAdmirationEvent(k,d){
   heartRecord(k,adult?'诗名与心意':'读诗怀想',`她说：“${lines[style]}”${text}`,mode==='release'?'原来诗中人未必会成为同行人。难过仍在，也想保留一点自己的体面。':'这份欣赏终于说出口了，往后怎样，还不能只靠想象。');
   if(mode==='ask')pushNow(xieMarriageRefusal(k,p));return text;
  };
- return chronicleEvent({title:adult?'诗名与心意':'读诗怀想',por:k,present:[k],valid,text:`${kidName(k)}案头多了一卷谢安的诗。她${style==='内敛'?'收了又展开，终于低声说':style==='灵动'?'眼睛发亮地说':'翻到留了书签的那一页'}：“${lines[style]}”\n${adult?'她愿意让你问问他的心意，还没有婚约。':xieRomanceActive()?'她尚未满十五岁；即使议定亲事，也只订婚，待成年后再成婚。':'她尚在长成，这次只是读诗与欣赏，不安排与成年人的婚事。'}`,choices:[
+ const estate=xieCapitalEstate(k),opening=estate?'请你到府中一叙，案上摊着一卷谢安的诗。':'案头多了一卷谢安的诗。';
+ return chronicleEvent({title:adult?'诗名与心意':'读诗怀想',por:k,present:estate?[]:[k],valid,text:`${kidName(k)}${opening}她${style==='内敛'?'收了又展开，终于低声说':style==='灵动'?'眼睛发亮地说':'翻到留了书签的那一页'}：“${lines[style]}”\n${adult?'她愿意让你问问他的心意，还没有婚约。':xieRomanceActive()?'她尚未满十五岁；即使议定亲事，也只订婚，待成年后再成婚。':'她尚在长成，这次只是读诗与欣赏，不安排与成年人的婚事。'}`,choices:[
   {t:'陪她读诗，认真听完',f:()=>settle('listen')},...(discuss&&(!xieRomanceActive()||xieCanPursue(k,p))?[{t:'召谢安，先问他是否愿意议婚',f:()=>settle('ask')}]:[]),{t:'一笑了之，劝女儿别把诗名当知己',f:()=>settle('release')}]});
 }
 function xieMarriageReady(k,p=xieAn()){
@@ -163,6 +169,7 @@ function xieMarriageRefusal(k,p){
   {t:'强制赐婚：“可惜爱女心有所属，还望体谅朕的爱女之心。” · 国库−50',cond:()=>valid()&&E().treasury>=50,why:'须双方仍未定亲，公主成年且国库足够',f:()=>{
    if(!valid()||E().treasury<50)return null;done=true;chg({treasury:-50});
    k.married=true;k.princessMarriage='xiean';k.xieAdmiration.outcome='forced';p.married=true;p.royalSpouseId=k.id;p.spouseName=k.name;
+   if(xieCapitalEstate(k))k.estate.route='xiean';
    k.spouse={id:p.id,personId:p.id,scholarId:p.id,name:p.name,sur:p.sur,sex:'m',seed:p.seed,official:p.official,artPortrait:p.artPortrait,born:S.turn-p.age*12,alive:true,background:'京中诗客 · 奉旨尚主',marriedAt:S.turn,trust:38,marriageNature:{temperament:'温厚',hobby:'books',spending:'节俭',space:'需要独处'}};
    p.xiean.marriage={childId:k.id,at:S.turn,last:S.turn,news:0,affection:18,separateUntil:S.turn+12,joinedAt:null};ensureMarriedLife(k);
    const text=`谢安辞婚未获准，陛下以爱女之心坚持赐婚。礼成后他对${kidName(k)}说：“此事非你之过。我虽未有相同心意，却不会让你在这里受委屈。”两人约定先分房一年，他不纳妾，也不让她为帝命赔罪。`;
@@ -189,7 +196,7 @@ const XIE_COUPLE_WORDS={
  quiet:[['各读一卷','两人各自读书，许久无话。她指出他诗里一个太满的字，他认真改了，转过来请她再看一遍。','她不因我是谢安便说句句都好。这样的直言，值得珍重。','不必时时找话，也能安稳地坐在同一盏灯下。'],['雨声与旧谱','雨夜误了赴宴，两人索性留在廊下理旧谱。他先问她想读哪一册，没有替她挑好所有事情。','相处可以留白。她肯说想法的时候，我愿认真听。','他给我留了说话的位置，也给我留了不说话的自在。']]
 };
 function xieLifeTick(){
- let p=xieAn();if(!p){if(S.turn>=6&&!mourningActive()&&S.children.some(k=>heartReady(k)&&kidAge(k)<(xieRomanceActive()?26:20))&&chance(.045))createXieAn();return;}
+ let p=xieAn();if(!p){if(S.turn>=6&&!mourningActive()&&S.children.some(k=>(heartReady(k)||xieHeartReady(k))&&kidAge(k)<(xieRomanceActive()?26:20))&&chance(.045))createXieAn();return;}
  if(!officialAlive(p))return;
  const pair=xieCouple();
  if(pair){
@@ -227,7 +234,7 @@ function xieEncourageReady(pair=xieCouple()){
 A.xieEncourage=function(){
  const pair=xieCouple();if(modalOpen||!xieEncourageReady(pair))return;const {p,k,m}=pair,parent=S.children.includes(k)?'父皇':'陛下';let done=false;
  const valid=()=>!done&&xieEncourageReady(pair)&&xieCouple()?.m===m;
- pushEv({title:'相伴不催 · 谢安与公主',cast:[k,p],present:[k,p],valid,text:`两人仍分房起居。谢安按时问安、分担家事，并未因此冷落公主。\n你可以劝他们腾出工夫同行、谈心，但不替他们决定何时亲近。`,choices:[
+ pushEv({title:'相伴不催 · 谢安与公主',cast:[k,p],present:xieCapitalEstate(k)?[p]:[k,p],valid,text:`两人仍分房起居。谢安按时问安、分担家事，并未因此冷落公主。\n你可以劝他们腾出工夫同行、谈心，但不替他们决定何时亲近。`,choices:[
   {t:'劝两人多相伴，也给彼此留余地 · 精力−1',cond:()=>valid()&&E().energy>0,why:'精力不足或处境已变',f:()=>{
    if(!valid()||!useE())return null;done=true;m.lastEncourage=S.turn;m.affection=clamp(m.affection+12);k.spouse.trust=clamp(k.spouse.trust+8);
    const close=m.affection>=38&&k.spouse.trust>=45;

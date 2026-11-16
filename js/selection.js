@@ -1,5 +1,5 @@
 /* Selection audiences and the first months at court. Rendering never rolls a new personality. */
-function selectionSkipTimingActive(){return journalContentVersion()>=53;}
+function selectionSkipTimingActive(){return journalContentVersion()>=54;}
 function selectionLogTurn(date){
  if(typeof date!=='string'||!date.startsWith(E().era))return null;
  const suffix=date.slice(E().era.length),split=suffix.indexOf('年'),month=MONTHS.indexOf(suffix.slice(split+1))+1;

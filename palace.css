@@ -307,16 +307,16 @@ body{background:#181b20;padding-block:14px;color:var(--ink)}
 #app[data-layout="landing"] .save-list .btn{background:#17232cd9;color:#fff1da}
 #app[data-view="map"] #panel{display:grid;place-items:center;background:transparent;box-shadow:none;padding:0;overflow:auto;margin:8px 0}
 .map-play{width:min(100%,calc((100dvh - 235px) * 1.5625),1060px);min-width:min(100%,380px);margin:auto;color:#fff0d8}
-.map-location{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:2px 12px;background:#19252df2;padding:6px 12px;border-radius:9px 9px 0 0;font-size:12px;line-height:1.5}
-#panel .map-location h2{font-size:16px;color:#ffebc9;margin:0}
-.map-location .hint,.map-legend{color:#f3e1c7;font-size:12px}
-.map-first-month{display:flex;align-items:center;justify-content:space-between;gap:6px 12px;flex-wrap:wrap;padding:6px 12px;background:#402522f5;color:#fff0d7;font-size:12px}
-.map-first-month .btn{min-height:36px}
+.map-location{display:flex;align-items:center;gap:8px;background:#19252df2;padding:6px 12px;border-radius:9px 9px 0 0;font-size:12px;line-height:1.5}
+#panel .map-location h2{flex:none;white-space:nowrap;font-size:16px;color:#ffebc9;margin:0}
+.map-location .btn{flex:none;min-height:36px;white-space:nowrap}
+.map-position{min-width:0;margin-inline-start:auto;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.map-position,.map-legend{color:#f3e1c7;font-size:12px}
 .mch .choice-preview{display:block;margin-top:4px;font-size:.82em;font-weight:400}
 .month-record{margin:12px 0;padding:12px;border:1px solid var(--line,#b69475);border-radius:8px}
 .month-record h3{margin-top:0}
 #menu .btn small{font-size:10px;line-height:1;white-space:nowrap}
-@media(pointer:coarse){.map-first-month .btn,#top .hud-next{min-height:44px}}
+@media(pointer:coarse){.map-location .btn,#top .hud-next{min-height:44px}}
 .map-legend{margin:0;background:#19252df2;padding:5px 12px;border-radius:0 0 9px 9px;line-height:1.5}
 #app[data-view="map"] #mapc{border-radius:0}
 #app[data-layout="game"] #menu{
@@ -348,7 +348,8 @@ body{background:#181b20;padding-block:14px;color:var(--ink)}
   #app[data-layout="game"] #menu{grid-template-columns:repeat(6,minmax(0,1fr));padding:5px 6px max(5px,env(safe-area-inset-bottom));gap:3px}
   #app[data-layout="game"] #menu .btn{min-height:40px}
   .map-play{min-width:0;width:100%}
-  .map-location{padding:6px 8px}
+  .map-location{gap:5px;padding:6px 8px}
+  .map-location .btn{padding-inline:7px;font-size:12px}
   .map-legend{padding:5px 8px}
   #modal{padding-bottom:max(12px,env(safe-area-inset-bottom))}
 }

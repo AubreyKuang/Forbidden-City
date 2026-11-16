@@ -380,28 +380,24 @@ function mountMap(){const w=$('#mapwrap');if(!w)return;w.appendChild(MAPC);mount
     bindMapGuide(b,p);w.appendChild(b)})}
 const backBtn=`<button class="btn sm" onclick="A.go('map')">◂ 返回宫城</button>`;
 function mapMemorial(){
-  const {done}=monthlyCourtStatus();
+  const status=monthlyCourtStatus(),{done}=status;
   const pending=S.flags.impeachmentReview;
   const reviewReady=!done&&((pending?.turn===S.turn&&pending.gen===S.gen&&impeachmentSubject(pending.file?.person))||
     (S.flags.monthlyCourt?.turn===S.turn&&S.flags.monthlyCourt.gen===S.gen&&!S.flags.monthlyCourt.done&&S.flags.monthlyCourt.review&&impeachmentSubject(S.flags.monthlyCourt.person)));
-  return {done,name:!done&&locustReliefDue()?'远村补粮回奏':reviewReady?'查账回奏':!done&&floodReliefDue()?'赈灾回奏':'本月奏折'};
+  return {...status,name:!done&&locustReliefDue()?'远村补粮回奏':reviewReady?'查账回奏':!done&&floodReliefDue()?'赈灾回奏':'本月奏折'};
 }
 function viewMap(){
   const leads=mapActivityLeads();
-  const first=leads.find(lead=>lead.expires)||leads[0];
-  const {done,name:report}=mapMemorial();
-  const host=S.turn===0&&monthlyCourtStatus().count>0&&!S.flags.firstEmpressVisit&&empress();
-  const next=host?`<button id="map-next" class="btn sm jade" onclick="A.visitMapActivity('kn')">去坤宁宫见${esc(fullName(host))}</button>`
-    :!done?`<button id="map-next" class="btn sm jade" onclick="A.court()">查看${report}</button>`
-    :first?`<button id="map-next" class="btn sm jade" onclick="${mapLeadAction(first)}">${esc(mapLeadPlace(first))} · ${esc(first.title)} →</button>`:'';
+  const {count,limit,done,name:report}=mapMemorial(),position=esc(nearestPlace());
+  const host=S.turn===0&&count>0&&!S.flags.firstEmpressVisit&&empress();
+  const status=`${monthlyCourtBatchEnabled()?`本月已批 ${count}/${limit} 份 · `:''}${done?'奏折已批复':report+'待阅'}`;
   return `<section class="map-play" aria-label="宫城地图">
-    <header class="map-location"><h2>宫城</h2><button class="btn sm" onclick="A.go('residences')">分配住所</button><span class="hint">${esc(nearestPlace())}</span></header>
-    <div class="map-first-month">
-      <span>${monthlyCourtBatchEnabled()?`本月已批 ${monthlyCourtStatus().count}/${MONTHLY_COURT_LIMIT} 份 · `:''}${done?'奏折已批复':report==='本月奏折'?'奏折待批':report+'待阅'} · 余 ${E().energy} 点精力</span>
-      ${next}
-      ${S.flags.lastMonthReview?'<button class="btn sm" onclick="A.go(\'log\')">上月回顾</button>':''}
-    </div>
-    <section class="map-month-notices" aria-label="本月宫中消息">${mourningNotice()}${mapActivityPanel(leads)}${princessMapNotice()}${birthdayBanquetButtons()}${proudDemandNotice()}</section>
+    <header class="map-location"><h2>宫城</h2>
+      <button id="map-next" class="btn sm jade" onclick="A.court()" aria-describedby="map-court-status" ${done?'disabled':''}>${done?'奏折已批复':'查看'+esc(report)}</button>
+      <button class="btn sm" onclick="A.go('residences')">分配住所</button>
+      <span class="map-position" title="${position}">${position}</span>
+    </header>
+    <section class="map-month-notices" aria-label="本月宫中消息">${mourningNotice()}${host?`<button class="btn sm jade" onclick="A.visitMapActivity('kn')">去坤宁宫见${esc(fullName(host))}</button>`:''}${mapActivityPanel(leads)}${princessMapNotice()}${birthdayBanquetButtons()}${proudDemandNotice()}</section>
     <div id="mapwrap"></div>
     <div id="map-guide-preview" aria-live="polite"></div>
     <div class="map-dock">
@@ -409,7 +405,8 @@ function viewMap(){
       <details class="map-brief" ${UI.mapBriefOpen?'open':''} ontoggle="UI.mapBriefOpen=this.open">
         <summary>宫中事务与常平仓</summary>
         <div class="map-brief-content">
-
+          <p id="map-court-status" class="hint">${esc(status)}</p>
+          ${S.flags.lastMonthReview?`<button class="btn sm" onclick="A.go('log')">上月回顾</button>`:''}
           ${floodDikeReady()?'<p class="hint">黄河险堤已加固。日后一次直接赈济可少花 '+FLOOD_DIKE_SAVING+' 万两。</p>':''}
           <p class="hint">${grainReserveReady()?`常平仓有${grainReserveLabel()}备荒粮。遇到蝗灾月奏时可发放，免耗精力。`:'常平仓暂无备荒粮，可以向粮商买半批。'}</p>
           ${Number.isInteger(S.flags.localGrainPaymentTurn)?`<p class="hint">赈粮尾款 ${localGrainBalance()} 万两，将于${localGrainPaymentDue()?'本月底':'下月底'}结清。${localGrainPaymentDue()&&grainReserveReady()?'可到常平仓以粮抵款。':''}${localGrainExtensionAvailable()?'可在常平仓展期一次。':''}</p>`:''}

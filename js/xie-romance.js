@@ -47,14 +47,14 @@ xieMarriageRefusal=function(k,p){
 const romanceAdmirer=xieAdmirerReady;
 xieAdmirerReady=function(k){
  if(!xieRomanceActive())return romanceAdmirer(k);
- const p=xieAn(),h=xieHouse(p);return heartReady(k)&&k.sex==='f'&&kidAge(k)<=25&&xiePresent(p)&&xieUnbound(p)&&p.age<=35&&!mothersOf(k).some(m=>houseOf(m)?.father.id===h?.rootId)&&E().sur!=='谢';
+ const p=xieAn(),h=xieHouse(p);return xieHeartReady(k)&&kidAge(k)<=25&&xiePresent(p)&&xieUnbound(p)&&p.age<=35&&!mothersOf(k).some(m=>houseOf(m)?.father.id===h?.rootId)&&E().sur!=='谢';
 };
 function xiePathTarget(p=xieAn()){return p?.xiean.path&&royalById(p.xiean.path.childId);}
 function xiePathEligible(p=xieAn(),k=xiePathTarget(p)){
  return xieRomanceActive()&&['solitude','return'].includes(p?.xiean.path?.kind)&&xieUnbound(p)&&!!k?.alive&&k.sex==='f'&&kidAge(k)>=12&&!k.married&&!k.spouse&&!k.betrothal&&k.xieAdmiration?.personId===p.id&&k.xieAdmiration.outcome==='declined';
 }
 function xiePathAvailable(p=xieAn(),k=xiePathTarget(p)){
- return xiePathEligible(p,k)&&xiePresent(p)&&childCanVisitCourt(k)&&k.hp>=45&&!mourningActive();
+ return xiePathEligible(p,k)&&xiePresent(p)&&xieCanMeetPrincess(k)&&k.hp>=45&&!mourningActive();
 }
 function xiePathClose(p,k,text){
  const path=p.xiean.path;path.kind='free';path.closedAt=S.turn;delete path.pending;p.xiean.lifelongSingle=true;
@@ -86,7 +86,7 @@ function xiePathEvent(){
  if(phase==='meeting'||phase==='knowing'){
   const first=phase==='meeting',row=XIE_KNOWING[childDisposition(k)];
   const scene=first?'谢安愿在有亲友同席的诗会上与公主交谈。公主收到邀请，仍想认识传闻之外的他，也明白这不是婚约。':row[0];
-  return chronicleEvent({title:first?'旧诗之外，重新相识':'渐识卿心',cast:[k,p],present:first?[]:[k,p],valid,text:scene+'\n'+(first?'这一次可以给彼此一个认识的机会，也可以就此放下。':'交谈渐渐超出了诗句，两人都在认识对方真实的日常。'),choices:[
+  return chronicleEvent({title:first?'旧诗之外，重新相识':'渐识卿心',cast:[k,p],present:first?[]:xieCapitalEstate(k)?[p]:[k,p],valid,text:scene+'\n'+(first?'这一次可以给彼此一个认识的机会，也可以就此放下。':'交谈渐渐超出了诗句，两人都在认识对方真实的日常。'),choices:[
    {t:first?'公主愿意赴会，让两人重新相识':'让他们按自己的心意继续来往',f:()=>{if(!finish())return null;path.stage++;
     const text=first?'公主应邀赴诗会。谢安认真听她说完喜欢哪一句，也问了她平日的志趣。散席时只约再谈，并未订婚。':scene;
     xieCoupleRecord(p,k,first?'重新相识':'渐识卿心',text,first?'愿再见她，是想认识这个人，不能拿怜惜当成爱。':row[1],first?'这回我也想亲眼认识他，若不合适，仍有说不的余地。':'他开始记住我说的小事。我也渐渐看见诗名以外的他。');return text;}},
@@ -95,7 +95,7 @@ function xiePathEvent(){
  if(phase==='proposal')return chronicleEvent({title:'谢安主动提亲',por:p,present:[p],valid,text:`谢安亲自递来求亲书帖，为${kidName(k)}郑重一礼。\n“从前辞婚，是草民真无此意；如今求娶，也是真心。最初不忍她伤心，后来才明白，自己已在盼每一次见面。”\n“求陛下容我再问她一句。若她不愿，草民绝不拿迟来的心意为难她。”`,choices:[
   {t:'转告公主，听她亲口答复',f:()=>{if(!finish())return null;path.pending='answer';scholarRecord(p,`【主动求娶】亲自为${kidName(k)}递上求亲书帖，坦陈数次相识后的心意，尚未订婚，等她亲口答复。`);pushNow(xiePathEvent());return null;}},
   {t:'暂留书帖，稍后再议'}]});
- if(phase==='answer')return chronicleEvent({title:'迟来的心意 · 公主的答复',por:k,present:[k],valid,text:`${kidName(k)}读完亲笔书帖，许久才抬起头。\n他记着相处时她说过的话，也写明愿照顾她的一生。她曾喜欢过他，今日仍可以重新选择。`,choices:[
+ if(phase==='answer')return chronicleEvent({title:'迟来的心意 · 公主的答复',por:k,present:xieCapitalEstate(k)?[]:[k],valid,text:`${kidName(k)}读完亲笔书帖，许久才抬起头。\n他记着相处时她说过的话，也写明愿照顾她的一生。她曾喜欢过他，今日仍可以重新选择。`,choices:[
   {t:(kidAge(k)<15?'她仍愿意，先订婚，满十五岁再成婚':'她仍愿意，成全两人的婚事')+' · 国库−50',cond:()=>valid()&&E().treasury>=50,why:'须双方仍无婚约，且国库足够',f:()=>{
    if(E().treasury<50||!finish())return null;chg({treasury:-50});return kidAge(k)<15?xieBetroth(k,p,'proposal'):xieCelebrate(k,p,'proposal',65);
   }},{t:'她已放下这段心事，婉拒提亲',f:goodbye},{t:'让她再想一想'}]});
@@ -116,6 +116,7 @@ function xieCelebrate(k,p,origin,affection){
  const loving=origin==='proposal'||affection>=60,engaged=!!p.xiean.engagement;
  delete k.betrothal;delete p.betrothal;delete p.xiean.engagement;if(p.xiean.path)p.xiean.path.kind='married';
  k.married=true;k.princessMarriage='xiean';k.xieAdmiration.outcome=loving?'mutual':'forced';p.married=true;p.royalSpouseId=k.id;p.spouseName=k.name;
+ if(xieCapitalEstate(k))k.estate.route='xiean';
  k.spouse={id:p.id,personId:p.id,scholarId:p.id,name:p.name,sur:p.sur,sex:'m',seed:p.seed,official:p.official,artPortrait:433,born:S.turn-p.age*12,alive:true,background:'京中诗客 · '+(loving?'两心相许':'奉旨尚主'),marriedAt:S.turn,trust:loving?60:38,marriageNature:{temperament:'温厚',hobby:'books',spending:'节俭',space:'需要独处'}};
  p.xiean.marriage={childId:k.id,at:S.turn,last:S.turn,news:0,affection,separateUntil:loving?null:S.turn+12,joinedAt:loving?S.turn:null,origin,startedWithLove:loving};ensureMarriedLife(k);
  const text=(engaged?'公主已满十五岁，双方依婚约举行婚礼。':'公主亲口答应谢安的提亲，两人自愿成婚。')+(loving?'谢安说：“这一回是我走向你。往后的风雨，不必一个人等。”两人已相知相许，婚后共同生活，不设一年分房。':'谢安仍未有相同心意，却愿温柔照应，不让妻子因帝命受委屈。两人从今日起约定先分房一年，慢慢相知。')+'他不纳妾，妻亡也不再娶。';
@@ -133,7 +134,7 @@ function xieBetrothalTick(p){
   if(k?.alive)heartRecord(k,'婚约成旧事',text,'往事值得记住，未来也仍可以重新选择。',-.5);
   if(p.xiean.path){p.xiean.path.kind='free';delete p.xiean.path.pending;}return;
  }
- if(!xiePresent(p)||!childCanVisitCourt(k)||k.hp<45||mourningActive())return;
+ if(!xiePresent(p)||!xieCanMeetPrincess(k)||k.hp<45||mourningActive())return;
  if(kidAge(k)>=15){xieCelebrate(k,p,engagement.origin,engagement.affection);return;}
  if(S.turn-engagement.last<6||!chance(.3))return;
  engagement.last=S.turn;engagement.affection=clamp(engagement.affection+12);
@@ -146,7 +147,7 @@ A.xieBridge=function(mode){
  const p=xieAn(),k=xiePathTarget(p),path=p?.xiean.path;if(modalOpen||!['meet','courage','leave'].includes(mode)||!xieBridgeReady(p))return;
  let done=false;const gen=S.gen,valid=()=>!done&&S.gen===gen&&p.xiean.path===path&&xieBridgeReady(p);
  const meeting=mode==='meet',leave=mode==='leave';
- pushEv(chronicleEvent({title:leave?'各有归途':meeting?'为他们留一次相遇':'鼓励她说出心意',por:k,present:[k],valid,
+ pushEv(chronicleEvent({title:leave?'各有归途':meeting?'为他们留一次相遇':'鼓励她说出心意',por:k,present:xieCapitalEstate(k)?[]:[k],valid,
   text:leave?'公主与谢安都可以不再继续这段旧事。尊重独身的选择后，不再为他们安排婚议。':meeting?'你提议在有亲友同席的诗会上留两席，让公主与谢安有机会谈谈彼此真正关心的事。她可以赴约，也不必把相遇当成一定要成婚的考验。':'你告诉公主，喜欢并不羞耻。她可以拿出自己的文章、见闻与想法，亲自说出心意，也听对方真实的答复。',choices:[
    {t:leave?'让这段婚议就此止步':(meeting?'安排诗会，请两人自行决定是否赴约':'鼓励她以自己的方式表达')+' · 精力−1',cond:()=>valid()&&(leave||E().energy>0),why:'精力不足或处境已变',f:()=>{
     if(!valid()||!leave&&!useE())return null;done=true;path.lastHelp=S.turn;
@@ -199,7 +200,7 @@ function xieRememberLate(pair,visit=false){
 A.xieFamilyTalk=function(){
  const pair=xieCouple();if(modalOpen||!xieLateReady(pair)||S.turn-(pair.m.lastTalk??-99)<6)return;
  const {p,k,m}=pair;let done=false;const valid=()=>!done&&xieCouple()?.m===m&&xieLateReady(pair)&&S.turn-(m.lastTalk??-99)>=6;
- pushEv(chronicleEvent({title:'归处有灯 · 谢安与公主',cast:[k,p],present:[k,p],valid,text:'两人来问安，提起府里近来的日常，谢安看向妻子时，眼底已有藏不住的笑意。',choices:[
+ pushEv(chronicleEvent({title:'归处有灯 · 谢安与公主',cast:[k,p],present:xieCapitalEstate(k)?[p]:[k,p],valid,text:'两人来问安，提起府里近来的日常，谢安看向妻子时，眼底已有藏不住的笑意。',choices:[
   {t:'听他们说说家常 · 精力−1',cond:()=>valid()&&E().energy>0,why:'精力不足或两人不便相见',f:()=>{if(!valid()||!useE())return null;done=true;m.lastTalk=S.turn;m.last=S.turn;return xieRememberLate(pair,true);}},
   {t:'改日再叙'}]}));
 };

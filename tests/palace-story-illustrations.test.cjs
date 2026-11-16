@@ -230,3 +230,28 @@ test('the adult follow-up shows the Huashan steps when the old promise leads to 
   assert.equal(game.run('k.immortal.stage'),'learning');
   assert.equal(game.run('E().treasury'),470);
 });
+
+test('the meadow illustration belongs to grass play and clears after answering',()=>{
+  const game=start();
+  game.run(`S.turn=120;S.month=4;E().energy=4;const c=empress();c.trait='活泼';
+    const k=makeKid(c,'f','昭宁');k.born=S.turn-72;k.pendingName=false;
+    c.initiative={id:'grassNames',turn:S.turn,target:k.id,text:PALACE_INITIATIVES.grassNames.text(c,k)};
+    A.seeInitiative(c.id,false);`);
+  assert.equal(game.run('curEv.title'),'斗草辨芳名');
+  assert.match(game.run("$('#mbox').innerHTML"),/story-grass-stems-sunlit\.webp/);
+  game.run('choose(0)');
+  assert.equal(game.run('E().energy'),3);
+  assert.doesNotMatch(game.run("$('#mbox').innerHTML"),/event-illustration/);
+});
+
+test('fallen petals are shown at the beginning of the personal story',()=>{
+  const game=start();
+  game.run(`const c=empress();c.trait='沉静';
+    offerPersonalExperience(c,PERSONAL_EPISODES.find(episode=>episode.title==='花下拾香'));
+    A.personalExperience(c.id);`);
+  assert.equal(game.run('curEv.title'),'花下拾香');
+  assert.match(game.run("$('#mbox').innerHTML"),/story-fallen-petals-after-rain\.webp/);
+  game.run('choose(0);nextEv();S.turn=c.personalExperiences.current.due;A.personalExperience(c.id)');
+  assert.equal(game.run('curEv.title'),'花下拾香 · 后话');
+  assert.doesNotMatch(game.run("$('#mbox').innerHTML"),/event-illustration/);
+});

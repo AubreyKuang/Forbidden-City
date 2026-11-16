@@ -139,6 +139,20 @@ function kidEvent(){
   }
   return null;
 }
+function royalComingOfAgeEvent(){
+  if(journalContentVersion()<53)return null;
+  const grown=kidsAlive().filter(k=>S.turn-k.born===15*12).sort(royalBirthOrder);
+  if(!grown.length)return null;
+  const lists=[['皇子','m'],['公主','f']].flatMap(([label,sex])=>{
+    const names=grown.filter(k=>k.sex===sex).map(kidName);
+    return names.length?[`${label}：${names.join('、')}`]:[];
+  });
+  const commander=jinyiweiCommanderReady()?jinyiwei().commander:null;
+  const reporter=commander?'锦衣卫':'宗人府';
+  return {title:`${reporter}奏报 · 皇嗣成年`,por:commander||undefined,
+    text:`${commander?`锦衣卫指挥使${commander.name}`:'宗人府'}呈上玉牒，本月年满十五岁的皇嗣如下。\n${lists.join('\n')}`,
+    onQueue:()=>log(`${reporter}奏报本月皇嗣成年。${lists.join('；')}。`),choices:[{t:'知道了'}]};
+}
 function milestone(){
   for(const k of kidsAlive()){if(k.templeStay||immortalAway(k))continue;const a=kidAge(k);
     if(k.sex==='f'){const event=princessMilestone(k);if(event)return event;}

@@ -395,7 +395,7 @@ A.answerInitiative=function(id,child){
   if(rule.choices){
     const place=PLACES.find(p=>p.id===initiativePlace(rule,person,move));
     setScene(place?.sc||'harem');
-    pushEv({title:rule.title,cast:[person,target].filter(Boolean),valid:()=>currentInitiative(person)===move&&!move.response&&!!initiativeParticipants(person,move),text:move.text,ref:rule.ref,refURL:INITIATIVE_SOURCES[rule.source],
+    pushEv({title:rule.title,illustration:rule.illustration,cast:[person,target].filter(Boolean),valid:()=>currentInitiative(person)===move&&!move.response&&!!initiativeParticipants(person,move),text:move.text,ref:rule.ref,refURL:INITIATIVE_SOURCES[rule.source],
       choices:[...rule.choices.map(choice=>({t:choice.label+'（精力-1）',cond:()=>E().energy>0,
         why:'精力不足',f:()=>{
           if(move.response||!initiativeParticipants(person,move)||!useE())return null;

@@ -1644,11 +1644,15 @@ test('version 1 saves load, rewinding restores a new-year snapshot, and absence 
 });
 
 test('a princess opens her own estate, sends project letters and stays in the family after succession',()=>{
-  const {run}=boot();
+  const {run,setRoll}=boot();
   run(`
     const mother=harem()[0], p=makeKid(mother,'f','明昭'), h=makeKid(mother,'m','承安');
     p.born=S.turn-16*12;h.born=S.turn-15*12;p.lit=70;p.mar=30;
-    assert.equal(milestone().title,'公主开府来信');
+  `);
+  setRoll(.1);
+  run(`assert.equal(milestone().title,'公主开府来信');`);
+  setRoll();
+  run(`
     A.openPrincess(p.id);choose(0);drain();
     assert.equal(p.estate.pursuit,'books');assert.equal(p.married,false);assert.equal(childInPalace(p),false);
     const oldTreasury=E().treasury;

@@ -1,6 +1,6 @@
 /* One person record, two parent links. Household branches follow a known father. */
 const layeredFamilyActive=()=>!!S&&journalContentVersion()>=19;
-function familyVisibilityActive(){return !!S&&journalContentVersion()>=53;}
+function familyVisibilityActive(){return !!S&&journalContentVersion()>=54;}
 function familyGroupKey(c){return hasClan(c)?clanKey(c):'house-'+(c.fatherId??c.house?.father.id??c.id);}
 function familyGroupHidden(key){return familyVisibilityActive()&&S.flags.hiddenFamilies?.[key]===true;}
 function familyVisibilityButton(key,label){

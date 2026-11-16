@@ -149,7 +149,9 @@ const EVENT_ILLUSTRATIONS={
   'liuxi-broken-bridge':'断桥下水正急，渡船贴着岸。',
   'qionglin-spilled-cup':'酒沿着桌缝淌下去。方才那句诗，谁也没有接。',
   'child-wooden-boat':'小舟一歪，墨线一头沉到水里。孩子凑得更近了。',
-  'huashan-stone-steps':'山雾掠过石阶。转过一道弯，前头又露出几级。'
+  'huashan-stone-steps':'山雾掠过石阶。转过一道弯，前头又露出几级。',
+  'grass-stems-sunlit':'风过草地，几根细茎先弯了腰。孩子蹲下来，一根一根地挑。',
+  'fallen-petals-after-rain':'几片花瓣落在湿草间。枝上还有花，在薄薄的天光里轻轻摇。'
 };
 function eventIllustration(key){
   if(!Object.hasOwn(EVENT_ILLUSTRATIONS,key))return '';
@@ -416,7 +418,9 @@ A.endMonth=function(){
   else if(S.month===2&&S.turn-S.flags.lastXX>=34&&newConsortEventAllowed()) pushEv({title:'三年大选',sfx:'chime',text:'又到三年一度的大选之期，各地秀女已候于储秀宫。',choices:[{t:'前去看看',f:()=>{genCands();UI.view='xx';return null}},{t:'今年免了',f:()=>{S.flags.lastXX=S.turn;return fx(chg({people:2}))}}]});
   reconcileResidences();archivePastLives();travelerLifeTick();daoLifeTick();immortalTick();childTempleTick();relTick();consortSocialTick();kidRelTick();clanTick();dowagerTick();initiativeTick();familyLifeTick();childLifeTick(true);courtTick();natalFamilyTick();seasonalTick();palaceDutiesTick();palaceRomanceTick();palaceParentageTick();marriedLifeTick();royalKinContactTick();personalExperienceTick();journeyTick();maternalTick();historyTick();continuityTick();personalLifeTick();livedRelationshipsTick();
   const passing=dowagerPassingEvent();if(passing)pushEv(passing);
+  const comingOfAge=royalComingOfAgeEvent();
   const must=[passing?null:haremRemonstranceEvent(),passing?null:pendingImmortalEvent(),passing?null:arcTick(),heirTick(),milestone(),parentageReportEvent(),birthSwapClueEvent(),birthSwapSearchReport(),pendingBirthSwapJustice(),pendingKinGreeting(),pendingMaternalKinCare(),pendingMaternalSisterArrival(),pendingDaoVoyage(),pendingTravelerEvent(),pendingOfficialReport(),pendingConcealedLoss(),...(legacyPendingAction()?[]:[pendingIncognitoReport(),passing?null:jingtishiEvent(),passing?null:selectionCouncilEvent()]),passing||typeof pendingHaremStewardEvent!=='function'?null:pendingHaremStewardEvent(),...(familyGardenActive()&&!passing?[familyGardenMonthlyEvent(),familyGardenDisputeEvent()]:[])].filter(Boolean),opt=[];
+  if(comingOfAge)must.unshift(comingOfAge);
   // 积压的奏折：离宫期间攒下的朝堂事务，月末一并呈上
   while((S.flags.memorials||0)>0){S.flags.memorials--;const memo=factionEvent();if(memo&&!must.some(e=>e.title===memo.title))must.push(memo)}
   const add=(e,p)=>{if(e&&ambientEventReady(e))opt.push([e,p+R()-ambientNovelty(e)+continuityEventScore(e)])};

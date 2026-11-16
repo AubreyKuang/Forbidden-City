@@ -83,7 +83,7 @@ test('an automatic monthly invitation survives a fresh-context pending-action re
  const c=boot(8,b.storage);c.ctx.assert=assert;c.run(`A.load('1');assert.equal(PalaceActions.blocked,false);assert.ok([curEv,...Q].some(e=>e?.title==='仙师来访 · 山门之约'));drain();assert.equal(S.children[0].immortal.stage,'learning');assert.equal(S.children[0].estate,undefined);`);
 });
 test('already queued coming-of-age and residence requests expire after a mountain departure',()=>{
- for(const sex of ['m','f']){const b=world(sex);b.run(`var request=milestone();assert.ok(request);immortalDiscover(k);immortalDepart(k);assert.equal(request.valid(),false);assert.equal(request.choices[0].f(),null);assert.equal(k.princeEstate,undefined);assert.equal(k.estate,undefined);A.kidTitle(k.id);assert.equal(modalOpen,false);`);}
+ for(const sex of ['m','f']){const b=world(sex);if(sex==='f')b.force(.1);b.run(`var request=milestone();assert.ok(request);immortalDiscover(k);immortalDepart(k);assert.equal(request.valid(),false);assert.equal(request.choices[0].f(),null);assert.equal(k.princeEstate,undefined);assert.equal(k.estate,undefined);A.kidTitle(k.id);assert.equal(modalOpen,false);`);}
 });
 test('moving out invalidates an open master interview without creating another conversation',()=>{
  const b=world();b.run(`immortalDiscover(k);var e=immortalEvent(k),n=k.story.length;k.away=true;assert.equal(e.valid(),false);assert.equal(e.choices[1].f(),null);assert.equal(k.story.length,n);`);

@@ -5,6 +5,7 @@ test('skipping an automatic selection preserves the actual date and allows an or
  var funds=E().treasury,e=scheduledSelectionEvent();assert.ok(e);e.choices[1].f();
  assert.equal(S.flags.lastXX,0);assert.equal(S.flags.lastXXSkipped,35);assert.equal(E().people,62);
  assert.equal(e.choices[1].f(),null);assert.equal(scheduledSelectionEvent(),null);assert.equal(E().people,62);
+ assert.match(viewXX(),/目前可依例下旨开选/);
  A.xxDecree();assert.equal(S.cands.length,6);assert.equal(E().treasury,funds);assert.equal(E().people,62);
  assert.equal(S.flags.lastXX,35);assert.equal(selectionFreeReady(),false);assert.ok(S.log.some(e=>e.t.includes('今年停办选秀')));`);
 });
@@ -43,10 +44,11 @@ test('insufficient old history does not erase an unknown real selection or use a
  assert.equal(selectionLastHeldTurn(),35);reconcileSelectionTiming();assert.equal(S.flags.lastXX,35);`);
 });
 const legacy=require('./fixtures/selection-and-dao-legacy-v52.json');
-for(const name of ['offer','skipped'])test('real v52 '+name+' replays before repairing its old refusal clock',()=>{
- const b=boot(591,new Map([['chengongji_v1_auto',JSON.stringify(legacy[name])]]));b.ctx.assert=assert;
- b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,52);
- if(!modalResult)choose(1);drain();assert.equal(PalaceActions.contentVersion,53);
+for(const version of [52,53])for(const name of ['offer','skipped'])test('real v'+version+' '+name+' replays before repairing its old refusal clock',()=>{
+ const fixture=require('./fixtures/selection-and-dao-legacy-v'+version+'.json');
+ const b=boot(591,new Map([['chengongji_v1_auto',JSON.stringify(fixture[name])]]));b.ctx.assert=assert;
+ b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,${version});
+ if(!modalResult)choose(1);drain();assert.equal(PalaceActions.contentVersion,54);
  var money=E().treasury;A.xxDecree();assert.equal(S.cands.length,6);assert.equal(E().treasury,money);`);
 });
 test('a settled old skip is repaired on load without needing a new game',()=>{
