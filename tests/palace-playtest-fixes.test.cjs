@@ -93,5 +93,5 @@ test('unanswered personal invitations resolve naturally while accepted promises 
 test('love keepsakes follow personality and legacy chapters retain their established token',()=>{
  const b=boot();start(b);assert.equal(b.run("new Set(['骄纵','城府','将门','活泼','好学','温婉'].map(trait=>{var c=byId(2);c.trait=trait;c.arc={id:'love',st:0,f:{}};return loveToken(c,c.arc.f).name})).size"),6);
  assert.equal(b.run("var c=byId(2);c.trait='将门';c.arc={id:'love',st:1,f:{}};loveToken(c,c.arc.f).name"),'鸳鸯帕');
- b.run("c.arc={id:'love',st:2,f:{token:'direct',wait:1}};c.aff=20");assert.doesNotMatch(b.run('ARCS.love.stages[2](c,c.arc.f).text'),/温和/);
+ b.run("c.arc={id:'love',st:2,f:{token:'direct',wait:1,shared:true}};c.nights=3;c.aff=20");assert.doesNotMatch(b.run('ARCS.love.stages[2](c,c.arc.f).text'),/温和/);
 });

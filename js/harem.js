@@ -29,13 +29,24 @@ function punishEv(A_,B,crime){
     {t:'降位禁足',f:()=>{A_.rank=Math.max(0,A_.rank-2);if(A_.rank===8)A_.rank=5;reconcileResidences();story(A_,`${crime}事发，被降为${RANKS[A_.rank]}，禁足宫中。`);setXin(A_,'惶恐',`${crime}事发`);log(`${fullName(A_)}因${crime}事发，降为${RANKS[A_.rank]}。`,1);if(B)cchg(B,{aff:5,mood:8});return fx(cchg(A_,{mood:-30,aff:-15,favor:-20}))}},
     {t:'念其初犯，罚俸了事',f:()=>{story(A_,`${crime}事发，陛下网开一面，仅罚俸半年。`);if(B){cchg(B,{aff:-8,mood:-10});story(B,'陛下对害她之人从轻发落，她心中凉了半截。');setXin(B,'怨恨','害她的人只被罚了俸',A_.id)}A_.scheme=clamp(A_.scheme+5);return `${cName(A_)}叩头谢恩，眼底却闪过一丝庆幸。`}}]};
 }
+// Historical favor is not proof of a recent visit. Merely opening a profile
+// calls noteHaremVisit, so only personal conversations, nights and arrivals count.
+function recentConsortAttention(c){
+  return [c.lastPersonalAttention,c.palaceWelcome?.turn,...(c.imperialNights||[])]
+    .filter(t=>Number.isFinite(t)&&t<=S.turn&&S.turn-t<3);
+}
+function recentFavoredConsort(h){
+  return h.filter(c=>recentConsortAttention(c).length)
+    .sort((a,b)=>b.favor-a.favor||Math.max(...recentConsortAttention(b))-Math.max(...recentConsortAttention(a)))[0];
+}
 const HAREM=[
- function jealous(){const h=harem();if(h.length<2)return null;const top=h.slice().sort((a,b)=>b.favor-a.favor)[0];
+ function jealous(){const current=journalContentVersion()>=26,h=harem();if(h.length<2)return null;const top=current?recentFavoredConsort(h):h.slice().sort((a,b)=>b.favor-a.favor)[0];if(!top)return null;
   const cs=h.filter(c=>!isSolitary(c)&&c!==top&&(TRAITS[c.trait].jealous||c.scheme>70)&&c.favor<top.favor-8);if(!cs.length)return null;const a=pick(cs);
-  return {title:'醋海生波',present:[a,top],por:a,text:`${cName(a)}前来请安，言语间颇有怨怼：\n“陛下近日总往${top.palace}去，想来${cName(top)}那儿的茶，是比别处香些。”`,choices:[
-   {t:'温言安抚',f:()=>{story(a,'向陛下诉了几句委屈，陛下温言安抚，她心中稍霁。');return fx(cchg(a,{mood:12,aff:4}))}},
+  const complaint=current?`陛下近来这样惦记${cName(top)}，想来她那儿的茶，是比臣妾这里香些。`:`陛下近日总往${top.palace}去，想来${cName(top)}那儿的茶，是比别处香些。`;
+  return {title:'醋海生波',present:[a,top],por:a,text:`${cName(a)}前来请安，言语间颇有怨怼：\n“${complaint}”`,choices:[
+   {t:'温言安抚',f:()=>{story(a,(current?`见陛下近来与${cName(top)}（${fullName(top)}）亲近，心生醋意。`:'')+'向陛下诉了几句委屈，陛下温言安抚，她心中稍霁。');return fx(cchg(a,{mood:12,aff:4}))}},
    {t:'今夜便宿在她宫里',cond:()=>E().energy>0&&!a.preg&&(!consortRecoveryActive()||!consortNightReason(a)),why:(consortRecoveryActive()&&consortNightReason(a))||('精力不足'),f:()=>{nightWith(a);return null}},
-   {t:'冷言训诫：“后宫当以和睦为先。”',f:()=>{story(a,'因妒生怨，遭陛下训诫，回宫后闭门不出。');a.scheme=clamp(a.scheme+3);return fx(cchg(a,{mood:-15,aff:-6,favor:-3}))}}]}},
+   {t:'冷言训诫：“后宫当以和睦为先。”',f:()=>{story(a,(current?`因陛下近来与${cName(top)}（${fullName(top)}）亲近而吃醋，`:'因妒生怨，')+'遭陛下训诫，回宫后闭门不出。');a.scheme=clamp(a.scheme+3);return fx(cchg(a,{mood:-15,aff:-6,favor:-3}))}}]}},
  function musk(){const h=harem();const sc=h.filter(c=>!isSolitary(c)&&c.scheme>=65&&(c.mood<70||c.scheme>=80));if(!sc.length)return null;const a=pick(sc);
   const ts=h.filter(c=>c!==a&&(c.favor>=a.favor||c.preg));if(!ts.length)return null;const b=ts.sort((x,y)=>relGet(a,x)-relGet(a,y))[0];
   return {title:'香囊疑案',present:[a,b],por:b,text:`${cName(b)}宫中的宫女整理衣物时，发现主子常佩的香囊里竟混了麝香。${cName(b)}面色惨白，跪在殿前请陛下做主。`,choices:[

@@ -84,7 +84,7 @@ const WOUNDS={
  scorn:'因为出身低，选秀时被嬷嬷当众嘲笑过，她一直记得那天。',
 };
 // Read-only fallback for incomplete old saves; never invent a replacement childhood.
-const personalContextActive=()=>typeof PalaceActions==='undefined'||PalaceActions.contentVersion>=26;
+const personalContextActive=()=>typeof PalaceActions==='undefined'||PalaceActions.contentVersion>=27;
 const GOUYI_PAST='自幼双手蜷握，她习惯把手藏在宽袖里。旁人记得的是奇症，她记得的却是河间窗下的雨声、茶香，还有不被追问的片刻清静。巡狩相见时，陛下先屏退围观者，等她愿意伸手，双掌才在御前缓缓舒开。她珍惜那日的相知，也一直想弄清缘由，更盼别人记住赵令仪这个名字。';
 function consortPastText(c){
   if(!personalContextActive()&&typeof WOUNDS[c.wound]==='string')return WOUNDS[c.wound];
@@ -168,7 +168,7 @@ function deepLine(c){deepen(c);if(c.wish==='title'&&c.title&&!c.wishDone){c.wish
   <div>平日消遣：<span class="tag">${esc(c.hobby)}</span></div>
   <div>心愿：${c.wishKnown?`${esc(w.t)}${c.wishDone?' <span class="tag y">已成全</span>':w.unknown?'':w.btn?` <button class="btn sm jade" onclick="A.wish(${c.id})" ${inPalace(c)?'':'disabled'}>${esc(w.btn)}</button>`:' <span class="hint">（生下孩子便成全了）</span>'}`:`<span class="hint">${c.aff>=50?'情分已够，多闲谈几次，她也许会说出心愿':'情分到 50 以后，闲谈时她也许会说'}</span>`}</div>
   ${c.woundKnown?`<div>往事：${esc(consortPastText(c))}</div>`:`<div class="hint">往事：${c.aff>=65?'情分已够，多闲谈几次，她也许会对你说起':'情分到 65 以后，她也许会对你说起'}</div>`}${typeof gouyiPastPanel==='function'?gouyiPastPanel(c):''}`}
-A.chat=function(id,fromEvent=false){const c=byId(id);if((modalOpen&&!fromEvent)||!inPalace(c))return;const home=homeCareEvent(c)||solitaryQuietEvent(c);if(home){(fromEvent?pushNow:pushEv)(home);return;}const arrival=kinArrivalGreeting(c)||newcomerWelcomeEvent(c);if(arrival){(fromEvent?pushNow:pushEv)(arrival);return;}const past=pastLifeEvent(c);if(past){(fromEvent?pushNow:pushEv)(past);return;}initTimeTraveler(c);const quiet=solitaryEvent(c);if(quiet){(fromEvent?pushNow:pushEv)(quiet);return;}const oldWorld=travelerConfessionEvent(c);if(oldWorld){if(useE())(fromEvent?pushNow:pushEv)(oldWorld);return;}if(!useE())return;if(!legacyPendingAction()){noteHaremVisit(c);c.lastPersonalAttention=S.turn;}deepen(c);const L=[];const xk=xinOf(c),opening=consortVoicePhase(c)==='first';
+A.chat=function(id,fromEvent=false){const c=byId(id);if((modalOpen&&!fromEvent)||!inPalace(c))return;const home=homeCareEvent(c)||solitaryQuietEvent(c);if(home){(fromEvent?pushNow:pushEv)(home);return;}const arrival=kinArrivalGreeting(c)||newcomerWelcomeEvent(c);if(arrival){(fromEvent?pushNow:pushEv)(arrival);return;}const past=pastLifeEvent(c);if(past){(fromEvent?pushNow:pushEv)(past);return;}initTimeTraveler(c);const quiet=solitaryEvent(c);if(quiet){(fromEvent?pushNow:pushEv)(quiet);return;}const oldWorld=travelerConfessionEvent(c);if(oldWorld){if(useE())(fromEvent?pushNow:pushEv)(oldWorld);return;}if(!useE())return;if(!legacyPendingAction()){noteHaremVisit(c);c.lastPersonalAttention=S.turn;}deepen(c);if(journalContentVersion()>=26)return layeredConsortChat(c);const L=[];const xk=xinOf(c),opening=consortVoicePhase(c)==='first';
   const voice=characterVoice(c,'talk');L.push(voice.stage);L.push(`“${voice.text}”`);
   const familyTalk=fiveBrotherChat(c);if(familyTalk)L.push(familyTalk);
   const sisterTalk=sisterChatLine(c);if(sisterTalk)L.push(sisterTalk);

@@ -1,5 +1,5 @@
 /* A change of emperor changes kinship, not the identities in the court register. */
-const retainedFamiliesActive=()=>journalContentVersion()>=26;
+const retainedFamiliesActive=()=>journalContentVersion()>=27;
 function familyCourtHosts(){return retainedFamiliesActive()?[...new Map([...(S.retainedFamilies||[]),...S.consorts].map(c=>[c.id,c])).values()]:S.consorts;}
 function familyHostById(id){return byId(Number(id))||(retainedFamiliesActive()?(S.retainedFamilies||[]).find(c=>c.id===Number(id)):null);}
 function reconcileRetainedFamilies(){

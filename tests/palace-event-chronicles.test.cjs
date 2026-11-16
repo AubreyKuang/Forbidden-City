@@ -119,6 +119,6 @@ test('deferring a parentage allegation records uncertainty without making it a v
 test('recalled care and rescue use actual experiences rather than inventing a cold-palace history',()=>{
  const w=world();w.run(`S.npcMemory=undefined;a.mem=[];a.aff=80;a.wishKnown=true;a.woundKnown=true;a.t2='念旧';a.entryTurn=-120;
  remember(a,'saved','花架倾倒时，陛下扶住了她');var heard=false;
- for(var i=0;i<80;i++){E().energy=5;A.chat(a.id);if(curEv){assert.doesNotMatch(curEv.text,/冷宫里那几个月|廊下站了一夜/);if(curEv.text.includes('她说起一段记得的往事：花架倾倒'))heard=true;}drain();}
+ for(var i=0;i<80;i++){E().energy=5;A.chat(a.id);if(curEv){assert.doesNotMatch(curEv.text,/冷宫里那几个月|廊下站了一夜/);if(a.chatThread.lastTopic==='memory'&&curEv.text.includes('花架倾倒'))heard=true;}drain();}
  assert.equal(heard,true);`);
 });

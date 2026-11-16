@@ -65,7 +65,7 @@ function contextualPrayerWish(c){
   return line+(family?'\n'+family:'');
 }
 function savedPrayerWish(prior){
-  if(!personalContextActive()||prior.contextVersion>=26)return prior.wish||'';
+  if(!personalContextActive()||prior.contextVersion>=27)return prior.wish||'';
   // Older wishes did not save enough evidence to support these absolute claims.
   return (prior.wish||'').replace('头一回等着做母亲，她把问题在心里转了几遍，才真正问出口。','等着这一胎时，她把问题在心里转了几遍，才真正问出口。').replace('更怕又等不到抱一抱的那天','更盼这一胎平平安安');
 }
@@ -91,7 +91,7 @@ function pregnancyPrayerEvent(c){
     const response=kind==='peace'?'她攥着衣袖的手慢慢松了，问男女的急切，也终于肯换成一句自己的心事。':kind==='lamp'?'她认真看着自己的名字，轻声说，原来这盏灯也为她而留。':'她说了几件极小的事：听雨、认花，还有亲手做一只不会扎手的玩具。';
     const text=`${fullName(c)}孕${c.preg}月，${home?'在本宫收到国师送来的祈愿笺':'到钦安殿问国师这一胎男女'}，得「${lot.name}」。${personalContextActive()?wish+'\n':''}${words}${response}`;
     c.pregnancyPrayer={key,lot:lot.id,choice:kind,month:c.preg,turn:S.turn,date:dateStr(),master:master.name,text,wish,reading:lot.line,answered:false};
-    if(personalContextActive())c.pregnancyPrayer.contextVersion=26;
+    if(personalContextActive())c.pregnancyPrayer.contextVersion=27;
     cchg(c,{mood:6,aff:4});pregnancyPrayerMemory(c,text,home?c.palace:'钦安殿');log(text);save('auto');
     return `${words}\n${response}\n她把「${lot.name}」收进匣里，等来日再看。`;
   };

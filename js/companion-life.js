@@ -62,17 +62,21 @@ function loveToken(c,f){
   if(!f.token)f.token=c.arc.st>0?'gentle':companionStyle(c); // Earlier saves already established a handkerchief.
   return LOVE_TOKENS[f.token]||LOVE_TOKENS.gentle;
 }
+function loveArcEligible(c){
+  // Affection may start high at generation; it is not a shared history.
+  return inPalace(c)&&!c.maid&&(c.nights>=3||(c.sharedMoments?.count??c.sharedMoments?.items?.length??0)>=2);
+}
 ARCS.love.name='相伴有凭';
 ARCS.love.stages=[
-  (c,f)=>{if(c.aff<40)return null;const token=loveToken(c,f);return {text:`你来到${c.palace}，${token.begin}`,choices:[
+  (c,f)=>{if(c.aff<40||journalContentVersion()>=26&&!loveArcEligible(c))return null;const token=loveToken(c,f);return {text:`你来到${c.palace}，${token.begin}`,choices:[
     {t:'等她愿意时再看',f:()=>{f.respected=true;aNext(c,1,2,5);story(c,`做了一件${token.name}，陛下愿等她慢慢完成。`);return '她没有被催促，反倒愿意多说几句自己的打算。';}},
     {t:'问她能否一同完成',f:()=>{f.shared=true;aNext(c,1,2,5);story(c,`与陛下一同留下${token.name}。`);return token.show+fx(cchg(c,{aff:6,mood:8}));}}
   ]};},
-  (c,f)=>{if(c.aff<55)return null;const token=loveToken(c,f);return {text:`近来你操劳，御医嘱咐静养。${token.care}\n案边放着先前的${token.name}。`,choices:[
+  (c,f)=>{if(c.aff<55||journalContentVersion()>=26&&!loveArcEligible(c))return null;const token=loveToken(c,f);return {text:`近来你操劳，御医嘱咐静养。${token.care}\n案边放着先前的${token.name}。`,choices:[
     {t:'谢过她，也让她好好休息',f:()=>{f.care=true;aNext(c,2,3,6);story(c,'陛下领了她的照应，也记着让她休息。');return fx(cchg(c,{aff:10,favor:6}));}},
     {t:'赏赐致谢（国库−20万两）',f:()=>{aNext(c,2,3,6);return fx(chg({treasury:-20}),cchg(c,{aff:4,mood:8}));}}
   ]};},
-  (c,f)=>{const token=loveToken(c,f);if(c.aff<70){if(!f.wait){f.wait=1;c.arc.t=S.turn+6;return null;}aEnd(c,'相敬如宾',`那件${token.name}被妥善收起，彼此仍守着礼数，各有自己的日子。`);return {text:`${cName(c)}将${token.name}收回旧匣。她没有改掉自己的性情，只是不再把每一日都等成你的归期。`,choices:[ok1]};}
+  (c,f)=>{if(journalContentVersion()>=26&&(!loveArcEligible(c)||!f.respected&&!f.shared))return null;const token=loveToken(c,f);if(c.aff<70){if(!f.wait){f.wait=1;c.arc.t=S.turn+6;return null;}aEnd(c,'相敬如宾',`那件${token.name}被妥善收起，彼此仍守着礼数，各有自己的日子。`);return {text:`${cName(c)}将${token.name}收回旧匣。她没有改掉自己的性情，只是不再把每一日都等成你的归期。`,choices:[ok1]};}
     return {text:`收拾旧物时，${cName(c)}又翻出${token.name}。${f.shared?'上面还留着你们一同完成的痕迹。':'她记得当时你没有催她。'}\n她问：往后的日子里，是否还能留下一点只属于彼此的工夫？`,choices:[
       {t:'约定常来，也听她自己的打算',f:()=>{c.bond=true;aEnd(c,'同心',`以${token.name}记下相伴的约定。不是一次冒险，而是愿意在平常日子里彼此照应。`);remember(c,'shared-moment',`一同保管${token.name}，约定把彼此的打算认真听完。`);return `她把${token.name}重新放到常用的匣子里。${fx(cchg(c,{aff:15,favor:10}))}\n§她的恩宠从此不再衰减`; }},
       {t:'坦言此时还无法许下约定',f:()=>{aEnd(c,'相敬如宾',`保留了${token.name}，也听到了陛下未能许诺的实话。`);return '她听完，收起旧物。往后的日子怎样过，她也会自己拿主意。';}}
