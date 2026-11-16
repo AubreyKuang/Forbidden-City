@@ -5,7 +5,7 @@ const {withClock}=require('./test-clock.cjs');
 
 function world(seed=616){
  const b=boot(seed);b.ctx.assert=assert;
- b.run(`A.start();drain();S.turn=40;S.year=4;S.month=2;E().treasury=900;E().energy=4;
+ b.run(`A.start();drain();S.scholars=[];S.ministries={};S.turn=40;S.year=4;S.month=2;E().treasury=900;E().energy=4;
  var [a,z]=harem();for(const c of [a,z])delete c.solitary;
  a.fam={t:'吏部尚书',p:60};z.fam={t:'户部侍郎',p:60};delete a.house;delete z.house;
  var fa=houseOf(a).father,fz=houseOf(z).father;
@@ -82,7 +82,7 @@ test('an unsolved harem case is filed against the person who actually did it',()
  b.run(`var ev=setupMusk();assert.ok(ev);assert.equal(ev.choices.some(c=>/锦衣卫/.test(c.t)),false,'no Jinyiwei choice before it exists');`);
  b.force(.99);b.run(`ev.choices[0].f();var x=S.palaceCases.at(-1);assert.equal(x.culprit,a.id);assert.equal(x.victim,z.id);assert.equal(x.status,'cold');
  var ev2=setupMusk();ev2.choices[1].f();assert.equal(S.palaceCases.filter(k=>k.status==='cold').length,1,'the same open case is not filed twice');`);
- b.force(.01);b.run(`var ev3=setupMusk();ev3.choices[0].f();assert.equal(S.palaceCases.length,1,'a solved scene files nothing new');`);
+ b.run(`var ev3=setupMusk();`);b.force(.01);b.run(`ev3.choices[0].f();assert.equal(S.palaceCases.length,1,'a solved scene files nothing new');`);
 });
 
 test('Jinyiwei investigations report the recorded culprit or go cold, and may be retried after six months',()=>{

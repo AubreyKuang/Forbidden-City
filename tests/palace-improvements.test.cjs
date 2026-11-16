@@ -106,7 +106,7 @@ test('the dowager and maternal clan are visible in both tree modes without inven
   for(const mode of ['graph','list']){
     run(`UI.familyMode='${mode}'`);
     const html=run(`viewFamily()`);
-    assert.match(html,/太后与母家亲族/);assert.match(html,/母子 →/);assert.match(html,/母家同族/);
+    assert.match(html,/太后与母家亲族/);assert.match(html,/(母子|生母) →/);assert.match(html,/母家同族/);
     assert.ok(html.includes(run(`fullName(woman)`))||html.includes(run(`cName(woman)`)));
     assert.doesNotMatch(html,/太后之女/);
   }
@@ -333,7 +333,7 @@ test('birth probabilities include rare multiples and independent sexes without a
 test('twins are registered together, resume after a partial naming reload and settle only once',()=>{
   const {run,force}=boot();
   run(`var mother=harem()[0];mother.trait='温婉';mother.preg=10;mother.mood=20;mother.aff=20;mother.favor=20;mother.rank=4;mother.swapRisk=false;var before=S.children.length;`);
-  force(.01,.1,.9,.01,.1); // twins, boy/girl, omen, red skies
+  force(.01,.1,.9,.01,.1,0,.9); // twins, boy/girl, label gate, good, red skies, no second label
   run(`var ev=birthEvent(mother);mother.delivery.difficult=false;assert.equal(ev.title,'龙凤呈祥');assert.equal(S.children.length,before+2);
     var kids=deliveryKids(mother),ids=kids.map(k=>k.id);assert.equal(kids[0].birthGroup,kids[1].birthGroup);
     assert.equal(kids[0].born,kids[1].born);assert.ok(kids.every(k=>k.birthOmen==='red'));assert.equal(mother.preg,0);
@@ -475,7 +475,7 @@ test('a large harem cannot make new-clothes invitations occur more than once per
 test('a discarded dowager death candidate cannot silently kill her or change character moods',()=>{
   const {run,force}=boot();
   run(`S.turn=50;var d=ensureDowager(),moods=JSON.stringify(S.consorts.map(c=>c.mood));`);
-  force(0);run(`var announcement=dowagerPassingEvent();assert.ok(announcement);assert.equal(d.alive,true);assert.equal(d.mourning,undefined);
+  force(0);run(`dowagerLifePlan(d).deathTurn=S.turn;var announcement=dowagerPassingEvent();assert.ok(announcement);assert.equal(d.alive,true);assert.equal(d.mourning,undefined);
     assert.equal(JSON.stringify(S.consorts.map(c=>c.mood)),moods);
     pushEv(announcement);assert.equal(d.alive,false);assert.equal(d.mourning.handled,false);assert.equal(curEv.scene,'mourning');
     assert.match($('#mbox').innerHTML,/慈宁宫丧仪画面/);assert.match(mourningNotice(),/丧仪尚待/);`);
@@ -537,7 +537,7 @@ test('maternal full sisters with separately saved fathers share one parent in bo
     S=JSON.parse(JSON.stringify(S));migrate();a=byId(a.id);b=byId(b.id);cousin=byId(cousin.id);
     assert.equal(a.house,b.house);assert.equal(b.kin[a.id],'亲姐');assert.notEqual(a.house,cousin.house);
     var name=a.house.father.name,id=a.house.father.id;
-    UI.familyMode='list';var list=viewFamily();assert.equal(list.split("A.go('official','"+a.id+":father')").length-1,1);
+    UI.familyMode='list';var list=viewFamily();assert.equal(list.split('aria-label="查看'+name+'"').length-1,1);
     UI.familyMode='graph';var graph=viewFamily();assert.equal(graph.split('data-person-id="'+id+'"').length-1,1);
     var edges=graph.split('<g class="paternal-links" data-parent-id="'+id+'">')[1].split('</g>')[0];
     assert.ok(edges.includes('data-child-id="'+a.id+'"'));assert.ok(edges.includes('data-child-id="'+b.id+'"'));
@@ -1108,7 +1108,7 @@ test('both princess and prince households record pregnancy, births and counts on
 
 test('confinement and death stop household events, pregnancies and inappropriate mother visits',()=>{
   const {run}=boot();run(marriedFixture);run(`S.turn+=6;startHouseholdPregnancy(son,son.spouse);son.jailed=true;S.turn++;marriedLifeTick();assert.equal(son.household.pregnancies.length,0);assert.equal(householdSceneEvent(son),null);var history=son.story.length;S.turn+=12;marriedLifeTick();assert.equal(son.story.length,history);
-    mother.cold=true;for(var i=0;i<30;i++)recordHouseholdNews(daughter);assert.ok(daughter.household.history.some(x=>/许可递送/.test(x.t)));assert.ok(!daughter.household.history.some(x=>/请安时陪/.test(x.t)));
+    mother.cold=true;daughter.spouse.trust=80;var separatedNews=[];for(var i=0;i<30;i++){recordHouseholdNews(daughter);separatedNews.push(daughter.household.history.at(-1).t);}assert.ok(separatedNews.some(t=>/许可递送/.test(t)));assert.ok(!separatedNews.some(t=>/请安时陪/.test(t)));
     daughter.alive=false;assert.equal(householdActive(daughter),false);A.householdVisit(daughter.id);assert.equal(modalOpen,false);`);
 });
 

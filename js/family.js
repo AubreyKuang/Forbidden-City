@@ -197,7 +197,7 @@ function clanEcho(c,t){const ms=clanMembers(clanKey(c));ms.filter(o=>o!==c).forE
   ms.forEach(o=>o.fam.p=clamp(o.fam.p+(t==='up'?3:-6),0,95))}
 function clanLine(c){if(c.maid||!c.alive||c.gone)return '';if(!hasClan(c))return `<div>家族：出身${esc(c.fam.t)}，娘家没有倚仗</div>`;const k=clanKey(c),ms=clanMembers(k).filter(o=>o!==c);
   const kt=o=>(c.kin&&c.kin[o.id])?KIN_TXT[c.kin[o.id]]:'同族';
-  return `<div>家族：${esc(clanName(k))}　势力 ${rd(c.fam.p)}${ms.length?`　同族在宫：${ms.map(o=>`<span class="tag ${isRival(c,o)?'r':'g'}">${esc(cName(o))}·${kt(o)}${isRival(c,o)?'·不和':''}</span>`).join('')}`:''}</div>`}
+  return `<div>家族：${esc(clanName(k))}　势力 ${rd(c.fam.p)}${cousinFamiliesActive()?`　在宫妃嫔 ${clanPalaceCount(k)} 人`:""}${ms.length?`　同族在宫：${ms.map(o=>`<span class="tag ${isRival(c,o)?'r':'g'}">${esc(cName(o))}·${kt(o)}${isRival(c,o)?'·不和':''}</span>`).join('')}`:''}</div>`}
 function clanEvent(){
   for(const [k,family] of shuffle(clans())){const ms=family.filter(inPalace);if(ms.length<2)continue;const [a,b]=shuffle(ms),rv=isRival(a,b),kt=a.kin&&a.kin[b.id],r=R();
     if(rv&&r<.5)return {title:'嫡庶',present:[a,b],cast:[a,b],text:`${cName(a)}与${cName(b)}是${kt?.startsWith('亲')?'亲生':kt?.startsWith('堂')?'堂房':'同族'}姐妹，在娘家时一个是嫡出、一个是庶出，从小就不对付。今日请安，两人又为座次争了起来，家里的老夫人连夜递了牌子进宫。`,choices:[

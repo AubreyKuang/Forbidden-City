@@ -21,7 +21,7 @@ function fosterPetitionReason(c){
 function fosterPetitioner(c){return !!fosterPetitionReason(c);}
 function fosterPetitionMatch(c,k){
   const reason=fosterPetitionReason(c),m=byId(k?.mom),f=k&&fosterOf(k);
-  if(journalContentVersion()>=43&&f?.alive&&f.cold)return false;
+  if(journalContentVersion()>=44&&f?.alive&&f.cold)return false;
   if(!reason||!m||m===c||!childInPalace(k)||k.pendingName||kidAge(k)>=6||k.id===S.heir||
     motherOriginalRank(k)>=5||c.rank<=motherOriginalRank(k)||(f?.alive&&!f.cold&&!f.gone))return false;
   return childNeedsMother(k)||(['long-wait','frail-wish'].includes(reason)&&inPalace(m));
@@ -130,7 +130,7 @@ function coldFosterPetitioner(c,k){
     !S.children.some(other=>other.alive&&(other.mom===c.id||other.foster===c.id));
 }
 function coldFosterPetitionEvent(){
-  if(journalContentVersion()<43||S.over||mourningActive())return null;
+  if(journalContentVersion()<44||S.over||mourningActive())return null;
   const offers=[];
   for(const k of S.children){
     if(!k.foster||!childInPalace(k)||k.pendingName||kidAge(k)>=14)continue;
@@ -154,7 +154,7 @@ function coldFosterPetitionEvent(){
     ]};
 }
 function coldFriendPetitionEvent(){
-  if(journalContentVersion()<43||S.over||mourningActive())return null;
+  if(journalContentVersion()<44||S.over||mourningActive())return null;
   const offers=[];
   for(const fallen of S.consorts){
     const episode=coldPetitionEpisode(fallen,1);

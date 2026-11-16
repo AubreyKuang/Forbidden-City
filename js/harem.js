@@ -18,7 +18,7 @@ A.xxTake=function(id){const c=S.cands.find(x=>x.id===id);if(!c)return;
     if(r>=4&&!c.title)grantConsortTitle(c,pick(TITLES.filter(t=>!harem().some(x=>x.title===t))));
     const batch=selectionBatch();batch.accepted.push(c.id);
     c.entryAdjustment={turn:S.turn,manner:entryManner(c),settled:false,pendingBatch:true};save('auto');
- AU.sfx('joy');return `${fullName(c)}叩首谢恩，入住${c.palace}。${fx(s)}`}
+ AU.sfx('joy');return `${fullName(c)}叩首谢恩，入住${c.palace}。${fx(s)}${cousinFamiliesActive()&&c.cousinAdmissionText?"\n"+c.cousinAdmissionText:""}`}
   pushEv({title:'留牌子',por:c,text:`${fullName(c)}，年方${c.age}，${c.fam.t}之女。\n陛下欲赐何等位分？`,choices:[...ch,{t:'再想想'}]});
 };
 A.xxEnd=function(){if(modalOpen)return;finishSelection();save('auto');A.go(S.selection?.phase==='arrivals'?'xx':'harem')};

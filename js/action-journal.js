@@ -2,7 +2,7 @@
    never from serialized JavaScript. Each command owns its random draws and answers.
    The saved world remains the authority; replay is checked before it is displayed. */
 const PalaceActions=(()=>{
-  const version=43, excluded=new Set(['save','load','rewind','downloadSave','readSaveFile','undoImport','newGame','officialsFilter','officialsBloc','kidsKind','chronicleFilter','chronicleSearch','chronicleClear','chronicleThread']);
+  const version=44, excluded=new Set(['save','load','rewind','downloadSave','readSaveFile','undoImport','newGame','officialsFilter','officialsBloc','kidsKind','chronicleFilter','chronicleSearch','chronicleClear','chronicleThread']);
   const actions=new Map();
   let blocked=false,snapshotRequested=false,journal=null,depth=0,replaying=false,step=null,cursor=0,answer=0,saving=0,fields=null;
   const clone=x=>JSON.parse(JSON.stringify(x));
@@ -25,7 +25,7 @@ const PalaceActions=(()=>{
     if(replaying){if(cursor>=step.rolls.length)throw Error('Missing recorded roll');return step.rolls[cursor++];}
     const value=Math.random();step.rolls.push(value);return value;
   }
-  function settle(previous){if(familyOriginsActive())reconcileFamilyOffices();courtFamilyLifeTick(previous);queenHeirFeelings(previous);familyRiseTick(previous);maternalTick();dowagerFamilyChanges(previous);palacePrayerChanges(previous);familyRememberDeathAges(previous);if(S){if(typeof haremStewardChanges==='function')haremStewardChanges();syncChildDisgrace();childMotherConsequences(previous);marriageBondConsequences(previous);gouyiCrownSettled(previous);if(journal?.version>=3)settleExhaustedMonth(previous);}}
+  function settle(previous){reconcileCousinFamilies();if(familyOriginsActive())reconcileFamilyOffices();courtFamilyLifeTick(previous);queenHeirFeelings(previous);familyRiseTick(previous);maternalTick();dowagerFamilyChanges(previous);palacePrayerChanges(previous);familyRememberDeathAges(previous);if(S){if(typeof haremStewardChanges==='function')haremStewardChanges();syncChildDisgrace();childMotherConsequences(previous);marriageBondConsequences(previous);gouyiCrownSettled(previous);if(journal?.version>=3)settleExhaustedMonth(previous);}}
   function input(selector){return fields?fields[selector]:$(selector)?.value;}
   function payload(){return {...S,pendingActions:journal||S?.pendingActions};}
   function run(name,args,fn){
@@ -71,7 +71,7 @@ const PalaceActions=(()=>{
     }
   }
   function valid(j){
-    return !!j&&[2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,version].includes(j.version)&&(j.base===null||validPalaceSave(j.base))&&!j.base?.pendingActions&&
+    return !!j&&[2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,version].includes(j.version)&&(j.base===null||validPalaceSave(j.base))&&!j.base?.pendingActions&&
       record(j.ui)&&(j.draft===undefined||typeof j.draft==='string'&&j.draft.length<=128)&&Array.isArray(j.steps)&&j.steps.length>0&&j.steps.length<=2048&&j.steps.every(s=>
         record(s)&&(s.monthNotice===undefined||typeof s.monthNotice==='boolean')&&((s.name==='choose'&&s.args?.length===2&&Number.isInteger(s.args[0]))||
           (s.name==='next'&&s.args?.length===0)||actions.has(s.name))&&

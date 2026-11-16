@@ -64,7 +64,7 @@ function useE(){ if(!S||S.over) return false; if(E().energy<=0){toast('本月精
 /* ============ 人物生成 ============ */
 function makeGirl(o={}){
   const trait=o.trait||pickConsortTrait(), T=TRAITS[trait], fam=o.fam||pickW(FAMS);
-  let g1=pick(GIV),g2=pick(GIV); while(g2===g1) g2=pick(GIV);
+  let g1=pick(GIV),g2=pick(GIV),nameRerolls=0; while(g2===g1){g2=pick(GIV);if(journalContentVersion()>=43&&++nameRerolls>=32&&g2===g1)g2=GIV[(GIV.indexOf(g1)+1)%GIV.length];}
   const sur=o.sur||pick(SUR.filter(x=>!S||x!==S.emp.sur));
   const girl={id:S.nid++, sur, given:o.given||(chance(.45)?g1:g1+g2), age:o.age||ri(16,19), trait, fam,
     looks:clamp(ri(40,88)+(T.looks||0)), talent:clamp(ri(30,85)+(T.talent||0)), virtue:clamp(ri(30,85)+(T.virtue||0)), scheme:clamp(ri(15,75)+(T.scheme||0)),
@@ -474,7 +474,7 @@ A.start=function(){
   const old=makeGirl({});old.favor=55;old.aff=60;old.knownBeforeAccession=true;old.rank=3;S.consorts.push(old);assignPalace(old);story(old,'潜邸旧人，陪伴陛下多年。新帝登基，册为贵人。');
   log(`${era}元年三月，新帝${sur}${name}登基，改元${era}，大赦天下。`,1);
   log(`册嫡妻${fullName(em)}为皇后，潜邸旧人${fullName(old)}为贵人。`);
-  migrate();UI.view='map';setScene('court');AU.sfx('gong');render();
-  pushEv({title:'登基',scene:'coronation',por:'emp',text:`${era}元年三月，先帝龙驭上宾，你在太和钟声中登上了宸极殿的御座。\n嫡妻${fullName(em)}册为皇后，潜邸旧人${fullName(old)}册为贵人。\n礼部奏请：新帝登基，当广选秀女，以充后宫、绵延皇嗣。`,choices:[
+  migrate();initializeMinistryRoster();initializeDowagerOpening();UI.view='map';setScene('court');AU.sfx('gong');render();
+  pushEv({title:'登基',scene:'coronation',por:'emp',text:`${era}元年三月，先帝龙驭上宾，你在太和钟声中登上了宸极殿的御座。\n嫡妻${fullName(em)}册为皇后，潜邸旧人${fullName(old)}册为贵人。${dowagerCareActive()&&em.dowagerKin?"\n皇后亦是太后母家侄女，宫中有潜邸夫妻与母族两层亲缘。":""}\n礼部奏请：新帝登基，当广选秀女，以充后宫、绵延皇嗣。`,choices:[
     {t:'进入宫城',primary:true},{t:'准奏，即刻选秀',f:()=>{genCands(7);UI.view='xx';return null}}]});
 };

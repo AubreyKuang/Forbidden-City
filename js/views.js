@@ -166,7 +166,7 @@ function familyGraphSVG(){
     const left=x(group.indices[0]),right=x(group.indices.at(-1)),center=(left+right)/2;
     backgrounds+=`<rect x="${left-col/2+3}" y="4" width="${right-left+col-6}" height="${H-8}" rx="9" fill="#fffaec" fill-opacity=".48" stroke="#cbb594"/>`;
     cards+=`<div class="graph-card graph-clan${group.key===maternal?' maternal-clan':''}" data-clan="${esc(group.key)}" style="${at(center,clanY,clanHeight)};width:${Math.min(320,right-left+cardWidth)}px">
-      ${label(group.label,group.key===maternal?'太后母家 · 同族系谱':group.fathers.size>1?'同族 · 按父亲分房':'父系家谱')}</div>`;
+      ${label(group.label,(cousinFamiliesActive()?'在宫妃嫔 '+(hasClan(people[group.indices[0]])?clanPalaceCount(group.key):group.indices.filter(i=>people[i].alive&&!people[i].gone&&!people[i].maid).length)+' 人 · ':'')+(group.key===maternal?'太后母家 · 同族系谱':group.fathers.size>1?'同族 · 按父亲分房':'父系家谱'))}</div>`;
     const branches=[...group.fathers.values()];
     const fatherX=branch=>(x(branch.indices[0])+x(branch.indices.at(-1)))/2;
     wires+=`<path d="M${center} ${clanY+clanHeight} V80 M${fatherX(branches[0])} 80 H${fatherX(branches.at(-1))}" fill="none" stroke="#a68b68" stroke-dasharray="4 3"/>`;
@@ -367,7 +367,7 @@ function viewConsort(){
     <p>${esc(fullName(c))} · ${c.age}岁 · ${c.alive?c.gone?'已出宫':c.homeLeave?'娘家 · 暂离宫中':c.templeStay?'护国寺':esc(residenceLabel(c)):esc(c.deathReason||'已故')}</p>
     <h2>${esc(cName(c))}</h2>${consortHomePlace(c)?`<button class="btn sm jade" onclick="A.visitConsortHome(${c.id})">去宫里看看 →</button>`:''}
     <p>${esc(c.fam.t)} · ${esc(c.trait)} ${solitaryTag(c)}${c.preg>=2?` <span class="tag r">有孕${c.preg}月</span>`:''}</p>
-    ${c.imperialKin?`<p class="hint">入宫亲缘 · ${esc(c.imperialKin.relation)}，经${esc(c.imperialKin.via)}引见。</p>`:''}
+    ${dowagerCareActive()&&c.dowagerKin?.gen===S.gen?`<p class="hint">太后母家侄女 · 陛下的母族表亲；潜邸时奉先帝之命成婚。</p>`:c.imperialKin?`<p class="hint">入宫亲缘 · ${esc(c.imperialKin.relation)}，经${esc(c.imperialKin.via)}引见。</p>`:''}
     ${PORTRAIT_CLOTHES[portraitCell(c)]?`<p>衣着 · ${PORTRAIT_CLOTHES[portraitCell(c)]}</p>`:''}
     ${characterVoiceHTML(c)}${daoPracticePanel(c)}
    </div></header>
