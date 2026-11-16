@@ -40,3 +40,32 @@ test('a prior-reign prince retains the same residence and can be visited there',
     assert.equal(princeEstateById(prince.id),prince);A.royalKinContact(prince.id,true);assert.equal(curEv.title,'王府 · 到府探望');
     choose(1);drain();assert.ok(prince.story.some(x=>x.t.includes('到王府看望皇弟承安')));`);
 });
+
+test('quarterly reports summarize the fiefs and only include weddings registered recently',()=>{
+  const game=princeWorld();game.run(`S.month=3;prince.away=true;
+    var other=makeKid(a,'m','承宁');other.born=prince.born;other.pendingName=false;other.away=true;other.adult=true;
+    var local=makeKid(a,'m','承宣');local.born=prince.born;local.pendingName=false;local.adult=true;openPrinceEstate(local);
+    prince.married=true;prince.spouse={...marriageCandidate(prince,'scholar'),marriedAt:S.turn};ensureMarriedLife(prince);
+    assert.equal(princeQuarterReports(),null);A.endMonth();
+    var summary=[curEv,...Q].filter(e=>e?.title==='王府长史 · 季度奏报');assert.equal(summary.length,1);
+    assert.match(summary[0].text,/睿亲王府.*禄米、王府修缮、婚礼用度/);
+    assert.match(summary[0].text,/承宁王府.*禄米、王府修缮/);assert.doesNotMatch(summary[0].text,/承宣/);
+    assert.equal(princeDocketPending(prince).length,3);assert.equal(princeDocketPending(other).length,2);
+    assert.equal(princeQuarterReports(),null);drain();`);
+});
+
+test('deferred quarterly items survive reload and funding cannot spend twice or overdraw',()=>{
+  let game=princeWorld();game.run(`S.month=4;prince.away=true;princeQuarterReports();var id=prince.id;
+    A.princeDocket(id,'grain');choose(2);drain();assert.equal(princeDocketPending(prince).length,2);
+    E().treasury=5;A.princeDocket(id,'grain');assert.equal(curEv.choices[0].cond(),false);assert.equal(curEv.choices[1].cond(),false);choose(2);drain();
+    E().treasury=50;A.princeDocket(id,'repair');save('auto');`);
+  game=boot(481,game.storage);game.ctx.assert=assert;
+  game.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);var prince=S.children.find(k=>k.name==='承安'),id=prince.id;
+    assert.equal(curEv.title,'长史奏报 · 王府修缮');var fund=curEv.choices[0].f;
+    choose(0);assert.equal(fund(),null);drain();assert.equal(E().treasury,30);
+    assert.ok(prince.story.some(x=>x.t.includes('国库拨银20万两')));assert.equal(S.log.filter(x=>x.t.includes('国库拨银20万两')).length,1);
+    S.turn+=3;S.month=7;assert.equal(princeQuarterReports(),null);assert.equal(princeDocketPending(prince).length,1);
+    A.princeDocket(id,'grain');choose(1);drain();assert.equal(E().treasury,24);
+    S.turn+=3;S.month=10;assert.ok(princeQuarterReports());assert.equal(princeDocketPending(prince)[0].kind,'grain');
+  `);
+});
