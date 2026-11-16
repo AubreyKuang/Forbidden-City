@@ -308,9 +308,9 @@ function setXin(c,k,why,who,{record=true}={}){if(!c||!c.alive||!XIN[k])return;co
   if(cur===k){c.xin.t=S.turn;c.xin.why=why;if(who)c.xin.who=who;return}
   c.xin={k,t:S.turn,why,who:who||null};if(k!=='平和'&&c.xinLog!==k+why){if(record)story(c,`【心境·${k}】${why}。`);c.xinLog=k+why}}
 function xinLine(c){const x=c.xin;if(!x||x.k==='平和')return '';if(x.k==='悲恸'&&!/孩子|骨肉|胎|皇子|公主/.test(x.why||''))return '她把旧物收拢又展开，说起难过的事时，声音低了下去。';const w=x.who&&x.who!=='emp'?byId(x.who):null;return pick(XIN[x.k].lines).replace('{who}',w?cName(w):'旁人')}
-function xinTag(c){const k=xinOf(c);return k==='平和'?'':`<span class="tag ${XIN[k].c}">${k}</span>`}
-function xinDetail(c){const k=xinOf(c);if(k==='平和')return '<div style="margin-top:4px">心境：<span class="tag">平和</span></div>';const x=c.xin,m=S.turn-x.t;
-  return `<div style="margin-top:4px">心境：<span class="tag ${XIN[k].c}">${k}</span> <span class="hint">因${esc(x.why)}${m>0?`，已 ${m} 个月`:''}${NEGX.includes(k)?'。多去陪她说话，或成全她的心愿，也许能解开':''}</span></div>`}
+function xinTag(c){const k=xinOf(c);return k==='平和'?'':`<span class="tag mood-tag">${k}</span>`}
+function xinDetail(c){const k=xinOf(c);if(k==='平和')return '<div style="margin-top:4px">心境：<span class="tag mood-tag">平和</span></div>';const x=c.xin,m=S.turn-x.t;
+  return `<div style="margin-top:4px">心境：<span class="tag mood-tag">${k}</span> <span class="hint">因${esc(x.why)}${m>0?`，已 ${m} 个月`:''}${NEGX.includes(k)?'。多去陪她说话，或成全她的心愿，也许能解开':''}</span></div>`}
 function xinTick(c){if(!c.alive||c.gone)return;
   if(c.cold){if(c.coldT===undefined)c.coldT=S.turn}else delete c.coldT;
   const x=c.xin,k=xinOf(c);

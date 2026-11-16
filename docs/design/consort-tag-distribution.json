@@ -1,0 +1,143 @@
+{
+  "samples": 18000,
+  "seeds": 30,
+  "batchesPerSeed": 100,
+  "source": "Real genCands() with the two opening consorts, no admissions, ageing or stat growth; seeds 17001–17030. Special story consorts excluded.",
+  "distribution": {
+    "looks": {
+      "present": 18000,
+      "missing": 0,
+      "min": 40,
+      "median": 65,
+      "p90": 85,
+      "p95": 87,
+      "max": 96
+    },
+    "talent": {
+      "present": 18000,
+      "missing": 0,
+      "min": 30,
+      "median": 60,
+      "p90": 82,
+      "p95": 85,
+      "max": 100
+    },
+    "virtue": {
+      "present": 18000,
+      "missing": 0,
+      "min": 30,
+      "median": 59,
+      "p90": 81,
+      "p95": 84,
+      "max": 97
+    },
+    "scheme": {
+      "present": 18000,
+      "missing": 0,
+      "min": 0,
+      "median": 46,
+      "p90": 71,
+      "p95": 74,
+      "max": 99
+    },
+    "hp": {
+      "present": 0,
+      "missing": 18000
+    }
+  },
+  "baseline": {
+    "looksOver85": 8.32,
+    "talentOver80": 13.53,
+    "virtueOver80": 11.54,
+    "weakPersonality": 5.31
+  },
+  "rules": [
+    {
+      "name": "沉鱼落雁",
+      "condition": "容貌 >90",
+      "count": 235,
+      "percent": 1.31
+    },
+    {
+      "name": "咏絮之才",
+      "condition": "才情 ≥95",
+      "count": 246,
+      "percent": 1.37
+    },
+    {
+      "name": "才貌双绝",
+      "condition": "容貌 ≥85、才情 ≥90",
+      "count": 48,
+      "percent": 0.27
+    },
+    {
+      "name": "蕙质兰心",
+      "condition": "德行 ≥90",
+      "count": 224,
+      "percent": 1.24
+    },
+    {
+      "name": "深藏不露",
+      "condition": "心机 ≥90",
+      "count": 140,
+      "percent": 0.78
+    },
+    {
+      "name": "赤子之心",
+      "condition": "心机 ≤10、德行 ≥75",
+      "count": 75,
+      "percent": 0.42
+    },
+    {
+      "name": "书卷清芬",
+      "condition": "爱好读书、才情 ≥90",
+      "count": 120,
+      "percent": 0.67
+    },
+    {
+      "name": "琴心雅韵",
+      "condition": "爱好抚琴、才情 ≥90",
+      "count": 96,
+      "percent": 0.53
+    },
+    {
+      "name": "绣心巧手",
+      "condition": "巧手性格、爱好刺绣、才情 ≥85",
+      "count": 46,
+      "percent": 0.26
+    },
+    {
+      "name": "丹青妙笔",
+      "condition": "喜爱字画、才情 ≥90",
+      "count": 61,
+      "percent": 0.34
+    },
+    {
+      "name": "弓马娴熟",
+      "condition": "将门性格，且擅骑射或喜爱弓马",
+      "count": 133,
+      "percent": 0.74
+    },
+    {
+      "name": "寒门明珠",
+      "condition": "明确出身寒门、才情 ≥90",
+      "count": 44,
+      "percent": 0.24
+    },
+    {
+      "name": "人淡如菊",
+      "condition": "淡泊性格、心机 ≤10、德行 ≥80",
+      "count": 45,
+      "percent": 0.25
+    },
+    {
+      "name": "玲珑心窍",
+      "condition": "才情 ≥90、心机 ≥70",
+      "count": 72,
+      "percent": 0.4
+    }
+  ],
+  "any": 6.99,
+  "multiple": 1.46,
+  "maximum": 4
+}

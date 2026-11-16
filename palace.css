@@ -940,3 +940,4 @@ button.family-room-person{cursor:pointer}button.family-room-person:hover{color:#
 .family-branch[data-family-key]>summary .family-visibility{margin-left:auto}
 .family-branch.family-hidden>summary{color:var(--muted,#806b5e)}
 .tag.dowager-kin-tag{background:#e4e4e2;color:#5c5c59;border:1px solid #c6c6c2}
+.tag.mood-tag{background:#f5dce7;color:#85435e;border:1px solid #e5b6c9}
