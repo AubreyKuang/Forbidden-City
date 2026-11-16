@@ -384,6 +384,7 @@ function viewConsort(){
     ['family','家人与孩子',
       actionGroup('探亲与省亲',familyActions)+
       natalVisitorsPanel(c)+
+      sisterPalaceConcernPanel(c)+
       detailSection('家族与人际',`${kids.length?`<div>子女：${kids.map(k=>`<button class="btn quiet sm" onclick="A.go('kid',${k.id})">${esc(k.name)}</button>`).join(' ')}</div>`:''}${family}`)+
       marriedSisterChildrenPanel(c)+
       (act?detailSection('与孩子的日常',consortFamilyPanel(c)):'')+
@@ -452,7 +453,7 @@ function viewKid(){
     ${a<14?`<button class="btn" onclick="A.foster(${k.id})">${foster?'换一位养母':'交给妃嫔抚养'}</button>`:''}
     ${foster&&mom?.alive?`<button class="btn" onclick="A.unfoster(${k.id})">抱回生母身边</button>`:''}</div>`:'';
   const titles=k.alive&&!k.removedFromRoyal&&!k.templeStay&&!immortalAway(k)?`${k.sex==='m'&&a>=5&&S.heir!==k.id?`<button class="btn" onclick="A.kidHeir(${k.id})">立为太子</button>`:''}
-    ${a>=12?`<button class="btn" onclick="A.kidTitle(${k.id})">赐封号</button>`:''}`.trim():'';
+    ${(journalContentVersion()>=40?royalChildTitleReady(k):a>=12)?`<button class="btn" onclick="A.kidTitle(${k.id})">赐封号</button>`:''}`.trim():'';
   return `${personBackButton('kids')}
    <header class="detail-head">${porImg(k,224)}<div class="grow"><p>${status}</p><h2>${esc(kidName(k))}</h2>
     <p>生母 ${outsideMotherLink(k)}${foster?` · 养母 ${parentLink(k.foster)}`:''}</p>${childResidence(k)?`<p class="hint">${esc(childResidence(k))}</p><button class="btn sm jade" onclick="A.visitChildHome(${k.id})" ${youngChildMother(k)?'':'disabled'}>去宫里看看 →</button>`:''}${birthTags(k)}${childHasLeftPalace(k)?`<p class="hint">居处 · ${esc(childWhereabouts(k))}</p>`:''}${characterVoiceHTML(k)}${daoPracticePanel(k)}</div></header>

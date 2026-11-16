@@ -3,8 +3,8 @@ const marriedSisterAffairsActive=()=>journalContentVersion()>=34;
 
 function marriedSisterAvailable(c,p){
   return marriedSisterAffairsActive()&&!S.over&&!mourningActive()&&inPalace(c)&&p?.sex==='f'&&p.alive&&!p.consortId&&
-    !p.parentRelativeId&&!p.motherRelativeId&&p.married&&p.spouse?.alive!==false&&!!p.spouse&&!p.widow&&natalAge(p)>=18&&
-    (!p.spouse.personId||officialAlive(maritalFather(p,null)?.p));
+    !p.parentRelativeId&&!p.motherRelativeId&&p.married&&p.spouse?.alive!==false&&(!!p.spouse||journalContentVersion()>=40)&&!p.widow&&natalAge(p)>=18&&
+    (!p.spouse?.personId||officialAlive(maritalFather(p,null)?.p));
 }
 
 function marriedSisterVisitButton(c,p){
@@ -12,11 +12,12 @@ function marriedSisterVisitButton(c,p){
   if(!marriedSisterAvailable(c,p))return '';
   if(affair?.coerced)return '<p class="hint">她请家人谢绝私下求见。</p>';
   const exhausted=affair?.lastMeeting===S.turn;
-  return `<button class="btn quiet" onclick="A.marriedSisterVisit(${c.id},${p.id})" ${exhausted?'disabled':''}>${natalInPalace(c,p)?'在宫中私下求见':'到她的住所求见'}${exhausted?'<small>本月已经见过</small>':''}</button>`;
+  return `<button class="btn primary" onclick="A.marriedSisterVisit(${c.id},${p.id})" ${exhausted?'disabled':''}>${natalInPalace(c,p)?'在宫中私下求见':'到她的住所求见'}${exhausted?'<small>本月已经见过</small>':''}</button>`;
 }
 
 function marriedSisterEncounter(c,p){
   if(!marriedSisterAvailable(c,p)||p.marriedSisterAffair?.coerced||p.marriedSisterAffair?.lastMeeting===S.turn)return null;
+  p.spouse ||= initialNatalSpouse(p,natalAge(p));
   const gen=S.gen,turn=S.turn,spouse=p.spouse,inPalaceNow=natalInPalace(c,p);
   const affair=p.marriedSisterAffair?.spouseId===spouse.id?p.marriedSisterAffair:(p.marriedSisterAffair={
     spouseId:spouse.id,receptive:p.willing!==false&&chance(['活泼','爽直'].includes(p.trait)? .48 : .32),meetings:0

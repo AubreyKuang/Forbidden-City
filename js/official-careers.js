@@ -176,29 +176,75 @@ function careerReportsHTML(){
 function courtFamilyLifeTick(previous){
   repairFamilyConcernWording();
   if(!careersActive()||!previous||previous.gen!==S.gen)return;
+  const expanded=journalContentVersion()>=40;
   const before=new Map((previous.consorts||[]).map(c=>[c.id,c]));
   for(const c of S.consorts){
     const old=before.get(c.id);if(!old)continue;
     const newborn=S.children.filter(k=>k.mom===c.id&&!(previous.children||[]).some(o=>o.id===k.id));
-    const kind=old.alive&&!c.alive?'death':!old.cold&&c.cold?'cold':c.rank<old.rank?'demoted':newborn.length?'birth':old.preg<2&&c.preg>=2?'pregnancy':old.favor<70&&c.favor>=70?'favored':old.favor>=25&&c.favor<25?'neglected':old.cold&&!c.cold?'released':null;
+    const kind=old.alive&&!c.alive?'death':!old.cold&&c.cold?'cold':expanded&&old.cold&&!c.cold?'released':c.rank<old.rank?'demoted':
+      newborn.length?'birth':old.preg<2&&c.preg>=2?'pregnancy':expanded&&c.rank>old.rank?'promoted':
+      old.favor<70&&c.favor>=70?'favored':old.favor>=25&&c.favor<25?'neglected':old.cold&&!c.cold?'released':null;
     if(!kind)continue;
+    const key=`${c.id}:${kind}`,stamp=`${S.turn}:${newborn.map(k=>k.id).join(',')}${kind==='promoted'?':'+c.rank:''}`;
+    const fact={death:'去世',cold:'被迁入冷宫',demoted:`由${RANKS[old.rank]}降为${RANKS[c.rank]}`,promoted:`由${RANKS[old.rank]}晋为${RANKS[c.rank]}`,birth:`诞育${newborn.map(k=>kidName(k)).join('、')}`,pregnancy:'有孕的消息传到家中',favored:'近来颇得圣眷',neglected:'近来少有召见',released:'获准离开冷宫'}[kind];
+    if(expanded)recordSisterPalaceConcerns(c,old,kind,fact,key,stamp);
     for(const person of careerPeople().filter(x=>officialAlive(x.p))){
       const r=careerKin(person).find(r=>r.c.id===c.id);if(!r)continue;
       if(r.type!=='blood'&&!['cold','demoted','birth','death'].includes(kind))continue;
-      const key=`${c.id}:${kind}`,stamp=`${S.turn}:${newborn.map(k=>k.id).join(',')}`;
       if(person.p.palaceConcerns?.[key]===stamp)continue;
       (person.p.palaceConcerns ||= {})[key]=stamp;
-      const sober=['持正','谨慎'].includes(person.p.temperament),fact={death:'去世',cold:'被迁入冷宫',demoted:`由${RANKS[old.rank]}降为${RANKS[c.rank]}`,birth:`诞育${newborn.map(k=>kidName(k)).join('、')}`,pregnancy:'有孕的消息传到家中',favored:'近来颇得圣眷',neglected:'近来少有召见',released:'获准离开冷宫'}[kind];
+      const sober=['持正','谨慎'].includes(person.p.temperament);
       let quote={death:'旧信还收在匣中，今后却再也等不到她的回信了。',cold:'臣不敢以家事乱国法，只求她有衣御寒、有药可医。',demoted:sober?'臣会写信劝她自省。只是做家人的，到底免不了担心。':'臣想听听她的近况。她性子里的委屈，可有人肯听？',birth:'母子可都平安？家中已备下小衣裳，只盼她好好将养。',pregnancy:'她打小就不肯轻易说难受。还望御医多问一句，别让她独自硬撑。',favored:sober?'家中自是欢喜，也会劝她慎言守礼，不可仗着圣眷失了分寸。':'听说她过得顺遂，家中悬着的心才放下。',neglected:'家书只说一切都好。臣却怕她报喜不报忧，把失落都藏着。',released:'知道她离了冷宫，臣一夜未眠，总算能往家里报个平安。'}[kind];
       if(familyJusticeActive()&&['cold','demoted','death'].includes(kind)){
         const context=familyPenaltyContext(c,old);
         if(kind!=='death'||context.known==='guilty')quote=familyPenaltyQuote(person.p,context);
       }
+      if(kind==='promoted')quote=familyPromotionThought(c,r.label);
       const text=`【宫中牵挂】得知${fullName(c)}${fact}，${person.p.name}道：“${quote}”`;
       story(person.p,text);log(text);person.p.palaceConcern={c:c.id,kind,turn:S.turn,quote};
-      if(c.alive&&!c.gone){const line=`【娘家来信】${r.label}${person.p.name}得知${familyJusticeActive()?fullName(c):'自己'}${fact}，托人传话：“${quote}”`;story(c,line);NPCMemory.record(S,{type:'family-concern',time:S.turn,participants:[c.id,person.p.id],object:fact},[{person:c.id,subject:person.p.id,interpretation:line,emotion:kind==='favored'||kind==='birth'?.4:-.4,impact:75}]);}
+      if(c.alive&&!c.gone){const line=`【娘家来信】${r.label}${person.p.name}得知${familyJusticeActive()?fullName(c):'自己'}${fact}，托人传话：“${quote}”`;story(c,line);NPCMemory.record(S,{type:'family-concern',time:S.turn,participants:[c.id,person.p.id],object:fact},[{person:c.id,subject:person.p.id,interpretation:line,emotion:['favored','birth','promoted'].includes(kind)?.4:-.4,impact:75}]);}
     }
   }
+}
+function familyPromotionThought(c,role){
+  const roots=familyUpbringing(c),kin=role==='父亲'?'女儿':role==='弟弟'?'姐姐':'妹妹';
+  if(roots.means==='ample'||roots.power>=55)return role==='父亲'?
+    '听说女儿晋位，我替她高兴。家里的事也要料理稳妥，她受了委屈时，还有娘家可以依仗。':
+    `我为${kin}高兴，也想把手上的事办得再稳些。她往后若有难处，可以先同自家人说几句心里话。`;
+  if(['humble','farm'].includes(roots.group)||roots.means==='modest')return role==='父亲'?
+    '得知女儿晋位，我心里欢喜。家里的生计还得自己撑起，才好叫她在宫里少一重牵挂。':
+    `知道${kin}得了喜信，我也想发奋学些本事，替家里多分担一点，让她少为我挂心。`;
+  return `我把${kin}晋位的家书留好。托人道贺时，也想问她近日过得如何。`;
+}
+function recordSisterPalaceConcerns(c,old,kind,fact,key,stamp){
+  const h=houseOf(c);if(!h)return;
+  const sisters=[...natalPeople(h).filter(p=>p.sex==='f'&&!p.parentRelativeId&&!p.motherRelativeId&&natalAge(p)>=6),
+    ...paternalFamily(c).filter(p=>p!==c&&S.consorts.includes(p)&&!p.gone)];
+  const cause=['cold','demoted'].includes(kind)?familyPenaltyContext(c,old):null;
+  for(const p of sisters){
+    if(!p.alive||p.palaceConcerns?.[key]===stamp)continue;
+    const close=relGet(c,p)>=25,name=p.name||fullName(p);
+    const quote={
+      promoted:close?'她这些年在宫里也有辛苦。听见晋位，我是真替她欢喜，也盼她得空说说近况。':'新位分有新规矩，也有更多人看着她。道贺的话要说，也想问她近日可还安稳。',
+      cold:cause?.known==='guilty'?`既然${cause.crime}已查实，只盼她知错守规。我想问问能否依例送衣药去。`:'消息只说她去了冷宫，缘由我还没听全。先托人问一句，她身边可有御寒的衣裳？',
+      demoted:cause?.known==='guilty'?`听说${cause.crime}已经查实，我心里很不好受。盼她把该认的错认下，也保重身子。`:'听说她受了降罚，我想等家书说清原委，再问问她缺些什么。',
+      released:'听说她已离了冷宫，才敢松一口气。先让她歇几日，想说话时再听她慢慢说。',
+      neglected:'听说近日少有召见，也不知她愿不愿提这些事。我还是想问问她过得好不好。',
+      favored:'知道她近来得眷，我替她高兴。下回写信，想听听她近来喜欢做什么。',
+      pregnancy:'宫里有了喜信，我先想着她近来吃睡如何，也想知道可有人好好照料她。',
+      birth:'听说家里添了孩子，我替她高兴，也盼她这些日子能安心将养。',
+      death:'家里报了死讯。我又翻了一遍她早些年写的信，想起那时还说来日再见。'
+    }[kind];
+    (p.palaceConcerns ||= {})[key]=stamp;
+    p.palaceConcern={c:c.id,kind,turn:S.turn,date:dateStr(),quote,sister:true};
+    story(p,`【宫中牵挂】${name}听说${fullName(c)}${fact}，记下：“${quote}”`);
+    Object.assign(p.story.at(-1),{thread:`sister-palace:${S.gen}:${c.id}:${p.id}:${kind}:${stamp}`,
+      life:{kind:'family',title:'宫中牵挂',turn:S.turn,gen:S.gen,people:[{id:p.id,name},{id:c.id,name:fullName(c)}],source:'姐妹间的消息'}});
+  }
+}
+function sisterPalaceConcernPanel(p){
+  const note=p.palaceConcern,c=note?.sister&&byId(note.c);
+  return c?detailSection('宫中牵挂',`<p>${esc(note.date)} · <button class="person-link" onclick="A.go('consort',${c.id})">${esc(fullName(c))} ↗</button></p><p>${esc(note.quote)}</p>`):'';
 }
 const careersBaseConversation=officialConversation;
 officialConversation=function(e,topic){const n=e.p.palaceConcern,c=n&&byId(n.c);return topic==='family'&&n&&c&&S.turn-n.turn<=12?`“${fullName(c)}的事，臣仍记挂着。${n.quote}”`:careersBaseConversation(e,topic);};

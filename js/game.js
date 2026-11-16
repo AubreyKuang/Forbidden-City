@@ -156,8 +156,8 @@ function openModal(ev){
   const choicePeople=new Set(ev.choices.filter(c=>c.portrait||c.person).map(c=>(c.portrait||c.person).id??c.person));
   const showChoicePortraits=choicePeople.size>1;
   const arrival=ev.scene==='palace-arrival';
-  let h=`<h2 class="mtitle" id="event-title" tabindex="-1">${esc(ev.title)}</h2>${ev.scene==='mourning'?mourningScene():''}${eventIllustration(ev.illustration)}${arrival?palaceArrivalHTML(ev):eventCast(people,ev)}<div class="mbody"${arrival?' hidden':''}>`;
-  if(people.length===1)h+=`<div class="mpor">${porImg(people[0],112)}<div>${esc(porName(people[0]))}</div></div>`;
+  let h=`<h2 class="mtitle" id="event-title" tabindex="-1">${esc(ev.title)}</h2>${ev.scene==='mourning'?mourningScene():''}${eventIllustration(ev.illustration)}${arrival?palaceArrivalHTML(ev):ev.gardenTables?banquetSeating(ev.gardenTables):eventCast(people,ev)}<div class="mbody"${arrival?' hidden':''}>`;
+  if(people.length===1&&!ev.gardenTables)h+=`<div class="mpor">${porImg(people[0],112)}<div>${esc(porName(people[0]))}</div></div>`;
   h+=`<div class="mtext">${ev.jewelry?`<figure class="event-jewelry">${jewelryImage(ev.jewelry,88)}<figcaption>${esc(JEWELRY[ev.jewelry]?.name||'')}</figcaption></figure>`:''}${fmt(ev.text)}${ev.ref?`<p class="ref">典出 · ${ev.refURL?`<a href="${esc(ev.refURL)}" target="_blank" rel="noopener noreferrer">${esc(ev.ref)}</a>`:esc(ev.ref)}</p>`:''}${ev.input?`<input id="minput" class="inp" maxlength="${ev.input.max||4}" value="${esc(ev.input.def||'')}" aria-label="输入">`:''}</div></div><div class="mch${showChoicePortraits?' event-choices':''}">`;
   ev.choices.forEach((c,i)=>{
     const ok=!c.cond||c.cond();

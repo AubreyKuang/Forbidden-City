@@ -35,6 +35,7 @@
 .chapter-body .life-chapters h4{font-size:14px}
 .natal-visitor{display:flex;align-items:center;gap:10px;padding:6px 10px;background:#fff3cf;border:2px solid var(--gold2);border-radius:8px}
 .natal-visitor>.grow{min-width:0}
+.natal-visitor+.natal-visitor{margin-top:8px}
 .action-group{padding:14px 16px;background:#f4ead8;border:1px solid #dfccb0;border-radius:10px;min-width:0}
 .action-group-label{margin:0 0 10px;font-size:13px;color:#715139;font-weight:700}
 .action-group .acts{margin:0;gap:8px}
@@ -84,6 +85,23 @@
 .residence-person>span{min-width:0;overflow-wrap:anywhere}
 .banquet-seats li{padding:12px 0;border-bottom:1px solid #dfccb0}
 .banquet-seats .acts{display:flex;gap:8px;margin:8px 0}
+.garden-table-layout{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,245px),1fr));gap:12px;margin:14px 0}
+.garden-table-layout:has(>.garden-table:only-child){max-width:480px;margin-inline:auto}
+.garden-table{display:grid;grid-template-columns:minmax(0,1fr) minmax(48px,.6fr) minmax(0,1fr);gap:8px;align-items:center;padding:12px;background:#f7ecda;border:1px solid #e1c8a5;border-radius:12px}
+.garden-table-heading{grid-column:1/-1;grid-row:1;display:flex;align-items:center;justify-content:center;gap:12px;color:#65402f}
+.garden-table-host{display:flex;align-items:center;gap:6px;font-size:13px}
+.garden-table-top{grid-area:2/2/4/3;align-self:stretch;display:flex;flex-direction:column;align-items:center;justify-content:space-evenly;gap:5px;min-height:90px;border-radius:24px;border:4px solid #a16b49;background:linear-gradient(90deg,#733e2d,#935a3d 49%,#733e2d);box-shadow:inset 0 0 0 1px #e0b47d,0 3px #5b33273b}
+.garden-table-top span{display:block;width:clamp(15px,3vw,25px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#8aaf9c 30%,#e9e6cb 32% 58%,#a5c4ae 61% 70%,#e6dac1 72%);box-shadow:0 2px 3px #37251b66}
+.garden-table-seats{display:contents}
+.garden-table-seat{display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px;min-width:0;margin:0;color:#563829}
+.garden-table-seat:nth-child(1){grid-area:2/1}
+.garden-table-seat:nth-child(2){grid-area:2/3}
+.garden-table-seat:nth-child(3){grid-area:3/3}
+.garden-table-seat:nth-child(4){grid-area:3/1}
+.garden-table-seat span{display:grid;line-height:1.3;overflow-wrap:anywhere}
+.garden-table-seat small{color:#806653;font-size:11px}
+.garden-table-seat strong{font-size:13px}
+.garden-table-seat .por,.garden-table-host .por{display:block;max-width:100%;height:auto;border-radius:8px;background:#e5d3b3}
 @media(max-width:600px){
  .page-heading{flex-direction:column;gap:12px;margin-bottom:16px}
  .page-tools{max-width:100%;justify-content:flex-start;width:100%}

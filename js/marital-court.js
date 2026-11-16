@@ -106,7 +106,9 @@ natalLifePanel=function(c,p){
 function natalVisitorsPanel(c){
   if(!inPalace(c))return '';
   const visitors=natalPeople(houseOf(c)).filter(p=>p.visit&&p.visit.host===c.id&&natalInPalace(c,p));
-  const relatives=visitors.map(p=>`<div class="natal-visitor"><div class="grow">${natalLabel(c,p)} <button class="person-link" onclick="A.go('natal','${c.id}:${p.id}')">${esc(p.name)} ↗</button> <span class="tag">${esc(natalStayLabel(p))}</span></div></div>`).join('');
+  const relatives=visitors.map(p=>natalVisitorRow(natalPortrait(p),
+    `${esc(natalLabel(c,p))} <button class="person-link" onclick="A.go('natal','${c.id}:${p.id}')"><b>${esc(p.name)}</b> ↗</button>`,
+    c.palace,p.visit.until-S.turn,'归家')).join('');
   return detailSection('娘家亲眷在宫中',motherVisitorRow(c)+relatives);
 }
 function natalSpouseSummary(p){

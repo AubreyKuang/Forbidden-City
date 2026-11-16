@@ -209,10 +209,12 @@ function visitorEvent(){const vs=alive().filter(c=>c.visitor&&inPalace(c)&&S.tur
     {t:'赐座，闲话家常',f:()=>{story(c,`母亲${v.name}在宫中时，陛下赐座与她说了许久的话。`);return fx(cchg(c,{aff:6,mood:10}))}},
     {t:'赏她一柄玉如意（国库-5万两）',f:()=>fx(chg({treasury:-5}),cchg(c,{aff:4,mood:6}))},
     {t:'“夫人不必多礼。”',f:()=>fx(cchg(c,{mood:3}))}]}}
+function natalVisitorRow(portrait,identity,palace,left,departure,detail=''){
+  return `<div class="natal-visitor">${porImg(portrait,44)}<div class="grow">${identity}正在${esc(palace)}小住，${left>0?`还有 ${left} 个月${departure}`:`本月${departure}`}。${detail?`<div class="hint">${detail}</div>`:''}</div></div>`;
+}
 function motherVisitorRow(c){
   const v=c.visitor;if(!v)return '';
-  const left=v.until-S.turn;
-  return `<div class="natal-visitor">${porImg(momObj(c),44)}<div class="grow">母亲 <b>${esc(v.name)}</b>（${esc(v.full)}）正在${esc(c.palace)}小住，${left>0?`还有 ${left} 个月出宫`:'本月出宫'}。<div class="hint">母亲在宫的日子，她每月心情都会好一些。</div></div></div>`;
+  return natalVisitorRow(momObj(c),`母亲 <b>${esc(v.name)}</b>（${esc(v.full)}）`,c.palace,v.until-S.turn,'出宫','母亲在宫的日子，她每月心情都会好一些。');
 }
 A.momIn=function(id){if(!S||S.over||modalOpen)return;const c=byId(id),state=momVisitState(c);if(!state.ready){toast(state.hint);return}chg({treasury:-15});momVisit(c,ri(2,3));setXin(c,'欢喜','母亲进宫来了');AU.sfx('joy');
   pushEv({title:'母亲入宫',por:momObj(c),text:`${c.visitor.name}进宫来了，要在${c.palace}住上几个月。母女俩一见面就抱头哭了。`+fx(cchg(c,{mood:20,aff:8})),choices:[ok1]});save('auto')};
