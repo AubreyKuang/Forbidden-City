@@ -3,6 +3,7 @@ const assert=require('node:assert/strict');
 const {cases,renderCase,signature}=require('./ui-layout-cases.cjs');
 const baseline=require('./fixtures/ui-before-organization.json');
 const {boot}=require('./playtest-harness.cjs');
+const childTextChanges=new Map([['宫内','宫中'],['已出宫','宫外'],['尚无皇子公主出宫。','宫外暂无皇嗣。']]);
 
 for(const c of cases)test(`layout preserves information and action availability: ${c[0]}`,()=>{
  const before=baseline.pages.find(p=>p.name===c[0]);
@@ -18,7 +19,9 @@ for(const c of cases)test(`layout preserves information and action availability:
  // The family list intentionally replaces flat kin labels with a paternal hierarchy.
  // Its original person controls remain checked above; parent/child identity and both
  // family views have dedicated end-to-end assertions in palace-layered-family.
- for(const fragment of (c[0]==='family-list'?[]:[...before.text]).sort((a,b)=>b.length-a.length)){
+ const expected=c[0]==='family-list'?[]:[...before.text];
+ const fragments=['children','children-out'].includes(c[0])?expected.map(text=>childTextChanges.get(text)??text):expected;
+ for(const fragment of fragments.sort((a,b)=>b.length-a.length)){
   assert.ok(text.includes(fragment),`Missing text: ${fragment}`);
   text=text.replace(fragment,'');
  }
