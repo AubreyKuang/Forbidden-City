@@ -27,7 +27,11 @@ function beginNatalPregnancy(c,p,{unconfirmed=false}={}){
   const bond=ensureMaritalBond(p),father=maritalFather(p);
   p.natalPregnancy={conceived:S.turn,due:S.turn+9,fatherId:father?.p.id||p.spouse.id,fatherName:father?.p.name||p.spouse.name,fatherSur:p.spouse.sur,
     sex:chance(.5)?'m':'f',seed:ri(1,2e9),difficult:chance(.015)};
-  if(unconfirmed){p.natalPregnancy.unconfirmed=true;(p.lifeCourse||={}).last=S.turn;return true;}
+  if(unconfirmed){
+    p.natalPregnancy.unconfirmed=true;
+    if(outsideParentageActive())Object.assign(p.natalPregnancy,{imperialParentage:chance(.55),conceptionGen:S.gen,conceptionEmperor:E().sur+E().name});
+    (p.lifeCourse||={}).last=S.turn;return true;
+  }
   (p.lifeCourse ||= {}).last=S.turn;p.maritalMood=bond.kind==='affectionate'?'有喜，也盼着他的照料':bond.kind==='respectful'?'欢喜中谨慎将养':'有孕后更盼有人听她说话';
   const thoughts={affectionate:`${p.spouse.name}读信时喜得又看一遍，叮嘱自己再忙也要问她饮食安睡。`,respectful:`${p.spouse.name}依礼备下补养之物，请家中细照料，关切仍说得含蓄。`,distant:`${p.spouse.name}听说要做父亲，心中有喜，也不知该怎样亲近妻子，回信写得拘谨。`};
   natalMarriageNotice(c,p,'外家有喜',`${p.name}诊出有孕，给${fullName(c)}写信报喜，也说起初次等孩子的忐忑。`,thoughts[bond.kind]);return true;
@@ -57,7 +61,7 @@ function natalPregnancyTick(){
         natalMarriageNotice(c,p,'外家添丁',`${p.name}平安生下${sex}${child.name}，将母子平安的家书寄给${fullName(c)}。${father&&!officialAlive(father.p)?'这是亡夫留下的遗腹子，欢喜里也有缺席的悲伤。':''}`,joy,.6,preg);
         story(child,preg.unconfirmed?`由${p.name}在宫外生下，按外家子女入册。`:`生于${p.name}与${preg.fatherName}之家，是外家子女，不列皇嗣。`);
       }
-      if(preg.unconfirmed)noteMarriedSisterChild(p,child);
+      if(preg.unconfirmed){noteMarriedSisterChild(p,child);if(outsideParentageActive())initializeOutsideParentage(child,preg);}
       (p.pregnancyHistory ||= []).push({...preg,childId:child.id,born:S.turn,outcome:preg.difficult?'maternal-death':'safe'});delete p.natalPregnancy;
     }
   }
@@ -81,10 +85,13 @@ const birthsSpousePanel=officialSpousePanel;
 officialSpousePanel=function(person){
   const children=[],seen=new Set();for(const c of S.consorts)for(const p of natalPeople(houseOf(c)))if(p.fatherId===person.p.id&&!seen.has(p.id)){children.push({c,p});seen.add(p.id);}
   const widow=person.p.widower,host=widow&&S.consorts.find(c=>natalPeople(houseOf(c)).some(p=>p.id===widow.wifeId));
-  return birthsSpousePanel(person)+(widow?detailSection('亡妻',`<p>${host?`<button class="person-link" onclick="A.go('natal','${host.id}:${widow.wifeId}')">${esc(widow.name)} ↗</button>`:esc(widow.name)} · 难产去世。${esc(person.p.householdMood||'')}</p>`):'')+(children.length?detailSection('家中子女',children.map(({c,p})=>`<button class="person-link" onclick="A.go('natal','${c.id}:${p.id}')">${esc(p.name)} · ${natalAge(p)}岁 · ${p.sex==='m'?'儿子':'女儿'}</button>`).join(' ')):'');
+  const recognized=outsideParentageActive()?S.children.filter(k=>k.outsideFamilyOrigin?.fatherId===person.p.id):[];
+  return birthsSpousePanel(person)+(widow?detailSection('亡妻',`<p>${host?`<button class="person-link" onclick="A.go('natal','${host.id}:${widow.wifeId}')">${esc(widow.name)} ↗</button>`:esc(widow.name)} · 难产去世。${esc(person.p.householdMood||'')}</p>`):'')+(children.length?detailSection('家中子女',children.map(({c,p})=>`<button class="person-link" onclick="A.go('natal','${c.id}:${p.id}')">${esc(p.name)} · ${natalAge(p)}岁 · ${p.sex==='m'?'儿子':'女儿'}</button>`).join(' ')):'')+
+    detailSection('曾在家中照料的孩子',recognized.map(k=>`<p><button class="person-link" onclick="A.go('kid',${k.id})">${esc(k.outsideFamilyOrigin.name)} ↗</button> · 已认回宫中</p>`).join(''));
 };
 function natalFatherPanel(p){
   if(p.unconfirmedParentage)return detailSection('身世未明','<p>关于生父的疑问尚无定论。原有亲缘依家籍保留。</p>');
+  if(['proved','stayed'].includes(p.outsideParentage?.status))return '';
   if(!p.fatherId)return '';const father=careerPeople().find(x=>x.p.id===p.fatherId);
   return detailSection('父系亲缘',`<p>父亲：${father?careerLink(father):esc(p.fatherName||'家中未详录')}${father?' · '+esc(officialStatus(father.p)):''}</p>`);
 }
