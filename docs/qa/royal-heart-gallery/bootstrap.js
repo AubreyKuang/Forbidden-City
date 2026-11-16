@@ -27,6 +27,7 @@
     assert(p.xiean.path.kind==='return'&&p.xiean.path.pending==='meeting','邀请未改变相识进展');
     const follow=[...document.querySelectorAll('#panel button')].find(b=>b.textContent.includes('听听辞婚之后'));assert(follow,'后续入口未显示');follow.click();choice();close();
     assert(p.xiean.path.stage===1&&!p.married&&!k.married,'相识被误写成结婚');
+    assert(p.xiean.pursuerId===id&&p.xiean.path.childId===id,'相识未绑定同一位追求者');
    }else{
     choice();
     if(view==='betrothal-check')assert(k.betrothal?.personId===p.id&&p.betrothal?.personId===k.id&&!k.married&&!p.married&&!k.spouse&&!k.household,'未满十五岁未正确订婚');
