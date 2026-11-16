@@ -49,7 +49,7 @@ function dowagerLastYearsQuestion(d,p){
 function dowagerIllnessNotice(d,p){
  const c=byId(p.caregiver);
  return {title:'慈宁宫 · 太后欠安',cast:[dowagerPerson(d),...(c?[c]:[])],valid:()=>dowagerIll(d)&&!p.warningAnswered,
-  text:`慈宁宫来报：太后近来食少易倦，夜间也睡不安稳。太医请减少迎送，静养调护。${c?`\n已按母家亲缘，由${fullName(c)}先行侍疾，太医与宫人协助轮值。`:'\n眼下由太医与宫人轮值照护，可另择身体安好的妃嫔侍疾。'}\n太后说：“也不必人人都来，留个说得上话的，陪哀家坐一会儿就好。”`,
+  text:`慈宁宫来报：太后近来食少易倦，夜间也睡不安稳。太医请减少迎送，静养调护。${c?`\n${c.clan===d.clan?"已按母家亲缘，由":"现由"}${fullName(c)}先行侍疾，太医与宫人协助轮值。`:'\n眼下由太医与宫人轮值照护，可另择身体安好的妃嫔侍疾。'}\n太后说：“也不必人人都来，留个说得上话的，陪哀家坐一会儿就好。”`,
   onQueue:()=>{p.warned=true;p.warnedAt=S.turn;dowagerRecord(d,'身体转衰','近来食少易倦、睡眠不安，太医请静养调护，慈宁宫已将病况禀告皇帝。');},choices:[
    {t:c?`由${fullName(c)}继续侍疾`:'嘱太医院与宫人细心照护',f:()=>{if(!dowagerIll(d)||p.warningAnswered)return null;p.warningAnswered=true;return '你问清了服药与轮值安排，嘱咐有变化随时报来。';}},
    {t:'另选妃嫔侍疾',f:()=>{if(!dowagerIll(d)||p.warningAnswered)return null;p.warningAnswered=true;pushNow(dowagerCareSelection(d));return null;}}]};

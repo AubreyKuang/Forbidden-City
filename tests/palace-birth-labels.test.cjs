@@ -13,6 +13,9 @@ test('the second tag is unique and belongs to the same category, with opposed am
  const b=world();b.force(0,.1,.4,0,.8);b.run(`var good=rollBirthLabels(a);assert.equal(good.length,2);assert.ok(good.every(id=>BIRTH_LABELS[id].kind==='good'));`);
  b.force(0,.9,0,0,.9);b.run(`var bad=rollBirthLabels(a);assert.equal(bad.length,2);assert.ok(bad.every(id=>BIRTH_LABELS[id].kind==='bad'));assert.notEqual(bad[0],bad[1]);assert.ok(!birthLabelPool(a,'good',['sharp']).some(x=>x.id==='serene'));assert.ok(!birthLabelPool(a,'good',['serene']).some(x=>x.id==='sharp'));var k=makeKid(a,'m','守一');assert.equal(applyBirthLabels(k,['red','frail']),false);assert.equal(applyBirthLabels(k,['red','red']),false);assert.equal(applyBirthLabels(k,['sharp','serene']),false);assert.equal(k.birthLabels,undefined);`);
 });
+test('frail inheritance has a thirty percent boundary and cannot be rolled again in the remaining branch',()=>{
+ const b=world();b.run(`a.trait='体弱';`);b.force(.3,.03);b.run(`assert.deepEqual(rollBirthLabels(a),[]);`);b.force(.299999,0,.9);b.run(`assert.deepEqual(rollBirthLabels(a),['frail']);`);b.force(.3,.029999,.9,0,0,.9);b.run(`assert.deepEqual(rollBirthLabels(a),['quake','drought']);`);
+});
 test('seeded population samples stay near the fixed total rate, and frail mothers have exactly thirty percent health labels',()=>{
  const b=world();const result=JSON.parse(b.run(`JSON.stringify((()=>{
   const out={};for(const [name,mother] of Object.entries({ordinary:a,weak:{trait:'体弱'},gouyi:{gouyi:true,trait:'体弱'}})){
