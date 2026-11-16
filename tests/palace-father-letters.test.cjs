@@ -34,7 +34,7 @@ test('each remittance and reply belongs to its own dated letter exchange',()=>{
  const w=world();
  w.run(`var letters=()=>c.story.filter(e=>e.t.startsWith('【父女家书·'));receiveFatherLetter(c);fatherLetterEvent(c).choices[0].f();S.turn++;fatherLetterReturn(c);var entries=letters();assert.equal(entries.length,3);assert.equal(new Set(entries.map(chronicleThread)).size,1);assert.match(S.log.at(-1).t,/银封有了回音/);S.turn+=6;receiveFatherLetter(c);assert.notEqual(chronicleThread(letters().at(-1)),chronicleThread(entries[0]));`);
 });
-for(const [name,data] of Object.entries(require('./fixtures/father-letters-legacy-v31.json')))test('real v31 '+name+' replays before private money or father letters activate',()=>{const w=boot(17,new Map([['chengongji_v1_auto',JSON.stringify(data)]]));w.ctx.assert=assert;w.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,31);assert.equal(fatherLettersActive(),false);assert.ok(S.consorts.every(c=>!c.fatherLetters));drain();assert.equal(PalaceActions.contentVersion,36);assert.equal(PalaceActions.blocked,false);`);});
+for(const [name,data] of Object.entries(require('./fixtures/father-letters-legacy-v31.json')))test('real v31 '+name+' replays before private money or father letters activate',()=>{const w=boot(17,new Map([['chengongji_v1_auto',JSON.stringify(data)]]));w.ctx.assert=assert;w.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,31);assert.equal(fatherLettersActive(),false);assert.ok(S.consorts.every(c=>!c.fatherLetters));drain();assert.equal(PalaceActions.contentVersion,37);assert.equal(PalaceActions.blocked,false);`);});
 test('she may answer an unattended letter herself without spending the emperor’s energy or treasury',()=>{const w=world();w.run(`receiveFatherLetter(c);S.turn+=3;S.flags.lastFatherLetter=S.turn;var energy=E().energy,money=E().treasury;Math.random=()=>0;fatherLetterTick();assert.equal(c.fatherLetters.pending.kind,'money');assert.equal(c.fatherLetters.purse,2);assert.equal(E().energy,energy);assert.equal(E().treasury,money);var count=c.story.length;fatherLetterTick();assert.equal(c.story.length,count);`);});
 test('a thoughtful daughter can autonomously set boundaries with a demanding father',()=>{const w=world('聪慧','demanding');w.run(`receiveFatherLetter(c);S.turn+=3;S.flags.lastFatherLetter=S.turn;Math.random=()=>0;fatherLetterTick();assert.equal(c.fatherLetters.pending.kind,'boundary');assert.equal(c.fatherLetters.purse,3);assert.equal(c.fatherLetters.quietUntil,S.turn+12);`);});
 test('heir pressure favors senior ranks, especially the empress with an incumbent high official for a father',()=>{
@@ -42,4 +42,39 @@ test('heir pressure favors senior ranks, especially the empress with an incumben
 });
 test('a daughter or foster son leaves the father eligible to ask about a birth son, with a distinct dated reaction',()=>{
  const w=world();w.run(`c.enteredAt=0;c.rank=8;father.career='official';father.office='吏部尚书';var girl=makeKid(c,'f','昭宁');var other=makeGirl({fam:{t:'寒门',p:5}});addConsort(other,1,'入宫');var foster=makeKid(other,'m','承煦');foster.foster=c.id;assert.ok(fatherHeirPressureChance(c)>0);Math.random=()=>0;fatherHeirPressureTick();var note=c.fatherHeirPressure;assert.match(note.text,/嫡子.*吏部尚书/);assert.match(note.daughter,/公主/);assert.match(houseLine(c),/父亲来信催问皇子/);assert.ok(c.story.some(e=>e.life?.title===note.title));assert.equal(father.daughterLetters[c.id].daughter,note.daughter);assert.equal(fatherHeirPressureChance(c),0);S.turn+=24;var son=makeKid(c,'m','承祐');son.alive=false;assert.equal(fatherHeirPressureChance(c),0);`);
+});
+function officialEmpress(){
+ const w=world('聪慧');
+ w.run(`c.rank=8;c.enteredAt=S.turn-18;c.upbringing=null;c.fam={t:'吏部尚书',p:78};father.career='official';father.office='吏部尚书';`);
+ return w;
+}
+test('the official-house empress can answer a succession letter about her princess and receive a reply',()=>{
+ let w=officialEmpress();
+ w.run(`makeKid(c,'f','昭宁');
+   var seniorRate=fatherHeirPressureChance(c);father.office='知县';
+   assert.ok(fatherHeirPressureChance(c)>0&&fatherHeirPressureChance(c)<seniorRate);
+   father.office='吏部尚书';c.enteredAt++;assert.equal(fatherHeirPressureChance(c),0);c.enteredAt--;
+   Math.random=()=>0;fatherLetterTick();fatherHeirPressureTick();
+   assert.match(c.fatherLetters.letter.quote,/只有公主.*同母的兄弟可倚仗/);
+   assert.equal(c.story.filter(e=>e.life?.title==='父亲来信催问皇子').length,1);
+   assert.equal((houseLine(c).match(/父亲来信催问皇子/g)||[]).length,1);
+   assert.equal(father.daughterLetters[c.id].daughter,c.fatherHeirPressure.daughter);
+   save('auto');A.fatherLetter(c.id);assert.equal(curEv.title,'父亲来信催问皇子');
+   var before=E().treasury;assert.equal(fatherLetterSend(c,'money'),null);
+   choose(1);assert.equal(E().treasury,before);assert.equal(c.fatherLetters.pending.topic,'queen-heir');`);
+ w=reload(w);
+ w.run(`drain();S.turn++;assert.equal(fatherLetterReturn(c),true);
+   assert.match(s.lastReply.quote,/朝中怎么议论，我且留在朝中/);
+   assert.equal(s.purse,0);assert.match(father.story.at(-1).t,/中宫家书有了回音/);
+   assert.equal(new Set(c.story.filter(e=>e.thread?.startsWith('father-letters:')).map(e=>e.thread)).size,1);
+   S.turn+=10;assert.equal(fatherHeirPressureChance(c),0);S.turn++;
+   assert.ok(fatherHeirPressureChance(c)>0);`);
+});
+test('after a birth son the official-house empress still exchanges ordinary letters on the shorter schedule',()=>{
+ const w=officialEmpress();w.run(`makeKid(c,'m','承祐');assert.equal(fatherHeirPressureChance(c),0);
+   Math.random=()=>.1;fatherLetterTick();assert.equal(c.fatherLetters.letter.topic,'queen-family');
+   assert.doesNotMatch(fatherLetterEvent(c).text,/嫡子|体己/);
+   assert.ok(fatherLetterSend(c,'peace',false));
+   S.turn++;fatherLetterReturn(c);S.turn+=4;fatherLetterTick();assert.equal(c.fatherLetters.serial,1);
+   S.turn++;fatherLetterTick();assert.equal(c.fatherLetters.serial,2);assert.equal(c.fatherHeirPressure,undefined);`);
 });

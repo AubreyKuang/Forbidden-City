@@ -1,13 +1,18 @@
 /* Private money and private family letters. No invented father, office, or shared mind. */
 const fatherLettersActive=()=>journalContentVersion()>=33;
 function fatherLetterPerson(c){return c?.house?.father||null;}
+function queenOfficialHouse(c){
+ if(journalContentVersion()<37||c?.rank!==8)return false;
+ const roots=familyUpbringing(c);
+ return !!(officialGrade({office:roots.title})||/官宦/.test(roots.title)||roots.group==='noble'&&officialGrade(fatherLetterPerson(c)));
+}
 function fatherLetterRoots(c){
  if(!fatherLettersActive()||!c||c.maid||c.rescue||!fatherLetterPerson(c))return false;
  const r=familyUpbringing(c);
- return ['humble','farm'].includes(r.group)||r.group==='scholar'&&r.means==='modest'||r.group==='official'&&r.power<=25&&r.means!=='ample';
+ return queenOfficialHouse(c)||['humble','farm'].includes(r.group)||r.group==='scholar'&&r.means==='modest'||r.group==='official'&&r.power<=25&&r.means!=='ample';
 }
 function fatherLetterAvailable(c){
- return fatherLetterRoots(c)&&fatherCanWrite(c);
+ return (fatherLetterRoots(c)||!!c?.fatherLetters?.letter?.topic)&&fatherCanWrite(c);
 }
 function fatherCanWrite(c){
  const p=fatherLetterPerson(c);
@@ -17,8 +22,9 @@ function fatherLetterInit(c){
  if(!fatherLetterAvailable(c))return null;
  const p=fatherLetterPerson(c);
  // This is a disposition of the same father, shared across sisters and saved once.
- p.daughterLetterNature||=chance(.12)?'demanding':'caring';
- if(!c.fatherLetters)c.fatherLetters={father:p.id,gen:S.gen,purse:2,lastAccrual:S.turn,closeness:p.daughterLetterNature==='caring'?65:-15,serial:0};
+ const royal=queenOfficialHouse(c);
+ if(!royal)p.daughterLetterNature||=chance(.12)?'demanding':'caring';
+ if(!c.fatherLetters)c.fatherLetters={father:p.id,gen:S.gen,purse:royal?0:2,lastAccrual:S.turn,closeness:royal||p.daughterLetterNature==='caring'?65:-15,serial:0};
  return c.fatherLetters.father===p.id?c.fatherLetters:null;
 }
 function fatherLetterWellOff(c){const p=fatherLetterPerson(c);return c.fam.p>=55||officialGrade(p)>0&&officialGrade(p)<=4;}
@@ -67,19 +73,21 @@ function fatherLetterRecord(c,title,text,daughter,father,options){
 }
 function fatherHeirPressureChance(c){
  const p=fatherLetterPerson(c),rank=c?.rank,rate=[.08,.12,.17,.24][rank-5];
+ const royal=queenOfficialHouse(c);
  const enteredAt=c?.enteredAt??(S.gen===1&&c?.knownBeforeAccession?0:S.turn);
  if(!fatherLettersActive()||!rate||c.maid||c.rescue||!fatherCanWrite(c)||c.preg||c.delivery&&!c.delivery.settled||
-   S.turn-enteredAt<(rank===8?24:36)||S.turn-(c.lastBirth??-99)<6||S.turn-(c.fatherHeirPressure?.turn??-99)<24||
+   S.turn-enteredAt<(royal?18:rank===8?24:36)||S.turn-(c.lastBirth??-99)<6||S.turn-(c.fatherHeirPressure?.turn??-99)<(royal?12:24)||
    S.children.some(k=>k.mom===c.id&&k.sex==='m'&&!k.removedFromRoyal))return 0;
  const grade=officialGrade(p),highOffice=grade&&grade<=4&&!p.retired;
  const ambitious=p.temperament==='进取'||p.daughterLetterNature==='demanding';
+ if(royal)return highOffice ? .45 : .28;
  if(highOffice)return rate;
  if(ambitious&&(grade||c.fam?.p>=55))return rate*.4;
  return p.daughterLetterNature==='demanding'?rate*.15:0;
 }
 function fatherHeirPressureTick(){
  if(S.turn-(S.flags.lastFatherHeirPressure??-99)<6)return;
- const candidates=S.consorts.filter(c=>c.rank>=5).sort((a,b)=>b.rank-a.rank||a.id-b.id);
+ const candidates=S.consorts.filter(c=>c.rank>=5&&!queenOfficialHouse(c)).sort((a,b)=>b.rank-a.rank||a.id-b.id);
  const c=candidates.find(c=>{const rate=fatherHeirPressureChance(c);return rate>0&&chance(rate);});
  if(!c)return;
  const p=fatherLetterPerson(c),title='父亲来信催问皇子',queen=c.rank===8;
@@ -101,20 +109,41 @@ function fatherHeirPressureTick(){
 }
 function fatherLetterNewReady(c,months=6){
  const s=c.fatherLetters;
- return fatherLetterAvailable(c)&&!s?.pending&&(!s?.letter||s.letter.answered)&&S.turn-(s?.lastLetter??-99)>=months&&S.turn>=(s?.quietUntil??-1);
+ return fatherLetterRoots(c)&&fatherCanWrite(c)&&!s?.pending&&(!s?.letter||s.letter.answered)&&S.turn-(s?.lastLetter??-99)>=months&&S.turn>=(s?.quietUntil??-1);
 }
-function receiveFatherLetter(c){
+function queenFatherLetter(c,pressure){
+ const p=fatherLetterPerson(c),s=c.fatherLetters;
+ const princesses=S.children.filter(k=>k.mom===c.id&&k.sex==='f'&&k.alive&&!k.removedFromRoyal);
+ const princess=princesses.length===1?'公主':'几位公主';
+ if(pressure){
+  const grade=officialGrade(p);
+  const court=grade&&grade<=4&&!p.retired?`为父在${p.office||p.post}任上，偶尔听见同僚问起中宫的子嗣。`:'族中谈起中宫的子嗣，常有人托我问一声。';
+  const appeal=princesses.length?`我也挂念${princess}，只是中宫只有公主，朝里议起承嗣时仍会问你。若早日有个亲生皇子，${princess}将来出阁，在宫里也有同母的兄弟可倚仗。`:
+    '中宫至今还无亲生皇子。若能早日诞下嫡子，朝里议及承嗣时少些揣测，你也少受几句闲话。';
+  const daughter=princesses.length?'父亲问公主近况，末了又说要等一个皇子才有依仗。我原想跟他说女儿近日的趣事，提了笔又搁下。':
+    '父亲把朝里的议论写到了我的桌上。嫡子不是多催几次便能有的，我提着笔，许久才写下头一句问安。';
+  return {topic:'queen-heir',title:'父亲来信催问皇子',quote:court+appeal,daughter,
+    father:princesses.length?'我确实惦记外孙女，却也把她往后的安稳系在了一个尚未出世的弟弟身上。':'我把朝里的话抄进了家书，盼她有个嫡子。等墨干时，才想起信中没有问她近来可曾睡好。'};
+ }
+ const quote=(s.serial%2===0&&princesses.length)?`我惦记${princess}，得闲时也说说近况。家中一切安好，你自己也要顾好起居。`:
+   ['这两日家里翻出了你从前的习字本，连那张写歪了的也还留着。中宫事务繁忙，得闲时给家里报个平安。','前日家里收拾书房，找着你从前用的那方小砚。宫里人多事也多，若有烦心的，家书里尽可说。'][s.serial%2];
+ return {topic:'queen-family',title:'中宫收到家书',quote,daughter:'父亲在信里仍同我说些家中的小事。读罢我重新铺纸，把近来想告诉家里的事写下来。',
+   father:'送信时又嘱咐人走稳些。我只盼女儿得空回几句，知道她近来怎样便好。'};
+}
+function receiveFatherLetter(c,heirPressure=false){
  if(!fatherLetterNewReady(c))return null;
  const s=fatherLetterInit(c);if(!s)return null;
- const p=fatherLetterPerson(c),words=fatherLetterConcern(c),thought=daughterLetterThought(c,p.daughterLetterNature);
+ const p=fatherLetterPerson(c),royal=queenOfficialHouse(c),words=royal?queenFatherLetter(c,heirPressure):fatherLetterConcern(c);
+ const thought=royal?words.daughter:daughterLetterThought(c,p.daughterLetterNature);
  s.letter={...words,turn:S.turn,serial:++s.serial,answered:false};s.lastLetter=S.turn;
- const pressure=p.daughterLetterNature==='demanding';cchg(c,{mood:pressure?-3:3});
+ const pressure=royal?heirPressure:p.daughterLetterNature==='demanding';cchg(c,{mood:pressure?-3:3});
  if(['平和','思念','委屈','释然','欢喜'].includes(xinOf(c)))setXin(c,pressure?'委屈':'思念',`读到父亲${p.name}的家书`);
- fatherLetterRecord(c,words.title,`${p.name}给${fullName(c)}写信：“${words.quote}”`,thought,words.father,{emotion:pressure?-.4:.45});
+ const note=fatherLetterRecord(c,words.title,`${p.name}给${fullName(c)}写信：“${words.quote}”`,thought,words.father,{emotion:pressure?-.4:.45});
+ if(royal&&heirPressure){c.fatherHeirPressure=note;S.flags.lastFatherHeirPressure=S.turn;}
  return s.letter;
 }
 function fatherLetterAccrue(c){
- const s=c.fatherLetters;if(!s||!fatherLettersActive()||!inPalace(c)||s.gen!==S.gen)return;
+ const s=c.fatherLetters;if(!s||!fatherLettersActive()||!inPalace(c)||s.gen!==S.gen||queenOfficialHouse(c)||s.letter?.topic&&!fatherLetterRoots(c))return;
  const periods=Math.floor((S.turn-s.lastAccrual)/3);if(periods<=0)return;
  // Reserve for personal extras, not historical taels; no retrospective grant on migration.
  s.purse=Math.max(s.purse,Math.min(6,s.purse+Math.min(periods,2)*(c.rank>=4||c.favor>=65?2:1)));s.lastAccrual=S.turn;
@@ -124,7 +153,7 @@ function fatherLetterReturn(c){
  if(mail.gen!==S.gen||mail.father!==p?.id){delete s.pending;return false;}
  if(p.alive===false){
   delete s.pending;if(mail.kind==='money')s.purse++;
-  if(c.alive)fatherLetterRecord(c,'未能送到的银封',`${fullName(c)}此前寄出的${mail.kind==='money'?'银封与家书':'家书'}未及送达，便传来父亲${p.name}的讣讯。${mail.kind==='money'?'银封退回，仍归她的体己。':'送出的信也随递信人带回。'}`,'原以为来日还能听见父亲回话，如今只剩一封没能读给他听的信。','',{toFather:false,emotion:-.8});
+  if(c.alive)fatherLetterRecord(c,mail.topic?'未能送到的家书':'未能送到的银封',`${fullName(c)}此前寄出的${mail.kind==='money'?'银封与家书':'家书'}未及送达，便传来父亲${p.name}的讣讯。${mail.kind==='money'?'银封退回，仍归她的体己。':'送出的信也随递信人带回。'}`,'原以为来日还能听见父亲回话，如今只剩一封没能读给他听的信。','',{toFather:false,emotion:-.8});
   return true;
  }
  if(S.turn<mail.due||p.exiled||p.dismissed||p.incognitoCase)return false;
@@ -133,8 +162,19 @@ function fatherLetterReturn(c){
  }
  if(!fatherLetterAvailable(c))return false;
  delete s.pending;
- const demanding=p.daughterLetterNature==='demanding',money=mail.kind==='money';let reply,father,thought;
- if(money&&demanding){
+ const royal=!!mail.topic,demanding=!royal&&p.daughterLetterNature==='demanding',money=mail.kind==='money';let reply,father,thought;
+ if(royal){
+  if(mail.kind==='boundary'){
+   reply='你的回信我读了。朝中怎么议论，我且留在朝中。你近来过得如何，下回得闲，再说给父亲听。';
+   father='她劝我莫把承嗣的话句句写进家书。我犹疑了半晌，还是将那几句旧话划去，改问她的近况。';
+   thought='这回父亲肯听我把话说完。我把他的回信收好，想等下次有了闲暇，再写些平日的事。';
+  }else{
+   reply='知道你近来安好，我与家里都放心。宫中诸事慢慢料理，等你得闲，再写信来。';
+   father='她肯写几笔中宫的日常。我将那封信叠在案边，闲下来又看了一遍。';
+   thought='父亲读进了我写的近况。家书来去，总还有几句是我们父女的话。';
+  }
+  s.closeness=clamp(s.closeness+3,-100,100);
+ }else if(money&&demanding){
   reply=`银钱已经收下。${fatherLetterWellOff(c)?'家里虽不缺衣食，往来体面却处处要用钱。':'这回先补了家用，往后还有许多用处。'}你也该在宫里再往上走一步，若得了赏赐，下回多寄些回来。${fatherLetterAmbition(c)}。`;
   father='收到女儿寄来的银钱，先算了家中的用处，又在回信里提起往后的盼头，没有问她为这份心意省了什么。';
   thought='读到父亲收下银钱，我原还松了口气。再往下读，他只问何时能多寄些，能不能帮家里谋个前程。那句想问我过得好不好，始终没等到。';s.closeness=clamp(s.closeness-5,-100,100);
@@ -153,7 +193,7 @@ function fatherLetterReturn(c){
  }
  s.lastReply={turn:S.turn,quote:reply,kind:mail.kind};
  cchg(c,{mood:demanding?-2:4});if(['平和','思念','委屈','释然','欢喜'].includes(xinOf(c)))setXin(c,demanding?'委屈':'释然',`收到父亲${p.name}的回信`);
- fatherLetterRecord(c,money?'银封之后的回信':'平安信有了回音',`${p.name}收到${fullName(c)}寄出的${money?'一份体己与家书':'家书'}，回信道：“${reply}”`,thought,father,{emotion:demanding?-.4:.5});
+ fatherLetterRecord(c,royal?'中宫家书有了回音':money?'银封之后的回信':'平安信有了回音',`${p.name}收到${fullName(c)}寄出的${money?'一份体己与家书':'家书'}，回信道：“${reply}”`,thought,father,{emotion:demanding?-.4:.5});
  log(`${fullName(c)}寄给父亲的${money?'银封':'家书'}有了回音。`);
  return true;
 }
@@ -165,22 +205,41 @@ function fatherLetterTick(){
  if(!mourningActive()&&S.turn-(S.flags.lastFatherLetterAutonomy??-99)>=3&&chance(.3)){
   const waiting=S.consorts.filter(c=>fatherLetterAvailable(c)&&c.fatherLetters?.letter&&!c.fatherLetters.letter.answered&&!c.fatherLetters.pending&&S.turn-c.fatherLetters.letter.turn>=3);
   if(waiting.length){const c=pick(waiting),s=c.fatherLetters,careful=['measured','solitary','studious'].includes(familyBearingStyle(c));
-   const kind=fatherLetterPerson(c).daughterLetterNature==='demanding'&&careful?'boundary':s.purse>=2&&chance(.6)?'money':'peace';
+   const kind=s.letter.topic?(s.letter.topic==='queen-heir'&&careful?'boundary':'peace'):
+     fatherLetterPerson(c).daughterLetterNature==='demanding'&&careful?'boundary':s.purse>=2&&chance(.6)?'money':'peace';
    if(fatherLetterSend(c,kind,false))S.flags.lastFatherLetterAutonomy=S.turn;
   }
  }
- if(mourningActive()||S.turn-(S.flags.lastFatherLetter??-99)<3||!chance(.25))return;
- const pool=S.consorts.filter(c=>fatherLetterNewReady(c,12));
+ if(mourningActive())return;
+ const queen=S.consorts.find(c=>queenOfficialHouse(c)&&fatherLetterNewReady(c));
+ if(queen){
+  const rate=S.turn-(S.flags.lastFatherHeirPressure??-99)>=6?fatherHeirPressureChance(queen):0;
+  const pressure=rate>0&&chance(rate);
+  if(pressure||chance(.4)){
+   if(receiveFatherLetter(queen,pressure))log(`${fullName(queen)}收到父亲${pressure?'关于皇嗣的':''}家书。`);
+  }
+ }
+ if(S.turn-(S.flags.lastFatherLetter??-99)<3||!chance(.25))return;
+ const pool=S.consorts.filter(c=>!queenOfficialHouse(c)&&fatherLetterNewReady(c,12));
  if(!pool.length)return;
  const c=pick(pool);if(receiveFatherLetter(c)){S.flags.lastFatherLetter=S.turn;log(`${fullName(c)}收到父亲的家书，心里有些话想说。`);}
 }
 function fatherLetterSend(c,kind,manual=true){
  const s=c?.fatherLetters,p=fatherLetterPerson(c),letter=s?.letter;
- if(!['money','peace','boundary'].includes(kind)||!fatherLetterAvailable(c)||s?.gen!==S.gen||s?.father!==p.id||!letter||letter.answered||s.pending||kind==='money'&&s.purse<2||kind==='boundary'&&p.daughterLetterNature!=='demanding')return null;
+ if(!['money','peace','boundary'].includes(kind)||!fatherLetterAvailable(c)||s?.gen!==S.gen||s?.father!==p.id||!letter||letter.answered||s.pending)return null;
+ const topic=letter.topic;
+ if(kind==='money'&&(topic||s.purse<2)||kind==='boundary'&&(topic?topic!=='queen-heir':p.daughterLetterNature!=='demanding'))return null;
  if(manual&&!useE())return null;
   letter.answered=true;if(kind==='money')s.purse--;
-  if(kind==='boundary')s.quietUntil=S.turn+12;
+ if(kind==='boundary'&&!topic)s.quietUntil=S.turn+12;
   s.pending={gen:S.gen,father:p.id,kind,sent:S.turn,due:S.turn+(p.commission||p.away?2:1),constrained:familyBearingContext(c).constrained};
+ if(topic){
+  s.pending.topic=topic;
+  const own=kind==='boundary'?'我想请父亲少提承嗣，多问几句家里人过得怎样。':'近况都写在信上了，得空也想听父亲说说家里的事。';
+  const text=`${fullName(c)}给父亲${p.name}回信，${kind==='boundary'?'请父亲以后家书少谈承嗣，多问女儿近况':'问候家中，写了几件中宫近来的事'}。信件已经交出，回音尚未到。`;
+  fatherLetterRecord(c,'中宫致父亲的回信',text,own,'',{toFather:false,emotion:.3});
+  return text+(manual?'\n§精力−1':'');
+ }
   const own=kind==='money'?'想把这一份心意送回家，也替自己留够日常余地。':kind==='boundary'?'能量力照应家用，却不能许下拿恩宠换官职的事。这些话，我想自己写清。':'先说清自己近来的日子，银钱暂留自用，不必拿每一次寄钱证明牵挂。';
   const text=`${fullName(c)}给父亲${p.name}回信，${kind==='money'?'从自己的体己中取出一份银钱随信寄出，另留一份作自用余地':kind==='boundary'?'说明会量力照应，却不替家门许诺官职与恩宠':'只报平安与近况，体己仍留着自用'}。信件已经交出，回音尚未到。`;
   fatherLetterRecord(c,kind==='money'?'寄一份体己回家':'把自己的话写清',text,own,'',{toFather:false,emotion:kind==='boundary'?-.1:.3});return text+(manual?'\n§精力−1'+(kind==='money'?' · 她的体己−1':''):'');
@@ -193,6 +252,10 @@ function fatherLetterEvent(c){
  const ready=()=>valid()&&s.letter===letter&&letter&&!letter.answered&&!s.pending;
  const act=kind=>{if(!ready())return null;const result=fatherLetterSend(c,kind);if(result)done=true;return result;};
  const context=letter&&!letter.answered?`父亲${p.name}写道：“${letter.quote}”`:s.pending?'寄出的家书尚在路上。':s.lastReply?`父亲最近的回信：“${s.lastReply.quote}”`:`父亲${p.name}写道：“${letter?.quote||''}”`;
+ if(letter?.topic)return {title:!letter.answered?letter.title:'父亲的家书',por:c,valid,text:`${context}\n她说：“${s.latest.daughter}”`,choices:[
+  {t:'陪她回信问安 · 精力−1',cond:()=>ready()&&E().energy>0,f:()=>act('peace')},
+  ...(letter.topic==='queen-heir'?[{t:'陪她写信，请父亲少谈承嗣 · 精力−1',cond:()=>ready()&&E().energy>0,f:()=>act('boundary')}]:[]),
+  {t:'先陪她收好信'}]};
  return {title:'父亲的家书',por:c,valid,text:`${context}\n她说：“${s.latest?.daughter||daughterLetterThought(c,p.daughterLetterNature)}”\n可支配体己：${s.purse}份。${s.purse<2?'眼下先留着自用，不勉强寄钱。':'寄出一份后仍为她保留自用余地。'}`,choices:[
   {t:'陪她写信，寄一份体己 · 精力−1',cond:()=>ready()&&s.purse>=2&&E().energy>0,why:s.purse<2?'先留一份自用':'这封信已回过或尚待回音',f:()=>act('money')},
   {t:'先报平安，银钱留着自用 · 精力−1',cond:()=>ready()&&E().energy>0,f:()=>act('peace')},
@@ -201,21 +264,25 @@ function fatherLetterEvent(c){
 }
 A.fatherLetter=function(id){
  if(modalOpen)return;
- const c=byId(id);if(!fatherLetterRoots(c))return;
+ const c=byId(id);if(!c||!fatherLetterRoots(c)&&!c.fatherLetters?.letter?.topic)return;
  // Journal snapshots deserialize each sister's household separately.
  houseOf(c);if(!fatherLetterAvailable(c))return;
  if(fatherLetterNewReady(c))receiveFatherLetter(c);
  const event=fatherLetterEvent(c);if(event)pushEv(event);
 };
 function fatherLetterPanel(c){
- if(!fatherLetterRoots(c))return '';
  const p=fatherLetterPerson(c),s=c.fatherLetters;
+ if(!p||!fatherLetterRoots(c)&&!s?.letter?.topic)return '';
+ if(s?.letter?.topic||queenOfficialHouse(c)){
+  return `<div class="father-letter-panel"><h4>父女家书</h4>${s?.latest?`<p>${esc(s.latest.date)} · ${esc(s.latest.title)}<br>${esc(s.latest.text)}</p><p>她记下：${esc(s.latest.daughter)}</p>`:'<p class="hint">她常与父亲通信，写些中宫与家中的近况。</p>'}${fatherLetterAvailable(c)?`<button class="btn sm" onclick="A.fatherLetter(${c.id})">${s?.pending?'看看寄出的家书':s?.latest?'听她谈父亲的家书':'同她聊聊父亲的来信'}</button>`:p.alive===false?'<p class="hint">父亲已故，旧日书信仍留着。</p>':''}</div>`;
+ }
  return `<div class="father-letter-panel"><h4>父女家书</h4>${s?.latest?`<p>${esc(s.latest.date)} · ${esc(s.latest.title)}<br>她记下：${esc(s.latest.daughter)}</p><p class="hint">父女情分：${s.closeness>=40?'亲近牵挂':s.closeness<0?'有些隔阂':'仍在磨合'} · 可支配体己 ${s.purse}份${s.pending?' · 家书待回音':''}</p>`:'<p class="hint">家门虽小，父亲与女儿也有各自的牵挂与盼头。</p>'}${fatherLetterAvailable(c)?`<button class="btn sm" onclick="A.fatherLetter(${c.id})">${s?.pending?'看看寄出的家书':s?.latest?'听她谈父亲的家书':'谈谈家中的用度'}</button>`:p.alive===false?'<p class="hint">父亲已故，旧日书信仍留着。</p>':''}</div>`;
 }
 const letterHouseLine=houseLine;
 houseLine=function(c){
- const html=letterHouseLine(c)+fatherLetterPanel(c),note=c.fatherHeirPressure;
- return html+(fatherLettersActive()&&note?`<div class="father-letter-panel"><h4>${esc(note.title)}</h4><p>${esc(note.date)} · ${esc(note.text)}</p><p>她记下：${esc(note.daughter)}</p></div>`:'');
+ const html=letterHouseLine(c)+fatherLetterPanel(c),note=c.fatherHeirPressure,latest=c.fatherLetters?.latest;
+ const alreadyShown=c.fatherLetters?.letter?.topic==='queen-heir'&&latest?.turn===note?.turn&&latest?.title===note?.title;
+ return html+(fatherLettersActive()&&note&&!alreadyShown?`<div class="father-letter-panel"><h4>${esc(note.title)}</h4><p>${esc(note.date)} · ${esc(note.text)}</p><p>她记下：${esc(note.daughter)}</p></div>`:'');
 };
 const letterLivedTick=livedRelationshipsTick;
 livedRelationshipsTick=function(){
@@ -227,9 +294,10 @@ const letterTopics=consortChatTopics;
 consortChatTopics=function(c){
  const topics=letterTopics(c),s=c.fatherLetters,p=fatherLetterPerson(c);
  if(!fatherLettersActive()||!fatherCanWrite(c))return topics;
- const pressure=c.fatherHeirPressure;
- if(pressure&&S.turn-pressure.turn<=6)topics.unshift({id:'father-heir-pressure',make:()=>({key:'father-heir-pressure',stage:`她提起父亲${p.name}催问皇嗣的那封信。`,text:pressure.daughter})});
- if(s?.latest&&fatherLetterRoots(c))topics.unshift({id:'father-letter',make:()=>({key:'father-letter',stage:`她将父亲${p.name}的信重新叠好，谈起自己的心事。`,text:s.latest.daughter})});
+ const pressure=c.fatherHeirPressure,recentPressure=pressure&&S.turn-pressure.turn<=6;
+ if(recentPressure)topics.unshift({id:'father-heir-pressure',make:()=>({key:'father-heir-pressure',stage:`她提起父亲${p.name}催问皇嗣的那封信。`,text:pressure.daughter})});
+ const sameLetter=recentPressure&&s?.letter?.topic==='queen-heir'&&s.latest?.title===pressure.title;
+ if(s?.latest&&!sameLetter&&(fatherLetterRoots(c)||s.letter?.topic))topics.unshift({id:'father-letter',make:()=>({key:'father-letter',stage:`她将父亲${p.name}的信重新叠好，谈起自己的心事。`,text:s.latest.daughter})});
  return topics;
 };
 const letterOfficialView=viewOfficial;

@@ -51,7 +51,7 @@ for(const f of require('./fixtures/careers-legacy-v14.json').cases)test('real v1
  let b=boot(711,new Map([['chengongji_v1_auto',JSON.stringify(f.save)]]));b.ctx.assert=assert;
  b.run("A.load('auto');assert.equal(PalaceActions.blocked,false);");assert.equal(b.run('curEv.title'),f.save.pendingActions.pending.title);
  b.run('if(modalResult)nextEv();else choose(curEv.choices.findIndex(c=>!c.cond||c.cond()));');b=reload(b);
- b.run('drain();assert.equal(PalaceActions.contentVersion,36);');
+ b.run('drain();assert.equal(PalaceActions.contentVersion,37);');
 });
 
 test('a military household student is not a general; civil appointment determines his actual duties',()=>{const b=world();b.run(`
