@@ -30,6 +30,35 @@ test('protection checks attendance and records no imaginary audience or automati
 test('a changed rank cancels stale social lines instead of disrespecting a new empress',()=>{const b=w();b.run(`a.trait='骄纵';a.rank=3;queueGouyiReaction(g,a);var ev=gouyiReactionEvent(g);a.rank=8;assert.equal(ev.choices[0].f(),null);assert.equal(gouyiReactionEvent(g),null);`);});
 test('social encounter is rolled only monthly and skips unavailable others',()=>{const b=w();b.run(`a.cold=true;b.gone=true;q.alive=false;Math.random=()=>0;gouyiLifeTick();assert.equal(g.gouyi.court.pending,undefined);a.cold=false;gouyiLifeTick();assert.equal(g.gouyi.court.pending,undefined);S.turn++;gouyiLifeTick();assert.equal(g.gouyi.court.pending.other,a.id);var count=Q.length;gouyiLifeTick();assert.equal(Q.length,count);`);});
 test('actual monthly action introducing reactions survives reload',()=>{let b=w();b.run(`g.gouyi.court={last:0,heard:{}};g.gouyi.inquiry={stage:0,last:0,history:[]};PalaceActions.reset();A.endMonth();save('auto');`);b=reload(b);b.run(`assert.equal(PalaceActions.blocked,false);drain();save('auto');`);reload(b);});
+test('appointing Gouyi’s birth son opens three dated East Palace scenes and replays an open choice',()=>{
+ let b=w();
+ b.run(`var k=makeKid(g,'m','承安');k.born=S.turn-96;delete k.pendingName;
+   PalaceActions.reset();A.kidHeir(k.id);choose(1);assert.equal(k.gouyiCrown,undefined);
+   A.kidHeir(k.id);choose(0);assert.ok(modalResult);nextEv();
+   assert.equal(curEv.title,'东宫 · 从前的名字');assert.deepEqual(curEv.present.map(x=>x.id).join(','),[k.id,g.id].join(','));`);
+ b=reload(b);
+ b.run(`var k=kidById(S.heir),started=S.turn,thread='gouyi-crown:'+S.gen+':'+k.id;
+   assert.equal(curEv.title,'东宫 · 从前的名字');choose(0);drain();
+   assert.equal(k.gouyiCrown.due,started+1);assert.equal(k.gouyiCrown.stage,1);
+   A.endMonth();drain();assert.equal(S.turn,started+1);assert.equal(k.gouyiCrown.stage,2);
+   A.endMonth();drain();assert.equal(k.gouyiCrown.stage,2);
+   A.endMonth();drain();assert.equal(S.turn,started+3);assert.equal(k.gouyiCrown.stage,3);
+   assert.equal(k.story.filter(n=>n.thread===thread).length,3);assert.equal(g.story.filter(n=>n.thread===thread).length,2);
+   assert.equal(S.log.filter(n=>n.t.startsWith('【东宫 ·')).length,3);
+   A.endMonth();drain();assert.equal(k.story.filter(n=>n.thread===thread).length,3);`);
+});
+test('an existing Gouyi heir begins at month-end and a rival’s appointment pauses unplayed scenes',()=>{
+ const b=w();
+ b.run(`var k=makeKid(g,'m','承安'),other=makeKid(a,'m','承宁');
+   for(const child of [k,other]){child.born=S.turn-96;delete child.pendingName;}
+   g.homeLeave={until:S.turn+12};S.heir=k.id;
+   gouyiCrownSettled({gen:S.gen,turn:S.turn-1,heir:k.id});
+   assert.match(curEv.text,/书签/);assert.equal(curEv.present.length,1);choose(0);drain();
+   A.kidHeir(other.id);choose(0);drain();assert.equal(other.gouyiCrown,undefined);
+   A.endMonth();drain();assert.equal(k.gouyiCrown.stage,1);
+   A.kidHeir(k.id);choose(0);nextEv();
+   assert.equal(curEv.title,'东宫 · 太傅第一问');choose(1);drain();assert.equal(k.gouyiCrown.stage,2);`);
+});
 const legacy=require('./fixtures/gouyi-legacy-v16.json');
 for(const [name,payload] of Object.entries(legacy))test('genuine version 16 '+name+' pending save resumes with its original decisions',()=>{
  const b=boot(991,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));b.ctx.assert=assert;b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,16);drain();assert.equal(PalaceActions.blocked,false);`);

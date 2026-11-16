@@ -209,3 +209,78 @@ consortVoicePool=function(c){
   if(personalContextActive()&&d?.stage&&gouyiLifeEligible(c))pool.push(voiceLine('gouyi-past','她望了一眼窗前，又将茶盏向你推近些。',d.stage===1?'陛下还记得臣妾说的河间杏花么？从前总想将袖子拉低，那日讲着花，倒忘了。':d.stage===2?'这几日听雨，臣妾又想起窗下候茶的旧日。如今也有人肯陪着，慢慢喝完一盏。':'从前以为河间那一次便用尽了奇遇。如今才知道，一起喝茶、说说旧事，也会叫人盼着明日。'));
   return pool;
 };
+
+const gouyiCrownActive=()=>journalContentVersion()>=38;
+const GOUYI_CROWN_SCENES=[
+  (k,m,arc)=>{
+    const together=inPalace(m);
+    const opening=arc.late?'这日你到东宫，案上搁着太子刚领到的一册礼仪。':'册命已下，东宫送来新的礼服和仪注。';
+    return {
+      title:'东宫 · 从前的名字',motherHere:together,
+      text:opening+(together
+        ? `赵令仪来替${k.name}看衣袖的长短。左右都改口称殿下，她一时仍喊了他的名字。母子相视，谁也没有立刻改口。\n她问你：“往后人前自然要守礼。只在咱们几个面前，还能照从前唤他么？”`
+        : `${k.name}从旧物中取出一枚生母收存的书签。左右都称殿下，夹在书页里的小笺却还写着他的名字。\n他问你：“这点旧物，我还可以留在东宫么？”`),
+      choices:[
+        {label:together?'私下仍照从前唤他':'准他把生母的旧物留下',keep:true,
+          outcome:together?'赵令仪替他理平了袖口，又唤了一遍从前的名字。他答应得和往常一样。':'书签仍夹在他常翻的那一册里。往后来人称他殿下，他听见自己的名字也还会回头。',
+          child:'人前行太子的礼，家里也还有人记得我的名字。',mother:'平日还可以好好唤他一声。',reward:['love',3,'父爱']},
+        {label:'一同读一遍东宫的新礼',keep:false,
+          outcome:'你将新仪注摊在案上，随他逐条读了，遇到生硬处便停下来解释。那本册子由他自己收好。',
+          child:'东宫礼数多，有些还可以慢慢问明白。',mother:'知道他读得明白，我也安心些。',reward:['vir',2,'品德']}
+      ]
+    };
+  },
+  (k,m,arc)=>({
+    title:'东宫 · 太傅第一问',
+    text:`${arc.keep?'东宫案边，还收着那日留下的旧物。':'东宫的仪注已翻过几遍，案角一页起了毛边。'}太傅说，${k.name}近日晨昏按时读书，碰见疑难却常停笔。\n你问起缘故。他说：“${kidAge(k)<12?'从前答错，先生还肯教我。现在他们都说殿下答得好，我反倒不知道哪里不会。':'近日问同一件事，左右答得越来越齐。儿臣想听实话，却不知道谁还肯直说。'}”`,
+    choices:[
+      {label:'准他每日留一段自行温书的时辰',outcome:'太子可自行挑一页未读明白的书，次日再带给太傅。头一日他留下了两处疑问。',
+        child:'有几页书，可以依自己的步子慢慢读熟。',reward:['love',3,'父爱']},
+      {label:'命太傅照常批错，准师生当面说理',outcome:'次日送来的课卷果然有两处墨批。太子翻出旧卷，两人当面讲明了第一处。',
+        child:'先生肯指出错处，我才知道哪里真正学会了。',reward:['lit',3,'才学']}
+    ]
+  }),
+  (k,m)=>{
+    const together=inPalace(m);
+    return {
+      title:'东宫 · 河间旧闻入册',motherHere:together,
+      text:`修册的礼官送来一份底稿。有人提议把赵令仪在河间展掌一事写在${k.name}的册礼卷首，誉为天命早现。另有人说，卷首写的是本朝如何择储，此事宜另载旧闻。\n底稿传至东宫，${k.name}在“天命早现”四字旁留了空白，等你定夺。`+
+        (together?'\n赵令仪细看那一页：“河间那一刻，臣妾自己也惊讶。若要留下，能不能也把这句实话记进去？”':''),
+      choices:[
+        {label:'册书写册礼，另录见闻与传言的来处',outcome:'礼官分卷誊写。册书依实录册礼，河间记另注亲见与传闻，备后人查考。',
+          child:'将来翻到册书，我还可以读到今日该做好的事。',mother:'我还记得自己的惊讶，如今也有人肯把它照实写下。'},
+        {label:'册书只载册礼，河间旧闻留存内档',outcome:'底稿中的河间一段归入内档。东宫收到的册书只写册礼，旧闻留待愿意查考时再读。',
+          child:'母亲的往事有了存放的地方，我也能安心翻开自己的册书。',mother:'听说旧事已经收好。往后见他，我还可以只问他近日书读得怎样。'}
+      ]
+    };
+  }
+];
+function gouyiCrownEvent(k,m){
+  const arc=k.gouyiCrown,stage=arc.stage,create=GOUYI_CROWN_SCENES[stage];
+  if(!create||S.turn<arc.due||k.pendingName||!childInPalace(k)||mourningActive())return null;
+  const scene=create(k,m,arc);
+  const valid=()=>!S.over&&S.gen===arc.gen&&S.heir===k.id&&k.mom===m.id&&k.gouyiCrown===arc&&arc.stage===stage&&childInPalace(k)&&!mourningActive()&&(!scene.motherHere||inPalace(m));
+  const people=scene.motherHere?[k,m]:[k];
+  return {title:scene.title,por:k,cast:people,present:people,valid,text:scene.text,choices:scene.choices.map(option=>({t:option.label,f:()=>{
+    if(!valid())return null;
+    arc.stage++;arc.due=S.turn+(stage===0?1:2);
+    if(stage===0)arc.keep=option.keep;
+    const thread=`gouyi-crown:${S.gen}:${k.id}`;
+    livedRecord(people,'family',scene.title,thread,`【${scene.title}】${option.outcome}`,[option.child,option.mother]);
+    log(`【${scene.title}】${option.outcome}`,1);
+    if(!option.reward)return option.outcome;
+    const [stat,value,label]=option.reward;
+    k[stat]=clamp(k[stat]+value);
+    return `${option.outcome}\n§${label}+${value}`;
+  }}))};
+}
+function gouyiCrownSettled(previous){
+  if(!gouyiCrownActive()||!previous||S.over||previous.gen!==S.gen)return;
+  const appointed=previous.heir!==S.heir;
+  if(!appointed&&previous.turn===S.turn)return;
+  const k=kidById(S.heir),m=k&&byId(k.mom);
+  if(!k?.alive||k.sex!=='m'||k.removedFromRoyal||!m?.gouyi||(m.gouyi.gen??S.gen)!==S.gen)return;
+  if(k.gouyiCrown?.gen!==S.gen)k.gouyiCrown={gen:S.gen,stage:0,due:S.turn,late:!appointed};
+  const event=gouyiCrownEvent(k,m);
+  if(event)(appointed?pushNow:pushEv)(event);
+}
