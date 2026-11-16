@@ -117,7 +117,7 @@ const HAREM=[
 ];
 function haremEvent(){for(const f of shuffle(HAREM)){const ev=f();if(ev&&ambientEventReady(ev))return {...ev,present:ev.present||eventPortraits(ev)}}return null}
 function returnedMaidPregnancy(c){
-  return journalContentVersion()>=48&&c.maid&&!c.near&&c.preg===2&&Number.isInteger(c.maidReturnedAt)&&
+  return journalContentVersion()>=49&&c.maid&&!c.near&&c.preg===2&&Number.isInteger(c.maidReturnedAt)&&
     c.maidReturnedAt===c.pregnancyCalendar?.conceived;
 }
 function pregEvent(c){
@@ -285,7 +285,7 @@ function afterMaidNight(g){return {title:'天明',por:g,text:`天快亮时，${g
   {t:'封为答应',f:()=>{promoteMaid(g,1);setXin(g,'欢喜','一夜承恩，封为答应');return `她磕头谢恩，搬进了${g.palace}。${fx(cchg(g,{mood:25,aff:10}))}`}},
   {t:'封为官女子',f:()=>{promoteMaid(g,0);setXin(g,'欢喜','一夜承恩，封为官女子');return `她磕头谢恩。${fx(cchg(g,{mood:15,aff:6}))}`}},
   {t:'留在身边，做贴身宫女',f:()=>{g.near=true;g.palace='乾清宫';story(g,'承恩后未受册封，留在御前做贴身宫女，随时侍奉在侧。');return `她留在了乾清宫，每日为你奉茶研墨。${fx(cchg(g,{aff:8}))}\n§「后宫」页的「贴身宫女」里能找到她，翻牌子时也有她`}},
-  {t:'赏些银子，让她回去当差',f:()=>{g.near=false;g.palace='尚衣局';if(journalContentVersion()>=48&&g.preg===1)g.maidReturnedAt=S.turn;story(g,'承恩一夜，次日被打发回尚衣局当差。');setXin(g,'委屈','承恩一夜，次日便被打发回去');return `她谢了恩，回去了。宫里没有人再提起那一夜。${fx(cchg(g,{mood:-10}))}`}}]}}
+  {t:'赏些银子，让她回去当差',f:()=>{g.near=false;g.palace='尚衣局';if(journalContentVersion()>=49&&g.preg===1)g.maidReturnedAt=S.turn;story(g,'承恩一夜，次日被打发回尚衣局当差。');setXin(g,'委屈','承恩一夜，次日便被打发回去');return `她谢了恩，回去了。宫里没有人再提起那一夜。${fx(cchg(g,{mood:-10}))}`}}]}}
 function monthlyMaidEvent(){
   if(!maidEncounterReady()||!chance(journalContentVersion()>=30?.25:.12))return null;
   const pool=[()=>maidEvent('长街')];

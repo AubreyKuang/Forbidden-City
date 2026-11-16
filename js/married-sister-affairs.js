@@ -12,13 +12,13 @@ function marriedSisterVisitButton(c,p){
   if(!marriedSisterAvailable(c,p))return '';
   if(affair?.coerced)return '<p class="hint">她请家人谢绝私下求见。</p>';
   const exhausted=affair?.lastMeeting===S.turn;
-  return `<button class="btn primary" onclick="A.marriedSisterVisit(${c.id},${p.id})" ${exhausted?'disabled':''}>${natalInPalace(c,p)?'在宫中私下求见':'到她的住所求见'}${exhausted?'<small>本月已经见过</small>':''}</button>${journalContentVersion()>=48?'<p class="hint">求见只会先问她的心意。</p>':''}`;
+  return `<button class="btn primary" onclick="A.marriedSisterVisit(${c.id},${p.id})" ${exhausted?'disabled':''}>${natalInPalace(c,p)?'在宫中私下求见':'到她的住所求见'}${exhausted?'<small>本月已经见过</small>':''}</button>${journalContentVersion()>=49?'<p class="hint">求见只会先问她的心意。</p>':''}`;
 }
 
 function marriedSisterEncounter(c,p){
   if(!marriedSisterAvailable(c,p)||p.marriedSisterAffair?.coerced||p.marriedSisterAffair?.lastMeeting===S.turn)return null;
   p.spouse ||= initialNatalSpouse(p,natalAge(p));
-  const direct=journalContentVersion()>=48;
+  const direct=journalContentVersion()>=49;
   const gen=S.gen,turn=S.turn,spouse=p.spouse,inPalaceNow=natalInPalace(c,p);
   const affair=p.marriedSisterAffair?.spouseId===spouse.id?p.marriedSisterAffair:(p.marriedSisterAffair={
     spouseId:spouse.id,receptive:p.willing!==false&&chance(['活泼','爽直'].includes(p.trait)? .48 : .32),meetings:0

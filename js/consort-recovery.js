@@ -32,7 +32,7 @@ function consortRecovery(c){
 function consortNightReason(c){
   if(!c)return '眼下不宜召见';
   if(c.cardWithdrawn)return '绿头牌已撤';
-  if(c.preg)return c.maid&&c.preg===1&&journalContentVersion()>=48?'今夜暂不宜留侍':'有孕在身';
+  if(c.preg)return c.maid&&c.preg===1&&journalContentVersion()>=49?'今夜暂不宜留侍':'有孕在身';
   const r=consortRecovery(c);
   if(r)return `${r.kind==='birth'?'产后':'小产后'}调养 · 还需${Math.min(3,r.until-S.turn)}个月`;
   if(consortRecoveryActive()&&c.delivery&&!c.delivery.settled)return '产事尚待安顿';

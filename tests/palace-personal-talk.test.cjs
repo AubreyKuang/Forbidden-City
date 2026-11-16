@@ -56,5 +56,5 @@ test('refresh preserves the active chat and continues with the next subject',()=
 });
 for(const [name,title] of [['jealous','醋海生波'],['love','相伴有凭'],['chat','闲话家常']])test('genuine v25 '+name+' pending scenes replay unchanged before adopting the new rules',()=>{
  const payload=require('./fixtures/'+name+'-legacy-v25.json'),w=boot(500,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));w.ctx.assert=assert;
- w.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,25);assert.equal(curEv.title,'${title}');drain();assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,48);`);
+ w.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,25);assert.equal(curEv.title,'${title}');drain();assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,49);`);
 });
