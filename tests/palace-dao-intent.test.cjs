@@ -32,5 +32,5 @@ test('children’s existing Daoist and immortal paths retain their potential and
 });
 for(const version of [52,53])test('published v'+version+' monthly attendance replays unchanged before the corrected labels activate',()=>{
  const payload=require('./fixtures/selection-and-dao-legacy-v'+version+'.json').daoMonth,b=boot(593,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));b.ctx.assert=assert;
- b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,${version});assert.equal(daoIntentActive(),false);drain();assert.equal(PalaceActions.contentVersion,57);assert.equal(daoIntentActive(),true);`);
+ b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,${version});assert.equal(daoIntentActive(),false);drain();assert.equal(PalaceActions.contentVersion,58);assert.equal(daoIntentActive(),true);`);
 });

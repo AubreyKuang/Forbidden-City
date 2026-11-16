@@ -46,6 +46,8 @@ function inheritDowager(h){
 }
 function inheritHousehold(h,queen){
   const household=h.household;if(!household||!queen)return;
+  const adopted=princeAdoptionActive()?household.children.filter(c=>c.princeAdoption):[];
+  if(adopted.length)(S.princeAdoptionOrigins||=[]).push({...h,away:false,princeEstate:undefined,princeAdoptionOrigin:true,household:{...household,children:adopted}});
   const mothers=new Map([[h.spouse.id,queen]]);
   for(const partner of household.concubines||[]){
     if(partner.alive===false||!partner.appearance)continue;
@@ -53,6 +55,7 @@ function inheritHousehold(h,queen){
     addConsort(c,3,'潜邸旧人，随新帝入宫');mothers.set(partner.id,c);
   }
   for(const child of household.children||[]){
+    if(princeAdoptionActive()&&child.princeAdoption)continue;
     const mother=mothers.get(child.mother)||queen;
     const k=makeKid(mother,child.sex,child.given||child.name);
     for(const field of ['born','seed','portraitVariant','lit','mar','vir','hp','amb','alive'])if(child[field]!==undefined)k[field]=child[field];
@@ -80,7 +83,7 @@ function royalKinship(k){
 function listedRoyalKin(){
   const cohorts=new Map(),current=new Set(S.children.map(k=>k.id));
   for(const k of royalHouseholds()){
-    if(current.has(k.id)||k.princelySuccession)continue;
+    if(current.has(k.id)||k.princelySuccession||k.princeAdoptionOrigin)continue;
     if(!cohorts.has(k.reign))cohorts.set(k.reign,[]);
     cohorts.get(k.reign).push(k);
   }
@@ -116,7 +119,7 @@ function royalKinContactButtons(k,estateContact=false){
   return `<div class="acts"><span class="hint">${esc(royalKinContactPlace(k,mode))}</span>${button}</div>`;
 }
 function royalKinWords(k,topic){
-  const age=kidAge(k),child=k.household?.children?.find(c=>c.alive!==false);
+  const age=kidAge(k),child=princeResidentChildren(k).find(c=>c.alive!==false);
   if(age<3)return topic==='home'?'乳母说，孩子每天醒后都要寻那只熟悉的布虎。':'乳母说，孩子近来吃得好，夜里也睡得安稳。';
   if(topic==='home'&&child)return `“${child.given||child.name}近来有了新本事，一回家就拉着我看。我也想让陛下听听这些小事。”`;
   if(topic==='home'&&k.spouse?.alive!==false&&k.spouse)return `“我同${k.spouse.name}约好，再忙也留一顿饭一起用。府里近来总算有些闲话可说。”`;

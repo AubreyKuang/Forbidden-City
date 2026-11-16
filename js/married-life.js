@@ -33,7 +33,7 @@ function marriageMeeting(k,p,back){
     ]};
 }
 const royalHouseholds=()=>{
-  const roots=[...new Map([...(S.royalRelatives||[]),...archivedPrincesses(),...S.children].map(k=>[k.id,k])).values()];
+  const roots=[...new Map([...(S.royalRelatives||[]),...(princeAdoptionActive()?S.princeAdoptionOrigins||[]:[]),...archivedPrincesses(),...S.children].map(k=>[k.id,k])).values()];
   return [...roots,...princelyDescendants(roots)];
 };
 const royalById=id=>royalHouseholds().find(k=>k.id===id);
@@ -62,7 +62,7 @@ function householdMother(k){
   if(d)return {...d.portrait,alive:d.alive};
   return byId(id)||(S.previousCourts||[]).slice().reverse().flatMap(c=>c.consorts).find(c=>c.id===id);
 }
-function householdLiving(k){return !!(k?.alive&&!k.removedFromRoyal&&k.married&&k.spouse?.alive!==false&&!k.jailed&&!k.gone&&!S.over);}
+function householdLiving(k){return !!(k?.alive&&!k.princeAdoptionOrigin&&!k.removedFromRoyal&&k.married&&k.spouse?.alive!==false&&!k.jailed&&!k.gone&&!S.over);}
 function householdActive(k){return householdLiving(k)&&!k.templeStay;}
 function householdRecord(k,type,text){
   const h=ensureMarriedLife(k);if(!h)return;
@@ -72,7 +72,8 @@ function householdRecord(k,type,text){
 function householdPeople(k){return [k.spouse,...(ensureMarriedLife(k)?.concubines||[])].filter(Boolean);}
 function householdSummary(k){
   const h=k.household;if(!h||kidAge(k)<18||!k.married)return '';
-  const children=[...h.children,...(k.recognizedChildren||[]).map(kidById).filter(Boolean)].filter(c=>c.alive!==false),sons=children.filter(c=>c.sex==='m').length;
+  const registered=princeResidentChildren(k);
+  const children=[...registered,...(k.recognizedChildren||[]).map(kidById).filter(Boolean)].filter(c=>c.alive!==false),sons=children.filter(c=>c.sex==='m').length;
   return `${sons}子${children.length-sons}女${h.pregnancies.length?' · 有喜':''}${h.concubines.length?' · 妾室'+h.concubines.length+'人':''}`;
 }
 function householdCanConceive(k,p){
@@ -122,7 +123,7 @@ const HOUSEHOLD_SCENES={
   boundary:{title:'两家的礼单',match:()=>true,
     text:(k,p)=>`${p.name}家送来节礼，又附了一封求官的信。${k.name}把信压在礼单下，不想让一份亲情变成答应不了的人情。`,
     choices:[['收下家书，官职另循公议',5,4,'vir',3,'两人一起回了家书，把亲情与官职分开处理。'],['让其中一人独自回绝',-5,-3,null,0,'回信的人觉得自己独担了恶名，另一人也不知该怎样开口。']]},
-  nursery:{title:'小儿初学步',match:k=>k.household.children.some(c=>c.alive&&kidAge(c)>=1&&kidAge(c)<=4),
+  nursery:{title:'小儿初学步',match:k=>princeResidentChildren(k).some(c=>c.alive&&kidAge(c)>=1&&kidAge(c)<=4),
     text:(k,p)=>`${k.name}与${p.name}争着教小儿走路。一个怕摔，一个怕护得太紧。孩子抱住椅脚，回头看看两人，偏不肯先迈步。`,
     choices:[['一起留出安全的空地，让孩子自己试',7,5,'vir',2,'两人一同蹲下等孩子走来，终于不再争谁的办法更好。'],['把教养交给一个人安排',-4,-2,null,0,'府里有了统一规矩，却有一个人被留在了孩子的日常之外。']]},
   repair:{title:'闭门后的回信',match:(k,p)=>(p.trust??60)<45,
@@ -166,7 +167,8 @@ function recordHouseholdNews(k){
   if(mother?.alive&&!mother.gone&&!mother.cold)choices.push({id:'mother',delta:2,text:near?`${k.name}与${p.name}请安时陪${cName(mother)}说了家常。母亲问起衣食，两人各答了一半，离去时还带了一包点心。`:`${k.name}与${p.name}一同给${cName(mother)}写了家书，把小家近来的安稳说给母亲听。`});
   if(mother?.alive&&(mother.cold||mother.gone))choices.push({id:'separated-mother',delta:good?2:0,text:`${k.name}挂念处境艰难的母亲，${p.name}${good?'听完牵挂，陪着把问安的信写好，等候许可递送。':'一时不知如何安慰，只陪着静坐了一会儿。'}`});
   if(p.fatherName)choices.push({id:'inlaws',delta:2,text:`${p.fatherName}家来信问安，${p.name}与${k.name}一同回信。两家旧习不同，他们把节礼的轻重提前商量清楚。`});
-  if(h.children.length){const baby=h.children.find(c=>c.alive!==false);if(baby)choices.push({id:'child',delta:3,text:kidAge(baby)<1?`${k.name}与${p.name}轮流照看${baby.name}，才发觉小儿一个笑容也能让两人说上半日。`:`${baby.name}渐渐有了自己的脾气。${k.name}与${p.name}起初各有教法，后来约好先听孩子说完。`});}
+  const baby=princeResidentChildren(k).find(c=>c.alive!==false);
+  if(baby)choices.push({id:'child',delta:3,text:kidAge(baby)<1?`${k.name}与${p.name}轮流照看${baby.name}，才发觉小儿一个笑容也能让两人说上半日。`:`${baby.name}渐渐有了自己的脾气。${k.name}与${p.name}起初各有教法，后来约好先听孩子说完。`});
   if(h.pregnancies.length)choices.push({id:'expecting',delta:3,text:`小家近来为将添的孩子收拾起居。${k.name}与${p.name}把旁的安排放慢，先顾好饮食与休息。`});
   const richer=richerPrincessMarriage(k);
   const record=richer&&k.officialMarriageId&&officialMarriageRecord(k.officialMarriageId);
@@ -196,6 +198,7 @@ function recordHouseholdNews(k){
 function marriedLifeTick(){
   if(S.over)return;
   for(const k of royalHouseholds()){
+    if(k.princeAdoptionOrigin)continue;
     const h=ensureMarriedLife(k);if(!h||h.lastTick===S.turn)continue;h.lastTick=S.turn;
     if(!householdLiving(k)){h.pending=null;h.pregnancies=[];continue;}
     for(const p of [...h.pregnancies])if(S.turn>=p.due)deliverHouseholdChild(k,p);
@@ -225,6 +228,7 @@ function householdConcubineReason(k){
 }
 function householdPanel(k){
   const h=ensureMarriedLife(k);if(!h||kidAge(k)<15)return '';
+  const residents=princeResidentChildren(k);
   const p=k.spouse,fit=marriageFit(k,p),adult=kidAge(k)>=18&&kidAge(p)>=18,concubineReason=householdConcubineReason(k);
   const pregnant=adult?h.pregnancies.map(g=>{const person=g.mother===k.id?k:householdPeople(k).find(p=>p.id===g.mother);return person?`${esc(k.sex==='f'?k.name:householdMotherName(k,person))}有孕 · ${Math.min(10,S.turn-g.conceived+1)}个月`:'';}).filter(Boolean):[];
   return `<section class="household-panel"><h3>家人与往来</h3><p>${esc(p.name)} · ${esc(marriageNature(p).temperament)} · ${esc(COUPLE_HOBBIES[marriageNature(p).hobby])} · ${esc(marriageNature(p).spending)}</p>
@@ -235,7 +239,7 @@ function householdPanel(k){
     ${h.project?`<p class="hint">${esc(h.project.title)} · 预计${Math.max(0,h.project.due-S.turn)}个月后有回音</p>`:''}
     ${h.pending?`<p class="initiative-note">府中近况：${esc(HOUSEHOLD_SCENES[h.pending.id]?.title||'待询问')}</p>`:''}
     ${householdActive(k)?`<div class="acts"><button class="btn jade" onclick="A.householdVisit(${royalActionArg(k.id)})">${k.away||k.princessMarriage==='frontier'?'读府中来信':'探望小家'} →</button><button class="btn" onclick="A.householdProject(${royalActionArg(k.id)})" ${h.project||S.turn-(h.lastProject??-99)<12?'disabled':''}>帮两人办件事</button>${adult&&k.sex==='m'?`<button class="btn" onclick="A.householdConcubine(${royalActionArg(k.id)})" title="${esc(concubineReason||'先听皇子的想法，再决定是否准许纳妾')}" ${concubineReason?'disabled':''}>询问皇子纳妾意愿${concubineReason?`<small>${esc(concubineReason)}</small>`:''}</button>`:''}</div>`:''}
-    ${adult&&h.children.length?`<div class="household-children">${h.children.map(c=>`<article>${porImg(c,56)}<div><strong>${esc(c.name)}</strong><small>${kidAge(c)}岁 · ${c.sex==='m'?'子':'女'} · 生母${esc(c.motherName)}</small></div></article>`).join('')}</div>`:''}
+    ${adult&&residents.length?`<div class="household-children">${residents.map(c=>`<article>${porImg(c,56)}<div><strong>${esc(c.name)}</strong><small>${kidAge(c)}岁 · ${c.princeAdoption?'嗣子':c.sex==='m'?'子':'女'} · 生母${esc(c.motherName)}</small></div></article>`).join('')}</div>`:''}
     </section>`;
 }
 A.householdVisit=function(id){

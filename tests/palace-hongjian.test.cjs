@@ -90,5 +90,5 @@ test('old biographies and admission references survive succession without admitt
 
 for(const [scene,fixture] of Object.entries(require('./fixtures/hongjian-legacy-v25.json')))test('genuine version 25 '+scene+' finishes unchanged before enabling admission',()=>{
  let b=world(new Map([['chengongji_v1_auto',JSON.stringify(fixture)]]));b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,25);assert.equal(hongjianContent(),false);`);assert.equal(b.run('curEv.title'),fixture.pendingActions.pending.title);
- b.run(`drain();assert.equal(PalaceActions.contentVersion,57);assert.equal(hongjianContent(),true);assert.equal(PalaceActions.blocked,false);`);
+ b.run(`drain();assert.equal(PalaceActions.contentVersion,58);assert.equal(hongjianContent(),true);assert.equal(PalaceActions.blocked,false);`);
 });
