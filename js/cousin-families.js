@@ -50,10 +50,6 @@ function cousinFatherEntries(c){
   seen.add(id);return true;
  }).map(o=>({c:o,p:o.house.father,key:o.id+':father',e:{c:o,h:o.house,p:o.house.father,role:'father'}}));
 }
-function cousinFatherLinks(c){
- const others=cousinFatherEntries(c);if(!others.length)return '';
- return `<p class="hint cousin-father-links">父亲的亲兄弟：${others.map(x=>`${officialLink(x.c,'father')}（${esc(fullName(x.c))}之父）`).join('；')}。两房女儿为堂姐妹。</p>`;
-}
 function clanPalaceCount(key){return S.consorts.filter(c=>c.alive&&!c.gone&&!c.maid&&hasClan(c)&&clanKey(c)===key).length;}
 function cousinAdmissionNotice(g){
  if(!cousinFamiliesActive()||g.cousinAdmissionRecorded)return;
