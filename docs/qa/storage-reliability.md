@@ -33,8 +33,18 @@ NODE_PATH=/path/to/playwright/node_modules node tests/storage-browser-acceptance
 
 ## 本地结果
 
-2029 项自动测试全部通过，60 个月完整流程通过。桌面 1440×1000 与手机 390×844 共 12 个存储场景通过，累计 14 次刷新恢复：[本地存储报告](storage-local-browser-results.json)。原家庭、选秀与慈宁宫浏览器验收共 26 个场景也全部通过，累计 80 次刷新恢复。
+初次存档修复的 2029 项自动测试全部通过，60 个月完整流程通过。桌面 1440×1000 与手机 390×844 共 12 个存储场景通过，累计 14 次刷新恢复：[本地存储报告](storage-local-browser-results.json)。原家庭、选秀与慈宁宫浏览器验收共 26 个场景也全部通过，累计 80 次刷新恢复。
 
 测试复现了旧存储达到容量上限的故障，没有取得玩家报告问题时的原始档案。真实设备磁盘耗尽、浏览器禁止本站存储、清除站点数据等仍需按界面提示处理；这些情况不会被承诺为无限可保存。
 
-正式站验收与截图在部署后补充。
+## 正式站结果
+
+存档实现来自 `54cafdc`；与家书、首饰及科举主线合并后的 `29b623b` 已部署至 [正式入口](https://aubreykuang.github.io/Forbidden-City/)，发布入口、测试入口及存档相关脚本逐字核对一致。合并后的 2078 项自动测试与 60 个月流程再次全部通过。正式站再次通过全部 12 个存储场景、14 次刷新恢复：[正式站存储报告](storage-production-browser-results.json)。家庭、选秀与慈宁宫另通过 26 场景、80 次刷新，合计 38 场景、94 次刷新。
+
+测试里的 12 MB 档案包含用于验证容量的合成大字段，不将其当作玩家原档或自然游玩体积统计。
+
+![正式站大容量存档及保存月份](../screenshots/storage/full-legacy-desktop-saved.jpg)
+
+| 手机读取存档 | 写入失败时保留旧档 |
+| --- | --- |
+| ![手机存档](../screenshots/storage/full-legacy-mobile-saved.jpg) | ![存档故障提示](../screenshots/storage/write-failure-mobile-refused.jpg) |

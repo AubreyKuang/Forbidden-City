@@ -1,0 +1,168 @@
+{
+  "url": "https://aubreykuang.github.io/Forbidden-City/",
+  "started": "2026-11-16T03:54:22.505Z",
+  "runs": [
+    {
+      "name": "garden",
+      "viewport": "desktop",
+      "reloads": 2,
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "infants",
+      "viewport": "desktop",
+      "reloads": 2,
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "monthly",
+      "viewport": "desktop",
+      "reloads": 2,
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "dispute-fair",
+      "viewport": "desktop",
+      "reloads": 3,
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "dispute-biased",
+      "viewport": "desktop",
+      "reloads": 2,
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "plan-declined",
+      "viewport": "desktop",
+      "reloads": 2,
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "petition",
+      "viewport": "desktop",
+      "reloads": 3,
+      "errors": [],
+      "passed": true,
+      "text": "沈知微入冷宫后，清宁、清和、明仪、玉宁一同来御前求情。\n\n“儿臣不敢说母妃没有过错，只求父皇顾念，别让她无人照料。”\n\n玉宁是陪交好的孩子前来，想把他们的担忧说给你听。\n\n清圆：尚不明白大人的处置，起居有了变化，睡梦中也比平日容易惊醒。"
+    },
+    {
+      "name": "autosave",
+      "viewport": "desktop",
+      "reloads": 5,
+      "errors": [],
+      "passed": true,
+      "months": [
+        65,
+        66,
+        67
+      ]
+    },
+    {
+      "name": "selection",
+      "viewport": "desktop",
+      "reloads": 2,
+      "errors": [],
+      "passed": true,
+      "offices": [
+        {
+          "name": "崔澜",
+          "office": "直隶总督"
+        },
+        {
+          "name": "白嫣漪",
+          "office": "湖广总督"
+        }
+      ]
+    },
+    {
+      "name": "garden",
+      "viewport": "mobile",
+      "reloads": 2,
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "infants",
+      "viewport": "mobile",
+      "reloads": 2,
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "monthly",
+      "viewport": "mobile",
+      "reloads": 2,
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "dispute-fair",
+      "viewport": "mobile",
+      "reloads": 3,
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "dispute-biased",
+      "viewport": "mobile",
+      "reloads": 2,
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "plan-declined",
+      "viewport": "mobile",
+      "reloads": 2,
+      "errors": [],
+      "passed": true
+    },
+    {
+      "name": "petition",
+      "viewport": "mobile",
+      "reloads": 3,
+      "errors": [],
+      "passed": true,
+      "text": "沈知微入冷宫后，清宁、清和、明仪、玉宁一同来御前求情。\n\n“儿臣不敢说母妃没有过错，只求父皇顾念，别让她无人照料。”\n\n玉宁是陪交好的孩子前来，想把他们的担忧说给你听。\n\n清圆：尚不明白大人的处置，起居有了变化，睡梦中也比平日容易惊醒。"
+    },
+    {
+      "name": "autosave",
+      "viewport": "mobile",
+      "reloads": 5,
+      "errors": [],
+      "passed": true,
+      "months": [
+        65,
+        66,
+        67
+      ]
+    },
+    {
+      "name": "selection",
+      "viewport": "mobile",
+      "reloads": 2,
+      "errors": [],
+      "passed": true,
+      "offices": [
+        {
+          "name": "崔澜",
+          "office": "直隶总督"
+        },
+        {
+          "name": "白嫣漪",
+          "office": "湖广总督"
+        }
+      ]
+    }
+  ],
+  "browser": "157.0.8103.78",
+  "finished": "2026-11-16T03:55:53.037Z",
+  "passed": true,
+  "verifiedCodeCommit": "29b623b84d67b18b37bd95824a9326b63cf27bb0"
+}

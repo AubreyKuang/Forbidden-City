@@ -1,0 +1,120 @@
+{
+  "url": "https://aubreykuang.github.io/Forbidden-City/",
+  "started": "2026-11-16T03:54:22.577Z",
+  "runs": [
+    {
+      "name": "full-legacy",
+      "viewport": "desktop",
+      "reloads": 3,
+      "errors": [],
+      "passed": true,
+      "legacyQuotaExceeded": true,
+      "months": [
+        65,
+        66,
+        67
+      ],
+      "legacyRetained": true
+    },
+    {
+      "name": "large-file",
+      "viewport": "desktop",
+      "reloads": 2,
+      "errors": [],
+      "passed": true,
+      "fileBytes": 12010166,
+      "exportBytes": 12010422
+    },
+    {
+      "name": "write-failure",
+      "viewport": "desktop",
+      "reloads": 1,
+      "errors": [],
+      "passed": true,
+      "retryPreservedProgress": true
+    },
+    {
+      "name": "two-tabs",
+      "viewport": "desktop",
+      "reloads": 0,
+      "errors": [],
+      "passed": true,
+      "otherTabProtected": true
+    },
+    {
+      "name": "dev-isolation",
+      "viewport": "desktop",
+      "reloads": 1,
+      "errors": [],
+      "passed": true,
+      "devTurn": 65
+    },
+    {
+      "name": "gallery-isolation",
+      "viewport": "desktop",
+      "reloads": 0,
+      "errors": [],
+      "passed": true,
+      "disposable": true
+    },
+    {
+      "name": "full-legacy",
+      "viewport": "mobile",
+      "reloads": 3,
+      "errors": [],
+      "passed": true,
+      "legacyQuotaExceeded": true,
+      "months": [
+        65,
+        66,
+        67
+      ],
+      "legacyRetained": true
+    },
+    {
+      "name": "large-file",
+      "viewport": "mobile",
+      "reloads": 2,
+      "errors": [],
+      "passed": true,
+      "fileBytes": 12010166,
+      "exportBytes": 12010422
+    },
+    {
+      "name": "write-failure",
+      "viewport": "mobile",
+      "reloads": 1,
+      "errors": [],
+      "passed": true,
+      "retryPreservedProgress": true
+    },
+    {
+      "name": "two-tabs",
+      "viewport": "mobile",
+      "reloads": 0,
+      "errors": [],
+      "passed": true,
+      "otherTabProtected": true
+    },
+    {
+      "name": "dev-isolation",
+      "viewport": "mobile",
+      "reloads": 1,
+      "errors": [],
+      "passed": true,
+      "devTurn": 65
+    },
+    {
+      "name": "gallery-isolation",
+      "viewport": "mobile",
+      "reloads": 0,
+      "errors": [],
+      "passed": true,
+      "disposable": true
+    }
+  ],
+  "browser": "157.0.8103.78",
+  "finished": "2026-11-16T03:56:00.168Z",
+  "passed": true,
+  "verifiedCodeCommit": "29b623b84d67b18b37bd95824a9326b63cf27bb0"
+}

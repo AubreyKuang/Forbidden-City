@@ -10,14 +10,14 @@ async function restore(p,r){await ready(p);const before=await state(p);await p.r
 async function drain(p){for(let n=0;n<120;n++){if(!await p.locator('#modal').isVisible())return;await p.locator('#modal .mch button:not([disabled])').first().click();}throw Error('Pending scenes did not finish');}
 async function savePage(p){await p.locator('#menu').getByRole('button',{name:'存档',exact:true}).click();await ready(p);}
 async function endMonth(p){const turn=(await state(p)).turn;await p.getByRole('button',{name:'结束本月 ▸',exact:true}).click();for(let n=0;n<25&&(await state(p)).turn===turn;n++)await p.locator('#modal .mch button:not([disabled])').last().click();assert.equal((await state(p)).turn,turn+1);await ready(p);}
-async function shot(p,r,suffix=''){await p.evaluate(()=>document.fonts.ready);await p.screenshot({path:path.join(shots,r.name+'-'+r.viewport+suffix+'.jpg'),type:'jpeg',quality:85});}
+async function shot(p,r,suffix=''){await p.waitForFunction(()=>document.querySelector('#toast').childElementCount===0);await p.evaluate(()=>document.fonts.ready);await p.screenshot({path:path.join(shots,r.name+'-'+r.viewport+suffix+'.jpg'),type:'jpeg',quality:85});}
 async function seed(ctx,full=false){await ctx.addInitScript(({data,key,full})=>{
  if(localStorage.getItem('qa-seeded'))return;
  const raw=JSON.stringify(data);localStorage.setItem(key,raw);localStorage.setItem('chengongji_v1_1',raw);localStorage.setItem(key+':backup',raw);localStorage.setItem('chengongji_v1_before-import',raw);localStorage.setItem('chengongji_dev_v1_auto',raw);localStorage.setItem(key+':snapshots',JSON.stringify([{label:'qa-year',savedAt:1,day:data.turn,date:'旧年岁首',raw}]));localStorage.setItem('qa-seeded','1');
  if(full){let value='';for(const size of [65536,1024,1])for(let n=0;n<6000;n++){try{const next=value+'x'.repeat(size);localStorage.setItem('qa-other-game-data',next);value=next;}catch{break;}}}
  },{data:fixture,key:KEY,full});}
 (async()=>{await fs.mkdir(shots,{recursive:true});const browser=await chromium.launch({headless:true,executablePath:process.env.PALACE_CHROME||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});report.browser=browser.version();
- try{for(const [viewport,size] of [['desktop',{width:1440,height:1000}],['mobile',{width:390,height:844}]])for(const name of ['full-legacy','large-file','write-failure','two-tabs','dev-isolation','gallery-isolation']){
+ try{for(const [viewport,size] of [['desktop',{width:1440,height:1000}],['mobile',{width:390,height:844}]])for(const name of (process.env.PALACE_QA_CASES?.split(',')||['full-legacy','large-file','write-failure','two-tabs','dev-isolation','gallery-isolation'])){
  const ctx=await browser.newContext({viewport:size,acceptDownloads:true}),p=await ctx.newPage(),r={name,viewport,reloads:0,errors:[],passed:false};report.runs.push(r);p.setDefaultTimeout(20000);p.on('dialog',d=>d.accept());p.on('pageerror',e=>r.errors.push(e.message));
  try{
   await seed(ctx,name==='full-legacy');await p.goto(url);await p.getByRole('button',{name:/^读取自动存档/}).click();await p.waitForFunction(()=>!!S);assert.equal((await state(p)).blocked,false);await savePage(p);
