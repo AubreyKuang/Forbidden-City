@@ -48,7 +48,7 @@ function rememberPersonRoute(view,id){
 function personBackButton(fallback){
   const source=personBackStack.at(-1);
   const view=source?.state===S?source.view:fallback;
-  const label={residences:'宫室分配',officials:'官员表',official:'父兄详情',ministries:'六部',scholar:'朝臣详情',consort:'妃嫔详情',kid:'皇嗣详情',princess:'公主府',palace:'宫殿',place:'上一地点'}[view]||
+  const label={residences:'宫室分配',officials:'官员表',official:'父兄详情',ministries:'六部',scholar:'朝臣详情',consort:'妃嫔详情',kid:'皇嗣详情',princess:'公主府','prince-estate':'王府',palace:'宫殿',place:'上一地点'}[view]||
     MENU.find(([id])=>id===view)?.[1]||'上一页';
   return `<button class="btn quiet sm detail-back" onclick="A.backPerson('${fallback}')">← 返回${esc(label)}</button>`;
 }
@@ -72,7 +72,7 @@ function renderPanel(){
   const p=$('#panel'),v=UI.view;
   const route=JSON.stringify([v,UI.sel]);
   if(!S)p.innerHTML=v==='new'?viewNew():viewTitle();
-  else p.innerHTML=({government:viewGovernment,residences:viewResidences,officials:officialsRoster,official:viewOfficial,ministries:typeof viewMinistries==='function'?viewMinistries:viewGovernment,scholar:typeof viewScholar==='function'?viewScholar:viewGovernment,jinyiwei:typeof viewJinyiwei==='function'?viewJinyiwei:viewGovernment,jewelry:viewJewelryVault,natal:viewNatalRelative,relative:viewRoyalRelative,family:viewFamily,map:viewMap,palace:viewPalace,place:viewPlace,banquet:viewBanquet,home:viewHome,fenghua:typeof viewFenghuaPerson==='function'?viewFenghuaPerson:viewHome,harem:viewHarem,consort:viewConsort,cards:viewCards,xx:viewXX,kids:viewKids,kid:viewKid,princess:viewPrincessEstate,out:viewOut,log:viewLog,sys:viewSys}[v]||viewHome)();
+  else p.innerHTML=({government:viewGovernment,residences:viewResidences,officials:officialsRoster,official:viewOfficial,ministries:typeof viewMinistries==='function'?viewMinistries:viewGovernment,scholar:typeof viewScholar==='function'?viewScholar:viewGovernment,jinyiwei:typeof viewJinyiwei==='function'?viewJinyiwei:viewGovernment,jewelry:viewJewelryVault,natal:viewNatalRelative,relative:viewRoyalRelative,family:viewFamily,map:viewMap,palace:viewPalace,place:viewPlace,banquet:viewBanquet,home:viewHome,fenghua:typeof viewFenghuaPerson==='function'?viewFenghuaPerson:viewHome,harem:viewHarem,consort:viewConsort,cards:viewCards,xx:viewXX,kids:viewKids,kid:viewKid,princess:viewPrincessEstate,'prince-estate':viewPrinceEstate,out:viewOut,log:viewLog,sys:viewSys}[v]||viewHome)();
   if(S&&v==='xx')rememberSelectionBlurt(selectionCurrent());
   if(route!==panelRoute){p.scrollTop=0;panelRoute=route;}
 }
@@ -490,7 +490,7 @@ function viewKid(){
       detailSection('封号与储位',titles?`<div class="acts">${titles}</div>`:'')+
       detailSection('其他属性',`<div class="stats">${bar('体魄',k.hp,'#a87a26')}${bar('野心',k.amb,'#6b4a33')}${bar('父爱',k.love,'#936375')}${k.sex==='m'&&a>=10?bar('支持',k.sup||0,'#617991'):''}</div>`)+
       detailSection('出生禀赋',childBirthPanel(k))],
-    ['family','亲缘与婚配',marriagePanel(k)+householdPanel(k)+princessActions(k)+multipleBirthPanel(k)+
+    ['family','亲缘与婚配',marriagePanel(k)+householdPanel(k)+princessActions(k)+princeEstateLink(k)+multipleBirthPanel(k)+
       detailSection('身世与安置',parentagePanel(k))+outsideParentagePanel(null,k)+detailSection('府中认回的孩子',recognizedChildrenPanel(k))+
       (k.alive?detailSection('与母亲的日常',kidFamilyPanel(k)):'')+detailSection('宫中关系',k.alive?kidRelLine(k):'')],
     ['history','往事与纪事',historyPanel(k)+detailSection('宫墙往事',palaceRomancePanel(k))+
@@ -499,7 +499,7 @@ function viewKid(){
 }
 function viewOut(){
   const o=[['garden','御花园','偶遇妃嫔、宫女，或独自散心'],['city','微服出宫','体察民情，也许会遇见有缘人'],['hunt','南苑围猎','武略越高越易成功，有受伤风险'],['temple','护国寺祈福','民心、龙体小增，本月更易得子'],['spa','温泉行宫',`休养龙体（国库-${SPA_COST}万两）`]];
-  return `${pageHeading('出巡','每次出巡花费1点精力。')}<div class="grid destination-grid">${o.map(([k,n,d])=>`<button class="card" onclick="A.out('${k}')"><div class="grow"><div class="nm">${n}</div><div>${d}</div></div></button>`).join('')}</div>${rescuedGuestsPanel()}${princessEstatePanel()}${incognitoLedger()}`}
+  return `${pageHeading('出巡','每次出巡花费1点精力。')}<div class="grid destination-grid">${o.map(([k,n,d])=>`<button class="card" onclick="A.out('${k}')"><div class="grow"><div class="nm">${n}</div><div>${d}</div></div></button>`).join('')}</div>${rescuedGuestsPanel()}${princessEstatePanel()}${princeEstatesPanel()}${incognitoLedger()}`}
 function viewLog(){
   // A month divider with nothing recorded after it is noise; keep only dividers that head real entries.
   const divider=l=>/^—— .+ ——$/.test(l?.t||'');
