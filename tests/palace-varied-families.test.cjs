@@ -15,6 +15,12 @@ test('legacy single brother and explicit absence are preserved, without inventin
  for(var woman of paternalFamily(c))woman.house=h;h.brother=null;save('2');load('2');c=byId(c.id);h=houseOf(c);assert.equal(brotherRoles(h).length,0);assert.doesNotMatch(houseLine(c),/无兄长/);assert.doesNotMatch(familyGraphSVG(),/无兄长/);
  c.trait='贪财';assert.equal(ARCS.greed.fit(c),false);assert.equal(householdGuest(c,{born:S.turn-180}),null);`);
 });
+test('new humble households mostly have no brother and never generate multiple sons',()=>{
+ const {run}=boot();run(`S.consorts=[];S.cands=[];var empty=0;for(var i=0;i<100;i++){var c=makeGirl({age:25,fam:{t:i%2?'寒门':'农家',p:5}});addConsort(c,3,'入宫');var h=houseOf(c),count=brotherRoles(h).length+natalPeople(h).filter(p=>p.sex==='m'&&!p.parentRelativeId).length;assert.ok(count<=1);if(!count)empty++;}assert.ok(empty>50&&empty<100);`);
+});
+test('one exchange between brothers is written once in their sister’s chronicle',()=>{
+ const {run}=boot();run(multi+`var one=courtPerson(c.id+':brother'),two=courtPerson(c.id+':brother2'),text='沈怀远给弟弟沈明修写信，叮嘱他认真读书。';recordBrotherExchange(one,two,text);assert.equal(c.story.filter(e=>e.t.includes(text)).length,1);assert.ok(one.p.story.some(e=>e.t===text)&&two.p.story.some(e=>e.t===text));story(c,'二兄沈明修：'+text);assert.equal(chronicleVisibleEntries(c.story).filter(({e})=>e.t.includes(text)).length,1);assert.equal(c.story.filter(e=>e.t.includes(text)).length,2);`);
+});
 test('each brother has independent actions and death, shared correctly by sisters after reload',()=>{
  const {run,force}=boot();run(multi+`var first=h.brother,second=h.brother2;var key=c.id+':brother2';A.go('official',key);assert.match(viewOfficial(),/沈明修/);assert.match(viewOfficial(),/沈怀远/);
  var trust=first.trust;A.officialAct(key,'talk');choose(1);drain();assert.equal(first.trust,trust);assert.equal(second.lastAudience,S.turn);

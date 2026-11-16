@@ -132,9 +132,16 @@ function familyGraphSVG(){
   }
   S.consorts.forEach(houseOf);
   const maternal=S.flags.dowager?.clan;
-  const people=S.consorts.filter(c=>(c.alive&&!c.gone&&!c.maid)||kids.has(c.id))
-    .sort((a,b)=>Number(clanKey(b)===maternal)-Number(clanKey(a)===maternal)||
-      clanKey(a).localeCompare(clanKey(b),'zh-CN')||(a.fatherId-b.fatherId)||b.rank-a.rank);
+  const people=S.consorts.filter(c=>(c.alive&&!c.gone&&!c.maid)||kids.has(c.id));
+  if(journalContentVersion()>=33&&layeredFamilyActive()){
+    const represented=new Set(people.map(c=>c.house?.father.id));
+    for(const {father} of familyTreeRegistry().nodes){
+      if(!father||represented.has(father.h.father.id)||!S.consorts.includes(father.c))continue;
+      people.push(father.c);represented.add(father.h.father.id);
+    }
+  }
+  people.sort((a,b)=>Number(clanKey(b)===maternal)-Number(clanKey(a)===maternal)||
+    clanKey(a).localeCompare(clanKey(b),'zh-CN')||(a.fatherId-b.fatherId)||b.rank-a.rank);
   if(!people.length)return '<p class="hint">目前没有入宫的妃嫔。</p>';
   const groups=new Map();
   people.forEach((c,index)=>{
@@ -185,7 +192,7 @@ function familyGraphSVG(){
   }
   people.forEach((c,i)=>{
     const cx=x(i),children=kids.get(c.id)||[],rail=cx-col/2+8;
-    cards+=`<button class="graph-card graph-consort${c.rank===8?' graph-crown':''}" style="${at(cx,consortY,consortHeight)}" onclick="A.go('consort',${c.id})">${porImg(c,52)}${label(fullName(c),cName(c),c)}</button>`;
+    cards+=`<button class="graph-card graph-consort${c.rank===8?' graph-crown':''}" style="${at(cx,consortY,consortHeight)}" onclick="A.go('consort',${c.id})">${porImg(c,52)}${label(fullName(c),!c.alive?'已故':c.gone?'已出宫':cName(c),c)}</button>`;
     if(children.length){
       const last=childY+(children.length-1)*childStep+childHeight/2;
       wires+=`<path d="M${cx} ${consortBottom} v12 H${rail} V${last}" fill="none" stroke="${blood}" stroke-width="1.8"/>`;

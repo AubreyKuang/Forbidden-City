@@ -201,6 +201,7 @@ A.gift=function(id){const c=byId(id);if(modalOpen||S.over||!inPalace(c))return;d
   let opts=shuffle(LIKES).slice(0,4);if(c.kl&&!opts.includes(c.like))opts[0]=c.like;
   pushEv({title:'赏赐',por:c,text:`赏${cName(c)}些什么好？日常礼物每样国库-20万两${c.maid?'':'，也可挑选内库已有的珍饰'}。${c.kl?`\n你记得她喜欢${c.like}，不喜${c.hate}。`:'\n你还不知道她喜欢什么。'}`,choices:[...opts.map(g=>({t:GIFTN[g],cond:()=>E().treasury>=20,f:()=>giveGift(c,g)})),...(!c.maid?[{t:'选一件内库首饰',f:()=>{A.jewelryChoose(c.id);return null;}}]:[]),{t:'算了'}]})};
 function giveGift(c,g){if(S.over||!inPalace(c)||E().treasury<20)return null;chg({treasury:-20});AU.sfx('coin');if(g==='绸缎')c.robeC=pick(RPAL[rTier(c.rank)]);
+  if(g==='珠翠'&&journalContentVersion()>=33)jewelryGiftReactions(c,GIFTN[g]);
   if(g===c.like){c.kl=true;remember(c,'gift',GIFTN[g]);if(!continuityBlocksSoothing(c,xinOf(c)))setXin(c,'欢喜',`得了心爱的${g}`);story(c,`陛下赏了${GIFTN[g]}，正是她心头所好。`);return `她眼睛一亮，捧在手里看了又看。${fx(cchg(c,{mood:25,aff:routineAffection(c,8)}))}\n§你记住了：她喜欢${g}`}
   if(g===c.hate){story(c,`陛下赏了${GIFTN[g]}，并非她的喜好；她谢恩时颇为勉强。`);return `她谢了恩，笑容却有些勉强。宫女悄悄说，主子向来不喜${g}。${fx(cchg(c,{mood:-5}))}`;}
   const big=c.trait==='贪财'&&(g==='珠翠'||g==='绸缎');story(c,`陛下赏了${GIFTN[g]}。`);return `她欢欢喜喜地谢了恩。${fx(cchg(c,{mood:big?20:10,aff:routineAffection(c,3)}))}`}
@@ -283,14 +284,14 @@ const XIN={
 const NEGX=['思念','委屈','惶恐','嫉恨','怨恨','悲恸','心如死灰','忧心'];
 const ARCX={'孤女':'心如死灰','诗绝':'心如死灰','沙尽':'心如死灰','冷月':'心如死灰','囚鸟':'怨恨','怨怼':'怨恨','削爵':'怨恨','连坐':'怨恨','心冷':'委屈','心结':'委屈','抄家':'委屈','昭雪':'释然','尘封':'释然','回头':'释然','知音':'欢喜','此心已许':'欢喜','同心':'欢喜','知己':'欢喜','回春':'欢喜','江南春':'欢喜','君臣相得':'感激','赎罪':'感激','驼铃归':'感激','将相和':'感激','清白':'感激','凤仪':'野心','摄六宫':'野心','败露':'惶恐'};
 function xinOf(c){return (c&&c.xin&&c.xin.k)||'平和'}
-function setXin(c,k,why,who){if(!c||!c.alive||!XIN[k])return;const cur=xinOf(c);
+function setXin(c,k,why,who,{record=true}={}){if(!c||!c.alive||!XIN[k])return;const cur=xinOf(c);
   if(cur==='清静被扰'&&solitaryNoiseActive(c)&&['欢喜','释然','感激','平和'].includes(k))return;
   if(homeWorryActive(c)&&cur==='忧心'&&['欢喜','释然','感激','平和'].includes(k))return;
   if(maternalUnsettled(c)&&['悲恸','心如死灰'].includes(cur)&&['欢喜','释然','感激','平和'].includes(k))return;
   if(cur==='心如死灰'&&!['释然','感激','悲恸'].includes(k))return;
   if(cur==='怨恨'&&['欢喜','委屈','思念','惶恐','嫉恨','野心'].includes(k))return;
   if(cur===k){c.xin.t=S.turn;c.xin.why=why;if(who)c.xin.who=who;return}
-  c.xin={k,t:S.turn,why,who:who||null};if(k!=='平和'&&c.xinLog!==k+why){story(c,`【心境·${k}】${why}。`);c.xinLog=k+why}}
+  c.xin={k,t:S.turn,why,who:who||null};if(k!=='平和'&&c.xinLog!==k+why){if(record)story(c,`【心境·${k}】${why}。`);c.xinLog=k+why}}
 function xinLine(c){const x=c.xin;if(!x||x.k==='平和')return '';if(x.k==='悲恸'&&!/孩子|骨肉|胎|皇子|公主/.test(x.why||''))return '她把旧物收拢又展开，说起难过的事时，声音低了下去。';const w=x.who&&x.who!=='emp'?byId(x.who):null;return pick(XIN[x.k].lines).replace('{who}',w?cName(w):'旁人')}
 function xinTag(c){const k=xinOf(c);return k==='平和'?'':`<span class="tag ${XIN[k].c}">${k}</span>`}
 function xinDetail(c){const k=xinOf(c);if(k==='平和')return '<div style="margin-top:4px">心境：<span class="tag">平和</span></div>';const x=c.xin,m=S.turn-x.t;

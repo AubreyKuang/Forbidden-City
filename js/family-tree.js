@@ -5,9 +5,16 @@ function familyTreeRegistry(){
   for(const c of familyCourtHosts()){const h=houseOf(c);if(!h||seen.has(h.father.id))continue;seen.add(h.father.id);houses.push({c,h});}
   for(const {c,h} of houses)for(const p of natalPeople(h))relatives.push({c,h,p});
   const men=houses.flatMap(({c,h})=>[{c,h,p:h.father,role:'father'},...brotherRoles(h).map(role=>({c,h,p:h[role],role})),...natalPeople(h).filter(p=>p.sex==='m').map(p=>({c,h,p,role:'relative'+p.id}))]);
+  const menById=new Map(men.map(e=>[String(e.p.id),e]));
   const nodes=relatives.map(e=>{
     const motherId=e.p.motherRelativeId??e.p.parentRelativeId,mother=relatives.find(x=>x.p.id===motherId&&x.p.sex==='f');
-    const fatherId=e.p.fatherId??mother?.p.spouse?.personId,father=men.find(x=>x.p.id===fatherId);
+    const spouse=mother?.p.spouse;
+    const sameMarriage=spouse&&(!e.p.fatherName||e.p.fatherName===spouse.name)&&
+      (e.p.fatherId==null||e.p.fatherId===spouse.id||e.p.fatherId===`spouse:${motherId}`);
+    const father=journalContentVersion()>=33
+      ?menById.get(String(e.p.fatherId))||(sameMarriage?menById.get(String(spouse.personId)):null)
+      :men.find(x=>x.p.id===(e.p.fatherId??spouse?.personId));
+    const fatherId=father?.p.id??e.p.fatherId??spouse?.personId;
     return {...e,mother,father,fatherId,parent:father?.p.id??(mother?mother.p.id:e.p.parentRelativeId),home:father?.c||e.c};
   });
   return {houses,nodes,men};
@@ -34,7 +41,7 @@ function familyHouseHeight(c){
   const h=houseOf(c);if(!h)return 68;
   if(!familyTreeExpanded(c,h.father.id,true))return 68;
   const registry=familyTreeRegistry();
-  return 68+familyTreeEntries(c,registry).reduce((n,e)=>n+62+(registry.nodes.some(x=>x.mother?.p.id===e.p.id&&x.parent!==e.p.id)?28:0)+(familyTreeExpanded(c,e.p.id)?e.children.length*60:0),0);
+  return 68+familyTreeEntries(c,registry).reduce((n,e)=>n+62+(familyTreeExpanded(c,e.p.id)?e.children.length*60:0),0);
 }
 function familyTreePerson(c,p,role,relation,list=false){
   if(list&&!role&&p.sex==='m'&&natalAge(p)>=18)role='relative'+p.id;
@@ -47,8 +54,7 @@ function familyHouseTree(c,list=false){
   const toggle=(p,count,defaultOpen=false)=>`<button class="family-fold" aria-expanded="${familyTreeExpanded(c,p.id,defaultOpen)}" aria-label="${familyTreeExpanded(c,p.id,defaultOpen)?'收起':'展开'}${esc(p.name)}的${defaultOpen?'家人':'子女'}" onclick="A.familyTreeToggle(${c.id},'${p.id}',${defaultOpen})">${familyTreeExpanded(c,p.id,defaultOpen)?'−':'+'}${count?`<small>${count}</small>`:''}</button>`;
   return `<div class="family-house-tree"><div class="family-tree-row">${familyTreePerson(c,h.father,'father',paternalFamily(c).filter(x=>S.consorts.includes(x)).length>1?'父亲 · 亲姐妹同父':'父亲',list)}${entries.length?toggle(h.father,entries.length,true):''}</div>${open?`<div class="family-tree-branches">${entries.map(e=>{
     const expanded=familyTreeExpanded(c,e.p.id),label=e.role?officialKinLabel(h,e.role,c):natalLabel(c,e.p);
-    const maternal=registry.nodes.filter(n=>n.mother?.p.id===e.p.id&&n.parent!==e.p.id);
-    return `<div class="family-tree-branch" data-relative-id="${e.p.id}"><div class="family-tree-row">${familyTreePerson(c,e.p,e.role,label,list)}${e.children.length?toggle(e.p,e.children.length):''}</div>${maternal.length?`<small class="family-married-hint">${maternal.length}名子女列于${esc(maternal[0].father?.p.name||'夫家')}名下 · 详情可查看</small>`:''}${expanded&&e.children.length?`<div class="family-tree-descendants">${e.children.map(n=>`<div class="family-tree-row" data-family-child-id="${n.p.id}">${familyTreePerson(n.home,n.p,null,n.p.sex==='m'?'儿子':'女儿',list)}</div>`).join('')}</div>`:''}</div>`;
+    return `<div class="family-tree-branch" data-relative-id="${e.p.id}"><div class="family-tree-row">${familyTreePerson(c,e.p,e.role,label,list)}${e.children.length?toggle(e.p,e.children.length):''}</div>${expanded&&e.children.length?`<div class="family-tree-descendants">${e.children.map(n=>`<div class="family-tree-row" data-family-child-id="${n.p.id}">${familyTreePerson(n.home,n.p,null,n.p.sex==='m'?'儿子':'女儿',list)}</div>`).join('')}</div>`:''}</div>`;
   }).join('')}</div>`:''}</div>`;
 }
 const treeNatalEntry=natalEntry;

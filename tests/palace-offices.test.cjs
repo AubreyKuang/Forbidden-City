@@ -33,6 +33,13 @@ test('the triennial palace examination names three graduates, and kin with a jur
  S.month=4;assert.equal(examDueNow(),false);S.year=5;S.month=3;assert.equal(examDueNow(),false);S.year=7;assert.equal(examDueNow(),true);`);
 });
 
+test('the rites ministry previews and saves annual, three-, five- and ten-year schedules',()=>{
+ const b=world();b.run(`assert.equal(regularExamInterval(),3);assert.match(viewMinistries(),/调整正科周期/);var rendered=JSON.stringify(S);assert.match(nextRegularExamDate(),/四年三月/);assert.equal(JSON.stringify(S),rendered);A.examSchedule();assert.deepEqual(curEv.choices.slice(0,4).map(c=>c.t),['每年一科','每三年一科','每五年一科','每十年一科']);assert.match(curEv.choices[3].preview,/十一年三月/);choose(3);assert.equal(regularExamInterval(),10);A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(regularExamInterval(),10);assert.match(modalResult.text,/十一年三月/);drain();for(var interval of [1,3,5,10]){ministryState().examInterval=interval;S.year=interval+1;S.month=3;assert.equal(examDueNow(),true);S.month=4;assert.equal(examDueNow(),false);}`);
+});
+test('an extra examination blocks a repeated sitting and the autumn qualifying round follows the selected cycle',()=>{
+ const b=world();b.run(`ministryState().examInterval=5;S.year=6;S.month=2;S.ministries.examDue=S.turn+1;assert.match(nextExamLabel(),/恩科.*十一年三月/);S.turn++;S.month=3;assert.ok(examDueNow());var ev=examEvent();assert.match(ev.title,/恩科/);assert.equal(examDueNow(),false);var kin=houseOf(a);kin.brother={name:'试读',career:'student',education:'书生',post:'书生',age:24,story:[],alive:true};initializeOfficialHouse(a,kin,paternalFamily(a));S.year=9;S.month=9;relativeStudyTick();assert.equal(kin.brother.lastExamYear,undefined);S.year=10;relativeStudyTick();assert.equal(kin.brother.lastExamYear,10);`);
+});
+
 test('ministers must be serving and able; graduates serve two years first; one person heads one ministry',()=>{
  const b=world();
  b.run(`fa.office='知府';fz.office='知府';var ev=examEvent();ev.choices[3].f();closeExamMarriage();var top=S.scholars[0];top.ability=80;
