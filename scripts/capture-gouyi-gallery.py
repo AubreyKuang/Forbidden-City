@@ -14,9 +14,11 @@ import argparse
 
 ROOT = Path(__file__).resolve().parent.parent
 parser = argparse.ArgumentParser()
-parser.add_argument('--gallery', choices=['gouyi', 'royal-heart'], default='gouyi')
+parser.add_argument('--gallery', choices=['gouyi', 'royal-heart', 'personal-context'], default='gouyi')
 args = parser.parse_args()
 NAMES = ['meeting', 'profile', 'inquiry', 'lamplight', 'friendship', 'rivalry', 'chronicle', 'reading'] if args.gallery == 'gouyi' else ['young', 'adult', 'refusal', 'marriage', 'chronicle', 'check', 'intervention', 'romance-check', 'proposal', 'proposal-check', 'betrothal-check', 'family', 'single']
+if args.gallery == 'personal-context':
+    NAMES = ['profile', 'past', 'prayer', 'foster', 'succession', 'official']
 REVISION = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
 DEST = ROOT / 'docs/screenshots' / args.gallery
 DEST.mkdir(parents=True, exist_ok=True)

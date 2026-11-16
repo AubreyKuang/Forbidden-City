@@ -34,6 +34,14 @@ function retainAccessionFamilies(h){
   S.imperialMaternalLine=[{mother:h.mom,adoptive:empress()?.id,gen:S.gen+1},...(S.imperialMaternalLine||[])];
   // Preserve existing recorded relationships among these people across the reign.
 }
+function retainedFamilyAgeTick(){
+  if(!retainedFamiliesActive())return;
+  for(const c of S.retainedFamilies||[]){
+    const d=[S.flags.dowager,S.flags.birthDowager].find(d=>d?.personId===c.id),a=c.familyArchive;
+    if(d?.alive===false)c.alive=false;
+    if(c.alive&&a)c.age=a.age+Math.max(0,Math.floor((S.turn-a.atTurn)/12));
+  }
+}
 function retainedHostTitle(c){
   const d=[S.flags.dowager,S.flags.birthDowager].find(d=>d?.personId===c.id);
   return d?`${d.relation||'皇太后'}${d.alive?'':' · 已故'}`:c.familyArchive?`第${cnNum(c.familyArchive.gen)}代宫眷${c.alive?'':' · 已故'}`:'本朝宫眷';

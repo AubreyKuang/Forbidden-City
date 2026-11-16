@@ -1012,6 +1012,7 @@ function courtEcho(id){
 }
 // 每月：兄长攒军功或政绩，父亲渐老，偶有致仕或病故
 function courtTick(){
+  retainedFamilyAgeTick();
   const seen=new Set();
   for(const c of familyCourtHosts()){
     const h=houseOf(c);if(!h)continue;
