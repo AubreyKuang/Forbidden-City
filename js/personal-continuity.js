@@ -67,11 +67,16 @@ function startOfficialContinuity(e,outcome,task){
 }
 function startChildContinuity(k,m,activity){
   if(!familyVisitAllowed(k,m)||kidAge(k)<6||kidAge(k)>=16||S.turn-(k.lastPersonalPlan??-99)<18)return;
+  if(journalContentVersion()>=32){
+    if(S.turn-(k.lastPersonalPlan??-99)<24||S.turn-(m.lastChildPlan??-99)<18||S.turn-(S.flags.lastChildPlan??-99)<6||S.turn-(k.lastPersonalPlanCheck??-99)<6)return;
+    // Ordinary play is worthwhile on its own, without always becoming a quest.
+    k.lastPersonalPlanCheck=S.turn;if(!chance(.2))return;
+  }
   const disposition=childDisposition(k),project=['好胜','爽直'].includes(disposition)?'archery':['仁厚','审慎'].includes(disposition)?'reading':'paint';
   const parentProject=m.trait==='将门'||m.t2==='擅骑射'?'archery':m.trait==='巧手'?'paint':'reading';
   const t=continuityStart('child',m,k.id,`${k.id}:${S.turn}`,{activity,project,parentProject,
     cause:`${dateStr()}，${fullName(m)}与${kidName(k)}一起${activity}。孩子想把下一回怎样做说给她听。`});
-  if(t)k.lastPersonalPlan=S.turn;
+  if(t){k.lastPersonalPlan=S.turn;if(journalContentVersion()>=32){m.lastChildPlan=S.turn;S.flags.lastChildPlan=S.turn;}}
 }
 function continuityTitle(t){
   return {duty:t.overlooked?'那一页没有写上的名字':'还想和她一起做',family:t.outcome==='death'?'家书留在人间':t.outcome==='setback'?'回奏之后，家中如何':'功劳之外的一封家书',child:'孩子自己的打算'}[t.kind];
@@ -83,8 +88,8 @@ function continuityDesire(t){
     `${fullName(c)}惦记${continuityOfficial(t).name}的回奏，也想让自己的意见被听见。`;
   return `${kidName(other)}想试试${FAMILY_ACTIVITIES[t.project].title}；${fullName(c)}原想安排${FAMILY_ACTIVITIES[t.parentProject].title}。`;
 }
-function continuityReady(c){
-  return continuityThreads(c).filter(t=>continuityAvailable(t)&&t.stage!=='settled'&&S.turn>=t.due&&S.turn>=(t.snooze??0))
+function continuityReady(c,forPopup=false){
+  return continuityThreads(c).filter(t=>continuityAvailable(t)&&t.stage!=='settled'&&S.turn>=t.due&&S.turn>=(t.snooze??0)&&(!forPopup||journalContentVersion()<32||t.kind!=='child'||t.childPopupStage!==t.stage&&S.turn-(continuityState()?.lastChildPopup??-99)>=6))
     .sort((a,b)=>(b.stage==='working')-(a.stage==='working')||continuityFocus(byId(b.owner))-continuityFocus(byId(a.owner))||a.due-b.due)[0];
 }
 function continuityBond(c,other,value,source){
@@ -221,8 +226,8 @@ A.continuePersonal=function(id,fromEvent=false){
 };
 function continuityMonthlyEvent(){
   const state=continuityState();if(!state||S.turn-state.lastPopup<3)return null;
-  const t=continuityReady();if(!t||t.stage==='settled')return null;
-  const ev=continuityEvent(t);if(ev)ev.onShow=()=>{state.lastPopup=S.turn;t.lastShown=S.turn;};return ev;
+  const t=continuityReady(null,true);if(!t||t.stage==='settled'||journalContentVersion()>=32&&t.kind==='child'&&!chance(.2))return null;
+  const ev=continuityEvent(t);if(ev)ev.onShow=()=>{state.lastPopup=S.turn;t.lastShown=S.turn;if(journalContentVersion()>=32&&t.kind==='child'){t.childPopupStage=t.stage;state.lastChildPopup=S.turn;}};return ev;
 }
 function continuityTick(){
   const state=continuityState();if(!state)return;

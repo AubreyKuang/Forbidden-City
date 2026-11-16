@@ -22,7 +22,7 @@ function familyVisitAllowed(k, mother) {
     !(k.foster && k.mom === mother.id && k.visitRule === 'closed');
 }
 
-function recordFamilyTime(k, mother, activity, childView, motherView, { gain = 8, place = '宫中', stat } = {}) {
+function recordFamilyTime(k, mother, activity, childView, motherView, { gain = 8, place = '宫中', stat, continuity = true } = {}) {
   const trust = clamp(childTrust(k, mother) + gain);
   const bonds = k.motherBonds ||= {};
   bonds[mother.id] = { trust, turn: S.turn, activity, childView, motherView };
@@ -34,7 +34,7 @@ function recordFamilyTime(k, mother, activity, childView, motherView, { gain = 8
     { person: k.id, subject: mother.id, interpretation: childView, emotion: .75, impact: 75 },
     { person: mother.id, subject: k.id, interpretation: motherView, emotion: .8, impact: 78 }
   ]);
-  startChildContinuity(k,mother,activity);
+  if(continuity)startChildContinuity(k,mother,activity);
 }
 
 const FAMILY_ACTIVITIES = {

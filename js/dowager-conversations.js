@@ -80,6 +80,14 @@ function dowagerCompanionEvent(d,fallback=false){
   ['small-question','也问问你的日子','哀家方才说了许多自己的事，也该问问你。近来可有什么让你舒心的小事？不必是朝中的大事。','太后问起你自己的日子，你们没有把话题转成朝政。'],
   ['unfinished-game','摆一局闲棋','既然还得闲，陪哀家摆几步棋？不必让，也不必急着赢，慢慢想，才有坐在一处的趣味。','你陪太后摆了几步闲棋，没有急着论输赢。']
  ];
+ if(!grieving&&journalContentVersion()>=32)pool.push(
+  ['childhood-treat','留着的小点心','别瞧着那碟点心笑。小时候有喜欢吃的东西，总想留到最后，如今做了皇帝，还会不会舍不得吃那最后一块？','你们说起小时候舍不得吃完的小点心，宫人另添了一碟。'],
+  ['rain-at-eaves','听一会儿檐外','你这样坐着不走，倒叫哀家想起从前等雨停的时候。那时嫌一刻钟太长，如今有人肯陪着坐一刻，反而觉得短了。','你陪太后说起旧日等雨的小事，让这一晌慢慢过去。'],
+  ['no-formalities','把礼数放一放','方才已经请过安了，不必又坐得那样端正。靠一靠软枕吧，哀家这里又不是朝堂，不会有人记你少说了一句话。','你依言靠着软枕，太后把正式的礼数放到了一边。'],
+  ['staying-for-supper','是不是等这顿饭','从茶坐到这会儿，陛下莫非是在等慈宁宫开饭？若是，直说便是，哀家还能少你一双筷子不成？','太后笑着留你吃饭，宫人添了碗筷，你们又说了一会儿家常。'],
+  ['little-worries','小时候怕什么','小时候怕的事，长大后想来常觉得好笑；可在当时，又实在是天大的事。你若想说，哀家今日有的是工夫听。','太后听你说起童年的小烦恼，没有因事情小便轻轻带过。'],
+  ['leave-the-books','折子暂且等一等','若没有急报，就让案上的折子再等一盏茶吧。哀家看你今日倒像终于肯歇一歇了，这样很好，不必连歇着都心急。','你们把话说得更慢些，留下了一段不赶时辰的母子相处。']
+ );
  let available=pool.filter(t=>dowagerTopicReady(d,'company:'+t[0],1));
  const fresh=available.length>0;
  if(!fresh){if(!fallback)return null;available=pool.filter(t=>'company:'+t[0]!==d.conversations?.recent?.at(-1));}
@@ -94,7 +102,7 @@ dowagerEvent=function(){
  const d=ensureDowager();if(!d?.alive)return null;
  if(journalContentVersion()>=30&&d.feeling?.kind==='悲恸')return dowagerCompanionEvent(d,true);
  if(journalContentVersion()<30&&d.conversations?.lastTurn===S.turn)return {title:'慈宁宫 · 静坐',por:dowagerPerson(d),valid:()=>d.alive,text:'今日已经说过一回话，太后这次没有再提先前的事，只叫宫人续茶，留你静坐片刻。',choices:[{t:'陪她坐一会'}]};
- if(journalContentVersion()>=30&&d.conversations?.visits?.turn===S.turn&&d.conversations.visits.count>=2&&chance(.7)){const company=dowagerCompanionEvent(d);if(company)return company;}
+ if(journalContentVersion()>=30&&d.conversations?.visits?.turn===S.turn&&d.conversations.visits.count>=2&&(journalContentVersion()>=32||chance(.7))){const company=dowagerCompanionEvent(d,journalContentVersion()>=32);if(company)return company;}
  if(S.month===9&&dowagerTopicReady(d,'birthday',12))return trackDowagerTalk(d,{title:'太后千秋',por:dowagerPerson(d),text:`今日是${d.name}千秋节。她说：“年年添一岁，只盼一家人各自安好。你肯来坐坐，哀家便欢喜。”`,choices:[{t:'大办寿宴（国库-60万两）',f:()=>fx(chg({treasury:-60,prestige:3,people:1}))},{t:'一切从简',f:()=>fx(chg({people:2}))}]},'birthday',{months:12});
  const r=R();
  if(r<.1){const favor=dowagerFavorEvent();if(favor)return favor;}

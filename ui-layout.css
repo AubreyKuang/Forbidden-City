@@ -2,9 +2,9 @@
 #panel{scroll-padding-block:100px 24px}
 .page-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:20px}
 .page-heading>div{min-width:0}
-.cining-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+.cining-heading{position:sticky;top:0;z-index:4;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;padding:10px 0;background:#f7f0e2;box-shadow:0 5px 12px #70532b12}
 #panel .cining-heading h2{margin:0;white-space:nowrap}
-.cining-actions{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:8px}
+.cining-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px}
 .cining-actions .btn{margin:0}
 @media(max-width:480px){.cining-actions .btn{padding:8px 10px;font-size:12px}}
 #panel .page-heading h2{margin:0 0 8px}

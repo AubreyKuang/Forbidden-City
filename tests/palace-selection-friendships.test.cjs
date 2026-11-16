@@ -1,10 +1,10 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const {boot}=require('./playtest-harness.cjs');
 function world(){const b=boot(782);b.ctx.assert=assert;b.run(`A.start();drain();S.turn=72;S.month=1;S.year=7;E().energy=8;S.rel={};
- var a=makeGirl({sur:'沈',given:'清微',age:22,trait:'温婉'}),b=makeGirl({sur:'顾',given:'兰音',age:23,trait:'活泼'});
+ var a=makeGirl({sur:'沈',given:'清微',age:22,trait:'温婉',fam:{t:'知府',p:38}}),b=makeGirl({sur:'顾',given:'兰音',age:23,trait:'活泼',fam:{t:'翰林学士',p:50}});
  for(var p of [a,b]){p.solitary=null;p.kin={};p.kinRival={};delete p.timeTraveler;}
  S.cands=[a,b];S.selection={phase:'roster',performed:[]};selectionBatch();var pair=linkSelectionFriends(a,b,{kind:'childhood',memory:'幼时在花宴相识，两家交好，常互通问候',score:42});
- UI.view='xx';PalaceActions.reset();var take=(p,rank=2)=>{A.xxTake(p.id);choose(rank);drain();};
+ assert.ok(pair,'fixture friends have comparable ages and upbringing');UI.view='xx';PalaceActions.reset();var take=(p,rank=2)=>{A.xxTake(p.id);choose(rank);drain();};
  var refresh=()=>{save('auto');A.load('auto');assert.equal(PalaceActions.blocked,false);};`);return b;}
 for(const [left,right] of [[true,true],[true,false],[false,true],[false,false]])test(`friends' selection outcomes ${left}/${right} preserve people and replay once`,()=>{
  const w=world();w.run(`var aid=a.id,bid=b.id;if(${left})take(a);else A.xxDrop(a.id);refresh();b=selectionPeer(S.selection,bid);

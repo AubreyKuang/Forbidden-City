@@ -1,6 +1,6 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const {boot}=require('./playtest-harness.cjs');
-function game(){const b=boot(202);b.ctx.assert=assert;b.run(`A.start();drain();S.turn=36;S.year=4;S.month=5;E().energy=4;E().treasury=800;
+function game(){const b=boot(202);b.ctx.assert=assert;b.ctx.planRoll=()=>b.force(0);b.run(`A.start();drain();S.turn=36;S.year=4;S.month=5;E().energy=4;E().treasury=800;
  var a=harem()[0],b=harem()[1],helper=makeGirl({sur:'沈',given:'知微',trait:'巧手'});addConsort(helper,3,'入宫');
  for(var p of [a,b,helper]){p.preg=0;p.cold=false;p.gone=false;p.hp=90;}
  var work={year:S.year,gen:S.gen,stage:'review',tables:a.id,gifts:b.id,helper:helper.id,helperRole:'tables',issue:'漏记帮手'};`);return b;}
@@ -8,7 +8,7 @@ const startDuty=`finishDuanwu(work,'照例办结');var t=continuityThreads()[0];
 const startFamily=`a.fam={t:'镇国大将军',p:65};delete a.house;var h=houseOf(a),p=h.father,entry={c:a,p,role:'father'};
  startOfficialContinuity(entry,'setback','巡边整饬军备');var t=continuityThreads()[0];S.turn=t.due;`;
 const startChild=`var k=makeKid(a,'m','承安');k.born=S.turn-8*12;k.temperament='好奇';a.trait='将门';
- recordFamilyTime(k,a,'练习投壶','和母亲练习投壶。','和孩子练习投壶。');var t=continuityThreads()[0];S.turn=t.due;`;
+ if(kidAge(k)>=6)planRoll();recordFamilyTime(k,a,'练习投壶','和母亲练习投壶。','和孩子练习投壶。');var t=continuityThreads()[0];S.turn=t.due;`;
 function restore(b){const n=boot(999,b.storage);n.ctx.assert=assert;n.run("A.load('auto')");assert.equal(n.run('PalaceActions.blocked'),false);return n;}
 const savedScene=b=>b.run('JSON.stringify({threads:S.continuity,energy:E().energy,title:curEv?.title,text:curEv?.text,choices:curEv?.choices.map(c=>c.t),result:modalResult})');
 
@@ -67,8 +67,8 @@ test('the three parenting choices preserve the actual child and lead to differen
  S.turn=t.due;continuityTick();assert.match(t.history.at(-1).text,/又来找/);`);}
 });
 test('changing the child temperament changes the proposed activity, and toddlers do not receive school plans',()=>{
- const b=game();b.run(`var k=makeKid(a,'f','昭宁');k.born=S.turn-2*12;recordFamilyTime(k,a,'做点心','做了点心。','陪孩子做点心。');assert.equal(continuityThreads().length,0);
- k.born=S.turn-8*12;k.temperament='爽直';recordFamilyTime(k,a,'并肩散步','一起走了走。','听孩子说话。');assert.equal(continuityThreads()[0].project,'archery');`);
+ const b=game();b.run(`var k=makeKid(a,'f','昭宁');k.born=S.turn-2*12;if(kidAge(k)>=6)planRoll();recordFamilyTime(k,a,'做点心','做了点心。','陪孩子做点心。');assert.equal(continuityThreads().length,0);
+ k.born=S.turn-8*12;k.temperament='爽直';if(kidAge(k)>=6)planRoll();recordFamilyTime(k,a,'并肩散步','一起走了走。','听孩子说话。');assert.equal(continuityThreads()[0].project,'archery');`);
 });
 test('temporary absence pauses an accepted plan; adulthood closes it without recasting',()=>{
  const b=game();b.run(startChild+`continuityChoose(t,'child');k.templeStay={from:S.turn,due:S.turn+3};S.turn=t.due;

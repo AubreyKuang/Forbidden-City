@@ -1,0 +1,67 @@
+{
+  "url": "http://127.0.0.1:8428/dev.html",
+  "started": "2026-11-16T03:28:50.181Z",
+  "runs": [
+    {
+      "name": "selection",
+      "viewport": "desktop",
+      "reloads": 2,
+      "errors": [],
+      "passed": true,
+      "offices": [
+        {
+          "name": "崔澜",
+          "office": "直隶总督"
+        },
+        {
+          "name": "白嫣漪",
+          "office": "湖广总督"
+        }
+      ]
+    },
+    {
+      "name": "autosave",
+      "viewport": "desktop",
+      "reloads": 5,
+      "errors": [],
+      "passed": true,
+      "months": [
+        65,
+        66,
+        67
+      ]
+    },
+    {
+      "name": "selection",
+      "viewport": "mobile",
+      "reloads": 2,
+      "errors": [],
+      "passed": true,
+      "offices": [
+        {
+          "name": "崔澜",
+          "office": "直隶总督"
+        },
+        {
+          "name": "白嫣漪",
+          "office": "湖广总督"
+        }
+      ]
+    },
+    {
+      "name": "autosave",
+      "viewport": "mobile",
+      "reloads": 5,
+      "errors": [],
+      "passed": true,
+      "months": [
+        65,
+        66,
+        67
+      ]
+    }
+  ],
+  "browser": "157.0.8103.78",
+  "finished": "2026-11-16T03:29:10.192Z",
+  "passed": true
+}

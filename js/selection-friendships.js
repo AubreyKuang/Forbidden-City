@@ -1,10 +1,12 @@
 /* Candidate friendships exist before the roster is decided. Only an actual
    friendly pair with at least one retained member gets a closing conversation. */
 const selectionFriendsEnabled=()=>journalContentVersion()>=12;
+function plausibleOldFriendPair(a,b){return Math.abs(a.age-b.age)<=5&&Math.abs((a.upbringing?.power??a.fam.p)-(b.upbringing?.power??b.fam.p))<=20;}
 const selectionFriendsClose=(a,b)=>!!a&&!!b&&a.alive!==false&&b.alive!==false&&relGet(a,b)>=30&&!isRival(a,b)&&!isRival(b,a);
 function selectionPeer(s,id){return byId(id)||S.cands.find(c=>c.id===id)||(s.peerDeparted||[]).find(c=>c.id===id);}
 function linkSelectionFriends(a,b,{kind='waiting',memory='候选时常坐在一起，把不熟悉的礼数互相讲清',score=36}={}){
   const s=S.selection;if(!s||a===b||!S.cands.includes(a)||!S.cands.includes(b)||isRival(a,b)||isRival(b,a))return null;
+  if(journalContentVersion()>=32&&['childhood','households'].includes(kind)&&!plausibleOldFriendPair(a,b))return null;
   s.peerPairs||=[];if(s.peerPairs.some(p=>[p.a,p.b].includes(a.id)||[p.a,p.b].includes(b.id))||s.peerPairs.length>=2)return null;
   const pair={a:a.id,b:b.id,kind,memory};s.peerPairs.push(pair);
   const key=rk(a,b);if(S.rel[key]===undefined)S.rel[key]=score;
@@ -23,7 +25,7 @@ function assignSelectionFriendships(){
     if((s.peerPairs||[]).some(p=>[p.a,p.b].includes(a.id)||[p.a,p.b].includes(b.id))||a.age<18||b.age<18||isRival(a,b)||isRival(b,a))continue;
     if(S.rel[rk(a,b)]!==undefined){if(selectionFriendsClose(a,b))linkSelectionFriends(a,b);continue;}
     const native=!a.timeTraveler&&!b.timeTraveler&&!a.rescue&&!b.rescue&&!/西域|东瀛|海西/.test(a.fam.t+b.fam.t);
-    const household=native&&Math.abs(a.fam.p-b.fam.p)<=30;
+    const household=native&&(journalContentVersion()>=32?plausibleOldFriendPair(a,b):Math.abs(a.fam.p-b.fam.p)<=30);
     const compatible=socialPair(a,b)&&consortCompatibility(a,b)>=3;
     if(!(household||compatible)||!chance(.22))continue;
     if(household&&chance(.5)){
