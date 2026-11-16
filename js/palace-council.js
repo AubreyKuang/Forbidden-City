@@ -1,6 +1,49 @@
 /* Repeated palace duties have named, remembered participants. */
-function noteHaremVisit(c){
-  if(legacyPendingAction()||!inPalace(c))return;S.flags.haremAttendance={gen:S.gen,turn:S.turn};
+const HAREM_RETURN_MONTHS=6;
+const haremReturnActive=()=>journalContentVersion()>=50;
+function noteHaremVisit(c,kind='talk'){
+  if(legacyPendingAction()||!inPalace(c))return;
+  const modern=haremReturnActive();
+  if(modern&&(c.maid||S.over))return;
+  const absence=modern?haremAbsence():0;
+  S.flags.haremAttendance={gen:S.gen,turn:S.turn};
+  if(absence>=HAREM_RETURN_MONTHS)recordHaremReturn(c,kind,absence);
+}
+function recordHaremReturn(c,kind,months){
+  const act=kind==='arrival'?`来到${c.palace}看她`:kind==='night'?'召她相伴':'与她当面说话';
+  const guarded=lifeBoundary(c)||['悲恸','心如死灰','怨恨','惶恐'].includes(xinOf(c));
+  const quiet=isSolitary(c)||['淡泊','沉静','持重'].includes(c.trait);
+  const joy=!guarded&&!quiet&&(c.aff>=35||c.trait==='痴情');
+  const feeling=guarded?'她先是一怔，依礼问安。许久未见，心头积下的话仍要等能开口时慢慢讲。':
+    quiet?'她有些意外，先把手里的事安顿好。几个月没有当面说过话，听见熟悉的声音，心里也暖了一些。':
+    joy?'她一听是陛下，欢喜得连原先想好的问安词都忘了，只顾着问这些日子可还安好。':
+    '她听见通传还有些不敢相信。见过礼后，才松了松一直攥着的袖口。';
+  const first=`陛下已有${months}个月未与后宫妃嫔相处，今日终于${act}。`;
+  story(c,`【久别重逢】${first}${feeling}`);
+  log(`久别后重回后宫：陛下已有${months}个月未与妃嫔相处，今日${kind==='night'?'召'+fullName(c)+'相伴':kind==='arrival'?'到'+c.palace+'看望'+fullName(c):'与'+fullName(c)+'当面说话'}。`);
+  if(!guarded)cchg(c,{mood:joy?8:3});
+
+  const observers=harem().filter(o=>o!==c&&inPalace(o)).sort((a,b)=>
+    Number(b.palace===c.palace)-Number(a.palace===c.palace)||Math.abs(relGet(b,c))-Math.abs(relGet(a,c))||a.id-b.id).slice(0,4);
+  const accounts=observers.map(o=>{
+    const name=fullName(c),relation=relGet(o,c);
+    const news=kind==='arrival'&&o.palace===c.palace
+      ?`她住在同一宫，听见宫人通传陛下久别后来看${name}。`
+      :`她听说陛下久别后先${kind==='night'?'召了':'见了'}${name}。`;
+    const reaction=isRival(o,c)||relation<=-25||TRAITS[o.trait]?.jealous&&!isSolitary(o)
+      ?'她听完心里泛酸，低声问贴身宫人，自己的宫门何时也能听到同样的通传。'
+      :relation>=30?'她替对方高兴。下次相见时，她想问问两人这些时日过得可好。'
+      :isSolitary(o)||['淡泊','沉静','持重'].includes(o.trait)
+        ?'宫人还想多说几句，她只说知道了，便接着做手上的事。'
+        :'她同宫人说，原以为这回又要等上几个月。说着说着，也盼哪天能当面问声安。';
+    const line=news+reaction;
+    story(o,'【六宫议论·久别重逢】'+line);
+    return {person:o.id,subject:c.id,interpretation:line,channel:'hearsay',emotion:.2,impact:45};
+  });
+  NPCMemory.record(S,{type:'harem-return',time:S.turn,location:kind==='arrival'?c.palace:'宫中',
+    participants:[c.id,...observers.map(o=>o.id)],outcome:first},[
+    {person:c.id,subject:'emperor',interpretation:feeling,emotion:joy?.7:.3,impact:75},...accounts
+  ]);
 }
 function haremAbsence(){
   const a=S.flags.haremAttendance;
@@ -9,10 +52,10 @@ function haremAbsence(){
   return S.turn-recent;
 }
 function jingtishiEvent(){
-  if(S.over||mourningActive()||haremAbsence()<6||S.flags.cardReminderGen===S.gen&&S.turn-(S.flags.cardReminderTurn??-99)<4)return null;
+  if(S.over||mourningActive()||haremAbsence()<HAREM_RETURN_MONTHS||S.flags.cardReminderGen===S.gen&&S.turn-(S.flags.cardReminderTurn??-99)<4)return null;
   const women=harem().filter(c=>!c.cardWithdrawn&&!c.preg&&(!consortRecoveryActive()||!consortNightReason(c)));
   if(!women.length)return null;
-  const valid=()=>!S.over&&!mourningActive()&&haremAbsence()>=6;
+  const valid=()=>!S.over&&!mourningActive()&&haremAbsence()>=HAREM_RETURN_MONTHS;
   return {title:'敬事房 · 捧牌候旨',valid,text:`陛下已有${haremAbsence()}个月未往后宫与妃嫔相处。\n敬事房总管候在御书房外，捧着绿头牌轻声道：“各宫的牌子都备下了。陛下若愿，今夜可召人相伴；若只想过去坐坐，奴才也好先去通传。”`,
     onShow:()=>{S.flags.cardReminderGen=S.gen;S.flags.cardReminderTurn=S.turn;log('敬事房因陛下久未入后宫，捧绿头牌至御书房候旨。');},choices:[
       {t:'把牌子呈上来',cond:()=>E().energy>0,why:'本月精力已尽',f:()=>{pushNow({title:'敬事房 · 今夜召谁',text:consortRecoveryActive()?'有孕、撤牌、不在宫中或尚在产后、小产后三个月调养期的人不列在此。':'有孕、撤牌或不在宫中的人不列在此。',choices:[

@@ -48,7 +48,29 @@ test('crown is shifted upward equally for canvas and file rendering without repl
 test('six months of absence summon the keeper, respects mourning, cards and cooldown',()=>{
  const b=world();b.run(`S.turn=6;S.flags.haremAttendance={gen:S.gen,turn:0};S.flags.dowager.mourning={turn:S.turn};assert.equal(jingtishiEvent(),null);delete S.flags.dowager.mourning;var ev=jingtishiEvent();assert.ok(ev);assert.equal(ev.por,undefined);ev.onShow();assert.equal(jingtishiEvent(),null);S.turn=10;
   for(var c of harem())c.cardWithdrawn=true;assert.equal(jingtishiEvent(),null);for(var c of harem())c.cardWithdrawn=false;
-  ev=jingtishiEvent();assert.ok(ev);A.go('consort',harem()[0].id);assert.equal(jingtishiEvent(),null);assert.equal(haremAbsence(),0);`);
+  ev=jingtishiEvent();assert.ok(ev);A.go('consort',empress().id);assert.equal(haremAbsence(),10);A.visitConsortHome(empress().id);assert.equal(jingtishiEvent(),null);assert.equal(haremAbsence(),0);`);
+});
+test('a real return after six months records the chosen consort and distinct witnesses once, including after reload',()=>{
+ let b=world();b.run(`var guest=harem().find(c=>c.rank!==8),friend=makeGirl({age:24,trait:'温婉'}),rival=makeGirl({age:26,trait:'善妒'});
+  addConsort(friend,4,'入宫');addConsort(rival,3,'入宫');guest.palace=friend.palace;guest.residenceRoom='side';guest.aff=85;guest.trait='痴情';guest.solitary=null;
+  friend.solitary=null;rival.solitary=null;relAdd(friend,guest,65-relGet(friend,guest));relAdd(rival,guest,-45-relGet(rival,guest));
+  S.turn=6;S.flags.haremAttendance={gen:S.gen,turn:0};UI.view='harem';A.go('consort',guest.id);
+  assert.equal(haremAbsence(),6);assert.ok(!guest.story.some(e=>e.t.includes('久别重逢')));
+  assert.equal(palaceResidents(guest.palace)[0],friend);var mood=guest.mood;save('auto');A.visitConsortHome(guest.id);assert.equal(curEv.arrival.c.id,guest.id);assert.equal(haremAbsence(),0);
+  assert.match(guest.story.at(-1).t,/久别重逢.*6个月.*欢喜/);assert.equal(guest.mood,Math.min(mood+8,100));
+  assert.match(friend.story.at(-1).t,/六宫议论.*替对方高兴/);assert.match(rival.story.at(-1).t,/六宫议论.*泛酸/);
+  assert.equal(NPCMemory.recall(S,friend.id,{type:'harem-return'})[0].channel,'hearsay');
+  assert.equal(S.log.filter(e=>e.t.includes('久别后重回后宫')).length,1);`);
+ const ids=b.run('[guest.id,friend.id,rival.id]');b=reload(b);b.run(`var guest=byId(${ids[0]});assert.equal(curEv.arrival.c.id,guest.id);
+  assert.equal(guest.story.filter(e=>e.t.includes('久别重逢')).length,1);
+  assert.equal(byId(${ids[1]}).story.filter(e=>e.t.includes('六宫议论·久别重逢')).length,1);
+  assert.equal(byId(${ids[2]}).story.filter(e=>e.t.includes('六宫议论·久别重逢')).length,1);
+  choose(curEv.choices.length-1);A.visitConsortHome(guest.id);assert.equal(S.log.filter(e=>e.t.includes('久别后重回后宫')).length,1);`);
+});
+test('an ordinary visit clears a short absence and a later night can mark a fresh return',()=>{
+ const b=world();b.run(`var c=empress();S.turn=5;S.flags.haremAttendance={gen:S.gen,turn:0};A.visitConsortHome(c.id);drain();
+  assert.equal(haremAbsence(),0);assert.ok(!c.story.some(e=>e.t.includes('久别重逢')));
+  S.turn+=6;nightWith(c);assert.match(c.story.find(e=>e.t.includes('久别重逢')).t,/召她相伴/);assert.equal(haremAbsence(),0);`);
 });
 test('keeper follows the real card selection through a save and never puts pregnant women on cards',()=>{
  let b=world();b.run(`S.turn=8;S.flags.haremAttendance={gen:S.gen,turn:0};harem()[0].preg=2;A.endMonth();`);
@@ -102,7 +124,7 @@ for(const fixture of legacyFixtures.cases)test(`pre-upgrade ${fixture.name} cont
  b.run("if(modalResult)nextEv();else choose(curEv.choices.findIndex(c=>!c.cond||c.cond()))");
  b=reload(b);b.run('drain();assert.equal(PalaceActions.legacy,false);');
  assert.equal(b.run('S.turn'),fixture.save.turn,'finishing a version 2 scene retains the original month');
- b.run("E().energy=1;A.out('spa');assert.equal(PalaceActions.payload().pendingActions.version,49)");
+ b.run("E().energy=1;A.out('spa');assert.equal(PalaceActions.payload().pendingActions.version,50)");
  b=reload(b);b.run('var previousTurn=S.turn;choose(0);tick(1500);assert.equal(S.turn,previousTurn+1);');
 });
 test('the old commission cancellation index still cancels instead of assigning a new mission',()=>{

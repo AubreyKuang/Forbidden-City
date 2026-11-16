@@ -25,7 +25,11 @@ A.mapStory=function(kind,id,token,child=false){
 function palaceActiveSceneEvent(place){
   if(!directPalaceScenes()||place.k!=='palace')return null;
   const leads=[...personalExperienceLeads(),...journeyLeads(),...historyLeads()].filter(l=>l.place===place.id&&l.storyKind);
-  const event=lead=>mapStoryEvent(lead.storyKind,lead.person.id,lead.storyToken,!!lead.person.sex);
+  const event=lead=>{
+    const person=lead.person,ev=mapStoryEvent(lead.storyKind,person.id,lead.storyToken,!!person.sex);
+    if(!ev||!haremReturnActive()||person.sex||!S.consorts.includes(person)||person.palace!==place.p)return ev;
+    return {...ev,onShow:()=>{noteHaremVisit(person,'arrival');ev.onShow?.();}};
+  };
   const ready=leads.filter(l=>event(l));if(!ready.length)return null;if(ready.length===1)return event(ready[0]);
   return {title:place.n+' · 正在发生',text:'这座宫里有几件事正在等你过问，选一件便可直接听当事人说。',choices:[
     ...ready.map(l=>({t:`${l.person.sex?l.person.name:fullName(l.person)} · ${l.title}`,person:l.person,f:()=>{const ev=event(l);if(ev)pushNow(ev);return null;}})),
