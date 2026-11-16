@@ -89,14 +89,96 @@ function listedRoyalKin(){
     return Array.isArray(ids)?eligible.filter(k=>ids.includes(k.id)):eligible.slice(0,ROYAL_KIN_PER_REIGN);
   });
 }
+function royalKinContactMode(k){
+  if(!k?.alive||!k.reign||k.removedFromRoyal||k.pendingName||k.jailed||k.gone)return '';
+  const estate=k.princeEstate||k.estate;
+  return k.away||k.princessMarriage==='frontier'||estate?.route==='frontier'||immortalAway(k)||k.templeStay||
+    (estate?.location&&estate.location!=='京城')?'letter':'visit';
+}
+function royalKinContactPlace(k,mode){
+  if(k.princessMarriage==='frontier'||k.estate?.route==='frontier')return '北境';
+  return k.away||immortalAway(k)||k.templeStay?childWhereabouts(k):k.princeEstate?.location||k.estate?.location||
+    (mode==='visit'?'京城':'外地');
+}
+function royalKinContactReady(k){
+  const contact=k.royalKinContact;
+  return !S.over&&S.turn-(contact?.last??-99)>=2&&!contact?.pending&&!contact?.reply?.unread;
+}
+function royalKinContactButtons(k){
+  const mode=royalKinContactMode(k);
+  if(!mode||journalContentVersion()<46||S.over)return '';
+  const pending=k.royalKinContact?.pending,unread=k.royalKinContact?.reply?.unread;
+  const button=unread?`<button class="btn sm jade" onclick="A.royalKinReply(${k.id})">读回信</button>`:
+    `<button class="btn sm jade" onclick="A.royalKinContact(${k.id})" ${royalKinContactReady(k)?'':'disabled'}>${mode==='visit'?'召见':'寄家书'}<small>${pending?'等候回信':!royalKinContactReady(k)?'近期已经问候':'精力−1'}</small></button>`;
+  return `<div class="acts"><span class="hint">${esc(royalKinContactPlace(k,mode))}</span>${button}</div>`;
+}
+function royalKinWords(k,topic){
+  const age=kidAge(k),child=k.household?.children?.find(c=>c.alive!==false);
+  if(age<3)return topic==='home'?'乳母说，孩子每天醒后都要寻那只熟悉的布虎。':'乳母说，孩子近来吃得好，夜里也睡得安稳。';
+  if(topic==='home'&&child)return `“${child.given||child.name}近来有了新本事，一回家就拉着我看。我也想让陛下听听这些小事。”`;
+  if(topic==='home'&&k.spouse?.alive!==false&&k.spouse)return `“我同${k.spouse.name}约好，再忙也留一顿饭一起用。府里近来总算有些闲话可说。”`;
+  if(topic==='home')return age<10?'“我还留着从前的毽子，等下回见面，想再踢给您看。”':'“我近日翻到旧册，里头还有家里一起题的几行字。看着看着，便想起了从前。”';
+  return age<10?'“这些日子我学着自己理书匣，想让您知道我也能管好自己的东西了。”':
+    childDisposition(k)==='内敛'?'“起居都好。近来读得几页闲书，原想找个时候与陛下说说。”':'“近来出门走了走，起居都好。也惦记陛下案牍繁重，可还有工夫歇一歇？”';
+}
+function recordRoyalKinContact(k,title,text){
+  princessMemory(k,'royal-kin-contact',`【${title}】${text}`,'御书房');
+  log(`【${title}】${text}`);
+}
+A.royalKinContact=function(id){
+  if(modalOpen||journalContentVersion()<46)return;
+  const k=listedRoyalKin().find(k=>k.id===id),mode=royalKinContactMode(k);
+  if(!mode||!royalKinContactReady(k))return;
+  const relation=royalKinship(k),where=royalKinContactPlace(k,mode),visit=mode==='visit';
+  const valid=()=>royalKinContactMode(k)===mode&&royalKinContactReady(k);
+  const finish=topic=>{
+    if(!valid()||!useE())return null;
+    const contact=k.royalKinContact||={};
+    contact.last=S.turn;
+    if(visit){
+      const line=`陛下在御书房召见${relation}${k.name}，${topic==='home'?'谈起家常':'问了近况'}。${royalKinWords(k,topic)}`;
+      recordRoyalKinContact(k,'皇亲召见',line);return line;
+    }
+    const sender=E().sur+E().name;
+    contact.pending={due:S.turn+1,sender,topic};
+    const line=`${sender}遣人往${where}给${relation}${k.name}寄家书，${topic==='home'?'问候家中起居':'问候近来的平安'}。`;
+    recordRoyalKinContact(k,'寄皇亲家书',line);return '家书已寄出，预计下月有回音。';
+  };
+  pushEv({title:visit?'御书房 · 召见皇亲':'皇亲家书',por:k,valid,
+    text:visit?`你打算召${relation}${k.name}来御书房，想同${k.sex==='m'?'他':'她'}说些什么？`:`${relation}${k.name}如今在${where}，你提笔写信问候。`,
+    choices:[
+      {t:visit?'问问近况':'写信问安',cond:()=>E().energy>0,why:'精力不足',f:()=>finish('well')},
+      {t:visit?'说说家常':'写信问问家中',cond:()=>E().energy>0,why:'精力不足',f:()=>finish('home')},
+      {t:'改日再说'}
+    ]});
+};
+function royalKinContactTick(){
+  if(!S||S.over||journalContentVersion()<46)return;
+  for(const k of royalHouseholds()){
+    const contact=k.royalKinContact,letter=contact?.pending;
+    if(!letter||S.turn<letter.due)continue;
+    delete contact.pending;
+    const mode=royalKinContactMode(k);
+    if(!mode)continue;
+    const text=`${royalKinship(k)}${k.name}回复${letter.sender}所寄的家书：${royalKinWords(k,letter.topic)}`;
+    contact.reply={text,unread:true};
+    recordRoyalKinContact(k,'皇亲回信',text);
+  }
+}
+A.royalKinReply=function(id){
+  if(modalOpen||S.over||journalContentVersion()<46)return;
+  const k=listedRoyalKin().find(k=>k.id===id),reply=k?.royalKinContact?.reply;
+  if(!reply?.unread||!royalKinContactMode(k))return;
+  pushEv({title:'皇亲回信',por:k,text:reply.text,choices:[{t:'收好回信',f:()=>{reply.unread=false;return null;}}]});
+};
 function royalRelativeCards(relatives){
   if(!relatives.length)return '';
   const cards=relatives.map(k=>{
     const household=householdSummary(k);
-    return `<button class="card portrait-card" onclick="A.go('relative',${k.id})">${porImg(k,84)}<span class="grow">
-      <strong class="nm">${esc(k.name)}</strong><br>
-      <small>${esc(royalKinship(k))} · ${kidAge(k)}岁${k.title?' · '+esc(k.title):''}${k.spouse?' · '+esc(k.spouse.name):''}</small>
-      ${household?`<br><span>${esc(household)}</span>`:''}</span></button>`;
+    return `<article class="card portrait-card"><button class="child-portrait" aria-label="查看${esc(k.name)}" onclick="A.go('relative',${k.id})">${porImg(k,84)}</button>
+      <div class="grow"><button class="person-link nm" onclick="A.go('relative',${k.id})">${esc(k.name)}</button>
+      <div><small>${esc(royalKinship(k))} · ${kidAge(k)}岁${k.title?' · '+esc(k.title):''}${k.spouse?' · '+esc(k.spouse.name):''}</small></div>
+      ${household?`<span>${esc(household)}</span>`:''}${royalKinContactButtons(k)}</div></article>`;
   });
   return `<div class="grid portrait-grid">${cards.join('')}</div>`;
 }
@@ -112,5 +194,5 @@ function royalKinRosterPanel(){
 }
 function viewRoyalRelative(){
   const k=royalById(UI.sel);if(!k)return viewFamily();
-  return `${personBackButton('family')}<header class="detail-head">${porImg(k,224)}<div class="grow"><h2>${esc(k.name)}</h2><p>${esc(royalKinship(k))} · ${kidAge(k)}岁</p><p>生母 ${esc(k.momName||'未记载')}</p></div></header>${immortalPanel(k)}${marriagePanel(k)}${householdPanel(k)}${detailSection('亲族纪事',detailStory(k))}`;
+  return `${personBackButton('family')}<header class="detail-head">${porImg(k,224)}<div class="grow"><h2>${esc(k.name)}</h2><p>${esc(royalKinship(k))} · ${kidAge(k)}岁</p><p>生母 ${esc(k.momName||'未记载')}</p></div></header>${listedRoyalKin().includes(k)?royalKinContactButtons(k):''}${immortalPanel(k)}${marriagePanel(k)}${householdPanel(k)}${detailSection('亲族纪事',detailStory(k))}`;
 }

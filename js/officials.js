@@ -67,6 +67,7 @@ function officialRecord(c,role,text,{family=true,emotion=0}={}){
       {person:member.id,subject:p.id,interpretation:text,emotion,impact:65}]);
   }
   log(`${p.name}：${text}`,1);
+  if(journalContentVersion()>=46)princessGroomNews(p,text);
 }
 function officialFamilyReaction(e,kind,task){
  const {c,p,role,h}=e;
