@@ -5,9 +5,9 @@ const manifest=require('../docs/consort-colors-sources.json');
 const legacyCases=[require('./fixtures/consort-colors-legacy-v34.json'),require('./fixtures/consort-colors-legacy-v35.json')];
 function game(storage=new Map()){const b=boot(510,storage);b.ctx.assert=assert;return b;}
 
-test('the eighteen approved portraits have distinct cells, full and bust views, and fitted jewelry',()=>{
-  assert.deepEqual(manifest.portraits.map(p=>p.id),Array.from({length:18},(_,i)=>459+i));
-  assert.equal(new Set(manifest.portraits.map(p=>p.atlas+':'+p.cell)).size,18);
+test('the thirty approved portraits have distinct cells, full and bust views, and fitted jewelry',()=>{
+  assert.deepEqual(manifest.portraits.map(p=>p.id),Array.from({length:30},(_,i)=>459+i));
+  assert.equal(new Set(manifest.portraits.map(p=>p.atlas+':'+p.cell)).size,30);
   const b=game();b.run('A.start();drain();');
   for(const p of manifest.portraits){
     assert.ok(fs.statSync(path.join(__dirname,'../assets/images',p.atlas)).size>1000);
@@ -24,7 +24,7 @@ test('the eighteen approved portraits have distinct cells, full and bust views, 
   }
 });
 
-test('new domestic candidates can use all eighteen colors without repeats, while foreign pools remain separate',()=>{
+test('new domestic candidates can use all thirty colors without repeats, while foreign pools remain separate',()=>{
   const b=game();b.run(`A.start();drain();S.consorts=[];S.cands=[];S.children=[];
     for(var i=0;i<NEW_DOMESTIC_CONSORT_PORTRAITS.length;i++)S.cands.push(makeGirl({age:22,fam:{t:'县令',p:20}}));
     var faces=S.cands.map(p=>p.artPortrait);assert.equal(new Set(faces).size,NEW_DOMESTIC_CONSORT_PORTRAITS.length);

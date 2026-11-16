@@ -5,7 +5,7 @@
   ],
   "columns": 4,
   "styleReference": 422,
-  "approved": "Three sheets, eighteen consorts including the pink-and-green ruqun revision",
+  "approved": "All five sheets, thirty consorts including the pink-and-green ruqun revision and six beauty-inspired portraits",
   "portraits": [
     {
       "id": 459,
@@ -546,6 +546,366 @@
         550
       ],
       "label": "青莲披帛"
+    },
+    {
+      "id": 477,
+      "atlas": "palace-consorts-ruqun-varied.webp",
+      "source": "exec-ceb9f9cf-44d4-47b8-8163-9a52c4af0cfc.png",
+      "sourceSha256": "ea04f94f32ce2a8524a66d63d9e8bf824ccaa32ef47642cd4788324b574bbc18",
+      "sourceSize": [
+        1374,
+        1145
+      ],
+      "cell": 0,
+      "crop": [
+        0,
+        0,
+        458,
+        572
+      ],
+      "bounds": [
+        0,
+        0,
+        458,
+        572
+      ],
+      "placed": [
+        4,
+        10,
+        440,
+        550
+      ],
+      "label": "鹅黄春绦"
+    },
+    {
+      "id": 478,
+      "atlas": "palace-consorts-ruqun-varied.webp",
+      "source": "exec-ceb9f9cf-44d4-47b8-8163-9a52c4af0cfc.png",
+      "sourceSha256": "ea04f94f32ce2a8524a66d63d9e8bf824ccaa32ef47642cd4788324b574bbc18",
+      "sourceSize": [
+        1374,
+        1145
+      ],
+      "cell": 1,
+      "crop": [
+        458,
+        0,
+        916,
+        572
+      ],
+      "bounds": [
+        0,
+        11,
+        458,
+        572
+      ],
+      "placed": [
+        452,
+        21,
+        440,
+        539
+      ],
+      "label": "湖青玉笛"
+    },
+    {
+      "id": 479,
+      "atlas": "palace-consorts-ruqun-varied.webp",
+      "source": "exec-ceb9f9cf-44d4-47b8-8163-9a52c4af0cfc.png",
+      "sourceSha256": "ea04f94f32ce2a8524a66d63d9e8bf824ccaa32ef47642cd4788324b574bbc18",
+      "sourceSize": [
+        1374,
+        1145
+      ],
+      "cell": 2,
+      "crop": [
+        916,
+        0,
+        1374,
+        572
+      ],
+      "bounds": [
+        0,
+        0,
+        458,
+        572
+      ],
+      "placed": [
+        900,
+        10,
+        440,
+        550
+      ],
+      "label": "石榴折扇"
+    },
+    {
+      "id": 480,
+      "atlas": "palace-consorts-ruqun-varied.webp",
+      "source": "exec-ceb9f9cf-44d4-47b8-8163-9a52c4af0cfc.png",
+      "sourceSha256": "ea04f94f32ce2a8524a66d63d9e8bf824ccaa32ef47642cd4788324b574bbc18",
+      "sourceSize": [
+        1374,
+        1145
+      ],
+      "cell": 3,
+      "crop": [
+        0,
+        572,
+        458,
+        1145
+      ],
+      "bounds": [
+        0,
+        0,
+        458,
+        573
+      ],
+      "placed": [
+        1348,
+        10,
+        440,
+        550
+      ],
+      "label": "月白紫藤"
+    },
+    {
+      "id": 481,
+      "atlas": "palace-consorts-ruqun-varied.webp",
+      "source": "exec-ceb9f9cf-44d4-47b8-8163-9a52c4af0cfc.png",
+      "sourceSha256": "ea04f94f32ce2a8524a66d63d9e8bf824ccaa32ef47642cd4788324b574bbc18",
+      "sourceSize": [
+        1374,
+        1145
+      ],
+      "cell": 4,
+      "crop": [
+        458,
+        572,
+        916,
+        1145
+      ],
+      "bounds": [
+        0,
+        0,
+        458,
+        573
+      ],
+      "placed": [
+        4,
+        570,
+        440,
+        550
+      ],
+      "label": "蜜桃香囊"
+    },
+    {
+      "id": 482,
+      "atlas": "palace-consorts-ruqun-varied.webp",
+      "source": "exec-ceb9f9cf-44d4-47b8-8163-9a52c4af0cfc.png",
+      "sourceSha256": "ea04f94f32ce2a8524a66d63d9e8bf824ccaa32ef47642cd4788324b574bbc18",
+      "sourceSize": [
+        1374,
+        1145
+      ],
+      "cell": 5,
+      "crop": [
+        916,
+        572,
+        1374,
+        1145
+      ],
+      "bounds": [
+        0,
+        0,
+        458,
+        573
+      ],
+      "placed": [
+        452,
+        570,
+        440,
+        550
+      ],
+      "label": "青莲书韵"
+    },
+    {
+      "id": 483,
+      "atlas": "palace-consorts-ruqun-legends.webp",
+      "source": "exec-f3afccfc-d7f6-439b-9e4f-73b1d6098632.png",
+      "sourceSha256": "be860d9e1dbdd7acfccca9f9b9da18946e7db7806731bb9a342081fbe5a533ea",
+      "sourceSize": [
+        1374,
+        1145
+      ],
+      "cell": 0,
+      "crop": [
+        0,
+        0,
+        467,
+        572
+      ],
+      "bounds": [
+        0,
+        0,
+        467,
+        572
+      ],
+      "placed": [
+        4,
+        21,
+        440,
+        539
+      ],
+      "label": "清荷玉露"
+    },
+    {
+      "id": 484,
+      "atlas": "palace-consorts-ruqun-legends.webp",
+      "source": "exec-f3afccfc-d7f6-439b-9e4f-73b1d6098632.png",
+      "sourceSha256": "be860d9e1dbdd7acfccca9f9b9da18946e7db7806731bb9a342081fbe5a533ea",
+      "sourceSize": [
+        1374,
+        1145
+      ],
+      "cell": 1,
+      "crop": [
+        467,
+        0,
+        918,
+        572
+      ],
+      "bounds": [
+        0,
+        0,
+        451,
+        572
+      ],
+      "placed": [
+        454,
+        8,
+        435,
+        552
+      ],
+      "label": "雪梅红裘"
+    },
+    {
+      "id": 485,
+      "atlas": "palace-consorts-ruqun-legends.webp",
+      "source": "exec-f3afccfc-d7f6-439b-9e4f-73b1d6098632.png",
+      "sourceSha256": "be860d9e1dbdd7acfccca9f9b9da18946e7db7806731bb9a342081fbe5a533ea",
+      "sourceSize": [
+        1374,
+        1145
+      ],
+      "cell": 2,
+      "crop": [
+        918,
+        0,
+        1374,
+        572
+      ],
+      "bounds": [
+        0,
+        0,
+        456,
+        572
+      ],
+      "placed": [
+        900,
+        8,
+        440,
+        552
+      ],
+      "label": "月华绮梦"
+    },
+    {
+      "id": 486,
+      "atlas": "palace-consorts-ruqun-legends.webp",
+      "source": "exec-f3afccfc-d7f6-439b-9e4f-73b1d6098632.png",
+      "sourceSha256": "be860d9e1dbdd7acfccca9f9b9da18946e7db7806731bb9a342081fbe5a533ea",
+      "sourceSize": [
+        1374,
+        1145
+      ],
+      "cell": 3,
+      "crop": [
+        0,
+        572,
+        485,
+        1145
+      ],
+      "bounds": [
+        0,
+        0,
+        485,
+        573
+      ],
+      "placed": [
+        1348,
+        40,
+        440,
+        520
+      ],
+      "label": "牡丹金绡"
+    },
+    {
+      "id": 487,
+      "atlas": "palace-consorts-ruqun-legends.webp",
+      "source": "exec-f3afccfc-d7f6-439b-9e4f-73b1d6098632.png",
+      "sourceSha256": "be860d9e1dbdd7acfccca9f9b9da18946e7db7806731bb9a342081fbe5a533ea",
+      "sourceSize": [
+        1374,
+        1145
+      ],
+      "cell": 4,
+      "crop": [
+        485,
+        572,
+        936,
+        1145
+      ],
+      "bounds": [
+        0,
+        0,
+        451,
+        573
+      ],
+      "placed": [
+        7,
+        568,
+        434,
+        552
+      ],
+      "label": "春燕轻纱"
+    },
+    {
+      "id": 488,
+      "atlas": "palace-consorts-ruqun-legends.webp",
+      "source": "exec-f3afccfc-d7f6-439b-9e4f-73b1d6098632.png",
+      "sourceSha256": "be860d9e1dbdd7acfccca9f9b9da18946e7db7806731bb9a342081fbe5a533ea",
+      "sourceSize": [
+        1374,
+        1145
+      ],
+      "cell": 5,
+      "crop": [
+        936,
+        572,
+        1374,
+        1145
+      ],
+      "bounds": [
+        0,
+        0,
+        438,
+        573
+      ],
+      "placed": [
+        461,
+        568,
+        422,
+        552
+      ],
+      "label": "玉兰书香"
     }
   ]
 }

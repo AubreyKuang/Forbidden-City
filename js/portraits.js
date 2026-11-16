@@ -176,7 +176,7 @@ const ROYAL_GROWTH_SETS={f:[380,383,392,395],m:[386,389]};
 const DESCENDANT_VARIANTS=29+ROYAL_GROWTH_SETS.m.length;
 const EXISTING_PRINCE_VARIANTS=4;
 const EXTRA_PRINCE_VARIANTS=LEGACY_DESCENDANT_VARIANTS-EXISTING_PRINCE_VARIANTS;
-const BEAUTY_PORTRAIT_START=92, YOUNG_ROYAL_PORTRAIT_START=136, PORTRAIT_COUNT=477;
+const BEAUTY_PORTRAIT_START=92, YOUNG_ROYAL_PORTRAIT_START=136, PORTRAIT_COUNT=489;
 // Opening-generation dowagers only. Inherited empresses keep their saved faces.
 const DOWAGER_PORTRAITS=Object.freeze(Array.from({length:18},(_,i)=>441+i));
 // Reserved story art never enters the random consort pools. Stable zero-based IDs.
@@ -221,7 +221,9 @@ const portraitSheets=[
   {start:453,rows:2,scale:4,src:'./assets/images/palace-dowagers-young.webp?v=1',image:document.createElement('img')},
   {start:459,rows:2,scale:4,src:'./assets/images/palace-consorts-colors-one.webp?v=1',image:document.createElement('img')},
   {start:465,rows:2,scale:4,src:'./assets/images/palace-consorts-colors-two.webp?v=1',image:document.createElement('img')},
-  {start:471,rows:2,scale:4,src:'./assets/images/palace-consorts-ruqun-pink-green.webp?v=1',image:document.createElement('img')}
+  {start:471,rows:2,scale:4,src:'./assets/images/palace-consorts-ruqun-pink-green.webp?v=1',image:document.createElement('img')},
+  {start:477,rows:2,scale:4,src:'./assets/images/palace-consorts-ruqun-varied.webp?v=1',image:document.createElement('img')},
+  {start:483,rows:2,scale:4,src:'./assets/images/palace-consorts-ruqun-legends.webp?v=1',image:document.createElement('img')}
 ];
 const portraitSheet=cell=>portraitSheets.slice().reverse().find(sheet=>cell>=sheet.start)||portraitSheets[0];
 function ensurePortraitSheet(cell){const sheet=portraitSheet(cell);if(!sheet.image.src)sheet.image.src=sheet.src;}
@@ -237,7 +239,7 @@ const ART_CACHE=new Map();
 const CONSORT_PORTRAITS=[1,2,3,4,5,6,7,21,...Array.from({length:44},(_,i)=>92+i).filter(cell=>![102,103,134,135].includes(cell)),...Array.from({length:8},(_,i)=>208+i),240,241,242,243,...Array.from({length:20},(_,i)=>248+i).filter(cell=>cell!==263),...Array.from({length:24},(_,i)=>316+i),...Array.from({length:25},(_,i)=>346+i),...Array.from({length:9},(_,i)=>371+i)];
 const WESTERN_PORTRAITS=[22,23,24,102,103,134,135,263,340,343];
 const EASTERN_PORTRAITS=[341,344],OVERSEAS_PORTRAITS=[342,345];
-const COLOR_CONSORT_PORTRAITS=Object.freeze(Array.from({length:18},(_,i)=>459+i));
+const COLOR_CONSORT_PORTRAITS=Object.freeze(Array.from({length:30},(_,i)=>459+i));
 const NEW_DOMESTIC_CONSORT_PORTRAITS=[...CONSORT_PORTRAITS,...COLOR_CONSORT_PORTRAITS];
 const ALL_CONSORT_PORTRAITS=[...NEW_DOMESTIC_CONSORT_PORTRAITS,...WESTERN_PORTRAITS,...EASTERN_PORTRAITS,...OVERSEAS_PORTRAITS];
 const PORTRAIT_CLOTHES={
@@ -268,7 +270,7 @@ for(let cell=208;cell<216;cell++)PORTRAIT_CLOTHES[cell]='盛装华服';
 ['朱金凤华','翠金云肩','海棠珠绣','紫晶莲纹','玄金团花','月白银枝','桂月玉兔','茉莉初雪','玉兰雪裘','月白银枝·近景','桂月珠华·近景','茉莉初雪·近景','玉兰雪裘·近景'].forEach((name,i)=>{PORTRAIT_CLOTHES[358+i]=name;});
 ['山茶绯玉','梅花雪霁','海棠春酣','幽兰碧岫','紫藤烟霞·近景','虞美人绛绡','紫藤烟霞·半身','牡丹国色·近景','牡丹国色·半身'].forEach((name,i)=>{PORTRAIT_CLOTHES[371+i]=name;});
 const consortPortraits=c=>(c.rescue||['西域贡女','西域流寓'].includes(c.fam?.t))?WESTERN_PORTRAITS:c.fam?.t==='东瀛贵族'?EASTERN_PORTRAITS:c.fam?.t==='海西贵族'?OVERSEAS_PORTRAITS:CONSORT_PORTRAITS;
-['绛红牡丹','青玉兰香','孔雀蓝鹤','杏金银杏','紫藤书韵','海棠粉绣','墨绿竹影','浅蓝梅雪','橘红回眸','玄金菊华','藕紫莲影','黛蓝书信','冰蓝扶花','粉绿回眸','紫藤香囊','绣球蓝扇','绿粉捧桃','青莲披帛'].forEach((name,i)=>{PORTRAIT_CLOTHES[459+i]=name;});
+['绛红牡丹','青玉兰香','孔雀蓝鹤','杏金银杏','紫藤书韵','海棠粉绣','墨绿竹影','浅蓝梅雪','橘红回眸','玄金菊华','藕紫莲影','黛蓝书信','冰蓝扶花','粉绿回眸','紫藤香囊','绣球蓝扇','绿粉捧桃','青莲披帛','鹅黄春绦','湖青玉笛','石榴折扇','月白紫藤','蜜桃香囊','青莲书韵','清荷玉露','雪梅红裘','月华绮梦','牡丹金绡','春燕轻纱','玉兰书香'].forEach((name,i)=>{PORTRAIT_CLOTHES[459+i]=name;});
 
 const LEGACY_FATHER_PORTRAITS=[268,269,270,271,276,277,278,282,283,284,288,289,290];
 const LEGACY_BROTHER_PORTRAITS=[272,273,274,275,279,280,281,285,286,287,291,292,293];
@@ -451,6 +453,8 @@ const PORTRAIT_HEADS={
   459:[54,34,25],460:[53,31,25],461:[54,33,25],462:[53,32,24],463:[53,32,25],464:[51,32,25],
   465:[69,33,28],466:[58,34,28],467:[64,34,28],468:[60,30,28],469:[52,32,28],470:[68,31,28],
   471:[67,31,28],472:[65,30,28],473:[61,30,28],474:[62,32,28],475:[63,31,28],476:[64,31,28],
+  477:[63,31,28],478:[64,29,28],479:[66,30,28],480:[62,31,28],481:[63,31,28],482:[65,31,28],
+  483:[61,30,28],484:[64,29,28],485:[65,30,28],486:[63,31,28],487:[62,31,28],488:[64,31,28],
   422:[51,38,27],
   248:[47,39,34],249:[59,40,34],250:[65,39,32],251:[66,38,32],252:[60,39,34],253:[54,39,34],254:[59,38,34],255:[59,39,34],
   256:[57,28,23],257:[50,31,27],258:[60,31,27],259:[56,31,27],260:[62,29,27],261:[65,30,25],262:[58,30,27],263:[59,31,27],264:[56,28,25],265:[60,28,26],266:[61,27,26],267:[50,29,27],

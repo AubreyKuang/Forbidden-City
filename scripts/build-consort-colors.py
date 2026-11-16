@@ -1,4 +1,4 @@
-"""Pack eighteen approved Gouyi-style consorts, without repainting the source art.
+"""Pack thirty approved Gouyi-style consorts, without repainting the source art.
 
 Usage: python3 scripts/build-consort-colors.py /path/to/generated_images
 The ruqun sheet uses the approved pink-and-green revision, not its orange draft.
@@ -21,12 +21,16 @@ SHEETS = [
      ['墨绿竹影', '浅蓝梅雪', '橘红回眸', '玄金菊华', '藕紫莲影', '黛蓝书信']),
     (471, 'palace-consorts-ruqun-pink-green.webp', 'exec-dc140b52-ccdc-408b-ae4d-cb38c1b17ca0.png',
      ['冰蓝扶花', '粉绿回眸', '紫藤香囊', '绣球蓝扇', '绿粉捧桃', '青莲披帛']),
+    (477, 'palace-consorts-ruqun-varied.webp', 'exec-ceb9f9cf-44d4-47b8-8163-9a52c4af0cfc.png',
+     ['鹅黄春绦', '湖青玉笛', '石榴折扇', '月白紫藤', '蜜桃香囊', '青莲书韵']),
+    (483, 'palace-consorts-ruqun-legends.webp', 'exec-f3afccfc-d7f6-439b-9e4f-73b1d6098632.png',
+     ['清荷玉露', '雪梅红裘', '月华绮梦', '牡丹金绡', '春燕轻纱', '玉兰书香']),
 ]
 
 
 def build(folder):
     manifest = {'frame': [448, 560], 'columns': 4, 'styleReference': 422,
-                'approved': 'Three sheets, eighteen consorts including the pink-and-green ruqun revision', 'portraits': []}
+                'approved': 'All five sheets, thirty consorts including the pink-and-green ruqun revision and six beauty-inspired portraits', 'portraits': []}
     for start, filename, source_name, labels in SHEETS:
         source_path = folder / source_name
         source_hash = hashlib.sha256(source_path.read_bytes()).hexdigest()
@@ -53,7 +57,7 @@ def build(folder):
         dest = ROOT / 'assets/images' / filename
         atlas.save(dest, 'WEBP', quality=96, method=6, exact=True)
         print(f'{filename}: 6 portraits, {atlas.size}, {dest.stat().st_size:,} bytes')
-    assert [p['id'] for p in manifest['portraits']] == list(range(459, 477))
+    assert [p['id'] for p in manifest['portraits']] == list(range(459, 489))
     (ROOT / 'docs/consort-colors-sources.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n')
 
 
