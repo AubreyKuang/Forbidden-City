@@ -104,7 +104,12 @@ function pushNow(ev){if(!eventStillValid(ev))return;Q.unshift(ev);if(!modalOpen)
 function nextEv(){
   if(typeof PalaceActions!=='undefined'&&!PalaceActions.busy)return PalaceActions.run('next',[],()=>nextEv());
   modalResult=null;
-  while(Q.length){const ev=Q.shift();if(eventStillValid(ev)){openModal(ev);return}}
+  while(Q.length){
+    const ev=Q.shift();if(!eventStillValid(ev))continue;
+    const report=jinyiweiRareAlert(ev);
+    if(report)Q.unshift(ev);
+    openModal(report||ev);return;
+  }
   const invoker=modalInvoker;
   modalInvoker=null;
   modalOpen=false;curEv=null;const modal=$('#modal');modal.close?.();modal.hidden=true;modal.setAttribute('data-scene','');checkEnd();render();

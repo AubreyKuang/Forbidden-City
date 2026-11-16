@@ -91,22 +91,75 @@ const JINYIWEI_RARE_NOTICES={
   '仙师来访 · 山门之约':'宫门可查来访名帖和引见人，至于国师所论灵根，缇骑只记其言。',
   '江湖闻名 · 故人仙踪':'可经沿途驿站核对信牒来处与印记；江湖盛传的话须另记作风闻。'
 };
-function jinyiweiRareNotice(ev,people){
-  if(journalContentVersion()<56||!Object.hasOwn(JINYIWEI_RARE_NOTICES,ev.title)||!jinyiweiCommanderReady())return '';
-  const j=jinyiwei(),notes=j.rareNotices||=[];
+const JINYIWEI_URGENT_EVENTS=new Set([
+  '香囊疑案','石阶惊变','巫蛊之祸','东宫惊魂','狸猫','襁褓上的旧结','迟来的脉案',
+  '宫外家书 · 身世起疑','皇子结党','兄弟阋墙','储位之争','逼宫','遇刺'
+]);
+const JINYIWEI_RECURRING_WARNINGS=new Set(['兄弟阋墙','储位之争']);
+function jinyiweiRareNote(ev,people){
   const ids=people.map(p=>String(p.id??p.name)).sort().join(',');
   const repeatable=['香囊疑案','石阶惊变','巫蛊之祸','东宫惊魂','逼宫','遇刺','储位之争','兄弟阋墙'].includes(ev.title);
   const key=`${S.gen}:${ev.title}:${ids}${repeatable?':'+S.turn:''}`;
-  const text=JINYIWEI_RARE_NOTICES[ev.title];
-  if(!notes.some(n=>n.key===key)){
-    notes.push({key,title:ev.title,text,date:dateStr()});
-    const line=`【锦衣卫提示 · ${ev.title}】${text}`;
-    j.commander.story||=[];story(j.commander,line);log(line);
-  }
-  return `锦衣卫指挥使${j.commander.name}附报：${text}`;
+  return {key,title:ev.title,text:JINYIWEI_RARE_NOTICES[ev.title],date:dateStr()};
+}
+function recordJinyiweiNotice(note){
+  const j=jinyiwei(),notes=j.rareNotices||=[];
+  if(notes.some(n=>n.key===note.key))return false;
+  notes.push(note);
+  const line=`【锦衣卫提示 · ${note.title}】${note.text}`;
+  j.commander.story||=[];story(j.commander,line);log(line);
+  return true;
+}
+function jinyiweiRareNotice(ev,people){
+  const version=journalContentVersion();
+  if(version<56||version>=65&&JINYIWEI_URGENT_EVENTS.has(ev.title)||!Object.hasOwn(JINYIWEI_RARE_NOTICES,ev.title)||!jinyiweiCommanderReady())return '';
+  const note=jinyiweiRareNote(ev,people);
+  recordJinyiweiNotice(note);
+  return `锦衣卫指挥使${jinyiwei().commander.name}附报：${note.text}`;
+}
+function jinyiweiRareAlert(ev){
+  if(journalContentVersion()<65||!JINYIWEI_URGENT_EVENTS.has(ev.title)||!jinyiweiCommanderReady())return null;
+  const people=eventPortraits(ev),note=jinyiweiRareNote(ev,people);
+  const subject=note.key.slice(0,note.key.lastIndexOf(':'));
+  const repeated=JINYIWEI_RECURRING_WARNINGS.has(ev.title)&&jinyiwei().rareNotices?.some(entry=>
+    entry.urgent&&entry.subject===subject&&S.turn-entry.turn<6);
+  Object.assign(note,{subject,turn:S.turn,urgent:!repeated});
+  if(!recordJinyiweiNotice(note)||repeated)return null;
+  const commander=jinyiwei().commander;
+  return {title:`锦衣卫急报 · ${note.title}`,por:commander,
+    text:`${commander.name}递来密札：\n${note.text}\n密札已存。请陛下接阅原事，再决定如何处置。`,
+    choices:[{t:'阅毕，查看原事'}]};
+}
+
+function jinyiweiFeudAlert(previous){
+  if(journalContentVersion()<65||!S||S.over||previous?.gen!==S.gen||!previous.jinyiwei?.commander||!jinyiweiCommanderReady())return;
+  const notes=jinyiwei().rareNotices||[],pairs=[];
+  const collect=(people,oldPeople,consorts)=>{
+    const oldById=new Map(oldPeople.map(p=>[p.id,p]));
+    for(let i=0;i<people.length;i++)for(let n=i+1;n<people.length;n++){
+      const a=people[i],b=people[n],oldA=oldById.get(a.id),oldB=oldById.get(b.id);
+      const kinRivals=consorts&&(isRival(a,b)||isRival(b,a));
+      const knewRivals=oldA&&oldB&&(isRival(oldA,oldB)||isRival(oldB,oldA));
+      const key=`${S.gen}:${rk(a,b)}`;
+      const crossed=oldA&&oldB&&(previous.rel?.[rk(a,b)]??0)>-40&&relGet(a,b)<=-40;
+      if(!(crossed||kinRivals&&!knewRivals)||notes.some(note=>note.feudPairs?.includes(key)&&S.turn-note.turn<6))continue;
+      const label=consorts?fullName:kidName;
+      pairs.push({key,text:`${label(a)}与${label(b)}近来怨隙已深。${consorts?'值守宫人传话时可分别核对，以免转述添深误会。':'可留意府门往来和当面争执，旁人转述先作记录。'}`});
+    }
+  };
+  collect(harem(),previous.consorts,true);
+  collect(kidsAlive().filter(k=>kidAge(k)>=15&&childCanVisitCourt(k)),previous.children,false);
+  if(!pairs.length)return;
+  const title='新怨密报',text=pairs.map(pair=>pair.text).join('\n')+'\n目前掌握的是两边的嫌隙，尚无凭据指认谁有加害之举。';
+  const feudPairs=pairs.map(pair=>pair.key).sort();
+  const urgent=!notes.some(note=>note.urgent&&note.feudPairs&&note.turn===S.turn);
+  const note={key:`feud:${S.turn}:${feudPairs.join(',')}`,title,text,date:dateStr(),turn:S.turn,feudPairs,urgent};
+  if(recordJinyiweiNotice(note)&&urgent)pushEv({title:'锦衣卫 · '+title,por:jinyiwei().commander,text,
+    choices:[{t:'记下嫌隙，继续留意'}]});
 }
 const rareCasesSection=casesSection;
 casesSection=function(){
   const base=rareCasesSection(),notes=jinyiwei()?.rareNotices;
-  return notes?.length?detailSection('稀有事件速报',`<ul class="story">${notes.slice(-20).reverse().map(n=>`<li><time>${esc(n.date)}</time><b>${esc(n.title)}</b><p>${esc(n.text)}</p></li>`).join('')}</ul>`)+base:base;
+  const title=journalContentVersion()>=65?'稀有事件速报与新怨密报':'稀有事件速报';
+  return notes?.length?detailSection(title,`<ul class="story">${notes.slice(-20).reverse().map(n=>`<li><time>${esc(n.date)}</time><b>${esc(n.title)}</b><p>${esc(n.text)}</p></li>`).join('')}</ul>`)+base:base;
 };
