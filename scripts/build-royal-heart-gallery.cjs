@@ -8,7 +8,7 @@ const scenes={
  young:{after:`k.sex='m';k.temperament='内敛';delete k.xieAdmiration;S.royalHeart={gen:S.gen,pending:{kind:'hope',child:k.id,stage:'young',topic:heartTopic(k)}};PalaceActions.reset();A.royalHeart(k.id);`},
  adult:{after:`k.born=S.turn-25*12;k.temperament='自矜';k.xieAdmiration.outcome='declined';S.royalHeart={gen:S.gen,pending:{kind:'hope',child:k.id,stage:'adult',topic:heartTopic(k)}};PalaceActions.reset();A.royalHeart(k.id);`},
  marriage:{after:`xieMarriageRefusal(k,p).choices[0].f();S.turn+=3;PalaceActions.reset();`,view:'marriage'},
- chronicle:{after:`xieMarriageRefusal(k,p).choices[0].f();for(var i=0;i<24;i++){S.turn++;xieLifeTick();}careerTick();for(var person of careerPeople().filter(x=>x.p.report)){A.officialReport(person.key);if(modalOpen)choose(curEv.choices.length-1);drain();}PalaceActions.reset();`,view:'chronicle'}
+ chronicle:{after:`xieMarriageRefusal(k,p).choices[0].f();for(var i=0;i<24;i++){S.turn++;S.month++;if(S.month>12){S.month=1;S.year++;E().age++;}xieLifeTick();}careerTick();for(var person of careerPeople().filter(x=>x.p.report)){A.officialReport(person.key);if(modalOpen)choose(curEv.choices.length-1);drain();}PalaceActions.reset();`,view:'chronicle'}
 };
 for(const [name,spec] of Object.entries(scenes)){
  const b=world();b.run(setup+spec.after);const payload=b.run('JSON.stringify(PalaceActions.payload())').replace(/</g,'\\u003c');
