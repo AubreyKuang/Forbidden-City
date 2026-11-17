@@ -59,7 +59,7 @@ const SaveManager = (() => {
     }
   }
 
-  function save(storage, key, data, valid, { touch = false, alongside = [], backup = true } = {}) {
+  function save(storage, key, data, valid, { touch = false, alongside = [], backup = true, rewindKey } = {}) {
     const changed = [];
     lastError = null;
     try {
@@ -78,7 +78,12 @@ const SaveManager = (() => {
       const writes = [...alongside];
       if (backup && entry.content !== null && content !== entry.content) writes.push([key + ':backup', previous]);
       if(storage.commit){
-        storage.commit([...writes,[key,next]]);
+        const reclaim=[];
+        if(rewindKey&&!alongside.length){
+          reclaim.push([rewindKey,'[]']);
+          if(entry.content!==null)reclaim.push([key+':backup','']);
+        }
+        storage.commit([...writes,[key,next]],{reclaim});
         observed.set(key,{raw:next,content,newer:false});
         return true;
       }
@@ -188,7 +193,13 @@ function palaceSaveError(slot){
   return '存档写入失败，眼下的进度尚未写入，之前的存档仍保留。请重试保存，或下载备份文件留存。';
 }
 let lastAutoSaveError='';
+let dismissedSaveError='';
 let lastAutoSaveInfo=null;
+function setAutoSaveError(error){
+  if(error!==lastAutoSaveError)dismissedSaveError='';
+  lastAutoSaveError=error;
+}
+A.dismissSaveError=function(){dismissedSaveError=lastAutoSaveError;renderTop();};
 function autoSaveStatusText(){
   if(SaveManager.getStorage()?.pendingKey?.(SKEY+'auto'))return '正在写入自动存档…';
   if(lastAutoSaveError)return '自动存档未写入';
@@ -214,8 +225,12 @@ function connectPalaceStorage(){
     if(change.type==='failed'){
       SaveManager.forget(change.keys);
       // A failed import/manual save also needs a persistent, visible warning.
-      lastAutoSaveError=palaceSaveError('auto');toast(lastAutoSaveError);
-    }else if(change.type==='saved'&&change.keys.includes(SKEY+'auto'))lastAutoSaveError='';
+      setAutoSaveError(palaceSaveError('auto'));
+    }else if(change.type==='saved'){
+      // A quota retry may intentionally clear an optional backup or rewind entry.
+      SaveManager.forget(change.keys.filter(key=>key.endsWith(':backup')||key.endsWith(':snapshots')));
+      if(change.keys.includes(SKEY+'auto'))setAutoSaveError('');
+    }
     refreshAutoSaveStatus();
     if(change.type==='idle'&&S&&UI.view==='sys')render();
   };
@@ -230,24 +245,34 @@ function confirmPalaceWrite(ok,message,slot='auto'){
 // When the browser store is full, rewind points and the previous-copy backup give way
 // before the playable save does.
 function writePalace(storage,key,data){
-  if(SaveManager.save(storage,key,data,validPalaceSave))return true;
+  if(SaveManager.save(storage,key,data,validPalaceSave,{rewindKey:SKEY+'auto:snapshots'}))return true;
   if(storage?.commit)return false;
   if(!storage||!SaveManager.storeFull()||SaveManager.status(storage,key)!=='ready')return false;
   while(SaveManager.dropOldestSnapshot(storage,SKEY+'auto')){
     if(SaveManager.save(storage,key,data,validPalaceSave))return true;
     if(!SaveManager.storeFull())return false;
   }
-  try{storage.removeItem(key+':backup');}catch{return false;}
-  return SaveManager.save(storage,key,data,validPalaceSave,{backup:false});
+  if(SaveManager.save(storage,key,data,validPalaceSave,{backup:false}))return true;
+  if(!SaveManager.storeFull())return false;
+  const backupKey=key+':backup';
+  let prior;
+  try{
+    if(!SaveManager.decode(storage.getItem(key),validPalaceSave))return false;
+    prior=storage.getItem(backupKey);
+    if(prior==null)return false;
+    storage.removeItem(backupKey);
+  }catch{return false;}
+  if(SaveManager.save(storage,key,data,validPalaceSave,{backup:false}))return true;
+  try{if(storage.getItem(backupKey)==null)storage.setItem(backupKey,prior);}catch{/* The primary save is still intact. */}
+  return false;
 }
 function save(slot){
   if(!S)return false;
-  if(typeof PalaceActions!=='undefined'){if(PalaceActions.blocked){if(slot==='auto'){lastAutoSaveError='未完事件尚待处理，自动存档暂未写入。请先处理「未完事件无法续接」提示，或下载现有进度。';refreshAutoSaveStatus();}return false;}if(PalaceActions.busy)return true;}
+  if(typeof PalaceActions!=='undefined'){if(PalaceActions.blocked){if(slot==='auto'){setAutoSaveError('未完事件尚待处理，自动存档暂未写入。请先处理「未完事件无法续接」提示，或下载现有进度。');refreshAutoSaveStatus();}return false;}if(PalaceActions.busy)return true;}
   const ok=writePalace(SaveManager.getStorage(),SKEY+slot,{...PalaceActions.payload(),savedAt:Date.now()});
   if(slot==='auto'){
     const error=ok?'':palaceSaveError(slot);
-    if(error&&error!==lastAutoSaveError)toast(error);
-    lastAutoSaveError=error;
+    setAutoSaveError(error);
     refreshAutoSaveStatus();
   }
   return ok;
@@ -269,7 +294,7 @@ function slotInfo(slot){
   return s?`${s.emp.sur}${s.emp.name}·${dateStr(s)}·后妃${s.consorts.filter(c=>c.alive&&!c.gone).length}`:null;
 }
 function showRestoredPalace(){
-  lastAutoSaveError='';refreshAutoSaveStatus();
+  setAutoSaveError('');refreshAutoSaveStatus();
   Q.length=0;curEv=null;modalOpen=false;modalResult=null;
   modalInvoker=null;
   $('#modal').close?.();
@@ -279,7 +304,7 @@ function showRestoredPalace(){
   if(PalaceActions.restore(pending)){resetMapPosition(S.pos);render();return;}
   render();
   if(!PalaceActions.blocked)A.resumePendingScenes();
-  else {lastAutoSaveError='未完事件尚待处理，自动存档暂未写入。请先处理「未完事件无法续接」提示，或下载现有进度。';refreshAutoSaveStatus();pushEv(pendingRecoveryEvent());}
+  else {setAutoSaveError('未完事件尚待处理，自动存档暂未写入。请先处理「未完事件无法续接」提示，或下载现有进度。');refreshAutoSaveStatus();pushEv(pendingRecoveryEvent());}
 }
 // Scenes that were queued but never shown should not keep their palace-wide cooldowns.
 function releaseUnansweredCooldowns(titles){

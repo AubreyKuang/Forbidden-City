@@ -47,8 +47,8 @@ for(const seed of [101,202,303,404])test(`seed ${seed}: 36 months with a cold re
 test('manual saves retain pending scenes; unavailable storage leaves the game playable',()=>{
  const b=boot();start(b);b.run("A.out('spa');A.save('1')");const before=snapshot(b);b.run("choose(0);A.load('1')");assert.equal(snapshot(b),before);
  b.run("localStorage.setItem=()=>{throw Error('quota')};drain()");const energy=b.run('E().energy');
- b.run("A.chat(2);drain()");assert.ok(b.messages.some(s=>s.includes('尚未写入')));
- assert.equal(b.run('E().energy'),energy-1);assert.equal(b.run('byId(2).voiceVisits'),1);assert.match(b.run("renderTop();$('#top').innerHTML"),/未能存档 · 下载备份/);
+ b.run("A.chat(2);drain()");assert.match(b.run('lastAutoSaveError'),/尚未写入/);
+ assert.equal(b.run('E().energy'),energy-1);assert.equal(b.run('byId(2).voiceVisits'),1);assert.match(b.run("renderTop();$('#top').innerHTML"),/hud-save-warning[\s\S]*下载备份/);
 });
 test('pending save data cannot replay storage actions',()=>{
  const b=boot();start(b);b.run('A.endMonth()');assert.equal(b.run("PalaceActions.valid({...PalaceActions.payload().pendingActions,steps:[{name:'undoImport',args:[],rolls:[],answers:[],saves:[],ui:{}}]})"),false);
@@ -63,7 +63,7 @@ test('a save edited in another tab still rolls back instead of being overwritten
  const b=boot();start(b);b.run('A.gift(2)');const before=b.run('E().treasury'),key='chengongji_v1_auto';
  const other=JSON.parse(b.storage.get(key));other.emp.treasury=1;b.storage.set(key,JSON.stringify(other));const raw=b.storage.get(key);
  b.run('choose(0)');assert.equal(b.run('E().treasury'),before);assert.equal(b.run('curEv.title'),'赏赐');assert.equal(b.storage.get(key),raw);
- assert.ok(b.messages.some(s=>s.includes('另一标签页')));
+ assert.match(b.run('lastAutoSaveError'),/另一标签页/);
 });
 test('year snapshots include pending scenes and direct map arrival resumes in a new runtime',()=>{
  let b=boot();start(b);b.run("arrive(PLACES.find(p=>p.id==='kn'))");b=reload(b);assert.equal(b.run('curEv.scene'),'palace-arrival');b.run('choose(1);drain();S.month=12;A.endMonth()');

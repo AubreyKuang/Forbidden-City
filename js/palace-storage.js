@@ -8,6 +8,7 @@ const PalaceStorage=(()=>{
       [prefix+slot,prefix+slot+':backup',...(slot==='auto'?[prefix+slot+':snapshots']:[])]));
   let store=null, opening=null, startupError=null;
   const conflict=()=>Object.assign(new Error('另一标签页已更新存档'),{name:'SaveConflictError'});
+  const quota=e=>e?.name==='QuotaExceededError'||e?.name==='NS_ERROR_DOM_QUOTA_REACHED'||e?.code===22||e?.code===1014;
   function readAll(db){return new Promise((resolve,reject)=>{
     const values=new Map(),tx=db.transaction(table,'readonly'),request=tx.objectStore(table).openCursor();
     request.onsuccess=()=>{const c=request.result;if(c){values.set(c.key,c.value);c.continue();}};
@@ -56,13 +57,33 @@ const PalaceStorage=(()=>{
         for(const [key,value] of batch.writes){if(value===null)records.delete(key);else records.put(value,key);}
       }catch(e){reason=e;tx.abort();}
     });
+    async function write(batch){
+      try{await transact(batch);return batch.writes;}
+      catch(error){
+        if(!quota(error)||!batch.reclaim.length)throw error;
+        const reclaim=new Map(batch.reclaim);
+        // Empty records prevent later startup from remigrating stale legacy copies.
+        const writes=[...reclaim,...batch.writes.filter(([key])=>!reclaim.has(key))];
+        const expected=new Map([...batch.reclaim.map(([key])=>[key,durable.get(key)??null]),...batch.expected]);
+        await transact({writes,expected});
+        for(const [key,value] of reclaim){
+          const following=queue.slice(1).find(item=>item.expected.some(([name])=>name===key));
+          if(following)following.expected=following.expected.map(([name,prior])=>[name,name===key?value:prior]);
+        }
+        return writes;
+      }
+    }
     async function pump(){
       if(running)return;running=true;
       while(queue.length){
         const batch=queue[0];
         try{
-          await transact(batch);apply(durable,batch.writes);queue.shift();
-          emit({type:'saved',keys:batch.writes.map(([key])=>key)});
+          const writes=await write(batch);apply(durable,writes);queue.shift();
+          if(writes!==batch.writes){
+            cache=new Map(durable);
+            for(const pending of queue)apply(cache,pending.writes);
+          }
+          emit({type:'saved',keys:writes.map(([key])=>key)});
         }catch(e){
           error=e;const failed=[...new Set(queue.flatMap(b=>b.writes.map(([key])=>key)))];queue=[];
           cache=new Map(durable);
@@ -79,9 +100,9 @@ const PalaceStorage=(()=>{
       pendingKey:key=>queue.some(b=>b.writes.some(([k])=>k===key)),
       get error(){return error;},
       hasConflict:key=>conflicts.has(key),
-      commit(writes){
+      commit(writes,{reclaim=[]}={}){
         if(writes.some(([key])=>conflicts.has(key)))throw conflict();
-        const batch={writes,expected:writes.map(([key])=>[key,cache.get(key)??null])};
+        const batch={writes,reclaim,expected:writes.map(([key])=>[key,cache.get(key)??null])};
         revision++;error=null;apply(cache,writes);queue.push(batch);pump();return true;
       },
       setItem(key,value){return api.commit([[key,String(value)]]);},

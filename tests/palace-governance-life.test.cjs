@@ -5,17 +5,17 @@ const {withClock}=require('./test-clock.cjs');
 function world(seed=311){const b=withClock(boot(seed));b.ctx.assert=assert;b.run('A.start();drain();');return b;}
 function reload(b){const c=withClock(boot(901,b.storage));c.ctx.assert=assert;c.run("A.load('auto');assert.equal(PalaceActions.blocked,false)");return c;}
 
-test('last energy waits for the current result, resumes across reload, then advances once',()=>{
+test('last energy waits for the current result and lets the player finish the month after reload',()=>{
  let b=world();b.run("E().energy=1;A.out('spa');assert.equal(E().energy,0);assert.equal(S.turn,0);assert.equal(curEv.title,'温泉行宫');");
- b=reload(b);b.run('assert.equal(S.turn,0);choose(0);assert.equal(S.turn,0);tick(1499);assert.equal(S.turn,0);tick(1);assert.equal(S.turn,1);assert.ok(E().energy>0);');
+ b=reload(b);b.run('assert.equal(S.turn,0);choose(0);assert.equal(S.turn,0);tick(1500);assert.equal(S.turn,0);A.endMonth();assert.equal(S.turn,1);assert.ok(E().energy>0);');
  b=reload(b);b.run('assert.equal(S.turn,1);while(modalOpen)nextEv();assert.equal(S.turn,1);');
 });
 test('last court action keeps its decision and only advances after the result is read',()=>{
  let b=world();b.run("E().energy=1;A.court();choose(0);assert.equal(S.turn,0);assert.ok(modalResult);assert.equal(S.flags.monthlyCourt.done,true);");
- b=reload(b);b.run("nextEv();assert.equal(S.turn,0);tick(1500);assert.equal(S.turn,1);assert.equal(S.flags.lastMonthReview.court.title,'黄河决堤');");
+ b=reload(b);b.run("nextEv();assert.equal(S.turn,0);tick(1500);assert.equal(S.turn,0);A.endMonth();assert.equal(S.turn,1);assert.equal(S.flags.lastMonthReview.court.title,'黄河决堤');");
 });
-test('a non-dialog action also advances; rejected actions and reading do not consume a month',()=>{
- const b=world();b.run("E().energy=1;A.taxPlan('light');assert.equal(S.turn,0);tick(1500);assert.equal(S.turn,1);while(modalOpen)nextEv();E().energy=0;delete S.flags.exhaustedTurn;A.taxPlan('regular');A.go('government');assert.equal(S.turn,1);assert.equal(governance().tax,'light');");
+test('non-dialog actions and navigation remain in the month until it is ended',()=>{
+ const b=world();b.run("E().energy=1;A.taxPlan('light');assert.equal(S.turn,0);tick(1500);assert.equal(S.turn,0);A.endMonth();assert.equal(S.turn,1);while(modalOpen)nextEv();E().energy=0;delete S.flags.exhaustedTurn;A.taxPlan('regular');A.go('government');assert.equal(S.turn,1);assert.equal(governance().tax,'light');");
 });
 test('a failed write keeps the last energy spent and saves it when storage returns',()=>{
  const b=world();b.run("E().energy=1;var coins=E().treasury,write=localStorage.setItem;localStorage.setItem=()=>{throw Error('quota')};A.out('spa');assert.equal(E().treasury,coins-60);assert.equal(E().energy,0);assert.ok(lastAutoSaveError);");
@@ -25,7 +25,7 @@ test('unsettled birth is handled before an exhausted month can advance',()=>{
  const b=world();b.run(`var c=harem()[1];c.preg=10;birthEvent(c);E().energy=0;S.flags.exhaustedTurn=S.turn;A.resumeBirth(c.id);
   var turn=S.turn;assert.equal(modalOpen,true);settleExhaustedMonth(null);assert.equal(S.turn,turn);
   for(var i=0;modalOpen&&S.turn===turn&&i<100;i++){if(modalResult)nextEv();else choose(curEv.choices.findIndex(x=>!x.cond||x.cond()));}
-  tick(1500);assert.equal(S.turn,turn+1);assert.equal(pendingDelivery(),undefined);assert.ok(S.children.every(k=>!k.pendingName));`);
+  tick(1500);assert.equal(S.turn,turn);A.endMonth();assert.equal(S.turn,turn+1);assert.equal(pendingDelivery(),undefined);assert.ok(S.children.every(k=>!k.pendingName));`);
 });
 test('tax and annual tribute each post exactly once, survive reload and recur next year',()=>{
  let b=world();b.run(`S.month=10;var before=E().treasury;var tax=annualRevenueTick();assert.equal(E().treasury-before,575);assert.match(tax.text,/575/);assert.equal(annualRevenueTick(),null);
@@ -124,8 +124,8 @@ for(const fixture of legacyFixtures.cases)test(`pre-upgrade ${fixture.name} cont
  b.run("if(modalResult)nextEv();else choose(curEv.choices.findIndex(c=>!c.cond||c.cond()))");
  b=reload(b);b.run('drain();assert.equal(PalaceActions.legacy,false);');
  assert.equal(b.run('S.turn'),fixture.save.turn,'finishing a version 2 scene retains the original month');
- b.run("E().energy=1;A.out('spa');assert.equal(PalaceActions.payload().pendingActions.version,68)");
- b=reload(b);b.run('var previousTurn=S.turn;choose(0);tick(1500);assert.equal(S.turn,previousTurn+1);');
+ b.run("E().energy=1;A.out('spa');assert.equal(PalaceActions.payload().pendingActions.version,69)");
+ b=reload(b);b.run('var previousTurn=S.turn;choose(0);tick(1500);assert.equal(S.turn,previousTurn);A.endMonth();assert.equal(S.turn,previousTurn+1);');
 });
 test('the old commission cancellation index still cancels instead of assigning a new mission',()=>{
  const fixture=legacyFixtures.cases.find(f=>f.name==='official');

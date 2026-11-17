@@ -3,7 +3,7 @@ function legacyPendingAction(){return typeof PalaceActions!=='undefined'&&Palace
 let exhaustedMonthNotice=null;
 const EXHAUSTED_MONTH_DELAY=1500;
 function exhaustedMonthReady(){
-  return !!(S&&!S.over&&E().energy<=0&&S.flags.exhaustedTurn===S.turn&&!modalOpen&&!Q.length);
+  return !!(S&&!S.over&&!playtestFeedbackActive()&&E().energy<=0&&S.flags.exhaustedTurn===S.turn&&!modalOpen&&!Q.length);
 }
 function clearExhaustedMonthNotice(){
   if(exhaustedMonthNotice&&typeof clearTimeout==='function')clearTimeout(exhaustedMonthNotice.timer);
@@ -39,6 +39,7 @@ A.completeExhaustedMonth=function(gen,turn){
 };
 function settleExhaustedMonth(previous){
   if(!S||S.over)return;
+  if(playtestFeedbackActive()){delete S.flags.exhaustedTurn;return;}
   if(previous?.gen===S.gen&&previous.turn===S.turn&&previous.emp.energy>0&&E().energy<=0)S.flags.exhaustedTurn=S.turn;
   if(E().energy>0){delete S.flags.exhaustedTurn;return;}
   if(S.flags.exhaustedTurn!==S.turn||modalOpen||Q.length)return;

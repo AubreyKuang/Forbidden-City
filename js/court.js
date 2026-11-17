@@ -2,6 +2,13 @@
 const FLOOD_DIRECT_COST=300, FLOOD_DIKE_COST=90, FLOOD_DIKE_SAVING=140;
 const RELIEF_SUSPENSION_MONTHS=3;
 const FLOOD_AUDIT_COST=30, FLOOD_AUDITED_ODDS=70;
+const EARTHQUAKE_INDEX=14;
+const EARTHQUAKE_REPORTS=[
+  ['陇西','山寨屋舍倾颓，几处井口也被落石堵住。'],
+  ['河东','沿汾河的村舍开裂，最急的是给露宿百姓搭棚。'],
+  ['京西','余震震坏了县仓和两座石桥，邻县正从小道送粮。'],
+  ['巴蜀','山石滚落，道路断了几段，驿使绕行才带回伤亡簿。']
+];
 const reliefSuspended=father=>father?.reliefResumeTurn>S.turn;
 const officialC=(p=50)=>{const a=harem().filter(c=>c.fam.p>=p&&officialServing(houseOf(c)?.father)&&!reliefSuspended(houseOf(c)?.father));return a.length?pick(a):null};
 const FOREIGN_CONSORT_ORIGINS=[
@@ -59,18 +66,22 @@ const COURT=[
    {t:'命太医院全力救治（国库-150万两）',f:()=>{log('京畿时疫，太医院救治有方。');return `${fx(chg({treasury:-150,people:6}))}`}},
    {t:'封锁疫区',f:()=>`疫情被控制住了，但疫区百姓死伤惨重。${fx(chg({people:-6,prestige:1}))}`}]}),
  ()=>({title:'五谷丰登',text:'今年风调雨顺，各省奏报丰收。',choices:[
-   {t:'减免三成赋税',f:()=>{log('岁丰，帝减免赋税。');return `${fx(chg({treasury:-100,people:9}))}`}},
-   {t:'照常征收，充实国库',f:()=>`${fx(chg({treasury:180}))}`}]}),
+   {t:'减免三成赋税',outcome:'县衙换下旧税榜。来交粮的人看了新榜，挑着余粮回家。',f:()=>{log('岁丰，帝减免赋税。');return fx(chg({treasury:-100,people:9}));}},
+   {t:'照常征收，充实国库',outcome:'漕船依旧额交粮，户部把丰年所增的收入逐笔登账。',f:()=>fx(chg({treasury:180}))}]}),
  ()=>({title:'修建园林',text:'工部奏请于西郊修建避暑园林，以供圣驾消夏。',choices:[
-   {t:'准奏（国库-300万两）',f:()=>{harem().forEach(c=>c.mood=clamp(c.mood+10));log('帝修西郊园林。');return `${fx(chg({treasury:-300,people:-4}))}\n§后宫众人心情+10`}},
-   {t:'不准，崇尚节俭',f:()=>`${fx(chg({people:3,prestige:2}))}`}]}),
+   {t:'准奏（国库-300万两）',outcome:'工部领了银，带人到西郊丈量地界。六宫得知有了消夏的去处，已在商量搬哪些书画。',f:()=>{harem().forEach(c=>c.mood=clamp(c.mood+10));log('帝修西郊园林。');return `${fx(chg({treasury:-300,people:-4}))}\n§后宫众人心情+10`}},
+   {t:'不准，崇尚节俭',outcome:'工部撤下西郊的营造图册，原拟摊派的工役也一并撤回。',f:()=>fx(chg({people:3,prestige:2}))}]}),
  ()=>({title:'文武之争',text:'内阁首辅与镇国大将军在朝堂上争执不下：一要削减军费兴修水利，一要扩军备边。',choices:[
    {t:'偏向文臣，兴修水利',f:()=>{harem().filter(c=>c.trait==='将门').forEach(c=>cchg(c,{mood:-10}));return `${fx(chg({treasury:-100,people:6,prestige:-1}))}`}},
    {t:'偏向武将，扩军备边',f:()=>`${fx(chg({treasury:-150,prestige:5,people:-2}))}`},
    {t:'各打五十大板',f:()=>`两人都讨了没趣。${fx(chg({prestige:2}))}`}]}),
- ()=>({title:'地龙翻身',sfx:'gong',text:'钦天监奏报：陇西地震，屋舍倾颓，死伤者众。朝野议论，皆言上天示警。',choices:[
-   {t:'下罪己诏',f:()=>{log('陇西地震，帝下罪己诏。',1);return `${fx(chg({prestige:-3,people:8}))}`}},
-   {t:'拨银赈灾（国库-200万两）',f:()=>`${fx(chg({treasury:-200,people:5}))}`}]}),
+ brief=>{
+   const report=EARTHQUAKE_REPORTS[brief?.earthquake??nextEarthquakeReport()]||EARTHQUAKE_REPORTS[0];
+   const [region,damage]=report;
+   return {title:'地龙翻身',sfx:'gong',text:playtestFeedbackActive()?`钦天监奏报：${region}地震，${damage}`:'钦天监奏报：陇西地震，屋舍倾颓，死伤者众。朝野议论，皆言上天示警。',choices:[
+    {t:'下罪己诏',outcome:`罪己诏传至${region}，州县在赈棚外张榜，吏员依诏逐户登记灾情。`,f:()=>{log(`${region}地震，帝下罪己诏。`,1);return fx(chg({prestige:-3,people:8}));}},
+    {t:'拨银赈灾（国库-200万两）',outcome:`银车发往${region}，州县先拨一笔安置无处栖身的人家。`,f:()=>fx(chg({treasury:-200,people:5}))}]};
+ },
  ()=>({title:'老臣乞骸骨',text:'三朝元老、太傅陈公年过七旬，上表请求告老还乡。',choices:[
    {t:'厚赐金帛，亲送出城',f:()=>`老臣涕泪纵横。百官感念陛下仁厚。${fx(chg({treasury:-30,prestige:3}))}`},
    {t:'挽留：“朝廷离不开您老。”',f:()=>`老臣又留任一年，朝政井井有条。${fx(chg({prestige:1,people:2}))}`}]}),
@@ -628,7 +639,7 @@ function impeachmentEvent(brief){
       story(consort,'其父遭弹劾，陛下将奏折压下。她心中感念。');
       return `你把奏折压下了。${fx(chg({people:-5}),cchg(consort,{aff:10}))}`;
     }},
-    {t:'罚俸一年，以儆效尤',f:()=>`${fx(chg({people:2}),cchg(consort,{mood:-8}))}`},
+    {t:'罚俸一年，以儆效尤',outcome:'吏部把罚俸的朱批抄送户部。消息传入内廷，她在案前坐了许久。',f:()=>fx(chg({people:2}),cchg(consort,{mood:-8}))},
   ];
   if(review){
     const alternative=file.guilty
@@ -678,6 +689,18 @@ const COURT_PREVIEWS=[
   ['国库 −100 万两 · 民心 +6 · 威望 −1 · 将门妃嫔心情 −10','国库 −150 万两 · 威望 +5 · 民心 −2','威望 +2'],
   ['威望 −3 · 民心 +8','国库 −200 万两 · 民心 +5'],
   ['国库 −30 万两 · 威望 +3','民心 +2 · 威望 +1'],
+  ['国库 −5 万两 · 民心 +5 · 威望 +4','民心 −2'],
+  ['民心 −8 · 威望 −3','民心 +2','民心 +6 · 威望 +6'],
+  ['国库 −80 万两 · 威望 +6','诸将服从则威望 +1；若哗变则威望 −6、民心 −3'],
+  ['得手则威望 +12、民心 +4；负伤擒拿则威望 +8、龙体 −6','威望 −6'],
+  ['国库 −500 万两 · 民心 −10 · 威望 +3 · 此后每月国库多入 25 万两','民心 +3'],
+  ['国库 −400 万两 · 威望 +10 · 民心 −2','国库 +30 万两'],
+  ['各半机会：施行得当国库 +150 万两、民心 +4；强行摊派国库 +180 万两、民心 −8','威望 −1'],
+  ['威望 +2 · 民心 −7','民心 +5'],
+  ['当下龙体 +8 · 服药后的影响留待太医观察','威望 +2'],
+  ['威望 +5 · 民心 +3','威望 −1'],
+  ['民心 +10 · 威望 +4 · 公主亲密 −10','国库 −5 万两 · 民心 −8'],
+  ['威望 +6 · 民心 +5','威望 −2'],
 ];
 const COURT_RELIEF={
   0:{office:'工部',cost:340,people:6},
@@ -766,14 +789,34 @@ function floodReliefEvent(brief){
   return event;
 }
 function courtEvent(){
-  const index=pick(SPONT),ev=COURT[index]();
+  const pool=playtestFeedbackActive()?SPONT.filter(courtSubjectReady):SPONT;
+  if(!pool.length)return null;
+  const index=pick(pool),ev=COURT[index]();
   if(index===FLOOD_INDEX||index===LOCUST_INDEX)appendYiDisasterRelief(ev,index===FLOOD_INDEX?'水灾':'蝗灾',5);
-  ev.onQueue=()=>{S.flags.lastCourt=ev.title;};
+  ev.choices=ev.choices.map((choice,i)=>({...choice,preview:choice.preview||COURT_PREVIEWS[index]?.[i]}));
+  ev.onQueue=()=>{S.flags.lastCourt=ev.title;rememberCourtSubject(index);};
   return ev;
 }
 
 const MONTHLY_COURT_LIMIT=3;
 const monthlyCourtBatchEnabled=()=>journalContentVersion()>=46;
+function recentCourtSubject(index){
+  const ledger=S.flags.recentCourtSubjects;
+  return ledger?.gen===S.gen?ledger.topics[index]:undefined;
+}
+function nextEarthquakeReport(){
+  return playtestFeedbackActive()?(recentCourtSubject(EARTHQUAKE_INDEX)?.count??0)%EARTHQUAKE_REPORTS.length:0;
+}
+function courtSubjectReady(index){
+  const interval=index===EARTHQUAKE_INDEX?6:3;
+  return S.turn-(recentCourtSubject(index)?.turn??-Infinity)>=interval&&(index!==HARVEST_INDEX||grainHarvestSeason());
+}
+function rememberCourtSubject(index){
+  if(!playtestFeedbackActive())return;
+  const count=(recentCourtSubject(index)?.count??0)+1;
+  if(S.flags.recentCourtSubjects?.gen!==S.gen)S.flags.recentCourtSubjects={gen:S.gen,topics:{}};
+  S.flags.recentCourtSubjects.topics[index]={turn:S.turn,count};
+}
 function currentCourtBrief(){
   const brief=S.flags.monthlyCourt;
   return brief?.turn===S.turn&&brief.gen===S.gen?brief:null;
@@ -888,22 +931,26 @@ function singleMonthlyCourtEvent(){
   }
   for(const index of candidates){
     if(seen.has(index))continue;
+    if(playtestFeedbackActive()&&!courtSubjectReady(index))continue;
     if(journalContentVersion()>=33&&index===2)continue; // 礼部日程统一安排殿试，已呈阅的旧奏折仍可批复。
     const impeachment=index===IMPEACHMENT_INDEX?newImpeachment():null;
     const floodNeed=index===FLOOD_INDEX?(S.turn===0||chance(.5)?'grain':'shelter'):null;
     const locustRoll=index===LOCUST_INDEX?R():null;
     const locustNeed=locustRoll===null?null:locustRoll<.5?'near':'far';
     const locustAuditNeed=locustRoll!==null&&locustRoll>=.35&&locustRoll<.65?(chance(.5)?'near':'far'):null;
+    const earthquake=index===EARTHQUAKE_INDEX&&playtestFeedbackActive()?nextEarthquakeReport():null;
     const ev=floodNeed?monthlyFloodEvent({floodNeed}):index===LOCUST_INDEX||index===HARVEST_INDEX
-      ?monthlyGrainEvent(index,{locustNeed,locustAuditNeed}):COURT[index](index===IMPEACHMENT_INDEX?{impeachment}:undefined);
+      ?monthlyGrainEvent(index,{locustNeed,locustAuditNeed}):COURT[index](index===IMPEACHMENT_INDEX?{impeachment}:earthquake!==null?{earthquake}:undefined);
     if(!ev)continue;
     S.flags.monthlyCourt={turn:S.turn,gen:S.gen,index,person:ev.person,sons:ev.sons,
       ...(impeachment?{impeachment}:{}),
       ...(floodNeed?{floodNeed}:{}),
       ...(locustNeed?{locustNeed}:{}),
       ...(locustAuditNeed?{locustAuditNeed}:{}),
+      ...(earthquake!==null?{earthquake}:{}),
       guest:ev.foreignArrival?ev.por:undefined};
     if(impeachment)S.flags.impeachmentSeen=true;
+    rememberCourtSubject(index);
     markGrainMemorialSeen(index);
     save('auto');
     return ev;
@@ -1145,9 +1192,9 @@ function factionEvent(){
     {t:'外放历练，三年后再议',f:()=>{brother.away=true;brother.post='外放'+pick(['知州','同知','通判']);if(journalContentVersion()>=15)brother.office=brother.post;brother.merit+=4;policyNudge('civil',1);officialRecord(c,role,`外放历练，授${brother.post}。`);return fx(cchg(c,{mood:-2}))+`\n§${brother.name}出京赴任`}}]});}
   const civil=withHouse.filter(c=>stanceOf(c)==='civil');
   if(civil.length){const c=pick(civil),h=houseOf(c);pool.push({title:'科场案',valid:()=>officialServing(h.father),ref:'科场舞弊（明·弘治己未科场案）',por:c,text:`今科会试有舞弊传闻，御史顺藤摸瓜，查到${h.father.name}的门生头上。${cName(c)}一早就跪在殿外，说父亲为官清白。`,choices:[
-    {t:'严查到底',f:()=>{c.fam.p=Math.max(5,c.fam.p-12);policyNudge('civil',4);setXin(c,'惶恐','父亲牵涉科场案');officialRecord(c,'father','因科场案受审。',{emotion:-.4});return fx(cchg(c,{mood:-10}),chg({people:4,prestige:2}))}},
-    {t:`看在${cName(c)}面上，从轻发落`,f:()=>{policyNudge('civil',-5);return fx(cchg(c,{mood:6,aff:4}),chg({people:-3,prestige:-2}))}},
-    {t:'交三司会审，查清再说',f:()=>{if(chance(.55)){officialRecord(c,'father','经三司会审，查明门生舞弊与本人无关，还其清白。',{emotion:.5});policyNudge('civil',2);return '三司会审，门生确有舞弊，却与'+h.father.name+'无关。'+fx(cchg(c,{mood:8}),chg({people:2}))}
+    {t:'严查到底',preview:'家族势力 −12（最低 5） · 她的心情 −10 · 民心 +4 · 威望 +2',outcome:'涉案试卷逐份封存，御史按名册传唤考官与门生。',f:()=>{c.fam.p=Math.max(5,c.fam.p-12);policyNudge('civil',4);setXin(c,'惶恐','父亲牵涉科场案');officialRecord(c,'father','因科场案受审。',{emotion:-.4});return fx(cchg(c,{mood:-10}),chg({people:4,prestige:2}))}},
+    {t:`看在${cName(c)}面上，从轻发落`,preview:'她的心情 +6、情分 +4 · 民心 −3 · 威望 −2',outcome:'拟好的问责折子退了回去。殿外的人都松了口气，几名落第举子仍在等一个说法。',f:()=>{policyNudge('civil',-5);return fx(cchg(c,{mood:6,aff:4}),chg({people:-3,prestige:-2}))}},
+    {t:'交三司会审，查清再说',preview:'民心 +2 · 约 55% 查无失察，她心情 +8；若查出失察，家族势力 −8、她心情 −6',f:()=>{if(chance(.55)){officialRecord(c,'father','经三司会审，查明门生舞弊与本人无关，还其清白。',{emotion:.5});policyNudge('civil',2);return '三司会审，门生确有舞弊，却与'+h.father.name+'无关。'+fx(cchg(c,{mood:8}),chg({people:2}))}
       c.fam.p=Math.max(5,c.fam.p-8);setXin(c,'惶恐','父亲被查出失察之责');officialRecord(c,'father','科场案查明失察之责，罚俸一年。',{emotion:-.4});return h.father.name+'失察，罚俸一年。'+fx(cchg(c,{mood:-6}),chg({people:2}))}}]});}
   const army=harem().filter(c=>stanceOf(c)==='army'&&brotherRole(houseOf(c),officialServing)&&frontierReportReady(c));
   if(army.length&&chance(.35)){const c=pick(army),h=houseOf(c),role=pick(brotherRoles(h).filter(r=>officialServing(h[r]))),brother=h[role],place=pick(FRONTIERS),win=chance(.35+E().wu/200+brother.merit/300);

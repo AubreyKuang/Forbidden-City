@@ -82,3 +82,31 @@ test('a corrupt primary retains a readable backup in title metadata and real res
  const base=boot();base.run('A.start();drain()');const raw=base.storage.get(KEY),legacy=new Map([[KEY,'broken'],[KEY+':backup',raw]]);
  const w=await world(undefined,legacy);assert.ok(w.run("slotInfo('auto')"));await w.run("A.load('auto')");assert.equal(w.run('S.turn'),0);assert.ok(w.run('lastAutoSaveInfo'));
 });
+
+test('quota retry makes room for auto and empty-slot saves while preserving the old manual slot',async()=>{
+ const factory=new IDBFactory(),legacy=new Map();
+ const b=boot();b.run('A.start();drain()');const old=b.storage.get(KEY);
+ const snapshot=JSON.stringify([{raw:old,label:'qa-year'}]);
+ legacy.set(KEY,old);legacy.set(KEY+':snapshots',snapshot);legacy.set('chengongji_v1_1',old);
+ const w=await world(factory,legacy),snapKey=KEY+':snapshots',slot3='chengongji_v1_3';
+ await w.run("A.load('auto')");
+ const put=IDBObjectStore.prototype.put,trimmed=new WeakSet();
+ IDBObjectStore.prototype.put=function(value,key){
+  if(key===snapKey&&value==='[]')trimmed.add(this.transaction);
+  if((key===KEY||key===slot3)&&!trimmed.has(this.transaction))throw new DOMException('full','QuotaExceededError');
+  return put.call(this,value,key);
+ };
+ try{
+  w.run("E().name='衍';E().era='嘉泰';A.go('home');");
+  assert.equal(await w.run('PalaceStorage.store.flush()'),true);
+  assert.equal(JSON.parse(w.run('PalaceStorage.store.getConfirmedItem(SKEY+"auto")')).emp.era,'嘉泰');
+  assert.equal(w.run('PalaceStorage.store.getConfirmedItem(SKEY+"auto:snapshots")'),'[]');
+  w.run("A.save('3')");
+  assert.equal(await w.run('PalaceStorage.store.flush()'),true);
+ }finally{IDBObjectStore.prototype.put=put;}
+ const next=await world(factory,legacy);
+ assert.equal(next.run('PalaceStorage.store.getConfirmedItem(SKEY+"auto:snapshots")'),'[]');
+ assert.equal(next.run('PalaceStorage.store.getConfirmedItem(SKEY+"1")'),old);
+ await next.run("A.load('3')");
+ assert.equal(next.run('E().era'),'嘉泰');assert.equal(next.run('E().name'),'衍');
+});

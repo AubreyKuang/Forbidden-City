@@ -545,7 +545,7 @@ function localPortrait(cell,rank,attrs,jewelry='',bust=false){
     crown=`<svg data-headpiece="${ornament.cell}" x="${box[0]}" y="${box[1]}" width="${box[2]}" height="${box[3]}" viewBox="${ornament.cell%3*512} ${Math.floor(ornament.cell/3)*512} 512 512" overflow="hidden"><image href="${JEWELRY_ART}" width="1536" height="1024"/></svg>`;
   }
   return `<svg ${attrs} aria-hidden="true" viewBox="${frame.join(' ')}" overflow="hidden">
-    <svg width="${PORTRAIT_WIDTH}" height="${PORTRAIT_HEIGHT}" viewBox="${x} ${y} ${PORTRAIT_WIDTH} ${PORTRAIT_HEIGHT}" overflow="hidden"><image href="${sheet.src}" width="${PORTRAIT_COLUMNS*PORTRAIT_WIDTH}" height="${sheet.rows*PORTRAIT_HEIGHT}"/></svg>${crown}</svg>`;
+    <image href="${sheet.src}" x="${-x}" y="${-y}" width="${PORTRAIT_COLUMNS*PORTRAIT_WIDTH}" height="${sheet.rows*PORTRAIT_HEIGHT}"/>${crown}</svg>`;
 }
 
 function porImg(x,size=64){

@@ -369,8 +369,9 @@ body{background:#241917}
 .hud-person{color:#efdfc7}
 #top .hud-next{background:#eac481;color:#38261a}
 #top .hud-next:hover{background:#f4d5a0}
-#top .hud-unsaved{background:#9c3b2e;color:#fff4e6;min-height:36px}
-#top .hud-unsaved:hover{background:#b44a3a}
+.hud-save-warning{order:4;flex:0 0 100%;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:6px 10px;background:#62312b;color:#fff4e6;font-size:12px}
+.hud-save-warning span{flex:1 1 260px}
+.hud-save-warning .btn{min-height:30px}
 #top .st{background:#ffedc413}
 #app[data-layout="game"] #menu{background:#3d2420f7;border-top-color:#d7ac6c65}
 #app[data-layout="game"] #menu .btn{color:#f4e6ce;border-radius:7px}

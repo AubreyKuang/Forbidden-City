@@ -18,7 +18,7 @@ COURT.push(
    {t:'劳民伤财，不开',f:()=>fx(chg({people:3}))}]},
  ()=>({title:'宝船',ref:'郑和下西洋（明·永乐）',text:'兵部献议：造六十艘宝船，载二万七千人，出海宣扬国威，联络南洋诸国。',choices:[
    {t:'造船出海（国库-400万两）',f:()=>{log('帝遣宝船下西洋。',1);return `船队走了两年，带回了长颈鹿、象牙和十几国的使臣。${fx(chg({treasury:-400,prestige:10,people:-2}))}`}},
-   {t:'海禁为上',f:()=>fx(chg({treasury:30}))}]}),
+   {t:'海禁为上',outcome:'船图卷了起来。兵部将已经备下的木料交还官仓，折银入库。',f:()=>fx(chg({treasury:30}))}]}),
  ()=>({title:'青苗法',ref:'王安石变法·青苗法（北宋）',text:'新任参知政事上了一道万言书：春荒时官府借钱给农户，秋收后收二分利。既救了百姓，国库也有进项。',choices:[
    {t:'推行新法',f:()=>chance(.5)?`各地推行得当，百姓称便。${fx(chg({treasury:150,people:4}))}`:`地方官强行摊派，借不借都要还利，民怨沸腾。${fx(chg({treasury:180,people:-8}))}`},
    {t:'祖宗之法不可变',f:()=>fx(chg({prestige:-1}))}]}),
@@ -27,7 +27,7 @@ COURT.push(
    {t:'“一句诗罢了。”告发者反坐',f:()=>`告发的人被打了板子。读书人私下都说陛下宽厚。${fx(chg({people:5}))}`}]}),
  ()=>S.flags.dan?null:{title:'金丹',ref:'历代帝王服丹求仙；明·红丸案',text:'一个自称活了三百岁的方士入宫献丹，说服下可延年益寿、百病不侵。你最近确实觉得乏力。',choices:[
    {t:'服下',f:()=>{S.flags.dan=S.turn;return `丹药入口，浑身燥热，精神竟真的好了许多。${fx(chg({health:8}))}`}},
-   {t:'把方士赶出宫去',f:()=>fx(chg({prestige:2}))}]},
+   {t:'把方士赶出宫去',outcome:'方士捧着丹匣退出宫门，等在外头举荐他的人也散了。',f:()=>fx(chg({prestige:2}))}]},
  ()=>({title:'十渐疏',ref:'魏征《十渐不克终疏》（唐）',text:'一位老臣上疏，列了十条陛下“渐不如初”之处：渐好奢靡、渐疏贤臣、渐怠朝政……末尾说：“愿陛下慎终如始。”',choices:[
    {t:'把奏疏抄在屏风上，朝夕自省',f:()=>{log('老臣上《十渐疏》，帝录于屏风，朝夕自省。',1);return fx(chg({prestige:5,people:3}))}},
    {t:'“朕知道了。”',f:()=>fx(chg({prestige:-1}))}]}),
@@ -72,7 +72,7 @@ const HIST=[
    {t:'转身离开',f:()=>{S.flags.ganye=1;return '你走出很远，回头时，她还站在那里。'}}]}},
  ()=>{if(S.flags.zifu||!newConsortEventAllowed())return null;const g=makeGirl({fam:{t:'歌女',p:2},trait:pick(['温婉','痴情','活泼'])});g.looks=clamp(g.looks+8);
    return {title:'平阳府',ref:'卫子夫平阳公主府献歌（西汉·汉武帝）',por:g,text:`你去长公主府上赴宴。席间一个歌女唱了一曲《清平调》，满座寂然。长公主笑着说：“陛下若喜欢，就带回去。”`,choices:[
-   {t:'带回宫',f:()=>{S.flags.zifu=1;addConsort(g,1,'原是长公主府上的歌女，被陛下带回宫');g.aff=35;g.favor=40;return fx(chg({prestige:-2}))}},
+   {t:'带回宫',outcome:'她收好席间的曲谱，随引路女官进宫。散宴后，有几位宾客私下议论这道新封。',f:()=>{S.flags.zifu=1;addConsort(g,1,'原是长公主府上的歌女，被陛下带回宫');g.aff=35;g.favor=40;return fx(chg({prestige:-2}))}},
    {t:'谢过长公主，独自回宫',f:()=>{S.flags.zifu=1;return '那歌声在你耳边绕了好几天。'}}]}},
  ()=>{if(!S.cands.length||S.flags.painter===S.flags.lastXX||!newConsortEventAllowed())return null;S.flags.painter=S.flags.lastXX;const g=makeGirl();g.looks=clamp(95);g.fam={t:'良家子',p:12};
    return {title:'画师',ref:'毛延寿索贿，误画王昭君（西汉·汉元帝）',por:g,text:`选秀的画像呈上来，你翻到一张平平无奇的脸。一个老嬷嬷忍不住说：“陛下，这位姑娘本人，比画上好看十倍——她不肯给画师送银子。”`,choices:[

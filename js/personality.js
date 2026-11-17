@@ -264,7 +264,7 @@ const QEV={
  '畏寒':c=>season()!==3?null:{title:'炭例',por:c,text:`入冬了，内务府按位分发炭，${cName(c)}宫里分到的是烟大呛人的黑炭。她冻得手都裂了口子，却没吭声。`,choices:[
    {t:'把乾清宫的银霜炭分她一半',f:()=>{remember(c,'care','分了陛下的银霜炭');return fx(cchg(c,{aff:10,mood:15}))}},{t:'申斥内务府',f:()=>fx(cchg(c,{mood:8}),chg({people:1}))}]},
  '嗜甜':c=>({title:'牙疼',por:c,text:`${cName(c)}偷吃松子糖吃坏了牙，半边脸肿得老高，还嘴硬说是被蚊子咬的。`,choices:[
-   {t:'笑着让太医去瞧',f:()=>fx(cchg(c,{mood:5,aff:3}))},{t:'下令她宫里禁糖一月',f:()=>fx(cchg(c,{mood:-8}))}]}),
+   {t:'笑着让太医去瞧',outcome:'太医问她松子糖吃了几颗。她抬手比了个数，自己先忍不住笑了。',f:()=>fx(cchg(c,{mood:5,aff:3}))},{t:'下令她宫里禁糖一月',outcome:'宫人依旨把糖盒收进柜中。她望了两眼，转身让人去沏茶。',f:()=>fx(cchg(c,{mood:-8}))}]}),
  // She asks this once and remembers the answer; asking again would make the answer meaningless.
  '好读史':c=>c.gouyiAnswer?null:({title:'读史',por:c,ref:'立子杀母（西汉·汉武帝与钩弋夫人）',text:`${cName(c)}合上书，问你：“陛下觉得，汉武帝该不该杀钩弋夫人？”\n汉武帝立幼子为太子，怕“主少母壮”，赐死了太子的生母。`,choices:[
    {t:'“该。主少母壮，必生祸乱。”',f:()=>{c.gouyiAnswer='yes';remember(c,'hurt','陛下说钩弋夫人该杀');return `她沉默了很久，没有再说话。${fx(cchg(c,{mood:-10}))}`}},

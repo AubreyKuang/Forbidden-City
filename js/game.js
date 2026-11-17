@@ -47,7 +47,14 @@ function log(t,big){S.log.push({d:dateStr(),t,b:big?1:0}); if(S.log.length>1500)
 function story(c,t){c.story.push({d:dateStr(),t})}
 function chg(o){
   const lab={prestige:'威望',people:'民心',treasury:'国库',health:'龙体'};const p=[];const e=E();
-  for(const k in o){const v=o[k]; if(!v) continue; if(k==='treasury') e.treasury=rd(e.treasury+v); else e[k]=clamp(e[k]+v);
+  for(const k in o){let v=o[k]; if(!v) continue;
+    const before=e[k];
+    if(k==='treasury') e.treasury=rd(e.treasury+v); else e[k]=clamp(e[k]+v);
+    if(k==='people'&&v>0&&e.people===100&&playtestFeedbackActive()){
+      v=e.people-before;
+      p.push(v>0?`民心+${v}（已达上限100）`:'民心已达上限100');
+      continue;
+    }
     p.push(`${lab[k]}${v>0?'+':''}${v}${k==='treasury'?'万两':''}`)}
   renderTop(); return p.join('　');
 }
@@ -57,6 +64,7 @@ function cchg(c,o){
   return p.length?`${cName(c)}：${p.join(' ')}`:'';
 }
 const fx=(...a)=>'\n§'+a.filter(Boolean).join('　');
+const playtestFeedbackActive=()=>journalContentVersion()>=69;
 function toast(t){const d=document.createElement('div');d.textContent=t;$('#toast').appendChild(d);setTimeout(()=>d.remove(),2200)}
 function maxEnergy(){const e=E();return 3+(e.style==='勤政'?1:0)-(e.health<35?1:0)}
 function useE(){ if(!S||S.over) return false; if(E().energy<=0){toast('本月精力已尽，请「结束本月」');AU.sfx('err');return false} E().energy--; renderTop(); return true }
@@ -247,9 +255,19 @@ function choose(i,inputValue){
   if(i===0&&curEv.jinyiweiNoticeKey&&!PalaceActions.replaying)rememberJinyiweiAcknowledgement(curEv);
   const val=curEv.input?((entered||'').trim().slice(0,curEv.input.max||4)||curEv.input.def):undefined;
   AU.sfx('click');const res=c.f?c.f(val):null;
-  if(res) showRes(res); else nextEv();
+  if(res) showRes(res,c); else nextEv();
 }
-function showRes(res){
+function narrativeResult(res,event,choice){
+  const text=typeof res==='string'?res:res.text||'';
+  if(text.split('\n').some(line=>line.trim()&&!line.trimStart().startsWith('§')))return res;
+  const narration=choice?.outcome||(event.scene==='monthly-court'
+    ?`内侍收起「${event.title}」的折子，将你的批复交值班官员传下去。`
+    :'你拿定主意，身边的人听了吩咐，各去料理。');
+  const body=narration+(text?'\n'+text.trimStart():'');
+  return typeof res==='string'?body:{...res,text:body};
+}
+function showRes(res,choice){
+  res=narrativeResult(res,curEv,choice);
   if(typeof res==='string') res={text:res};
   modalResult=res;
   const b=$('#mbox');
@@ -281,7 +299,8 @@ function nightWith(c,fromEvent){
   story(c,`奉召侍寝。${line}`);
   log(`召${cName(c)}侍寝。`);
   setScene('night');
-  pushNow({title:'春宵',por:c,sfx:'chime',text:`是夜，敬事房传${cName(c)}侍寝。\n${line}${fx(s)}`,choices:[
+  const fatigue=playtestFeedbackActive()?'\n龙体于月底结算。本月自第四次召幸起，每次额外损耗龙体 1.2。':'';
+  pushNow({title:'春宵',por:c,sfx:'chime',text:`是夜，敬事房传${cName(c)}侍寝。\n${line}${fatigue}${fx(s)}`,choices:[
     {t:'翌日赏赐（国库-10万两）',f:()=>{AU.sfx('coin');story(c,'侍寝翌日，陛下另赏了一对白玉镯子。');remember(c,'gift','侍寝翌日收到一对白玉镯子');return `你命人送去一对白玉镯子。${fx(chg({treasury:-10}),cchg(c,{mood:8,aff:2}))}`}},
     {t:'就此作罢'}]});
 }
@@ -316,7 +335,7 @@ const A={
     ev.choices=[...ev.choices,...[delegation,installment,freightBooking,waiver].filter(Boolean)].map((choice,index)=>{
       const cost=choice.delegated?0:1;
       return {...choice,t:`${choice.t}（${cost?'精力 −1':'免耗精力'}）`,
-        preview:choice.preview||COURT_PREVIEWS[brief.index]?.[index],
+        preview:choice.preview||COURT_PREVIEWS[brief.index]?.[index]||'按此批示办理',
         cond:()=>!brief.done&&(!cost||E().energy>0)&&(!choice.cond||choice.cond()),why:choice.why||'精力不足',
         f:()=>{
           if(brief.done||S.flags.monthlyCourt!==brief)return;
@@ -341,7 +360,8 @@ const A={
             record.done=true;
             S.flags.lastCourt=ev.title;
             log(`批复奏折「${ev.title}」，${choice.t}。`);
-            const result=choice.f?.();
+            const raw=choice.f?.();
+            const result=raw&&playtestFeedbackActive()?narrativeResult(raw,ev,choice):raw;
             record.result={title:ev.title,choice:choice.t,text:(typeof result==='string'?result:result?.text||'').replace(/§/g,''),
               person:choice.person??ev.person,child:ev.sons?.[index]};
             return result;
@@ -353,7 +373,7 @@ const A={
           return result;
         }};
     });
-    ev.choices.push({t:'稍后再议'});
+    ev.choices.push({t:'稍后再议',preview:'暂不批复 · 免耗精力 · 本月可再呈阅'});
     setScene('court');pushEv(ev);
   },
   night(id){const c=byId(id);if(!inPalace(c)||c.preg||c.cardWithdrawn)return;nightWith(c)},
@@ -399,6 +419,7 @@ A.endMonth=function(){
   if(!S||S.over||modalOpen)return;const e=E();
   const delivery=pendingDelivery();if(delivery){A.resumeBirth(delivery.id);return;}
   // 财政
+  const openingTreasury=e.treasury,openingHealth=e.health;
   const localGrainPayment=localGrainPaymentDue()?localGrainBalance():0;
   const hongjianIncome=typeof settleHongjianIncome==='function'?settleHongjianIncome():0;
   const inc=rd(45+e.people*1.1+(S.flags.canal?25:0))+hongjianIncome,exp=alive().reduce((s,c)=>s+(c.cold?1:STIPEND[c.rank]),0)+kidsAlive().reduce((s,k)=>s+3+(k.tutor?5:0),0)+localGrainPayment;
@@ -468,7 +489,8 @@ A.endMonth=function(){
   homeLeaveTick();
   cohabitationTick();
   S.consorts.forEach(solitaryHouseholdTick);
-  let dh=-.17-(e.age>40?(e.age-40)*.05:0)-Math.max(0,(e.nightsMonth||0)-3)*1.2-(e.style==='风流'?.05:0);
+  const nightFatigue=Math.max(0,(e.nightsMonth||0)-3)*1.2;
+  const dh=-.17-(e.age>40?(e.age-40)*.05:0)-nightFatigue-(e.style==='风流'?.05:0);
   e.health=clamp(e.health+dh);e.nightsMonth=0;e.energy=maxEnergy();
   if(e.treasury<0){const d=Math.min(8,Math.ceil(-e.treasury/400));chg({people:-1-d,prestige:-1});log(`国库亏空${-e.treasury}万两，百官俸禄迟发，民间加征赋税。`)}
   toast(`${monthDate}　月入${inc}　支出${exp}`);
@@ -513,6 +535,10 @@ A.endMonth=function(){
     if(Q.length+(modalOpen?1:0)>=limit)break;
     if(seen.has(e.title)||!ambientEventReady(e))continue;
     seen.add(e.title);const queued=e.onQueue;e.onQueue=()=>{queued?.();rememberAmbientEvent(e);};pushEv(e);
+  }
+  if(playtestFeedbackActive()){
+    S.flags.lastMonthReview.finance={opening:openingTreasury,closing:e.treasury,other:e.treasury-openingTreasury-inc+exp};
+    S.flags.lastMonthReview.health={opening:openingHealth,closing:e.health,nightFatigue};
   }
   log(`—— ${dateStr()} ——`);
   setScene(pick(['court','harem','garden']));

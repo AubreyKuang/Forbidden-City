@@ -10,9 +10,10 @@ function renderTop(){
   const e=E(),mx=maxEnergy();let pips='';for(let i=0;i<mx;i++)pips+=`<span class="pip${i<e.energy?'':' off'}"></span>`;
   const hd=e.health>=80?'康健':e.health>=55?'安好':e.health>=30?'欠安':'病笃';
   t.innerHTML=`<div class="hud-identity">${porImg('emp',38)}<div class="hud-name"><span class="date">${esc(dateStr())}</span><span class="hud-person">${esc(e.sur+e.name)} · ${e.age}岁</span></div></div>
-   <div class="hud-stats"><span class="st" title="${hd}">龙体 <b>${rd(e.health)}</b></span><span class="st">威望 <b>${rd(e.prestige)}</b></span><span class="st">民心 <b>${rd(e.people)}</b></span>
+   <div class="hud-stats"><span class="st" title="${hd}">龙体 <b>${rd(e.health)}</b></span><span class="st">威望 <b>${rd(e.prestige)}</b></span><span class="st" title="民心范围 0–100">民心 <b>${rd(e.people)}</b>${e.people>=100?'<small>（上限）</small>':''}</span>
    <span class="st">国库 <b>${e.treasury}</b>万两</span><span class="st">精力 <b>${e.energy}／${mx}</b><span aria-hidden="true">${pips}</span></span></div>
-   <div class="hud-controls">${lastAutoSaveError?`<button class="btn sm hud-unsaved" title="${esc(lastAutoSaveError)}" onclick="A.downloadSave()">未能存档 · 下载备份</button>`:''}${sound}${devLaunch}<button id="finish-month" class="btn gold sm hud-next" onclick="A.finishMonth()" ${S.over?'disabled':''}>结束本月 ▸</button></div>`;
+   <div class="hud-controls">${sound}${devLaunch}<button id="finish-month" class="btn gold sm hud-next" onclick="A.finishMonth()" ${S.over?'disabled':''}>结束本月 ▸</button></div>
+   ${lastAutoSaveError&&lastAutoSaveError!==dismissedSaveError?`<div class="hud-save-warning"><span role="status"><strong>未能存档</strong> · ${esc(lastAutoSaveError)}</span><button class="btn sm" onclick="A.save('auto')">重试</button><button class="btn sm" onclick="A.downloadSave()">下载备份</button><button class="btn sm" aria-label="关闭存档提示" onclick="A.dismissSaveError()">关闭</button></div>`:''}`;
 }
 const MENU=[['map','宫城'],['home','御书房'],['court','理政'],['harem','后宫'],['cards','翻牌子'],['xx','选秀'],['kids','皇嗣'],['family','家族'],['out','出巡'],['log','起居注'],['sys','存档']];
 // One restrained gold-line family, with distinct silhouettes at mobile sizes.
@@ -87,7 +88,7 @@ function render(){
 }
 function viewTitle(){
   const slots=['auto','1','2','3'].map(s=>({s,i:slotInfo(s)})).filter(x=>x.i);
-  return `<div class="title-wrap"><div class="eyebrow">FORBIDDEN CITY</div><h1>宸宫纪</h1>
+  return `<div class="title-wrap"><div class="eyebrow">FORBIDDEN CITY · v${PalaceActions.releaseVersion}</div><h1>宸宫纪</h1>
    <p class="intro">在宫城里处理朝政、走访后宫，写下属于你的一朝本纪。</p>
    <button class="btn gold" onclick="A.newGame()">新开一局</button>
    ${slots.length?`<div class="save-list">${slots.map(x=>`<button class="btn sm" onclick="A.load('${x.s}')">读取${x.s==='auto'?'自动存档':'存档'+x.s}：${esc(x.i)}</button>`).join('')}</div>`:''}</div>`}
@@ -460,11 +461,18 @@ function viewKids(){
   const visible=groups[selected].filter(matches),past=S.children.filter(k=>!k.alive&&matches(k));
   const residenceLabel=selected==='palace'?'宫中':'宫外';
   const grid=ks=>`<div class="grid portrait-grid">${ks.map(childListCard).join('')}</div>`;
-  return `${pageHeading('皇嗣','',`<button class="btn jade" onclick="A.visitMapActivity('ss')">去上书房看看 →</button>`)}${pendingBirthPanel()}${S.children.length?`
+  const rates=harem().filter(c=>!consortNightReason(c)).map(consortConceptionChance).filter(p=>p>0);
+  const chanceHint=rates.length?`按本月可召幸妃嫔的体质估算，单次基础机会约 ${[...new Set([Math.min(...rates),Math.max(...rates)].map(p=>(100*p).toFixed(1)+'%'))].join('–')}。陛下的子嗣状况也会影响结果。`:'眼下暂无适宜受孕的人选，可以等身体恢复、产后静养期满或新的妃嫔入宫。';
+  const guide=`<details class="detail-section" ${living.length?'':'open'}><summary>求嗣、会诊与立储</summary>
+    <p>${chanceHint} 出巡时去护国寺祈福，可提高当月机会。</p>
+    <p>若陛下有子嗣方面的难处，连续十二个月各有一次可受孕的召幸且始终未有孕讯，太医院才会提出会诊。接到结论后，可在御书房寻访医者，或按宗人府礼例议请入继。</p>
+    <p>符合条件的皇子满五岁后，可在其人物页选择「立为太子」。</p>
+    <div class="acts"><button class="btn sm" onclick="A.go('cards')">去翻牌子</button><button class="btn sm" onclick="A.go('out')">出巡与祈福</button></div></details>`;
+  return `${pageHeading('皇嗣','',`<button class="btn jade" onclick="A.visitMapActivity('ss')">去上书房看看 →</button>`)}${pendingBirthPanel()}${guide}${S.children.length?`
     <div class="residence-tabs" role="group" aria-label="皇嗣居处">${[['palace','宫中'],['out','宫外']].map(([id,label])=>`<button class="btn ${selected===id?'primary on':''}" aria-pressed="${selected===id}" onclick="A.kidsResidence('${id}')">${label}<span>${groups[id].length}</span></button>`).join('')}</div>
     <div class="acts official-filters" role="group" aria-label="皇嗣类别">${KIDS_KIND_FILTERS.map(([id,label])=>`<button class="btn sm ${kind===id?'on':''}" aria-pressed="${kind===id}" onclick="A.kidsKind('${id}')">${label}</button>`).join('')}</div>
     <section aria-label="${residenceLabel}皇嗣">${visible.length?grid(visible):`<p class="hint">${residenceLabel}暂无${kind==='all'?'皇嗣':kindLabel}。</p>`}</section>
-    ${past.length?`<details class="past-children"><summary>已故与失踪 · ${past.length}</summary>${grid(past)}</details>`:''}`:'<p class="hint">膝下尚无子嗣。多召幸妃嫔，或去护国寺祈福。</p>'}`;
+    ${past.length?`<details class="past-children"><summary>已故与失踪 · ${past.length}</summary>${grid(past)}</details>`:''}`:'<p class="hint">膝下尚无子嗣。</p>'}`;
 }
 function viewKid(){
   const k=kidById(UI.sel);if(!k)return viewKids();const a=kidAge(k);
@@ -514,6 +522,8 @@ function viewLog(){
   return `${pageHeading('起居注')}<div class="log-filter" role="group" aria-label="纪事筛选与留存"><button class="btn sm ${UI.logF==='all'?'on':''}" onclick="UI.logF='all';render()">全部</button><button class="btn sm ${UI.logF==='big'?'on':''}" onclick="UI.logF='big';render()">只看大事</button><button class="btn sm" onclick="A.logCard()">保存上月纪念卡</button></div>
    ${month?`<section class="month-record"><h3>${esc(month.date)}回顾</h3>
     <p>月入 ${esc(month.inc)} 万两 · 支出 ${esc(month.exp)} 万两</p>
+    ${month.finance&&[month.finance.opening,month.finance.closing,month.finance.other].every(Number.isFinite)?`<p>换月前国库 ${month.finance.opening} 万两 · 换月后 ${month.finance.closing} 万两${month.finance.other?` · 其他换月收支 ${month.finance.other>0?'+':''}${month.finance.other} 万两`:''}</p>`:''}
+    ${month.health&&[month.health.opening,month.health.closing,month.health.nightFatigue].every(Number.isFinite)?`<p>月底龙体 ${month.health.opening.toFixed(2)} → ${month.health.closing.toFixed(2)}${month.health.nightFatigue?`，其中召幸过频损耗 ${month.health.nightFatigue.toFixed(1)}`:''}。</p>`:''}
     ${month.hongjianIncome?`<p>月入含薛红笺经营增益 ${month.hongjianIncome} 万两。</p>`:''}
     ${month.stewardship?`<p>协理六宫：${esc(month.stewardship.name)}，本月额外恩宠 +${month.stewardship.gain}${month.stewardship.gain<10?'（上限100）':''}。</p>`:''}
     ${month.localGrainPayment?`<p>支出含赈粮尾款 ${esc(month.localGrainPayment)} 万两。</p>`:''}
@@ -524,6 +534,8 @@ function viewLog(){
    <ul class="story" style="max-height:560px">${L.map(l=>`<li class="${l.b?'big':''}"><time>${esc(l.d)}</time>${esc(l.t)}</li>`).join('')}</ul>`}
 function viewSys(){
   return `${pageHeading('存档','存档保存在本浏览器中；每月结束时会自动存档。剧情选择后也会保存，未完事件可继续。')}
+   <p class="hint">游戏版本 v${PalaceActions.releaseVersion}</p>
+   ${lastAutoSaveError?`<p role="status">${esc(lastAutoSaveError)}</p>`:''}
    <p class="hint">${SaveManager.getStorage()?.kind==='indexeddb'?'已启用大容量本机存档；旧存档自动接续，人物纪事完整保留。':'当前浏览器使用兼容存档，请定期下载备份文件。'} 请等「正在写入」结束后再关闭页面。</p>
    <section class="save-section" aria-label="浏览器存档"><div class="save-slots">
    ${['1','2','3'].map(s=>`<article class="save-slot"><div class="save-slot-info"><b>存档${s}</b><span class="hint">${esc(slotInfo(s)||'空')}</span></div><div class="save-slot-actions"><button class="btn sm gold" onclick="A.save('${s}')">保存</button><button class="btn sm" onclick="A.load('${s}')">读取</button></div></article>`).join('')}

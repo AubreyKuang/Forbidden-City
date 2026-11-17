@@ -86,8 +86,8 @@ const HAREM=[
  function homesick(){const c=pick(harem().filter(c=>!c.rescue&&c.wound!=='mom'&&!c.visitor));return c?sickMotherEvent(c):null},
  function empressReport(){const em=empress();if(!em)return null;
   if(em.virtue>=60) return {title:'中宫奏事',por:em,text:'皇后奏请：后宫用度日增，臣妾愿率六宫减省膳食衣料，以充国用。',choices:[
-   {t:'准奏，皇后贤德',f:()=>{story(em,'率六宫节俭用度，陛下赞其贤德。');harem().forEach(c=>{if(c!==em)c.mood=clamp(c.mood-3)});return fx(chg({treasury:60,prestige:2}),cchg(em,{aff:6}))}},
-   {t:'不必委屈了六宫',f:()=>fx(cchg(em,{aff:2}))}]};
+   {t:'准奏，皇后贤德',outcome:'皇后让坤宁宫先减下月的用度，再把账册送往各宫。省下的银两由内务府点清入库。',f:()=>{story(em,'率六宫节俭用度，陛下赞其贤德。');harem().forEach(c=>{if(c!==em)c.mood=clamp(c.mood-3)});return fx(chg({treasury:60,prestige:2}),cchg(em,{aff:6}))}},
+   {t:'不必委屈了六宫',outcome:'皇后把账册合上，嘱咐女官先照旧拨给各宫。',f:()=>fx(cchg(em,{aff:2}))}]};
   const tgt=harem().filter(c=>c!==em).sort((a,b)=>b.favor-a.favor)[0];if(!tgt)return null;
   return {title:'中宫奏事',cast:[em,tgt],text:`皇后奏道：“${cName(tgt)}${tgt.favor>=60&&tgt.favor>=em.favor+10?'恃宠而骄，':'近来'}屡次请安迟到，臣妾请陛下准许依宫规罚她抄经百遍。”`,choices:[
    {t:'后宫之事，皇后做主',person:em,f:()=>{story(tgt,'被皇后以宫规责罚，抄经百遍。');return fx(cchg(em,{aff:6,mood:8}),cchg(tgt,{mood:-15}))}},
@@ -96,7 +96,7 @@ const HAREM=[
   return {title:'争执',cast:[a,b],text:`晨起请安时，${cName(a)}与${cName(b)}为一匹蜀锦的归属起了争执，闹到了御前。`,choices:[
    {t:`判给${cName(a)}`,person:a,f:()=>{rememberQuarrel(a,b,a.id);return fx(cchg(a,{mood:10}),cchg(b,{mood:-10,aff:-3}))}},
    {t:`判给${cName(b)}`,person:b,f:()=>{rememberQuarrel(a,b,b.id);return fx(cchg(b,{mood:10}),cchg(a,{mood:-10,aff:-3}))}},
-   {t:'各赏一匹，息事宁人',f:()=>{rememberQuarrel(a,b);return fx(chg({treasury:-15}),cchg(a,{mood:4}),cchg(b,{mood:4}))}}]}},
+   {t:'各赏一匹，息事宁人',outcome:'内务府另送来一匹蜀锦。两人各自带着绸缎回宫，殿前终于安静下来。',f:()=>{rememberQuarrel(a,b);return fx(chg({treasury:-15}),cchg(a,{mood:4}),cchg(b,{mood:4}))}}]}},
  function coldPlea(){const cs=alive().filter(c=>c.cold);if(!cs.length)return null;const c=pick(cs);const w=S.flags.wronged&&S.flags.wronged.v===c.id;
   return {title:'冷宫来信',por:c,present:[],valid:()=>c.alive&&!c.gone&&c.cold,text:w?`冷宫里的${fullName(c)}托一个老宫女捎来血书：“巫蛊一事，实乃有人栽赃。求陛下明察！”`:`冷宫里的${fullName(c)}托人送来一方旧帕，上面绣着近况，问你是否还愿意来看一眼。`,choices:[
    {t:'放她出冷宫',f:()=>{A.uncold(c.id);if(w){const a=byId(S.flags.wronged.a);S.flags.wronged=null;if(a&&a.alive&&!a.cold){a.known=true;pushNow(punishEv(a,c,'栽赃巫蛊'))}}return `${fullName(c)}出了冷宫，形容憔悴，却仍向你深深一拜。`}},

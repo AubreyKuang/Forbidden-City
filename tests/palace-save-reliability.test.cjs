@@ -83,7 +83,8 @@ test('a full store gives up rewind snapshots and the backup copy before the live
 test('a new reign can begin and continue when the browser refuses all storage',()=>{
   const b=boot();b.run("localStorage.setItem=()=>{throw Error('denied')};localStorage.getItem=()=>{throw Error('denied')}");
   start(b);assert.ok(b.run('!!S'));b.run('A.endMonth();drain()');assert.equal(b.run('S.turn'),1);
-  assert.ok(b.messages.some(s=>s.includes('尚未写入')));
+  assert.match(b.run('lastAutoSaveError'),/尚未写入/);
+  assert.match(b.run("$('#top').innerHTML"),/hud-save-warning/);
 });
 
 test('a write refused for another reason keeps rewind snapshots and the backup copy',()=>{
