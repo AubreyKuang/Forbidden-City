@@ -83,7 +83,7 @@ function royalKinship(k){
 function listedRoyalKin(){
   const cohorts=new Map(),current=new Set(S.children.map(k=>k.id));
   for(const k of royalHouseholds()){
-    if(current.has(k.id)||k.princelySuccession||k.princeAdoptionOrigin)continue;
+    if(current.has(k.id)||k.princelySuccession||k.princeAdoptionOrigin||k.royalRegisterBranch)continue;
     if(!cohorts.has(k.reign))cohorts.set(k.reign,[]);
     cohorts.get(k.reign).push(k);
   }
@@ -96,13 +96,13 @@ function royalKinContactMode(k,estateContact=false){
   if(estateContact)return princeEstateAvailable(k)?k.away?'letter':'visit':'';
   if(!k?.alive||!k.reign||k.removedFromRoyal||k.pendingName||k.jailed||k.gone)return '';
   const estate=k.princeEstate||k.estate;
-  return k.away||k.princessMarriage==='frontier'||estate?.route==='frontier'||immortalAway(k)||k.templeStay||
+  return k.away||k.princessMarriage==='frontier'||estate?.route==='frontier'||royalJourneyAway(k)||k.templeStay||
     (estate?.location&&estate.location!=='京城')?'letter':'visit';
 }
 function royalKinContactPlace(k,mode){
   if(k.princessMarriage==='frontier'||k.estate?.route==='frontier')return '北境';
-  if(k.away&&princeFief(k)&&!immortalAway(k)&&!k.templeStay)return princeFief(k);
-  return k.away||immortalAway(k)||k.templeStay?childWhereabouts(k):k.princeEstate?.location||k.estate?.location||
+  if(k.away&&princeFief(k)&&!royalJourneyAway(k)&&!k.templeStay)return princeFief(k);
+  return k.away||royalJourneyAway(k)||k.templeStay?childWhereabouts(k):k.princeEstate?.location||k.estate?.location||
     (mode==='visit'?'京城':'外地');
 }
 function royalKinContactReady(k){
@@ -203,5 +203,5 @@ function royalKinRosterPanel(){
 }
 function viewRoyalRelative(){
   const k=royalById(UI.sel);if(!k)return viewFamily();
-  return `${personBackButton('family')}<header class="detail-head">${porImg(k,224)}<div class="grow"><h2>${esc(k.name)}</h2><p>${esc(royalKinship(k))} · ${kidAge(k)}岁</p><p>生母 ${esc(k.momName||'未记载')}</p>${princeEstateLink(k)}</div></header>${listedRoyalKin().includes(k)?royalKinContactButtons(k):''}${immortalPanel(k)}${marriagePanel(k)}${householdPanel(k)}${detailSection('亲族纪事',detailStory(k))}`;
+  return `${personBackButton('family')}<header class="detail-head">${porImg(k,224)}<div class="grow"><h2>${esc(k.name)}</h2><p>${esc(royalKinship(k))} · ${kidAge(k)}岁</p><p>生母 ${esc(k.momName||'未记载')}</p>${princeEstateLink(k)}</div></header>${listedRoyalKin().includes(k)?royalKinContactButtons(k):''}${immortalPanel(k)}${royalTravelPanel(k)}${marriagePanel(k)}${householdPanel(k)}${detailSection('亲族纪事',detailStory(k))}`;
 }

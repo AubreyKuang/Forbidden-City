@@ -1,0 +1,417 @@
+{
+  "frame": [
+    448,
+    560
+  ],
+  "columns": 4,
+  "portraits": [
+    {
+      "id": 489,
+      "atlas": "palace-royal-growth-colors.webp",
+      "source": "exec-c35a2310-4fb7-48a1-8c88-646a45468ed5.png",
+      "sourceSha256": "8d5f3a7c262be22499a581f21056f3a9362e3f18c81ab97f9b51a43bbbb668e0",
+      "sourceSize": [
+        1374,
+        1145
+      ],
+      "sourceCell": 0,
+      "cell": 0,
+      "crop": [
+        0,
+        0,
+        441,
+        572
+      ],
+      "bounds": [
+        10,
+        84,
+        404,
+        567
+      ],
+      "placed": [
+        4,
+        21,
+        440,
+        539
+      ],
+      "sex": "f",
+      "variant": 37,
+      "stage": 0,
+      "label": "桃夭粉翠·幼年"
+    },
+    {
+      "id": 490,
+      "atlas": "palace-royal-growth-colors.webp",
+      "source": "exec-c35a2310-4fb7-48a1-8c88-646a45468ed5.png",
+      "sourceSha256": "8d5f3a7c262be22499a581f21056f3a9362e3f18c81ab97f9b51a43bbbb668e0",
+      "sourceSize": [
+        1374,
+        1145
+      ],
+      "sourceCell": 1,
+      "cell": 1,
+      "crop": [
+        441,
+        0,
+        876,
+        572
+      ],
+      "bounds": [
+        0,
+        39,
+        435,
+        567
+      ],
+      "placed": [
+        452,
+        26,
+        440,
+        534
+      ],
+      "sex": "f",
+      "variant": 37,
+      "stage": 1,
+      "label": "桃夭粉翠·少年"
+    },
+    {
+      "id": 491,
+      "atlas": "palace-royal-growth-colors.webp",
+      "source": "exec-c35a2310-4fb7-48a1-8c88-646a45468ed5.png",
+      "sourceSha256": "8d5f3a7c262be22499a581f21056f3a9362e3f18c81ab97f9b51a43bbbb668e0",
+      "sourceSize": [
+        1374,
+        1145
+      ],
+      "sourceCell": 2,
+      "cell": 2,
+      "crop": [
+        876,
+        0,
+        1374,
+        572
+      ],
+      "bounds": [
+        0,
+        0,
+        494,
+        567
+      ],
+      "placed": [
+        900,
+        55,
+        440,
+        505
+      ],
+      "sex": "f",
+      "variant": 37,
+      "stage": 2,
+      "label": "桃夭粉翠·成年"
+    },
+    {
+      "id": 492,
+      "atlas": "palace-royal-growth-colors.webp",
+      "source": "exec-c35a2310-4fb7-48a1-8c88-646a45468ed5.png",
+      "sourceSha256": "8d5f3a7c262be22499a581f21056f3a9362e3f18c81ab97f9b51a43bbbb668e0",
+      "sourceSize": [
+        1374,
+        1145
+      ],
+      "sourceCell": 3,
+      "cell": 3,
+      "crop": [
+        0,
+        572,
+        441,
+        1145
+      ],
+      "bounds": [
+        11,
+        76,
+        409,
+        572
+      ],
+      "placed": [
+        1348,
+        12,
+        440,
+        548
+      ],
+      "sex": "f",
+      "variant": 38,
+      "stage": 0,
+      "label": "紫藤烟蓝·幼年"
+    },
+    {
+      "id": 493,
+      "atlas": "palace-royal-growth-colors.webp",
+      "source": "exec-c35a2310-4fb7-48a1-8c88-646a45468ed5.png",
+      "sourceSha256": "8d5f3a7c262be22499a581f21056f3a9362e3f18c81ab97f9b51a43bbbb668e0",
+      "sourceSize": [
+        1374,
+        1145
+      ],
+      "sourceCell": 4,
+      "cell": 4,
+      "crop": [
+        441,
+        572,
+        887,
+        1145
+      ],
+      "bounds": [
+        0,
+        32,
+        446,
+        572
+      ],
+      "placed": [
+        4,
+        587,
+        440,
+        533
+      ],
+      "sex": "f",
+      "variant": 38,
+      "stage": 1,
+      "label": "紫藤烟蓝·少年"
+    },
+    {
+      "id": 494,
+      "atlas": "palace-royal-growth-colors.webp",
+      "source": "exec-c35a2310-4fb7-48a1-8c88-646a45468ed5.png",
+      "sourceSha256": "8d5f3a7c262be22499a581f21056f3a9362e3f18c81ab97f9b51a43bbbb668e0",
+      "sourceSize": [
+        1374,
+        1145
+      ],
+      "sourceCell": 5,
+      "cell": 5,
+      "crop": [
+        887,
+        572,
+        1374,
+        1145
+      ],
+      "bounds": [
+        0,
+        0,
+        486,
+        573
+      ],
+      "placed": [
+        452,
+        601,
+        440,
+        519
+      ],
+      "sex": "f",
+      "variant": 38,
+      "stage": 2,
+      "label": "紫藤烟蓝·成年"
+    },
+    {
+      "id": 495,
+      "atlas": "palace-royal-growth-colors.webp",
+      "source": "exec-6cb41b74-4299-48e3-b765-10c6febacd7e.png",
+      "sourceSha256": "4cd154cce07e52c1f6cf409a73a75bc03b1e5a97c8ef754cfc8771baba412921",
+      "sourceSize": [
+        1536,
+        1024
+      ],
+      "sourceCell": 0,
+      "cell": 6,
+      "crop": [
+        0,
+        0,
+        512,
+        514
+      ],
+      "bounds": [
+        86,
+        98,
+        501,
+        514
+      ],
+      "placed": [
+        900,
+        679,
+        440,
+        441
+      ],
+      "sex": "m",
+      "variant": 31,
+      "stage": 0,
+      "label": "湖青银竹·幼年"
+    },
+    {
+      "id": 496,
+      "atlas": "palace-royal-growth-colors.webp",
+      "source": "exec-6cb41b74-4299-48e3-b765-10c6febacd7e.png",
+      "sourceSha256": "4cd154cce07e52c1f6cf409a73a75bc03b1e5a97c8ef754cfc8771baba412921",
+      "sourceSize": [
+        1536,
+        1024
+      ],
+      "sourceCell": 1,
+      "cell": 7,
+      "crop": [
+        512,
+        0,
+        1003,
+        514
+      ],
+      "bounds": [
+        63,
+        33,
+        491,
+        514
+      ],
+      "placed": [
+        1348,
+        626,
+        440,
+        494
+      ],
+      "sex": "m",
+      "variant": 31,
+      "stage": 1,
+      "label": "湖青银竹·少年"
+    },
+    {
+      "id": 497,
+      "atlas": "palace-royal-growth-colors.webp",
+      "source": "exec-6cb41b74-4299-48e3-b765-10c6febacd7e.png",
+      "sourceSha256": "4cd154cce07e52c1f6cf409a73a75bc03b1e5a97c8ef754cfc8771baba412921",
+      "sourceSize": [
+        1536,
+        1024
+      ],
+      "sourceCell": 2,
+      "cell": 8,
+      "crop": [
+        1003,
+        0,
+        1536,
+        514
+      ],
+      "bounds": [
+        0,
+        0,
+        515,
+        514
+      ],
+      "placed": [
+        4,
+        1241,
+        440,
+        439
+      ],
+      "sex": "m",
+      "variant": 31,
+      "stage": 2,
+      "label": "湖青银竹·成年"
+    },
+    {
+      "id": 498,
+      "atlas": "palace-royal-growth-colors.webp",
+      "source": "exec-6cb41b74-4299-48e3-b765-10c6febacd7e.png",
+      "sourceSha256": "4cd154cce07e52c1f6cf409a73a75bc03b1e5a97c8ef754cfc8771baba412921",
+      "sourceSize": [
+        1536,
+        1024
+      ],
+      "sourceCell": 3,
+      "cell": 9,
+      "crop": [
+        0,
+        514,
+        512,
+        1024
+      ],
+      "bounds": [
+        86,
+        0,
+        510,
+        510
+      ],
+      "placed": [
+        452,
+        1151,
+        440,
+        529
+      ],
+      "sex": "m",
+      "variant": 32,
+      "stage": 0,
+      "label": "朱砂玄锦·幼年"
+    },
+    {
+      "id": 499,
+      "atlas": "palace-royal-growth-colors.webp",
+      "source": "exec-6cb41b74-4299-48e3-b765-10c6febacd7e.png",
+      "sourceSha256": "4cd154cce07e52c1f6cf409a73a75bc03b1e5a97c8ef754cfc8771baba412921",
+      "sourceSize": [
+        1536,
+        1024
+      ],
+      "sourceCell": 4,
+      "cell": 10,
+      "crop": [
+        512,
+        514,
+        1005,
+        1024
+      ],
+      "bounds": [
+        42,
+        13,
+        471,
+        510
+      ],
+      "placed": [
+        900,
+        1170,
+        440,
+        510
+      ],
+      "sex": "m",
+      "variant": 32,
+      "stage": 1,
+      "label": "朱砂玄锦·少年"
+    },
+    {
+      "id": 500,
+      "atlas": "palace-royal-growth-colors.webp",
+      "source": "exec-6cb41b74-4299-48e3-b765-10c6febacd7e.png",
+      "sourceSha256": "4cd154cce07e52c1f6cf409a73a75bc03b1e5a97c8ef754cfc8771baba412921",
+      "sourceSize": [
+        1536,
+        1024
+      ],
+      "sourceCell": 5,
+      "cell": 11,
+      "crop": [
+        1005,
+        514,
+        1536,
+        1024
+      ],
+      "bounds": [
+        0,
+        0,
+        523,
+        510
+      ],
+      "placed": [
+        1348,
+        1251,
+        440,
+        429
+      ],
+      "sex": "m",
+      "variant": 32,
+      "stage": 2,
+      "label": "朱砂玄锦·成年"
+    }
+  ]
+}

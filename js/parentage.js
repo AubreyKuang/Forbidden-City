@@ -31,7 +31,7 @@ function palaceParentageTick(){
   pair.conceivedAt=S.turn;S.flags.lastSecretConception=S.turn;
 }
 function parentageReady(k){
-  return !!(k?.alive&&!k.pendingName&&k.parentage&&k.parentage.status!=='hidden'&&!k.parentage.decision&&!S.over);
+  return !!(k?.alive&&!k.pendingName&&k.parentage&&k.parentage.status!=='hidden'&&!k.parentage.decision&&!royalTravelAway(k)&&!S.over);
 }
 function knownBiologicalFather(k){return !!(k.parentage&&['confirmed','resolved'].includes(k.parentage.status));}
 function childFatherHTML(k){

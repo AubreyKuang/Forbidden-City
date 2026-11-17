@@ -3,16 +3,17 @@ const assert=require('node:assert/strict');
 const {world}=require('./court-family-browser-fixtures.cjs');
 const {boot}=require('./playtest-harness.cjs');
 
-test('opening a supported event adds a specific, replayable notice and does not create a case',()=>{
+test('an assassination forces a replayable alert before the untouched scene',()=>{
   let game=world();game.ctx.assert=assert;
   game.run(`S.jinyiwei={commander:{id:'rare-commander',name:'程秉直',alive:true,career:'official',official:3,story:[]}};
     S.flags.marketRescueSeen=true;S.flags.xieCityAttempt=S.turn;fenghuaState().lastCity=S.turn;`);
   game.force(.95,.7);
-  game.run(`A.out('city');assert.equal(curEv.title,'遇刺');assert.match($('#mbox').innerHTML,/锦衣卫指挥使程秉直附报/);
+  game.run(`A.out('city');assert.equal(curEv.title,'锦衣卫急报 · 遇刺');assert.equal(Q[0].title,'遇刺');
     assert.match($('#mbox').innerHTML,/刺客的来路仍待查问/);assert.equal(jinyiwei().rareNotices.length,1);
     assert.equal(palaceCases().length,0);save('auto');`);
   game=boot(89,game.storage);game.ctx.assert=assert;game.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);
-    assert.equal(curEv.title,'遇刺');assert.equal(jinyiwei().rareNotices.length,1);assert.match(casesSection(),/稀有事件速报/);
+    assert.equal(curEv.title,'锦衣卫急报 · 遇刺');assert.equal(jinyiwei().rareNotices.length,1);assert.match(casesSection(),/稀有事件速报/);
+    choose(0);assert.equal(curEv.title,'遇刺');assert.equal(jinyiwei().rareNotices.length,1);assert.equal(palaceCases().length,0);
     assert.equal(S.log.filter(x=>x.t.includes('锦衣卫提示 · 遇刺')).length,1);`);
 });
 
@@ -21,4 +22,71 @@ test('an unshown scene or a scene unrelated to the guards does not create a noti
     pushEv({title:'茶馆闲谈',text:'茶才倒好。',choices:[{t:'饮茶'}]});
     pushEv({title:'回廊相依',valid:()=>false,text:'失效的旧事。',choices:[{t:'知道了'}]});
     drain();assert.equal(jinyiwei().rareNotices,undefined);`);
+});
+
+test('ordinary rare scenes get an inline notice and a vacant guard never interrupts',()=>{
+  const game=world();game.ctx.assert=assert;game.run(`setupJyw();
+    pushEv({title:'仙师来访 · 山门之约',text:'有来客。',choices:[{t:'知道了'}]});
+    assert.equal(curEv.title,'仙师来访 · 山门之约');assert.match($('#mbox').innerHTML,/锦衣卫指挥使程秉直附报/);
+    drain();jinyiwei().commander.alive=false;
+    pushEv({title:'东宫惊魂',text:'东宫传讯。',choices:[{t:'知道了'}]});
+    assert.equal(curEv.title,'东宫惊魂');assert.equal(jinyiwei().rareNotices.length,1);`);
+});
+
+test('repeated succession conflicts go to the archive during a six month cooldown',()=>{
+  const game=world();game.ctx.assert=assert;game.run(`setupJyw();
+    var faction=()=>pushEv({title:'储位之争',por:a,text:'群臣起争执。',choices:[{t:'知道了'}]});
+    faction();assert.equal(curEv.title,'锦衣卫急报 · 储位之争');drain();S.turn++;
+    faction();assert.equal(curEv.title,'储位之争');assert.equal(jinyiwei().rareNotices.at(-1).urgent,false);drain();
+    S.turn+=5;faction();assert.equal(curEv.title,'锦衣卫急报 · 储位之争');`);
+});
+
+test('a real action raises only the first severe feud popup of the month and replays it exactly once',()=>{
+  let game=world();game.ctx.assert=assert;game.run(`setupJyw();q.trait='善妒';
+    S.rel[rk(q,a)]=-27;S.rel[rk(q,b)]=-38;
+    A.night(a.id);drain();assert.equal(jinyiwei().rareNotices,undefined);
+    A.night(b.id);assert.equal(curEv.title,'春宵');choose(1);
+    assert.equal(curEv.title,'锦衣卫 · 新怨密报');assert.match(curEv.text,/许清容/);
+    assert.equal(jinyiwei().rareNotices.length,1);save('auto');`);
+  game=boot(89,game.storage);game.ctx.assert=assert;game.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);
+    assert.equal(curEv.title,'锦衣卫 · 新怨密报');assert.equal(jinyiwei().rareNotices.length,1);drain();
+    var q=S.consorts.find(c=>c.given==='明华'),a=S.consorts.find(c=>c.given==='知微');
+    S.rel[rk(q,a)]=-38;delete a.preg;A.night(a.id);choose(1);
+    assert.equal(modalOpen,false);assert.equal(jinyiwei().rareNotices.length,2);
+    assert.equal(jinyiwei().rareNotices.at(-1).urgent,false);assert.match(casesSection(),/沈知微/);
+    assert.equal(palaceCases().length,0);`);
+});
+
+for(const [title,setup,resumed] of [
+  ['锦衣卫急报 · 遇刺',`S.flags.marketRescueSeen=true;S.flags.xieCityAttempt=S.turn;
+    fenghuaState().lastCity=S.turn;A.out('city');`,'遇刺'],
+  ['锦衣卫 · 新怨密报',`S.rel[rk(q,a)]=-38;A.night(a.id);choose(1);`,null],
+])test(`${title} keeps an acknowledgement even if the autosave transaction is lost on reload`,()=>{
+  const auto='chengongji_v1_auto',game=world(),session=new Map();
+  game.force(.95,.7);game.ctx.assert=assert;
+  game.run(`setupJyw();${setup}assert.equal(curEv.title,${JSON.stringify(title)});`);
+  const durable=new Map(game.storage);
+  const attach=(browser,tabSession=session)=>{
+    browser.ctx.sessionStorage={getItem:key=>tabSession.get(key),setItem:(key,value)=>tabSession.set(key,value)};
+    browser.ctx.indexedAutosave={...browser.ctx.localStorage,getConfirmedItem:key=>durable.get(key)};
+    browser.ctx.assert=assert;
+    browser.run('SaveManager.getStorage=()=>indexedAutosave;');
+    return browser;
+  };
+  attach(game).run('choose(0);');
+  assert.equal(session.size,1);
+  assert.notEqual(game.storage.get(auto),durable.get(auto));
+  const reload=()=>attach(boot(89,new Map(durable)));
+  const check=browser=>browser.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);
+    assert.equal(curEv?.title??null,${JSON.stringify(resumed)});assert.equal(jinyiwei().rareNotices.length,1);`);
+  check(reload());
+  check(reload()); // A second reload can interrupt the recovered write as well.
+
+  const differentSlot=reload();differentSlot.storage.set('chengongji_v1_1',durable.get(auto));
+  differentSlot.run(`A.load(1);assert.equal(curEv.title,${JSON.stringify(title)});`);
+  const newRevision=JSON.parse(durable.get(auto));newRevision.savedAt+=1000;
+  const differentSave=reload();differentSave.storage.set(auto,JSON.stringify(newRevision));
+  differentSave.run(`A.load('auto');assert.equal(curEv.title,${JSON.stringify(title)});`);
+  const differentTab=attach(boot(89,new Map(durable)),new Map());
+  differentTab.run(`A.load('auto');assert.equal(curEv.title,${JSON.stringify(title)});`);
 });

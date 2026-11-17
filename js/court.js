@@ -178,11 +178,14 @@ function settleLocalGrainWithReserveChoice(half){
     })};
 }
 function grainStorageHasRoom(){return !grainReserveReady()||halfGrainReserve();}
-function storePurchasedGrain(){
+function storeHalfGrainReserve(){
   const half=halfGrainReserve();
   S.flags.grainReserveGen=S.gen;
   if(half)delete S.flags.grainReserveHalf;
   else S.flags.grainReserveHalf=true;
+}
+function storePurchasedGrain(){
+  storeHalfGrainReserve();
   S.flags.grainPurchaseTurn=S.turn;
 }
 function buyGrainChoice(half,cost){
@@ -315,6 +318,7 @@ A.grainReserve=function(){
   }
   if(!stocked||half)choices.push(buyGrainChoice(half,cost));
   if(!order&&S.month===7&&grainStorageHasRoom())choices.push(reserveAutumnGrainChoice());
+  if(yiLandActive()&&yiLandProjects().length)choices.push({t:'查阅义田簿',f:()=>{pushNow(yiLandLedger());return null;}});
   choices.push(stocked?{t:'留粮备荒',preview:`遇蝗灾月奏可发粮 · 国库无支出 · 免耗精力 · 民心 +${half?3:6}`}:{t:'暂不购粮'});
   pushEv({title:'常平仓',text:`${stocked?'现有'+grainReserveLabel()+'备荒粮':'仓中暂无备荒粮'}，国库有 ${E().treasury} 万两。`+
     (stocked||order==='due'?`当前民心 ${E().people}。`:'')+
@@ -478,7 +482,7 @@ function monthlyGrainEvent(index,brief={}){
       }
     }
   }
-  return event;
+  return index===LOCUST_INDEX?appendYiDisasterRelief(event,'蝗灾',5):event;
 }
 function locustReliefDue(){
   const relief=S.flags.locustRelief;
@@ -578,7 +582,7 @@ function monthlyFloodEvent(brief){
         return `赈粮送抵灾区，工部随后加固险堤。日后一次黄河赈灾，直接拨款可少花 ${FLOOD_DIKE_SAVING} 万两。${fx(chg({treasury:-cost,people:10,prestige:3}))}`;
       }});
   }
-  return event;
+  return appendYiDisasterRelief(event,'水灾',need==='grain'?5:3);
 }
 const IMPEACHMENT_INDEX=3;
 const FIRST_IMPEACHMENT_TURN=3;
@@ -762,7 +766,8 @@ function floodReliefEvent(brief){
   return event;
 }
 function courtEvent(){
-  const ev=COURT[pick(SPONT)]();
+  const index=pick(SPONT),ev=COURT[index]();
+  if(index===FLOOD_INDEX||index===LOCUST_INDEX)appendYiDisasterRelief(ev,index===FLOOD_INDEX?'水灾':'蝗灾',5);
   ev.onQueue=()=>{S.flags.lastCourt=ev.title;};
   return ev;
 }

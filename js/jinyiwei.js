@@ -63,13 +63,16 @@ A.establishJinyiwei=function(){
 };
 function caseReady(x){return !!x&&x.status==='cold'&&S.turn-(x.lastTry??-99)>=JINYIWEI_RETRY;}
 function dispatchCase(x,cost){x.status='investigating';x.due=S.turn+1;x.tries++;x.lastTry=S.turn;x.cost=cost;policyNudge('civil',-1);}
-A.jinyiweiInvestigate=function(id){
-  const x=palaceCases().find(c=>c.id===id);if(modalOpen||!caseReady(x)||!jinyiweiCommanderReady())return;
-  pushEv({title:'锦衣卫密查 · '+x.title,por:jinyiwei().commander,text:`案卷：${x.title}（${x.d}立案）。${x.kind==='harem'?`受害：${caseVictimName(x)}。`:''}${x.tries?`此前已查过${x.tries}次未果。`:''}\n指挥使${jinyiwei().commander.name}才干${rd(jinyiwei().commander.ability)}，下月回报。`,choices:[
+function jinyiweiInvestigationEvent(x){
+  if(!caseReady(x)||!jinyiweiCommanderReady())return null;
+  return {title:'锦衣卫密查 · '+x.title,por:jinyiwei().commander,text:`案卷：${x.title}（${x.d}立案）。${x.kind==='harem'?`受害：${caseVictimName(x)}。`:''}${x.tries?`此前已查过${x.tries}次未果。`:''}\n指挥使${jinyiwei().commander.name}才干${rd(jinyiwei().commander.ability)}，下月回报。`,choices:[
     {t:'派人密查 · 精力−1 · 国库−15',cond:()=>caseReady(x)&&E().energy>=1&&E().treasury>=15,why:'精力或国库不足',f:()=>{
       if(!caseReady(x)||!useE())return null;chg({treasury:-15});dispatchCase(x,15);
       story(jinyiwei().commander,`奉旨密查「${x.title}」旧案。`);save('auto');return '缇骑已经出发，下月回报。';
-    }},{t:'暂缓'}]});
+    }},{t:'暂缓'}]};
+}
+A.jinyiweiInvestigate=function(id){
+  if(!modalOpen)pushEv(jinyiweiInvestigationEvent(palaceCases().find(c=>c.id===id)));
 };
 // 回报：成败看指挥使才干、案子新旧与此前查过几次；真相在立案时已定。
 function caseOdds(x){const j=jinyiwei();return clamp(.3+j.commander.ability/200+Math.min(.15,(x.tries-1)*.05)-(S.turn-x.opened>36?.1:0),.1,.85);}

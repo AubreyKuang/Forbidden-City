@@ -1,9 +1,9 @@
 /* ============ 母子日常与御花园小宴 ============ */
 const inPalace = c => c?.alive && !c.familyArchive && !c.gone && !c.cold && !c.templeStay && !c.homeLeave;
 // Marriage alone does not move a child: a local couple may still await an estate.
-const childHasLeftPalace = k => !!(immortalAway(k) || k?.away || k?.estate || k?.princeEstate || k?.jailed || k?.templeStay || k?.removedFromRoyal || k?.princessMarriage==='frontier');
+const childHasLeftPalace = k => !!(royalJourneyAway(k) || k?.away || k?.estate || k?.princeEstate || k?.jailed || k?.templeStay || k?.removedFromRoyal || k?.princessMarriage==='frontier');
 const childInPalace = k => !!k?.alive && !childHasLeftPalace(k);
-const childCanVisitCourt = k => !!k?.alive&&!immortalAway(k)&&!k.templeStay&&!k.removedFromRoyal&&!k.jailed&&!k.away&&(childInPalace(k)||!!k.princeEstate);
+const childCanVisitCourt = k => !!k?.alive&&!royalJourneyAway(k)&&!k.templeStay&&!k.removedFromRoyal&&!k.jailed&&!k.away&&(childInPalace(k)||!!k.princeEstate);
 const familyName = person => person.sex ? kidName(person) : cName(person);
 const mothersOf = k => [...new Set([byId(k.mom), fosterOf(k)].filter(Boolean))];
 
@@ -151,10 +151,11 @@ function familyTimePanel(k, mothers) {
     const closeness = kidAge(k) < 3
       ? trust >= 45 ? '认得她的声音' : '还在熟悉她的声音'
       : trust >= 68 ? '有事愿意先来找她' : trust >= 45 ? '相处自在' : '见面还有些拘谨';
+    const traveling = royalTravelAway(k);
     const ready = familyVisitAllowed(k, mother) && bond?.turn !== S.turn;
     return `<article class="family-time-row"><div><strong>${mother.id === k.mom ? '生母' : childCareAddress(k,mother)==='姨母'?'养母（仍唤姨母）':'养母'} · ${parentLink(mother.id)}</strong>
-      <p class="hint">${inPalace(mother) ? closeness : '如今无法相见'}</p>
-      ${bond?.activity ? `<p>${esc(UI.view === 'kid' ? bond.childView : bond.motherView)}</p>` : ''}</div>
+      <p class="hint">${traveling ? '离宫游历 · '+esc(royalTravelPlace(k)) : inPalace(mother) ? closeness : '如今无法相见'}</p>
+      ${!traveling && bond?.activity ? `<p>${esc(UI.view === 'kid' ? bond.childView : bond.motherView)}</p>` : ''}</div>
       ${ready ? `<button class="btn sm jade" onclick="A.familyTime(${k.id},${mother.id})">一起陪陪孩子<small>精力-1</small></button>` : ''}</article>`;
   }).join('');
 }

@@ -4,14 +4,22 @@ function chronicleTopic(e){return (LIFE_CHAPTERS.find(c=>e.life?.kind?c.key===e.
 function chronicleThread(e){return e.thread||(e.life?.source?`life:${e.life.gen}:${e.life.title}:${e.life.source}`:'');}
 function chronicleCast(e){return [...new Map([...(e.life?.people||[]),...(e.event?.participants||[])].map(p=>[p.id,p])).values()];}
 function chronicleMatches(e,f={}){return (!f.year||chronicleYear(e)===f.year)&&(!f.topic||chronicleTopic(e)===f.topic)&&(!f.person||chronicleCast(e).some(p=>String(p.id)===f.person))&&(!f.thread||chronicleThread(e)===f.thread)&&(!f.query||[e.d,e.t,e.life?.source,e.event?.situation,e.event?.choice,e.event?.outcome,...chronicleCast(e).map(p=>p.name)].join(' ').toLocaleLowerCase().includes(f.query.toLocaleLowerCase()));}
-function chroniclePersonLink(p){
- if(byId(p.id)||kidById(p.id))return lifePersonLink(p);
- for(const c of S.consorts){const h=c.house;if(!h)continue;
-  const relative=h.relatives?.find(x=>x.id===p.id);if(relative)return `<button class="btn quiet sm" onclick="A.go('natal','${c.id}:${p.id}')">${esc(p.name)}</button>`;
-  const found=Object.entries(h).find(([key,v])=>v&&typeof v==='object'&&v.id===p.id);
-  if(found)return `<button class="btn quiet sm" onclick="A.go('official','${c.id}:${found[0]}')">${esc(p.name)}</button>`;
+function chroniclePersonTarget(id){
+ const number=Number(id),consort=familyHostById(number),child=royalById(number),scholar=scholarById(id);
+ if(consort)return {person:consort,view:'consort',id:number};
+ if(child)return {person:child,view:S.children.includes(child)?'kid':'relative',id:number};
+ if(scholar)return {person:scholar,view:'scholar',id};
+ for(const c of familyCourtHosts()){
+  const h=c.house;if(!h)continue;
+  for(const role of ['father',...brotherRoles(h)])if(String(h[role]?.id)===String(id))return {person:h[role],view:'official',id:`${c.id}:${role}`};
+  const relative=h.relatives?.find(p=>String(p.id)===String(id));
+  if(relative)return {person:relative,view:'natal',id:`${c.id}:${relative.id}`};
  }
- return esc(p.name);
+ return null;
+}
+function chroniclePersonLink(p){
+ const target=chroniclePersonTarget(p.id);
+ return target?`<button class="btn quiet sm" onclick="A.go('${target.view}',${esc(JSON.stringify(target.id))})">${esc(p.name)}</button>`:esc(p.name);
 }
 function chronicleVisibleEntries(story){
  const personalPromotions=new Set(),brotherExchanges=new Set();
@@ -47,6 +55,6 @@ A.chronicleFilter=function(key,field,value){if(!['year','topic','person'].includ
 A.chronicleSearch=function(key){((UI.chronicleFilters||={})[key]||={}).query=(document.getElementById?.('chronicle-search-'+key)||$('[id="chronicle-search-'+key+'"]'))?.value?.trim().slice(0,100)||'';render();};
 A.chronicleClear=function(key){if(UI.chronicleFilters)delete UI.chronicleFilters[key];render();};
 A.chronicleThread=function(key,index){
- const id=Number(key.split(':')[1]),person=byId(id)||kidById(id)||S.consorts.flatMap(c=>c.house?[c.house.father,...Object.entries(c.house).filter(([k])=>/^brother/.test(k)).map(([,v])=>v),...(c.house.relatives||[])]:[]).find(p=>p?.id===id);
+ const id=key.slice(key.indexOf(':')+1),person=chroniclePersonTarget(id)?.person;
  const thread=person&&chronicleThread(person.story?.[index]||{});if(thread){(UI.chronicleFilters||={})[key]={thread};render();}
 };

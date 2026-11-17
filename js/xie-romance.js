@@ -258,6 +258,7 @@ function xieRememberLate(pair,visit=false){
  const {p,k,m}=pair,row=xieLateWords(pair);m.lateNews=(m.lateNews||0)+1;m.affection=clamp(m.affection+4);k.spouse.trust=clamp(k.spouse.trust+3);
  xieCoupleRecord(p,k,row[0],(visit?'两人与你说起近日家常：':'')+row[1],row[2],row[3]);
  if(row[4]){row[4].story ||= [];kstory(row[4],`【家中温情】${row[1]}`);}
+ if(visit&&row[0]==='满城风月，不及归灯')return {text:row[1],illustration:'xie-homecoming-lamp'};
  return row[1];
 }
 A.xieFamilyTalk=function(){

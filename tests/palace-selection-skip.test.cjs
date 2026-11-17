@@ -48,7 +48,7 @@ for(const version of [52,53])for(const name of ['offer','skipped'])test('real v'
  const fixture=require('./fixtures/selection-and-dao-legacy-v'+version+'.json');
  const b=boot(591,new Map([['chengongji_v1_auto',JSON.stringify(fixture[name])]]));b.ctx.assert=assert;
  b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,${version});
- if(!modalResult)choose(1);drain();assert.equal(PalaceActions.contentVersion,60);
+ if(!modalResult)choose(1);drain();assert.equal(PalaceActions.contentVersion,67);
  var money=E().treasury;A.xxDecree();assert.equal(S.cands.length,6);assert.equal(E().treasury,money);`);
 });
 test('a settled old skip is repaired on load without needing a new game',()=>{

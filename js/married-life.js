@@ -76,10 +76,11 @@ function householdSummary(k){
   const children=[...registered,...(k.recognizedChildren||[]).map(kidById).filter(Boolean)].filter(c=>c.alive!==false),sons=children.filter(c=>c.sex==='m').length;
   return `${sons}子${children.length-sons}女${h.pregnancies.length?' · 有喜':''}${h.concubines.length?' · 妾室'+h.concubines.length+'人':''}`;
 }
+const householdBirthCount=k=>k.household.children.length+(royalAdoptionStoriesActive()?k.palaceAdoptedChildren?.length||0:0);
 function householdCanConceive(k,p){
   const woman=k.sex==='f'?k:p,h=ensureMarriedLife(k);
   return householdActive(k)&&p?.alive!==false&&kidAge(k)>=18&&kidAge(p)>=18&&kidAge(woman)<=45&&
-    !p.away&&!p.jailed&&!p.gone&&!p.cold&&h.children.length+h.pregnancies.length<8&&!h.pregnancies.some(g=>g.mother===woman.id)&&
+    !p.away&&!p.jailed&&!p.gone&&!p.cold&&householdBirthCount(k)+h.pregnancies.length<8&&!h.pregnancies.some(g=>g.mother===woman.id)&&
     S.turn-(h.lastBirthByMother[woman.id]??-99)>=18&&S.turn-(p.joinedAt??h.started)>=3&&(p.trust??k.spouse.trust)>=40;
 }
 function householdMotherName(k,p){return k.sex==='f'?k.name:(p.id===k.spouse.id?'正妻':'妾室')+p.name;}
@@ -101,8 +102,8 @@ function deliverHouseholdChild(k,pregnancy){
   const names=sex==='m'?['景和','怀瑾','知远','承礼','允章','明谦','思齐','修宁']:['令仪','清嘉','舒窈','静姝','婉宁','含章','昭华','若兰'];
   const used=new Set(royalHouseholds().flatMap(r=>(r.household?.children||[]).map(c=>c.given)));
   const name=pick(names.filter(n=>!used.has(n)).length?names.filter(n=>!used.has(n)):names)+ (names.every(n=>used.has(n))?pick(sex==='m'?BOYC:GIV):'');
-  const baby={id:`grand-${S.gen}-${k.id}-${h.children.length+1}`,courtGuest:true,name:sur+name,given:name,sur,sex,
-    born:S.turn,alive:true,seed:ri(1,2e9),portraitVariant:ri(0,DESCENDANT_VARIANTS-1),
+  const baby={id:`grand-${S.gen}-${k.id}-${householdBirthCount(k)+1}`,courtGuest:true,name:sur+name,given:name,sur,sex,
+    born:S.turn,alive:true,seed:ri(1,2e9),portraitVariant:ri(0,(journalContentVersion()>=62?portraitVariantCount({sex}):31)-1),
     mother:pregnancy.mother,motherName:woman.name,father:pregnancy.father,fatherName:k.sex==='m'?k.name:p.name,
     lit:clamp(k.lit*.5+(p.appearance?.talent||50)*.35+ri(0,10)),vir:clamp(k.vir*.5+(p.appearance?.virtue||50)*.35+ri(0,10)),mar:clamp(k.mar*.55+ri(4,20)),hp:ri(65,95),amb:ri(15,50)};
   h.children.push(baby);h.lastBirth=S.turn;h.lastBirthByMother[woman.id]=S.turn;

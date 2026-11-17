@@ -48,6 +48,96 @@ const MINISTRIES={
   works:{name:'工部',duty:'营缮河工',army:false,action:'督修河工',cost:120,brief:'由部里直接督修黄河险段，修成可抵一次决口的赈济开支。'}
 };
 const MINISTRY_GAP=12;
+const MINISTRY_REVIEWS={
+  personnel:'京察复勘',revenue:'追库与秋税',rites:'恩科录用',war:'边镇补报',justice:'秋审余卷',works:'河工验收'
+};
+function ministryDockets(){
+  return journalContentVersion()>=65?(S?.ministries?.dockets||[]).filter(d=>d.gen===S.gen):[];
+}
+function ministryDocketReady(d){return !S.over&&!d.closed&&Number.isFinite(d.due)&&S.turn>=d.due;}
+function openMinistryDocket(id,head,success,text){
+  const dockets=ministryState().dockets||=[];
+  dockets.push({id:`review-${S.gen}-${S.turn}-${id}`,ministry:id,gen:S.gen,turn:S.turn,date:dateStr(),
+    due:id==='rites'?null:S.turn+2,success,headKey:head.key,headId:head.p.id,headName:head.p.name,summary:text});
+  if(dockets.length>30){const index=dockets.findIndex(d=>d.closed||d.gen!==S.gen);if(index>=0)dockets.splice(index,1);}
+  return id==='rites'?'放榜后，礼部会把恩科录用簿送来。':'两个月后可在六部阅看复议。';
+}
+function settleMinistryDocket(docket,decision){
+  docket.closed=dateStr();docket.decision=decision;
+  const title=MINISTRY_REVIEWS[docket.ministry],line=`【六部纪事 · ${title}】${decision}。`;
+  const person=courtPerson(docket.headKey);
+  if(person?.p.id===docket.headId&&officialServing(person.p))story(person.p,line);
+  log(line,1);
+}
+function ministryDocketEvent(docket){
+  const id=docket.ministry,title=MINISTRY_REVIEWS[id],valid=()=>ministryDockets().includes(docket)&&ministryDocketReady(docket);
+  const choices=[];
+  const redirect=(label,view,personId)=>choices.push({t:label,f:()=>{
+    if(!valid())return null;
+    settleMinistryDocket(docket,label);
+    if(personId!=null)A.go(view,personId);else A.go(view);
+    return '复议已经记入六部案簿。';
+  }});
+  const forward=(label,factory)=>choices.push({t:label,f:()=>{
+    if(!valid())return null;
+    const event=factory();if(!event)return '相关回奏或案卷已有变化，仍可把本折归档。';
+    settleMinistryDocket(docket,label);pushNow(event);return null;
+  }});
+  const task=id=>forward(`择官办理${OFFICIAL_TASKS[id].title}`,()=>governmentTaskEvent(id));
+  let follow='';
+  if(id==='personnel'){
+    const pending=careerPeople().find(person=>careerEligible(person.p)&&person.p.report?.outcome==='setback');
+    follow=pending?`吏部另附${pending.p.name}仍待御批的「${pending.p.report.title}」。京察评语可与任上实绩对看，原回奏仍由陛下亲批。`:'本次京察评语已入各人履历。日后调任时，可与官员任内实绩一并核对。';
+    if(pending)forward('对照地方回奏，请陛下亲批',()=>pending.p.report?careerReportEvent(pending):null);
+    else redirect('翻阅官员表与履历','officials');
+  }
+  if(id==='revenue'){
+    const receipt=treasuryReceipt('tax');
+    follow=receipt?`本年秋税已经入库 ${receipt.amount} 万两，请与追回的亏空分别记账。`:`本年秋税仍按「${TAX_PLANS[governance().tax].name}」预备，估收 ${taxEstimate()} 万两。清查追亏与常年征税分开处理。`;
+    if(!receipt&&governance().tax!=='light')choices.push({t:'按现行制度减免三成秋税 · 精力−1',cond:()=>valid()&&!treasuryReceipt('tax')&&governance().tax!=='light'&&E().energy>0,why:'秋税已结算、已经减免或精力不足',f:()=>{
+      if(!valid()||!applyTaxPlan('light'))return null;
+      settleMinistryDocket(docket,'按章改定减免三成秋税');return '户部已改定本年秋税办法，入库时按现行税制结算。';
+    }});
+    task('accounts');
+  }
+  if(id==='rites'){
+    const winner=scholarById(docket.winner);
+    follow=winner?`恩科已放榜，${winner.name}中状元。他在殿试的策论写的是「${winner.essay}」。礼部请另择实务查验，任命仍依原有铨选办法。`:'恩科录用簿已归礼部，可在科举日程查到此科记录。';
+    if(winner)redirect('阅看状元的档案与策论','scholar',winner.id);
+    task('schools');
+  }
+  if(id==='war'){
+    follow=docket.success?'兵员与器械已对过簿册。兵部请接着护送边粮，查粮道能否按期通行。':'上次器械已补，尚有数镇的兵册不齐。兵部请择武职实地巡边，回奏时再核对缺额。';
+    task(docket.success?'escort':'border');
+  }
+  if(id==='justice'){
+    const cold=palaceCases().find(item=>item.kind==='harem'&&caseReady(item));
+    follow=cold?`秋审已过，「${cold.title}」一卷仍有未查清的线索。刑部请调原卷复核，照旧凭证据行事。`:'本批秋审回奏已复点。卷外传言另作记录，现有未结案仍可在案簿查看。';
+    if(cold&&jinyiweiCommanderReady())forward(`调卷复核「${cold.title}」`,()=>jinyiweiInvestigationEvent(cold));
+    else redirect('查看锦衣卫旧案与线索','jinyiwei');
+  }
+  if(id==='works'){
+    const ready=floodDikeReady();
+    follow=ready?'险段现有一笔修堤减免可用。工部另列了疏通农渠的差事，可视农时安排。':docket.success?'此次督修曾经验收。如今河工簿上已无待用的赈济减免，可另择官岁修。':'上次督修未验收，工部请由承办官重核险段和料银，再呈工簿。';
+    task(ready?'water':'dikes');
+  }
+  return {title:`${MINISTRIES[id].name}回奏 · ${title}`,valid,text:`${docket.date}由${docket.headName}主办「${MINISTRIES[id].action}」。\n原折：${docket.summary}\n${follow}`,choices:[
+    ...choices,{t:'看过回奏，照实归档',f:()=>{if(!valid())return null;settleMinistryDocket(docket,'回奏已阅，照实归档');return '原折和本次复议均已存入六部案簿。';}},
+    {t:'留中，下次再议'}
+  ]};
+}
+A.ministryDocket=function(id){
+  const docket=ministryDockets().find(d=>d.id===id);
+  if(!modalOpen&&docket&&ministryDocketReady(docket))pushEv(ministryDocketEvent(docket));
+};
+function ministryDocketSection(){
+  if(journalContentVersion()<65)return '';
+  const all=ministryDockets().slice().reverse(),rows=[...all.filter(d=>!d.closed),...all.filter(d=>d.closed).slice(0,6)];
+  return detailSection('六部回奏与纪事',rows.length?`<ul class="story">${rows.map(d=>
+    `<li><time>${esc(d.date)}</time><b>${esc(MINISTRIES[d.ministry].name+' · '+MINISTRY_REVIEWS[d.ministry])}</b> · ${esc(d.headName)}
+      <p>${esc(d.closed?`${d.closed} · ${d.decision}`:d.due==null?'待恩科放榜':ministryDocketReady(d)?'回奏已至':`${Math.max(0,d.due-S.turn)}个月后回奏`)}</p>
+      ${ministryDocketReady(d)?`<button class="btn sm jade" onclick="A.ministryDocket('${d.id}')">阅看${MINISTRIES[d.ministry].name}回奏</button>`:''}</li>`).join('')}</ul>`:'<p class="hint">六部奉准办差后，后续回奏会呈送到这里。</p>');
+}
 function initializeMinistryRoster(){
   if(journalContentVersion()<43||S.ministries?.foundingRoster)return;
   const st=ministryState();st.foundingRoster=true;S.scholars ||= [];
@@ -177,7 +267,9 @@ A.ministryAct=function(id){
         if(!ministryReady(id)||!useE())return null;
         ministryState().used[id]=S.turn;const success=chance(ministryOdds(id));
         head.p.merit=clamp(head.p.merit+(success?6:-2));
-        const text=ministryResult(id,head,success);save('auto');return {text,por:head.p};
+        let text=ministryResult(id,head,success);
+        if(journalContentVersion()>=65)text+='\n'+openMinistryDocket(id,head,success,text);
+        save('auto');return {text,por:head.p};
       }},{t:'暂缓'}]});
 };
 A.ministryAppoint=function(id){
@@ -225,6 +317,10 @@ function examEvent(){
       else officialRecord(e.c,e.role,'会试未第，仍以举人身份候选。');
     }
     record.top=order.map(p=>p.id);
+    if(journalContentVersion()>=65&&record.enke){
+      const docket=ministryDockets().find(d=>d.ministry==='rites'&&d.due==null&&d.turn+1===record.turn);
+      if(docket){docket.due=S.turn+1;docket.winner=order[0].id;}
+    }
     if(careersActive()&&examMarriageCandidates(order[2]).length)pushEv(examMarriageEvent(order[2]));
     return `金榜张挂：状元${order[0].name}、榜眼${order[1].name}、探花${order[2].name}。${kin.filter(x=>x.passed).length?`\n外家子弟${kin.filter(x=>x.passed).map(x=>x.e.p.name).join('、')}亦中进士，候选授官。`:''}${fx(chg({prestige:2,people:1}))}`;
   };
@@ -263,7 +359,8 @@ function viewMinistries(){
   };
   const scholars=scholarList().filter(p=>!p.registrySource).slice().reverse();
   return `<button class="btn quiet sm detail-back" onclick="A.go('government')">← 返回治国理政</button><h2>六部</h2>${examSchedulePanel(false)}<p class="hint">尚书由在任且才干 55 以上的官员出任，一人不兼两部。各部每年可办一件大事，成败看尚书才干。</p>
-    <div class="grid ministry-grid">${Object.entries(MINISTRIES).map(card).join('')}</div>
+    ${ministryDocketSection()}
+    <div class="grid ministry-grid">${Object.entries(MINISTRIES).map(card).join('')}</div>${travelFleetPanel()}
     ${detailSection('新科进士',scholars.length?`<ul class="story">${scholars.map(p=>`<li><button class="person-link" onclick="A.go('scholar','${p.id}')">${esc(p.name)}</button> · ${esc(p.examYear?`${p.examRank}`:'')} · ${esc(officialOfficeLabel(p))} · ${officialStatus(p)} · 才干${rd(p.ability)}</li>`).join('')}</ul>`:`<p class="hint">尚无科举出身的朝臣。${nextExamLabel()}。</p>`)}`;
 }
 function viewScholar(){

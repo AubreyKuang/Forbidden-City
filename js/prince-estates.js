@@ -6,7 +6,7 @@ const princeEstatePlace=k=>k.away?princeFief(k)||'外地封地':'京城';
 const princeEstateHolder=k=>k?.sex==='m'&&!!(k.princeEstate||k.away)&&!k.removedFromRoyal&&!k.pendingName&&S.heir!==k.id;
 const princeEstateEligible=k=>!!k?.alive&&princeEstateHolder(k);
 const princeEstateById=id=>{const k=royalById(id);return princeEstateEligible(k)||princeProbate(k)?k:null;};
-const princeEstateAvailable=k=>princeEstateEligible(k)&&!k.jailed&&!k.templeStay&&!immortalAway(k)&&!k.gone;
+const princeEstateAvailable=k=>princeEstateEligible(k)&&!k.jailed&&!k.templeStay&&!royalJourneyAway(k)&&!k.gone;
 function princeEstateLink(k){
   return princeEstateEligible(k)||princeProbate(k)?`<button class="btn sm jade" onclick="A.go('prince-estate',${royalActionArg(k.id)})">查看王府</button>`:'';
 }
@@ -36,7 +36,7 @@ function viewPrinceEstate(){
       ['residence','居处与藩务',detailSection('居处',`<p>${esc(state)}</p>${res}`)],
       ['dockets','长史奏报',princeDocketPanel(k)],
       ['succession','世子与袭爵',princeSuccessionPanel(k)],
-      ['family','家人与往来',royalKinContactButtons(k,true)+marriagePanel(k)+householdPanel(k)],
+      ['family','家人与往来',princeAdoptionContactPanel(k)+royalKinContactButtons(k,true)+marriagePanel(k)+householdPanel(k)],
       ['history','王府记事',detailStory(k)]
     ])}`;
 }

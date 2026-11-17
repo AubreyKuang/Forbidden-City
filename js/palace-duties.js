@@ -93,6 +93,8 @@ A.assignDuanwu=function(){
             if(!legacyPendingAction())palaceSupportMemory(lead,gifts,'duanwu_assigned','御花园','端午宫务分派',
               `奉旨与${fullName(gifts)}合办端午，自己主理宴席，由她筹备节礼；内务府拨下二十万两，约定五月查验。`,
               `奉旨与${fullName(lead)}合办端午，自己筹备节礼，由她主理宴席；内务府拨下二十万两，约定五月查验。`,.35,.35);
+            duanwuCharacterChapter(S.duanwuWork,lead,[gifts],'tables');
+            duanwuCharacterChapter(S.duanwuWork,gifts,[lead],'gifts');
             log(`端午宫务交由${fullName(lead)}与${fullName(gifts)}筹备。`);
             save('auto');
             return '内务府已拨下备办银两。五月到御花园看筹备结果。';
@@ -120,12 +122,19 @@ function finishDuanwu(work,mode){
       `与${fullName(gifts)}同办端午，我负责${DUANWU_ROLES.tables}。${result}`,
       `和${fullName(tables)}合办端午，我负责${DUANWU_ROLES.gifts}。${conflict&&!countCredit?'还记着席次与份例争执。':result}`,
       gain<0?-.55:.7,gain<0?-.65:.65);
+    duanwuCharacterChapter(work,tables,[gifts],null,countCredit?'她把改过的席图夹在结案册里，谁在何处出了力，也一并写在图后。':
+      conflict?'收拾席图时她看见改了两回的座次，还有几处改动当时没能当面说清。':'她把最后照办的席次图留下，免得明年还要从头理一遍。');
+    duanwuCharacterChapter(work,gifts,[tables],null,countCredit?'她将实际封好的节礼和经手人的名字逐一核对，亲手把册页合上。':
+      mode==='私下协调'?'她和主理宴席的人私下对过分礼册，短少的几份也一同补齐。':'她把未用完的礼签扎在一处，另记哪几份按例发了出去。');
     if(canManageFeast(helper)){
       relAdd(partner,helper,countCredit?8:mode==='私下协调'?4:work.issue==='漏记帮手'?-6:2);
       palaceSupportMemory(partner,helper,'duanwu_help','御花园',mode,
         `${fullName(helper)}帮我料理了${DUANWU_ROLES[work.helperRole]}。`,
         `我帮${fullName(partner)}做了${DUANWU_ROLES[work.helperRole]}。${countCredit?'结案册上也有我的名字。':mode==='私下协调'?'她特地来谢了我。':work.issue==='漏记帮手'?'结案时却没提我做过的事。':'她私下谢了我。'}`,
         .65,countCredit?.85:work.issue==='漏记帮手'&&mode!=='私下协调'?-.7:.45);
+      const deed=work.helperRole==='gifts'?'逐份核礼签，找出错放的一匣节礼':'帮着重排临时挪动的席位，把新次序告诉值守宫人';
+      duanwuCharacterChapter(work,partner,[helper],null,`${fullName(helper)}${deed}。`);
+      duanwuCharacterChapter(work,helper,[partner],null,`她${deed}，${countCredit?'在终册上看见了自己的名字。':'仍记得那晚她们是怎样做完的。'}`);
     }
     cchg(tables,{mood:gain});cchg(gifts,{mood:gain});
     startDutyContinuity(work,mode);

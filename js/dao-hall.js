@@ -10,7 +10,7 @@ function daoMaster(){
   return {...DAO_MASTERS[cell%4],daoMaster:true,alive:true};
 }
 function daoEligible(p){
-  const localChild=p?.alive&&!immortalAway(p)&&!p.jailed&&!p.away&&!p.templeStay&&!p.removedFromRoyal&&p.princessMarriage!=='frontier';
+  const localChild=p?.alive&&!royalJourneyAway(p)&&!p.jailed&&!p.away&&!p.templeStay&&!p.removedFromRoyal&&p.princessMarriage!=='frontier';
   return !S.over&&!!p&&(p.sex?localChild&&kidAge(p)>=12&&!p.pendingName:inPalace(p)&&!p.maid&&p.preg<2)&&(p.hp??100)>=40;
 }
 function daoInterest(p){

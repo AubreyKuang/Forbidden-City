@@ -37,5 +37,5 @@ for(const version of [35,36])for(const name of ['birth','frail-birthday'])test('
  w.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,${version});assert.equal(birthOmenChance(harem()[0]),.03);`);
  if(name==='birth')w.run(`assert.ok(S.children.every(k=>!k.birthOmen));`);
  else w.run(`assert.equal(S.children.find(k=>k.name==='清宁').hp,50);`);
- w.run(`drain();assert.equal(PalaceActions.contentVersion,60);assert.equal(birthOmenChance(harem()[0]),.03);save('auto');A.load('auto');assert.equal(PalaceActions.blocked,false);`);
+ w.run(`drain();assert.equal(PalaceActions.contentVersion,67);assert.equal(birthOmenChance(harem()[0]),.03);save('auto');A.load('auto');assert.equal(PalaceActions.blocked,false);`);
 });

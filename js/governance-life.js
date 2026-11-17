@@ -77,10 +77,13 @@ function annualRevenueTick(){
   row.text=text;log(text,1);
   return {title:type==='tax'?'户部 · 秋税入库':'岁首 · 各地进献',jewelry:row.jewelry,text:text+'\n可在「治国理政」查阅收支簿。',choices:[{t:'知道了'}]};
 }
+function applyTaxPlan(id){
+  if(S.over||!TAX_PLANS[id]||treasuryReceipt('tax')||governance().tax===id||!useE())return false;
+  governance().tax=id;log(`谕户部：今年秋税${TAX_PLANS[id].name}。`,1);
+  return true;
+}
 A.taxPlan=function(id){
-  if(modalOpen||S.over||!TAX_PLANS[id]||treasuryReceipt('tax')||governance().tax===id)return;
-  if(!useE())return;governance().tax=id;
-  log(`谕户部：今年秋税${TAX_PLANS[id].name}。`,1);render();
+  if(!modalOpen&&applyTaxPlan(id))render();
 };
 const GOVERNMENT_POSTS={
   jiangnan:{name:'江南知府',army:false,min:45,away:true,detail:'查验田亩、安顿流民，离京赴任。'},
@@ -123,15 +126,19 @@ A.postCandidates=function(id){
   pushEv({title:'吏部调任 · '+t.name,text:t.detail+`\n需才干至少 ${t.min}，在任且无未结差事；调任后半年考课。`+(candidates.length?'':'\n暂无符合条件的官员。'),choices:[
     ...candidates.map(e=>({t:`${e.p.name} · ${e.p.office||e.p.post} · 才干 ${e.p.ability}`,person:e.p,cond:()=>canTransfer(e,id)&&E().energy>0&&E().treasury>=20,why:'需精力 1、国库 20，且职位空缺',f:()=>transferOfficial(e,id)})),{t:'暂不调任'}]});
 };
-A.governmentTask=function(id){
-  if(modalOpen||S.over||!OFFICIAL_TASKS[id])return;
+function governmentTaskEvent(id){
+  if(S.over||!OFFICIAL_TASKS[id])return null;
   const t=OFFICIAL_TASKS[id],entries=officialEntries().filter(e=>officialActionReady(e,'commission')&&t.army===(e.h.bloc==='army'));
-  pushEv({title:t.title,text:`需 ${t.months} 个月，拨款 ${t.cost} 万两。${t.brief||'择人领差，办结后据实回奏。'}\n${entries.length?'请选承办官员。':'暂无可领此差的官员，可等在外官员回奏后再安排。'}`,choices:[
-    ...entries.map(e=>({t:`${e.p.name} · ${e.p.office||e.p.post} · 才干 ${e.p.ability}`,person:e.p,cond:()=>officialActionReady(e,'commission')&&E().energy>0&&E().treasury>=t.cost,why:'精力或国库不足，或已有未结差事',f:()=>assignOfficialTask(e,id)})),{t:'暂缓'}]});
+  return {title:t.title,text:`需 ${t.months} 个月，拨款 ${t.cost} 万两。${t.brief||'择人领差，办结后据实回奏。'}\n${entries.length?'请选承办官员。':'暂无可领此差的官员，可等在外官员回奏后再安排。'}`,choices:[
+    ...entries.map(e=>({t:`${e.p.name} · ${e.p.office||e.p.post} · 才干 ${e.p.ability}`,person:e.p,cond:()=>officialActionReady(e,'commission')&&E().energy>0&&E().treasury>=t.cost,why:'精力或国库不足，或已有未结差事',f:()=>assignOfficialTask(e,id)})),{t:'暂缓'}]};
+}
+A.governmentTask=function(id){
+  if(!modalOpen)pushEv(governmentTaskEvent(id));
 };
 function viewGovernment(){
   const g=governance(),receipt=treasuryReceipt('tax');
-  return `${pageHeading('治国理政','用人、钱粮、民间见闻，都须有去处，也有回音。')}<div class="acts page-actions">${monthlyCourtButton()}<button class="btn" onclick="A.go('officials')">官员表</button><button class="btn" onclick="A.go('ministries')">六部</button><button class="btn" onclick="A.go('jinyiwei')">锦衣卫</button><button class="btn" onclick="A.go('out')">微服问民情</button></div>
+  const ready=ministryDockets().filter(ministryDocketReady).length;
+  return `${pageHeading('治国理政','用人、钱粮、民间见闻，都须有去处，也有回音。')}<div class="acts page-actions">${monthlyCourtButton()}<button class="btn" onclick="A.go('officials')">官员表</button><button class="btn" onclick="A.go('ministries')">六部${ready?`<small>${ready} 份回奏待阅</small>`:''}</button><button class="btn" onclick="A.go('jinyiwei')">锦衣卫</button><button class="btn" onclick="A.go('out')">微服问民情</button></div>
   ${typeof examSchedulePanel==='function'?examSchedulePanel():''}
   ${careerReportsHTML()}
   ${pageChapters('government',[

@@ -290,7 +290,8 @@ function viewHome(){
    ${birthdayBanquetButtons()}${proudDemandNotice()}
    ${pageChapters('home',[
      ['recent','近事',`<ul class="story">${recent.map(l=>`<li class="${l.b?'big':''}"><time>${esc(l.d)}</time>${esc(l.t)}</li>`).join('')||'<li>尚无记载</li>'}</ul>`],
-     ['royal-kin','皇亲列表',royalKinRosterPanel()],
+     ['royal-kin','皇亲列表',palaceAdoptionPanel()+royalKinRosterPanel()],
+     ['fertility','太医院会诊',imperialFertilityPanel()],
      ['court','朝堂与外家',courtBlocHTML()],
      ['stewardship','协理六宫',typeof haremStewardPanel==='function'?haremStewardPanel():''],
      ['story-consorts','剧情妃图鉴',storyConsortCodex()],
@@ -474,7 +475,7 @@ function viewKid(){
     <div class="acts">${a>=6?`<button class="btn ${k.tutor?'on':''}" onclick="A.kidTutor(${k.id})">${k.tutor?'已延请太傅':'延请太傅'}<small>每月5万两</small></button>`:''}
     ${a<14?`<button class="btn" onclick="A.foster(${k.id})">${foster?'换一位养母':'交给妃嫔抚养'}</button>`:''}
     ${foster&&mom?.alive?`<button class="btn" onclick="A.unfoster(${k.id})">抱回生母身边</button>`:''}</div>`:'';
-  const titles=k.alive&&!k.removedFromRoyal&&!k.templeStay&&!immortalAway(k)?`${k.sex==='m'&&a>=5&&S.heir!==k.id?`<button class="btn" onclick="A.kidHeir(${k.id})">立为太子</button>`:''}
+  const titles=k.alive&&!k.removedFromRoyal&&!k.templeStay&&!royalJourneyAway(k)?`${k.sex==='m'&&a>=5&&S.heir!==k.id?`<button class="btn" onclick="A.kidHeir(${k.id})">立为太子</button>`:''}
     ${(journalContentVersion()>=40?royalChildTitleReady(k):a>=12)?`<button class="btn" onclick="A.kidTitle(${k.id})">赐封号</button>`:''}`.trim():'';
   return `${personBackButton('kids')}
    <header class="detail-head">${porImg(k,224)}<div class="grow"><p>${status}</p><h2>${esc(kidName(k))}</h2>
@@ -483,14 +484,14 @@ function viewKid(){
    ${k.alive&&!k.removedFromRoyal&&!k.estate&&!k.jailed&&!k.pendingName?`<div class="detail-actions" role="group" aria-label="人物操作"><span class="detail-action-label" aria-hidden="true">人物操作</span><div class="acts"><button class="btn primary" onclick="A.kidVisit(${k.id})">${childHasLeftPalace(k)?'写家书':'探望'}<small>精力-1</small></button></div></div>`:''}
    <div class="detail-vitals">${bar('才学',k.lit,'#617991')}${bar('武艺',k.mar,'#92504a')}${bar('品德',k.vir,'#517369')}</div>
    ${pageChapters('child',[
-    ['now','近况与心事',childDispositionPanel(k)+immortalPanel(k)+continuityPanel(k)+
+    ['now','近况与心事',childDispositionPanel(k)+immortalPanel(k)+royalTravelPanel(k)+continuityPanel(k)+
       (k.alive?initiativeHTML(k):'')+detailSection(a>=20?'婚事与心意':'少年心事',youthPanel(k))+
       detailSection('护国寺祈福',childTemplePanel(k))],
     ['care','教养与封号',detailSection('教养与抚养',care)+
       detailSection('封号与储位',titles?`<div class="acts">${titles}</div>`:'')+
       detailSection('其他属性',`<div class="stats">${bar('体魄',k.hp,'#a87a26')}${bar('野心',k.amb,'#6b4a33')}${bar('父爱',k.love,'#936375')}${k.sex==='m'&&a>=10?bar('支持',k.sup||0,'#617991'):''}</div>`)+
       detailSection('出生禀赋',childBirthPanel(k))],
-    ['family','亲缘与婚配',marriagePanel(k)+householdPanel(k)+princessActions(k)+princeEstateLink(k)+multipleBirthPanel(k)+
+    ['family','亲缘与婚配',palaceAdoptionOriginPanel(k)+marriagePanel(k)+householdPanel(k)+princessActions(k)+princeEstateLink(k)+multipleBirthPanel(k)+
       detailSection('身世与安置',parentagePanel(k))+outsideParentagePanel(null,k)+detailSection('府中认回的孩子',recognizedChildrenPanel(k))+
       (k.alive?detailSection('与母亲的日常',kidFamilyPanel(k)):'')+detailSection('宫中关系',k.alive?kidRelLine(k):'')],
     ['history','往事与纪事',historyPanel(k)+detailSection('宫墙往事',palaceRomancePanel(k))+

@@ -69,13 +69,15 @@ function careerKin(person){
 function careerPeopleForMarriage(id){return officialEntries().find(e=>e.p.id===id)||(scholarById(id)?{p:scholarById(id),key:'scholar:'+id,scholar:true}:null);}
 function careerKinText(person){return careerKin(person).map(r=>`${fullName(r.c)}的${r.label}（${r.detail}）`).join('；')||'未登记宫中亲缘';}
 function careerKinHTML(person){return careerKin(person).map(r=>`<p><button class="person-link" onclick="A.go('consort',${r.c.id})">${esc(fullName(r.c))}${r.c.alive?'':'（已故）'}</button> · ${esc(r.label)}<small>${esc(r.detail)}</small></p>`).join('')||'<p class="hint">未登记宫中亲缘。同姓不等于同族。</p>';}
-function careerFamilyEcho(person,kind,text){
+function careerFamilyEcho(person,kind,text,report){
   for(const r of careerKin(person).filter(r=>r.c.alive&&!r.c.gone)){
     const c=r.c,formal=isSolitary(c)||['持重','淡泊','聪慧','才女','好学','刚烈'].includes(c.trait),proud=['骄纵','骄矜','城府','善妒'].includes(c.trait);
     const quotes=kind==='promote'||kind==='reward'?[formal?'他能凭实绩立身，臣妾替他高兴。更盼他记得，升了一阶，也多担了一分责。':proud?'这回总算有人看见他的本事了。臣妾也想把这份好消息告诉家里。':'多谢陛下记得他的辛苦。家书送到，家里该能安心些了。',3]:kind==='demote'||kind==='accountable'?[formal?'臣妾心里自然不好受。可任上有疏漏，总该把该补的事补好。':proud?'这折子只写了他的过失么？臣妾想再看看原委……若真是他的错，也不敢瞒。':'臣妾怕家里撑不住，也怕他从此一蹶不振。只盼还有补过的机会。',-4]:['臣妾已听说这份回奏。任上好坏，还请陛下照实情裁断。',0];
     if(kind==='central'){quotes[0]=formal?'他在地方做成了实事，如今调入中央，臣妾替他欣慰。也愿他仍记着百姓的日子，担好新的差事。':proud?'他做成的事总算让朝中看见了！想到往后能在京中任职，臣妾心里自然欢喜。':'听说他因任上的功劳调回京中，臣妾很高兴。只盼新差事虽重，他也能好好照顾自己。';quotes[1]=4;}
     const relation=r.type==='blood'?'':`（${r.label}，${r.detail}）`,line=`【前朝家书】${person.p.name}${relation}：${text} 她道：“${quotes[0]}”`;
-    story(c,line);cchg(c,{mood:quotes[1]*(r.type==='blood'?1:.5)});
+    story(c,line);
+    if(characterRecordsActive()&&report?.kind==='local'&&report.id)characterChapter(c,localChronicleThread(report),'family','外家差务',[person.p],'',{append:true});
+    cchg(c,{mood:quotes[1]*(r.type==='blood'?1:.5)});
     c.careerNews={personId:person.p.id,key:person.key,turn:S.turn,quote:quotes[0],kind};
     NPCMemory.record(S,{type:'career-family',time:S.turn,participants:[c.id,person.p.id],object:text},[{person:c.id,subject:person.p.id,interpretation:line,emotion:quotes[1]/10,impact:r.type==='blood'?75:45}]);
   }
@@ -154,7 +156,7 @@ function careerReportEvent(person){
     if(kind==='accountable'||kind==='demote')p.trust=clamp(p.trust-5);
     const text=`【御批】${r.title}：${r.text} 批复：${decision}${decision.endsWith('。')?'':'。'}`;
     (p.reportHistory ||= []).push({turn:S.turn,d:dateStr(),...r,decision});
-    courtPersonRecord(person,text);careerFamilyEcho(person,kind==='commend'?'reward':kind,`${r.title}：${r.text} 批复：${decision}`);
+    courtPersonRecord(person,text);if(kind==='commend')proposeYiLand(person,r);noteLocalChronicle(person,r,kind);careerFamilyEcho(person,kind==='commend'?'reward':kind,`${r.title}：${r.text} 批复：${decision}`,r);
     if(person.e&&['reward','accountable','promote','demote','central','commend'].includes(kind))officialFamilyReaction(person.e,['promote','central','commend'].includes(kind)?'reward':kind==='demote'?'accountable':kind,r.title+'；'+decision);save('auto');return text;
   };
   const choice=(direction,label)=>{const to=target(direction);return {t:to?`${label} → ${to[1]} · ${GRADE_NAMES[to[0]-1]}`:`${label}（暂不符合条件）`,cond:()=>!!target(direction),why:'须在任、未转任他职，升任需才干50、功绩30，升贬间隔半年且未到品序边界',f:()=>finish(direction)};};
