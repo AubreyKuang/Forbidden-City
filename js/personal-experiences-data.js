@@ -80,3 +80,38 @@ const PERSONAL_EPISODES=PERSONAL_EPISODE_ROWS.map((line,i)=>{
   const [title,group,source,begin,action,success,setback,privateResult,illustration,successIllustration]=line.split('|');
   return {id:'life'+String(i+1).padStart(2,'0'),title,group,source,begin,action,success,setback,privateResult,illustration,successIllustration};
 });
+
+// Each episode follows a distinction the player already knows.
+const CONSORT_DISTINCTION_EPISODES=[
+  {id:'trait-portrait',distinction:'pretty',group:'garden',source:'original',title:'画里认人',
+   begin:'画师送来一张小像，众人都说眉眼画得好。她端详半晌，只指着耳后说：“我日日夹着那枚旧竹簪，画上怎么没有？”她想请画师重来一趟。',
+   action:'由她亲自同画师商量',
+   success:'新像添了竹簪，衣袖也照她平日的样子挽起。她把画留在窗边，请宫人另描一张小的寄回家。',
+   setback:'竹簪画进去了，神情却越改越拘谨。她收起两张底稿，等画师下回得闲时再坐一回。',
+   privateResult:'她在旧画旁夹了一张自己描的竹簪小样，预备下次见到画师时给他看。'},
+  {id:'trait-riddle',distinction:'quick',group:'ink',source:'original',title:'灯谜换题',
+   begin:'试挂灯谜时，送茶的小宫女一听就猜中了谜底，却说自己一个字也认不得。她留住那盏灯，打算添几条光听也能猜的谜。',
+   action:'请她编一册可念可猜的灯谜',
+   success:'试念到第三条，廊下扫地的人抢先答了出来。她把这一条誊在新谜册的第一页，请答中的人也出一道题。',
+   setback:'有几条谜在纸上灵巧，念出来却容易听错。她在稿上划掉那几个同音字，留下能念顺的两条。',
+   privateResult:'她先留了三条谜给当值的人换班时猜，有一条直到交灯才揭晓。'},
+  {id:'trait-cloth',distinction:'gentle',group:'agency',source:'original',title:'余布一匹',
+   begin:'库房分下节用的布，她宫里恰好多了一匹。身边人劝她原封退回，她却问低位宫人的冬衣可都裁足了。她想先问清缺处，再动这匹布。',
+   action:'让她问过各处再定余布去向',
+   success:'裁衣的人报了实数，余布补足了几件冬衣的里子。她把用布和经手人一同写进回单，还留了些边角供日后补衣。',
+   setback:'报来的尺寸差了几寸，她把未裁的布收回，先请缺衣的人来量身。',
+   privateResult:'她让库房当面复点，把缺布的几处附在退单上，留给下一次分派时查用。'},
+  {id:'trait-ledger',distinction:'careful',group:'agency',source:'original',title:'两张灯油单',
+   begin:'廊灯的领油单上，两个值夜的班次都画了押。她记得那晚换过班，便把两张单子并在一处，请你先留着原件，等她问清时辰。',
+   action:'让她照值夜交接逐条核对',
+   success:'两班交接时各登记了一回，油壶却只领过一只。她请两班在同一条账下补签，从此换班也有一处可查。',
+   setback:'有一班的记号已被油洇开。她把能核实的数目先对上，单独圈起这一笔，等下一回交接再看。',
+   privateResult:'她把两张单子夹在同一页，请掌灯的人下次交接时当面记一遍。'},
+  {id:'trait-rest',distinction:'frail',group:'garden',source:'original',title:'曲谱留半页',
+   begin:'前些日子她坐久了便乏，命人把曲谱带到榻边。她想把记得的曲子哼给身边人抄下，哼到哪一段算哪一段。',
+   action:'请熟识的人依她的节奏记谱',
+   success:'最后一段由她哼起，执笔的人接着往下唱，她听见错处便抬手一指。待谱页收好，她自己叫人关窗歇了半日。',
+   setback:'一处转音反复记岔了，她给那行留了半页空白，把谱先收起来。',
+   privateResult:'她抄下还记得的起调，让人把空着的半页留在册中。'}
+];
+PERSONAL_EPISODES.push(...CONSORT_DISTINCTION_EPISODES);

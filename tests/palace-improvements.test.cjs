@@ -1200,8 +1200,8 @@ test('new portrait sheet appends only, keeps four princess options and shared co
     assert.equal(portraitSheet(239).src,'./assets/images/palace-royal-regalia.webp?v=1');`);
 });
 
-test('all 64 personal episodes have unique authored entries, valid sources and matching conditions',()=>{
-  const {run}=boot();run(`assert.equal(PERSONAL_EPISODES.length,64);assert.equal(new Set(PERSONAL_EPISODES.map(e=>e.id)).size,64);assert.equal(new Set(PERSONAL_EPISODES.map(e=>e.title)).size,64);
+test('all 69 personal episodes have unique authored entries, valid sources and matching conditions',()=>{
+  const {run}=boot();run(`assert.equal(PERSONAL_EPISODES.length,69);assert.equal(new Set(PERSONAL_EPISODES.map(e=>e.id)).size,69);assert.equal(new Set(PERSONAL_EPISODES.map(e=>e.title)).size,69);
     for(var e of PERSONAL_EPISODES){for(var key of ['begin','action','success','setback','privateResult'])assert.ok(e[key]?.length>5,e.id+' '+key);assert.ok(EXPERIENCE_GROUPS[e.group]);assert.ok(EXPERIENCE_SOURCES[e.source]);}
     var c=harem()[0];c.trait='好学';c.hobby='读书';assert.equal(experienceEligible(c,PERSONAL_EPISODES[0]),true);c.cold=true;assert.equal(experienceEligible(c,PERSONAL_EPISODES[0]),false);c.cold=false;assert.equal(experienceEligible(c,PERSONAL_EPISODES[48]),false);
     var k=makeKid(c,'f','清宁');k.born=S.turn-48;assert.equal(experienceEligible(c,PERSONAL_EPISODES[48]),true);assert.equal(experienceEligible(c,PERSONAL_EPISODES[51]),false);`);
@@ -1219,7 +1219,7 @@ test('personal episodes have two durable stages, cannot reroll on rendering, and
 test('all authored personal episodes execute support, setback, private and postponed branches without broken state',()=>{
   const {run,force}=boot();
   run(`var parent=harem()[0];for(var age of [5,7,13]){var k=makeKid(parent,'f','验收女儿');k.born=S.turn-age*12;}`);
-  for(let index=0;index<64;index++){
+  for(let index=0;index<69;index++){
     run(`var c=harem()[0],e=PERSONAL_EPISODES[${index}];c.alive=true;c.cold=false;c.trait='聪慧';c.hobby='读书';c.age=25;c.aff=70;c.rank=5;c.favor=20;c.talent=50;c.personalExperiences={seen:{},history:[],lastEnd:-99,current:{id:e.id,stage:'offered'}};E().energy=4;
       S.children.forEach((k,i)=>k.born=S.turn-[5,7,13][i]*12);pushEv(personalExperienceEvent(c));choose(0);drain();S.turn=c.personalExperiences.current.due;pushEv(personalExperienceEvent(c));`);
     force(.999);run(`choose(0);drain();assert.equal(c.personalExperiences.history[0].outcome,'有遗憾');assert.equal(c.personalExperiences.history[0].t,e.setback);

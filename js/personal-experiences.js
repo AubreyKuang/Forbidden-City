@@ -22,7 +22,9 @@ function experienceParticipants(c,episode,current){
     experienceChildCandidates(c,episode).slice(0,episode.id==='life51'?2:1);
 }
 function experienceEligible(c,episode){
-  if(!inPalace(c)||c.maid||!episode||!EXPERIENCE_GROUPS[episode.group].fit(c))return false;
+  if(!inPalace(c)||c.maid||!episode)return false;
+  if(episode.distinction)return consortDistinctionStoriesActive()&&consortTraitLabels(c).some(rule=>rule.id===episode.distinction);
+  if(!EXPERIENCE_GROUPS[episode.group].fit(c))return false;
   if(episode.group!=='mother')return true;
   return experienceChildCandidates(c,episode).length>=(episode.id==='life51'?2:1);
 }
@@ -52,7 +54,8 @@ function personalExperienceTick(){
   const offered=[];
   for(const c of people){const episodes=PERSONAL_EPISODES.filter(e=>experienceEligible(c,e)&&experienceState(c)?.seen?.[e.id]===undefined&&S.turn-(pace.topics[e.id]??-99)>=48);if(episodes.length)offered.push({c,episodes});}
   if(!offered.length)return;
-  const {c,episodes}=pick(offered),different=episodes.filter(e=>e.group!==pace.lastGroup),episode=pick(different.length?different:episodes);
+  const {c,episodes}=pick(offered),matched=episodes.filter(e=>e.distinction),pool=matched.length?matched:episodes;
+  const different=pool.filter(e=>e.group!==pace.lastGroup),episode=pick(different.length?different:pool);
   if(offerPersonalExperience(c,episode)){pace.last=S.turn;pace.topics[episode.id]=S.turn;pace.lastGroup=episode.group;}
 }
 function endPersonalExperience(c,episode,result,outcome){
@@ -67,7 +70,7 @@ function personalExperienceEvent(c){
   const h=experienceState(c),current=h?.current,episode=experienceRule(c);if(!current||!episode||!inPalace(c))return null;
   const valid=()=>inPalace(c)&&experienceState(c)?.current===current&&(episode.group!=='mother'||experienceParticipants(c,episode,current).length>=(episode.id==='life51'?2:1));
   if(!valid())return null;
-  const source=EXPERIENCE_SOURCES[episode.source],ref=source.name+' · 意象改编';
+  const source=EXPERIENCE_SOURCES[episode.source],ref=episode.distinction?source.name:source.name+' · 意象改编';
   if(current.stage==='offered')return {title:episode.title,illustration:episode.illustration,por:c,present:[c],valid,ref,text:`${cName(c)}：\n${episode.begin}\n她想听听你的意思，也希望保留自己作主的余地。`,choices:[
     {t:episode.action+' · 精力−1',cond:()=>valid()&&E().energy>0,why:'精力不足',f:()=>{
       if(!valid()||!useE())return null;

@@ -56,9 +56,49 @@ test('tags appear in the live card, detail and selection audience without extra 
 for(const key of ['month','birth','ill'])test('genuine v54 '+key+' resumes with original health and random outcomes',()=>{
  const payload=require('./fixtures/consort-traits-legacy-v54.json')[key],b=boot(17001,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));b.ctx.assert=assert;
  b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,54);assert.equal(consortTraitsActive(),false);
- drain();A.go('harem');assert.equal(PalaceActions.contentVersion,59);assert.ok(S.consorts.every(c=>Number.isFinite(c.hp)));`);
+ drain();A.go('harem');assert.equal(PalaceActions.contentVersion,60);assert.ok(S.consorts.every(c=>Number.isFinite(c.hp)));`);
 });
-for(const version of [56,57,58])test('genuine published v'+version+' scene finishes before activating health and distinctions',()=>{
+for(const version of [56,57,58,59])test('genuine published v'+version+' scene finishes under its original distinction rules',()=>{
  const payload=require('./fixtures/consort-traits-legacy-v'+version+'.json').month,b=boot(17001,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));b.ctx.assert=assert;
- b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,${version});assert.equal(princeAdoptionActive(),${version>=57});assert.equal(xieStoryUpdated(),${version>=58});assert.equal(consortTraitsActive(),false);drain();A.go('harem');assert.equal(PalaceActions.contentVersion,59);assert.ok(S.consorts.every(c=>Number.isFinite(c.hp)));`);
+ b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,${version});assert.equal(princeAdoptionActive(),${version>=57});assert.equal(xieStoryUpdated(),${version>=58});assert.equal(consortTraitsActive(),${version>=59});assert.equal(consortDistinctionStoriesActive(),false);drain();A.go('harem');assert.equal(PalaceActions.contentVersion,60);assert.ok(S.consorts.every(c=>Number.isFinite(c.hp)));`);
+});
+
+test('new trait notes use prose, respect discovery and are written only once',()=>{
+ const b=world();b.run(`assert.deepEqual(Object.keys(CONSORT_DISTINCTION_NOTES).sort(),CONSORT_DISTINCTIONS.map(r=>r.id).sort());
+ Object.assign(c,{virtue:84,scheme:75,known:false});
+ c.distinctions.noted={};reconcileConsortDistinctions();
+ assert.equal(c.distinctions.noted.gentle,undefined);assert.equal(c.distinctions.noted.careful,undefined);
+ c.known=true;reconcileConsortDistinctions();reconcileConsortDistinctions();
+ for(const id of ['gentle','careful']){
+   const rule=CONSORT_DISTINCTIONS.find(r=>r.id===id),notes=c.story.filter(e=>e.t.startsWith('【人物特质·'+rule.name+'】')&&e.t.endsWith(CONSORT_DISTINCTION_NOTES[id]));
+   assert.equal(notes.length,1);
+ }`);
+});
+
+test('all five trait episodes require their visible distinction and enter through ordinary monthly scheduling',()=>{
+ const b=world();b.run(`Object.assign(c,{looks:87,talent:85,virtue:84,scheme:75,hp:40,known:false});
+ assert.deepEqual(CONSORT_DISTINCTION_EPISODES.filter(e=>experienceEligible(c,e)).map(e=>e.distinction),['pretty','quick','frail']);
+ c.known=true;assert.ok(CONSORT_DISTINCTION_EPISODES.every(e=>experienceEligible(c,e)));
+ c.looks=91;c.hp=65;
+ assert.deepEqual(CONSORT_DISTINCTION_EPISODES.filter(e=>experienceEligible(c,e)).map(e=>e.distinction),['quick','gentle','careful']);
+ S.turn=24;c.enteredAt=0;for(const other of harem().filter(p=>p!==c))other.enteredAt=S.turn;
+ c.personalExperiences={seen:{},history:[],lastEnd:-99};S.flags.personalExperiencePace={last:-99,topics:{},lastGroup:null};`);
+ b.force(0,0,0);
+ b.run(`personalExperienceTick();assert.equal(experienceRule(c).title,'灯谜换题');assert.equal(modalOpen,false);assert.match(personalExperiencePanel(c),/灯谜换题/);`);
+});
+
+test('trait episode invitation and result survive separate reloads and record one achievement',()=>{
+ let b=world();b.run(`Object.assign(c,{looks:50,talent:85,virtue:50,scheme:50});E().energy=10;
+ var episode=CONSORT_DISTINCTION_EPISODES.find(e=>e.distinction==='quick');
+ assert.equal(offerPersonalExperience(c,episode),true);A.personalExperience(c.id);save('auto');`);
+ b=boot(17001,b.storage);b.ctx.assert=assert;
+ b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(curEv.title,'灯谜换题');choose(0);drain();
+ var c=harem()[0];S.turn=experienceState(c).current.due;A.personalExperience(c.id);`);
+ b.force(0);
+ b.run(`choose(0);save('auto');`);
+ b=boot(17001,b.storage);b.ctx.assert=assert;
+ b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);drain();var c=harem()[0],h=experienceState(c);
+ assert.equal(h.history.filter(e=>e.id==='trait-riddle'&&e.outcome==='有所成').length,1);
+ assert.equal(c.distinctions.proof.letters.title,'灯谜换题');
+ assert.equal(offerPersonalExperience(c,CONSORT_DISTINCTION_EPISODES.find(e=>e.id==='trait-riddle')),false);`);
 });
