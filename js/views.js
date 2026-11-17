@@ -2,16 +2,17 @@
 function bar(l,v,c){v=rd(v);return `<div class="bar"><span>${l}</span><i><b style="width:${clamp(v)}%;${c?`background:${c}`:''}"></b></i><em>${v}</em></div>`}
 function renderTop(){
   const t=$('#top');
+  const devLaunch=typeof DEV==='undefined'?'':'<button id="dev-launch" type="button" aria-controls="dev-panel" onclick="DEV.open()">DEV · 金手指</button>';
   const sound=`<span class="music-controls"><button id="snd" class="btn sm${AU.on?' on':''}" aria-pressed="${AU.on}" aria-labelledby="snd-label" onclick="AU.toggle()"><span aria-hidden="true">♪</span> <span id="snd-label">${AU.on?'声音：开':'开启声音'}</span></button>
     <select id="music-track" aria-label="背景配乐" onchange="AU.selectTrack(this.value)">${Object.entries(PALACE_MUSIC).map(([id,track])=>
       `<option value="${id}"${AU.track===id?' selected':''}>${track.name}</option>`).join('')}</select></span>`;
-  if(!S){t.innerHTML=`<span class="brand">宸宫纪</span><span class="sp"></span>${sound}`;return}
+  if(!S){t.innerHTML=`<span class="brand">宸宫纪</span><span class="sp"></span>${sound}${devLaunch}`;return}
   const e=E(),mx=maxEnergy();let pips='';for(let i=0;i<mx;i++)pips+=`<span class="pip${i<e.energy?'':' off'}"></span>`;
   const hd=e.health>=80?'康健':e.health>=55?'安好':e.health>=30?'欠安':'病笃';
   t.innerHTML=`<div class="hud-identity">${porImg('emp',38)}<div class="hud-name"><span class="date">${esc(dateStr())}</span><span class="hud-person">${esc(e.sur+e.name)} · ${e.age}岁</span></div></div>
    <div class="hud-stats"><span class="st" title="${hd}">龙体 <b>${rd(e.health)}</b></span><span class="st">威望 <b>${rd(e.prestige)}</b></span><span class="st">民心 <b>${rd(e.people)}</b></span>
    <span class="st">国库 <b>${e.treasury}</b>万两</span><span class="st">精力 <b>${e.energy}／${mx}</b><span aria-hidden="true">${pips}</span></span></div>
-   <div class="hud-controls">${lastAutoSaveError?`<button class="btn sm hud-unsaved" title="${esc(lastAutoSaveError)}" onclick="A.downloadSave()">未能存档 · 下载备份</button>`:''}${sound}<button id="finish-month" class="btn gold sm hud-next" onclick="A.finishMonth()" ${S.over?'disabled':''}>结束本月 ▸</button></div>`;
+   <div class="hud-controls">${lastAutoSaveError?`<button class="btn sm hud-unsaved" title="${esc(lastAutoSaveError)}" onclick="A.downloadSave()">未能存档 · 下载备份</button>`:''}${sound}${devLaunch}<button id="finish-month" class="btn gold sm hud-next" onclick="A.finishMonth()" ${S.over?'disabled':''}>结束本月 ▸</button></div>`;
 }
 const MENU=[['map','宫城'],['home','御书房'],['court','理政'],['harem','后宫'],['cards','翻牌子'],['xx','选秀'],['kids','皇嗣'],['family','家族'],['out','出巡'],['log','起居注'],['sys','存档']];
 // One restrained gold-line family, with distinct silhouettes at mobile sizes.

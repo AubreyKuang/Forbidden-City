@@ -19,6 +19,13 @@ test('dev entry shares every production module and adds only its own editor',()=
   const prod=sources(read('index.html')),dev=sources(read('dev.html'));
   assert.deepEqual(dev.slice(0,-1),prod);assert.match(dev.at(-1),/dev-tools.js/);assert.doesNotMatch(read('index.html'),/dev-tools/);
 });
+test('the dev launcher and month button share the in-game status controls',()=>{
+  const {run}=boot();
+  run(`assert.equal(($('#top').innerHTML.match(/id="dev-launch"/g)||[]).length,1);
+    assert.match($('#top').innerHTML,/<div class="hud-controls">.*id="dev-launch".*id="finish-month"/s);
+    DEV.open();assert.equal($('#dev-panel').hidden,false);
+    DEV.close();assert.equal($('#dev-panel').hidden,true);`);
+});
 test('dev saves are isolated and importing production creates a copy',()=>{
   const {run,storage}=boot();run(`assert.equal(SKEY,'chengongji_dev_v1_');var production=JSON.stringify(S);localStorage.setItem('chengongji_v1_auto',production);DEV.copyProduction();DEV.applyPatch('emp',{treasury:99999});`);
   assert.equal(storage.get('chengongji_v1_auto'),run('production'));

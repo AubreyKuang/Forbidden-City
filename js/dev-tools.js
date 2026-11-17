@@ -196,7 +196,7 @@ const DEV={
   }
 };
 function mountDevTools(){
-  const root=document.createElement('div');root.innerHTML=`<button id="dev-launch" onclick="DEV.open()">DEV · 金手指</button><section id="dev-panel" role="dialog" aria-label="金手指面板" hidden>
+  const root=document.createElement('div');root.innerHTML=`<section id="dev-panel" role="dialog" aria-label="金手指面板" hidden>
     <div class="dev-head"><h2>金手指</h2><button class="btn sm" onclick="DEV.close()">收起</button></div><p class="dev-help">测试模式 · 独立测试存档。选择人物，修改数值或立绘，预览后保存。</p>
     <div class="dev-actions"><button class="btn sm" onclick="DEV.safely(DEV.copyProduction)">载入正式版存档副本</button><button class="btn sm" onclick="DEV.safely(DEV.restore)">回退上一次修改</button></div>
     <section class="dev-time"><h3>跳过时间</h3><p class="dev-help">快进日历与人物年龄，便于预览成长。随机剧情、政务和生育不在这里自动结算，可回退上一次修改。</p><div class="dev-actions"><input id="dev-time-amount" type="number" min="1" max="1200" step="1" value="12" aria-label="跳过数量"><select id="dev-time-unit" aria-label="时间单位"><option value="month">个月</option><option value="year">年</option></select><button class="btn jade" onclick="DEV.safely(()=>DEV.jumpTime(Number($('#dev-time-amount').value),$('#dev-time-unit').value))">跳过并保存</button></div></section>
@@ -208,5 +208,6 @@ function mountDevTools(){
   </section>`;document.body.appendChild(root);
   $('#dev-panel').addEventListener('input',()=>{DEV.patch=null;$('#dev-confirm').disabled=true;DEV.message('属性已改动，请重新预览。');});
   portraitSheets.map(sheet=>sheet.image).forEach(atlas=>atlas.addEventListener('load',()=>{if(!$('#dev-panel').hidden&&DEV.draft)DEV.gallery()}));
+  if(!palaceStorageOpening)renderTop();
 }
 mountDevTools();
