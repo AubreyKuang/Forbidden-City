@@ -208,6 +208,6 @@ function mountDevTools(){
   </section>`;document.body.appendChild(root);
   $('#dev-panel').addEventListener('input',()=>{DEV.patch=null;$('#dev-confirm').disabled=true;DEV.message('属性已改动，请重新预览。');});
   portraitSheets.map(sheet=>sheet.image).forEach(atlas=>atlas.addEventListener('load',()=>{if(!$('#dev-panel').hidden&&DEV.draft)DEV.gallery()}));
-  if(!palaceStorageOpening)renderTop();
+  renderTop();
 }
 mountDevTools();
