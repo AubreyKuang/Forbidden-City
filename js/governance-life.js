@@ -67,6 +67,7 @@ function annualRevenueTick(){
   if(type==='tax'){
     chg({people:TAX_PLANS[g.tax].people});
     text=`户部核销各地秋粮与田赋，按「${TAX_PLANS[g.tax].name}」实收入库 ${amount} 万两。${g.tax==='light'?'蠲免的三成不再向百姓追征，州县已张榜晓谕。':'此为年度田赋结算，月常入另记，不向百姓另加摊派。'}`;
+    settleMinistryTax(row);
   }else{
     const v=ensureJewelry(),ids=Object.keys(JEWELRY),least=Math.min(...ids.map(id=>v.received[id]||0));
     const id=pick(ids.filter(id=>(v.received[id]||0)===least));row.jewelry=id;
@@ -126,18 +127,18 @@ A.postCandidates=function(id){
   pushEv({title:'吏部调任 · '+t.name,text:t.detail+`\n需才干至少 ${t.min}，在任且无未结差事；调任后半年考课。`+(candidates.length?'':'\n暂无符合条件的官员。'),choices:[
     ...candidates.map(e=>({t:`${e.p.name} · ${e.p.office||e.p.post} · 才干 ${e.p.ability}`,person:e.p,cond:()=>canTransfer(e,id)&&E().energy>0&&E().treasury>=20,why:'需精力 1、国库 20，且职位空缺',f:()=>transferOfficial(e,id)})),{t:'暂不调任'}]});
 };
-function governmentTaskEvent(id){
+function governmentTaskEvent(id,docket){
   if(S.over||!OFFICIAL_TASKS[id])return null;
   const t=OFFICIAL_TASKS[id],entries=officialEntries().filter(e=>officialActionReady(e,'commission')&&t.army===(e.h.bloc==='army'));
   return {title:t.title,text:`需 ${t.months} 个月，拨款 ${t.cost} 万两。${t.brief||'择人领差，办结后据实回奏。'}\n${entries.length?'请选承办官员。':'暂无可领此差的官员，可等在外官员回奏后再安排。'}`,choices:[
-    ...entries.map(e=>({t:`${e.p.name} · ${e.p.office||e.p.post} · 才干 ${e.p.ability}`,person:e.p,cond:()=>officialActionReady(e,'commission')&&E().energy>0&&E().treasury>=t.cost,why:'精力或国库不足，或已有未结差事',f:()=>assignOfficialTask(e,id)})),{t:'暂缓'}]};
+    ...entries.map(e=>({t:`${e.p.name} · ${e.p.office||e.p.post} · 才干 ${e.p.ability}`,person:e.p,cond:()=>officialActionReady(e,'commission')&&E().energy>0&&E().treasury>=t.cost,why:'精力或国库不足，或已有未结差事',f:()=>assignOfficialTask(e,id,docket)})),{t:'暂缓'}]};
 }
 A.governmentTask=function(id){
   if(!modalOpen)pushEv(governmentTaskEvent(id));
 };
 function viewGovernment(){
   const g=governance(),receipt=treasuryReceipt('tax');
-  const ready=ministryDockets().filter(ministryDocketReady).length;
+  const ready=ministryDockets().filter(d=>ministryDocketReady(d)||ministryAftermathReady(d)).length;
   return `${pageHeading('治国理政','用人、钱粮、民间见闻，都须有去处，也有回音。')}<div class="acts page-actions">${monthlyCourtButton()}<button class="btn" onclick="A.go('officials')">官员表</button><button class="btn" onclick="A.go('ministries')">六部${ready?`<small>${ready} 份回奏待阅</small>`:''}</button><button class="btn" onclick="A.go('jinyiwei')">锦衣卫</button><button class="btn" onclick="A.go('out')">微服问民情</button></div>
   ${typeof examSchedulePanel==='function'?examSchedulePanel():''}
   ${careerReportsHTML()}

@@ -64,7 +64,7 @@ for(const legacy of legacyCases)for(const [name,payload] of Object.entries(legac
   b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,${payload.pendingActions.version});
     assert.equal(portraitCreationVariantCount({sex:'m'}),31);assert.equal(portraitCreationVariantCount({sex:'f'}),37);`);
   assert.deepEqual(JSON.parse(b.run('JSON.stringify(S.children.map(k=>[k.id,k.sex,k.portraitVariant]))')),payload.children.map(k=>[k.id,k.sex,k.portraitVariant]));
-  b.run(`drain();assert.equal(PalaceActions.contentVersion,67);assert.equal(portraitCreationVariantCount({sex:'m'}),33);assert.equal(portraitCreationVariantCount({sex:'f'}),39);save('auto');`);
+  b.run(`drain();assert.equal(PalaceActions.contentVersion,68);assert.equal(portraitCreationVariantCount({sex:'m'}),33);assert.equal(portraitCreationVariantCount({sex:'f'}),39);save('auto');`);
   b=game(b.storage);b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);`);
   assert.deepEqual(JSON.parse(b.run('JSON.stringify(S.children.map(k=>[k.id,k.sex,k.portraitVariant]))')),payload.children.map(k=>[k.id,k.sex,k.portraitVariant]));
 });

@@ -51,6 +51,79 @@ const MINISTRY_GAP=12;
 const MINISTRY_REVIEWS={
   personnel:'京察复勘',revenue:'追库与秋税',rites:'恩科录用',war:'边镇补报',justice:'秋审余卷',works:'河工验收'
 };
+const MINISTRY_FOLLOWUPS={
+  tax:['秋税张榜','张榜那天，一名老农把去年的税票也带来了。里正拿两张票对给他看，把今年蠲掉的数当面划去。老农将新票折好，问那一栏来年还作不作数。','州县初拟的减免榜撤下了。里正逐户重核时，有人拿着原先抄下的数来问，县里按最终税额重开了票。'],
+  accounts:['对得上的两本账','县库交来的不是新誊的清册，是两本纸边发黑的旧账。一笔往年欠款在收票和库册上都找到了，书吏当场销号。','库册多出一笔银，收票上却查不出是谁交的。承办官把两页一起封起，等原经手人来认笔迹。'],
+  schools:['一册旧课簿','学官把一本旧课簿送进京。最末一页新添了几个名字，都是农忙后才回来读书的孩子。他请朝廷留着旧簿，明年还能一页页对看。','点名册上学生并不少，问到近来读过哪一篇，学官却答不上来。承办官留下了学生原卷，请地方补送这几月实授的课目。'],
+  escort:['粮车到关','边仓的收票上多了一行小字，车队行经水洼时换了两根车轴。守仓吏赶在闭关前收齐粮袋，在票尾写了实到时辰。','粮车过渡误了时辰。边仓把先到、后到的车分列两栏，关门前实收多少，回奏便写多少。'],
+  border:['烽下夜簿','戍卒夜里换防，巡边官在烽台跟着点了一回名。原册把轮休的人也列作当值，他请守军把两栏分开，重新签押。','巡至一处烽台，簿上有名的人还在前一寨等换防。承办官在缺员处画了空格，将未交接的日子留在卷中。'],
+  water:['第一畦引水','开闸那天，上游先放了一夜的水。守在末渠的人挽着裤脚站了半晌，直到第一畦也见了水，才在验单上画押。','水到了上游，末渠却只湿了一截。验单留着最后一栏空白，承办官请下游人家亲自来验下一次放水。'],
+  dikes:['堤脚留下的水线','验堤时，老河工领人看去年高水在墙脚留下的印子。新夯的土已过那道印，工部把此处写在下次巡堤的头一站。','河工帐上写着已夯到旧水印，去看时仍差一截。承办官在堤脚立了木桩，料银仍按未完一段单列。'],
+  case:['秋审归卷','刑部收到密查的复卷，先核纸页的封号，再将人证与物证分袋登记。值房只抄了查证日期，封内姓名仍依原案处置。','旧卷退回时，值房把已经核过的日子划明。尚缺哪一页、哪一份证词，都另系一条纸签，留待有新线索时再翻。']
+};
+function beginMinistryFollowup(docket,type,details={}){
+  if(journalContentVersion()<68||!docket||docket.followup)return false;
+  docket.followup={type,...details};return true;
+}
+function finishMinistryFollowup(id,outcome,result){
+  if(journalContentVersion()<68||!id)return;
+  const followup=ministryDockets().find(d=>d.id===id)?.followup;
+  if(followup&&!followup.date)Object.assign(followup,{outcome,result,date:dateStr()});
+}
+function settleMinistryTax(receipt){
+  if(journalContentVersion()<68)return;
+  const docket=ministryDockets().find(d=>d.followup?.type==='tax'&&d.followup.year===receipt.year);
+  finishMinistryFollowup(docket?.id,receipt.policy==='light'?'success':'setback',
+    `户部实收秋税 ${receipt.amount} 万两，按「${TAX_PLANS[receipt.policy].name}」结算。`);
+}
+function settleInterruptedMinistryFollowups(){
+  if(journalContentVersion()<68)return;
+  for(const docket of ministryDockets()){
+    const f=docket.followup;
+    if(!f||f.date||!Number.isFinite(f.due)||S.turn<f.due)continue;
+    if(f.type==='case'){
+      const item=palaceCases().find(x=>x.id===f.caseId);
+      if(item?.status==='investigating'&&item.ministryDocket===docket.id)continue;
+      if(item?.status==='solved'){
+        finishMinistryFollowup(docket.id,'success',`「${item.title}」另循现有案卷查得证据。处置详情仍依原案。`);continue;
+      }
+    }else if(officialEntry(f.person)?.p.commission?.ministryDocket===docket.id)continue;
+    finishMinistryFollowup(docket.id,'interrupted','此项差事已中止，未收到原定回奏。');
+  }
+}
+function ministryAftermathReady(docket){return !S.over&&docket.followup?.date&&!docket.followup.read;}
+function ministryFollowupStatus(f){
+  if(f.read)return `${f.read} · ${f.decision}`;
+  if(f.date)return `${f.date} · 纪事待阅`;
+  if(f.type==='tax')return '待本年十月秋税结算';
+  return S.turn<f.due?`预计 ${f.due-S.turn} 个月后回报`:'等候实报';
+}
+A.ministryAftermath=function(id){
+  const docket=ministryDockets().find(d=>d.id===id);
+  if(modalOpen||!docket||!ministryAftermathReady(docket))return;
+  const f=docket.followup,[title,good,bad]=MINISTRY_FOLLOWUPS[f.type];
+  const person=f.person&&officialEntry(f.person);
+  const witness=person&&person.p.id===f.personId?person.p:null;
+  const head=courtPerson(docket.headKey),minister=head?.p.id===docket.headId?head.p:null;
+  const guard=jinyiwei()?.commander;
+  const reader=f.type==='case'&&guard?.id===f.commanderId?guard:witness||minister;
+  const detail=f.outcome==='death'?'讣报与原折一并送回。承办人途中身亡，余下的差事须另作安排。':
+    f.outcome==='interrupted'?'原折后面只夹着停办签。交接未能完成，余下的事仍须另议。':f.outcome==='success'?good:bad;
+  const valid=()=>ministryAftermathReady(docket);
+  const finish=copy=>{
+    if(!valid())return null;
+    f.read=dateStr();f.decision=copy?'另抄一份留作复核':'随原折归档';
+    const line=`【${MINISTRIES[docket.ministry].name}纪事 · ${title}】${f.result}${detail}${f.decision}。`;
+    log(line,1);
+    if(copy&&reader)story(reader,line);
+    return copy?'已将纪事另录一份，附在承办履历中。':'原折与后续纪事一并归档。';
+  };
+  pushEv({title:`${MINISTRIES[docket.ministry].name}纪事 · ${title}`,por:reader||undefined,valid,
+    text:`${f.date}${f.name?' · '+f.name:''}\n${f.result}\n${detail}`,choices:[
+      {t:'随原折归档',f:()=>finish(false)},
+      ...(reader?[{t:'另录一份，附在承办履历中',f:()=>finish(true)}]:[]),
+      {t:'留待下回再阅'}]});
+};
 function ministryDockets(){
   return journalContentVersion()>=65?(S?.ministries?.dockets||[]).filter(d=>d.gen===S.gen):[];
 }
@@ -59,7 +132,7 @@ function openMinistryDocket(id,head,success,text){
   const dockets=ministryState().dockets||=[];
   dockets.push({id:`review-${S.gen}-${S.turn}-${id}`,ministry:id,gen:S.gen,turn:S.turn,date:dateStr(),
     due:id==='rites'?null:S.turn+2,success,headKey:head.key,headId:head.p.id,headName:head.p.name,summary:text});
-  if(dockets.length>30){const index=dockets.findIndex(d=>d.closed||d.gen!==S.gen);if(index>=0)dockets.splice(index,1);}
+  if(dockets.length>30){const index=dockets.findIndex(d=>d.gen!==S.gen||d.closed&&(!d.followup||d.followup.read));if(index>=0)dockets.splice(index,1);}
   return id==='rites'?'放榜后，礼部会把恩科录用簿送来。':'两个月后可在六部阅看复议。';
 }
 function settleMinistryDocket(docket,decision){
@@ -83,7 +156,7 @@ function ministryDocketEvent(docket){
     const event=factory();if(!event)return '相关回奏或案卷已有变化，仍可把本折归档。';
     settleMinistryDocket(docket,label);pushNow(event);return null;
   }});
-  const task=id=>forward(`择官办理${OFFICIAL_TASKS[id].title}`,()=>governmentTaskEvent(id));
+  const task=id=>forward(`择官办理${OFFICIAL_TASKS[id].title}`,()=>governmentTaskEvent(id,docket));
   let follow='';
   if(id==='personnel'){
     const pending=careerPeople().find(person=>careerEligible(person.p)&&person.p.report?.outcome==='setback');
@@ -96,6 +169,7 @@ function ministryDocketEvent(docket){
     follow=receipt?`本年秋税已经入库 ${receipt.amount} 万两，请与追回的亏空分别记账。`:`本年秋税仍按「${TAX_PLANS[governance().tax].name}」预备，估收 ${taxEstimate()} 万两。清查追亏与常年征税分开处理。`;
     if(!receipt&&governance().tax!=='light')choices.push({t:'按现行制度减免三成秋税 · 精力−1',cond:()=>valid()&&!treasuryReceipt('tax')&&governance().tax!=='light'&&E().energy>0,why:'秋税已结算、已经减免或精力不足',f:()=>{
       if(!valid()||!applyTaxPlan('light'))return null;
+      beginMinistryFollowup(docket,'tax',{year:S.year});
       settleMinistryDocket(docket,'按章改定减免三成秋税');return '户部已改定本年秋税办法，入库时按现行税制结算。';
     }});
     task('accounts');
@@ -113,7 +187,7 @@ function ministryDocketEvent(docket){
   if(id==='justice'){
     const cold=palaceCases().find(item=>item.kind==='harem'&&caseReady(item));
     follow=cold?`秋审已过，「${cold.title}」一卷仍有未查清的线索。刑部请调原卷复核，照旧凭证据行事。`:'本批秋审回奏已复点。卷外传言另作记录，现有未结案仍可在案簿查看。';
-    if(cold&&jinyiweiCommanderReady())forward(`调卷复核「${cold.title}」`,()=>jinyiweiInvestigationEvent(cold));
+    if(cold&&jinyiweiCommanderReady())forward(`调卷复核「${cold.title}」`,()=>jinyiweiInvestigationEvent(cold,docket));
     else redirect('查看锦衣卫旧案与线索','jinyiwei');
   }
   if(id==='works'){
@@ -132,10 +206,13 @@ A.ministryDocket=function(id){
 };
 function ministryDocketSection(){
   if(journalContentVersion()<65)return '';
-  const all=ministryDockets().slice().reverse(),rows=[...all.filter(d=>!d.closed),...all.filter(d=>d.closed).slice(0,6)];
+  const all=ministryDockets().slice().reverse(),active=d=>!d.closed||d.followup&&!d.followup.read;
+  const rows=[...all.filter(active),...all.filter(d=>!active(d)).slice(0,6)];
   return detailSection('六部回奏与纪事',rows.length?`<ul class="story">${rows.map(d=>
     `<li><time>${esc(d.date)}</time><b>${esc(MINISTRIES[d.ministry].name+' · '+MINISTRY_REVIEWS[d.ministry])}</b> · ${esc(d.headName)}
       <p>${esc(d.closed?`${d.closed} · ${d.decision}`:d.due==null?'待恩科放榜':ministryDocketReady(d)?'回奏已至':`${Math.max(0,d.due-S.turn)}个月后回奏`)}</p>
+      ${d.followup?`<p>${esc(MINISTRY_FOLLOWUPS[d.followup.type][0])} · ${esc(ministryFollowupStatus(d.followup))}</p>`:''}
+      ${ministryAftermathReady(d)?`<button class="btn sm jade" onclick="A.ministryAftermath('${d.id}')">阅看后续纪事</button>`:''}
       ${ministryDocketReady(d)?`<button class="btn sm jade" onclick="A.ministryDocket('${d.id}')">阅看${MINISTRIES[d.ministry].name}回奏</button>`:''}</li>`).join('')}</ul>`:'<p class="hint">六部奉准办差后，后续回奏会呈送到这里。</p>');
 }
 function initializeMinistryRoster(){
@@ -333,7 +410,7 @@ function examEvent(){
 }
 function examTick(){if(examDueNow())pushEv(examEvent());}
 const ministriesBaseTick=courtTick;
-courtTick=function(...args){const result=ministriesBaseTick.apply(this,args);examTick();return result;};
+courtTick=function(...args){const result=ministriesBaseTick.apply(this,args);examTick();settleInterruptedMinistryFollowups();return result;};
 
 /* —— 页面 —— */
 function examSchedulePanel(showMinistries=true){

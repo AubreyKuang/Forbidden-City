@@ -166,7 +166,7 @@ for(const version of [49,50,51])for(const [name,payload] of Object.entries(requi
   const b=boot(318,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));b.ctx.assert=assert;
   b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,${version});
   assert.equal(immortalPalaceLessonsEnabled(),false);if(!modalResult)choose(1);drain();
-  assert.equal(PalaceActions.contentVersion,67);var k=S.children.find(k=>k.name==='昭瑶');
+  assert.equal(PalaceActions.contentVersion,68);var k=S.children.find(k=>k.name==='昭瑶');
   S.turn=k.immortal.due;A.immortalTalk(k.id);assert.match(curEv.title,/宫中修习/);
   save('auto');A.load('auto');assert.equal(PalaceActions.blocked,false);assert.match(curEv.title,/宫中修习/);`);
  });

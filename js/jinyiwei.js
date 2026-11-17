@@ -63,11 +63,13 @@ A.establishJinyiwei=function(){
 };
 function caseReady(x){return !!x&&x.status==='cold'&&S.turn-(x.lastTry??-99)>=JINYIWEI_RETRY;}
 function dispatchCase(x,cost){x.status='investigating';x.due=S.turn+1;x.tries++;x.lastTry=S.turn;x.cost=cost;policyNudge('civil',-1);}
-function jinyiweiInvestigationEvent(x){
+function jinyiweiInvestigationEvent(x,docket){
   if(!caseReady(x)||!jinyiweiCommanderReady())return null;
   return {title:'锦衣卫密查 · '+x.title,por:jinyiwei().commander,text:`案卷：${x.title}（${x.d}立案）。${x.kind==='harem'?`受害：${caseVictimName(x)}。`:''}${x.tries?`此前已查过${x.tries}次未果。`:''}\n指挥使${jinyiwei().commander.name}才干${rd(jinyiwei().commander.ability)}，下月回报。`,choices:[
     {t:'派人密查 · 精力−1 · 国库−15',cond:()=>caseReady(x)&&E().energy>=1&&E().treasury>=15,why:'精力或国库不足',f:()=>{
       if(!caseReady(x)||!useE())return null;chg({treasury:-15});dispatchCase(x,15);
+      const commander=jinyiwei().commander;
+      if(beginMinistryFollowup(docket,'case',{name:commander.name,commanderId:commander.id,caseId:x.id,due:x.due}))x.ministryDocket=docket.id;
       story(jinyiwei().commander,`奉旨密查「${x.title}」旧案。`);save('auto');return '缇骑已经出发，下月回报。';
     }},{t:'暂缓'}]};
 }
@@ -149,8 +151,13 @@ A.jinyiweiSearch=function(id){
 function jinyiweiTick(){
   if(!courtOfficesActive()||!jinyiwei())return;
   for(const x of palaceCases().filter(k=>k.status==='investigating'&&k.due<=S.turn)){
-    if(!jinyiweiCommanderReady()){x.status='cold';continue;}
-    const ev=caseReport(x);if(ev)pushEv(ev);
+    if(!jinyiweiCommanderReady()){
+      x.status='cold';finishMinistryFollowup(x.ministryDocket,'interrupted',`「${x.title}」到期时指挥使无法主事，密查停办，原案仍留卷。`);continue;
+    }
+    const ev=caseReport(x);
+    finishMinistryFollowup(x.ministryDocket,x.status==='solved'?'success':'setback',
+      x.status==='solved'?`「${x.title}」已查得人证物证。处置详情仍依原案。`:`「${x.title}」线索暂断，原卷留待复查。`);
+    if(ev)pushEv(ev);
   }
 }
 const jinyiweiBaseTick=courtTick;

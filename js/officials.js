@@ -196,11 +196,12 @@ const OFFICIAL_TASKS={
   pay:{title:'清核军饷与抚恤',army:true,cost:45,months:2,risk:0,brief:'核对军籍，补发欠饷，不以空名冒领。',success:'军籍、饷册和领款手印核对相符，欠饷与抚恤分发到本人及遗属。',failure:'饷册出现空名，兵部封存可疑账目，未核实的款项暂不发放。'},
   drills:{title:'轮训边镇守军',army:true,cost:55,months:3,risk:.005,brief:'轮换疲军、修整烽燧，兼顾驻地百姓。',success:'轮换与烽燧演练完成，疲军得到休整，军纪申明不得侵扰沿途百姓。',failure:'换防衔接不畅，部分烽燧仍缺人手，须另列补训清单。'}
 };
-function assignOfficialTask(e,id){
+function assignOfficialTask(e,id,docket){
   const task=OFFICIAL_TASKS[id];if(!task||!officialActionReady(e,'commission')||task.army!==officialMilitary(e.p,e.h)||E().treasury<task.cost||!useE())return null;
   const p=e.p;chg({treasury:-task.cost});p.lastCommission=S.turn;
   const roll=R(),success=.35+p.ability/200+p.trust/500;
   p.commission={id,title:task.title,due:S.turn+task.months,started:S.turn,contact:e.c.id,wasAway:!!p.away,outcome:roll<task.risk?'death':roll<success?'success':'setback'};
+  if(beginMinistryFollowup(docket,id,{name:p.name,person:e.key,personId:p.id,due:p.commission.due}))p.commission.ministryDocket=docket.id;
   officialRecord(e.c,e.role,`奉旨${task.title}，约${task.months}个月后回奏。`);officialFamilyReaction(e,'assigned',task.title);noteCommissionChapter(e,p.commission);save('auto');return `${p.name}领命。进展将记入其履历，并向家眷通报。`;
 }
 function officialTaskTick(){
@@ -226,6 +227,7 @@ function officialTaskTick(){
     }
     noteCommissionChapter(familyContact,j,true);
     p.report={text,outcome:j.outcome,title:j.title,turn:S.turn};if(careersActive())p.report.office=p.office||p.post;
+    finishMinistryFollowup(j.ministryDocket,j.outcome,text);
     startOfficialContinuity(familyContact,j.outcome,j.title);
   }
 }
