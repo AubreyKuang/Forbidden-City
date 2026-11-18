@@ -105,6 +105,9 @@ function viewNew(){
     <fieldset class="coronation-styles"><legend>帝王性情</legend>
       <div>${Object.entries(STYLES).map(([k,d],i)=>`<label class="opt"><input type="radio" name="f-style" value="${k}" ${i===0?'checked':''}><span><b>${k}</b><span class="hint">${d}</span></span><span class="opt-check" aria-hidden="true">✓ 已选</span></label>`).join('')}</div>
     </fieldset>
+    <fieldset class="coronation-styles"><legend>开局剧本</legend>
+      <div>${Object.entries(DYNASTY_SCENARIOS).map(([id,scenario],i)=>`<label class="opt"><input type="radio" name="f-scenario" value="${id}" ${i===0?'checked':''}><span><b>${esc(scenario.name)}</b><span class="hint">${esc(scenario.description)}</span></span><span class="opt-check" aria-hidden="true">✓ 已选</span></label>`).join('')}</div>
+    </fieldset>
     <div class="coronation-actions"><button type="button" class="btn quiet sm" onclick="A.go('title')">返回</button><button type="submit" class="btn primary">登基</button></div>
   </form>`}
 function consortCard(c){
@@ -315,7 +318,19 @@ function detailSection(title,content){
 }
 
 function dynastyGoalsPanel(){
+  const scenario=S.scenario,definition=DYNASTY_SCENARIOS[scenario?.id];
+  const hiddenDescriptions={
+    founder:'五年后民心达到85',regent:'将权臣掌控度降至0',
+    succession:'让宗亲皇嗣入继宫中',prosperous:'五年后国库达到2500万两',
+    crisis:'在期限内将民心提升至85'
+  };
+  const chapter=scenario&&definition?`<h3>${esc(definition.name)}</h3><p>${esc(definition.description)}
+    ${scenario.status==='won'?' · 已完成':scenario.status==='lost'?' · 期限已过':scenario.deadline!=null?` · 剩余 ${Math.max(0,scenario.deadline-S.turn)} 个月`:''}</p>
+    ${scenario.id==='regent'?`<p>权臣掌控度 ${scenario.control}/100</p>${scenario.control>0&&scenario.gen===S.gen?`<button class="btn sm" onclick="A.lowerRegentControl()" ${scenario.lastReform===S.turn||E().energy<1?'disabled':''}>核对朝政 · 精力−1</button>`:''}`:''}
+    <ul class="story">${dynastyScenarioGoals().map(([name,value,target])=>`<li>${esc(name)} · ${Math.min(value,target)}/${target}</li>`).join('')}
+    <li>隐藏目标 · ${scenario.hidden?esc(hiddenDescriptions[scenario.id])+' · 已达成':'???'}</li></ul>`:'';
   return `<section class="detail-section"><h3>王朝目标</h3>
+    ${chapter}
     <p class="hint">皇嗣目标按本朝记录计算，达成后保存在当前王朝存档，换代后仍可领取。</p>
     <ul class="story">${DYNASTY_GOALS.map(goal=>{
       const entry=S.dynastyGoals?.[goal.id],progress=entry?.completed?goal.target:Math.min(goal.progress(),goal.target);

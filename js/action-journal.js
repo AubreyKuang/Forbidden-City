@@ -39,7 +39,11 @@ const PalaceActions=(()=>{
       journal={version,base:S?clone(world(S)):null,ui:clone(UI),steps:[]};
     }
     const current={name,args:clone(args),monthNotice:true,rolls:[],answers:[],saves:[],ui:clone(UI)};
-    if(name==='start')current.fields=Object.fromEntries(['#f-sur','#f-name','#f-era','input[name=f-style]:checked'].map(k=>[k,$(k)?.value||'']));
+    if(name==='start'){
+      const selectors=['#f-sur','#f-name','#f-era','input[name=f-style]:checked'];
+      if(journal?.version>=75)selectors.push('input[name=f-scenario]:checked');
+      current.fields=Object.fromEntries(selectors.map(k=>[k,$(k)?.value||'']));
+    }
     if(journal){journal.steps.push(current);if(name==='choose'||name==='next')delete journal.draft;}
     step=journal?current:null;depth++;
     const ask=globalThis.confirm,persist=save;

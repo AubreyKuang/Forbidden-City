@@ -23,6 +23,71 @@ const byId=id=>S.consorts.find(c=>c.id===id);
 const kidById=id=>S.children.find(k=>k.id===id);
 const kidAge=k=>Math.floor((S.turn-k.born)/12);
 const empress=()=>alive().find(c=>c.rank===8&&!c.cold&&!c.maid);
+const DYNASTY_SCENARIOS={
+  standard:{name:'寻常登基',description:'以先帝留下的朝局开始。'},
+  founder:{name:'开国之君',description:'国库与朝局尚待重建。'},
+  regent:{name:'傀儡皇帝',description:'权臣势大，须逐步收回朝政。'},
+  succession:{name:'子嗣艰难',description:'继承之事多有波折，需筹谋后路。'},
+  prosperous:{name:'盛世之君',description:'国库丰盈，外家势力亦在增长。'},
+  crisis:{name:'亡国之君',description:'国库空虚、民心低落，须在三年内稳住朝局。'}
+};
+const dynastyScenarioActive=()=>journalContentVersion()>=75;
+function startDynastyScenario(id){
+  if(!dynastyScenarioActive()||!DYNASTY_SCENARIOS[id]||id==='standard')return;
+  const e=E(),state=S.scenario={id,gen:S.gen,start:S.turn,status:'active'};
+  if(id==='founder')Object.assign(e,{treasury:350,people:45,prestige:40});
+  if(id==='regent'){Object.assign(e,{treasury:500,people:50,prestige:30});state.control=70;}
+  if(id==='succession')e.fertilityReview={profile:'low',months:0,last:-99};
+  if(id==='prosperous'){
+    Object.assign(e,{treasury:1800,people:80,prestige:75});
+    for(const c of S.consorts)c.fam.p=Math.max(c.fam.p,65);
+  }
+  if(id==='crisis'){Object.assign(e,{treasury:100,people:25,prestige:25});state.deadline=S.turn+36;}
+  log(`【开局剧本】${DYNASTY_SCENARIOS[id].name}：${DYNASTY_SCENARIOS[id].description}`,1);
+}
+function dynastyScenarioGoals(){
+  const state=S?.scenario,e=E();
+  if(!state||state.gen!==S.gen)return [];
+  const objectives={
+    founder:[['国库',e.treasury,800],['民心',e.people,70],['威望',e.prestige,65]],
+    regent:[['民心',e.people,65],['威望',e.prestige,65],['收回朝权',100-state.control,70]],
+    succession:[['在世皇嗣',kidsAlive().length,1],['民心',e.people,65],['威望',e.prestige,60]],
+    prosperous:[['国库',e.treasury,2000],['民心',e.people,85],['威望',e.prestige,85]],
+    crisis:[['国库',e.treasury,500],['民心',e.people,60],['威望',e.prestige,50]]
+  };
+  return objectives[state.id]||[];
+}
+function reconcileDynastyScenario(){
+  const state=S?.scenario;
+  if(!dynastyScenarioActive()||!state||state.gen!==S.gen)return;
+  const hidden={
+    founder:()=>S.gen===1&&S.turn>=60&&E().people>=85,
+    regent:()=>state.control===0,
+    succession:()=>S.children.some(k=>k.palaceAdoption),
+    prosperous:()=>S.turn>=60&&E().treasury>=2500,
+    crisis:()=>S.turn<=state.deadline&&E().people>=85
+  };
+  if(!state.hidden&&hidden[state.id]?.()){
+    state.hidden={turn:S.turn,date:dateStr()};
+    log(`【开局剧本】${DYNASTY_SCENARIOS[state.id].name}隐藏目标达成。`,1);
+  }
+  if(state.status!=='active')return;
+  if(dynastyScenarioGoals().every(([,value,target])=>value>=target)){
+    state.status='won';state.completed=S.turn;
+    log(`【开局剧本】${DYNASTY_SCENARIOS[state.id].name}：三项目标均已完成。`,1);
+  }else if(state.deadline!=null&&S.turn>=state.deadline){
+    state.status='lost';state.completed=S.turn;
+    log('【开局剧本】三年期限已至，朝局仍未达到约定目标。',1);
+  }
+}
+function lowerRegentControl(){
+  const state=S?.scenario;
+  if(!dynastyScenarioActive()||state?.id!=='regent'||state.gen!==S.gen||state.control<=0||E().energy<1)return;
+  if(S.turn===state.lastReform)return;
+  E().energy--;state.control=Math.max(0,state.control-10);state.lastReform=S.turn;
+  log('【朝权】亲核奏章与官员名册，逐步收回朝权。');
+  reconcileDynastyScenario();render();
+}
 const DYNASTY_GOALS=[
   {id:'grown',name:'桃李满天下',description:'本朝抚育十位在世成年皇嗣',target:10,reward:100,
     progress:()=>S.children.filter(k=>k.alive&&kidAge(k)>=18).length},
@@ -33,6 +98,7 @@ const DYNASTY_GOALS=[
 ];
 function reconcileDynastyGoals(){
   if(!S||PalaceActions.blocked||journalContentVersion()<75)return;
+  reconcileDynastyScenario();
   const goals=S.dynastyGoals||={};
   for(const goal of DYNASTY_GOALS){
     if(goal.progress()<goal.target||goals[goal.id]?.completed)continue;
@@ -331,6 +397,7 @@ function nightWith(c,fromEvent){
 }
 const A={
   claimDynastyGoal(id){claimDynastyGoal(id)},
+  lowerRegentControl(){lowerRegentControl()},
   go(v,id){
     if(PAGE_ORIGIN_VIEWS.includes(v)&&UI.view!==v&&!PERSON_DETAIL_VIEWS.includes(UI.view))(UI.pageFrom ||= {})[v]=UI.view;
     rememberPersonRoute(v,id);UI.view=v;UI.sel=id;
@@ -625,6 +692,7 @@ A.start=function(){
   const fv=id=>typeof PalaceActions==='undefined'?$(id)?.value:PalaceActions.input(id);
   const sur=(fv('#f-sur')||'萧').trim().slice(0,2),name=(fv('#f-name')||'彻').trim().slice(0,2),era=(fv('#f-era')||'永宁').trim().slice(0,2);
   const style=fv('input[name=f-style]:checked')||'勤政';
+  const scenario=dynastyScenarioActive()?fv('input[name=f-scenario]:checked')||'standard':'standard';
   S={v:1,emp:{sur,name,era,age:18,birthMonth:3,health:90,prestige:50,people:60,treasury:800,energy:3,nightsMonth:0,style,wen:50,wu:50,seed:ri(1,2e9)},
     year:1,month:3,turn:0,consorts:[],children:[],cands:[],log:[],nid:1,gen:1,heir:null,genChar:pick(GEN_CHARS),
     flags:{lastXX:-99,dowager:{name:'太后',alive:true},peek:0,openingCourt:true,familyRules:2},history:[],ys:{c:0,b:0,n:0},over:false};
@@ -633,11 +701,13 @@ A.start=function(){
   if(style==='勤政'){e.prestige=58;e.people=65}if(style==='风流')e.health=84;if(style==='尚武'){e.wu=80;e.prestige=55}if(style==='文雅')e.wen=80;
   e.energy=maxEnergy();
   const em=makeGirl({fam:pick(FAMS.slice(0,3)),trait:pick(['温婉','聪慧','城府','骄矜'])});em.favor=40;em.aff=40;em.age=18;em.knownBeforeAccession=true;
-  S.consorts.push(em);em.rank=8;assignPalace(em);story(em,'潜邸时奉先帝之命嫁与陛下为嫡妻。新帝登基，册为皇后，入主坤宁宫。');
+  S.consorts.push(em);em.rank=8;assignPalace(em);story(em,scenario==='founder'?'旧日夫妻相伴，今随陛下开创新朝，册为皇后，入主坤宁宫。':'潜邸时奉先帝之命嫁与陛下为嫡妻。新帝登基，册为皇后，入主坤宁宫。');
   const old=makeGirl({});old.favor=55;old.aff=60;old.knownBeforeAccession=true;old.rank=3;S.consorts.push(old);assignPalace(old);story(old,'潜邸旧人，陪伴陛下多年。新帝登基，册为贵人。');
+  startDynastyScenario(scenario);
   log(`${era}元年三月，新帝${sur}${name}登基，改元${era}，大赦天下。`,1);
   log(`册嫡妻${fullName(em)}为皇后，潜邸旧人${fullName(old)}为贵人。`);
   migrate();initializeMinistryRoster();initializeDowagerOpening();UI.view='map';setScene('court');AU.sfx('gong');render();
-  pushEv({title:'登基',scene:'coronation',por:'emp',text:`${era}元年三月，先帝龙驭上宾，你在太和钟声中登上了宸极殿的御座。\n嫡妻${fullName(em)}册为皇后，潜邸旧人${fullName(old)}册为贵人。${dowagerCareActive()&&em.dowagerKin?"\n皇后亦是太后母家侄女，宫中有潜邸夫妻与母族两层亲缘。":""}\n礼部奏请：新帝登基，当广选秀女，以充后宫、绵延皇嗣。`,choices:[
+  const accession=scenario==='founder'?'天下初定，你在钟声中登上了新朝的御座。':'先帝龙驭上宾，你在太和钟声中登上了宸极殿的御座。';
+  pushEv({title:'登基',scene:'coronation',por:'emp',text:`${era}元年三月，${accession}\n嫡妻${fullName(em)}册为皇后，潜邸旧人${fullName(old)}册为贵人。${dowagerCareActive()&&em.dowagerKin?"\n皇后亦是太后母家侄女，宫中有潜邸夫妻与母族两层亲缘。":""}\n礼部奏请：新帝登基，当广选秀女，以充后宫、绵延皇嗣。`,choices:[
     {t:'进入宫城',primary:true},{t:'准奏，即刻选秀',f:()=>{genCands(7);UI.view='xx';return null}}]});
 };
