@@ -455,7 +455,7 @@ function storyCastPanel(c){
   const d=STORY_CAST[c.fixedStory],ev=storyCastPalaceEvent(c);
   const father=c.fixedStory==='chuwan'?'<p class="muted">生父 · 前朝楚国皇帝（已故）</p>':'';
   const guide=storyCastFollowupsActive()?storyCastFollowupGuide(c,storyCastRecord(c.fixedStory)):'';
-  return detailSection(esc(d.epithet),'<p>'+esc(d.intro)+'</p>'+father+guide+
+  return whiteSpringMailPanel(c)+detailSection(esc(d.epithet),'<p>'+esc(d.intro)+'</p>'+father+guide+
     (ev?`<button class="btn jade" onclick="A.storyCastPalace(${c.id})" ${E().energy?'':'disabled'}>${esc(ev.title)}<small>精力−1</small></button>`:''))+storyCastLifePanel(c)+commonerFavorPanel(c,storyCastRecord(c.fixedStory))+(c.fixedStory==='ayimu'?estatePrincesses().filter(k=>k.mom===c.id&&k.household?.whiteSpringVisit).map(whiteSpringFamilyPanel).join(''):'');
 }
 function storyCastMonthlyEvents(){

@@ -219,6 +219,7 @@ A.greet=function(){if(!S.flags.dowager?.alive){A.go('place','cn');return;}if(!us
 
 /* ============ 母亲入宫小住 ============ */
 function momVisitState(c){
+  if(whiteSpringRoyal(c))return {ready:false,hint:'白泉王室循使团通家书'};
   if(homeMother(c)&&homeMother(c).status!=='well')return {ready:false,hint:'母亲病中调养，不宜远行；可派医赴家或准回家探病'};
   if(!inPalace(c)||c.maid||c.rescue||c.wound==='mom')return {ready:false,hint:c?.rescue?'远方家人需循寻亲线索联系':'眼下不能安排家眷入宫'};
   if(c.visitor){const left=Math.max(0,Math.ceil(c.visitor.until-S.turn)||0);return {ready:false,hint:left?`母亲在宫 · 还住${left}个月`:'母亲在宫 · 本月出宫'};}
@@ -228,11 +229,12 @@ function momVisitState(c){
   return {ready:E().treasury>=15,hint:E().treasury>=15?'国库-15万两 · 小住两三个月':'国库不足 · 需15万两'};
 }
 function momVisitButton(c){
+  if(whiteSpringRoyal(c))return '';
   const state=momVisitState(c);
   return `<button class="btn" onclick="A.momIn(${c.id})" ${state.ready?'':'disabled'}>接母亲入宫<small>${esc(state.hint)}</small></button>`;
 }
 const momObj=c=>c.visitor?{isMom:true,seed:c.visitor.seed,name:c.visitor.name,alive:true}:null;
-function momVisit(c,months){if(homeMother(c)&&homeMother(c).status!=='well')return false;const v=c.visitor;if(v){v.until=Math.max(v.until,S.turn+months);return}
+function momVisit(c,months){if(whiteSpringRoyal(c))return false;if(homeMother(c)&&homeMother(c).status!=='well')return false;const v=c.visitor;if(v){v.until=Math.max(v.until,S.turn+months);return}
   c.visitor={name:`${c.sur}夫人`,full:`${c.sur}门${pick(SUR.filter(x=>x!==c.sur))}氏`,from:S.turn,until:S.turn+months,seed:(c.seed%999983)*7+13};c.lastVisit=S.turn;
   story(c,`母亲${c.visitor.name}奉旨入宫，在${c.palace}小住${cnNum(months)}个月。`);log(`准${fullName(c)}之母入宫小住。`)}
 function visitorTick(c){const v=c.visitor;if(!v)return;if(!inPalace(c)){delete c.visitor;return}

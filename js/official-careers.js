@@ -183,6 +183,7 @@ function courtFamilyLifeTick(previous){
   const before=new Map((previous.consorts||[]).map(c=>[c.id,c]));
   for(const c of S.consorts){
     const old=before.get(c.id);if(!old)continue;
+    if(whiteSpringRoyal(c)){whiteSpringFamilyChanges(c,old,previous);continue;}
     const newborn=S.children.filter(k=>k.mom===c.id&&!(previous.children||[]).some(o=>o.id===k.id));
     const kind=old.alive&&!c.alive?'death':!old.cold&&c.cold?'cold':expanded&&old.cold&&!c.cold?'released':c.rank<old.rank?'demoted':
       newborn.length?'birth':old.preg<2&&c.preg>=2?'pregnancy':expanded&&c.rank>old.rank?'promoted':

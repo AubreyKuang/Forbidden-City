@@ -1043,7 +1043,7 @@ function sameFather(a,b){
     left.name===right.name&&left.office===right.office);
 }
 function paternalFamily(c){
-  const people=[...new Set([...(typeof familyCourtHosts==='function'?familyCourtHosts():(S?.consorts||[])),...(S?.cands||[]),c])].filter(p=>p&&!p.maid&&p.selectionNatalHost==null);
+  const people=[...new Set([...(typeof familyCourtHosts==='function'?familyCourtHosts():(S?.consorts||[])),...(S?.cands||[]),c])].filter(p=>p&&!p.maid&&!whiteSpringRoyal(p)&&p.selectionNatalHost==null);
   const relatives=new Set([c]);
   let changed=true;
   while(changed){
@@ -1081,6 +1081,7 @@ function identifyFather(family,house){
   return house;
 }
 function houseOf(c){
+  if(whiteSpringRoyal(c)){whiteSpringFamily(c);return null;}
   if(c?.familyBranchOrigin)return null; // Her parents already have records in the original branch.
   if(c?.selectionNatalHost!=null)return c.house=familyHostById(c.selectionNatalHost)?.house||c.house;
   if(!c||c.maid||c.rescue||storyCastActive()&&c.fixedStory==='chuwan')return null;

@@ -118,7 +118,7 @@ const HISTC={
  '文字狱':'她说：“清风不识字，何故乱翻书——为一句诗杀人，诗没了，人心也没了。”',
 };
 const woundOK=(c,w)=>w==='exile'?!!c.rescue:c.rescue?false:w==='quiet'?isSolitary(c):!isSolitary(c)&&!((w==='scorn'&&c.fam.p>=30)||(w==='fall'&&c.fam.p>=55));
-const wishOK=(c,w)=>w==='rescueLetter'?!!c.rescue:c.rescue?false:!(w==='father'&&c.fam.p>=60);
+const wishOK=(c,w)=>whiteSpringRoyal(c)&&['mother','father'].includes(w)?false:w==='rescueLetter'?!!c.rescue:c.rescue?false:!(w==='father'&&c.fam.p>=60);
 function grantConsortTitle(c,title){c.title=title;if(title&&c.wish==='title')c.wishDone=true;}
 function deepen(c){if(!c)return;
   if(c.wish==='brother'){c.wish=c.rescue?'rescueLetter':'poem';c.wishKnown=false;c.wishDone=false;}

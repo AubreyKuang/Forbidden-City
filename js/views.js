@@ -155,7 +155,7 @@ function familyGraphSVG(){
   const groups=new Map();
   people.forEach((c,index)=>{
     const key=familyGroupKey(c);
-    if(!groups.has(key))groups.set(key,{key,label:hasClan(c)?clanName(key):c.sur+'家',fathers:new Map(),indices:[]});
+    if(!groups.has(key))groups.set(key,{key,label:whiteSpringRoyal(c)?'白泉王室':hasClan(c)?clanName(key):c.sur+'家',fathers:new Map(),indices:[]});
     const group=groups.get(key),father=houseOf(c)?.father;
     group.indices.push(index);
     const id=father?.id||'unlisted-'+c.id;
@@ -190,7 +190,10 @@ function familyGraphSVG(){
     for(const branch of branches){
       const {person:c,father,indices}=branch,cx=fatherX(branch),h=houseOf(c),stance=stanceOf(c),color=BLOC_COLOR[stance]||'#8a8277';
       wires+=`<path d="M${cx} 80 V${houseY}" stroke="#a68b68" stroke-dasharray="4 3"/>`;
-      if(h){
+      if(whiteSpringRoyal(c)){
+        cards+=`<div class="graph-card graph-house" style="${at(cx,houseY,houseHeight)}"><strong>白泉王室</strong><div>父王 · 王兄</div></div>`;
+        wires+=line(cx,houseY+houseHeight,cx,consortY,blood);
+      }else if(h){
         const military=stance==='army'?1:0;
         const kin=(person,role,office)=>person?`<button class="graph-kin-person${!person.alive?' deceased':''}" onclick="A.go('official','${c.id}:${role}')" aria-label="查看${esc(person.name)}">${porImg(person,34)}${label(person.name,`${role==='father'?(indices.length>1?'父亲 · 亲姐妹同父':'父亲'):officialKinLabel(h,role)} · ${officialStatus(person)} · ${office}`)}</button>`:'';
         cards+=`<div class="graph-card graph-house" data-father-id="${c.fatherId}" data-person-id="${esc(father.id)}" style="${at(cx,houseY,houseHeight)};--house-color:${color}">
@@ -280,7 +283,7 @@ function viewFamily(){
       }).join('')}</details>`;
   };
   const branches=[...byClan].sort(([a],[b])=>Number(a==null)-Number(b==null)).map(([key,people])=>
-    branch(familyVisibilityActive()?(hasClan(people[0])?clanName(key):people[0].sur+'家'):key?clanName(key):'未列家族',people,hasClan(people[0])?` · 势力 ${Math.max(...people.map(c=>rd(c.fam.p)))}`:'',key||'')).join('');
+    branch(whiteSpringRoyal(people[0])?'白泉王室 · 父王与王兄':familyVisibilityActive()?(hasClan(people[0])?clanName(key):people[0].sur+'家'):key?clanName(key):'未列家族',people,hasClan(people[0])?` · 势力 ${Math.max(...people.map(c=>rd(c.fam.p)))}`:'',key||'')).join('');
   const unlisted=S.children.filter(k=>!byId(k.mom)&&!k.birthSwap?.confirmed);
   return `${pageHeading('家族关系树')}<div class="acts view-switch" role="group" aria-label="家族查看方式"><button class="btn sm" onclick="A.familyMode('graph')">关系图</button><button class="btn sm on">家族列表</button></div><p class="hint">皇嗣列在生母名下，另标养母。点名字可查看人物。</p>
     ${dowagerFamilyPanel()}${branches||'<p class="hint">目前没有入宫的妃嫔。</p>'}${outsideBirthFamilyPanel()}${royalRelativesPanel()}
