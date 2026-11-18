@@ -28,3 +28,6 @@ test('release from a child plea queues the same reunion after the plea result',(
 test('a real v95 release result continues without injecting a new scene into its saved transcript',()=>{
  const data=require('./fixtures/cold-release-legacy-v95.json'),b=boot(557,new Map([['chengongji_v1_auto',JSON.stringify(data)]]));b.ctx.assert=assert;b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,95);assert.ok(modalResult);assert.ok(!Q.some(ev=>ev.title==='冷宫归来 · 惦念孩子'));drain();assert.equal(PalaceActions.contentVersion,PalaceActions.releaseVersion);`);
 });
+test('the published v96 foster-chronicle release result also replays unchanged',()=>{
+ const data=require('./fixtures/cold-release-legacy-v96.json'),b=boot(558,new Map([['chengongji_v1_auto',JSON.stringify(data)]]));b.ctx.assert=assert;b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,96);assert.ok(modalResult);assert.ok(!Q.some(ev=>ev.title==='冷宫归来 · 惦念孩子'));drain();assert.equal(PalaceActions.contentVersion,PalaceActions.releaseVersion);`);
+});
