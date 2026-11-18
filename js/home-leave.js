@@ -9,13 +9,14 @@ function startHomeLeave(c,months=2,reason='省亲'){
 function returnHomeLeave(c,early=false){
  if(!c?.homeLeave)return false;
  if(!c.alive||c.gone){delete c.homeLeave;return false;}
+ if(c.homeLeave.field){storyCastFrontierReturn(c,early);return true;}
  const leave=c.homeLeave;delete c.homeLeave;
  homeReturn(c,leave,early);log(`${fullName(c)}${early?'提前':'期满'}回宫。`,1);npcSync();return true;
 }
-function homeLeaveTick(){for(const c of S.consorts){homeMotherTick(c);if(c.homeLeave){if(!c.alive||c.gone||c.cold)delete c.homeLeave;else if(S.turn>=c.homeLeave.due)returnHomeLeave(c);}}}
+function homeLeaveTick(){for(const c of S.consorts){homeMotherTick(c);if(c.homeLeave){if(!c.alive||c.gone||c.cold)delete c.homeLeave;else if(c.homeLeave.field)storyCastFrontierTick(c);else if(S.turn>=c.homeLeave.due)returnHomeLeave(c);}}}
 function homeLeavePanel(c){
  if(!c.homeLeave)return '';
- return `<section class="personal-experience"><h3>暂离宫中 · ${esc(c.homeLeave.reason)}</h3><p>正在娘家，约${Math.max(0,c.homeLeave.due-S.turn)}个月后回宫。原位分与${esc(c.palace)}居所保留，暂不参加宫内活动。</p><button class="btn" onclick="A.recallHomeLeave(${c.id})">提前召回</button></section>`;
+ return `<section class="personal-experience"><h3>暂离宫中 · ${esc(c.homeLeave.reason)}</h3><p>${c.homeLeave.field?'正在北境军驿':'正在娘家'}，约${Math.max(0,c.homeLeave.due-S.turn)}个月后回宫。原位分与${esc(c.palace)}居所保留，暂不参加宫内活动。</p><button class="btn" onclick="A.recallHomeLeave(${c.id})">提前召回</button></section>`;
 }
 A.homeLeave=function(id){const c=byId(id);if(modalOpen||!homeLeaveEligible(c))return;pushEv({title:'回家省亲',por:c,valid:()=>homeLeaveEligible(c),text:'可准她限期回娘家省亲。随侍护送，原宫室保留；离宫期间不能在宫中相见、召幸或赴宴。',choices:[...[1,2,3].map(months=>({t:`准省亲${cnNum(months)}个月`,f:()=>startHomeLeave(c,months,homeWorryActive(c)?'探病':'省亲')?'她收拾行装，按约暂离宫中。':null})),{t:'暂不安排'}]});};
 A.recallHomeLeave=function(id){if(modalOpen)return;const c=byId(id);if(returnHomeLeave(c,true)){save('auto');render();}};

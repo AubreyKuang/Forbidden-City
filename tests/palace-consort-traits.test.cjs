@@ -56,11 +56,11 @@ test('tags appear in the live card, detail and selection audience without extra 
 for(const key of ['month','birth','ill'])test('genuine v54 '+key+' resumes with original health and random outcomes',()=>{
  const payload=require('./fixtures/consort-traits-legacy-v54.json')[key],b=boot(17001,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));b.ctx.assert=assert;
  b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,54);assert.equal(consortTraitsActive(),false);
- drain();A.go('harem');assert.equal(PalaceActions.contentVersion,69);assert.ok(S.consorts.every(c=>Number.isFinite(c.hp)));`);
+ drain();A.go('harem');assert.equal(PalaceActions.contentVersion,70);assert.ok(S.consorts.every(c=>Number.isFinite(c.hp)));`);
 });
 for(const version of [56,57,58,59,66])test('genuine published v'+version+' scene finishes under its original distinction rules',()=>{
  const payload=require('./fixtures/consort-traits-legacy-v'+version+'.json').month,b=boot(17001,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));b.ctx.assert=assert;
- b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,${version});assert.equal(princeAdoptionActive(),${version>=57});assert.equal(xieStoryUpdated(),${version>=58});assert.equal(consortTraitsActive(),${version>=59});assert.equal(consortDistinctionStoriesActive(),false);drain();A.go('harem');assert.equal(PalaceActions.contentVersion,69);assert.ok(S.consorts.every(c=>Number.isFinite(c.hp)));`);
+ b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,${version});assert.equal(princeAdoptionActive(),${version>=57});assert.equal(xieStoryUpdated(),${version>=58});assert.equal(consortTraitsActive(),${version>=59});assert.equal(consortDistinctionStoriesActive(),false);drain();A.go('harem');assert.equal(PalaceActions.contentVersion,70);assert.ok(S.consorts.every(c=>Number.isFinite(c.hp)));`);
 });
 
 test('new trait notes use prose, respect discovery and are written only once',()=>{

@@ -377,7 +377,7 @@ const A={
     setScene('court');pushEv(ev);
   },
   night(id){const c=byId(id);if(!inPalace(c)||c.preg||c.cardWithdrawn)return;nightWith(c)},
-  promote(id){const c=byId(id),nr=c.rank+1;
+  promote(id){const c=byId(id);if(!c||storyCastPromotionEvent(c,()=>A.promote(id)))return;const nr=c.rank+1;
     if(nr>=8){toast('立后请用「册立皇后」');return}
     if(rankCount(nr)>=RANK_CAP[nr]){toast(`${RANKS[nr]}之位已满（${RANK_CAP[nr]}人）`);return}
     const doIt=(title)=>{c.rank=nr;if(title)grantConsortTitle(c,title);
@@ -511,6 +511,7 @@ A.endMonth=function(){
   const fiefDockets=princeQuarterReports();
   const must=[passing?null:haremRemonstranceEvent(),passing?null:pendingImmortalEvent(),passing?null:pendingRoyalTravelEvent(),passing?null:pendingTravelInstitutionEvent(),passing?null:pendingRoyalSchoolRevision(),passing?null:pendingLocalChronicleReview(),passing?null:pendingClassicStory(),passing?null:pendingYiLandEvent(),passing?null:arcTick(),heirTick(),milestone(),parentageReportEvent(),birthSwapClueEvent(),birthSwapSearchReport(),pendingBirthSwapJustice(),pendingKinGreeting(),pendingMaternalKinCare(),pendingMaternalSisterArrival(),pendingDaoVoyage(),pendingTravelerEvent(),pendingOfficialReport(),pendingConcealedLoss(),...(legacyPendingAction()?[]:[pendingIncognitoReport(),passing?null:jingtishiEvent(),passing?null:selectionCouncilEvent()]),passing||typeof pendingHaremStewardEvent!=='function'?null:pendingHaremStewardEvent(),...(familyGardenActive()&&!passing?[familyGardenMonthlyEvent(),familyGardenDisputeEvent()]:[])].filter(Boolean),opt=[];
   if(comingOfAge)must.unshift(comingOfAge);
+  if(!passing)must.push(...storyCastMonthlyEvents());
   if(princeSuccession)must.push(princeSuccession);
   if(fertilityReview)must.push(fertilityReview);
   if(orphan)must.push(orphan);
@@ -555,13 +556,13 @@ function deathEvent(why){
   const score=e.prestige*.5+e.people*.5;
   const shi=score>=80?'圣':score>=68?'文':score>=56?'景':score>=44?'恭':score>=32?'哀':'炀';
   const miao=['太祖','太宗','高宗','仁宗','宣宗','英宗','宪宗','孝宗','穆宗','神宗'][S.gen-1]||'睿宗';
-  const sons=kidsAlive().filter(k=>k.sex==='m'&&!k.jailed&&!immortalAway(k));let heir=S.heir&&kidById(S.heir);if(!heir||!heir.alive||immortalAway(heir))heir=sons.sort((a,b)=>a.born-b.born)[0];
+  const sons=kidsAlive().filter(k=>k.sex==='m'&&!k.jailed&&!immortalAway(k)&&!storyCastHeirBar(k));let heir=S.heir&&kidById(S.heir);if(!heir||!heir.alive||immortalAway(heir)||storyCastHeirBar(heir))heir=sons.sort((a,b)=>a.born-b.born)[0];
   const nC=S.consorts.length,nK=S.children.length;
   let t= why==='民变'?`流民四起，叛军攻破京城。${e.era}${cnNum(yrs)}年，${e.sur}${e.name}自缢于宫中，享年${e.age}岁。`
     :`${dateStr()}，${e.sur}${e.name}崩于养心殿，享年${e.age}岁，在位${yrs}年。`;
   t+=`\n庙号${miao}，谥曰「${shi}皇帝」。\n一生册封后妃${nC}人，育皇子${S.children.filter(k=>k.sex==='m').length}人、公主${S.children.filter(k=>k.sex==='f').length}人。`;
   if(why==='民变')heir=null;
-  t+=heir?`\n遗诏：传位于${kidName(heir)}。`:why==='民变'?'\n社稷倾覆，国祚至此而终。':immortalEnabled()&&kidsAlive().some(k=>k.sex==='m'&&immortalAway(k))?'\n皇子长留山门，未列入继统之序，宗室旁支承继大统。山中的亲人仍在人世。':'\n膝下无子，宗室旁支入继大统，本朝血脉至此而终。';
+  t+=heir?`\n遗诏：传位于${kidName(heir)}。`:why==='民变'?'\n社稷倾覆，国祚至此而终。':immortalEnabled()&&kidsAlive().some(k=>k.sex==='m'&&immortalAway(k))?'\n皇子长留山门，未列入继统之序，宗室旁支承继大统。山中的亲人仍在人世。':kidsAlive().some(k=>k.sex==='m'&&storyCastHeirBar(k))?'\n礼部依异域皇嗣的储位成例议定，由宗室旁支继统。':'\n膝下无子，宗室旁支入继大统，本朝血脉至此而终。';
   S.history.push({sur:e.sur,name:e.name,era:e.era,yrs,miao,shi});
   log(t.split('\n')[0]+`庙号${miao}。`,1);AU.sfx('gong');
   const ch=[];

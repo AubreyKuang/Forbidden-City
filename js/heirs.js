@@ -12,6 +12,7 @@ function makeKid(c,sex,name,{outsideChild=null,origin=null,foster=null}={}){
     k.married=!!outsideChild.married;if(outsideChild.spouse)k.spouse=outsideChild.spouse;
     if(foster)k.foster=foster.id;
   }
+  if(!outsideChild)storyCastBirth(k,c);
   // Birth traits are a game rule, separate from education and the current caregiver.
   k.birthTraits={mother:{id:c.id,name:fullName(c),talent:c.talent,virtue:c.virtue,scheme:c.scheme,trait:c.trait,rank:c.rank},
     father,initial:{lit:k.lit,mar:k.mar,vir:k.vir,hp:k.hp,amb:k.amb}};
@@ -30,7 +31,7 @@ function swapEvent(c,k){const a=harem().find(x=>x!==c&&x.scheme>=70);k.alive=fal
 function kstory(k,t){k.story.push({d:dateStr(),t})}
 function growKid(k){
   const a=kidAge(k);if(a<3)return;const m=k.tutor?1.6:1,g=()=>R()*.9*m;
-  if(k.policy==='读书')k.lit+=g()*1.7;else if(k.policy==='习武'){k.mar+=g()*1.7;k.hp+=.08}else if(k.policy==='修德')k.vir+=g()*1.7;
+  if(k.policy==='读书')k.lit+=g()*1.7;else if(k.policy==='习武'){k.mar+=g()*1.7*(k.jiangmenChild&&storyCastActive()?2:1);k.hp+=.08}else if(k.policy==='修德')k.vir+=g()*1.7;
   else if(k.policy==='放养'){k.hp+=.25;k.amb+=.1;k.love+=.05}else{k.lit+=g()*.65;k.mar+=g()*.65;k.vir+=g()*.65}
   {const fm=fosterOf(k);if(fm&&fm.alive){if(fm.virtue>65)k.vir+=.15;if(fm.talent>65)k.lit+=.15;if(fm.scheme>65)k.amb+=.12}}['lit','mar','vir','hp','amb','love'].forEach(s=>k[s]=clamp(k[s]));supTick(k);
 }
@@ -45,7 +46,7 @@ A.kidVisit=function(id){const k=kidById(id);if(modalOpen||!k?.alive||k.removedFr
 };
 A.kidPolicy=function(id,p){const k=kidById(id);k.policy=p;AU.sfx('click');render()};
 A.kidTutor=function(id){const k=kidById(id);k.tutor=!k.tutor;if(k.tutor){kstory(k,'陛下延请当世大儒为师。');toast('已延请太傅（每月5万两）')}render()};
-A.kidHeir=function(id){const k=kidById(id);if(!k?.alive||k.removedFromRoyal||k.templeStay||royalJourneyAway(k)||k.sex!=='m'||kidAge(k)<5)return;const old=S.heir&&kidById(S.heir);
+A.kidHeir=function(id){const k=kidById(id);if(!k?.alive||k.removedFromRoyal||k.templeStay||royalJourneyAway(k)||k.sex!=='m'||kidAge(k)<5)return;if(storyCastHeirBar(k)){toast('礼部回禀：有异域血脉的皇嗣依本朝成例不得入主东宫。');return;}const old=S.heir&&kidById(S.heir);
   pushEv({title:'册立太子',por:k,valid:()=>k.alive&&!royalJourneyAway(k),text:old?`太子${old.name}尚在。改立${k.name}为太子，必将引起朝野震动（威望-6）。`:`立${kidName(k)}为皇太子，昭告天下？`,choices:[
     {t:'册立太子',f:()=>{if(!k.alive||royalJourneyAway(k))return null;let s='';if(old){s=chg({prestige:-6});kstory(old,'被废去太子之位。');old.amb=clamp(old.amb+20)}else s=chg({prestige:5});
       S.heir=k.id;delete k.princeEstate;k.away=false;kstory(k,'被册立为皇太子，入主东宫。');{const mm=byId(k.foster||k.mom);if(mm&&mm.alive)setXin(mm,mm.scheme>=55?'野心':'欢喜',`${k.name}被立为太子`)}log(`立${k.name}为皇太子。`,1);
@@ -132,7 +133,7 @@ function kidEvent(){
       return {title:'顽童',por:k,text:`${kidName(k)}${w[0]}。`,choices:[
       {t:'罚跪一个时辰',f:()=>{k.vir=clamp(k.vir+4);k.love=clamp(k.love-5);kstory(k,`${a}岁，${w[1]}，被罚跪一个时辰。`);return '§品德+4　父爱-5'}},
       {t:'一笑置之',f:()=>{k.amb=clamp(k.amb+3);k.love=clamp(k.love+3);kstory(k,`${a}岁，${w[1]}，父皇一笑置之。`);return '§父爱+3'}}]}}
-    if(k.sex==='m'&&a>=12&&k.amb>=60&&S.heir&&S.heir!==k.id&&chance(.5)){const h=kidById(S.heir);if(h&&h.alive) return {title:'兄弟阋墙',por:k,text:`有宫人密报：${kidName(k)}私下结交朝臣，对太子颇有微词。`,choices:[
+    if(k.sex==='m'&&!storyCastHeirBar(k)&&a>=12&&k.amb>=60&&S.heir&&S.heir!==k.id&&chance(.5)){const h=kidById(S.heir);if(h&&h.alive) return {title:'兄弟阋墙',por:k,text:`有宫人密报：${kidName(k)}私下结交朝臣，对太子颇有微词。`,choices:[
       {t:'严厉申斥',f:()=>{k.amb=clamp(k.amb-15);k.love=clamp(k.love-10);kstory(k,'私结朝臣，被父皇严厉申斥。');return '§野心-15　父爱-10'}},
       {t:'暗中观察',f:()=>{k.amb=clamp(k.amb+5);return '你没有声张。'}},
       {t:'改立他为太子',chronicle:false,f:()=>{A.kidHeir(k.id);return null}}]}}
@@ -168,7 +169,7 @@ function supTick(k){if(k.sex!=='m'||!k.alive||k.templeStay||royalJourneyAway(k)|
   const d=k.amb/140+(m&&m.alive&&!m.cold?m.fam.p/220+(m.rank>=6?.25:0):0)+(S.heir===k.id?.5:0)+(k.lit+k.vir)/400-(k.amb<30?.4:0);
   k.sup=clamp((k.sup||0)+d-.25)}
 function heirTick(){
-  const sons=kidsAlive().filter(k=>k.sex==='m'&&!k.templeStay&&!royalJourneyAway(k)&&!k.away&&!k.jailed);if(!sons.length)return null;
+  const sons=kidsAlive().filter(k=>k.sex==='m'&&!storyCastHeirBar(k)&&!k.templeStay&&!royalJourneyAway(k)&&!k.away&&!k.jailed);if(!sons.length)return null;
   const heir=S.heir&&kidById(S.heir);
   const reb=sons.find(k=>k.id!==S.heir&&kidAge(k)>=16&&k.amb>=78&&(k.sup||0)>=65&&(E().prestige<60||E().health<45));
   if(reb&&chance(.3))return coupEvent(reb);

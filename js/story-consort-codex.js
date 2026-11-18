@@ -15,5 +15,5 @@ function storyConsortCodex(){
     const seen=S.flags.gouyiSeen,p=S.consorts.find(c=>c.gouyi),status=p?(!p.alive?'已入宫 · 已故':p.gone?'已入宫 · 已离宫':'已入宫'):seen?.outcome==='归家'?'已相遇 · 归家':seen?'已相遇 · 尚未入宫':'尚未相遇';
     const preview={id:'codex-'+d.key,sur:'赵',given:'令仪',age:22,trait:'沉静',rank:3,alive:true,seed:422,artPortrait:d.portrait,portraitOverride:d.portrait};
     return `<article class="story-consort-card" data-story-consort="${d.key}"><div class="story-consort-picture">${porImg(preview,200)}<span class="tag y">${status}</span></div><div class="story-consort-copy"><h3>${d.epithet} · ${d.name}</h3><p>${d.introduction}</p><dl><dt>典故</dt><dd>${d.source}</dd><dt>触发方法</dt><dd>${d.route}<br>${d.conditions}</dd><dt>相遇与去留</dt><dd>${d.admission}</dd><dt>入宫后续</dt><dd>${d.sequel}</dd></dl><div class="acts">${p?`<button class="btn jade" onclick="A.go('consort',${p.id})">查看赵令仪的经历</button>`:!seen?'<button class="btn jade" onclick="A.go(\'out\')">前往出巡</button>':''}</div></div></article>`;
-  }).join('')}</div>`;
+  }).join('')}${storyCastCodexCards()}</div>`;
 }

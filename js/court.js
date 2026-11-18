@@ -58,7 +58,7 @@ const COURT=[
   return {title:d.region+'使臣',por:g,foreignArrival:true,text:`${d.region}遣使来朝，同行的${fullName(g)}自愿来京入选。${d.dress}。译者为她通传姓名与来意，她依礼上前相见。`,choices:[
    {t:'纳入后宫，封为常在',f:()=>{addConsort(g,2,d.region+'来朝入选');return `她向你行礼，女官与译者引她熟悉宫中起居。${fx(chg({prestige:2}))}`}},
    {t:'婉拒，厚赐使臣',f:()=>`使臣叹服天朝气度。${fx(chg({prestige:3,people:2,treasury:-30}))}`}]}},
- brief=>{const sons=kidsAlive().filter(k=>k.sex==='m'&&kidAge(k)>=6&&(!brief||brief.sons?.includes(k.id))).slice(0,4);if(!sons.length||S.heir)return null;
+ brief=>{const sons=kidsAlive().filter(k=>k.sex==='m'&&!storyCastHeirBar(k)&&kidAge(k)>=6&&(!brief||brief.sons?.includes(k.id))).slice(0,4);if(!sons.length||S.heir)return null;
   return {title:'请立储君',sons:sons.map(k=>k.id),text:`以内阁首辅为首，群臣联名上书：“国本未定，人心不安，伏请陛下早立储君。”`,choices:[
    ...sons.map(k=>({t:`立${kidName(k)}（${kidAge(k)}岁）`,preview:'册立储君 · 威望 +6 · 生母心情 +25',f:()=>{S.heir=k.id;kstory(k,'群臣请立储君，被册为皇太子。');log(`立${k.name}为皇太子。`,1);const m=byId(k.mom);if(m)cchg(m,{mood:25});return `${fx(chg({prestige:6}))}`}})),
    {t:'朕春秋正盛，此事容后再议',preview:'威望 −3',f:()=>`${fx(chg({prestige:-3}))}`}]}},
@@ -1071,7 +1071,7 @@ function identifyFather(family,house){
   return house;
 }
 function houseOf(c){
-  if(!c||c.maid||c.rescue)return null;
+  if(!c||c.maid||c.rescue||storyCastActive()&&c.fixedStory==='chuwan')return null;
   const family=paternalFamily(c),root=family[0];
   const existing=family.find(p=>p.house)?.house;
   if(existing)return identifyFather(family,existing);

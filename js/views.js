@@ -410,7 +410,7 @@ function viewConsort(){
       actionGroup('位分与居所',management)+actionGroup('敬事房',cardAction)+
       detailSection('御赐珍饰',jewelryPanel(c))+(act&&c.rank===8?birthdayBanquetButtons():'')],
     ['history','往事与纪事',
-      detailSection('宫墙往事',palaceRomancePanel(c))+journeyPanel(c)+solitaryPanel(c)+pastLifePanel(c)+
+      storyCastPanel(c)+detailSection('宫墙往事',palaceRomancePanel(c))+journeyPanel(c)+solitaryPanel(c)+pastLifePanel(c)+
       timeTravelerPanel(c)+personalExperiencePanel(c)+historyPanel(c)+lifeBiography(c)+
       detailSection('人物纪事',(act?arcLine(c):'')+detailStory(c))],
     ['decisions','处置',detailFold('处置',penalties?`<div class="acts">${penalties}</div>`:'')]
@@ -484,7 +484,7 @@ function viewKid(){
     <div class="acts">${a>=6?`<button class="btn ${k.tutor?'on':''}" onclick="A.kidTutor(${k.id})">${k.tutor?'已延请太傅':'延请太傅'}<small>每月5万两</small></button>`:''}
     ${a<14?`<button class="btn" onclick="A.foster(${k.id})">${foster?'换一位养母':'交给妃嫔抚养'}</button>`:''}
     ${foster&&mom?.alive?`<button class="btn" onclick="A.unfoster(${k.id})">抱回生母身边</button>`:''}</div>`:'';
-  const titles=k.alive&&!k.removedFromRoyal&&!k.templeStay&&!royalJourneyAway(k)?`${k.sex==='m'&&a>=5&&S.heir!==k.id?`<button class="btn" onclick="A.kidHeir(${k.id})">立为太子</button>`:''}
+  const titles=k.alive&&!k.removedFromRoyal&&!k.templeStay&&!royalJourneyAway(k)?`${k.sex==='m'&&a>=5&&S.heir!==k.id&&!storyCastHeirBar(k)?`<button class="btn" onclick="A.kidHeir(${k.id})">立为太子</button>`:''}
     ${(journalContentVersion()>=40?royalChildTitleReady(k):a>=12)?`<button class="btn" onclick="A.kidTitle(${k.id})">赐封号</button>`:''}`.trim():'';
   return `${personBackButton('kids')}
    <header class="detail-head">${porImg(k,224)}<div class="grow"><p>${status}</p><h2>${esc(kidName(k))}</h2>
@@ -493,7 +493,7 @@ function viewKid(){
    ${k.alive&&!k.removedFromRoyal&&!k.estate&&!k.jailed&&!k.pendingName?`<div class="detail-actions" role="group" aria-label="人物操作"><span class="detail-action-label" aria-hidden="true">人物操作</span><div class="acts"><button class="btn primary" onclick="A.kidVisit(${k.id})">${childHasLeftPalace(k)?'写家书':'探望'}<small>精力-1</small></button></div></div>`:''}
    <div class="detail-vitals">${bar('才学',k.lit,'#617991')}${bar('武艺',k.mar,'#92504a')}${bar('品德',k.vir,'#517369')}</div>
    ${pageChapters('child',[
-    ['now','近况与心事',childDispositionPanel(k)+immortalPanel(k)+royalTravelPanel(k)+continuityPanel(k)+
+    ['now','近况与心事',storyCastChildPanel(k)+childDispositionPanel(k)+immortalPanel(k)+royalTravelPanel(k)+continuityPanel(k)+
       (k.alive?initiativeHTML(k):'')+detailSection(a>=20?'婚事与心意':'少年心事',youthPanel(k))+
       detailSection('护国寺祈福',childTemplePanel(k))],
     ['care','教养与封号',detailSection('教养与抚养',care)+
@@ -509,7 +509,7 @@ function viewKid(){
 }
 function viewOut(){
   const o=[['garden','御花园','偶遇妃嫔、宫女，或独自散心'],['city','微服出宫','体察民情，也许会遇见有缘人'],['hunt','南苑围猎','武略越高越易成功，有受伤风险'],['temple','护国寺祈福','民心、龙体小增，本月更易得子'],['spa','温泉行宫',`休养龙体（国库-${SPA_COST}万两）`]];
-  return `${pageHeading('出巡','每次出巡花费1点精力。')}<div class="grid destination-grid">${o.map(([k,n,d])=>`<button class="card" onclick="A.out('${k}')"><div class="grow"><div class="nm">${n}</div><div>${d}</div></div></button>`).join('')}</div>${rescuedGuestsPanel()}${princessEstatePanel()}${princeEstatesPanel()}${incognitoLedger()}`}
+  return `${pageHeading('出巡','每次出巡花费1点精力。')}<div class="grid destination-grid">${o.map(([k,n,d])=>`<button class="card" onclick="A.out('${k}')"><div class="grow"><div class="nm">${n}</div><div>${d}</div></div></button>`).join('')}</div>${rescuedGuestsPanel()}${princessEstatePanel()}${princeEstatesPanel()}${incognitoLedger()}${storyCastOutPanel()}`}
 function viewLog(){
   // A month divider with nothing recorded after it is noise; keep only dividers that head real entries.
   const divider=l=>/^—— .+ ——$/.test(l?.t||'');

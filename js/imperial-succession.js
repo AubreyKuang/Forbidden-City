@@ -44,7 +44,7 @@ function imperialHeirProposal(adopted,brother,state){
   if(old?.status==='closed'||old?.status==='wait'&&!ofAge||S.turn-(state.lastPetition??-99)<4)return;
   const queenAsks=q&&brother.mom===q.id&&!isSolitary(q)&&q.scheme>=55;
   if(!old&&!chance(queenAsks?.22:.08))return;
-  const valid=()=>!S.over&&S.heir===adopted.id&&eligiblePalaceSon(adopted)&&laterImperialSon(brother,adopted)&&!brother.jailed&&!brother.templeStay&&!immortalAway(brother);
+  const valid=()=>!S.over&&S.heir===adopted.id&&eligiblePalaceSon(adopted)&&laterImperialSon(brother,adopted)&&!storyCastHeirBar(brother)&&!brother.jailed&&!brother.templeStay&&!immortalAway(brother);
   const resolve=(mode)=>()=>{
     if(!valid())return null;
     state.proposals[key]={status:mode==='defer'?'wait':'closed'};

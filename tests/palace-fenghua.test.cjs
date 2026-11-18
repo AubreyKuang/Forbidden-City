@@ -103,7 +103,7 @@ test('departure has a real return date and personal chronicle threads work with 
 
 test('a genuine version 21 pending scene resumes its old world before enabling version 22',()=>{
  const fixture=require('./fixtures/fenghua-legacy-v21.json'),b=game(new Map([['chengongji_v1_auto',JSON.stringify(fixture)]]));
- b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,21);assert.equal(fenghuaActive(),false);assert.equal(S.fenghua,undefined);drain();assert.equal(PalaceActions.contentVersion,69);assert.equal(fenghuaActive(),true);`);
+ b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,21);assert.equal(fenghuaActive(),false);assert.equal(S.fenghua,undefined);drain();assert.equal(PalaceActions.contentVersion,70);assert.equal(fenghuaActive(),true);`);
 });
 
 for(const key of ['shangguanLantai','gaoHuaibi'])test(key+' first audience reloads before and after admission',()=>{
@@ -136,5 +136,5 @@ test('Jinyiwei receives a pending clue only while a serving commander exists',()
 for(const [scene,fixture] of Object.entries(require('./fixtures/fenghua-legacy-v22.json')))test('published version 22 '+scene+' resumes without adding a guest or changing its draws',()=>{
  const b=game(new Map([['chengongji_v1_auto',JSON.stringify(fixture)]]));b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,22);assert.equal(fenghuaActive(),false);assert.equal(S.fenghua,undefined);`);
  assert.equal(b.run('curEv.title'),fixture.pendingActions.pending.title);
- b.run(`drain();assert.equal(PalaceActions.contentVersion,69);assert.equal(fenghuaActive(),true);assert.equal(PalaceActions.blocked,false);`);
+ b.run(`drain();assert.equal(PalaceActions.contentVersion,70);assert.equal(fenghuaActive(),true);assert.equal(PalaceActions.blocked,false);`);
 });
