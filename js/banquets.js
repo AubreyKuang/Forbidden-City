@@ -57,10 +57,49 @@ A.banquetActivity = function(activity) {
   render();
 };
 
+function whiteSpringDancer(draft){
+  if(draft?.kind!=='garden')return null;
+  const dancer=byId(storyCastRecord('ayimu')?.id);
+  return inPalace(dancer)&&!dancer.maid?dancer:null;
+}
+function seatedForDance(draft,c){return draft.all||draft.seats.includes(c.id);}
+function danceFriend(dancer,c){
+  return relGet(dancer,c)>=30&&!isRival(dancer,c)&&!isRival(c,dancer)&&!friendshipTense(dancer,c);
+}
+function gardenDrummers(draft,dancer){
+  return (dancer.gardenDrummers||[]).map(byId).filter(c=>inPalace(c)&&!c.maid&&seatedForDance(draft,c)&&danceFriend(dancer,c));
+}
+function gardenDancePanel(draft){
+  const dancer=whiteSpringDancer(draft);
+  if(!dancer)return '';
+  const seated=seatedForDance(draft,dancer);
+  const options=[['solo','请阿依慕独舞'],...gardenDrummers(draft,dancer).map(c=>[c.id,'请'+fullName(c)+'伴鼓'])];
+  return `<h3>白泉舞</h3>${seated?'':'<p class="hint">将阿依慕列入席单，便可请她献舞。</p>'}<div class="acts">${options.map(([key,label])=>
+    `<button class="btn sm ${draft.dance===key?'on':''}" aria-pressed="${draft.dance===key}" ${seated?'':'disabled'} onclick="A.banquetDance('${key}')">${esc(label)}</button>`).join('')}${draft.dance?`<button class="btn sm quiet" onclick="A.banquetDance('')">撤下舞曲</button>`:''}</div>`;
+}
+A.banquetDance=function(key){
+  const draft=banquetDraft(),dancer=whiteSpringDancer(draft);
+  if(modalOpen||!dancer||!seatedForDance(draft,dancer))return;
+  if(key==='')delete draft.dance;
+  else if(key==='solo')draft.dance='solo';
+  else{
+    const partner=gardenDrummers(draft,dancer).find(c=>String(c.id)===key);
+    if(!partner)return;
+    draft.dance=partner.id;
+  }
+  render();
+};
+function checkDanceSeats(draft){
+  if(!draft.dance)return;
+  const dancer=whiteSpringDancer(draft);
+  if(!dancer||!seatedForDance(draft,dancer)||(draft.dance!=='solo'&&!gardenDrummers(draft,dancer).some(c=>c.id===draft.dance)))delete draft.dance;
+}
+
 A.banquetInviteAll = function(all) {
   const draft = banquetDraft();
   if (!draft) return;
   draft.all=all;
+  checkDanceSeats(draft);
   render();
 };
 
@@ -70,6 +109,7 @@ A.banquetGuest = function(id) {
   const index=draft.seats.indexOf(id);
   if (index>=0) draft.seats.splice(index,1);
   else if (draft.seats.length<4) draft.seats.push(id);
+  checkDanceSeats(draft);
   render();
 };
 
@@ -144,6 +184,7 @@ function viewBanquet() {
         }).join('')}</ol><div class="grid">${guestCards}</div>`}
     <p class="banquet-selection" role="status">已选：${draft.all?'全员宴请':'自选宾客'} · ${GARDEN_ACTIVITIES[draft.activity].label} · ${people.length} 位宾客</p><h3>席间活动</h3><div class="acts">${Object.entries(GARDEN_ACTIVITIES).map(([key,act])=>
       `<button class="btn sm ${draft.activity===key?'on':''}" aria-pressed="${draft.activity===key}" onclick="A.banquetActivity('${key}')">${act.label}</button>`).join('')}</div>
+    ${gardenDancePanel(draft)}
     <div class="acts"><button class="btn gold" ${problem?'disabled':''} onclick="A.holdBanquet()">开宴<small>精力-1 · ${feast.cost?`国库-${feast.cost}万两`:'筹备时已拨款'}</small></button></div>
     ${problem?`<p class="hint">${problem}</p>`:''}`;
 }
@@ -205,6 +246,43 @@ A.holdBanquet = function() {
     }})), {t:'再看看席单'}] });
 };
 
+function performWhiteSpringDance(draft,people){
+  if(!draft.dance)return null;
+  const dancer=whiteSpringDancer(draft);
+  if(!dancer||!people.includes(dancer))return null;
+  const partner=people.find(c=>c.id===draft.dance);
+  if(draft.dance!=='solo'&&!gardenDrummers(draft,dancer).includes(partner))return null;
+  const guests=people.filter(c=>!c.sex&&!c.maid&&c!==dancer&&c!==partner);
+  const learned=dancer.gardenDrummers||[];
+  const pupil=guests.filter(c=>!learned.includes(c.id)&&danceFriend(dancer,c)).sort((a,b)=>relGet(dancer,b)-relGet(dancer,a))[0];
+  const glimpses=new Map();
+  for(const c of guests){
+    const bond=relGet(dancer,c);
+    let tone,line;
+    if(c===pupil){
+      tone='学鼓';line='听阿依慕又打了一遍收袖前的两记轻拍，接过小鼓试到合拍，约好下回为她伴奏。';
+      (dancer.gardenDrummers||=[]).push(c.id);relAdd(c,dancer,3);
+    }else if(danceFriend(dancer,c)){
+      tone='欣赏';line=pick(['认出阿依慕收步前总要轻侧一下腕子，赶在银铃响起前便先叫了好。','见阿依慕一舞方歇，替她拢起垂到鼓边的长纱，问她故乡人怎样谢舞。']);relAdd(c,dancer,2);
+    }else if(bond<=-25||isRival(dancer,c)||isRival(c,dancer)||(bond<15&&TRAITS[c.trait]?.jealous&&dancer.favor>=c.favor)){
+      tone='吃醋';line=c.scheme>=60?'见陛下目光随阿依慕的舞袖转了一圈，也随众人拍了几下手。等乐工收鼓，才低声同贴身人说：“这一曲可真长。”':'原也跟着鼓声轻拍，见陛下一直望着阿依慕，便放下手里的拍板，低头拨弄杯盖。';cchg(c,{mood:-2});relAdd(c,dancer,-1);
+    }else if(consortHobby(c)==='抚琴'){
+      tone='听曲';line='听出阿依慕落脚总比银铃声早半拍，拿筷子在掌心试了两次，才摸清这支白泉舞的拍子。';relAdd(c,dancer,1);
+    }else{
+      tone='观礼';line=pick(['起初担心鼓面太窄，看到阿依慕稳稳收住脚尖，才放心随众人拍手。','留意到阿依慕足下的鼓声音色各异，散席后还记得最清亮的那一响。']);
+    }
+    story(c,'御花园小宴观白泉舞。'+line);
+    if(!glimpses.has(tone))glimpses.set(tone,fullName(c)+line);
+  }
+  const song=partner?'《归泉》':'《泉上铃》';
+  const line=partner?'随'+fullName(partner)+'的手鼓跳了'+song+'，听见熟悉的两记轻拍便收袖，两个人一同向上席行礼。':'应邀在御花园跳了家乡的'+song+'，收住脚步时，腕上的小银铃还在颤。';
+  story(dancer,line+(pupil?' 歇曲时教'+fullName(pupil)+'学会了收拍。':''));cchg(dancer,{mood:4});
+  if(partner){story(partner,'在御花园小宴为阿依慕伴鼓，照上回学的拍子送她收袖，一同谢席。');relAdd(dancer,partner,4);}
+  log('御花园小宴，请阿依慕再跳白泉舞'+song+'。'+(partner?fullName(partner)+'为她伴鼓。':''));
+  return {title:'御花园小宴 · '+song,por:dancer,portraitArt:WHITE_SPRING_DANCE_ART,
+    text:'阿依慕'+line+'\n'+['学鼓','吃醋','欣赏','听曲','观礼'].map(t=>glimpses.get(t)).filter(Boolean).slice(0,3).join('\n'),choices:[{t:'接着用宴'}]};
+}
+
 function playBanquet(draft,feast,people,tables,move) {
   if (!useE()) return;
   E().treasury-=feast.cost;
@@ -212,6 +290,7 @@ function playBanquet(draft,feast,people,tables,move) {
   else if (draft.kind==='duanwu') duanwuWork().held=true;
   else S.lastGardenBanquet=S.turn;
   const label=GARDEN_ACTIVITIES[draft.activity].label, toss=draft.activity==='toss';
+  const dance=performWhiteSpringDance(draft,people);
   const lines=[];
   let entries=0, successes=0;
   for (const table of tables) {
@@ -269,6 +348,7 @@ function playBanquet(draft,feast,people,tables,move) {
   if (demand) pushNow(proudDemandEvent(demand,people));
   pushNow({title:`${feast.title} · ${label}`, cast:people.slice(0,4), gardenTables:draft.kind==='garden'?tables:null,
     text:`§${result}${promise}\n${lines.slice(0,6).join('\n')}`, choices:[ok1]});
+  if(dance)pushNow(dance);
 }
 
 function banquetPair(a,b,label,toss,move) {

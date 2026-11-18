@@ -8,8 +8,8 @@ const STORY_CAST={
     epithet:'北境将门',route:'北苑校场',rank:3,
     intro:'陆将军独女，有一位兄长。十岁随父见过战阵，长成后百步穿杨，说不惯宫里的客套话。'},
   ayimu:{sur:'',given:'阿依慕',age:15,trait:'活泼',family:'白泉国王室',power:50,place:'envoy',
-    epithet:'白泉国来使',route:'四夷馆接风宴',rank:3,
-    intro:'白泉国和亲公主，天真活泼，初来不熟宫规，衣袖常带故乡的淡香。她在意互市，也想让远方的母亲能收到亲笔信。'},
+    epithet:'白泉国公主',route:'御花园 · 白泉国宫宴',rank:3,
+    intro:'白泉国王携女入朝求亲。她随父亲赴宫宴，亲自挑了一支故乡舞曲，袖上系着母亲缝的香囊。她在意互市，也想让远方的母亲能收到亲笔信。'},
   chuwan:{sur:'方',given:'晚',age:15,trait:'沉静',family:'民间寄居',power:8,place:'register',
     epithet:'旧籍里的名字',route:'查阅地方旧籍 · 第一代登基满十二年',rank:1,
     intro:'随照养人姓方，旧籍中还有一个被涂去的名字。'},
@@ -20,6 +20,8 @@ const STORY_CAST={
     epithet:'灯市戏法',route:'京城灯市 · 正月也可从御花园请她献艺',rank:1,
     intro:'街头卖艺，接活先谈钱，不偷不骗，也不求怜悯。她数得清每场工钱，也记得大杂院里几个孩子缺过冬的炭。'}
 };
+const WHITE_SPRING_DANCE_ART={src:'./assets/images/story-cast/ayimu-dance.webp',alt:'阿依慕身着绣银白泉舞服，轻踏鼓面，腕上银铃随袖扬起'};
+const whiteSpringBanquetActive=()=>journalContentVersion()>=75;
 const storyCastData=key=>Object.hasOwn(STORY_CAST,key)?STORY_CAST[key]:null;
 const storyCastRecord=key=>S.flags.storyCast?.gen===S.gen?S.flags.storyCast.people[key]:null;
 const storyCastPerson=r=>r?.person||byId(r?.id);
@@ -106,6 +108,22 @@ function storyCastMeetEvent(key,r){
     return scene('陆绾 · 听她谈军驿','她谈起十岁在边营见的第一仗，也谈父兄夜里核对伤员名册。“我愿留京。北边真出事了，您得让我先把家书看了。”',
       join('北苑相识，亲口应允入宫'),close('送她随陆家回边城','已相识 · 回北境','告别京城，仍随陆家回北境。'));
   }
+  if(key==='ayimu'&&whiteSpringBanquetActive()){
+    const first=stage===0;
+    const keep=storyCastChoice(first?'应下国王的婚议，留阿依慕入宫':'准阿依慕留下，遣使向国王报喜',
+      ()=>storyCastAdmit(c,r,first?'随父王赴御花园宫宴，鼓上献舞惊艳四座，席间亲允婚议':'接风宴后亲自回话，愿留京入宫，与白泉家书往来'),
+      ()=>storyCastAdmissionAllowed(c,r));
+    const farewell=close('以国宾礼送父女归国','已相识 · 随父王归国',first?
+      '随父赴宫宴，在御前献了白泉鼓舞。陛下赐宴答礼，次日随父王启程回乡。':'入宫辞行，领了回赠母亲的织锦，随父王回白泉。');
+    if(!first)return scene('白泉公主 · 席后回话','阿依慕跟父王一道来辞行。国王提起席上的婚议，她已想好：“我愿留下。开春商队入关，我想托他们带一封平安信给母亲。”国王听完，向你行了一礼，等候回音。',keep,farewell);
+    return {title:'御花园宫宴 · 白泉公主献舞',por:c,
+      portraitArt:WHITE_SPRING_DANCE_ART,
+      text:'宫中设宴款待白泉国王。酒过一巡，国王领女儿上前：“小女阿依慕，愿以一支家乡的舞为陛下祝酒。臣也有意将她许与陛下，求两家结亲。”'
+        +'\n乐工把三面扁鼓依次放平。阿依慕提起裙角，足尖踏上鼓面，一串轻响从席前传到花下。最后一拍，她忽然收袖，腕上的银铃还在响。一只白蝶停在袖口，她索性等它飞走才行礼。席间静了一瞬，连方才执壶的宫人也跟着喝起彩来。'
+        +'\n你问她自己的意思。她望了父亲一眼，用才学的官话答道：“我愿意。若留下，明早可许我托父王给母亲带封信？她还在等我说，京里的鼓跟家里响得一不一样。”',
+      valid:()=>!r.id&&!r.closed&&r.stage===0,choices:[keep,farewell,
+        advance('请父女在京暂住，稍后再答复','父王在御花园席上求亲，她献过鼓舞，随父暂住馆舍，等候回音。')]};
+  }
   if(key==='ayimu'){
     if(stage===0)return scene('四夷馆 · 白泉国接风宴','阿依慕戴着母亲缝的干花香囊献舞。曲将终时，一只蝴蝶落在她肩上。她笑着收住袖口，请通译等舞罢再问边关几时开市。',
       advance('请她留坐，一并听使团来意','接风宴献舞后与陛下叙话，问及边关互市和寄家书的办法。'),
@@ -139,16 +157,17 @@ function storyCastMeetEvent(key,r){
     close('送她回灯市，自由往来','已相识 · 回到灯市','仍在灯市演戏法，记住了这趟宫宴的几份工钱。'));
 }
 
-const STORY_CAST_PLACES={suzhou:'南巡苏州',drill:'北苑校场',envoy:'四夷馆接风宴',register:'查阅地方旧籍',lantern:'京城灯市'};
+const STORY_CAST_PLACES={suzhou:'南巡苏州',drill:'北苑校场',envoy:'白泉国宫宴',register:'查阅地方旧籍',lantern:'京城灯市'};
 function storyCastMeetReady(key){
   const r=storyCastRecord(key);
+  if(key==='ayimu'&&whiteSpringBanquetActive()&&(mourningActive()||E().age<15))return false;
   return storyCastReady(key)&&!r?.closed&&!r?.id&&S.turn>=(r?.due??0)&&
     !(key==='xiaoman'&&r?.stage===1&&!r.performed);
 }
 A.storyCastVisit=function(key){
   if(!storyCastActive()||!storyCastData(key)||modalOpen||S.over||!storyCastMeetReady(key)||!useE())return;
   const r=storyCastRecord(key)||storyCastCreate(key);
-  setScene(r.office?'harem':key==='luwan'?'garden':'city');
+  setScene(r.office?'harem':(key==='luwan'||key==='ayimu'&&whiteSpringBanquetActive())?'garden':'city');
   pushEv(storyCastMeetEvent(key,r));
 };
 A.storyCastDossier=function(key){
@@ -164,8 +183,9 @@ function storyCastVisitButton(key){
     return `<button class="btn jade" onclick="A.openBanquet()">筹御花园小宴请岑小满献艺</button>`;
   }
   const d=STORY_CAST[key],name=key==='chuwan'&&!r?'地方旧籍':storyCastName(key,r);
-  const label=r?.office?'往钟粹宫见沈清漪':r?.stage?'继续「'+name+'」的故事':'寻访'+name;
-  const hint=!storyCastReady(key)?d.route:r?.due>S.turn?'再等 '+(r.due-S.turn)+' 个月':'精力−1';
+  const banquet=key==='ayimu'&&whiteSpringBanquetActive();
+  const label=banquet?(r?.stage?'听白泉公主回话':'赴白泉国宫宴') : r?.office?'往钟粹宫见沈清漪':r?.stage?'继续「'+name+'」的故事':'寻访'+name;
+  const hint=banquet&&mourningActive()?'服丧期间暂缓设宴':banquet&&E().age<15?'陛下年满十五岁后赴宴':!storyCastReady(key)?d.route:r?.due>S.turn?'再等 '+(r.due-S.turn)+' 个月':'精力−1';
   return `<button class="btn jade" onclick="A.storyCastVisit('${key}')" ${ready?'':'disabled'}>${esc(label)}<small>${esc(hint)}</small></button>`;
 }
 function storyCastOutPanel(){
@@ -177,15 +197,18 @@ function storyCastOutPanel(){
   }).join(''));
 }
 function storyCastGardenButton(){
-  if(!storyCastActive()||S.month!==1)return '';
-  return storyCastVisitButton('xiaoman');
+  if(!storyCastActive())return '';
+  return (whiteSpringBanquetActive()?storyCastVisitButton('ayimu'):'')+(S.month===1?storyCastVisitButton('xiaoman'):'');
 }
 function storyCastCodexCards(){
   if(!storyCastActive())return '';
   return Object.entries(STORY_CAST).map(([key,d])=>{
     const r=storyCastRecord(key),p=storyCastPerson(r)||{...d,fixedStory:key,alive:true};
     const name=key==='chuwan'&&!r?'姓名待考':storyCastName(key,r);
-    return `<article class="story-consort-card" data-story-consort="${key}"><div class="story-consort-picture">${porImg(p,200)}<span class="tag y">${esc(storyCastStatus(r))}</span></div><div class="story-consort-copy"><h3>${esc(name)} · ${esc(d.epithet)}</h3><p>${esc(d.intro)}</p><p>出巡 → ${esc(d.route)}</p><div class="acts">${r?`<button class="btn" onclick="A.storyCastDossier('${key}')">查看经历</button>`:''}${storyCastVisitButton(key)}</div></div></article>`;
+    const tag='<span class="tag y">'+esc(STORY_CAST_TAGS[key])+'</span>';
+    const badge=key==='chuwan'&&!r?.revealed?'<details><summary>查看特殊标签（含身世）</summary>'+tag+'</details>':tag;
+    const guide=STORY_CAST_LIVES[key];
+    return `<article class="story-consort-card" data-story-consort="${key}"><div class="story-consort-picture">${porImg(p,200)}<span class="tag y">${esc(storyCastStatus(r))}</span></div><div class="story-consort-copy"><h3>${esc(name)} · ${esc(d.epithet)}</h3><div aria-label="人物特殊标签">${badge}</div><p>${esc(d.intro)}</p><p>${key==='ayimu'?'宫中':'出巡'} → ${esc(d.route)}</p><p>入宫主线 · ${esc(guide.title)}<br>日常 · ${esc(guide.routine)}<br>特殊事件 · ${esc(guide.secret)}</p>${key==='ayimu'?'<p>入宫后，可在御花园小宴请她跳白泉舞。交好的妃嫔学过鼓点，往后同席可点名伴奏。</p>':''}<div class="acts">${r?`<button class="btn" onclick="A.storyCastDossier('${key}')">查看经历</button>`:''}${storyCastVisitButton(key)}</div></div></article>`;
   }).join('');
 }
 

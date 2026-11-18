@@ -17,7 +17,7 @@ test('v74 pending result replays before goal reconciliation',()=>{
  const b=boot(1,new Map([['chengongji_v1_auto',JSON.stringify(save)]]));b.ctx.assert=assert;
  b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,74);
   assert.equal(curEv.title,'黄河决堤');assert.ok(modalResult);drain();A.go('home');
-  assert.equal(PalaceActions.contentVersion,75);assert.ok(S.dynastyGoals);`);
+  assert.equal(PalaceActions.contentVersion,76);assert.ok(S.dynastyGoals);`);
 });
 
 for(const [scenario,expected] of [['founder',350],['regent',500],['succession',800],['prosperous',1800],['crisis',100]]){

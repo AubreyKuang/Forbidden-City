@@ -13,7 +13,8 @@ test('all six dossiers use their own visits, wait for consent and admit exactly 
   assert.equal(storyCastRecord('qingyi').office,true);assert.equal(harem().some(c=>c.fixedStory==='qingyi'),false);
   S.turn+=2;assert.equal(storyCastMeetReady('qingyi'),false);S.turn++;visit('qingyi');
   var shen=storyCastPerson(storyCastRecord('qingyi'));assert.equal(shen.rank,1);assert.equal(shen.palace,'钟粹宫');
-  for(const key of ['luwan','ayimu','suheng']){visit(key);S.turn++;visit(key);}
+  for(const key of ['luwan','suheng']){visit(key);S.turn++;visit(key);}
+  visit('ayimu');assert.equal(storyCastPerson(storyCastRecord('ayimu')).enteredAt,S.turn);
   visit('xiaoman');S.turn++;assert.equal(storyCastMeetReady('xiaoman'),false);
   A.openBanquet();A.banquetInviteAll(true);A.holdBanquet();choose(0);drain();
   visit('xiaoman',1);
@@ -34,7 +35,7 @@ test('pending scenes restore and each daughter or son inherits only the relevant
  b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(curEv.title,'北苑校场 · 陆绾');
   choose(0);drain();S.turn++;E().energy=8;A.storyCastVisit('luwan');choose(0);drain();
   var lu=storyCastPerson(storyCastRecord('luwan'));var son=makeKid(lu,'m','景谦');assert.ok(son.jiangmenChild);
-  A.storyCastVisit('ayimu');choose(0);drain();S.turn++;A.storyCastVisit('ayimu');choose(0);drain();
+  A.storyCastVisit('ayimu');choose(0);drain();
   var ayi=storyCastPerson(storyCastRecord('ayimu'));var white=makeKid(ayi,'m','景泽');white.born=S.turn-8*12;
   assert.ok(white.foreignLineage);assert.equal(white.charm,25);A.kidHeir(white.id);assert.equal(S.heir,null);assert.equal(modalOpen,false);
   assert.equal(makeKid(empress(),'f','清荷').foreignLineage,undefined);
@@ -87,4 +88,20 @@ test('Chu Wan keeps her original portrait before admission and wears robes for h
   wan.rank=4;assert.match(porImg(wan,84),/chuwan-noble\.webp/);
   wan.rank=6;assert.match(porImg(wan,200),/chuwan-grand\.webp/);
   wan.rank=3;assert.match(porImg(wan,64),/chuwan-court\.webp/);`);
+});
+
+test('White Spring guests can leave or stay for a later audience without repeating the dance',()=>{
+ for(const answer of [0,1,2]){
+  const b=world();b.ctx.assert=assert;b.ctx.answer=answer;
+  b.run(`E().age=14;var energy=E().energy;A.storyCastVisit('ayimu');assert.equal(E().energy,energy);
+   E().age=25;S.flags.dowager.mourning={turn:S.turn};assert.equal(storyCastMeetReady('ayimu'),false);
+   delete S.flags.dowager.mourning;assert.match(storyCastGardenButton(),/赴白泉国宫宴/);
+   A.storyCastVisit('ayimu');assert.match(curEv.title,/白泉公主献舞/);assert.equal(porName(curEv.por),'白泉公主 · 阿依慕');choose(answer);drain();
+   var r=storyCastRecord('ayimu');
+   if(answer===2){assert.equal(storyCastMeetReady('ayimu'),false);S.turn++;A.storyCastVisit('ayimu');
+    assert.match(curEv.title,/席后回话/);choose(0);drain();}
+   if(answer===1){assert.ok(r.closed);assert.match(r.person.story.at(-1).t,/随父王/);}
+   else{assert.equal(harem().filter(c=>c.id===r.id).length,1);assert.equal(byId(r.id).rank,3);}
+   assert.equal(storyCastMeetReady('ayimu'),false);assert.doesNotMatch(storyCastGardenButton(),/白泉/);`);
+ }
 });
