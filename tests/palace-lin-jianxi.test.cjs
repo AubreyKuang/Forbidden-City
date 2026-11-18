@@ -123,3 +123,53 @@ test('an actual v69 city encounter replays its original guest before Lin enters 
   assert.ok(fenghuaPerson('jiShuye'));assert.equal(linJianxiPerson(),undefined);
   assert.match(fenghuaCodex(),/林见溪/);`);
 });
+
+test('three special visits work without a princess and keep a single portrait and identity',()=>{
+ let b=game();
+ b.run(`createFenghuaPerson('linJianxi');A.fenghuaVisit('linJianxi');choose(0);drain();`);
+ for(const title of ['借的是书','扇上不题名','风里有回声']){
+  advance(b);
+  b.run(`A.fenghuaVisit('linJianxi');assert.match(curEv.title,/${title}/);save('auto');`);
+  b=game(b.storage);
+  b.run(`choose(0);drain();assert.ok(linJianxiPerson().story.some(s=>s.event?.title==='${title}'));`);
+ }
+ advance(b);
+ b.run(`A.fenghuaVisit('linJianxi');assert.match(curEv.title,/竹下清坐/);choose(0);drain();`);
+});
+
+test('all eight dispositions leave specific memories in his own proposal',()=>{
+ const b=game();
+ setupPrincess(b);
+ b.run(`var p=createFenghuaPerson('linJianxi');A.linJianxiHeart(k.id);choose(0);drain();
+  A.linJianxiVisit(k.id);choose(0);drain();`);
+ advance(b);visit(b);advance(b);
+ b.run(`for(const [temperament,[memory,text]] of Object.entries(LIN_JIANXI_PASTIMES)){
+  k.temperament=temperament;const scene=linJianxiVisit(p,k);assert.ok(scene.text.includes(text));scene.choices[0].f();
+  assert.ok(linJianxiProposalEvent(k).text.includes(memory));k.linJianxi.phase='return';
+ }`);
+ b.run(`A.linJianxiVisit(k.id);choose(1);drain();
+  assert.doesNotMatch(youthPanel(k),/读林见溪的画笺/);`);
+ advance(b);
+ b.run(`A.linJianxiFriend(k.id);assert.match(curEv.title,/旧图知音/);choose(0);drain();
+  assert.equal(k.linJianxi.phase,'friends');assert.ok(k.story.some(s=>s.event?.title==='旧图知音'));
+  A.linJianxiFriend(k.id);assert.equal(modalOpen,false);`);
+});
+
+test('married chapters remember her choice and require a present child for the family branch',()=>{
+ let b=game();setupCourtship(b);
+ b.run(`A.openPrincess(k.id);choose(0);drain();A.linJianxiProposal(k.id);choose(0);drain();`);
+ advance(b);
+ b.run(`A.linJianxiWalk(k.id);choose(1);drain();A.linJianxiHome(k.id);assert.equal(modalOpen,false);`);
+ advance(b);
+ b.run(`A.linJianxiHome(k.id);assert.match(curEv.title,/竹门有灯/);choose(1);drain();`);
+ advance(b,6);
+ b.run(`A.linJianxiHome(k.id);assert.match(curEv.title,/竹径归来/);assert.match(curEv.text,/桥边竹荫下喝茶.*静坐/);
+  choose(0);drain();assert.ok(startHouseholdPregnancy(k,k.spouse));`);
+ advance(b,9);
+ b.run(`var child=deliverHouseholdChild(k,k.household.pregnancies[0]);assert.ok(child);
+  A.linJianxiHome(k.id);assert.equal(modalOpen,false);`);
+ advance(b,48);
+ b.run(`A.linJianxiHome(k.id);assert.match(curEv.title,/小儿问水/);save('auto');`);
+ b=game(b.storage);
+ b.run(`assert.match(curEv.title,/小儿问水/);choose(0);drain();assert.equal(S.children[0].linJianxi.childStory,true);`);
+});

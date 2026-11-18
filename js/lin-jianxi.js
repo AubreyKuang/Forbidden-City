@@ -57,11 +57,41 @@ function linJianxiSharedEvent(k,p,title,text,choices,ready=linJianxiMeetingReady
   }
  }))};
 }
+const LIN_JIANXI_PASTIMES={
+ 好奇:['岔路两图','她循着图问溪上还有几道岔路。见溪在背面添了方向，也圈出一段自己还未走过的路。她说，等去过再一同补上。'],
+ 内敛:['看画不催','一时无人开口，他把画转过去，让她慢慢看。她最后指给他看，自己添的其实是一小点月影。'],
+ 仁厚:['也替他斟一盏','见溪给席上诸人添了茶。轮到自己时壶已空了，她起身续水，把第一盏放回他面前。他怔一怔，这回先坐下喝。'],
+ 爽直:['当面问一声','她问他是否也有想托人搭把手的时候。他想了想，将画的另一角交给她压住，两人刚好腾得出手把图折齐。'],
+ 好胜:['两个好主意','两人各执一种渡溪的走法。他没让她赢，只把两条路都画了出来。她先看出自己漏了水涨时的石阶，他也划掉了自己多画的一段。'],
+ 灵动:['扇面换个看法','她借窗光把手影投到扇上，正像一只落在溪边的鸟。他笑了，顺手将扇挪低一点，好叫她再试一次。'],
+ 审慎:['说清归时','她问若遇涨水该走哪条路、何时回城。他一一说明，也请她定折返的时辰。两人写下约定，谁都不必只凭猜测等人。'],
+ 自矜:['这一笔由她说','席间有人道公主落笔自然样样好。见溪却认真问她为何把远山留淡。她说罢，他再看一遍，才说自己明白了。']
+};
+const LIN_JIANXI_SOLO=[
+ ['借的是书','竹窗边晾着几册潮了的书。见溪说，邻里孩子常来借，有人不识字，便等认得字的孩子慢慢念给他听。书角卷了，他把自己的那册挪来垫在上面。',
+  ['请他留下互相借阅的法子','他只记哪册书到了谁手上。识字多的、识字少的，都能在簿上画下自己的记号。'],
+  ['与你一道晒完这一摞书','两人把书移到廊下避风处。他说等明日还书的人来了，让孩子们自己认那一摞。']],
+ ['扇上不题名','有人愿借他的山水扇临一幅画，还想请他添一句称颂的话。见溪把扇拢在手里，声音仍轻：“各有各的景。这面扇上，我只想留山水。”',
+  ['听他说这处山水从何而来','他指着扇面一角，说春水最盛时，桥影便到这里。若写得满了，倒会遮住它。'],
+  ['问他可愿让人临画','他愿意给人看，也愿让人另外画，仍将自己的原扇带回竹窗边。']],
+ ['风里有回声','竹林外一阵细响。见溪不急着分辨，请你先说听见了什么。过一会儿，溪声低下来，另一边叶片轻响，两人听见的原来都在。',
+  ['静下来，等他也说一说','他说自己从前总在等旁人开口，今日有话，也想慢慢说完。'],
+  ['留他到月上，再听片刻','他添了盏茶。月亮露出来时，你们已能从一阵响动里听出水声和竹声。']]
+];
 function linJianxiSoloVisit(p){
+ const chapter=p.fenghua.soloChapter||0;
+ if(chapter>0&&chapter<=LIN_JIANXI_SOLO.length){
+  const [title,text,...answers]=LIN_JIANXI_SOLO[chapter-1];
+  return fenghuaEvent(p,title,text,answers.map(([t,result])=>({t,trust:2,f:()=>{
+   p.fenghua.soloChapter=chapter+1;
+   return result;
+  }})),{advance:false});
+ }
+ const advance=()=>{p.fenghua.soloChapter ||= 1;};
  return fenghuaEvent(p,'竹下清坐',
   '林见溪在竹窗下候你，桌上放着一盏仍暖的茶。他把山水扇合起，放到一旁：“风正好。若不想说话，坐一会儿也好。”',[
-   {t:'问他扇上的溪水从哪里来',trust:2,result:'他说沿溪多走半里便能听见水声，却看不见水从哪里下来。他自己也还想往上找一找。'},
-   {t:'共坐片刻，听竹叶里的风',trust:1,result:'两个人静坐到茶尽，起身时才约好下回得空再见。'}
+   {t:'问他扇上的溪水从哪里来',trust:2,f:advance,result:'他说沿溪多走半里便能听见水声，却看不见水从哪里下来。他自己也还想往上找一找。'},
+   {t:'共坐片刻，听竹叶里的风',trust:1,f:advance,result:'两个人静坐到茶尽，起身时才约好下回得空再见。'}
   ],{advance:false});
 }
 function linJianxiVisit(p,k){
@@ -87,10 +117,11 @@ function linJianxiVisit(p,k){
  }
  const recalled=state.reply==='wait'?'席间又有人问起近来所读。他把茶盏轻轻搁下，等到公主自己答完，才问她最喜欢书里哪一段。':
   '席间有人翻开书问公主的看法。他先等了一等，等到她朝这边望过来，才顺着她方才说过的话替她接了一句。';
- return linJianxiSharedEvent(k,p,'等她答完 · 回约',recalled+
+ const [memory,pastime]=LIN_JIANXI_PASTIMES[childDisposition(k)];
+ return linJianxiSharedEvent(k,p,'等她答完 · 回约',recalled+'\n'+pastime+
   '\n人散后，公主说起彼此曾看过的山水，想托人问问他的心意。你可以替她传话。',[
    {label:'依她的心意递话',apply:s=>{
-    s.phase='proposal';s.after=S.turn;
+    s.phase='proposal';s.after=S.turn;s.sharedMemory=memory;
     return '林见溪听罢，亲自回话：“我也愿意。若殿下还肯听，我想按礼来求这一门亲。”他的回话留待公主亲自答复。';
    }},
    {label:'听她说，往后仍愿做知交',apply:s=>{
@@ -107,7 +138,7 @@ function linJianxiProposalReady(k,p=linJianxiPerson()){
 function linJianxiProposalEvent(k,p=linJianxiPerson()){
  if(!linJianxiProposalReady(k,p))return null;
  return linJianxiSharedEvent(k,p,'山水有约',
-  '林见溪把求亲书帖放在案上，留出一段空处给她搁回信。他说得很轻：“从前总约殿下下回来看溪水。若你愿意，往后得闲，我想都来问你一句，要不要一道走。”他停下来，等她答复。',[
+  `林见溪把求亲书帖放在案上，留出一段空处给她搁回信。${k.linJianxi.sharedMemory?`帖下还夹着一页小记，题作《${k.linJianxi.sharedMemory}》，写的是两人同席那日的一件小事。`:''}他说得很轻：“从前总约殿下下回来看溪水。若你愿意，往后得闲，我想都来问你一句，要不要一道走。”他停下来，等她答复。`,[
    {label:'公主应允，准两人依礼成婚',apply:s=>{
     const spouse={id:p.id,personId:p.id,name:p.name,sur:p.sur,sex:'m',seed:p.seed,
      fenghuaKey:p.fenghuaKey,portraitOverride:p.portraitOverride,born:p.fenghua.born,alive:true,
@@ -127,14 +158,17 @@ function linJianxiProposalEvent(k,p=linJianxiPerson()){
   ],linJianxiProposalReady);
 }
 
-function linJianxiWalkReady(k,p){
+function linJianxiCouplePresent(k,p){
  return linJianxiReleased()&&fenghuaPresent(p)&&!!k&&p.royalSpouseId===k.id&&
- k.spouse?.id===p.id&&k.linJianxi?.phase==='married'&&!k.linJianxi.walked&&
- householdActive(k)&&!!k.estate&&linJianxiPrincessPresent(k)&&!mourningActive()&&S.turn-k.spouse.marriedAt>=3;
+ k.spouse?.id===p.id&&k.linJianxi?.phase==='married'&&
+ householdActive(k)&&!!k.estate&&linJianxiPrincessPresent(k)&&!mourningActive();
+}
+function linJianxiWalkReady(k,p){
+ return linJianxiCouplePresent(k,p)&&!k.linJianxi.walked&&S.turn-k.spouse.marriedAt>=3;
 }
 function linJianxiWalkEvent(k,p){
  if(!linJianxiWalkReady(k,p))return null;
- const walk=(place,outcome)=>s=>{s.walked=place;return outcome;};
+ const walk=(place,outcome)=>s=>{s.walked=place;s.lastFamily=S.turn;return outcome;};
  return linJianxiSharedEvent(k,p,'溪桥家常',
   '公主府送来一则家常。林见溪把那柄山水扇带到府门，问她想走到哪一段。晨间下过雨，溪桥还微微湿着。',[
    {label:'公主说，走过小桥，再往上看看',apply:walk('bridge','他在湿石边站定，等她走稳，两个人一道去找扇上画不到的那一段溪水。')},
@@ -142,9 +176,61 @@ function linJianxiWalkEvent(k,p){
   ],linJianxiWalkReady);
 }
 
+function linJianxiHomeChapter(k,p){
+ if(!linJianxiCouplePresent(k,p))return '';
+ const s=k.linJianxi,past=k.spouse.marriedAt;
+ if(!s.walked||S.turn-(s.lastFamily??past)<3)return '';
+ if(!s.lamp)return 'lamp';
+ if(!s.bamboo&&S.turn-past>=12)return 'bamboo';
+ if(s.bamboo&&!s.childStory&&S.turn-past>=12&&linJianxiChild(k))return 'child';
+ return '';
+}
+function linJianxiChild(k){
+ return k.household?.children?.find(child=>child.alive!==false&&!child.away&&child.mother===k.id&&child.father===k.spouse.id&&child.born<=S.turn-48);
+}
+function linJianxiHomeEvent(k,p){
+ const chapter=linJianxiHomeChapter(k,p);
+ if(!chapter)return null;
+ const ready=(bride,groom)=>linJianxiHomeChapter(bride,groom)===chapter;
+ const decide=(key,value,result)=>s=>{s[key]=value;s.lastFamily=S.turn;return result;};
+ if(chapter==='lamp')return linJianxiSharedEvent(k,p,'竹门有灯',
+  '公主忙完府里的事，回房已迟。见溪本想问她是不是遇见了麻烦，见她在门边站定，便只把灯挪亮一点：“要坐下来讲给我听，还是先歇一歇？都好。”',[
+   {label:'她坐下来，说说今日的难处',apply:decide('lamp','talk','他先听完，才问哪一桩明日可以交给他料理。她说了一件，他便只记那一件。')},
+   {label:'她愿意并肩坐一会儿',apply:decide('lamp','quiet','他把未读完的书往案里推了推。两人隔着一盏灯坐了许久，谁也不急着开口。')}
+  ],ready);
+ if(chapter==='bamboo')return linJianxiSharedEvent(k,p,'竹径归来',
+  `两人又到城外。她还记得旧日${k.linJianxi.walked==='bridge'?'携手走过湿桥':'在桥边竹荫下喝茶'}的情形。这回见溪的脚步慢了些。她问起缘由，他才坦白昨日走了远路，今日其实想在近处歇歇。${k.linJianxi.lamp==='quiet'?'她指了指近处的石阶，问是否也能像灯下那样静坐一会儿。':'她把伞斜过来，请他慢慢说这一趟想怎样走。'}`,[
+   {label:'由他来选今天的路',apply:decide('bamboo','rest','他选了离水最近的一段石阶。她坐下后，先给他斟茶。日光落满溪面，两人这才说起下回的约。')},
+   {label:'商量好折返的时辰，徐徐走一段',apply:decide('bamboo','path','两人约好走过一处竹影就折返。见溪头一回先开口说自己走累了，她便挽住他，也说这一段已足够。')}
+  ],ready);
+ const child=linJianxiChild(k);
+ return linJianxiSharedEvent(k,p,'小儿问水',
+  '小儿伏在案边看那柄山水扇，指着溪上淡淡一笔问水从哪里来。见溪先问孩子，自己猜是哪一处，再把同一个问题递给公主。',[
+   {label:'让孩子自己沿着扇面找找',apply:decide('childStory',true,'孩子慢慢顺着淡墨找到扇边。见溪笑着说，等天气晴好，就一起去听那里的水声。')},
+   {label:'三人各说一个答案',apply:decide('childStory',true,'公主说小桥，孩子说远山，见溪指着画外留白说自己还想找找。后来孩子又问了第二回，三人仍在这盏灯下答他。')}
+  ],(bride,groom)=>ready(bride,groom)&&linJianxiChild(bride)===child);
+}
+function linJianxiFriendReady(k,p){
+ const s=k?.linJianxi;
+ return s?.phase==='friends'&&s.personId===p?.id&&s.fan&&!s.friendNote&&
+  fenghuaPresent(p)&&linJianxiPrincessPresent(k)&&!mourningActive()&&S.turn-p.fenghua.lastVisit>=3;
+}
+function linJianxiFriendEvent(k,p){
+ if(!linJianxiFriendReady(k,p))return null;
+ return linJianxiSharedEvent(k,p,'旧图知音',
+  '她托人在上回说过的溪山图旁补了一笔，又将画送来给林见溪看。他回了一张小笺，认真说起自己最喜欢那处溪水，也问家中近来可好。',[
+   {label:'由她回信说说近来所画',apply:s=>{s.friendNote=true;return '她回了一封简短的家常信。旧画上添的是一树新叶，彼此说起近况也仍像从前那样自在。';}}
+  ],linJianxiFriendReady);
+}
 A.linJianxiHeart=function(id){if(!modalOpen)pushEv(linJianxiHeartEvent(kidById(id),linJianxiPerson()));};
 A.linJianxiVisit=id=>openFenghuaVisit(linJianxiPerson(),p=>linJianxiVisit(p,kidById(id)));
 A.linJianxiProposal=function(id){if(!modalOpen)pushEv(linJianxiProposalEvent(kidById(id)));};
+A.linJianxiFriend=function(id){
+ if(!modalOpen)pushEv(linJianxiFriendEvent(kidById(id),linJianxiPerson()));
+};
+A.linJianxiHome=function(id){
+ if(!modalOpen&&linJianxiReleased())pushEv(linJianxiHomeEvent(princessById(id),linJianxiPerson()));
+};
 A.linJianxiWalk=function(id){
  if(!modalOpen&&linJianxiReleased())pushEv(linJianxiWalkEvent(princessById(id),linJianxiPerson()));
 };
@@ -153,6 +239,7 @@ function linJianxiHeartPanel(k,p){
  if(!linJianxiReleased()||!k||!p||S.over)return '';
  const id=royalActionArg(k.id);
  if(linJianxiHearReady(k,p))return `<button class="btn jade" onclick="A.linJianxiHeart(${id})">听她说起林见溪</button>`;
+ if(linJianxiFriendReady(k,p))return `<button class="btn jade" onclick="A.linJianxiFriend(${id})">读林见溪的画笺</button>`;
  if(!linJianxiPair(k,p))return '';
  if(linJianxiMeetingReady(k,p)){
   const label={invited:'安排亲友同席',met:'安排再见林见溪',return:'依约再见林见溪'}[k.linJianxi.phase];
@@ -173,7 +260,11 @@ youthPanel=k=>linJianxiYouthPanel(k)+linJianxiHeartPanel(k,linJianxiReleased()?l
 const linJianxiHouseholdPanel=householdPanel;
 householdPanel=function(k){
  const html=linJianxiHouseholdPanel(k);
- if(!linJianxiReleased()||UI.view!=='princessEstate'||!linJianxiWalkReady(k,linJianxiPerson()))return html;
+ if(!linJianxiReleased()||UI.view!=='princessEstate')return html;
+ const p=linJianxiPerson(),chapter=linJianxiHomeChapter(k,p);
+ const title={lamp:'竹门有灯',bamboo:'竹径归来',child:'小儿问水'}[chapter];
+ if(title)return html+detailSection('家常',`<button class="btn jade" onclick="A.linJianxiHome(${royalActionArg(k.id)})">听听${title}</button>`);
+ if(!linJianxiWalkReady(k,p))return html;
  return html+detailSection('家常',`<button class="btn jade" onclick="A.linJianxiWalk(${royalActionArg(k.id)})">听听溪桥家常</button>`);
 };
 const linJianxiMarriageChanges=marriageBondConsequences;
