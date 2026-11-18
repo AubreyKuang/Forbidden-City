@@ -1,6 +1,8 @@
 // The sealed register belongs to a reign. Public people are linked by id only.
 const outerActive=()=>S&&journalContentVersion()>=76&&PalaceActions.outerHouseholds;
 const outerFamilyStories=()=>outerActive()&&journalContentVersion()>=83;
+const outerHouseholdUpdates=()=>journalContentVersion()>=90&&PalaceActions.outerHouseholdUpdates;
+const outerIntegration=()=>outerActive()&&outerHouseholdUpdates();
 const outerBook=()=>S.outerRegisters?.find(r=>r.gen===S.gen);
 function openOuterBook(){
   S.outerRegisters||=[];
@@ -74,6 +76,27 @@ function outerTripLead(place){
   if(outerActive()&&!S.over&&E().age>=18&&!mourningActive())
     S.flags.outerTrip={turn:S.turn,place};
 }
+function outerSouthernTour(){
+  const trip=S.flags.outerSouthernTour;
+  return trip?.gen===S.gen&&S.turn<trip.returns?trip:null;
+}
+A.outerSouthTour=function(){
+  if(!outerIntegration()||S.over||modalOpen||mourningActive()||E().age<18||S.year<3||outerSouthernTour()||!useE())return;
+  S.flags.outerSouthernTour={gen:S.gen,departed:S.turn,returns:S.turn+3};
+  setScene('city');
+  log(`${dateStr()}，帝启程南巡，沿江察访三月。`);
+  pushEv({title:'南巡启程',text:'御舟离京，巡察江南水道。接下来三个月，可到渡口访人。',choices:[{t:'登舟，沿江而行'}]});
+};
+function outerTourAllows(place){
+  return !outerIntegration()||(place==='suzhou')===Boolean(outerSouthernTour());
+}
+const haremStability=()=>E().haremStability??100;
+function outerHaremFall(level,m){
+  const before=haremStability();
+  E().haremStability=clamp(before-({60:4,40:8,20:15}[level]+(m.host?2:0)));
+  E().haremDisturbedAt=S.turn;
+  return before-E().haremStability;
+}
 const outerPlaces={city:'城南茶市',hunt:'南苑猎场外',temple:'护国寺山门',suzhou:'苏州渡头',altar:'郊坛归途',home:'城外别院',gate:'宫门外的长亭',natal:'外家的门庭',birthday:'贺寿别院'};
 function outerEncounter(place,source,sibling){
   const b=openOuterBook(),trade=pick(outerFamilyStories()&&sibling&&!sibling.p.widow?outerTrades.filter(t=>t[0]!=='寡妇'):outerTrades),sur=sibling?.p.sur||pick(SUR);
@@ -107,6 +130,7 @@ A.outerEstate=function(){
 A.outerMeet=function(source,place='city',hostId,relativeId){
   if(!outerActive()||modalOpen||S.over||mourningActive()||E().age<18||!Object.hasOwn(outerPlaces,place)||!['市井','旧识','姊妹'].includes(source))return;
   if(outerFamilyStories()&&source==='姊妹'&&place==='home')place='natal';
+  if(!outerTourAllows(place))return;
   const allowed=source==='姊妹'?['natal','gate','birthday']:source==='旧识'?['city','suzhou','altar']:['city','hunt','temple','altar','suzhou','home'];
   if(outerFamilyStories()&&!allowed.includes(place))return;
   const b=outerBook(),sibling=source!=='姊妹'?null:outerFamilyStories()?outerKinChoices(place).find(x=>(hostId==null||x.host.id===hostId)&&(relativeId==null||x.p.id===relativeId)):outerSibling();
@@ -117,7 +141,7 @@ A.outerMeet=function(source,place='city',hostId,relativeId){
 };
 A.outerVisit=function(id){
   const m=outerMother(id);
-  if(!outerActive()||modalOpen||S.over||mourningActive()||E().age<18||!m||m.closed||!outerContactPresent(m)||m.seen===S.turn||!useE())return;
+  if(!outerActive()||modalOpen||S.over||mourningActive()||E().age<18||!m||m.closed||!outerTourAllows(m.place)||!outerContactPresent(m)||m.seen===S.turn||!useE())return;
   m.seen=S.turn;setScene('city');
   const choices=[];
   function visit(t,line,aff,trust,cost=0,intimate=false){
@@ -228,7 +252,18 @@ function outerHouseholdExpense(){
   return total;
 }
 function outerMonthly(){
+  if(outerIntegration()&&!S.over){
+    const trip=S.flags.outerSouthernTour;
+    if(trip?.gen===S.gen&&S.turn>=trip.returns){
+      delete S.flags.outerSouthernTour;
+      log(`${dateStr()}，南巡毕，御舟还京。`);
+    }
+  }
   const b=outerBook();if(!outerActive()||!b||S.over||b.tick===S.turn)return;b.tick=S.turn;
+  if(outerIntegration()&&haremStability()<100&&S.turn-(E().haremDisturbedAt??-99)>=2){
+    if(haremStability()<80)for(const c of harem())cchg(c,{mood:-1});
+    E().haremStability=clamp(haremStability()+2);
+  }
   for(const m of b.mothers){
     if(m.relative!=null&&outerSister(m)?.alive===false&&m.closed!=='已故'){
       m.closed='已故';delete m.preg;
@@ -255,6 +290,10 @@ function outerMonthly(){
   for(const k of b.children){
     if(k.lastTick===S.turn)continue;k.lastTick=S.turn;
     const m=outerMother(k.mother),age=kidAge(k),birthday=(S.turn-k.born)%12===0;
+    if(outerIntegration()){
+      if(age>=18)k.pending=k.pending.filter(key=>key!=='school');
+      if(k.palaceRank)outerReconcileResident(k,m);
+    }
     if(journalContentVersion()>=84&&m.relative!=null&&!k.sealed){
       const recognized=k.pedigree==='认领',child=recognized?kidById(k.id):k,previous=child?.outsideGrowthAge;
       outsideChildGrowing(child,byId(m.relative)||outerSister(m),familyHostById(m.host),recognized?'recognized':'quiet');
@@ -289,7 +328,7 @@ function outerMonthly(){
       if(age>=6&&S.turn-(k.lastVisit??k.born)>=24)k.trust=clamp(k.trust-(k.placement==='断联'?2:.5));
 
       if(age===3)outerNote(m,k,'三岁家报','收家书',`信里说孩子近来少生病，笑起来很像${m.name}。信末印着一只沾了糕粉的手。`,'“这个手印，也是我的名字吗？”');
-      if(age===6)outerQueue(k,'school');
+      if(age===6||outerIntegration()&&age>6&&age<18&&k.schoolAge!==age)outerQueue(k,'school');
       if(age===10)outerQueue(k,'father');
       if(age===18){outerQueue(k,'adult');outerNote(m,k,'成年','收成人礼家书',`${k.alias}将旧户帖上的幼名描了一遍，问明年能否自己署名。`,'“往后若有我的事，先问问我。”');}
       if(age>18)outerAnnual(k,m,age);

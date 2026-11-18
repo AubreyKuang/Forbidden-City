@@ -32,7 +32,7 @@ const DOCK_ART={
 };
 function dockIcon(key){return `<svg class="dock-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${DOCK_ART[key]}"></path></svg>`;}
 function renderMenu(){const m=$('#menu');if(!S){m.innerHTML='';m.hidden=true;return}m.hidden=false;
-  const current={government:'court',ministries:'court',scholar:'court',fenghua:'home',jinyiwei:'court',residences:'harem',officials:'home',official:'home',jewelry:'home',natal:'family',relative:'family',palace:'map',place:'map',banquet:'map',consort:'harem',kid:'kids',princess:'out'}[UI.view]||UI.view;
+  const current={government:'court',ministries:'court',scholar:'court',fenghua:'home',jinyiwei:'court',residences:'harem',officials:'home',official:'home',jewelry:'home',natal:'family',relative:'family',palace:'map',place:'map',banquet:'map',consort:'harem',kid:'kids',princess:'out',regnal:'log'}[UI.view]||UI.view;
   m.innerHTML=MENU.map(([k,l])=>`<button class="btn${current===k?' on':''}" ${current===k?'aria-current="page"':''} onclick="${k==='court'?"A.go('government')":`A.go('${k}')`}">${dockIcon(k)}<span>${l}</span></button>`).join('');
 }
 let panelRoute;
@@ -74,6 +74,7 @@ function renderPanel(){
   const p=$('#panel'),v=UI.view;
   const route=JSON.stringify([v,UI.sel]);
   if(!S)p.innerHTML=v==='new'?viewNew():viewTitle();
+  else if(v==='regnal'&&regnalChronicleActive())p.innerHTML=viewRegnalChronicle();
   else p.innerHTML=({government:viewGovernment,residences:viewResidences,officials:officialsRoster,official:viewOfficial,ministries:typeof viewMinistries==='function'?viewMinistries:viewGovernment,scholar:typeof viewScholar==='function'?viewScholar:viewGovernment,jinyiwei:typeof viewJinyiwei==='function'?viewJinyiwei:viewGovernment,jewelry:viewJewelryVault,natal:viewNatalRelative,relative:viewRoyalRelative,family:viewFamily,map:viewMap,palace:viewPalace,place:viewPlace,banquet:viewBanquet,home:viewHome,fenghua:typeof viewFenghuaPerson==='function'?viewFenghuaPerson:viewHome,harem:viewHarem,consort:viewConsort,cards:viewCards,xx:viewXX,outer:typeof outerRegisterView==="function"?outerRegisterView:viewKids,kids:viewKids,kid:viewKid,princess:viewPrincessEstate,'prince-estate':viewPrinceEstate,out:viewOut,log:viewLog,sys:viewSys}[v]||viewHome)();
   if(S&&v==='xx')rememberSelectionBlurt(selectionCurrent());
   if(route!==panelRoute){p.scrollTop=0;panelRoute=route;}
@@ -320,6 +321,7 @@ function viewHarem(){
   const sec=(t,arr)=>arr.length?`<h3>${t}（${arr.length}）</h3><div class="grid portrait-grid">${arr.map(consortCard).join('')}</div>`:'';
   const dead=S.consorts.filter(c=>!c.alive||c.gone);
   return `${pageHeading('后宫','点击妃嫔查看详情、互动与她的故事。各位分名额：嫔6、妃4、贵妃2、皇贵妃1、皇后1。','<button class="btn jade" onclick="A.openResidence()">宫室分配 · 主位与同住</button>')}${haremRestraintPanel()}
+   ${outerIntegration()?bar('后宫稳定',haremStability(),'#816449'):''}
    ${sec('中宫',g(c=>c.rank===8))}${sec('妃位',g(c=>c.rank>=5&&c.rank<8))}${sec('嫔位',g(c=>c.rank===4))}${sec('小主',g(c=>c.rank<4))}${sec('回家省亲',all.filter(c=>c.homeLeave&&!c.cold))}${sec('寺中修行',all.filter(c=>c.templeStay&&!c.cold))}${sec('冷宫',all.filter(c=>c.cold))}${sec('贴身宫女',maids().filter(m=>m.near))}
    ${facHTML()}${dead.length?`<h3>故人</h3><div class="hint">${dead.map(c=>`<button class="btn sm" onclick="A.go('consort',${c.id})">${esc(fullName(c))}${c.gone?'（出宫）':'（已故）'}</button>`).join(' ')}</div>`:''}`}
 function detailSection(title,content){
@@ -347,7 +349,7 @@ function dynastyCodexPanel(){
  return `<p class="hint">图鉴根据本存档实际留下的记录整理；旧存档中未记录的典故不会凭空补写。</p>
  <details><summary>妃嫔图鉴 · ${consorts.length}</summary><div class="acts">${persons(consorts)||'尚无记录'}</div></details>
  <details><summary>历史典故 · ${historical.length}</summary><ul class="story">${historical.map(x=>`<li><time>${esc(x.d)}</time>${esc(x.title)} · ${esc(x.ref)} · ${esc(x.choice)}${x.reconstructed?' · 据人物纪事整理':''}</li>`).join('')||'<li>尚无记录。</li>'}</ul></details>
- <details><summary>皇帝本纪 · ${emperor.length}</summary><ul class="story">${emperor.map(x=>`<li>${esc(x)}</li>`).join('')}</ul><button class="btn sm" onclick="A.go('log')">查看按时间记载的起居注</button></details>
+ <details><summary>皇帝本纪 · ${emperor.length}</summary><ul class="story">${emperor.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>${regnalChronicleActive()?'<button class="btn sm" onclick="A.go(\'regnal\')">翻阅皇帝本纪</button>':'<button class="btn sm" onclick="A.go(\'log\')">查看按时间记载的起居注</button>'}</details>
  <details><summary>服饰珍宝 · ${jewelry.length}</summary><p>${jewelry.map(([id])=>esc(JEWELRY[id].name)).join('、')||'尚无记录'}</p><button class="btn sm" onclick="A.go('jewelry')">查看内库</button></details>
  <details><summary>皇嗣成长 · ${children.length}</summary><div class="acts">${persons(children)||'尚无记录'}</div></details>
  <details><summary>宫廷建筑 · ${PLACES.length}</summary><p>${PLACES.map(p=>esc(p.n)).join('、')}</p><button class="btn sm" onclick="A.go('map')">查看宫城</button></details>`;
@@ -433,7 +435,7 @@ function viewConsort(){
     if(c.rank<7)management+=`<button class="btn" onclick="A.promote(${c.id})">晋封<small>→${RANKS[c.rank+1]}</small></button>`;
     if(c.rank>0&&c.rank<8)penalties+=`<button class="btn danger" onclick="A.demote(${c.id})">降位</button>`;
     if(c.rank>=4)management+=`<button class="btn" onclick="A.rename(${c.id})">改封号</button>`;
-    if(c.rank>=5&&c.rank<8&&!empress())management+=`<button class="btn" onclick="A.crown(${c.id})">册立皇后</button>`;
+    if(c.rank>=5&&c.rank<8&&!empress()&&!c.outerHouseholdId)management+=`<button class="btn" onclick="A.crown(${c.id})">册立皇后</button>`;
     penalties+=`<button class="btn danger" onclick="A.cold(${c.id})">${c.rank===8?'废后':'打入冷宫'}</button><button class="btn danger" onclick="A.away(${c.id})">遣出宫</button>`;
   } else if(act&&c.cold){
     acts+=`<button class="btn primary" onclick="A.uncold(${c.id})">放出冷宫</button>`;

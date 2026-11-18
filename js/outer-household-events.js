@@ -18,9 +18,18 @@ function outerAnnual(k,m,age){
   else outerNote(m,k,'岁信','收家书',k.trade>=55?'今年铺里收了第一个徒弟。随家书寄来的账单上，东家签的是孩子自己的名字。':'生母寄来一张重修门户的收条，背面另有孩子的手书，说今年家中一切安好。','“旧事我记着，我也有自己的日子。”');
   if(!k.searchDone&&!k.inquiry&&k.knowledge!=='不知'&&age>=20)outerQueue(k,'search');
 }
+function outerFileCover(k,m,route){
+  if(!outerIntegration()||k.register==='化名')return;
+  const surnames=SUR.filter(s=>s!==m.sur&&s!==k.foster&&s!==E().sur);
+  if(!surnames.includes(k.coverSur))k.coverSur=pick(surnames);
+  k.alias=k.coverSur+k.given;
+  k.register='化名';
+  outerNote(m,k,'化名投牒',route,'他以另立的姓名递交户帖，原籍封在御前密匣。','“旁人只认户帖上那个名字。”');
+}
 function outerAttemptOffice(k,m,route){
   if(k.officialId||k.pedigree==='认领'||kidAge(k)<18||k.lastTrial===S.turn)return;
   k.lastTrial=S.turn;
+  outerFileCover(k,m,route);
   const score=route==='候武选'?k.mar:route==='候荫补'?(k.vir+(m.host||k.foster?22:0)):k.lit;
   if(score+ri(0,25)<62){
     outerQueue(k,'retry');outerNote(m,k,'落选',route,'榜尾也没有自己的名字。回去的船上，孩子把卷子重新摊开。','“再给我一点时间。”');return;
@@ -35,6 +44,7 @@ function outerAttemptOffice(k,m,route){
   if(m.host){
     const aunt=familyHostById(m.host),owner=m.owner==null?aunt:familyHostById(m.owner),house=owner&&houseOf(owner);
     if(house&&k.register==='本姓')p.courtKin=[{fatherId:house.father.id,type:'maternalNephew',detail:m.kin==='堂姐妹'?'生母与宫中姨母分属堂房，以生母本房入籍':'母亲与宫中姨母出于同一家籍'}];
+    if(outerIntegration()&&house?.bloc&&house.bloc!=='none'&&route!=='候武选')p.bloc=house.bloc;
   }
   p.siblingsChecked=true;p.ageTrackedAt=S.turn;
   (S.scholars||=[]).push(p);k.officialId=p.id;k.path='入朝任职';k.secret=clamp(k.secret-5);
@@ -52,11 +62,69 @@ function outerSelectionCall(){
     outerQueue(k,'roster');const ev=outerPendingEvent(k,'roster');if(ev)pushEv(ev);
   }
 }
+function outerSelectionPerson(k){
+  const sur=k.alias.slice(0,-k.given.length),trait={沉静:'沉静',直率:'爽直',坚韧:'持重'}[k.temper]||'温婉';
+  const c=makeGirl({sur,given:k.given,age:kidAge(k),trait,fam:{...FAMS.find(f=>f.t==='寒门')}});
+  Object.assign(c,{id:k.id,outerHouseholdId:k.id,birthMonth:birthMonth(k),looks:k.looks,talent:k.lit,virtue:k.vir,scheme:k.amb,
+    portraitOverride:portraitCell({...k,courtGuest:true}),seed:k.seed,kinNote:k.mark+'，随身带着'+k.token});
+  deepen(c);
+  return c;
+}
+function outerSelectionEligible(k){
+  return k?.sex==='f'&&kidAge(k)>=18&&!k.sealed&&!k.claim&&k.pedigree!=='认领'&&k.path==='待殿选';
+}
+function outerSelectionAdmitted(k,c){
+  k.path='宫中留名';
+  k.palaceRank=RANKS[c.rank];
+  k.secret=clamp(k.secret-12);
+  if(!k.exposed&&k.secret>=40)outerAward('暗度陈仓');
+  return outerNote(outerMother(k.mother),k,'殿选留牌',k.palaceRank,`女史领她入住${c.palace}，衣箱入册时，那枚旧信物也被人看见了。`,'“从这里，还看得见进城的那条路。”');
+}
+function outerSelectionDismissed(c){
+  if(!outerIntegration()||!c.outerHouseholdId)return;
+  const k=outerChild(c.outerHouseholdId);
+  if(k?.path!=='待殿选')return;
+  k.path='自立门户';
+  outerNote(outerMother(k.mother),k,'殿选出宫','送还原籍','她拿回原籍文书，在城门口买了两包母亲爱吃的糖。','“总算可以回去问她了。”');
+}
+function outerReleaseResidence(k,reason,recognizing=false){
+  const c=byId(k.id);
+  if(c?.outerHouseholdId!==k.id)return;
+  story(c,reason);
+  if(recognizing)S.consorts=S.consorts.filter(p=>p!==c);
+  else c.gone=true;
+  reconcileResidences();
+  return c;
+}
+function outerReconcileResident(k,m){
+  if(k.sex!=='f'||k.sealed||k.pedigree==='认领'||kidAge(k)<18)return;
+  const c=byId(k.id);
+  if(!c){
+    const resident=outerSelectionPerson(k);
+    addConsort(resident,Math.max(0,RANKS.indexOf(k.palaceRank)),'依旧册归入内廷',{recordAdmission:false});
+    return;
+  }
+  if(c.outerHouseholdId!==k.id)return;
+  if(!c.alive||c.gone){
+    delete k.palaceRank;
+    k.path=c.alive?'出宫归家':'宫中身故';
+    if(!c.alive){k.sealed=true;delete k.claim;}
+    k.pending=k.pending.filter(key=>c.alive&&key!=='recognizedFace');
+    outerNote(m,k,'内廷来报',k.path,c.alive?'女史把她送至宫门外，旧户帖一并交还。':'内廷递来讣信，原来的信物随遗物送还。');
+  }else k.palaceRank=RANKS[c.rank];
+}
 function outerRoyalEntry(k,m){
   const given=m.name.slice(m.sur.length),mother={id:m.relative??m.id,sur:m.sur,given,rank:0,talent:55,virtue:60,scheme:35,trait:m.trait};
   const official=k.officialId&&scholarById(k.officialId);
+  let formerResident;
+  if(outerIntegration()){
+    S.cands=S.cands.filter(c=>c.outerHouseholdId!==k.id);
+    formerResident=outerReleaseResidence(k,'奉旨交还宫牌，改列宗室玉牒。',true);
+    k.recognizedTurn=S.turn;
+  }
   if(official?.married){k.married=true;if(official.spouse)k.spouse={...official.spouse};}
   const royal=makeKid(mother,k.sex,k.given,{outsideChild:k,origin:null,foster:kidAge(k)<14?empress():null});
+  if(formerResident)royal.story.unshift(...formerResident.story);
   for(const stat of ['lit','mar','vir','amb','looks'])royal[stat]=k[stat];
   S.children.filter(c=>c.sex===k.sex).sort(royalBirthOrder).forEach((c,index)=>{c.ord=index+1;});
   royal.birthTraits.initial={...royal.birthTraits.initial,lit:k.lit,mar:k.mar,vir:k.vir,amb:k.amb};
@@ -107,7 +175,8 @@ function outerLateReply(k,m,ask){
 function outerPendingEvent(k,requested){
   if(!outerActive()||!k||!outerBook()?.children.includes(k)||S.over||k.sealed||!k.pending.length)return null;
   const pending=outerFamilyStories()&&!outerCanClaim(k)?k.pending.filter(p=>p!=='claim'&&p!=='council'):k.pending;
-  const key=requested||(['birth','claim','leak20','roster'].find(p=>pending.includes(p))||pending[0]);
+  const priority=outerIntegration()?['birth','claim','leak20','roster','father']:['birth','claim','leak20','roster'];
+  const key=requested||(priority.find(p=>pending.includes(p))||pending[0]);
   if(!pending.includes(key))return null;
   if(outerFamilyStories()&&key==='council'&&(!k.claim||!outerCanClaim(k)))return null;
   const m=outerMother(k.mother),choices=[],valid=()=>outerChild(k.id)===k&&!S.over&&!k.sealed&&k.pending.includes(key);
@@ -138,7 +207,12 @@ function outerPendingEvent(k,requested){
       if(!help)k.clues=(k.clues||0)+1;
       return note('姨母见甥',help?'替家人守密':'留下见证',text+(help?'她替孩子放下车帘，只叮嘱一路平安。':'她将相见的日子写进家书，准备向中宫说明。'),'“她为什么知道我娘小时候的乳名？”');});
   }else if(key==='school'){
-    title='六岁的书箱';text='塾师、武师和账房都肯收徒。生母只问，孩子明早该往哪条街走？';for(const lesson of Object.keys(outerLessons))option(lesson,()=>outerEducate(k,lesson));
+    const age=kidAge(k);
+    if(outerIntegration()&&(age<6||age>=18||k.schoolAge===age))return null;
+    title=!outerIntegration()||age===6?'六岁的书箱':'年度教养 · '+k.alias;
+    text=!outerIntegration()||age===6?'塾师、武师和账房都肯收徒。生母只问，孩子明早该往哪条街走？':
+      `孩子今年${age}岁，眼下${k.lesson}。生母来信问，今年是接着学，还是换个方向？`;
+    for(const lesson of Object.keys(outerLessons))option(lesson,()=>outerEducate(k,lesson));
   }else if(key==='father'){
     title='“我的爹是谁？”';text='孩子摊开那张写着生辰的纸。一栏字迹磨得看不清，偏偏只指着那里问。';
     option('告诉孩子来历',()=>{k.knowledge='知道';k.trust=clamp(k.trust+12);return note('十岁问父','坦白身世','你把出生那一日从头讲起，等孩子把问题一个个问完。','“原来大人一直知道。让我想一会儿。”');});
@@ -147,29 +221,55 @@ function outerPendingEvent(k,requested){
   }else if(key==='retry'){
     title='落榜之后';text='名册收了，孩子把余下几年的盘算写给了你。';
     for(const next of ['候会试','候武选',...(k.foster||m.host?['候荫补']:[]),'自立门户'])option(next,()=>{
+      if(next!=='自立门户')outerFileCover(k,m,next);
       k.path=next;return note('另择前程',next,'孩子收好上一次落榜的文书，给来年留了另一条路。','“落一次榜，还能自己选。”');});
   }else if(key==='adult'){
     title='成人礼后的第一封信';text=`${k.alias}满了十八岁，来信署的是户籍上的名。${k.sex==='f'?'生母带来礼部候选的消息，孩子也想知道宫门里是什么样子。':'案头摊着会试程文、武选章程和荐书。'}`;
     const paths=k.sex==='f'?['候选秀','自立门户']:['候会试','候武选',...(k.foster||m.host?['候荫补']:[]),'自立门户'];
-    for(const path of paths)option(path,()=>{k.path=path;return note('成年去向',path,path==='候选秀'?'养家交了户帖。礼部下次开选时，会把名册送来核对。':path==='候会试'?'孩子封好考篮，等礼部开正科或恩科。':path==='自立门户'?'孩子在街口租了一间小屋，头一次自己落了房契。':'孩子先从乡试弓马、验籍起步，来年见分晓。','“这条路，我想亲自试一试。”');});
+    for(const path of paths)option(path,()=>{
+      if(k.sex==='m'&&path!=='自立门户')outerFileCover(k,m,path);
+      k.path=path;return note('成年去向',path,path==='候选秀'?'养家交了户帖。礼部下次开选时，会把名册送来核对。':path==='候会试'?'孩子封好考篮，等礼部开正科或恩科。':path==='自立门户'?'孩子在街口租了一间小屋，头一次自己落了房契。':'孩子先从乡试弓马、验籍起步，来年见分晓。','“这条路，我想亲自试一试。”');});
   }else if(key==='roster'){
     title='选秀名册上的旧姓';text=`礼部送来户帖：${k.alias}，生于${k.birthDate}。候选人抬手行礼，${k.mark}。${m.aunt?m.aunt+(outerFamilyStories()?'认出了娘家旧日的针法。':'认出了妹妹用过的针法。'):'老宫女在帘下多看了一眼。'}她随身带着${k.token}。`;
     option('划去名字，另给出路',()=>{k.path='自立门户';k.trust=clamp(k.trust-5);return note('应选被拦','划名','她领回折皱的户帖，追问是谁替她作了决定。','“我只想听一句实话。”');},12);
     if(outerCanClaim(k))option('停止应选，请核皇女身份',()=>{k.path='停选待核';return claim();});
-    option('照常送殿核选',()=>{k.path='待殿选';outerQueue(k,'audience');pushNow(outerPendingEvent(k,'audience'));return note('选前预警','照常递帖','名册送进殿去。她把信物贴身收好，跟着女史过了门槛。','“殿里有人见过我母亲么？”');});
+    option('照常送殿核选',()=>{
+      k.path='待殿选';
+      if(outerIntegration()&&S.selection&&S.selection.phase!=='arrivals'){
+        if(!S.cands.some(c=>c.id===k.id))S.cands.push(outerSelectionPerson(k));
+      }else{
+        outerQueue(k,'audience');pushNow(outerPendingEvent(k,'audience'));
+      }
+      return note('选前预警','照常递帖','名册送进殿去。她把信物贴身收好，跟着女史过了门槛。','“殿里有人见过我母亲么？”');
+    });
   }else if(key==='audience'){
     title='殿选 · '+k.alias;text=`女史唱名。${k.alias}答了两句家乡的收成，又说起${m.name}在家如何教她做人。她的神情像极了生母。\n才学 ${rd(k.lit)} · 容貌 ${rd(k.looks)}`;
     if(outerFamilyStories())text+=`\n她${k.likeness||'眉眼像极了生母'}。${k.temper==='直率'?'问起户籍时她抬起眼，把养家人的名字一字一字念清。':k.temper==='坚韧'?'提起求学的路，她说自己在渡口背过三年书。':'她把手收在袖里，想了一会儿才答。'}`;
-    option('留牌，记名答应，另院居住',()=>{k.path='宫中留名';k.palaceRank='答应';log(`选秀留牌，${k.alias}记名答应，居别院。`);k.secret=clamp(k.secret-12);if(!k.exposed&&k.secret>=40)outerAward('暗度陈仓');return note('殿选留牌','记名答应','女史领她往别院去，衣箱入册时，那枚旧信物也被人看见了。','“从这里，还看得见进城的那条路。”');});
+    option('留牌，记名答应，另院居住',()=>{
+      if(outerIntegration()){
+        const c=outerSelectionPerson(k);
+        addConsort(c,1,`${dateStr()}选秀入宫`);
+        return outerSelectionAdmitted(k,c);
+      }
+      k.path='宫中留名';k.palaceRank='答应';log(`选秀留牌，${k.alias}记名答应，居别院。`);k.secret=clamp(k.secret-12);if(!k.exposed&&k.secret>=40)outerAward('暗度陈仓');return note('殿选留牌','记名答应','女史领她往别院去，衣箱入册时，那枚旧信物也被人看见了。','“从这里，还看得见进城的那条路。”');
+    });
     option('撂牌，送还原籍',()=>{k.path='自立门户';return note('殿选出宫','送还原籍','她拿回原籍文书，在城门口买了两包母亲爱吃的糖。','“总算可以回去问她了。”');});
   }else if(key==='recognizedFace'){
     title='别院里认出了故人';text=`${m.aunt||'太后身边的旧宫女'}认出${k.token}，又说起${k.mark}。${k.alias}把门关上，问你这两件事为何旁人都知道。`;
     const available=outerFamilyStories()?outerDiscoverers(m):[];
     const who=available.find(p=>p.role===k.discoverer?.role&&p.name===k.discoverer.name)||available[0];
     if(who)text=`${who.name}认出了${k.token}，又问起${k.mark}。${k.alias}头一次将生母的名字与当年的旧信对上。她把宫牌搁在桌上，等你听过她的意思再定去留。`;
-    for(const label of ['护她另居','调离别院','为她议远嫁','听她自己选'])option(label,()=>{
+    const protect=outerIntegration()?'护她留宫':'护她另居';
+    for(const label of [protect,'调离别院','为她议远嫁','听她自己选'])option(label,()=>{
       k.knowledge=outerKnown(k);k.secret=clamp(k.secret-10);
-      delete k.palaceRank;k.path=label==='听她自己选'?(k.trust<35?'出家清修':k.amb>55?'留任女史':'出宫归家'):label==='护她另居'?'别院独居':label==='为她议远嫁'?(k.trust>=55?'自愿远嫁':'婉谢婚事，归家'):'出宫归家';
+      delete k.palaceRank;k.path=label==='听她自己选'?(k.trust<35?'出家清修':k.amb>55?'留任女史':'出宫归家'):label===protect?'别院独居':label==='为她议远嫁'?(k.trust>=55?'自愿远嫁':'婉谢婚事，归家'):'出宫归家';
+      if(outerIntegration()){
+        const c=byId(k.id);
+        if((label===protect||k.path==='留任女史')&&c?.alive&&!c.gone&&c.outerHouseholdId===k.id){
+          k.palaceRank=RANKS[c.rank];k.path='留宫自处';c.outerPrivateResidence=true;
+          story(c,'她请留在原居，往后只由女史通传家书。');
+        }else outerReleaseResidence(k,'依本人答复交还宫牌，另定去处。');
+      }
       if(who){
         k.recognizedBy=who.role;pushNow(outerQuestion(k,m,who));
         if(label==='听她自己选'&&k.trust<20&&k.secret<20){k.path='离宫养病';k.illUntil=S.turn+3;}
@@ -181,7 +281,7 @@ function outerPendingEvent(k,requested){
     for(const label of ['暗中提携','保持距离',...(outerCanClaim(k)?['请核身世']:[]),'永不相认'])option(label,()=>{
       if(label==='请核身世')return claim();
       k.patron=label==='暗中提携'?'提携':'自立';
-      if(label==='暗中提携'){k.secret=clamp(k.secret-10);const p=scholarById(k.officialId);if(p){p.merit=clamp(p.merit+10);careerSetOffice(courtPerson('scholar:'+p.id),p.bloc==='army'?'边营千总':'州府通判','考课后奉调');}}
+      if(label==='暗中提携'){k.secret=clamp(k.secret-10);const p=scholarById(k.officialId);if(p){p.merit=clamp(p.merit+10);careerSetOffice(courtPerson('scholar:'+p.id),(outerIntegration()?p.entryRoute==='武选':p.bloc==='army')?'边营千总':'州府通判','考课后奉调');}}
       if(label==='永不相认'){outerDeclineClaim(k);k.trust=clamp(k.trust-18);}
       return note('仕途',label,label==='暗中提携'?'吏部留意到新官的调令来得特别快。':label==='永不相认'?'你封还了私信，只收下署着官名的公文。':'你将空白考语退回，请吏部照实考课。','“我的名字，写在考册第几页？”');
     });
@@ -249,7 +349,11 @@ function outerPendingEvent(k,requested){
   }else if(key==='history'){
     title='史官候笔';text=`${k.recognizedAt}，${k.royalName}入玉牒。史官请示本纪如何落笔。`;
     for(const publish of [true,false])option(publish?'记入本纪':'永远封存',()=>{k.history=publish?'入本纪':'永封';
-      const line=`${k.recognizedAt}，帝认皇${k.sex==='f'?'女':'子'}${k.royalName}，入玉牒。`;if(publish){log(line,1);S.log.at(-1).d=k.recognizedAt;}
+      const line=`${k.recognizedAt}，帝认皇${k.sex==='f'?'女':'子'}${k.royalName}，入玉牒。`;
+      if(publish){
+        log(line,1);S.log.at(-1).d=k.recognizedAt;
+        if(outerIntegration())recordRegnalEntry('归宗',line,k.recognizedAt,k.recognizedTurn??S.turn);
+      }
       return note('本纪定笔',k.history,publish?line:'史官收回空白的纸页，家书仍归密匣。');});
   }else if(key.startsWith('leak')){
     const level=Number(key.slice(4)),relative=m.host&&byId(m.host);
@@ -261,6 +365,7 @@ function outerPendingEvent(k,requested){
     const sisterBond=relative&&outerSister(m)?relGet(relative,outerSister(m)):0;
     if(relative)text+=relative.aff+sisterBond>=65?'宫里的姊妹愿替家人作证，也劝你护住孩子。':'宫里的姊妹认出了笔迹，要求在太后面前说清楚。';
     const consequence=()=>{
+      const stability=outerIntegration()?outerHaremFall(level,m):0;
       if(level===40&&!k.broker&&k.witnesses.some(w=>w.active&&w.loyal<55)){
         const broker=careerPeople().filter(x=>x.p.id!==k.officialId&&officialServing(x.p)&&x.p.ability>=70).sort((a,b)=>b.p.ability-a.p.ability)[0];
         if(broker){k.broker=broker.key;outerQueue(k,'leverage');}
@@ -275,11 +380,13 @@ function outerPendingEvent(k,requested){
       if(level===40&&people.length)pushNow(outerQuestion(k,m,people[0]));
       if(level===20){m.trust=clamp(m.trust-(relative?12:6));outerNote(m,k,'生母家门受问','留存家书',m.name+'的家人被请到县衙核实户籍，回家之后仍得应付邻里的打听。');
         if(relative&&people.length)for(const who of people.slice().reverse())pushNow(outerQuestion(k,m,who));}
-    }};
+    }
+    return stability?fx('后宫稳定−'+stability):'';
+    };
     if(level===20){
-      option(outerCanClaim(k)?'公开护住孩子，呈请归宗':'公开护住家人，尊重原籍',()=>{consequence();k.exposed=true;outerAward('满城风雨');return claim();});
-      option('不认血缘，保留原籍',()=>{consequence();k.exposed=true;outerDeclineClaim(k);k.trust=clamp(k.trust-20);k.knowledge=outerKnown(k);return note('公开风波','不认血缘','原籍保住了，门前围观的人却过了许久才散。','“你既说出口，我也记住了。”');});
-    }else option('听取来报，护送家人回去',()=>{consequence();return note(title,'护送家人',text);});
+      option(outerCanClaim(k)?'公开护住孩子，呈请归宗':'公开护住家人，尊重原籍',()=>{const impact=consequence();k.exposed=true;outerAward('满城风雨');return claim()+impact;});
+      option('不认血缘，保留原籍',()=>{const impact=consequence();k.exposed=true;outerDeclineClaim(k);k.trust=clamp(k.trust-20);k.knowledge=outerKnown(k);return note('公开风波','不认血缘','原籍保住了，门前围观的人却过了许久才散。','“你既说出口，我也记住了。”')+impact;});
+    }else option('听取来报，护送家人回去',()=>{const impact=consequence();return note(title,'护送家人',text)+impact;});
   }else return null;
   return {title,text,por:{...k,courtGuest:true,name:k.alias},valid,choices};
 }

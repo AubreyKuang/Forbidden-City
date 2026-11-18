@@ -33,6 +33,7 @@ function consortRecovery(c){
 function consortNightReason(c){
   if(!c)return '眼下不宜召见';
   if(c.homeLeave&&journalContentVersion()>=88)return c.homeLeave.field?'外出 · 赴北境军驿':'外出省亲';
+  if(c.outerHouseholdId)return '分院安置，不入轮值';
   if(c.cardWithdrawn)return '绿头牌已撤';
   if(c.preg)return c.maid&&c.preg===1&&journalContentVersion()>=49?'今夜暂不宜留侍':'有孕在身';
   const r=consortRecovery(c);

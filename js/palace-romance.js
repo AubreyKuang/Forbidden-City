@@ -8,7 +8,7 @@ function romanceKin(k){
   return [...new Set([k.mom,k.foster,...Object.keys(k.motherBonds||{}).map(Number)].filter(Boolean))].map(byId).filter(Boolean);
 }
 function romanceEligible(k,c){
-  if(!childCanVisitCourt(k)||k.sex!=='m'||kidAge(k)<15||!inPalace(c)||c.maid||c.rank===8||c.age<15||Math.abs(kidAge(k)-c.age)>8)return false;
+  if(!childCanVisitCourt(k)||k.sex!=='m'||kidAge(k)<15||!inPalace(c)||c.maid||c.outerHouseholdId||c.rank===8||c.age<15||Math.abs(kidAge(k)-c.age)>8)return false;
   // Exclude people who entered while the prince was still a young child.
   if(!Number.isFinite(c.enteredAt)||c.enteredAt<k.born+15*12)return false;
   return c.sur!==E().sur&&!romanceKin(k).some(m=>m.id===c.id||m.sur===c.sur||clanKey(m)===clanKey(c)||m.kin?.[c.id]||c.kin?.[m.id]);

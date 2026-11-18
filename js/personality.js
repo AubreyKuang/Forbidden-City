@@ -190,6 +190,15 @@ function accessionArrivalConversation(c){
 }
 A.chat=function(id,fromEvent=false){
   const c=byId(id);if((modalOpen&&!fromEvent)||!inPalace(c))return;
+  if(c.outerHouseholdId){
+    if(c.outerPrivateResidence){toast('她请由女史通传家书。');return;}
+    if(!useE())return;
+    noteHaremVisit(c);c.lastPersonalAttention=S.turn;setScene('harem');
+    const text='她说起新居的陈设和入宫后结识的人。谈到原家的来信，她问可否照旧收寄。';
+    story(c,'【宫中闲话】'+text);
+    (fromEvent?pushNow:pushEv)({title:'宫中闲话 · '+fullName(c),por:c,present:[c],text:text+fx(cchg(c,{mood:6,aff:3})),choices:[{t:'准她照常收寄家书'}]});
+    return;
+  }
   const offer=event=>{
     const scene=haremReturnActive()?{...event,onShow:()=>{noteHaremVisit(c);event.onShow?.();}}:event;
     (fromEvent?pushNow:pushEv)(scene);

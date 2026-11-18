@@ -6,13 +6,14 @@ A.outerCare=function(id,task){
   const m=outerMother(k.mother),age=kidAge(k),choices=[];
   let title,text;
   if(task==='visit'){
-    if(k.lastVisit===S.turn||mourningActive()||k.placement==='断联'||!useE())return;
+    if(k.lastVisit===S.turn||mourningActive()||k.placement==='断联'||outerIntegration()&&k.palaceRank||!useE())return;
     k.lastVisit=S.turn;k.visits++;k.trust=clamp(k.trust+8);k.secret=clamp(k.secret-.8);
     if(age>=10&&k.knowledge!=='不知'&&k.knowledge!=='怀疑')k.knowledge=outerKnown(k);
     title='探望 · '+k.alias;text=outerNote(m,k,'探望家中','亲自出宫',age<3?'你坐到摇篮边，孩子攥住你的袖口，睡熟了才松开。':age<10?'你陪孩子走了一趟上学的小路，记住了哪块石阶下雨会打滑。':'你让车马停在巷外，听孩子慢慢讲完这一年的打算。',age>=3?'“下回来的时候，你还认得路吧？”':'');
   }else if(task==='withdraw'){
     if(!k.palaceRank)return;title='另院去留';text='趁宫中尚未传开，你可以先问她愿往何处。';
     for(const path of ['请她出宫归家','为她议一门远亲','问她愿否入寺'])choices.push({t:path,f:()=>{
+      if(outerIntegration())outerReleaseResidence(k,'宫牌已交还，她依自己的意思离开内廷。');
       delete k.palaceRank;k.pending=k.pending.filter(key=>key!=='recognizedFace');
       k.path=path==='请她出宫归家'?'出宫归家':path==='问她愿否入寺'&&k.trust<35?'入寺清修':path==='为她议一门远亲'&&k.trust>=55?'自愿远嫁':'自立门户';
       return outerNote(m,k,'留牌后改籍',path,`女史领回宫牌。她在去向栏写了“${k.path}”，把信物连同自己的衣物一并带走。`,'“往后的信，请寄到我自己选的地方。”');}});
@@ -25,8 +26,12 @@ A.outerCare=function(id,task){
   }else if(task==='identity'){
     title='户籍与私记';text='改籍须付抄契钱，旧帖仍会留下痕迹。暗记只在你的密匣里存一笔。';
     for(const label of ['本姓','化名',...(k.foster?['寄养姓']:[])])if(k.register!==label)choices.push(outerCostChoice('改用'+label,8,()=>{
-      k.register=label;k.coverSur||=pick(SUR.filter(s=>s!==m.sur&&s!==k.foster));k.alias=(label==='本姓'?m.sur:label==='化名'?k.coverSur:k.foster)+k.given;
+      k.register=label;k.coverSur||=pick(SUR.filter(s=>s!==m.sur&&s!==k.foster&&(!outerIntegration()||s!==E().sur)));k.alias=(label==='本姓'?m.sur:label==='化名'?k.coverSur:k.foster)+k.given;
       const p=k.officialId&&scholarById(k.officialId);if(p){p.name=k.alias;p.sur=k.alias.slice(0,-k.given.length);}
+      if(outerIntegration()){
+        const c=S.cands.find(x=>x.outerHouseholdId===k.id)||byId(k.id);
+        if(c?.outerHouseholdId===k.id)c.sur=k.alias.slice(0,-k.given.length);
+      }
       k.clues=(k.clues||0)+1;k.secret=clamp(k.secret-3);return outerNote(m,k,'改籍',label,'新帖用了新姓，旧帖仍留在县衙的底册里。');
     }));
     if(k.pedigree==='未入')choices.push({t:'在密匣暗记一笔',f:()=>{k.pedigree='暗记';return outerNote(m,k,'暗记','留存私牍','御笔写下出生年月，封套上只题了一个小字。');}});
@@ -51,14 +56,24 @@ const outerOutView=viewOut;
 viewOut=function(){
   const html=outerOutView();if(!outerActive()||S.over||mourningActive()||E().age<18)return html;
   const b=outerBook(),busy=b?.lastMeet===S.turn||E().energy<1;
+  const oldTieReady=S.year>=3&&!b?.mothers.some(m=>m.source==='旧识');
+  const south=outerIntegration()&&outerSouthernTour();
+  if(south){
+    const buttons=[outerLink('访江南渡口 · 精力1',"A.outerMeet('市井','suzhou')",busy)];
+    if(oldTieReady)buttons.push(outerLink('重访旧渡 · 精力1',"A.outerMeet('旧识','suzhou')",busy));
+    for(const m of b?.mothers||[])if(m.place==='suzhou'&&!m.closed&&outerContactPresent(m))
+      buttons.push(outerLink('重访'+m.name+' · 精力1',`A.outerVisit(${m.id})`,m.seen===S.turn||E().energy<1));
+    return html+detailSection('城外人家',`<p>御舟在江南 · 尚余${south.returns-S.turn}个月</p>`+buttons.join(' '));
+  }
   const buttons=[outerLink('微服访城南茶市 · 精力1',"A.outerMeet('市井','city')",busy)];
+  if(outerIntegration()&&S.year>=3)buttons.push(outerLink('启程南巡三月 · 精力1','A.outerSouthTour()',E().energy<1));
   buttons.push(b?.estate?outerLink('出宫到别院访邻 · 精力1',"A.outerMeet('市井','home')",busy):outerLink('置办城外别院',"A.outerEstate()"));
   const trip=S.flags.outerTrip;
   if(trip?.turn===S.turn&&['hunt','temple','altar'].includes(trip.place))buttons.push(outerLink('重走'+outerPlaces[trip.place]+' · 精力1',`A.outerMeet('市井','${trip.place}')`,busy));
-  if(S.year>=3&&!b?.mothers.some(m=>m.source==='旧识'))buttons.push(outerLink('南巡重访旧渡 · 精力1',"A.outerMeet('旧识','suzhou')",busy));
+  if(!outerIntegration()&&oldTieReady)buttons.push(outerLink('南巡重访旧渡 · 精力1',"A.outerMeet('旧识','suzhou')",busy));
   if(outerFamilyStories()){
-    buttons.push(outerLink('南巡访江南渡口 · 精力1',"A.outerMeet('市井','suzhou')",busy));
-    if(S.year>=3&&!b?.mothers.some(m=>m.source==='旧识')){
+    if(!outerIntegration())buttons.push(outerLink('南巡访江南渡口 · 精力1',"A.outerMeet('市井','suzhou')",busy));
+    if(oldTieReady){
       buttons.push(outerLink('微服寻访旧识 · 精力1',"A.outerMeet('旧识','city')",busy));
       if(trip?.turn===S.turn&&trip.place==='altar')buttons.push(outerLink('祭天归途寻旧人 · 精力1',"A.outerMeet('旧识','altar')",busy));
     }
@@ -67,15 +82,17 @@ viewOut=function(){
       if(rows.length)buttons.push(detailFold(label,rows.join(' ')));
     }
   }else if(outerSibling())buttons.push(outerLink('往外家别院送寿礼 · 精力1',"A.outerMeet('姊妹','home')",busy));
-  for(const m of b?.mothers||[])if(!m.closed&&outerContactPresent(m))buttons.push(outerLink('重访'+m.name+' · 精力1',`A.outerVisit(${m.id})`,m.seen===S.turn||E().energy<1));
+  for(const m of b?.mothers||[])if(!m.closed&&outerTourAllows(m.place)&&outerContactPresent(m))buttons.push(outerLink('重访'+m.name+' · 精力1',`A.outerVisit(${m.id})`,m.seen===S.turn||E().energy<1));
   return html+detailSection('城外人家',buttons.join(' '));
 };
 function outerCard(b,k,frozen){
   const m=b.mothers.find(m=>m.id===k.mother),age=Math.floor(((b.closedTurn??S.turn)-k.born)/12);
+  const c=!frozen&&outerIntegration()&&byId(k.id);
   const lines=[`生母 ${m.name} · 生于${k.birthDate} · ${age}岁 · 真名 ${k.pedigree==='认领'?k.royalName:'＊＊'}`,
     `${k.register} · ${k.pedigree} · ${k.placement} · ${k.path} · ${k.knowledge} · 保密 ${Math.ceil(k.secret)}`,
     `${k.mark} · ${k.token} · ${m.trait}的${m.trade}所出`,Object.entries(outerStats).map(([s,t])=>t+' '+rd(k[s])).join(' · '),
     age<18?`教养 ${k.lesson} · 月支 ${k.fee}万两`:'已成年'];
+  if(c?.outerHouseholdId===k.id&&c.alive&&!c.gone)lines.push(`宫中位分 ${RANKS[c.rank]} · ${c.palace}`);
   if(outerFamilyStories()){
     if(k.temper)lines.push(k.temper+' · '+k.likeness);
     if(k.denied)lines.push('御前已决：永不认领，保留原籍。');
@@ -87,8 +104,9 @@ function outerCard(b,k,frozen){
   if(!frozen&&!k.sealed){
     if(k.pending.length)controls.push(outerLink('阅待办家书',`A.outerPetition(${k.id})`));
     if(k.pedigree!=='认领'&&k.placement!=='待安置'){
-      if(k.placement!=='断联')controls.push(outerLink('出宫探望 · 精力1',`A.outerCare(${k.id},'visit')`,k.lastVisit===S.turn||E().energy<1||mourningActive()));
+      if(k.placement!=='断联'&&(!outerIntegration()||!k.palaceRank))controls.push(outerLink('出宫探望 · 精力1',`A.outerCare(${k.id},'visit')`,k.lastVisit===S.turn||E().energy<1||mourningActive()));
       if(k.palaceRank)controls.push(outerLink('商量去留',`A.outerCare(${k.id},'withdraw')`));
+      if(c?.outerHouseholdId===k.id&&c.alive&&!c.gone)controls.push(outerLink('查阅后宫档案',`A.go('consort',${c.id})`));
       if(age<18&&['外宅','寄养','随母'].includes(k.placement))controls.push(outerLink('调整月用',`A.outerCare(${k.id},'allowance')`));
       if(age>=6&&age<18)controls.push(outerLink('定今年教养',`A.outerCare(${k.id},'school')`,k.schoolAge===age));
       controls.push(outerLink('户籍与认领',`A.outerCare(${k.id},'identity')`),outerLink('处置知情人',`A.outerCare(${k.id},'witness')`));
@@ -113,11 +131,12 @@ const outerKidsView=viewKids;
 viewKids=function(){return outerKidsView()+(outerActive()&&!S.over?outerLink('启御前密匣',"A.go('outer')"):'');};
 const outerLogView=viewLog;
 viewLog=function(){
-  return outerLogView()+(outerActive()?(S.outerRegisters||[]).filter(b=>b.gen!==S.gen||S.over).map(b=>outerLink('野史拾遗 · '+b.era,`A.go('outer',${b.gen})`)).join(''):'');
+  const history=regnalChronicleActive()?outerLink('皇帝本纪',"A.go('regnal')"):'';
+  return outerLogView()+history+(outerActive()?(S.outerRegisters||[]).filter(b=>b.gen!==S.gen||S.over).map(b=>outerLink('野史拾遗 · '+b.era,`A.go('outer',${b.gen})`)).join(''):'');
 };
 
 const outerHaremView=viewHarem;
 viewHarem=function(){
-  const html=outerHaremView(),residents=outerActive()?(outerBook()?.children||[]).filter(k=>k.palaceRank):[];
+  const html=outerHaremView(),residents=outerActive()?(outerBook()?.children||[]).filter(k=>k.palaceRank&&(!outerIntegration()||!byId(k.id))):[];
   return residents.length?html+detailSection('别院名册',residents.map(k=>`<p>${esc(k.alias)} · ${esc(k.palaceRank)} · 别院另居</p>`).join('')):html;
 };
