@@ -32,6 +32,7 @@ function consortRecovery(c){
 }
 function consortNightReason(c){
   if(!c)return '眼下不宜召见';
+  if(mourningNightPause())return '太后新丧，本月暂停侍寝';
   if(c.homeLeave&&journalContentVersion()>=88)return c.homeLeave.field?'外出 · 赴北境军驿':'外出省亲';
   if(journalContentVersion()>=91){
     const d=S.flags.dowager;

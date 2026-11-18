@@ -106,7 +106,7 @@ function maidEvent(where){
   if(!newConsortEventAllowed())return null;
   const g=makeGirl({fam:{t:'宫女',p:3},age:ri(16,19)});
   return {title:'宫女',maidEncounter:true,por:g,text:`${where}的花径上，一个小宫女正低头扫落花，口中轻轻哼着家乡的小调。你问她名字，她慌忙跪下：“奴婢${fullName(g)}。”`,choices:[
-    {t:'今夜召她侍寝（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{g.maid=true;g.near=false;g.palace='尚衣局';g.favor=20;g.aff=25;S.consorts.push(g);deepen(g);story(g,`本是${where}一带当差的宫女，被陛下看中。`);maidNight(g);return null}},
+    {t:'今夜召她侍寝（精力-1）',cond:()=>E().energy>0&&!mourningNightPause(),why:mourningNightPause()?'太后新丧，本月暂停侍寝':'精力不足',f:()=>{if(mourningNightPause())return null;g.maid=true;g.near=false;g.palace='尚衣局';g.favor=20;g.aff=25;S.consorts.push(g);deepen(g);story(g,`本是${where}一带当差的宫女，被陛下看中。`);maidNight(g);return null}},
     {t:'收为官女子',f:()=>{addConsort(g,0,'本为宫女，蒙陛下青眼');g.favor=25;g.aff=30;return `${fullName(g)}受宠若惊，磕了好几个头。`}},
     {t:'赏她一支簪子',f:()=>'她捧着簪子，红着脸退下了。'}]};
 }

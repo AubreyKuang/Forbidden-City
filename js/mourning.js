@@ -1,6 +1,7 @@
 /* A death is committed only when its mandatory announcement enters the queue. */
 function mourningOf(){return S?.flags.dowager?.mourning}
 function mourningActive(){const m=mourningOf();return !!(m&&!m.legacy&&S.turn===m.turn)}
+function mourningNightPause(){return journalContentVersion()>=94&&mourningActive();}
 function mourningWomen(){const d=ensureDowager();return d?dowagerKin().filter(c=>!c.cold):[]}
 function mourningReaction(c){
   if(c.cold)return '消息传到冷宫，她伏在窗前哭了许久，连晚膳也没有动。';
@@ -53,7 +54,7 @@ function dowagerFuneralEvent(d=S.flags.dowager){
     save('auto');return result;
   };
   return {title:'太后崩逝 · 宫中举哀',scene:'mourning',sfx:'sad',cast:kin.slice(0,3),
-    text:`慈宁宫传来长长的哭声。掌事姑姑跪在御前，几次哽咽，才说出：“${d.name}……去了。”\n宫门撤去彩饰，换上素幡。${d.name}生前常坐的榻边，只剩一盏未熄的灯。${reactions?'\n'+reactions:''}\n请陛下安排丧仪。本月宫中暂停宴饮。`,
+    text:`慈宁宫传来长长的哭声。掌事姑姑跪在御前，几次哽咽，才说出：“${d.name}……去了。”\n宫门撤去彩饰，换上素幡。${d.name}生前常坐的榻边，只剩一盏未熄的灯。${reactions?'\n'+reactions:''}\n请陛下安排丧仪。本月宫中暂停宴饮${journalContentVersion()>=94?'与召幸，已有身孕的妃嫔仍照常诊治、安胎与生产':''}。`,
     onQueue:()=>beginDowagerMourning(d),choices:[
       {t:'厚葬守孝，亲赴慈宁宫送别（国库-80）',cond:()=>E().treasury>=80,why:'国库银两不足，可从简尽礼',f:()=>settle(false)},
       {t:'丧仪从简，仍亲自守灵（国库至多-20）',f:()=>settle(true)}]};
