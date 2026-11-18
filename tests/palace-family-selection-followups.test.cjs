@@ -17,6 +17,27 @@ test('paternal and maternal recommendations share one niece through selection, r
  assert.ok(familyTreeChildren(h.brother).some(n=>n.p.id===girlId));
  `);
 });
+test('the family tree and list link to the profile, where nomination sits beside the visit action',()=>{
+ const b=setup();b.run(`for(const mode of ['graph','list']){
+   UI.familyMode=mode;const html=viewFamily();
+   assert.ok(html.includes("A.go('natal','"+other.id+":"+sister.id+"')"));assert.doesNotMatch(html,/A\\.nominateRelative/);
+ }
+ A.go('natal',other.id+':'+sister.id);
+ assert.match(viewNatalRelative(),/准入宫探亲<\\/button><button [^>]+>荐入下届选秀/);
+ A.nominateRelative(other.id,sister.id);
+ assert.match(viewNatalRelative(),/disabled>已荐入下届选秀/);`);
+});
+test('a married sister’s daughter can be nominated from her own maternal-family profile',()=>{
+ const b=setup();b.run(`sister.married=true;
+ var niece=addNatalPerson(other,oh,'f',15,218,false);
+ niece.parentRelativeId=sister.id;niece.married=false;
+ A.familyTreeToggle(other.id,String(sister.id),false);
+ assert.ok(familyHouseTree(other).includes("A.go('natal','"+other.id+":"+niece.id+"')"));
+ A.go('natal',other.id+':'+niece.id);assert.match(viewNatalRelative(),/外甥女/);
+ assert.match(viewNatalRelative(),/荐入下届选秀/);A.nominateRelative(other.id,niece.id);
+ genCands();var matches=S.cands.filter(g=>g.id===niece.id);
+ assert.equal(matches.length,1);assert.match(matches[0].kinNote,/外甥女/);`);
+});
 test('next actual selection rechecks marriage and keeps valid nominated sisters across skipped selections',()=>{
  const b=setup();b.run(`var friend=addNatalPerson(other,oh,'f',17,106,false);
  A.nominateRelative(other.id,sister.id);A.nominateRelative(other.id,friend.id);friend.married=true;

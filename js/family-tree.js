@@ -80,7 +80,7 @@ function familyTreePerson(c,p,role,relation,list=false){
   const royal=!!p.outsideFamilyOrigin;
   if(!royal&&list&&!role&&p.sex==='m'&&natalAge(p)>=18)role='relative'+p.id;
   const target=p.consortId?`'consort',${p.consortId}`:royal?`'kid',${p.id}`:role?`'official','${c.id}:${role}'`:`'natal','${c.id}:${p.id}'`,age=role?p.age:natalAge(p),status=royal?'已认回宫':role?officialStatus(p):natalStatus(p);
-  return `<button class="graph-kin-person${p.alive===false?' deceased':''}" onclick="A.go(${target})" aria-label="查看${esc(p.name)}">${porImg(role?p:natalPortrait(p),34)}<span class="graph-person"><strong>${esc(p.name)}</strong><small>${esc(relation)} · ${role?esc(status)+' · '+esc(p.office||p.post||''):age+'岁 · '+esc(status)}${outsideChildBadge(p)}</small>${role?`<small>${age}岁 · ${esc(officialOfficeLabel(p))}</small>`:''}</span></button>`+(role||royal?'':familyNominationButton(c,p));
+  return `<button class="graph-kin-person${p.alive===false?' deceased':''}" onclick="A.go(${target})" aria-label="查看${esc(p.name)}">${porImg(role?p:natalPortrait(p),34)}<span class="graph-person"><strong>${esc(p.name)}</strong><small>${esc(relation)} · ${role?esc(status)+' · '+esc(p.office||p.post||''):age+'岁 · '+esc(status)}${outsideChildBadge(p)}</small>${role?`<small>${age}岁 · ${esc(officialOfficeLabel(p))}</small>`:''}</span></button>`;
 }
 function familyHouseTree(c,list=false){
   const h=houseOf(c);if(!h)return '';
