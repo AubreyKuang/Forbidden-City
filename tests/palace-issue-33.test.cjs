@@ -46,7 +46,7 @@ test('a real v68 result reloads and then uses the new manual month control',()=>
  b.run(`
    A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,68);
    assert.equal(curEv.title,'黄河决堤');assert.ok(modalResult);drain();
-   assert.equal(PalaceActions.contentVersion,70);assert.equal(S.turn,0);
+   assert.equal(PalaceActions.contentVersion,PalaceActions.releaseVersion);assert.equal(S.turn,0);
    A.go('family');assert.equal(S.turn,0);assert.equal(UI.view,'family');
  `);
 });

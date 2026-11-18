@@ -11,7 +11,9 @@ function fenghuaDeliverLetter(c,p,amounts){
  return fx(result);
 }
 function fenghuaStoryEvent(p){
- const key=p.fenghuaKey,stage=p.fenghua.stage;if(stage>=3)return fenghuaDailyEvent(p);
+ const key=p.fenghuaKey,stage=p.fenghua.stage;
+ if(key==='linJianxi')return linJianxiSoloVisit(p);
+ if(stage>=3)return fenghuaDailyEvent(p);
  if(key==='shangguanLantai'){
   if(stage===0)return fenghuaEvent(p,'红笔署名','女官初任，送出的校稿却被人抄去署了另一个名字。兰台带来两份底稿，没有哭诉：“我能再写一篇。可若今日不问，下次替谁担错的，也未必是写错的人。”',[
    {t:'核对底稿，恢复她的署名',trust:10,key:'credit',f:()=>{p.fenghua.credit=true;E().wen=clamp(E().wen+2);return '两份底稿当面核对，原署名恢复。她将校书责任也一并签下，今后愿继续直陈文字中的问题。';}},

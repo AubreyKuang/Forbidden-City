@@ -43,7 +43,7 @@ test('month settlement retains every reply and starts a fresh quota, without acc
 for(const version of [44,45])for(const name of ['preview','result'])test('published v'+version+' '+name+' replays unchanged and then continues toward three replies',()=>{
  const payload=require('./fixtures/monthly-court-legacy-v'+version+'.json')[name];
  let b=boot(82,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));b.ctx.assert=assert;
- b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,${version});assert.doesNotMatch(curEv.text,/本月第/);drain();assert.equal(PalaceActions.contentVersion,70);assert.equal(monthlyCourtStatus().count,1);A.court();assert.match(curEv.text,/本月第 2 份/);assert.notEqual(curEv.title,'黄河决堤');`);
+ b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,${version});assert.doesNotMatch(curEv.text,/本月第/);drain();assert.equal(PalaceActions.contentVersion,PalaceActions.releaseVersion);assert.equal(monthlyCourtStatus().count,1);A.court();assert.match(curEv.text,/本月第 2 份/);assert.notEqual(curEv.title,'黄河决堤');`);
  b=reload(b);b.run(`assert.equal(monthlyCourtStatus().count,1);assert.match(curEv.text,/本月第 2 份/);`);
 });
 

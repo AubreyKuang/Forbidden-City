@@ -158,26 +158,30 @@ function princessMarriage(k){
   const order=preference==='books'?['scholar','official','frontier']:preference==='archery'?['frontier','scholar','official']:['official','scholar','frontier'];
   const voice=princessMarriageVoicesActive()?princessMarriageVoice(k):null;
   return {title:'公主婚事',por:k,valid:()=>marriageReady(k),...(voice?{onShow:()=>rememberPrincessMarriageVoice(k,voice)}:{}),text:voice?.text||`${kidName(k)}请你先看她写的笺子：「${PRINCESS_PURSUITS[preference].wish}」\n她愿意与你逐一谈谈求亲的人。`,choices:[
+    ...(typeof linJianxiProposalReady==='function'&&linJianxiProposalReady(k)?[{t:'听林见溪的求亲回话',f:()=>{pushNow(linJianxiProposalEvent(k));return null;}}]:[]),
     ...(rememberedMatch(k)?[{t:'谈谈少年时相识的'+rememberedMatch(k).name,f:()=>{pushNow(rememberedMatchEvent(k));return null;}}]:[]),
     ...order.map(id=>({t:`听她谈谈${PRINCESS_MATCHES[id].name}`,f:()=>{pushNow(princessMatchReview(k,id));return null;}})),
     {t:'由她安排，半年后再谈',f:()=>{k.marriageAfter=S.turn+6;save('auto');return '她收起名帖，说等有了主意会来找你。';}}
   ]};
+}
+function settlePrincessMarriage(k,person,id,description=PRINCESS_MATCHES[id].name){
+  k.married=true;k.spouse={...person,marriedAt:S.turn};
+  if(k.estate)k.estate.route=id;
+  k.princessMarriage=id;
+  princessMemory(k,'princess_marriage',`婚事议定：${person.name}（${description}）。`);
+  log(`${kidName(k)}与${person.name}议定婚事。`,1);
+  const mother=byId(k.mom);
+  if(id==='frontier'&&mother?.alive)cchg(mother,{mood:-18,aff:-5});
+  if(id==='scholar')k.love=clamp(k.love+15);
+  const gains=id==='frontier'?chg({prestige:3,people:6}):id==='official'?chg({prestige:4,treasury:-50}):'父爱+15';
+  ensureMarriedLife(k);return gains;
 }
 function princessMatchReview(k,id){
   const match=PRINCESS_MATCHES[id],person=marriageCandidate(k,id);save('auto');
   return {title:'灯下谈婚事',cast:[k,person],valid:()=>marriageReady(k),text:`${person.name} · ${kidAge(person)}岁 · ${match.name}\n${princessMarriageVoicesActive()?princessMatchVoice(k,id):match.note}\n${marriageProfileText(k,person)}${id==='official'?'\n婚仪需国库五十万两。':''}\n她把名帖推过来，等你回答。`,choices:[
     {t:id==='scholar'?'准她自择驸马':id==='frontier'?'允准和亲':'允准这门亲事',cond:()=>marriageReady(k)&&(id!=='official'||E().treasury>=50),f:()=>{
       if(!marriageReady(k)||(id==='official'&&E().treasury<50))return null;
-      k.married=true;k.spouse={...person,marriedAt:S.turn};
-      if(k.estate)k.estate.route=id;
-      k.princessMarriage=id;
-      princessMemory(k,'princess_marriage',`婚事议定：${person.name}（${match.name}）。`);
-      log(`${kidName(k)}与${person.name}议定婚事。`,1);
-      const mother=byId(k.mom);
-      if(id==='frontier'&&mother?.alive)cchg(mother,{mood:-18,aff:-5});
-      if(id==='scholar')k.love=clamp(k.love+15);
-      const gains=id==='frontier'?chg({prestige:3,people:6}):id==='official'?chg({prestige:4,treasury:-50}):'父爱+15';
-      ensureMarriedLife(k);save('auto');return fx(gains);
+      const gains=settlePrincessMarriage(k,person,id);save('auto');return fx(gains);
     }},
     {t:'先让两人谈谈日常',f:()=>{pushNow(marriageMeeting(k,person,()=>princessMatchReview(k,id)));return null;}},
     {t:'再看别的人选',f:()=>{pushNow(princessMarriage(k));return null;}},

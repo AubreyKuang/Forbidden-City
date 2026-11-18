@@ -176,13 +176,13 @@ const ROYAL_GROWTH_SETS={f:[380,383,392,395,489,492],m:[386,389,495,498]};
 const DESCENDANT_VARIANTS=29+ROYAL_GROWTH_SETS.m.length;
 const EXISTING_PRINCE_VARIANTS=4;
 const EXTRA_PRINCE_VARIANTS=LEGACY_DESCENDANT_VARIANTS-EXISTING_PRINCE_VARIANTS;
-const BEAUTY_PORTRAIT_START=92, YOUNG_ROYAL_PORTRAIT_START=136, PORTRAIT_COUNT=501;
+const BEAUTY_PORTRAIT_START=92, YOUNG_ROYAL_PORTRAIT_START=136, PORTRAIT_COUNT=502;
 // Opening-generation dowagers only. Inherited empresses keep their saved faces.
 const DOWAGER_PORTRAITS=Object.freeze(Array.from({length:18},(_,i)=>441+i));
 // Reserved story art never enters the random consort pools. Stable zero-based IDs.
 const STORY_CONSORT_PORTRAITS=Object.freeze({gouyi:422,hongjian:438});
 // Dedicated story characters are bound with portraitOverride, outside random pools.
-const STORY_NPC_PORTRAITS=Object.freeze({capitalNoble:433,shangguanLantai:435,gaoHuaibi:436,jiShuye:437,xueHongjian:438,sunYunxiu:439,liuZhaoshuang:440});
+const STORY_NPC_PORTRAITS=Object.freeze({capitalNoble:433,shangguanLantai:435,gaoHuaibi:436,jiShuye:437,xueHongjian:438,sunYunxiu:439,liuZhaoshuang:440,linJianxi:501});
 const PRINCESS_VARIANTS=33+ROYAL_GROWTH_SETS.f.length;
 const EXPANDED_ROYAL_START=294;
 const EMPEROR_PORTRAITS=[12,13,312,313,314,315];
@@ -226,7 +226,8 @@ const portraitSheets=[
   {start:471,rows:2,scale:4,src:'./assets/images/palace-consorts-ruqun-pink-green.webp?v=1',image:document.createElement('img')},
   {start:477,rows:2,scale:4,src:'./assets/images/palace-consorts-ruqun-varied.webp?v=1',image:document.createElement('img')},
   {start:483,rows:2,scale:4,src:'./assets/images/palace-consorts-ruqun-legends.webp?v=1',image:document.createElement('img')},
-  {start:489,rows:3,scale:4,src:'./assets/images/palace-royal-growth-colors.webp?v=1',image:document.createElement('img')}
+  {start:489,rows:3,scale:4,src:'./assets/images/palace-royal-growth-colors.webp?v=1',image:document.createElement('img')},
+  {start:501,rows:1,scale:4,src:'./assets/images/palace-lin-jianxi.webp?v=1',image:document.createElement('img')}
 ];
 const portraitSheet=cell=>portraitSheets.slice().reverse().find(sheet=>cell>=sheet.start)||portraitSheets[0];
 function ensurePortraitSheet(cell){const sheet=portraitSheet(cell);if(!sheet.image.src)sheet.image.src=sheet.src;}
@@ -447,6 +448,7 @@ function portraitJewelry(rank,id){return JEWELRY[id]|| (rank===8?JEWELRY.phoenix
 // Coordinates are in the stable 112 × 140 portrait tile: brow centre and head width.
 // Half-length paintings need much smaller ornaments than the original close-ups.
 const PORTRAIT_HEADS={
+  501:[56,29,25],
   433:[61,26,26],
   434:[62,26,26],
   435:[55,40,25],436:[64,40,25],437:[61,42,25],438:[55,44,25],439:[62,48,26],440:[65,41,24],
