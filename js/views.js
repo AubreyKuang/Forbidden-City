@@ -379,7 +379,7 @@ function viewConsort(){
   const family=(act?fosterLine(c)+clanLine(c)+conKidLine(c)+relLine(c):'')+houseLine(c)+fiveBrotherPanel(c);
   return `${personBackButton('harem')}
    <header class="detail-head">${porImg(c,224)}<div class="grow">
-    <p>${esc(fullName(c))} · ${c.age}岁 · ${c.alive?c.gone?'已出宫':c.homeLeave?'娘家 · 暂离宫中':c.templeStay?'护国寺':esc(residenceLabel(c)):esc(c.deathReason||'已故')}</p>
+    <p>${esc(fullName(c))} · ${c.age}岁 · ${c.alive?c.gone?'已出宫':c.homeLeave?'娘家 · 暂离宫中':c.templeStay?'护国寺':esc(residenceLabel(c)):esc([c.passingDate,consortPassingReason(c)||'已故'].filter(Boolean).join(' · '))}</p>
     <h2>${esc(cName(c))}</h2>${consortHomePlace(c)?`<button class="btn sm jade" onclick="A.visitConsortHome(${c.id})">去宫里看看 →</button>`:''}
     <p>${esc(c.fam.t)} · ${esc(c.trait)} ${solitaryTag(c)}${dowagerKinTag(c)}${consortTraitTags(c)}${c.preg>=2?` <span class="tag r">有孕${c.preg}月</span>`:''}</p>
     ${dowagerCareActive()&&c.dowagerKin?.gen===S.gen?`<p class="hint">太后母家侄女 · 陛下的母族表亲；潜邸时奉先帝之命成婚。</p>`:c.imperialKin?`<p class="hint">入宫亲缘 · ${esc(c.imperialKin.relation)}，经${esc(c.imperialKin.via)}引见。</p>`:''}

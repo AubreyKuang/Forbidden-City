@@ -89,8 +89,8 @@ const ARCS={
     aNext(c,2,4,8);return {illustration:'quiet-palace-keepsakes',text:`${cName(c)}从宫人的窃窃私语里知道了自己的病情。她没有哭闹，只是把你送她的东西一件件收进了箱子里。`,choices:[{t:'去看她',f:()=>fx(cchg(c,{mood:-10,aff:-5}))}]}},
   (c,f)=>{if(f.herb&&chance(.7)){c.trait='温婉';aEnd(c,'回春','雪灵芝入药，她的心疾竟慢慢好了。她开始学骑马，虽然总是摔下来。');return {illustration:'kunlun-snow-fungus',text:'昆仑雪灵芝送到了。三个月后，太医惊喜地禀报：她的脉象平稳了。',choices:[{t:'太好了',f:()=>fx(cchg(c,{aff:20,mood:30}))}]}}
     if(f.trip&&chance(.4)){aEnd(c,'江南春','从江南回来后，她的病竟一日好过一日。太医说，心病还须心药医。');return {illustration:'illness-rest-window',text:'从江南回来后，她的气色一日好过一日。',choices:[{t:'太好了',f:()=>fx(cchg(c,{mood:20}))}]}}
-    c.alive=false;aEnd(c,f.trip?'烟雨':'香消',f.trip?'她走在一个春天的清晨，枕边放着从西湖带回的一枝柳。':'一个雪夜，她安静地走了。');AU.sfx('sad');
-    return {illustration:f.trip?'willow-by-pillow':'western-moon-window',text:`${fullName(c)}薨了。${f.trip?'宫人说，她走之前一直在笑。':''}`,choices:[{t:'追封，厚葬',f:()=>{c.rank=Math.min(7,c.rank+1);return fx(chg({treasury:-30}))}},{t:'……'}]}}]},
+    c.alive=false;if(journalContentVersion()>=81)c.deathReason='心疾不治';aEnd(c,f.trip?'烟雨':'香消',f.trip?'她走在一个春天的清晨，枕边放着从西湖带回的一枝柳。':'一个雪夜，她安静地走了。');AU.sfx('sad');
+    return {...(journalContentVersion()>=81?{deathNotice:c.id,title:'后宫丧讯 · '+fullName(c)}:{}),illustration:f.trip?'willow-by-pillow':'western-moon-window',text:`${fullName(c)}${journalContentVersion()>=81?'因心疾不治，薨逝':'薨了'}。${f.trip?'宫人说，她走之前一直在笑。':''}`,choices:[{t:journalContentVersion()>=81&&c.rank>=7?'照原位厚葬':'追封，厚葬',f:()=>{if(journalContentVersion()<81||c.rank<7)c.rank=Math.min(7,c.rank+1);return fx(chg({treasury:-30}))}},{t:'……'}]}}]},
  envoy:{name:'驼铃',fit:c=>c.fam.t==='西域贡女',stages:[
   (c,f)=>({illustration:'western-envoy-bell',text:`西域使团再次入京。使臣请求私下拜见${cName(c)}，说是带来了她母亲的口信。`,choices:[
     {t:'准',f:()=>{f.v='allow';aNext(c,1,2,4);return '使臣在她宫里待了一个时辰。'}},
@@ -251,7 +251,7 @@ function arcTick(){
     const ev=st(c,c.arc.f);if(ev){
       if(!c.arc.done&&c.arc.t<=S.turn)c.arc.t=S.turn+99;
       ev.title=ev.title||ARCS[id].name;ev.por=ev.por||c;
-      const valid=ev.valid;ev.valid=()=>inPalace(c)&&officialArcEligible(c)&&(!valid||valid());
+      const valid=ev.valid;ev.valid=()=>ev.deathNotice===c.id?byId(c.id)===c&&!c.alive:inPalace(c)&&officialArcEligible(c)&&(!valid||valid());
       const queued=ev.onQueue;
       ev.onQueue=()=>{queued?.();c.arc.startedAt??=S.turn;pace.last=S.turn;pace.byType[id]={turn:S.turn,person:c.id};if(RARE_ARCS[id])pace.investigation=S.turn;if(journalContentVersion()>=26&&id==='love'&&c.arc.st===2&&c.aff>=70)pace.loveVow=S.turn;};
       return ev;

@@ -18,7 +18,7 @@ function sisterArrivalFeeling(c,g,admission=true){
   if(relation>=55)return {kind:'welcome',delta:8,text:`${branch}${fullName(c)}记着两人原本的好交情：“往后有人能说家中旧事，自然是好。可她有她的心思，臣妾也不能替她安排一生。”`};
   return {kind:'mixed',delta:2,text:`${branch}${fullName(c)}既盼亲人作伴，也有一点难言的忐忑，只先把宫中起居的规矩说清。`};
 }
-function familyAdmissionReactions(g){
+function familyAdmissionReactions(g,selection=false){
   if(g.sisterArrivalRecorded)return;
   g.sisterArrivalRecorded=true;
   for(const c of S.consorts){
@@ -26,12 +26,13 @@ function familyAdmissionReactions(g){
     const feeling=sisterArrivalFeeling(c,g,true);if(!inPalace(c))feeling.text=feeling.text.replace('按礼相迎','从家信得知消息');relAdd(c,g,feeling.delta);cchg(c,{mood:feeling.delta});
     if(relGet(c,g)<=-25){(c.kinRival||={})[g.id]=1;(g.kinRival||={})[c.id]=1;}
     c.sisterArrival={other:g.id,turn:S.turn,kind:feeling.kind,text:feeling.text};
-    if(familyScenesEnabled())sisterAdmissionChronicle(c,g,feeling);
+    if(familyScenesEnabled())sisterAdmissionChronicle(c,g,feeling,selection);
     else{story(c,`【姐妹入宫】${feeling.text}`);story(g,`【姐妹初见】${feeling.text}`);}
     // An old rift with the newcomer is between the two of them, not a grievance against the emperor.
     if(feeling.delta<0)NPCMemory.record(S,{type:'family',time:S.turn,location:c.palace,participants:[c.id,g.id],outcome:feeling.text},
       [{person:c.id,subject:g.id,interpretation:feeling.text,emotion:-.6,impact:80}]);
     else remember(c,'family',feeling.text);
+    if(selection&&feeling.delta>0&&!['悲恸','心如死灰'].includes(xinOf(c)))setXin(c,'欢喜',fullName(g)+'留选入宫',g.id,{record:false});
     if(feeling.delta<0&&!['悲恸','心如死灰'].includes(xinOf(c)))setXin(c,'委屈',`家中另送${fullName(g)}入宫，心中不安`);
   }
 }
@@ -50,9 +51,9 @@ function natalSceneRecord(c,p,text,emotion=0){
  const younger=age<3?'由长辈照料，听见说话声转过头来。':age<18?'带来的小物终于能亲手交给她，宫里的规矩仍要听长辈提醒。':guarded?'她待我守礼而疏远，不能把这次见面当作旧嫌已经解开。':p.trait==='活泼'?'备了一路的话，真正相见又怕说得太多；见她肯听，才慢慢放松。':p.trait==='才女'?'那页旧书上的批注还在，想问她如今是否仍有空读。':'见到她过得怎样，比家书里一句“安好”真切得多。我也有自己的打算，想让她听见。';
  livedRecord([c,p],'family',title,sisterThread(c,p),text,[elder,younger]);
 }
-function sisterAdmissionChronicle(c,g,feeling){
+function sisterAdmissionChronicle(c,g,feeling,selection=false){
  const selected=g.natalOrigin?.via==='selection',visiting=!selected&&g.natalOrigin?.host===c.id;
- const fact=`【姐妹入宫】${fullName(g)}${visiting?'原是入宫探亲的'+natalLabel(c,{born:S.turn-g.age*12,sex:'f'})+'，与陛下相识后自愿留下':selected?'以娘家原有名册应选，殿选留牌入宫':'依亲缘入宫'}，册为${RANKS[g.rank]}，赐居${g.palace}。${fullName(c)}得知了这件事。${inPalace(c)?'从此两人既是家人，也各有宫中的身份。':'她眼下不能在宫中迎接，只收到消息，没有当面相见。'}`;
+ const fact=selection?`【选秀 · 姐妹定榜】${rosterSister(c,g)}${fullName(g)}留选，初封${selectionInitialRank(g)}，赐居${g.palace}。`:`【姐妹入宫】${fullName(g)}${visiting?'原是入宫探亲的'+natalLabel(c,{born:S.turn-g.age*12,sex:'f'})+'，与陛下相识后自愿留下':selected?'以娘家原有名册应选，殿选留牌入宫':'依亲缘入宫'}，册为${RANKS[g.rank]}，赐居${g.palace}。${fullName(c)}得知了这件事。${inPalace(c)?'从此两人既是家人，也各有宫中的身份。':'她眼下不能在宫中迎接，只收到消息，没有当面相见。'}`;
  const newcomer=sisterNewcomerThought(c,g,feeling);
  livedRecord([c,g],'family','姐妹入宫',sisterThread(c,g),fact,[feeling.text,newcomer]);
  g.sisterArrival={other:c.id,turn:S.turn,kind:feeling.kind,text:newcomer};

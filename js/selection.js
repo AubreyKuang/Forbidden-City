@@ -145,11 +145,54 @@ function selectionChronicle(entries){
     return [entry];
   });
 }
+function rememberDroppedKin(s,c){
+ if(!s||journalContentVersion()<81||!(c.fatherId||c.house?.father||Object.keys(c.kin||{}).length))return;
+ const departed=s.departedKin||=[];
+ if(!departed.some(p=>p.id===c.id))departed.push({id:c.id,sur:c.sur,given:c.given,age:c.age,fatherId:c.fatherId??c.house?.father?.id,
+   kin:{...c.kin},kinRival:{...c.kinRival},willing:c.willing});
+}
+function rosterSister(c,p){
+ const direct=c.kin?.[p.id],reverse=p.kin?.[c.id];
+ if(KIN_TXT[direct])return KIN_TXT[direct];
+ if(KIN_TXT[reverse])return KIN_TXT[reverse[0]+(reverse[1]==='姐'?'妹':'姐')];
+ const id=p.fatherId??p.house?.father?.id;
+ const same=id!=null&&(c.fatherId===id||c.house?.father?.id===id);
+ if(!same&&!c.house?.father?.siblingFatherIds?.includes(id))return '';
+ return KIN_TXT[(same?'亲':'堂')+(p.age>c.age||p.age===c.age&&p.id<c.id?'姐':'妹')];
+}
+function selectionKinNews(s,members,remaining){
+ if(journalContentVersion()<81)return;
+ const kept=new Set(members.map(c=>c.id)),roster=new Map([...(s?.peerDeparted||[]),...(s?.departedKin||[]),...remaining,...members].map(c=>[c.id,c]));
+ for(const c of S.consorts.filter(c=>c.alive&&!c.gone&&!c.maid)){
+  const news=[];
+  for(const p of roster.values()){
+   if(p.id===c.id||kept.has(p.id)&&p.sisterArrivalRecorded&&c.kin?.[p.id])continue;
+   const kin=rosterSister(c,p);if(!kin)continue;
+   const retained=kept.has(p.id),name=kin+fullName(p),rival=isRival(c,p)||isRival(p,c)||relGet(c,p)<=-25;
+   let mood,feeling,line;
+   if(retained&&rival){mood=-5;feeling='忧心';line='礼数上该道喜，可往后抬头不见低头见，我担心家中那些旧话又被人提起。';}
+   else if(retained){mood=6;feeling='欢喜';line='从前隔着宫门惦记，如今总算能见面了。我还记得自己头一次请安时走错了门，想先把这事告诉她。';}
+   else if(rival){mood=2;feeling='释然';line='听到她回家的消息，我松了口气。托人回家只说她一路平安，别在她面前再议这张榜。';}
+   else if(p.willing===false){mood=3;feeling='释然';line='她本就不愿留宫。虽舍不得，也替她高兴，盼她回家过自己想过的日子。';}
+   else{mood=-4;feeling='思念';line='原想若能留下，往后便有人一起说家常。如今只盼家里别拿这次落选说她，等她到家报声平安。';}
+   const fact=name+(retained?'留选，初封'+selectionInitialRank(p):'此次未留选，归家');
+   news.push({fact,mood,feeling,id:p.id});
+   story(c,'【选秀 · 姐妹定榜】'+fact+'。'+line);
+  }
+  if(!news.length)continue;
+  const delta=news.reduce((v,n)=>v+n.mood,0);cchg(c,{mood:delta});
+  const main=news.reduce((a,b)=>Math.abs(a.mood)>=Math.abs(b.mood)?a:b);
+  if(!['悲恸','心如死灰'].includes(xinOf(c)))setXin(c,main.feeling,news.map(n=>n.fact).join('；'),main.id,{record:false});
+ }
+}
 function finishSelection(){
   const s=S.selection;
   if(s?.phase==='arrivals'||(!s&&!S.cands.length))return false;
-  S.cands=[];
   const members=(s?.accepted||[]).map(byId).filter(Boolean);
+  if(journalContentVersion()>=81)for(const c of members)familyAdmissionReactions(c,true);
+  selectionKinNews(s,members,S.cands);
+  if(s)delete s.departedKin;
+  S.cands=[];
   if(!members.length){finishSelectionCourt(s,[]);delete S.selection;log('选秀礼毕，本次未留新人。');return true;}
   s.phase='arrivals';s.finishedAt=S.turn;
   for(const c of members){

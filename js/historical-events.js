@@ -44,7 +44,7 @@ function palaceCoupEvent(){
    const quiet=chance(.98);if(quiet||S.turn<36||S.flags.palaceCoupGen===S.gen)return null;S.flags.palaceCoupGen=S.gen;
    const previous=byId(S.flags.lastNight),last=inPalace(previous)?previous:null;return {title:'宫变',ref:'壬寅宫变（明·嘉靖）',sfx:'gong',text:`深夜，十几个宫女趁你熟睡，用黄绫勒住了你的脖子。绳结打成了死扣，没能勒紧。一个胆小的宫女跑去坤宁宫报了信。${last&&last.alive?`\n那夜，你宿在${cName(last)}宫里。`:''}`,choices:[
    {t:'彻查主谋',f:()=>{log('宫女十余人夜谋弑君，事败伏诛。',1);return `她们说，是受不了宫里动辄打死人的日子。${fx(chg({health:-12,prestige:-4}))}\n§你下令宫中不得再虐打宫人`}},
-   ...(last&&last.alive&&!last.cold?[{t:`迁怒${cName(last)}：她宫里出的事`,f:()=>{last.alive=false;story(last,'宫变那夜陛下宿在她宫中，事后被以“知情不报”赐死。她至死喊冤。');log(`${fullName(last)}因宫变牵连被赐死。`,1);AU.sfx('sad');return `后来查明，她毫不知情。${fx(chg({health:-12,people:-6}))}`}}]:[])]}}
+   ...(last&&last.alive&&!last.cold?[{t:`迁怒${cName(last)}：她宫里出的事`,f:()=>{last.alive=false;if(journalContentVersion()>=81)last.deathReason='因宫变牵连被赐死';story(last,'宫变那夜陛下宿在她宫中，事后被以“知情不报”赐死。她至死喊冤。');log(`${fullName(last)}因宫变牵连被赐死。`,1);AU.sfx('sad');return `后来查明，她毫不知情。${fx(chg({health:-12,people:-6}))}`}}]:[])]}}
 const HIST=[
  ()=>{const c=harem().find(c=>c.virtue>=65&&c.rank>=3);if(!c)return null;return {title:'辞辇',ref:'班婕妤辞辇（西汉·汉成帝）',por:c,text:`你要去上林苑，让${cName(c)}与你同坐御辇。她却跪下推辞：“臣妾看古时的画像，贤君身边都是名臣，只有末代之君身边才坐着宠妃。”`,choices:[
    {t:'“得此贤妃，朕之幸也。”',f:()=>{story(c,'辞辇不坐，陛下赞她贤德。');log(`${fullName(c)}辞辇。`,1);return fx(cchg(c,{aff:8}),chg({prestige:3}))}},{t:'“扫兴。”',f:()=>fx(cchg(c,{mood:-8}))}]}},

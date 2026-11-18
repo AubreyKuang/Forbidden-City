@@ -46,3 +46,29 @@ A.consortHealthCare=function(id){
   {t:'稍后安排'}
  ]});
 };
+
+function consortPassingReason(c){
+ if(c.deathReason)return c.deathReason;
+ if(c.arc?.id==='ill'&&['香消','烟雨'].includes(c.arc.end))return '心疾不治';
+ if(c.story?.some(e=>e.t.includes('病势沉重，无人问津')))return '病势沉重，不治身故';
+ if(c.story?.some(e=>e.t.includes('被以“知情不报”赐死')))return '因宫变牵连被赐死';
+ return '';
+}
+function recordConsortPassing(c){
+ c.passingDate=dateStr();
+ const reason=consortPassingReason(c),line=fullName(c)+'，'+c.age+'岁'+(reason?'，'+reason:'，已故')+'。';
+ story(c,'【丧讯】'+line);return line;
+}
+function announceConsortPassings(previous){
+ if(journalContentVersion()<81||!previous||previous.gen!==S.gen)return;
+ const dead=S.consorts.filter(c=>c.alive===false&&!c.passingDate);
+ if(!dead.length)return;
+ const living=new Set(previous.consorts?.filter(c=>c.alive).map(c=>c.id));
+ for(const c of dead){
+  if(!living.has(c.id))continue;
+  const line=recordConsortPassing(c);
+  if([curEv,...Q].some(ev=>ev?.deathNotice===c.id))continue;
+  pushNow({title:(c.maid?'宫人丧讯':'后宫丧讯')+' · '+fullName(c),por:c,sfx:'sad',deathNotice:c.id,
+   text:c.passingDate+'，'+line,choices:[{t:'记下讣闻'}]});
+ }
+}

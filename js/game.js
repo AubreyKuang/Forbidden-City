@@ -90,7 +90,9 @@ function addConsort(c,rank,why,{major=false,recordAdmission=true}={}){
   c.rank=rank; c.enteredAt=S.turn; c.enteredMonth=S.month; S.consorts.push(c); assignPalace(c); S.ys.c++; deepen(c); initRel(c); assignArc(c); acceptPastLife(c); initTimeTraveler(c); clanKey(c); if(c.kin)for(const id in c.kin){const o=byId(+id);if(o&&o.alive)relAdd(c,o,(previousKin.get(o.id)??(isRival(c,o)?-30:45))-relGet(c,o))}
   story(c,`${why}，封为${RANKS[rank]}，赐居${c.palace}。`);
   if(recordAdmission)log(`${fullName(c)}（${c.fam.t}之女）${why}，封${RANKS[rank]}。`,major);
-  houseOf(c);portraitAdmission(c);familyAdmissionReactions(c);
+  houseOf(c);portraitAdmission(c);
+  if(journalContentVersion()>=81&&!recordAdmission&&c.natalOrigin?.via==='selection')story(c,'殿选留牌，依娘家原册核过姓名与亲缘。');
+  if(journalContentVersion()<81||recordAdmission)familyAdmissionReactions(c);
 }
 
 /* ============ 弹窗与事件队列 ============ */

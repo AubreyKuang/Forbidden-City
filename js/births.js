@@ -101,11 +101,11 @@ function birthNamingEvent(c){
 }
 function birthLossEvent(c){
   if(!c.delivery?.lossPending||c.delivery.settled)return null;
-  const k=deliveryKids(c)[0];return {title:'产房哀讯',por:c,sfx:'sad',valid:()=>!!c.delivery?.lossPending&&!c.delivery.settled,
+  const k=deliveryKids(c)[0];return {...(journalContentVersion()>=81&&c.delivery.difficult?{deathNotice:c.id}:{}),title:'产房哀讯',por:c,sfx:'sad',valid:()=>!!c.delivery?.lossPending&&!c.delivery.settled,
     text:`医官回报，${fullName(c)}产下的孩子出生时已无生息。${c.delivery.difficult?'产妇又因血崩未能挺过，太医回天乏术。':''}接生与出入记录已经核对，此事并非她的过错。`,choices:[{t:c.delivery.difficult?'按礼安葬母子':'妥善安葬，命太医照看她',f:()=>{
       if(c.delivery.settled)return null;c.delivery.settled=true;c.delivery.lossPending=false;
       const line=c.delivery.difficult?'亲生孩子出生时已无生息，产妇又因血崩薨逝，母子按礼安葬。':'亲生孩子出生时已无生息，按礼安葬，命太医照看产妇。';kstory(k,line);log(`${fullName(c)}产房传来哀讯，孩子未能存活。`,1);
-      if(c.delivery.difficult){c.alive=false;c.deathReason='产后血崩';log(`${fullName(c)}因产后血崩薨逝。`,1);}else{setXin(c,'悲恸','初生孩子夭折');cchg(c,{mood:-25});}recordDeliveryOutcome(c,{loss:true});save('auto');return line;
+      if(c.delivery.difficult){c.alive=false;c.deathReason='产后血崩';if(journalContentVersion()>=81)recordConsortPassing(c);log(`${fullName(c)}因产后血崩薨逝。`,1);}else{setXin(c,'悲恸','初生孩子夭折');cchg(c,{mood:-25});}recordDeliveryOutcome(c,{loss:true});save('auto');return line;
     }}]};
 }
 function finishDelivery(c){
@@ -117,6 +117,7 @@ function finishDelivery(c){
   const names=children.map(k=>kidName(k)).join('、');
   let effect=chg({prestige:children.some(k=>k.sex==='m')?4:2}),text=`${names}，均已赐名。`;
   const lastWords=sisterDeliveryScene(c,children);
+  if(delivery.sisterDeath&&journalContentVersion()>=81)recordConsortPassing(c);
   if(lastWords)text+='\n'+lastWords;
   if(!delivery.sisterDeath&&delivery.difficult){
     c.alive=false;c.deathReason='产后血崩';log(`${fullName(c)}诞下${names}后因产后血崩薨逝。`,1);AU.sfx('sad');

@@ -43,8 +43,35 @@ function friendshipCauses(a,b,arc=friendshipArc(a,b)){
  if(argument)add('argument',a,b,argument,2);
  return causes;
 }
+// Compare only people who actually attended this feast. A previously bereaved or fostering mother isn't described as childless.
+function banquetFriendshipIncident(people,title,host){
+ if(journalContentVersion()<81||S.turn-(S.flags.lastFriendshipIncident??-99)<3)return null;
+ const women=people.filter(c=>!c.sex&&friendshipAvailable(c)),candidates=[];
+ for(const mother of women){
+  const child=people.find(k=>k.sex&&!k.pendingName&&mothersOf(k).includes(mother));
+  if(!child&&mother!==host)continue;
+  for(const friend of women){
+   if(mother===friend)continue;
+   const arc=friendshipArc(mother,friend)||friendshipTrack(mother,friend);
+   if(!arc||arc.pending||!socialPair(mother,friend)||['broken','bereaved'].includes(arc.stage)||S.turn<(arc.spaceUntil??-1)||S.turn-(arc.lastIncident??-99)<6)continue;
+   let kind;
+   if(child&&!friend.preg&&(friend.lastBirth??-99)<0&&S.turn-(friend.enteredAt??S.turn)>=24&&!S.children.some(k=>k.mom===friend.id||k.foster===friend.id))kind='childToast';
+   else if(mother===host&&friendFavorState(mother,friend)==='unequal'&&mother.favor>friend.favor)kind='birthdayToast';
+   if(kind&&S.turn-(arc.causes[kind]??-99)>=12)candidates.push({kind,hurt:friend,other:mother,evidence:{title,child:child?.name,young:child&&kidAge(child)<5},w:friendshipRisk(friend)});
+  }
+ }
+ if(!candidates.length||!chance(.30))return null;
+ const cause=pickW(candidates);
+ const note=friendshipIncident(cause.hurt,cause.other,cause.kind,cause);
+ return note&&{...note,cast:[cause.hurt,cause.other]};
+}
 function friendshipIncidentWords(cause){
  const {hurt:a,other:b,kind,evidence}=cause,A=fullName(a),B=fullName(b),style=companionStyle(a);
+ if(kind==='childToast')return {title:'一杯没喝完的贺酒',text:`${evidence.title}上，${evidence.young?`乳母抱来${evidence.child}，请${B}接孩子入席。${A}替她拉开椅子，旁人却笑着问，她何时也能抱上自己的孩子。${B}忙着接过孩子`:`${evidence.child}给${B}敬茶。${A}腾出地方让孩子走过去，旁人却笑着问她何时也能喝上这一盏。${B}忙着接茶`}，等回过神，好友已托人把贺酒送来了。`,thoughts:[
+  `我是真喜欢${evidence.child}，也愿意看她们亲热。只是我进宫这些年，连敬朋友一杯酒，都有人替我数膝下有几个人。`,
+  `我看见${A}特意替我们让开地方了。那句话出口时，我该先替她解围。等我追到廊下，她已经走了。`]};
+ if(kind==='birthdayToast')return {title:'寿席上空着的位置',text:`${evidence.title}上，${A}端着寿面来贺${B}。掌事见众人都抢着向寿星敬酒，请她往旁边让一让。她放下碗便回了原席。等${B}想起要留她说句话，面已经凉了。`,thoughts:[
+  '这碗面是我亲手盛的。原想同她说句家常，到了跟前，却连个站脚的地方也没有。','我一眼就认出了她用的碗，却只顾着回旁人的礼。她今晚大概一直在等我叫住她。']};
  if(kind==='favor')return {title:'一句恭喜之后',text:`${A}与${B}小坐，宫人来问后者近来的赏赐。话题一再绕回恩宠，${A}原本想说的家常没能说完。临别仍道了恭喜，这一回却没有约下次。`,thoughts:[
  a.trait==='善妒'?`我确实嫉妒${B}，连一句恭喜都要在心里练过。她未必有心冷落，可我已经怕再坐在那里听人夸她。`:style==='proud'?`我也有自己的体面。与${B}相见，不该总像在旁边衬她风光。`:style==='direct'?`我想和${B}说话，不想只听人问她得了什么。下回还是等我能坦然些再去。`:`替${B}欢喜是真的，觉得自己被落下也是真的。我不想怪她，却已经不像从前那样自在。`,
  b.trait==='骄纵'||b.trait==='骄矜'?`${A}今日冷了些脸，我也有些恼。可细想起来，她几次欲言又止，我竟没问她想说什么。`:`${A}今日走得早。我忙着答旁人的话，后来才想起，竟没听完她原先要说的事。`]};
@@ -58,9 +85,9 @@ function friendshipIncidentWords(cause){
  style==='direct'?`那日与${B}争的事，我仍觉得有道理。可我不只想争个对错，也想知道她还愿不愿意听我说。`:`我记得${B}从前体谅我的时候，正因为记得，如今那几句硬话才格外难忘。`,
  `我并非处处要与${A}作对，也不愿替那日所有的争执认错。可一直不提，竟像连旧交也一并放下了。`]};
 }
-function friendshipIncident(a,b,kind){
+function friendshipIncident(a,b,kind,ceremony=null){
  const arc=friendshipArc(a,b);if(!arc||S.over||mourningActive()||arc.pending||S.turn<(arc.spaceUntil??-1)||S.turn-(arc.lastIncident??-99)<6||S.turn-(S.flags.lastFriendshipIncident??-99)<3||['broken','bereaved'].includes(arc.stage))return null;
- const options=friendshipCauses(a,b,arc),cause=options.find(c=>c.kind===kind);if(!cause)return null;
+ const cause=ceremony||friendshipCauses(a,b,arc).find(c=>c.kind===kind);if(!cause)return null;
  const scene=friendshipIncidentWords(cause),hurt=cause.hurt,other=cause.other;
  arc.incidents++;arc.lastIncident=S.turn;arc.causes[kind]=S.turn;S.flags.lastFriendshipIncident=S.turn;
  relAdd(a,b,-(arc.incidents===1?8:arc.incidents===2?12:18));
