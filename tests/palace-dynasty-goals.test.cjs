@@ -17,7 +17,7 @@ test('v74 pending result replays before goal reconciliation',()=>{
  const b=boot(1,new Map([['chengongji_v1_auto',JSON.stringify(save)]]));b.ctx.assert=assert;
  b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,74);
   assert.equal(curEv.title,'黄河决堤');assert.ok(modalResult);drain();A.go('home');
-  assert.equal(PalaceActions.contentVersion,77);assert.ok(S.dynastyGoals);`);
+  assert.equal(PalaceActions.contentVersion,81);assert.ok(S.dynastyGoals);`);
 });
 
 for(const [scenario,expected] of [['founder',350],['regent',500],['succession',800],['prosperous',1800],['crisis',100]]){
@@ -63,7 +63,7 @@ test('published v75 pending result resumes before enabling the new scenario syst
  const b=boot(1,new Map([['chengongji_v1_auto',JSON.stringify(save)]]));b.ctx.assert=assert;
  b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,75);
    assert.equal(dynastyScenarioActive(),false);assert.ok(modalResult);drain();A.go('home');
-   assert.equal(PalaceActions.contentVersion,77);assert.equal(dynastyScenarioActive(),true);`);
+   assert.equal(PalaceActions.contentVersion,81);assert.equal(dynastyScenarioActive(),true);`);
 });
 
 test('monthly goals count consecutive months once and reset after interruptions',()=>{
@@ -118,11 +118,11 @@ test('claimed achievements unlock a new start, inherited trait and headpiece acr
   assert.ok(S.dynastyMeta.includes('companionship'));assert.ok(empress().jewelry.some(item=>item.id==='phoenix'));`);
 });
 
-test('a genuine v76 pending coronation resumes before adopting cross-game rewards',()=>{
- const save=require('./fixtures/dynasty-goals-legacy-v76.json');
+test('a genuine published v80 pending coronation resumes before adopting cross-game rewards',()=>{
+ const save=require('./fixtures/dynasty-goals-legacy-v80.json');
  const b=boot(1,new Map([['chengongji_v1_auto',JSON.stringify(save)]]));b.ctx.assert=assert;
- b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,76);
-  assert.equal(curEv.title,'登基');assert.equal(S.dynastyMeta,undefined);drain();A.go('home');assert.equal(PalaceActions.contentVersion,77);`);
+ b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,80);
+  assert.equal(curEv.title,'登基');assert.equal(S.dynastyMeta,undefined);drain();A.go('home');assert.equal(PalaceActions.contentVersion,81);`);
 });
 
 test('the inherited scenario cannot start before its achievement is unlocked',()=>{
@@ -135,4 +135,11 @@ test('an unfinished scenario records defeat if the ruler dies before its goals a
  b.run(`document.querySelector('input[name=f-scenario]:checked').value='founder';A.start();drain();
   deathEvent('驾崩');assert.equal(S.scenario.status,'lost');assert.equal(S.scenario.failure,'君主驾崩前未完成目标');
   assert.match(dynastyGoalsPanel(),/君主驾崩前未完成目标/);`);
+});
+
+test('published v80 pending consort chat resumes before new accession dialogue rules',()=>{
+ const save=require('./fixtures/dynasty-goals-v80-pending-chat.json');
+ const b=boot(1,new Map([['chengongji_v1_auto',JSON.stringify(save)]]));b.ctx.assert=assert;
+ b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,80);
+  assert.equal(curEv.title,'闲话家常');assert.equal(S.dynastyGoals,undefined);drain();A.go('home');assert.equal(PalaceActions.contentVersion,81);`);
 });

@@ -80,7 +80,7 @@ function storyCastAdmit(c,r,reason){
 }
 const storyCastLater={t:'过些日子再谈'};
 const storyCastChoice=(t,f,cond)=>({t,f,cond});
-function storyCastMeetEvent(key,r){
+function storyCastMeetEvent(key,r,feastTitle='御花园宫宴'){
   const c=r.person,stage=r.stage;
   const advance=(title,line,delay)=>storyCastChoice(title,()=>storyCastAdvance(r,c,line,delay));
   const close=(title,status,line)=>storyCastChoice(title,()=>storyCastClose(r,c,status,line));
@@ -111,18 +111,18 @@ function storyCastMeetEvent(key,r){
   if(key==='ayimu'&&whiteSpringBanquetActive()){
     const first=stage===0;
     const keep=storyCastChoice(first?'应下国王的婚议，留阿依慕入宫':'准阿依慕留下，遣使向国王报喜',
-      ()=>storyCastAdmit(c,r,first?'随父王赴御花园宫宴，鼓上献舞惊艳四座，席间亲允婚议':'接风宴后亲自回话，愿留京入宫，与白泉家书往来'),
+      ()=>storyCastAdmit(c,r,first?'随父王赴'+feastTitle+'，鼓上献舞惊艳四座，席间亲允婚议':'接风宴后亲自回话，愿留京入宫，与白泉家书往来'),
       ()=>storyCastAdmissionAllowed(c,r));
     const farewell=close('以国宾礼送父女归国','已相识 · 随父王归国',first?
       '随父赴宫宴，在御前献了白泉鼓舞。陛下赐宴答礼，次日随父王启程回乡。':'入宫辞行，领了回赠母亲的织锦，随父王回白泉。');
     if(!first)return scene('白泉公主 · 席后回话','阿依慕跟父王一道来辞行。国王提起席上的婚议，她已想好：“我愿留下。开春商队入关，我想托他们带一封平安信给母亲。”国王听完，向你行了一礼，等候回音。',keep,farewell);
-    return {title:'御花园宫宴 · 白泉公主献舞',por:c,
+    return {title:feastTitle+' · 白泉公主献舞',por:c,
       portraitArt:WHITE_SPRING_DANCE_ART,
       text:'宫中设宴款待白泉国王。酒过一巡，国王领女儿上前：“小女阿依慕，愿以一支家乡的舞为陛下祝酒。臣也有意将她许与陛下，求两家结亲。”'
         +'\n乐工把三面扁鼓依次放平。阿依慕提起裙角，足尖踏上鼓面，一串轻响从席前传到花下。最后一拍，她忽然收袖，腕上的银铃还在响。一只白蝶停在袖口，她索性等它飞走才行礼。席间静了一瞬，连方才执壶的宫人也跟着喝起彩来。'
         +'\n你问她自己的意思。她望了父亲一眼，用才学的官话答道：“我愿意。若留下，明早可许我托父王给母亲带封信？她还在等我说，京里的鼓跟家里响得一不一样。”',
       valid:()=>!r.id&&!r.closed&&r.stage===0,choices:[keep,farewell,
-        advance('请父女在京暂住，稍后再答复','父王在御花园席上求亲，她献过鼓舞，随父暂住馆舍，等候回音。')]};
+        advance('请父女在京暂住，稍后再答复',(feastTitle==='御花园宫宴'?'父王在御花园席上':'父王在'+feastTitle+'上')+'求亲，她献过鼓舞，随父暂住馆舍，等候回音。')]};
   }
   if(key==='ayimu'){
     if(stage===0)return scene('四夷馆 · 白泉国接风宴','阿依慕戴着母亲缝的干花香囊献舞。曲将终时，一只蝴蝶落在她肩上。她笑着收住袖口，请通译等舞罢再问边关几时开市。',
@@ -205,10 +205,10 @@ function storyCastCodexCards(){
   return Object.entries(STORY_CAST).map(([key,d])=>{
     const r=storyCastRecord(key),p=storyCastPerson(r)||{...d,fixedStory:key,alive:true};
     const name=key==='chuwan'&&!r?'姓名待考':storyCastName(key,r);
-    const tag='<span class="tag y">'+esc(STORY_CAST_TAGS[key])+'</span>';
+    const tag=storyConsortBadge(key);
     const badge=key==='chuwan'&&!r?.revealed?'<details><summary>查看特殊标签（含身世）</summary>'+tag+'</details>':tag;
     const guide=STORY_CAST_LIVES[key];
-    return `<article class="story-consort-card" data-story-consort="${key}"><div class="story-consort-picture">${porImg(p,200)}<span class="tag y">${esc(storyCastStatus(r))}</span></div><div class="story-consort-copy"><h3>${esc(name)} · ${esc(d.epithet)}</h3><div aria-label="人物特殊标签">${badge}</div><p>${esc(d.intro)}</p><p>${key==='ayimu'?'宫中':'出巡'} → ${esc(d.route)}</p><p>入宫主线 · ${esc(guide.title)}<br>日常 · ${esc(guide.routine)}<br>特殊事件 · ${esc(guide.secret)}</p>${key==='ayimu'?'<p>入宫后，可在御花园小宴请她跳白泉舞。交好的妃嫔学过鼓点，往后同席可点名伴奏。</p>':''}<div class="acts">${r?`<button class="btn" onclick="A.storyCastDossier('${key}')">查看经历</button>`:''}${storyCastVisitButton(key)}</div></div></article>`;
+    return `<article class="story-consort-card" data-story-consort="${key}"><div class="story-consort-picture">${porImg(p,200)}${storyConsortProgress(storyCastStatus(r))}</div><div class="story-consort-copy"><h3>${esc(name)} · ${esc(d.epithet)}</h3><div aria-label="人物特殊标签">${badge}</div><p>${esc(d.intro)}</p><p>${key==='ayimu'?'宫中':'出巡'} → ${esc(d.route)}</p><p>入宫主线 · ${esc(guide.title)}<br>日常 · ${esc(guide.routine)}<br>特殊事件 · ${esc(guide.secret)} → ${esc(guide.after)}</p>${key==='ayimu'?'<p>新年宫宴、中秋宫宴和皇帝万寿宴都可能有使臣来贺。筹宴时可在外宾席主动请白泉国王携阿依慕赴宴。入宫后，可在御花园小宴请她跳白泉舞。交好的妃嫔学过鼓点，往后同席可点名伴奏。亲生皇嗣带有异域血脉，皇子不可入储，公主成年后可和亲白泉。</p>':''}${COMMONER_STORIES[key]?'<p>街坊口碑 · 持续得宠影响民心，可在人物档案处理「'+esc(COMMONER_STORIES[key].title)+'」。</p>':''}<div class="acts">${r?`<button class="btn" onclick="A.storyCastDossier('${key}')">查看经历</button>`:''}${storyCastVisitButton(key)}</div></div></article>`;
   }).join('');
 }
 
@@ -223,10 +223,12 @@ function storyCastBirth(k,c){
     kstory(k,'【异域血脉】白泉国王室一脉，武艺+20，魅力+25；参与白泉使团事务时可以帮忙。');
   }
 }
-const storyCastHeirBar=k=>storyCastActive()&&!!k?.foreignLineage;
+const storyCastCivicActive=()=>journalContentVersion()>=77;
+const whiteSpringChild=k=>!!k?.foreignLineage&&!(k.birthSwap?.confirmed&&k.birthSwap.occurred);
+const storyCastHeirBar=k=>storyCastActive()&&(storyCastCivicActive()?whiteSpringChild(k):!!k?.foreignLineage);
 function storyCastChildPanel(k){
   if(!storyCastActive())return '';
-  const tags=[k.jiangmenChild?'将门虎子':'',k.foreignLineage?'异域血脉 · 魅力 '+k.charm+' · 依礼例不可入主东宫':'',k.fieldWorry?'担心母妃 · 心情 '+k.mood:''].filter(Boolean);
+  const tags=[k.jiangmenChild?'将门虎子':'',whiteSpringChild(k)?'异域血脉 · 出生武艺+20，魅力 '+k.charm+' · '+(k.sex==='m'?'依本朝礼例不可立为太子':k.spouse?.route==='whiteSpring'?'已作为和亲公主远嫁白泉国':k.married?'白泉国王室外孙女':'年满十五岁、未婚未订亲时可议白泉和亲'):'',k.fieldWorry?'担心母妃 · 心情 '+k.mood:''].filter(Boolean);
   return tags.length?detailSection('家世与近况',tags.map(t=>'<p>'+esc(t)+'</p>').join('')+
     (k.fieldWorry?`<button class="btn" onclick="A.storyCastComfort(${k.id})">陪孩子等母妃的消息</button>`:'')):'';
 }
@@ -310,7 +312,7 @@ function storyCastPalaceEvent(c){
     if(child&&!child.whiteSpringStudy)return scene('阿依慕 · 教孩子白泉话',child.name+'能读一封家书了，问白泉国的外祖母平日如何称呼自己。',
       storyCastChoice('由阿依慕教孩子读家信',()=>{child.whiteSpringStudy=true;kstory(child,'随母学会家书的白泉语，也学了使团礼节。');return advance('给'+child.name+'讲白泉的家书称谓与使团礼节。');}));
     if(child?.whiteSpringStudy&&S.turn>=(r.tradeDue??0))return scene('白泉使者 · 互市议事','使者来核对今年开市时日。礼官请会白泉话的皇嗣旁听，必要时把两边的意思再说清。',
-      storyCastChoice('请'+child.name+'协助通译',()=>{const ok=chance(.55+(child.foreignLineage ? .20 : 0));r.tradeDue=S.turn+12;const line=ok?'译明两国礼单中的日期，互市按时议成。':'译清了条款，两方仍需回去复核。';kstory(child,'协助白泉使团通译。'+line);if(ok)chg({people:3,prestige:2});return storyCastRecordLine(c,line,true);}),
+      storyCastChoice('请'+child.name+'协助通译',()=>{const ok=chance(.55+(storyCastHeirBar(child) ? .20 : 0));r.tradeDue=S.turn+12;const line=ok?'译明两国礼单中的日期，互市按时议成。':'译清了条款，两方仍需回去复核。';kstory(child,'协助白泉使团通译。'+line);if(ok)chg({people:3,prestige:2});return storyCastRecordLine(c,line,true);}),
       storyCastChoice('交礼官照常办理',()=>{r.tradeDue=S.turn+12;const ok=chance(.55);if(ok)chg({people:3,prestige:2});return storyCastRecordLine(c,ok?'礼官议定本年互市。':'使团和礼部另约时日复议。');}));
     if(r.butterflies===S.year||season()>1)return null;
     if(c.mood>=70)return scene('御花园 · 蝶落花枝','阿依慕读完白泉家书，在花树下忍不住笑了。一只蝴蝶落在她手边。',
@@ -360,19 +362,74 @@ A.storyCastPalace=function(id){
   if(!storyCastActive()||modalOpen||S.over||!c?.fixedStory)return;
   const ev=storyCastPalaceEvent(c);if(ev&&useE())pushEv(ev);
 };
+const COMMONER_STORIES={
+  suheng:{title:'姑苏香市 · 两杆秤',reply:'姑苏香市 · 复秤回帖',rumor:'姑苏铺户听说宫中肯听做香人的话，合计将几家公用的秤砣重新校过。'},
+  xiaoman:{title:'京城庙会 · 散场的工钱',reply:'京城庙会 · 幕后的花名账',rumor:'往日在灯市看过小满戏法的街坊听说她在宫中得宠，逢人便提，搭戏台的人也能教宫里看见。'}
+};
+function commonerFavorTick(c,r){
+  if(!storyCastCivicActive()||!COMMONER_STORIES[c.fixedStory])return;
+  const p=r.publicFavor||={months:0};
+  if(p.checked===S.turn)return;
+  p.months=inPalace(c)&&c.favor>=65?(p.checked===S.turn-1?p.months:0)+1:0;
+  p.checked=S.turn;
+  if(p.months<3||S.turn-(p.last??-Infinity)<6)return;
+  p.last=S.turn;const before=E().people;chg({people:1});
+  storyCastRecordLine(c,COMMONER_STORIES[c.fixedStory].rumor+(E().people>before?'（民心+1）':'（民心已满）'));
+}
+function commonerFavorMonth(){
+  if(!storyCastCivicActive())return;
+  for(const key of Object.keys(COMMONER_STORIES)){
+    const r=storyCastRecord(key),c=byId(r?.id);
+    if(c&&(inPalace(c)||r.publicFavor?.months))commonerFavorTick(c,r);
+  }
+}
+function commonerFavorEvent(c,r){
+  const d=COMMONER_STORIES[c.fixedStory],p=r?.publicFavor;
+  if(!storyCastCivicActive()||!d||!p||p.last==null||p.done||!inPalace(c)||S.over)return null;
+  const reply=!!p.plan,su=c.fixedStory==='suheng';
+  const valid=()=>inPalace(c)&&!S.over&&!p.done&&(reply?p.plan&&S.turn>=p.due:!p.plan&&p.months>=3&&c.favor>=65);
+  if(!valid())return null;
+  const choose=(title,plan,line,gains,cost=0)=>({t:title,cond:()=>valid()&&E().treasury>=cost,f:()=>{
+    if(!valid()||E().treasury<cost)return null;
+    if(reply)p.done=true;else{p.plan=plan;p.due=S.turn+2;}
+    const effects=chg(gains);return storyCastRecordLine(c,line,true)+fx(effects);
+  }});
+  if(!reply)return {title:d.title,por:c,valid,text:su?'姑苏香市递来两包都标一两的白芷，一上秤却差了好几钱。苏蘅认得封口，有一包正出自自家铺子。她请你先把苏家的秤也送去校准，让别家愿意跟着办。':'庙会散场，台上的赏钱结了，抬箱和搭棚的人却还在等。岑小满认出领条上的老相识：“街坊知道我在宫里说得上话，才肯把这张纸递来。”',choices:[
+    su?choose('拨四万两设公秤，请各家验货','public','市口设了公秤，苏家第一批香料也当众过秤。',{treasury:-4,people:3},4):
+      choose('先垫四万两结清帮工钱，留下领条','public','从国库垫付搭棚和抬箱人的工钱，小满拿到逐人签收的领条。',{treasury:-4,people:3},4),
+    su?choose('先从苏家铺契试行，交铺户互验','local','苏家先照新秤交货，两位街坊掌柜在单上做了见证。',{people:1}):
+      choose('让班主当众核工，按旧契自行补发','local','小满把当日工序与旧契对上，班主认下欠款，约定下场前交回凭据。',{people:1}),storyCastLater]};
+  const publicPlan=p.plan==='public';
+  const result=su?(publicPlan?'市口的公秤用了两个月，几个小铺送来并排盖印的复秤单。':'苏家和邻铺交回互验的货签，连老主顾也肯在收货时一起看秤。'):
+    (publicPlan?'庙会班主还来当初垫付的银钱，散工的手印和领条逐人对得上。':'班主把补发的工钱交清，抬箱人自己带来了写有名字的回执。');
+  return {title:d.reply,por:c,valid,text:result,choices:[choose(su?'验过回帖，把秤样留给街坊':'照名册核销，让街坊收好副本','',result,
+    !su&&publicPlan?{treasury:4,people:2}:{people:2}),storyCastLater]};
+}
+A.commonerFavor=function(id){
+  const c=byId(id);if(modalOpen||!c)return;
+  const ev=commonerFavorEvent(c,storyCastRecord(c.fixedStory));if(ev&&useE())pushEv(ev);
+};
+function commonerFavorPanel(c,r){
+  if(!storyCastCivicActive()||!COMMONER_STORIES[c.fixedStory])return '';
+  const p=r?.publicFavor,ev=commonerFavorEvent(c,r);
+  const state=p?.done?'街坊的回执已记入纪事。':p?.plan?'已递出批复，约定两个月后收回帖。':'恩宠达到 65，连续三个转月在宫受宠，民心加 1；此后每人每六个月至多一次。';
+  return detailSection('街坊口碑','<p>'+state+'</p>'+(ev?`<button class="btn jade" onclick="A.commonerFavor(${c.id})" ${E().energy?'':'disabled'}>${esc(ev.title)}<small>精力−1</small></button>`:''));
+}
 function storyCastPanel(c){
   if(!storyCastActive()||!c.fixedStory)return '';
   const d=STORY_CAST[c.fixedStory],ev=storyCastPalaceEvent(c);
   const father=c.fixedStory==='chuwan'?'<p class="muted">生父 · 前朝楚国皇帝（已故）</p>':'';
   const guide=storyCastFollowupsActive()?storyCastFollowupGuide(c,storyCastRecord(c.fixedStory)):'';
   return detailSection(esc(d.epithet),'<p>'+esc(d.intro)+'</p>'+father+guide+
-    (ev?`<button class="btn jade" onclick="A.storyCastPalace(${c.id})" ${E().energy?'':'disabled'}>${esc(ev.title)}<small>精力−1</small></button>`:''))+storyCastLifePanel(c);
+    (ev?`<button class="btn jade" onclick="A.storyCastPalace(${c.id})" ${E().energy?'':'disabled'}>${esc(ev.title)}<small>精力−1</small></button>`:''))+storyCastLifePanel(c)+commonerFavorPanel(c,storyCastRecord(c.fixedStory))+(c.fixedStory==='ayimu'?estatePrincesses().filter(k=>k.mom===c.id&&k.household?.whiteSpringVisit).map(whiteSpringFamilyPanel).join(''):'');
 }
 function storyCastMonthlyEvents(){
   if(!storyCastActive())return [];
   const events=[];
   for(const c of S.consorts.filter(c=>c.fixedStory&&inPalace(c))){
     const r=storyCastRecord(c.fixedStory);if(!r||r.id!==c.id)continue;
+    const civic=commonerFavorEvent(c,r);
+    if(civic&&r.publicFavor.notice!==civic.title){r.publicFavor.notice=civic.title;events.push(civic);continue;}
     const ev=storyCastPalaceEvent(c);
     const identity=c.fixedStory==='luwan'&&ev?.title==='陆绾 · 边城来急报'?storyCastFrontier(c)?.id:ev?.title;
     if(ev&&identity!==r.lastProposed){r.lastProposed=identity;events.push(ev);}
@@ -415,8 +472,8 @@ const STORY_CAST_TAGS={
 };
 const previousStoryCastTags=solitaryTag;
 solitaryTag=function(c){
-  const tag=storyCastFollowupsActive()&&STORY_CAST_TAGS[c?.fixedStory];
-  return previousStoryCastTags(c)+(tag?'<span class="tag y">'+esc(tag)+'</span>':'');
+  const key=c?.gouyi?'gouyi':c?.hongjian?'hongjian':storyCastFollowupsActive()&&c?.fixedStory;
+  return previousStoryCastTags(c)+(key?storyConsortBadge(key):'');
 };
 
 function storyCastFollowupEvent(c,r){

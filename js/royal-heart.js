@@ -2,7 +2,7 @@
 const royalHeartActive=()=>!!S&&!S.over&&journalContentVersion()>=20;
 const xieStoryUpdated=()=>journalContentVersion()>=58;
 const heartStage=k=>kidAge(k)<16?'early':kidAge(k)<20?'young':'adult';
-const heartSingleChild=k=>royalHeartActive()&&S.children.includes(k)&&kidAge(k)>=12&&!k.pendingName&&!k.married&&!k.spouse&&!k.betrothal&&k.hp>=45;
+const heartSingleChild=k=>royalHeartActive()&&S.children.includes(k)&&kidAge(k)>=(k.outerRegisterId?18:12)&&!k.pendingName&&!k.married&&!k.spouse&&!k.betrothal&&k.hp>=45;
 const heartReady=k=>heartSingleChild(k)&&childCanVisitCourt(k);
 const xieCapitalEstate=k=>journalContentVersion()>=53&&!!k?.estate&&k.sex==='f'&&k.estate.route!=='frontier'&&k.princessMarriage!=='frontier';
 const xieCanMeetPrincess=k=>childCanVisitCourt(k)||(xieCapitalEstate(k)&&canOpenPrincess(k)&&!k.away);

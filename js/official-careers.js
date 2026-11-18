@@ -27,7 +27,7 @@ function officialMilitary(p,h){
   if(officialGrade(p)||/^候补/.test(title))return false;
   return h?.bloc==='army';
 }
-function careerPeople(){return [...officialEntries().map(e=>({p:e.p,key:e.key,e,bloc:e.h.bloc})),...scholarList().map(p=>({p,key:'scholar:'+p.id,scholar:true,bloc:'civil'}))];}
+function careerPeople(){return [...officialEntries().map(e=>({p:e.p,key:e.key,e,bloc:e.h.bloc})),...scholarList().map(p=>({p,key:'scholar:'+p.id,scholar:true,bloc:p.outerChildId&&p.bloc==='army'?'army':'civil'}))];}
 function careerLink(person){return `<button class="person-link" onclick="A.go('${person.scholar?'scholar':'official'}','${person.scholar?person.p.id:person.key}')">${esc(person.p.name)} ↗</button>`;}
 function careerEligible(p){return officialServing(p)&&p.age>=18&&!reliefSuspended(p)&&!!officialGrade(p);}
 function careerTarget(person,direction){
@@ -53,7 +53,7 @@ function careerKin(person){
   const found=new Map(),add=(c,type,label,detail)=>{if(!found.has(c.id))found.set(c.id,{c,type,label,detail});};
   if(person.e)for(const c of paternalFamily(person.e.c).filter(c=>S.consorts.includes(c)))add(c,'blood',officialKinLabel(person.e.h,person.e.role,c),'同父家系');
   for(const edge of person.p.courtKin||[])for(const c of S.consorts){
-    const h=houseOf(c);if(h?.father.id===edge.fatherId)add(c,'branch',person.p.age>=h.father.age?'远房族伯':'远房族叔',edge.detail);
+    const h=houseOf(c);if(h?.father.id===edge.fatherId)add(c,edge.type==='maternalNephew'?'blood':'branch',edge.type==='maternalNephew'?'外甥':person.p.age>=h.father.age?'远房族伯':'远房族叔',edge.detail);
   }
   const houses=new Map();for(const c of S.consorts){const h=houseOf(c);if(h&&!houses.has(h.father.id))houses.set(h.father.id,{c,h});}
   for(const {c,h} of houses.values())for(const sister of h.relatives||[]){

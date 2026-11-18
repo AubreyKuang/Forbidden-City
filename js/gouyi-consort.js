@@ -54,7 +54,5 @@ A.out=function(kind){
 };
 const gouyiViewOut=viewOut;
 viewOut=function(){return gouyiViewOut()+(careersActive()?`<section class="detail-section"><h3>仪仗巡狩</h3><button class="btn gold" onclick="A.out('procession')" ${E().energy>0&&E().treasury>=80&&S.turn-(S.flags.lastProcession??-99)>=12?'':'disabled'}>浩荡巡狩<small>精力−1 · 国库−80 · 每年一次</small></button><p class="hint">沿途问农桑、阅河工，也许会遇见载入旧传的奇人异事。</p></section>`:'');};
-const gouyiSolitaryTag=solitaryTag;
-solitaryTag=function(c){return gouyiSolitaryTag(c)+(c?.gouyi?'<span class="tag y">钩弋之遇 · 帝前展掌</span>':'');};
 const gouyiVoicePool=consortVoicePool;
 consortVoicePool=function(c){const pool=gouyiVoicePool(c);if(c.gouyi&&inPalace(c)&&!maternalVoiceUrgent(c))pool.push(voiceLine('gouyi','她在你面前慢慢展掌，指尖停着一片落花。',c.aff>=60?'从前他们只想看我的手。如今我愿意把这片花也给您看看，您肯听我说它是从哪棵树上落下的。':'臣妾记得河间那日。只是有时也怕，人们记得钩弋，却忘了令仪。'));return pool;};

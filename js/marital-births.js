@@ -18,6 +18,7 @@ function natalMarriageNotice(c,p,title,text,husbandThought,emotion=.4,preg=p.nat
   }else if(!father&&p.spouse){(p.spouse.story ||= []).push({d:dateStr(),t:`【${title}】${text} ${husbandThought}`});}
 }
 function natalPregnancyReady(p){
+  if(typeof outerActive==='function'&&outerActive()&&outerBook()?.mothers.some(m=>m.relative===p.id&&(m.preg||m.restUntil>S.turn)))return false;
   if(!careersActive()||!p.alive||!p.married||p.widow||p.consortId||p.natalPregnancy||p.spouse?.alive===false||!p.spouse)return false;
   if(natalAge(p)<20||natalAge(p)>40||(p.lifeCourse?.children||0)>=2||S.turn-(p.lifeCourse?.lastBirth??-99)<24)return false;
   return !p.spouse.personId||officialAlive(maritalFather(p)?.p);

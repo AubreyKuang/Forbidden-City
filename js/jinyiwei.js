@@ -68,7 +68,7 @@ const INTELLIGENCE_SOURCES={
  guard:{name:'锦衣卫',specialty:'案件与证据',kind:'harem'},
  court:{name:'外朝密探',specialty:'官员与外戚往来',kind:'rumor'}
 };
-const intelligenceEnabled=()=>journalContentVersion()>=76;
+const intelligenceEnabled=()=>journalContentVersion()>=81;
 const intelligenceState=()=>S.intelligence?.gen===S.gen?S.intelligence:null;
 function intelligenceAgent(id){
   const group=INTELLIGENCE_SOURCES[id],state=intelligenceState();
@@ -276,7 +276,7 @@ function rumorReport(x,found){
     return {title:'锦衣卫密报',por:j.commander,text:`${j.commander.name}回奏：${target.p.name}被参「${x.charge}」一事，暂未查得实据，也未能证其清白。`,choices:[{t:'知道了'}]};}
   const delta=x.friendsBefore?-12:-8;
   if(x.truth){target.p.trust=clamp(target.p.trust-5);target.p.merit=clamp(target.p.merit-6);actor.p.trust=clamp(actor.p.trust+2);
-    if(journalContentVersion()>=76&&!x.familyConsequences&&/收受|贪墨/.test(x.charge)){
+    if(journalContentVersion()>=81&&!x.familyConsequences&&/收受|贪墨/.test(x.charge)){
       x.familyConsequences=true;
       const relatives=paternalFamily(target.c).filter(c=>S.consorts.includes(c));
       for(const c of relatives){c.fam={...c.fam,p:clamp(c.fam.p-8)};story(c,`外家${target.p.name}被查实${x.charge}，家族声势受损。`);}

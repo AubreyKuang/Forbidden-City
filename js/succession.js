@@ -52,7 +52,7 @@ function inheritHousehold(h,queen){
   for(const partner of household.concubines||[]){
     if(partner.alive===false||!partner.appearance)continue;
     const c=JSON.parse(JSON.stringify(partner.appearance));c.age=kidAge(partner);c.alive=true;
-    addConsort(c,3,'潜邸旧人，随新帝入宫');if(journalContentVersion()>=76)c.accessionArrival={gen:S.gen,started:S.turn};mothers.set(partner.id,c);
+    addConsort(c,3,'潜邸旧人，随新帝入宫');if(journalContentVersion()>=81)c.accessionArrival={gen:S.gen,started:S.turn};mothers.set(partner.id,c);
   }
   for(const child of household.children||[]){
     if(princeAdoptionActive()&&child.princeAdoption)continue;
@@ -95,12 +95,14 @@ function listedRoyalKin(){
 function royalKinContactMode(k,estateContact=false){
   if(estateContact)return princeEstateAvailable(k)?k.away?'letter':'visit':'';
   if(!k?.alive||!k.reign||k.removedFromRoyal||k.pendingName||k.jailed||k.gone)return '';
+  if(whiteSpringInPalace(k))return 'visit';
   const estate=k.princeEstate||k.estate;
   return k.away||k.princessMarriage==='frontier'||estate?.route==='frontier'||royalJourneyAway(k)||k.templeStay||
     (estate?.location&&estate.location!=='京城')?'letter':'visit';
 }
 function royalKinContactPlace(k,mode){
-  if(k.princessMarriage==='frontier'||k.estate?.route==='frontier')return '北境';
+  if(whiteSpringInPalace(k))return '宫中小住';
+  if(k.princessMarriage==='frontier'||k.estate?.route==='frontier')return princessMarriageLand(k);
   if(k.away&&princeFief(k)&&!royalJourneyAway(k)&&!k.templeStay)return princeFief(k);
   return k.away||royalJourneyAway(k)||k.templeStay?childWhereabouts(k):k.princeEstate?.location||k.estate?.location||
     (mode==='visit'?'京城':'外地');

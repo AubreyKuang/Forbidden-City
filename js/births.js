@@ -36,11 +36,12 @@ function annualBirthOmenTick(){
   }
 }
 function birthTags(k){
-  if(birthLabelsActive()&&Array.isArray(k.birthLabels))return immortalTags(k)+multipleBadge(k)+birthLabelsHTML(k);
+  const lineage=storyCastCivicActive()&&whiteSpringChild(k)?'<span class="tag y">异域血脉 · 白泉王裔</span>':'';
+  if(birthLabelsActive()&&Array.isArray(k.birthLabels))return lineage+immortalTags(k)+multipleBadge(k)+birthLabelsHTML(k);
   const omen=BIRTH_OMENS[k.birthOmen],trouble=BIRTH_TROUBLES[k.birthTrouble];
   const effect=omen&&(journalContentVersion()>=30?birthOmenEffect(omen):`${omen.label}+${omen.bonus}`);
   const troubleEffect=journalContentVersion()>=37&&trouble?.stat?` · ${birthOmenEffect(trouble)}`:'';
-  return `${immortalTags(k)}${multipleBadge(k)}${omen?`<span class="tag y" title="${journalContentVersion()>=30?'周岁起，每逢生辰结算一次；属性范围0—100。':'出生时'+effect}">${omen.name} · ${effect}</span>`:''}${trouble?`<span class="tag"${troubleEffect?' title="周岁起，每逢生辰结算一次；属性范围0—100。"':''}>${esc(trouble.name+troubleEffect)}</span>`:''}`;
+  return `${lineage}${immortalTags(k)}${multipleBadge(k)}${omen?`<span class="tag y" title="${journalContentVersion()>=30?'周岁起，每逢生辰结算一次；属性范围0—100。':'出生时'+effect}">${omen.name} · ${effect}</span>`:''}${trouble?`<span class="tag"${troubleEffect?' title="周岁起，每逢生辰结算一次；属性范围0—100。"':''}>${esc(trouble.name+troubleEffect)}</span>`:''}`;
 }
 function deliveryKids(c){return (c.delivery?.children||[]).map(kidById).filter(Boolean)}
 function pendingDelivery(){return S.consorts.find(c=>c.delivery&&!c.delivery.settled&&(c.delivery.lossPending||deliveryKids(c).some(k=>k.pendingName)))}
@@ -115,22 +116,24 @@ function finishDelivery(c){
   remember(c,'child',delivery.concealedLoss?'报来的孩子获赐名入册':delivery.kind?`诞下${delivery.kind}`:'生下孩子');
   const names=children.map(k=>kidName(k)).join('、');
   let effect=chg({prestige:children.some(k=>k.sex==='m')?4:2}),text=`${names}，均已赐名。`;
-  if(delivery.difficult){
+  const lastWords=sisterDeliveryScene(c,children);
+  if(lastWords)text+='\n'+lastWords;
+  if(!delivery.sisterDeath&&delivery.difficult){
     c.alive=false;c.deathReason='产后血崩';log(`${fullName(c)}诞下${names}后因产后血崩薨逝。`,1);AU.sfx('sad');
     children.forEach(k=>kstory(k,`生母${k.momName}生产后因血崩薨逝。`));text+=`\n然而产后血崩，${fullName(c)}没能挺过那个夜晚。`;
-  }else{
+  }else if(!delivery.sisterDeath){
     setXin(c,'欢喜',delivery.concealedLoss?'报喜获赐名':'诞下皇嗣');log(`${delivery.concealedLoss?'宫中报称':''}${fullName(c)}诞下${names}${delivery.kind?`（${delivery.kind}）`:''}。`,1);
     effect+='　'+cchg(c,{mood:25,aff:10,favor:8});
   }
   recordDeliveryOutcome(c);
-  const follow=[],kinCare=!c.alive?maternalKinCareEvent(c):null;
+  const follow=delivery.sisterDeath?[sisterInquiryDecision(c)]:[],kinCare=!c.alive&&!delivery.sisterDeath?maternalKinCareEvent(c):null;
   if(kinCare)follow.push(kinCare);
   if(delivery.swap)follow.push(swapEvent(c,children[0]));
-  const batchCare=children.filter(k=>k.alive).length>1&&!kinCare&&(!c.alive||c.maid||c.rank<=1);
+  const batchCare=children.filter(k=>k.alive).length>1&&!delivery.sisterDeath&&!kinCare&&(!c.alive||c.maid||c.rank<=1);
   if(batchCare){delivery.carePlan={created:S.turn,closed:false};follow.push(birthCareEvent(c));}
   for(const k of children){
     if(!k.alive)continue;
-    if(!batchCare&&!c.alive&&!kinCare)follow.push(fosterOffer(k,'孩子的生母已经不在了。'));
+    if(!batchCare&&!c.alive&&!kinCare&&!delivery.sisterDeath)follow.push(fosterOffer(k,'孩子的生母已经不在了。'));
     else if(!batchCare&&c.alive&&(c.maid||c.rank<=1))follow.push(fosterOffer(k,`${kidName(k)}的生母只是${c.maid?'宫女':RANKS[c.rank]}。`));
     if(k.parentage)follow.push(parentageInquiryEvent(k));
   }
@@ -143,14 +146,14 @@ function finishDelivery(c){
    It must not go through participant-memory helpers, which skip the deceased. */
 function recordDeliveryOutcome(c,{loss=false,date,legacy=false}={}){
  const d=c.delivery;if(!d?.settled||d.outcome)return;
- const children=deliveryKids(c),fatal=!!d.difficult&&!c.alive;
+ const children=deliveryKids(c),fatal=!!(d.difficult||d.sisterDeath)&&!c.alive;
  if(!children.length)return;
  const birthDate=date||d.date||dateStr(),names=children.map(k=>({id:k.id,name:k.name,sex:k.sex}));
  const label=children.map(k=>`${k.sex==='m'?'皇子':'公主'}${k.name==='未命名'?'（未及赐名）':k.name}`).join('、');
- let text=`${fullName(c)}${d.concealedLoss?'被宫中报称生产，':'于'+(c.palace||'宫中')+'临盆，'}${loss?'产下的孩子出生时已无生息':`诞下${label}${d.kind?`（${d.kind}）`:''}，${children.length>1?'孩子们分别':'孩子'}获陛下赐名`}。${fatal?'生产后突发血崩，太医救治无效，撒手人寰，因产后血崩薨逝。':loss?'按礼安葬孩子，太医继续照看产妇。':d.concealedLoss?'报喜与赐名已入册，亲缘仍以查证结果为准。':'产后平安，继续调养。'}${gouyiBirthBlessing(c)&&!loss&&BIRTH_OMENS[d.omen]?`诞生时见「${BIRTH_OMENS[d.omen].name}」，与孩子的诞生纪事一同记下。`:''}`;
+ let text=`${fullName(c)}${d.concealedLoss?'被宫中报称生产，':'于'+(c.palace||'宫中')+'临盆，'}${loss?'产下的孩子出生时已无生息':`诞下${label}${d.kind?`（${d.kind}）`:''}，${children.length>1?'孩子们分别':'孩子'}获陛下赐名`}。${d.sisterDeath?'临盆时在陛下怀中辞世，死因当时未明。':fatal?'生产后突发血崩，太医救治无效，撒手人寰，因产后血崩薨逝。':loss?'按礼安葬孩子，太医继续照看产妇。':d.concealedLoss?'报喜与赐名已入册，亲缘仍以查证结果为准。':'产后平安，继续调养。'}${gouyiBirthBlessing(c)&&!loss&&BIRTH_OMENS[d.omen]?`诞生时见「${BIRTH_OMENS[d.omen].name}」，与孩子的诞生纪事一同记下。`:''}`;
  if(birthLabelsActive()&&d.labels?.length&&!loss)text+='本胎出生禀赋：'+d.labels.map(id=>BIRTH_LABELS[id].name).join('、')+'。';
- d.outcome={date:birthDate,children:names,kind:d.kind||'单胎',loss,fatal,cause:fatal?'产后血崩':null,text};
- if(fatal){c.deathReason='产后血崩';c.deathRecord={date:birthDate,cause:'产后血崩',text,children:names};}
+ d.outcome={date:birthDate,children:names,kind:d.kind||'单胎',loss,fatal,cause:fatal?(d.sisterDeath?c.deathReason:'产后血崩'):null,text};
+ if(fatal){c.deathReason=d.outcome.cause;c.deathRecord={date:birthDate,cause:c.deathReason,text,children:names};}
  // An older build may already have the shorter line. Enrich it in place.
  const old=legacy&&(c.story||[]).find(s=>/血崩/.test(s.t)&&/薨|撒手人寰/.test(s.t));
  const entry=old||{d:birthDate,t:text};entry.t=text;entry.birthOutcome=d.outcome;

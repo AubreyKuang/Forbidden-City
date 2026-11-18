@@ -90,3 +90,14 @@ test('portrait preview through the real form handles newborn and legacy missing 
     assert.equal(child.portraitVariant,2);assert.equal(child.sup,0);var id=child.id;load('auto');assert.equal(kidById(id).portraitVariant,2);DEV.restore();assert.equal(kidById(id).portraitVariant,oldVariant);
   }`);
 });
+test('automatic month waits through nested scenes, respects the dev switch and fires just once',()=>{
+ const {run,storage}=boot();
+ run(`var timers=[];setTimeout=(f,t)=>{if(t===1500)timers.push(f);};E().energy=1;var startTurn=S.turn;
+   A.out('temple');assert.equal(E().energy,0);assert.equal(exhaustedMonthNotice,null);
+   choose(0);assert.match(curEv.title,/皇嗣祈福/);assert.equal(exhaustedMonthNotice,null);
+   choose(curEv.choices.length-1);assert.ok(exhaustedMonthNotice);var first=timers.at(-1);
+   DEV.open();DEV.setAutoMonth(false);DEV.close();first();assert.equal(S.turn,startTurn);assert.equal(exhaustedMonthNotice,null);
+   DEV.open();DEV.setAutoMonth(true);assert.equal(exhaustedMonthNotice,null);DEV.close();
+   var last=timers.at(-1);last();last();assert.equal(S.turn,startTurn+1);`);
+ assert.equal(storage.get('chengongji_dev_auto_month'),'on');
+});

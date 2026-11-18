@@ -74,7 +74,7 @@ function renderPanel(){
   const p=$('#panel'),v=UI.view;
   const route=JSON.stringify([v,UI.sel]);
   if(!S)p.innerHTML=v==='new'?viewNew():viewTitle();
-  else p.innerHTML=({government:viewGovernment,residences:viewResidences,officials:officialsRoster,official:viewOfficial,ministries:typeof viewMinistries==='function'?viewMinistries:viewGovernment,scholar:typeof viewScholar==='function'?viewScholar:viewGovernment,jinyiwei:typeof viewJinyiwei==='function'?viewJinyiwei:viewGovernment,jewelry:viewJewelryVault,natal:viewNatalRelative,relative:viewRoyalRelative,family:viewFamily,map:viewMap,palace:viewPalace,place:viewPlace,banquet:viewBanquet,home:viewHome,fenghua:typeof viewFenghuaPerson==='function'?viewFenghuaPerson:viewHome,harem:viewHarem,consort:viewConsort,cards:viewCards,xx:viewXX,kids:viewKids,kid:viewKid,princess:viewPrincessEstate,'prince-estate':viewPrinceEstate,out:viewOut,log:viewLog,sys:viewSys}[v]||viewHome)();
+  else p.innerHTML=({government:viewGovernment,residences:viewResidences,officials:officialsRoster,official:viewOfficial,ministries:typeof viewMinistries==='function'?viewMinistries:viewGovernment,scholar:typeof viewScholar==='function'?viewScholar:viewGovernment,jinyiwei:typeof viewJinyiwei==='function'?viewJinyiwei:viewGovernment,jewelry:viewJewelryVault,natal:viewNatalRelative,relative:viewRoyalRelative,family:viewFamily,map:viewMap,palace:viewPalace,place:viewPlace,banquet:viewBanquet,home:viewHome,fenghua:typeof viewFenghuaPerson==='function'?viewFenghuaPerson:viewHome,harem:viewHarem,consort:viewConsort,cards:viewCards,xx:viewXX,outer:typeof outerRegisterView==="function"?outerRegisterView:viewKids,kids:viewKids,kid:viewKid,princess:viewPrincessEstate,'prince-estate':viewPrinceEstate,out:viewOut,log:viewLog,sys:viewSys}[v]||viewHome)();
   if(S&&v==='xx')rememberSelectionBlurt(selectionCurrent());
   if(route!==panelRoute){p.scrollTop=0;panelRoute=route;}
 }
@@ -93,7 +93,7 @@ function viewTitle(){
    <button class="btn gold" onclick="A.newGame()">新开一局</button>
    ${slots.length?`<div class="save-list">${slots.map(x=>`<button class="btn sm" onclick="A.load('${x.s}')">读取${x.s==='auto'?'自动存档':'存档'+x.s}：${esc(x.i)}</button>`).join('')}</div>`:''}</div>`}
 function viewNew(){
-  const profile=journalContentVersion()>=77?dynastyProfile():[];
+  const profile=journalContentVersion()>=81?dynastyProfile():[];
   return `<section class="story-scene coronation-scene" aria-labelledby="coronation-title">
     <header><p>宸极殿</p><h2 id="coronation-title">登基大典</h2></header>
   </section>
@@ -302,7 +302,7 @@ function viewHome(){
      ['royal-kin','皇亲列表',palaceAdoptionPanel()+royalKinRosterPanel()],
      ['fertility','太医院会诊',imperialFertilityPanel()],
      ['goals','王朝目标',dynastyGoalsPanel()],
-     ...(journalContentVersion()>=76?[['collection','王朝图鉴',dynastyCodexPanel()]]:[]),
+     ...(journalContentVersion()>=81?[['collection','王朝图鉴',dynastyCodexPanel()]]:[]),
      ...(e.dynastyLegacy?[["legacy","先帝传承",`<p>先帝 ${esc(e.dynastyLegacy.predecessor)} · ${esc(e.dynastyLegacy.era)}朝 · 声望 ${rd(e.dynastyLegacy.prestige)}</p><p>家训：${esc(e.dynastyLegacy.lesson)}。登基时承先朝声望，威望 +${e.dynastyLegacy.renown}；${esc(({people:'民心',wu:'武略',wen:'文才',health:'龙体'})[e.dynastyLegacy.stat])} +${e.dynastyLegacy.bonus}。</p>`]]:[]),
      ['court','朝堂与外家',courtBlocHTML()],
      ['stewardship','协理六宫',typeof haremStewardPanel==='function'?haremStewardPanel():''],
@@ -567,7 +567,7 @@ function viewLog(){
     const person=child?kidById(id):byId(id);
     return person?`<button class="btn sm" onclick="A.go('${child?'kid':'consort'}',${person.id})">查看${esc(child?kidName(person):fullName(person))}</button>`:'';
   };
-  return `${pageHeading('起居注')}<div class="log-filter" role="group" aria-label="纪事筛选与留存"><button class="btn sm ${UI.logF==='all'?'on':''}" onclick="UI.logF='all';render()">全部</button><button class="btn sm ${UI.logF==='big'?'on':''}" onclick="UI.logF='big';render()">只看大事</button><button class="btn sm" onclick="A.logCard()">保存上月纪念卡</button>${journalContentVersion()>=76?'<button class="btn sm" onclick="A.go(\'home\');jumpToPageSection(\'home-collection\')">查看王朝图鉴</button>':''}</div>
+  return `${pageHeading('起居注')}<div class="log-filter" role="group" aria-label="纪事筛选与留存"><button class="btn sm ${UI.logF==='all'?'on':''}" onclick="UI.logF='all';render()">全部</button><button class="btn sm ${UI.logF==='big'?'on':''}" onclick="UI.logF='big';render()">只看大事</button><button class="btn sm" onclick="A.logCard()">保存上月纪念卡</button>${journalContentVersion()>=81?'<button class="btn sm" onclick="A.go(\'home\');jumpToPageSection(\'home-collection\')">查看王朝图鉴</button>':''}</div>
    ${month?`<section class="month-record"><h3>${esc(month.date)}回顾</h3>
     <p>月入 ${esc(month.inc)} 万两 · 支出 ${esc(month.exp)} 万两</p>
     ${month.finance&&[month.finance.opening,month.finance.closing,month.finance.other].every(Number.isFinite)?`<p>换月前国库 ${month.finance.opening} 万两 · 换月后 ${month.finance.closing} 万两${month.finance.other?` · 其他换月收支 ${month.finance.other>0?'+':''}${month.finance.other} 万两`:''}</p>`:''}

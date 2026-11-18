@@ -1,15 +1,17 @@
 /* Saved journeys, care arrangements and mothers' concern for children living away. */
 function childWhereabouts(k){
   if(royalDiplomaticAway(k))return (DIPLOMACY_COUNTRIES[k.diplomaticJourney.country]?.name||'异国')+(k.diplomaticJourney.status==='detained'?' · 受留':' · 出使');
+  const inWhiteSpring=k.spouse?.route==='whiteSpring';
   if(royalTravelAway(k))return royalTravelPlace(k);
-  if(royalTravelActive()&&k.royalTravel?.stage==='returned'&&k.royalTravel.returnPlace)return k.royalTravel.returnPlace;
+  if(!inWhiteSpring&&royalTravelActive()&&k.royalTravel?.stage==='returned'&&k.royalTravel.returnPlace)return k.royalTravel.returnPlace;
   if(immortalAway(k))return IMMORTAL_SECTS[k.immortal.route].name;
-  if(k.immortal?.stage==='returned'&&k.immortal.returnPlace)return k.immortal.returnPlace;
+  if(!inWhiteSpring&&k.immortal?.stage==='returned'&&k.immortal.returnPlace)return k.immortal.returnPlace;
   if(k.templeStay)return '护国寺';
   if(k.birthSwap?.occurred&&k.parentage?.decision==='family')return '宫外亲生父母家';
   if(k.parentage?.decision==='household')return '生父皇子府';
   if(k.jailed)return '宗人府';
-  if(k.princessMarriage==='frontier')return '北境';
+  if(whiteSpringInPalace(k))return '宫中小住';
+  if(k.princessMarriage==='frontier')return princessMarriageLand(k);
   if(k.away)return princeFief(k)||'封地';
   if(k.estate)return k.sex==='f'?'公主府':'皇子府';
   if(k.princeEstate)return '京中皇子府';

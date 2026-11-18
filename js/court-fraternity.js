@@ -66,6 +66,12 @@ function queenHeirFeelings(previous){
   const fresh=!(previous.children||[]).some(k=>k.sex==='m'&&!k.removedFromRoyal&&!k.pendingName);
   const barren=S.turn-(q.enteredAt??0)>=36&&!S.children.some(k=>k.sex==='m'&&k.mom===q.id&&k.alive&&!k.removedFromRoyal);
   const key=`${S.gen}:${q.id}:${first.id}`,old=S.flags.queenHeirFeelings?.[key];
+  if(fresh&&journalContentVersion()>=80&&mother.delivery?.children?.includes(first.id)&&!mother.delivery.concealedLoss){
+    const batch=deliveryKids(mother);
+    if(batch.every(k=>k.alive&&!k.birthSwap?.occurred)&&batch.some(k=>goodBirthSigns(k).length)){
+      (S.flags.queenHeirFeelings ||= {})[key]=S.turn;return;
+    }
+  }
   if(old!=null&&S.turn-old<24||!fresh&&(!barren||previous.turn===S.turn||!chance(.08)))return;
   (S.flags.queenHeirFeelings ||= {})[key]=S.turn;
   const intense=['骄纵','骄矜','善妒','城府'].includes(q.trait),quiet=isSolitary(q)||q.trait==='淡泊',loss=intense?10:quiet?1:4;

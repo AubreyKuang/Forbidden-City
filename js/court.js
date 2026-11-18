@@ -45,7 +45,7 @@ const COURT=[
    {t:'斥其谄媚，放鹿归山',f:()=>`你命人将白鹿放归山林。朝臣暗暗称是。${fx(chg({people:4,prestige:2}))}`}]}),
  ()=>({title:'蝗灾',text:'河南、山东飞蝗蔽日，禾稼尽毁。',choices:[
    {t:'开仓放粮（国库-200万两）',f:()=>{log('蝗灾，帝开仓放粮。');return `${fx(chg({treasury:-200,people:8}))}`}},
-   {t:'设坛祭天',f:()=>chance(.4)?`祭天三日，忽降大雨，蝗群散去。${fx(chg({prestige:4}))}`:`蝗灾未止，百姓流亡。${fx(chg({people:-7}))}`},
+   {t:'设坛祭天',f:()=>{if(typeof outerTripLead==='function')outerTripLead('altar');return chance(.4)?`祭天三日，忽降大雨，蝗群散去。${fx(chg({prestige:4}))}`:`蝗灾未止，百姓流亡。${fx(chg({people:-7}))}`}},
    {t:'悬赏捕蝗，以蝗换粟',f:()=>`百姓争相捕蝗，灾情渐缓。${fx(chg({treasury:-80,people:4}))}`}]}),
  ()=>({title:'盐政',text:'户部尚书奏请整顿盐政：废除盐引世袭，可增岁入，但必触怒盐商与其背后的勋贵。',choices:[
    {t:'准奏，雷厉风行',f:()=>{log('帝整顿盐政。',1);return `盐税大增，勋贵怨声载道。${fx(chg({treasury:250,prestige:2,people:-3}))}`}},
@@ -981,7 +981,7 @@ A.courtPolicy=function(id){
     const previous=S.courtPolicy[group.id]||0;
     S.courtPolicy[group.id]=Math.max(-30,Math.min(30,previous+(group===bloc?10:-2)));
   }
-  if(journalContentVersion()>=77){
+  if(journalContentVersion()>=81){
     const affiliation={civil:'civil',military:'army',clan:'kin',trade:'civil',travel:'civil'};
     for(const k of kidsAlive()){
       const career=k.princeCareer,wanted=affiliation[career?.path];if(!wanted||!childCanVisitCourt(k))continue;
@@ -1041,7 +1041,7 @@ function sameFather(a,b){
     left.name===right.name&&left.office===right.office);
 }
 function paternalFamily(c){
-  const people=[...new Set([...(typeof familyCourtHosts==='function'?familyCourtHosts():(S?.consorts||[])),...(S?.cands||[]),c])].filter(p=>p&&!p.maid);
+  const people=[...new Set([...(typeof familyCourtHosts==='function'?familyCourtHosts():(S?.consorts||[])),...(S?.cands||[]),c])].filter(p=>p&&!p.maid&&p.selectionNatalHost==null);
   const relatives=new Set([c]);
   let changed=true;
   while(changed){
@@ -1079,6 +1079,7 @@ function identifyFather(family,house){
   return house;
 }
 function houseOf(c){
+  if(c?.selectionNatalHost!=null)return c.house=byId(c.selectionNatalHost)?.house||c.house;
   if(!c||c.maid||c.rescue||storyCastActive()&&c.fixedStory==='chuwan')return null;
   const family=paternalFamily(c),root=family[0];
   const existing=family.find(p=>p.house)?.house;

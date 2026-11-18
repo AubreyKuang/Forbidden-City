@@ -171,7 +171,7 @@ function deepLine(c){deepen(c);if(c.wish==='title'&&c.title&&!c.wishDone){c.wish
   ${c.woundKnown?`<div>往事：${esc(consortPastText(c))}</div>`:`<div class="hint">往事：${c.aff>=65?'情分已够，多闲谈几次，她也许会对你说起':'情分到 65 以后，她也许会对你说起'}</div>`}${typeof gouyiPastPanel==='function'?gouyiPastPanel(c):''}`}
 function accessionArrivalConversation(c){
  const arrival=c?.accessionArrival;
- if(journalContentVersion()<76||!arrival||arrival.gen!==S.gen||arrival.done||S.turn-arrival.started>=12||!inPalace(c))return null;
+ if(journalContentVersion()<81||!arrival||arrival.gen!==S.gen||arrival.done||S.turn-arrival.started>=12||!inPalace(c))return null;
  const line=['骄矜','骄纵','好胜'].includes(c.trait)?'王府里我认得每一条廊，到了这里，连出门见谁都要先问宫人。臣妾不是怕，只是不愿总像个客人。':
    ['聪慧','持重','沉静'].includes(c.trait)?'王府的人和事都熟悉，如今宫门深、规矩多，臣妾还在记每一处该怎么走。您也才登基，想必同样不容易。':
    '从前在王府，听见您的脚步就知道您回来了。如今隔着这样多的宫门，连院里的树都还不认得，臣妾有时真有些不习惯。';
