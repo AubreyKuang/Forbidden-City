@@ -20,7 +20,7 @@ function marketRescueEvent(){
 }
 function rescueVoice(c){
  const r=c?.rescue;if(!r)return null;
- return voiceLine('rescued-home',r.familyContact==='confirmed'?'她把远方的回信仔细收好。':'她说汉话仍有不熟的地方，却已愿意慢慢说完。',r.familyContact==='confirmed'?'知道远处还有人记得我，心里终于不只剩这里的一扇门。陛下救我的情分，我仍记着。':r.trust<50?'刚来时，我连要找谁问路都不知道。您肯听我说，我就安心些。':'从前我只敢等您来，怕旁人一句话就把我送走。如今我想学会自己写信，也想请您帮我找找家人。');
+ return voiceLine('rescued-home',r.familyContact==='confirmed'?'她把远方的回信仔细收好。':journalContentVersion()>=96&&c.palaceSpeech?.stage===3?'她用中原话说起故乡，遇到家人才用的小名，仍按原来的读音念。':'她说汉话仍有不熟的地方，却已愿意慢慢说完。',r.familyContact==='confirmed'?'知道远处还有人记得我，心里终于不只剩这里的一扇门。陛下救我的情分，我仍记着。':r.trust<50?'刚来时，我连要找谁问路都不知道。您肯听我说，我就安心些。':'从前我只敢等您来，怕旁人一句话就把我送走。如今我想学会自己写信，也想请您帮我找找家人。');
 }
 function rescuedGuestEvent(g){
  if(!g||!g.rescuedGuest||!inPalace(g)||!S.shelteredGuests?.includes(g))return null;

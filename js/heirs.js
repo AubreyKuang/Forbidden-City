@@ -367,6 +367,7 @@ A.foster=function(id){const k=kidById(id);const m=byId(k.mom);
     choices:[...cands.map(c=>fosterCandidateChoice(c,carer=>doFoster(k,carer))),{t:'再想想'}]})};
 function doFoster(k,c,options={}){if(familyScenesEnabled()&&(!childInPalace(k)||!inPalace(c)||k.foster===c.id||c.id===k.mom))return null;const m=byId(k.mom),old=fosterOf(k),childless=!raisesKid(c);if(m&&m.alive&&m!==c&&!k.motherBonds?.[m.id]){(k.motherBonds ||= {})[m.id]={trust:childTrust(k,m)}}
   if(old&&old!==c&&!k.motherBonds?.[old.id]){(k.motherBonds ||= {})[old.id]={trust:childTrust(k,old)}}
+  if(journalContentVersion()>=96)beginFosterAdjustment(k,c,old||m);
   preserveFormerCare(k,old,c);
   k.foster=c.id;k.fosterT=S.turn;relAdd(c,k,Math.max(0,50-relGet(c,k)));
   kstory(k,`交由${fullName(c)}抚养。`);story(c,`陛下将${kidName(k)}交给她抚养。`);log(`${kidName(k)}交由${fullName(c)}抚养。`,1);
@@ -380,7 +381,7 @@ function doFoster(k,c,options={}){if(familyScenesEnabled()&&(!childInPalace(k)||
 A.unfoster=function(id){const k=kidById(id),c=fosterOf(k),m=byId(k.mom);if(!m||!m.alive){toast('生母已不在');return}
   if(c&&!k.motherBonds?.[c.id]){(k.motherBonds ||= {})[c.id]={trust:childTrust(k,c)}}
   preserveFormerCare(k,c,m);
-  k.foster=null;delete k.visitRule;kstory(k,`离开养母${c?fullName(c):'的居处'}，回到生母${fullName(m)}身边。`);if(c&&c.alive){setXin(c,'委屈',`${k.name}被抱回生母身边`);story(c,`照料的${k.name}回到生母${fullName(m)}身边。`);cchg(c,{mood:-15})}
+  k.foster=null;delete k.fosterAdjustment;delete k.visitRule;kstory(k,`离开养母${c?fullName(c):'的居处'}，回到生母${fullName(m)}身边。`);if(c&&c.alive){setXin(c,'委屈',`${k.name}被抱回生母身边`);story(c,`照料的${k.name}回到生母${fullName(m)}身边。`);cchg(c,{mood:-15})}
   setXin(m,'欢喜',`${k.name}回到身边`);cchg(m,{mood:25,aff:6});story(m,`${k.name}回到了她身边。`);toast('孩子回到了生母身边');render()};
 function fosterOffer(k,why){return {title:'抚养',por:k,text:why+'\n按宫中旧例，可将孩子交给位分高的妃嫔抚养，将来也好有个倚仗。',choices:[{t:'挑一位妃嫔抚养',f:()=>{A.foster(k.id);return null}},{t:'不必',f:()=>{kstory(k,'曾议交由妃嫔抚养，陛下未允，仍依原安排照料。');return '你没有把孩子交给旁人。';}}]}}
 function fosterEvent(){const ks=kidsAlive().filter(k=>{const m=byId(k.mom),f=fosterOf(k);return !k.visitRule&&familyVisitAllowed(k,m)&&inPalace(f)&&kidAge(k)<14});if(!ks.length)return null;
