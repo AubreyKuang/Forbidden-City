@@ -1,5 +1,6 @@
 /* Saved journeys, care arrangements and mothers' concern for children living away. */
 function childWhereabouts(k){
+  if(royalDiplomaticAway(k))return (DIPLOMACY_COUNTRIES[k.diplomaticJourney.country]?.name||'异国')+(k.diplomaticJourney.status==='detained'?' · 受留':' · 出使');
   if(royalTravelAway(k))return royalTravelPlace(k);
   if(royalTravelActive()&&k.royalTravel?.stage==='returned'&&k.royalTravel.returnPlace)return k.royalTravel.returnPlace;
   if(immortalAway(k))return IMMORTAL_SECTS[k.immortal.route].name;

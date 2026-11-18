@@ -154,9 +154,9 @@ function viewGovernment(){
 
 /* 邻国及使节：任务与真实在任官员关联，回国后保留外交记录。 */
 const DIPLOMACY_COUNTRIES={
- north:{name:'朔庭',envoy:'阿鲁',character:'重武备与边界',favors:'border',relation:35},
- sea:{name:'海岚',envoy:'海宁',character:'重商贸与航路',favors:'trade',relation:45},
- west:{name:'西昭',envoy:'安弥',character:'重礼仪与往来',favors:'visit',relation:50}
+ north:{name:'朔庭',envoy:'阿鲁',student:'图尔',character:'重武备与边界',favors:'border',relation:35},
+ sea:{name:'海岚',envoy:'海宁',student:'兰舟',character:'重商贸与航路',favors:'trade',relation:45},
+ west:{name:'西昭',envoy:'安弥',student:'明沙',character:'重礼仪与往来',favors:'visit',relation:50}
 };
 const DIPLOMACY_MISSIONS={
  visit:{name:'修好通使',cost:20,months:3},trade:{name:'商议通商',cost:30,months:3},
@@ -177,12 +177,17 @@ function diplomacyCountry(id,create=false){
 function diplomacyPanel(){
  if(!diplomacyEnabled())return '';
  const state=diplomacyState(),envoys=officialEntries().filter(e=>officialServing(e.p)&&!e.p.away).sort((a,b)=>b.p.ability-a.p.ability).slice(0,8);
+ const princes=kidsAlive().filter(k=>k.sex==='m'&&kidAge(k)>=16&&childCanVisitCourt(k)&&S.heir!==k.id).slice(0,6);
  return `<p class="hint">使臣须为在京任职的朝臣，三个月后回奏。邦交、通商与往来记录随王朝存档保留。</p><div class="grid">${Object.entries(DIPLOMACY_COUNTRIES).map(([id,d])=>{
   const c=state?.countries[id],mission=state?.missions.find(m=>m.country===id&&m.status==='traveling');
   return `<article class="card"><h3>${d.name}</h3><p>${d.character} · 邦交 ${rd(c?.relation??d.relation)} · ${c?.trade?'通商中':'未通商'} · 边境紧张 ${rd(c?.tension??0)}</p><p>${c?.treatyUntil>S.turn?`和约尚余 ${c.treatyUntil-S.turn} 个月`:'尚无生效和约'}${c?.tribute?' · 已议定朝贡':''}</p><p>对方使臣 ${esc(d.envoy)} · 对本朝的态度 ${rd(c?.envoy?.attitude??50)}</p>
   ${c?.succession?.status==='pending'?`<p>${d.name}王室正争议继承，长嗣与幼嗣各有支持者。</p><div class="acts"><button class="btn sm" onclick="A.foreignSuccession('${id}','elder')" ${E().energy<1||E().treasury<40?'disabled':''}>支持长嗣 · 银40 · 精力−1</button><button class="btn sm" onclick="A.foreignSuccession('${id}','younger')" ${E().energy<1||E().treasury<40?'disabled':''}>支持幼嗣 · 银40 · 精力−1</button><button class="btn sm" onclick="A.foreignSuccession('${id}','neutral')" ${E().energy<1?'disabled':''}>保持中立 · 精力−1</button></div>`:''}
   <div class="acts"><button class="btn sm" onclick="A.receiveForeignEnvoy('${id}','gift')" ${S.turn-(c?.lastAudience??-99)<6||E().energy<1||E().treasury<20?'disabled':''}>礼待使臣 · 银20 · 精力−1</button><button class="btn sm" onclick="A.receiveForeignEnvoy('${id}','slight')" ${S.turn-(c?.lastAudience??-99)<6||E().energy<1?'disabled':''}>冷落使臣 · 精力−1</button></div>
+  ${c?.student?.status==='studying'?`<p>${d.name}王子${esc(c.student.name)}在京求学 · 已学习 ${c.student.months} 个月 · 情谊 ${c.student.friendship}</p><button class="btn sm" onclick="A.visitForeignStudent('${id}')" ${E().energy<1||S.turn-(c.student.lastVisit??-99)<6?'disabled':''}>问候王子 · 精力−1</button>`:c?.student?`<p>${d.name}王子${esc(c.student.name)}已结束求学归国。</p>`:`<button class="btn sm" onclick="A.inviteForeignStudent('${id}')" ${(c?.relation??d.relation)<60||E().treasury<30||E().energy<1?'disabled':''}>邀请王子来学 · 邦交60 · 银30 · 精力−1</button>`}
+  ${state?.missions.filter(m=>m.country===id&&m.type==='prince'&&m.status==='detained').map(m=>`<p>${esc(m.envoyName)}被留在${d.name}。</p><button class="btn sm" onclick="A.ransomDiplomaticPrince('${esc(m.id)}')" ${E().treasury<80||E().energy<1?'disabled':''}>议赎归国 · 银80 · 精力−1</button>`).join('')||''}
+  ${state?.missions.filter(m=>m.country===id&&m.marriageOffer?.status==='pending'&&marriageReady(royalById(m.envoyId))).map(m=>`<p>${esc(m.envoyName)}与${esc(m.marriageOffer.person.name)}有意议婚。</p><button class="btn sm" onclick="A.foreignMarriage('${esc(m.id)}')">听取双方心意</button>`).join('')||''}
   ${mission?`<p>${esc(mission.envoyName)}出使中 · 还需 ${Math.max(0,mission.due-S.turn)} 个月</p>`:`<div class="acts">${envoys.map(e=>Object.entries(DIPLOMACY_MISSIONS).filter(([kind])=>kind!=='trade'||!c?.trade).map(([kind,m])=>`<button class="btn sm" onclick="A.sendDiplomaticEnvoy('${id}','${kind}','${encodeURIComponent(e.key)}')" ${E().energy<1||E().treasury<m.cost?'disabled':''}>${esc(e.p.name)} · ${m.name} · 银${m.cost}</button>`).join('')).join('')||'<span class="hint">暂无可派遣的在京官员。</span>'}</div>`}
+  ${!mission?`<div class="acts">${princes.map(k=>`<button class="btn sm" onclick="A.sendDiplomaticPrince('${id}',${k.id})" ${E().energy<1||E().treasury<50?'disabled':''}>派${esc(k.name)}出使 · 银50 · 精力−1</button>`).join('')}</div>`:''}
   <ul class="story">${(c?.memory||[]).slice(-4).reverse().map(item=>`<li><time>${esc(item.d)}</time>${esc(item.text)}</li>`).join('')||'<li>尚无交往记录。</li>'}</ul></article>`;
  }).join('')}</div>`;
 }
@@ -200,6 +205,35 @@ function sendDiplomaticEnvoy(country,kind,encoded){
  story(entry.p,`奉命出使${d.name}，${mission.name}。`);log(`【邦交】${entry.p.name}奉命出使${d.name}，${mission.name}。`);render();
 }
 A.sendDiplomaticEnvoy=sendDiplomaticEnvoy;
+function sendDiplomaticPrince(id,kidId){
+ const def=DIPLOMACY_COUNTRIES[id],k=kidById(kidId);
+ if(!diplomacyEnabled()||!def||!k||k.sex!=='m'||kidAge(k)<16||S.heir===k.id||!childCanVisitCourt(k)||S.over||modalOpen||E().energy<1||E().treasury<50)return;
+ const state=diplomacyState(true),country=diplomacyCountry(id,true);if(state.missions.some(m=>m.country===id&&m.status==='traveling'))return;
+ if(!useE())return;chg({treasury:-50});const roll=R();
+ const outcome=roll<clamp(.45+k.lit/400+country.relation/500,.25,.85)?'success':roll>.92?'detained':'setback';
+ const m={id:`${S.gen}:${S.turn}:${id}:prince:${k.id}`,type:'prince',country:id,envoyId:k.id,envoyName:k.name,due:S.turn+6,status:'traveling',outcome,possibleMarriage:!k.married&&chance(.25)};
+ state.missions.push(m);k.diplomaticJourney={id:m.id,country:id,status:'traveling'};kstory(k,`奉命出使${def.name}，辞京启程。`);log(`【邦交】${kidName(k)}奉命出使${def.name}。`,1);render();
+}
+A.sendDiplomaticPrince=sendDiplomaticPrince;
+function ransomDiplomaticPrince(id){
+ const m=diplomacyState()?.missions.find(x=>x.id===id&&x.type==='prince'&&x.status==='detained'),k=m&&royalById(m.envoyId);
+ if(!m||!k?.alive||k.diplomaticJourney?.id!==m.id||S.over||modalOpen||E().energy<1||E().treasury<80)return;
+ if(!useE())return;chg({treasury:-80});m.status='ransomed';k.diplomaticJourney.status='returned';
+ const text=`${k.name}经交涉获释，平安从${DIPLOMACY_COUNTRIES[m.country].name}归来。`;kstory(k,`【出使】${text}`);diplomacyCountry(m.country).memory.push({d:dateStr(),turn:S.turn,text});log(`【邦交】${text}`,1);render();
+}
+A.ransomDiplomaticPrince=ransomDiplomaticPrince;
+function foreignMarriage(id){
+ const m=diplomacyState()?.missions.find(x=>x.id===id&&x.marriageOffer?.status==='pending'),k=m&&royalById(m.envoyId),offer=m?.marriageOffer;
+ if(modalOpen||S.over||!k?.alive||!marriageReady(k)||!offer)return;
+ const valid=()=>!S.over&&k.alive&&marriageReady(k)&&offer.status==='pending';
+ pushEv({title:'异国议婚',por:k,valid,text:`${k.name}出使时结识${DIPLOMACY_COUNTRIES[m.country].name}的${offer.person.name}。礼部问过双方，二人都愿进一步议婚。她也盼婚后能继续与家乡通信。`,choices:[
+  {t:'准予成婚 · 银50',cond:()=>E().treasury>=50&&valid(),why:'国库不足或婚事已变',f:()=>{
+    if(!valid()||E().treasury<50)return null;chg({treasury:-50});k.married=true;k.spouse={...offer.person,marriedAt:S.turn};offer.status='accepted';
+    ensureMarriedLife(k);diplomacyCountry(m.country).relation=clamp(diplomacyCountry(m.country).relation+8);
+    kstory(k,`【异国议婚】经双方同意，与${offer.person.name}成婚。`);log(`【异国议婚】${kidName(k)}与${offer.person.name}成婚。`,1);save('auto');return '礼部按双方心意筹办婚礼，也为她安排与家乡通信。';
+  }},{t:'暂不议婚',f:()=>{offer.status='declined';kstory(k,'【异国议婚】这门婚事暂未议成。');return '礼部将结果告知双方。';}}]});
+}
+A.foreignMarriage=foreignMarriage;
 function receiveForeignEnvoy(id,mode){
  const def=DIPLOMACY_COUNTRIES[id];if(!diplomacyEnabled()||!def||!['gift','slight'].includes(mode)||S.over||modalOpen||E().energy<1||mode==='gift'&&E().treasury<20)return;
  const country=diplomacyCountry(id,true);if(S.turn-(country.lastAudience??-99)<6)return;
@@ -212,6 +246,22 @@ function receiveForeignEnvoy(id,mode){
  log(`【邦交 · ${def.name}】${text}`,1);render();
 }
 A.receiveForeignEnvoy=receiveForeignEnvoy;
+function inviteForeignStudent(id){
+ const def=DIPLOMACY_COUNTRIES[id],existing=diplomacyCountry(id);
+ if(!diplomacyEnabled()||!def||S.over||modalOpen||E().energy<1||E().treasury<30||(existing?.relation??def.relation)<60||existing?.student)return;
+ if(!useE())return;chg({treasury:-30});const country=diplomacyCountry(id,true);
+ country.student={name:def.student,status:'studying',arrived:S.turn,months:0,friendship:50,memory:[]};
+ const text=`${def.name}王子${def.student}受邀来京求学，暂定两年。`;country.memory.push({d:dateStr(),turn:S.turn,text});log(`【邦交 · ${def.name}】${text}`,1);render();
+}
+A.inviteForeignStudent=inviteForeignStudent;
+function visitForeignStudent(id){
+ const country=diplomacyCountry(id),def=DIPLOMACY_COUNTRIES[id],student=country?.student;
+ if(!def||student?.status!=='studying'||S.over||modalOpen||E().energy<1||S.turn-(student.lastVisit??-99)<6)return;
+ if(!useE())return;student.lastVisit=S.turn;student.friendship=clamp(student.friendship+5);
+ const text=`你问${student.name}在京读书与生活是否适应，也听他讲起${def.name}的风俗。`;
+ student.memory.push({d:dateStr(),turn:S.turn,text});if(student.memory.length>20)student.memory.shift();log(`【邦交 · 求学】${text}`);render();
+}
+A.visitForeignStudent=visitForeignStudent;
 function foreignSuccession(id,choice){
  const def=DIPLOMACY_COUNTRIES[id],country=diplomacyCountry(id),crisis=country?.succession;
  if(!def||!crisis||crisis.status!=='pending'||!['elder','younger','neutral'].includes(choice)||S.over||modalOpen||E().energy<1||choice!=='neutral'&&E().treasury<40)return;
@@ -230,6 +280,11 @@ function diplomacyTick(){
  for(const [id,c] of Object.entries(state.countries)){
   if(c.trade)chg({treasury:6});
   if(c.tribute&&S.month===1)chg({treasury:60});
+  if(c.student?.status==='studying'&&++c.student.months>=24){
+    c.student.status='returned';c.student.returned=S.turn;c.relation=clamp(c.relation+(c.student.friendship>=60?8:4));
+    const text=`${DIPLOMACY_COUNTRIES[id].name}王子${c.student.name}完成两年求学，带着在京的见闻归国。`;
+    c.student.memory.push({d:dateStr(),turn:S.turn,text});c.memory.push({d:dateStr(),turn:S.turn,text});log(`【邦交 · 求学】${text}`,1);
+  }
   if(S.turn>0&&S.turn%24===0&&chance(c.treatyUntil>S.turn?.02:.15)){
     c.tension=clamp((c.tension||0)+20);c.relation=clamp(c.relation-3);
     const text='边境出现争端，双方关系受损；可派使臣商议边界。';c.memory.push({d:dateStr(),turn:S.turn,text});if(c.memory.length>30)c.memory.shift();
@@ -241,6 +296,22 @@ function diplomacyTick(){
   }
  }
  for(const m of state.missions){if(m.status!=='traveling'||S.turn<m.due)continue;
+  if(m.type==='prince'){
+    const k=royalById(m.envoyId),country=diplomacyCountry(m.country,true),def=DIPLOMACY_COUNTRIES[m.country];
+    if(!k?.alive||k.diplomaticJourney?.id!==m.id){m.status='interrupted';continue;}
+    m.status=m.outcome;k.diplomaticJourney.status=m.outcome==='detained'?'detained':'returned';
+    let text;
+    if(m.outcome==='success'){
+      k.foreignLanguages||=[];if(!k.foreignLanguages.includes(def.name))k.foreignLanguages.push(def.name);k.lit=clamp(k.lit+2);country.relation=clamp(country.relation+6);
+      if(m.possibleMarriage&&marriageReady(k)){
+        const appearance=makeGirl({age:Math.max(18,kidAge(k)),fam:{t:def.name+'王室',p:55}}),person={id:`foreign-match-${m.id}`,sex:'f',name:fullName(appearance),sur:appearance.sur,born:S.turn-appearance.age*12,seed:appearance.seed,alive:true,background:def.name+'王室',appearance};
+        m.marriageOffer={status:'pending',person};
+      }
+      text=`${k.name}出使${def.name}归来，学会当地语言，才学与两国关系有所增长。`;
+    }else if(m.outcome==='detained')text=`${k.name}出使途中遭${def.name}扣留，须议赎才能归来。`;
+    else text=`${k.name}出使${def.name}未能谈妥，但已平安归来。`;
+    kstory(k,`【出使】${text}`);country.memory.push({d:dateStr(),turn:S.turn,text});if(country.memory.length>30)country.memory.shift();log(`【邦交 · ${def.name}】${text}`,1);continue;
+  }
   const country=diplomacyCountry(m.country,true),def=DIPLOMACY_COUNTRIES[m.country],entry=officialEntry(m.envoyKey);
   country.envoy||={name:def.envoy,attitude:50,memory:[]};
   const returned=entry&&entry.p.id===m.envoyId&&officialAlive(entry.p)&&!entry.p.exiled&&!entry.p.dismissed;

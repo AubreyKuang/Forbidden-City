@@ -2,7 +2,8 @@
 const TRAVEL_RELEASE_JOURNAL=63;
 const royalTravelActive=()=>journalContentVersion()>=TRAVEL_RELEASE_JOURNAL;
 const royalTravelAway=k=>royalTravelActive()&&k?.royalTravel?.stage==='traveling';
-const royalJourneyAway=k=>immortalAway(k)||royalTravelAway(k);
+const royalDiplomaticAway=k=>journalContentVersion()>=76&&['traveling','detained'].includes(k?.diplomaticJourney?.status);
+const royalJourneyAway=k=>immortalAway(k)||royalTravelAway(k)||royalDiplomaticAway(k);
 function royalTravelMothers(k){
  const mothers=immortalMothers(k);
  for(const id of [k.mom,k.foster]){

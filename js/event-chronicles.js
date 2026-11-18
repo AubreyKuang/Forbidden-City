@@ -6,8 +6,8 @@ function chronicleEvent(ev){
   if(!ev||ev.chronicled)return ev;
   ev.chronicled=true;let resolved=false;
   ev.choices=ev.choices.map(choice=>{
-    if(!choice.f||choice.chronicle===false)return choice;
-    const perform=choice.f;
+    if((!choice.f&&!(journalContentVersion()>=76&&ev.ref))||choice.chronicle===false)return choice;
+    const perform=choice.f||(()=>null);
     return {...choice,f:function(...args){
       if(resolved||!eventStillValid(ev)||choice.cond&&!choice.cond())return null;
       const people=[...new Set([...eventPortraits(ev),...(ev.chroniclePeople||[])])].filter(p=>p&&typeof p==='object'&&p.alive!==false);
@@ -16,6 +16,10 @@ function chronicleEvent(ev){
       const situation=chronicleText(ev.text),decision=choice.t.replace(/\s*[（(·]\s*(?:精力|国库).*$/,'');
       const result=perform.apply(this,args);resolved=true;
       const outcome=chronicleText(typeof result==='string'?result:result?.text);
+      if(journalContentVersion()>=76&&ev.ref){
+        const records=S.historicalCodex||=[];
+        records.push({d:dateStr(),turn:S.turn,title:ev.title,ref:ev.ref,choice:decision,outcome});
+      }
       for(const p of people){
         if(!S.consorts.includes(p)&&!S.children.includes(p)&&(legacyPendingAction()||p.official===undefined))continue;
         const entries=(p.story||[]).slice(before.get(p));
@@ -55,3 +59,7 @@ impeachmentEvent=(...args)=>chronicleEvent(chronicleImpeachmentEvent(...args));
 // COURT retained the original factory when it was registered; new cases use it
 // while saved/pending cases call impeachmentEvent directly. Cover both routes.
 COURT[IMPEACHMENT_INDEX]=impeachmentEvent;
+// Court memorials based on historical incidents also enter the new codex.
+for(let i=0;i<COURT.length;i++){
+  const create=COURT[i];COURT[i]=(...args)=>{const ev=create(...args);return journalContentVersion()>=76&&ev?.ref?chronicleEvent(ev):ev;};
+}
