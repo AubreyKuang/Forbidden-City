@@ -19,6 +19,39 @@ function haremStewardChanges(){
  if(S.flags.haremSteward.gen!==S.gen){delete S.flags.haremSteward;return;}
  const c=haremStewardPerson();if(!c||!c.alive||c.gone||c.cold||c.maid||c.rank>=8)endHaremSteward(haremStewardReason(c));
 }
+function palaceSocialFeeling(a,b){
+ if(friendshipTense(a,b)||isRival(a,b)||isRival(b,a)||relGet(a,b)<0)return 'strained';
+ return selectionFriendsClose(a,b)?'close':'neutral';
+}
+function stewardAppointmentFeelings(c,former){
+ const queen=empress(),name=fullName(c);
+ const joy=former?'听见交接的旨意，她原本绷着的脸一下有了笑意。她把上一任留下的待办逐件问清，回去还给第一页簿子包了个新书角。':'她接过宫务簿，忍不住先翻开看了一眼。回宫后亲手磨墨，把第一笔轮值写得端端正正，写完才发觉自己一直在笑。';
+ story(c,'【初领宫务】'+joy);cchg(c,{mood:8});setXin(c,'欢喜','奉旨协理六宫，以掌事人的身份签了宫务簿',null,{record:false});
+ for(const o of harem().filter(o=>o!==c&&inPalace(o))){
+  const feeling=palaceSocialFeeling(o,c),close=feeling==='close',strained=feeling==='strained';
+  let reaction;
+  if(o===queen){
+   reaction=close?'她把自己那本圈得密密的旧簿也送了去：“有几处最容易算重，我吃过亏，给你留个记号。”今后案前总算有个人能同她商量。':
+    strained?'她在交给对方的簿尾添了一行“逐月送中宫复核”。笔下的字一如往常，心里却惦记着，从此有些事要经那双手了。':
+    '她将急着要办的三件事另抄一纸，又把原要点灯核对的账放回匣里。有人分劳，她松了口气，只盼初次交接少出岔子。';
+  }else if(o===former){
+   reaction=close?'她把最难催的一笔灯油圈给旧友看。亲手交出掌了许久的簿子，难免怅然，所幸接过去的人懂她的字。':
+    strained?'她当面数清簿册，请女官逐本签收。交给素有嫌隙的人，她连最后一笔也舍不得含糊。':
+    '她交出了用惯的钥匙。晚间还习惯性地问了一句谁值夜，问完才记起，这件事已归旁人管了。';
+  }else if(o.rank>=5){
+   reaction=(queen?'':'中宫虚位，众人都在看谁先道贺。')+(close?'她赶在各宫礼单送到前亲自来了一趟，只问旧友头一晚忙不忙：“若忙，我陪你把轮值簿理清。”':
+    strained?'她依礼送上贺笺，回头却叫人把本宫的旧账再核一遍。打过交道的人如今掌了簿，她心里实在不痛快。':
+    '她看内侍把轮值簿送去了别宫，才察觉自己原也盼过这份差事。她静坐片刻，仍提笔写了贺笺。');
+  }else{
+   reaction=close?'她先跑来道喜，见案上堆满簿册，又悄悄退出去。晚上送来一碟热糕，纸上只写着：“你忙你的，我替你记着吃饭。”':
+    strained?'她想起上回两人话不投机，把本宫的领用票一张张理齐。往后要向那个人递帖子，她心里还有个结。':
+    '她打听清楚往后该把用度单送到哪里，随即把搁了几日的修窗纸也添了上去。新掌事的人肯不肯听小事，她想先试一试。';
+  }
+  story(o,`【闻协理任命】${name}奉旨协理六宫。${reaction}`);
+  if(close||strained)cchg(o,{mood:close?3:-3});
+ }
+ return joy;
+}
 function appointHaremSteward(c,source='御书房任命'){
  if(!haremStewardEligible(c)||haremStewardPerson()===c)return null;
  const former=haremStewardPerson();if(former)endHaremSteward(`奉旨将协理之责交给${fullName(c)}`);
@@ -28,6 +61,7 @@ function appointHaremSteward(c,source='御书房任命'){
  if(c.hongjian)c.hongjian.stewardDecision='accepted';
  const queen=empress(),text=`奉旨协理六宫，核对各宫用度、宫人轮值与新人的安顿${inPalace(queen)?`，向皇后${fullName(queen)}与御前回报`:'，向御前回报'}。不改变位分与住处；每月结算额外恩宠10点。`;
  haremStewardNote(c,'领协理之责',text);
+ if(journalContentVersion()>=80)return text+'\n'+stewardAppointmentFeelings(c,former);
  return `${fullName(c)}领了宫务簿，先问清现有规例与未办完的事。${text}`;
 }
 function settleHaremStewardReward(){
@@ -86,7 +120,37 @@ function haremStewardReport(){
   {t:'把未办好的也记下，听各宫说明后逐项补齐',f:()=>{if(!valid())return null;done=true;term.reportDone=true;haremStewardNote(c,'宫务回奏','奉旨保留未结事项，听取各宫的说明，再逐项补齐。差事重在照实回奏，不以隐瞒换好看。');return '她把留白的一栏写上“待核”，明白自己不必装作事事无误。'+fx(cchg(c,{aff:5,mood:6}));}},
   {t:'先缩减分工，由掌事女官分担轮值与安顿',f:()=>{if(!valid())return null;done=true;term.reportDone=true;haremStewardNote(c,'宫务分工','奉旨先专理用度，轮值与新人安顿交掌事女官分担。仍保留协理名分与每月恩宠。');return '宫务重新分工，她仍协理六宫，不必独自揽下所有差事。'+fx(cchg(c,{aff:3,mood:8}));}}]};
 }
+function queenHouseholdRecommendation(){
+ if(journalContentVersion()<80||mourningActive())return null;
+ const q=empress(),gen=S.gen;
+ if(!inPalace(q)||q.declinedHouseholdGen===gen)return null;
+ const prior=S.flags.queenRecommendations;
+ if(prior?.gen===gen&&(S.turn-prior.turn<6||prior.year===S.year&&prior.count>=2))return null;
+ const friends=harem().filter(c=>haremStewardEligible(c)&&palaceSocialFeeling(q,c)==='close')
+  .sort((a,b)=>relGet(q,b)-relGet(q,a)||b.talent-a.talent);
+ const promotable=c=>c.rank<7&&rankCount(c.rank+1)<RANK_CAP[c.rank+1];
+ const steward=!haremStewardPerson()&&friends.find(c=>c.rank>=5);
+ const c=steward||friends.find(promotable);
+ if(!c||!chance(.2))return null;
+ const rank=c.rank,name=fullName(c),office=steward?'协理六宫':`晋为${RANKS[rank+1]}`;
+ let shown=false,done=false;
+ const valid=()=>!done&&S.gen===gen&&empress()===q&&inPalace(q)&&q.declinedHouseholdGen!==gen&&
+  haremStewardEligible(c)&&palaceSocialFeeling(q,c)==='close'&&c.rank===rank&&(steward?!haremStewardPerson():promotable(c));
+ return {title:steward?'中宫荐举 · 分掌宫务':'中宫请封 · 请晋一级',cast:[q,c],present:[q],valid,
+  text:steward?`皇后把两份轮值簿摊在案上：“陛下看，两处都排了同一个人值夜。是${name}先瞧出来的。臣妾同她相熟，知道她肯管这些琐碎事。想请她协理六宫，往后也好有人同臣妾仔细核一遍。”`:
+   `皇后将请封笺亲手递来：“${name}如今是${RANKS[rank]}。平日一同料理宫事，她用的心，臣妾看得见。想替她讨一级位分，晋作${RANKS[rank+1]}。这句话是臣妾自己要说的，没先许过她。”`,
+  onShow:()=>{if(shown)return;shown=true;S.flags.queenRecommendations={gen,turn:S.turn,year:S.year,count:(prior?.gen===gen&&prior.year===S.year?prior.count:0)+1};},
+  choices:[{t:steward?'准她协理六宫':`准晋一级，封为${RANKS[rank+1]}`,f:()=>{
+   if(!valid())return null;done=true;story(q,`【中宫荐举】奏请${name}${office}，得陛下允准。她将请笺收好，才叫人去报喜。`);
+   if(steward)return appointHaremSteward(c,'皇后'+fullName(q)+'荐举');
+   story(c,`【中宫请封】皇后${fullName(q)}为她请晋一级，陛下准礼官办理。`);return A.promote(c.id,true);
+  }},{t:'驳回，今后不必再荐',f:()=>{
+   if(!valid())return null;done=true;q.declinedHouseholdGen=gen;
+   story(q,`【中宫荐举】为${name}请${office}未获准。她记住御前的意思，本朝不再主动荐人协理，也不再替人请封。`);
+   return '皇后收起请笺：“臣妾记下了。”这位皇后本朝不再主动荐举协理或晋位人选。';
+  }}]};
+}
 function pendingHaremStewardEvent(){
  if(!haremStewardActive()||mourningActive())return null;
- return haremStewardReport()||hongjianStewardProposal(S.consorts.find(c=>c.hongjian));
+ return haremStewardReport()||hongjianStewardProposal(S.consorts.find(c=>c.hongjian))||queenHouseholdRecommendation();
 }

@@ -3,7 +3,9 @@ function legacyPendingAction(){return typeof PalaceActions!=='undefined'&&Palace
 let exhaustedMonthNotice=null;
 const EXHAUSTED_MONTH_DELAY=1500;
 function exhaustedMonthReady(){
-  return !!(S&&!S.over&&!playtestFeedbackActive()&&E().energy<=0&&S.flags.exhaustedTurn===S.turn&&!modalOpen&&!Q.length);
+  if(!S||S.over||E().energy>0||modalOpen||Q.length)return false;
+  if(!playtestFeedbackActive())return S.flags.exhaustedTurn===S.turn;
+  return journalContentVersion()>=80&&typeof DEV!=='undefined'&&DEV.autoMonth&&$('#dev-panel')?.hidden===true;
 }
 function clearExhaustedMonthNotice(){
   if(exhaustedMonthNotice&&typeof clearTimeout==='function')clearTimeout(exhaustedMonthNotice.timer);
@@ -29,7 +31,9 @@ function syncExhaustedMonthNotice(){
   pending.timer=setTimeout(()=>{
     if(exhaustedMonthNotice!==pending)return;
     clearExhaustedMonthNotice();
-    if(S===pending.state)A.completeExhaustedMonth(pending.gen,pending.turn);
+    if(S!==pending.state||S.gen!==pending.gen||S.turn!==pending.turn||PalaceActions.blocked||!exhaustedMonthReady())return;
+    // Record an ordinary month-end action, so loading it never depends on this browser's switch.
+    if(playtestFeedbackActive())A.endMonth();else A.completeExhaustedMonth(pending.gen,pending.turn);
   },EXHAUSTED_MONTH_DELAY);
 }
 A.completeExhaustedMonth=function(gen,turn){

@@ -1033,7 +1033,7 @@ function sameFather(a,b){
     left.name===right.name&&left.office===right.office);
 }
 function paternalFamily(c){
-  const people=[...new Set([...(typeof familyCourtHosts==='function'?familyCourtHosts():(S?.consorts||[])),...(S?.cands||[]),c])].filter(p=>p&&!p.maid);
+  const people=[...new Set([...(typeof familyCourtHosts==='function'?familyCourtHosts():(S?.consorts||[])),...(S?.cands||[]),c])].filter(p=>p&&!p.maid&&p.selectionNatalHost==null);
   const relatives=new Set([c]);
   let changed=true;
   while(changed){
@@ -1071,6 +1071,7 @@ function identifyFather(family,house){
   return house;
 }
 function houseOf(c){
+  if(c?.selectionNatalHost!=null)return c.house=byId(c.selectionNatalHost)?.house||c.house;
   if(!c||c.maid||c.rescue||storyCastActive()&&c.fixedStory==='chuwan')return null;
   const family=paternalFamily(c),root=family[0];
   const existing=family.find(p=>p.house)?.house;

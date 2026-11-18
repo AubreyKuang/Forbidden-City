@@ -42,11 +42,51 @@ function recordBirthFeeling(c){
  }
  return text;
 }
+// Record the news once, after the whole birth batch has been named and its outcome is known.
+function goodBirthSigns(k){
+ return (k.birthLabels||[k.birthOmen]).filter(id=>BIRTH_LABELS[id]?.kind==='good');
+}
+function recordBirthOmenReactions(mother){
+ const d=mother.delivery,kids=deliveryKids(mother);
+ if(!d.settled||!mother.alive||d.concealedLoss||!kids.length||kids.some(k=>!k.alive||k.pendingName||k.birthSwap?.occurred))return '';
+ const marked=kids.filter(k=>goodBirthSigns(k).length),signs=[...new Set(marked.flatMap(goodBirthSigns))].map(id=>BIRTH_LABELS[id].name);
+ if(!signs.length)return '';
+ const names=marked.map(kidName).join('、'),news=`${fullName(mother)}诞下${names}，诞生簿记着“${signs.join('、')}”`;
+ const son=marked.some(k=>k.sex==='m'),responses=[];
+ for(const c of harem().filter(c=>c!==mother&&c.rank>=5&&inPalace(c)).sort((a,b)=>b.rank-a.rank)){
+   const feeling=palaceSocialFeeling(c,mother),close=feeling==='close',atOdds=feeling==='strained';
+   const own=S.children.filter(k=>k.alive&&!k.lost&&!k.removedFromRoyal&&(k.mom===c.id||k.foster===c.id));
+   const peer=(son&&own.find(k=>k.id===S.heir))||own.find(k=>kids.some(n=>n.sex===k.sex))||own[0];
+   let doubt;
+   if(son&&peer&&peer.id===S.heir)doubt=`东宫的师傅明早也会听说。若有人拿天象与太子${peer.name}相比，我该怎么同他说？`;
+   else if(peer)doubt=`下回${peer.name}生辰，若听见旁人只问今日的祥瑞，心里会是什么滋味？`;
+   else if(c.rank===8)doubt='连该怎样写贺表都有人先去问产房。往后六宫有事，还会先到中宫来么？';
+   else doubt='方才来借贺礼样子的宫人，一进门就打听那边的喜好。往后还有谁记得我这里的规矩？';
+   let gesture;
+   if(close)gesture=son?'她拣了最软的一匹旧绫给孩子做贴身衣裳，捎话说：“听说你们都平安，我今夜能睡个好觉了。”':
+     '她翻出亲手绣的小花鞋，笑着叫人送去：“等小公主会走路，我还要再给她做一双。”';
+   else if(atOdds)gesture='她听着廊下的人争说吉兆，把贺礼单上另添的一笔轻轻抹去：“照宫例送。孩子的份，一样别少。”';
+   else gesture=c.rank===8?'她照例给产房添了赏，听到掌事又提吉兆，才放下笔：“先让她们安安静静歇一晚。”':
+     '她吩咐备贺，听见宫人把吉语说了一遍又一遍，手里的茶一直放到凉透。';
+   const text=`${news}。${gesture}等报喜的人走远，她心里却还压着一句话：“${doubt}”`;
+   const title='听闻皇嗣祥瑞';
+   story(c,`【${title}】${text}`);
+   Object.assign(c.story.at(-1),{thread:`birth-omen:${S.gen}:${mother.id}:${d.turn}`,
+     life:{kind:'family',title,turn:S.turn,gen:S.gen,people:[c,mother].map(p=>({id:p.id,name:fullName(p)})).concat(kids.map(k=>({id:k.id,name:k.name})))}});
+   cchg(c,{mood:close?2:atOdds?-5:-2});
+   responses.push({close,line:`${cName(c)}听到喜信。${gesture}她私下想：“${doubt}”`});
+ }
+ if(!responses.length)return '';
+ const first=responses[0],other=responses.find(r=>r.close!==first.close);
+ return news+'。\n'+[first,other].filter(Boolean).map(r=>r.line).join('\n');
+}
 const birthFeelingsFinish=finishDelivery;
 finishDelivery=function(c){
  const fresh=c?.delivery&&!c.delivery.settled,result=birthFeelingsFinish(c);
  if(!fresh||journalContentVersion()<12)return result;
- const feeling=recordBirthFeeling(c);return result+(feeling?'\n\n'+feeling:'');
+ const feeling=recordBirthFeeling(c);
+ const reactions=journalContentVersion()>=80?recordBirthOmenReactions(c):'';
+ return [result,feeling,reactions].filter(Boolean).join('\n\n');
 };
 const birthFeelingsVoice=maternalVoice;
 maternalVoice=function(c){

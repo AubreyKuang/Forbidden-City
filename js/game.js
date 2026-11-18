@@ -381,7 +381,7 @@ const A={
     setScene('court');pushEv(ev);
   },
   night(id){const c=byId(id);if(!inPalace(c)||c.preg||c.cardWithdrawn)return;nightWith(c)},
-  promote(id){const c=byId(id);if(!c||storyCastPromotionEvent(c,()=>A.promote(id)))return;const nr=c.rank+1;
+  promote(id,approved=false){const c=byId(id);if(!c||storyCastPromotionEvent(c,()=>A.promote(id,approved)))return;const nr=c.rank+1;
     if(nr>=8){toast('立后请用「册立皇后」');return}
     if(rankCount(nr)>=RANK_CAP[nr]){toast(`${RANKS[nr]}之位已满（${RANK_CAP[nr]}人）`);return}
     const doIt=(title)=>{c.rank=nr;if(title)grantConsortTitle(c,title);
@@ -395,7 +395,8 @@ const A={
       const opts=shuffle(TITLES.filter(t=>!harem().some(x=>x.title===t))).slice(0,3);
       pushEv({title:'拟定封号',por:c,text:`${fullName(c)}将晋为${RANKS[nr]}，请陛下钦定封号（一字），或自拟：`,input:{def:opts[0],max:2},
         choices:[{t:'就用这个封号',f:v=>doIt(v)},...opts.slice(1).map(o=>({t:`「${o}」`,f:()=>doIt(o)}))]});
-    } else pushEv({title:'晋封',por:c,text:`晋${fullName(c)}为${RANKS[nr]}？`,choices:[{t:'准',f:()=>doIt()},{t:'再想想'}]});},
+    } else if(approved)return doIt();
+    else pushEv({title:'晋封',por:c,text:`晋${fullName(c)}为${RANKS[nr]}？`,choices:[{t:'准',f:()=>doIt()},{t:'再想想'}]});},
   demote(id){const c=byId(id);if(c.rank<=0||c.rank===8)return;
     pushEv({title:'降位',danger:true,por:c,text:`降${cName(c)}为${RANKS[c.rank-1]}？`,choices:[{t:'降位',f:()=>{c.rank--;reconcileResidences();const s=cchg(c,{mood:-25,aff:-10,favor:-5});story(c,`被降为${RANKS[c.rank]}。`);remember(c,'hurt','被降位');setXin(c,(c.t2==='记仇'||c.scheme>60)?'怨恨':'委屈','被降了位分','emp');log(`降${fullName(c)}为${RANKS[c.rank]}。`);AU.sfx('sad');return `${fullName(c)}跪地谢恩，泪落无声。${fx(s)}`}},{t:'作罢'}]})},
   rename(id){const c=byId(id);pushEv({title:'更改封号',por:c,text:'请为她拟一个新的封号：',input:{def:c.title||pick(TITLES),max:2},choices:[{t:'赐此封号',f:v=>{grantConsortTitle(c,v);story(c,`陛下赐封号「${v}」。`);return `自今日起，她便是${cName(c)}。${fx(cchg(c,{mood:10,aff:4}))}`}},{t:'作罢'}]})},
@@ -516,9 +517,11 @@ A.endMonth=function(){
   const comingOfAge=royalComingOfAgeEvent();
   const fiefDockets=princeQuarterReports();
   const must=[passing?null:haremRemonstranceEvent(),passing?null:pendingImmortalEvent(),passing?null:pendingRoyalTravelEvent(),passing?null:pendingTravelInstitutionEvent(),passing?null:pendingRoyalSchoolRevision(),passing?null:pendingLocalChronicleReview(),passing?null:pendingClassicStory(),passing?null:pendingYiLandEvent(),passing?null:arcTick(),heirTick(),milestone(),parentageReportEvent(),birthSwapClueEvent(),birthSwapSearchReport(),pendingBirthSwapJustice(),pendingKinGreeting(),pendingMaternalKinCare(),pendingMaternalSisterArrival(),pendingDaoVoyage(),pendingTravelerEvent(),pendingOfficialReport(),pendingConcealedLoss(),...(legacyPendingAction()?[]:[pendingIncognitoReport(),passing?null:jingtishiEvent(),passing?null:selectionCouncilEvent()]),passing||typeof pendingHaremStewardEvent!=='function'?null:pendingHaremStewardEvent(),...(familyGardenActive()&&!passing?[familyGardenMonthlyEvent(),familyGardenDisputeEvent()]:[])].filter(Boolean),opt=[];
+  const inquiry=pendingSisterInquiry();if(inquiry)must.unshift(inquiry);
   if(comingOfAge)must.unshift(comingOfAge);
   if(!passing){
     const castStories=storyCastMonthlyEvents();must.push(...castStories);
+    const petition=pendingSisterCustody();if(petition)must.push(petition);
     const palaceChapter=storyCastLifeMonthly(castStories);if(palaceChapter)must.push(palaceChapter);
   }
   if(princeSuccession)must.push(princeSuccession);
@@ -530,6 +533,7 @@ A.endMonth=function(){
   const add=(e,p)=>{if(e&&ambientEventReady(e))opt.push([e,p+R()-ambientNovelty(e)+continuityEventScore(e)])};
   if(!passing){
   add(continuityMonthlyEvent(),9);
+  add(pregnancyGardenEvent(true),8);
   add(homeReturnSocialEvent(),8);add(natalVisitRequest(),7);add(awaitingNoticeEvent(),6);
   add(pastLifeMonthlyEvent(),6);add(pregnancyPrayerMonthlyEvent(),6);add(residencePetitionEvent(),8);add(fiveBrotherMonthlyEvent(),6);add(travelerMonthlyEvent(),8);add(recoveredSwapEvent(),8);add(fosterPetitionEvent(),8);add(kinSuccessionEvent(),8);add(parentageClueEvent(),8);
   add(coldFosterPetitionEvent(),9);add(coldFriendPetitionEvent(),8);

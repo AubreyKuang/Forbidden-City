@@ -109,13 +109,39 @@ function natalCourtshipEvent(c,p){
       {t:'不急，仍按探亲之约',f:()=>{natalSceneRecord(c,p,'谈过入宫之意，尚未定下，仍按原约探亲。');return '你没有立刻册封，她仍是来访的亲眷。';}}
     ]};
 }
-function makeNatalConsort(c,p){
+function natalConsortProfile(c,p){
   const g=makeGirl({sur:p.sur,given:p.given,age:natalAge(p),trait:p.trait,fam:{...c.fam}});
   g.id=p.id;g.seed=p.seed;g.artPortrait=p.artPortrait;g.house=c.house;g.fatherId=c.fatherId;g.clan=clanKey(c);g.story=p.story.map(s=>({...s}));g.kin={};g.kinRival={};
-  for(const member of paternalFamily(c)){g.kin[member.id]='亲'+(natalLabel(member,p)==='姐姐'?'妹':'姐');member.kin||={};member.kin[g.id]='亲'+(natalLabel(member,p)==='姐姐'?'姐':'妹');
-    if(relGet(member,p)<0){g.kinRival[member.id]=1;(member.kinRival||={})[g.id]=1;}}
-  g.natalOrigin={host:c.id,relative:p.id};p.consortId=g.id;delete p.visit;
   return g;
+}
+function linkNatalConsort(c,p,g,via){
+  g.house=c.house;g.fatherId=c.fatherId;
+  for(const member of paternalFamily(c)){if(member.id===g.id)continue;g.kin[member.id]='亲'+(natalLabel(member,p)==='姐姐'?'妹':'姐');member.kin||={};member.kin[g.id]='亲'+(natalLabel(member,p)==='姐姐'?'姐':'妹');
+    if(relGet(member,p)<0){g.kinRival[member.id]=1;(member.kinRival||={})[g.id]=1;}}
+  g.natalOrigin={host:c.id,relative:p.id};if(via)g.natalOrigin.via=via;
+  p.consortId=g.id;delete p.visit;
+  return g;
+}
+function makeNatalConsort(c,p){return linkNatalConsort(c,p,natalConsortProfile(c,p));}
+function selectionSisterEligible(p){
+  return p.alive&&p.sex==='f'&&!p.parentRelativeId&&!p.motherRelativeId&&!p.outsideFamilyOrigin&&!p.consortId&&!byId(p.id)&&
+    !p.married&&!p.spouse&&!p.betrothal&&!p.visit&&!p.declined&&p.willing&&natalAge(p)>=16&&natalAge(p)<=19;
+}
+function registeredSelectionSister(c){
+  // Only consult the household that already existed before the selection.
+  const people=(c.house?.relatives||[]).filter(selectionSisterEligible);
+  if(!people.length)return null;
+  const p=pick(people),g=natalConsortProfile(c,p);
+  g.selectionNatalHost=c.id;g.kinNote=cName(c)+'的亲'+natalLabel(c,p);return g;
+}
+function confirmSelectionSister(g){
+  if(g.selectionNatalHost==null){
+    // A roster left open by an older release may contain a newly invented sister.
+    return !S.consorts.some(c=>/^亲[姐妹]$/.test(g.kin?.[c.id]||c.kin?.[g.id]||''));
+  }
+  const c=byId(g.selectionNatalHost),p=c?.house?.relatives?.find(p=>p.id===g.id);
+  if(!p||!selectionSisterEligible(p))return false;
+  delete g.selectionNatalHost;linkNatalConsort(c,p,g,'selection');return true;
 }
 function admitNatalSister(c,p){
   if(!natalRomanceReady(c,p)||!p.willing||rankCount(2)>=RANK_CAP[2])return null;

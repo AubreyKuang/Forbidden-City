@@ -1,5 +1,12 @@
 /* ============ 选秀 ============ */
-function genCands(n=6){finishSelection();S.cands=[];for(let i=0;i<n;i++)S.cands.push(makeGirl());{const kc=harem().filter(c=>c.fam.p>=15&&hasClan(c));if(kc.length&&chance(.4))S.cands[0]=makeKin(pick(kc),chance(.6)?'堂':'亲')}S.cands.forEach(c=>{deepen(c);initTimeTraveler(c);});assignPastLifeCandidates();S.selection={phase:'audience',current:S.cands[0]?.id,performed:[]};selectionBatch();captureSelectionCourt();S.flags.peek=3;S.flags.lastXX=S.turn;if(typeof outerSelectionCall==='function')outerSelectionCall();log(`${dateStr()}，开选秀，各地秀女入宫待选。`,journalContentVersion()<41)}
+function genCands(n=6){finishSelection();S.cands=[];for(let i=0;i<n;i++)S.cands.push(makeGirl());
+  const kc=harem().filter(c=>c.fam.p>=15&&hasClan(c));
+  if(kc.length&&chance(.4)){
+    const c=pick(kc),type=chance(.6)?'堂':'亲';
+    const kin=journalContentVersion()>=80&&type==='亲'?registeredSelectionSister(c):makeKin(c,type);
+    if(kin)S.cands[0]=kin;
+  }
+  S.cands.forEach(c=>{deepen(c);initTimeTraveler(c);});assignPastLifeCandidates();S.selection={phase:'audience',current:S.cands[0]?.id,performed:[]};selectionBatch();captureSelectionCourt();S.flags.peek=3;S.flags.lastXX=S.turn;if(typeof outerSelectionCall==='function')outerSelectionCall();log(`${dateStr()}，开选秀，各地秀女入宫待选。`,journalContentVersion()<41)}
 A.xxDecree=function(){
   if(selectionSkipTimingActive()&&(modalOpen||S.over||S.cands.length))return;
   reconcileSelectionTiming();
@@ -13,8 +20,9 @@ A.xxDrop=function(id){S.cands=S.cands.filter(x=>x.id!==id);AU.sfx('click');rende
 A.xxTake=function(id){const c=S.cands.find(x=>x.id===id);if(!c)return;
   const ch=[0,1,2,3].map(r=>({t:`封为${RANKS[r]}`,f:()=>take(r)}));
   if(c.fam.p>=70) ch.push({t:'封为嫔（世家之女，可破格）',cond:()=>rankCount(4)<RANK_CAP[4],why:'嫔位已满',f:()=>take(4)});
-  function take(r){if(!S.cands.some(x=>x.id===c.id)||S.consorts.some(x=>x.id===c.id)||rankCount(r)>=RANK_CAP[r])return null;S.cands=S.cands.filter(x=>x!==c);
-    const version=journalContentVersion();
+  function take(r){if(!S.cands.some(x=>x.id===c.id)||S.consorts.some(x=>x.id===c.id)||rankCount(r)>=RANK_CAP[r])return null;const version=journalContentVersion();
+    if(version>=80&&!confirmSelectionSister(c)){S.cands=S.cands.filter(x=>x!==c);return '礼部复核名册，亲缘或参选资格未能核合，已撤去这张名牌。';}
+    S.cands=S.cands.filter(x=>x!==c);
     addConsort(c,r,`${dateStr()}选秀入宫`,{major:version===40,recordAdmission:version<41});let s='';
     if(r>=3&&c.fam.p>=60)s=chg({prestige:2});
     if(r>=4&&!c.title)grantConsortTitle(c,pick(TITLES.filter(t=>!harem().some(x=>x.title===t))));

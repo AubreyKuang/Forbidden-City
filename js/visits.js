@@ -21,12 +21,46 @@ function gardenEncounter(c){
     {text:`细雨忽至，你与${n}在回廊下躲雨，说了许多话。`}
   ].filter(scene=>scene.text));
 }
+function pregnancyGardenEvent(monthly=false){
+ if(journalContentVersion()<80||mourningActive()||S.turn-(S.flags.lastPregnancyWalk??-99)<3)return null;
+ const ready=c=>inPalace(c)&&c.preg>0&&c.preg<10&&!concealedPregnancy(c)&&c.hp>=40&&
+  !(c.delivery&&!c.delivery.settled)&&!(c.illnessRecovery?.until>S.turn);
+ const women=harem().filter(ready),friends=[],others=[];
+ for(let i=0;i<women.length;i++)for(const b of women.slice(i+1)){
+  const a=women[i],feeling=palaceSocialFeeling(a,b);
+  if(feeling==='close')friends.push([a,b]);else if(feeling==='neutral')others.push([a,b]);
+ }
+ if(!friends.length&&!others.length||monthly&&!chance(friends.length ? .32 : .18))return null;
+ const close=friends.length>0&&(!others.length||chance(.8)),[a,b]=pick(close?friends:others);
+ const scene=[
+  ['海棠树下','风把落花吹了满阶。','这边青苔还湿，走廊下吧。','你也慢些，花落了还会再开呀。'],
+  ['荷亭听雨','才走到荷亭，一阵疏雨便打响了荷叶。','石凳被雨打湿了，来我这边坐。','你的袖口也湿了，我带了干帕子。'],
+  ['桂影扶栏','桂花落了一肩，两人索性停在栏边闻香。','香气太浓，你上回闻久了难受，咱们站在上风处。','那就再站一小会儿。你若腿酸，可别陪我硬撑。'],
+  ['隔窗看梅','北风卷过梅梢，两人都在向阳的游廊收了步。','风从那扇窗子钻进来。换我坐外边，你手还冷呢。','挤一挤就好。手炉你也捂一会儿。']
+ ][season()];
+ const intro=close?`两人原约好一路走到园门，走到半途却谁也没催。${fullName(a)}先开口：“${scene[2]}”${fullName(b)}笑着答：“${scene[3]}”`:
+  `${fullName(a)}与${fullName(b)}各自带人散步，在廊下遇着。两人都有了身孕，走得也慢。${fullName(a)}往里挪了一席，${fullName(b)}便留下来，同她说了会儿闲话。`;
+ const valid=()=>ready(a)&&ready(b)&&palaceSocialFeeling(a,b)!=='strained'&&S.turn-(S.flags.lastPregnancyWalk??-99)>=3;
+ return {title:'孕中同游 · '+scene[0],cast:[a,b],present:[a,b],valid,text:scene[1]+intro,choices:[
+  {t:'让她们自在走一会儿',f:()=>finish(false)},{t:'请掌事留一处歇脚的地方',f:()=>finish(true)}]};
+ function finish(seat){
+  if(!valid())return null;S.flags.lastPregnancyWalk=S.turn;
+  const end=seat?'掌事在廊下安了靠背，二人歇够了才慢慢往回走。':'随侍远远跟着，两人自己定了回去的时辰。';
+  for(const [c,other,line] of [[a,b,scene[3]],[b,a,scene[2]]]){
+   const note=close?`她记住${fullName(other)}那句“${line}”，回宫时心里还暖着。`:
+    `她原与${fullName(other)}来往平常，今日并肩坐过一会，下次遇见也有话可说了。`;
+   story(c,`【孕中同游·${scene[0]}】有孕时与${fullName(other)}在御花园散步。${note}${end}`);cchg(c,{mood:close?4:2});
+  }
+  relAdd(a,b,close?3:2);return end;
+ }
+}
 const SPA_COST=60;
 A.out=function(kind){ if(!useE())return; const e=E();
   if(['hunt','temple'].includes(kind)&&typeof outerTripLead==='function')outerTripLead(kind);
   if(kind==='garden'){setScene('garden');
     const h=harem();
     const roll=R();
+    if(roll>=.75){const walk=pregnancyGardenEvent();if(walk){pushEv(walk);return;}}
     if(familyGardenActive()&&roll<FAMILY_GARDEN_RULES.garden){const together=familyGardenEvent('garden');if(together){pushEv(together);return;}}
     if(roll<.5&&h.length){const c=pick(h);const {text:t,illustration}=gardenEncounter(c);
       story(c,`与陛下在御花园偶遇。${t}`);pushEv({title:'御花园偶遇',illustration,por:c,text:t+fx(cchg(c,{favor:6,aff:6,mood:10})),choices:[{t:'今夜便召她侍寝',cond:()=>E().energy>0&&!c.preg&&(!consortRecoveryActive()||!consortNightReason(c)),why:(consortRecoveryActive()&&consortNightReason(c))||(c.preg?'她有孕在身':'精力不足'),f:()=>{nightWith(c);return null}},{t:'与她作别'}]});}
