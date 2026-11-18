@@ -205,10 +205,10 @@ function storyCastCodexCards(){
   return Object.entries(STORY_CAST).map(([key,d])=>{
     const r=storyCastRecord(key),p=storyCastPerson(r)||{...d,fixedStory:key,alive:true};
     const name=key==='chuwan'&&!r?'姓名待考':storyCastName(key,r);
-    const tag='<span class="tag y">'+esc(STORY_CAST_TAGS[key])+'</span>';
+    const tag=storyConsortBadge(key);
     const badge=key==='chuwan'&&!r?.revealed?'<details><summary>查看特殊标签（含身世）</summary>'+tag+'</details>':tag;
     const guide=STORY_CAST_LIVES[key];
-    return `<article class="story-consort-card" data-story-consort="${key}"><div class="story-consort-picture">${porImg(p,200)}<span class="tag y">${esc(storyCastStatus(r))}</span></div><div class="story-consort-copy"><h3>${esc(name)} · ${esc(d.epithet)}</h3><div aria-label="人物特殊标签">${badge}</div><p>${esc(d.intro)}</p><p>${key==='ayimu'?'宫中':'出巡'} → ${esc(d.route)}</p><p>入宫主线 · ${esc(guide.title)}<br>日常 · ${esc(guide.routine)}<br>特殊事件 · ${esc(guide.secret)}</p>${key==='ayimu'?'<p>入宫后，可在御花园小宴请她跳白泉舞。交好的妃嫔学过鼓点，往后同席可点名伴奏。</p>':''}<div class="acts">${r?`<button class="btn" onclick="A.storyCastDossier('${key}')">查看经历</button>`:''}${storyCastVisitButton(key)}</div></div></article>`;
+    return `<article class="story-consort-card" data-story-consort="${key}"><div class="story-consort-picture">${porImg(p,200)}${storyConsortProgress(storyCastStatus(r))}</div><div class="story-consort-copy"><h3>${esc(name)} · ${esc(d.epithet)}</h3><div aria-label="人物特殊标签">${badge}</div><p>${esc(d.intro)}</p><p>${key==='ayimu'?'宫中':'出巡'} → ${esc(d.route)}</p><p>入宫主线 · ${esc(guide.title)}<br>日常 · ${esc(guide.routine)}<br>特殊事件 · ${esc(guide.secret)} → ${esc(guide.after)}</p>${key==='ayimu'?'<p>入宫后，可在御花园小宴请她跳白泉舞。交好的妃嫔学过鼓点，往后同席可点名伴奏。</p>':''}<div class="acts">${r?`<button class="btn" onclick="A.storyCastDossier('${key}')">查看经历</button>`:''}${storyCastVisitButton(key)}</div></div></article>`;
   }).join('');
 }
 
@@ -415,8 +415,8 @@ const STORY_CAST_TAGS={
 };
 const previousStoryCastTags=solitaryTag;
 solitaryTag=function(c){
-  const tag=storyCastFollowupsActive()&&STORY_CAST_TAGS[c?.fixedStory];
-  return previousStoryCastTags(c)+(tag?'<span class="tag y">'+esc(tag)+'</span>':'');
+  const key=c?.gouyi?'gouyi':c?.hongjian?'hongjian':storyCastFollowupsActive()&&c?.fixedStory;
+  return previousStoryCastTags(c)+(key?storyConsortBadge(key):'');
 };
 
 function storyCastFollowupEvent(c,r){

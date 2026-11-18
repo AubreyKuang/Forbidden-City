@@ -90,3 +90,26 @@ test('reloading the solo performance keeps the paid banquet and its drum lesson 
    assert.equal(E().treasury,1985);drain();assert.equal(d.gardenDrummers.length,1);
    assert.equal(S.log.filter(e=>e.t.includes('再跳白泉舞')).length,1);`);
 });
+
+for(const choice of [0,1])test('six keepsake scenes branch once and settle actual consequences, choice '+choice,()=>{
+ const b=world();b.ctx.assert=assert;b.ctx.n=choice;b.run(setup+`
+ const kid=makeKid(fixed.ayimu,'f','清竹');kid.born=S.turn-8*12;kid.whiteSpringStudy=true;kid.lit=kid.hp=kid.vir=40;
+ for(const [key,c] of Object.entries(fixed)){
+  const life=storyCastRecord(key).life={stage:3,secret:S.turn-1,visits:0,settled:true};
+  assert.equal(storyCastLifeEvent(c,'after'),null);life.secret--;const money=E().treasury;
+  E().treasury=0;if(n===1&&['chuwan','xiaoman'].includes(key))assert.equal(storyCastLifeEvent(c,'after').choices[n].cond(),false);
+  E().treasury=money;chapter(key,n,'after');assert.equal(life.after,S.turn);
+  assert.equal(storyCastLifeEvent(c,'after'),null);assert.match(c.story.at(-1).t,new RegExp(STORY_CAST_LIVES[key].after));
+  if(n===1&&['chuwan','xiaoman'].includes(key))assert.equal(E().treasury,money-6);
+  if(n===1&&key==='suheng')assert.equal(E().treasury,money+8);
+ }
+ if(n===0){
+  chapter('qingyi',1,'routine');assert.equal(kid.lit,45);
+  chapter('luwan',0,'routine');assert.equal(kid.hp,45);
+  const pop=E().people,treasury=E().treasury;
+  chapter('chuwan',1,'routine');assert.equal(E().people,pop+2);
+  chapter('suheng',0,'routine');assert.equal(E().treasury,treasury+7);
+  storyCastRecord('xiaoman').life.performance=S.turn;chapter('xiaoman',0,'routine');assert.equal(E().people,pop+7);assert.equal(E().treasury,treasury+1);
+ }else{assert.equal(kid.lit,50);assert.equal(kid.vir,44);assert.match(kid.story.map(e=>e.t).join(' '),/谱/);}
+ `);
+});

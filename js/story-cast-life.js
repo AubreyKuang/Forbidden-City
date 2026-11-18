@@ -1,17 +1,17 @@
 /* The palace chapters leave each character with something the player can still do. */
 const storyCastLifeActive=()=>journalContentVersion()>=74;
 const STORY_CAST_LIVES={
-  qingyi:{title:'钟粹宫书案',chapters:['旧本退还','两封回信','留一席读书'],routine:'灯下共校',secret:'秋夜归笺',
+  qingyi:{title:'钟粹宫书案',chapters:['旧本退还','两封回信','留一席读书'],routine:'灯下共校',secret:'秋夜归笺',after:'书末谁署名',
     guide:'沈母来信后可开书案。选择私下校书或交女官公议，将决定日后与中宫以及皇嗣的来往。'},
-  luwan:{title:'北苑骑课',chapters:['先学牵马','分场试骑','把伤簿送回去'],routine:'校场授课',secret:'驿马归栏',
+  luwan:{title:'北苑骑课',chapters:['先学牵马','分场试骑','把伤簿送回去'],routine:'校场授课',secret:'驿马归栏',after:'听马的人',
     guide:'可以带皇嗣，也可和骑射同好的妃嫔开课。重基本功和重骑射各有不同收获。'},
-  ayimu:{title:'白泉关书',chapters:['两边的市日','驿路回单','席上两种话'],routine:'核白泉互市',secret:'母亲的香囊',
+  ayimu:{title:'白泉关书',chapters:['两边的市日','驿路回单','席上两种话'],routine:'核白泉互市',secret:'母亲的香囊',after:'把曲子寄回白泉',
     guide:'商路可先试办，也可等两边共同核准。懂白泉话的皇嗣参与时，在互市里更容易议成。'},
-  chuwan:{title:'旧仓新册',chapters:['门外的证人','半批粮的去处','谁在卷尾署名'],routine:'复核一处粮仓',secret:'一只旧木碗',
+  chuwan:{title:'旧仓新册',chapters:['门外的证人','半批粮的去处','谁在卷尾署名'],routine:'复核一处粮仓',secret:'一只旧木碗',after:'粥棚门前的孩子',
     guide:'公开旧卷有朝上的益处，封存住址可以照料证人。赈粮会真实扣除常平仓库存。'},
-  suheng:{title:'供香账房',chapters:['香炉归位','三张供单','谁验最后一缸'],routine:'换季比香',secret:'一味无香',
+  suheng:{title:'供香账房',chapters:['香炉归位','三张供单','谁验最后一缸'],routine:'换季比香',secret:'一味无香',after:'空炉也有领用单',
     guide:'赔礼后开账房。供香有押款与回账，苏家铺子也要按同一标准验收。'},
-  xiaoman:{title:'宫宴戏班',chapters:['按手艺报工钱','一张要紧的契','第一场自己登台'],routine:'排下一场戏',secret:'多出一枚铜钱',
+  xiaoman:{title:'宫宴戏班',chapters:['按手艺报工钱','一张要紧的契','第一场自己登台'],routine:'排下一场戏',secret:'多出一枚铜钱',after:'幕布后面的人',
     guide:'学徒和成年艺人都按名册领工钱。排好的节目会在真正举办的宫宴里演，再回来核账。'}
 };
 
@@ -33,7 +33,7 @@ function storyCastLifePartner(c,predicate){
 function storyCastLifeScene(c,r,state,key,title,text,choices,cast=[]){
   const stage=state?.stage||0;
   const valid=()=>storyCastLifeUnlocked(c,r)&&r.life===state&&(state?.stage||0)===stage&&
-    (key==='chapter'?S.turn>=(state?.due??0):key==='routine'?S.turn>=(state?.next??0):!state?.secret);
+    (key==='chapter'?S.turn>=(state?.due??0):key==='routine'?S.turn>=(state?.next??0):key==='after'?state?.after==null:state?.secret==null);
   return {title,por:c,cast:[c,...cast.filter(Boolean)],text,valid,choices:[
     ...choices.map(({t,cond,effect})=>({t,cond:()=>valid()&&(!cond||cond()),f:()=>{
       if(!valid()||cond&&!cond())return null;
@@ -42,6 +42,7 @@ function storyCastLifeScene(c,r,state,key,title,text,choices,cast=[]){
       if(key==='chapter'){life.stage++;life.due=S.turn+(outcome.wait??1);if(life.stage===3)life.next=life.due;}
       if(key==='routine'){life.visits++;life.next=S.turn+(outcome.wait??4);}
       if(key==='secret')life.secret=S.turn;
+      if(key==='after')life.after=S.turn;
       life.last=S.turn;
       const note=storyCastRecordLine(c,'【'+title.split(' · ').at(-1)+'】'+outcome.line,key!=='routine');
       return note+(outcome.effects?fx(outcome.effects):'');
@@ -68,7 +69,7 @@ function storyCastLifeQingyi(c,r,life,stage,scene){
     ...(q&&q!==c?[lifeChoice('请皇后一起校书 · 两人关系+8',()=>{relAdd(q,c,8);story(q,'和沈清漪各校一卷旧书，核过借簿才闲谈。');return lifeOutcome('清漪与皇后商定各候一本，宫人照登记往来，少了私下比较。','关系+8');})]:[])],[child,q].filter(o=>o!==c));
   return scene('灯下共校','书案仍留着一盏灯。'+(life.trust?'她等那份只写家常的回信。':'她刚校完一卷，给你留了两处拿不准的字。'),[
     lifeChoice('陪她写一封家书 · 情分+4',()=>lifeOutcome('你陪她写完关切的话，她又夹了一页旧书校记送回去。',cchg(c,{aff:4,mood:4}))),
-    ...(child?[lifeChoice('带'+child.name+'来校一页 · 才学+3',()=>{skillGain(child,'lit',3);kstory(child,'又到钟粹宫同清漪校书，为一个异字翻查了旧本。');return lifeOutcome('借给'+child.name+'一卷旧书，让其下回把疑问带来。',child.name+'才学+3');})]:[])],[child]);
+    ...(child?[lifeChoice('带'+child.name+'来校一页 · 才学+'+(life.signedCopy?5:3),()=>{skillGain(child,'lit',life.signedCopy?5:3);kstory(child,'又到钟粹宫同清漪校书，为一个异字翻查了旧本。');return lifeOutcome('借给'+child.name+'一卷旧书，让其下回把疑问带来。',child.name+'才学+'+(life.signedCopy?5:3));})]:[])],[child]);
 }
 
 function storyCastLifeLuwan(c,r,life,stage,scene){
@@ -87,7 +88,7 @@ function storyCastLifeLuwan(c,r,life,stage,scene){
     lifeChoice('抄送军驿留用 · 威望+2',s=>{s.militaryBook=true;for(const p of [h?.father,h?.brother].filter(officialServing))storyCastLifeLetter(p,'陆绾从宫中抄来新版骑课伤簿，把换马、伤病和归还的时辰分开。');return lifeOutcome('伤簿抄送了北境军驿，军令仍由在任将领出。',chg({prestige:2}));}),
     lifeChoice('留在北苑给学员看 · 情分+5',()=>lifeOutcome('让新来的学员知道受伤时先去哪里报，不许硬撑。',cchg(c,{aff:5})))]);
   return scene('校场授课','陆绾在场边点马名，让学员按各人的体力挑课。',[
-    ...(child?[lifeChoice('让'+child.name+'按教养方向练习',()=>{const skill=life.path==='骑射'&&child.policy==='习武'?'mar':'hp';skillGain(child,skill,3);kstory(child,'陆绾换了一项适合自己的北苑功课。');return lifeOutcome('教'+child.name+'复练初学的动作，并留一笔在课簿。',child.name+(skill==='mar'?'武艺':'体魄')+'+3');})]:[]),
+    ...(child?[lifeChoice('让'+child.name+'按教养方向练习',()=>{const skill=life.path==='骑射'&&child.policy==='习武'?'mar':'hp';skillGain(child,skill,3);if(life.stableLesson)skillGain(child,'hp',2);kstory(child,'陆绾换了一项适合自己的北苑功课。'+(life.stableLesson?'课前还跟她到老马栏边练了脚力。':''));return lifeOutcome('教'+child.name+'复练初学的动作，并留一笔在课簿。',child.name+(skill==='mar'?'武艺':'体魄')+'+3'+(life.stableLesson?'　体魄+2':''));})]:[]),
     lifeChoice(mate?'与'+fullName(mate)+'比稳骑 · 关系+5':'随陆绾慢骑一圈 · 龙体+2',()=>{
       if(mate){relAdd(c,mate,5);story(mate,'和陆绾在北苑比过稳骑，轮着给对方牵马。');return lifeOutcome('和骑射同好绕场，先说怎样才算稳。','关系+5');}
       return lifeOutcome('陆绾给皇帝挑一匹性子稳的马，慢慢走过半场。',chg({health:2}));})],[teacher]);
@@ -131,7 +132,7 @@ function storyCastLifeChuwan(c,r,life,stage,scene){
     })],[child,q].filter(o=>o!==c));
   return scene('复核一处粮仓','地方又送来一页夏粮账。楚晚指着两户近来迁出的名字，问要怎样核这一回的欠粮。',[
     lifeChoice('先拨半批仓粮再验回单 · 民心+4',()=>{if(halfGrainReserve())clearGrainReserve();else S.flags.grainReserveHalf=true;return lifeOutcome('本次用掉半批常平仓粮，楚晚在新旧清单间补进搬家的两户。',chg({people:4}),6);},grainReserveReady),
-    lifeChoice('就地访核，抄回实数 · 情分+3',()=>lifeOutcome('请地方照搬家后的户址找人，先把欠数抄实再议怎么发。',cchg(c,{aff:3}),4))]);
+    lifeChoice('就地访核，抄回实数 · 情分+3'+(life.checkNewcomers?'，民心+2':''),()=>lifeOutcome('请地方照搬家后的户址找人，先把欠数抄实再议怎么发。',cchg(c,{aff:3})+(life.checkNewcomers?'　'+chg({people:2}):''),4))]);
 }
 
 function storyCastLifeSuheng(c,r,life,stage,scene){
@@ -145,7 +146,7 @@ function storyCastLifeSuheng(c,r,life,stage,scene){
   if(stage===2)return scene('谁验最后一缸',life.deposit?'掌事验完三缸，账上还有六万两可退。苏蘅等另一名经手人写完名字才伸手接册。':'入库的几笔照旧单结清了。苏蘅指给你看，她自己负责的那一列只有几个批号。',[
     lifeChoice('照签过的账结算',s=>{const refund=s.deposit?6:0;s.deposit=0;return lifeOutcome('把验过的清单留在供香账房，退回银钱也按实记数。',(refund?chg({treasury:refund})+'　':'')+cchg(c,{aff:5}));})]);
   return scene('换季比香','掌事带两份到期的报价过来。苏蘅认出其中一批应暂存，问你愿不愿继续看这份账。',[
-    lifeChoice('按诉求抽查后按旧约减支 · 国库+5',()=>lifeOutcome('掌事向供货人核过到期支出，收回旧约多付的五万两。',chg({treasury:5})+'　'+cchg(c,{aff:2}),6)),
+    lifeChoice('按诉求抽查后按旧约减支 · 国库+'+(life.orderByUse?7:5),()=>lifeOutcome('掌事向供货人核过到期支出，收回旧约多付的五万两。'+(life.orderByUse?'另扣去空炉的两万两。':''),chg({treasury:life.orderByUse?7:5})+'　'+cchg(c,{aff:2}),6)),
     lifeChoice('只与她看样，按旧账结清 · 心情+4',()=>lifeOutcome('苏蘅逐批道明来处，继续按掌事原先的账结清，没有另动押款。',cchg(c,{mood:4}),4))]);
 }
 
@@ -160,7 +161,7 @@ function storyCastLifeXiaoman(c,r,life,stage,scene){
   if(stage===2)return scene('第一场自己登台',life.path==='带徒'?'院里最稳的两个学徒都已经练熟，央她听一遍开场。':'两位街坊师傅愿先带徒一同试一场，验过座位再谈能否开演。',[
     lifeChoice('给她留一次宫宴登台的名帖',s=>{s.booking=S.turn;return lifeOutcome('将节目记入下一场实际办成的宫宴。宴后小满会来对上台和领钱的名册。',cchg(c,{aff:3}));})]);
   if(performance!=null)return scene('散席工钱簿','宫宴已经散了。岑小满带了两份名单来，一份是台上人，一份是台下布置的人。她问都能不能按场领钱。',[
-    lifeChoice('照册发给各人 · 国库−6，民心+3',s=>{delete s.performance;s.settled=true;return lifeOutcome('按两份名册逐人发了工钱，院里收到一封可核对的回信。',chg({treasury:-6,people:3})+'　'+cchg(c,{aff:4}),4);},()=>E().treasury>=6),
+    lifeChoice('照册发给各人 · 国库−6，民心+'+(life.backstageCredit?5:3),s=>{delete s.performance;s.settled=true;return lifeOutcome('按两份名册逐人发了工钱，院里收到一封可核对的回信。'+(s.backstageCredit?'学徒和抬箱师傅一道报了姓名。':''),chg({treasury:-6,people:s.backstageCredit?5:3})+'　'+cchg(c,{aff:4}),4);},()=>E().treasury>=6),
     lifeChoice('记明国库欠付，先给领钱凭签',()=>{const note='欠款仍留在账上，日后可以回来发放。';return lifeOutcome(note,cchg(c,{mood:-2}),1);})]);
   if(life.booking!=null)return null;
   return scene('排下一场戏',child?'小满捧来两枚不值钱的铜钱。'+child.name+'还记得她演过的第一手。':'小满找出一张换新的节目单，问什么时候还有下一场杯盏响。',[
@@ -191,21 +192,61 @@ function storyCastLifeSecret(c,r,life,scene){
   return null;
 }
 
+function storyCastLifeAfter(c,life,scene){
+  const key=c.fixedStory,title=STORY_CAST_LIVES[key].after;
+  if(key==='qingyi'){
+    const child=storyCastLifePupil(c);
+    return scene(title,'新抄本送来了。末页写着「旧抄一本」，清漪翻到母亲当年用朱笔补的那个字：“她也在这本书上做过工夫。”她想在校记末尾添上母女两代的名字，家信仍由自己收好。',[
+      lifeChoice('准母女同署，留作讲本',s=>{s.signedCopy=true;return lifeOutcome('在卷末分署沈母订字、清漪复校。此后皇嗣来校书，可多读一层母女旁注。',cchg(c,{talent:3}));}),
+      lifeChoice(child?'请'+child.name+'做私本的第一位读者':'陪她装订一册家藏本',()=>{
+        if(child){skillGain(child,'lit',5);kstory(child,'第一个读到清漪母女合署的家藏本，亲手描下卷尾的朱笔。');}
+        return lifeOutcome('把母女二人的名字写在私本上，照她的意思收进书匣。',cchg(c,{aff:6})+(child?'　'+child.name+'才学+5':''));})],[child]);
+  }
+  if(key==='luwan'){
+    return scene(title,'北苑那匹退下来的驿马，一听铃响便伸头找旧日的马夫。陆绾把鞍子摘下：“今日教人听它喘气。它已经替我们跑够了。”',[
+      lifeChoice('留老马在栏，给北苑学员上识马课',s=>{s.stableLesson=true;return lifeOutcome('在栏外挂上休骑木牌。此后皇嗣来授课，先学看马的步态，再练自己的脚力。',cchg(c,{mood:5}));}),
+      lifeChoice('照伤簿描一页，送给仍在军驿的人',()=>{const kin=houseOf(c);for(const p of [kin?.father,kin?.brother].filter(officialServing))storyCastLifeLetter(p,'读到陆绾寄来的旧马图，认出当年送信那匹马耳边的白斑。');return lifeOutcome('按旧伤簿画下马耳和蹄印，附上它如今能安稳吃草的消息，随驿袋送往北境。',cchg(c,{aff:6})+'　'+chg({prestige:2}));})]);
+  }
+  if(key==='ayimu'){
+    const drummer=(c.gardenDrummers||[]).map(byId).find(o=>inPalace(o)&&danceFriend(c,o));
+    const child=storyCastOffspring(c,7).find(k=>k.whiteSpringStudy&&childInPalace(k));
+    return scene(title,'香囊里还压着一小片花瓣。回白泉的信封已经糊好一半，阿依慕又拿了回来：“光说我过得好，母亲哪知道我跳到哪一拍了？”',[
+      lifeChoice(drummer?'请'+fullName(drummer)+'同录鼓谱寄回去':'陪她敲一遍，替她记下鼓点',()=>{if(drummer){story(drummer,'与阿依慕把学过的舞曲录成鼓谱，自己的名字也随家书去了白泉。');relAdd(c,drummer,7);}return lifeOutcome('把宫宴所用的急拍、收袖前的轻拍逐一记在谱上，让母亲在白泉也能照着敲。',cchg(c,{aff:5})+(drummer?'　两人关系+7':''));}),
+      lifeChoice(child?'让'+child.name+'用白泉话给外祖母写谱注':'请她亲笔写一份双语谱注',()=>{if(child){skillGain(child,'lit',5);kstory(child,'替母亲的舞谱写了白泉语小注，第一次把故乡歌名完整写给外祖母。');}return lifeOutcome('把两种话写在同一段谱下，给故乡的回信终于封好了。',child?child.name+'才学+5':cchg(c,{talent:4}));})],[drummer,child]);
+  }
+  if(key==='chuwan'){
+    const child=storyCastLifePupil(c);
+    return scene(title,'楚晚把那只裂碗搁在新册旁。粥棚按户发筹，昨日恰有一户迁来，名下的孩子到散棚也没领着。她把那一行圈出来，请你看看漏在何处。',[
+      lifeChoice('给迁户添补领栏，每回核仓都查漏户',s=>{s.checkNewcomers=true;return lifeOutcome('旧册添了迁入日期与领筹两栏。往后她就地访核粮仓时，也会查刚落脚的人家。',chg({people:3}));}),
+      lifeChoice('从国库补给本次漏领的人家 · 国库−6',()=>{if(child){skillGain(child,'vir',4);kstory(child,'跟楚晚数完漏发的粮筹，记住了粥棚外等着的一家人。');}return lifeOutcome('按核实的漏领名单拨补粮钱，旧碗仍归本人收存。',chg({treasury:-6,people:5})+(child?'　'+child.name+'品德+4':''));},()=>E().treasury>=6)],[child]);
+  }
+  if(key==='suheng'){
+    const other=storyCastLifePartner(c,o=>relGet(c,o)>=8);
+    return scene(title,'苏蘅翻到一张供单，上写「各殿照旧」，连她亲自收起香炉那日也算了一份。她在纸边画只空炉：“这一栏，往后总得有人能勾。”',[
+      lifeChoice('供单改为按殿领用，空炉可停供',s=>{s.orderByUse=true;return lifeOutcome('掌事逐殿核签，空炉从下季的订量中扣除。此后抽查旧约可多省二万两。',cchg(c,{talent:3}));}),
+      lifeChoice(other?'请'+fullName(other)+'同核这笔，退回未用香银':'请掌事清点这笔，退回未用香银',()=>{if(other){story(other,'与苏蘅核对空炉旧账，见她连自家香铺也照样追退。');relAdd(c,other,6);}return lifeOutcome('按领簿退回这一次未焚用的香银，苏家铺契也销去这一笔。',chg({treasury:8})+(other?'　两人关系+6':''));})],[other]);
+  }
+  return scene(title,'戏班学徒拿着那枚铜钱来交账，指着戏单最下面一行：“抬箱子的师傅也会手彩，可台前的人总认不得他。”小满把幕布掀开一角，等你说这回怎样开场。',[
+    lifeChoice('让幕后师傅带徒谢幕，往后两班同记',s=>{s.backstageCredit=true;return lifeOutcome('台上师傅报了抬箱人和学徒的名字。从下一次真正演出并结清工钱起，两班都记在戏单上。',cchg(c,{aff:5}));}),
+    lifeChoice('另拨一场教艺钱，让师傅回街坊开课 · 国库−6',()=>lifeOutcome('把教艺钱另立一笔，不抵戏班的工钱。师傅带着旧幕布回了大杂院，小满答应等他们能上台时亲自来看。',chg({treasury:-6,people:5})+'　'+cchg(c,{mood:5})),()=>E().treasury>=6)]);
+}
+
 const STORY_CAST_LIFE_BUILDERS={qingyi:storyCastLifeQingyi,luwan:storyCastLifeLuwan,ayimu:storyCastLifeAyimu,
   chuwan:storyCastLifeChuwan,suheng:storyCastLifeSuheng,xiaoman:storyCastLifeXiaoman};
 function storyCastLifeEvent(c,kind){
   const r=STORY_CAST_LIVES[c?.fixedStory]&&storyCastLifeRecord(c);
   if(!storyCastLifeUnlocked(c,r))return null;
   const life=r.life,stage=life?.stage||0;
+  if(kind==='after'&&(journalContentVersion()<76||stage<3||life.secret==null||S.turn<life.secret+2||life.after!=null))return null;
   if(kind==='secret'&&(stage<3||life.secret!=null))return null;
   if(kind==='chapter'&&(stage>=3||S.turn<(life?.due??0)))return null;
   if(kind==='routine'&&(stage<3||S.turn<(life?.next??0)))return null;
   const scene=(title,text,choices,cast)=>storyCastLifeScene(c,r,life,kind,fullName(c)+' · '+title,text,choices,cast);
-  return kind==='secret'?storyCastLifeSecret(c,r,life,scene):
+  return kind==='after'?storyCastLifeAfter(c,life,scene):kind==='secret'?storyCastLifeSecret(c,r,life,scene):
     STORY_CAST_LIFE_BUILDERS[c.fixedStory](c,r,life,stage,scene);
 }
 A.storyCastLife=function(id,kind){
-  if(modalOpen||!['chapter','routine','secret'].includes(kind))return;
+  if(modalOpen||!['chapter','routine','secret','after'].includes(kind))return;
   const ev=storyCastLifeEvent(byId(id),kind);
   if(ev&&useE())pushEv(ev);
 };
@@ -215,7 +256,7 @@ function storyCastLifePanel(c){
   if(!r||!d)return '';
   const life=r.life,stage=life?.stage||0,chapter=storyCastLifeEvent(c,'chapter'),routine=storyCastLifeEvent(c,'routine'),secret=storyCastLifeEvent(c,'secret');
   const due=(stage<3?life?.due:life?.next)??S.turn,wait=Math.max(0,due-S.turn);
-  const options=[['chapter',chapter],['routine',routine],['secret',secret]].filter(([,event])=>event)
+  const options=[['chapter',chapter],['routine',routine],['secret',secret],['after',storyCastLifeEvent(c,'after')]].filter(([,event])=>event)
     .map(([key,event])=>`<button class="btn jade" onclick="A.storyCastLife(${c.id},'${key}')" ${E().energy?'':'disabled'}>${esc(event.title.split(' · ').at(-1))}<small>精力−1</small></button>`).join('');
   const status=c.fixedStory==='xiaoman'&&life?.performance!=null?'戏已演完，散席工钱尚待结算。':
     c.fixedStory==='xiaoman'&&life?.booking!=null?'戏班已经排入下一场宫宴。':
@@ -224,6 +265,7 @@ function storyCastLifePanel(c){
     wait>0?'还需等 '+wait+' 个月。':stage>=3?'三幕已写入纪事，可继续日常往来。':d.chapters[stage]+'可以续谈。';
   return detailSection(esc(d.title),'<p>'+esc(d.guide)+'</p><p class="hint">'+esc(status)+'</p>'+
     '<ol>'+d.chapters.map((title,i)=>'<li>'+esc(title)+(i<stage?' · 已记入纪事':'')+'</li>').join('')+'</ol>'+
+    (life?.secret!=null&&journalContentVersion()>=76?'<p class="hint">'+esc(d.after)+(life.after!=null?' · 已记入纪事':S.turn<life.secret+2?' · 特殊事件两个月后可续谈':' · 可续谈')+'</p>':'')+
     (options?'<div class="acts">'+options+'</div>':''));
 }
 function storyCastLifeMonthly(offered){
@@ -231,7 +273,7 @@ function storyCastLifeMonthly(offered){
   for(const c of harem().filter(o=>o.fixedStory&&!offered.some(ev=>ev.por===o))){
     const r=storyCastLifeRecord(c);
     if(!r)continue;
-    const ev=storyCastLifeEvent(c,'secret')||storyCastLifeEvent(c,'chapter');
+    const ev=storyCastLifeEvent(c,'after')||storyCastLifeEvent(c,'secret')||storyCastLifeEvent(c,'chapter');
     if(ev&&ev.title!==r.lifeNotice){
       ev.onQueue=()=>{r.lifeNotice=ev.title;};
       return ev;

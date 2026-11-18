@@ -12,3 +12,15 @@ for(const kind of ['night','palace','letter'])test('genuine version 16 pending '
  const fixture=require('./fixtures/court-living-'+kind+'-legacy-v16.json'),b=boot(821,new Map([['chengongji_v1_auto',JSON.stringify(fixture)]]));b.ctx.assert=assert;
  b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(journalContentVersion(),16);assert.equal(storyConsortCodex(),'');${kind==='palace'?"assert.equal(curEv.scene,'palace-arrival');":''}drain();assert.equal(PalaceActions.blocked,false);assert.ok(journalContentVersion()>=17);`);
 });
+
+test('all eight catalogue cards share one gold identity badge with the harem, while progress stays plain',()=>{
+ const b=world();b.ctx.assert=assert;b.run(String.raw`
+  const cards=[...storyConsortCodex().matchAll(/<article class="story-consort-card" data-story-consort="([^"]+)">([\s\S]*?)<\/article>/g)];
+  assert.equal(cards.length,8);
+  for(const [,key,html] of cards){
+   const c=key==='gouyi'?{gouyi:{}}:key==='hongjian'?{hongjian:{}}:{fixedStory:key};
+   const badge=storyConsortBadge(key);assert.equal(solitaryTag(c),badge);
+   assert.equal(html.split(badge).length,2);assert.equal(html.split('<span class="tag y">').length,2);
+   assert.ok(html.includes('<small class="hint">经历 · '));
+  }`);
+});
