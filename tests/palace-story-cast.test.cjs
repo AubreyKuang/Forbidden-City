@@ -45,3 +45,34 @@ test('pending scenes restore and each daughter or son inherits only the relevant
   A.storyCastComfort(son.id);choose(0);drain();assert.equal(son.mood,65);
   S.turn++;homeLeaveTick();assert.equal(inPalace(lu),true);assert.match(curEv.title,/北境归来/);drain();`);
 });
+
+test('all six yellow tags reach the ordinary harem cards and new chapters change real game values',()=>{
+ const b=world();b.ctx.assert=assert;
+ b.run(`S.year=13;S.turn=144;E().age=38;E().energy=35;E().prestige=50;E().people=50;
+  var admit=key=>{const r=storyCastCreate(key);if(key==='chuwan'){r.revealed=true;r.person.sur='楚';r.person.fam.t='前朝遗孤';}storyCastAdmit(r.person,r,'测试册封');return byId(r.id);};
+  var shen=admit('qingyi'),lu=admit('luwan'),ayi=admit('ayimu'),chu=admit('chuwan'),su=admit('suheng'),xiao=admit('xiaoman');
+  for(const c of [shen,lu,ayi,chu,su,xiao])assert.ok(consortCard(c).includes('<span class="tag y">'+STORY_CAST_TAGS[c.fixedStory]+'</span>'));
+  assert.doesNotMatch(solitaryTag(a),/京城第一美人/);
+  var runChapter=(p,title,n=0)=>{A.storyCastPalace(p.id);assert.equal(curEv.title,title);choose(n);drain();};
+  S.turn+=2;
+  var treasury=E().treasury;
+  runChapter(shen,'沈清漪 · 两封家信');assert.equal(shen.aff,53);assert.equal(E().treasury,treasury-12);
+  S.turn++;assert.equal(storyCastPalaceEvent(shen),null);shen.aff=55;shen.favor=60;
+  runChapter(shen,'沈清漪 · 旧信去处');assert.equal(E().prestige,52);
+  var child=makeKid(lu,'f','清禾');child.born=S.turn-6*12;child.policy='习武';child.mar=60;
+  runChapter(lu,'陆绾 · 校场教箭');assert.equal(child.mar,66);
+  lu.aff=60;S.turn++;runChapter(lu,'陆绾 · 军驿移交簿');assert.equal(E().prestige,54);
+  storyCastRecord('ayimu').palaceStage=2;treasury=E().treasury;
+  runChapter(ayi,'阿依慕 · 随使团回乡的信');assert.equal(E().treasury,treasury-8);
+  S.turn++;runChapter(ayi,'白泉来使 · 核对开市日');assert.equal(E().people,53);
+  storyCastRecord('chuwan').palaceStage=2;
+  runChapter(chu,'楚晚 · 旧仓赈册');assert.equal(E().people,58);
+  storyCastRecord('suheng').palaceStage=1;storyCastRecord('suheng').amends=true;treasury=E().treasury;
+  runChapter(su,'苏蘅 · 宫中供香比价');assert.equal(E().treasury,treasury+12);
+  storyCastRecord('xiaoman').palaceStage=2;treasury=E().treasury;
+  runChapter(xiao,'岑小满 · 旧院账本');assert.equal(E().treasury,treasury-10);
+  assert.equal(E().people,61);assert.equal(storyCastPalaceEvent(xiao),null);
+  S.turn++;S.lastGardenBanquet=S.turn;runChapter(xiao,'岑小满 · 散席后学戏');
+  assert.equal(storyCastRecord('xiaoman').followupChapter,2);
+  assert.ok(S.log.some(e=>e.t.includes('验过的账')));`);
+});

@@ -268,6 +268,7 @@ function storyCastPalaceEvent(c){
   const advance=(line,months=1)=>{r.palaceStage=step+1;r.palaceDue=S.turn+months;return storyCastRecordLine(c,line,true);};
   const scene=(title,text,...choices)=>({title,por:c,text,valid:()=>inPalace(c)&&(r.palaceStage||0)===step,choices:[...choices,storyCastLater]});
   if(S.turn<(r.palaceDue??0))return null;
+  const followup=storyCastFollowupEvent(c,r);if(followup)return followup;
   if(key==='luwan'){
     const w=storyCastFrontier(c);return w?storyCastMilitaryEvent(c,w):null;
   }
@@ -340,7 +341,8 @@ function storyCastPanel(c){
   if(!storyCastActive()||!c.fixedStory)return '';
   const d=STORY_CAST[c.fixedStory],ev=storyCastPalaceEvent(c);
   const father=c.fixedStory==='chuwan'?'<p class="muted">生父 · 前朝楚国皇帝（已故）</p>':'';
-  return detailSection(esc(d.epithet),'<p>'+esc(d.intro)+'</p>'+father+
+  const guide=storyCastFollowupsActive()?storyCastFollowupGuide(c,storyCastRecord(c.fixedStory)):'';
+  return detailSection(esc(d.epithet),'<p>'+esc(d.intro)+'</p>'+father+guide+
     (ev?`<button class="btn jade" onclick="A.storyCastPalace(${c.id})" ${E().energy?'':'disabled'}>${esc(ev.title)}<small>精力−1</small></button>`:''));
 }
 function storyCastMonthlyEvents(){
@@ -349,7 +351,7 @@ function storyCastMonthlyEvents(){
   for(const c of S.consorts.filter(c=>c.fixedStory&&inPalace(c))){
     const r=storyCastRecord(c.fixedStory);if(!r||r.id!==c.id)continue;
     const ev=storyCastPalaceEvent(c);
-    const identity=c.fixedStory==='luwan'?storyCastFrontier(c)?.id:ev?.title;
+    const identity=c.fixedStory==='luwan'&&ev?.title==='陆绾 · 边城来急报'?storyCastFrontier(c)?.id:ev?.title;
     if(ev&&identity!==r.lastProposed){r.lastProposed=identity;events.push(ev);}
   }
   return events;
@@ -377,4 +379,159 @@ function storyCastBanquetPerformance(){
   if(r.closed||r.stage!==1||r.performed)return '';
   r.performed=S.turn+1;
   return storyCastRecordLine(r.person,'和搭档按名帖登席献艺。散席时，等内务府按名单结清工钱。');
+}
+
+const storyCastFollowupsActive=()=>journalContentVersion()>=72;
+const STORY_CAST_TAGS={
+  qingyi:'京城第一美人 · 姑苏旧识',
+  luwan:'北境将门 · 百步穿杨',
+  ayimu:'白泉公主 · 蝶落香肩',
+  chuwan:'前朝遗孤 · 楚氏旧籍',
+  suheng:'姑苏苏氏 · 调香辨账',
+  xiaoman:'京城灯市 · 铜钱戏法'
+};
+const previousStoryCastTags=solitaryTag;
+solitaryTag=function(c){
+  const tag=storyCastFollowupsActive()&&STORY_CAST_TAGS[c?.fixedStory];
+  return previousStoryCastTags(c)+(tag?'<span class="tag y">'+esc(tag)+'</span>':'');
+};
+
+function storyCastFollowupEvent(c,r){
+  if(!storyCastFollowupsActive()||S.turn-(r.admitted??S.turn)<2||S.turn<(r.followupDue??0))return null;
+  const key=c.fixedStory,chapter=r.followupChapter||0,base=r.palaceStage||0;
+  const scene=(title,text,choices,cast=[])=>({title,por:c,cast:[c,...cast],text,
+    valid:()=>inPalace(c)&&(r.followupChapter||0)===chapter,
+    choices:[...choices,storyCastLater]});
+  const result=(text,effects)=>{
+    r.followupChapter=chapter+1;r.followupDue=S.turn+1;
+    return storyCastRecordLine(c,text,true)+(effects?fx(effects):'');
+  };
+  const choice=(t,f,cond)=>storyCastChoice(t,f,cond);
+
+  if(key==='qingyi'){
+    if(chapter===0)return scene('沈清漪 · 两封家信',
+      '沈母寄来信说，姑苏入冬后旧疾又犯，叫女儿别求人。清漪把当年的旧信和新家书并排放好，问陛下还记不记得重逢时答应过什么。',[
+        choice('请地方医者照看沈母 · 国库−12，情分+8',()=>{
+          if(E().treasury<12)return null;
+          const effects=chg({treasury:-12})+'　'+cchg(c,{aff:8,mood:10});
+          r.shenCare='医者';setXin(c,'感激','母亲终于有人照看');
+          return result('地方医者依旧址探看母亲，诊金由宫中拨付。她另写家信报了平安。',effects);
+        },()=>E().treasury>=12),
+        choice('陪她写信，向家里问清病况 · 情分+4',()=>{
+          r.shenCare='家书';return result('陛下陪她把信写完，让母亲先讲实情。她仍牵挂，却总算有了回信的地址。',cchg(c,{aff:4,mood:3}));
+        })]);
+    if(chapter===1&&c.aff>=55){
+      const q=empress(),publicTalk=c.favor>=60&&q&&q!==c;
+      return scene('沈清漪 · 旧信去处',
+        (r.shenCare==='医者'?'家书说母亲已得调养。':'家书终于写明母亲的病势。')+
+        (publicTalk?'清漪近来得宠，宫人又拿京城第一美人的旧话同皇后比较。':'清漪把旧信拿出来，问值不值得一直收藏。'),[
+          ...(publicTalk?[choice('当面和中宫说清沈家的安排 · 威望+2',()=>{
+            story(q,'陛下在中宫当面说清沈家家眷的安排。谈过后，她省去了再从宫人口中打听。');
+            relAdd(c,q,8);return result('同中宫当面把旧事说清，清漪将信收回妆匣。她和中宫各自在纪事里记下这回对话。',chg({prestige:2})+'　'+cchg(c,{aff:6}));
+          })]:[]),
+          choice('把旧信交还，听她说今天的话 · 情分+8',()=>result('陛下把旧信交回她手里。她只说眼下想回封什么信，昔日的亲事留在纸上。',cchg(c,{aff:8,mood:6})))],publicTalk?[q]:[]);
+    }
+  }
+
+  if(key==='luwan'&&chapter<2){
+    if(storyCastFrontier(c))return null;
+    const child=storyCastOffspring(c,5).find(childInPalace);
+    const pupil=harem().find(o=>o!==c&&consortHobby(o)==='骑射'&&relGet(o,c)>=10);
+    if(!child&&!pupil)return null;
+    if(chapter===0)return scene('陆绾 · 校场教箭',
+      child?child.name+'问母妃，能不能学她小时候搭弓。陆绾先让孩子试一张轻弓，再问近来想学些什么。':
+        fullName(pupil)+'敢牵马走一圈了，来问陆绾下一回能否同去校场。',[
+      ...(child?[choice('让她按教养方向带这堂课',()=>{
+        const martial=child.policy==='习武',value=martial?6:3;
+        skillGain(child,martial?'mar':'hp',value);
+        kstory(child,martial?'跟陆绾习骑射，母妃让自己由轻弓起练。':'随陆绾学牵马、站稳，练过便照常回书房。');
+        return result('亲自给'+child.name+'上了一堂骑射课。'+(martial?'练习与习武方向相合。':'按孩子的步调先学牵马。'),(martial?'武艺':'体魄')+'+'+value+'　'+cchg(c,{mood:6}));
+      })]:[]),
+      ...(pupil?[choice('让她和同好一起练马术 · 关系+8',()=>{relAdd(c,pupil,8);story(pupil,'同陆绾在校场学稳坐、控马，发觉她教学比平日说话耐心。');return result('和'+fullName(pupil)+'照约在校场练马术。','两人关系+8');})]:[])],child?[child]:[pupil]);
+    if(chapter===1&&(c.castCampaign||c.aff>=60)){
+      const father=houseOf(c)?.father;
+      return scene('陆绾 · 军驿移交簿','陆绾把从边营学来的移交法用在宫里，把用过的马料和伤病记在一册。她问要不要把这份写得明白的簿子送回北境。',[
+        choice('交给兵部和家中各留一份 · 威望+2',()=>{
+          if(officialServing(father))princePersonNote(father,'收到女儿陆绾寄来的军驿移交簿样式，交军中照册核对。');
+          return result('把军驿登记的办法抄给兵部，边营接手的人知道先核哪几项。',chg({prestige:2}));
+        }),
+        choice('先留给校场 · 情分+5',()=>result('将移交簿留在校场，供养马的人按册交接。',cchg(c,{aff:5})))]);
+    }
+  }
+
+  if(key==='ayimu'&&base>=2){
+    if(chapter===0)return scene('阿依慕 · 随使团回乡的信',
+      '近两回寄到白泉的家书走了不同驿路，其中一封到晚了。阿依慕请通译列出可以随商队带信的日子，自己在信尾写好回程驿名。',[
+        choice('给家书留固定驿期 · 国库−8，情分+7',()=>{
+          if(E().treasury<8)return null;r.whiteSpringPost=true;
+          return result('白泉使团领到固定驿期的札记。她终于能告诉母亲，几月能等到回信。',chg({treasury:-8})+'　'+cchg(c,{aff:7,mood:10}));
+        },()=>E().treasury>=8),
+        choice('先让商队捎这一封 · 情分+3',()=>result('请将出关的商队带上书信。她把通译写的驿名又看了一遍。',cchg(c,{aff:3})))]);
+    if(chapter===1&&r.whiteSpringPost){
+      const child=storyCastOffspring(c,7).find(k=>k.whiteSpringStudy&&childInPalace(k));
+      return scene('白泉来使 · 核对开市日','使团送来回信，也请朝廷把两地的开市日写在同一张礼单上。'+(child?child.name+'能读白泉话，已经圈出有歧义的几处。':'阿依慕和通译逐条核过。'),[
+        choice('准两边张贴同一份市期 · 民心+3',()=>{
+          if(child){skillGain(child,'lit',3);kstory(child,'凭所学白泉话核对互市日期，才学+3。');}
+          return result('两边都领到一份核对过的市期。阿依慕把母亲的回信收进匣里。',chg({people:3})+(child?'　'+child.name+'才学+3':''));
+        })],child?[child]:[]);
+    }
+  }
+
+  if(key==='chuwan'&&base>=2){
+    if(chapter===0)return scene('楚晚 · 旧仓赈册',
+      '她署旧名作证后，地方又送来一份少了两页的仓账。那两页记着没领到粮的家户。楚晚愿重抄人名，私下问照养人的地址能不能继续封存。',[
+        choice('封存私籍，核实名单后补粮 · 国库−18，民心+5',()=>{
+          if(E().treasury<18)return null;
+          return result('将照养人的住处和可用于赈济的名单分别封存。地方核实名单后补粮，旧案再添一笔实据。',chg({treasury:-18,people:5}));
+        },()=>E().treasury>=18),
+        choice('核存旧册，经手人另作说明 · 威望+2',()=>result('旧仓册留作证据，当年经手的官员另行说明缺页缘由。',chg({prestige:2})))]);
+    if(chapter===1){
+      const child=storyCastOffspring(c,8).find(k=>k.chuAncestryTalk&&childInPalace(k));
+      if(!child)return null;
+      return scene('楚晚 · 让孩子抄一次粮册',child.name+'又问起两边皇家的旧事。楚晚抽出那本赈簿，指着最早没领到粮的一户，请孩子把理由也抄下来。',[
+        choice('请孩子写下旧账给人的难处 · 品德+4',()=>{
+          skillGain(child,'vir',4);kstory(child,'抄过母妃指出的赈粮户名，写下为什么当初官仓该开。品德+4。');
+          return result('听完'+child.name+'如何看那本旧账，她把自己的名字写在注脚。',child.name+'品德+4');
+        })],[child]);
+    }
+  }
+
+  if(key==='suheng'&&r.amends&&base>=1){
+    if(chapter===0)return scene('苏蘅 · 宫中供香比价','供香又到了换契的时日。苏蘅带来三家的报价和样品，把苏家铺子的那份也列在内，愿由掌事另作核验。',[
+      choice('共同复核，再按实价换契 · 国库+12',()=>{
+        r.suhengOpenBid=true;
+        return result('账目由掌事与三家供货人当面核清。退回多支的旧款，内库收回十二万两。',chg({treasury:12})+'　'+cchg(c,{aff:4}));
+      }),
+      choice('她只辨样品，契约另委掌事 · 情分+5',()=>result('她把辨出的差异整理给掌事，留下样品，自己依例回避家铺的契约。',cchg(c,{aff:5})))]);
+    if(chapter===1&&r.suhengOpenBid&&c.aff>=55)return scene('苏蘅 · 合香之前先问',
+      '新供香送到。苏蘅先让常来陪她说话的几个人各选一件喜欢的，只给愿意试的人备香。她问陛下近来睡得如何。',[
+        choice('清香只留在她自己的屋里 · 龙体+2，情分+5',()=>result('两人说好，调养时只试她房里这一回，宫宴仍用各人认可的旧例。',chg({health:2})+'　'+cchg(c,{aff:5})))]);
+  }
+
+  if(key==='xiaoman'&&base>=2){
+    if(chapter===0)return scene('岑小满 · 旧院账本','大杂院的孩子想跟邻里学手艺。小满拿出上回补冬被的账，另划出几个人原先漏记的工钱，请把这两笔各写一页。',[
+      choice('照册结工钱，再帮孩子延请师傅 · 国库−10，民心+3',()=>{
+        if(E().treasury<10)return null;r.xiaoApprentices=true;
+        return result('照册结清匠人的工钱，孩子们到自己选的师傅那里试学。小满留下一份验过的账。',chg({treasury:-10,people:3})+'　'+cchg(c,{aff:6}));
+      },()=>E().treasury>=10),
+      choice('请她自行安排，按单核清旧账 · 情分+4',()=>result('她自己向邻里回信，另指定旧账逐人找回，欠谁多少都写清。',cchg(c,{aff:4})))]);
+    if(chapter===1&&r.xiaoApprentices&&S.turn-S.lastGardenBanquet<=2)return scene('岑小满 · 散席后学戏',
+      '刚散了小宴。小满身边几枚铜钱还是整整齐齐。她说院里的孩子学会了第一手，今日也可以教陛下看穿一手。',[
+        choice('请她教当年答应的那一手 · 情分+6',()=>result('她记得上回答应要教的动作，等到没人催着散席才慢慢演一遍。',cchg(c,{aff:6,mood:8})))]);
+  }
+  return null;
+}
+
+function storyCastFollowupGuide(c,r){
+  if(!r||r.id!==c.id)return '';
+  const chapter=r.followupChapter||0;
+  const hint={
+    qingyi:chapter===1&&c.aff<55?'清漪要等情分达到 55，才肯再拿出旧信。恩宠达到 60 时，中宫也可能听到议论。':'',
+    luwan:chapter===0?'有满五岁、在宫的孩子，或关系达到 10 的骑射同好，可开校场教箭。':'',
+    ayimu:chapter===0?'处理香囊传言和白泉家书后，可议两边如何定驿期。':'',
+    chuwan:chapter===0?'晋位后完成署旧名作证，可续查旧仓赈册。':'',
+    suheng:chapter===0?'赔礼并补清旧账后，可请她参与宫中供香比价。':'',
+    xiaoman:chapter===1&&r.xiaoApprentices?'帮院里孩子请过师傅后，御花园小宴结束两个月内可找她学戏法。':''
+  }[c.fixedStory];
+  return hint?'<p class="hint">'+esc(hint)+'</p>':'';
 }
