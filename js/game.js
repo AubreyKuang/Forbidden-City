@@ -373,6 +373,8 @@ const A={
           return result;
         }};
     });
+    const annex=typeof heXingjianLeadChoice==='function'&&heXingjianLeadChoice('memorial');
+    if(annex)ev.choices.push(annex);
     ev.choices.push({t:'稍后再议',preview:'暂不批复 · 免耗精力 · 本月可再呈阅'});
     setScene('court');pushEv(ev);
   },

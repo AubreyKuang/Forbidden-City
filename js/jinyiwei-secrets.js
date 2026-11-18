@@ -42,13 +42,20 @@ function revealSecretParentage(k,text){
   k.parentage ||= {father:{...k.birthTraits.father},claimedFather:E().sur+E().name};
   if(!['investigating','confirmed'].includes(k.parentage.status)){k.parentage.status='suspected';k.parentage.clue ||= {kind:k.birthSwap?'birth-swap':'register',text,turn:S.turn};}
 }
+function beginSecretEvidence(x,subject){
+  if(!subject.k)return;
+  revealSecretParentage(subject.k,x.clueText);
+  kstory(subject.k,'奉旨交锦衣卫核对身世记录，尚未定案，原有身份与照护不变。');
+  const mother=byId(subject.k.birthSwap?.claimedMother??subject.k.mom);
+  if(mother?.alive)story(mother,`${subject.k.name}的身世疑点交锦衣卫查证，尚未凭流言定罪。`);
+}
 function secretInquiryEvent(x){
   if(!x||!secretCaseSubject(x)||!caseReady(x)||!jinyiweiCommanderReady())return null;
   return {title:'锦衣卫彻查 · '+x.title,por:jinyiwei().commander,valid:()=>!!secretCaseSubject(x)&&caseReady(x)&&jinyiweiCommanderReady(),text:`${x.clueText}\n分别封存簿册、问询经手人，并请医官核对产房与脉案。次月回奏；线索不全时仍可能无果，原有身份与照护不会因立案改变。`,choices:[
     {t:'封存证据，派人彻查 · 精力−1 · 国库−15',cond:()=>E().energy>=1&&E().treasury>=15,f:()=>{
       const subject=secretCaseSubject(x);if(!subject||!caseReady(x)||!jinyiweiCommanderReady()||E().treasury<15||!useE())return null;
       chg({treasury:-15});dispatchCase(x,15);
-      if(subject.k){revealSecretParentage(subject.k,x.clueText);kstory(subject.k,'奉旨交锦衣卫核对身世记录，尚未定案，原有身份与照护不变。');const m=byId(subject.k.birthSwap?.claimedMother??subject.k.mom);if(m?.alive)story(m,`${subject.k.name}的身世疑点交锦衣卫查证，尚未凭流言定罪。`);}
+      beginSecretEvidence(x,subject);
       save('auto');return '锦衣卫已领案，次月回奏。查齐证据之前，不改宗谱，不预定罪名。';
     }},{t:'暂存案卷，日后再查'}]};
 }
@@ -124,6 +131,7 @@ caseReport=function(x){
 A.reviewSecretCase=function(id){const x=palaceCases().find(x=>x.id===id);if(!modalOpen&&secretCasesActive()&&x?.kind==='palace-secret'&&['solved','closed'].includes(x.status))pushEv(secretCaseResultEvent(x));};
 A.jinyiweiPatrol=function(){
   const j=jinyiwei();if(modalOpen||!secretCasesActive()||!jinyiweiCommanderReady()||j.lastPalacePatrol===S.turn)return;
+  const annex=typeof heXingjianLeadChoice==='function'&&heXingjianLeadChoice('patrol');
   pushEv({title:'巡察宫闱',por:j.commander,text:'令缇骑核查宫门值簿、产房移送与药簿，访谈经手人。有疑点才呈报，寻常往来不当作私情，体貌与流言也不能作为身世结论。每月可安排一次，未必有收获。',choices:[
     {t:'按簿巡察 · 精力−1 · 国库−5',cond:()=>E().energy>=1&&E().treasury>=5,f:()=>{
       if(!jinyiweiCommanderReady()||j.lastPalacePatrol===S.turn||E().treasury<5||!useE())return null;
@@ -131,7 +139,7 @@ A.jinyiweiPatrol=function(){
       if(!found){const text='本次巡察未发现足以立案的新疑点。没有凭此断言宫中无人有隐情，也没有据猜测处罚任何人。';story(j.commander,text);save('auto');return text;}
       const source=pick(sources),x=fileSecretCase(source);j.lastPatrolCase=x.id;
       pushNow({title:'巡察所得 · 新疑点',por:j.commander,text:`${source.title}\n${source.text}\n线索已入案卷，可以继续彻查，也可以暂缓。`,choices:[{t:'循线彻查，先看交办安排',f:()=>{pushNow(secretInquiryEvent(x));return null;}},{t:'先存案卷，不惊动有关人物'}]});save('auto');return null;
-    }},{t:'暂不安排'}]});
+    }},...(annex?[annex]:[]),{t:'暂不安排'}]});
 };
 const secretsCasesSection=casesSection;
 casesSection=function(){

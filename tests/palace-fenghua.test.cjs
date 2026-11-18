@@ -7,7 +7,7 @@ function reload(b){const c=game(b.storage);c.run(`A.load('auto');assert.equal(Pa
 
 test('fixed guests are separate from Hongjian and other plot consorts and viewing does not create people or roll',()=>{
  const b=game();b.run(`var before=JSON.stringify(S);Math.random=()=>{throw Error('view rolled')};
- var html=fenghuaCodex();assert.equal((html.match(/data-fenghua=/g)||[]).length,7);assert.match(html,/不入后宫/);assert.doesNotMatch(html,/undefined|NaN/);
+ var html=fenghuaCodex();assert.equal((html.match(/data-fenghua=/g)||[]).length,8);assert.match(html,/不入后宫/);assert.doesNotMatch(html,/undefined|NaN/);
  assert.match(storyConsortCodex(),/赵令仪/);assert.doesNotMatch(storyConsortCodex(),/上官兰台/);assert.match(storyConsortCodex(),/薛红笺/);assert.doesNotMatch(html,/data-fenghua="xueHongjian"/);
  assert.equal(JSON.stringify(S),before);assert.equal(fenghuaAll().length,0);
  for(var d of Object.values(FENGHUA_PEOPLE))for(var pool of [ALL_CONSORT_PORTRAITS,ALL_OFFICIAL_PORTRAITS,EMPEROR_PORTRAITS,BROTHER_PORTRAITS])assert.ok(!pool.includes(d.portrait));`);
