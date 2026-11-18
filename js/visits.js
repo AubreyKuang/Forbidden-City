@@ -175,6 +175,7 @@ function festival(){const m=S.month,h=harem();if(!h.length)return null;
   const pickOne=(name,desc,act)=>({title:name,text:desc,choices:[...top.map(c=>({t:`携${cName(c)}同往`,f:()=>{story(c,act);harem().forEach(o=>{if(o!==c&&TRAITS[o.trait].jealous)o.mood=clamp(o.mood-4)});return fx(cchg(c,{aff:10,favor:6,mood:12}))}})),{t:'独自一人',f:()=>'你独自站了很久。'}]});
   if(m===1) return pickOne('上元灯节','正月十五，宫中张灯结彩，太液池畔挂满了花灯。',`上元节陪陛下赏灯，猜中了最难的一道灯谜。`);
   if(m===7) return pickOne('七夕','七月初七，鹊桥相会。宫中女子都在穿针乞巧。','七夕之夜陪陛下看星，许了一个不肯说出口的愿。');
+  if(m===8&&envoyFeastsActive())return midAutumnCourtEvent();
   if(m===8) return {title:'中秋家宴',text:'八月十五，月圆人团圆。',choices:[{t:'设中秋家宴，六宫同乐（国库-30万两）',f:()=>{h.forEach(c=>c.mood=clamp(c.mood+6));kidsAlive().forEach(k=>k.love=clamp(k.love+5));log('中秋家宴，六宫同乐。');return fx(chg({treasury:-30}))+'\n§后宫心情+6　皇嗣父爱+5'}},{t:'简单赏月',f:()=>'你独自登上角楼赏月。'}]};
   return null;
 }

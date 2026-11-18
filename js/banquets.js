@@ -14,7 +14,69 @@ const GARDEN_ACTIVITIES = {
 const gardenPlace = () => PLACES.find(p => p.id === 'yh');
 const birthMonth = person => person.birthMonth ?? (Math.abs(person.seed || 0)%12+1);
 
+const seasonalCourtFeasts = {
+  newYear:{title:'新年宫宴',month:1},
+  midAutumn:{title:'中秋宫宴',month:8}
+};
+const envoyFeastsActive=()=>journalContentVersion()>=79;
+const hostsEnvoys=kind=>envoyFeastsActive()&&['newYear','midAutumn','emperor'].includes(kind);
+const whiteSpringAudienceReady=()=>storyCastMeetReady('ayimu');
+function envoyInvitationLabel(){
+  if(!whiteSpringAudienceReady())return '请礼部邀在京使臣赴宴';
+  return storyCastRecord('ayimu')?.stage?'请白泉国王与公主入席回话':'请白泉国王携阿依慕赴宴';
+}
+function envoySeatsPanel(draft){
+  if(!hostsEnvoys(draft.kind))return '';
+  return '<h3>外宾席</h3><div class="acts"><button class="btn sm '+(draft.envoys?'on':'')+'" aria-pressed="'+!!draft.envoys+'" onclick="A.banquetEnvoys()">'+envoyInvitationLabel()+'</button></div><p class="hint">'+
+    (draft.envoys?'礼部已拟好请帖，开宴时为来使留席。再点可撤回。':'即使未发请帖，来使也可能在开宴时递上贺表。')+'</p>';
+}
+A.banquetEnvoys=function(){
+  const draft=banquetDraft();
+  if(modalOpen||!draft||!hostsEnvoys(draft.kind)||!banquetKind(draft.kind)?.ready)return;
+  draft.envoys=!draft.envoys;render();
+};
+function receiveBanquetEnvoys(kind,title,invited){
+  if(!hostsEnvoys(kind)||S.over||mourningActive()||(!invited&&!chance(.35)))return;
+  const greeting={newYear:'奉上贺正国书',midAutumn:'携节礼前来拜节',emperor:'呈上祝寿国书'}[kind];
+  if(whiteSpringAudienceReady()){
+    const r=storyCastRecord('ayimu');
+    pushNow({title:title+' · 白泉来使',text:'礼部通传，白泉国王携女儿'+greeting+'。'+
+      (r?.stage?'公主在馆中住了些日子，今日愿将先前的婚议亲口答复。':'随行乐工把三面扁鼓抬到廊下，等候传召。'),
+      choices:[{t:r?.stage?'请父女入席，听公主回话':'请父女入席，观白泉鼓舞',f:()=>{
+        if(!whiteSpringAudienceReady())return null;
+        const guest=storyCastRecord('ayimu')||storyCastCreate('ayimu');
+        storyCastRecordLine(guest.person,'随父王赴'+title+'，以白泉国宾之礼入席。');
+        pushNow(storyCastMeetEvent('ayimu',guest,title));return null;
+      }},{t:'请礼部代收贺表，今日只设家席',f:()=>{log(title+'由礼部代受白泉贺表。');return '礼部将回帖送到馆中，国王领女儿谢过。';}}]});
+    return;
+  }
+  const [region,gift]=pick([['西域','彩纹织毯'],['东瀛','描金漆匣'],['海西','琉璃杯']]);
+  pushNow({title:title+' · '+region+'使臣',text:region+'使臣'+greeting+'，并以一件'+gift+'为贺。通译捧着礼单候在阶下。',
+    choices:[{t:'赐席，听使臣说说故乡的节俗',f:()=>{log(title+'赐席'+region+'使臣，听其讲述乡俗。');return '使臣谢过赐席，说起家乡筵席上主人怎样向远客致意。'+fx(chg({prestige:1}));}},
+      {t:'请礼部答礼',f:()=>{log(title+'命礼部答谢'+region+'使臣。');return '礼官收下贺表，送使臣回馆。';}}]});
+}
+function midAutumnFamilyGifts(){
+  harem().forEach(c=>c.mood=clamp(c.mood+6));
+  kidsAlive().forEach(k=>k.love=clamp(k.love+5));
+}
+function midAutumnCourtEvent(){
+  if(!banquetKind('midAutumn')?.ready)return null;
+  const hold=invited=>{
+    if(!banquetKind('midAutumn')?.ready||E().treasury<30)return null;
+    (S.flags.seasonalFeasts||={}).midAutumn=S.year;
+    midAutumnFamilyGifts();log('中秋家宴，六宫同乐。');
+    const gains=chg({treasury:-30});receiveBanquetEnvoys('midAutumn','中秋宫宴',invited);
+    return fx(gains)+'\n§后宫心情+6　皇嗣父爱+5';
+  };
+  return {title:'中秋家宴',text:'八月十五，月饼和桂花酒已经摆上长案。礼部来问，今年是否给外宾也留一席。',valid:()=>banquetKind('midAutumn')?.ready,
+    choices:[{t:'设中秋家宴，六宫同乐（国库-30万两）',cond:()=>E().treasury>=30,f:()=>hold(false)},
+      {t:'设宴，并'+envoyInvitationLabel()+'（国库-30万两）',cond:()=>E().treasury>=30,f:()=>hold(true)},
+      {t:'简单赏月',f:()=>'你独自登上角楼赏月。'}]};
+}
+
 function banquetKind(kind) {
+  const seasonal=Object.hasOwn(seasonalCourtFeasts,kind)&&seasonalCourtFeasts[kind];
+  if(seasonal&&envoyFeastsActive())return {title:seasonal.title,cost:30,ready:!S.over&&!mourningActive()&&S.month===seasonal.month&&S.flags.seasonalFeasts?.[kind]!==S.year};
   if (kind === 'garden') return { title:'御花园小宴', cost:15,
     ready:!S.over && !mourningActive() && S.turn-(S.lastGardenBanquet ?? -3)>=3 };
   if (kind === 'duanwu') {
@@ -30,7 +92,9 @@ function banquetKind(kind) {
 
 function birthdayBanquetButtons() {
   const feasts = ['emperor','empress'].map(kind=>[kind,banquetKind(kind)]).filter(([,feast])=>feast);
-  return `<div class="acts">${feasts.map(([kind,feast])=>feast.ready
+  const seasonal=Object.keys(seasonalCourtFeasts).filter(kind=>banquetKind(kind)?.ready).map(kind=>
+    `<button class="btn gold" onclick="A.openBanquet('${kind}')">筹办${seasonalCourtFeasts[kind].title}</button>`).join('');
+  return `<div class="acts">${seasonal}${feasts.map(([kind,feast])=>feast.ready
     ? `<button class="btn gold" onclick="A.openBanquet('${kind}')">筹办${feast.title}</button>`
     : `<span class="hint">${feast.title} · ${MONTHS[birthMonth(feast.host)-1]}${feast.host.birthFeastYear===S.year?'（本年已办）':''}</span>`).join('')}</div>`;
 }
@@ -133,7 +197,7 @@ function banquetAttendees(draft, feast) {
 function banquetProblem(draft, feast, people) {
   if(mourningActive())return '太后新丧，本月宫中暂缓宴饮。';
   if (!feast?.ready) return '这场宴会目前不能举办。';
-  if (people.length<(feast.host?1:2)||people.every(p=>p.sex)) return '还需选足宾客，并至少有一位妃嫔或宫人在席。';
+  if (people.length<(feast.host||Object.hasOwn(seasonalCourtFeasts,draft.kind)?1:2)||people.every(p=>p.sex)) return '还需选足宾客，并至少有一位妃嫔或宫人在席。';
   if (E().energy<=0) return '本月精力已尽。';
   if (feast.cost>0&&E().treasury<feast.cost) return '国库银两不足。';
   return '';
@@ -184,7 +248,7 @@ function viewBanquet() {
         }).join('')}</ol><div class="grid">${guestCards}</div>`}
     <p class="banquet-selection" role="status">已选：${draft.all?'全员宴请':'自选宾客'} · ${GARDEN_ACTIVITIES[draft.activity].label} · ${people.length} 位宾客</p><h3>席间活动</h3><div class="acts">${Object.entries(GARDEN_ACTIVITIES).map(([key,act])=>
       `<button class="btn sm ${draft.activity===key?'on':''}" aria-pressed="${draft.activity===key}" onclick="A.banquetActivity('${key}')">${act.label}</button>`).join('')}</div>
-    ${gardenDancePanel(draft)}
+    ${envoySeatsPanel(draft)}${gardenDancePanel(draft)}
     <div class="acts"><button class="btn gold" ${problem?'disabled':''} onclick="A.holdBanquet()">开宴<small>精力-1 · ${feast.cost?`国库-${feast.cost}万两`:'筹备时已拨款'}</small></button></div>
     ${problem?`<p class="hint">${problem}</p>`:''}`;
 }
@@ -288,7 +352,10 @@ function playBanquet(draft,feast,people,tables,move) {
   E().treasury-=feast.cost;
   if (feast.host) feast.host.birthFeastYear=S.year;
   else if (draft.kind==='duanwu') duanwuWork().held=true;
-  else S.lastGardenBanquet=S.turn;
+  else if(Object.hasOwn(seasonalCourtFeasts,draft.kind)){
+    (S.flags.seasonalFeasts||={})[draft.kind]=S.year;
+    if(draft.kind==='midAutumn')midAutumnFamilyGifts();
+  }else S.lastGardenBanquet=S.turn;
   const label=GARDEN_ACTIVITIES[draft.activity].label, toss=draft.activity==='toss';
   const dance=performWhiteSpringDance(draft,people);
   const lines=[];
@@ -349,6 +416,7 @@ function playBanquet(draft,feast,people,tables,move) {
   pushNow({title:`${feast.title} · ${label}`, cast:people.slice(0,4), gardenTables:draft.kind==='garden'?tables:null,
     text:`§${result}${promise}\n${lines.slice(0,6).join('\n')}`, choices:[ok1]});
   if(dance)pushNow(dance);
+  receiveBanquetEnvoys(draft.kind,feast.title,draft.envoys);
 }
 
 function banquetPair(a,b,label,toss,move) {
