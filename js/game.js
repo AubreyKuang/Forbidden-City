@@ -23,6 +23,31 @@ const byId=id=>S.consorts.find(c=>c.id===id);
 const kidById=id=>S.children.find(k=>k.id===id);
 const kidAge=k=>Math.floor((S.turn-k.born)/12);
 const empress=()=>alive().find(c=>c.rank===8&&!c.cold&&!c.maid);
+const DYNASTY_GOALS=[
+  {id:'grown',name:'桃李满天下',description:'本朝抚育十位在世成年皇嗣',target:10,reward:100,
+    progress:()=>S.children.filter(k=>k.alive&&kidAge(k)>=18).length},
+  {id:'children',name:'儿孙满堂',description:'本朝拥有二十位皇嗣',target:20,reward:100,
+    progress:()=>S.children.length},
+  {id:'reigns',name:'千秋一统',description:'见证三代君主继位',target:3,reward:150,
+    progress:()=>S.gen}
+];
+function reconcileDynastyGoals(){
+  if(!S||PalaceActions.blocked||journalContentVersion()<75)return;
+  const goals=S.dynastyGoals||={};
+  for(const goal of DYNASTY_GOALS){
+    if(goal.progress()<goal.target||goals[goal.id]?.completed)continue;
+    goals[goal.id]={completed:true,claimed:false,date:dateStr(),gen:S.gen};
+    log(`【王朝目标】${goal.name}达成，可在御书房领取赏银。`);
+  }
+}
+function claimDynastyGoal(id){
+  const goal=DYNASTY_GOALS.find(item=>item.id===id),entry=S?.dynastyGoals?.[id];
+  if(!goal||!entry?.completed||entry.claimed||S.over)return;
+  entry.claimed=true;
+  chg({treasury:goal.reward});
+  log(`【王朝目标】${goal.name}赏银 ${goal.reward} 万两入库。`);
+  render();
+}
 const rankCount=r=>alive().filter(c=>c.rank===r&&!c.cold&&!c.maid).length;
 const season=()=>S?Math.floor(((S.month+11)%12)/3):0; // 0春(1-3)…
 function dateStr(s=S){return `${s.emp.era}${s.year===1?'元':cnNum(s.year)}年${MONTHS[s.month-1]}`}
@@ -305,6 +330,7 @@ function nightWith(c,fromEvent){
     {t:'就此作罢'}]});
 }
 const A={
+  claimDynastyGoal(id){claimDynastyGoal(id)},
   go(v,id){
     if(PAGE_ORIGIN_VIEWS.includes(v)&&UI.view!==v&&!PERSON_DETAIL_VIEWS.includes(UI.view))(UI.pageFrom ||= {})[v]=UI.view;
     rememberPersonRoute(v,id);UI.view=v;UI.sel=id;

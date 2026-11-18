@@ -294,6 +294,7 @@ function viewHome(){
      ['recent','近事',`<ul class="story">${recent.map(l=>`<li class="${l.b?'big':''}"><time>${esc(l.d)}</time>${esc(l.t)}</li>`).join('')||'<li>尚无记载</li>'}</ul>`],
      ['royal-kin','皇亲列表',palaceAdoptionPanel()+royalKinRosterPanel()],
      ['fertility','太医院会诊',imperialFertilityPanel()],
+     ['goals','王朝目标',dynastyGoalsPanel()],
      ['court','朝堂与外家',courtBlocHTML()],
      ['stewardship','协理六宫',typeof haremStewardPanel==='function'?haremStewardPanel():''],
      ['story-consorts','剧情妃图鉴',storyConsortCodex()],
@@ -311,6 +312,17 @@ function viewHarem(){
    ${facHTML()}${dead.length?`<h3>故人</h3><div class="hint">${dead.map(c=>`<button class="btn sm" onclick="A.go('consort',${c.id})">${esc(fullName(c))}${c.gone?'（出宫）':'（已故）'}</button>`).join(' ')}</div>`:''}`}
 function detailSection(title,content){
   return content?`<section class="detail-section"><h3>${title}</h3><div class="detail-content">${content}</div></section>`:'';
+}
+
+function dynastyGoalsPanel(){
+  return `<section class="detail-section"><h3>王朝目标</h3>
+    <p class="hint">皇嗣目标按本朝记录计算，达成后保存在当前王朝存档，换代后仍可领取。</p>
+    <ul class="story">${DYNASTY_GOALS.map(goal=>{
+      const entry=S.dynastyGoals?.[goal.id],progress=entry?.completed?goal.target:Math.min(goal.progress(),goal.target);
+      return `<li><strong>${esc(goal.name)}</strong> · ${esc(goal.description)} · ${progress}/${goal.target}
+        ${entry?.claimed?' · 已领取':entry?.completed?`<button class="btn sm gold" onclick="A.claimDynastyGoal('${goal.id}')" ${S.over?'disabled':''}>领取 ${goal.reward} 万两</button>`:` · 赏银 ${goal.reward} 万两`}</li>`;
+    }).join('')}</ul>
+  </section>`;
 }
 function detailFold(title,content){
   return content?`<details class="detail-fold"><summary>${title}</summary><div class="detail-content">${content}</div></details>`:'';
