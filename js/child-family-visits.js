@@ -103,3 +103,44 @@ A.formerCareRule=function(childId,motherId){
  const k=kidById(childId),m=byId(motherId),v=k?.careVisitors?.[motherId];if(modalOpen||!childInPalace(k)||v?.role!=='原养母'||!m?.alive)return;
  v.blocked=!v.blocked;livedRecord([k,m],'family','原养母探视安排',`care:${S.gen}:${k.id}:${m.id}`,`陛下${v.blocked?'暂停':'恢复'}原养母${fullName(m)}对${k.name}的探视。以前的照料经历与亲近仍保留，现有抚养没有改变。`);render();
 };
+
+/* Releasing a mother restores only care that has not been assigned to someone else. */
+function releaseMotherReunionChanges(previous){
+ if(!S||!previous||previous.gen!==S.gen||journalContentVersion()<96||PalaceActions.blocked)return;
+ const before=new Map((previous.consorts||[]).map(c=>[c.id,c]));
+ for(const mother of S.consorts){
+  const old=before.get(mother.id);
+  if(!old?.alive||!old.cold||mother.cold||!inPalace(mother))continue;
+  const children=S.children.filter(k=>k.mom===mother.id&&childInPalace(k));
+  if(!children.length)continue;
+  const thread=`cold-release:${S.gen}:${mother.id}:${S.turn}`;
+  const entries=children.map(k=>{
+   const age=kidAge(k),named=k.pendingName?`尚未赐名的${k.sex==='m'?'小皇子':'小公主'}`:k.name;
+   const foster=k.foster&&k.foster!==mother.id?byId(k.foster):null;
+   const assigned=!!(k.foster&&k.foster!==mother.id);
+   const blocked=assigned&&k.visitRule==='closed';
+   const returnCare=!assigned&&age<14&&!k.married&&!k.pendingName;
+   let text;
+   if(blocked)text=`${named}已有${foster?fullName(foster):'养母'}照料，先前的禁探仍在。她急着打听孩子的近况，却只能托人送去问候，没有擅闯或改变抚养安排。`;
+   else if(assigned)text=`${named}如今由${foster?fullName(foster):'养母'}抚养。她悄悄来探望，只在一旁确认孩子安好，怕惊动旁人；孩子仍按原安排生活，她没有擅自接走。`;
+   else if(returnCare)text=age<6?`${named}尚未交由旁人抚养。她急忙去接孩子回到自己身边，又问乳母饮食、夜里睡得可安稳，往后仍由她与宫人照料。`:`${named}尚未交由旁人抚养。她急忙去看孩子，问清近来的起居和功课，重新照应孩子的日常，也听孩子慢慢说。`;
+   else text=`她悄悄去看${named}，先问起孩子这些日子过得好不好。孩子的住处与现有安排照旧，她仍惦记着孩子。`;
+   const words='“往后我会守好规矩，不再让你为我担惊受怕。你要好好的，我会一直惦记着你。”';
+   return {k,text,words,blocked};
+  });
+  const detail=entries.map(e=>e.text+(e.blocked?'':e.words)).join('\n\n');
+  const event={title:'冷宫归来 · 惦念孩子',por:mother,cast:entries.filter(e=>!e.blocked&&!e.k.pendingName).map(e=>e.k).slice(0,3),text:`${fullName(mother)}刚离开冷宫，连自己的东西也来不及细收，先问孩子过得好不好。\n${detail}`,
+   onQueue:()=>{
+    for(const e of entries){
+     const {k,text,words,blocked}=e;
+     if(blocked){story(mother,`【冷宫归来】${text}她仍惦记着孩子。`);continue;}
+     const childView=kidAge(k)<3?'在熟悉的声音和乳母照料下，慢慢安稳下来。':'母亲记得我，也愿意听我说这些日子的事。';
+     const motherView='盼孩子平安，往后守好规矩，不再让孩子替自己担惊受怕。';
+     livedRecord([mother,k],'family','冷宫归来 · 惦念孩子',thread,text+words,[motherView,childView]);
+     recordFamilyTime(k,mother,'冷宫归来重逢',childView,motherView,{gain:3,continuity:false});
+    }
+    log(`【冷宫归来】${fullName(mother)}出冷宫后惦念孩子，照现有抚养及探视安排问候。`,1);
+   },choices:[{t:'记下她对孩子的牵挂'}]};
+  pushEv(event);
+ }
+}
