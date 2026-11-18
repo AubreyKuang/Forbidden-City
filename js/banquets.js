@@ -264,7 +264,7 @@ function playBanquet(draft,feast,people,tables,move) {
   if(draft.kind==='duanwu')save('auto');
   UI.banquet=null;
   arrive(gardenPlace());
-  const performance=storyCastBanquetPerformance();if(performance)lines.unshift(performance);
+  const performance=storyCastBanquetPerformance()||storyCastLifeBanquet();if(performance)lines.unshift(performance);
   const demand=proudBanquetGuest(people);
   if (demand) pushNow(proudDemandEvent(demand,people));
   pushNow({title:`${feast.title} · ${label}`, cast:people.slice(0,4), gardenTables:draft.kind==='garden'?tables:null,

@@ -513,7 +513,10 @@ A.endMonth=function(){
   const fiefDockets=princeQuarterReports();
   const must=[passing?null:haremRemonstranceEvent(),passing?null:pendingImmortalEvent(),passing?null:pendingRoyalTravelEvent(),passing?null:pendingTravelInstitutionEvent(),passing?null:pendingRoyalSchoolRevision(),passing?null:pendingLocalChronicleReview(),passing?null:pendingClassicStory(),passing?null:pendingYiLandEvent(),passing?null:arcTick(),heirTick(),milestone(),parentageReportEvent(),birthSwapClueEvent(),birthSwapSearchReport(),pendingBirthSwapJustice(),pendingKinGreeting(),pendingMaternalKinCare(),pendingMaternalSisterArrival(),pendingDaoVoyage(),pendingTravelerEvent(),pendingOfficialReport(),pendingConcealedLoss(),...(legacyPendingAction()?[]:[pendingIncognitoReport(),passing?null:jingtishiEvent(),passing?null:selectionCouncilEvent()]),passing||typeof pendingHaremStewardEvent!=='function'?null:pendingHaremStewardEvent(),...(familyGardenActive()&&!passing?[familyGardenMonthlyEvent(),familyGardenDisputeEvent()]:[])].filter(Boolean),opt=[];
   if(comingOfAge)must.unshift(comingOfAge);
-  if(!passing)must.push(...storyCastMonthlyEvents());
+  if(!passing){
+    const castStories=storyCastMonthlyEvents();must.push(...castStories);
+    const palaceChapter=storyCastLifeMonthly(castStories);if(palaceChapter)must.push(palaceChapter);
+  }
   if(princeSuccession)must.push(princeSuccession);
   if(fertilityReview)must.push(fertilityReview);
   if(orphan)must.push(orphan);
