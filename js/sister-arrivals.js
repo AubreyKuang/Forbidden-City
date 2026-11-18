@@ -18,13 +18,27 @@ function sisterArrivalFeeling(c,g,admission=true){
   if(relation>=55)return {kind:'welcome',delta:8,text:`${branch}${fullName(c)}记着两人原本的好交情：“往后有人能说家中旧事，自然是好。可她有她的心思，臣妾也不能替她安排一生。”`};
   return {kind:'mixed',delta:2,text:`${branch}${fullName(c)}既盼亲人作伴，也有一点难言的忐忑，只先把宫中起居的规矩说清。`};
 }
+function recordSisterRelation(c,g,feeling){
+  relAdd(c,g,feeling.delta);
+  if(relGet(c,g)<=-25){(c.kinRival||={})[g.id]=1;(g.kinRival||={})[c.id]=1;}
+}
+function prepareSelectionSisterFeelings(g){
+  for(const c of S.consorts){
+    if(c===g||!c.alive||c.gone||!c.kin?.[g.id])continue;
+    const feeling=sisterArrivalFeeling(c,g,true);
+    (g.selectionSisterFeelings||={})[c.id]=feeling;
+    recordSisterRelation(c,g,feeling);
+  }
+}
 function familyAdmissionReactions(g,selection=false){
   if(g.sisterArrivalRecorded)return;
   g.sisterArrivalRecorded=true;
   for(const c of S.consorts){
     if(c===g||!c.alive||c.gone||!c.kin?.[g.id])continue;
-    const feeling=sisterArrivalFeeling(c,g,true);if(!inPalace(c))feeling.text=feeling.text.replace('按礼相迎','从家信得知消息');relAdd(c,g,feeling.delta);cchg(c,{mood:feeling.delta});
-    if(relGet(c,g)<=-25){(c.kinRival||={})[g.id]=1;(g.kinRival||={})[c.id]=1;}
+    const prepared=g.selectionSisterFeelings?.[c.id],feeling=prepared||sisterArrivalFeeling(c,g,true);
+    if(!inPalace(c))feeling.text=feeling.text.replace('按礼相迎','从家信得知消息');
+    if(!prepared)recordSisterRelation(c,g,feeling);
+    cchg(c,{mood:feeling.delta});
     c.sisterArrival={other:g.id,turn:S.turn,kind:feeling.kind,text:feeling.text};
     if(familyScenesEnabled())sisterAdmissionChronicle(c,g,feeling,selection);
     else{story(c,`【姐妹入宫】${feeling.text}`);story(g,`【姐妹初见】${feeling.text}`);}
@@ -35,6 +49,7 @@ function familyAdmissionReactions(g,selection=false){
     if(selection&&feeling.delta>0&&!['悲恸','心如死灰'].includes(xinOf(c)))setXin(c,'欢喜',fullName(g)+'留选入宫',g.id,{record:false});
     if(feeling.delta<0&&!['悲恸','心如死灰'].includes(xinOf(c)))setXin(c,'委屈',`家中另送${fullName(g)}入宫，心中不安`);
   }
+  delete g.selectionSisterFeelings;
 }
 function sisterThread(c,g){return `sister:${S.gen}:${c.id}:${g.id}`;}
 function sisterNewcomerThought(c,g,feeling){
