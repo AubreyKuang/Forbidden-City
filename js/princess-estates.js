@@ -8,6 +8,7 @@ const PRINCESS_PURSUITS = {
     next:{title:'编一册亲眷手记',wish:'我想请各房亲眷寄来自己记得的小事，连同旧菜谱、旧书签一道抄下来。等他们来府上，就放在小厅慢慢翻。',result:'手记整订好了。一页写着家宴上做过的点心，另一页夹着旧书签的摹本。各房都收到一册，府里还留着一册，可以随时添写。'}}
 };
 const PRINCESS_MATCHES = {
+  whiteSpring:{name:'白泉国来使为本国望族求亲',note:'来使带来母族故地的婚书和商路图，盼两边约定家书的驿期。'},
   official:{name:'重臣之子', note:'他的家人能在朝中照应她，她担心婚后很难拒绝娘家的请托。'},
   frontier:{name:'北境来使为本部求亲', note:'她问，远行之后可否继续给母亲写信，又能否保留自己的府中人手。'},
   scholar:{name:'她愿意交往的进士', note:'两人谈过她想做的事。对方愿先来见她，等她自己作答。'}
@@ -153,6 +154,25 @@ function princessOpening(k){
   ]};
 }
 
+const princessMarriageLand=k=>k.spouse?.route==='whiteSpring'?'白泉国':'北境';
+const whiteSpringMatchReady=k=>storyCastCivicActive()&&whiteSpringChild(k)&&k.sex==='f'&&marriageReady(k);
+function whiteSpringMatchReview(k){
+  if(!whiteSpringMatchReady(k))return null;
+  const p=marriageCandidate(k,'whiteSpring');
+  const wish=k.whiteSpringStudy?'她自己用白泉话问了归程和驿期，当面听完了答复。':'她请通译把婚书再念了一遍，先问成亲后家书要从哪一站递。';
+  const valid=()=>whiteSpringMatchReady(k);
+  return {title:'白泉婚书 · 母亲的故乡',cast:[k,p],valid,text:p.name+'出自白泉国的商驿世家，与公主外祖家并无亲缘。'+wish+'\n'+k.name+'说：“我愿意随他去白泉。我想看看母亲小时候走过的街，也想让您收到我的第一封信。”',
+    choices:[{t:'准她和亲白泉，留驿路通家书',cond:valid,f:()=>{
+      if(!valid())return null;
+      const gains=settlePrincessMarriage(k,p,'frontier','白泉国商驿世家');
+      k.estate||={pursuit:princessPursuit(k),opened:S.turn,stage:'proposal',route:'frontier'};
+      k.estate.location='白泉国';k.estate.nextVisit=S.turn+2;
+      const mother=byId(k.mom);
+      if(mother?.alive){story(mother,'女儿'+k.name+'自愿和亲白泉，临行托她捎一句故乡平安。');cchg(mother,{mood:3});}
+      save('auto');return '公主收好婚书，命随行人记下第一处可寄家信的驿站。'+fx(gains);
+    }},{t:'先让两人谈谈日常',f:()=>{pushNow(marriageMeeting(k,p,()=>whiteSpringMatchReview(k)));return null;}},
+      {t:'再看别的人选',f:()=>{pushNow(princessMarriage(k));return null;}},{t:'暂缓半年',f:()=>{k.marriageAfter=S.turn+6;save('auto');return '公主收好路图，婚书留待日后再议。';}}]};
+}
 function princessMarriage(k){
   const preference=k.estate?.pursuit||princessPursuit(k);
   const order=preference==='books'?['scholar','official','frontier']:preference==='archery'?['frontier','scholar','official']:['official','scholar','frontier'];
@@ -160,6 +180,7 @@ function princessMarriage(k){
   return {title:'公主婚事',por:k,valid:()=>marriageReady(k),...(voice?{onShow:()=>rememberPrincessMarriageVoice(k,voice)}:{}),text:voice?.text||`${kidName(k)}请你先看她写的笺子：「${PRINCESS_PURSUITS[preference].wish}」\n她愿意与你逐一谈谈求亲的人。`,choices:[
     ...(typeof linJianxiProposalReady==='function'&&linJianxiProposalReady(k)?[{t:'听林见溪的求亲回话',f:()=>{pushNow(linJianxiProposalEvent(k));return null;}}]:[]),
     ...(rememberedMatch(k)?[{t:'谈谈少年时相识的'+rememberedMatch(k).name,f:()=>{pushNow(rememberedMatchEvent(k));return null;}}]:[]),
+    ...(whiteSpringMatchReady(k)?[{t:'听她谈白泉国的和亲婚书',f:()=>{pushNow(whiteSpringMatchReview(k));return null;}}]:[]),
     ...order.map(id=>({t:`听她谈谈${PRINCESS_MATCHES[id].name}`,f:()=>{pushNow(princessMatchReview(k,id));return null;}})),
     {t:'由她安排，半年后再谈',f:()=>{k.marriageAfter=S.turn+6;save('auto');return '她收起名帖，说等有了主意会来找你。';}}
   ]};
@@ -168,10 +189,15 @@ function settlePrincessMarriage(k,person,id,description=PRINCESS_MATCHES[id].nam
   k.married=true;k.spouse={...person,marriedAt:S.turn};
   if(k.estate)k.estate.route=id;
   k.princessMarriage=id;
-  princessMemory(k,'princess_marriage',`婚事议定：${person.name}（${description}）。`);
-  log(`${kidName(k)}与${person.name}议定婚事。`,1);
+  if(person.route==='whiteSpring'){
+    princessMemory(k,'princess_marriage','循母亲当年的来路远嫁白泉国，与'+person.name+'安家，约好循驿路给宫中寄信。','白泉国');
+    log(kidName(k)+'和亲白泉国，与'+person.name+'在白泉定居。',1);
+  }else{
+    princessMemory(k,'princess_marriage',`婚事议定：${person.name}（${description}）。`);
+    log(`${kidName(k)}与${person.name}议定婚事。`,1);
+  }
   const mother=byId(k.mom);
-  if(id==='frontier'&&mother?.alive)cchg(mother,{mood:-18,aff:-5});
+  if(id==='frontier'&&person.route!=='whiteSpring'&&mother?.alive)cchg(mother,{mood:-18,aff:-5});
   if(id==='scholar')k.love=clamp(k.love+15);
   const gains=id==='frontier'?chg({prestige:3,people:6}):id==='official'?chg({prestige:4,treasury:-50}):'父爱+15';
   ensureMarriedLife(k);return gains;
@@ -246,7 +272,7 @@ function princessLetterLabel(estate){
   if(estate.stage==='working')return S.turn>=estate.due?'送来了办成的消息':'府中正在筹办';
   if(princessFollowupDue(estate))return '续办的事已有回音';
   if(estate.followup&&estate.followup.finished===undefined)return '续办的事正在筹备';
-  return S.turn>=estate.nextVisit?'可邀她回宫':'府中日常';
+  return S.turn>=estate.nextVisit?(estate.route==='frontier'?'可读远方家书':'可邀她回宫'):'府中日常';
 }
 function princessFollowupPanel(k,project){
   const e=k.estate,f=e.followup;
@@ -262,7 +288,7 @@ function princessEstateFamilyPanel(k){
   const callWait=Math.max(0,(e.nextCall??0)-S.turn);
   const frontier=(k.princessMarriage||e.route)==='frontier';
   return detailSection('探望与家书',`<div class="acts">${local?`<button class="btn jade" onclick="A.princessEstateCall(${k.id})" ${princessEstateVisitReady(k)&&E().energy>0?'':'disabled'}>到公主府探望<small>${callWait?`还需 ${callWait} 个月`:'精力 −1'}</small></button>`:''}
-    ${local||frontier?`<button class="btn" onclick="A.princessVisit(${k.id})" ${wait?'disabled':''}>${local?'请她回宫探亲':'读北境家书'}${wait?`<small>还需 ${wait} 个月</small>`:''}</button>`:''}</div>`);
+    ${local||frontier?`<button class="btn" onclick="A.princessVisit(${k.id})" ${wait?'disabled':''}>${local?'请她回宫探亲':'读'+princessMarriageLand(k)+'家书'}${wait?`<small>还需 ${wait} 个月</small>`:''}</button>`:''}</div>`);
 }
 function viewPrincessEstate(){
   const k=princessById(UI.sel),e=k?.estate;
@@ -357,11 +383,12 @@ A.princessVisit=function(id){
   const parent=k.reign?`新君与${princessKinship(k)}在宫里叙了旧。`:mother?.alive&&!mother.gone&&!mother.cold?`她与${cName(mother)}在廊下坐了半日，说起开府后的日子。`:'她在宫里走了走，在从前住的地方停了一会儿。';
   const far=(k.princessMarriage||e.route)==='frontier';
   const text=far?`她托来京的使者带回一封家书：「${e.stage==='done'?'府中的事已经办妥，愿宫中安好。':'等府中事务安顿，我再寻机会回来。'}」`:parent;
-  pushEv({title:far?'北境家书':'回宫探亲',por:k,text,choices:[{t:far?'回信问安':'留她用膳',f:()=>{
+  pushEv({title:far?princessMarriageLand(k)+'家书':'回宫探亲',por:k,text,choices:[{t:far?'回信问安':'留她用膳',f:()=>{
     if(S.turn<e.nextVisit)return null;
     e.nextVisit=S.turn+4;k.love=clamp(k.love+5);
     if(!far&&mother?.alive&&!mother.gone&&!mother.cold){cchg(mother,{mood:6});story(mother,`${k.name}回宫探亲，母女叙话。`);}
+    if(far&&k.spouse?.route==='whiteSpring'&&mother?.alive)story(mother,'女儿'+k.name+'从白泉寄回近况，来使还捎来故乡开市的日子。');
     princessMemory(k,'princess_visit',text,far?'公主府':'宫中');
-    log(`${kidName(k)}${far?'从北境寄回家书':'回宫探亲'}。`);save('auto');return null;
+    log(`${kidName(k)}${far?'从'+princessMarriageLand(k)+'寄回家书':'回宫探亲'}。`);save('auto');return null;
   }},{t:'改日再说'}]});
 };

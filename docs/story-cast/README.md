@@ -62,6 +62,10 @@
 
 <img src="../screenshots/story-cast-life/ayimu-garden-encore.jpg" alt="阿依慕入宫后在御花园再跳白泉舞，在席妃嫔各有反应" width="455">
 
+**子女与白泉婚书**。亲生儿女出生武艺加 20（上限 100）、魅力 25，在皇嗣名册与档案显示「异域血脉 · 白泉王裔」。皇子依游戏中的礼例不可立储。年满十五岁、尚未婚配或订亲且可议婚的公主，在皇嗣档案或已开的公主府点「议婚 / 赐婚 → 听她谈白泉国的和亲婚书」。可先相看、暂缓，或准她嫁到母亲的故国。识白泉话会有不同的相看对白。婚后住在白泉，可从公主府读白泉国家书；原本的北境婚事仍可另选。
+
+<img src="../screenshots/story-cast-life/white-spring-princess-marriage.jpg" alt="清竹自愿远嫁母族故地，礼部呈白泉婚书" width="455">
+
 原有香囊澄清、妃嫔学香、蝴蝶与白泉家书的剧情会继续出现。教孩子白泉话的入口在原有「家书与互市」一线，孩子须满七岁且在宫。
 
 - **两边的市日 → 驿路回单 → 席上两种话**。可付 8 万两先走一趟试市，两个月后看回单，也可等三个月重签。收到回单后可以留一条家书驿路。已学白泉话的皇嗣可随她核礼单并获才学加 4。
@@ -90,6 +94,10 @@
 
 <img src="../screenshots/story-cast-life/09-suheng-accounts.jpg" alt="苏蘅和掌事按已签的供单结算押款" width="455"> <img src="../screenshots/story-cast-life/10-suheng-tea.jpg" alt="苏蘅的一味无香特殊事件" width="455">
 
+**姑苏香市口碑**。苏蘅在宫、连续三个转月恩宠达到 65，民心加 1，之后每六个月最多一次。「两杆秤」可拨 4 万两设公秤，或让苏家铺子先试行互验。两个月后收到复秤单，可以核准回帖。
+
+<img src="../screenshots/story-cast-life/suheng-market-scales.jpg" alt="苏蘅请核准姑苏香市的公秤" width="455">
+
 ## 岑小满
 
 京城灯市相遇，赴宴后先结清搭档的赏钱，才谈入宫。原有大杂院来信还可拨给孩子过冬钱，或请她讲清什么时候能补。
@@ -99,6 +107,10 @@
 - **多出一枚铜钱**。结清一场戏的工钱后出现。她故意多藏一枚钱，等学徒先发现钱数与账上不同，再把那枚钱给最认真查账的人。
 
 <img src="../screenshots/story-cast-life/11-xiaoman-wages.jpg" alt="真实宫宴结束后岑小满核算戏班工钱" width="455"> <img src="../screenshots/story-cast-life/12-xiaoman-coin.jpg" alt="结清工钱后触发岑小满的多出一枚铜钱" width="455">
+
+**灯市口碑**。岑小满在宫且连续三个转月恩宠达到 65，民心加 1，每六个月最多一次。庙会散工找她追工钱，可从国库先垫 4 万两，也可让班主照约支付。两个月后核销领条，国库垫付的银钱会如数归还。
+
+<img src="../screenshots/story-cast-life/xiaoman-fair-wages.jpg" alt="岑小满为庙会散工核对工钱" width="455">
 
 ## 截图与验收
 

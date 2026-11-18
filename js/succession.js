@@ -100,7 +100,7 @@ function royalKinContactMode(k,estateContact=false){
     (estate?.location&&estate.location!=='京城')?'letter':'visit';
 }
 function royalKinContactPlace(k,mode){
-  if(k.princessMarriage==='frontier'||k.estate?.route==='frontier')return '北境';
+  if(k.princessMarriage==='frontier'||k.estate?.route==='frontier')return princessMarriageLand(k);
   if(k.away&&princeFief(k)&&!royalJourneyAway(k)&&!k.templeStay)return princeFief(k);
   return k.away||royalJourneyAway(k)||k.templeStay?childWhereabouts(k):k.princeEstate?.location||k.estate?.location||
     (mode==='visit'?'京城':'外地');

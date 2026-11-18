@@ -36,11 +36,12 @@ function annualBirthOmenTick(){
   }
 }
 function birthTags(k){
-  if(birthLabelsActive()&&Array.isArray(k.birthLabels))return immortalTags(k)+multipleBadge(k)+birthLabelsHTML(k);
+  const lineage=storyCastCivicActive()&&whiteSpringChild(k)?'<span class="tag y">异域血脉 · 白泉王裔</span>':'';
+  if(birthLabelsActive()&&Array.isArray(k.birthLabels))return lineage+immortalTags(k)+multipleBadge(k)+birthLabelsHTML(k);
   const omen=BIRTH_OMENS[k.birthOmen],trouble=BIRTH_TROUBLES[k.birthTrouble];
   const effect=omen&&(journalContentVersion()>=30?birthOmenEffect(omen):`${omen.label}+${omen.bonus}`);
   const troubleEffect=journalContentVersion()>=37&&trouble?.stat?` · ${birthOmenEffect(trouble)}`:'';
-  return `${immortalTags(k)}${multipleBadge(k)}${omen?`<span class="tag y" title="${journalContentVersion()>=30?'周岁起，每逢生辰结算一次；属性范围0—100。':'出生时'+effect}">${omen.name} · ${effect}</span>`:''}${trouble?`<span class="tag"${troubleEffect?' title="周岁起，每逢生辰结算一次；属性范围0—100。"':''}>${esc(trouble.name+troubleEffect)}</span>`:''}`;
+  return `${lineage}${immortalTags(k)}${multipleBadge(k)}${omen?`<span class="tag y" title="${journalContentVersion()>=30?'周岁起，每逢生辰结算一次；属性范围0—100。':'出生时'+effect}">${omen.name} · ${effect}</span>`:''}${trouble?`<span class="tag"${troubleEffect?' title="周岁起，每逢生辰结算一次；属性范围0—100。"':''}>${esc(trouble.name+troubleEffect)}</span>`:''}`;
 }
 function deliveryKids(c){return (c.delivery?.children||[]).map(kidById).filter(Boolean)}
 function pendingDelivery(){return S.consorts.find(c=>c.delivery&&!c.delivery.settled&&(c.delivery.lossPending||deliveryKids(c).some(k=>k.pendingName)))}
