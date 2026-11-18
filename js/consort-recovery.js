@@ -33,11 +33,12 @@ function consortRecovery(c){
 function consortNightReason(c){
   if(!c)return '眼下不宜召见';
   if(c.homeLeave&&journalContentVersion()>=88)return c.homeLeave.field?'外出 · 赴北境军驿':'外出省亲';
-  if(journalContentVersion()>=90){
+  if(journalContentVersion()>=91){
     const d=S.flags.dowager;
     if(dowagerIll(d)&&d.lastYears.caregiver===c.id)return '正在为太后侍疾';
     if(queenCaregiver()===c)return '正在为皇后侍疾';
   }
+  if(c.outerHouseholdId)return '分院安置，不入轮值';
   if(c.cardWithdrawn)return '绿头牌已撤';
   if(c.preg)return c.maid&&c.preg===1&&journalContentVersion()>=49?'今夜暂不宜留侍':'有孕在身';
   const r=consortRecovery(c);
@@ -47,13 +48,13 @@ function consortNightReason(c){
   return '';
 }
 function queenCaregiver(){
-  if(!S||journalContentVersion()<90)return null;
+  if(!S||journalContentVersion()<91)return null;
   const q=empress(),care=q?.queenIllnessCare,ill=q?.illnessRecovery;
   if(!q||!inPalace(q)||!care||!ill||ill.turn!==care.illnessTurn||S.turn>=Math.min(care.until,ill.until))return null;
   const c=byId(care.caregiver);return c&&dowagerVisitReady(c)?c:null;
 }
 function queenCareSelection(q){
-  const valid=()=>journalContentVersion()>=90&&q===empress()&&inPalace(q)&&q.illnessRecovery?.until>S.turn;
+  const valid=()=>journalContentVersion()>=91&&q===empress()&&inPalace(q)&&q.illnessRecovery?.until>S.turn;
   if(!valid())return null;
   const candidates=()=>harem().filter(c=>c!==q&&c.age>=18&&dowagerVisitReady(c)&&!(dowagerIll(S.flags.dowager)&&S.flags.dowager.lastYears.caregiver===c.id));
   return {title:'中宫 · 安排侍疾',por:q,valid,text:'皇后病中可请一位身体安好的妃嫔照应起居，太医和宫人仍负责诊治与轮值。侍疾期间暂不召她侍寝，病程结束后恢复。',choices:[

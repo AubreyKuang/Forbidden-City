@@ -192,6 +192,7 @@ function finishSelection(){
   if(journalContentVersion()>=81)for(const c of members)familyAdmissionReactions(c,true);
   selectionKinNews(s,members,S.cands);
   if(s)delete s.departedKin;
+  if(outerIntegration())for(const c of S.cands)outerSelectionDismissed(c);
   S.cands=[];
   if(!members.length){finishSelectionCourt(s,[]);delete S.selection;log('选秀礼毕，本次未留新人。');return true;}
   s.phase='arrivals';s.finishedAt=S.turn;
@@ -261,8 +262,8 @@ A.xxPerform=function(id){if(modalOpen||selectionCurrent()?.id!==id)return;S.sele
 A.xxNext=function(id){if(modalOpen||selectionCurrent()?.id!==id)return;const i=S.cands.findIndex(c=>c.id===id);S.selection||={};S.selection.current=S.cands[i+1]?.id;S.selection.phase=i+1<S.cands.length?'audience':'roster';save('auto');render();};
 function newcomerWelcomeEvent(c){
   const arrival=c.entryAdjustment;
-  if(!arrival||arrival.settled||arrival.pendingBatch||S.turn-arrival.turn>=6||!inPalace(c))return null;
-  const valid=()=>inPalace(c)&&!arrival.settled&&!arrival.pendingBatch&&S.turn-arrival.turn<6;
+  if(!arrival||arrival.settled||arrival.pendingBatch||S.turn-arrival.turn>=6||!inPalace(c)||c.outerPrivateResidence)return null;
+  const valid=()=>inPalace(c)&&!arrival.settled&&!arrival.pendingBatch&&S.turn-arrival.turn<6&&!c.outerPrivateResidence;
   const favored=harem().filter(o=>o.id!==c.id&&o.favor>=40).sort((a,b)=>b.favor-a.favor||a.id-b.id)[0];
   const news=favored?`宫人答说，近来${cName(favored)}常蒙召见。`:'宫人只说，各宫各有起居，不好妄议圣意。';
   const text={solitary:'她问清请安的时辰，便将自己的书与茶具放好。“分内的礼数，臣妾不会怠慢。至于闲时，可否容臣妾独自过？并非与谁不睦，只是不惯结伴。”',careful:`她先请教请安的次序，又不动声色地问了各宫近来的赏赐。${news}\n见你进来，她收住话：“臣妾只怕不懂规矩，给人添了麻烦。”`,

@@ -14,6 +14,10 @@ function ministryState(){
 }
 const scholarList=()=>S.scholars||[];
 const scholarById=id=>scholarList().find(p=>p.id===id);
+function scholarCourtBloc(p){
+  if(outerHouseholdUpdates()&&p.outerChildId&&p.bloc)return p.bloc;
+  return p.outerChildId&&p.bloc==='army'?'army':'civil';
+}
 
 /* —— 新科进士：外戚之外的朝臣 —— */
 const SCHOLAR_ORIGINS=['寒门','书香门第','耕读之家','盐商之后','军户子弟'];
@@ -31,7 +35,7 @@ function scholarRecord(p,text,big=true){story(p,text);log(`${p.name}：${text}`,
 // 尚书人选与表格共用的统一条目：外戚出身的用 officialEntry 键，进士出身的用 scholar: 前缀。
 function courtPerson(key){
   if(!key)return null;
-  if(String(key).startsWith('scholar:')){const p=scholarById(String(key).slice(8));return p?{p,key,scholar:true,bloc:p.outerChildId&&p.bloc==='army'?'army':'civil'}:null;}
+  if(String(key).startsWith('scholar:')){const p=scholarById(String(key).slice(8));return p?{p,key,scholar:true,bloc:scholarCourtBloc(p)}:null;}
   const e=officialEntry(key);return e?{p:e.p,key,e,bloc:e.h.bloc}:null;
 }
 function courtPersonRecord(person,text,options){
@@ -385,6 +389,7 @@ function examEvent(){
   let done=false;
   const finish=order=>{
     if(done)return null;done=true;
+    if(regnalChronicleActive())openRegnalChronicle();
     const titles=['状元','榜眼','探花'],posts=['翰林院修撰','翰林院编修','翰林院编修'];
     S.scholars ||= [];
     order.forEach((p,i)=>{p.examRank=titles[i];p.examYear=S.year;p.office=posts[i];p.post=posts[i];p.appointedTurn=S.turn;if(i===0)p.trust=55;
@@ -394,6 +399,7 @@ function examEvent(){
       else officialRecord(e.c,e.role,'会试未第，仍以举人身份候选。');
     }
     record.top=order.map(p=>p.id);
+    if(regnalChronicleActive())recordRegnalEntry('科举',`${record.enke?'恩科':'正科'}殿试，${order.map((p,i)=>titles[i]+p.name).join('、')}。`);
     if(typeof outerExamResults==="function")outerExamResults();
     if(journalContentVersion()>=65&&record.enke){
       const docket=ministryDockets().find(d=>d.ministry==='rites'&&d.due==null&&d.turn+1===record.turn);
@@ -480,7 +486,8 @@ function ritesVacancyPetitions(){
     wait.next=first?wait.since+6:S.turn+6;
     if(!chance(first?.55:.8))continue;
     const head=ministryHead('rites'),byline=head?'礼部尚书'+head.p.name:'礼部代署官',topic=queen?'册立皇后':'册立太子';
-    const candidates=queen?harem().filter(c=>c.rank>=5&&c.rank<8).sort((a,b)=>b.rank-a.rank):S.children.filter(ritesHeirEligible).sort((a,b)=>a.born-b.born);
+    const queenEligible=c=>!c.outerHouseholdId&&c.rank>=5&&c.rank<8;
+    const candidates=queen?harem().filter(queenEligible).sort((a,b)=>b.rank-a.rank):S.children.filter(ritesHeirEligible).sort((a,b)=>a.born-b.born);
     const preface=queen?(first?'中宫已虚三月，臣请陛下早定人选，好让奉册、告庙诸礼有所预备。':'凤位久虚。来日宗庙行礼，内廷命妇由谁领班，还请陛下定夺。'):
       '宗人府呈来的玉牒上，已有年满五岁的皇子。臣请陛下早定储嗣，东宫讲读也好有所安排。';
     const record=line=>{log(byline+line);if(head)courtPersonRecord(head,line);};
@@ -490,7 +497,7 @@ function ritesVacancyPetitions(){
       onQueue:()=>record('上疏，请'+topic+'。'),
       choices:[{t:'留中，容后再议',f:()=>{record('所奏'+topic+'一事，奉旨缓议。');return '奏疏留中，礼部照旧例行事。';}},
         ...candidates.map(p=>({t:(queen?'拟立':'拟册')+(queen?cName(p):kidName(p))+' · '+(queen?fullName(p):kidAge(p)+'岁'),
-          cond:()=>valid()&&(queen?harem().includes(p)&&p.rank>=5&&p.rank<8:ritesHeirEligible(p)),
+          cond:()=>valid()&&(queen?harem().includes(p)&&queenEligible(p):ritesHeirEligible(p)),
           f:()=>{if(queen)A.crown(p.id);else A.kidHeir(p.id,true);}}))]});
   }
   return events;

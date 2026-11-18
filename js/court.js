@@ -1082,7 +1082,7 @@ function identifyFather(family,house){
 }
 function houseOf(c){
   if(whiteSpringRoyal(c)){whiteSpringFamily(c);return null;}
-  if(c?.familyBranchOrigin)return null; // Her parents already have records in the original branch.
+  if(c?.familyBranchOrigin||c?.outerHouseholdId)return null; // These households already have records elsewhere.
   if(c?.selectionNatalHost!=null)return c.house=familyHostById(c.selectionNatalHost)?.house||c.house;
   if(!c||c.maid||c.rescue||storyCastActive()&&c.fixedStory==='chuwan')return null;
   const family=paternalFamily(c),root=family[0];

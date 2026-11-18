@@ -311,7 +311,7 @@ function officialFilterMatch(p,filter){
 }
 function officialsTable(){
   const filter=OFFICIAL_FILTERS.some(([id])=>id===UI.officialsFilter)?UI.officialsFilter:'serving';
-  const bloc=UI.officialsBloc||'all',scholarBloc=p=>p.fenghuaKey==='gaoHuaibi'?'army':'civil';
+  const bloc=UI.officialsBloc||'all',scholarBloc=p=>p.fenghuaKey==='gaoHuaibi'?'army':outerHouseholdUpdates()?scholarCourtBloc(p):'civil';
   const entries=officialEntries().filter(e=>!['student','commoner'].includes(e.p.career)),scholars=(typeof scholarList==='function'?scholarList():[]).filter(p=>!['student','commoner'].includes(p.career)),blocs=[...new Set([...entries.map(e=>e.h.bloc||'none'),...scholars.map(scholarBloc)])];
   const rows=entries.filter(e=>officialFilterMatch(e.p,filter)&&(bloc==='all'||(e.h.bloc||'none')===bloc))
     .sort((a,b)=>(officialAlive(b.p)-officialAlive(a.p))||((b.role==='father')-(a.role==='father'))||(b.p.merit-a.p.merit));

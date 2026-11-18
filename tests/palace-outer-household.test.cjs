@@ -31,18 +31,29 @@ test('adult encounters use an outing and earn trust across visits; the reported 
 test('a real selection calls an adult daughter, warns before audience, and resolves her residence and discovery exactly once',()=>{
   let b=household();b.run(`k.sex='f';A.outerPetition(k.id);choose(1);drain();
     k.born=S.turn-17*12;k.path='候选秀';genCands();assert.ok(!k.pending.includes('roster'));
-    k.born=S.turn-18*12;PalaceActions.reset();A.go('outer');genCands();assert.match(curEv.title,/名册/);
-    assert.ok(curEv.text.includes(k.token));choose(2);nextEv();assert.equal(k.path,'待殿选');
-    nextEv();A.outerPetition(k.id);assert.match(curEv.title,/殿选/);`);
-  b=game(67,b.storage);b.run(`var k=outerBook().children[0];choose(0);drain();
-    assert.equal(k.path,'宫中留名');assert.ok(!S.consorts.some(c=>c.id===k.id));assert.ok(outerBook().awards.includes('暗度陈仓'));
+    finishSelection();S.flags.lastXX=-99;k.born=S.turn-18*12;PalaceActions.reset();
+    A.xxDecree();assert.match(curEv.title,/名册/);
+    assert.ok(curEv.text.includes(k.token));choose(2);drain();assert.equal(k.path,'待殿选');
+    A.xxRoster();assert.ok(viewXX().includes(k.alias));assert.ok(viewXX().includes(k.mark));
+    A.xxMeet(k.id);assert.equal(selectionCurrent().id,k.id);A.xxPerform(k.id);
+    A.xxTake(k.id);assert.match(curEv.title,/留牌/);`);
+  b=game(67,b.storage);b.run(`var k=outerBook().children[0];choose(1);drain();A.xxEnd();
+    var c=byId(k.id);assert.ok(c);assert.equal(fullName(c),k.alias);
+    assert.equal(k.path,'宫中留名');assert.ok(viewHarem().includes(k.alias));assert.ok(outerBook().awards.includes('暗度陈仓'));
+    assert.ok(S.selection.accepted.includes(k.id));assert.match(c.story.at(-1).t,/选秀礼毕/);
+    A.chat(c.id);assert.match(curEv.title,/宫中闲话/);drain();
+    A.promote(c.id);choose(0);drain();assert.equal(c.rank,2);assert.match(outerRegisterView(),/宫中位分 常在/);
     Math.random=()=>0;S.turn++;outerMonthly();assert.match(curEv.title,/认出了故人/);
-    choose(3);drain();assert.notEqual(k.path,'宫中留名');assert.equal(outerBook().notes.filter(n=>n.title==='认出身世').length,1);`);
+    choose(0);drain();assert.equal(k.path,'留宫自处');assert.ok(inPalace(c));
+    A.chat(c.id);assert.equal(modalOpen,false);
+    A.outerCare(k.id,'withdraw');choose(0);drain();assert.equal(c.gone,true);assert.equal(k.path,'出宫归家');
+    assert.equal(outerBook().notes.filter(n=>n.title==='认出身世').length,1);`);
 });
 test('an aspiring son appears on a completed real exam, keeps a real career and can decline late recognition',()=>{
   const b=household();b.run(`k.sex='m';A.outerPetition(k.id);choose(2);drain();k.born=S.turn-18*12;k.lit=85;k.path='候会试';
     var before=(S.scholars||[]).length;var exam=examEvent();assert.equal(k.officialId,undefined);
     pushEv(exam);choose(0);drain();var p=scholarById(k.officialId);assert.equal(p.name,k.alias);assert.equal(p.examRank,'进士');
+    assert.equal(k.register,'化名');assert.notEqual(p.sur,m.sur);assert.notEqual(p.sur,E().sur);
     outerExamResults();assert.equal(S.scholars.filter(p=>p.outerChildId===k.id).length,1);
     A.outerPetition(k.id);choose(0);drain();assert.equal(p.office,'州府通判');
     A.outerCare(k.id,'identity');choose(curEv.choices.findIndex(c=>c.t.includes('核验')));drain();
@@ -79,9 +90,9 @@ test('sisters use an actual adult relative and prenatal calendar; a reunion has 
     outerSister(m).married=true;outerSister(m).spouse={name:'许文',alive:true};
     m.preg={notice:S.turn+2,due:S.turn+9};assert.equal(natalPregnancyReady(outerSister(m)),false);
     A.outerMeet('旧识','suzhou');assert.equal(modalOpen,false);
-    S.year=3;S.turn+=24;A.outerMeet('旧识','suzhou');assert.match(curEv.text,/渡头|订亲|藩邸|大雨/);choose(0);drain();
+    S.year=3;S.turn+=24;A.outerSouthTour();drain();A.outerMeet('旧识','suzhou');assert.match(curEv.text,/渡头|订亲|藩邸|大雨/);choose(0);drain();
     assert.ok(outerBook().mothers[1].aff>m.aff);assert.ok(outerBook().mothers[1].trust>m.trust);
-    var count=outerBook().mothers.length;A.outerMeet('市井','city');assert.equal(modalOpen,false);assert.equal(outerBook().mothers.length,count);`);
+    var count=outerBook().mothers.length;A.outerMeet('市井','suzhou');assert.equal(modalOpen,false);assert.equal(outerBook().mothers.length,count);`);
 });
 test('secrecy passes through rumor, inquiry and compulsory decision in order and archived registers cannot act for a successor',()=>{
   const b=household();b.run(`A.outerPetition(k.id);choose(5);drain();
@@ -120,6 +131,7 @@ test('military and sponsored entrants use real career grades, source-specific re
     const b=household();b.run(`k.sex='m';A.outerPetition(k.id);choose(3);drain();k.born=S.turn-18*12;k.mar=88;k.vir=88;k.path='${route}';
       outerAttemptOffice(k,m,k.path);var p=scholarById(k.officialId),person=courtPerson('scholar:'+p.id);assert.ok(officialGrade(p));
       assert.equal(person.bloc,'${bloc}');UI.sel=p.id;assert.match(viewScholar(),/${origin}出身/);assert.doesNotMatch(viewScholar(),/undefined|殿试策论/);
+      UI.officialsBloc='${bloc}';assert.ok(officialsTable().includes(p.name));UI.officialsBloc=['army','civil'].find(bloc=>bloc!==person.bloc);assert.ok(!officialsTable().includes(p.name));
       A.outerPetition(k.id);choose(0);drain();assert.equal(p.office,'${post}');assert.ok(officialGrade(p));`);
   }
 });
@@ -203,4 +215,59 @@ test('returning home in severe distress has a dated ending and cannot repeatedly
  const b=household();b.run(`A.outerPetition(k.id);choose(1);drain();k.sex='f';k.born=S.turn-222;k.trust=14;k.secret=12;k.exposed=true;k.path='宫中留名';k.palaceRank='答应';
  outerQueue(k,'recognizedFace');A.outerPetition(k.id);choose(3);drain();assert.equal(k.path,'离宫养病');S.turn+=2;outerMonthly();assert.ok(!k.sealed);
  S.turn++;outerMonthly();assert.equal(k.path,'病逝故里');assert.ok(k.sealed);S.turn++;outerMonthly();assert.equal(outerBook().notes.filter(n=>n.title==='故里讣音').length,1);`);
+});
+
+test('a three-month southern tour gates the ferry and visits, even after reloading',()=>{
+  let b=game();b.run(`var energy=E().energy;A.outerMeet('市井','suzhou');A.outerSouthTour();
+    assert.equal(E().energy,energy);assert.doesNotMatch(viewOut(),/访江南渡口/);
+    S.year=3;S.turn+=24;PalaceActions.reset();A.outerSouthTour();assert.equal(E().energy,energy-1);`);
+  b=game(67,b.storage);b.run(`assert.match(curEv.title,/南巡启程/);drain();
+    var tour=outerSouthernTour();assert.equal(tour.returns-S.turn,3);assert.match(viewOut(),/访江南渡口/);
+    A.outerMeet('市井','city');assert.equal(modalOpen,false);
+    A.outerMeet('市井','suzhou');choose(0);drain();var m=outerBook().mothers[0];
+    S.turn=tour.returns-1;A.outerVisit(m.id);assert.match(curEv.title,/别院/);drain();
+    S.turn++;outerMonthly();drain();assert.equal(outerSouthernTour(),null);
+    assert.doesNotMatch(viewOut(),/访江南渡口/);A.outerVisit(m.id);assert.equal(modalOpen,false);
+    assert.equal(S.log.filter(e=>e.t.includes('御舟还京')).length,1);`);
+});
+
+test('education prompts annually once, and a stale school letter cannot change an adult',()=>{
+  const b=household();b.run(`A.outerPetition(k.id);choose(1);drain();
+    S.turn=k.born+72;outerMonthly();assert.match(curEv.title,/六岁/);choose(0);drain();
+    S.turn+=12;outerMonthly();assert.match(curEv.title,/年度教养/);choose(1);drain();
+    outerMonthly();A.outerCare(k.id,'school');assert.equal(modalOpen,false);
+    assert.equal(k.lesson,'习武');assert.equal(outerBook().notes.filter(n=>n.title==='年度教养').length,2);
+    outerQueue(k,'school');S.turn=k.born+216;assert.equal(outerPendingEvent(k,'school'),null);
+    outerMonthly();assert.ok(!k.pending.includes('school'));drain();assert.equal(k.lesson,'习武');`);
+});
+
+test('a rumor independently lowers palace stability, which affects morale and recovers in quiet months',()=>{
+  const b=household();b.run(`A.outerPetition(k.id);choose(1);drain();
+    k.secret=59;S.turn++;outerMonthly();assert.match(curEv.title,/流言/);choose(0);drain();
+    assert.equal(haremStability(),96);assert.match(viewHarem(),/后宫稳定/);
+    k.secret=39;S.turn++;outerMonthly();choose(0);drain();assert.equal(haremStability(),88);
+    k.secret=19;S.turn++;outerMonthly();choose(1);drain();assert.equal(haremStability(),73);
+    var q=empress(),mood=q.mood;S.turn+=2;outerMonthly();drain();assert.equal(q.mood,mood-1);
+    assert.equal(haremStability(),75);outerMonthly();assert.equal(haremStability(),75);`);
+});
+
+test('the public annals retain published recognition, seal at death and stay separate after succession',()=>{
+  for(const publish of [true,false]){
+    let b=household();b.run(`A.outerPetition(k.id);choose(1);drain();k.sex='f';k.trust=80;
+      outerRoyalEntry(k,m);outerQueue(k,'history');A.outerPetition(k.id);choose(${publish?0:1});drain();
+      var name=k.royalName,firstEntries=S.regnalChronicles[0].entries;
+      assert.equal(firstEntries.filter(n=>n.kind==='归宗').length,${publish?1:0});
+      for(let i=0;i<1600;i++)log('普通起居');
+      assert.ok(!S.log.some(n=>n.t.includes('帝认皇女')));
+      makeKid(empress(),'m','承志');E().health=0;checkEnd();
+      assert.match(curEv.title,/龙驭宾天/);assert.ok(S.regnalChronicles[0].closedAt);
+      assert.equal(S.regnalChronicles[0].entries.at(-1).kind,'帝纪终篇');
+      choose(0);assert.equal(curEv.title,'新君登基');choose(0,'弘治');drain();
+      assert.equal(S.regnalChronicles.length,2);assert.equal(S.regnalChronicles[1].entries[0].kind,'登基');`);
+    b=game(67,b.storage);b.run(`A.go('regnal',1);assert.match(viewRegnalChronicle(),/定稿/);
+      assert.equal(viewRegnalChronicle().includes('帝认皇女'),${publish});
+      assert.ok(!viewRegnalChronicle().includes('普通起居'));
+      A.go('outer',1);assert.match(outerRegisterView(),/野史拾遗/);
+      assert.equal(outerRegisterView().includes('永远封存')||outerRegisterView().includes('永封'),${!publish});`);
+  }
 });

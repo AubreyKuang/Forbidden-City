@@ -271,7 +271,9 @@ function coupEvent(k){return {title:'逼宫',por:k,valid:()=>k.alive&&!royalJour
   {t:'开门，和他谈',f:()=>{S.heir=k.id;k.amb=clamp(k.amb-20);kstory(k,'起兵逼宫，迫使父皇立他为太子。');log(`${k.name}兵谏，被立为太子。`,1);return `你答应立他为太子。他跪下叩头，眼里却没有一丝愧色。${fx(chg({prestige:-12}))}`}},
   {t:'禅位于他',f:()=>{pushNow(abdicateEvent(k));return null}}]}}
 function abdicateEvent(k){S.over=true;const e=E();S.history.push({sur:e.sur,name:e.name,era:e.era,yrs:S.year,miao:'太上皇',shi:''});
-  return {title:'禅位',por:'emp',text:`${dateStr()}，${e.sur}${e.name}禅位于${k.name}，移居西苑，称太上皇。`,choices:[{t:`以${k.name}的身份继续`,f:()=>{succeed(k);return null}},{t:'重新开局',f:()=>{S=null;UI.view='title';return null}}]}}
+  const text=`${dateStr()}，${e.sur}${e.name}禅位于${k.name}，移居西苑，称太上皇。`;
+  if(regnalChronicleActive()){recordRegnalEntry('禅位',text);closeRegnalChronicle();}
+  return {title:'禅位',por:'emp',text,choices:[{t:`以${k.name}的身份继续`,f:()=>{succeed(k);return null}},{t:'重新开局',f:()=>{S=null;UI.view='title';return null}}]};}
 
 /* ============ 皇嗣抚养与过继 ============ */
 const fosterOf=k=>k.foster?byId(k.foster):null;

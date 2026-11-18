@@ -195,7 +195,12 @@ function kidName(k){
   if(S.heir===k.id) return `太子 ${k.name}`;
   return `${k.title||base} ${k.name}`;
 }
-function log(t,big){S.log.push({d:dateStr(),t,b:big?1:0}); if(S.log.length>1500) S.log.splice(0,200)}
+function log(t,big){
+  const entry={d:dateStr(),t,b:big?1:0};
+  S.log.push(entry);
+  if(regnalChronicleActive())recordRegnalLog(entry);
+  if(S.log.length>1500)S.log.splice(0,200);
+}
 function story(c,t){c.story.push({d:dateStr(),t})}
 function chg(o){
   const lab={prestige:'威望',people:'民心',treasury:'国库',health:'龙体'};const p=[];const e=E();
@@ -470,6 +475,8 @@ const A={
     rememberPersonRoute(v,id);UI.view=v;UI.sel=id;
     if(v==='palace')preparePalaceLife(id);
     if(v==='consort'&&S&&!haremReturnActive())noteHaremVisit(byId(id));
+    if(v==='harem'&&outerIntegration()&&!S.over)
+      for(const k of outerBook()?.children||[])if(k.palaceRank)outerReconcileResident(k,outerMother(k.mother));
     if(v==='consort'&&S?.turn===0&&!S.flags.firstEmpressVisit&&id===empress()?.id){
       S.flags.firstEmpressVisit=true;save('auto');
     }
@@ -559,7 +566,7 @@ const A={
   demote(id){const c=byId(id);if(c.rank<=0||c.rank===8)return;
     pushEv({title:'降位',danger:true,por:c,text:`降${cName(c)}为${RANKS[c.rank-1]}？`,choices:[{t:'降位',f:()=>{c.rank--;reconcileResidences();const s=cchg(c,{mood:-25,aff:-10,favor:-5});story(c,`被降为${RANKS[c.rank]}。`);remember(c,'hurt','被降位');setXin(c,(c.t2==='记仇'||c.scheme>60)?'怨恨':'委屈','被降了位分','emp');log(`降${fullName(c)}为${RANKS[c.rank]}。`);AU.sfx('sad');return `${fullName(c)}跪地谢恩，泪落无声。${fx(s)}`}},{t:'作罢'}]})},
   rename(id){const c=byId(id);pushEv({title:'更改封号',por:c,text:'请为她拟一个新的封号：',input:{def:c.title||pick(TITLES),max:2},choices:[{t:'赐此封号',f:v=>{grantConsortTitle(c,v);story(c,`陛下赐封号「${v}」。`);return `自今日起，她便是${cName(c)}。${fx(cchg(c,{mood:10,aff:4}))}`}},{t:'作罢'}]})},
-  crown(id){const c=byId(id);if(empress()){toast('中宫已有皇后');return}
+  crown(id){const c=byId(id);if(c?.outerHouseholdId)return;if(empress()){toast('中宫已有皇后');return}
     pushEv({title:'册立皇后',por:c,valid:()=>journalContentVersion()<88||!empress()&&inPalace(c)&&!c.maid&&c.rank>=5&&c.rank<8,text:`册${fullName(c)}为皇后，入主坤宁宫？\n册封大典需耗费国库一百万两。`,choices:[
       {t:'择吉日行册封礼',f:()=>{c.rank=8;assignPalace(c);AU.sfx('gong');
         let s=chg({treasury:-100,prestige:c.fam.p>=50?6:2});
@@ -746,7 +753,9 @@ function deathEvent(why){
   if(why==='民变')heir=null;
   t+=heir?`\n遗诏：传位于${kidName(heir)}。`:why==='民变'?'\n社稷倾覆，国祚至此而终。':kidsAlive().some(k=>k.sex==='m'&&royalDiplomaticAway(k))?'\n皇子出使在外或尚未获释，未能及时归京继统，由宗室旁支承继大统。':immortalEnabled()&&kidsAlive().some(k=>k.sex==='m'&&immortalAway(k))?'\n皇子长留山门，未列入继统之序，宗室旁支承继大统。山中的亲人仍在人世。':kidsAlive().some(k=>k.sex==='m'&&storyCastHeirBar(k))?'\n礼部依异域皇嗣的储位成例议定，由宗室旁支继统。':'\n膝下无子，宗室旁支入继大统，本朝血脉至此而终。';
   S.history.push({sur:e.sur,name:e.name,era:e.era,yrs,miao,shi});
-  log(t.split('\n')[0]+`庙号${miao}。`,1);AU.sfx('gong');
+  log(t.split('\n')[0]+`庙号${miao}。`,1);
+  if(regnalChronicleActive())closeRegnalChronicle();
+  AU.sfx('gong');
   const ch=[];
   if(heir) ch.push({t:`传位于${heir.name}，开启新朝`,f:()=>{succeed(heir);return null}});
   ch.push({t:'重新开局',f:()=>{S=null;UI.view='title';return null}},{t:'翻阅起居注',f:()=>{UI.view='log';return null}});
@@ -757,6 +766,7 @@ function succeed(h){
   pushNow({title:'新君登基',por:h,text:`${h.name}即将即位。请为新朝拟定年号（二字）：`,input:{def:pick(ERAS.filter(x=>x!==old.era)),max:2},choices:[{t:'改元',f:v=>{
     rememberDynastyClans();
     if(royalTravelAway(h))returnRoyalTraveler(h);
+    if(regnalChronicleActive()){closeRegnalChronicle();delete S.flags.outerSouthernTour;}
     if(typeof outerActive==="function"&&outerActive()&&outerBook())outerBook().closedTurn=S.turn;
     inheritDowager(h);
     S.emp={sur:old.sur,name:h.name,era:v,age:Math.max(a,14),health:clamp(h.hp+10),prestige:clamp(35+h.vir/3),people:old.people,treasury:old.treasury,energy:3,nightsMonth:0,

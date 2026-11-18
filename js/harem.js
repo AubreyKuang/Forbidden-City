@@ -17,17 +17,24 @@ A.xxDecree=function(){
     {t:'朕意已决',f:()=>{const s=chg({treasury:-100,people:-4});genCands();UI.view='xx';return `圣旨下达，各地秀女陆续进京。${fx(s)}`}},{t:'作罢'}]});
 };
 A.xxPeek=function(id){const c=S.cands.find(x=>x.id===id);if(!c||c.known)return;if(S.flags.peek<=0){toast('本次暗访次数已用尽');return}S.flags.peek--;c.known=true;AU.sfx('page');render()};
-A.xxDrop=function(id){S.cands=S.cands.filter(x=>x.id!==id);AU.sfx('click');render()};
+A.xxDrop=function(id){
+  const c=S.cands.find(x=>x.id===id);
+  if(c)outerSelectionDismissed(c);
+  S.cands=S.cands.filter(x=>x.id!==id);AU.sfx('click');render()
+};
 A.xxTake=function(id){const c=S.cands.find(x=>x.id===id);if(!c)return;
   const ch=[0,1,2,3].map(r=>({t:`封为${RANKS[r]}`,f:()=>take(r)}));
   if(c.fam.p>=70) ch.push({t:'封为嫔（世家之女，可破格）',cond:()=>rankCount(4)<RANK_CAP[4],why:'嫔位已满',f:()=>take(4)});
   function take(r){if(!S.cands.some(x=>x.id===c.id)||S.consorts.some(x=>x.id===c.id)||rankCount(r)>=RANK_CAP[r])return null;const version=journalContentVersion();
+    const outer=outerIntegration()&&c.outerHouseholdId?outerChild(c.outerHouseholdId):null;
+    if(c.outerHouseholdId&&!outerSelectionEligible(outer))return '礼部复核未能通过，她这一张户帖暂且封存。';
     if(version>=80&&!confirmSelectionSister(c)){S.cands=S.cands.filter(x=>x!==c);return '礼部复核名册，亲缘或参选资格未能核合，已撤去这张名牌。';}
     S.cands=S.cands.filter(x=>x!==c);
     addConsort(c,r,`${dateStr()}选秀入宫`,{major:version===40,recordAdmission:version<41});let s='';
     if(r>=3&&c.fam.p>=60)s=chg({prestige:2});
     if(r>=4&&!c.title)grantConsortTitle(c,pick(TITLES.filter(t=>!harem().some(x=>x.title===t))));
     const batch=selectionBatch();batch.accepted.push(c.id);
+    if(outer)outerSelectionAdmitted(outer,c);
     c.entryAdjustment={turn:S.turn,manner:entryManner(c),settled:false,pendingBatch:true};save('auto');
  AU.sfx('joy');return `${fullName(c)}叩首谢恩，入住${c.palace}。${fx(s)}${cousinFamiliesActive()&&c.cousinAdmissionText?"\n"+c.cousinAdmissionText:""}`}
   pushEv({title:'留牌子',por:c,text:`${fullName(c)}，年方${c.age}，${c.fam.t}之女。\n陛下欲赐何等位分？`,choices:[...ch,{t:'再想想'}]});
@@ -91,7 +98,7 @@ const HAREM=[
   return {title:'病榻',por:c,onShow:()=>{if(consortRecoveryActive())c.illnessRecovery={turn:S.turn,until:S.turn+2};consortHealthHurt(c,'ill');},text:`${cName(c)}偶感风寒，连日高烧不退。`,choices:[
    {t:'宣太医诊治',f:()=>{consortHealthTreat(c);story(c,'染了风寒，太医悉心诊治，渐渐痊愈。');return fx(chg({treasury:-10}),cchg(c,{mood:5}))}},
    {t:'亲自探视（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{E().energy--;renderTop();consortHealthTreat(c,{immediate:4});remember(c,'care','病中探视');story(c,'卧病在床，陛下亲自来看她，还喂了她一口药。');return fx(cchg(c,{mood:20,aff:15}))}},
-   ...(journalContentVersion()>=90&&c===empress()?[{t:'宣太医并安排妃嫔侍疾',f:()=>{consortHealthTreat(c);story(c,'染了风寒，太医诊治，宫中另安排妃嫔照应。');chg({treasury:-10});cchg(c,{mood:5});const ev=queenCareSelection(c);if(ev)pushNow(ev);return null;}}]:[]),
+   ...(journalContentVersion()>=91&&c===empress()?[{t:'宣太医并安排妃嫔侍疾',f:()=>{consortHealthTreat(c);story(c,'染了风寒，太医诊治，宫中另安排妃嫔照应。');chg({treasury:-10});cchg(c,{mood:5});const ev=queenCareSelection(c);if(ev)pushNow(ev);return null;}}]:[]),
    {t:'不必理会',f:()=>{if(c.trait==='体弱'&&chance(.25)){c.alive=false;if(journalContentVersion()>=81)c.deathReason='病势沉重，不治身故';story(c,'病势沉重，无人问津，于一个雪夜香消玉殒。');log(`${fullName(c)}病逝。`,1);AU.sfx('sad');return `数日后，${c.palace}传来噩耗：${fullName(c)}病逝了。`}story(c,'病了半月，陛下未曾过问。');remember(c,'neglect','病中无人过问');return fx(cchg(c,{mood:-15,aff:-8}))}}]}},
  function homesick(){const c=pick(harem().filter(c=>!c.rescue&&c.wound!=='mom'&&!c.visitor));return c?sickMotherEvent(c):null},
  function empressReport(){const em=empress();if(!em)return null;
