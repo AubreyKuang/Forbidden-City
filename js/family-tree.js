@@ -6,7 +6,7 @@ function familyGroupHidden(key){return familyVisibilityActive()&&S.flags.hiddenF
 function familyVisibilityButton(key,label){
  if(!familyVisibilityActive())return '';
  const hidden=familyGroupHidden(key);
- return `<button class="btn sm family-visibility" data-family-toggle="${esc(key)}" aria-label="${hidden?'显示':'隐藏'}${esc(label)}整个家族" aria-expanded="${!hidden}" onclick="event.preventDefault();event.stopPropagation();A.familyVisibilityToggle(${esc(JSON.stringify(key))})">${hidden?'显示家族':'隐藏家族'}</button>`;
+ return `<button class="btn sm family-visibility" data-family-toggle="${esc(key)}" aria-label="${hidden?'显示':'隐藏'}${esc(label)}整个家族" aria-expanded="${!hidden}" onclick="event.preventDefault();event.stopPropagation();A.familyVisibilityToggle(${esc(JSON.stringify(key))})">${hidden?'显示家族':'隐藏'}</button>`;
 }
 A.familyVisibilityToggle=function(key){
  if(modalOpen||!familyVisibilityActive()||!S.consorts.some(c=>familyGroupKey(c)===key))return;

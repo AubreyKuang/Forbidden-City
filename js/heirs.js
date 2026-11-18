@@ -57,22 +57,38 @@ function princeCareerPanel(k){
  if(journalContentVersion()<76||!k.alive||k.sex!=='m'||kidAge(k)<16||k.removedFromRoyal)return '';
  const career=k.princeCareer,path=PRINCE_CAREERS[career?.path];
  return `<p class="hint">皇子成年后可选择一条发展方向，每积累十二个月完成一次差务；不在京或受限时暂停。更换方向须间隔一年。</p>
- ${path?`<p>当前方向：${path.name} · ${path.work} · 进度 ${career.months}/12 · 已完成 ${career.completed} 次</p>`:'<p>尚未选择方向。</p>'}
+ ${path?`<p>当前方向：${path.name} · ${path.work} · 进度 ${career.months}/12 · 已完成 ${career.completed} 次 · 势 ${career.momentum||0}</p>`:'<p>尚未选择方向。</p>'}
  <div class="acts">${Object.entries(PRINCE_CAREERS).map(([id,p])=>`<button class="btn sm ${career?.path===id?'on':''}" onclick="A.princeCareer(${k.id},'${id}')" ${!childCanVisitCourt(k)||E().energy<1||career&&S.turn-career.assigned<12?'disabled':''}>${p.name} · 精力−1</button>`).join('')}</div>`;
 }
 A.princeCareer=function(id,path){
  const k=kidById(id),p=PRINCE_CAREERS[path];if(journalContentVersion()<76||!p||!k||k.sex!=='m'||kidAge(k)<16||!childCanVisitCourt(k)||E().energy<1)return;
  const previous=k.princeCareer;if(previous&&(previous.path===path||S.turn-previous.assigned<12))return;
- E().energy--;k.princeCareer={path,assigned:S.turn,months:0,completed:previous?.completed||0,last:-1};
+ E().energy--;k.princeCareer={path,assigned:S.turn,months:0,completed:previous?.completed||0,momentum:previous?.momentum||0,last:-1};
  kstory(k,`开始循${p.name}方向发展：${p.work}。`);log(`${kidName(k)}选择${p.name}方向。`);render();
 };
 function princeCareerTick(k){
  const c=k.princeCareer,p=PRINCE_CAREERS[c?.path];if(journalContentVersion()<76||!p||!childCanVisitCourt(k)||kidAge(k)<16||c.last===S.turn)return;
- c.last=S.turn;if(++c.months<12)return;c.months=0;c.completed++;
+ c.last=S.turn;if(++c.months<12)return;c.months=0;c.completed++;c.momentum=Math.min(100,(c.momentum||0)+1);
  k[p.stat]=clamp(k[p.stat]+2);k.sup=clamp((k.sup||0)+p.support);
  if(c.path==='trade')chg({treasury:8});
  const result=`【${p.name}差务】${p.work}满一年，经验与朝中支持有所增长。${c.path==='trade'?'产业所得八万两入库。':''}`;
  kstory(k,result);log(`${kidName(k)}：${result}`);
+}
+function princeCareerRivalryEvent(){
+ if(journalContentVersion()<76||S.over||S.turn-(S.flags.lastPrinceCareerRivalry??-99)<36)return null;
+ const rivals=kidsAlive().filter(k=>k.sex==='m'&&PRINCE_CAREERS[k.princeCareer?.path]&&childCanVisitCourt(k)&&kidAge(k)>=16).sort((a,b)=>a.id-b.id);
+ if(rivals.length<2)return null;
+ const [a,b]=rivals,valid=()=>!S.over&&a.alive&&b.alive&&childCanVisitCourt(a)&&childCanVisitCourt(b)&&!!a.princeCareer&&!!b.princeCareer;
+ const decision=chosen=>{
+  if(!valid())return null;
+  if(chosen){const other=chosen===a?b:a;chosen.princeCareer.momentum=Math.min(100,(chosen.princeCareer.momentum||0)+2);other.princeCareer.momentum=Math.max(0,(other.princeCareer.momentum||0)-1);
+   kstory(chosen,'【皇子竞争】在父皇考核中得到认可，声势渐长。');kstory(other,'【皇子竞争】父皇认可了兄弟的表现，自己决意继续努力。');
+   log(`【皇子竞争】${kidName(chosen)}在考核中获得认可。`,1);return `你认可了${chosen.name}的表现。他的势增加，另一人的势略有回落。`;}
+  kstory(a,'【皇子竞争】父皇让兄弟各凭实绩发展。');kstory(b,'【皇子竞争】父皇让兄弟各凭实绩发展。');return '你听完两人的打算，令他们各凭实绩，不以一次比较论高下。';
+ };
+ return {title:'皇子竞争 · 各有所长',cast:[a,b],valid,onShow:()=>{S.flags.lastPrinceCareerRivalry=S.turn;},
+  text:`${kidName(a)}循${PRINCE_CAREERS[a.princeCareer.path].name}发展，${kidName(b)}则在${PRINCE_CAREERS[b.princeCareer.path].name}上用心。两人都想得到你的认可，朝中也有人议论谁的差事务实。`,choices:[
+   {t:`认可${a.name}的表现`,f:()=>decision(a)},{t:`认可${b.name}的表现`,f:()=>decision(b)},{t:'让二人各凭实绩',f:()=>decision(null)}]};
 }
 function growKid(k){
   const a=kidAge(k);if(a<3)return;const m=k.tutor?1.6:1,g=()=>R()*.9*m;

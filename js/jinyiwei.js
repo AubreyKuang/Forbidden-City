@@ -105,7 +105,7 @@ function intelligenceDispatch(id,caseId,suspectId){
   const accurate=chance(accuracy);
   const report={id:network.nextId++,agent:id,agentName:agent.name,caseId:file.id,title:file.title,
     kind:file.kind,suspect:suspect?.id??null,suspectName:suspect?fullName(suspect):officialEntry(file.target)?.p.name||'被参官员',
-    conclusion:agent.compromised?true:accurate?truth:!truth,accuracy:Math.round(accuracy*100),due:S.turn+2,status:'pending'};
+    conclusion:id==='guard'&&agent.protection?.stage>=2&&agent.protection.consort===suspect?.id?false:agent.compromised?true:accurate?truth:!truth,accuracy:Math.round(accuracy*100),due:S.turn+2,status:'pending'};
   network.reports.push(report);
   log(`【宫廷情报】${agent.name}受命查访「${file.title}」，约两个月后回报。`);
   render();
@@ -145,6 +145,49 @@ A.intelligenceDispatch=intelligenceDispatch;
 A.trustIntelligenceReport=trustIntelligenceReport;
 A.investigateIntelligenceAgent=investigateIntelligenceAgent;
 A.dismissIntelligenceAgent=dismissIntelligenceAgent;
+function assignPersonalGuard(id){
+ const guard=intelligenceAgent('guard'),c=byId(id);
+ if(!intelligenceEnabled()||!guard||(guard.protection&&!guard.protection.ended)||!inPalace(c)||c.maid||c.age<18||S.over||modalOpen||E().energy<1)return;
+ if(!useE())return;
+ guard.protection={consort:c.id,started:S.turn,last:S.turn,months:0,stage:0,secrecy:80,discovered:false};
+ story(c,`${guard.name}奉命守护她的宫室。`);log(`【宫廷情报】${guard.name}奉命守护${fullName(c)}。`);render();
+}
+A.assignPersonalGuard=assignPersonalGuard;
+function guardProtectionTick(){
+ const guard=intelligenceAgent('guard'),bond=guard?.protection,c=bond&&byId(bond.consort);
+ if(!intelligenceEnabled()||!bond||bond.ended||bond.last===S.turn)return;
+ if(!inPalace(c)||c.age<18){bond.ended='处境改变，护卫差事结束。';return;}
+ bond.last=S.turn;bond.months++;
+ if(bond.months===6){bond.stage=1;story(c,`【守宫旧事】${guard.name}守了许久，记得她出门的习惯与院中的灯何时熄。`);}
+ if(bond.months===18&&c.aff<70&&!c.bond&&chance(clamp(.25+guard.loyalty/400-c.aff/400,.1,.5))){bond.stage=2;story(c,`【守宫旧事】${guard.name}为她挡过一场雨，两人的心意渐渐有了变化。`);}
+ if(bond.months===30&&bond.stage===2){bond.stage=3;story(c,`【守宫旧事】她与${guard.name}私下相见，彼此都明白事情不能轻易让人知道。`);}
+ if(bond.stage>=2){
+   guard.loyalty=clamp(guard.loyalty+(c.mood>=65?.2:c.mood<35?-.3:0));
+   c.mood=clamp(c.mood+(guard.loyalty>=65?.2:guard.loyalty<35?-.3:0));
+ }
+ if(bond.stage===3&&!bond.discovered){bond.secrecy=clamp(bond.secrecy-3);if(chance((100-bond.secrecy)/250))bond.discovered=true;}
+}
+function guardAffairEvent(){
+ const guard=intelligenceAgent('guard'),bond=guard?.protection,c=bond&&byId(bond.consort);
+ if(!intelligenceEnabled()||!bond?.discovered||bond.ended||!inPalace(c)||S.over)return null;
+ const valid=()=>intelligenceAgent('guard')===guard&&guard.protection===bond&&!bond.ended&&inPalace(c)&&!S.over;
+ const resolve=mode=>{
+   if(!valid())return null;
+   const innocent=harem().find(person=>person!==c&&person.rank<8);
+   if(mode==='frame'&&!innocent)return null;
+   let result;
+   if(mode==='protect'){bond.ended='被发现后，陛下压下消息，保全二人。';guard.loyalty=clamp(guard.loyalty+8);cchg(c,{aff:3,mood:5});result='你没有追究二人，将消息压下。护卫差事结束，他们仍记得这份宽容。';}
+   else if(mode==='transfer'){bond.ended='被发现后，侍卫调离宫室。';guard.loyalty=clamp(guard.loyalty-8);cchg(c,{aff:-4,mood:-8});result='你让他另领差事，不再守她的宫室。她没有争辩，只把没有说完的话收回去。';}
+   else if(mode==='frame'){bond.ended='被发现后，旁人被诬作递消息之人。';guard.loyalty=clamp(guard.loyalty-5);cchg(c,{mood:-5});cchg(innocent,{aff:-8,mood:-12});
+     innocent.fam={...innocent.fam,p:clamp(innocent.fam.p-5)};story(innocent,`被诬作${guard.name}私通消息的经手人，蒙受不白之冤。`);result=`你将消息推到${fullName(innocent)}身上。她受了委屈，娘家声势也受牵连。`;}
+   story(c,`【守宫旧事】私下来往被发现。${result}`);log(`【守宫旧事】${fullName(c)}与${guard.name}的往来被发现。${result}`,1);save('auto');return result;
+ };
+ return {title:'守宫旧事 · 密报',por:c,present:[c],valid,text:`守宫的${guard.name}与${cName(c)}往来日久，从彼此照应到暗生情意，如今有人发现了两人的私下相见。消息尚未传开。\n${guard.name}仍是你的情报人员，曾受命查访宫中案件。`,choices:[
+  {t:'压下消息，保全二人',f:()=>resolve('protect')},
+  {t:'调离侍卫，各自安置',f:()=>resolve('transfer')},
+  {t:'嫁祸旁人',cond:()=>harem().some(p=>p!==c&&p.rank<8),why:'宫中没有可被牵连的人',f:()=>resolve('frame')}
+ ]};
+}
 function intelligencePanel(){
   if(!intelligenceEnabled())return '';
   const state=intelligenceState(),agents=state?.agents||{};
@@ -173,7 +216,10 @@ function intelligencePanel(){
     const action=ready&&report.accepted==null&&file?`<button class="btn sm" onclick="A.trustIntelligenceReport(${report.id})" ${S.over?'disabled':''}>采信线索</button>`:report.accepted!=null?' · 已采信':'';
     return `<li><b>${esc(report.title)}</b> · 来源 ${esc(report.agentName)} · ${ready?`可靠度估计 ${report.accuracy}% · ${esc(report.suspectName)}${report.conclusion?'有涉案嫌疑':'暂未发现涉案线索'}。此为线索，须核实。${result}${action}`:`查访中 · 还需 ${report.due-S.turn} 个月`}</li>`;
   }).join('');
-  return detailSection('宫廷情报',`<p class="hint">查访需两个月，回报可能有误。锦衣卫案卷仍可另行调查。</p><ul class="story">${personnel}</ul>
+  const guard=agents.guard,protection=guard?.protection,guarded=protection&&byId(protection.consort);
+  const protectionPanel=guard?`<h4>宫室护卫</h4>${protection&&!protection.ended?`<p>${esc(guard.name)}正在守护${esc(guarded?fullName(guarded):'旧人')}。</p>`:
+    `${protection?`<p>${esc(protection.ended)}</p>`:'<p class="hint">可请这名情报人员兼任宫室护卫。</p>'}<div class="acts">${harem().filter(c=>c.age>=18&&!c.maid&&c.id!==protection?.consort).map(c=>`<button class="btn sm" onclick="A.assignPersonalGuard(${c.id})" ${E().energy<1?'disabled':''}>守护${esc(cName(c))} · 精力−1</button>`).join('')}</div>`}`:'';
+  return detailSection('宫廷情报',`<p class="hint">查访需两个月，回报可能有误。锦衣卫案卷仍可另行调查。</p><ul class="story">${personnel}</ul>${protectionPanel}
     <h4>查访案卷</h4><ul class="story">${missions||'<li>暂无可查访的宫闱疑案或风闻案卷。</li>'}</ul>
     <h4>情报回报</h4><ul class="story">${reports||'<li>暂无回报。</li>'}</ul>`);
 }

@@ -7,7 +7,7 @@ function world(){const b=boot(592);b.ctx.assert=assert;b.run(`A.start();drain();
  A.go('family');var key=familyGroupKey(a);`);return b;}
 test('graph has an explicit right-hand family control, hides all branches and shrinks the layout',()=>{
  const b=world();b.run(`var before=familyGraphSVG(),width=Number(before.match(/graph-sheet.*?width:(\\d+)px/)[1]);
- assert.match(before,/data-family-toggle=/);assert.match(before,/隐藏家族/);A.familyVisibilityToggle(key);
+ assert.match(before,/data-family-toggle=/);assert.ok(before.includes('>隐藏</button>'));A.familyVisibilityToggle(key);
  var after=familyGraphSVG();assert.ok(after.includes(clanName(key)));assert.match(after,/显示家族/);
  for(var p of [a,sister,k])assert.ok(!after.includes("A.go('"+(p.sex?'kid':'consort')+"',"+p.id+")"));
  assert.ok(after.includes("A.go('consort',"+other.id+")"));assert.ok(Number(after.match(/graph-sheet.*?width:(\\d+)px/)[1])<width);
@@ -18,7 +18,7 @@ test('list and graph share hiding without altering kinship, people or history',(
  var list=viewFamily(),part=list.split('data-family-key="'+key+'"')[1].split('</details>')[0];
  assert.match(part,/显示家族/);assert.doesNotMatch(part,/paternal-branch|family-person/);
  assert.equal(JSON.stringify([S.consorts,S.children,S.rel]),people);
- A.familyVisibilityToggle(key);assert.match(viewFamily(),/隐藏家族/);assert.ok(viewFamily().includes(a.given));`);
+ A.familyVisibilityToggle(key);assert.ok(viewFamily().includes('>隐藏</button>'));assert.ok(viewFamily().includes(a.given));`);
 });
 test('hiding persists after fresh-context loading and restoring has no gameplay cost',()=>{
  let b=world();const id=b.run('a.id');b.run(`var energy=E().energy;A.familyVisibilityToggle(key);assert.equal(E().energy,energy);save('1');`);

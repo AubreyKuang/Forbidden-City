@@ -20,3 +20,13 @@ test('invalid or underage assignments do not cost energy, and changing direction
   A.princeCareer(k.id,'trade');assert.equal(k.princeCareer.path,'civil');S.turn+=12;A.princeCareer(k.id,'trade');
   assert.equal(k.princeCareer.path,'trade');assert.equal(E().energy,3);`);
 });
+
+test('recognition in a rivalry changes visible momentum and imposes a cooldown',()=>{
+ const b=boot(44001);b.ctx.assert=assert;
+ b.run(`A.start();drain();var first=makeKid(empress(),'m','承安'),second=makeKid(empress(),'m','承平');
+  first.born=second.born=S.turn-240;E().energy=5;A.princeCareer(first.id,'civil');A.princeCareer(second.id,'military');
+  var rivalry=princeCareerRivalryEvent();assert.ok(rivalry);pushEv(rivalry);choose(0);drain();
+  assert.equal(first.princeCareer.momentum,2);assert.equal(second.princeCareer.momentum,0);
+  assert.match(princeCareerPanel(first),/势 2/);assert.equal(princeCareerRivalryEvent(),null);
+  assert.ok(first.story.some(s=>s.t.includes('皇子竞争')));`);
+});

@@ -147,6 +147,116 @@ function viewGovernment(){
     ['tax','户部岁入',`<section class="detail-section"><p>每年十月结算秋税，正月收取岁贡银 120 万两与珍饰一件。月常入与俸禄仍逐月结算。</p><p>${receipt?`本年秋税已实收 ${receipt.amount} 万两。`:`今年采用「${TAX_PLANS[g.tax].name}」，按当前民心估计秋税 ${taxEstimate()} 万两。`}</p><div class="acts">${Object.entries(TAX_PLANS).map(([id,p])=>`<button class="btn sm" onclick="A.taxPlan('${id}')" ${receipt||g.tax===id||E().energy<1?'disabled':''}>${p.name} · 精力−1${id==='light'?' · 秋税入库时民心+5':''}</button>`).join('')}</div><ul class="story">${g.receipts.slice(-8).reverse().map(r=>`<li><time>${esc(r.date)}</time>${esc(r.text)}</li>`).join('')||'<li>尚未到年度入库时节。</li>'}</ul></section>`],
     ['posts','吏部调度',`<section class="detail-section"><p class="hint">调任需精力 1、交接银 20 万两。同一官员半年内不再调任，在途差务、致仕或获罪期间不可调动。</p><div class="grid">${Object.entries(GOVERNMENT_POSTS).map(([id,p])=>{const e=postHolder(id);return `<article class="card government-post"><h3>${p.name}</h3><p>${p.detail}</p>${e?`<p>${officialLink(e.c,e.role)} · ${officialStatus(e.p)}</p>`:`<button class="btn sm jade" onclick="A.postCandidates('${id}')">择人调任</button>`}</article>`;}).join('')}</div></section>`],
     ['tasks','治事与回奏',`<section class="detail-section"><div class="grid government-tasks">${Object.entries(OFFICIAL_TASKS).map(([id,t])=>`<button class="card" onclick="A.governmentTask('${id}')"><div><b>${t.title}</b><p>${t.brief||'择人领差，期满回奏。'}</p><small>${t.months}个月 · 国库 ${t.cost} · ${t.army?'武职':'文职'}</small></div></button>`).join('')}</div></section>`],
-    ['people','民情回访',incognitoLedger()]
+    ['people','民情回访',incognitoLedger()],
+    ['foreign','邦交与使节',diplomacyPanel()]
   ])}`;
+}
+
+/* 邻国及使节：任务与真实在任官员关联，回国后保留外交记录。 */
+const DIPLOMACY_COUNTRIES={
+ north:{name:'朔庭',envoy:'阿鲁',character:'重武备与边界',favors:'border',relation:35},
+ sea:{name:'海岚',envoy:'海宁',character:'重商贸与航路',favors:'trade',relation:45},
+ west:{name:'西昭',envoy:'安弥',character:'重礼仪与往来',favors:'visit',relation:50}
+};
+const DIPLOMACY_MISSIONS={
+ visit:{name:'修好通使',cost:20,months:3},trade:{name:'商议通商',cost:30,months:3},
+ border:{name:'商议边界',cost:25,months:3},tribute:{name:'议定朝贡',cost:40,months:3},treaty:{name:'商订和约',cost:35,months:3}
+};
+const diplomacyEnabled=()=>journalContentVersion()>=76;
+function diplomacyState(create=false){
+ if(!S||!diplomacyEnabled())return null;
+ if(!S.diplomacy&&create)S.diplomacy={countries:{},missions:[],lastTick:-1};
+ return S.diplomacy||null;
+}
+function diplomacyCountry(id,create=false){
+ const definition=DIPLOMACY_COUNTRIES[id],state=diplomacyState(create);if(!definition)return null;
+ if(!state)return null;
+ if(!state.countries[id]&&create)state.countries[id]={relation:definition.relation,trade:false,memory:[],envoy:{name:definition.envoy,attitude:50,memory:[]}};
+ return state.countries[id]||null;
+}
+function diplomacyPanel(){
+ if(!diplomacyEnabled())return '';
+ const state=diplomacyState(),envoys=officialEntries().filter(e=>officialServing(e.p)&&!e.p.away).sort((a,b)=>b.p.ability-a.p.ability).slice(0,8);
+ return `<p class="hint">使臣须为在京任职的朝臣，三个月后回奏。邦交、通商与往来记录随王朝存档保留。</p><div class="grid">${Object.entries(DIPLOMACY_COUNTRIES).map(([id,d])=>{
+  const c=state?.countries[id],mission=state?.missions.find(m=>m.country===id&&m.status==='traveling');
+  return `<article class="card"><h3>${d.name}</h3><p>${d.character} · 邦交 ${rd(c?.relation??d.relation)} · ${c?.trade?'通商中':'未通商'} · 边境紧张 ${rd(c?.tension??0)}</p><p>${c?.treatyUntil>S.turn?`和约尚余 ${c.treatyUntil-S.turn} 个月`:'尚无生效和约'}${c?.tribute?' · 已议定朝贡':''}</p><p>对方使臣 ${esc(d.envoy)} · 对本朝的态度 ${rd(c?.envoy?.attitude??50)}</p>
+  ${c?.succession?.status==='pending'?`<p>${d.name}王室正争议继承，长嗣与幼嗣各有支持者。</p><div class="acts"><button class="btn sm" onclick="A.foreignSuccession('${id}','elder')" ${E().energy<1||E().treasury<40?'disabled':''}>支持长嗣 · 银40 · 精力−1</button><button class="btn sm" onclick="A.foreignSuccession('${id}','younger')" ${E().energy<1||E().treasury<40?'disabled':''}>支持幼嗣 · 银40 · 精力−1</button><button class="btn sm" onclick="A.foreignSuccession('${id}','neutral')" ${E().energy<1?'disabled':''}>保持中立 · 精力−1</button></div>`:''}
+  <div class="acts"><button class="btn sm" onclick="A.receiveForeignEnvoy('${id}','gift')" ${S.turn-(c?.lastAudience??-99)<6||E().energy<1||E().treasury<20?'disabled':''}>礼待使臣 · 银20 · 精力−1</button><button class="btn sm" onclick="A.receiveForeignEnvoy('${id}','slight')" ${S.turn-(c?.lastAudience??-99)<6||E().energy<1?'disabled':''}>冷落使臣 · 精力−1</button></div>
+  ${mission?`<p>${esc(mission.envoyName)}出使中 · 还需 ${Math.max(0,mission.due-S.turn)} 个月</p>`:`<div class="acts">${envoys.map(e=>Object.entries(DIPLOMACY_MISSIONS).filter(([kind])=>kind!=='trade'||!c?.trade).map(([kind,m])=>`<button class="btn sm" onclick="A.sendDiplomaticEnvoy('${id}','${kind}','${encodeURIComponent(e.key)}')" ${E().energy<1||E().treasury<m.cost?'disabled':''}>${esc(e.p.name)} · ${m.name} · 银${m.cost}</button>`).join('')).join('')||'<span class="hint">暂无可派遣的在京官员。</span>'}</div>`}
+  <ul class="story">${(c?.memory||[]).slice(-4).reverse().map(item=>`<li><time>${esc(item.d)}</time>${esc(item.text)}</li>`).join('')||'<li>尚无交往记录。</li>'}</ul></article>`;
+ }).join('')}</div>`;
+}
+function sendDiplomaticEnvoy(country,kind,encoded){
+ const d=DIPLOMACY_COUNTRIES[country],mission=DIPLOMACY_MISSIONS[kind];
+ if(!diplomacyEnabled()||!d||!mission||S.over||modalOpen||E().energy<1||E().treasury<mission.cost)return;
+ let entry;try{entry=officialEntry(decodeURIComponent(encoded));}catch{return;}
+ if(!entry||!officialServing(entry.p)||entry.p.away)return;
+ const state=diplomacyState(true),c=diplomacyCountry(country,true);
+ if(state.missions.some(m=>m.country===country&&m.status==='traveling')||kind==='trade'&&c.trade)return;
+ if(!useE())return;chg({treasury:-mission.cost});
+ const odds=clamp(.35+entry.p.ability/250+c.relation/500+(d.favors===kind?.15:0)+((c.envoy?.attitude??50)-50)/500,.2,.9);
+ const item={id:`${S.gen}:${S.turn}:${country}`,country,kind,envoyKey:entry.key,envoyId:entry.p.id,envoyName:entry.p.name,due:S.turn+mission.months,status:'traveling',success:chance(odds)};
+ state.missions.push(item);entry.p.diplomaticJourney={id:item.id,country,due:item.due};
+ story(entry.p,`奉命出使${d.name}，${mission.name}。`);log(`【邦交】${entry.p.name}奉命出使${d.name}，${mission.name}。`);render();
+}
+A.sendDiplomaticEnvoy=sendDiplomaticEnvoy;
+function receiveForeignEnvoy(id,mode){
+ const def=DIPLOMACY_COUNTRIES[id];if(!diplomacyEnabled()||!def||!['gift','slight'].includes(mode)||S.over||modalOpen||E().energy<1||mode==='gift'&&E().treasury<20)return;
+ const country=diplomacyCountry(id,true);if(S.turn-(country.lastAudience??-99)<6)return;
+ if(!useE())return;if(mode==='gift')chg({treasury:-20});country.lastAudience=S.turn;
+ country.envoy||={name:def.envoy,attitude:50,memory:[]};const change=mode==='gift'?8:-12;
+ country.envoy.attitude=clamp(country.envoy.attitude+change);country.relation=clamp(country.relation+(mode==='gift'?4:-6));
+ const text=mode==='gift'?`礼待${def.name}使臣${def.envoy}，他记下这份尊重。`:`冷落${def.name}使臣${def.envoy}，他将此事记在心里。`;
+ country.memory.push({d:dateStr(),turn:S.turn,text});if(country.memory.length>30)country.memory.shift();
+ country.envoy.memory.push({d:dateStr(),turn:S.turn,kind:mode});if(country.envoy.memory.length>30)country.envoy.memory.shift();
+ log(`【邦交 · ${def.name}】${text}`,1);render();
+}
+A.receiveForeignEnvoy=receiveForeignEnvoy;
+function foreignSuccession(id,choice){
+ const def=DIPLOMACY_COUNTRIES[id],country=diplomacyCountry(id),crisis=country?.succession;
+ if(!def||!crisis||crisis.status!=='pending'||!['elder','younger','neutral'].includes(choice)||S.over||modalOpen||E().energy<1||choice!=='neutral'&&E().treasury<40)return;
+ if(!useE())return;if(choice!=='neutral')chg({treasury:-40});
+ const won=choice===crisis.winner,change=choice==='neutral'?0:won?8:-8;
+ country.relation=clamp(country.relation+change);country.envoy||={name:def.envoy,attitude:50,memory:[]};country.envoy.attitude=clamp(country.envoy.attitude+(choice==='neutral'?0:won?6:-6));
+ crisis.status='resolved';crisis.choice=choice;crisis.resolved=S.turn;
+ const label=choice==='neutral'?'保持中立':choice==='elder'?'支持长嗣':'支持幼嗣';
+ const text=`${def.name}继承争议中，本朝${label}。最终${crisis.winner==='elder'?'长嗣':'幼嗣'}继位；${choice==='neutral'?'两国关系未因此改变':won?'新君记得本朝支持':'新君记得本朝曾支持另一方'}。`;
+ country.memory.push({d:dateStr(),turn:S.turn,text});if(country.memory.length>30)country.memory.shift();country.envoy.memory.push({d:dateStr(),turn:S.turn,kind:'succession',choice,winner:crisis.winner});if(country.envoy.memory.length>30)country.envoy.memory.shift();
+ log(`【邦交 · ${def.name}】${text}`,1);render();
+}
+A.foreignSuccession=foreignSuccession;
+function diplomacyTick(){
+ const state=diplomacyState();if(!state||state.lastTick===S.turn)return;state.lastTick=S.turn;
+ for(const [id,c] of Object.entries(state.countries)){
+  if(c.trade)chg({treasury:6});
+  if(c.tribute&&S.month===1)chg({treasury:60});
+  if(S.turn>0&&S.turn%24===0&&chance(c.treatyUntil>S.turn?.02:.15)){
+    c.tension=clamp((c.tension||0)+20);c.relation=clamp(c.relation-3);
+    const text='边境出现争端，双方关系受损；可派使臣商议边界。';c.memory.push({d:dateStr(),turn:S.turn,text});if(c.memory.length>30)c.memory.shift();
+    log(`【邦交 · ${DIPLOMACY_COUNTRIES[id].name}】${text}`,1);
+  }
+  if(S.turn>0&&S.turn%36===0&&S.turn-(c.lastSuccession??-99)>=120&&c.succession?.status!=='pending'&&chance(.12)){
+    c.lastSuccession=S.turn;c.succession={status:'pending',started:S.turn,winner:chance(.5)?'elder':'younger'};
+    const text='王室发生继承争议，双方正寻求外援。';c.memory.push({d:dateStr(),turn:S.turn,text});if(c.memory.length>30)c.memory.shift();log(`【邦交 · ${DIPLOMACY_COUNTRIES[id].name}】${text}`,1);
+  }
+ }
+ for(const m of state.missions){if(m.status!=='traveling'||S.turn<m.due)continue;
+  const country=diplomacyCountry(m.country,true),def=DIPLOMACY_COUNTRIES[m.country],entry=officialEntry(m.envoyKey);
+  country.envoy||={name:def.envoy,attitude:50,memory:[]};
+  const returned=entry&&entry.p.id===m.envoyId&&officialAlive(entry.p)&&!entry.p.exiled&&!entry.p.dismissed;
+  if(entry?.p.id===m.envoyId&&entry.p.diplomaticJourney?.id===m.id)delete entry.p.diplomaticJourney;
+  m.status=returned?(m.success?'success':'setback'):'interrupted';
+  let text;
+  if(!returned)text=`${m.envoyName}未能完成此行，${DIPLOMACY_MISSIONS[m.kind].name}未成。`;
+  else if(m.success){const gain=def.favors===m.kind?10:6;country.relation=clamp(country.relation+gain);
+    if(m.kind==='trade')country.trade=true;
+    if(m.kind==='treaty')country.treatyUntil=S.turn+60;
+    if(m.kind==='tribute')country.tribute=true;
+    if(m.kind==='border')country.tension=clamp((country.tension||0)-20);
+    text=`${m.envoyName}归来，${DIPLOMACY_MISSIONS[m.kind].name}有成，两国邦交增进${gain}。${m.kind==='trade'?'两国开始通商，每月商税六万两。':m.kind==='treaty'?'和约有效五年，可减少边境争端。':m.kind==='tribute'?'议定朝贡，每年正月贡银六十万两。':m.kind==='border'?'边境紧张有所缓和。':''}`;
+  }else{country.relation=clamp(country.relation-3);text=`${m.envoyName}归来，${DIPLOMACY_MISSIONS[m.kind].name}未谈妥，两国邦交下降3。`;}
+  country.memory.push({d:dateStr(),turn:S.turn,text});if(country.memory.length>30)country.memory.shift();
+  if(returned){country.envoy.attitude=clamp(country.envoy.attitude+(m.success?4:-3));country.envoy.memory.push({d:dateStr(),turn:S.turn,kind:m.kind,success:m.success,envoy:m.envoyName});if(country.envoy.memory.length>30)country.envoy.memory.shift();}
+  if(returned)story(entry.p,`【出使${def.name}】${text}`);log(`【邦交 · ${def.name}】${text}`,1);
+ }
 }
