@@ -30,7 +30,7 @@ test('an adult married sister can be approached at home or through her palace vi
 });
 
 test('refusal stays refusal and coercion has consequences while withdrawing remains available',()=>{
-  const w=world(false);w.run(`var energy=E().energy,prestige=E().prestige;A.marriedSisterVisit(hostId,wifeId);assert.match(curEv.text,/不愿/);choose(0);assert.equal(curEv.title,'她已拒绝');choose(0);assert.equal(E().energy,energy);assert.equal(sister.marriedSisterAffair.coerced,undefined);
+  const w=world(false);w.run(`var energy=E().energy,prestige=E().prestige;Math.random=()=>.99;A.marriedSisterVisit(hostId,wifeId);assert.match(curEv.text,/不愿/);choose(0);assert.equal(curEv.title,'她已拒绝');choose(0);assert.equal(E().energy,energy);assert.equal(sister.marriedSisterAffair.coerced,undefined);
     A.marriedSisterVisit(hostId,wifeId);choose(0);Math.random=()=>.99;choose(1);assert.equal(sister.marriedSisterAffair.meetings,0);assert.equal(sister.marriedSisterAffair.coerced,true);assert.equal(E().prestige,prestige-8);assert.equal(E().energy,energy-1);assert.match(sister.story.at(-1).t,/已明言拒绝/);drain();S.turn++;assert.equal(marriedSisterEncounter(other,sister),null);`);
 });
 

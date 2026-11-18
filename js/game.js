@@ -506,7 +506,7 @@ A.endMonth=function(){
   // 岁末总结
   if(newYear)snapshotYear();
   if(newYear){const y=S.ys;pushEv({title:'岁首',sfx:'chime',text:`爆竹声中一岁除。${dateStr()}，陛下${e.age}岁。\n去岁：新入宫${y.c}人，皇嗣降生${y.b}位，侍寝${y.n}次。\n国库${e.treasury}万两，威望${rd(e.prestige)}，民心${rd(e.people)}。`,choices:[{t:'新岁新气象'}]});S.ys={c:0,b:0,n:0}}
-  if(revenue)pushEv(revenue);
+  if(revenue)pushEv(revenue.jewelry?tributeEnvoyEvent(revenue):revenue);
   // 事件
   if(selectionSkipTimingActive()){const selectionOffer=scheduledSelectionEvent();if(selectionOffer)pushEv(selectionOffer);}
   else if(S.month===2&&S.turn-S.flags.lastXX>=34&&newConsortEventAllowed()) pushEv({title:'三年大选',sfx:'chime',text:'又到三年一度的大选之期，各地秀女已候于储秀宫。',choices:[{t:'前去看看',f:()=>{genCands();UI.view='xx';return null}},{t:'今年免了',f:()=>{S.flags.lastXX=S.turn;return fx(chg({people:2}))}}]});
@@ -540,7 +540,8 @@ A.endMonth=function(){
   add(homeReturnSocialEvent(),8);add(natalVisitRequest(),7);add(awaitingNoticeEvent(),6);
   add(pastLifeMonthlyEvent(),6);add(pregnancyPrayerMonthlyEvent(),6);add(residencePetitionEvent(),8);add(fiveBrotherMonthlyEvent(),6);add(travelerMonthlyEvent(),8);add(recoveredSwapEvent(),8);add(fosterPetitionEvent(),8);add(kinSuccessionEvent(),8);add(parentageClueEvent(),8);
   add(coldFosterPetitionEvent(),9);add(coldFriendPetitionEvent(),8);
-  add(jewelryTributeEvent(),7);add(jewelryRequestEvent(),7);
+  const tribute=jewelryTributeEvent();
+  add(revenue?.jewelry?tribute:tributeEnvoyEvent(tribute),7);add(jewelryRequestEvent(),7);
   add(chance(.8)?festival():null,5);add(chance(.75)?haremEvent():null,6);
   add(chance(.65)?quirkEvent():null,5);add(chance(.5)?histEvent():null,6);add(chance(.4)?courtEvent():null,4);add(palaceRomanceEvent(),8);add(courtFriendshipEvent(),9);add(motherAppealEvent(),9);
   add(chance(.3)?youthEvent():null,7);add(chance(.45)?kidEvent():null,4);add(chance(.55)?xinEvent():null,6);add(monthlyMaidEvent(),4);add(chance(.3)?fosterEvent():null,4);add(chance(.45)?relEvent():null,5);add(chance(.35)?clanEvent():null,5);add(chance(.45)?factionEvent():null,6);add(chance(.5)?visitorEvent():null,5);add(chance(.15)?dowagerEvent():null,3);

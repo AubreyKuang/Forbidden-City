@@ -97,7 +97,7 @@ function outerCard(b,k,frozen){
     if(k.pedigree==='认领'&&kidById(k.id))controls.push(outerLink('查阅皇嗣档案',`A.go('kid',${k.id})`));
   }
   const witnesses=k.witnesses.map(w=>`<li>${esc(w.role+' '+w.name)} · 忠诚 ${rd(w.loyal)} · 口风 ${rd(w.discretion)}${w.active?'':' · 已离开'}</li>`).join('');
-  return detailSection(esc(k.alias),`${porImg({...k,courtGuest:true,name:k.alias,born:S.turn-age*12},72)}${lines.map(l=>'<p>'+esc(l)+'</p>').join('')}<details><summary>知情人名册</summary><ul>${witnesses}</ul></details>${controls.join(' ')}`);
+  return detailSection(esc(k.alias),`${porImg({...k,courtGuest:true,name:k.alias,born:S.turn-age*12},72)}${outsideChildBadge(k,m.relative!=null)}${lines.map(l=>'<p>'+esc(l)+'</p>').join('')}<details><summary>知情人名册</summary><ul>${witnesses}</ul></details>${controls.join(' ')}`);
 }
 function outerRegisterView(){
   const records=S.outerRegisters||[],reign=Number(UI.sel)||S.gen,b=records.find(b=>b.gen===reign);

@@ -63,8 +63,15 @@ function palaceRomanceTick(){
     const score=romanceAffinity(k,c);if(score)matches.push({k,c,score});
   }
   // One roll for the whole palace, not one roll for every possible pair.
-  if(!matches.length||!chance(.04))return;
-  const {k,c}=pick(matches.sort((a,b)=>b.score-a.score).slice(0,3));
+  if(!matches.length)return;
+  let pool=matches;
+  const roll=R();
+  if(roll>=.04){
+    if(roll>=.08)return;
+    pool=matches.filter(({k,c})=>romanceAdults(k,c)&&restlessDisposition(c));
+    if(!pool.length)return;
+  }
+  const {k,c}=pick(pool.sort((a,b)=>b.score-a.score).slice(0,3));
   const key=k.id+'-'+c.id,books=['读书','抚琴','对弈'].includes(consortHobby(c));
   state.pairs[key]={key,prince:k.id,consort:c.id,stage:1,status:'active',pending:true,known:false,started:S.turn,place:books?'wy':'yh',theme:books?'books':'riding'};
   state.lastStart=S.turn;

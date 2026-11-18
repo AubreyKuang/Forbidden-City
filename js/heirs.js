@@ -7,6 +7,7 @@ function makeKid(c,sex,name,{outsideChild=null,origin=null,foster=null}={}){
     vir:clamp(c.virtue*.7+ri(0,12)),hp:clamp(55+ri(0,35)-(c.trait==='体弱'?15:0)),amb:clamp(c.scheme*.65+ri(0,18)),
     love:50,sup:0,policy:'均衡',tutor:false,title:'',alive:true,married:false,adult:false,story:outsideChild?.story||[],seed:outsideChild?.seed??ri(1,2e9)};
   if(outsideChild){
+    if(outsideChild.outsideGrowthAge)k.outsideGrowthAge=outsideChild.outsideGrowthAge;
     k.birthMonth=((S.month-1-(S.turn-k.born)%12+12)%12)+1;k.outsideFamilyOrigin=origin;
     k.outsideParentage=outsideChild.outsideParentage;k.adult=kidAge(k)>=15;
     k.married=!!outsideChild.married;if(outsideChild.spouse)k.spouse=outsideChild.spouse;

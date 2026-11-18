@@ -22,7 +22,7 @@ A.familyVisibilityToggle=function(key){
 function familyTreeRegistry(){
   const houses=[],seen=new Set(),relatives=[];
   for(const c of familyCourtHosts()){const h=houseOf(c);if(!h||seen.has(h.father.id))continue;seen.add(h.father.id);houses.push({c,h});}
-  for(const {c,h} of houses)for(const p of natalPeople(h))relatives.push({c,h,p});
+  for(const {c,h} of houses)for(const p of (h.relatives||[]).filter(p=>!p.consortId||byId(p.consortId)?.familyBranchOrigin))relatives.push({c,h,p});
   if(outsideParentageActive())for(const p of S.children.filter(k=>k.outsideFamilyOrigin)){
     const origin=houses.find(x=>x.h.father.id===p.outsideFamilyOrigin.house);
     if(origin)relatives.push({...origin,p});
@@ -79,8 +79,8 @@ function familyHouseHeight(c){
 function familyTreePerson(c,p,role,relation,list=false){
   const royal=!!p.outsideFamilyOrigin;
   if(!royal&&list&&!role&&p.sex==='m'&&natalAge(p)>=18)role='relative'+p.id;
-  const target=royal?`'kid',${p.id}`:role?`'official','${c.id}:${role}'`:`'natal','${c.id}:${p.id}'`,age=role?p.age:natalAge(p),status=royal?'已认回宫':role?officialStatus(p):natalStatus(p);
-  return `<button class="graph-kin-person${p.alive===false?' deceased':''}" onclick="A.go(${target})" aria-label="查看${esc(p.name)}">${porImg(role?p:natalPortrait(p),34)}<span class="graph-person"><strong>${esc(p.name)}</strong><small>${esc(relation)} · ${role?esc(status)+' · '+esc(p.office||p.post||''):age+'岁 · '+esc(status)}${p.unconfirmedParentage?' '+unconfirmedParentageTag(p):''}</small>${role?`<small>${age}岁 · ${esc(officialOfficeLabel(p))}</small>`:''}</span></button>`;
+  const target=p.consortId?`'consort',${p.consortId}`:royal?`'kid',${p.id}`:role?`'official','${c.id}:${role}'`:`'natal','${c.id}:${p.id}'`,age=role?p.age:natalAge(p),status=royal?'已认回宫':role?officialStatus(p):natalStatus(p);
+  return `<button class="graph-kin-person${p.alive===false?' deceased':''}" onclick="A.go(${target})" aria-label="查看${esc(p.name)}">${porImg(role?p:natalPortrait(p),34)}<span class="graph-person"><strong>${esc(p.name)}</strong><small>${esc(relation)} · ${role?esc(status)+' · '+esc(p.office||p.post||''):age+'岁 · '+esc(status)}${outsideChildBadge(p)}</small>${role?`<small>${age}岁 · ${esc(officialOfficeLabel(p))}</small>`:''}</span></button>`+(role||royal?'':familyNominationButton(c,p));
 }
 function familyHouseTree(c,list=false){
   const h=houseOf(c);if(!h)return '';

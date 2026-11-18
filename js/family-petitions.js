@@ -192,7 +192,7 @@ function coldFriendPetitionEvent(){
 A.fosterWish=function(id){if(modalOpen)return;const c=byId(id),ev=c&&fosterPetitionEvent(c);if(ev)pushEv(ev);};
 function fosterWishButton(c){return maternalSisterArrivalButton(c)+maternalKinCareButton(c)+(fosterPetitionPairs(c).length?`<button class="btn sm" onclick="A.fosterWish(${c.id})">听她谈抚养孩子</button>`:'');}
 function kinSuccessionSource(c){
-  return c&&!c.maid&&c.rank>=5&&c.age>=20&&hasClan(c)&&(!c.alive||c.cold||c.gone)&&!c.kinSuccessor&&!c.maternalArrival;
+  return c&&!c.familyBranchOrigin&&!c.maid&&c.rank>=5&&c.age>=20&&hasClan(c)&&(!c.alive||c.cold||c.gone)&&!c.kinSuccessor&&!c.maternalArrival;
 }
 function kinArrivalGreeting(c){
   const a=c?.kinArrival,m=byId(a?.mother);if(!a?.pending||!inPalace(c)||!m)return null;

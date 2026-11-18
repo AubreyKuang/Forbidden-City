@@ -38,23 +38,42 @@ A.banquetEnvoys=function(){
 function receiveBanquetEnvoys(kind,title,invited){
   if(!hostsEnvoys(kind)||S.over||mourningActive()||(!invited&&!chance(.35)))return;
   const greeting={newYear:'奉上贺正国书',midAutumn:'携节礼前来拜节',emperor:'呈上祝寿国书'}[kind];
+  if(journalContentVersion()>=84){
+    if(S.flags.courtEnvoyTurn===S.turn&&!invited)return;
+    S.flags.courtEnvoyTurn=S.turn;
+  }
+  pushNow(courtEnvoyEvent(title,greeting));
+}
+function courtEnvoyEvent(title,greeting){
   if(whiteSpringAudienceReady()){
     const r=storyCastRecord('ayimu');
-    pushNow({title:title+' · 白泉来使',text:'礼部通传，白泉国王携女儿'+greeting+'。'+
+    return {title:title+' · 白泉来使',text:'礼部通传，白泉国王携女儿'+greeting+'。'+
       (r?.stage?'公主在馆中住了些日子，今日愿将先前的婚议亲口答复。':'随行乐工把三面扁鼓抬到廊下，等候传召。'),
       choices:[{t:r?.stage?'请父女入席，听公主回话':'请父女入席，观白泉鼓舞',f:()=>{
         if(!whiteSpringAudienceReady())return null;
         const guest=storyCastRecord('ayimu')||storyCastCreate('ayimu');
         storyCastRecordLine(guest.person,'随父王赴'+title+'，以白泉国宾之礼入席。');
         pushNow(storyCastMeetEvent('ayimu',guest,title));return null;
-      }},{t:'请礼部代收贺表，今日只设家席',f:()=>{log(title+'由礼部代受白泉贺表。');return '礼部将回帖送到馆中，国王领女儿谢过。';}}]});
-    return;
+      }},{t:'请礼部代收贺表，今日只设家席',f:()=>{log(title+'由礼部代受白泉贺表。');return '礼部将回帖送到馆中，国王领女儿谢过。';}}]};
   }
   const [region,gift]=pick([['西域','彩纹织毯'],['东瀛','描金漆匣'],['海西','琉璃杯']]);
-  pushNow({title:title+' · '+region+'使臣',text:region+'使臣'+greeting+'，并以一件'+gift+'为贺。通译捧着礼单候在阶下。',
+  return {title:title+' · '+region+'使臣',text:region+'使臣'+greeting+'，并以一件'+gift+'为贺。通译捧着礼单候在阶下。',
     choices:[{t:'赐席，听使臣说说故乡的节俗',f:()=>{log(title+'赐席'+region+'使臣，听其讲述乡俗。');return '使臣谢过赐席，说起家乡筵席上主人怎样向远客致意。'+fx(chg({prestige:1}));}},
-      {t:'请礼部答礼',f:()=>{log(title+'命礼部答谢'+region+'使臣。');return '礼官收下贺表，送使臣回馆。';}}]});
+      {t:'请礼部答礼',f:()=>{log(title+'命礼部答谢'+region+'使臣。');return '礼官收下贺表，送使臣回馆。';}}]};
 }
+// The tribute itself keeps its ordinary inventory, costs and award choices.
+function tributeEnvoyEvent(tribute){
+  if(journalContentVersion()<84||S.over||mourningActive()||S.flags.courtEnvoyTurn===S.turn)return tribute;
+  const occasion=S.month===1?'岁首朝贺':S.month===8?'中秋节礼':birthMonth(E())===S.month?'万寿朝贺':null;
+  if((!tribute&&!occasion)||!chance(.35))return tribute;
+  const visit=courtEnvoyEvent(occasion||'御前受贡',occasion==='万寿朝贺'?'呈上祝寿国书':'随贡使呈上国书');
+  const mark=()=>{S.flags.courtEnvoyTurn=S.turn;};
+  if(!tribute)return {...visit,onQueue:mark};
+  const queue=tribute.onQueue,accept=tribute.choices[0].f;
+  return {...tribute,text:tribute.text+'\n'+visit.text,onQueue:()=>{queue?.();mark();},
+    choices:[...tribute.choices,{...visit.choices[0],f:()=>{accept?.();return visit.choices[0].f();}}]};
+}
+
 function midAutumnFamilyGifts(){
   harem().forEach(c=>c.mood=clamp(c.mood+6));
   kidsAlive().forEach(k=>k.love=clamp(k.love+5));

@@ -124,6 +124,13 @@ A.outerVisit=function(id){
     choices.push({t,cond:()=>!cost||E().treasury>=cost,why:'国库不足',f:()=>{
       if(cost)chg({treasury:-cost});m.last=S.turn;m.meetings++;m.aff=clamp(m.aff+aff);m.trust=clamp(m.trust+trust);
       if(intimate&&m.age+Math.floor((S.turn-m.created)/12)<48&&!m.preg&&S.turn>=(m.restUntil??0)&&chance(.38))m.preg={notice:S.turn+ri(1,2),due:S.turn+9};
+      if(intimate&&journalContentVersion()>=84&&m.relative!=null){
+        const sister=outerSister(m);
+        if(sister?.married&&!sister.widow&&sister.spouse?.alive!==false){
+          m.privateMeetings=(m.privateMeetings||0)+1;
+          story(sister,'【别院私会】'+sisterMarriageReflection(sister,m.privateMeetings));
+        }
+      }
       return outerNote(m,null,'别院重访',t,line);
     }});
   }
@@ -248,6 +255,11 @@ function outerMonthly(){
   for(const k of b.children){
     if(k.lastTick===S.turn)continue;k.lastTick=S.turn;
     const m=outerMother(k.mother),age=kidAge(k),birthday=(S.turn-k.born)%12===0;
+    if(journalContentVersion()>=84&&m.relative!=null&&!k.sealed){
+      const recognized=k.pedigree==='认领',child=recognized?kidById(k.id):k,previous=child?.outsideGrowthAge;
+      outsideChildGrowing(child,byId(m.relative)||outerSister(m),familyHostById(m.host),recognized?'recognized':'quiet');
+      if(child?.outsideGrowthAge!==previous)outerNote(m,k,'成长家书','收家信',child.story.at(-1).t);
+    }
     if(k.pedigree==='认领'||k.sealed)continue;
     const official=k.officialId&&scholarById(k.officialId);
     if(official?.alive===false){

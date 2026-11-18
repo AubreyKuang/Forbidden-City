@@ -1,11 +1,12 @@
 /* ============ 选秀 ============ */
 function genCands(n=6){finishSelection();S.cands=[];for(let i=0;i<n;i++)S.cands.push(makeGirl());
-  const kc=harem().filter(c=>c.fam.p>=15&&hasClan(c));
+  const kc=harem().filter(c=>c.fam.p>=15&&hasClan(c)&&!c.familyBranchOrigin);
   if(kc.length&&chance(.4)){
     const c=pick(kc),type=chance(.6)?'堂':'亲';
     const kin=journalContentVersion()>=80&&type==='亲'?registeredSelectionSister(c):makeKin(c,type);
     if(kin)S.cands[0]=kin;
   }
+  if(journalContentVersion()>=84)appendFamilyNominees();
   S.cands.forEach(c=>{deepen(c);initTimeTraveler(c);});assignPastLifeCandidates();S.selection={phase:'audience',current:S.cands[0]?.id,performed:[]};selectionBatch();captureSelectionCourt();S.flags.peek=3;S.flags.lastXX=S.turn;if(typeof outerSelectionCall==='function')outerSelectionCall();log(`${dateStr()}，开选秀，各地秀女入宫待选。`,journalContentVersion()<41)}
 A.xxDecree=function(){
   if(selectionSkipTimingActive()&&(modalOpen||S.over||S.cands.length))return;
@@ -125,7 +126,22 @@ const HAREM=[
    {t:'命人八百里快马送青梅',f:()=>{story(c,'孕中想吃家乡的青梅，陛下命人快马送来。');return fx(chg({treasury:-10,people:-1}),cchg(c,{mood:18,aff:10}))}},
    {t:'让御膳房想想办法',f:()=>fx(cchg(c,{mood:6}))}]}},
 ];
-function haremEvent(){for(const f of shuffle(HAREM)){const ev=f();if(ev&&ambientEventReady(ev))return {...ev,present:ev.present||eventPortraits(ev)}}return null}
+function guardTrystEvent(){
+  if(journalContentVersion()<84||mourningActive()||S.turn-(S.flags.lastGuardTryst??0)<18)return null;
+  const eligible=harem().filter(c=>c.age>=18&&!c.maid&&c.rank!==8&&!c.bond&&!c.preg&&c.aff<50&&c.favor<40&&!c.guardTryst&&
+    !['持重','痴情'].includes(c.trait)&&!isSolitary(c));
+  if(!eligible.length)return null;
+  // One opportunity per palace and month, including if several ambient events are requested.
+  const key=E().seed+':guard-tryst:'+S.turn,c=eligible[voiceHash(key+':who')%eligible.length];
+  if(voiceHash(key+':roll')%100>=(restlessDisposition(c)?6:2))return null;
+  const record=(order,delta)=>{c.guardTryst={turn:S.turn,order};story(c,'【宫门私约】与值夜侍卫私下相恋。'+order);log(fullName(c)+'与侍卫的私约被发现。'+order);return order+fx(cchg(c,{mood:delta}));};
+  return {title:'宫门私约',por:c,present:[c],valid:()=>inPalace(c)&&!c.guardTryst,
+    onQueue:()=>{S.flags.lastGuardTryst=S.turn;},
+    text:`巡夜内侍禀报，昨夜换值之后，${cName(c)}还在廊下等那名侍卫。你召她问话，她从袖里取出两人往来的短信：“是我约他来的。他也待我有情。”`,
+    choices:[{t:'将侍卫调离内廷',f:()=>record('侍卫奉调离开内廷，两人就此别过。',-8)},
+      {t:'封存此事',f:()=>record('陛下封存了信件，她回宫后亲手收起了最后一封回信。',-2)}]};
+}
+function haremEvent(){const guard=guardTrystEvent();if(guard)return guard;for(const f of shuffle(HAREM)){const ev=f();if(ev&&ambientEventReady(ev))return {...ev,present:ev.present||eventPortraits(ev)}}return null}
 function returnedMaidPregnancy(c){
   return journalContentVersion()>=49&&c.maid&&!c.near&&c.preg===2&&Number.isInteger(c.maidReturnedAt)&&
     c.maidReturnedAt===c.pregnancyCalendar?.conceived;
