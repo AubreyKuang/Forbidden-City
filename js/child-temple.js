@@ -9,6 +9,7 @@ function childWhereabouts(k){
   if(k.birthSwap?.occurred&&k.parentage?.decision==='family')return '宫外亲生父母家';
   if(k.parentage?.decision==='household')return '生父皇子府';
   if(k.jailed)return '宗人府';
+  if(whiteSpringInPalace(k))return '宫中小住';
   if(k.princessMarriage==='frontier')return princessMarriageLand(k);
   if(k.away)return princeFief(k)||'封地';
   if(k.estate)return k.sex==='f'?'公主府':'皇子府';

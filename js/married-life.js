@@ -79,7 +79,7 @@ function householdSummary(k){
 const householdBirthCount=k=>k.household.children.length+(royalAdoptionStoriesActive()?k.palaceAdoptedChildren?.length||0:0);
 function householdCanConceive(k,p){
   const woman=k.sex==='f'?k:p,h=ensureMarriedLife(k);
-  return householdActive(k)&&p?.alive!==false&&kidAge(k)>=18&&kidAge(p)>=18&&kidAge(woman)<=45&&
+  return householdActive(k)&&!whiteSpringInPalace(k)&&p?.alive!==false&&kidAge(k)>=18&&kidAge(p)>=18&&kidAge(woman)<=45&&
     !p.away&&!p.jailed&&!p.gone&&!p.cold&&householdBirthCount(k)+h.pregnancies.length<8&&!h.pregnancies.some(g=>g.mother===woman.id)&&
     S.turn-(h.lastBirthByMother[woman.id]??-99)>=18&&S.turn-(p.joinedAt??h.started)>=3&&(p.trust??k.spouse.trust)>=40;
 }
@@ -108,7 +108,7 @@ function deliverHouseholdChild(k,pregnancy){
     lit:clamp(k.lit*.5+(p.appearance?.talent||50)*.35+ri(0,10)),vir:clamp(k.vir*.5+(p.appearance?.virtue||50)*.35+ri(0,10)),mar:clamp(k.mar*.55+ri(4,20)),hp:ri(65,95),amb:ri(15,50)};
   h.children.push(baby);h.lastBirth=S.turn;h.lastBirthByMother[woman.id]=S.turn;
   householdRecord(k,'household_birth',`${householdMotherName(k,p)}平安诞下${sex==='m'?'一子':'一女'}，取名${baby.name}。现有${householdSummary(k)}。`);
-  log(`${kidName(k)}府中添丁，${baby.name}降生。`,1);return baby;
+  log(`${kidName(k)}府中添丁，${baby.name}降生。`,1);whiteSpringBirthLetter(k,baby);return baby;
 }
 const HOUSEHOLD_SCENES={
   tea:{title:'赌书分茶',
@@ -200,10 +200,11 @@ function marriedLifeTick(){
   if(S.over)return;
   for(const k of royalHouseholds()){
     if(k.princeAdoptionOrigin)continue;
+    whiteSpringFamilyTick(k);
     const h=ensureMarriedLife(k);if(!h||h.lastTick===S.turn)continue;h.lastTick=S.turn;
     if(!householdLiving(k)){h.pending=null;h.pregnancies=[];continue;}
     for(const p of [...h.pregnancies])if(S.turn>=p.due)deliverHouseholdChild(k,p);
-    if(!householdActive(k)){h.pending=null;continue;}
+    if(!householdActive(k)||whiteSpringInPalace(k)){h.pending=null;continue;}
     if(h.echo&&S.turn>=h.echo.due){k.spouse.trust=clamp(k.spouse.trust+h.echo.trust);householdRecord(k,'household_echo','两个月后，府中回信：'+h.echo.text);delete h.echo;}
     if(h.project&&S.turn>=h.project.due){const project=h.project;delete h.project;k[project.stat]=clamp(k[project.stat]+4);k.spouse.trust=clamp(k.spouse.trust+5);householdRecord(k,'household_project',project.title+'办成，两人各自做了擅长的一部分。');}
     if(S.turn>=h.nextNews){recordHouseholdNews(k);h.nextNews=S.turn+(richerPrincessMarriage(k)?ri(2,4):ri(4,7));}
@@ -216,7 +217,7 @@ function marriedLifeTick(){
     }
   }
   if(S.turn-(S.flags.lastHouseholdScene??-99)<4)return;
-  const options=royalHouseholds().filter(k=>householdActive(k)&&!ensureMarriedLife(k).pending&&S.turn-k.household.lastEvent>=6);
+  const options=royalHouseholds().filter(k=>householdActive(k)&&!whiteSpringInPalace(k)&&!ensureMarriedLife(k).pending&&S.turn-k.household.lastEvent>=6);
   if(options.length&&chance(.35)){const k=pick(options);if(makeHouseholdScene(k))S.flags.lastHouseholdScene=S.turn;}
 }
 function householdConcubineReason(k){
@@ -239,18 +240,18 @@ function householdPanel(k){
     ${h.concubines.length?`<p>妾室：${h.concubines.map(p=>esc(p.name)+'（'+esc(marriageNature(p).temperament)+'）').join('、')}</p>`:''}
     ${h.project?`<p class="hint">${esc(h.project.title)} · 预计${Math.max(0,h.project.due-S.turn)}个月后有回音</p>`:''}
     ${h.pending?`<p class="initiative-note">府中近况：${esc(HOUSEHOLD_SCENES[h.pending.id]?.title||'待询问')}</p>`:''}
-    ${householdActive(k)?`<div class="acts"><button class="btn jade" onclick="A.householdVisit(${royalActionArg(k.id)})">${k.away||k.princessMarriage==='frontier'?'读府中来信':'探望小家'} →</button><button class="btn" onclick="A.householdProject(${royalActionArg(k.id)})" ${h.project||S.turn-(h.lastProject??-99)<12?'disabled':''}>帮两人办件事</button>${adult&&k.sex==='m'?`<button class="btn" onclick="A.householdConcubine(${royalActionArg(k.id)})" title="${esc(concubineReason||'先听皇子的想法，再决定是否准许纳妾')}" ${concubineReason?'disabled':''}>询问皇子纳妾意愿${concubineReason?`<small>${esc(concubineReason)}</small>`:''}</button>`:''}</div>`:''}
+    ${householdActive(k)&&!whiteSpringInPalace(k)?`<div class="acts"><button class="btn jade" onclick="A.householdVisit(${royalActionArg(k.id)})">${k.away||k.princessMarriage==='frontier'?'读府中来信':'探望小家'} →</button><button class="btn" onclick="A.householdProject(${royalActionArg(k.id)})" ${h.project||S.turn-(h.lastProject??-99)<12?'disabled':''}>帮两人办件事</button>${adult&&k.sex==='m'?`<button class="btn" onclick="A.householdConcubine(${royalActionArg(k.id)})" title="${esc(concubineReason||'先听皇子的想法，再决定是否准许纳妾')}" ${concubineReason?'disabled':''}>询问皇子纳妾意愿${concubineReason?`<small>${esc(concubineReason)}</small>`:''}</button>`:''}</div>`:''}
     ${adult&&residents.length?`<div class="household-children">${residents.map(c=>`<article>${porImg(c,56)}<div><strong>${esc(c.name)}</strong><small>${kidAge(c)}岁 · ${c.princeAdoption?'嗣子':c.sex==='m'?'子':'女'} · 生母${esc(c.motherName)}</small></div></article>`).join('')}</div>`:''}
-    </section>`;
+    </section>${whiteSpringFamilyPanel(k)}`;
 }
 A.householdVisit=function(id){
-  const k=royalById(id);if(modalOpen||!householdActive(k))return;
+  const k=royalById(id);if(modalOpen||!householdActive(k)||whiteSpringInPalace(k))return;
   const h=ensureMarriedLife(k);if(!h.pending)makeHouseholdScene(k);
   const ev=householdSceneEvent(k);
   if(ev)pushEv(ev);else pushEv({title:'府中日常',cast:[k,k.spouse],text:`${k.name}与${k.spouse.name}近来平静度日。${h.project?'两人还在筹办'+h.project.title+'。':'府中没有新事请你定夺。'}`,choices:[{t:'让他们安心过日子'}]});save('auto');
 };
 A.householdProject=function(id){
-  const k=royalById(id);if(modalOpen||!householdActive(k))return;
+  const k=royalById(id);if(modalOpen||!householdActive(k)||whiteSpringInPalace(k))return;
   const h=ensureMarriedLife(k),valid=()=>householdActive(k)&&!h.project&&S.turn-(h.lastProject??-99)>=12;
   if(!valid())return;
   pushEv({title:'一同经营的小事',cast:[k,k.spouse],valid,text:marriageProfileText(k,k.spouse)+'\n拨银十万两，两人会用三个月共同完成。',choices:[

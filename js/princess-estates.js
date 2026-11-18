@@ -283,12 +283,130 @@ function princessFollowupPanel(k,project){
 }
 const princessEstateLocal=k=>!k.away&&k.estate.route!=='frontier'&&k.princessMarriage!=='frontier'&&(!k.estate.location||k.estate.location==='京城');
 const princessEstateVisitReady=k=>!S.over&&!!k?.alive&&!!k.estate&&princessEstateLocal(k)&&!k.jailed&&!k.templeStay&&!k.removedFromRoyal&&S.turn>=(k.estate.nextCall??0);
+// A visit carries the original household child's id. The marriage and the family's home stay in White Spring.
+function whiteSpringGrandmother(k){
+  if(journalContentVersion()<78||k?.sex!=='f'||k.spouse?.route!=='whiteSpring'||!whiteSpringChild(k))return null;
+  const mother=familyHostById(k.mom);
+  return mother?.fixedStory==='ayimu'?mother:null;
+}
+function whiteSpringHostReady(m){
+  if(!m?.alive)return false;
+  if(!m.familyArchive)return inPalace(m);
+  return [S.flags.dowager,S.flags.birthDowager].some(d=>d?.personId===m.id&&d.alive);
+}
+function whiteSpringGrandchildren(k){
+  return princeResidentChildren(k).filter(c=>c.mother===k.id&&c.alive!==false);
+}
+const whiteSpringKinTerm=c=>c.sex==='f'?'外孙女':'外孙';
+const whiteSpringInPalace=k=>k?.household?.whiteSpringVisit?.stage==='palace';
+function whiteSpringFamilyMemory(k,m,c,title,daughter,grandmother,child,place){
+  princessMemory(k,'white_spring_family','【'+title+'】'+daughter,place);
+  if(m?.alive&&grandmother){
+    story(m,'【'+title+'】'+grandmother);
+    const d=[S.flags.dowager,S.flags.birthDowager].find(d=>d?.personId===m.id&&d.alive);
+    if(d)dowagerRecord(d,title,grandmother);
+  }
+  c.story ||= [];kstory(c,'【'+title+'】'+child);
+}
+function whiteSpringBirthLetter(k,c){
+  const m=whiteSpringGrandmother(k);if(!m?.alive)return;
+  const term=whiteSpringKinTerm(c);
+  const letter='母亲亲启：孩子取名'+c.name+'。我把您从前哄我睡的歌轻轻唱了一遍，还没唱到末一句，孩子就睡着了。女儿平安，您也好好吃饭。';
+  whiteSpringFamilyMemory(k,m,c,'白泉报喜', '产后亲笔给母亲报平安，写下了'+c.name+'的名字。',
+    '收到女儿'+k.name+'的报喜信，把'+term+c.name+'的名字轻声念了几遍，又托回程的使者带去一顶软帽。',
+    '降生在白泉。母亲写信告诉外祖母我的名字，外祖母从宫里寄来一顶软帽。','白泉国');
+  log(k.name+'自白泉寄来家书，向阿依慕报了'+c.name+'的喜讯。',1);
+  pushEv({title:'白泉家书 · 添丁报喜',cast:[k,m,c],text:letter+'\n阿依慕读完，又把落款看了一遍：“她小时候也爱听这支曲子。”',choices:[{t:'把回信和软帽交给白泉来使'}]});
+}
+function whiteSpringCanInvite(k,c,m){
+  const h=k?.household;
+  return !!(h&&c&&k.alive&&!S.over&&!k.jailed&&!k.gone&&!k.templeStay&&!royalJourneyAway(k)&&whiteSpringHostReady(m)&&
+    !h.whiteSpringVisit&&S.turn>=(h.whiteSpringNextVisit??0)&&kidAge(c)>=3&&whiteSpringGrandchildren(k).includes(c));
+}
+function whiteSpringInvitation(k,c,m){
+  const valid=()=>whiteSpringCanInvite(k,c,m);
+  return {title:'白泉家书 · 接女儿回宫',cast:[m,k,c],valid,text:'阿依慕摊开女儿的信。'+k.name+'写道：“'+c.name+'听说我小时候也在宫里住过，追着问我：外祖母窗外的树，如今有多高了？”\n白泉的使团正要返程，可以托使者带去家信。公主和孩子下月抵京，住两个月。',
+    choices:[{t:'请公主带'+c.name+'回宫小住',f:()=>{if(!valid())return null;
+      k.household.whiteSpringOffered=true;
+      k.household.whiteSpringVisit={child:c.id,stage:'invited',due:S.turn+1};
+      log('遣使赴白泉，请'+k.name+'带'+c.name+'回宫探望阿依慕。');save('auto');
+      return '阿依慕在信尾添了一行：“屋里有被褥，路上少带些东西。”';
+    }},{t:'容她们另择归期'}]};
+}
+A.whiteSpringInvite=function(id,childId){
+  const k=royalById(id),m=whiteSpringGrandmother(k),c=k&&whiteSpringGrandchildren(k).find(c=>c.id===childId);
+  if(!modalOpen&&whiteSpringCanInvite(k,c,m))pushEv(whiteSpringInvitation(k,c,m));
+};
+function whiteSpringFamilyTick(k){
+  const m=whiteSpringGrandmother(k),h=k.household,v=h?.whiteSpringVisit;
+  if(!h||(!m&&!v))return;
+  const children=whiteSpringGrandchildren(k);
+  if(v){
+    const c=children.find(c=>c.id===v.child);
+    if(!k.alive||k.gone||k.jailed||k.templeStay||royalJourneyAway(k)||!c||!whiteSpringHostReady(m)){
+      if(k.alive&&c)whiteSpringFamilyMemory(k,m,c,'探亲改期',v.stage==='palace'?'因宫中情势有变，带'+c.name+'提前归家。':'收到改期的消息，带'+c.name+'留在白泉。',
+        null,v.stage==='palace'?'随母亲提前回了白泉。':'随母亲在白泉等下一封家书。','白泉国');
+      delete h.whiteSpringVisit;return;
+    }
+    if(S.turn<v.due)return;
+    if(v.stage==='invited'){
+      v.stage='palace';v.due=S.turn+2;
+      whiteSpringFamilyMemory(k,m,c,'白泉归宁','牵着'+c.name+'走进母亲屋里，认出窗边还是自己从前坐的小凳。',
+        '接到女儿'+k.name+'和'+whiteSpringKinTerm(c)+c.name+'。特意把小凳摆回窗下，让孩子自己挑地方坐。',
+        '跟母亲进宫看望外祖母阿依慕。她替我留了一张靠窗的小凳。','宫中');
+      log(k.name+'携'+c.name+'抵京，在宫中与阿依慕小住两个月。',1);
+      pushEv({title:'白泉归宁 · 窗边的小凳',cast:[k,m,c],text:k.name+'才跨过门槛，'+c.name+'就仰起脸去看窗外的树。阿依慕把小凳搬近一些。公主笑了：“母亲，我当年也是站在这里量个头的。”',choices:[{t:'留她们一家慢慢叙话'}]});
+    }else{
+      delete h.whiteSpringVisit;h.whiteSpringNextVisit=S.turn+36;
+      whiteSpringFamilyMemory(k,m,c,'辞宫返白泉','小住期满，带'+c.name+'向母亲辞行，约定到了白泉便捎信。',
+        '送女儿'+k.name+'和'+whiteSpringKinTerm(c)+c.name+'到宫门，等车过了转角才回去。',
+        '随母亲回白泉，把外祖母送的小布袋系在了行囊上。','白泉国');
+      log(k.name+'携'+c.name+'辞别阿依慕，启程返回白泉。',1);
+    }
+    return;
+  }
+  if(!k.alive||!whiteSpringHostReady(m))return;
+  for(const c of children){
+    if(S.turn-c.born===12&&!c.whiteSpringBirthday){
+      c.whiteSpringBirthday=true;
+      whiteSpringFamilyMemory(k,m,c,'白泉周岁','收到母亲为'+c.name+'量鞋样的细绳，把孩子的脚长比好，随信寄回。',
+        '惦记'+whiteSpringKinTerm(c)+c.name+'周岁，托女儿量量脚长，好裁一双软底鞋。','周岁时，母亲替我量了脚长。外祖母要照着绳上的结给我做鞋。','白泉国');
+    }
+  }
+  const first=children.find(c=>whiteSpringCanInvite(k,c,m));
+  if(first&&!h.whiteSpringOffered){h.whiteSpringOffered=true;pushEv(whiteSpringInvitation(k,first,m));}
+}
+A.whiteSpringFamilySong=function(id){
+  const k=royalById(id),m=whiteSpringGrandmother(k),v=k?.household?.whiteSpringVisit;
+  const c=v&&whiteSpringGrandchildren(k).find(c=>c.id===v.child);
+  const valid=()=>!!(c&&whiteSpringHostReady(m)&&k.alive&&k.household.whiteSpringVisit===v&&v.stage==='palace'&&!v.sang&&!S.over);
+  if(modalOpen||!valid())return;
+  pushEv({title:'归宁小坐 · 两处乡音',cast:[m,k,c],valid,text:'阿依慕用指节在桌边轻轻叩了三下。'+c.name+'接着把后半句唱完，她反倒愣住了：“咦，我小时候唱的，末一句不是这样。”'+k.name+'笑着让母亲也唱一遍。',
+    choices:[{t:'坐下听她们把两种唱法都唱完',f:()=>{if(!valid())return null;v.sang=true;
+      whiteSpringFamilyMemory(k,m,c,'两处乡音','听母亲和'+c.name+'各唱一遍白泉旧曲，自己在一旁打拍子。',
+        '原以为'+whiteSpringKinTerm(c)+c.name+'忘了末一句，听女儿唱过才明白，故乡如今有了新的唱法。',
+        '我把白泉的歌唱给外祖母听。她也教了我一句，是她离乡时的唱法。','宫中');
+      k.love=clamp(k.love+3);save('auto');return '唱到末尾，三个人各唱各的尾音，却一齐收了拍。';
+    }},{t:'让她们先歇歇'}]});
+};
+function whiteSpringFamilyPanel(k){
+  const m=whiteSpringGrandmother(k);if(!m)return '';
+  const h=k.household,children=whiteSpringGrandchildren(k);if(!children.length)return '';
+  const v=h.whiteSpringVisit,guest=children.find(c=>c.id===v?.child);
+  const status=guest?(v.stage==='invited'?'已捎信相邀，约下月抵京。':'正在宫中陪伴阿依慕，还有 '+Math.max(0,v.due-S.turn)+' 个月启程回白泉。'):
+    !whiteSpringHostReady(m)?'眼下宫里无法接待探亲。':S.turn<h.whiteSpringNextVisit?'上次归宁后，再过 '+(h.whiteSpringNextVisit-S.turn)+' 个月可重邀。':'孩子满三岁后，可请公主带回宫中小住。';
+  const song=guest&&v.stage==='palace'&&!v.sang&&whiteSpringHostReady(m)?'<button class="btn jade" onclick="A.whiteSpringFamilySong('+royalActionArg(k.id)+')">陪三代人唱一支白泉旧曲</button>':'';
+  return detailSection('白泉外家', '<p>'+esc(guest?k.name+'与'+guest.name+' · '+status:status)+'</p>'+song+children.map(c=>
+    (whiteSpringCanInvite(k,c,m)?'<button class="btn jade" onclick="A.whiteSpringInvite('+royalActionArg(k.id)+','+royalActionArg(c.id)+')">请公主带'+esc(c.name)+'回宫小住</button>':'')+
+    '<details><summary>'+esc(c.name)+' · '+kidAge(c)+'岁 · '+whiteSpringKinTerm(c)+'的记事</summary>'+((c.story||[]).map(e=>'<p>'+esc(e.d)+'　'+esc(e.t)+'</p>').join('')||'<p>尚无记事。</p>')+'</details>').join(''));
+}
+
 function princessEstateFamilyPanel(k){
   const e=k.estate,local=princessEstateLocal(k),wait=Math.max(0,(e.nextVisit??0)-S.turn);
   const callWait=Math.max(0,(e.nextCall??0)-S.turn);
   const frontier=(k.princessMarriage||e.route)==='frontier';
   return detailSection('探望与家书',`<div class="acts">${local?`<button class="btn jade" onclick="A.princessEstateCall(${k.id})" ${princessEstateVisitReady(k)&&E().energy>0?'':'disabled'}>到公主府探望<small>${callWait?`还需 ${callWait} 个月`:'精力 −1'}</small></button>`:''}
-    ${local||frontier?`<button class="btn" onclick="A.princessVisit(${k.id})" ${wait?'disabled':''}>${local?'请她回宫探亲':'读'+princessMarriageLand(k)+'家书'}${wait?`<small>还需 ${wait} 个月</small>`:''}</button>`:''}</div>`);
+    ${(local||frontier)&&!whiteSpringInPalace(k)?`<button class="btn" onclick="A.princessVisit(${k.id})" ${wait?'disabled':''}>${local?'请她回宫探亲':'读'+princessMarriageLand(k)+'家书'}${wait?`<small>还需 ${wait} 个月</small>`:''}</button>`:''}</div>`);
 }
 function viewPrincessEstate(){
   const k=princessById(UI.sel),e=k?.estate;
@@ -378,7 +496,7 @@ A.princessLetter=function(id){
 };
 A.princessVisit=function(id){
   const k=princessById(id),e=k?.estate;
-  if(S.over||modalOpen||!k?.alive||!e||S.turn<e.nextVisit)return;
+  if(S.over||modalOpen||!k?.alive||!e||whiteSpringInPalace(k)||S.turn<e.nextVisit)return;
   const mother=!k.reign&&byId(k.mom);
   const parent=k.reign?`新君与${princessKinship(k)}在宫里叙了旧。`:mother?.alive&&!mother.gone&&!mother.cold?`她与${cName(mother)}在廊下坐了半日，说起开府后的日子。`:'她在宫里走了走，在从前住的地方停了一会儿。';
   const far=(k.princessMarriage||e.route)==='frontier';

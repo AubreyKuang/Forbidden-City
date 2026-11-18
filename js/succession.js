@@ -95,11 +95,13 @@ function listedRoyalKin(){
 function royalKinContactMode(k,estateContact=false){
   if(estateContact)return princeEstateAvailable(k)?k.away?'letter':'visit':'';
   if(!k?.alive||!k.reign||k.removedFromRoyal||k.pendingName||k.jailed||k.gone)return '';
+  if(whiteSpringInPalace(k))return 'visit';
   const estate=k.princeEstate||k.estate;
   return k.away||k.princessMarriage==='frontier'||estate?.route==='frontier'||royalJourneyAway(k)||k.templeStay||
     (estate?.location&&estate.location!=='京城')?'letter':'visit';
 }
 function royalKinContactPlace(k,mode){
+  if(whiteSpringInPalace(k))return '宫中小住';
   if(k.princessMarriage==='frontier'||k.estate?.route==='frontier')return princessMarriageLand(k);
   if(k.away&&princeFief(k)&&!royalJourneyAway(k)&&!k.templeStay)return princeFief(k);
   return k.away||royalJourneyAway(k)||k.templeStay?childWhereabouts(k):k.princeEstate?.location||k.estate?.location||
