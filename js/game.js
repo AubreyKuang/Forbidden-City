@@ -707,6 +707,10 @@ function checkEnd(){
 }
 function deathEvent(why){
   S.over=true;const e=E();const yrs=S.year;
+  if(journalContentVersion()>=77&&S.scenario?.gen===S.gen&&S.scenario.status==='active'){
+    S.scenario.status='lost';S.scenario.completed=S.turn;S.scenario.failure=why==='民变'?'国祚倾覆':'君主驾崩前未完成目标';
+    log(`【开局剧本】${DYNASTY_SCENARIOS[S.scenario.id]?.name||'本局'}：${S.scenario.failure}。`,1);
+  }
   const score=e.prestige*.5+e.people*.5;
   const shi=score>=80?'圣':score>=68?'文':score>=56?'景':score>=44?'恭':score>=32?'哀':'炀';
   const miao=['太祖','太宗','高宗','仁宗','宣宗','英宗','宪宗','孝宗','穆宗','神宗'][S.gen-1]||'睿宗';

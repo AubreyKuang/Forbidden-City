@@ -129,3 +129,10 @@ test('the inherited scenario cannot start before its achievement is unlocked',()
  const b=boot(19002);b.ctx.assert=assert;
  b.run(`document.querySelector('input[name=f-scenario]:checked').value='restoration';A.start();assert.equal(S.scenario,undefined);`);
 });
+
+test('an unfinished scenario records defeat if the ruler dies before its goals are met',()=>{
+ const b=boot(19002);b.ctx.assert=assert;
+ b.run(`document.querySelector('input[name=f-scenario]:checked').value='founder';A.start();drain();
+  deathEvent('驾崩');assert.equal(S.scenario.status,'lost');assert.equal(S.scenario.failure,'君主驾崩前未完成目标');
+  assert.match(dynastyGoalsPanel(),/君主驾崩前未完成目标/);`);
+});

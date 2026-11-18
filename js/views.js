@@ -345,7 +345,7 @@ function dynastyGoalsPanel(){
     crisis:'在期限内将民心提升至85',restoration:'五年后民心达到90'
   };
   const chapter=scenario&&definition?`<h3>${esc(definition.name)}</h3><p>${esc(definition.description)}
-    ${scenario.status==='won'?' · 已完成':scenario.status==='lost'?' · 期限已过':scenario.deadline!=null?` · 剩余 ${Math.max(0,scenario.deadline-S.turn)} 个月`:''}</p>
+    ${scenario.status==='won'?' · 已完成':scenario.status==='lost'?` · ${esc(scenario.failure||'期限已过')}`:scenario.deadline!=null?` · 剩余 ${Math.max(0,scenario.deadline-S.turn)} 个月`:''}</p>
     ${scenario.id==='regent'?`<p>权臣掌控度 ${scenario.control}/100</p>${scenario.control>0&&scenario.gen===S.gen?`<button class="btn sm" onclick="A.lowerRegentControl()" ${scenario.lastReform===S.turn||E().energy<1?'disabled':''}>核对朝政 · 精力−1</button>`:''}`:''}
     <ul class="story">${dynastyScenarioGoals().map(([name,value,target])=>`<li>${esc(name)} · ${Math.min(value,target)}/${target}</li>`).join('')}
     <li>隐藏目标 · ${scenario.hidden?esc(hiddenDescriptions[scenario.id])+' · 已达成':'???'}</li></ul>`:'';
