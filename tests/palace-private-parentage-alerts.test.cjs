@@ -9,6 +9,12 @@ test('a private pregnancy receives a timely commander notice without claiming it
  const b=setup();b.run(`S.turn++;natalPregnancyTick();assert.equal(curEv.title,'锦衣卫密报 · 宫外孕讯');assert.match(curEv.text,/不能.*断定/);
   assert.equal(originalPreg.privateNoticeQueued,true);drain();natalPregnancyTick();assert.equal(modalOpen,false);`);
 });
+test('the monthly pregnancy notice survives refresh without duplication',()=>{
+ let b=setup();b.run(`A.endMonth();for(let n=0;modalOpen&&curEv.title!=='锦衣卫密报 · 宫外孕讯'&&n<100;n++){if(modalResult)nextEv();else choose(0);}
+  assert.equal(curEv.title,'锦衣卫密报 · 宫外孕讯');save('auto');`);
+ b=boot(73,b.storage);b.ctx.assert=assert;b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(curEv.title,'锦衣卫密报 · 宫外孕讯');
+  choose(0);drain();assert.equal(S.log.filter(x=>x.t.includes('【宫外孕讯】')).length,1);`);
+});
 test('a pregnancy and birth still get a clear notice when the guard is not established',()=>{
  const b=setup(false);b.run(`S.turn++;natalPregnancyTick();assert.equal(curEv.title,'宫外来信 · 有孕');drain();`);birth(b);
  b.run(`assert.equal(curEv.title,'宫外来信 · 添丁');assert.equal(curEv.choices.length,1);drain();`);
@@ -33,4 +39,9 @@ test('saved non-imperial truth is not rewritten to the emperor',()=>{
  const b=setup(true,false);birth(b);b.run(`choose(0);drain();var q=child.outsideParentage.privateInquiry;S.turn=q.due;outsidePaternityTick();
   assert.equal(curEv.title,'锦衣卫回奏 · 宫外生父');assert.match(curEv.text,new RegExp(child.fatherName));choose(0);drain();
   assert.equal(child.unconfirmedParentage,true);assert.equal(q.imperial,false);assert.doesNotMatch(natalFatherPanel(child),/生父：皇帝/);`);
+});
+test('parallel inquiries cannot silently change the unclear label',()=>{
+ const b=setup();birth(b);b.run(`choose(0);drain();var data=child.outsideParentage,f=outsideParentageFamily(other,child);data.status='reported';
+  var oldCase=outsideParentageEvent(f);assert.equal(oldCase.choices[0].cond(),false);assert.equal(data.privateInquiry.status,'investigating');
+  data.privateInquiry.status='complete';data.status='investigating';delete data.privateInquiry;assert.equal(outsidePaternityReady(f),false);`);
 });
