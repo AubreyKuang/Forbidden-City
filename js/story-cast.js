@@ -20,6 +20,7 @@ const STORY_CAST={
     epithet:'灯市戏法',route:'京城灯市 · 正月也可从御花园请她献艺',rank:1,
     intro:'街头卖艺，接活先谈钱，不偷不骗，也不求怜悯。她数得清每场工钱，也记得大杂院里几个孩子缺过冬的炭。'}
 };
+const WHITE_SPRING_DANCE_ART={src:'./assets/images/story-cast/ayimu-dance.webp',alt:'阿依慕身着绣银白泉舞服，轻踏鼓面，腕上银铃随袖扬起'};
 const whiteSpringBanquetActive=()=>journalContentVersion()>=75;
 const storyCastData=key=>Object.hasOwn(STORY_CAST,key)?STORY_CAST[key]:null;
 const storyCastRecord=key=>S.flags.storyCast?.gen===S.gen?S.flags.storyCast.people[key]:null;
@@ -116,7 +117,7 @@ function storyCastMeetEvent(key,r){
       '随父赴宫宴，在御前献了白泉鼓舞。陛下赐宴答礼，次日随父王启程回乡。':'入宫辞行，领了回赠母亲的织锦，随父王回白泉。');
     if(!first)return scene('白泉公主 · 席后回话','阿依慕跟父王一道来辞行。国王提起席上的婚议，她已想好：“我愿留下。开春商队入关，我想托他们带一封平安信给母亲。”国王听完，向你行了一礼，等候回音。',keep,farewell);
     return {title:'御花园宫宴 · 白泉公主献舞',por:c,
-      portraitArt:{src:'./assets/images/story-cast/ayimu-dance.webp',alt:'阿依慕身着绣银白泉舞服，轻踏鼓面，腕上银铃随袖扬起'},
+      portraitArt:WHITE_SPRING_DANCE_ART,
       text:'宫中设宴款待白泉国王。酒过一巡，国王领女儿上前：“小女阿依慕，愿以一支家乡的舞为陛下祝酒。臣也有意将她许与陛下，求两家结亲。”'
         +'\n乐工把三面扁鼓依次放平。阿依慕提起裙角，足尖踏上鼓面，一串轻响从席前传到花下。最后一拍，她忽然收袖，腕上的银铃还在响。一只白蝶停在袖口，她索性等它飞走才行礼。席间静了一瞬，连方才执壶的宫人也跟着喝起彩来。'
         +'\n你问她自己的意思。她望了父亲一眼，用才学的官话答道：“我愿意。若留下，明早可许我托父王给母亲带封信？她还在等我说，京里的鼓跟家里响得一不一样。”',
@@ -204,7 +205,10 @@ function storyCastCodexCards(){
   return Object.entries(STORY_CAST).map(([key,d])=>{
     const r=storyCastRecord(key),p=storyCastPerson(r)||{...d,fixedStory:key,alive:true};
     const name=key==='chuwan'&&!r?'姓名待考':storyCastName(key,r);
-    return `<article class="story-consort-card" data-story-consort="${key}"><div class="story-consort-picture">${porImg(p,200)}<span class="tag y">${esc(storyCastStatus(r))}</span></div><div class="story-consort-copy"><h3>${esc(name)} · ${esc(d.epithet)}</h3><p>${esc(d.intro)}</p><p>${key==='ayimu'?'宫中':'出巡'} → ${esc(d.route)}</p><div class="acts">${r?`<button class="btn" onclick="A.storyCastDossier('${key}')">查看经历</button>`:''}${storyCastVisitButton(key)}</div></div></article>`;
+    const tag='<span class="tag y">'+esc(STORY_CAST_TAGS[key])+'</span>';
+    const badge=key==='chuwan'&&!r?.revealed?'<details><summary>查看特殊标签（含身世）</summary>'+tag+'</details>':tag;
+    const guide=STORY_CAST_LIVES[key];
+    return `<article class="story-consort-card" data-story-consort="${key}"><div class="story-consort-picture">${porImg(p,200)}<span class="tag y">${esc(storyCastStatus(r))}</span></div><div class="story-consort-copy"><h3>${esc(name)} · ${esc(d.epithet)}</h3><div aria-label="人物特殊标签">${badge}</div><p>${esc(d.intro)}</p><p>${key==='ayimu'?'宫中':'出巡'} → ${esc(d.route)}</p><p>入宫主线 · ${esc(guide.title)}<br>日常 · ${esc(guide.routine)}<br>特殊事件 · ${esc(guide.secret)}</p>${key==='ayimu'?'<p>入宫后，可在御花园小宴请她跳白泉舞。交好的妃嫔学过鼓点，往后同席可点名伴奏。</p>':''}<div class="acts">${r?`<button class="btn" onclick="A.storyCastDossier('${key}')">查看经历</button>`:''}${storyCastVisitButton(key)}</div></div></article>`;
   }).join('');
 }
 

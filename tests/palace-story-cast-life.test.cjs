@@ -53,3 +53,40 @@ test('a pending new chapter replays with the original amount and pays once after
   choose(1);drain();assert.equal(E().treasury,money-6);assert.equal(r.life.path,'共校');
   A.storyCastLife(r.id,'chapter');assert.equal(modalOpen,false);assert.equal(r.life.stage,1);`);
 });
+
+test('garden dance follows the confirmed guest list and teaches a friend to accompany a later banquet',()=>{
+ const b=world();b.ctx.assert=assert;
+ b.run(`
+  const r=storyCastCreate('ayimu');storyCastAdmit(r.person,r,'白泉宫宴');const dancer=byId(r.id);
+  const outsider=makeGirl({sur:'冯',given:'丝雨',age:20});addConsort(outsider,2,'入宫');
+  S.rel[rk(dancer,a)]=70;S.rel[rk(dancer,b)]=-55;b.scheme=70;
+  A.openBanquet();A.banquetDance('solo');assert.equal(UI.banquet.dance,undefined);
+  for(const c of [dancer,a,b])A.banquetGuest(c.id);
+  A.banquetDance('solo');A.banquetGuest(dancer.id);assert.equal(UI.banquet.dance,undefined);
+  A.banquetGuest(dancer.id);A.banquetDance('solo');let cost=E().treasury;
+  A.holdBanquet();choose(3);drain();assert.equal(E().treasury,cost);assert.equal(dancer.gardenDrummers,undefined);
+  A.holdBanquet();choose(0);assert.match(curEv.title,/泉上铃/);assert.match(curEv.portraitArt.src,/ayimu-dance/);
+  assert.deepEqual([...dancer.gardenDrummers],[a.id]);assert.match(a.story.at(-1).t,/鼓/);assert.match(b.story.at(-1).t,/一曲可真长/);
+  assert.ok(!outsider.story.some(e=>e.t.includes('白泉舞')));assert.equal(E().treasury,cost-15);drain();
+  S.turn+=3;A.openBanquet();A.banquetInviteAll(true);assert.match(viewBanquet(),new RegExp('请'+fullName(a)+'伴鼓'));
+  A.banquetDance(String(a.id));A.banquetInviteAll(false);assert.equal(UI.banquet.dance,undefined);
+  A.banquetInviteAll(true);A.banquetDance(String(a.id));A.holdBanquet();choose(0);
+  assert.match(curEv.title,/归泉/);assert.ok(a.story.some(e=>e.t.includes('为阿依慕伴鼓')));drain();
+  S.turn+=3;S.rel[rk(dancer,a)]=-40;A.openBanquet();A.banquetInviteAll(true);A.banquetDance(String(a.id));
+  assert.equal(UI.banquet.dance,undefined);assert.ok(!viewBanquet().includes('请'+fullName(a)+'伴鼓'));
+  dancer.cold=true;assert.ok(!viewBanquet().includes('请阿依慕独舞'));
+  for(const [key,tag] of Object.entries(STORY_CAST_TAGS))assert.ok(storyCastCodexCards().includes('<span class="tag y">'+tag+'</span>'),key);
+ `);
+});
+
+test('reloading the solo performance keeps the paid banquet and its drum lesson exactly once',()=>{
+ let b=world();b.ctx.assert=assert;
+ b.run(`const r=storyCastCreate('ayimu');storyCastAdmit(r.person,r,'白泉宫宴');
+   S.rel[rk(byId(r.id),a)]=80;A.openBanquet();A.banquetInviteAll(true);A.banquetDance('solo');
+   A.holdBanquet();choose(0);assert.match(curEv.title,/泉上铃/);save('auto');`);
+ b=boot(923,b.storage);b.ctx.assert=assert;
+ b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.match(curEv.title,/泉上铃/);
+   const d=byId(storyCastRecord('ayimu').id);assert.equal(d.gardenDrummers.length,1);
+   assert.equal(E().treasury,1985);drain();assert.equal(d.gardenDrummers.length,1);
+   assert.equal(S.log.filter(e=>e.t.includes('再跳白泉舞')).length,1);`);
+});
