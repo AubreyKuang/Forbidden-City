@@ -124,3 +124,8 @@ test('a genuine v76 pending coronation resumes before adopting cross-game reward
  b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,76);
   assert.equal(curEv.title,'登基');assert.equal(S.dynastyMeta,undefined);drain();A.go('home');assert.equal(PalaceActions.contentVersion,77);`);
 });
+
+test('the inherited scenario cannot start before its achievement is unlocked',()=>{
+ const b=boot(19002);b.ctx.assert=assert;
+ b.run(`document.querySelector('input[name=f-scenario]:checked').value='restoration';A.start();assert.equal(S.scenario,undefined);`);
+});

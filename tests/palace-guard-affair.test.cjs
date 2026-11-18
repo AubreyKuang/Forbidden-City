@@ -3,7 +3,7 @@ function start(){const b=boot(55001);b.ctx.assert=assert;b.run(`A.start();drain(
 function develop(b){b.force(.001,.001);b.run(`for(let month=1;month<=30;month++){S.turn=month;guardProtectionTick();}assert.equal(guard.protection.stage,3);assert.equal(guard.protection.discovered,true);`);}
 test('guard relationship develops across months and discovery survives a save',()=>{
  let b=start();develop(b);b.run(`assert.ok(c.story.some(e=>e.t.includes('挡过一场雨')));save('auto');`);
- b=boot(3,b.storage);b.ctx.assert=assert;b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);var guard=intelligenceAgent('guard'),c=byId(guard.protection.consort),affairScene=guardAffairEvent();assert.equal(affairScene.title,'守宫旧事 · 密报');
+ b=boot(3,b.storage);b.ctx.assert=assert;b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);var guard=intelligenceAgent('guard'),c=byId(guard.protection.consort),affairScene=guardAffairEvent();assert.equal(affairScene.title,'守宫旧事 · 密报');assert.match(affairScene.text,/保密值/);assert.match(intelligencePanel(),/保密值/);
   pushEv(affairScene);choose(0);drain();assert.match(guard.protection.ended,/保全/);assert.ok(c.story.some(e=>e.t.includes('私下来往被发现')));assert.equal(guardAffairEvent(),null);`);
 });
 

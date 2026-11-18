@@ -92,6 +92,10 @@ function trainIntelligenceAgent(id){
   chg({treasury:-5});agent.ability=clamp(agent.ability+5);agent.loyalty=clamp(agent.loyalty+3);agent.trainingTurn=S.turn;
   log(`【宫廷情报】${agent.name}接受查访训练。`);render();
 }
+function assignIntelligencePalace(id,palace){
+ const agent=intelligenceAgent(id);if(!intelligenceEnabled()||!agent||!['eunuch','maid'].includes(id)||!['坤宁宫',...PALACES].includes(palace)||S.over||modalOpen||E().energy<1||agent.palaceTurn===S.turn||agent.palace===palace)return;
+ if(!useE())return;agent.palace=palace;agent.palaceTurn=S.turn;log(`【宫廷情报】${agent.name}奉命留意${palace}的动向。`);render();
+}
 function intelligenceDispatch(id,caseId,suspectId){
   const agent=intelligenceAgent(id),network=intelligenceState(),file=palaceCases().find(c=>c.id===caseId);
   const source=INTELLIGENCE_SOURCES[id],suspect=file?.kind==='harem'?byId(suspectId):null;
@@ -101,7 +105,7 @@ function intelligenceDispatch(id,caseId,suspectId){
   if(!useE())return;
   chg({treasury:-15});
   const truth=file.kind==='harem'?file.culprit===suspect.id:file.truth===true;
-  const accuracy=clamp(.3+agent.ability/200+agent.loyalty/500,.25,.9);
+  const accuracy=clamp(.3+agent.ability/200+agent.loyalty/500+(agent.palace&&agent.palace===suspect?.palace ? .08 : 0),.25,.9);
   const accurate=chance(accuracy);
   const report={id:network.nextId++,agent:id,agentName:agent.name,caseId:file.id,title:file.title,
     kind:file.kind,suspect:suspect?.id??null,suspectName:suspect?fullName(suspect):officialEntry(file.target)?.p.name||'被参官员',
@@ -141,6 +145,7 @@ function dismissIntelligenceAgent(id){
 }
 A.recruitIntelligenceAgent=recruitIntelligenceAgent;
 A.trainIntelligenceAgent=trainIntelligenceAgent;
+A.assignIntelligencePalace=assignIntelligencePalace;
 A.intelligenceDispatch=intelligenceDispatch;
 A.trustIntelligenceReport=trustIntelligenceReport;
 A.investigateIntelligenceAgent=investigateIntelligenceAgent;
@@ -182,12 +187,13 @@ function guardAffairEvent(){
      innocent.fam={...innocent.fam,p:clamp(innocent.fam.p-5)};story(innocent,`被诬作${guard.name}私通消息的经手人，蒙受不白之冤。`);result=`你将消息推到${fullName(innocent)}身上。她受了委屈，娘家声势也受牵连。`;}
    story(c,`【守宫旧事】私下来往被发现。${result}`);log(`【守宫旧事】${fullName(c)}与${guard.name}的往来被发现。${result}`,1);save('auto');return result;
  };
- return {title:'守宫旧事 · 密报',por:c,present:[c],valid,text:`守宫的${guard.name}与${cName(c)}往来日久，从彼此照应到暗生情意，如今有人发现了两人的私下相见。消息尚未传开。\n${guard.name}仍是你的情报人员，曾受命查访宫中案件。`,choices:[
+ return {title:'守宫旧事 · 密报',por:c,present:[c],valid,text:`守宫的${guard.name}与${cName(c)}往来日久，从彼此照应到暗生情意，如今有人发现了两人的私下相见。消息尚未传开。\n保密值 ${rd(bond.secrecy)}/100；数值越低，越容易被人发现。${guard.name}仍是你的情报人员，曾受命查访宫中案件。`,choices:[
   {t:'压下消息，保全二人',f:()=>resolve('protect')},
   {t:'调离侍卫，各自安置',f:()=>resolve('transfer')},
   {t:'嫁祸旁人',cond:()=>harem().some(p=>p!==c&&p.rank<8),why:'宫中没有可被牵连的人',f:()=>resolve('frame')}
  ]};
 }
+A.reviewGuardAffair=function(){if(!modalOpen)pushEv(guardAffairEvent());};
 function intelligencePanel(){
   if(!intelligenceEnabled())return '';
   const state=intelligenceState(),agents=state?.agents||{};
@@ -195,9 +201,9 @@ function intelligencePanel(){
     const a=agents[id];
     const review=a?.review,reviewText=review?(S.turn<review.due?`复核中 · 还需 ${review.due-S.turn} 个月`:
       review.compromised?`复核查出暗中受人收买。<button class="btn sm" onclick="A.dismissIntelligenceAgent('${id}')">撤去差事</button>`:'复核未查出受人收买。'):'';
-    return `<li><strong>${esc(source.name)}</strong> · ${esc(source.specialty)} · ${a?`${esc(a.name)} · 才干 ${a.ability} · 忠诚 ${a.loyalty}
+    return `<li><strong>${esc(source.name)}</strong> · ${esc(source.specialty)} · ${a?`${esc(a.name)} · 才干 ${a.ability} · 忠诚 ${a.loyalty}${a.palace?' · 驻守'+esc(a.palace):''}
       <button class="btn sm" onclick="A.trainIntelligenceAgent('${id}')" ${S.over||a.trainingTurn===S.turn||E().energy<1||E().treasury<5?'disabled':''}>训练 · 精力−1 · 国库−5</button>
-      ${review?reviewText:`<button class="btn sm" onclick="A.investigateIntelligenceAgent('${id}')" ${S.over||E().energy<1||E().treasury<15?'disabled':''}>复核此人 · 精力−1 · 国库−15</button>`}`:
+      ${review?reviewText:`<button class="btn sm" onclick="A.investigateIntelligenceAgent('${id}')" ${S.over||E().energy<1||E().treasury<15?'disabled':''}>复核此人 · 精力−1 · 国库−15</button>`}${['eunuch','maid'].includes(id)?`<details><summary>安排驻守宫室</summary><div class="acts">${['坤宁宫',...PALACES].map(p=>`<button class="btn sm" onclick="A.assignIntelligencePalace('${id}','${esc(p)}')" ${a.palace===p||a.palaceTurn===S.turn||E().energy<1?'disabled':''}>${esc(p)}</button>`).join('')}</div><p class="hint">查访驻守宫室时，线索准确率有所提高；每月可调整一次。</p></details>`:''}`:
       `<button class="btn sm" onclick="A.recruitIntelligenceAgent('${id}')" ${!jinyiweiCommanderReady()||S.over||E().energy<1||E().treasury<10?'disabled':''}>招募 · 精力−1 · 国库−10</button>`}</li>`;
   }).join('');
   const cases=palaceCases().filter(x=>caseOpen(x)&&['harem','rumor'].includes(x.kind));
@@ -217,7 +223,7 @@ function intelligencePanel(){
     return `<li><b>${esc(report.title)}</b> · 来源 ${esc(report.agentName)} · ${ready?`可靠度估计 ${report.accuracy}% · ${esc(report.suspectName)}${report.conclusion?'有涉案嫌疑':'暂未发现涉案线索'}。此为线索，须核实。${result}${action}`:`查访中 · 还需 ${report.due-S.turn} 个月`}</li>`;
   }).join('');
   const guard=agents.guard,protection=guard?.protection,guarded=protection&&byId(protection.consort);
-  const protectionPanel=guard?`<h4>宫室护卫</h4>${protection&&!protection.ended?`<p>${esc(guard.name)}正在守护${esc(guarded?fullName(guarded):'旧人')}。</p>`:
+  const protectionPanel=guard?`<h4>宫室护卫</h4>${protection&&!protection.ended?`<p>${esc(guard.name)}正在守护${esc(guarded?fullName(guarded):'旧人')}。</p>${protection.discovered?`<p>往来已被发现 · 保密值 ${rd(protection.secrecy)}/100</p><button class="btn sm" onclick="A.reviewGuardAffair()">处理密报</button>`:''}`:
     `${protection?`<p>${esc(protection.ended)}</p>`:'<p class="hint">可请这名情报人员兼任宫室护卫。</p>'}<div class="acts">${harem().filter(c=>c.age>=18&&!c.maid&&c.id!==protection?.consort).map(c=>`<button class="btn sm" onclick="A.assignPersonalGuard(${c.id})" ${E().energy<1?'disabled':''}>守护${esc(cName(c))} · 精力−1</button>`).join('')}</div>`}`:'';
   return detailSection('宫廷情报',`<p class="hint">查访需两个月，回报可能有误。锦衣卫案卷仍可另行调查。</p><ul class="story">${personnel}</ul>${protectionPanel}
     <h4>查访案卷</h4><ul class="story">${missions||'<li>暂无可查访的宫闱疑案或风闻案卷。</li>'}</ul>

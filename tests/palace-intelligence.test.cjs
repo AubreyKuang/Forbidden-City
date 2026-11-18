@@ -65,3 +65,11 @@ test('verified family corruption affects the maternal house and prince support o
   rumorReport(claim,true);assert.equal(target.c.fam.p,Math.max(0,power-8));assert.equal(son.sup,45);
   assert.ok(son.story.some(s=>s.t.includes('朝中支持受到牵连')));`);
 });
+
+test('a maid posted to the target palace gains accuracy and the assignment survives reload',()=>{
+ let b=start();b.run(`A.recruitIntelligenceAgent('maid');var agent=intelligenceAgent('maid');agent.ability=50;agent.loyalty=50;
+  A.assignIntelligencePalace('maid',a.palace);assert.equal(agent.palace,a.palace);A.intelligenceDispatch('maid',file.id,a.id);
+  assert.equal(intelligenceState().reports[0].accuracy,73);save('auto');`);
+ b=boot(5,b.storage);b.ctx.assert=assert;b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);
+  assert.equal(intelligenceAgent('maid').palace,byId(intelligenceState().reports[0].suspect).palace);`);
+});

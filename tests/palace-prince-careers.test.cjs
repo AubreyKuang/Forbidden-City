@@ -30,3 +30,11 @@ test('recognition in a rivalry changes visible momentum and imposes a cooldown',
   assert.match(princeCareerPanel(first),/势 2/);assert.equal(princeCareerRivalryEvent(),null);
   assert.ok(first.story.some(s=>s.t.includes('皇子竞争')));`);
 });
+
+test('court policy can align with or conflict with an adult prince’s political path',()=>{
+ const b=boot(44001);b.ctx.assert=assert;
+ b.run(`A.start();drain();var k=makeKid(empress(),'m','承安');k.born=S.turn-240;E().energy=10;E().treasury=1000;
+  A.princeCareer(k.id,'military');var love=k.love;A.courtPolicy('civil');assert.equal(k.love,love-1);
+  assert.ok(k.story.some(e=>e.t.includes('有分歧')));S.turn++;E().energy=10;A.courtPolicy('army');assert.equal(k.princeCareer.momentum,1);
+  assert.match(princeCareerPanel(k),/重视武备与边防/);`);
+});
