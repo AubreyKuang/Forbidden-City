@@ -18,8 +18,47 @@ function dowagerPerson(d){
   }
   return {...portrait,dowagerName:d?.name||'太后',alive:!!d?.alive};
 }
+// Older courts kept dated admissions and promotions in each woman's own chronicle.
+function consortAdmission(c){
+  return c?.story?.find(e=>/，封为[^，。]+，赐居/.test(e.t)||/^潜邸.*新帝登基，册为/.test(e.t));
+}
+function recordedConsortRanks(c){
+  if(!c)return [];
+  const ranks=[...(c.courtRanks||[])];
+  if(!ranks.length){
+    const titles=[...RANKS].reverse();
+    for(const entry of c.story||[]){
+      const text=entry.t||'';
+      const match=text.match(/(?:，封为|新帝登基，册为|^晋封为|^蒙恩晋为|^诊出喜脉，晋为|被降为|废去后位，降为|出冷宫，复为)([^，。]+)/);
+      const rank=text.startsWith('钦天监择吉日，行册后大典')?8:match?RANKS.indexOf(titles.find(t=>match[1].endsWith(t))):-1;
+      if(rank>=0&&rank!==ranks.at(-1))ranks.push(rank);
+    }
+  }
+  if(RANKS[c.rank]&&c.rank!==ranks.at(-1))ranks.push(c.rank);
+  return ranks;
+}
+function trackConsortRanks(previous){
+  if(journalContentVersion()<86||!previous||previous.gen!==S.gen)return;
+  const old=new Map(previous.consorts.map(c=>[c.id,c]));
+  for(const c of S.consorts){
+    const before=old.get(c.id);
+    if(before&&!c.maid&&RANKS[c.rank]&&(before.rank!==c.rank||before.maid)){
+      c.courtRanks=before.maid?[]:recordedConsortRanks(before);
+      if(c.courtRanks.at(-1)!==c.rank)c.courtRanks.push(c.rank);
+    }
+  }
+}
+function dowagerChildren(id,children){
+  const counts={sons:0,daughters:0,fostered:0};
+  for(const k of children){
+    if(k.mom===id){if(k.sex==='m')counts.sons++;else if(k.sex==='f')counts.daughters++;}
+    else if(k.foster===id)counts.fostered++;
+  }
+  return counts;
+}
 function makeDowager(c,relation){
   return {name:c?`${c.sur}太后`:'太后',fullName:c?fullName(c):'',personId:c?.id,relation,
+    ...(c&&journalContentVersion()>=86?{childrenSummary:dowagerChildren(c.id,S.children)}:{}),
     age:c?.age,atTurn:S.turn,portrait:c?{...JSON.parse(JSON.stringify(c)),portraitOverride:portraitCell(c),rank:8}:undefined,
     sur:c?.sur,fam:c?{...c.fam}:undefined,clan:c?clanKey(c):undefined,lastOffer:null,cooldown:24,
     alive:!!(c?.alive&&!c.gone&&!c.cold)};
@@ -66,8 +105,61 @@ function inheritHousehold(h,queen){
   }
   S.ys={c:0,b:0,n:0};
 }
+function archivedAdmissionDate(c,court){
+  if(!Number.isInteger(c?.enteredAt)||!court?.emperor?.era)return '';
+  const start=court.gen===1?0:S.previousCourts.find(p=>p.gen===court.gen-1)?.turn;
+  if(start==null||c.enteredAt<start||c.enteredAt>court.turn)return '';
+  const month=court.gen===1?3:1+((S.month-1-(S.turn-start)%12+12)%12);
+  const elapsed=month-1+c.enteredAt-start;
+  return dateStr({emp:court.emperor,year:1+Math.floor(elapsed/12),month:elapsed%12+1});
+}
+function dowagerBiography(d){
+  const opening=S.gen===1&&d.personId==null;
+  if(!opening&&d.personId==null)return '';
+  const court=d.personId!=null&&S.previousCourts?.findLast(court=>(court.consorts||[]).some(c=>c.id===d.personId));
+  const archived=court?.consorts?.find(c=>c.id===d.personId)||S.retainedFamilies?.find(c=>c.id===d.personId);
+  // The display portrait is always dressed as an empress, even for a former concubine.
+  const c=archived||(d.portrait&&{...d.portrait,rank:undefined});
+  const [surname,origin]=(d.clan||c?.clan||'').split('|');
+  const sur=d.sur||c?.sur||surname,house=origin||d.fam?.t||c?.fam?.t;
+  const lines=[];
+  if(sur){
+    let family='出自'+sur+'氏';
+    if(house&&house!=='太后母家')family+='（'+house+'）';
+    else if(opening)family+='，母家是京中旧族，家中设有族塾';
+    if(!opening&&c?.house?.father?.name)family+='，父亲名'+c.house.father.name;
+    lines.push(family+'。');
+  }
+  if(opening){
+    const niece=d.natalBrotherId!=null&&S.consorts.find(c=>c.house?.father?.id===d.natalBrotherId&&c.dowagerKin?.relation==='侄女');
+    lines.push(niece?'母家的侄女'+fullName(niece)+'也进了宫。她仍按家里的旧习，收着侄女从潜邸带来的家书。':
+      ['她在母家跟着长辈认字，出阁时带进宫的那册家训，至今还放在慈宁宫案头。','在家时，每逢岁末都由她替长辈誊写家信。入宫多年，她看见旧信封，仍认得娘家的字。','她记得母家庭院里有一株老梅。初入宫的那个冬日，家里捎来的头一封信里就夹着梅花。'][(d.sur||'').charCodeAt(0)%3]||'她至今还收着入宫时从母家带来的家书。');
+  }else if(d.personId!=null){
+    const admission=consortAdmission(c),entered=admission?.d||archivedAdmissionDate(c,court);
+    if(entered)lines.push(entered+(/潜邸/.test(admission?.t)?'自潜邸随驾入宫。':/选秀/.test(admission?.t)?'经选秀入宫。':'入宫受封。'));
+    const ranks=recordedConsortRanks(c);
+    if(ranks.length){
+      const trail=ranks.slice(1).map((r,i)=>(r>ranks[i]?'晋为':'降为')+RANKS[r]);
+      lines.push('前朝曾为'+[RANKS[ranks[0]],...trail].join('，')+'。');
+    }
+    let children=d.childrenSummary;
+    if(!children&&Array.isArray(S.royalRelatives)){
+      // The old kin roster excludes the heir who succeeded, but retains deceased siblings.
+      children=dowagerChildren(d.personId,S.royalRelatives.filter(k=>k.reign===S.gen-1));
+      if(d.relation?.startsWith('生母'))children.sons++;
+    }
+    if(children)lines.push((children.sons||children.daughters?'亲生皇子'+cnNum(children.sons)+'人、公主'+cnNum(children.daughters)+'人':'膝下无亲生皇子公主')+
+      (children.fostered?'，另抚养皇嗣'+cnNum(children.fostered)+'人':'')+'。');
+    const milestone=c?.story?.findLast(e=>e.birthOutcome||/^【(?:初领宫务|协理六宫·|侍疾送别|母家晚辈)/.test(e.t))||c?.story?.at(-1);
+    if(milestone&&milestone!==admission){
+      const text=milestone.t.replace(/^【[^】]+】/,'');
+      lines.push([milestone.d,text.match(/^[^。！？]*[。！？]/)?.[0]||text].filter(Boolean).join('，'));
+    }
+  }
+  return lines.map(line=>'<p>'+esc(line)+'</p>').join('');
+}
 function dowagerCourtPanel(){
-  return [S.flags.dowager,S.flags.birthDowager].filter(Boolean).map(d=>`<section class="detail-head dowager-court">${porImg(dowagerPerson(d),160)}<div class="grow"><h3>${esc(d.name)}</h3><p>${esc(d.fullName||'')}${d.relation?' · '+esc(d.relation):''}</p>${d.age?`<p>${d.age+Math.floor((S.turn-(d.atTurn||0))/12)}岁 · ${d.alive?'慈宁宫':'已故'}</p>`:''}${d.portrait?.trait?`<p>${esc(d.portrait.trait)} · ${esc(TRAITS[d.portrait.trait]?.d||'')}</p>`:''}${d.portrait?.story?.length?`<p class="hint">往事：${esc(d.portrait.story.at(-1).t)}</p>`:''}</div></section>`).join('');
+  return [S.flags.dowager,S.flags.birthDowager].filter(Boolean).map(d=>`<section class="detail-head dowager-court">${porImg(dowagerPerson(d),160)}<div class="grow"><h3>${esc(d.name)}</h3><p>${esc(d.fullName||'')}${d.relation?' · '+esc(d.relation):''}</p>${d.age?`<p>${d.age+Math.floor((S.turn-(d.atTurn||0))/12)}岁 · ${d.alive?'慈宁宫':'已故'}</p>`:''}${d.portrait?.trait?`<p>${esc(d.portrait.trait)} · ${esc(TRAITS[d.portrait.trait]?.d||'')}</p>`:''}${dowagerBiography(d)}</div></section>`).join('');
 }
 
 function royalBirthOrder(a,b){return a.born-b.born||a.id-b.id;}

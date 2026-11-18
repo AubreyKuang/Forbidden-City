@@ -102,3 +102,35 @@ test('without a living empress the birth mother retains her own portrait as sole
     assert.equal(portraitCell(dowagerPerson(S.flags.dowager)),422);assert.equal(S.flags.dowager.relation,'生母');
   `);
 });
+
+test('opening Cining biography follows the natal clan and stays stable when revisited or loaded',()=>{
+  const b=game();b.run(`A.start();drain();UI.sel='cn';
+    var d=S.flags.dowager,bio=dowagerBiography(d),before=JSON.stringify(d);
+    assert.ok(bio.includes('出自'+d.sur+'氏'));assert.match(bio,/家书|家训|母家|旧信封/);
+    assert.ok(viewPlace().includes(bio));assert.equal(JSON.stringify(d),before);save('auto');`);
+  const cold=game(b.storage);
+  assert.equal(cold.run("A.load('auto');dowagerBiography(S.flags.dowager)"),b.run('bio'));
+});
+
+test('both inherited biographies keep real admission, promotions and distinct children across reload',()=>{
+  const b=game();b.run(`A.start();drain();var queen=empress();S.year=4;S.month=6;S.turn=39;
+    var mother=makeGirl({sur:'沈'});addConsort(mother,3,'选秀入宫');
+    var admitted=dateStr(),natal=mother.house.father.name;story(mother,'【初领宫务】奉旨协理六宫，第一次在宫务簿上落款。');
+    A.promote(mother.id,true);choose(0);drain();
+    var heir=makeKid(mother,'m','承宁'),daughter=makeKid(mother,'f','清和'),other=makeKid(queen,'f','昭华');
+    daughter.alive=false;heir.foster=queen.id;heir.born=S.turn-240;
+    succeed(heir);choose(0);drain();UI.sel='cn';var main=dowagerBiography(S.flags.dowager),birth=dowagerBiography(S.flags.birthDowager);
+    assert.ok(birth.includes(admitted+'经选秀入宫'));assert.ok(birth.includes(natal));assert.match(birth,/贵人，晋为嫔/);assert.ok(birth.includes(admitted+'，奉旨协理六宫'));
+    assert.match(birth,/亲生皇子一人、公主一人/);assert.match(main,/亲生皇子零人、公主一人，另抚养皇嗣一人/);
+    assert.match(main,/永宁元年三月自潜邸随驾入宫/);assert.ok(viewPlace().includes(main)&&viewPlace().includes(birth));save('auto');`);
+  const cold=game(b.storage);cold.run("A.load('auto');");
+  for(const [key,profile] of [['dowager','main'],['birthDowager','birth']]){
+    assert.equal(cold.run('dowagerBiography(S.flags.'+key+')'),b.run(profile));
+  }
+  cold.run(`var d=S.flags.birthDowager;delete d.childrenSummary;assert.match(dowagerBiography(d),/亲生皇子一人、公主一人/);
+    var source=S.previousCourts.at(-1).consorts.find(c=>c.id===d.personId);
+    delete source.courtRanks;source.story=source.story.filter(e=>!e.t.includes('赐居'));
+    assert.match(dowagerBiography(d),/永宁四年六月入宫受封/);
+    S.previousCourts=[];S.retainedFamilies=[];delete d.portrait.courtRanks;
+    assert.doesNotMatch(dowagerBiography(d),/晋为皇后/);`);
+});
