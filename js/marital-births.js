@@ -43,7 +43,7 @@ function natalPregnancyTick(){
     for(const p of natalPeople(h).slice()){
       const preg=p.natalPregnancy;if(!preg||!p.alive||p.consortId)continue;
       if(marriedSisterAffairsActive())noteMarriedSisterPregnancy(p,preg);
-      if(journalContentVersion()>=87&&preg.unconfirmed&&S.turn-preg.conceived>=1&&!preg.privateNoticeQueued)queueOutsidePregnancyNotice(c,p,preg);
+      if(journalContentVersion()>=88&&preg.unconfirmed&&S.turn-preg.conceived>=1&&!preg.privateNoticeQueued)queueOutsidePregnancyNotice(c,p,preg);
       if(S.turn<preg.due)continue;
       const child=addNatalPerson(c,h,preg.sex,0,preg.seed,false);child.parentRelativeId=p.id;child.fatherId=preg.fatherId;child.fatherName=preg.fatherName;child.sur=preg.fatherSur||c.sur;child.name=child.sur+child.given;child.born=S.turn;child.age=0;
       const life=p.lifeCourse ||= {};life.children=(life.children||0)+1;life.lastBirth=S.turn;life.last=S.turn;
@@ -63,7 +63,7 @@ function natalPregnancyTick(){
         natalMarriageNotice(c,p,'外家添丁',`${p.name}平安生下${sex}${child.name}，将母子平安的家书寄给${fullName(c)}。${father&&!officialAlive(father.p)?'这是亡夫留下的遗腹子，欢喜里也有缺席的悲伤。':''}`,joy,.6,preg);
         story(child,preg.unconfirmed?`由${p.name}在宫外生下，按外家子女入册。`:`生于${p.name}与${preg.fatherName}之家，是外家子女，不列皇嗣。`);
       }
-      if(preg.unconfirmed){noteMarriedSisterChild(p,child);if(outsideParentageActive())initializeOutsideParentage(child,preg);if(journalContentVersion()>=87)queueOutsideBirthNotice(c,child);}
+      if(preg.unconfirmed){noteMarriedSisterChild(p,child);if(outsideParentageActive())initializeOutsideParentage(child,preg);if(journalContentVersion()>=88)queueOutsideBirthNotice(c,child);}
       (p.pregnancyHistory ||= []).push({...preg,childId:child.id,born:S.turn,outcome:preg.difficult?'maternal-death':'safe'});delete p.natalPregnancy;
     }
   }

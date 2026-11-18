@@ -181,7 +181,7 @@ function clanKey(c){return c.clan||(c.clan=c.sur+'|'+c.fam.t)}
 function clanName(key){const [s,t]=key.split('|');return `${s}氏（${t.endsWith('家')?t:t+'家'}）`}
 function clanMembers(key){return alive().filter(c=>!c.maid&&clanKey(c)===key&&!NOCLAN.includes(key.split('|')[1]))}
 const NOCLAN=['宫女','寒门','西域贡女','歌女','良家子','先帝才人','西域流寓','农家','东瀛贵族','海西贵族'];
-const hasClan=c=>!c.maid&&!NOCLAN.includes((c.clan||'').split('|')[1]||c.fam.t);
+const hasClan=c=>!whiteSpringRoyal(c)&&!c.maid&&!NOCLAN.includes((c.clan||'').split('|')[1]||c.fam.t);
 function clans(){const m={};alive().filter(hasClan).forEach(c=>{const k=clanKey(c);(m[k]=m[k]||[]).push(c)});return Object.entries(m).filter(([k,v])=>v.length>=2)}
 const isRival=(a,b)=>!!(a.kinRival&&a.kinRival[b.id]);
 function clanTick(){for(const [k,ms] of clans()){const p=Math.round(ms.reduce((s,c)=>s+c.fam.p,0)/ms.length);ms.forEach(c=>c.fam.p=p);
@@ -196,7 +196,7 @@ function makeKin(c,type){c.kin=c.kin||{};c.kinRival=c.kinRival||{};const g=makeG
 function clanEcho(c,t){const ms=clanMembers(clanKey(c));ms.filter(o=>o!==c).forEach(o=>{const rv=isRival(o,c);
   if(t==='up'){if(rv)setXin(o,'嫉恨',`${fullName(c)}晋了位分`,c.id);else cchg(o,{mood:6})}else{if(rv)cchg(o,{mood:5});else setXin(o,'惶恐',`同族的${fullName(c)}获罪`)}});
   ms.forEach(o=>o.fam.p=clamp(o.fam.p+(t==='up'?3:-6),0,95))}
-function clanLine(c){if(c.maid||!c.alive||c.gone)return '';if(!hasClan(c))return `<div>家族：出身${esc(c.fam.t)}，娘家没有倚仗</div>`;const k=clanKey(c),ms=clanMembers(k).filter(o=>o!==c);
+function clanLine(c){if(whiteSpringRoyal(c))return '<div>娘家 · 白泉王室</div>';if(c.maid||!c.alive||c.gone)return '';if(!hasClan(c))return `<div>家族：出身${esc(c.fam.t)}，娘家没有倚仗</div>`;const k=clanKey(c),ms=clanMembers(k).filter(o=>o!==c);
   const kt=o=>(c.kin&&c.kin[o.id])?KIN_TXT[c.kin[o.id]]:'同族';
   return `<div>家族：${esc(clanName(k))}　势力 ${rd(c.fam.p)}${cousinFamiliesActive()?`　在宫妃嫔 ${clanPalaceCount(k)} 人`:""}${ms.length?`　同族在宫：${ms.map(o=>`<span class="tag ${isRival(c,o)?'r':'g'}">${esc(cName(o))}·${kt(o)}${isRival(c,o)?'·不和':''}</span>`).join('')}`:''}</div>`}
 function clanEvent(){
