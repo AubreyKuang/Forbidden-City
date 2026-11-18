@@ -102,6 +102,13 @@ const DYNASTY_GOALS=[
   {id:'reigns',name:'千秋一统',description:'见证三代君主继位',target:3,reward:150,
     progress:()=>S.gen}
 ];
+const DYNASTY_HIDDEN_GOALS=[{id:'threeClans',name:'三世姻亲',description:'连续三代有同一家族的女性入宫',target:1,reward:150}];
+function rememberDynastyClans(){
+  if(!S||journalContentVersion()<76)return;
+  const history=S.dynastyClanHistory||={},key=String(S.gen),seen=new Set(history[key]||[]);
+  for(const c of S.consorts)if(c.fam?.t&&!c.maid)seen.add(c.clan||c.sur+'|'+c.fam.t);
+  history[key]=[...seen];
+}
 function settleDynastyGoalMonth(){
   if(!S||journalContentVersion()<76)return;
   const saved=S.dynastyGoalProgress||={};
@@ -123,15 +130,23 @@ function settleDynastyGoalMonth(){
 function reconcileDynastyGoals(){
   if(!S||PalaceActions.blocked||journalContentVersion()<76)return;
   reconcileDynastyScenario();
+  rememberDynastyClans();
   const goals=S.dynastyGoals||={};
   for(const goal of DYNASTY_GOALS){
     if(goal.progress()<goal.target||goals[goal.id]?.completed)continue;
     goals[goal.id]={completed:true,claimed:false,date:dateStr(),gen:S.gen};
     log(`【王朝目标】${goal.name}达成，可在御书房领取赏银。`);
   }
+  if(S.gen>=3&&!goals.threeClans?.completed){
+    const history=S.dynastyClanHistory,prior=new Set(history[String(S.gen-1)]||[]),earlier=new Set(history[String(S.gen-2)]||[]);
+    if((history[String(S.gen)]||[]).some(clan=>prior.has(clan)&&earlier.has(clan))){
+      goals.threeClans={completed:true,claimed:false,date:dateStr(),gen:S.gen};
+      log('【隐藏成就】三世姻亲达成，可在御书房领取赏银。');
+    }
+  }
 }
 function claimDynastyGoal(id){
-  const goal=DYNASTY_GOALS.find(item=>item.id===id),entry=S?.dynastyGoals?.[id];
+  const goal=[...DYNASTY_GOALS,...DYNASTY_HIDDEN_GOALS].find(item=>item.id===id),entry=S?.dynastyGoals?.[id];
   if(!goal||!entry?.completed||entry.claimed||S.over)return;
   entry.claimed=true;
   chg({treasury:goal.reward});
@@ -698,16 +713,24 @@ function deathEvent(why){
 function succeed(h){
   const old=E(),a=kidAge(h);
   pushNow({title:'新君登基',por:h,text:`${h.name}即将即位。请为新朝拟定年号（二字）：`,input:{def:pick(ERAS.filter(x=>x!==old.era)),max:2},choices:[{t:'改元',f:v=>{
+    rememberDynastyClans();
     if(royalTravelAway(h))returnRoyalTraveler(h);
     inheritDowager(h);
     S.emp={sur:old.sur,name:h.name,era:v,age:Math.max(a,14),health:clamp(h.hp+10),prestige:clamp(35+h.vir/3),people:old.people,treasury:old.treasury,energy:3,nightsMonth:0,
       style:h.mar>h.lit+15?'尚武':h.lit>h.mar+15?'文雅':'勤政',wen:rd(h.lit),wu:rd(h.mar),seed:h.seed,portraitOverride:portraitCell(h),birthMonth:birthMonth(h)};
+    if(journalContentVersion()>=76){
+      const legacy={勤政:{lesson:'勤于政事，体察民情',stat:'people'},尚武:{lesson:'修习武备，慎守边疆',stat:'wu'},文雅:{lesson:'崇文重学，明辨是非',stat:'wen'},风流:{lesson:'珍重身体，宽待身边人',stat:'health'}}[old.style]||{lesson:'勤于政事，体察民情',stat:'people'};
+      const renown=Math.max(0,Math.round((old.prestige-50)/10)),beforePrestige=S.emp.prestige,beforeStat=S.emp[legacy.stat];
+      S.emp.prestige=clamp(beforePrestige+renown);S.emp[legacy.stat]=clamp(beforeStat+3);
+      S.emp.dynastyLegacy={predecessor:old.sur+old.name,era:old.era,prestige:old.prestige,style:old.style,lesson:legacy.lesson,stat:legacy.stat,renown:S.emp.prestige-beforePrestige,bonus:S.emp[legacy.stat]-beforeStat};
+    }
     keepAccededTravelProjects(h);
     archivePrincessEstates(h);
     S.consorts=[];S.children=[];S.rel=retainedFamiliesActive()?S.rel:{};S.courtPolicy={};S.courtPolicyTurn=null;S.heir=null;S.cands=[];S.gen++;S.year=1;S.over=false;S.genChar=GEN_CHARS[(GEN_CHARS.indexOf(S.genChar)+1)%GEN_CHARS.length];
     delete S.selection;if(!legacyPendingAction())S.flags.haremAttendance={gen:S.gen,turn:S.turn};S.flags.lastXX=-99;if(selectionSkipTimingActive())delete S.flags.lastXXSkipped;delete S.flags.lastProudDemand;delete S.flags.scholarArc;delete S.flags.rareArcOwners;delete S.flags.arcPacing;delete S.flags.xinPacing;delete S.flags.lastLiteraryGathering;delete S.lastGardenBanquet;S.gardenPlans=[];seasonalTick();S.emp.energy=maxEnergy();
     log(`━━ 第${cnNum(S.gen)}代 ━━ ${v}元年，新帝${S.emp.sur}${h.name}登基，尊${S.flags.dowager.fullName||S.flags.dowager.name}为${S.flags.dowager.name}${S.flags.birthDowager?.alive?`，另尊生母${S.flags.birthDowager.fullName}为皇太后`:""}。`,1);
-    if(S.emp.age>=15){const em=marriageEmpress(h)||makeGirl({fam:pick(FAMS.slice(0,4)),trait:pick(['温婉','聪慧','城府','骄矜'])});em.favor=35;em.aff=30;if(h.spouse)em.knownBeforeAccession=true;addConsort(em,8,h.spouse?'潜邸嫡妻，随新帝登基册立':'新帝登基，奉遗诏册立');}
+    if(S.emp.dynastyLegacy){const l=S.emp.dynastyLegacy;log(`【先帝传承】${l.predecessor}留下家训「${l.lesson}」。先朝声望使新君威望增加${l.renown}。`,1);}
+    if(S.emp.age>=15){const em=marriageEmpress(h)||makeGirl({fam:pick(FAMS.slice(0,4)),trait:pick(['温婉','聪慧','城府','骄矜'])});em.favor=35;em.aff=30;if(h.spouse)em.knownBeforeAccession=true;addConsort(em,8,h.spouse?'潜邸嫡妻，随新帝登基册立':'新帝登基，奉遗诏册立');if(h.spouse&&journalContentVersion()>=76)em.accessionArrival={gen:S.gen,started:S.turn};}
     inheritHousehold(h,empress());inheritLifeKeepsakes(h);S.ys={c:0,b:0,n:0};UI.kidsResidence='palace';
     migrate();UI.view='map';AU.sfx('gong');
     return {title:'新朝家人',por:dowagerPerson(S.flags.dowager),text:`${v}元年，新帝登基，大赦天下。\n${S.flags.dowager.fullName||S.flags.dowager.name}${S.flags.dowager.alive?'尊为'+S.flags.dowager.name+'，居慈宁宫。':'已故，尊谥存于宗谱。'}${S.flags.birthDowager?.alive?'\n生母'+S.flags.birthDowager.fullName+'亦尊为皇太后。':''}\n潜邸妻儿与亲族的往来，由此接入新朝。`}}}]});
@@ -730,6 +753,7 @@ A.start=function(){
   const em=makeGirl({fam:pick(FAMS.slice(0,3)),trait:pick(['温婉','聪慧','城府','骄矜'])});em.favor=40;em.aff=40;em.age=18;em.knownBeforeAccession=true;
   S.consorts.push(em);em.rank=8;assignPalace(em);story(em,scenario==='founder'?'旧日夫妻相伴，今随陛下开创新朝，册为皇后，入主坤宁宫。':'潜邸时奉先帝之命嫁与陛下为嫡妻。新帝登基，册为皇后，入主坤宁宫。');
   const old=makeGirl({});old.favor=55;old.aff=60;old.knownBeforeAccession=true;old.rank=3;S.consorts.push(old);assignPalace(old);story(old,'潜邸旧人，陪伴陛下多年。新帝登基，册为贵人。');
+  if(journalContentVersion()>=76){em.accessionArrival={gen:S.gen,started:S.turn};old.accessionArrival={gen:S.gen,started:S.turn};}
   startDynastyScenario(scenario);
   log(`${era}元年三月，新帝${sur}${name}登基，改元${era}，大赦天下。`,1);
   log(`册嫡妻${fullName(em)}为皇后，潜邸旧人${fullName(old)}为贵人。`);

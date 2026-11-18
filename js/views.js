@@ -298,6 +298,7 @@ function viewHome(){
      ['royal-kin','皇亲列表',palaceAdoptionPanel()+royalKinRosterPanel()],
      ['fertility','太医院会诊',imperialFertilityPanel()],
      ['goals','王朝目标',dynastyGoalsPanel()],
+     ...(e.dynastyLegacy?[["legacy","先帝传承",`<p>先帝 ${esc(e.dynastyLegacy.predecessor)} · ${esc(e.dynastyLegacy.era)}朝 · 声望 ${rd(e.dynastyLegacy.prestige)}</p><p>家训：${esc(e.dynastyLegacy.lesson)}。登基时承先朝声望，威望 +${e.dynastyLegacy.renown}；${esc(({people:'民心',wu:'武略',wen:'文才',health:'龙体'})[e.dynastyLegacy.stat])} +${e.dynastyLegacy.bonus}。</p>`]]:[]),
      ['court','朝堂与外家',courtBlocHTML()],
      ['stewardship','协理六宫',typeof haremStewardPanel==='function'?haremStewardPanel():''],
      ['story-consorts','剧情妃图鉴',storyConsortCodex()],
@@ -337,6 +338,7 @@ function dynastyGoalsPanel(){
       return `<li><strong>${esc(goal.name)}</strong> · ${esc(goal.description)} · ${progress}/${goal.target}
         ${entry?.claimed?' · 已领取':entry?.completed?`<button class="btn sm gold" onclick="A.claimDynastyGoal('${goal.id}')" ${S.over?'disabled':''}>领取 ${goal.reward} 万两</button>`:` · 赏银 ${goal.reward} 万两`}</li>`;
     }).join('')}</ul>
+    <h3>隐藏成就</h3><ul class="story">${DYNASTY_HIDDEN_GOALS.map(goal=>{const entry=S.dynastyGoals?.[goal.id];return entry?.completed?`<li><strong>${esc(goal.name)}</strong> · ${esc(goal.description)} ${entry.claimed?'· 已领取':`<button class="btn sm gold" onclick="A.claimDynastyGoal('${goal.id}')" ${S.over?'disabled':''}>领取 ${goal.reward} 万两</button>`}</li>`:'<li>???</li>';}).join('')}</ul>
   </section>`;
 }
 function detailFold(title,content){
@@ -523,7 +525,7 @@ function viewKid(){
     ['now','近况与心事',storyCastChildPanel(k)+childDispositionPanel(k)+immortalPanel(k)+royalTravelPanel(k)+continuityPanel(k)+
       (k.alive?initiativeHTML(k):'')+detailSection(a>=20?'婚事与心意':'少年心事',youthPanel(k))+
       detailSection('护国寺祈福',childTemplePanel(k))],
-    ['care','教养与封号',detailSection('教养与抚养',care)+detailSection('师承',childMentorPanel(k))+
+    ['care','教养与封号',detailSection('教养与抚养',care)+detailSection('师承',childMentorPanel(k))+detailSection('成年志向与差务',princeCareerPanel(k))+
       detailSection('封号与储位',titles?`<div class="acts">${titles}</div>`:'')+
       detailSection('其他属性',`<div class="stats">${bar('体魄',k.hp,'#a87a26')}${bar('野心',k.amb,'#6b4a33')}${bar('父爱',k.love,'#936375')}${k.sex==='m'&&a>=10?bar('支持',k.sup||0,'#617991'):''}</div>`)+
       detailSection('出生禀赋',childBirthPanel(k))],

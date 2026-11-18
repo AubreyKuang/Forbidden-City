@@ -224,6 +224,13 @@ function rumorReport(x,found){
     return {title:'锦衣卫密报',por:j.commander,text:`${j.commander.name}回奏：${target.p.name}被参「${x.charge}」一事，暂未查得实据，也未能证其清白。`,choices:[{t:'知道了'}]};}
   const delta=x.friendsBefore?-12:-8;
   if(x.truth){target.p.trust=clamp(target.p.trust-5);target.p.merit=clamp(target.p.merit-6);actor.p.trust=clamp(actor.p.trust+2);
+    if(journalContentVersion()>=76&&!x.familyConsequences&&/收受|贪墨/.test(x.charge)){
+      x.familyConsequences=true;
+      const relatives=paternalFamily(target.c).filter(c=>S.consorts.includes(c));
+      for(const c of relatives){c.fam={...c.fam,p:clamp(c.fam.p-8)};story(c,`外家${target.p.name}被查实${x.charge}，家族声势受损。`);}
+      const mothers=new Set(relatives.map(c=>c.id));
+      for(const k of kidsAlive().filter(k=>k.sex==='m'&&mothers.has(k.mom))){k.sup=clamp((k.sup||0)-5);kstory(k,`母族${target.p.name}被查实${x.charge}，其朝中支持受到牵连。`);}
+    }
     officialRecord(target.c,target.role,`锦衣卫查实其「${x.charge}」，罚俸半年。`,{emotion:-.5});officialRecord(actor.c,actor.role,`参劾${target.p.name}，经锦衣卫查实。`);}
   else{actor.p.trust=clamp(actor.p.trust-6);
     officialRecord(target.c,target.role,`被参「${x.charge}」，锦衣卫查明并无其事，得还清白。`,{emotion:.3});officialRecord(actor.c,actor.role,`参劾${target.p.name}，锦衣卫查无其事。`,{emotion:-.4});}

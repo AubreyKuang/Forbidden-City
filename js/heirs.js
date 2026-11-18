@@ -46,6 +46,34 @@ A.childMentor=function(id,encoded){
  kstory(k,e?`拜${e.p.name}为师，跟随学习。`:`结束与${prior?.p.name||'原师长'}的师承。`);
  if(e)story(e.p,`受命教导${kidName(k)}。`);render();
 };
+const PRINCE_CAREERS={
+ civil:{name:'文治',work:'随朝议事，整理政务',stat:'lit',support:2},
+ military:{name:'武略',work:'习练兵事，核对军务',stat:'mar',support:3},
+ clan:{name:'宗室',work:'核对宗谱，照料宗亲',stat:'vir',support:2},
+ trade:{name:'经商',work:'打理产业，核算商账',stat:'lit',support:1},
+ travel:{name:'游历',work:'研读舆图，记录沿途见闻',stat:'lit',support:1}
+};
+function princeCareerPanel(k){
+ if(journalContentVersion()<76||!k.alive||k.sex!=='m'||kidAge(k)<16||k.removedFromRoyal)return '';
+ const career=k.princeCareer,path=PRINCE_CAREERS[career?.path];
+ return `<p class="hint">皇子成年后可选择一条发展方向，每积累十二个月完成一次差务；不在京或受限时暂停。更换方向须间隔一年。</p>
+ ${path?`<p>当前方向：${path.name} · ${path.work} · 进度 ${career.months}/12 · 已完成 ${career.completed} 次</p>`:'<p>尚未选择方向。</p>'}
+ <div class="acts">${Object.entries(PRINCE_CAREERS).map(([id,p])=>`<button class="btn sm ${career?.path===id?'on':''}" onclick="A.princeCareer(${k.id},'${id}')" ${!childCanVisitCourt(k)||E().energy<1||career&&S.turn-career.assigned<12?'disabled':''}>${p.name} · 精力−1</button>`).join('')}</div>`;
+}
+A.princeCareer=function(id,path){
+ const k=kidById(id),p=PRINCE_CAREERS[path];if(journalContentVersion()<76||!p||!k||k.sex!=='m'||kidAge(k)<16||!childCanVisitCourt(k)||E().energy<1)return;
+ const previous=k.princeCareer;if(previous&&(previous.path===path||S.turn-previous.assigned<12))return;
+ E().energy--;k.princeCareer={path,assigned:S.turn,months:0,completed:previous?.completed||0,last:-1};
+ kstory(k,`开始循${p.name}方向发展：${p.work}。`);log(`${kidName(k)}选择${p.name}方向。`);render();
+};
+function princeCareerTick(k){
+ const c=k.princeCareer,p=PRINCE_CAREERS[c?.path];if(journalContentVersion()<76||!p||!childCanVisitCourt(k)||kidAge(k)<16||c.last===S.turn)return;
+ c.last=S.turn;if(++c.months<12)return;c.months=0;c.completed++;
+ k[p.stat]=clamp(k[p.stat]+2);k.sup=clamp((k.sup||0)+p.support);
+ if(c.path==='trade')chg({treasury:8});
+ const result=`【${p.name}差务】${p.work}满一年，经验与朝中支持有所增长。${c.path==='trade'?'产业所得八万两入库。':''}`;
+ kstory(k,result);log(`${kidName(k)}：${result}`);
+}
 function growKid(k){
   const a=kidAge(k);if(a<3)return;const m=k.tutor?1.6:1,g=()=>R()*.9*m;
   if(k.policy==='读书')k.lit+=g()*1.7;else if(k.policy==='习武'){k.mar+=g()*1.7*(k.jiangmenChild&&storyCastActive()?2:1);k.hp+=.08}else if(k.policy==='修德')k.vir+=g()*1.7;
@@ -57,7 +85,7 @@ function growKid(k){
       if(mentor.p.temperament==='持正')k.vir+=bonus;else if(mentor.h.bloc==='army')k.mar+=bonus;else k.lit+=bonus;
     }
   }
-  ['lit','mar','vir','hp','amb','love'].forEach(s=>k[s]=clamp(k[s]));supTick(k);
+  ['lit','mar','vir','hp','amb','love'].forEach(s=>k[s]=clamp(k[s]));supTick(k);princeCareerTick(k);
 }
 A.kidVisit=function(id){const k=kidById(id);if(modalOpen||!k?.alive||k.removedFromRoyal||k.jailed||k.pendingName||!useE())return;
   if(visitChildAfterConsequence(k))return;

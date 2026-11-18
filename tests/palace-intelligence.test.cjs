@@ -53,3 +53,15 @@ test('a compromised agent can be investigated and removed after the result is du
   A.dismissIntelligenceAgent('maid');assert.equal(intelligenceAgent('maid'),undefined);
   assert.ok(S.log.some(entry=>entry.t.includes('撤去差事')));`);
 });
+
+test('verified family corruption affects the maternal house and prince support once; an untrue report does not',()=>{
+ const b=start();b.ctx.assert=assert;
+ b.run(`var entries=officialEntries().filter(e=>S.consorts.includes(e.c)&&officialServing(e.p));
+  var target=entries[0],actor=entries.find(e=>e.p.id!==target.p.id&&e.c.id!==target.c.id);assert.ok(actor);
+  var son=makeKid(target.c,'m','承安');son.born=S.turn-240;son.sup=50;var power=target.c.fam.p;
+  var claim={kind:'rumor',target:target.key,targetId:target.p.id,accuserKey:actor.key,accuser:actor.p.id,charge:'门下收受地方馈赠',truth:false,status:'solved'};
+  rumorReport(claim,true);assert.equal(target.c.fam.p,power);assert.equal(son.sup,50);
+  claim.truth=true;rumorReport(claim,true);assert.equal(target.c.fam.p,Math.max(0,power-8));assert.equal(son.sup,45);
+  rumorReport(claim,true);assert.equal(target.c.fam.p,Math.max(0,power-8));assert.equal(son.sup,45);
+  assert.ok(son.story.some(s=>s.t.includes('朝中支持受到牵连')));`);
+});

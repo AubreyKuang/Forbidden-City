@@ -77,3 +77,28 @@ test('monthly goals count consecutive months once and reset after interruptions'
   E().people=85;for(let month=61;month<181;month++){S.turn=month;settleDynastyGoalMonth();}
   assert.ok(S.dynastyGoals.prosperity.completed);assert.equal(S.dynastyGoalProgress.prosperity.months,120);`);
 });
+
+test('succession passes the prior ruler’s renown and teaching to the new ruler and preserves them after reload',()=>{
+ let b=boot(19001);b.ctx.assert=assert;
+ b.run(`A.start();drain();E().style='文雅';E().prestige=90;var previous=E().sur+E().name;
+   var heir=makeKid(empress(),'m','承安');heir.born=S.turn-20*12;heir.lit=60;heir.vir=60;
+   succeed(heir);choose(0,'承平');drain();
+   assert.equal(E().prestige,59);assert.equal(E().wen,63);assert.equal(E().dynastyLegacy.predecessor,previous);
+   assert.equal(E().dynastyLegacy.renown,4);assert.match(viewHome(),/崇文重学/);save('auto');`);
+ b=boot(5,b.storage);b.ctx.assert=assert;
+ b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(E().dynastyLegacy.stat,'wen');
+  assert.equal(E().dynastyLegacy.bonus,3);assert.match(viewHome(),/先帝传承/);`);
+});
+
+test('hidden three-generation clan achievement reveals itself only after consecutive reigns and pays once',()=>{
+ let b=boot(19200);b.ctx.assert=assert;
+ b.run(`A.start();drain();empress().clan='shared-family';reconcileDynastyGoals();
+  assert.doesNotMatch(dynastyGoalsPanel(),/三世姻亲/);var heir=makeKid(empress(),'m','承安');heir.born=S.turn-240;
+  succeed(heir);choose(0,'承平');drain();empress().clan='shared-family';reconcileDynastyGoals();
+  assert.equal(S.dynastyGoals.threeClans,undefined);var next=makeKid(empress(),'m','续安');next.born=S.turn-240;
+  succeed(next);choose(0,'永安');drain();empress().clan='shared-family';reconcileDynastyGoals();
+  assert.ok(S.dynastyGoals.threeClans.completed);assert.match(dynastyGoalsPanel(),/三世姻亲/);
+  var money=E().treasury;A.claimDynastyGoal('threeClans');A.claimDynastyGoal('threeClans');assert.equal(E().treasury,money+150);save('auto');`);
+ b=boot(5,b.storage);b.ctx.assert=assert;
+ b.run(`A.load('auto');assert.equal(S.dynastyGoals.threeClans.claimed,true);assert.match(dynastyGoalsPanel(),/三世姻亲/);`);
+});

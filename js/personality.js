@@ -169,12 +169,36 @@ function deepLine(c){deepen(c);if(c.wish==='title'&&c.title&&!c.wishDone){c.wish
   <div>平日消遣：<span class="tag">${esc(c.hobby)}</span></div>
   <div>心愿：${c.wishKnown?`${esc(w.t)}${c.wishDone?' <span class="tag y">已成全</span>':w.unknown?'':w.btn?` <button class="btn sm jade" onclick="A.wish(${c.id})" ${inPalace(c)?'':'disabled'}>${esc(w.btn)}</button>`:' <span class="hint">（生下孩子便成全了）</span>'}`:`<span class="hint">${c.aff>=50?'情分已够，多闲谈几次，她也许会说出心愿':'情分到 50 以后，闲谈时她也许会说'}</span>`}</div>
   ${c.woundKnown?`<div>往事：${esc(consortPastText(c))}</div>`:`<div class="hint">往事：${c.aff>=65?'情分已够，多闲谈几次，她也许会对你说起':'情分到 65 以后，她也许会对你说起'}</div>`}${typeof gouyiPastPanel==='function'?gouyiPastPanel(c):''}`}
+function accessionArrivalConversation(c){
+ const arrival=c?.accessionArrival;
+ if(journalContentVersion()<76||!arrival||arrival.gen!==S.gen||arrival.done||S.turn-arrival.started>=12||!inPalace(c))return null;
+ const line=['骄矜','骄纵','好胜'].includes(c.trait)?'王府里我认得每一条廊，到了这里，连出门见谁都要先问宫人。臣妾不是怕，只是不愿总像个客人。':
+   ['聪慧','持重','沉静'].includes(c.trait)?'王府的人和事都熟悉，如今宫门深、规矩多，臣妾还在记每一处该怎么走。您也才登基，想必同样不容易。':
+   '从前在王府，听见您的脚步就知道您回来了。如今隔着这样多的宫门，连院里的树都还不认得，臣妾有时真有些不习惯。';
+ const valid=()=>inPalace(c)&&!S.over&&c.accessionArrival===arrival&&arrival.gen===S.gen&&!arrival.done;
+ const reply=(kind)=>{
+   if(!valid())return null;arrival.done=true;arrival.response=kind;arrival.turn=S.turn;
+   const response=kind==='listen'?'你坐下来听她讲王府里的旧事，约好有空一起认一认这座新宫城。':kind==='objects'?'你让人把她珍爱的旧物安置妥当，也请她自己决定院里怎样布置。':'你告诉她不必急着适应，若有不便，可以随时说与你听。';
+   const text=`【初入宫城】她谈起从王府搬到皇宫后尚不习惯。${response}`;
+   story(c,text);remember(c,'care',text);log(`${fullName(c)}说起初入皇宫的不习惯。`);save('auto');return response;
+ };
+ return {title:'初入宫城 · 潜邸旧人',por:c,present:[c],valid,text:`登基未久，${cName(c)}陪你坐了一会儿，才说起这些天的心事。\n“${line}”`,choices:[
+  {t:'听她讲讲王府的旧事',f:()=>reply('listen')},
+  {t:'为她安置熟悉的旧物',f:()=>reply('objects')},
+  {t:'告诉她不必急着适应',f:()=>reply('reassure')}
+ ]};
+}
 A.chat=function(id,fromEvent=false){
   const c=byId(id);if((modalOpen&&!fromEvent)||!inPalace(c))return;
   const offer=event=>{
     const scene=haremReturnActive()?{...event,onShow:()=>{noteHaremVisit(c);event.onShow?.();}}:event;
     (fromEvent?pushNow:pushEv)(scene);
   };
+  const accession=accessionArrivalConversation(c);if(accession){
+    if(!useE())return;noteHaremVisit(c);c.lastPersonalAttention=S.turn;deepen(c);
+    cchg(c,{aff:routineAffection(c,c.trait==='痴情'?8:5),mood:8,favor:2});
+    rememberConversation(c,{text:'从王府搬入皇宫后，仍有些不习惯。'},c.palace);setScene('harem');offer(accession);save('auto');return;
+  }
   const home=homeCareEvent(c)||solitaryQuietEvent(c);if(home){offer(home);return;}
   const arrival=kinArrivalGreeting(c)||newcomerWelcomeEvent(c);if(arrival){offer(arrival);return;}
   const past=pastLifeEvent(c);if(past){offer(past);return;}
