@@ -17,7 +17,7 @@ test('v74 pending result replays before goal reconciliation',()=>{
  const b=boot(1,new Map([['chengongji_v1_auto',JSON.stringify(save)]]));b.ctx.assert=assert;
  b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,74);
   assert.equal(curEv.title,'黄河决堤');assert.ok(modalResult);drain();A.go('home');
-  assert.equal(PalaceActions.contentVersion,84);assert.ok(S.dynastyGoals);`);
+  assert.equal(PalaceActions.contentVersion,85);assert.ok(S.dynastyGoals);`);
 });
 
 for(const [scenario,expected] of [['founder',350],['regent',500],['succession',800],['prosperous',1800],['crisis',100]]){
@@ -63,7 +63,7 @@ test('published v75 pending result resumes before enabling the new scenario syst
  const b=boot(1,new Map([['chengongji_v1_auto',JSON.stringify(save)]]));b.ctx.assert=assert;
  b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,75);
    assert.equal(dynastyScenarioActive(),false);assert.ok(modalResult);drain();A.go('home');
-   assert.equal(PalaceActions.contentVersion,84);assert.equal(dynastyScenarioActive(),true);`);
+   assert.equal(PalaceActions.contentVersion,85);assert.equal(dynastyScenarioActive(),true);`);
 });
 
 test('monthly goals count consecutive months once and reset after interruptions',()=>{
@@ -122,7 +122,7 @@ test('a genuine published v80 pending coronation resumes before adopting cross-g
  const save=require('./fixtures/dynasty-goals-legacy-v80.json');
  const b=boot(1,new Map([['chengongji_v1_auto',JSON.stringify(save)]]));b.ctx.assert=assert;
  b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,80);
-  assert.equal(curEv.title,'登基');assert.equal(S.dynastyMeta,undefined);drain();A.go('home');assert.equal(PalaceActions.contentVersion,84);`);
+  assert.equal(curEv.title,'登基');assert.equal(S.dynastyMeta,undefined);drain();A.go('home');assert.equal(PalaceActions.contentVersion,85);`);
 });
 
 test('the inherited scenario cannot start before its achievement is unlocked',()=>{
@@ -141,7 +141,7 @@ test('published v80 pending consort chat resumes before new accession dialogue r
  const save=require('./fixtures/dynasty-goals-v80-pending-chat.json');
  const b=boot(1,new Map([['chengongji_v1_auto',JSON.stringify(save)]]));b.ctx.assert=assert;
  b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,80);
-  assert.equal(curEv.title,'闲话家常');assert.equal(S.dynastyGoals,undefined);drain();A.go('home');assert.equal(PalaceActions.contentVersion,84);`);
+  assert.equal(curEv.title,'闲话家常');assert.equal(S.dynastyGoals,undefined);drain();A.go('home');assert.equal(PalaceActions.contentVersion,85);`);
 });
 
 test('founder actually establishes institutions over separate months and unlocks council policy',()=>{
@@ -159,7 +159,7 @@ test('founder actually establishes institutions over separate months and unlocks
 test('published v83 pending conversation resumes before the new rules',()=>{
  const save=require('./fixtures/dynasty-goals-v83-pending-chat.json'),b=boot(1,new Map([['chengongji_v1_auto',JSON.stringify(save)]]));b.ctx.assert=assert;
  b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,83);assert.equal(curEv.title,'闲话家常');
-  drain();A.go('home');assert.equal(PalaceActions.contentVersion,84);`);
+  drain();A.go('home');assert.equal(PalaceActions.contentVersion,85);`);
 });
 
 test('the founded granary adds two to actual monthly income',()=>{
@@ -167,4 +167,15 @@ test('the founded granary adds two to actual monthly income',()=>{
  b.run(`document.querySelector('input[name=f-scenario]:checked').value='founder';A.start();drain();E().energy=10;
   A.establishDynastyFoundation('granary');var baseline=Math.round(45+E().people*1.1+(S.flags.canal?25:0));
   A.endMonth();assert.equal(S.flags.lastMonthReview.inc,baseline+2+(S.flags.lastMonthReview.hongjianIncome||0));`);
+});
+
+test('published v84 family dialogue resumes with its original choices before new systems activate',()=>{
+ const save=require('./fixtures/dynasty-goals-v84-pending-family.json'),b=boot(1,new Map([['chengongji_v1_auto',JSON.stringify(save)]]));b.ctx.assert=assert;b.ctx.expectedTitle=save.pendingActions.pending.title;
+ b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,84);assert.equal(curEv.title,expectedTitle);
+  drain();A.go('home');assert.equal(PalaceActions.contentVersion,85);`);
+});
+
+test('prosperous opening changes its own families without modifying shared generation templates',()=>{
+ const b=boot(19003);b.ctx.assert=assert;b.run(`var original=JSON.stringify(FAMS);document.querySelector('input[name=f-scenario]:checked').value='prosperous';
+  A.start();assert.equal(JSON.stringify(FAMS),original);assert.ok(S.consorts.every(c=>c.fam.p>=65));`);
 });

@@ -1,7 +1,12 @@
 /* Descriptive distinctions follow real attributes. Nothing rolls during rendering. */
 const consortTraitsActive=()=>!!S&&journalContentVersion()>=59;
 const consortDistinctionStoriesActive=()=>journalContentVersion()>=67;
+// Use the person's original seed so a relative keeps the same disposition at selection.
+function restlessDisposition(p){
+ return journalContentVersion()>=84&&p&&Number.isFinite(p.seed)&&voiceHash(p.seed+':restless')%100<8;
+}
 const CONSORT_DISTINCTIONS=[
+ {id:'restless',name:'不安于室',groups:['romance'],priority:120,why:'容易对相投之人动心，私下相会时更可能回应。',test:restlessDisposition},
  {id:'grace',name:'沉鱼落雁',groups:['looks'],priority:60,why:'容貌超过90，眉目容色出众。',test:c=>c.looks>90},
  {id:'poet',name:'咏絮之才',groups:['talent'],priority:60,why:'才情达到95，才思尤为出众。',talent:95,art:'letters',test:c=>c.talent>=95},
  {id:'both',name:'才貌双绝',groups:['looks','talent'],priority:100,why:'容貌至少85、才情至少90，兼具才貌。',talent:90,art:'any',test:c=>c.looks>=85&&c.talent>=90},
@@ -23,6 +28,7 @@ const CONSORT_DISTINCTIONS=[
  {id:'frail',name:'弱柳扶风',groups:['health'],priority:110,why:'当前健康低于50，宜注意静养调护；健康恢复后不再显示。',test:c=>c.alive&&Number.isFinite(c.hp)&&c.hp<50}
 ];
 const CONSORT_DISTINCTION_NOTES={
+ restless:'她并不避讳谈情。若遇见投契的人，她也愿意先递出一封信。',
  grace:'容色出众，殿上诸人一眼便能认出她来。',
  poet:'她落笔便有诗意，寻常时景到了她笔下也有了新意。',
  both:'她的容貌先教人记住，听她论诗说事，才知道她的才情也一样出众。',

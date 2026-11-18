@@ -547,7 +547,7 @@ function monthlyFloodEvent(brief){
     let supervised=null;
     const available=harem().find(c=>{
       if(!hasClan(c)||c.fam.t.includes('（获罪）'))return false;
-      const father=houseOf(c).father;
+      const father=houseOf(c)?.father;
       if(!officialServing(father)||!terms.offices.includes(father.office)||
         paternalFamily(c).some(relative=>relative.fam.t.includes('（获罪）')))return false;
       if(!reliefSuspended(father))return true;
@@ -983,7 +983,7 @@ A.courtPolicy=function(id){
     const previous=S.courtPolicy[group.id]||0;
     S.courtPolicy[group.id]=Math.max(-30,Math.min(30,previous+(group===bloc?10:-2)));
   }
-  if(journalContentVersion()>=84){
+  if(journalContentVersion()>=85){
     const affiliation={civil:'civil',military:'army',clan:'kin',trade:'civil',travel:'civil'};
     for(const k of kidsAlive()){
       const career=k.princeCareer,wanted=affiliation[career?.path];if(!wanted||!childCanVisitCourt(k))continue;
@@ -1081,7 +1081,8 @@ function identifyFather(family,house){
   return house;
 }
 function houseOf(c){
-  if(c?.selectionNatalHost!=null)return c.house=byId(c.selectionNatalHost)?.house||c.house;
+  if(c?.familyBranchOrigin)return null; // Her parents already have records in the original branch.
+  if(c?.selectionNatalHost!=null)return c.house=familyHostById(c.selectionNatalHost)?.house||c.house;
   if(!c||c.maid||c.rescue||storyCastActive()&&c.fixedStory==='chuwan')return null;
   const family=paternalFamily(c),root=family[0];
   const existing=family.find(p=>p.house)?.house;
@@ -1104,6 +1105,10 @@ function houseOf(c){
 // 立场：父兄所在的集团；娘家势力大的妃嫔也会被看作外戚一派
 function stanceOf(c){const h=houseOf(c);if(!h)return null;return h.bloc||(c.fam?.p>=55?'kin':null)}
 function houseLine(c){
+  if(c.familyBranchOrigin){
+    const e=natalEntry(c.familyBranchOrigin.host,c.familyBranchOrigin.relative);
+    if(e)return natalParentLinks(e.c,e.p);
+  }
   const h=houseOf(c);if(!h)return '';
   const st=stanceOf(c);
   const suspension=h.father.alive&&reliefSuspended(h.father)?' · 停办赈务中':'';

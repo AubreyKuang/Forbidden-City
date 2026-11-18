@@ -134,7 +134,53 @@ function registeredSelectionSister(c){
   const p=pick(people),g=natalConsortProfile(c,p);
   g.selectionNatalHost=c.id;g.kinNote=cName(c)+'的亲'+natalLabel(c,p);return g;
 }
+function canNominateRelative(p){
+  return p?.sex==='f'&&p.alive&&!p.outsideFamilyOrigin&&!p.unconfirmedParentage&&(!p.outsideParentage||p.outsideParentage.status==='cleared')&&
+    !p.consortId&&!byId(p.id)&&!p.married&&!p.spouse&&!p.betrothal&&!p.widow&&!p.declined&&natalAge(p)>=15;
+}
+function familyNominationButton(c,p){
+  if(journalContentVersion()<84||!canNominateRelative(p))return '';
+  const pending=S.flags.familyNominees?.some(n=>n.relative===p.id),listed=S.cands.some(g=>g.id===p.id);
+  return `<button class="btn sm gold" onclick="A.nominateRelative(${c.id},${p.id})" ${pending||listed?'disabled':''}>${listed?'已在本届名册':pending?'已荐入下届选秀':'荐入下届选秀'}</button>`;
+}
+A.nominateRelative=function(id,relative){
+  if(modalOpen||journalContentVersion()<84)return;
+  const e=natalEntry(id,relative);
+  if(!e||!canNominateRelative(e.p)||S.cands.some(g=>g.id===e.p.id))return;
+  const nominees=S.flags.familyNominees||=[];
+  if(nominees.some(n=>n.relative===e.p.id))return;
+  nominees.push({host:e.c.id,relative:e.p.id});
+  story(e.p,'奉旨登记下届选秀，家人替她收好了礼部递来的名帖。');
+  save('auto');render();toast(e.p.name+'已登记，下次开选时入册');
+};
+function appendFamilyNominees(){
+  const nominees=S.flags.familyNominees||[];
+  delete S.flags.familyNominees;
+  for(const {host,relative} of nominees){
+    const e=natalEntry(host,relative);
+    if(!e||!canNominateRelative(e.p))continue;
+    const {c,p}=e;
+    let g=S.cands.find(g=>g.id===p.id);
+    if(!g){g=natalConsortProfile(c,p);S.cands.push(g);}
+    g.selectionNatalHost=c.id;g.familyNominee=true;
+    g.kinNote='家族荐选 · '+fullName(c)+'的'+natalLabel(c,p);
+    if(p.parentRelativeId||p.motherRelativeId){
+      g.familyBranchOrigin={host:e.originHost??c.id,relative:p.id};
+      delete g.house;delete g.fatherId;delete g.clan;
+    }
+  }
+}
 function confirmSelectionSister(g){
+  if(g.familyNominee){
+    const e=natalEntry(g.selectionNatalHost,g.id);
+    if(!e||!canNominateRelative(e.p))return false;
+    delete g.selectionNatalHost;delete g.familyNominee;
+    if(g.familyBranchOrigin){
+      e.p.consortId=g.id;delete e.p.visit;
+      story(e.p,'家族荐选，殿前留牌入宫。');story(g,'家族荐选，殿前留牌入宫。');
+    }else linkNatalConsort(e.c,e.p,g,'selection');
+    return true;
+  }
   if(g.selectionNatalHost==null){
     // A roster left open by an older release may contain a newly invented sister.
     return !S.consorts.some(c=>/^亲[姐妹]$/.test(g.kin?.[c.id]||c.kin?.[g.id]||''));
@@ -157,8 +203,8 @@ function viewNatalRelative(){
   const {c,h,p}=e;if(p.consortId){UI.view='consort';UI.sel=p.consortId;return viewConsort();}
   if(p.sex==='m'&&natalAge(p)>=18){UI.view='official';UI.sel=c.id+':relative'+p.id;return viewOfficial();}
   const age=natalAge(p),living=p.alive,visited=natalInPalace(c,p);
-  return `${personBackButton('family')}<header class="detail-head">${porImg(natalPortrait(p),224)}<div class="grow"><h2>${esc(p.name)}</h2><p>${esc(fullName(c))}的${natalLabel(c,p)} · ${age}岁 · ${natalStatus(p)}${p.unconfirmedParentage?' '+unconfirmedParentageTag(p):''}</p><p>${age<6?'尚在幼年':esc(natalTrait(p))}</p></div></header>
-    <div class="acts">${living?`<button class="btn" onclick="A.natalLetter(${c.id},${p.id})" ${S.turn-(p.lastLetter??-99)>=3&&E().energy>0?'':'disabled'}>${age<3?'赐衣问安':'赐书问候'}<small>精力−1 · 每三个月一次</small></button>`:''}
+  return `${personBackButton('family')}<header class="detail-head">${porImg(natalPortrait(p),224)}<div class="grow"><h2>${esc(p.name)}</h2><p>${esc(fullName(c))}的${natalLabel(c,p)} · ${age}岁 · ${natalStatus(p)}${outsideChildBadge(p)}</p><p>${age<6?'尚在幼年':esc(natalTrait(p))}${age>=15&&p.sex==='f'&&restlessDisposition(p)?' <span class="tag y">不安于室</span>':''}</p></div></header>
+    <div class="acts">${familyNominationButton(c,p)}${living?`<button class="btn" onclick="A.natalLetter(${c.id},${p.id})" ${S.turn-(p.lastLetter??-99)>=3&&E().energy>0?'':'disabled'}>${age<3?'赐衣问安':'赐书问候'}<small>精力−1 · 每三个月一次</small></button>`:''}
     ${natalVisitReady(c,p)?`<button class="btn" onclick="A.natalVisit(${c.id},${p.id})">准入宫探亲</button>`:''}${visited?`<button class="btn primary" onclick="A.natalMeet(${c.id},${p.id})">探亲相见</button><span>约${p.visit.until-S.turn}个月后归家</span>`:''}</div>
     ${detailSection('私下求见',marriedSisterVisitButton(c,p))}
     ${typeof natalAdmissionPanel==='function'?natalAdmissionPanel(c,p):''}

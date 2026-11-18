@@ -15,18 +15,50 @@ function marriedSisterVisitButton(c,p){
   return `<button class="btn primary" onclick="A.marriedSisterVisit(${c.id},${p.id})" ${exhausted?'disabled':''}>${natalInPalace(c,p)?'在宫中私下求见':'到她的住所求见'}${exhausted?'<small>本月已经见过</small>':''}</button>${journalContentVersion()>=49?'<p class="hint">求见只会先问她的心意。</p>':''}`;
 }
 
+function sisterPrivateChance(p){
+  const forward=['活泼','爽直'].includes(p.trait);
+  if(journalContentVersion()<84)return p.willing!==false&&chance(forward?.48:.32);
+  return chance(Math.min(.96,(p.willing===false?.80:forward?.90:.86)+(restlessDisposition(p)?.08:0)));
+}
+function sisterPrivateWords(c,p,meetings){
+  const kin=natalLabel(c,p)==='姐姐'?'妹妹':'姐姐',relation=relGet(c,p);
+  const first=meetings===0;
+  if(relation<=-25)return first
+    ?`她吃了一惊，随即抬眼看你：“从小大家都先问我${kin}怎么想。她能得你喜欢，难道我就不能？今日你是来见我的，可别又只问起她。”`
+    :`“上回你记住了我爱喝的茶。”她把另一盏推过来，“我倒有些后悔，总拿自己和${kin}比。”`;
+  if(relation>=30&&p.willing!==false&&(c.favor<35||['温婉','聪慧'].includes(p.trait)))return first
+    ?`她吃了一惊，把替${kin}缝好的护腕放到一旁：“她信里什么都说好。我有时想，若能在宫里陪她，总能看出她哪天是真的高兴。”她顿了顿，“可今日留你，是我自己的意思。”`
+    :`“若有一日我也入宫，你可许我们姐妹关起门说句家常？”她把新收到的信折好，留出你身旁的座位。`;
+  if(!first&&meetings>1)return '她把上回没下完的棋重新摆好：“这一步我等了好些日子。这回你多坐一会儿，好不好？”';
+  const reply={活泼:'她把身边的椅子拉近：“我猜了半日你会不会来，赌的是我自己。看来我赢了。”',
+    爽直:'她迎着你的目光笑起来：“陛下若是真心喜欢我，就当面说。我听了高兴，也愿意你留下。”',
+    聪慧:'她让人添了一盏热茶：“上次随口说的事，你竟还记得。今日我想听你把话说完。”',
+    才女:'她翻开一本词集，把夹在里头的小笺递给你：“那日送别后填的。最后一句，想亲自念给你听。”',
+    沉静:'她没有立刻答话，只把窗下那张空凳搬到自己身旁：“原以为只有我惦记那一面。”',
+    温婉:'她亲手添了一盏茶，笑道：“你记得我说过的话，又特意来看我，我心里自然欢喜。”'};
+  return (first?'她吃了一惊，听清来意才慢慢笑了。':'她认得你的脚步声。')+(reply[p.trait]||reply.沉静);
+}
+function sisterMarriageReflection(p,meetings){
+  const husband=p.spouse?.name||'丈夫',bond=ensureMaritalBond(p).kind;
+  if(bond==='affectionate')return meetings===1?`回家时，${husband}还给她留着一盏灯。她想起方才的私约，道谢时竟不敢看他。`:
+    `见${husband}把她喜欢的菜移到面前，她几乎想坦白，又怕一句话伤了他的心，终究没说。`;
+  if(bond==='distant')return meetings===1?`她将见面的事瞒下。${husband}只问她路上冷不冷，听她答了便各自歇下。`:
+    `她把来信和家用账册分开收好，没有告诉${husband}近来惦记的是谁。`;
+  return meetings===1?`她与${husband}照常用了晚饭，说起白日的琐事，唯独略过与你相见的那一段。`:
+    `听${husband}说起下个月的家事，她应了一声。心里有话压着，却始终没能开口。`;
+}
 function marriedSisterEncounter(c,p){
   if(!marriedSisterAvailable(c,p)||p.marriedSisterAffair?.coerced||p.marriedSisterAffair?.lastMeeting===S.turn)return null;
   p.spouse ||= initialNatalSpouse(p,natalAge(p));
   const direct=journalContentVersion()>=49;
   const gen=S.gen,turn=S.turn,spouse=p.spouse,inPalaceNow=natalInPalace(c,p);
   const affair=p.marriedSisterAffair?.spouseId===spouse.id?p.marriedSisterAffair:(p.marriedSisterAffair={
-    spouseId:spouse.id,receptive:p.willing!==false&&chance(['活泼','爽直'].includes(p.trait)? .48 : .32),meetings:0
+    ...(journalContentVersion()>=84?{host:c.id}:{}),spouseId:spouse.id,receptive:sisterPrivateChance(p),meetings:0
   });
   const valid=()=>S.gen===gen&&S.turn===turn&&p.spouse===spouse&&marriedSisterAvailable(c,p)&&!affair.coerced&&
     affair.lastMeeting!==S.turn&&inPalaceNow===natalInPalace(c,p);
   const opening=inPalaceNow?`趁${p.name}来${c.palace}探亲，你请她到偏厅说话。`:`你到${p.name}平日所住的地方，问她愿不愿意单独见一面。`;
-  const answer=affair.receptive?[
+  const answer=affair.receptive&&journalContentVersion()>=84?sisterPrivateWords(c,p,affair.meetings):affair.receptive?[
     '她吃了一惊，认出是你，随即亲自引你坐下：“我也曾想过，若能入宫与你相见，该是什么样。没想到你会先来找我。”',
     '她亲自来开门，先问上次那句迟迟没说完的话，你还记不记得。',
     '她望着窗外想了半晌：“总有片刻想见你。可一想到明日，我还有自己的家要回去。”'
@@ -41,7 +73,7 @@ function marriedSisterEncounter(c,p){
       story(p,'【不愿再见】她已明言拒绝，皇帝仍强令她留下。此后她托家人谢绝皇帝私下求见。');
     }else{
       affair.meetings++;
-      story(p,direct?`【私下承宠】她愿意与你私下相会，在${inPalaceNow?c.palace+'偏厅':'自己的住处'}承宠。离开后，她将这件事藏在心里。`:
+      story(p,direct?`【私下承宠】她愿意与你私下相会，在${inPalaceNow?c.palace+'偏厅':'自己的住处'}承宠。${journalContentVersion()>=84?sisterMarriageReflection(p,affair.meetings):'离开后，她将这件事藏在心里。'}`:
         `【私下相会】她自己答应在${inPalaceNow?c.palace:'住处'}与你见面。${answer}`);
     }
     if(natalPregnancyReady(p)&&chance(.28))beginNatalPregnancy(c,p,{unconfirmed:true});
@@ -171,7 +203,7 @@ function marriedSisterChildrenPanel(c){
   if(!marriedSisterAffairsActive()||!c.natalOrigin)return '';
   const children=natalChildrenOf(c,c.natalOrigin.relative);
   const mother=c.house?.relatives?.find(p=>p.id===c.natalOrigin.relative);
-  return detailSection('原家子女',children.map(p=>`<p><button class="person-link" onclick="A.go('natal','${c.id}:${p.id}')">${esc(p.outsideFamilyOrigin?.name||p.name)} ↗</button> ${unconfirmedParentageTag(p)}</p>`).join(''))+
+  return detailSection('原家子女',children.map(p=>`<p><button class="person-link" onclick="A.go('natal','${c.id}:${p.id}')">${esc(p.outsideFamilyOrigin?.name||p.name)} ↗</button> ${outsideChildBadge(p)}</p>`).join(''))+
     (mother?outsideHouseholdHusbandPanel(mother):'');
 }
 

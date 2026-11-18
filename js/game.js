@@ -32,16 +32,16 @@ const DYNASTY_SCENARIOS={
   crisis:{name:'亡国之君',description:'国库空虚、民心低落，须在三年内稳住朝局。'},
   restoration:{name:'承祧之君',description:'继承先朝积累，重整朝局与民生。',unlock:'reigns'}
 };
-const dynastyScenarioActive=()=>journalContentVersion()>=84;
+const dynastyScenarioActive=()=>journalContentVersion()>=85;
 function startDynastyScenario(id){
   if(!dynastyScenarioActive()||!DYNASTY_SCENARIOS[id]||id==='standard')return;
   const e=E(),state=S.scenario={id,gen:S.gen,start:S.turn,status:'active'};
-  if(id==='founder'){Object.assign(e,{treasury:350,people:45,prestige:40});if(journalContentVersion()>=84)state.foundations={charter:false,granary:false,council:false};}
+  if(id==='founder'){Object.assign(e,{treasury:350,people:45,prestige:40});if(journalContentVersion()>=85)state.foundations={charter:false,granary:false,council:false};}
   if(id==='regent'){Object.assign(e,{treasury:500,people:50,prestige:30});state.control=70;}
   if(id==='succession')e.fertilityReview={profile:'low',months:0,last:-99};
   if(id==='prosperous'){
     Object.assign(e,{treasury:1800,people:80,prestige:75});
-    for(const c of S.consorts)c.fam.p=Math.max(c.fam.p,65);
+    for(const c of S.consorts)c.fam={...c.fam,p:Math.max(c.fam.p,65)};
   }
   if(id==='crisis'){Object.assign(e,{treasury:100,people:25,prestige:25});state.deadline=S.turn+36;}
   if(id==='restoration')Object.assign(e,{treasury:650,people:55,prestige:60});
@@ -64,7 +64,7 @@ function dynastyScenarioGoals(){
 const DYNASTY_FOUNDATIONS={charter:{name:'颁立国制',cost:30},granary:{name:'建立仓储',cost:60},council:{name:'设立议政',cost:50}};
 function establishDynastyFoundation(id){
  const scenario=S?.scenario,item=DYNASTY_FOUNDATIONS[id];
- if(journalContentVersion()<84||!item||scenario?.id!=='founder'||scenario.gen!==S.gen||scenario.status!=='active'||!scenario.foundations||scenario.foundations[id]||scenario.lastFoundation===S.turn||S.over||modalOpen||E().energy<1||E().treasury<item.cost)return;
+ if(journalContentVersion()<85||!item||scenario?.id!=='founder'||scenario.gen!==S.gen||scenario.status!=='active'||!scenario.foundations||scenario.foundations[id]||scenario.lastFoundation===S.turn||S.over||modalOpen||E().energy<1||E().treasury<item.cost)return;
  if(!useE())return;chg({treasury:-item.cost});scenario.foundations[id]=true;scenario.lastFoundation=S.turn;
  if(id==='charter')chg({prestige:4});if(id==='granary'){S.flags.founderGranary=true;chg({people:4});}if(id==='council')chg({prestige:2});
  log(`【开国】${item.name}完成。${id==='granary'?'仓储运行后每月岁入增加二万两。':id==='council'?'朝堂可正式议定派系建议。':'诏告天下，厘定新朝章程。'}`,1);reconcileDynastyScenario();render();
@@ -125,13 +125,13 @@ function dynastyProfile(){
  return [...found].sort();
 }
 function rememberDynastyClans(){
-  if(!S||journalContentVersion()<84)return;
+  if(!S||journalContentVersion()<85)return;
   const history=S.dynastyClanHistory||={},key=String(S.gen),seen=new Set(history[key]||[]);
   for(const c of S.consorts)if(c.fam?.t&&!c.maid)seen.add(c.clan||c.sur+'|'+c.fam.t);
   history[key]=[...seen];
 }
 function settleDynastyGoalMonth(){
-  if(!S||journalContentVersion()<84)return;
+  if(!S||journalContentVersion()<85)return;
   const saved=S.dynastyGoalProgress||={};
   if(saved.last?.gen===S.gen&&saved.last.turn===S.turn)return;
   saved.last={gen:S.gen,turn:S.turn};
@@ -149,7 +149,7 @@ function settleDynastyGoalMonth(){
   reconcileDynastyGoals();
 }
 function reconcileDynastyGoals(){
-  if(!S||PalaceActions.blocked||journalContentVersion()<84)return;
+  if(!S||PalaceActions.blocked||journalContentVersion()<85)return;
   reconcileDynastyScenario();
   rememberDynastyClans();
   const goals=S.dynastyGoals||={};
@@ -170,7 +170,7 @@ function claimDynastyGoal(id){
   const goal=[...DYNASTY_GOALS,...DYNASTY_HIDDEN_GOALS].find(item=>item.id===id),entry=S?.dynastyGoals?.[id];
   if(!goal||!entry?.completed||entry.claimed||S.over)return;
   entry.claimed=true;
-  if(journalContentVersion()>=84){S.dynastyMeta||=[];if(!S.dynastyMeta.includes(id))S.dynastyMeta.push(id);}
+  if(journalContentVersion()>=85){S.dynastyMeta||=[];if(!S.dynastyMeta.includes(id))S.dynastyMeta.push(id);}
   chg({treasury:goal.reward});
   log(`【王朝目标】${goal.name}赏银 ${goal.reward} 万两入库。`);
   render();
@@ -663,7 +663,7 @@ A.endMonth=function(){
   // 岁末总结
   if(newYear)snapshotYear();
   if(newYear){const y=S.ys;pushEv({title:'岁首',sfx:'chime',text:`爆竹声中一岁除。${dateStr()}，陛下${e.age}岁。\n去岁：新入宫${y.c}人，皇嗣降生${y.b}位，侍寝${y.n}次。\n国库${e.treasury}万两，威望${rd(e.prestige)}，民心${rd(e.people)}。`,choices:[{t:'新岁新气象'}]});S.ys={c:0,b:0,n:0}}
-  if(revenue)pushEv(revenue);
+  if(revenue)pushEv(revenue.jewelry?tributeEnvoyEvent(revenue):revenue);
   // 事件
   if(selectionSkipTimingActive()){const selectionOffer=scheduledSelectionEvent();if(selectionOffer)pushEv(selectionOffer);}
   else if(S.month===2&&S.turn-S.flags.lastXX>=34&&newConsortEventAllowed()) pushEv({title:'三年大选',sfx:'chime',text:'又到三年一度的大选之期，各地秀女已候于储秀宫。',choices:[{t:'前去看看',f:()=>{genCands();UI.view='xx';return null}},{t:'今年免了',f:()=>{S.flags.lastXX=S.turn;return fx(chg({people:2}))}}]});
@@ -699,7 +699,8 @@ A.endMonth=function(){
   add(homeReturnSocialEvent(),8);add(natalVisitRequest(),7);add(awaitingNoticeEvent(),6);
   add(pastLifeMonthlyEvent(),6);add(pregnancyPrayerMonthlyEvent(),6);add(residencePetitionEvent(),8);add(fiveBrotherMonthlyEvent(),6);add(travelerMonthlyEvent(),8);add(recoveredSwapEvent(),8);add(fosterPetitionEvent(),8);add(kinSuccessionEvent(),8);add(parentageClueEvent(),8);
   add(coldFosterPetitionEvent(),9);add(coldFriendPetitionEvent(),8);
-  add(jewelryTributeEvent(),7);add(jewelryRequestEvent(),7);
+  const tribute=jewelryTributeEvent();
+  add(revenue?.jewelry?tribute:tributeEnvoyEvent(tribute),7);add(jewelryRequestEvent(),7);
   add(chance(.8)?festival():null,5);add(chance(.75)?haremEvent():null,6);
   add(chance(.65)?quirkEvent():null,5);add(chance(.5)?histEvent():null,6);add(chance(.4)?courtEvent():null,4);add(palaceRomanceEvent(),8);add(courtFriendshipEvent(),9);add(motherAppealEvent(),9);
   add(chance(.3)?youthEvent():null,7);add(chance(.45)?kidEvent():null,4);add(chance(.55)?xinEvent():null,6);add(monthlyMaidEvent(),4);add(chance(.3)?fosterEvent():null,4);add(chance(.45)?relEvent():null,5);add(chance(.35)?clanEvent():null,5);add(chance(.45)?factionEvent():null,6);add(chance(.5)?visitorEvent():null,5);add(chance(.15)?dowagerEvent():null,3);
@@ -728,14 +729,14 @@ function checkEnd(){
 }
 function deathEvent(why){
   S.over=true;const e=E();const yrs=S.year;
-  if(journalContentVersion()>=84&&S.scenario?.gen===S.gen&&S.scenario.status==='active'){
+  if(journalContentVersion()>=85&&S.scenario?.gen===S.gen&&S.scenario.status==='active'){
     S.scenario.status='lost';S.scenario.completed=S.turn;S.scenario.failure=why==='民变'?'国祚倾覆':'君主驾崩前未完成目标';
     log(`【开局剧本】${DYNASTY_SCENARIOS[S.scenario.id]?.name||'本局'}：${S.scenario.failure}。`,1);
   }
   const score=e.prestige*.5+e.people*.5;
   const shi=score>=80?'圣':score>=68?'文':score>=56?'景':score>=44?'恭':score>=32?'哀':'炀';
   const miao=['太祖','太宗','高宗','仁宗','宣宗','英宗','宪宗','孝宗','穆宗','神宗'][S.gen-1]||'睿宗';
-  const sons=kidsAlive().filter(k=>k.sex==='m'&&!k.jailed&&!(journalContentVersion()>=84?royalJourneyAway(k):immortalAway(k))&&!storyCastHeirBar(k));let heir=S.heir&&kidById(S.heir);if(!heir||!heir.alive||(journalContentVersion()>=84?royalJourneyAway(heir):immortalAway(heir))||storyCastHeirBar(heir))heir=sons.sort((a,b)=>a.born-b.born)[0];
+  const sons=kidsAlive().filter(k=>k.sex==='m'&&!k.jailed&&!(journalContentVersion()>=85?royalJourneyAway(k):immortalAway(k))&&!storyCastHeirBar(k));let heir=S.heir&&kidById(S.heir);if(!heir||!heir.alive||(journalContentVersion()>=85?royalJourneyAway(heir):immortalAway(heir))||storyCastHeirBar(heir))heir=sons.sort((a,b)=>a.born-b.born)[0];
   const nC=S.consorts.length,nK=S.children.length;
   let t= why==='民变'?`流民四起，叛军攻破京城。${e.era}${cnNum(yrs)}年，${e.sur}${e.name}自缢于宫中，享年${e.age}岁。`
     :`${dateStr()}，${e.sur}${e.name}崩于养心殿，享年${e.age}岁，在位${yrs}年。`;
@@ -758,7 +759,7 @@ function succeed(h){
     inheritDowager(h);
     S.emp={sur:old.sur,name:h.name,era:v,age:Math.max(a,14),health:clamp(h.hp+10),prestige:clamp(35+h.vir/3),people:old.people,treasury:old.treasury,energy:3,nightsMonth:0,
       style:h.mar>h.lit+15?'尚武':h.lit>h.mar+15?'文雅':'勤政',wen:rd(h.lit),wu:rd(h.mar),seed:h.seed,portraitOverride:portraitCell(h),birthMonth:birthMonth(h)};
-    if(journalContentVersion()>=84){
+    if(journalContentVersion()>=85){
       const legacy={勤政:{lesson:'勤于政事，体察民情',stat:'people'},尚武:{lesson:'修习武备，慎守边疆',stat:'wu'},文雅:{lesson:'崇文重学，明辨是非',stat:'wen'},风流:{lesson:'珍重身体，宽待身边人',stat:'health'}}[old.style]||{lesson:'勤于政事，体察民情',stat:'people'};
       const renown=Math.max(0,Math.round((old.prestige-50)/10)),beforePrestige=S.emp.prestige,beforeStat=S.emp[legacy.stat];
       S.emp.prestige=clamp(beforePrestige+renown);S.emp[legacy.stat]=clamp(beforeStat+3);
@@ -770,7 +771,7 @@ function succeed(h){
     delete S.selection;if(!legacyPendingAction())S.flags.haremAttendance={gen:S.gen,turn:S.turn};S.flags.lastXX=-99;if(selectionSkipTimingActive())delete S.flags.lastXXSkipped;delete S.flags.lastProudDemand;delete S.flags.scholarArc;delete S.flags.rareArcOwners;delete S.flags.arcPacing;delete S.flags.xinPacing;delete S.flags.lastLiteraryGathering;delete S.lastGardenBanquet;S.gardenPlans=[];seasonalTick();S.emp.energy=maxEnergy();
     log(`━━ 第${cnNum(S.gen)}代 ━━ ${v}元年，新帝${S.emp.sur}${h.name}登基，尊${S.flags.dowager.fullName||S.flags.dowager.name}为${S.flags.dowager.name}${S.flags.birthDowager?.alive?`，另尊生母${S.flags.birthDowager.fullName}为皇太后`:""}。`,1);
     if(S.emp.dynastyLegacy){const l=S.emp.dynastyLegacy;log(`【先帝传承】${l.predecessor}留下家训「${l.lesson}」。先朝声望使新君威望增加${l.renown}。`,1);}
-    if(S.emp.age>=15){const em=marriageEmpress(h)||makeGirl({fam:pick(FAMS.slice(0,4)),trait:pick(['温婉','聪慧','城府','骄矜'])});em.favor=35;em.aff=30;if(h.spouse)em.knownBeforeAccession=true;addConsort(em,8,h.spouse?'潜邸嫡妻，随新帝登基册立':'新帝登基，奉遗诏册立');if(h.spouse&&journalContentVersion()>=84)em.accessionArrival={gen:S.gen,started:S.turn};}
+    if(S.emp.age>=15){const em=marriageEmpress(h)||makeGirl({fam:pick(FAMS.slice(0,4)),trait:pick(['温婉','聪慧','城府','骄矜'])});em.favor=35;em.aff=30;if(h.spouse)em.knownBeforeAccession=true;addConsort(em,8,h.spouse?'潜邸嫡妻，随新帝登基册立':'新帝登基，奉遗诏册立');if(h.spouse&&journalContentVersion()>=85)em.accessionArrival={gen:S.gen,started:S.turn};}
     inheritHousehold(h,empress());inheritLifeKeepsakes(h);S.ys={c:0,b:0,n:0};UI.kidsResidence='palace';
     migrate();UI.view='map';AU.sfx('gong');
     return {title:'新朝家人',por:dowagerPerson(S.flags.dowager),text:`${v}元年，新帝登基，大赦天下。\n${S.flags.dowager.fullName||S.flags.dowager.name}${S.flags.dowager.alive?'尊为'+S.flags.dowager.name+'，居慈宁宫。':'已故，尊谥存于宗谱。'}${S.flags.birthDowager?.alive?'\n生母'+S.flags.birthDowager.fullName+'亦尊为皇太后。':''}\n潜邸妻儿与亲族的往来，由此接入新朝。`}}}]});
@@ -783,22 +784,22 @@ A.start=function(){
   const sur=(fv('#f-sur')||'萧').trim().slice(0,2),name=(fv('#f-name')||'彻').trim().slice(0,2),era=(fv('#f-era')||'永宁').trim().slice(0,2);
   const style=fv('input[name=f-style]:checked')||'勤政';
   let scenario=dynastyScenarioActive()?fv('input[name=f-scenario]:checked')||'standard':'standard',meta=[];
-  if(journalContentVersion()>=84){try{const candidate=JSON.parse(fv('#f-dynasty-meta')||'[]');if(Array.isArray(candidate)){const valid=new Set([...DYNASTY_GOALS,...DYNASTY_HIDDEN_GOALS].map(g=>g.id));meta=[...new Set(candidate.filter(id=>valid.has(id)))];}}catch{/* 无可用跨局记录。 */}}
+  if(journalContentVersion()>=85){try{const candidate=JSON.parse(fv('#f-dynasty-meta')||'[]');if(Array.isArray(candidate)){const valid=new Set([...DYNASTY_GOALS,...DYNASTY_HIDDEN_GOALS].map(g=>g.id));meta=[...new Set(candidate.filter(id=>valid.has(id)))];}}catch{/* 无可用跨局记录。 */}}
   if(DYNASTY_SCENARIOS[scenario]?.unlock&&!meta.includes(DYNASTY_SCENARIOS[scenario].unlock))scenario='standard';
   S={v:1,emp:{sur,name,era,age:18,birthMonth:3,health:90,prestige:50,people:60,treasury:800,energy:3,nightsMonth:0,style,wen:50,wu:50,seed:ri(1,2e9)},
     year:1,month:3,turn:0,consorts:[],children:[],cands:[],log:[],nid:1,gen:1,heir:null,genChar:pick(GEN_CHARS),
     flags:{lastXX:-99,dowager:{name:'太后',alive:true},peek:0,openingCourt:true,familyRules:2},history:[],ys:{c:0,b:0,n:0},over:false};
   const e=S.emp;
-  if(journalContentVersion()>=84){S.dynastyMeta=meta;if(meta.includes('children'))e.dynastyTrait='家学仁厚';}
+  if(journalContentVersion()>=85){S.dynastyMeta=meta;if(meta.includes('children'))e.dynastyTrait='家学仁厚';}
   e.imperialPortrait=style==='尚武'?1:style==='文雅'?0:e.seed%2;
-  if(journalContentVersion()>=84&&meta.includes('grown')&&['0','1'].includes(fv('input[name=f-dynasty-portrait]:checked')))e.imperialPortrait=Number(fv('input[name=f-dynasty-portrait]:checked'));
+  if(journalContentVersion()>=85&&meta.includes('grown')&&['0','1'].includes(fv('input[name=f-dynasty-portrait]:checked')))e.imperialPortrait=Number(fv('input[name=f-dynasty-portrait]:checked'));
   if(style==='勤政'){e.prestige=58;e.people=65}if(style==='风流')e.health=84;if(style==='尚武'){e.wu=80;e.prestige=55}if(style==='文雅')e.wen=80;
   e.energy=maxEnergy();
   const em=makeGirl({fam:pick(FAMS.slice(0,3)),trait:pick(['温婉','聪慧','城府','骄矜'])});em.favor=40;em.aff=40;em.age=18;em.knownBeforeAccession=true;
-  if(journalContentVersion()>=84&&meta.includes('companionship')){receiveJewelry(em,'phoenix','跨局成就「情深不渝」解锁的礼冠');(ensureJewelry().received.phoenix||=0);S.jewelry.received.phoenix++;}
+  if(journalContentVersion()>=85&&meta.includes('companionship')){receiveJewelry(em,'phoenix','跨局成就「情深不渝」解锁的礼冠');(ensureJewelry().received.phoenix||=0);S.jewelry.received.phoenix++;}
   S.consorts.push(em);em.rank=8;assignPalace(em);story(em,scenario==='founder'?'旧日夫妻相伴，今随陛下开创新朝，册为皇后，入主坤宁宫。':'潜邸时奉先帝之命嫁与陛下为嫡妻。新帝登基，册为皇后，入主坤宁宫。');
   const old=makeGirl({});old.favor=55;old.aff=60;old.knownBeforeAccession=true;old.rank=3;S.consorts.push(old);assignPalace(old);story(old,'潜邸旧人，陪伴陛下多年。新帝登基，册为贵人。');
-  if(journalContentVersion()>=84){em.accessionArrival={gen:S.gen,started:S.turn};old.accessionArrival={gen:S.gen,started:S.turn};}
+  if(journalContentVersion()>=85){em.accessionArrival={gen:S.gen,started:S.turn};old.accessionArrival={gen:S.gen,started:S.turn};}
   startDynastyScenario(scenario);
   if(e.dynastyTrait)e.people=clamp(e.people+3);
   log(`${era}元年三月，新帝${sur}${name}登基，改元${era}，大赦天下。`,1);

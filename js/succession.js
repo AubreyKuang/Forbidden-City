@@ -52,7 +52,7 @@ function inheritHousehold(h,queen){
   for(const partner of household.concubines||[]){
     if(partner.alive===false||!partner.appearance)continue;
     const c=JSON.parse(JSON.stringify(partner.appearance));c.age=kidAge(partner);c.alive=true;
-    addConsort(c,3,'潜邸旧人，随新帝入宫');if(journalContentVersion()>=84)c.accessionArrival={gen:S.gen,started:S.turn};mothers.set(partner.id,c);
+    addConsort(c,3,'潜邸旧人，随新帝入宫');if(journalContentVersion()>=85)c.accessionArrival={gen:S.gen,started:S.turn};mothers.set(partner.id,c);
   }
   for(const child of household.children||[]){
     if(princeAdoptionActive()&&child.princeAdoption)continue;

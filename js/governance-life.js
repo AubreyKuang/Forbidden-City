@@ -166,7 +166,7 @@ const DIPLOMACY_MISSIONS={
  visit:{name:'修好通使',cost:20,months:3},trade:{name:'商议通商',cost:30,months:3},
  border:{name:'商议边界',cost:25,months:3},tribute:{name:'议定朝贡',cost:40,months:3},treaty:{name:'商订和约',cost:35,months:3}
 };
-const diplomacyEnabled=()=>journalContentVersion()>=84;
+const diplomacyEnabled=()=>journalContentVersion()>=85;
 function diplomacyState(create=false){
  if(!S||!diplomacyEnabled())return null;
  if(!S.diplomacy&&create)S.diplomacy={countries:{},missions:[],lastTick:-1};
@@ -206,7 +206,7 @@ function sendDiplomaticEnvoy(country,kind,encoded){
  if(!useE())return;chg({treasury:-mission.cost});
  const odds=clamp(.35+entry.p.ability/250+c.relation/500+(d.favors===kind?.15:0)+((c.envoy?.attitude??50)-50)/500,.2,.9);
  const item={id:`${S.gen}:${S.turn}:${country}`,country,kind,envoyKey:entry.key,envoyId:entry.p.id,envoyName:entry.p.name,due:S.turn+mission.months,status:'traveling',success:chance(odds)};
- if(journalContentVersion()>=84){const accuracy=clamp(.25+entry.p.ability/250+(entry.p.trust??50)/400,.25,.9),truth=(c.tension||0)>=40;
+ if(journalContentVersion()>=85){const accuracy=clamp(.25+entry.p.ability/250+(entry.p.trust??50)/400,.25,.9),truth=(c.tension||0)>=40;
   item.intelligence={truth,accuracy:Math.round(accuracy*100),alarm:chance(accuracy)?truth:!truth};}
  state.missions.push(item);entry.p.diplomaticJourney={id:item.id,country,due:item.due};
  story(entry.p,`奉命出使${d.name}，${mission.name}。`);log(`【邦交】${entry.p.name}奉命出使${d.name}，${mission.name}。`);render();
@@ -263,7 +263,7 @@ function receiveForeignEnvoy(id,mode){
  const text=mode==='gift'?`礼待${def.name}使臣${def.envoy}，他记下这份尊重。`:`冷落${def.name}使臣${def.envoy}，他将此事记在心里。`;
  country.memory.push({d:dateStr(),turn:S.turn,text});if(country.memory.length>30)country.memory.shift();
  country.envoy.memory.push({d:dateStr(),turn:S.turn,kind:mode});if(country.envoy.memory.length>30)country.envoy.memory.shift();
- if(journalContentVersion()>=84){country.envoy.followups=(country.envoy.followups||[]).filter(x=>!x.done);country.envoy.followups.push({due:S.turn+36,kind:mode,done:false});}
+ if(journalContentVersion()>=85){country.envoy.followups=(country.envoy.followups||[]).filter(x=>!x.done);country.envoy.followups.push({due:S.turn+36,kind:mode,done:false});}
  log(`【邦交 · ${def.name}】${text}`,1);render();
 }
 A.receiveForeignEnvoy=receiveForeignEnvoy;
@@ -299,7 +299,7 @@ A.foreignSuccession=foreignSuccession;
 function diplomacyTick(){
  const state=diplomacyState();if(!state||state.lastTick===S.turn)return;state.lastTick=S.turn;
  for(const [id,c] of Object.entries(state.countries)){
-  if(journalContentVersion()>=84)for(const response of c.envoy?.followups||[]){
+  if(journalContentVersion()>=85)for(const response of c.envoy?.followups||[]){
     if(response.done||S.turn<response.due)continue;response.done=true;const friendly=response.kind==='gift';
     c.relation=clamp(c.relation+(friendly?5:-5));chg({treasury:friendly?30:-30});
     const text=friendly?`${DIPLOMACY_COUNTRIES[id].envoy}记得当年的礼遇，托商队送来谢礼。`:`${DIPLOMACY_COUNTRIES[id].envoy}记得昔日受冷落，回国后促成商路加征费用。`;

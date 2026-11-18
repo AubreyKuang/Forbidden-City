@@ -28,11 +28,46 @@ function outsideParentageChronicle(family,title,lines){
   if(lines.emperor)log(`【${title}】${lines.emperor}`,1);
 }
 
+function outsideChildBadge(k,outerSister=false){
+  const data=k.outsideParentage;
+  let label=k.unconfirmedParentage?'身世未明':'';
+  if(journalContentVersion()>=84){
+    if(k.outsideFamilyOrigin||k.outerRegisterId&&outerMother(outerChild(k.outerRegisterId)?.mother)?.relative!=null)label='宫外归宗';
+    else if(data?.status==='stayed'||data?.status==='proved')label='宫外皇嗣';
+    else if(outerSister)label=k.pedigree==='认领'?'宫外归宗':'宫外血脉';
+  }
+  return label?`<span class="tag y">${label}</span>`:'';
+}
+function outsideChildGrowing(child,mother,aunt,status){
+  if(!child||child.alive===false||status==='cleared')return;
+  const age=kidAge(child),milestone=[12,7,3].find(a=>age===a);
+  if(!milestone||(child.outsideGrowthAge||0)>=milestone)return;
+  child.outsideGrowthAge=milestone;
+  const name=child.alias||child.name,son=child.sex==='m',publicKin=status==='recognized';
+  const scene=milestone===3?['学会自己系披风，系歪了也抬着下巴让人看','一笑便微微挑起的眉梢']:
+    milestone===7?['写完一页大字，特意把最端正的那个圈了出来','提笔前先把袖口折两道的习惯']:
+    ['替家里写了第一封问安信，落款时认认真真写了自己的名字','落笔前偏头想一想的神气'];
+  child.story||=[];story(child,`【成长家书】${name}${scene[0]}。`);
+  const motherLine=milestone===3?'她解开那根歪带子，握着孩子的小手教了一遍。':milestone===7?'她把这一页字收好，想等孩子长大后拿出来给孩子看。':'她把信读了两遍。那个从前要她代笔的孩子，已有了自己的口气。';
+  if(mother&&mother.alive!==false){mother.story||=[];story(mother,`【孩子长大】${name}${scene[0]}。${motherLine}`);}
+  if(aunt?.alive&&!aunt.gone){
+    const worry=publicKin?'如今孩子已认回，她盼旁人也听听孩子自己想说什么。':
+      son?'她担心旁人也看出来，一个男孩若被人拿去议论储位，往后还能不能安稳读书？回信只问他近来喜欢什么。':
+      '她怕旁人追问孩子的来历，把那句“真像”留在心底，只在回信里夸了孩子两句。';
+    story(aunt,`【姨母读家书】听说${name}${scene[0]}。她想起陛下${scene[1]}，越想越觉得像。${worry}`);
+  }
+}
 function outsideParentageTick(){
   if(!outsideParentageActive()||S.over||mourningActive())return;
   const seen=new Set(),cases=[];
   for(const c of familyCourtHosts()){
     const h=houseOf(c);if(!h||seen.has(h))continue;seen.add(h);
+    if(journalContentVersion()>=84)for(const child of h.relatives){
+      if(!child.outsideParentage||child.outsideParentage.gen!==S.gen)continue;
+      const p=h.relatives.find(p=>p.id===outsideMotherId(child));
+      const aunt=familyHostById(p?.marriedSisterAffair?.host)||c;
+      outsideChildGrowing(child,byId(p?.id)||p,aunt,child.outsideParentage.status);
+    }
     for(const child of h.relatives.filter(p=>p.alive&&p.unconfirmedParentage)){
       const f=outsideParentageFamily(c,child);if(!f)continue;
       const history=h.relatives.find(p=>p.id===outsideMotherId(child))?.pregnancyHistory;
@@ -52,6 +87,12 @@ function outsideParentageTick(){
       if(data.status==='investigating'&&S.turn>=data.due&&!data.reportQueued)cases.unshift(f);
       if(data.status==='reported'&&!data.noticeQueued)cases.push(f);
     }
+  }
+  if(journalContentVersion()>=84)for(const k of S.children){
+    const o=k.outsideFamilyOrigin;
+    if(!o||k.outsideParentage?.gen!==S.gen)continue;
+    const aunt=familyHostById(o.host),mother=byId(o.motherId)||aunt?.house?.relatives?.find(p=>p.id===o.motherId);
+    outsideChildGrowing(k,mother,aunt,'recognized');
   }
   const first=cases[0];if(!first)return;
   const event=outsideParentageEvent(first);if(!event)return;

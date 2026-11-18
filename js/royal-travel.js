@@ -2,7 +2,7 @@
 const TRAVEL_RELEASE_JOURNAL=63;
 const royalTravelActive=()=>journalContentVersion()>=TRAVEL_RELEASE_JOURNAL;
 const royalTravelAway=k=>royalTravelActive()&&k?.royalTravel?.stage==='traveling';
-const royalDiplomaticAway=k=>journalContentVersion()>=84&&['traveling','detained'].includes(k?.diplomaticJourney?.status);
+const royalDiplomaticAway=k=>journalContentVersion()>=85&&['traveling','detained'].includes(k?.diplomaticJourney?.status);
 const royalJourneyAway=k=>immortalAway(k)||royalTravelAway(k)||royalDiplomaticAway(k);
 function royalTravelMothers(k){
  const mothers=immortalMothers(k);
