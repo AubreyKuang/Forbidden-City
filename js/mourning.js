@@ -1,7 +1,24 @@
 /* A death is committed only when its mandatory announcement enters the queue. */
 function mourningOf(){return S?.flags.dowager?.mourning}
 function mourningActive(){const m=mourningOf();return !!(m&&!m.legacy&&S.turn===m.turn)}
-function mourningNightPause(){return journalContentVersion()>=94&&mourningActive();}
+function mourningNightMonths(){
+  const m=mourningOf();if(!m||m.legacy||!Number.isInteger(m.turn)||S.turn<m.turn)return 0;
+  if(journalContentVersion()<95)return journalContentVersion()>=94&&mourningActive()?1:0;
+  return Math.max(0,(Number.isInteger(m.nightUntil)?m.nightUntil:m.turn+6)-S.turn);
+}
+function mourningNightPause(){return mourningNightMonths()>0;}
+function mourningNightMessage(){return journalContentVersion()>=95?`太后服丧，暂停侍寝 · 还需${mourningNightMonths()}个月`:'太后新丧，本月暂停侍寝';}
+function mourningNightChoice(d){
+  const m=d.mourning,valid=()=>journalContentVersion()>=95&&mourningOf()===m&&!m.nightChoice&&!S.over;
+  if(!valid())return null;
+  const settle=months=>{if(!valid())return null;m.nightUntil=m.turn+months;m.nightChoice=months;
+    const text=months===12?'皇帝悲痛难抑，亲自决定为太后停召幸一年。':'依礼暂缓召幸六个月，待期满后恢复。';
+    log(`【慈宁宫守孝】${text}`,1);save('auto');return `${text}已有身孕者仍照常诊治、安胎与生产。`;};
+  return {title:'慈宁宫 · 守孝之期',scene:'mourning',valid,text:'太后新丧，敬事房请定暂停召幸的时日。通常暂缓六个月；若悲痛难抑，也可停召幸一年。两种安排都从太后去世当月算起，孕妇继续按孕期接受照护。',choices:[
+    {t:'依礼暂停召幸六个月',f:()=>settle(6)},
+    {t:'帝大恸，暂停召幸一年',f:()=>settle(12)}]};
+}
+
 function mourningWomen(){const d=ensureDowager();return d?dowagerKin().filter(c=>!c.cold):[]}
 function mourningReaction(c){
   if(c.cold)return '消息传到冷宫，她伏在窗前哭了许久，连晚膳也没有动。';
@@ -15,6 +32,7 @@ function beginDowagerMourning(d){
   d.alive=false;
   const kin=dowagerKin();
   d.mourning={turn:S.turn,date:dateStr(),handled:false,followed:false,kin:kin.map(c=>c.id),reactions:{}};
+  if(journalContentVersion()>=95)d.mourning.nightUntil=S.turn+6;
   log(`${d.name}于慈宁宫崩逝，宫门悬素，停宴举哀。`,1);
   for(const c of alive()){
     const related=kin.includes(c);c.mood=clamp(c.mood-(related?28:5));
@@ -51,10 +69,11 @@ function dowagerFuneralEvent(d=S.flags.dowager){
     log(`为${d.name}${m.rite}，母族妃嫔相伴守灵。`,1);
     const paid=Math.min(Math.max(0,E().treasury),cost);
     const result=`灵前香烟缓缓升起。${women.length?women.map(cName).join('、')+(women.length>1?'相伴守在灵前，殿中渐渐安静下来。':'静静守在灵前。'):'宫人默默换过灯烛。'}你在素帷前停了很久。${fx(chg({treasury:-paid,people:simple?2:4,prestige:2}))}`;
+    if(journalContentVersion()>=95&&Number.isInteger(m.nightUntil)){const choice=mourningNightChoice(d);if(choice)pushNow(choice);}
     save('auto');return result;
   };
   return {title:'太后崩逝 · 宫中举哀',scene:'mourning',sfx:'sad',cast:kin.slice(0,3),
-    text:`慈宁宫传来长长的哭声。掌事姑姑跪在御前，几次哽咽，才说出：“${d.name}……去了。”\n宫门撤去彩饰，换上素幡。${d.name}生前常坐的榻边，只剩一盏未熄的灯。${reactions?'\n'+reactions:''}\n请陛下安排丧仪。本月宫中暂停宴饮${journalContentVersion()>=94?'与召幸，已有身孕的妃嫔仍照常诊治、安胎与生产':''}。`,
+    text:`慈宁宫传来长长的哭声。掌事姑姑跪在御前，几次哽咽，才说出：“${d.name}……去了。”\n宫门撤去彩饰，换上素幡。${d.name}生前常坐的榻边，只剩一盏未熄的灯。${reactions?'\n'+reactions:''}\n请陛下安排丧仪。本月宫中暂停宴饮${journalContentVersion()>=95?'，并将另定暂停召幸的时日；已有身孕的妃嫔仍照常诊治、安胎与生产':journalContentVersion()>=94?'与召幸，已有身孕的妃嫔仍照常诊治、安胎与生产':''}。`,
     onQueue:()=>beginDowagerMourning(d),choices:[
       {t:'厚葬守孝，亲赴慈宁宫送别（国库-80）',cond:()=>E().treasury>=80,why:'国库银两不足，可从简尽礼',f:()=>settle(false)},
       {t:'丧仪从简，仍亲自守灵（国库至多-20）',f:()=>settle(true)}]};
