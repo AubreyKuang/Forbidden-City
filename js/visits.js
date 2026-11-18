@@ -23,6 +23,7 @@ function gardenEncounter(c){
 }
 const SPA_COST=60;
 A.out=function(kind){ if(!useE())return; const e=E();
+  if(['hunt','temple'].includes(kind)&&typeof outerTripLead==='function')outerTripLead(kind);
   if(kind==='garden'){setScene('garden');
     const h=harem();
     const roll=R();

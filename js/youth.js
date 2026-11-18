@@ -38,7 +38,7 @@ function youthEvent(){
   return {...ev,present:cast,valid:()=>cast.every(k=>teenageChildren().includes(k)),onQueue:()=>{S.flags.lastYouthEvent=S.turn;cast.forEach(k=>k.lastYouthEvent=S.turn);}};
 }
 function youngGuestEligible(k,g){
-  if(!k?.alive||k.sex!=='f'||k.married||k.jailed||!g?.alive||g.married||g.sur===E().sur)return false;
+  if(!k?.alive||k.outerRegisterId&&kidAge(k)<18||k.sex!=='f'||k.married||k.jailed||!g?.alive||g.married||g.sur===E().sur)return false;
   return !mothersOf(k).some(m=>clanKey(m)===g.clan||houseOf(m)?.father.id===g.houseId);
 }
 function guestFather(h,guest){

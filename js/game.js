@@ -426,7 +426,7 @@ A.endMonth=function(){
   const openingTreasury=e.treasury,openingHealth=e.health;
   const localGrainPayment=localGrainPaymentDue()?localGrainBalance():0;
   const hongjianIncome=typeof settleHongjianIncome==='function'?settleHongjianIncome():0;
-  const inc=rd(45+e.people*1.1+(S.flags.canal?25:0))+hongjianIncome,exp=alive().reduce((s,c)=>s+(c.cold?1:STIPEND[c.rank]),0)+kidsAlive().reduce((s,k)=>s+3+(k.tutor?5:0),0)+localGrainPayment;
+  const inc=rd(45+e.people*1.1+(S.flags.canal?25:0))+hongjianIncome,exp=alive().reduce((s,c)=>s+(c.cold?1:STIPEND[c.rank]),0)+kidsAlive().reduce((s,k)=>s+3+(k.tutor?5:0),0)+localGrainPayment+(typeof outerHouseholdExpense==="function"?outerHouseholdExpense():0);
   e.treasury+=inc-exp;
   if(localGrainPayment){
     clearLocalGrainPayment();
@@ -488,6 +488,7 @@ A.endMonth=function(){
   consortHealthTick();
   for(const maid of returnedMaidNotices)pushEv(pregEvent(maid));
   annualBirthOmenTick();
+  if(typeof outerMonthly==="function")outerMonthly();
   const revenue=legacyPendingAction()?null:annualRevenueTick();
   if(!legacyPendingAction()){postingTick();incognitoTick();}
   homeLeaveTick();
@@ -581,6 +582,7 @@ function succeed(h){
   const old=E(),a=kidAge(h);
   pushNow({title:'新君登基',por:h,text:`${h.name}即将即位。请为新朝拟定年号（二字）：`,input:{def:pick(ERAS.filter(x=>x!==old.era)),max:2},choices:[{t:'改元',f:v=>{
     if(royalTravelAway(h))returnRoyalTraveler(h);
+    if(typeof outerActive==="function"&&outerActive()&&outerBook())outerBook().closedTurn=S.turn;
     inheritDowager(h);
     S.emp={sur:old.sur,name:h.name,era:v,age:Math.max(a,14),health:clamp(h.hp+10),prestige:clamp(35+h.vir/3),people:old.people,treasury:old.treasury,energy:3,nightsMonth:0,
       style:h.mar>h.lit+15?'尚武':h.lit>h.mar+15?'文雅':'勤政',wen:rd(h.lit),wu:rd(h.mar),seed:h.seed,portraitOverride:portraitCell(h),birthMonth:birthMonth(h)};

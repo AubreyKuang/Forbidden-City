@@ -40,6 +40,11 @@ function officialMarriageReason(person){
 function officialMarriageOpen(person,b){
   if(!officialMarriageActive()||officialMarriageReason(person)||!b||b.archived)return false;
   const p=b.p,age=officialMarriageAge(p);
+  if(person.p.outerChildId){
+    const book=S.outerRegisters?.find(r=>r.gen===person.p.outerGen),child=book?.children.find(k=>k.id===person.p.outerChildId);
+    const mother=book?.mothers.find(m=>m.id===child?.mother);
+    if(b.kind==='princess'&&b.gen===person.p.outerGen||mother?.host!=null&&(b.host===mother.host||b.c?.clan===mother.clan))return false;
+  }
   if(p.alive===false||p.married||p.spouse||p.consortId||p.gone||p.widow&&!p.widow.authorized)return false;
   if(b.kind==='princess'?!marriageReady(p)||p.sex!=='f':age<18)return false;
   return true;
