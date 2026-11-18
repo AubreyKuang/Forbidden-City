@@ -29,7 +29,8 @@ const DYNASTY_SCENARIOS={
   regent:{name:'傀儡皇帝',description:'权臣势大，须逐步收回朝政。'},
   succession:{name:'子嗣艰难',description:'继承之事多有波折，需筹谋后路。'},
   prosperous:{name:'盛世之君',description:'国库丰盈，外家势力亦在增长。'},
-  crisis:{name:'亡国之君',description:'国库空虚、民心低落，须在三年内稳住朝局。'}
+  crisis:{name:'亡国之君',description:'国库空虚、民心低落，须在三年内稳住朝局。'},
+  restoration:{name:'承祧之君',description:'继承先朝积累，重整朝局与民生。',unlock:'reigns'}
 };
 const dynastyScenarioActive=()=>journalContentVersion()>=76;
 function startDynastyScenario(id){
@@ -43,6 +44,7 @@ function startDynastyScenario(id){
     for(const c of S.consorts)c.fam.p=Math.max(c.fam.p,65);
   }
   if(id==='crisis'){Object.assign(e,{treasury:100,people:25,prestige:25});state.deadline=S.turn+36;}
+  if(id==='restoration')Object.assign(e,{treasury:650,people:55,prestige:60});
   log(`【开局剧本】${DYNASTY_SCENARIOS[id].name}：${DYNASTY_SCENARIOS[id].description}`,1);
 }
 function dynastyScenarioGoals(){
@@ -53,7 +55,8 @@ function dynastyScenarioGoals(){
     regent:[['民心',e.people,65],['威望',e.prestige,65],['收回朝权',100-state.control,70]],
     succession:[['在世皇嗣',kidsAlive().length,1],['民心',e.people,65],['威望',e.prestige,60]],
     prosperous:[['国库',e.treasury,2000],['民心',e.people,85],['威望',e.prestige,85]],
-    crisis:[['国库',e.treasury,500],['民心',e.people,60],['威望',e.prestige,50]]
+    crisis:[['国库',e.treasury,500],['民心',e.people,60],['威望',e.prestige,50]],
+    restoration:[['国库',e.treasury,1000],['民心',e.people,80],['威望',e.prestige,75]]
   };
   return objectives[state.id]||[];
 }
@@ -65,7 +68,8 @@ function reconcileDynastyScenario(){
     regent:()=>state.control===0,
     succession:()=>S.children.some(k=>k.palaceAdoption),
     prosperous:()=>S.turn>=60&&E().treasury>=2500,
-    crisis:()=>S.turn<=state.deadline&&E().people>=85
+    crisis:()=>S.turn<=state.deadline&&E().people>=85,
+    restoration:()=>S.turn>=60&&E().people>=90
   };
   if(!state.hidden&&hidden[state.id]?.()){
     state.hidden={turn:S.turn,date:dateStr()};
@@ -103,6 +107,13 @@ const DYNASTY_GOALS=[
     progress:()=>S.gen}
 ];
 const DYNASTY_HIDDEN_GOALS=[{id:'threeClans',name:'三世姻亲',description:'连续三代有同一家族的女性入宫',target:1,reward:150}];
+function dynastyProfile(){
+ const ids=new Set([...DYNASTY_GOALS,...DYNASTY_HIDDEN_GOALS].map(goal=>goal.id)),found=new Set();
+ const collect=save=>{if(!save||typeof save!=='object')return;for(const id of ids)if(save.dynastyGoals?.[id]?.claimed||save.dynastyMeta?.includes(id))found.add(id);};
+ collect(S);
+ try{const storage=SaveManager.getStorage();for(const slot of ['auto','1','2','3']){const raw=storage?.getItem(SKEY+slot);if(raw)collect(JSON.parse(raw));}}catch{/* 当前存档仍可用于继承。 */}
+ return [...found].sort();
+}
 function rememberDynastyClans(){
   if(!S||journalContentVersion()<76)return;
   const history=S.dynastyClanHistory||={},key=String(S.gen),seen=new Set(history[key]||[]);
@@ -149,6 +160,7 @@ function claimDynastyGoal(id){
   const goal=[...DYNASTY_GOALS,...DYNASTY_HIDDEN_GOALS].find(item=>item.id===id),entry=S?.dynastyGoals?.[id];
   if(!goal||!entry?.completed||entry.claimed||S.over)return;
   entry.claimed=true;
+  if(journalContentVersion()>=77){S.dynastyMeta||=[];if(!S.dynastyMeta.includes(id))S.dynastyMeta.push(id);}
   chg({treasury:goal.reward});
   log(`【王朝目标】${goal.name}赏银 ${goal.reward} 万两入库。`);
   render();
@@ -744,19 +756,25 @@ A.start=function(){
   const fv=id=>typeof PalaceActions==='undefined'?$(id)?.value:PalaceActions.input(id);
   const sur=(fv('#f-sur')||'萧').trim().slice(0,2),name=(fv('#f-name')||'彻').trim().slice(0,2),era=(fv('#f-era')||'永宁').trim().slice(0,2);
   const style=fv('input[name=f-style]:checked')||'勤政';
-  const scenario=dynastyScenarioActive()?fv('input[name=f-scenario]:checked')||'standard':'standard';
+  let scenario=dynastyScenarioActive()?fv('input[name=f-scenario]:checked')||'standard':'standard',meta=[];
+  if(journalContentVersion()>=77){try{const candidate=JSON.parse(fv('#f-dynasty-meta')||'[]');if(Array.isArray(candidate)){const valid=new Set([...DYNASTY_GOALS,...DYNASTY_HIDDEN_GOALS].map(g=>g.id));meta=[...new Set(candidate.filter(id=>valid.has(id)))];}}catch{/* 无可用跨局记录。 */}}
+  if(DYNASTY_SCENARIOS[scenario]?.unlock&&!meta.includes(DYNASTY_SCENARIOS[scenario].unlock))scenario='standard';
   S={v:1,emp:{sur,name,era,age:18,birthMonth:3,health:90,prestige:50,people:60,treasury:800,energy:3,nightsMonth:0,style,wen:50,wu:50,seed:ri(1,2e9)},
     year:1,month:3,turn:0,consorts:[],children:[],cands:[],log:[],nid:1,gen:1,heir:null,genChar:pick(GEN_CHARS),
     flags:{lastXX:-99,dowager:{name:'太后',alive:true},peek:0,openingCourt:true,familyRules:2},history:[],ys:{c:0,b:0,n:0},over:false};
   const e=S.emp;
+  if(journalContentVersion()>=77){S.dynastyMeta=meta;if(meta.includes('children'))e.dynastyTrait='家学仁厚';}
   e.imperialPortrait=style==='尚武'?1:style==='文雅'?0:e.seed%2;
+  if(journalContentVersion()>=77&&meta.includes('grown')&&['0','1'].includes(fv('input[name=f-dynasty-portrait]:checked')))e.imperialPortrait=Number(fv('input[name=f-dynasty-portrait]:checked'));
   if(style==='勤政'){e.prestige=58;e.people=65}if(style==='风流')e.health=84;if(style==='尚武'){e.wu=80;e.prestige=55}if(style==='文雅')e.wen=80;
   e.energy=maxEnergy();
   const em=makeGirl({fam:pick(FAMS.slice(0,3)),trait:pick(['温婉','聪慧','城府','骄矜'])});em.favor=40;em.aff=40;em.age=18;em.knownBeforeAccession=true;
+  if(journalContentVersion()>=77&&meta.includes('companionship')){receiveJewelry(em,'phoenix','跨局成就「情深不渝」解锁的礼冠');(ensureJewelry().received.phoenix||=0);S.jewelry.received.phoenix++;}
   S.consorts.push(em);em.rank=8;assignPalace(em);story(em,scenario==='founder'?'旧日夫妻相伴，今随陛下开创新朝，册为皇后，入主坤宁宫。':'潜邸时奉先帝之命嫁与陛下为嫡妻。新帝登基，册为皇后，入主坤宁宫。');
   const old=makeGirl({});old.favor=55;old.aff=60;old.knownBeforeAccession=true;old.rank=3;S.consorts.push(old);assignPalace(old);story(old,'潜邸旧人，陪伴陛下多年。新帝登基，册为贵人。');
   if(journalContentVersion()>=76){em.accessionArrival={gen:S.gen,started:S.turn};old.accessionArrival={gen:S.gen,started:S.turn};}
   startDynastyScenario(scenario);
+  if(e.dynastyTrait)e.people=clamp(e.people+3);
   log(`${era}元年三月，新帝${sur}${name}登基，改元${era}，大赦天下。`,1);
   log(`册嫡妻${fullName(em)}为皇后，潜邸旧人${fullName(old)}为贵人。`);
   migrate();initializeMinistryRoster();initializeDowagerOpening();UI.view='map';setScene('court');AU.sfx('gong');render();

@@ -17,7 +17,7 @@ test('v74 pending result replays before goal reconciliation',()=>{
  const b=boot(1,new Map([['chengongji_v1_auto',JSON.stringify(save)]]));b.ctx.assert=assert;
  b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,74);
   assert.equal(curEv.title,'黄河决堤');assert.ok(modalResult);drain();A.go('home');
-  assert.equal(PalaceActions.contentVersion,76);assert.ok(S.dynastyGoals);`);
+  assert.equal(PalaceActions.contentVersion,77);assert.ok(S.dynastyGoals);`);
 });
 
 for(const [scenario,expected] of [['founder',350],['regent',500],['succession',800],['prosperous',1800],['crisis',100]]){
@@ -63,7 +63,7 @@ test('published v75 pending result resumes before enabling the new scenario syst
  const b=boot(1,new Map([['chengongji_v1_auto',JSON.stringify(save)]]));b.ctx.assert=assert;
  b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,75);
    assert.equal(dynastyScenarioActive(),false);assert.ok(modalResult);drain();A.go('home');
-   assert.equal(PalaceActions.contentVersion,76);assert.equal(dynastyScenarioActive(),true);`);
+   assert.equal(PalaceActions.contentVersion,77);assert.equal(dynastyScenarioActive(),true);`);
 });
 
 test('monthly goals count consecutive months once and reset after interruptions',()=>{
@@ -101,4 +101,26 @@ test('hidden three-generation clan achievement reveals itself only after consecu
   var money=E().treasury;A.claimDynastyGoal('threeClans');A.claimDynastyGoal('threeClans');assert.equal(E().treasury,money+150);save('auto');`);
  b=boot(5,b.storage);b.ctx.assert=assert;
  b.run(`A.load('auto');assert.equal(S.dynastyGoals.threeClans.claimed,true);assert.match(dynastyGoalsPanel(),/三世姻亲/);`);
+});
+
+test('claimed achievements unlock a new start, inherited trait and headpiece across games',()=>{
+ let b=boot(19001);b.ctx.assert=assert;
+ b.run(`A.start();drain();S.dynastyGoals={reigns:{completed:true,claimed:false},children:{completed:true,claimed:false},companionship:{completed:true,claimed:false},grown:{completed:true,claimed:false}};
+  A.claimDynastyGoal('reigns');A.claimDynastyGoal('children');A.claimDynastyGoal('companionship');A.claimDynastyGoal('grown');save('auto');`);
+ b=boot(5,b.storage);b.ctx.assert=assert;
+ b.run(`var profile=dynastyProfile();assert.ok(profile.includes('reigns'));assert.ok(profile.includes('children'));assert.ok(profile.includes('companionship'));
+  document.querySelector('#f-dynasty-meta').value=JSON.stringify(profile);
+  document.querySelector('input[name=f-scenario]:checked').value='restoration';document.querySelector('input[name=f-dynasty-portrait]:checked').value='1';A.start();
+  assert.equal(S.scenario.id,'restoration');assert.equal(E().imperialPortrait,1);assert.equal(E().dynastyTrait,'家学仁厚');assert.equal(E().people,58);
+  assert.ok(empress().jewelry.some(item=>item.id==='phoenix'));save('auto');`);
+ b=boot(6,b.storage);b.ctx.assert=assert;
+ b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(S.scenario.id,'restoration');
+  assert.ok(S.dynastyMeta.includes('companionship'));assert.ok(empress().jewelry.some(item=>item.id==='phoenix'));`);
+});
+
+test('a genuine v76 pending coronation resumes before adopting cross-game rewards',()=>{
+ const save=require('./fixtures/dynasty-goals-legacy-v76.json');
+ const b=boot(1,new Map([['chengongji_v1_auto',JSON.stringify(save)]]));b.ctx.assert=assert;
+ b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,76);
+  assert.equal(curEv.title,'登基');assert.equal(S.dynastyMeta,undefined);drain();A.go('home');assert.equal(PalaceActions.contentVersion,77);`);
 });

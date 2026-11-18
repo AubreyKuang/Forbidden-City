@@ -93,10 +93,12 @@ function viewTitle(){
    <button class="btn gold" onclick="A.newGame()">新开一局</button>
    ${slots.length?`<div class="save-list">${slots.map(x=>`<button class="btn sm" onclick="A.load('${x.s}')">读取${x.s==='auto'?'自动存档':'存档'+x.s}：${esc(x.i)}</button>`).join('')}</div>`:''}</div>`}
 function viewNew(){
+  const profile=journalContentVersion()>=77?dynastyProfile():[];
   return `<section class="story-scene coronation-scene" aria-labelledby="coronation-title">
     <header><p>宸极殿</p><h2 id="coronation-title">登基大典</h2></header>
   </section>
   <form class="coronation-form" onsubmit="event.preventDefault();A.start()">
+    <input type="hidden" id="f-dynasty-meta" value="${esc(JSON.stringify(profile))}">
     <div class="coronation-names">
       <label>国姓<input id="f-sur" class="inp" maxlength="2" value="萧"></label>
       <label>名讳<input id="f-name" class="inp" maxlength="2" value="${pick(['彻','珩','翊','昭','衍','恪'])}"></label>
@@ -105,9 +107,11 @@ function viewNew(){
     <fieldset class="coronation-styles"><legend>帝王性情</legend>
       <div>${Object.entries(STYLES).map(([k,d],i)=>`<label class="opt"><input type="radio" name="f-style" value="${k}" ${i===0?'checked':''}><span><b>${k}</b><span class="hint">${d}</span></span><span class="opt-check" aria-hidden="true">✓ 已选</span></label>`).join('')}</div>
     </fieldset>
+    ${profile.includes('grown')?`<fieldset class="coronation-styles"><legend>成就解锁 · 选择帝王画像</legend><div>${[['default','随性情选择'],['0','文雅画像'],['1','英武画像']].map(([id,label],i)=>`<label class="opt"><input type="radio" name="f-dynasty-portrait" value="${id}" ${i===0?'checked':''}><span><b>${label}</b></span><span class="opt-check" aria-hidden="true">✓ 已选</span></label>`).join('')}</div></fieldset>`:''}
     <fieldset class="coronation-styles"><legend>开局剧本</legend>
-      <div>${Object.entries(DYNASTY_SCENARIOS).map(([id,scenario],i)=>`<label class="opt"><input type="radio" name="f-scenario" value="${id}" ${i===0?'checked':''}><span><b>${esc(scenario.name)}</b><span class="hint">${esc(scenario.description)}</span></span><span class="opt-check" aria-hidden="true">✓ 已选</span></label>`).join('')}</div>
+      <div>${Object.entries(DYNASTY_SCENARIOS).filter(([,scenario])=>!scenario.unlock||profile.includes(scenario.unlock)).map(([id,scenario],i)=>`<label class="opt"><input type="radio" name="f-scenario" value="${id}" ${i===0?'checked':''}><span><b>${esc(scenario.name)}</b><span class="hint">${esc(scenario.description)}</span></span><span class="opt-check" aria-hidden="true">✓ 已选</span></label>`).join('')}</div>
     </fieldset>
+    ${profile.length?`<p class="hint">已继承成就奖励：${profile.includes('reigns')?'承祧之君剧本 ':''}${profile.includes('children')?'家学仁厚（开局民心+3） ':''}${profile.includes('companionship')?'皇后礼冠 ':''}${profile.includes('grown')?'选择帝王画像 ':''}</p>`:''}
     <div class="coronation-actions"><button type="button" class="btn quiet sm" onclick="A.go('title')">返回</button><button type="submit" class="btn primary">登基</button></div>
   </form>`}
 function consortCard(c){
@@ -286,7 +290,7 @@ function viewHome(){
   const e=E(),h=harem(),k=kidsAlive(),heir=S.heir&&kidById(S.heir);
   const recent=S.log.filter(l=>!l.t.startsWith('——')).slice(-8).reverse();
   return `${pageHeading('御书房')}<div class="row home-overview">${porImg('emp',96)}<div class="grow">
-   <div><b style="font-size:17px">${esc(e.sur+e.name)}</b>　年号${esc(e.era)}　${S.gen>1?`第${cnNum(S.gen)}代　`:''}${e.style}之君</div>
+   <div><b style="font-size:17px">${esc(e.sur+e.name)}</b>　年号${esc(e.era)}　${S.gen>1?`第${cnNum(S.gen)}代　`:''}${e.style}之君${e.dynastyTrait?` · ${esc(e.dynastyTrait)}`:''}</div>
    <div class="stats" style="margin-top:6px">${bar('龙体',e.health,'#4f9078')}${bar('威望',e.prestige,'#a87a26')}${bar('民心',e.people,'#3b5fa8')}${bar('文才',e.wen)}${bar('武略',e.wu)}</div>
    <div style="margin-top:6px">后宫 ${h.length} 人${alive().some(c=>c.cold)?`（冷宫 ${alive().filter(c=>c.cold).length}）`:''}　皇嗣 ${k.length} 位　储君：${heir?esc(heir.name):'未立'}　${S.flags.dowager&&S.flags.dowager.alive?esc(S.flags.dowager.name)+'健在':''}</div>
    </div></div>
@@ -338,7 +342,7 @@ function dynastyGoalsPanel(){
   const hiddenDescriptions={
     founder:'五年后民心达到85',regent:'将权臣掌控度降至0',
     succession:'让宗亲皇嗣入继宫中',prosperous:'五年后国库达到2500万两',
-    crisis:'在期限内将民心提升至85'
+    crisis:'在期限内将民心提升至85',restoration:'五年后民心达到90'
   };
   const chapter=scenario&&definition?`<h3>${esc(definition.name)}</h3><p>${esc(definition.description)}
     ${scenario.status==='won'?' · 已完成':scenario.status==='lost'?' · 期限已过':scenario.deadline!=null?` · 剩余 ${Math.max(0,scenario.deadline-S.turn)} 个月`:''}</p>
