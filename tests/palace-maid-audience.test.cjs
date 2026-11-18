@@ -47,6 +47,12 @@ test('the commander reports a favored maid pregnancy once and the original care 
   assert.equal(S.log.filter(x=>x.t.includes('尚衣局来报')).length,1);`);
 });
 
+test('a genuine v87 pregnancy scene completes without inserting a new report into the old transcript',()=>{
+ const payload=require('./fixtures/maid-pregnancy-legacy-v87.json'),w=boot(731,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));w.ctx.assert=assert;
+ w.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,87);
+  assert.equal(curEv.title,'尚衣局来报 · 喜脉');choose(1);drain();assert.equal(PalaceActions.contentVersion,PalaceActions.releaseVersion);`);
+});
+
 test('only a previously favored maid has the attendant report, without a mistress or a plea for a visit',()=>{
  const w=world();w.run(`var g=newMaid('尚衣局');g.xin={k:'委屈',t:S.turn};assert.equal(XEV.委屈(g),null);
  g.nights=1;var ev=xinEvent();assert.equal(ev.por,g);assert.match(ev.text,/内侍来报.*曾承宠的宫女.*伤心.*落泪/);
