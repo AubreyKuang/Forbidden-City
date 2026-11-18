@@ -57,3 +57,23 @@ test('crisis deadline and victory remain stable across saves',()=>{
   assert.equal(S.scenario.status,'lost');E().people=90;E().prestige=90;E().treasury=1000;
   reconcileDynastyScenario();assert.equal(S.scenario.status,'lost');`);
 });
+
+test('published v75 pending result resumes before enabling the new scenario system',()=>{
+ const save=require('./fixtures/dynasty-goals-legacy-v75.json');
+ const b=boot(1,new Map([['chengongji_v1_auto',JSON.stringify(save)]]));b.ctx.assert=assert;
+ b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,75);
+   assert.equal(dynastyScenarioActive(),false);assert.ok(modalResult);drain();A.go('home');
+   assert.equal(PalaceActions.contentVersion,76);assert.equal(dynastyScenarioActive(),true);`);
+});
+
+test('monthly goals count consecutive months once and reset after interruptions',()=>{
+ const b=boot();b.ctx.assert=assert;
+ b.run(`A.start();drain();var queen=empress(),other=harem().find(c=>c!==queen);
+  appointHaremSteward(other);queen.aff=85;queen.mood=80;other.mood=80;E().people=85;
+  for(let month=0;month<60;month++){S.turn=month;settleDynastyGoalMonth();settleDynastyGoalMonth();}
+  assert.equal(S.dynastyGoalProgress.prosperity.months,60);
+  assert.ok(S.dynastyGoals.empress.completed);assert.ok(S.dynastyGoals.companionship.completed);
+  E().people=79;S.turn=60;settleDynastyGoalMonth();assert.equal(S.dynastyGoalProgress.prosperity.months,0);
+  E().people=85;for(let month=61;month<181;month++){S.turn=month;settleDynastyGoalMonth();}
+  assert.ok(S.dynastyGoals.prosperity.completed);assert.equal(S.dynastyGoalProgress.prosperity.months,120);`);
+});

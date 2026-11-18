@@ -29,11 +29,35 @@ function swapEvent(c,k){const a=harem().find(x=>x!==c&&x.scheme>=70);k.alive=fal
    {t:'彻查，掘地三尺也要找到孩子',f:()=>{if(a&&chance(.45+E().prestige/250)){k.alive=true;k.lost=false;kstory(k,'出生当夜险些被人用狸猫调包，幸被宫女藏在妆盒里救下。');a.known=true;pushNow(punishEv(a,c,'狸猫换子'));return '一个叫寇珠的宫女跪着捧出一只妆盒——孩子在里面，睡得正香。'}story(c,'孩子出生当夜被人调包，下落不明。');setXin(c,'悲恸','孩子下落不明');return `孩子下落不明。${fx(cchg(c,{mood:-40}))}`}},
    {t:'信了稳婆的话，将她打入冷宫',f:()=>{c.cold=true;c.palace='冷宫';story(c,'产下“狸猫”，被视为妖孽，打入冷宫。');setXin(c,'怨恨','被诬产下妖孽','emp');log(`${fullName(c)}产“妖孽”，打入冷宫。`,1);return fx(cchg(c,{mood:-60,aff:-30}))}}]}}
 function kstory(k,t){k.story.push({d:dateStr(),t})}
+function childMentor(k){return k?.mentorId&&officialEntries().find(e=>e.p.id===k.mentorId)||null}
+function childMentorPanel(k){
+  if(journalContentVersion()<76||!k.alive||!childInPalace(k)||kidAge(k)<6||kidAge(k)>=16)return '';
+  const current=childMentor(k),candidates=officialEntries().filter(e=>officialServing(e.p)&&!e.p.away);
+  return `<p class="hint">选择在京任职的朝臣指导学业，满十六岁后师承仍会留在纪事中。任官变动后无法继续指导。</p>
+    ${current?`<p>现任师长：${esc(current.p.name)}（才干 ${rd(current.p.ability)}）${officialServing(current.p)&&!current.p.away?'':' · 已不能授课'}</p>`:''}
+    <div class="acts">${candidates.map(e=>`<button class="btn sm ${e.p.id===k.mentorId?'on':''}" onclick="A.childMentor(${k.id},'${encodeURIComponent(e.key)}')">${esc(e.p.name)} · 才干${rd(e.p.ability)}</button>`).join('')||'<span class="hint">暂无可授课的在京朝臣。</span>'}${k.mentorId?`<button class="btn sm" onclick="A.childMentor(${k.id},'')">解除师承</button>`:''}</div>`;
+}
+A.childMentor=function(id,encoded){
+ const k=kidById(id);if(journalContentVersion()<76||!k?.alive||!childInPalace(k)||kidAge(k)<6||kidAge(k)>=16)return;
+ const e=encoded?officialEntry(decodeURIComponent(encoded)):null;
+ if(encoded&&(!e||!officialServing(e.p)||e.p.away))return;
+ if(k.mentorId===(e?.p.id||null))return;
+ const prior=childMentor(k);k.mentorId=e?.p.id||null;
+ kstory(k,e?`拜${e.p.name}为师，跟随学习。`:`结束与${prior?.p.name||'原师长'}的师承。`);
+ if(e)story(e.p,`受命教导${kidName(k)}。`);render();
+};
 function growKid(k){
   const a=kidAge(k);if(a<3)return;const m=k.tutor?1.6:1,g=()=>R()*.9*m;
   if(k.policy==='读书')k.lit+=g()*1.7;else if(k.policy==='习武'){k.mar+=g()*1.7*(k.jiangmenChild&&storyCastActive()?2:1);k.hp+=.08}else if(k.policy==='修德')k.vir+=g()*1.7;
   else if(k.policy==='放养'){k.hp+=.25;k.amb+=.1;k.love+=.05}else{k.lit+=g()*.65;k.mar+=g()*.65;k.vir+=g()*.65}
-  {const fm=fosterOf(k);if(fm&&fm.alive){if(fm.virtue>65)k.vir+=.15;if(fm.talent>65)k.lit+=.15;if(fm.scheme>65)k.amb+=.12}}['lit','mar','vir','hp','amb','love'].forEach(s=>k[s]=clamp(k[s]));supTick(k);
+  {const fm=fosterOf(k);if(fm&&fm.alive){if(fm.virtue>65)k.vir+=.15;if(fm.talent>65)k.lit+=.15;if(fm.scheme>65)k.amb+=.12}}
+  if(journalContentVersion()>=76&&a>=6&&a<16&&childInPalace(k)){
+    const mentor=childMentor(k);if(mentor&&officialServing(mentor.p)&&!mentor.p.away){
+      const bonus=.05+clamp(mentor.p.ability||0)*.002;
+      if(mentor.p.temperament==='持正')k.vir+=bonus;else if(mentor.h.bloc==='army')k.mar+=bonus;else k.lit+=bonus;
+    }
+  }
+  ['lit','mar','vir','hp','amb','love'].forEach(s=>k[s]=clamp(k[s]));supTick(k);
 }
 A.kidVisit=function(id){const k=kidById(id);if(modalOpen||!k?.alive||k.removedFromRoyal||k.jailed||k.pendingName||!useE())return;
   if(visitChildAfterConsequence(k))return;

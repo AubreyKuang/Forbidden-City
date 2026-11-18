@@ -93,9 +93,33 @@ const DYNASTY_GOALS=[
     progress:()=>S.children.filter(k=>k.alive&&kidAge(k)>=18).length},
   {id:'children',name:'儿孙满堂',description:'本朝拥有二十位皇嗣',target:20,reward:100,
     progress:()=>S.children.length},
+  {id:'prosperity',name:'盛世明君',description:'连续十年每月民心不低于80',target:120,reward:150,
+    progress:()=>S.dynastyGoalProgress?.prosperity?.months||0},
+  {id:'empress',name:'一代贤后',description:'同一位皇后主理六宫且有协理人，连续五年各宫心情不低于40',target:60,reward:150,
+    progress:()=>S.dynastyGoalProgress?.empress?.months||0},
+  {id:'companionship',name:'情深不渝',description:'与同一位在宫妃嫔连续五年保持情分80以上',target:60,reward:100,
+    progress:()=>Math.max(0,...Object.values(S.dynastyGoalProgress?.companionship||{}).map(entry=>entry.months))},
   {id:'reigns',name:'千秋一统',description:'见证三代君主继位',target:3,reward:150,
     progress:()=>S.gen}
 ];
+function settleDynastyGoalMonth(){
+  if(!S||journalContentVersion()<76)return;
+  const saved=S.dynastyGoalProgress||={};
+  if(saved.last?.gen===S.gen&&saved.last.turn===S.turn)return;
+  saved.last={gen:S.gen,turn:S.turn};
+  const next=(entry,qualifies,id)=>qualifies
+    ?{id,gen:S.gen,months:entry?.gen===S.gen&&entry.id===id?entry.months+1:1}
+    :{id:null,gen:S.gen,months:0};
+  saved.prosperity=next(saved.prosperity,E().people>=80,'people');
+  const queen=empress(),steward=haremStewardPerson();
+  saved.empress=next(saved.empress,!!queen&&inPalace(queen)&&!!steward&&inPalace(steward)&&harem().every(c=>c.mood>=40),queen?.id);
+  const ties=saved.companionship||={};
+  for(const c of S.consorts){
+    const key=String(c.id);
+    ties[key]=next(ties[key],inPalace(c)&&!c.maid&&c.aff>=80,c.id);
+  }
+  reconcileDynastyGoals();
+}
 function reconcileDynastyGoals(){
   if(!S||PalaceActions.blocked||journalContentVersion()<76)return;
   reconcileDynastyScenario();
@@ -567,6 +591,7 @@ A.endMonth=function(){
   if(typeof settleHaremStewardReward==='function'){
     const stewardship=settleHaremStewardReward();if(stewardship)S.flags.lastMonthReview.stewardship=stewardship;
   }
+  settleDynastyGoalMonth();
   maternalTick();alive().forEach(c=>{xinTick(c);visitorTick(c)});kidsAlive().forEach(growKid);
   finishSelection();
   // 时间

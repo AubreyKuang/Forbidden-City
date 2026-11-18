@@ -523,7 +523,7 @@ function viewKid(){
     ['now','近况与心事',storyCastChildPanel(k)+childDispositionPanel(k)+immortalPanel(k)+royalTravelPanel(k)+continuityPanel(k)+
       (k.alive?initiativeHTML(k):'')+detailSection(a>=20?'婚事与心意':'少年心事',youthPanel(k))+
       detailSection('护国寺祈福',childTemplePanel(k))],
-    ['care','教养与封号',detailSection('教养与抚养',care)+
+    ['care','教养与封号',detailSection('教养与抚养',care)+detailSection('师承',childMentorPanel(k))+
       detailSection('封号与储位',titles?`<div class="acts">${titles}</div>`:'')+
       detailSection('其他属性',`<div class="stats">${bar('体魄',k.hp,'#a87a26')}${bar('野心',k.amb,'#6b4a33')}${bar('父爱',k.love,'#936375')}${k.sex==='m'&&a>=10?bar('支持',k.sup||0,'#617991'):''}</div>`)+
       detailSection('出生禀赋',childBirthPanel(k))],
