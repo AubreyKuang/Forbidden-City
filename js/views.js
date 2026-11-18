@@ -486,7 +486,7 @@ function viewConsort(){
       (act?detailSection('与孩子的日常',consortFamilyPanel(c)):'')+
       (act?detailSection('牵挂远方的孩子',motherConcernPanel(c)):'')+
       detailSection('孩子的身世',consortParentagePanel(c))+
-      fosterWishButton(c)+homeLeavePanel(c)+homeFamilyPanel(c)+maternalPanel(c)],
+      fosterWishButton(c)+palaceSpeechPanel(c)+homeLeavePanel(c)+homeFamilyPanel(c)+maternalPanel(c)],
     ['affairs','册封与宫务',
       actionGroup('位分与居所',management)+actionGroup('敬事房',cardAction)+
       detailSection('御赐珍饰',jewelryPanel(c))+(act&&c.rank===8?birthdayBanquetButtons():'')],

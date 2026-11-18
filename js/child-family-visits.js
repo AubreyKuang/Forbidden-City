@@ -106,7 +106,7 @@ A.formerCareRule=function(childId,motherId){
 
 /* Releasing a mother restores only care that has not been assigned to someone else. */
 function releaseMotherReunionChanges(previous){
- if(!S||!previous||previous.gen!==S.gen||journalContentVersion()<96||PalaceActions.blocked)return;
+ if(!S||!previous||previous.gen!==S.gen||journalContentVersion()<97||PalaceActions.blocked)return;
  const before=new Map((previous.consorts||[]).map(c=>[c.id,c]));
  for(const mother of S.consorts){
   const old=before.get(mother.id);
