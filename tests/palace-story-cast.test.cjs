@@ -24,7 +24,7 @@ test('all six dossiers use their own visits, wait for consent and admit exactly 
   assert.equal(houseOf(storyCastPerson(storyCastRecord('chuwan'))),null);
   var lu=storyCastPerson(storyCastRecord('luwan'));assert.equal(houseOf(lu).brother.name,'陆从谦');
   A.storyCastVisit('xiaoman');assert.equal(modalOpen,false);
-  assert.ok(Object.keys(STORY_CAST).every(k=>storyCastCodexCards().includes('story-cast/'+k+'.webp')));`);
+  assert.ok(Object.keys(STORY_CAST).every(k=>storyCastCodexCards().includes('story-cast/'+k+(k==='chuwan'?'-court':'')+'.webp')));`);
 });
 
 test('pending scenes restore and each daughter or son inherits only the relevant story rule',()=>{
@@ -75,4 +75,16 @@ test('all six yellow tags reach the ordinary harem cards and new chapters change
   S.turn++;S.lastGardenBanquet=S.turn;runChapter(xiao,'岑小满 · 散席后学戏');
   assert.equal(storyCastRecord('xiaoman').followupChapter,2);
   assert.ok(S.log.some(e=>e.t.includes('验过的账')));`);
+});
+
+test('Chu Wan keeps her original portrait before admission and wears robes for her current palace rank',()=>{
+ const b=world();b.ctx.assert=assert;
+ b.run(`S.year=13;S.turn=144;E().age=35;
+  const r=storyCastCreate('chuwan'),wan=r.person;
+  assert.match(porImg(wan,200),/chuwan\.webp/);wan.sur='楚';r.revealed=true;
+  assert.match(porImg(wan,64),/chuwan\.webp/);
+  storyCastAdmit(wan,r,'测试册封');assert.match(porImg(wan,200),/chuwan-court\.webp/);
+  wan.rank=4;assert.match(porImg(wan,84),/chuwan-noble\.webp/);
+  wan.rank=6;assert.match(porImg(wan,200),/chuwan-grand\.webp/);
+  wan.rank=3;assert.match(porImg(wan,64),/chuwan-court\.webp/);`);
 });
