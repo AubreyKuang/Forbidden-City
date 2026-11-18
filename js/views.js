@@ -418,6 +418,7 @@ function viewConsort(){
     // Temple status and return actions have their own section below.
   } else if(act&&!c.cold){
     acts+=`<button class="btn" onclick="A.night(${c.id})" ${consortNightReason(c)?'disabled':''}>召幸侍寝<small>${consortNightReason(c)||'精力-1'}</small></button>`;
+    if(journalContentVersion()>=90&&c===empress()&&c.illnessRecovery?.until>S.turn)management+=`<button class="btn jade" onclick="A.queenCare()">安排或更换侍疾妃嫔</button>`;
     acts+=`<button class="btn primary" onclick="A.chat(${c.id})">闲话家常<small>精力-1</small></button>`;
     acts+=`<button class="btn jade" onclick="A.gift(${c.id})">赏赐<small>礼物 · 内库珍饰</small></button>`;
     familyActions+=momVisitButton(c);

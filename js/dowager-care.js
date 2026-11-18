@@ -26,7 +26,7 @@ function dowagerLifePlan(d=ensureDowager()){
  return d.lastYears;
 }
 const dowagerIll=d=>!!(dowagerCareActive()&&d?.alive&&d.lastYears&&S.turn>=d.lastYears.deathTurn-6&&S.turn<d.lastYears.deathTurn);
-const dowagerCareCandidates=()=>harem().filter(c=>c.age>=18&&dowagerVisitReady(c));
+const dowagerCareCandidates=()=>harem().filter(c=>c.age>=18&&dowagerVisitReady(c)&&(journalContentVersion()<90||queenCaregiver()!==c));
 function defaultDowagerCaregiver(d){return dowagerCareCandidates().filter(c=>c.clan===d.clan).sort((a,b)=>dowagerBond(b,d)-dowagerBond(a,d)||b.rank-a.rank||a.id-b.id)[0]||null;}
 function appointDowagerCaregiver(d,c,reason='奉旨'){ 
  const p=d?.lastYears;if(!dowagerIll(d)||c&&!dowagerCareCandidates().includes(c))return false;

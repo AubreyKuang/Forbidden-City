@@ -33,6 +33,11 @@ function consortRecovery(c){
 function consortNightReason(c){
   if(!c)return '眼下不宜召见';
   if(c.homeLeave&&journalContentVersion()>=88)return c.homeLeave.field?'外出 · 赴北境军驿':'外出省亲';
+  if(journalContentVersion()>=90){
+    const d=S.flags.dowager;
+    if(dowagerIll(d)&&d.lastYears.caregiver===c.id)return '正在为太后侍疾';
+    if(queenCaregiver()===c)return '正在为皇后侍疾';
+  }
   if(c.cardWithdrawn)return '绿头牌已撤';
   if(c.preg)return c.maid&&c.preg===1&&journalContentVersion()>=49?'今夜暂不宜留侍':'有孕在身';
   const r=consortRecovery(c);
@@ -41,6 +46,25 @@ function consortNightReason(c){
   if(consortTraitsActive()&&c.hp<35)return '身体虚弱，宜先调养';
   return '';
 }
+function queenCaregiver(){
+  if(!S||journalContentVersion()<90)return null;
+  const q=empress(),care=q?.queenIllnessCare,ill=q?.illnessRecovery;
+  if(!q||!inPalace(q)||!care||!ill||ill.turn!==care.illnessTurn||S.turn>=Math.min(care.until,ill.until))return null;
+  const c=byId(care.caregiver);return c&&dowagerVisitReady(c)?c:null;
+}
+function queenCareSelection(q){
+  const valid=()=>journalContentVersion()>=90&&q===empress()&&inPalace(q)&&q.illnessRecovery?.until>S.turn;
+  if(!valid())return null;
+  const candidates=()=>harem().filter(c=>c!==q&&c.age>=18&&dowagerVisitReady(c)&&!(dowagerIll(S.flags.dowager)&&S.flags.dowager.lastYears.caregiver===c.id));
+  return {title:'中宫 · 安排侍疾',por:q,valid,text:'皇后病中可请一位身体安好的妃嫔照应起居，太医和宫人仍负责诊治与轮值。侍疾期间暂不召她侍寝，病程结束后恢复。',choices:[
+    ...candidates().map(c=>({t:`请${fullName(c)}侍疾`,person:c,cond:()=>valid()&&candidates().includes(c),why:'眼下不宜侍疾',f:()=>{
+      if(!valid()||!candidates().includes(c))return null;
+      q.queenIllnessCare={caregiver:c.id,illnessTurn:q.illnessRecovery.turn,until:q.illnessRecovery.until};
+      story(c,'【中宫侍疾】奉旨照看皇后病中起居，太医与宫人协助轮值。');story(q,`【中宫侍疾】${fullName(c)}奉旨照应病中起居。`);
+      log(`${fullName(c)}奉旨为皇后侍疾，病中暂不召幸。`);return `${fullName(c)}接下侍疾安排，待皇后病程结束后恢复召幸。`;
+    }})),{t:'由太医与宫人照护',f:()=>{if(!valid())return null;delete q.queenIllnessCare;return '由太医与宫人轮值照护，不再另派妃嫔。';}}]};
+}
+A.queenCare=function(){if(!modalOpen){const q=empress(),ev=q&&queenCareSelection(q);if(ev)pushEv(ev);}};
 function bearGuardEligible(c){
   if(!consortRecoveryActive())return true;
   if(!inPalace(c)||c.preg||c.hp<65||consortRecovery(c)||c.delivery&&!c.delivery.settled)return false;
