@@ -185,12 +185,19 @@ function guardAffairEvent(){
    else if(mode==='transfer'){bond.ended='被发现后，侍卫调离宫室。';guard.loyalty=clamp(guard.loyalty-8);cchg(c,{aff:-4,mood:-8});result='你让他另领差事，不再守她的宫室。她没有争辩，只把没有说完的话收回去。';}
    else if(mode==='frame'){bond.ended='被发现后，旁人被诬作递消息之人。';guard.loyalty=clamp(guard.loyalty-5);cchg(c,{mood:-5});cchg(innocent,{aff:-8,mood:-12});
      innocent.fam={...innocent.fam,p:clamp(innocent.fam.p-5)};story(innocent,`被诬作${guard.name}私通消息的经手人，蒙受不白之冤。`);result=`你将消息推到${fullName(innocent)}身上。她受了委屈，娘家声势也受牵连。`;}
+   else if(mode==='demote'&&journalContentVersion()>=82&&c.rank>0&&c.rank<8){
+     const oldRank=c.rank;bond.ended='私情查实后，侍卫调离，当事人受降位处置。';guard.loyalty=clamp(guard.loyalty-12);
+     c.rank--;cchg(c,{mood:-18,aff:-12,favor:-8});c.fam={...c.fam,p:clamp(c.fam.p-5)};
+     for(const k of kidsAlive().filter(child=>child.sex==='m'&&child.mom===c.id)){k.sup=clamp((k.sup||0)-3);kstory(k,`生母因宫中私情被降位，母族支持受到牵连。`);}
+     reconcileResidences();result=`${fullName(c)}由${RANKS[oldRank]}降为${RANKS[c.rank]}，侍卫调离；她的母族声势及其子支持受到牵连。`;
+   }else return null;
    story(c,`【守宫旧事】私下来往被发现。${result}`);log(`【守宫旧事】${fullName(c)}与${guard.name}的往来被发现。${result}`,1);save('auto');return result;
  };
  return {title:'守宫旧事 · 密报',por:c,present:[c],valid,text:`守宫的${guard.name}与${cName(c)}往来日久，从彼此照应到暗生情意，如今有人发现了两人的私下相见。消息尚未传开。\n保密值 ${rd(bond.secrecy)}/100；数值越低，越容易被人发现。${guard.name}仍是你的情报人员，曾受命查访宫中案件。`,choices:[
   {t:'压下消息，保全二人',f:()=>resolve('protect')},
   {t:'调离侍卫，各自安置',f:()=>resolve('transfer')},
-  {t:'嫁祸旁人',cond:()=>harem().some(p=>p!==c&&p.rank<8),why:'宫中没有可被牵连的人',f:()=>resolve('frame')}
+  {t:'嫁祸旁人',cond:()=>harem().some(p=>p!==c&&p.rank<8),why:'宫中没有可被牵连的人',f:()=>resolve('frame')},
+  ...(journalContentVersion()>=82?[{t:'查实后降位，调离侍卫',cond:()=>c.rank>0&&c.rank<8,why:'皇后与最低位分不能按此降位',f:()=>resolve('demote')}]:[])
  ]};
 }
 A.reviewGuardAffair=function(){if(!modalOpen)pushEv(guardAffairEvent());};

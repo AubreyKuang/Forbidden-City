@@ -17,7 +17,7 @@ test('v74 pending result replays before goal reconciliation',()=>{
  const b=boot(1,new Map([['chengongji_v1_auto',JSON.stringify(save)]]));b.ctx.assert=assert;
  b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,74);
   assert.equal(curEv.title,'黄河决堤');assert.ok(modalResult);drain();A.go('home');
-  assert.equal(PalaceActions.contentVersion,81);assert.ok(S.dynastyGoals);`);
+  assert.equal(PalaceActions.contentVersion,82);assert.ok(S.dynastyGoals);`);
 });
 
 for(const [scenario,expected] of [['founder',350],['regent',500],['succession',800],['prosperous',1800],['crisis',100]]){
@@ -63,7 +63,7 @@ test('published v75 pending result resumes before enabling the new scenario syst
  const b=boot(1,new Map([['chengongji_v1_auto',JSON.stringify(save)]]));b.ctx.assert=assert;
  b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,75);
    assert.equal(dynastyScenarioActive(),false);assert.ok(modalResult);drain();A.go('home');
-   assert.equal(PalaceActions.contentVersion,81);assert.equal(dynastyScenarioActive(),true);`);
+   assert.equal(PalaceActions.contentVersion,82);assert.equal(dynastyScenarioActive(),true);`);
 });
 
 test('monthly goals count consecutive months once and reset after interruptions',()=>{
@@ -122,7 +122,7 @@ test('a genuine published v80 pending coronation resumes before adopting cross-g
  const save=require('./fixtures/dynasty-goals-legacy-v80.json');
  const b=boot(1,new Map([['chengongji_v1_auto',JSON.stringify(save)]]));b.ctx.assert=assert;
  b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,80);
-  assert.equal(curEv.title,'登基');assert.equal(S.dynastyMeta,undefined);drain();A.go('home');assert.equal(PalaceActions.contentVersion,81);`);
+  assert.equal(curEv.title,'登基');assert.equal(S.dynastyMeta,undefined);drain();A.go('home');assert.equal(PalaceActions.contentVersion,82);`);
 });
 
 test('the inherited scenario cannot start before its achievement is unlocked',()=>{
@@ -141,5 +141,17 @@ test('published v80 pending consort chat resumes before new accession dialogue r
  const save=require('./fixtures/dynasty-goals-v80-pending-chat.json');
  const b=boot(1,new Map([['chengongji_v1_auto',JSON.stringify(save)]]));b.ctx.assert=assert;
  b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,80);
-  assert.equal(curEv.title,'闲话家常');assert.equal(S.dynastyGoals,undefined);drain();A.go('home');assert.equal(PalaceActions.contentVersion,81);`);
+  assert.equal(curEv.title,'闲话家常');assert.equal(S.dynastyGoals,undefined);drain();A.go('home');assert.equal(PalaceActions.contentVersion,82);`);
+});
+
+test('founder actually establishes institutions over separate months and unlocks council policy',()=>{
+ let b=boot(19001);b.ctx.assert=assert;
+ b.run(`document.querySelector('input[name=f-scenario]:checked').value='founder';A.start();drain();E().energy=10;
+  var oldMoney=E().treasury;A.courtPolicy('civil');assert.equal(S.courtPolicyTurn,undefined);
+  A.establishDynastyFoundation('charter');A.establishDynastyFoundation('granary');assert.equal(S.scenario.foundations.granary,false);
+  assert.equal(E().treasury,oldMoney-30);S.turn++;A.establishDynastyFoundation('granary');assert.equal(S.flags.founderGranary,true);save('auto');`);
+ b=boot(5,b.storage);b.ctx.assert=assert;
+ b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(S.scenario.foundations.granary,true);S.turn++;E().energy=10;
+  A.establishDynastyFoundation('council');assert.equal(S.scenario.status,'won');assert.equal(founderCouncilReady(),true);
+  A.courtPolicy('civil');assert.equal(S.courtPolicyTurn,S.turn);`);
 });

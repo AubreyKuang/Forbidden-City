@@ -38,3 +38,19 @@ test('court policy can align with or conflict with an adult prince’s political
   assert.ok(k.story.some(e=>e.t.includes('有分歧')));S.turn++;E().energy=10;A.courtPolicy('army');assert.equal(k.princeCareer.momentum,1);
   assert.match(princeCareerPanel(k),/重视武备与边防/);`);
 });
+
+test('rivalry rotates among recognition, maternal resources, military merit and court support',()=>{
+ const b=boot(44001);b.ctx.assert=assert;
+ b.run(`A.start();drain();var a=makeKid(empress(),'m','承安'),z=makeKid(harem()[1],'m','承平');a.born=z.born=S.turn-240;E().energy=10;
+  A.princeCareer(a.id,'civil');A.princeCareer(z.id,'military');var mother=byId(a.mom),power=mother.fam.p;
+  for(let round=0;round<4;round++){var competitionScene=princeCareerRivalryEvent();assert.ok(competitionScene);pushEv(competitionScene);choose(0);drain();S.turn+=36;}
+  assert.deepEqual(Array.from(S.flags.princeRivalryHistory,x=>x.axis),['recognition','maternal','military','official']);
+  assert.equal(mother.fam.p,Math.min(100,power+2));assert.equal(a.princeCareer.momentum,8);
+  assert.ok(a.story.some(s=>s.t.includes('军务功绩')));`);
+});
+
+test('a v81 unresolved rivalry keeps its original results before adopting new rules',()=>{
+ const save=require('./fixtures/dynasty-goals-v81-pending-rivalry.json'),b=boot(1,new Map([['chengongji_v1_auto',JSON.stringify(save)]]));b.ctx.assert=assert;
+ b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,81);assert.equal(curEv.title,'皇子竞争 · 各有所长');
+  choose(0);drain();assert.equal(S.flags.princeRivalryRound,undefined);A.go('home');assert.equal(PalaceActions.contentVersion,82);`);
+});

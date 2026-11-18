@@ -86,3 +86,16 @@ test('an unanswered foreign marriage proposal resumes safely after reload',()=>{
  b=boot(5,b.storage);b.ctx.assert=assert;b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(curEv.title,'异国议婚');
   choose(1);drain();var mission=diplomacyState().missions.find(m=>m.type==='prince');assert.equal(mission.marriageOffer.status,'declined');`);
 });
+test('an envoy can return a false report, with a cost for trusting it and delayed verification',()=>{
+ let b=start();b.force(.001,.999);b.run(`A.sendDiplomaticEnvoy('north','visit',encodeURIComponent(envoy.key));var mission=diplomacyState().missions[0];
+  S.turn=mission.due;diplomacyTick();var report=diplomacyState().reports[0];assert.equal(report.truth,false);assert.equal(report.alarm,true);
+  var amount=E().treasury;A.trustForeignReport(report.id);A.trustForeignReport(report.id);assert.equal(E().treasury,amount-20);
+  A.verifyForeignReport(report.id);assert.equal(report.verifyDue,S.turn+2);assert.doesNotMatch(diplomacyPanel(),/复核结果/);save('auto');`);
+ b=boot(3,b.storage);b.ctx.assert=assert;b.run(`A.load('auto');var report=diplomacyState().reports[0];S.turn=report.verifyDue;
+  assert.match(diplomacyPanel(),/当时未发现异动/);`);
+});
+test('a foreign envoy remembers a reception and returns the favor or retaliates after three years',()=>{
+ const b=start();b.run(`A.receiveForeignEnvoy('west','gift');var c=diplomacyCountry('west'),relation=c.relation,amount=E().treasury;
+  S.turn+=36;diplomacyTick();assert.equal(c.relation,relation+5);assert.equal(E().treasury,amount+30);
+  diplomacyTick();assert.equal(E().treasury,amount+30);assert.ok(c.memory.some(x=>x.text.includes('谢礼')));`);
+});

@@ -36,7 +36,7 @@ const dynastyScenarioActive=()=>journalContentVersion()>=81;
 function startDynastyScenario(id){
   if(!dynastyScenarioActive()||!DYNASTY_SCENARIOS[id]||id==='standard')return;
   const e=E(),state=S.scenario={id,gen:S.gen,start:S.turn,status:'active'};
-  if(id==='founder')Object.assign(e,{treasury:350,people:45,prestige:40});
+  if(id==='founder'){Object.assign(e,{treasury:350,people:45,prestige:40});if(journalContentVersion()>=82)state.foundations={charter:false,granary:false,council:false};}
   if(id==='regent'){Object.assign(e,{treasury:500,people:50,prestige:30});state.control=70;}
   if(id==='succession')e.fertilityReview={profile:'low',months:0,last:-99};
   if(id==='prosperous'){
@@ -50,6 +50,7 @@ function startDynastyScenario(id){
 function dynastyScenarioGoals(){
   const state=S?.scenario,e=E();
   if(!state||state.gen!==S.gen)return [];
+  if(state.id==='founder'&&state.foundations)return [['颁立国制',Number(state.foundations.charter),1],['建立仓储',Number(state.foundations.granary),1],['设立议政',Number(state.foundations.council),1]];
   const objectives={
     founder:[['国库',e.treasury,800],['民心',e.people,70],['威望',e.prestige,65]],
     regent:[['民心',e.people,65],['威望',e.prestige,65],['收回朝权',100-state.control,70]],
@@ -60,6 +61,15 @@ function dynastyScenarioGoals(){
   };
   return objectives[state.id]||[];
 }
+const DYNASTY_FOUNDATIONS={charter:{name:'颁立国制',cost:30},granary:{name:'建立仓储',cost:60},council:{name:'设立议政',cost:50}};
+function establishDynastyFoundation(id){
+ const scenario=S?.scenario,item=DYNASTY_FOUNDATIONS[id];
+ if(journalContentVersion()<82||!item||scenario?.id!=='founder'||scenario.gen!==S.gen||scenario.status!=='active'||!scenario.foundations||scenario.foundations[id]||scenario.lastFoundation===S.turn||S.over||modalOpen||E().energy<1||E().treasury<item.cost)return;
+ if(!useE())return;chg({treasury:-item.cost});scenario.foundations[id]=true;scenario.lastFoundation=S.turn;
+ if(id==='charter')chg({prestige:4});if(id==='granary'){S.flags.founderGranary=true;chg({people:4});}if(id==='council')chg({prestige:2});
+ log(`【开国】${item.name}完成。${id==='granary'?'仓储运行后每月岁入增加二万两。':id==='council'?'朝堂可正式议定派系建议。':'诏告天下，厘定新朝章程。'}`,1);reconcileDynastyScenario();render();
+}
+function founderCouncilReady(){const s=S?.scenario;return !(s?.id==='founder'&&s.gen===S.gen&&s.foundations&&!s.foundations.council);}
 function reconcileDynastyScenario(){
   const state=S?.scenario;
   if(!dynastyScenarioActive()||!state||state.gen!==S.gen)return;
@@ -451,6 +461,7 @@ function nightWith(c,fromEvent){
 const A={
   claimDynastyGoal(id){claimDynastyGoal(id)},
   lowerRegentControl(){lowerRegentControl()},
+  establishDynastyFoundation(id){establishDynastyFoundation(id)},
   go(v,id){
     if(PAGE_ORIGIN_VIEWS.includes(v)&&UI.view!==v&&!PERSON_DETAIL_VIEWS.includes(UI.view))(UI.pageFrom ||= {})[v]=UI.view;
     rememberPersonRoute(v,id);UI.view=v;UI.sel=id;
@@ -464,6 +475,7 @@ const A={
   },
   court(){
     if(!S||S.over||modalOpen)return;
+    if(!founderCouncilReady()){toast('新朝尚未设立议政，请先在王朝目标中筹办。');return;}
     const ev=monthlyCourtEvent();
     if(!ev){
       if(monthlyCourtBatchEnabled()){
@@ -571,7 +583,7 @@ A.endMonth=function(){
   const openingTreasury=e.treasury,openingHealth=e.health;
   const localGrainPayment=localGrainPaymentDue()?localGrainBalance():0;
   const hongjianIncome=typeof settleHongjianIncome==='function'?settleHongjianIncome():0;
-  const inc=rd(45+e.people*1.1+(S.flags.canal?25:0))+hongjianIncome,exp=alive().reduce((s,c)=>s+(c.cold?1:STIPEND[c.rank]),0)+kidsAlive().reduce((s,k)=>s+3+(k.tutor?5:0),0)+localGrainPayment+(typeof outerHouseholdExpense==="function"?outerHouseholdExpense():0);
+  const inc=rd(45+e.people*1.1+(S.flags.canal?25:0))+(S.flags.founderGranary?2:0)+hongjianIncome,exp=alive().reduce((s,c)=>s+(c.cold?1:STIPEND[c.rank]),0)+kidsAlive().reduce((s,k)=>s+3+(k.tutor?5:0),0)+localGrainPayment+(typeof outerHouseholdExpense==="function"?outerHouseholdExpense():0);
   e.treasury+=inc-exp;
   if(localGrainPayment){
     clearLocalGrainPayment();

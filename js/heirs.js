@@ -79,15 +79,26 @@ function princeCareerRivalryEvent(){
  const rivals=kidsAlive().filter(k=>k.sex==='m'&&PRINCE_CAREERS[k.princeCareer?.path]&&childCanVisitCourt(k)&&kidAge(k)>=16).sort((a,b)=>a.id-b.id);
  if(rivals.length<2)return null;
  const [a,b]=rivals,valid=()=>!S.over&&a.alive&&b.alive&&childCanVisitCourt(a)&&childCanVisitCourt(b)&&!!a.princeCareer&&!!b.princeCareer;
+ const axes=[['recognition','父皇认可'],['maternal','母族资源'],['military','军务功绩'],['official','朝臣支持']];
+ const expanded=journalContentVersion()>=82,round=S.flags.princeRivalryRound||0,[axis,subject]=expanded?axes[round%axes.length]:axes[0];
+ const prior=expanded?S.flags.princeRivalryHistory?.at(-1):null;
  const decision=chosen=>{
   if(!valid())return null;
   if(chosen){const other=chosen===a?b:a;chosen.princeCareer.momentum=Math.min(100,(chosen.princeCareer.momentum||0)+2);other.princeCareer.momentum=Math.max(0,(other.princeCareer.momentum||0)-1);
-   kstory(chosen,'【皇子竞争】在父皇考核中得到认可，声势渐长。');kstory(other,'【皇子竞争】父皇认可了兄弟的表现，自己决意继续努力。');
-   log(`【皇子竞争】${kidName(chosen)}在考核中获得认可。`,1);return `你认可了${chosen.name}的表现。他的势增加，另一人的势略有回落。`;}
+   if(!expanded){kstory(chosen,'【皇子竞争】在父皇考核中得到认可，声势渐长。');kstory(other,'【皇子竞争】父皇认可了兄弟的表现，自己决意继续努力。');log(`【皇子竞争】${kidName(chosen)}在考核中获得认可。`,1);return `你认可了${chosen.name}的表现。他的势增加，另一人的势略有回落。`;}
+   let consequence='';if(expanded){
+    if(axis==='recognition'){chosen.love=clamp(chosen.love+3);consequence='父子情分有所增进。';}
+    else if(axis==='maternal'){const mother=byId(chosen.mom);if(mother?.fam){mother.fam={...mother.fam,p:clamp(mother.fam.p+2)};story(mother,`【皇子竞争】${chosen.name}的母族获得一份有限的支持。`);consequence='母族声势略有增长。';}}
+    else if(axis==='military'){chosen.mar=clamp(chosen.mar+2);consequence='他在军务考核中增长了经验。';}
+    else {chosen.sup=clamp((chosen.sup||0)+3);consequence='他的朝中支持有所增加。';}
+    (S.flags.princeRivalryHistory||=[]).push({turn:S.turn,gen:S.gen,axis,winner:chosen.id,name:chosen.name});
+   }
+   kstory(chosen,`【皇子竞争】在${subject}一事中得到认可，声势渐长。${consequence}`);kstory(other,`【皇子竞争】父皇在${subject}一事认可了兄弟，自己决意继续努力。`);
+   log(`【皇子竞争】${kidName(chosen)}在${subject}一事中获得认可。`,1);return `你认可了${chosen.name}的表现。他的势增加，另一人的势略有回落。${consequence}`;}
   kstory(a,'【皇子竞争】父皇让兄弟各凭实绩发展。');kstory(b,'【皇子竞争】父皇让兄弟各凭实绩发展。');return '你听完两人的打算，令他们各凭实绩，不以一次比较论高下。';
  };
- return {title:'皇子竞争 · 各有所长',cast:[a,b],valid,onShow:()=>{S.flags.lastPrinceCareerRivalry=S.turn;},
-  text:`${kidName(a)}循${PRINCE_CAREERS[a.princeCareer.path].name}发展，${kidName(b)}则在${PRINCE_CAREERS[b.princeCareer.path].name}上用心。两人都想得到你的认可，朝中也有人议论谁的差事务实。`,choices:[
+ return {title:'皇子竞争 · 各有所长',cast:[a,b],valid,onShow:()=>{S.flags.lastPrinceCareerRivalry=S.turn;if(expanded)S.flags.princeRivalryRound=round+1;},
+  text:expanded?`${kidName(a)}循${PRINCE_CAREERS[a.princeCareer.path].name}发展，${kidName(b)}则在${PRINCE_CAREERS[b.princeCareer.path].name}上用心。眼下两人都盼在${subject}上有所进展。${prior?`上次较量中${prior.name}得到认可，两人都记得此事。`:''}`:`${kidName(a)}循${PRINCE_CAREERS[a.princeCareer.path].name}发展，${kidName(b)}则在${PRINCE_CAREERS[b.princeCareer.path].name}上用心。两人都想得到你的认可，朝中也有人议论谁的差事务实。`,choices:[
    {t:`认可${a.name}的表现`,f:()=>decision(a)},{t:`认可${b.name}的表现`,f:()=>decision(b)},{t:'让二人各凭实绩',f:()=>decision(null)}]};
 }
 function growKid(k){

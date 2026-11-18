@@ -35,3 +35,10 @@ test('a devoted consort need not develop an affair simply because a guard was as
  const b=start();b.run(`c.aff=90;for(let month=1;month<=36;month++){S.turn=month;guardProtectionTick();}
   assert.equal(guard.protection.stage,1);assert.equal(guard.protection.discovered,false);assert.equal(guardAffairEvent(),null);`);
 });
+
+test('verified discipline reduces rank and affects her family and son once',()=>{
+ const b=start();b.run(`var son=makeKid(c,'m','承安');son.born=S.turn-240;son.sup=50;`);develop(b);
+ b.run(`var rank=c.rank,power=c.fam.p;pushEv(guardAffairEvent());assert.match(curEv.choices[3].t,/降位/);choose(3);drain();
+  assert.equal(c.rank,rank-1);assert.equal(c.fam.p,Math.max(0,power-5));assert.equal(son.sup,47);
+  assert.ok(son.story.some(e=>e.t.includes('生母因宫中私情被降位')));assert.equal(guardAffairEvent(),null);`);
+});

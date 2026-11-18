@@ -322,15 +322,28 @@ function viewHarem(){
 function detailSection(title,content){
   return content?`<section class="detail-section"><h3>${title}</h3><div class="detail-content">${content}</div></section>`:'';
 }
+const HISTORICAL_RECORD_REFS={辞辇:'班婕妤辞辇（西汉）',荔枝:'杨贵妃与荔枝（唐）',烽火:'周幽王烽火戏诸侯（西周）',金屋:'汉武帝金屋藏娇（西汉）',感业寺:'武则天感业寺为尼（唐）',平阳府:'卫子夫平阳公主府献歌（西汉）',画师:'毛延寿误画王昭君（西汉）',陈州少年:'狸猫换太子·认母（民间传说）',梃击案:'梃击案（明）',七步诗:'曹植七步诗（三国）',让梨:'孔融让梨（东汉）',砸缸:'司马光砸缸（北宋）'};
+function recordedHistoricalCodex(){
+ const current=(S.historicalCodex||[]).map(x=>({...x}));if(journalContentVersion()<82)return current.reverse();
+ const people=[...S.consorts,...S.children,...(S.retainedFamilies||[]),...(S.royalRelatives||[]),...(S.previousCourts||[]).flatMap(c=>c.consorts||[])];
+ const keys=new Set(current.map(x=>JSON.stringify([x.d,x.title,x.choice])));
+ for(const person of people)for(const entry of person.story||[]){
+  const ev=entry.event,ref=ev&&HISTORICAL_RECORD_REFS[ev.title];if(!ref||!ev.choice)continue;
+  const key=JSON.stringify([entry.d,ev.title,ev.choice]);if(keys.has(key))continue;keys.add(key);
+  current.push({d:entry.d,title:ev.title,ref,choice:ev.choice,outcome:ev.outcome||'',reconstructed:true});
+ }
+ const dateOrder=new Map();for(const entry of S.log||[])if(!dateOrder.has(entry.d))dateOrder.set(entry.d,dateOrder.size);
+ return current.map((entry,index)=>({entry,index})).sort((a,b)=>(dateOrder.get(b.entry.d)??-1)-(dateOrder.get(a.entry.d)??-1)||b.index-a.index).map(x=>x.entry);
+}
 function dynastyCodexPanel(){
  const consorts=S.consorts.filter(c=>!c.maid),children=royalHouseholds().filter(k=>k.sex==='m'||k.sex==='f');
  const jewelry=Object.entries(S.jewelry?.received||{}).filter(([id,n])=>JEWELRY[id]&&n>0);
- const historical=(S.historicalCodex||[]).slice().reverse();
+ const historical=recordedHistoricalCodex();
  const emperor=[...S.history.map(h=>`${h.miao} ${h.sur}${h.name} · ${h.era} · 在位${h.yrs}年`),`${E().sur}${E().name} · ${E().era} · 在位中`];
  const persons=people=>people.map(p=>chroniclePersonLink({id:p.id,name:p.sex?kidName(p):fullName(p)})).join(' ');
  return `<p class="hint">图鉴根据本存档实际留下的记录整理；旧存档中未记录的典故不会凭空补写。</p>
  <details><summary>妃嫔图鉴 · ${consorts.length}</summary><div class="acts">${persons(consorts)||'尚无记录'}</div></details>
- <details><summary>历史典故 · ${historical.length}</summary><ul class="story">${historical.map(x=>`<li><time>${esc(x.d)}</time>${esc(x.title)} · ${esc(x.ref)} · ${esc(x.choice)}</li>`).join('')||'<li>尚无记录。</li>'}</ul></details>
+ <details><summary>历史典故 · ${historical.length}</summary><ul class="story">${historical.map(x=>`<li><time>${esc(x.d)}</time>${esc(x.title)} · ${esc(x.ref)} · ${esc(x.choice)}${x.reconstructed?' · 据人物纪事整理':''}</li>`).join('')||'<li>尚无记录。</li>'}</ul></details>
  <details><summary>皇帝本纪 · ${emperor.length}</summary><ul class="story">${emperor.map(x=>`<li>${esc(x)}</li>`).join('')}</ul><button class="btn sm" onclick="A.go('log')">查看按时间记载的起居注</button></details>
  <details><summary>服饰珍宝 · ${jewelry.length}</summary><p>${jewelry.map(([id])=>esc(JEWELRY[id].name)).join('、')||'尚无记录'}</p><button class="btn sm" onclick="A.go('jewelry')">查看内库</button></details>
  <details><summary>皇嗣成长 · ${children.length}</summary><div class="acts">${persons(children)||'尚无记录'}</div></details>
@@ -347,6 +360,7 @@ function dynastyGoalsPanel(){
   const chapter=scenario&&definition?`<h3>${esc(definition.name)}</h3><p>${esc(definition.description)}
     ${scenario.status==='won'?' · 已完成':scenario.status==='lost'?` · ${esc(scenario.failure||'期限已过')}`:scenario.deadline!=null?` · 剩余 ${Math.max(0,scenario.deadline-S.turn)} 个月`:''}</p>
     ${scenario.id==='regent'?`<p>权臣掌控度 ${scenario.control}/100</p>${scenario.control>0&&scenario.gen===S.gen?`<button class="btn sm" onclick="A.lowerRegentControl()" ${scenario.lastReform===S.turn||E().energy<1?'disabled':''}>核对朝政 · 精力−1</button>`:''}`:''}
+    ${scenario.id==='founder'&&scenario.foundations?`<p class="hint">新朝须逐步立制、设仓、议政；每月最多筹办一项。设议政前不能采纳派系建议。</p><div class="acts">${Object.entries(DYNASTY_FOUNDATIONS).map(([id,item])=>`<button class="btn sm" onclick="A.establishDynastyFoundation('${id}')" ${scenario.foundations[id]||scenario.status!=='active'||scenario.lastFoundation===S.turn||E().energy<1||E().treasury<item.cost?'disabled':''}>${item.name} · 银${item.cost} · 精力−1${scenario.foundations[id]?' · 已完成':''}</button>`).join('')}</div>`:''}
     <ul class="story">${dynastyScenarioGoals().map(([name,value,target])=>`<li>${esc(name)} · ${Math.min(value,target)}/${target}</li>`).join('')}
     <li>隐藏目标 · ${scenario.hidden?esc(hiddenDescriptions[scenario.id])+' · 已达成':'???'}</li></ul>`:'';
   return `<section class="detail-section"><h3>王朝目标</h3>
