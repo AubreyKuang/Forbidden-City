@@ -266,6 +266,7 @@ test('the public annals retain published recognition, seal at death and stay sep
       assert.equal(S.regnalChronicles.length,2);assert.equal(S.regnalChronicles[1].entries[0].kind,'登基');`);
     b=game(67,b.storage);b.run(`A.go('regnal',1);assert.match(viewRegnalChronicle(),/定稿/);
       assert.equal(viewRegnalChronicle().includes('帝认皇女'),${publish});
+      assert.doesNotMatch(viewRegnalChronicle(),/史官候笔|永远封存/);
       assert.ok(!viewRegnalChronicle().includes('普通起居'));
       A.go('outer',1);assert.match(outerRegisterView(),/野史拾遗/);
       assert.equal(outerRegisterView().includes('永远封存')||outerRegisterView().includes('永封'),${!publish});`);

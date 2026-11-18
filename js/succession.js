@@ -297,5 +297,5 @@ function royalKinRosterPanel(){
 }
 function viewRoyalRelative(){
   const k=royalById(UI.sel);if(!k)return viewFamily();
-  return `${personBackButton('family')}<header class="detail-head">${porImg(k,224)}<div class="grow"><h2>${esc(k.name)}</h2><p>${esc(royalKinship(k))} · ${kidAge(k)}岁</p><p>生母 ${esc(k.momName||'未记载')}</p>${princeEstateLink(k)}</div></header>${listedRoyalKin().includes(k)?royalKinContactButtons(k):''}${immortalPanel(k)}${royalTravelPanel(k)}${marriagePanel(k)}${householdPanel(k)}${detailSection('亲族纪事',detailStory(k))}`;
+  return `${personBackButton('family')}<header class="detail-head">${porImg(k,224)}<div class="grow"><h2>${esc(k.name)}</h2><p>${esc(royalKinship(k))} · ${kidAge(k)}岁</p><p>生母 ${esc(k.momName||'未记载')}</p>${princeEstateLink(k)}</div></header>${listedRoyalKin().includes(k)?royalKinContactButtons(k):''}${immortalPanel(k)}${royalTravelPanel(k)}${marriagePanel(k)}${householdPanel(k)}${princeCirclePanel(k)}${detailSection('出使见闻',diplomaticTraitsPanel(k))}${detailSection('亲族纪事',detailStory(k))}`;
 }

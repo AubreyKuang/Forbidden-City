@@ -33,6 +33,44 @@ const DYNASTY_SCENARIOS={
   restoration:{name:'承祧之君',description:'继承先朝积累，重整朝局与民生。',unlock:'reigns'}
 };
 const dynastyScenarioActive=()=>journalContentVersion()>=85;
+const dynastyFollowupActive=()=>journalContentVersion()>=92;
+const DYNASTY_TEACHINGS={
+  勤政:{lesson:'勤于政事，体察民情',stat:'people',trait:'勤于听政'},
+  尚武:{lesson:'修习武备，慎守边疆',stat:'wu',trait:'熟习武备'},
+  文雅:{lesson:'崇文重学，明辨是非',stat:'wen',trait:'尚文好学'},
+  风流:{lesson:'珍重身体，宽待身边人',stat:'health',trait:'知人善待'}
+};
+const DYNASTY_TRAIT_STATS={'家学仁厚':'people',...Object.fromEntries(Object.values(DYNASTY_TEACHINGS).map(t=>[t.trait,t.stat]))};
+function rulerLegacyTrait(ruler){
+  const trait=ruler.dynastyTrait||ruler.dynastyLegacy?.trait;
+  return Object.hasOwn(DYNASTY_TRAIT_STATS,trait)?trait:DYNASTY_TEACHINGS[ruler.style]?.trait;
+}
+function dynastyLegacySources(){
+  const storage=SaveManager.getStorage(),sources=new Map();
+  for(const slot of ['auto','1','2','3']){
+    const saved=slot==='auto'&&S?S:confirmedPalaceSave(storage,SKEY+slot);
+    if(!saved||!Object.hasOwn(DYNASTY_TEACHINGS,saved.emp.style)||!Number.isFinite(saved.emp.prestige))continue;
+    const {sur,name,era,style,prestige}=saved.emp;
+    const source={predecessor:sur+name,era,style,prestige:rd(clamp(prestige)),trait:rulerLegacyTrait(saved.emp),slot};
+    const key=JSON.stringify([sur,name,era,saved.emp.seed,source.prestige,style,source.trait]);
+    if(!sources.has(key))sources.set(key,source);
+  }
+  return [...sources.values()];
+}
+function applyDynastyLegacy(ruler,source,crossGame=false){
+  const teaching=DYNASTY_TEACHINGS[source.style]||DYNASTY_TEACHINGS.勤政;
+  const renown=Math.max(0,Math.round((source.prestige-50)/10)),beforePrestige=ruler.prestige,beforeStat=ruler[teaching.stat];
+  ruler.prestige=clamp(beforePrestige+renown);ruler[teaching.stat]=clamp(beforeStat+3);
+  ruler.dynastyLegacy={predecessor:source.predecessor,era:source.era,prestige:source.prestige,style:source.style,lesson:teaching.lesson,
+    stat:teaching.stat,renown:ruler.prestige-beforePrestige,bonus:ruler[teaching.stat]-beforeStat};
+  if(dynastyFollowupActive()&&crossGame){
+    const trait=Object.hasOwn(DYNASTY_TRAIT_STATS,source.trait)?source.trait:teaching.trait;
+    const traitStat=DYNASTY_TRAIT_STATS[trait],before=ruler[traitStat];
+    ruler[traitStat]=clamp(before+2);
+    Object.assign(ruler.dynastyLegacy,{trait,traitStat,traitBonus:ruler[traitStat]-before});
+    ruler.dynastyLegacy.crossGame=true;
+  }
+}
 function startDynastyScenario(id){
   if(!dynastyScenarioActive()||!DYNASTY_SCENARIOS[id]||id==='standard')return;
   const e=E(),state=S.scenario={id,gen:S.gen,start:S.turn,status:'active'};
@@ -197,6 +235,7 @@ function kidName(k){
 }
 function log(t,big){
   const entry={d:dateStr(),t,b:big?1:0};
+  if(dynastyFollowupActive())Object.assign(entry,{gen:S.gen,turn:S.turn,order:nextReignEntryOrder()});
   S.log.push(entry);
   if(regnalChronicleActive())recordRegnalLog(entry);
   if(S.log.length>1500)S.log.splice(0,200);
@@ -416,7 +455,9 @@ function choose(i,inputValue){
   const c=curEv&&curEv.choices[i];if(!c)return;if(c.cond&&!c.cond())return;
   if(i===0&&curEv.jinyiweiNoticeKey&&!PalaceActions.replaying)rememberJinyiweiAcknowledgement(curEv);
   const val=curEv.input?((entered||'').trim().slice(0,curEv.input.max||4)||curEv.input.def):undefined;
+  const annal=dynastyFollowupActive()?reignEventEntry(curEv,c,val):null;
   AU.sfx('click');const res=c.f?c.f(val):null;
+  if(annal&&S)recordReignEvent(annal,res);
   if(res) showRes(res,c); else nextEv();
 }
 function narrativeResult(res,event,choice){
@@ -684,6 +725,11 @@ A.endMonth=function(){
   const orphan=palaceOrphanEvent();
   const comingOfAge=royalComingOfAgeEvent();
   const fiefDockets=princeQuarterReports();
+  if(dynastyFollowupActive()){
+    intelligenceCounterTick();
+    princeFiefRequestTick();
+    for(const k of S.royalRelatives||[])if(k.princeCareer)princeCircleTick(k);
+  }
   const must=[passing?null:haremRemonstranceEvent(),passing?null:pendingImmortalEvent(),passing?null:pendingRoyalTravelEvent(),passing?null:pendingTravelInstitutionEvent(),passing?null:pendingRoyalSchoolRevision(),passing?null:pendingLocalChronicleReview(),passing?null:pendingClassicStory(),passing?null:pendingYiLandEvent(),passing?null:arcTick(),heirTick(),milestone(),parentageReportEvent(),birthSwapClueEvent(),birthSwapSearchReport(),pendingBirthSwapJustice(),pendingKinGreeting(),pendingMaternalKinCare(),pendingMaternalSisterArrival(),pendingDaoVoyage(),pendingTravelerEvent(),pendingOfficialReport(),pendingConcealedLoss(),...(legacyPendingAction()?[]:[pendingIncognitoReport(),passing?null:jingtishiEvent(),passing?null:selectionCouncilEvent()]),passing||typeof pendingHaremStewardEvent!=='function'?null:pendingHaremStewardEvent(),...(familyGardenActive()&&!passing?[familyGardenMonthlyEvent(),familyGardenDisputeEvent()]:[])].filter(Boolean),opt=[];
   const inquiry=pendingSisterInquiry();if(inquiry)must.unshift(inquiry);
   if(comingOfAge)must.unshift(comingOfAge);
@@ -694,6 +740,11 @@ A.endMonth=function(){
     const palaceChapter=storyCastLifeMonthly(castStories);if(palaceChapter)must.push(palaceChapter);
     const guardAffair=guardAffairEvent();if(guardAffair)must.push(guardAffair);
     const princeRivalry=princeCareerRivalryEvent();if(princeRivalry)must.push(princeRivalry);
+    if(dynastyFollowupActive()){
+      const counterIntelligence=pendingCounterIntelligenceEvent();if(counterIntelligence)must.push(counterIntelligence);
+      const fiefRequest=pendingPrinceFiefRequest();if(fiefRequest)must.push(fiefRequest);
+      const diplomaticReturn=pendingForeignStudentReturn();if(diplomaticReturn)must.push(diplomaticReturn);
+    }
   }
   if(princeSuccession)must.push(princeSuccession);
   if(fertilityReview)must.push(fertilityReview);
@@ -771,12 +822,8 @@ function succeed(h){
     inheritDowager(h);
     S.emp={sur:old.sur,name:h.name,era:v,age:Math.max(a,14),health:clamp(h.hp+10),prestige:clamp(35+h.vir/3),people:old.people,treasury:old.treasury,energy:3,nightsMonth:0,
       style:h.mar>h.lit+15?'尚武':h.lit>h.mar+15?'文雅':'勤政',wen:rd(h.lit),wu:rd(h.mar),seed:h.seed,portraitOverride:portraitCell(h),birthMonth:birthMonth(h)};
-    if(journalContentVersion()>=85){
-      const legacy={勤政:{lesson:'勤于政事，体察民情',stat:'people'},尚武:{lesson:'修习武备，慎守边疆',stat:'wu'},文雅:{lesson:'崇文重学，明辨是非',stat:'wen'},风流:{lesson:'珍重身体，宽待身边人',stat:'health'}}[old.style]||{lesson:'勤于政事，体察民情',stat:'people'};
-      const renown=Math.max(0,Math.round((old.prestige-50)/10)),beforePrestige=S.emp.prestige,beforeStat=S.emp[legacy.stat];
-      S.emp.prestige=clamp(beforePrestige+renown);S.emp[legacy.stat]=clamp(beforeStat+3);
-      S.emp.dynastyLegacy={predecessor:old.sur+old.name,era:old.era,prestige:old.prestige,style:old.style,lesson:legacy.lesson,stat:legacy.stat,renown:S.emp.prestige-beforePrestige,bonus:S.emp[legacy.stat]-beforeStat};
-    }
+    if(journalContentVersion()>=85)applyDynastyLegacy(S.emp,{predecessor:old.sur+old.name,era:old.era,prestige:old.prestige,style:old.style,trait:rulerLegacyTrait(old)});
+    if(dynastyFollowupActive()&&h.diplomaticTraits?.length)S.emp.diplomaticTraits=[...h.diplomaticTraits];
     keepAccededTravelProjects(h);
     archivePrincessEstates(h);
     S.consorts=[];S.children=[];S.rel=retainedFamiliesActive()?S.rel:{};S.courtPolicy={};S.courtPolicyTurn=null;S.heir=null;S.cands=[];S.gen++;S.year=1;S.over=false;S.genChar=GEN_CHARS[(GEN_CHARS.indexOf(S.genChar)+1)%GEN_CHARS.length];
@@ -798,6 +845,15 @@ A.start=function(){
   let scenario=dynastyScenarioActive()?fv('input[name=f-scenario]:checked')||'standard':'standard',meta=[];
   if(journalContentVersion()>=85){try{const candidate=JSON.parse(fv('#f-dynasty-meta')||'[]');if(Array.isArray(candidate)){const valid=new Set([...DYNASTY_GOALS,...DYNASTY_HIDDEN_GOALS].map(g=>g.id));meta=[...new Set(candidate.filter(id=>valid.has(id)))];}}catch{/* 无可用跨局记录。 */}}
   if(DYNASTY_SCENARIOS[scenario]?.unlock&&!meta.includes(DYNASTY_SCENARIOS[scenario].unlock))scenario='standard';
+  let legacy;
+  if(dynastyFollowupActive()&&fv('#f-dynasty-legacy')){
+    try{
+      const options=JSON.parse(fv('#f-dynasty-legacies')||'[]'),source=Array.isArray(options)&&options[Number(fv('#f-dynasty-legacy'))];
+      if(source&&typeof source.predecessor==='string'&&typeof source.era==='string'&&Object.hasOwn(DYNASTY_TEACHINGS,source.style)&&Number.isFinite(source.prestige)){
+        legacy={predecessor:source.predecessor.slice(0,12),era:source.era.slice(0,8),style:source.style,prestige:clamp(source.prestige),trait:source.trait};
+      }
+    }catch{/* 无可用的先朝记录。 */}
+  }
   S={v:1,emp:{sur,name,era,age:18,birthMonth:3,health:90,prestige:50,people:60,treasury:800,energy:3,nightsMonth:0,style,wen:50,wu:50,seed:ri(1,2e9)},
     year:1,month:3,turn:0,consorts:[],children:[],cands:[],log:[],nid:1,gen:1,heir:null,genChar:pick(GEN_CHARS),
     flags:{lastXX:-99,dowager:{name:'太后',alive:true},peek:0,openingCourt:true,familyRules:2},history:[],ys:{c:0,b:0,n:0},over:false};
@@ -814,6 +870,10 @@ A.start=function(){
   if(journalContentVersion()>=85){em.accessionArrival={gen:S.gen,started:S.turn};old.accessionArrival={gen:S.gen,started:S.turn};}
   startDynastyScenario(scenario);
   if(e.dynastyTrait)e.people=clamp(e.people+3);
+  if(legacy){
+    applyDynastyLegacy(e,legacy,true);
+    log(`【前局传承】${legacy.predecessor}留下家训「${e.dynastyLegacy.lesson}」与特质「${e.dynastyLegacy.trait}」。先朝声望使新君威望增加${e.dynastyLegacy.renown}。`,1);
+  }
   log(`${era}元年三月，新帝${sur}${name}登基，改元${era}，大赦天下。`,1);
   log(`册嫡妻${fullName(em)}为皇后，潜邸旧人${fullName(old)}为贵人。`);
   migrate();initializeMinistryRoster();initializeDowagerOpening();UI.view='map';setScene('court');AU.sfx('gong');render();

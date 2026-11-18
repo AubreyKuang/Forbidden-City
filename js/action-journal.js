@@ -2,7 +2,7 @@
    never from serialized JavaScript. Each command owns its random draws and answers.
    The saved world remains the authority; replay is checked before it is displayed. */
 const PalaceActions=(()=>{
-  const version=91, excluded=new Set(['save','dismissSaveError','load','rewind','downloadSave','readSaveFile','undoImport','newGame','officialsFilter','officialsBloc','kidsKind','chronicleFilter','chronicleSearch','chronicleClear','chronicleThread']);
+  const version=92, excluded=new Set(['save','dismissSaveError','load','rewind','downloadSave','readSaveFile','undoImport','newGame','officialsFilter','officialsBloc','kidsKind','chronicleFilter','chronicleSearch','chronicleClear','chronicleThread']);
   const actions=new Map();
   let blocked=false,snapshotRequested=false,journal=null,depth=0,replaying=false,step=null,cursor=0,answer=0,saving=0,fields=null;
   const clone=x=>JSON.parse(JSON.stringify(x));
@@ -48,6 +48,7 @@ const PalaceActions=(()=>{
       const selectors=['#f-sur','#f-name','#f-era','input[name=f-style]:checked'];
       if(journal?.version>=85)selectors.push('input[name=f-scenario]:checked');
       if(journal?.version>=85)selectors.push('#f-dynasty-meta','input[name=f-dynasty-portrait]:checked');
+      if(dynastyFollowupActive())selectors.push('#f-dynasty-legacies','#f-dynasty-legacy');
       current.fields=Object.fromEntries(selectors.map(k=>[k,$(k)?.value||'']));
     }
     if(journal){journal.steps.push(current);if(name==='choose'||name==='next')delete journal.draft;}

@@ -54,11 +54,78 @@ const PRINCE_CAREERS={
  trade:{name:'经商',work:'打理产业，核算商账',stat:'lit',support:1},
  travel:{name:'游历',work:'研读舆图，记录沿途见闻',stat:'lit',support:1}
 };
+const PRINCE_CAREER_BLOCS={civil:'civil',military:'army',clan:'kin',trade:'civil',travel:'civil'};
+function princeAptitude(k){
+ const school={读书:'civil',习武:'military',修德:'clan',游学:'travel'}[k.policy];
+ const temperament={好奇:'travel',好胜:'military',仁厚:'clan',内敛:'civil',爽直:'military',灵动:'travel',审慎:'trade',自矜:'civil'}[childDisposition(k)];
+ const mentor=childMentor(k),bloc=mentor?.h.bloc;
+ const guidance=mentor?.p.temperament==='持正'?'clan':bloc==='army'?'military':mentor?'civil':null;
+ const studies=k.princeEducation||{};
+ const scores={civil:k.lit,military:k.mar,clan:k.vir,trade:(k.lit+k.vir)/2-5,travel:(k.lit+k.mar)/2-5};
+ const score=id=>scores[id]+(school===id?14:0)+(temperament===id?14:0)+(guidance===id?9:0)+Math.min(24,(studies[id]||0)/3);
+ return Object.keys(PRINCE_CAREERS).sort((a,b)=>score(b)-score(a))[0];
+}
+function choosePrinceVocation(k){
+ const path=princeAptitude(k);
+ k.princeCareer={path,assigned:S.turn-12,months:0,completed:0,momentum:0,last:-1,selfChosen:true};
+ kstory(k,`【成年志向】结合儿时所学和自己的性情，愿从${PRINCE_CAREERS[path].name}一道做起。`);
+ log(`【皇子志向】${kidName(k)}自择${PRINCE_CAREERS[path].name}一道。`);
+}
+function princeCirclePanel(k){
+ if(!dynastyFollowupActive()||!k.princeCareer)return '';
+ const circle=k.princeCircle;
+ const party=COURT_BLOCS.find(b=>b.id===circle?.bloc)?.name;
+ const rows=(items,label)=>`<p><b>${label}</b></p><ul class="story">${items?.length?items.map(p=>`<li>${chroniclePersonLink(p)} · ${p.score}/100</li>`).join(''):'<li>尚无记载。</li>'}</ul>`;
+ return detailSection('故交与朝臣',`${party?`<p>与${party}一系往来较多 · 朝中声援 ${princeCircleSupport(k)}/100</p>`:''}
+   ${rows(circle?.friends,'常来往的同辈')}${rows(circle?.officials,'往来的朝臣')}`);
+}
+function princeCircleSupport(k){
+ const circle=k.princeCircle;
+ if(!circle)return 0;
+ return Math.min(100,Math.round(circle.officials.reduce((sum,tie)=>sum+(tie.backing?tie.score:0),0)/2));
+}
+function princeCircleTick(k){
+ const career=k.princeCareer;
+ if(!career||!childCanVisitCourt(k))return;
+ const circle=k.princeCircle||={friends:[],officials:[]};
+ if(S.turn-(circle.last??career.assigned)<6)return;
+ circle.last=S.turn;
+ circle.bloc=PRINCE_CAREER_BLOCS[career.path];
+ const advance=(rows,people,amount,note)=>{
+   const indexed=new Map(rows.map(row=>[row.id,row])),newcomers=people.filter(p=>!indexed.has(p.id));
+   const activeIds=new Set(people.map(p=>p.id));
+   const inactive=rows.filter(row=>!activeIds.has(row.id)).sort((a,b)=>a.score-b.score)[0];
+   const eligible=(rows.length<3||inactive)&&newcomers.length?newcomers:people.filter(p=>indexed.has(p.id));
+   if(!eligible.length)return null;
+   const chosen=eligible[voiceHash(`prince-circle:${k.seed}:${S.turn}:${note}`)%eligible.length];
+   const row=indexed.get(chosen.id);
+   if(row){
+     const before=row.score;row.score=clamp(before+amount);
+     if(before<40&&row.score>=40)kstory(k,`【${note}】与${row.name}数次往来，渐有交情。`);
+     return row;
+   }
+   const next={id:chosen.id,name:chosen.name,score:25};
+   if(rows.length>=3&&inactive)rows.splice(rows.indexOf(inactive),1);
+   rows.push(next);
+   kstory(k,`【${note}】和${chosen.name}有了往来。`);
+   return next;
+ };
+ const peers=royalHouseholds().filter(p=>p!==k&&p.sex&&kidAge(p)>=16&&Math.abs(kidAge(p)-kidAge(k))<=12&&childCanVisitCourt(p)&&relGet(k,p)>-20)
+   .sort((a,b)=>relGet(k,b)-relGet(k,a)).slice(0,8);
+ const friend=advance(circle.friends,peers,8,'府中故交');
+ const peer=friend&&peers.find(p=>p.id===friend.id);
+ if(peer)relAdd(k,peer,1);
+ const officials=officialEntries().filter(e=>officialServing(e.p)&&!e.p.away&&e.h.bloc===circle.bloc);
+ const active=new Set(officials.map(e=>e.p.id));
+ for(const tie of circle.officials)tie.backing=active.has(tie.id)&&tie.score>=40;
+ const ally=advance(circle.officials,officials.map(e=>e.p),10,'朝臣往来');
+ if(ally&&ally.score>=40){ally.backing=true;k.sup=clamp((k.sup||0)+1);}
+}
 function princeCareerPanel(k){
  if(journalContentVersion()<85||!k.alive||k.sex!=='m'||kidAge(k)<16||k.removedFromRoyal)return '';
  const career=k.princeCareer,path=PRINCE_CAREERS[career?.path];
  return `<p class="hint">皇子成年后可选择一条发展方向，每积累十二个月完成一次差务；不在京或受限时暂停。更换方向须间隔一年。</p>
- ${path?`<p>当前方向：${path.name} · ${path.work} · 进度 ${career.months}/12 · 已完成 ${career.completed} 次 · 势 ${career.momentum||0}</p><p class="hint">朝政立场：${({civil:'重视文官与民政',military:'重视武备与边防',clan:'重视外家与宗亲',trade:'重视民政与商贸',travel:'重视民政与见闻'})[career.path]}；母族 ${esc(byId(k.mom)?.fam?.t||'未记载')}。</p>`:'<p>尚未选择方向。</p>'}
+ ${path?`<p>当前方向：${path.name}${career.selfChosen?' · 本人志向':''} · ${path.work} · 进度 ${career.months}/12 · 已完成 ${career.completed} 次 · 势 ${career.momentum||0}</p><p class="hint">朝政立场：${({civil:'重视文官与民政',military:'重视武备与边防',clan:'重视外家与宗亲',trade:'重视民政与商贸',travel:'重视民政与见闻'})[career.path]}；母族 ${esc(byId(k.mom)?.fam?.t||'未记载')}。</p>`:'<p>尚未选择方向。</p>'}
  <div class="acts">${Object.entries(PRINCE_CAREERS).map(([id,p])=>`<button class="btn sm ${career?.path===id?'on':''}" onclick="A.princeCareer(${k.id},'${id}')" ${!childCanVisitCourt(k)||E().energy<1||career&&S.turn-career.assigned<12?'disabled':''}>${p.name} · 精力−1</button>`).join('')}</div>`;
 }
 A.princeCareer=function(id,path){
@@ -68,7 +135,10 @@ A.princeCareer=function(id,path){
  kstory(k,`开始循${p.name}方向发展：${p.work}。`);log(`${kidName(k)}选择${p.name}方向。`);render();
 };
 function princeCareerTick(k){
- const c=k.princeCareer,p=PRINCE_CAREERS[c?.path];if(journalContentVersion()<85||!p||!childCanVisitCourt(k)||kidAge(k)<16||c.last===S.turn)return;
+ if(journalContentVersion()<85||!childCanVisitCourt(k)||kidAge(k)<16)return;
+ if(dynastyFollowupActive()&&k.sex==='m'&&!k.princeCareer)choosePrinceVocation(k);
+ const c=k.princeCareer,p=PRINCE_CAREERS[c?.path];if(!p||c.last===S.turn)return;
+ if(dynastyFollowupActive())princeCircleTick(k);
  c.last=S.turn;if(++c.months<12)return;c.months=0;c.completed++;c.momentum=Math.min(100,(c.momentum||0)+1);
  k[p.stat]=clamp(k[p.stat]+2);k.sup=clamp((k.sup||0)+p.support);
  if(c.path==='trade')chg({treasury:8});
@@ -105,7 +175,13 @@ function princeCareerRivalryEvent(){
 function growKid(k){
   const a=kidAge(k);if(a<3)return;const m=k.tutor?1.6:1,g=()=>R()*.9*m;
   if(k.policy==='读书')k.lit+=g()*1.7;else if(k.policy==='习武'){k.mar+=g()*1.7*(k.jiangmenChild&&storyCastActive()?2:1);k.hp+=.08}else if(k.policy==='修德')k.vir+=g()*1.7;
-  else if(k.policy==='放养'){k.hp+=.25;k.amb+=.1;k.love+=.05}else{k.lit+=g()*.65;k.mar+=g()*.65;k.vir+=g()*.65}
+  else if(k.policy==='放养'){k.hp+=.25;k.amb+=.1;k.love+=.05}
+  else if(dynastyFollowupActive()&&k.policy==='游学'){k.lit+=g()*.9;k.mar+=g()*.7;k.hp+=.12}
+  else{k.lit+=g()*.65;k.mar+=g()*.65;k.vir+=g()*.65}
+  if(dynastyFollowupActive()&&k.sex==='m'&&a<16){
+    const area={读书:'civil',习武:'military',修德:'clan',游学:'travel'}[k.policy];
+    if(area){const studies=k.princeEducation||={};studies[area]=(studies[area]||0)+1;}
+  }
   {const fm=fosterOf(k);if(fm&&fm.alive){if(fm.virtue>65)k.vir+=.15;if(fm.talent>65)k.lit+=.15;if(fm.scheme>65)k.amb+=.12}}
   if(journalContentVersion()>=85&&a>=6&&a<16&&childInPalace(k)){
     const mentor=childMentor(k);if(mentor&&officialServing(mentor.p)&&!mentor.p.away){
@@ -237,7 +313,7 @@ function royalComingOfAgeEvent(){
 function milestone(){
   for(const k of kidsAlive()){if(k.templeStay||royalJourneyAway(k))continue;const a=kidAge(k);
     if(k.sex==='f'){const event=princessMilestone(k);if(event)return event;}
-    if(k.sex==='m'&&a>=16&&!k.adult){k.adult=true;if(S.heir===k.id)continue;return {title:'皇子成年',por:k,valid:()=>k.alive&&!royalJourneyAway(k)&&!k.templeStay&&!k.jailed,text:`${kidName(k)}年满十六，按祖制当封王开府。`,choices:[
+    if(k.sex==='m'&&a>=16&&!k.adult){k.adult=true;if(dynastyFollowupActive()&&!k.princeCareer&&childCanVisitCourt(k))choosePrinceVocation(k);if(S.heir===k.id)continue;return {title:'皇子成年',por:k,valid:()=>k.alive&&!royalJourneyAway(k)&&!k.templeStay&&!k.jailed,text:`${kidName(k)}年满十六，按祖制当封王开府。`,choices:[
       {t:'封亲王，留京辅政',f:()=>{if(!k.alive||royalJourneyAway(k))return null;openPrinceEstate(k);const keepTitle=journalContentVersion()>=40&&k.title?.endsWith('亲王');if(!keepTitle)A.kidTitle(k.id);k.amb=clamp(k.amb+10);return keepTitle?`${k.name}沿用「${k.title}」封号，留京开府。`:null}},
       {t:'封王，就藩地方',f:()=>{if(!k.alive||royalJourneyAway(k))return null;k.away=true;if(journalContentVersion()<40||!k.title?.endsWith('亲王'))k.title=pick(['晋','楚','燕','蜀','吴','齐'])+'王';k.amb=clamp(k.amb-10);kstory(k,`受封${k.title}，就藩地方。`);log(`封${k.name}为${k.title}，就藩。`);return `${k.name}辞别父皇，前往封地。`}}]}}
   }

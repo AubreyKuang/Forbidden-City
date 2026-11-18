@@ -95,6 +95,7 @@ function viewTitle(){
    ${slots.length?`<div class="save-list">${slots.map(x=>`<button class="btn sm" onclick="A.load('${x.s}')">读取${x.s==='auto'?'自动存档':'存档'+x.s}：${esc(x.i)}</button>`).join('')}</div>`:''}</div>`}
 function viewNew(){
   const profile=journalContentVersion()>=85?dynastyProfile():[];
+  const legacies=dynastyFollowupActive()?dynastyLegacySources():[];
   return `<section class="story-scene coronation-scene" aria-labelledby="coronation-title">
     <header><p>宸极殿</p><h2 id="coronation-title">登基大典</h2></header>
   </section>
@@ -113,6 +114,11 @@ function viewNew(){
       <div>${Object.entries(DYNASTY_SCENARIOS).filter(([,scenario])=>!scenario.unlock||profile.includes(scenario.unlock)).map(([id,scenario],i)=>`<label class="opt"><input type="radio" name="f-scenario" value="${id}" ${i===0?'checked':''}><span><b>${esc(scenario.name)}</b><span class="hint">${esc(scenario.description)}</span></span><span class="opt-check" aria-hidden="true">✓ 已选</span></label>`).join('')}</div>
     </fieldset>
     ${profile.length?`<p class="hint">已继承成就奖励：${profile.includes('reigns')?'承祧之君剧本 ':''}${profile.includes('children')?'家学仁厚（开局民心+3） ':''}${profile.includes('companionship')?'皇后礼冠 ':''}${profile.includes('grown')?'选择帝王画像 ':''}</p>`:''}
+    ${legacies.length?`<fieldset class="coronation-styles"><legend>前局传承</legend>
+      <input type="hidden" id="f-dynasty-legacies" value="${esc(JSON.stringify(legacies))}">
+      <label>先朝<select id="f-dynasty-legacy"><option value="">从本朝开始</option>
+        ${legacies.map((r,i)=>`<option value="${i}">${esc(r.predecessor)} · ${esc(r.era)} · 声望 ${r.prestige} · ${esc(r.trait)} · ${r.slot==='auto'?'自动存档':`存档${r.slot}`}</option>`).join('')}
+      </select></label><p class="hint">选定一位旧档君主，将他的声望、家训和一项特质传给新君。</p></fieldset>`:''}
     <div class="coronation-actions"><button type="button" class="btn quiet sm" onclick="A.go('title')">返回</button><button type="submit" class="btn primary">登基</button></div>
   </form>`}
 function consortCard(c){
@@ -290,6 +296,12 @@ function viewFamily(){
     ${dowagerFamilyPanel()}${branches||'<p class="hint">目前没有入宫的妃嫔。</p>'}${outsideBirthFamilyPanel()}${royalRelativesPanel()}
     ${unlisted.length?`<details class="family-branch"><summary>生母未载</summary><ul>${unlisted.map(childLine).join('')}</ul></details>`:''}`;
 }
+function dynastyLegacyPanel(legacy){
+ const stats={people:'民心',wu:'武略',wen:'文才',health:'龙体'};
+ return `<p>先朝君主 ${esc(legacy.predecessor)} · ${esc(legacy.era)}朝 · 声望 ${rd(legacy.prestige)}</p>
+   <p>家训「${esc(legacy.lesson)}」 · 威望 +${legacy.renown} · ${stats[legacy.stat]} +${legacy.bonus}</p>
+   ${legacy.trait?`<p>承袭特质「${esc(legacy.trait)}」 · ${stats[legacy.traitStat]} +${legacy.traitBonus}</p>`:''}`;
+}
 function viewHome(){
   const e=E(),h=harem(),k=kidsAlive(),heir=S.heir&&kidById(S.heir);
   const recent=S.log.filter(l=>!l.t.startsWith('——')).slice(-8).reverse();
@@ -307,7 +319,8 @@ function viewHome(){
      ['fertility','太医院会诊',imperialFertilityPanel()],
      ['goals','王朝目标',dynastyGoalsPanel()],
      ...(journalContentVersion()>=85?[['collection','王朝图鉴',dynastyCodexPanel()]]:[]),
-     ...(e.dynastyLegacy?[["legacy","先帝传承",`<p>先帝 ${esc(e.dynastyLegacy.predecessor)} · ${esc(e.dynastyLegacy.era)}朝 · 声望 ${rd(e.dynastyLegacy.prestige)}</p><p>家训：${esc(e.dynastyLegacy.lesson)}。登基时承先朝声望，威望 +${e.dynastyLegacy.renown}；${esc(({people:'民心',wu:'武略',wen:'文才',health:'龙体'})[e.dynastyLegacy.stat])} +${e.dynastyLegacy.bonus}。</p>`]]:[]),
+     ...(e.dynastyLegacy?[["legacy",e.dynastyLegacy.crossGame?'前局传承':'先帝传承',dynastyLegacyPanel(e.dynastyLegacy)]]:[]),
+     ...(dynastyFollowupActive()&&e.diplomaticTraits?.length?[['foreign-traits','先前出使',diplomaticTraitsPanel(e)]]:[]),
      ['court','朝堂与外家',courtBlocHTML()],
      ['stewardship','协理六宫',typeof haremStewardPanel==='function'?haremStewardPanel():''],
      ['story-consorts','剧情妃图鉴',storyConsortCodex()],
@@ -545,7 +558,7 @@ function viewKids(){
 }
 function viewKid(){
   const k=kidById(UI.sel);if(!k)return viewKids();const a=kidAge(k);
-  const pol=['均衡','读书','习武','修德','放养'];
+  const pol=['均衡','读书','习武','修德','放养',...(dynastyFollowupActive()&&a<16?['游学']:[])];
   const foster=fosterOf(k),mom=byId(k.mom);
   const status=[k.alive?`${a}岁`:k.lost?'下落不明':k.deathReason||'已故',k.married?'已婚嫁':'',k.estate?'已开府':'',k.away?'已就藩':'',k.jailed?'圈禁于宗人府':'',k.removedFromRoyal?'不列皇嗣':''].filter(Boolean).join(' · ');
   const care=childInPalace(k)?`<div class="hint">当前方针：${esc(k.policy)} · 三岁起生效</div><div class="acts">
@@ -562,10 +575,10 @@ function viewKid(){
    ${k.alive&&!k.removedFromRoyal&&!k.estate&&!k.jailed&&!k.pendingName?`<div class="detail-actions" role="group" aria-label="人物操作"><span class="detail-action-label" aria-hidden="true">人物操作</span><div class="acts"><button class="btn primary" onclick="A.kidVisit(${k.id})">${childHasLeftPalace(k)?'写家书':'探望'}<small>精力-1</small></button></div></div>`:''}
    <div class="detail-vitals">${bar('才学',k.lit,'#617991')}${bar('武艺',k.mar,'#92504a')}${bar('品德',k.vir,'#517369')}</div>
    ${pageChapters('child',[
-    ['now','近况与心事',storyCastChildPanel(k)+childDispositionPanel(k)+(k.foreignLanguages?.length?detailSection('出使见闻',`<p>所学外语：${k.foreignLanguages.map(esc).join('、')}。</p>`):'')+immortalPanel(k)+royalTravelPanel(k)+continuityPanel(k)+
+    ['now','近况与心事',storyCastChildPanel(k)+childDispositionPanel(k)+(k.foreignLanguages?.length?detailSection('出使见闻',`<p>所学外语：${k.foreignLanguages.map(esc).join('、')}。</p>`+diplomaticTraitsPanel(k)):'')+immortalPanel(k)+royalTravelPanel(k)+continuityPanel(k)+
       (k.alive?initiativeHTML(k):'')+detailSection(a>=20?'婚事与心意':'少年心事',youthPanel(k))+
       detailSection('护国寺祈福',childTemplePanel(k))],
-    ['care','教养与封号',detailSection('教养与抚养',care)+detailSection('师承',childMentorPanel(k))+detailSection('成年志向与差务',princeCareerPanel(k))+
+    ['care','教养与封号',detailSection('教养与抚养',care)+detailSection('师承',childMentorPanel(k))+detailSection('成年志向与差务',princeCareerPanel(k)+princeFiefRequestPanel(k))+princeCirclePanel(k)+
       detailSection('封号与储位',titles?`<div class="acts">${titles}</div>`:'')+
       detailSection('其他属性',`<div class="stats">${bar('体魄',k.hp,'#a87a26')}${bar('野心',k.amb,'#6b4a33')}${bar('父爱',k.love,'#936375')}${k.sex==='m'&&a>=10?bar('支持',k.sup||0,'#617991'):''}</div>`)+
       detailSection('出生禀赋',childBirthPanel(k))],
@@ -588,7 +601,7 @@ function viewLog(){
     const person=child?kidById(id):byId(id);
     return person?`<button class="btn sm" onclick="A.go('${child?'kid':'consort'}',${person.id})">查看${esc(child?kidName(person):fullName(person))}</button>`:'';
   };
-  return `${pageHeading('起居注')}<div class="log-filter" role="group" aria-label="纪事筛选与留存"><button class="btn sm ${UI.logF==='all'?'on':''}" onclick="UI.logF='all';render()">全部</button><button class="btn sm ${UI.logF==='big'?'on':''}" onclick="UI.logF='big';render()">只看大事</button><button class="btn sm" onclick="A.logCard()">保存上月纪念卡</button>${journalContentVersion()>=85?'<button class="btn sm" onclick="A.go(\'home\');jumpToPageSection(\'home-collection\')">查看王朝图鉴</button>':''}</div>
+  return `${pageHeading('起居注')}<div class="log-filter" role="group" aria-label="纪事筛选与留存"><button class="btn sm ${UI.logF==='all'?'on':''}" onclick="UI.logF='all';render()">全部</button><button class="btn sm ${UI.logF==='big'?'on':''}" onclick="UI.logF='big';render()">只看大事</button><button class="btn sm" onclick="A.logCard()">保存上月纪念卡</button>${journalContentVersion()>=85?'<button class="btn sm" onclick="A.go(\'home\');jumpToPageSection(\'home-collection\')">查看王朝图鉴</button>':''}${dynastyFollowupActive()?'<button class="btn sm" onclick="A.go(\'regnal\')">皇帝本纪</button>':''}</div>
    ${month?`<section class="month-record"><h3>${esc(month.date)}回顾</h3>
     <p>月入 ${esc(month.inc)} 万两 · 支出 ${esc(month.exp)} 万两</p>
     ${month.finance&&[month.finance.opening,month.finance.closing,month.finance.other].every(Number.isFinite)?`<p>换月前国库 ${month.finance.opening} 万两 · 换月后 ${month.finance.closing} 万两${month.finance.other?` · 其他换月收支 ${month.finance.other>0?'+':''}${month.finance.other} 万两`:''}</p>`:''}

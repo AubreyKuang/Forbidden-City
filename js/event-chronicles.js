@@ -2,6 +2,16 @@
    participants and explicit chroniclePeople receive it; `present` can contain
    secret suspects and is never used as a list of people who know. */
 function chronicleText(text){return String(text||'').split('\n').filter(line=>!line.startsWith('§')).join('\n').trim();}
+function nextReignEntryOrder(){return S.reignEntryOrder=(S.reignEntryOrder||0)+1;}
+function reignEventEntry(event,choice,value){
+  if(!S||PalaceActions.blocked||event.sealedAnnals||choice.chronicle===false)return null;
+  return {gen:S.gen,turn:S.turn,d:dateStr(),order:nextReignEntryOrder(),title:event.title,choice:value?`${choice.t}（${value}）`:choice.t};
+}
+function recordReignEvent(entry,result){
+  const outcome=chronicleText(typeof result==='string'?result:result?.text);
+  if(outcome)entry.outcome=outcome.slice(0,480);
+  (S.reignAnnals||=[]).push(entry);
+}
 function chronicleEvent(ev){
   if(!ev||ev.chronicled)return ev;
   ev.chronicled=true;let resolved=false;

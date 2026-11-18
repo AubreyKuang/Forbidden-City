@@ -72,24 +72,74 @@ const intelligenceEnabled=()=>journalContentVersion()>=85;
 const intelligenceState=()=>S.intelligence?.gen===S.gen?S.intelligence:null;
 function intelligenceAgent(id){
   const group=INTELLIGENCE_SOURCES[id],state=intelligenceState();
-  return group&&state?.agents?.[id];
+  const agent=group&&state?.agents?.[id];
+  const person=agent?.personId!=null?byId(agent.personId):null;
+  if(dynastyFollowupActive()&&agent?.personId!=null&&(!person?.maid||!inPalace(person)))return;
+  return agent;
 }
-function recruitIntelligenceAgent(id){
+function intelligenceSponsors(){
+  return officialEntries().filter(e=>S.consorts.includes(e.c)&&officialServing(e.p)&&!e.p.away&&
+    (e.c.fam.p>=55||(e.p.trust??0)>=65||officialGrade(e.p)&&officialGrade(e.p)<=3))
+    .sort((a,b)=>b.c.fam.p-a.c.fam.p||(b.p.trust??0)-(a.p.trust??0)||a.key.localeCompare(b.key));
+}
+function recruitIntelligenceAgent(id,personId){
   if(!intelligenceEnabled()||!jinyiweiCommanderReady()||!INTELLIGENCE_SOURCES[id]||modalOpen||S.over||E().energy<1||E().treasury<10)return;
+  const person=dynastyFollowupActive()&&personId!=null?byId(personId):null;
+  if(dynastyFollowupActive()&&personId!=null&&(id!=='maid'||!person?.maid||!person.near||!inPalace(person)))return;
   const network=S.intelligence?.gen===S.gen?S.intelligence:(S.intelligence={gen:S.gen,agents:{},reports:[],nextId:1});
-  if(network.agents[id])return;
+  if(intelligenceAgent(id))return;
   if(!useE())return;
   chg({treasury:-10});
   const seed=ri(1,2e9),sur=pick(SUR),given=pick(BROTHER_NAMES);
-  network.agents[id]={id,name:sur+given,seed,ability:ri(40,75),loyalty:ri(45,85),compromised:chance(.15),recruited:S.turn};
-  log(`【宫廷情报】${network.agents[id].name}开始担任${INTELLIGENCE_SOURCES[id].name}。`);
+  const agent=network.agents[id]={id,name:sur+given,seed,ability:ri(40,75),loyalty:ri(45,85),compromised:chance(.15),recruited:S.turn};
+  if(person){
+    Object.assign(agent,{personId:person.id,name:fullName(person),ability:rd((person.talent+person.scheme)/2),loyalty:rd(person.aff)});
+    agent.compromised=false;
+    story(person,'【宫廷情报】在御前领了密差，平日仍照旧当值。');
+  }else if(dynastyFollowupActive()&&agent.compromised){
+    const sponsor=intelligenceSponsors()[0];
+    if(sponsor)agent.infiltration={kind:'plant',name:sponsor.p.name,id:sponsor.p.id,turn:S.turn};
+  }
+  log(`【宫廷情报】${agent.name}开始担任${INTELLIGENCE_SOURCES[id].name}。`);
   render();
+}
+function appointIntelligenceSteward(){
+  const agent=intelligenceAgent('eunuch');
+  if(!dynastyFollowupActive()||!agent||agent.steward||agent.ability<55||agent.loyalty<55||modalOpen||!useE())return;
+  agent.steward=true;
+  log(`【宫廷情报】任命${agent.name}为宫中总管，统筹内侍与宫女的查访。`,1);render();
+}
+A.appointIntelligenceSteward=appointIntelligenceSteward;
+function intelligenceCounterTick(){
+  const state=intelligenceState();
+  if(!dynastyFollowupActive()||!state||S.over||S.turn-(state.lastApproach??0)<12)return;
+  const candidates=Object.keys(state.agents).map(intelligenceAgent).filter(a=>a&&!a.compromised&&S.turn-a.recruited>=3&&!(a.review?.due>S.turn));
+  const sponsor=candidates.length&&intelligenceSponsors()[0];
+  if(!sponsor)return;
+  state.lastApproach=S.turn;
+  const agent=pick(candidates);
+  const pressure=clamp(.48+sponsor.c.fam.p/300-agent.loyalty/160,.05,.7);
+  const accepted=chance(pressure);
+  const person=agent.personId!=null?byId(agent.personId):null;
+  agent.approach={turn:S.turn,d:dateStr(),accepted};
+  delete agent.review;
+  if(accepted){
+    agent.compromised=true;
+    agent.infiltration={kind:'bribe',name:sponsor.p.name,id:sponsor.p.id,turn:S.turn};
+    if(person)story(person,'【宫廷情报】宫门外有人借家信递来一封另有夹层的信，她把它藏了起来。');
+    log('【宫廷情报】值房查见有人递私封进宫。收信人尚未核清，可复核情报人员的往来。');
+  }else{
+    agent.loyalty=clamp(agent.loyalty+3);
+    if(person)story(person,'【宫廷情报】有人许以银钱请她传话，她原封退回，悄悄向御前禀报。');
+    log(`【宫廷情报】${agent.name}退还试图收买自己的私封，已将此事上报。`);
+  }
 }
 function trainIntelligenceAgent(id){
   const agent=intelligenceAgent(id);
   if(!intelligenceEnabled()||!agent||S.over||modalOpen||agent.trainingTurn===S.turn||E().energy<1||E().treasury<5)return;
   if(!useE())return;
   chg({treasury:-5});agent.ability=clamp(agent.ability+5);agent.loyalty=clamp(agent.loyalty+3);agent.trainingTurn=S.turn;
+  if(agent.personId!=null)story(byId(agent.personId),'【宫廷情报】练习核对值簿与转述口供。');
   log(`【宫廷情报】${agent.name}接受查访训练。`);render();
 }
 function assignIntelligencePalace(id,palace){
@@ -105,11 +155,14 @@ function intelligenceDispatch(id,caseId,suspectId){
   if(!useE())return;
   chg({treasury:-15});
   const truth=file.kind==='harem'?file.culprit===suspect.id:file.truth===true;
-  const accuracy=clamp(.3+agent.ability/200+agent.loyalty/500+(agent.palace&&agent.palace===suspect?.palace ? .08 : 0),.25,.9);
+  const steward=dynastyFollowupActive()&&intelligenceAgent('eunuch');
+  const coordination=steward?.steward&&source.kind==='harem'&&id!=='guard'?.05:0;
+  const accuracy=clamp(.3+agent.ability/200+agent.loyalty/500+(agent.palace&&agent.palace===suspect?.palace ? .08 : 0)+coordination,.25,.9);
   const accurate=chance(accuracy);
+  const manipulated=agent.infiltration?file.kind==='rumor'&&file.targetId===agent.infiltration.id?false:!truth:true;
   const report={id:network.nextId++,agent:id,agentName:agent.name,caseId:file.id,title:file.title,
     kind:file.kind,suspect:suspect?.id??null,suspectName:suspect?fullName(suspect):officialEntry(file.target)?.p.name||'被参官员',
-    conclusion:id==='guard'&&agent.protection?.stage>=2&&agent.protection.consort===suspect?.id?false:agent.compromised?true:accurate?truth:!truth,accuracy:Math.round(accuracy*100),due:S.turn+2,status:'pending'};
+    conclusion:id==='guard'&&agent.protection?.stage>=2&&agent.protection.consort===suspect?.id?false:agent.compromised?manipulated:accurate?truth:!truth,accuracy:Math.round(accuracy*100),due:S.turn+2,status:'pending'};
   network.reports.push(report);
   log(`【宫廷情报】${agent.name}受命查访「${file.title}」，约两个月后回报。`);
   render();
@@ -133,17 +186,44 @@ function investigateIntelligenceAgent(id){
   if(!intelligenceEnabled()||!agent||agent.review||S.over||modalOpen||E().energy<1||E().treasury<15)return;
   if(!useE())return;
   chg({treasury:-15});agent.review={due:S.turn+2,compromised:agent.compromised};
+  if(dynastyFollowupActive()&&agent.infiltration)agent.review.infiltration={...agent.infiltration};
   log(`【宫廷情报】着人复核${agent.name}的来往与经手账册，约两个月后回报。`);
   render();
 }
-function dismissIntelligenceAgent(id){
+function dismissIntelligenceAgent(id,fromReview=false){
   const agent=intelligenceAgent(id),review=agent?.review;
-  if(!intelligenceEnabled()||!review||S.turn<review.due||!review.compromised||S.over||modalOpen)return;
+  if(!intelligenceEnabled()||!review||S.turn<review.due||!review.compromised||S.over||modalOpen&&!fromReview)return;
   delete intelligenceState().agents[id];
   log(`【宫廷情报】复核查出${agent.name}暗中受人收买，已撤去差事。`);
-  render();
+  const person=agent.personId!=null?byId(agent.personId):null;
+  if(person)story(person,'【宫廷情报】暗中收受私封一事被查出，御前撤去密差。');
+  if(!fromReview)render();
 }
+function counterIntelligenceEvent(id){
+  const agent=intelligenceAgent(id),review=agent?.review;
+  if(!dynastyFollowupActive()||!review?.infiltration||review.read||S.turn<review.due||S.over)return null;
+  const {kind,name}=review.infiltration;
+  const valid=()=>intelligenceAgent(id)===agent&&agent.review===review&&!review.read&&!S.over;
+  return {title:'宫廷情报 · 密查复奏',por:jinyiwei()?.commander,valid,
+    text:`值簿和经手的私封对上了。${kind==='plant'?`${agent.name}入值前就受${name}指使，是安插进来的人。`:`${name}借私封送银给${agent.name}，要此人改写查访回报。`}这段时日呈上的密报宜另行核实。`,
+    choices:[{t:'撤去密差，记录证人',f:()=>{dismissIntelligenceAgent(id,true);return '值房收回令牌，将私封归入案卷。';}},
+      {t:'留任观察，封存证据',f:()=>{review.read=true;log(`【宫廷情报】封存${name}与${agent.name}私下往来的证据，暂留其差事。`,1);return '指挥使收好案卷，继续复核此人往后的密报。';}}]};
+}
+function pendingCounterIntelligenceEvent(){
+  for(const id of Object.keys(intelligenceState()?.agents||{})){
+    const event=counterIntelligenceEvent(id);if(event)return event;
+  }
+  return null;
+}
+A.reviewCounterIntelligence=function(id){if(!modalOpen)pushEv(counterIntelligenceEvent(id));};
 A.recruitIntelligenceAgent=recruitIntelligenceAgent;
+A.releaseIntelligenceMaid=function(){
+ const a=intelligenceAgent('maid');
+ if(!dynastyFollowupActive()||!a||S.over||modalOpen)return;
+ delete intelligenceState().agents.maid;
+ if(a.personId!=null)story(byId(a.personId),'【宫廷情报】卸下密差，回去料理原有差事。');
+ log(`【宫廷情报】${a.name}卸下查访差事。`);render();
+};
 A.trainIntelligenceAgent=trainIntelligenceAgent;
 A.assignIntelligencePalace=assignIntelligencePalace;
 A.intelligenceDispatch=intelligenceDispatch;
@@ -205,17 +285,22 @@ function intelligencePanel(){
   if(!intelligenceEnabled())return '';
   const state=intelligenceState(),agents=state?.agents||{};
   const personnel=Object.entries(INTELLIGENCE_SOURCES).map(([id,source])=>{
-    const a=agents[id];
+    const a=intelligenceAgent(id);
+    const maids=dynastyFollowupActive()&&id==='maid'?maidsInIntelligenceReach():[];
     const review=a?.review,reviewText=review?(S.turn<review.due?`复核中 · 还需 ${review.due-S.turn} 个月`:
-      review.compromised?`复核查出暗中受人收买。<button class="btn sm" onclick="A.dismissIntelligenceAgent('${id}')">撤去差事</button>`:'复核未查出受人收买。'):'';
+      review.compromised?(review.infiltration&&!review.read?`复核查出暗中受人收买。<button class="btn sm" onclick="A.reviewCounterIntelligence('${id}')">阅览复奏</button>`:`复核查出暗中受人收买。<button class="btn sm" onclick="A.dismissIntelligenceAgent('${id}')">撤去差事</button>`):'复核未查出受人收买。'):'';
     return `<li><strong>${esc(source.name)}</strong> · ${esc(source.specialty)} · ${a?`${esc(a.name)} · 才干 ${a.ability} · 忠诚 ${a.loyalty}${a.palace?' · 驻守'+esc(a.palace):''}
       <button class="btn sm" onclick="A.trainIntelligenceAgent('${id}')" ${S.over||a.trainingTurn===S.turn||E().energy<1||E().treasury<5?'disabled':''}>训练 · 精力−1 · 国库−5</button>
-      ${review?reviewText:`<button class="btn sm" onclick="A.investigateIntelligenceAgent('${id}')" ${S.over||E().energy<1||E().treasury<15?'disabled':''}>复核此人 · 精力−1 · 国库−15</button>`}${['eunuch','maid'].includes(id)?`<details><summary>安排驻守宫室</summary><div class="acts">${['坤宁宫',...PALACES].map(p=>`<button class="btn sm" onclick="A.assignIntelligencePalace('${id}','${esc(p)}')" ${a.palace===p||a.palaceTurn===S.turn||E().energy<1?'disabled':''}>${esc(p)}</button>`).join('')}</div><p class="hint">查访驻守宫室时，线索准确率有所提高；每月可调整一次。</p></details>`:''}`:
-      `<button class="btn sm" onclick="A.recruitIntelligenceAgent('${id}')" ${!jinyiweiCommanderReady()||S.over||E().energy<1||E().treasury<10?'disabled':''}>招募 · 精力−1 · 国库−10</button>`}</li>`;
+      ${review?reviewText:`<button class="btn sm" onclick="A.investigateIntelligenceAgent('${id}')" ${S.over||E().energy<1||E().treasury<15?'disabled':''}>复核此人 · 精力−1 · 国库−15</button>`}
+      ${dynastyFollowupActive()&&id==='maid'?'<button class="btn quiet sm" onclick="A.releaseIntelligenceMaid()">卸下密差</button>':''}
+      ${dynastyFollowupActive()&&id==='eunuch'?(a.steward?' · 宫中总管 · 宫闱查访可信度估计 +5':`<button class="btn sm" onclick="A.appointIntelligenceSteward()" ${a.ability<55||a.loyalty<55||S.over||E().energy<1?'disabled':''}>任命宫中总管 · 才干及忠诚须满55 · 精力−1</button>`):''}
+      ${['eunuch','maid'].includes(id)?`<details><summary>安排驻守宫室</summary><div class="acts">${['坤宁宫',...PALACES].map(p=>`<button class="btn sm" onclick="A.assignIntelligencePalace('${id}','${esc(p)}')" ${a.palace===p||a.palaceTurn===S.turn||E().energy<1?'disabled':''}>${esc(p)}</button>`).join('')}</div><p class="hint">查访驻守宫室时，线索准确率有所提高；每月可调整一次。</p></details>`:''}`:
+      `<button class="btn sm" onclick="A.recruitIntelligenceAgent('${id}')" ${intelligenceRecruitmentLocked()?'disabled':''}>招募 · 精力−1 · 国库−10</button>
+      ${maids.map(person=>`<button class="btn sm" onclick="A.recruitIntelligenceAgent('maid',${person.id})" ${intelligenceRecruitmentLocked()?'disabled':''}>培养${esc(fullName(person))}为心腹 · 精力−1 · 国库−10</button>`).join('')}`}</li>`;
   }).join('');
   const cases=palaceCases().filter(x=>caseOpen(x)&&['harem','rumor'].includes(x.kind));
   const missions=cases.map(file=>{
-    const choices=Object.entries(agents).filter(([id])=>INTELLIGENCE_SOURCES[id]?.kind===file.kind).flatMap(([id,a])=>{
+    const choices=Object.entries(agents).filter(([id])=>intelligenceAgent(id)&&INTELLIGENCE_SOURCES[id]?.kind===file.kind).flatMap(([id,a])=>{
       if(file.kind==='rumor')return [`<button class="btn sm" onclick="A.intelligenceDispatch('${id}','${esc(file.id)}',null)">${esc(a.name)}查访 · 精力−1 · 国库−15</button>`];
       return harem().filter(c=>c.id!==file.victim).map(c=>`<button class="btn sm" onclick="A.intelligenceDispatch('${id}','${esc(file.id)}',${c.id})">${esc(a.name)}查访${esc(cName(c))} · 精力−1 · 国库−15</button>`);
     });
@@ -236,6 +321,8 @@ function intelligencePanel(){
     <h4>查访案卷</h4><ul class="story">${missions||'<li>暂无可查访的宫闱疑案或风闻案卷。</li>'}</ul>
     <h4>情报回报</h4><ul class="story">${reports||'<li>暂无回报。</li>'}</ul>`);
 }
+const maidsInIntelligenceReach=()=>S.consorts.filter(person=>person.maid&&person.near&&inPalace(person));
+const intelligenceRecruitmentLocked=()=>!jinyiweiCommanderReady()||S.over||E().energy<1||E().treasury<10;
 function dispatchCase(x,cost){x.status='investigating';x.due=S.turn+1;x.tries++;x.lastTry=S.turn;x.cost=cost;policyNudge('civil',-1);}
 function jinyiweiInvestigationEvent(x,docket){
   if(!caseReady(x)||!jinyiweiCommanderReady())return null;

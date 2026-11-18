@@ -153,7 +153,7 @@ function outerQuestion(k,m,who){
     姨母:'她把信物翻到背面：“这针脚是她亲手教我的。陛下，我家里还有多少事，是您知道、我却不知道的？”',
     旧宫女:'她认得襁褓里那枚信物，握住孩子的手好一会儿，才小声问：“你娘一直把它留给你么？”'
   };
-  return {title:who.role+'问起旧籍',text:who.name+'从案头取出'+k.token+'。'+text[who.role],choices:[
+  return {title:who.role+'问起旧籍',sealedAnnals:true,text:who.name+'从案头取出'+k.token+'。'+text[who.role],choices:[
     {t:'据实说明，护住生母与孩子',f:()=>{k.secret=clamp(k.secret-3);k.trust=clamp(k.trust+5);return outerNote(m,k,'当面回话',who.role+' · 据实说明',who.name+'听完原委，收起旧帖，嘱咐照常照看家人。','“这一次，他肯当面把话说清。”');}},
     {t:'只认原籍，请孩子照常生活',f:()=>{chg({prestige:-3});k.trust=clamp(k.trust-5);const q=byId(who.id);if(q)cchg(q,{mood:-4});
       return outerNote(m,k,'当面回话',who.role+' · 援引原籍',who.name+'把答话写在旧帖旁，对那段空白的年月仍有疑虑。','“纸上那一栏，又空着了。”');}}
@@ -388,7 +388,7 @@ function outerPendingEvent(k,requested){
       option('不认血缘，保留原籍',()=>{const impact=consequence();k.exposed=true;outerDeclineClaim(k);k.trust=clamp(k.trust-20);k.knowledge=outerKnown(k);return note('公开风波','不认血缘','原籍保住了，门前围观的人却过了许久才散。','“你既说出口，我也记住了。”')+impact;});
     }else option('听取来报，护送家人回去',()=>{const impact=consequence();return note(title,'护送家人',text)+impact;});
   }else return null;
-  return {title,text,por:{...k,courtGuest:true,name:k.alias},valid,choices};
+  return {title,text,sealedAnnals:true,por:{...k,courtGuest:true,name:k.alias},valid,choices};
 }
 function outerEducate(k,lesson){
   k.lesson=lesson;k.schoolAge=kidAge(k);

@@ -18,6 +18,50 @@ function princeEstatesPanel(){
 }
 const princeMoveWait=k=>Math.max(0,(k.princeEstate?.lastMove??-99)+6-S.turn);
 const princeMoveReady=k=>!S.over&&princeEstateAvailable(k)&&kidAge(k)>=16&&!princeMoveWait(k)&&!k.royalKinContact?.pending;
+function princeFiefRequestReady(k){
+  return dynastyFollowupActive()&&!!k&&S.children.includes(k)&&princeMoveReady(k)&&!k.away&&kidAge(k)>=18&&k.royalTravel?.stage!=='request';
+}
+function princeFiefRequestTick(){
+  if(S.turn-(S.flags.lastPrinceFiefRequest??0)<18||S.children.some(k=>k.fiefRequest?.status==='pending'&&princeFiefRequestReady(k)))return;
+  const candidate=S.children.filter(k=>princeFiefRequestReady(k)&&S.turn-k.princeEstate.opened>=24&&
+    S.turn-(k.fiefRequest?.turn??-99)>=48&&k.princeCareer&&
+    (['clan','travel'].includes(k.princeCareer.path)||S.turn-(k.princeCareer.lastDisagreement??-99)<=12))
+    .sort((a,b)=>a.princeEstate.opened-b.princeEstate.opened||royalBirthOrder(a,b))[0];
+  if(!candidate)return;
+  const {path,lastDisagreement}=candidate.princeCareer;
+  const reason=S.turn-(lastDisagreement??-99)<=12?'近来的朝议与儿臣所想不同。儿臣想离京领藩，先把自己的差事办妥。':
+    path==='clan'?'儿臣想替宗室守一处藩邸，照看当地的亲眷。':'儿臣想长住一处封地，好亲眼看看地方是怎样过日子的。';
+  const place=PRINCE_FIEFS[voiceHash(`prince-fief:${candidate.seed}:${S.turn}`)%PRINCE_FIEFS.length];
+  candidate.fiefRequest={turn:S.turn,place,reason,status:'pending'};
+  S.flags.lastPrinceFiefRequest=S.turn;
+  kstory(candidate,`【王府请藩】呈表请求离京就藩${place}。`);
+  log(`【王府请藩】${kidName(candidate)}呈上请藩表。`,1);
+}
+function princeFiefRequestEvent(k){
+  const request=k?.fiefRequest;
+  const valid=()=>princeFiefRequestReady(k)&&k.fiefRequest===request&&request?.status==='pending';
+  if(!valid())return null;
+  return {title:'王府请藩 · '+k.name,por:k,valid,text:`${kidName(k)}亲自递来请藩表：“${request.reason}若父皇允准，儿臣愿赴${request.place}。”`,choices:[
+    {t:`准赴${request.place}就藩`,f:()=>{
+      const line=settlePrinceFief(k,request.place);
+      request.status='accepted';return line;
+    }},
+    {t:'眼下仍需你留京',f:()=>{
+      request.status='declined';k.love=clamp(k.love-2);
+      kstory(k,'【王府请藩】父皇暂不准离京，自己收回请藩表。');
+      return '他领了旨，将请藩表收回，仍在京中当差。';
+    }},
+    {t:'留表稍后再议',f:()=>{request.reviewed=S.turn;return '内侍将请藩表留在王府记档，可另行批阅。';}}
+  ]};
+}
+function pendingPrinceFiefRequest(){
+  const k=S.children.find(person=>person.fiefRequest?.reviewed==null&&person.fiefRequest?.status==='pending'&&princeFiefRequestReady(person));
+  return princeFiefRequestEvent(k);
+}
+A.princeReviewFiefRequest=function(id){if(!modalOpen)pushEv(princeFiefRequestEvent(kidById(id)));};
+function princeFiefRequestPanel(k){
+  return princeFiefRequestEvent(k)?`<div class="acts"><button class="btn sm jade" onclick="A.princeReviewFiefRequest(${royalActionArg(k.id)})">批阅请藩表</button></div>`:'';
+}
 function viewPrinceEstate(){
   const k=princeEstateById(UI.sel);if(!k)return viewOut();
   const id=royalActionArg(k.id);
@@ -33,10 +77,10 @@ function viewPrinceEstate(){
   return `<button class="btn quiet sm" onclick="A.go('out')">← 返回出巡</button>
     <header class="detail-head">${porImg(k,112)}<div class="grow"><p>${esc(caption)} · ${k.alive?kidAge(k)+'岁':'已薨'}</p><h2>${esc(princeEstateLabel(k))}</h2><p>${esc(k.reign?`${royalKinship(k)} ${k.name}`:k.name)}${birth?.father?` · 生父 <button class="person-link" onclick="A.princeFamilyMemo(${id},${royalActionArg(birth.father.id)})">${esc(birth.father.name)}</button>`:''} · 生母 ${motherLink}</p></div></header>
     ${pageChapters('prince-estate',[
-      ['residence','居处与藩务',detailSection('居处',`<p>${esc(state)}</p>${res}`)],
+      ['residence','居处与藩务',detailSection('居处',`<p>${esc(state)}</p>${res}${princeFiefRequestPanel(k)}`)],
       ['dockets','长史奏报',princeDocketPanel(k)],
       ['succession','世子与袭爵',princeSuccessionPanel(k)],
-      ['family','家人与往来',princeAdoptionContactPanel(k)+royalKinContactButtons(k,true)+marriagePanel(k)+householdPanel(k)],
+      ['family','家人与往来',princeAdoptionContactPanel(k)+royalKinContactButtons(k,true)+marriagePanel(k)+householdPanel(k)+princeCirclePanel(k)],
       ['history','王府记事',detailStory(k)]
     ])}`;
 }
@@ -45,14 +89,18 @@ function princeEstateRecord(k,line){
   else childSeparationMemory(k,line,k.away?-.25:.35);
   log(line,1);
 }
-function princeFiefChoices(k,register=false){
-  const valid=()=>princeEstateById(k.id)===k&&princeMoveReady(k)&&(register?k.away&&!princeFief(k):!k.away);
-  const chooseFief=location=>()=>{
-    if(!valid())return null;
+function settlePrinceFief(k,location,register=false){
     k.princeEstate={...k.princeEstate,opened:k.princeEstate?.opened??S.turn,location,...(register?{}:{lastMove:S.turn})};
     if(!register){k.away=true;k.sup=clamp((k.sup||0)-20);}
     const line=register?`宗人府补录${k.name}的藩邸在${location}。`:`${k.name}奉诏离京，赴${location}就藩，由长史料理府务，地方政务仍归有司。`;
     princeEstateRecord(k,line);return line;
+}
+function princeFiefChoices(k,register=false){
+  const valid=()=>princeEstateById(k.id)===k&&princeMoveReady(k)&&(register?k.away&&!princeFief(k):!k.away);
+  const chooseFief=location=>()=>{
+    if(!valid())return null;
+    if(!register&&dynastyFollowupActive()&&k.fiefRequest?.status==='pending')k.fiefRequest.status='superseded';
+    return settlePrinceFief(k,location,register);
   };
   return {title:register?'王府 · 补录藩地':'王府 · 商议就藩',por:k,valid,
     text:register?'旧册只记了他已就藩。请选择要补录的藩邸。':`${k.name}入殿听旨。请择一处藩邸，他将离京赴任，在京的储位支持会下降。`,

@@ -984,11 +984,13 @@ A.courtPolicy=function(id){
     S.courtPolicy[group.id]=Math.max(-30,Math.min(30,previous+(group===bloc?10:-2)));
   }
   if(journalContentVersion()>=85){
-    const affiliation={civil:'civil',military:'army',clan:'kin',trade:'civil',travel:'civil'};
     for(const k of kidsAlive()){
-      const career=k.princeCareer,wanted=affiliation[career?.path];if(!wanted||!childCanVisitCourt(k))continue;
+      const career=k.princeCareer,wanted=PRINCE_CAREER_BLOCS[career?.path];if(!wanted||!childCanVisitCourt(k))continue;
       if(id===wanted){career.momentum=Math.min(100,(career.momentum||0)+1);kstory(k,`【朝政立场】父皇采纳${bloc.name}建议，与自己的${PRINCE_CAREERS[career.path].name}方向相合，声势有所增长。`);}
-      else if((wanted==='army'&&id==='civil')||(wanted==='civil'&&id==='army')){k.love=clamp(k.love-1);kstory(k,`【朝政立场】父皇优先采纳${bloc.name}建议，与自己的${PRINCE_CAREERS[career.path].name}方向有分歧。`);}
+      else if((wanted==='army'&&id==='civil')||(wanted==='civil'&&id==='army')){
+        k.love=clamp(k.love-1);kstory(k,`【朝政立场】父皇优先采纳${bloc.name}建议，与自己的${PRINCE_CAREERS[career.path].name}方向有分歧。`);
+        if(dynastyFollowupActive())career.lastDisagreement=S.turn;
+      }
     }
   }
   log(`御书房议政，优先采纳${bloc.name}建议。`,1);

@@ -54,6 +54,7 @@ function closeRegnalChronicle(){
 }
 
 function viewRegnalChronicle(){
+  if(dynastyFollowupActive())return viewReignAnnals();
   const gen=Number(UI.sel)||S.gen;
   const summary=S.history[gen-1];
   const book=(S.regnalChronicles||[]).find(b=>b.gen===gen)||{

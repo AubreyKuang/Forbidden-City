@@ -1,4 +1,72 @@
 /* Filters live only in UI. Reading a life never mutates people, memories or RNG. */
+function reignAnnals(){
+ const rulers=[...S.history.slice(0,S.gen-1),S.history[S.gen-1]||E()].map((r,i)=>({gen:i+1,name:r.sur+r.name,era:r.era,miao:r.miao,years:r.yrs,entries:[]}));
+ const publicEntries=new Set();
+ for(const book of S.regnalChronicles||[]){
+  const ruler=rulers[book.gen-1];if(!ruler)continue;
+  ruler.closedAt=book.closedAt;
+  for(const entry of book.entries){
+    ruler.entries.push(entry);
+    publicEntries.add(JSON.stringify([book.gen,entry.d,entry.t]));
+  }
+ }
+ let inferred;
+ for(const entry of S.log){
+  if(/^—— .+ ——$/.test(entry.t))continue;
+  const divider=rulers.find(r=>entry.t.startsWith(`━━ 第${cnNum(r.gen)}代 ━━`));
+  if(divider)inferred=divider.gen;
+  if(entry.gen)inferred=entry.gen;
+  const candidates=rulers.filter(r=>entry.d?.startsWith(r.era));
+  const known=entry.gen||divider?.gen;
+  const ruler=known?rulers[known-1]:
+    candidates.find(r=>r.gen===inferred)||(candidates.length===1?candidates[0]:null);
+  if(ruler){
+    inferred=ruler.gen;
+    if(entry.b&&!publicEntries.has(JSON.stringify([ruler.gen,entry.d,entry.t])))ruler.entries.push(entry);
+  }
+ }
+ const seen=new Set();
+ for(const entry of S.reignAnnals||[]){
+   rulers[entry.gen-1]?.entries.push(entry);
+   seen.add(JSON.stringify([entry.d,entry.title,entry.choice]));
+ }
+ for(const entry of S.historicalCodex||[]){
+  if(seen.has(JSON.stringify([entry.d,entry.title,entry.choice])))continue;
+  const matches=rulers.filter(r=>entry.d?.startsWith(r.era));
+  if(matches.length===1)matches[0].entries.push(entry);
+ }
+ for(const ruler of rulers){
+  const dates=new Map(ruler.entries.map(entry=>[entry.d,annalDateOrder(entry.d,ruler.era)]));
+  ruler.entries.sort((a,b)=>{
+    const when=Number.isInteger(a.turn)&&Number.isInteger(b.turn)?a.turn-b.turn:dates.get(a.d)-dates.get(b.d);
+    return when||(a.order??-1)-(b.order??-1);
+  });
+ }
+ return rulers;
+}
+function annalDateOrder(date,era){
+ const [year,month]=String(date||'').slice(era.length).split('年');
+ const digits='零一二三四五六七八九';
+ const digit=x=>Math.max(0,digits.indexOf(x));
+ const tens=year?.indexOf('十')??-1;
+ const number=year==='元'?1:tens<0?digit(year):(tens===0?1:digit(year[0]))*10+digit(year[tens+1]);
+ return number*12+Math.max(0,MONTHS.indexOf(month));
+}
+function viewReignAnnals(){
+ const rulers=reignAnnals(),ruler=rulers.find(r=>r.gen===Number(UI.sel))||rulers.at(-1);
+ const years=new Map();
+ for(const entry of ruler.entries){
+  const year=chronicleYear(entry);
+  if(!years.has(year))years.set(year,[]);
+  years.get(year).push(entry);
+ }
+ const pages=[...years.entries()],latest=pages.at(-1)?.[0];
+ return `${pageHeading('皇帝本纪','',`<button class="btn sm" onclick="A.go('home');jumpToPageSection('home-collection')">王朝图鉴</button><button class="btn sm" onclick="A.go('log')">起居注</button>`)}
+   <div class="acts" aria-label="选择一朝本纪">${rulers.map(r=>`<button class="btn sm${r===ruler?' on':''}" aria-pressed="${r===ruler}" onclick="A.go('regnal',${r.gen})">${esc(r.miao||r.name)} · ${esc(r.era)}</button>`).join('')}</div>
+   <h3>${esc(ruler.name)} · ${esc(ruler.era)}${ruler.years!=null?` · 在位${ruler.years}年`:' · 在位中'}${ruler.closedAt?` · ${esc(ruler.closedAt)}定稿`:''}</h3>
+   ${pages.length?pages.map(([year,entries])=>`<details${year===latest?' open':''}><summary>${esc(year)} · ${entries.length}则</summary>
+     <ul class="story">${entries.map(e=>`<li><time>${esc(e.d)}${e.kind?` · ${esc(e.kind)}`:''}</time>${e.title?`<strong>${esc(e.title)}</strong><p>批答：${esc(e.choice)}</p>${e.outcome?`<p>${esc(e.outcome)}</p>`:''}`:esc(e.t)}</li>`).join('')}</ul></details>`).join(''):'<p class="hint">这一朝尚无留存纪事。</p>'}`;
+}
 function chronicleYear(e){return e.d?.includes('年')?e.d.split('年')[0]+'年':e.d||'日期未详';}
 function chronicleTopic(e){return (LIFE_CHAPTERS.find(c=>e.life?.kind?c.key===e.life.kind:c.re.test(e.t))||LIFE_CHAPTERS.at(-1)).key;}
 function chronicleThread(e){return e.thread||(e.life?.source?`life:${e.life.gen}:${e.life.title}:${e.life.source}`:'');}
