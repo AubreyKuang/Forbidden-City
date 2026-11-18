@@ -36,6 +36,17 @@ test('sending a maid back without conception does not manufacture a pregnancy re
  drain();assert.equal(g.preg,0);assert.ok(!S.log.some(x=>x.t.includes('尚衣局来报')));`);
 });
 
+test('the commander reports a favored maid pregnancy once and the original care decision survives reload',()=>{
+ let w=world();w.run(`E().energy=20;E().treasury=1000;A.establishJinyiwei();choose(0);drain();A.maidAudience();choose(0);`);
+ w.force(.2376181826,.6413819692,.5583668493,.8159323614,.0499424019,.6126509556,.0678740593,.3046474559);
+ w.run(`choose(0);var g=maids()[0],id=g.id;assert.equal(g.preg,1);choose(1);choose(3);drain();A.endMonth();
+  assert.equal(curEv.title,'锦衣卫急报 · 宫女有孕');save('auto');`);
+ const id=w.run('id');w=boot(730,w.storage);w.ctx.assert=assert;w.ctx.maidId=id;
+ w.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(curEv.title,'锦衣卫急报 · 宫女有孕');
+  choose(0);assert.equal(curEv.title,'尚衣局来报 · 喜脉');choose(1);drain();assert.equal(byId(maidId).prot,true);
+  assert.equal(S.log.filter(x=>x.t.includes('尚衣局来报')).length,1);`);
+});
+
 test('only a previously favored maid has the attendant report, without a mistress or a plea for a visit',()=>{
  const w=world();w.run(`var g=newMaid('尚衣局');g.xin={k:'委屈',t:S.turn};assert.equal(XEV.委屈(g),null);
  g.nights=1;var ev=xinEvent();assert.equal(ev.por,g);assert.match(ev.text,/内侍来报.*曾承宠的宫女.*伤心.*落泪/);

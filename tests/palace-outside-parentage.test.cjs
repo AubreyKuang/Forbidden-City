@@ -9,7 +9,7 @@ function household(imperial=true,suspected=true){
     Object.assign(sister.natalPregnancy,{noted:true,husbandSuspects:${suspected},imperialParentage:${imperial},difficult:false});
     S.turn=sister.natalPregnancy.due;natalPregnancyTick();
     var child=oh.relatives.find(p=>p.parentRelativeId===sister.id),id=child.id,host=other.id,husband=h.brother,oldName=child.name;
-    PalaceActions.reset();`);
+    drain();PalaceActions.reset();`);
   return w;
 }
 function openCase(w){
