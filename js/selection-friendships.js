@@ -43,7 +43,7 @@ function keepSelectionPeer(s,p){
 }
 const selectionPeersDrop=A.xxDrop;
 A.xxDrop=function(id){
-  if(selectionFriendsEnabled()){const p=S.cands.find(x=>x.id===id);if(p)keepSelectionPeer(S.selection,p);}
+  if(selectionFriendsEnabled()){const p=S.cands.find(x=>x.id===id);if(p){keepSelectionPeer(S.selection,p);rememberDroppedKin(S.selection,p);}}
   return selectionPeersDrop.call(this,id);
 };
 const selectionPeersAdmission=addConsort;

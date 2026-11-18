@@ -90,7 +90,7 @@ const HAREM=[
   return {title:'病榻',por:c,onShow:()=>{if(consortRecoveryActive())c.illnessRecovery={turn:S.turn,until:S.turn+2};consortHealthHurt(c,'ill');},text:`${cName(c)}偶感风寒，连日高烧不退。`,choices:[
    {t:'宣太医诊治',f:()=>{consortHealthTreat(c);story(c,'染了风寒，太医悉心诊治，渐渐痊愈。');return fx(chg({treasury:-10}),cchg(c,{mood:5}))}},
    {t:'亲自探视（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{E().energy--;renderTop();consortHealthTreat(c,{immediate:4});remember(c,'care','病中探视');story(c,'卧病在床，陛下亲自来看她，还喂了她一口药。');return fx(cchg(c,{mood:20,aff:15}))}},
-   {t:'不必理会',f:()=>{if(c.trait==='体弱'&&chance(.25)){c.alive=false;story(c,'病势沉重，无人问津，于一个雪夜香消玉殒。');log(`${fullName(c)}病逝。`,1);AU.sfx('sad');return `数日后，${c.palace}传来噩耗：${fullName(c)}病逝了。`}story(c,'病了半月，陛下未曾过问。');remember(c,'neglect','病中无人过问');return fx(cchg(c,{mood:-15,aff:-8}))}}]}},
+   {t:'不必理会',f:()=>{if(c.trait==='体弱'&&chance(.25)){c.alive=false;if(journalContentVersion()>=81)c.deathReason='病势沉重，不治身故';story(c,'病势沉重，无人问津，于一个雪夜香消玉殒。');log(`${fullName(c)}病逝。`,1);AU.sfx('sad');return `数日后，${c.palace}传来噩耗：${fullName(c)}病逝了。`}story(c,'病了半月，陛下未曾过问。');remember(c,'neglect','病中无人过问');return fx(cchg(c,{mood:-15,aff:-8}))}}]}},
  function homesick(){const c=pick(harem().filter(c=>!c.rescue&&c.wound!=='mom'&&!c.visitor));return c?sickMotherEvent(c):null},
  function empressReport(){const em=empress();if(!em)return null;
   if(em.virtue>=60) return {title:'中宫奏事',por:em,text:'皇后奏请：后宫用度日增，臣妾愿率六宫减省膳食衣料，以充国用。',choices:[

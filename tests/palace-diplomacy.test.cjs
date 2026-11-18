@@ -99,3 +99,9 @@ test('a foreign envoy remembers a reception and returns the favor or retaliates 
   S.turn+=36;diplomacyTick();assert.equal(c.relation,relation+5);assert.equal(E().treasury,amount+30);
   diplomacyTick();assert.equal(E().treasury,amount+30);assert.ok(c.memory.some(x=>x.text.includes('谢礼')));`);
 });
+test('a false reassurance can leave the border exposed',()=>{
+ const b=start();b.run(`A.receiveForeignEnvoy('north','gift');var country=diplomacyCountry('north');country.tension=50;`);b.force(.001,.999);
+ b.run(`A.sendDiplomaticEnvoy('north','visit',encodeURIComponent(envoy.key));var mission=diplomacyState().missions[0];S.turn=mission.due;diplomacyTick();
+  var report=diplomacyState().reports[0];assert.equal(report.truth,true);assert.equal(report.alarm,false);
+  var people=E().people;A.trustForeignReport(report.id);assert.equal(E().people,people-2);assert.equal(country.tension,55);`);
+});

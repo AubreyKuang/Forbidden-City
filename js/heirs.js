@@ -31,14 +31,14 @@ function swapEvent(c,k){const a=harem().find(x=>x!==c&&x.scheme>=70);k.alive=fal
 function kstory(k,t){k.story.push({d:dateStr(),t})}
 function childMentor(k){return k?.mentorId&&officialEntries().find(e=>e.p.id===k.mentorId)||null}
 function childMentorPanel(k){
-  if(journalContentVersion()<81||!k.alive||!childInPalace(k)||kidAge(k)<6||kidAge(k)>=16)return '';
+  if(journalContentVersion()<84||!k.alive||!childInPalace(k)||kidAge(k)<6||kidAge(k)>=16)return '';
   const current=childMentor(k),candidates=officialEntries().filter(e=>officialServing(e.p)&&!e.p.away);
   return `<p class="hint">选择在京任职的朝臣指导学业，满十六岁后师承仍会留在纪事中。任官变动后无法继续指导。</p>
     ${current?`<p>现任师长：${esc(current.p.name)}（才干 ${rd(current.p.ability)}）${officialServing(current.p)&&!current.p.away?'':' · 已不能授课'}</p>`:''}
     <div class="acts">${candidates.map(e=>`<button class="btn sm ${e.p.id===k.mentorId?'on':''}" onclick="A.childMentor(${k.id},'${encodeURIComponent(e.key)}')">${esc(e.p.name)} · 才干${rd(e.p.ability)}</button>`).join('')||'<span class="hint">暂无可授课的在京朝臣。</span>'}${k.mentorId?`<button class="btn sm" onclick="A.childMentor(${k.id},'')">解除师承</button>`:''}</div>`;
 }
 A.childMentor=function(id,encoded){
- const k=kidById(id);if(journalContentVersion()<81||!k?.alive||!childInPalace(k)||kidAge(k)<6||kidAge(k)>=16)return;
+ const k=kidById(id);if(journalContentVersion()<84||!k?.alive||!childInPalace(k)||kidAge(k)<6||kidAge(k)>=16)return;
  const e=encoded?officialEntry(decodeURIComponent(encoded)):null;
  if(encoded&&(!e||!officialServing(e.p)||e.p.away))return;
  if(k.mentorId===(e?.p.id||null))return;
@@ -54,20 +54,20 @@ const PRINCE_CAREERS={
  travel:{name:'游历',work:'研读舆图，记录沿途见闻',stat:'lit',support:1}
 };
 function princeCareerPanel(k){
- if(journalContentVersion()<81||!k.alive||k.sex!=='m'||kidAge(k)<16||k.removedFromRoyal)return '';
+ if(journalContentVersion()<84||!k.alive||k.sex!=='m'||kidAge(k)<16||k.removedFromRoyal)return '';
  const career=k.princeCareer,path=PRINCE_CAREERS[career?.path];
  return `<p class="hint">皇子成年后可选择一条发展方向，每积累十二个月完成一次差务；不在京或受限时暂停。更换方向须间隔一年。</p>
  ${path?`<p>当前方向：${path.name} · ${path.work} · 进度 ${career.months}/12 · 已完成 ${career.completed} 次 · 势 ${career.momentum||0}</p><p class="hint">朝政立场：${({civil:'重视文官与民政',military:'重视武备与边防',clan:'重视外家与宗亲',trade:'重视民政与商贸',travel:'重视民政与见闻'})[career.path]}；母族 ${esc(byId(k.mom)?.fam?.t||'未记载')}。</p>`:'<p>尚未选择方向。</p>'}
  <div class="acts">${Object.entries(PRINCE_CAREERS).map(([id,p])=>`<button class="btn sm ${career?.path===id?'on':''}" onclick="A.princeCareer(${k.id},'${id}')" ${!childCanVisitCourt(k)||E().energy<1||career&&S.turn-career.assigned<12?'disabled':''}>${p.name} · 精力−1</button>`).join('')}</div>`;
 }
 A.princeCareer=function(id,path){
- const k=kidById(id),p=PRINCE_CAREERS[path];if(journalContentVersion()<81||!p||!k||k.sex!=='m'||kidAge(k)<16||!childCanVisitCourt(k)||E().energy<1)return;
+ const k=kidById(id),p=PRINCE_CAREERS[path];if(journalContentVersion()<84||!p||!k||k.sex!=='m'||kidAge(k)<16||!childCanVisitCourt(k)||E().energy<1)return;
  const previous=k.princeCareer;if(previous&&(previous.path===path||S.turn-previous.assigned<12))return;
  E().energy--;k.princeCareer={path,assigned:S.turn,months:0,completed:previous?.completed||0,momentum:previous?.momentum||0,last:-1};
  kstory(k,`开始循${p.name}方向发展：${p.work}。`);log(`${kidName(k)}选择${p.name}方向。`);render();
 };
 function princeCareerTick(k){
- const c=k.princeCareer,p=PRINCE_CAREERS[c?.path];if(journalContentVersion()<81||!p||!childCanVisitCourt(k)||kidAge(k)<16||c.last===S.turn)return;
+ const c=k.princeCareer,p=PRINCE_CAREERS[c?.path];if(journalContentVersion()<84||!p||!childCanVisitCourt(k)||kidAge(k)<16||c.last===S.turn)return;
  c.last=S.turn;if(++c.months<12)return;c.months=0;c.completed++;c.momentum=Math.min(100,(c.momentum||0)+1);
  k[p.stat]=clamp(k[p.stat]+2);k.sup=clamp((k.sup||0)+p.support);
  if(c.path==='trade')chg({treasury:8});
@@ -75,13 +75,13 @@ function princeCareerTick(k){
  kstory(k,result);log(`${kidName(k)}：${result}`);
 }
 function princeCareerRivalryEvent(){
- if(journalContentVersion()<81||S.over||S.turn-(S.flags.lastPrinceCareerRivalry??-99)<36)return null;
+ if(journalContentVersion()<84||S.over||(S.flags.princeRivalryGen===S.gen&&S.turn-(S.flags.lastPrinceCareerRivalry??-99)<36))return null;
  const rivals=kidsAlive().filter(k=>k.sex==='m'&&PRINCE_CAREERS[k.princeCareer?.path]&&childCanVisitCourt(k)&&kidAge(k)>=16).sort((a,b)=>a.id-b.id);
  if(rivals.length<2)return null;
- const [a,b]=rivals,valid=()=>!S.over&&a.alive&&b.alive&&childCanVisitCourt(a)&&childCanVisitCourt(b)&&!!a.princeCareer&&!!b.princeCareer;
  const axes=[['recognition','父皇认可'],['maternal','母族资源'],['military','军务功绩'],['official','朝臣支持']];
- const expanded=journalContentVersion()>=82,round=S.flags.princeRivalryRound||0,[axis,subject]=expanded?axes[round%axes.length]:axes[0];
- const prior=expanded?S.flags.princeRivalryHistory?.at(-1):null;
+ const expanded=journalContentVersion()>=84,round=S.flags.princeRivalryGen===S.gen?(S.flags.princeRivalryRound||0):0,[axis,subject]=expanded?axes[round%axes.length]:axes[0];
+ const first=Math.floor(round/4)%rivals.length,a=rivals[first],b=rivals[(first+1)%rivals.length],valid=()=>!S.over&&a.alive&&b.alive&&childCanVisitCourt(a)&&childCanVisitCourt(b)&&!!a.princeCareer&&!!b.princeCareer;
+ const prior=expanded?S.flags.princeRivalryHistory?.filter(x=>x.gen===S.gen).at(-1):null;
  const decision=chosen=>{
   if(!valid())return null;
   if(chosen){const other=chosen===a?b:a;chosen.princeCareer.momentum=Math.min(100,(chosen.princeCareer.momentum||0)+2);other.princeCareer.momentum=Math.max(0,(other.princeCareer.momentum||0)-1);
@@ -97,7 +97,7 @@ function princeCareerRivalryEvent(){
    log(`【皇子竞争】${kidName(chosen)}在${subject}一事中获得认可。`,1);return `你认可了${chosen.name}的表现。他的势增加，另一人的势略有回落。${consequence}`;}
   kstory(a,'【皇子竞争】父皇让兄弟各凭实绩发展。');kstory(b,'【皇子竞争】父皇让兄弟各凭实绩发展。');return '你听完两人的打算，令他们各凭实绩，不以一次比较论高下。';
  };
- return {title:'皇子竞争 · 各有所长',cast:[a,b],valid,onShow:()=>{S.flags.lastPrinceCareerRivalry=S.turn;if(expanded)S.flags.princeRivalryRound=round+1;},
+ return {title:'皇子竞争 · 各有所长',cast:[a,b],valid,onShow:()=>{S.flags.lastPrinceCareerRivalry=S.turn;if(expanded){S.flags.princeRivalryGen=S.gen;S.flags.princeRivalryRound=round+1;}},
   text:expanded?`${kidName(a)}循${PRINCE_CAREERS[a.princeCareer.path].name}发展，${kidName(b)}则在${PRINCE_CAREERS[b.princeCareer.path].name}上用心。眼下两人都盼在${subject}上有所进展。${prior?`上次较量中${prior.name}得到认可，两人都记得此事。`:''}`:`${kidName(a)}循${PRINCE_CAREERS[a.princeCareer.path].name}发展，${kidName(b)}则在${PRINCE_CAREERS[b.princeCareer.path].name}上用心。两人都想得到你的认可，朝中也有人议论谁的差事务实。`,choices:[
    {t:`认可${a.name}的表现`,f:()=>decision(a)},{t:`认可${b.name}的表现`,f:()=>decision(b)},{t:'让二人各凭实绩',f:()=>decision(null)}]};
 }
@@ -106,7 +106,7 @@ function growKid(k){
   if(k.policy==='读书')k.lit+=g()*1.7;else if(k.policy==='习武'){k.mar+=g()*1.7*(k.jiangmenChild&&storyCastActive()?2:1);k.hp+=.08}else if(k.policy==='修德')k.vir+=g()*1.7;
   else if(k.policy==='放养'){k.hp+=.25;k.amb+=.1;k.love+=.05}else{k.lit+=g()*.65;k.mar+=g()*.65;k.vir+=g()*.65}
   {const fm=fosterOf(k);if(fm&&fm.alive){if(fm.virtue>65)k.vir+=.15;if(fm.talent>65)k.lit+=.15;if(fm.scheme>65)k.amb+=.12}}
-  if(journalContentVersion()>=81&&a>=6&&a<16&&childInPalace(k)){
+  if(journalContentVersion()>=84&&a>=6&&a<16&&childInPalace(k)){
     const mentor=childMentor(k);if(mentor&&officialServing(mentor.p)&&!mentor.p.away){
       const bonus=.05+clamp(mentor.p.ability||0)*.002;
       if(mentor.p.temperament==='持正')k.vir+=bonus;else if(mentor.h.bloc==='army')k.mar+=bonus;else k.lit+=bonus;

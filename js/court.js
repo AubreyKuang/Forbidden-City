@@ -983,7 +983,7 @@ A.courtPolicy=function(id){
     const previous=S.courtPolicy[group.id]||0;
     S.courtPolicy[group.id]=Math.max(-30,Math.min(30,previous+(group===bloc?10:-2)));
   }
-  if(journalContentVersion()>=81){
+  if(journalContentVersion()>=84){
     const affiliation={civil:'civil',military:'army',clan:'kin',trade:'civil',travel:'civil'};
     for(const k of kidsAlive()){
       const career=k.princeCareer,wanted=affiliation[career?.path];if(!wanted||!childCanVisitCourt(k))continue;

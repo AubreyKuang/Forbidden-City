@@ -26,7 +26,7 @@ function fenghuaEntryReady(key){
   (d.entry!=='merit'||Number.isFinite(S.flags.lastMilitaryMerit)&&S.turn-S.flags.lastMilitaryMerit<=24);
 }
 function fenghuaPreview(key){const d=FENGHUA_PEOPLE[key];return {id:'fenghua-preview-'+key,name:d.name,sur:d.sur,given:d.given,age:d.age,seed:d.portrait,portraitOverride:d.portrait,alive:true};}
-function createFenghuaPerson(key){
+function createFenghuaPerson(key,meeting){
  if(!fenghuaActive()||!FENGHUA_PEOPLE[key]||!fenghuaReleased(key))return null;const old=fenghuaPerson(key);if(old)return old;if(S.fenghua?.admitted?.[key])return null;
  const d=FENGHUA_PEOPLE[key],p=key==='gaoHuaibi'?makeScholar():{id:'fenghua-'+S.gen+'-'+key,story:[]};
  Object.assign(p,{name:d.name,sur:d.sur,given:d.given,gender:d.gender,age:d.age,seed:d.portrait,temperament:d.temperament,alive:true,
@@ -35,7 +35,7 @@ function createFenghuaPerson(key){
  if(key==='gaoHuaibi'){Object.assign(p,{official:3,career:'official',office:'游击',post:'游击',ability:88,merit:35,trust:55,education:null,appointedTurn:S.turn,ageTrackedAt:S.turn,siblingsChecked:true,essay:'以护军与战功受召，未以科名入仕'});(S.scholars ||= []).push(p);}
  else fenghuaState().people.push(p);
  if(key==='linJianxi')p.fenghua.stage=1;
- fenghuaRecord(p,key==='linJianxi'?'竹径拾纸':'初识',d.intro,'愿意相识',`${d.name}以${d.role}的身份留下姓名。`);return p;
+ fenghuaRecord(p,key==='linJianxi'?'竹径拾纸':'初识',meeting||d.intro,'愿意相识',`${d.name}以${d.role}的身份留下姓名。`);return p;
 }
 function fenghuaWitness(x){return !!x&&x.alive!==false&&(S.consorts.includes(x)?inPalace(x):x.fenghuaKey?fenghuaPresent(x):S.children.includes(x)?childCanVisitCourt(x):x.storyPerson==='xiean'?xiePresent(x):true);}
 function fenghuaRecord(p,title,situation,choice,outcome,peers=[]){

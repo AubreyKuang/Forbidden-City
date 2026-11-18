@@ -74,7 +74,69 @@ function midAutumnCourtEvent(){
       {t:'简单赏月',f:()=>'你独自登上角楼赏月。'}]};
 }
 
+function capitalBanquetOfficial(p){
+ return !!(p&&officialServing(p)&&officialGrade(p)&&!p.away&&!p.jailed&&!reliefSuspended(p)&&!/(知府|知州|知县|县令|总督|巡抚|道员|通判|县丞)/.test(p.office||p.post||''));
+}
+function birthdayKin(c){
+ const h=c?.house;if(!h)return null;
+ for(const role of ['father',...brotherRoles(h),...natalPeople(h).filter(p=>p.sex==='m'&&natalAge(p)>=18).map(p=>'relative'+p.id)]){
+  const p=officialPerson(h,role);if(capitalBanquetOfficial(p))return {p,c,role};
+ }
+ return null;
+}
+function familyBirthdayEligible(c){
+ return !!(storyIntroductionsActive()&&!S.over&&!mourningActive()&&inPalace(c)&&!c.maid&&c.rank>=5&&c.rank<8&&c.favor>=65&&birthMonth(c)===S.month&&c.birthFeastYear!==S.year&&birthdayKin(c));
+}
+function banquetPatron(kind,feast){
+ if(!storyIntroductionsActive()||!(hostsEnvoys(kind)||kind==='empress'||feast.sponsor))return null;
+ if(feast.sponsor)return feast.sponsor;
+ if(kind==='empress'){const kin=birthdayKin(feast.host);if(kin)return kin;}
+ // Use the registered office and its current holder, including officials unrelated to the birthday guest.
+ const pool=[...scholarList().map(p=>({p})),...S.consorts.filter(c=>c.house).map(birthdayKin).filter(Boolean)].filter(s=>capitalBanquetOfficial(s.p));
+ return pool.sort((a,b)=>Number(!/礼部|光禄寺/.test(a.p.office||a.p.post))-Number(!/礼部|光禄寺/.test(b.p.office||b.p.post))||officialGrade(a.p)-officialGrade(b.p))[0];
+}
+const FEAST_ARTISTS={xiaoman:'岑小满与搭档的铜钱戏法',suheng:'苏蘅当席辨香',hongjian:'薛红笺染笺题席签'};
+function feastArtistReady(key){
+ if(key==='hongjian')return hongjianContent()&&fenghuaEntryReady('xueHongjian');
+ return Object.hasOwn(FEAST_ARTISTS,key)&&storyCastMeetReady(key)&&!storyCastRecord(key)?.stage;
+}
+function patronProgramPanel(draft,feast){
+ const sponsor=banquetPatron(draft.kind,feast);if(!sponsor)return '';
+ const buttons=Object.keys(FEAST_ARTISTS).filter(feastArtistReady).map(key=>
+  `<button class="btn sm ${draft.artist===key?'on':''}" aria-pressed="${draft.artist===key}" onclick="A.banquetArtist('${key}')">${FEAST_ARTISTS[key]}</button>`).join('');
+ return buttons?'<h3>大臣荐艺</h3><p>'+esc((sponsor.p.office||sponsor.p.post)+sponsor.p.name)+'呈上节目单，请陛下择一入席。</p><div class="acts">'+buttons+'</div>':'';
+}
+A.banquetArtist=function(key){
+ const draft=banquetDraft();if(modalOpen||!draft||!banquetKind(draft.kind)?.ready||!Object.hasOwn(FEAST_ARTISTS,key)||!feastArtistReady(key)||!banquetPatron(draft.kind,banquetKind(draft.kind)))return;
+ draft.artist=draft.artist===key?null:key;render();
+};
+function banquetArtistEvent(draft,feast){
+ const sponsor=banquetPatron(draft.kind,feast);if(!sponsor)return null;
+ const available=Object.keys(FEAST_ARTISTS).filter(feastArtistReady);
+ const key=draft.artist||(available.length&&chance(.35)?pick(available):null);
+ if(!available.includes(key))return null;
+ const guestName=key==='hongjian'?'薛红笺':storyCastName(key),official=sponsor.p.name,occasion=feast.title;
+ const proposal=key==='xiaoman'?'戏班摆下两只空碗，小满却先把搭档叫到身边：“我们俩合演。赏单上写几个人？”':
+  key==='suheng'?'苏蘅随姑苏商队到京交货，带了两包都盖着苏家字号的香。她请席上先别点炉：“这一包是我们铺子的，另一包不是，得让送货的人也闻闻。”':
+  '笺铺主人捧来两沓新染的席签，请宾客在灯下看两种纸色：“席签我写得。若要用我的诗，请把我的名字也落在上面。”';
+ return {title:occasion+' · '+FEAST_ARTISTS[key],text:official+'具名引荐，礼官将人引到席前。'+proposal,valid:()=>feastArtistReady(key)&&capitalBanquetOfficial(sponsor.p)&&!S.over&&!mourningActive(),choices:[
+  {t:key==='xiaoman'?'写上两个人的名字，请二人登席演出':key==='suheng'?'请她当席辨香，让掌事核清货单':'请她署名题诗，再听她谈笺铺',f:()=>{
+   if(!feastArtistReady(key))return null;
+   const line=occasion+'上，'+official+'引荐'+guestName+'，'+(key==='xiaoman'?'小满与搭档演完铜钱戏法，散席后将按两人的名册结工钱。':key==='suheng'?'苏蘅验明两包香的来路，替小铺保住了货款。':'薛红笺在席签上署了自己的名字。');
+   if(sponsor.c)officialRecord(sponsor.c,sponsor.role,line,{family:false});else{story(sponsor.p,line);log(line);}
+   if(feast.host&&feast.host!==E())story(feast.host,line);
+   if(key==='hongjian'){createFenghuaPerson('xueHongjian',line);return line;}
+   const r=storyCastRecord(key)||storyCastCreate(key);r.introduction='banquet';
+   if(key==='xiaoman')r.performed=S.turn+1;
+   return storyCastAdvance(r,r.person,line);
+  }},{t:'今日照原席单，不添这一场'}]};
+}
+
 function banquetKind(kind) {
+  if(storyIntroductionsActive()&&typeof kind==='string'&&kind.startsWith('family-')){
+    const host=byId(Number(kind.slice(7)));if(!host)return null;
+    return {host,sponsor:birthdayKin(host),title:fullName(host)+'生辰家宴',cost:0,ready:familyBirthdayEligible(host)};
+  }
   const seasonal=Object.hasOwn(seasonalCourtFeasts,kind)&&seasonalCourtFeasts[kind];
   if(seasonal&&envoyFeastsActive())return {title:seasonal.title,cost:30,ready:!S.over&&!mourningActive()&&S.month===seasonal.month&&S.flags.seasonalFeasts?.[kind]!==S.year};
   if (kind === 'garden') return { title:'御花园小宴', cost:15,
@@ -94,7 +156,9 @@ function birthdayBanquetButtons() {
   const feasts = ['emperor','empress'].map(kind=>[kind,banquetKind(kind)]).filter(([,feast])=>feast);
   const seasonal=Object.keys(seasonalCourtFeasts).filter(kind=>banquetKind(kind)?.ready).map(kind=>
     `<button class="btn gold" onclick="A.openBanquet('${kind}')">筹办${seasonalCourtFeasts[kind].title}</button>`).join('');
-  return `<div class="acts">${seasonal}${feasts.map(([kind,feast])=>feast.ready
+  const family=storyIntroductionsActive()?harem().filter(familyBirthdayEligible).map(c=>
+    `<button class="btn gold" onclick="A.openBanquet('family-${c.id}')">娘家请贺 · ${esc(fullName(c))}生辰</button>`).join(''):'';
+  return `<div class="acts">${family}${seasonal}${feasts.map(([kind,feast])=>feast.ready
     ? `<button class="btn gold" onclick="A.openBanquet('${kind}')">筹办${feast.title}</button>`
     : `<span class="hint">${feast.title} · ${MONTHS[birthMonth(feast.host)-1]}${feast.host.birthFeastYear===S.year?'（本年已办）':''}</span>`).join('')}</div>`;
 }
@@ -162,17 +226,39 @@ function checkDanceSeats(draft){
 A.banquetInviteAll = function(all) {
   const draft = banquetDraft();
   if (!draft) return;
+  if(draft.ranked){delete draft.ranked;draft.seats=[];}
   draft.all=all;
   checkDanceSeats(draft);
   render();
 };
 
+A.banquetRankSeats=function(){
+  const draft=banquetDraft();if(!draft||modalOpen||!storyIntroductionsActive())return;
+  const feast=banquetKind(draft.kind);if(!feast?.ready)return;
+  // Respect a hand-picked guest list. An empty first draft starts with everyone.
+  const people=draft.all||(!draft.ranked&&!draft.seats.length)?banquetGuests(true):banquetAttendees(draft,feast);
+  const precedence=p=>p.sex?-2:p.maid?-1:p.rank;
+  people.sort((a,b)=>precedence(b)-precedence(a)||(a.sex&&b.sex?a.born-b.born:b.favor-a.favor));
+  draft.all=false;draft.ranked=true;draft.seats=people.map(p=>p.id);
+  checkDanceSeats(draft);render();
+};
+A.banquetFirst=function(id){
+  const draft=banquetDraft();if(!draft||modalOpen||draft.all)return;
+  const i=draft.seats.indexOf(id);if(i<=0)return;
+  draft.seats.splice(i,1);draft.seats.unshift(id);render();
+};
+function arrangedBanquetTables(draft,people){
+  if(!draft.ranked)return draft.all?banquetTables(people):[people];
+  const tables=[];for(let i=0;i<people.length;i+=4)tables.push(people.slice(i,i+4));
+  return tables;
+}
 A.banquetGuest = function(id) {
   const draft = banquetDraft();
-  if (!draft || draft.all || !banquetGuests(false).some(p=>p.id===id)) return;
+  if (!draft || draft.all || !banquetGuests(!!draft.ranked).some(p=>p.id===id)) return;
   const index=draft.seats.indexOf(id);
+  if(index>=0&&draft.ranked&&banquetKind(draft.kind)?.host?.id===id)return;
   if (index>=0) draft.seats.splice(index,1);
-  else if (draft.seats.length<4) draft.seats.push(id);
+  else if (draft.ranked||draft.seats.length<4) draft.seats.push(id);
   checkDanceSeats(draft);
   render();
 };
@@ -187,10 +273,10 @@ A.banquetMove = function(index,direction) {
 };
 
 function banquetAttendees(draft, feast) {
-  const available = banquetGuests(draft.all);
+  const available = banquetGuests(draft.all||draft.ranked);
   const people = draft.all ? available : available.filter(p=>draft.seats.includes(p.id))
     .sort((a,b)=>draft.seats.indexOf(a.id)-draft.seats.indexOf(b.id));
-  if (draft.kind==='empress' && !people.includes(feast.host)) people.unshift(feast.host);
+  if ((draft.kind==='empress'||feast.sponsor) && !people.includes(feast.host)) people.unshift(feast.host);
   return people;
 }
 
@@ -224,8 +310,8 @@ function viewBanquet() {
   const people=banquetAttendees(draft,feast);
   const children=kidsAlive();
   const problem=banquetProblem(draft,feast,people);
-  const guestCards = draft.all?'':banquetGuests(false).filter(p=>!people.includes(p)).map(p=>
-    `<button class="card" ${draft.seats.length>=4?'disabled':''} onclick="A.banquetGuest(${p.id})">${porImg(p,40)}
+  const guestCards = draft.all?'':banquetGuests(!!draft.ranked).filter(p=>!people.includes(p)).map(p=>
+    `<button class="card" ${!draft.ranked&&draft.seats.length>=4?'disabled':''} onclick="A.banquetGuest(${p.id})">${porImg(p,40)}
       <span class="grow"><strong>${esc(familyName(p))}</strong>
       ${p.sex?'':`<small>${esc(p.trait)} · ${esc(p.t2)}</small>`}
       <small>${esc(banquetGuestFamily(p,children))}</small></span></button>`).join('');
@@ -233,23 +319,25 @@ function viewBanquet() {
     <p class="hint">在世皇嗣 · ${banquetChildCount(children)}</p>
     ${draft.kind==='empress'?`<p class="hint">寿星皇后 · ${esc(banquetGuestFamily(feast.host,children))}</p>`:''}
     <div class="acts"><button class="btn ${draft.all?'on':''}" aria-pressed="${draft.all}" onclick="A.banquetInviteAll(true)">全员宴请</button>
-    <button class="btn ${!draft.all?'on':''}" aria-pressed="${!draft.all}" onclick="A.banquetInviteAll(false)">自选宾客</button></div>
-    ${draft.kind==='garden'&&people.length?banquetSeating(draft.all?banquetTables(people):[people]):''}
+    <button class="btn ${!draft.all&&!draft.ranked?'on':''}" aria-pressed="${!draft.all&&!draft.ranked}" onclick="A.banquetInviteAll(false)">自选宾客</button>
+    ${storyIntroductionsActive()?`<button class="btn ${draft.ranked?'on':''}" aria-pressed="${!!draft.ranked}" onclick="A.banquetRankSeats()">按位分一键排座</button>`:''}</div>
+    ${(draft.ranked||draft.kind==='garden')&&people.length?banquetSeating(arrangedBanquetTables(draft,people)):''}
     ${draft.all
       ? `<p class="hint">全邀在宫的妃嫔、宫人与皇嗣，共 ${people.length} 位，其中${banquetChildCount(people.filter(p=>p.sex))}。按家人分桌，幼童可观礼。</p>`
-      : `<h3>座次</h3><p class="hint">自选至多四位宾客。相邻两人同玩一轮。${draft.kind==='empress'?'皇后为寿星，自动入席。':''}</p>
+      : `<h3>座次</h3><p class="hint">${draft.ranked?'每桌四人，同位分先按恩宠排列，皇嗣按长幼入席。可移到首席或逐席微调。':'自选至多四位宾客。相邻两人同玩一轮。'}${draft.kind==='empress'?'皇后为寿星，自动入席。':''}</p>
         <ol class="banquet-seats">${draft.seats.map((id,i)=>{
           const p=people.find(person=>person.id===id);
           return p?`<li><strong>${esc(familyName(p))}</strong><div class="acts">
+            ${storyIntroductionsActive()?`<button class="btn quiet sm" aria-label="将${esc(familyName(p))}移到首席" ${i===0?'disabled':''} onclick="A.banquetFirst(${id})">移到首席</button>`:''}
             <button class="btn quiet sm" aria-label="${esc(familyName(p))}前移" ${i===0?'disabled':''} onclick="A.banquetMove(${i},-1)">前移</button>
             <button class="btn quiet sm" aria-label="${esc(familyName(p))}后移" ${i===draft.seats.length-1?'disabled':''} onclick="A.banquetMove(${i},1)">后移</button>
-            <button class="btn quiet sm" aria-label="撤下${esc(familyName(p))}" onclick="A.banquetGuest(${id})">撤下</button></div>
+            <button class="btn quiet sm" aria-label="撤下${esc(familyName(p))}" ${draft.ranked&&p===feast.host?'disabled':''} onclick="A.banquetGuest(${id})">撤下</button></div>
             <div class="hint">${esc(banquetGuestFamily(p,children))}</div></li>`:'';
         }).join('')}</ol><div class="grid">${guestCards}</div>`}
-    <p class="banquet-selection" role="status">已选：${draft.all?'全员宴请':'自选宾客'} · ${GARDEN_ACTIVITIES[draft.activity].label} · ${people.length} 位宾客</p><h3>席间活动</h3><div class="acts">${Object.entries(GARDEN_ACTIVITIES).map(([key,act])=>
+    <p class="banquet-selection" role="status">已选：${draft.ranked?'按位分排座':draft.all?'全员宴请':'自选宾客'} · ${GARDEN_ACTIVITIES[draft.activity].label} · ${people.length} 位宾客</p><h3>席间活动</h3><div class="acts">${Object.entries(GARDEN_ACTIVITIES).map(([key,act])=>
       `<button class="btn sm ${draft.activity===key?'on':''}" aria-pressed="${draft.activity===key}" onclick="A.banquetActivity('${key}')">${act.label}</button>`).join('')}</div>
-    ${envoySeatsPanel(draft)}${gardenDancePanel(draft)}
-    <div class="acts"><button class="btn gold" ${problem?'disabled':''} onclick="A.holdBanquet()">开宴<small>精力-1 · ${feast.cost?`国库-${feast.cost}万两`:'筹备时已拨款'}</small></button></div>
+    ${patronProgramPanel(draft,feast)}${envoySeatsPanel(draft)}${gardenDancePanel(draft)}
+    <div class="acts"><button class="btn gold" ${problem?'disabled':''} onclick="A.holdBanquet()">开宴<small>精力-1 · ${feast.cost?`国库-${feast.cost}万两`:feast.sponsor?'娘家出资':'筹备时已拨款'}</small></button></div>
     ${problem?`<p class="hint">${problem}</p>`:''}`;
 }
 
@@ -301,8 +389,8 @@ A.holdBanquet = function() {
   const problem=banquetProblem(draft,feast,people);
   if (problem) {toast(problem);return}
   const activity=GARDEN_ACTIVITIES[draft.activity];
-  const tables=draft.all?banquetTables(people):[people];
-  pushEv({ title:`${feast.title} · ${activity.label}`, cast:people.slice(0,4), gardenTables:draft.kind==='garden'?tables:null,
+  const tables=arrangedBanquetTables(draft,people);
+  pushEv({ title:`${feast.title} · ${activity.label}`, cast:people.slice(0,4), gardenTables:draft.ranked||draft.kind==='garden'?tables:null,
     text:`${people.length} 位宾客入席，分 ${tables.length} 桌。\n${activity.prompt}`,
     choices:[...activity.moves.map((move,i)=>({t:move.label, primary:i===0, f:()=>{
       playBanquet(draft,feast,people,tables,move);
@@ -391,7 +479,11 @@ function playBanquet(draft,feast,people,tables,move) {
     }
   }
   if (feast.host) {
-    if (draft.kind==='empress') {
+    if(feast.sponsor){
+      cchg(feast.host,{mood:10,aff:4});
+      const line=feast.sponsor.p.name+'为'+fullName(feast.host)+'具帖贺寿，家中出了寿席的用度。';
+      story(feast.host,line);officialRecord(feast.host,feast.sponsor.role,line,{family:false});lines.unshift(line);
+    }else if (draft.kind==='empress') {
       const queen=feast.host;
       cchg(queen,{mood:16,aff:8});
       remember(queen,'bday','陛下在我生辰亲自主持千秋宴。');
@@ -413,8 +505,11 @@ function playBanquet(draft,feast,people,tables,move) {
   const performance=storyCastBanquetPerformance()||storyCastLifeBanquet();if(performance)lines.unshift(performance);
   const demand=proudBanquetGuest(people);
   if (demand) pushNow(proudDemandEvent(demand,people));
-  pushNow({title:`${feast.title} · ${label}`, cast:people.slice(0,4), gardenTables:draft.kind==='garden'?tables:null,
+  pushNow({title:`${feast.title} · ${label}`, cast:people.slice(0,4), gardenTables:draft.ranked||draft.kind==='garden'?tables:null,
     text:`§${result}${promise}\n${lines.slice(0,6).join('\n')}`, choices:[ok1]});
+  const incident=banquetFriendshipIncident(people,feast.title,feast.host);
+  if(incident)pushNow({title:incident.title,cast:incident.cast,text:incident.text,choices:[{t:'记下席间这件事'}]});
+  const guest=banquetArtistEvent(draft,feast);if(guest)pushNow(guest);
   if(dance)pushNow(dance);
   receiveBanquetEnvoys(draft.kind,feast.title,draft.envoys);
 }
@@ -436,6 +531,8 @@ function banquetPair(a,b,label,toss,move) {
     if (opensUp && familyVisitAllowed(k,mother)) planGardenReunion({child:k.id,mother:mother.id,activity:label});
     return child;
   }
+  if(storyIntroductionsActive()&&!a.sex&&!b.sex&&['broken','distant'].includes(friendshipArc(a,b)?.stage))
+    return fullName(a)+'与'+fullName(b)+'照席次行过礼，各自用膳，没有再约散席后小坐。';
   const friendly=relGet(a,b)>=-25;
   const competitive=[a,b].find(p=>p.t2==='好胜'||(p.sex&&p.amb>=75));
   const lead=competitive || (banquetTalent(a,toss)>=banquetTalent(b,toss)?a:b);
@@ -526,6 +623,7 @@ function showGardenReunion() {
   if (!reunion || reunion.turn!==S.turn || reunion.joined) return null;
   const first=kidById(reunion.child)||byId(reunion.guest);
   const second=byId(reunion.mother||reunion.partner);
+  if(storyIntroductionsActive()&&!first?.sex&&first&&second&&friendshipTense(first,second))return null;
   if (!(first?.sex ? familyVisitAllowed(first,second) : inPalace(first)&&inPalace(second))) return null;
   return {reunion,first,second};
 }

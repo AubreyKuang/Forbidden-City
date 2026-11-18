@@ -137,3 +137,70 @@ test('two births due together both receive dated placement petitions even with a
     choose(5);nextEv();choose(5);drain();
     assert.ok(k.pending.includes('father'));assert.equal(outerBook().children.filter(x=>x.born===S.turn&&x.placement==='随母').length,2);`);
 });
+
+test('a permanent denial closes existing papers and every fresh filing, including exposure and an old save',()=>{
+ const b=household();b.run(`A.outerPetition(k.id);choose(1);drain();k.sex='m';k.born=S.turn-228;k.lit=100;
+ outerAttemptOffice(k,m,'候会试');outerBeginClaim(k);outerQueue(k,'claim');pushEv(outerPendingEvent(k,'career'));choose(3);drain();
+ assert.equal(k.denied,true);assert.equal(k.claim,undefined);assert.ok(!k.pending.includes('claim'));A.outerCare(k.id,'identity');
+ assert.ok(!curEv.choices.some(c=>c.t.includes('核验')));choose(curEv.choices.length-1);drain();
+ k.claim={step:'改录玉牒',due:S.turn};k.pending.push('claim','leak20');PalaceActions.reset();save('auto');A.load('auto');k=outerBook().children[0];
+ A.outerPetition(k.id);assert.match(curEv.title,/御前/);assert.match(curEv.choices[0].t,/尊重原籍/);choose(0);drain();S.turn++;outerMonthly();drain();
+ assert.equal(k.claim,undefined);assert.equal(kidById(k.id),undefined);assert.equal(k.denied,true);`);
+});
+test('real registered paternal cousins can meet at a natal home, gate or birthday without creating a relative',()=>{
+ for(const place of ['natal','birthday','gate']){
+ const b=game();b.run(`var host=empress(),owner=makeKin(host,'堂');addConsort(owner,3,'入宫');var p=addNatalPerson(owner,houseOf(owner),'f',25,122222,false);
+ p.married=true;var n=owner.house.relatives.length;host.birthMonth=2;S.month=2;
+ if('${place}'==='gate')p.visit={host:owner.id,from:S.turn,until:S.turn+2};
+ var match=outerKinChoices('${place}').find(x=>x.host===host&&x.p===p);assert.equal(match.kin,'堂姐妹');
+ A.outerMeet('姊妹','${place}',host.id,p.id);assert.ok(curEv.text.includes(p.name));choose(0);drain();
+ var m=outerBook().mothers[0];assert.equal(m.owner,owner.id);assert.equal(m.relative,p.id);assert.equal(outerSister(m).id,p.id);
+ assert.equal(m.marital,'已成家');assert.equal(owner.house.relatives.length,n);assert.ok(!outerKinChoices('${place}').some(x=>x.p.id===p.id));
+ save('auto');A.load('auto');m=outerBook().mothers[0];assert.equal(outerSister(m).id,p.id);assert.equal(PalaceActions.blocked,false);`);
+ }
+});
+test('four old ties preserve their own token, remembered identity, reunion and evidence in new and legacy registers',()=>{
+ for(let i=0;i<4;i++){const b=game();b.run(`var m={id:7777,sur:'姚',name:'姚春杏',source:'旧识',oldTie:${i},aff:70,trust:75,trait:'温和',meetings:2,age:28,created:S.turn};
+ openOuterBook().mothers.push(m);outerNote(m,null,'相识','留下回信处',outerMemories[${i}]);var tie=outerOldTie(m);
+ delete m.oldTie;assert.equal(outerOldTie(m).name,tie.name);A.outerVisit(m.id);assert.ok(curEv.text.includes(tie.after));choose(0);drain();
+ outerBirth(m);var k=outerBook().children[0];assert.equal(k.token,tie.token);outerQueue(k,'leak40');assert.ok(outerPendingEvent(k,'leak40').text.includes(tie.proof));`);}
+});
+test('every available discoverer has a different inquiry; reticent and truthful answers survive the choice',()=>{
+ for(const role of ['太后','皇后','旧宫女','锦衣卫','姨母']){
+ const b=household();b.run(`A.outerPetition(k.id);choose(1);drain();m.host=empress().id;S.jinyiwei={commander:{name:'周澈',alive:true}};
+ var who=outerDiscoverers(m).find(p=>p.role==='${role}');assert.ok(who);k.sex='f';k.born=S.turn-216;k.path='宫中留名';k.palaceRank='答应';
+ k.discoverer=who;outerQueue(k,'recognizedFace');PalaceActions.reset();A.outerPetition(k.id);assert.ok(curEv.text.includes(who.name));choose(3);nextEv();
+ assert.equal(curEv.title,'${role}问起旧籍');save('auto');A.load('auto');assert.equal(PalaceActions.blocked,false);
+ k=outerBook().children[0];var trust=k.trust;choose(1);drain();assert.equal(k.recognizedBy,'${role}');assert.equal(k.trust,trust-5);
+ assert.equal(outerBook().notes.filter(n=>n.title==='当面回话').length,1);`);}
+});
+test('a late family letter hears a married adult, a political opponent, an estranged child or a willing child before opening papers',()=>{
+ for(const kind of ['family','office','estranged','accept','denied']){
+ const b=household();b.run(`A.outerPetition(k.id);choose(1);drain();E().age=63;k.born=S.turn-32*12;k.sex='m';k.lit=95;k.trust=50;
+ outerAttemptOffice(k,m,'候会试');k.pending=[];var p=scholarById(k.officialId);
+ if('${kind}'==='family')p.married=true;if('${kind}'==='office')k.dispute={heir:11};if('${kind}'==='estranged')k.trust=24;if('${kind}'==='denied')outerDeclineClaim(k);
+ if('${kind}'==='denied'){S.turn++;outerMonthly();}else{A.outerCare(k.id,'identity');choose(curEv.choices.findIndex(c=>c.t.includes('核验')));}
+ assert.match(curEv.title,/暮年/);choose(0);drain();assert.ok(k.lateAsked);assert.equal(Boolean(k.claim),${kind==='accept'});
+ assert.equal(!!k.refused,${['office','family','estranged'].includes(kind)});assert.equal(outerBook().notes.filter(n=>n.title==='暮年家书').length,1);
+ save('auto');A.load('auto');k=outerBook().children[0];assert.equal(Boolean(k.claim),${kind==='accept'});`);
+ }
+});
+test('adult sons must return from court debate before a single public or private dynastic entry',()=>{
+ const b=household();b.run(`A.outerPetition(k.id);choose(1);drain();k.sex='m';k.born=S.turn-216;k.trust=80;
+ outerBeginClaim(k);for(let i=0;i<3;i++){S.turn++;outerMonthly();choose(0);drain();}
+ assert.ok(k.pending.includes('council'));assert.equal(kidById(k.id),undefined);A.outerPetition(k.id);choose(0);drain();
+ S.turn++;outerMonthly();choose(0);drain();assert.ok(kidById(k.id));A.outerPetition(k.id);choose(1);drain();
+ assert.equal(outerBook().notes.filter(n=>n.title==='归宗廷议').length,1);assert.equal(k.history,'永封');`);
+});
+test('monthly family visit remembers the same visiting sister with her child exactly once and never imports a fosterling',()=>{
+ const b=game();b.run(`var a=empress(),p=addNatalPerson(a,houseOf(a),'f',23,7991,false);A.outerMeet('姊妹','natal',a.id,p.id);choose(0);drain();
+ var m=outerBook().mothers[0];outerBirth(m);var k=outerBook().children[0];A.outerPetition(k.id);choose(1);drain();
+ k.born=S.turn-40;relAdd(a,p,75);p.visit={host:a.id,from:S.turn,until:S.turn+2};S.turn++;Math.random=()=>0;outerMonthly();
+ assert.equal(curEv.title,'外家探亲 · 廊下一张熟面孔');choose(0);drain();outerMonthly();assert.equal(outerBook().notes.filter(n=>n.title==='姨母见甥').length,1);
+ delete k.visitWitness;k.placement='寄养';p.visit={host:a.id,from:S.turn,until:S.turn+2};S.turn++;outerMonthly();assert.equal(k.visitWitness,undefined);`);
+});
+test('returning home in severe distress has a dated ending and cannot repeatedly emit a death notice',()=>{
+ const b=household();b.run(`A.outerPetition(k.id);choose(1);drain();k.sex='f';k.born=S.turn-222;k.trust=14;k.secret=12;k.exposed=true;k.path='宫中留名';k.palaceRank='答应';
+ outerQueue(k,'recognizedFace');A.outerPetition(k.id);choose(3);drain();assert.equal(k.path,'离宫养病');S.turn+=2;outerMonthly();assert.ok(!k.sealed);
+ S.turn++;outerMonthly();assert.equal(k.path,'病逝故里');assert.ok(k.sealed);S.turn++;outerMonthly();assert.equal(outerBook().notes.filter(n=>n.title==='故里讣音').length,1);`);
+});

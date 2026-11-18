@@ -91,7 +91,7 @@ function familyLifeTick() {
       return;
     } else if (plan.guest) {
       const first=byId(plan.guest), second=byId(plan.partner);
-      if (inPalace(first) && inPalace(second)) {
+      if (inPalace(first) && inPalace(second)&&(!storyIntroductionsActive()||!friendshipTense(first,second))) {
         relAdd(first,second,4);
         S.banquetReunion={...plan,text:`${cName(first)}带着${plan.activity==='投壶'?'铜壶':'新裁的花笺'}赴约，${cName(second)}已经在亭里等她。`};
       }

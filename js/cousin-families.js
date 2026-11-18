@@ -51,7 +51,7 @@ function cousinFatherEntries(c){
  }).map(o=>({c:o,p:o.house.father,key:o.id+':father',e:{c:o,h:o.house,p:o.house.father,role:'father'}}));
 }
 function clanPalaceCount(key){return S.consorts.filter(c=>c.alive&&!c.gone&&!c.maid&&hasClan(c)&&clanKey(c)===key).length;}
-function cousinAdmissionNotice(g){
+function cousinAdmissionNotice(g,selection=false){
  if(!cousinFamiliesActive()||g.cousinAdmissionRecorded)return;
  const relatives=S.consorts.filter(c=>c!==g&&/^堂[姐妹]$/.test(c.kin?.[g.id]||g.kin?.[c.id]||''));
  if(!relatives.length)return;
@@ -60,12 +60,13 @@ function cousinAdmissionNotice(g){
  const kin=fathers.map(c=>`${c.house.father.name}与${g.house.father.name}是亲兄弟，${fullName(c)}与${fullName(g)}是堂姐妹`).join('；');
  const text=`${fullName(g)}留选入宫，${clanName(clanKey(g))}在宫妃嫔由${Math.max(0,clanPalaceCount(clanKey(g))-1)}人增至${clanPalaceCount(clanKey(g))}人。${kin}。`;
  story(g,'【同族入宫】'+text);for(const c of relatives)story(c,'【同族入宫】'+text);
- log(text,1);g.cousinAdmissionText=text;
+ if(!selection||journalContentVersion()<81)log(text,1);
+ g.cousinAdmissionText=text;
 }
 const cousinsMakeKin=makeKin;
 makeKin=function(c,type){const g=cousinsMakeKin(c,type);if(cousinFamiliesActive())reconcileCousinFamilies([c,g]);return g;};
 const cousinsAddConsort=addConsort;
-addConsort=function(c,...args){if(cousinFamiliesActive())reconcileCousinFamilies([c]);const result=cousinsAddConsort(c,...args);cousinAdmissionNotice(c);return result;};
+addConsort=function(c,...args){if(cousinFamiliesActive())reconcileCousinFamilies([c]);const result=cousinsAddConsort(c,...args);cousinAdmissionNotice(c,args[2]?.recordAdmission===false);return result;};
 const cousinsMigrate=migrate;
 migrate=function(...args){const result=cousinsMigrate.apply(this,args);reconcileCousinFamilies();return result;};
 const cousinsOfficialBrothers=officialBrothers;

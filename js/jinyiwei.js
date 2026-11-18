@@ -68,7 +68,7 @@ const INTELLIGENCE_SOURCES={
  guard:{name:'锦衣卫',specialty:'案件与证据',kind:'harem'},
  court:{name:'外朝密探',specialty:'官员与外戚往来',kind:'rumor'}
 };
-const intelligenceEnabled=()=>journalContentVersion()>=81;
+const intelligenceEnabled=()=>journalContentVersion()>=84;
 const intelligenceState=()=>S.intelligence?.gen===S.gen?S.intelligence:null;
 function intelligenceAgent(id){
   const group=INTELLIGENCE_SOURCES[id],state=intelligenceState();
@@ -185,7 +185,7 @@ function guardAffairEvent(){
    else if(mode==='transfer'){bond.ended='被发现后，侍卫调离宫室。';guard.loyalty=clamp(guard.loyalty-8);cchg(c,{aff:-4,mood:-8});result='你让他另领差事，不再守她的宫室。她没有争辩，只把没有说完的话收回去。';}
    else if(mode==='frame'){bond.ended='被发现后，旁人被诬作递消息之人。';guard.loyalty=clamp(guard.loyalty-5);cchg(c,{mood:-5});cchg(innocent,{aff:-8,mood:-12});
      innocent.fam={...innocent.fam,p:clamp(innocent.fam.p-5)};story(innocent,`被诬作${guard.name}私通消息的经手人，蒙受不白之冤。`);result=`你将消息推到${fullName(innocent)}身上。她受了委屈，娘家声势也受牵连。`;}
-   else if(mode==='demote'&&journalContentVersion()>=82&&c.rank>0&&c.rank<8){
+   else if(mode==='demote'&&journalContentVersion()>=84&&c.rank>0&&c.rank<8){
      const oldRank=c.rank;bond.ended='私情查实后，侍卫调离，当事人受降位处置。';guard.loyalty=clamp(guard.loyalty-12);
      c.rank--;cchg(c,{mood:-18,aff:-12,favor:-8});c.fam={...c.fam,p:clamp(c.fam.p-5)};
      for(const k of kidsAlive().filter(child=>child.sex==='m'&&child.mom===c.id)){k.sup=clamp((k.sup||0)-3);kstory(k,`生母因宫中私情被降位，母族支持受到牵连。`);}
@@ -197,7 +197,7 @@ function guardAffairEvent(){
   {t:'压下消息，保全二人',f:()=>resolve('protect')},
   {t:'调离侍卫，各自安置',f:()=>resolve('transfer')},
   {t:'嫁祸旁人',cond:()=>harem().some(p=>p!==c&&p.rank<8),why:'宫中没有可被牵连的人',f:()=>resolve('frame')},
-  ...(journalContentVersion()>=82?[{t:'查实后降位，调离侍卫',cond:()=>c.rank>0&&c.rank<8,why:'皇后与最低位分不能按此降位',f:()=>resolve('demote')}]:[])
+  ...(journalContentVersion()>=84?[{t:'查实后降位，调离侍卫',cond:()=>c.rank>0&&c.rank<8,why:'皇后与最低位分不能按此降位',f:()=>resolve('demote')}]:[])
  ]};
 }
 A.reviewGuardAffair=function(){if(!modalOpen)pushEv(guardAffairEvent());};
@@ -283,7 +283,7 @@ function rumorReport(x,found){
     return {title:'锦衣卫密报',por:j.commander,text:`${j.commander.name}回奏：${target.p.name}被参「${x.charge}」一事，暂未查得实据，也未能证其清白。`,choices:[{t:'知道了'}]};}
   const delta=x.friendsBefore?-12:-8;
   if(x.truth){target.p.trust=clamp(target.p.trust-5);target.p.merit=clamp(target.p.merit-6);actor.p.trust=clamp(actor.p.trust+2);
-    if(journalContentVersion()>=81&&!x.familyConsequences&&/收受|贪墨/.test(x.charge)){
+    if(journalContentVersion()>=84&&!x.familyConsequences&&/收受|贪墨/.test(x.charge)){
       x.familyConsequences=true;
       const relatives=paternalFamily(target.c).filter(c=>S.consorts.includes(c));
       for(const c of relatives){c.fam={...c.fam,p:clamp(c.fam.p-8)};story(c,`外家${target.p.name}被查实${x.charge}，家族声势受损。`);}

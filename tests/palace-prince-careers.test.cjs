@@ -49,8 +49,13 @@ test('rivalry rotates among recognition, maternal resources, military merit and 
   assert.ok(a.story.some(s=>s.t.includes('军务功绩')));`);
 });
 
-test('a v81 unresolved rivalry keeps its original results before adopting new rules',()=>{
- const save=require('./fixtures/dynasty-goals-v81-pending-rivalry.json'),b=boot(1,new Map([['chengongji_v1_auto',JSON.stringify(save)]]));b.ctx.assert=assert;
- b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,81);assert.equal(curEv.title,'皇子竞争 · 各有所长');
-  choose(0);drain();assert.equal(S.flags.princeRivalryRound,undefined);A.go('home');assert.equal(PalaceActions.contentVersion,82);`);
+test('an expanded rivalry survives a refresh without advancing the round twice',()=>{
+ let b=boot(44001);b.ctx.assert=assert;
+ b.run(`A.start();drain();var a=makeKid(empress(),'m','承安'),z=makeKid(harem()[1],'m','承平');a.born=z.born=S.turn-240;E().energy=10;
+  A.princeCareer(a.id,'civil');A.princeCareer(z.id,'military');A.endMonth();
+  for(let i=0;modalOpen&&curEv.title!=='皇子竞争 · 各有所长'&&i<100;i++){if(modalResult)nextEv();else choose(0);}
+  assert.equal(curEv.title,'皇子竞争 · 各有所长');assert.equal(S.flags.princeRivalryRound,1);save('auto');`);
+ b=boot(5,b.storage);b.ctx.assert=assert;
+ b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(curEv.title,'皇子竞争 · 各有所长');
+  choose(0);drain();assert.equal(S.flags.princeRivalryRound,1);assert.equal(S.flags.princeRivalryHistory.length,1);`);
 });

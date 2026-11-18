@@ -22,6 +22,41 @@ const STORY_CAST={
 };
 const WHITE_SPRING_DANCE_ART={src:'./assets/images/story-cast/ayimu-dance.webp',alt:'阿依慕身着绣银白泉舞服，轻踏鼓面，腕上银铃随袖扬起'};
 const whiteSpringBanquetActive=()=>journalContentVersion()>=75;
+const storyIntroductionsActive=()=>journalContentVersion()>=81;
+const COURT_PETITIONS={
+ qingyi:{title:'沈清漪 · 姑苏递来的旧信',body:'姑苏送来的抄本夹着一封私信。沈清漪落了自己的款：“父亲当年上过什么折子，您尽可问我。只是那桩婚事如何散的，我也想听您亲口说一句。”她请递书的人把回信带给沈母。',choice:'亲笔回信，准她与母亲商议赴京',line:'从姑苏递上旧信，收到亲笔回书，愿与母亲商议京中掌书的差事。'},
+ luwan:{title:'陆绾 · 军驿送来的马簿',body:'北境军驿送来换马簿。陆绾在几匹马的蹄印旁画了圈：“不是马慢，是这段石路伤蹄。我随父亲走过，愿进京把这几处说清。”末页有陆将军验过的押记。',choice:'请陆绾入京，当面听她谈军驿',line:'以亲见的蹄伤佐证驿路失修，应召进京，从军马的事与陛下相识。'},
+ chuwan:{title:'方晚 · 请核两页户籍',body:'地方呈上的户籍申诉附着两页抄件。一个署名方晚的姑娘指给书吏看：同一户人的迁出与迁入竟差了一年。她愿到京里作证，只求照养她的人别因此失去住处。',choice:'收下抄件，先安顿证人再核旧籍',line:'亲递两页户籍，在照养人得到安顿后同意继续核查旧粮册。'}
+};
+function palacePetitionReady(key){
+ return !!(storyIntroductionsActive()&&Object.hasOwn(COURT_PETITIONS,key)&&!S.over&&!mourningActive()&&storyCastMeetReady(key)&&!(storyCastRecord(key)?.stage));
+}
+function palacePetition(key){
+ const d=COURT_PETITIONS[key],valid=()=>palacePetitionReady(key);
+ return {title:d.title,text:d.body,valid,choices:[{t:d.choice,f:()=>{
+  if(!valid())return null;
+  const r=storyCastRecord(key)||storyCastCreate(key);r.introduction='petition';
+  return storyCastAdvance(r,r.person,d.line);
+ }},{t:'把来信留在御书房，改日再读'}]};
+}
+A.storyPetition=function(key){
+ if(!modalOpen&&palacePetitionReady(key))pushEv(palacePetition(key));
+};
+function monthlyIntroduction(){
+ if(!storyIntroductionsActive()||S.over||mourningActive())return null;
+ const host=harem().find(c=>familyBirthdayEligible(c)&&c.familyFeastNotice!==S.year);
+ if(host){
+  host.familyFeastNotice=S.year;
+  const feast=banquetKind('family-'+host.id);
+  return {title:'娘家请贺生辰 · '+fullName(host),por:host,valid:()=>familyBirthdayEligible(host),text:feast.sponsor.p.name+'递帖，请用家资给'+fullName(host)+'备一桌寿席：“她小时候爱热闹。若陛下许她与亲近的人坐一席，家里人也就欢喜了。”',choices:[
+   {t:'准予筹办，看看寿宴席单',f:()=>{UI.banquet={kind:'family-'+host.id,all:true,activity:'toss',seats:[]};UI.view='banquet';setScene('garden');return null;}},
+   {t:'寿礼照收，先不设宴'}]};
+ }
+ if(S.turn-(S.flags.lastCastPetition??0)<6)return null;
+ const key=Object.keys(COURT_PETITIONS).find(k=>palacePetitionReady(k)&&!S.flags.castPetitions?.[k]);
+ if(!key||!chance(.15))return null;
+ (S.flags.castPetitions||={})[key]=true;S.flags.lastCastPetition=S.turn;return palacePetition(key);
+}
 const storyCastData=key=>Object.hasOwn(STORY_CAST,key)?STORY_CAST[key]:null;
 const storyCastRecord=key=>S.flags.storyCast?.gen===S.gen?S.flags.storyCast.people[key]:null;
 const storyCastPerson=r=>r?.person||byId(r?.id);
@@ -92,7 +127,7 @@ function storyCastMeetEvent(key,r,feastTitle='御花园宫宴'){
     if(stage===0)return scene('南巡苏州 · 未寄的信','沈清漪主动递帖。昔日的京城第一美人如今穿着半旧青衫，照礼叫你陛下。她拿出当年没寄出的信：“太后说亲事作罢时，您知道么？”',
       advance('坐下来，告诉她当年的实情','在姑苏递上旧信，终于问清当年断亲的事。她仍惦记母亲住在哪里。'),
       advance('先问沈母，许她日后寄信','陛下问了母亲的病，她把旧信交给随侍，等日后再谈。'));
-    if(stage===1)return scene('姑苏 · 随驾回京','她想为病弱的母亲安顿住处，又怕沈家返京被说成翻案。她愿先领掌书差，校完那批旧书，再问自己愿不愿留。',
+    if(stage===1)return scene(r.introduction==='petition'?'御书房 · 沈家回书':'姑苏 · 随驾回京','她想为病弱的母亲安顿住处，又怕沈家返京被说成翻案。她愿先领掌书差，校完那批旧书，再问自己愿不愿留。',
       storyCastChoice('召她任掌书女官，居钟粹宫偏殿',()=>{r.office=true;return storyCastAdvance(r,c,'以故人之后回京，任掌书女官，居钟粹宫偏殿校书。三个月后再议去留。',3);}),
       close('准沈家返京居住','已相识 · 归京奉母','奉母返京寓居，沈父旧案仍照原案。'),
       close('沈家仍留姑苏','已相识 · 留在姑苏','仍居姑苏奉母，陛下准她继续通信。'));
@@ -106,7 +141,7 @@ function storyCastMeetEvent(key,r,feastTitle='御花园宫宴'){
     if(stage===0)return scene('北苑校场 · 陆绾','北境军马进京试辔。陆绾一眼认出其中一匹旧伤未好：“它不是不肯跑，是踩不实。”陆将军听完，叫马夫请兽医。',
       advance('问她怎么看出马伤','在校场指出军马足伤，陛下愿听她把话说完。'));
     return scene('陆绾 · 听她谈军驿','她谈起十岁在边营见的第一仗，也谈父兄夜里核对伤员名册。“我愿留京。北边真出事了，您得让我先把家书看了。”',
-      join('北苑相识，亲口应允入宫'),close('送她随陆家回边城','已相识 · 回北境','告别京城，仍随陆家回北境。'));
+      join(r.introduction==='petition'?'以驿马簿相识，亲口应允入宫':'北苑相识，亲口应允入宫'),close('送她随陆家回边城','已相识 · 回北境','告别京城，仍随陆家回北境。'));
   }
   if(key==='ayimu'&&whiteSpringBanquetActive()){
     const first=stage===0;
@@ -144,7 +179,7 @@ function storyCastMeetEvent(key,r,feastTitle='御花园宫宴'){
     if(stage===0)return scene('姑苏香铺 · 辨香','行馆收了两包盖同一字号的供香，气味偏不一样。苏蘅请来小铺掌柜和送货人，当面厘清两批货。街坊说她鼻子比别人灵三倍，她只是低头把账页折回去。',
       advance('替小铺核清账，再约她见面','同掌事查清来货来源，替被赖账的小铺说了实话。'));
     return scene('苏蘅 · 铺契与去留','苏蘅将铺契摊在桌上。若她进宫，由老伙计照契经营，分账每季送来一次。把经营的安排说定，她才肯谈去留。',
-      join('姑苏辨香后结识，自定香铺分账，自愿入宫'),close('让她留在姑苏掌柜','已相识 · 留在香铺','收好铺契，仍在姑苏经营苏家香铺。'));
+      join((r.introduction==='banquet'?'宫宴':'姑苏')+'辨香后结识，自定香铺分账，自愿入宫'),close('让她留在姑苏掌柜','已相识 · 留在香铺','收好铺契，仍在姑苏经营苏家香铺。'));
   }
   if(stage===0)return scene('京城灯市 · 岑小满','礼官看中岑小满的戏法，请她和搭档赴宴。她收起刚从空碗下变出来的铜钱：“几时收场？两个人的赏钱都在名册上么？”',
     advance('递演出名帖，约好两个人的工钱','领了宫宴名帖，先讲定自己和搭档的工钱。'));
@@ -152,7 +187,7 @@ function storyCastMeetEvent(key,r,feastTitle='御花园宫宴'){
     storyCastChoice('核对名册，补足两人的工钱 · 国库−4',()=>{if(E().treasury<4)return null;chg({treasury:-4});return storyCastAdvance(r,c,'按名册结清两人工钱。她说打算给大杂院的几个孩子添冬被。');},()=>E().treasury>=4),
     storyCastChoice('另赏她银钱 · 国库−4',()=>{if(r.extra||E().treasury<4)return null;chg({treasury:-4});r.extra=true;return storyCastRecordLine(c,'谢过另赏，仍请宫里核对搭档应领的工钱。');},()=>!r.extra&&E().treasury>=4));
   return scene('岑小满 · 留或走','小满问，大杂院的孩子能不能照旧由熟悉的邻里管饭、她按时送钱。她熟的是守约的人，愿留下也要先把这句话说清。',
-    join('灯市与宫宴反复相见，按约照拂街坊，自愿入宫'),
+    join((r.introduction==='banquet'?'宫宴荐艺相识':'灯市与宫宴反复相见')+'，按约照拂街坊，自愿入宫'),
     close('日后仍请她做宫宴艺人','已相识 · 宫宴艺人','仍按场领酬，在宫宴演戏法，平日回灯市。'),
     close('送她回灯市，自由往来','已相识 · 回到灯市','仍在灯市演戏法，记住了这趟宫宴的几份工钱。'));
 }
@@ -208,7 +243,7 @@ function storyCastCodexCards(){
     const tag=storyConsortBadge(key);
     const badge=key==='chuwan'&&!r?.revealed?'<details><summary>查看特殊标签（含身世）</summary>'+tag+'</details>':tag;
     const guide=STORY_CAST_LIVES[key];
-    return `<article class="story-consort-card" data-story-consort="${key}"><div class="story-consort-picture">${porImg(p,200)}${storyConsortProgress(storyCastStatus(r))}</div><div class="story-consort-copy"><h3>${esc(name)} · ${esc(d.epithet)}</h3><div aria-label="人物特殊标签">${badge}</div><p>${esc(d.intro)}</p><p>${key==='ayimu'?'宫中':'出巡'} → ${esc(d.route)}</p><p>入宫主线 · ${esc(guide.title)}<br>日常 · ${esc(guide.routine)}<br>特殊事件 · ${esc(guide.secret)} → ${esc(guide.after)}</p>${key==='ayimu'?'<p>新年宫宴、中秋宫宴和皇帝万寿宴都可能有使臣来贺。筹宴时可在外宾席主动请白泉国王携阿依慕赴宴。入宫后，可在御花园小宴请她跳白泉舞。交好的妃嫔学过鼓点，往后同席可点名伴奏。亲生皇嗣带有异域血脉，皇子不可入储，公主成年后可和亲白泉。</p>':''}${COMMONER_STORIES[key]?'<p>街坊口碑 · 持续得宠影响民心，可在人物档案处理「'+esc(COMMONER_STORIES[key].title)+'」。</p>':''}<div class="acts">${r?`<button class="btn" onclick="A.storyCastDossier('${key}')">查看经历</button>`:''}${storyCastVisitButton(key)}</div></div></article>`;
+    return `<article class="story-consort-card" data-story-consort="${key}"><div class="story-consort-picture">${porImg(p,200)}${storyConsortProgress(storyCastStatus(r))}</div><div class="story-consort-copy"><h3>${esc(name)} · ${esc(d.epithet)}</h3><div aria-label="人物特殊标签">${badge}</div><p>${esc(d.intro)}</p><p>${key==='ayimu'?'宫中':'出巡'} → ${esc(d.route)}</p><p>入宫主线 · ${esc(guide.title)}<br>日常 · ${esc(guide.routine)}<br>特殊事件 · ${esc(guide.secret)} → ${esc(guide.after)}</p>${key==='ayimu'?'<p>新年宫宴、中秋宫宴和皇帝万寿宴都可能有使臣来贺。筹宴时可在外宾席主动请白泉国王携阿依慕赴宴。入宫后，可在御花园小宴请她跳白泉舞。交好的妃嫔学过鼓点，往后同席可点名伴奏。亲生皇嗣带有异域血脉，皇子不可入储，公主成年后可和亲白泉。</p>':''}${COMMONER_STORIES[key]?'<p>街坊口碑 · 持续得宠影响民心，可在人物档案处理「'+esc(COMMONER_STORIES[key].title)+'」。</p>':''}<div class="acts">${r?`<button class="btn" onclick="A.storyCastDossier('${key}')">查看经历</button>`:''}${storyCastVisitButton(key)}${palacePetitionReady(key)?`<button class="btn" onclick="A.storyPetition('${key}')">读${esc(COURT_PETITIONS[key].title)}</button>`:''}</div></div></article>`;
   }).join('');
 }
 
@@ -425,7 +460,7 @@ function storyCastPanel(c){
 }
 function storyCastMonthlyEvents(){
   if(!storyCastActive())return [];
-  const events=[];
+  const incoming=monthlyIntroduction(),events=incoming?[incoming]:[];
   for(const c of S.consorts.filter(c=>c.fixedStory&&inPalace(c))){
     const r=storyCastRecord(c.fixedStory);if(!r||r.id!==c.id)continue;
     const civic=commonerFavorEvent(c,r);
