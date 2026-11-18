@@ -1,5 +1,6 @@
 /* Temporary leave retains rank, palace and every pending personal story. */
-function homeLeaveEligible(c){return !!(c&&inPalace(c)&&!c.maid&&!c.rescue&&!c.visitor&&!natalPeople(c.house).some(p=>p.visit?.host===c.id)&&!S.over&&c.hp>=40&&(!c.preg||c.preg<5));}
+function domesticHomeLeaveAllowed(c){return c?.fixedStory!=='ayimu'||journalContentVersion()<93;}
+function homeLeaveEligible(c){return !!(c&&domesticHomeLeaveAllowed(c)&&inPalace(c)&&!c.maid&&!c.rescue&&!c.visitor&&!natalPeople(c.house).some(p=>p.visit?.host===c.id)&&!S.over&&c.hp>=40&&(!c.preg||c.preg<5));}
 function startHomeLeave(c,months=2,reason='省亲'){
  if(!homeLeaveEligible(c)||![1,2,3].includes(months))return false;
  c.homeLeave={from:S.turn,due:S.turn+months,reason};c.lastHomeLeave=S.turn;
@@ -22,7 +23,7 @@ A.homeLeave=function(id){const c=byId(id);if(modalOpen||!homeLeaveEligible(c))re
 A.recallHomeLeave=function(id){if(modalOpen)return;const c=byId(id);if(returnHomeLeave(c,true)){save('auto');render();}};
 function sickMotherEvent(c){
  const previous=homeMother(c);
- if(!inPalace(c)||c.rescue||c.wound==='mom'||c.visitor||previous&&(previous.status!=='well'||S.turn-previous.from<24))return null;
+ if(!domesticHomeLeaveAllowed(c)||!inPalace(c)||c.rescue||c.wound==='mom'||c.visitor||previous&&(previous.status!=='well'||S.turn-previous.from<24))return null;
  let done=false;const valid=()=>!done&&inPalace(c)&&!c.visitor&&c.wound!=='mom';
  return {title:'家中病讯',por:c,present:[c],valid,onQueue:()=>beginMotherIllness(c),text:`${cName(c)}收到家中病讯：母亲病重，眼下不宜远行。她想知道能否请太医前往，也盼亲自回去照料。`,choices:[
   {t:'派太医赴家诊治 · 国库−15',cond:()=>E().treasury>=15,f:()=>{if(!valid()||E().treasury<15)return null;done=true;const r=beginMotherIllness(c);r.care='physician';r.due=S.turn+2;chg({treasury:-15});cchg(c,{aff:6,mood:2});homeRecord(c,'母亲重病，陛下派太医赴家诊治，未让病人远行入宫。她感激这份照应，病况未明，仍在担忧。',.25);return '太医携必要药材赴她家中诊治，病况将由家人转报；她记着这份照应，尚不能因此安心，更不能断言已经痊愈。';}},

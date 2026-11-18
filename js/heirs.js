@@ -354,11 +354,17 @@ function abdicateEvent(k){S.over=true;const e=E();S.history.push({sur:e.sur,name
 /* ============ 皇嗣抚养与过继 ============ */
 const fosterOf=k=>k.foster?byId(k.foster):null;
 const raisesKid=c=>S.children.some(x=>x.alive&&(x.foster===c.id||(x.mom===c.id&&!x.foster)));
+function fosterCandidates(k){
+  return harem().filter(c=>c.id!==k.mom&&c.id!==k.foster&&c.rank>=2).sort((a,b)=>b.rank-a.rank||b.virtue-a.virtue).slice(0,6);
+}
+function fosterCandidateChoice(c,assign){
+  return {t:`${cName(c)}（德${rd(c.virtue)} 才${rd(c.talent)}${c.known?' 心机'+rd(c.scheme):''}，${c.fam.t}，${raisesKid(c)?'已有孩子':'膝下无子'}）`,person:c,f:()=>assign(c)};
+}
 A.foster=function(id){const k=kidById(id);const m=byId(k.mom);
-  const cands=harem().filter(c=>c.id!==k.mom&&c.id!==k.foster&&c.rank>=2).sort((a,b)=>b.rank-a.rank||b.virtue-a.virtue).slice(0,6);
+  const cands=fosterCandidates(k);
   if(!cands.length){toast('眼下没有合适的妃嫔（需贵人及以上）');return}
   pushEv({title:'抚养',por:k,text:`把${kidName(k)}交给谁抚养？\n${m&&m.alive?`生母${cName(m)}会很难过。`:'孩子的生母已经不在了。'}养母的德行、才情、心机会影响孩子的成长，她的家世也会成为孩子将来的倚仗。`,
-    choices:[...cands.map(c=>({t:`${cName(c)}（德${rd(c.virtue)} 才${rd(c.talent)}${c.known?' 心机'+rd(c.scheme):''}，${c.fam.t}，${raisesKid(c)?'已有孩子':'膝下无子'}）`,person:c,f:()=>doFoster(k,c)})),{t:'再想想'}]})};
+    choices:[...cands.map(c=>fosterCandidateChoice(c,carer=>doFoster(k,carer))),{t:'再想想'}]})};
 function doFoster(k,c,options={}){if(familyScenesEnabled()&&(!childInPalace(k)||!inPalace(c)||k.foster===c.id||c.id===k.mom))return null;const m=byId(k.mom),old=fosterOf(k),childless=!raisesKid(c);if(m&&m.alive&&m!==c&&!k.motherBonds?.[m.id]){(k.motherBonds ||= {})[m.id]={trust:childTrust(k,m)}}
   if(old&&old!==c&&!k.motherBonds?.[old.id]){(k.motherBonds ||= {})[old.id]={trust:childTrust(k,old)}}
   preserveFormerCare(k,old,c);

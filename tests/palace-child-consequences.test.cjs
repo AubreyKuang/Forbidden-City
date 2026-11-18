@@ -70,3 +70,22 @@ test('petitioners lead the popup and identical infant reactions share one short 
 test('a genuine v31 pending petition keeps its original words through reload',()=>{
  const payload=require('./fixtures/child-plea-legacy-v31.json'),w=boot(123,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));w.ctx.assert=assert;w.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,31);assert.match(curEv.text,/消息传到了孩子们那里/);drain();assert.equal(PalaceActions.contentVersion,PalaceActions.releaseVersion);`);
 });
+test('choose care for each dependent after a cold-palace order, including an infant, and resume between children',()=>{
+ const w=world();w.run(`elder.away=true;little.born=S.turn-14*12;Math.random=()=>.999;
+ var fosterId=foster.id,babyId=baby.id,motherId=a.id,carerId=q.id;
+ A.cold(a.id);choose(0);nextEv();assert.equal(curEv.title,'母亲遭逢变故');
+ choose(curEv.choices.findIndex(x=>x.t==='把孩子交给其他妃嫔抚养'));
+ assert.equal(curEv.por.id,fosterId);choose(curEv.choices.length-1);assert.equal(curEv.por.id,babyId);
+ save('auto');A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(curEv.por.id,babyId);
+ choose(curEv.choices.findIndex(x=>x.person?.id===carerId));drain();
+ assert.equal(kidById(babyId).foster,carerId);assert.equal(kidById(babyId).mom,motherId);
+ assert.equal(kidById(fosterId).foster,motherId);assert.equal(S.flags.childFamilyIncidents.at(-1).response,'foster');
+ assert.ok(byId(carerId).story.some(s=>s.t.includes(baby.name)&&s.t.includes('抚养')));
+ assert.ok(S.log.some(s=>s.t.includes(baby.name)&&s.t.includes(fullName(byId(carerId)))));`);
+});
+test('declining every carer returns to the unresolved incident without moving the child',()=>{
+ const w=world();w.run(`S.children=[baby];`);cold(w);
+ w.run(`choose(curEv.choices.findIndex(x=>x.t==='把孩子交给其他妃嫔抚养'));
+ choose(curEv.choices.length-1);assert.equal(curEv.title,'母亲遭逢变故');
+ assert.ok(!S.flags.childFamilyIncidents.at(-1).resolved);choose(0);drain();assert.ok(!baby.foster);`);
+});

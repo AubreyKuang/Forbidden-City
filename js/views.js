@@ -437,7 +437,7 @@ function viewConsort(){
     acts+=`<button class="btn primary" onclick="A.chat(${c.id})">闲话家常<small>精力-1</small></button>`;
     acts+=`<button class="btn jade" onclick="A.gift(${c.id})">赏赐<small>礼物 · 内库珍饰</small></button>`;
     familyActions+=momVisitButton(c);
-    familyActions+=`<button class="btn" onclick="A.homeLeave(${c.id})" ${homeLeaveEligible(c)?'':'disabled'}>准回家省亲</button>`;
+    if(domesticHomeLeaveAllowed(c))familyActions+=`<button class="btn" onclick="A.homeLeave(${c.id})" ${homeLeaveEligible(c)?'':'disabled'}>准回家省亲</button>`;
     if(residencePetitionFor(c))conversations+=`<button class="btn" onclick="A.residencePetition(${c.id})">听她谈居处</button>`;
     if(solitaryQuietEvent(c))conversations+=`<button class="btn" onclick="A.quietHousehold(${c.id})">听她谈清静</button>`;
     if(travelerQuietPair(c))conversations+=`<button class="btn" onclick="A.neighborWord(${c.id})">听听廊下的新词</button>`;

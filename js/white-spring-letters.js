@@ -1,6 +1,7 @@
 /* 白泉王室有自己的家籍。往来的是亲书和国书，父兄不列本朝官员。 */
 function whiteSpringRoyal(c){return c?.fixedStory==='ayimu'&&journalContentVersion()>=87;}
 function whiteSpringFamily(c){
+  if(c.homeLeave&&!domesticHomeLeaveAllowed(c))delete c.homeLeave;
   if(c.whiteSpringFamily)return c.whiteSpringFamily;
   const former=c.house;
   const family=c.whiteSpringFamily={

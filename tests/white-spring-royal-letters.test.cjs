@@ -32,3 +32,12 @@ test('older domestic family data stops generating relatives or visits, without a
  UI.sel=id;assert.doesNotMatch(viewConsort(),/接母亲入宫|接她母亲入宫|准入宫探亲/);assert.match(familyGraphSVG(),/白泉王室/);
  natalFamilyTick();assert.equal(lady.house,undefined);assert.equal(officialEntries().some(e=>e.c.id===id),false);`);
 });
+test('Ayimu stays at court while ordinary consorts can visit home; an obsolete leave is cleared on load',()=>{
+ const w=palace();w.run(`lady.hp=90;UI.sel=id;assert.doesNotMatch(viewConsort(),/准回家省亲/);
+ assert.equal(homeLeaveEligible(lady),false);A.homeLeave(id);assert.equal(modalOpen,false);
+ assert.equal(startHomeLeave(lady,2,'探病'),false);assert.equal(sickMotherEvent(lady),null);
+ assert.equal(homeLeaveEligible(a),true);assert.ok(startHomeLeave(a,2));
+ lady.homeLeave={from:S.turn,due:S.turn+2,reason:'省亲'};var aId=a.id;save('auto');A.load('auto');drain();
+ assert.ok(inPalace(byId(id)));assert.equal(byId(id).homeLeave,undefined);
+ assert.equal(byId(aId).homeLeave.due,S.turn+2);assert.ok(byId(id).whiteSpringFamily.father.alive);`);
+});

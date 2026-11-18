@@ -100,7 +100,7 @@ const HAREM=[
    {t:'亲自探视（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{E().energy--;renderTop();consortHealthTreat(c,{immediate:4});remember(c,'care','病中探视');story(c,'卧病在床，陛下亲自来看她，还喂了她一口药。');return fx(cchg(c,{mood:20,aff:15}))}},
    ...(journalContentVersion()>=91&&c===empress()?[{t:'宣太医并安排妃嫔侍疾',f:()=>{consortHealthTreat(c);story(c,'染了风寒，太医诊治，宫中另安排妃嫔照应。');chg({treasury:-10});cchg(c,{mood:5});const ev=queenCareSelection(c);if(ev)pushNow(ev);return null;}}]:[]),
    {t:'不必理会',f:()=>{if(c.trait==='体弱'&&chance(.25)){c.alive=false;if(journalContentVersion()>=81)c.deathReason='病势沉重，不治身故';story(c,'病势沉重，无人问津，于一个雪夜香消玉殒。');log(`${fullName(c)}病逝。`,1);AU.sfx('sad');return `数日后，${c.palace}传来噩耗：${fullName(c)}病逝了。`}story(c,'病了半月，陛下未曾过问。');remember(c,'neglect','病中无人过问');return fx(cchg(c,{mood:-15,aff:-8}))}}]}},
- function homesick(){const c=pick(harem().filter(c=>!c.rescue&&c.wound!=='mom'&&!c.visitor));return c?sickMotherEvent(c):null},
+ function homesick(){const c=pick(harem().filter(c=>domesticHomeLeaveAllowed(c)&&!c.rescue&&c.wound!=='mom'&&!c.visitor));return c?sickMotherEvent(c):null},
  function empressReport(){const em=empress();if(!em)return null;
   if(em.virtue>=60) return {title:'中宫奏事',por:em,text:'皇后奏请：后宫用度日增，臣妾愿率六宫减省膳食衣料，以充国用。',choices:[
    {t:'准奏，皇后贤德',outcome:'皇后让坤宁宫先减下月的用度，再把账册送往各宫。省下的银两由内务府点清入库。',f:()=>{story(em,'率六宫节俭用度，陛下赞其贤德。');harem().forEach(c=>{if(c!==em)c.mood=clamp(c.mood-3)});return fx(chg({treasury:60,prestige:2}),cchg(em,{aff:6}))}},

@@ -74,9 +74,9 @@ function childMotherConsequenceEvent(n){
   if(!mother||!children.length||n.resolved)return null;
   const label=k=>k.pendingName?`尚未赐名的小${k.sex==='m'?'皇子':'公主'}`:k.name;
   const valid=()=>!n.resolved&&children.some(k=>k.alive),people=[...new Set([...children,...group])];
-  const finish=mode=>{
+  const finish=(mode,placement)=>{
     if(!valid())return null;n.resolved=true;n.response=mode;
-    const text=mode==='release'?`${fullName(mother)}获准出冷宫，以官女子身份安置，未恢复旧位。`:
+    const text=mode==='foster'?placement:mode==='release'?`${fullName(mother)}获准出冷宫，以官女子身份安置，未恢复旧位。`:
       mode==='care'?`陛下准向${fullName(mother)}送去衣食与平安口信，原来的处分仍保留。`:
       mode==='wait'?'陛下先命随侍妥善照料孩子，未改变原来的安排。':n.kind==='death'?'陛下听孩子们说完，安排熟悉的随侍照料，没有催他们马上止住悲伤。':'陛下听完孩子们的心事，解释处置须论是非，也让他们知道照护不会被遗忘。';
     if(mode==='release'){mother.rank=0;A.uncold(mother.id);}
@@ -90,6 +90,24 @@ function childMotherConsequenceEvent(n){
     }
     return text;
   };
+  const needsCarer=k=>childInPalace(k)&&kidAge(k)<14&&(k.foster||k.mom)===mother.id;
+  const dependents=journalContentVersion()>=89?children.filter(needsCarer):[];
+  function arrangeCare(index,placed){
+    while(index<dependents.length){
+      const k=dependents[index++],candidates=fosterCandidates(k);
+      if(!needsCarer(k)||!candidates.length)continue;
+      pushNow({title:'为'+label(k)+'择养母',por:k,valid,
+        text:kidName(k)+'今后的日常起居，由哪位妃嫔照料？',
+        choices:[...candidates.map(c=>fosterCandidateChoice(c,carer=>{
+          if(needsCarer(k)&&fosterCandidates(k).includes(carer)&&doFoster(k,carer))
+            placed.push(label(k)+'交由'+fullName(carer)+'抚养');
+          return arrangeCare(index,placed);
+        })),{t:'这个孩子仍按原安排照料',f:()=>arrangeCare(index,placed)}]});
+      return;
+    }
+    if(placed.length)return finish('foster','陛下定下照料人选：'+placed.join('；')+'。');
+    pushNow(childMotherConsequenceEvent(n));
+  }
   const body=()=>{
     if(journalContentVersion()>=32){
       const fact=`${fullName(mother)}${{death:'离世',cold:'入冷宫',departure:'离宫',demotion:'降位',punishment:'受罚'}[n.kind]}`,lines=[];
@@ -122,7 +140,10 @@ function childMotherConsequenceEvent(n){
   const ev={title,por:focus.find(k=>!k.pendingName)||children[0],cast:focus.filter(k=>!k.pendingName).slice(0,4),present:[],valid,text:'',onShow:()=>{ev.text=body();},choices:[
     {t:group.length?'听完求情，说明缘由并安抚':'陪孩子说一会儿，安排照料',f:()=>finish('comfort')},
     ...(group.length&&mother.alive?[{t:'准送衣食与口信，原处分保留',f:()=>finish('care')},...(mother.cold?[{t:'念其孝心，准出冷宫，降为官女子',cond:()=>mother.alive&&mother.cold,f:()=>finish('release')}]:[])]:[]),
-    {t:'先由随侍照料，稍后再陪伴',f:()=>finish('wait')}
+    {t:'先由随侍照料，稍后再陪伴',f:()=>finish('wait')},
+    // Existing pending incidents replay choices by index. Keep the earlier responses in order.
+    ...(dependents.length?[{t:'把孩子交给其他妃嫔抚养',cond:()=>dependents.some(k=>needsCarer(k)&&fosterCandidates(k).length),
+      why:'眼下没有合适的养母人选',f:()=>arrangeCare(0,[])}]:[])
   ]};ev.text=body();return ev;
 }
 function childConsequenceFeeling(k){
