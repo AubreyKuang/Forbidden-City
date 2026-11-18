@@ -21,13 +21,30 @@ function chroniclePersonLink(p){
  const target=chroniclePersonTarget(p.id);
  return target?`<button class="btn quiet sm" onclick="A.go('${target.view}',${esc(JSON.stringify(target.id))})">${esc(p.name)}</button>`:esc(p.name);
 }
+function chronicleGroupedLetters(story){
+ const entries=[],groups=new Map();
+ for(const [i,e] of story.entries()){
+  const row={e,i},letter=String(e.t).match(/^【娘家来信】(.+?)得知(.+?(?:降为.+?|被迁入冷宫)，托人传话：“.+”)$/);
+  if(letter){
+   const [,writer,body]=letter,key=JSON.stringify([e.d,body]),group=groups.get(key);
+   if(group){
+    group.names.push(writer);
+    group.row.e={...group.row.e,t:'【娘家来信】'+group.names.join('、')+'得知'+body};
+    continue;
+   }
+   groups.set(key,{row,names:[writer]});
+  }
+  entries.push(row);
+ }
+ return entries;
+}
 function chronicleVisibleEntries(story){
  const personalPromotions=new Set(),brotherExchanges=new Set();
  for(const e of story){
   const promotion=String(e.t).match(/^【父亲升黜·[^】]+】家书传来：父亲(.+?)由(.+?)(?:升任|贬任)(.+?)。/);
   if(promotion)personalPromotions.add(JSON.stringify([e.d,...promotion.slice(1)]));
  }
- return story.map((e,i)=>({e,i})).filter(({e})=>{
+ return chronicleGroupedLetters(story).filter(({e})=>{
   const text=String(e.t),promotion=text.match(/^父亲(.+?)：[^：]+：由(.+?)改任(.+?)。$/);
   if(promotion&&personalPromotions.has(JSON.stringify([e.d,...promotion.slice(1)])))return false;
   const exchange=text.match(/^(?:[长二三四五]兄|兄长|弟弟)[^：]+：([^。]+(?:举荐自己的(?:兄长|弟弟)|给弟弟[^。]+写信).+)$/);

@@ -9,7 +9,7 @@ function initializeOutsideParentage(child,preg,gen=S.gen){
 
 // A private finding identifies the biological father without changing the family register.
 function queueOutsidePregnancyNotice(c,mother,preg){
-  if(journalContentVersion()<88||!preg?.unconfirmed||preg.privateNoticeQueued)return;
+  if(journalContentVersion()<89||!preg?.unconfirmed||preg.privateNoticeQueued)return;
   preg.privateNoticeQueued=true;
   const commander=jinyiweiCommanderReady()?jinyiwei().commander:null;
   const title=commander?'锦衣卫密报 · 宫外孕讯':'宫外来信 · 有孕';
@@ -19,7 +19,7 @@ function queueOutsidePregnancyNotice(c,mother,preg){
   pushEv({title,por:commander||natalPortrait(mother),text,choices:[{t:'记下消息，先让她安心养护'}]});
 }
 function queueOutsideBirthNotice(c,child){
-  if(journalContentVersion()<88||child.privateBirthNoticeQueued)return;
+  if(journalContentVersion()<89||child.privateBirthNoticeQueued)return;
   const f=outsideParentageFamily(c,child);if(!f)return;
   child.privateBirthNoticeQueued=true;
   const commander=jinyiweiCommanderReady()?jinyiwei().commander:null;
@@ -30,7 +30,7 @@ function queueOutsideBirthNotice(c,child){
     {t:'先记下，日后再议'}]});
 }
 function outsidePaternityReady(f){
-  return journalContentVersion()>=88&&!!f?.child?.unconfirmedParentage&&f.household.relatives.includes(f.child)&&!f.child.outsideParentage?.privateInquiry&&f.child.outsideParentage?.status!=='investigating'&&jinyiweiCommanderReady()&&!S.over;
+  return journalContentVersion()>=89&&!!f?.child?.unconfirmedParentage&&f.household.relatives.includes(f.child)&&!f.child.outsideParentage?.privateInquiry&&f.child.outsideParentage?.status!=='investigating'&&jinyiweiCommanderReady()&&!S.over;
 }
 function beginOutsidePaternityInquiry(f){
   if(!outsidePaternityReady(f)||E().treasury<15||!useE())return null;
@@ -58,7 +58,7 @@ function outsidePaternityResult(f){
     }}]};
 }
 function outsidePaternityTick(){
-  if(!S||S.over||journalContentVersion()<88)return;
+  if(!S||S.over||journalContentVersion()<89)return;
   const seen=new Set();for(const c of familyCourtHosts()){
     const house=houseOf(c);if(!house||seen.has(house.father.id))continue;seen.add(house.father.id);
     for(const child of house.relatives||[]){
@@ -185,8 +185,8 @@ function outsideParentageEvent(f){
     const status=data.status;
     return {title:status==='reported'?'宫外家书 · 身世起疑':'重阅旧案',por,valid:()=>valid(status),
       text:`${his}曾请宫中查看${name}出生前后的旧信。他只求明白实情，也担心这些议论终会落到孩子身上。\n${her}说：“孩子跟着我们过了这么些日子。陛下若要查，请先准他照常过日子。”`,choices:[
-      {t:'调阅家书与接生簿 · 精力−1',cond:()=>valid(status)&&E().energy>0&&!(journalContentVersion()>=88&&data.privateInquiry?.status==='investigating'),why:'精力不足或锦衣卫正在核查',f:()=>{
-        if(!valid(status)||(journalContentVersion()>=88&&data.privateInquiry?.status==='investigating')||!useE())return null;
+      {t:'调阅家书与接生簿 · 精力−1',cond:()=>valid(status)&&E().energy>0&&!(journalContentVersion()>=89&&data.privateInquiry?.status==='investigating'),why:'精力不足或锦衣卫正在核查',f:()=>{
+        if(!valid(status)||(journalContentVersion()>=89&&data.privateInquiry?.status==='investigating')||!useE())return null;
         data.status='investigating';data.due=S.turn+1;
         outsideParentageChronicle(f,'查证身世',{
           husband:'他交出留下的书信与行程，答应等查证的人回话。',mother:'她把自己记得的日子写了下来，仍亲自照看孩子。',
@@ -289,7 +289,7 @@ function outsideParentagePanel(c,p){
   const status=data.status,label=labels[status];
   const action={reported:'阅丈夫的家信',suppressed:'重阅身世旧案',investigating:S.turn>=data.due?'听取身世回奏':'',proved:'决定孩子归处'}[status];
   const q=data.privateInquiry;
-  const privatePart=journalContentVersion()>=88&&p.unconfirmedParentage&&c?`<p>${q?.status==='complete'?`秘密查证已完成，生父已写明；孩子仍保留「身世未明」标签。`:q?.status==='investigating'?`锦衣卫核查中，${S.turn>=q.due?'回奏已到':`还需 ${q.due-S.turn} 个月`}。`:'可请锦衣卫只核查生父，不改变孩子身份。'}</p>${!q&&jinyiweiCommanderReady()&&!S.over?`<button class="btn jade" onclick="A.outsidePaternityInquiry(${c.id},${p.id})">请锦衣卫彻查生父</button>`:q?.status==='investigating'&&S.turn>=q.due&&!S.over?`<button class="btn jade" onclick="A.outsidePaternityReport(${c.id},${p.id})">听取锦衣卫回奏</button>`:''}`:'';
+  const privatePart=journalContentVersion()>=89&&p.unconfirmedParentage&&c?`<p>${q?.status==='complete'?`秘密查证已完成，生父已写明；孩子仍保留「身世未明」标签。`:q?.status==='investigating'?`锦衣卫核查中，${S.turn>=q.due?'回奏已到':`还需 ${q.due-S.turn} 个月`}。`:'可请锦衣卫只核查生父，不改变孩子身份。'}</p>${!q&&jinyiweiCommanderReady()&&!S.over?`<button class="btn jade" onclick="A.outsidePaternityInquiry(${c.id},${p.id})">请锦衣卫彻查生父</button>`:q?.status==='investigating'&&S.turn>=q.due&&!S.over?`<button class="btn jade" onclick="A.outsidePaternityReport(${c.id},${p.id})">听取锦衣卫回奏</button>`:''}`:'';
   return label||privatePart?detailSection('宫外身世',`${label?`<p>${esc(label)}</p>`:''}${action&&p.alive&&c&&data.gen===S.gen&&!S.over?`<button class="btn jade" onclick="A.outsideParentage(${c.id},${p.id})">${action}</button>`:''}${privatePart}`):'';
 }
 
@@ -305,7 +305,7 @@ natalLifeTick=function(){earlierOutsideParentageTick();outsideParentageTick();ou
 
 const earlierOutsideCasesSection=casesSection;
 casesSection=function(){
-  const base=earlierOutsideCasesSection();if(journalContentVersion()<88||!jinyiwei())return base;
+  const base=earlierOutsideCasesSection();if(journalContentVersion()<89||!jinyiwei())return base;
   const rows=[],seen=new Set();for(const c of familyCourtHosts()){
     const h=houseOf(c);if(!h||seen.has(h.father.id))continue;seen.add(h.father.id);
     for(const child of h.relatives||[]){if(!child.unconfirmedParentage||!child.outsideParentage)continue;

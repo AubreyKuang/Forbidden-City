@@ -26,7 +26,7 @@ function personalLifePanel(c){
 }
 function lifeChapters(person){
  const groups=new Map();
- for(const [index,entry] of (person.story||[]).entries()){
+ for(const {i:index,e:entry} of chronicleGroupedLetters(person.story||[])){
   if(entry.t.startsWith('【心境'))continue;
   const chapter=LIFE_CHAPTERS.find(c=>entry.life?.kind?c.key===entry.life.kind:c.re.test(entry.t))||LIFE_CHAPTERS.at(-1);
   if(!groups.has(chapter.key))groups.set(chapter.key,{...chapter,entries:[]});groups.get(chapter.key).entries.push({entry,index});

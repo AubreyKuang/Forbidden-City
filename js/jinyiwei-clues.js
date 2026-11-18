@@ -118,7 +118,7 @@ function jinyiweiRareNotice(ev,people){
   return `锦衣卫指挥使${jinyiwei().commander.name}附报：${note.text}`;
 }
 function jinyiweiRareAlert(ev){
-  if(journalContentVersion()>=88&&jinyiweiCommanderReady()&&['喜脉','尚衣局来报 · 喜脉'].includes(ev?.title)&&ev.por?.maid){
+  if(journalContentVersion()>=89&&jinyiweiCommanderReady()&&['喜脉','尚衣局来报 · 喜脉'].includes(ev?.title)&&ev.por?.maid){
     const maid=ev.por,conceived=maid.pregnancyCalendar?.conceived??maid.pregnancyFather?.conceived??S.turn-1;
     const note={key:`maid-pregnancy:${S.gen}:${maid.id}:${conceived}`,title:'宫女有孕',date:dateStr(),turn:S.turn,urgent:true,
       text:`宫女${fullName(maid)}经太医诊出身孕，敬事房已核对侍寝记录。原有请安与安置事项随后呈阅。`};
