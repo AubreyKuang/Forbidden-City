@@ -77,7 +77,7 @@ for(const [mode,fan,reply,first,future] of [
 test('the agreement in the normal marriage menu creates a real household and unlocks one walk at the estate',()=>{
  let b=game();setupCourtship(b);
  b.run(`A.openPrincess(kidId);choose(0);drain();assert.ok(k.estate);
-  UI.view='princessEstate';UI.sel=k.id;assert.match(viewPrincessEstate(),/听林见溪的求亲回话/);
+  A.go('princess',k.id);assert.match(viewPrincessEstate(),/听林见溪的求亲回话/);
   A.kidMarriage(kidId);choose(curEv.choices.findIndex(x=>x.t==='听林见溪的求亲回话'));
   assert.match(curEv.title,/山水有约/);choose(1);drain();
   assert.equal(k.married,false);assert.equal(linJianxiProposalReady(k),false);`);
@@ -91,7 +91,7 @@ test('the agreement in the normal marriage menu creates a real household and unl
   assert.ok(k.story.some(s=>s.t.includes('竹林贤客，两情相悦')));
   assert.equal(linJianxiWalkReady(k,p),false);`);
  advance(b);
- b.run(`UI.view='princessEstate';UI.sel=k.id;assert.match(viewPrincessEstate(),/听听溪桥家常/);
+ b.run(`A.go('princess',k.id);assert.match(viewPrincessEstate(),/听听溪桥家常/);
   A.linJianxiWalk(kidId);choose(1);drain();assert.equal(k.linJianxi.walked,'bank');
   assert.ok(k.story.some(s=>s.event?.title==='溪桥家常'));assert.ok(p.story.some(s=>s.event?.title==='溪桥家常'));
   assert.equal(linJianxiWalkReady(k,p),false);`);

@@ -260,7 +260,7 @@ youthPanel=k=>linJianxiYouthPanel(k)+linJianxiHeartPanel(k,linJianxiReleased()?l
 const linJianxiHouseholdPanel=householdPanel;
 householdPanel=function(k){
  const html=linJianxiHouseholdPanel(k);
- if(!linJianxiReleased()||UI.view!=='princessEstate')return html;
+ if(!linJianxiReleased()||UI.view!=='princess')return html;
  const p=linJianxiPerson(),chapter=linJianxiHomeChapter(k,p);
  const title={lamp:'竹门有灯',bamboo:'竹径归来',child:'小儿问水'}[chapter];
  if(title)return html+detailSection('家常',`<button class="btn jade" onclick="A.linJianxiHome(${royalActionArg(k.id)})">听听${title}</button>`);
