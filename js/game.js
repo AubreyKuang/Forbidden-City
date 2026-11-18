@@ -560,7 +560,7 @@ const A={
     pushEv({title:'降位',danger:true,por:c,text:`降${cName(c)}为${RANKS[c.rank-1]}？`,choices:[{t:'降位',f:()=>{c.rank--;reconcileResidences();const s=cchg(c,{mood:-25,aff:-10,favor:-5});story(c,`被降为${RANKS[c.rank]}。`);remember(c,'hurt','被降位');setXin(c,(c.t2==='记仇'||c.scheme>60)?'怨恨':'委屈','被降了位分','emp');log(`降${fullName(c)}为${RANKS[c.rank]}。`);AU.sfx('sad');return `${fullName(c)}跪地谢恩，泪落无声。${fx(s)}`}},{t:'作罢'}]})},
   rename(id){const c=byId(id);pushEv({title:'更改封号',por:c,text:'请为她拟一个新的封号：',input:{def:c.title||pick(TITLES),max:2},choices:[{t:'赐此封号',f:v=>{grantConsortTitle(c,v);story(c,`陛下赐封号「${v}」。`);return `自今日起，她便是${cName(c)}。${fx(cchg(c,{mood:10,aff:4}))}`}},{t:'作罢'}]})},
   crown(id){const c=byId(id);if(empress()){toast('中宫已有皇后');return}
-    pushEv({title:'册立皇后',por:c,text:`册${fullName(c)}为皇后，入主坤宁宫？\n册封大典需耗费国库一百万两。`,choices:[
+    pushEv({title:'册立皇后',por:c,valid:()=>journalContentVersion()<88||!empress()&&inPalace(c)&&!c.maid&&c.rank>=5&&c.rank<8,text:`册${fullName(c)}为皇后，入主坤宁宫？\n册封大典需耗费国库一百万两。`,choices:[
       {t:'择吉日行册封礼',f:()=>{c.rank=8;assignPalace(c);AU.sfx('gong');
         let s=chg({treasury:-100,prestige:c.fam.p>=50?6:2});
         if(c.virtue<40) s+='　'+chg({people:-3});
@@ -582,6 +582,7 @@ const A={
 A.endMonth=function(){
   if(!S||S.over||modalOpen)return;const e=E();
   const delivery=pendingDelivery();if(delivery){A.resumeBirth(delivery.id);return;}
+  if(journalContentVersion()>=88)observeRitesVacancies();
   // 财政
   const openingTreasury=e.treasury,openingHealth=e.health;
   const localGrainPayment=localGrainPaymentDue()?localGrainBalance():0;
@@ -680,6 +681,7 @@ A.endMonth=function(){
   const inquiry=pendingSisterInquiry();if(inquiry)must.unshift(inquiry);
   if(comingOfAge)must.unshift(comingOfAge);
   if(!passing){
+    if(journalContentVersion()>=88&&!mourningActive())must.push(...ritesVacancyPetitions());
     const castStories=storyCastMonthlyEvents();must.push(...castStories);
     const petition=pendingSisterCustody();if(petition)must.push(petition);
     const palaceChapter=storyCastLifeMonthly(castStories);if(palaceChapter)must.push(palaceChapter);

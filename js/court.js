@@ -931,7 +931,7 @@ function singleMonthlyCourtEvent(){
     candidates.unshift(IMPEACHMENT_INDEX);
   }
   for(const index of candidates){
-    if(seen.has(index))continue;
+    if(seen.has(index)||index===9&&journalContentVersion()>=88)continue;
     if(playtestFeedbackActive()&&!courtSubjectReady(index))continue;
     if(journalContentVersion()>=33&&index===2)continue; // 礼部日程统一安排殿试，已呈阅的旧奏折仍可批复。
     const impeachment=index===IMPEACHMENT_INDEX?newImpeachment():null;

@@ -482,7 +482,8 @@ function viewConsort(){
    ])}`;
 }
 function viewCards(){
-  const h=harem().filter(c=>!c.cardWithdrawn).sort((a,b)=>b.rank-a.rank||b.favor-a.favor).concat(maids().filter(m=>m.near&&!m.cardWithdrawn));
+  const cards=harem().concat(alive().filter(c=>c.homeLeave&&!c.maid&&!c.cold&&!c.templeStay));
+  const h=cards.filter(c=>!c.cardWithdrawn).sort((a,b)=>b.rank-a.rank||b.favor-a.favor).concat(maids().filter(m=>m.near&&!m.cardWithdrawn));
   return `<h2>敬事房 · 翻牌子</h2><p class="hint">敬事房呈上绿头牌。翻谁的牌子，今夜便召谁侍寝（精力-1）。本月已侍寝 ${E().nightsMonth||0} 次，一月超过三次有损龙体。</p>
    ${h.length?`<div class="pais">${h.map(c=>`<button class="pai" ${consortNightReason(c)?'disabled':''} onclick="A.night(${c.id})"><strong>${esc(cName(c))}</strong><small>${consortNightReason(c)||'恩宠 '+rd(c.favor)}</small></button>`).join('')}</div>`:'<p class="hint">暂无可翻的绿头牌。可在妃嫔详情中恢复绿头牌。</p>'}${maidAudiencePanel()}`;
 }

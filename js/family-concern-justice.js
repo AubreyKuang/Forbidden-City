@@ -53,3 +53,37 @@ const justiceConsortView=viewConsort,justiceOfficialView=viewOfficial,justiceFam
 viewConsort=function(){repairFamilyConcernWording();return justiceConsortView();};
 viewOfficial=function(){repairFamilyConcernWording();return justiceOfficialView();};
 officialConversation=function(e,topic){repairFamilyConcernWording();return justiceFamilyConversation(e,topic);};
+
+function familyPenaltyRole(r){
+  return r.label==='父亲'?'father':r.type==='blood'&&/[兄弟]/.test(r.label)?'brother':'kin';
+}
+function familyPenaltyWriters(kin,key,stamp,lostCrown){
+  const entrants=[];
+  for(const {person,r} of kin){
+    if(person.p.palaceConcerns?.[key]===stamp)continue;
+    const role=familyPenaltyRole(r);
+    const odds=({father:lostCrown?.85:.65,brother:lostCrown?.6:.4,kin:lostCrown?.28:.12})[role];
+    const score=R()/odds;
+    if(score<1)entrants.push({person,role,score});
+  }
+  const writers=new Set(),roles=new Set();
+  for(const {person,role} of entrants.sort((a,b)=>a.score-b.score)){
+    if(roles.has(role))continue;
+    writers.add(person);roles.add(role);
+    if(writers.size===(lostCrown?2:1))break;
+  }
+  return writers;
+}
+function familyPenaltyVoice(p,r,context,lostCrown,fallback){
+  const role=familyPenaltyRole(r),guilty=context.known==='guilty';
+  if(!lostCrown&&role==='father')return fallback;
+  const kin=r.label==='弟弟'?'姐姐':'妹妹',sober=['谨慎','持正'].includes(p.temperament);
+  if(role==='father'){
+    const line=sober?'当初送女儿受册，我亲手把告庙的祝文收进匣里。今日听说收了凤印，我又把那篇祝文取出来，坐了半晌。':'她幼时随我写字，第一回家信还把“安”字写歪了。我提笔写了半日，还是只唤她一声女儿。';
+    return line+(guilty?'因'+context.crime+'获罪，我会劝她认错；家里谁也不许拿旧日恩典说情。':context.known==='cleared'?'既已查明她未涉此事，但愿她能睡个安稳觉。':'诏书之外的事，我不敢妄议，只想知道她如今住得可好。');
+  }
+  if(role==='brother')return (lostCrown?'从前门上挤满了来贺中宫的人，今日门前倒清静了。':'家里听见消息，几次催我进宫问个究竟。')+
+    (guilty?'既然'+context.crime+'已经查实，我已回绝说情的人，也会写信劝'+kin+'认错。':context.known==='cleared'?'既已查明清白，我想让'+kin+'知道，家里的门始终为她开着。':'我告诉家里，先别信外头的闲话。有难处，让'+kin+'在信里告诉我。');
+  return (lostCrown?'从前逢节，家里递往中宫的贺笺都由我过目。如今我嘱咐他们收起旧帖，往后依新礼往来。':'两家虽是亲眷，我知道的也只比外人多一封家信。')+
+    (guilty?'听闻'+context.crime+'查实，婚亲各房也该约束子弟，勿借旧亲求情。':context.known==='cleared'?'疑处既已查清，也请亲友止住闲议。':'有人来打听内情，我只让他看宫里明发的诏书。');
+}

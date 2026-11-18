@@ -192,8 +192,11 @@ function courtFamilyLifeTick(previous){
     const key=`${c.id}:${kind}`,stamp=`${S.turn}:${newborn.map(k=>k.id).join(',')}${kind==='promoted'?':'+c.rank:''}`;
     const fact={death:'去世',cold:'被迁入冷宫',demoted:`由${RANKS[old.rank]}降为${RANKS[c.rank]}`,promoted:`由${RANKS[old.rank]}晋为${RANKS[c.rank]}`,birth:`诞育${newborn.map(k=>kidName(k)).join('、')}`,pregnancy:'有孕的消息传到家中',favored:'近来颇得圣眷',neglected:'近来少有召见',released:'获准离开冷宫'}[kind];
     if(expanded)recordSisterPalaceConcerns(c,old,kind,fact,key,stamp);
-    for(const person of careerPeople().filter(x=>officialAlive(x.p))){
-      const r=careerKin(person).find(r=>r.c.id===c.id);if(!r)continue;
+    const penalty=journalContentVersion()>=88&&['cold','demoted'].includes(kind);
+    const lostCrown=penalty&&old.rank===8;
+    const kin=careerPeople().filter(x=>officialAlive(x.p)).map(person=>({person,r:careerKin(person).find(r=>r.c.id===c.id)})).filter(x=>x.r);
+    const writers=penalty?familyPenaltyWriters(kin,key,stamp,lostCrown):null;
+    for(const {person,r} of kin){
       if(r.type!=='blood'&&!['cold','demoted','birth','death'].includes(kind))continue;
       if(person.p.palaceConcerns?.[key]===stamp)continue;
       (person.p.palaceConcerns ||= {})[key]=stamp;
@@ -203,10 +206,11 @@ function courtFamilyLifeTick(previous){
         const context=familyPenaltyContext(c,old);
         if(kind!=='death'||context.known==='guilty')quote=familyPenaltyQuote(person.p,context);
       }
+      if(penalty)quote=familyPenaltyVoice(person.p,r,familyPenaltyContext(c,old),lostCrown,quote);
       if(kind==='promoted')quote=familyPromotionThought(c,r.label);
       const text=`【宫中牵挂】得知${fullName(c)}${fact}，${person.p.name}道：“${quote}”`;
-      story(person.p,text);log(text);person.p.palaceConcern={c:c.id,kind,turn:S.turn,quote};
-      if(c.alive&&!c.gone){const line=`【娘家来信】${r.label}${person.p.name}得知${familyJusticeActive()?fullName(c):'自己'}${fact}，托人传话：“${quote}”`;story(c,line);NPCMemory.record(S,{type:'family-concern',time:S.turn,participants:[c.id,person.p.id],object:fact},[{person:c.id,subject:person.p.id,interpretation:line,emotion:['favored','birth','promoted'].includes(kind)?.4:-.4,impact:75}]);}
+      story(person.p,text);if(!writers||writers.has(person))log(text);person.p.palaceConcern={c:c.id,kind,turn:S.turn,quote};
+      if(c.alive&&!c.gone&&(!writers||writers.has(person))){const line=`【娘家来信】${r.label}${person.p.name}得知${familyJusticeActive()?fullName(c):'自己'}${fact}，托人传话：“${quote}”`;story(c,line);NPCMemory.record(S,{type:'family-concern',time:S.turn,participants:[c.id,person.p.id],object:fact},[{person:c.id,subject:person.p.id,interpretation:line,emotion:['favored','birth','promoted'].includes(kind)?.4:-.4,impact:75}]);}
     }
   }
 }
@@ -228,7 +232,7 @@ function recordSisterPalaceConcerns(c,old,kind,fact,key,stamp){
   for(const p of sisters){
     if(!p.alive||p.palaceConcerns?.[key]===stamp)continue;
     const close=relGet(c,p)>=25,name=p.name||fullName(p);
-    const quote={
+    let quote={
       promoted:close?'她这些年在宫里也有辛苦。听见晋位，我是真替她欢喜，也盼她得空说说近况。':'新位分有新规矩，也有更多人看着她。道贺的话要说，也想问她近日可还安稳。',
       cold:cause?.known==='guilty'?`既然${cause.crime}已查实，只盼她知错守规。我想问问能否依例送衣药去。`:'消息只说她去了冷宫，缘由我还没听全。先托人问一句，她身边可有御寒的衣裳？',
       demoted:cause?.known==='guilty'?`听说${cause.crime}已经查实，我心里很不好受。盼她把该认的错认下，也保重身子。`:'听说她受了降罚，我想等家书说清原委，再问问她缺些什么。',
@@ -239,6 +243,7 @@ function recordSisterPalaceConcerns(c,old,kind,fact,key,stamp){
       birth:'听说家里添了孩子，我替她高兴，也盼她这些日子能安心将养。',
       death:'家里报了死讯。我又翻了一遍她早些年写的信，想起那时还说来日再见。'
     }[kind];
+    if(cause&&old.rank===8&&journalContentVersion()>=88)quote=(close?'她收起凤冠那晚，身边可有个能说话的人？':'从前给家中回信，她总在末尾嘱咐我们守礼。往后再写信，家里也该改称呼了。')+(cause.known==='guilty'?'听说'+cause.crime+'已查实，我也盼她肯认错。':'');
     (p.palaceConcerns ||= {})[key]=stamp;
     p.palaceConcern={c:c.id,kind,turn:S.turn,date:dateStr(),quote,sister:true};
     story(p,`【宫中牵挂】${name}听说${fullName(c)}${fact}，记下：“${quote}”`);

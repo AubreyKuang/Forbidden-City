@@ -457,3 +457,41 @@ A.scholarTalk=function(id){
   pushEv({title:'召见 · '+p.name,por:p,text:line,choices:[{t:'退下吧'}]});
 };
 PERSON_DETAIL_VIEWS.push('scholar');
+
+function ritesHeirEligible(k){
+  return k.alive&&k.sex==='m'&&!k.removedFromRoyal&&!k.jailed&&!k.templeStay&&!royalJourneyAway(k)&&kidAge(k)>=5&&!storyCastHeirBar(k);
+}
+function observeRitesVacancies(){
+  let state=S.flags.ritesVacancies;
+  if(state?.gen!==S.gen)state=S.flags.ritesVacancies={gen:S.gen};
+  const observe=(seat,vacant,delay)=>{
+    if(!vacant)delete state[seat];
+    else state[seat]||={since:S.turn,next:S.turn+delay};
+  };
+  observe('queen',!empress(),3);
+  observe('heir',!S.heir&&S.children.some(ritesHeirEligible),6);
+  return state;
+}
+function ritesVacancyPetitions(){
+  const state=observeRitesVacancies(),events=[];
+  for(const seat of ['queen','heir']){
+    const wait=state[seat];if(!wait||S.turn<wait.next)continue;
+    const queen=seat==='queen',months=S.turn-wait.since,first=queen&&months<6;
+    wait.next=first?wait.since+6:S.turn+6;
+    if(!chance(first?.55:.8))continue;
+    const head=ministryHead('rites'),byline=head?'礼部尚书'+head.p.name:'礼部代署官',topic=queen?'册立皇后':'册立太子';
+    const candidates=queen?harem().filter(c=>c.rank>=5&&c.rank<8).sort((a,b)=>b.rank-a.rank):S.children.filter(ritesHeirEligible).sort((a,b)=>a.born-b.born);
+    const preface=queen?(first?'中宫已虚三月，臣请陛下早定人选，好让奉册、告庙诸礼有所预备。':'凤位久虚。来日宗庙行礼，内廷命妇由谁领班，还请陛下定夺。'):
+      '宗人府呈来的玉牒上，已有年满五岁的皇子。臣请陛下早定储嗣，东宫讲读也好有所安排。';
+    const record=line=>{log(byline+line);if(head)courtPersonRecord(head,line);};
+    const valid=()=>S.gen===state.gen&&!S.over&&!mourningActive()&&(queen?!empress():!S.heir&&S.children.some(ritesHeirEligible));
+    events.push({title:queen?'礼部请立中宫':'礼部请立储君',valid,por:head?.p,
+      text:byline+'上疏：“'+preface+'”'+(queen&&!candidates.length?'\n眼下宫中无人居妃位及以上，礼部请先斟酌晋封人选。':''),
+      onQueue:()=>record('上疏，请'+topic+'。'),
+      choices:[{t:'留中，容后再议',f:()=>{record('所奏'+topic+'一事，奉旨缓议。');return '奏疏留中，礼部照旧例行事。';}},
+        ...candidates.map(p=>({t:(queen?'拟立':'拟册')+(queen?cName(p):kidName(p))+' · '+(queen?fullName(p):kidAge(p)+'岁'),
+          cond:()=>valid()&&(queen?harem().includes(p)&&p.rank>=5&&p.rank<8:ritesHeirEligible(p)),
+          f:()=>{if(queen)A.crown(p.id);else A.kidHeir(p.id,true);}}))]});
+  }
+  return events;
+}
