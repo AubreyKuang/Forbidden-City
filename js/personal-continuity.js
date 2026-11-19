@@ -63,6 +63,7 @@ function startOfficialContinuity(e,outcome,task){
   const kin=role==='father'?'父亲':role.startsWith('relative')?natalLabel(c,p):officialKinLabel(e.h,role);
   const cause=`${dateStr()}，${kin}${p.name}${outcome==='death'?'去世。'+(p.death?.reason||''): `奉差「${task}」${outcome==='success'?'办结':'未尽如期'}。`}`;
   const t=continuityStart('family',c,null,`${p.id}:${S.turn}:${outcome}`,{officialId:p.id,role,outcome,task,cause});
+  if(t&&role==='father'&&outcome==='death'&&journalContentVersion()>=129)t.mourningKey=fatherMourningKey(c,p);
   if(t&&outcome!=='success')(c.personalConcerns||={})[t.key]={kind:outcome==='death'?'grief':'family',text:outcome==='death'?`仍在整理${p.name}留下的家事。`:`惦记${p.name}差事的善后。`,source:t.id};
 }
 function startChildContinuity(k,m,activity){
@@ -78,10 +79,63 @@ function startChildContinuity(k,m,activity){
     cause:`${dateStr()}，${fullName(m)}与${kidName(k)}一起${activity}。孩子想把下一回怎样做说给她听。`});
   if(t){k.lastPersonalPlan=S.turn;if(journalContentVersion()>=32){m.lastChildPlan=S.turn;S.flags.lastChildPlan=S.turn;}}
 }
+// Each scene follows a known circumstance of this father and this daughter.
+const FATHER_MOURNING_SCENES={
+ battle:{title:'军报的末一行',opening:'她已听过战死的经过，却还想知道，最后一程是谁与父亲同行。',action:'陪她给同行的人拟一封问讯',work:'将想问的话写成一封短信，只问最后一程的情形。',after:'把写好的信读了一遍，到“同行的人”几个字时停下来，提笔把生硬的敬语改了。'},
+ execution:{title:'祭文上的称呼',opening:'祭文起首写了官职，她看了很久，问能不能只写一声“爹”。',action:'留一页纸，让她以女儿的身份写',work:'另铺一张素纸，把对父亲的私语与案情分开。',after:'把祭文开头的官衔划去，只留了一个“父”字。余下的话，她想亲手写。'},
+ road:{title:'没能等到归期',opening:'她想问清父亲病倒前走到了哪里。那段路在讣报上，不过寥寥几个字。',action:'陪她核对父亲最后走过的路',work:'把讣报记下的地名按次序抄好，拿不准的地方留白。',after:'指着纸上最后一个地名停下来。她总算知道，那次等的人走到了哪里。'},
+ money:{title:'银封之后的回音',opening:'她把父亲收了银钱后寄回的信翻了出来。原本怕他舍不得用，如今竟想再听他叮嘱一遍。',action:'陪她重读银封送到后的回信',work:'把回信叠回旧折痕里，将父亲牵挂自己的那几句单独抄下。',after:'读到父亲劝她留钱自用的地方，轻声念了两遍，第二遍不必再看纸。'},
+ demand:{title:'没回完的话',opening:'她一直记得那些盼她照应家门的话。如今听见父亲身故，她既难过，也没法把当年的委屈说成欢喜。',action:'听她把当年的委屈也说出来',work:'把自己当年想答的话说完，写在一张只留给自己的纸上。',after:'把那页话重新展开。这一次，她留下了怨过父亲的那一句，也留下了舍不得的那一句。'},
+ succession:{title:'家书里的两种称呼',opening:'父亲曾来信催问皇子。她从前提笔总想着该怎样回复家门，如今只想叫他一声爹。',action:'让她照自己的心意给父亲写几句',work:'卸下答复家门的口吻，写了一页从女儿心里出来的话。',after:'把“父亲大人”轻轻念成了“爹”，余下半页便顺畅许多。'},
+ unsent:{title:'尚在路上的信',opening:'她记起上回托人寄回家的东西。递出时想的是父亲见了会怎么回话，竟没想过有一天会等不到。',action:'听她说原本想等一句怎样的回话',work:'将最想听的那一句写了下来，没有在后面替父亲作答。',after:'把纸展平，空着的地方仍旧空着。这次她肯讲起当初寄出时的心情了。'},
+ service:{title:'军中与家中',opening:'来人一口一个将军，她都应下了。等人走远，她才问：“我能不能讲一件同打仗全不相干的事？”',action:'听她讲军功册上没有的父亲',work:'拣了一件寻常父女的小事，告诉你父亲在家是什么样子。',after:'说起父亲卸下公事时的神情，仿佛那张熟悉的脸又近了一些。'},
+ retired:{title:'归田以后的日子',opening:'她从前总觉得，既然父亲已经卸任，以后尽有闲日可说家常。如今最挂心的，偏是那些推到以后的话。',action:'陪她想一想父亲归田后的日子',work:'从父亲卸任那年说起，慢慢拾回家书之外的记忆。',after:'把记得准的几件事说清，记不清的那一天，她想留待家人来信再补。'},
+ scholar:{title:'不必誊清的那页',opening:'她想写几句悼父的话，才起笔就习惯地留了空，好像父亲还会替她看看哪个字不妥。',action:'请她把初稿读给你听',work:'留下涂改的字迹，把初稿从头读了一遍。',after:'没有另誊清稿。她说，看见纸上踌躇过的地方，才知道那一日自己是怎样过来的。'},
+ merchant:{title:'账外的一页',opening:'听完丧信，她铺开纸，想把记得的家事留几笔。写下头一件才发现，最舍不得的东西从来没记进账里。',action:'陪她记一件家中账外的小事',work:'从家中最寻常的一天写起，把记得的声音也写了下来。',after:'拿出那页家事，指着改过三次的一行说，这一句终于像他平常说话的口气了。'},
+ humble:{title:'再添一双筷子',opening:'她忽然想起家里吃饭时，少一双筷子是看得出来的。宫人来收茶，她才发觉自己在桌上划着座次。',action:'陪她说说从前一家人怎样围桌吃饭',work:'在纸上画出旧家的饭桌，把父亲惯坐的位置点了出来。',after:'拿出那张小小的饭桌图，在空着的位置旁补了一双筷子。'},
+ home:{title:'只写家里的名字',opening:'家中问祭文该怎样写。她提起笔，最先记起来的却是父亲在家唤人的声音。',action:'听她讲一件家里人才知道的小事',work:'把父亲平日在家的一件小事写下来，留给自家人读。',after:'念起自己写的几行家常，中途笑了一声，随后拿帕子按了按眼角。'},
+ desk:{title:'素笺上的改字',opening:'她照着惯例写了几句追悼的话，读起来却像在说旁人，便将纸翻了过来。',action:'换一张素笺，陪她慢慢写',work:'从一个记得最清楚的片刻写起，把套话一句句删去。',after:'把写剩的几行放到灯下。篇幅比原先短了许多，她却肯将它念出声了。'}
+};
+function fatherMourningKey(c,p){
+ const mail=c.fatherLetters?.father===p.id?c.fatherLetters:null;
+ if(p.death?.kind==='battle')return 'battle';
+ if(p.death?.kind==='execution')return 'execution';
+ if(/途中|奉差/.test(p.death?.reason||''))return 'road';
+ if(c.fatherHeirPressure)return 'succession';
+ if(mail?.letter&&p.daughterLetterNature==='demanding')return 'demand';
+ if(mail?.pending)return 'unsent';
+ if(mail?.lastReply?.kind==='money'&&p.daughterLetterNature==='caring')return 'money';
+ const group=familyUpbringing(c).group;
+ if(p.retired)return 'retired';
+ if(group==='military')return 'service';
+ if(group==='scholar')return 'scholar';
+ if(group==='merchant')return 'merchant';
+ if(['farm','humble'].includes(group))return 'humble';
+ return voiceHash('mourning:'+c.id+':'+p.id)%2?'home':'desk';
+}
+const FATHER_GRIEF_VOICES={
+ gentle:['容我在这儿坐一会儿吧。刚才听完，我还下意识想着，该给家里回个平安。','人家来宽我的心，我都领情。只是今日我想有人陪我念念他的名字。'],
+ bright:['我本来有一肚子话。人都散了，才想起最想说的那一句。','您陪我走两步吧。坐着听人一遍遍劝节哀，我反倒喘不过气。'],
+ proud:['旁人跟前我还能稳住。您要是肯坐一会儿，就先别叫人进来了。','礼我都记得。今日若一时说不出谢字，请您容我缓一缓。'],
+ measured:['家里的事我会一件件料理。眼下这杯茶，能不能先陪我喝完？','方才问什么我都答得上来。等人走了，才明白从今往后少的是谁。'],
+ studious:['我写了好几行，总觉得不像我自己说的话。您等我再改几个字。','纸上的字还看得清，人却见不到了。我今儿才懂这句话。'],
+ solitary:['听见了。让我自己静一静，等我能说了，再来找您。','我想把门掩上。您若肯留一会儿，不说话也好。']
+};
+function fatherGriefVoice(c,p,next=0){
+ const lines=FATHER_GRIEF_VOICES[familyBearingStyle(c)];
+ return lines[(voiceHash(c.id+':'+p.id+':farewell')+next)%lines.length];
+}
+function fatherMourningScene(t){
+ if(journalContentVersion()<129||t.kind!=='family'||t.role!=='father'||t.outcome!=='death')return null;
+ const c=byId(t.owner),p=continuityOfficial(t);
+ return c&&p?FATHER_MOURNING_SCENES[t.mourningKey||fatherMourningKey(c,p)]:null;
+}
 function continuityTitle(t){
+  const grief=fatherMourningScene(t);if(grief)return grief.title;
   return {duty:t.overlooked?'那一页没有写上的名字':'还想和她一起做',family:t.outcome==='death'?'家书留在人间':t.outcome==='setback'?'回奏之后，家中如何':'功劳之外的一封家书',child:'孩子自己的打算'}[t.kind];
 }
 function continuityDesire(t){
+  const grief=fatherMourningScene(t);if(grief)return grief.opening;
   const c=byId(t.owner),other=t.kind==='child'?kidById(t.other):byId(t.other);
   if(t.kind==='duty')return t.overlooked?`${fullName(c)}想先与${fullName(other)}说清上次的功劳，再决定是否合作。`:`${fullName(c)}想与${fullName(other)}再做一件有始有终的小事。`;
   if(t.kind==='family')return t.outcome==='death'?`${fullName(c)}想把${continuityOfficial(t).name}留下的书信安顿好。`:
@@ -118,6 +172,18 @@ A.addressPersonalConcern=function(id){
 
 function continuityOptions(t){
   const c=byId(t.owner),o=t.kind==='child'?kidById(t.other):byId(t.other),p=t.kind==='family'?continuityOfficial(t):null;
+  const grief=fatherMourningScene(t);
+  if(grief){
+    const name=fullName(c);
+    if(t.stage==='invitation')return [
+      {id:'letters',label:grief.action,text:name+grief.work},
+      {id:'space',label:'把这一晌留给她，等她愿意再谈',text:name+'请人先退下。你替她掩了门，让她自己决定哪些话肯讲、哪些只留给家人。'}
+    ];
+    return [
+      {id:'voice',label:'听她把记得的事讲完',text:name+'说起'+p.name+'，这次自己挑了一件愿意讲的往事。你一直听到她说完。'},
+      {id:'speak',label:'替她照应来访的人，让她歇一歇',text:'你替'+name+'挡下这日的问候。她把留给家人的几句话收好，安静用了一顿饭。'}
+    ];
+  }
   if(t.stage==='invitation'){
     if(t.kind==='duty')return [
       {id:'credit',label:t.overlooked?'核对原册，补记她做过的事，再请两人合作':'请两人共同定分工，各自署名',text:`${fullName(c)}与${fullName(o)}当面列清各自做过和准备做的事。${t.overlooked?'旧册按实补记，没有把歉意折成赏银。':'两人商量着再备一套节礼花样。'}`},
@@ -154,6 +220,9 @@ function continuityOptions(t){
   ];
 }
 function continuityProgressText(t){
+  const grief=fatherMourningScene(t);
+  if(grief)return fullName(byId(t.owner))+(t.choice==='space'?'这回自己来找你。她说，上次独坐的时候，忽然想起一件原以为已经忘了的小事。':grief.after);
+
   const c=byId(t.owner),o=t.kind==='child'?kidById(t.other):byId(t.other);
   if(t.kind==='duty')return t.choice==='solo'?`${fullName(c)}带来独立做好的花样册。${fullName(o)}也来问，今后是否还需要她帮忙。`:
     t.choice==='private'&&t.overlooked?`${fullName(c)}接受了${fullName(o)}私下的谢意，这回却带来了自己独立完成的一页。她想先试一次自己拿主意。`:
@@ -215,7 +284,7 @@ function continuityEvent(t){
   const c=byId(t.owner),tone=companionStyle(c);
   const line={proud:'“我在意的事，想当面说清。”',reserved:'“先前的事，我又想了几遍。想听听陛下的意思。”',direct:'“这回我有自己的打算，先让我说完。”',bright:'“又有一点新主意，这回可得认真听。”',maker:'“手里的东西还没收好，有几处想自己改一改。”',gentle:'“有一件事，臣妾一直放在心上。”'}[tone];
   return {title:continuityTitle(t)+' · '+fullName(c),cast:continuityCast(t),personalStory:true,valid,
-    text:t.cause+'\n'+(stage==='invitation'?continuityDesire(t)+'\n'+line:continuityProgressText(t)),
+    text:t.cause+'\n'+(stage==='invitation'?continuityDesire(t)+'\n'+(fatherMourningScene(t)?'“'+fatherGriefVoice(c,continuityOfficial(t),1)+'”':line):continuityProgressText(t)),
     choices:[...continuityOptions(t).map(choice=>({t:choice.label+' · 精力−1',cond:()=>valid()&&E().energy>=1,why:'精力不足或人物处境已变',f:()=>valid()?continuityChoose(t,choice.id):null})),
       {t:'改日再来接着谈',f:()=>{if(valid())t.snooze=S.turn+3;return '这件事仍留在人物近况里，可以到宫中再谈。';}}]};
 }
@@ -239,6 +308,7 @@ function continuityTick(){
       continue;
     }
     if(t.kind==='family'&&!officialAlive(other)&&t.outcome!=='death'){
+      if(t.role==='father'&&journalContentVersion()>=129)t.mourningKey=fatherMourningKey(c,other);
       t.outcome='death';t.stage='invitation';t.origin=S.turn;t.due=S.turn+1;delete t.choice;delete t.followup;
       t.cause=`${other.death?.d||dateStr()}，${other.name}去世。${other.death?.reason||''}先前有关差事的往来，如今也成了家中的旧事。`;
       (c.personalConcerns||={})[t.key]={kind:'grief',text:`仍在整理${other.name}留下的家事。`,source:t.id};
@@ -249,7 +319,7 @@ function continuityTick(){
         `${fullName(c)}把自己署名的花样册留在案边。${fullName(other)}经过时仍会看看，是否再合作，要由两人慢慢决定。`;
       else if(t.kind==='family'){
         t.delivered=officialAlive(other);if(c.familyVoice?.officialId===other.id)c.familyVoice.delivered=t.delivered;
-        text=`${fullName(c)}把关于${other.name}的那封家书妥善收起。${t.delivered?other.name+'已收到寄出的信，也回了平安。':''}${t.followup==='voice'?'她遇到家中有事时，更愿意先把自己的判断说给你听。':'她感念照应，也仍把一些想法写在自己的信里。'}`;
+        text=fatherMourningScene(t)?`${fullName(c)}如今偶尔也肯提起父亲${other.name}。那天${t.followup==='voice'?'你听她讲完的那件小事，她一直记得。':'替她留出的那一点清静，她仍记着。'}`:`${fullName(c)}把关于${other.name}的那封家书妥善收起。${t.delivered?other.name+'已收到寄出的信，也回了平安。':''}${t.followup==='voice'?'她遇到家中有事时，更愿意先把自己的判断说给你听。':'她感念照应，也仍把一些想法写在自己的信里。'}`;
       }
       else text=`${kidName(other)}又来找${fullName(c)}${FAMILY_ACTIVITIES[other.personalPractice?.project||t.project].title}。${t.followup==='listen'?'这次先说了想改的地方，母亲没有急着接过手。':'孩子先照着上次的办法练完，再把自己的新想法拿给母亲看。'}`;
       continuityRecord(t,text);t.stage='ended';t.ended=S.turn;if(t.kind==='family')continuityResolveConcern(t);

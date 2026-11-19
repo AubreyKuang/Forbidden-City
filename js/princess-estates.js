@@ -148,7 +148,8 @@ function openMaritalEstate(k){
   const estate=k.estate=createPrincessEstate(k,princessPursuit(k));
   const frontier=estate.route==='frontier';
   estate.location=frontier?princessMarriageLand(k):'京城';
-  const line=frontier?`婚后在${estate.location}立下公主府，与宫中仍以家书往来。`:'婚后迁入京中公主府。随行的宫人把最后一箱书送进新居，她提笔给宫里报了平安。';
+  const line=journalContentVersion()>=129?
+    `婚后在${estate.location}立下公主府，来信报平安：“${PRINCESS_SETTLED_LETTERS[childDisposition(k)]}”`:frontier?`婚后在${estate.location}立下公主府，与宫中仍以家书往来。`:'婚后迁入京中公主府。随行的宫人把最后一箱书送进新居，她提笔给宫里报了平安。';
   princessMemory(k,'princess_estate',line,frontier?estate.location:'公主府');
   log(kidName(k)+line,1);
   return kidName(k)+line;
@@ -157,18 +158,75 @@ function settleMarriedPrincessEstates(){
   if(S&&PalaceActions.maritalEstates)S.children.forEach(openMaritalEstate);
 }
 
+const PRINCESS_SETTLED_LETTERS={
+ 好奇:'我已问明近旁街巷的名字，等画出小图就寄回来。',
+ 好胜:'府里的头一桩事交到我手里，请等我的好消息。',
+ 仁厚:'随行的人都安顿好了，家里也请放心。',
+ 内敛:'箱笼刚放稳，我先给家里写这封信。',
+ 爽直:'我们安顿下来了，缺什么我会直说，您别挂念。',
+ 灵动:'我找着了最喜欢的一扇窗，猜猜从那里能看见什么？',审慎:'箱物和人手都已点齐，这是我的第一封平安信。',
+ 自矜:'府门安好了，我亲手写了这第一张家笺。'
+};
+const PRINCESS_OPENING_LETTERS={
+ 好奇:{letters:['我把府图翻来覆去看了两天。图上只画了井，没画提水的人一天要走多远。我想亲自去走一遍。','我有一张纸，左边记着懂的事，右边记着想问的事。等住进自己的府里，也许右边还会比左边长。'],yes:'她将府图折进袖里，说等亲眼看过，就给父皇画一张更明白的。',wait:'她把没弄懂的地方圈起来，预备再去问问管事。'},
+ 好胜:{letters:['宫里交给我的事，总有人替我收尾。我想独自把一件事从头办到尾，办得怎样，请您到时候来看。','别人都说公主府只管挑好的就是。我偏想试试，同样的用度交到我手里，能不能料理得更好。'],yes:'她谢过恩，当即定下头一件要自己办好的事。',wait:'她收了笺，说这三个月先拿一桩小事练手，下回带着成效来。'},
+ 仁厚:{letters:['看府图时，我先找了当值的人歇脚的地方。我若自己当家，想让赶早班的人也能坐着吃口热饭。','有人问我要多大的正厅，我惦记的倒是偏院。若有人生病，那里得有间向阳的小屋可住。'],yes:'她先问新府何日开灶，好让头一天搬东西的人也有口热饭。',wait:'她把安顿人手的那一页留着，等下回再一起商量。'},
+ 内敛:{letters:['有几句话，站在殿上总说不全，便写来给您。我看中了院角一扇小窗，午后的光刚好落在案头。','我想有一处地方，来客走后，可以自己把门轻轻关上。等您得闲，我也想在那里给您沏一盏茶。'],yes:'她把准信又读了一遍，悄悄在图上圈出了自己要住的那间屋。',wait:'她将府图夹进常读的书里，写了张短笺，说愿等些时日再谈。'},
+ 爽直:{letters:['我想出宫开府。这几个字在纸头放了半天，添上客套话倒显得生分，索性直说给您听。','府里的钥匙，我想自己收；以后出了岔子，也该我自己来向您说清。您肯让我试一试吗？'],yes:'她笑着接过准信：“好。往后您问起府里的事，就直接问我。”',wait:'她当面问清何时再议，记下日子便告退了。'},
+ 灵动:{letters:['府图实在画得太规矩，我在旁边另添了几笔。您看看，那处廊子晴日能摆桌，下雨还能听檐水。','倘若一推窗就有人等我吩咐，我怕头一天要闹笑话。可一想到能亲手收拾那座小院，我已经等不及了。'],yes:'她在图上添了一只小茶盏，说那是给父皇头回来坐时留的位子。',wait:'她把图卷起来，笑说三个月足够再画两种摆法了。'},
+ 审慎:{letters:['笺后夹着两页小账。一页是开府头月的用度，一页是万一修漏、添炭该从哪里省。我先算过，才敢来请。','这几日我把各处门钥、值宿和家书递送的事问了一遍。还有几样要请教，心里比先前有数了。'],yes:'她把准信和用度单收在一处，逐项核对迁府前该料理的事。',wait:'她把疑处添在账页边上，说正好趁这段日子核实。'},
+ 自矜:{letters:['看府的人恭维我眼光好，可他们连我挑了哪间屋都没问。我想住进去，让他们看看我自己的安排。','若蒙父皇准许，府中头一份章程，我想亲自署名。旁人夸它也好，挑它的错也好，都该来找我。'],yes:'她亲笔签下第一张府务单，端详了一会儿才把笔放下。',wait:'她把誊得端正的原稿收回来，说下次仍想亲自呈上。'}
+};
+const PRINCESS_ESTATE_POSTSCRIPTS={
+ 好奇:['我问过两个人，答得竟不一样。想先试一回，看究竟哪种做法合用。','原先料得最准的那件事，倒是我猜错了。下回请您听我讲个中缘由。','我又多了一个疑问，索性连同这次的打算一道寄来。','最有趣的是后来才弄明白的那一处，我在旁边标了一个小圈。'],
+ 好胜:['请先容我自己领头，届时做得好坏，都照实告诉您。','这回总算能拿出一样实实在在的成果，我已经把下回该改的地方记下了。','上回有两件事还可以做得更好，这次我想再试试自己的本领。','这一回我最得意的，是把上次难住我的那一步做顺了。'],
+ 仁厚:['我先问了要出力的人，他们也有些想法，愿一并呈给您。','出力的人里有几个头一回当差，我把他们的名字也写在信后了。','上次没赶上的人也来打听。我想给他们留个位子。','今日最欢喜的，是听到有人说，下一回还愿意来。'],
+ 内敛:['我先写给您看。等事情有了眉目，再同旁人提起也来得及。','有一句不好意思当面说，写在信末好了：我很高兴。','近来慢慢有了些新念头，先在这张纸上同您说。','人都散了，我才坐下来写这封信。这样安静地想一遍，倒真舍不得今天。'],
+ 爽直:['哪里办得来，哪里缺人手，我都写明了，您别嫌我直。','难处是真有，办成了也是真高兴。若您来，我连走过的弯路也讲给您听。','我开门见山，还有一桩事想接着办。','这回没有白忙。若有人问值不值得，我能痛快地答一句：值得。'],
+ 灵动:['原先只画了一张图，越画点子越多。圈起来的那一个，我最想先试。','我真想把今日的声音也封进信里！光看这几行字，您准猜不出当时多热闹。','上回散场时忽然冒出个点子，我可得趁还记得，赶快写给您。','等您来坐，我把今日最好玩的那一段演给您看。'],
+ 审慎:['人手与用度另列一页，哪项可缓我也标清了，请您过目。','我照开头的单子核了一遍，用了多少、余下多少，都附在这一页。','有了上回的数目，这次好算得多。添减的地方，我分别作了记号。','原定的章程有一处不合用。我把旧稿也附上，您看过就知道为什么要改。'],
+ 自矜:['主意是我出的，这封信也由我署名。若有不妥，请把话直接回给我。','末页我端端正正签了自己的名字，这个字，今天写得格外称心。','上回大家肯看我做的事，这回我更想办出一点自己的意思。','有人说只消写一笔“办妥”便够了。我仍把经过誊了上来，请您亲看。']
+};
+function princessEstateMail(k,line,phase){
+ if(journalContentVersion()<129)return line;
+ return line+'\n'+PRINCESS_ESTATE_POSTSCRIPTS[childDisposition(k)][phase];
+}
+
+function princessEstateProposal(k,plan){
+  const wish=journalContentVersion()>=129&&k.estate.pursuit==='near'?'我想把近宫的小厅收拾出来。亲眷若来，哪怕只有半日工夫，也能安安稳稳地坐一坐。':plan.wish;
+  return princessEstateMail(k,wish,0);
+}
+function princessOpeningLetter(k,pursuit){
+ const voice=PRINCESS_OPENING_LETTERS[childDisposition(k)],round=k.estateLetterRound??(k.estateDeferred===undefined?0:1);
+ const line=voice.letters[(voiceHash('estate:'+k.id+':'+k.seed)+round)%voice.letters.length];
+ const project={
+   books:'我想把几卷旧书带去，挑出异文，一卷一卷校好。',
+   archery:'院子里得留一段跑马的地方。我想办一场女骑赛，头回上马的人也能来试试。',
+   near:'宅子想择在离宫门近些的地方。往后有家人来坐，半日就够往返。'
+ }[pursuit];
+ const concern=princessMarriageFamilyConcern(k);
+ const family=concern?{death:'要是母亲还在，真想请她看看我画的府图。',cold:'往后给冷宫里的母亲递问候，该循哪条规矩，也请父皇教我。',departure:'若准开府，我想给离宫的母亲捎个信，让她知道我住在哪里。'}[concern.kind]:'';
+ const opening=round?'父皇，上回您说过些日子再议，女儿又想了想。':'父皇亲启。';
+ return {text:`${opening}
+${line}
+${project}${family}
+女儿${k.name}，请准在京开府。`,line,yes:voice.yes,wait:voice.wait,round};
+}
+
 function princessOpening(k){
-  const pursuit=princessPursuit(k);
-  return {title:'公主开府来信',por:k,valid:()=>canOpenPrincess(k)&&!k.estate,text:`${kidName(k)}亲手递来一封信。\n「${PRINCESS_PURSUITS[pursuit].wish}」\n她已相中一处府邸，请你准她自理府中事务。`,choices:[
+  const pursuit=princessPursuit(k),letter=journalContentVersion()>=129?princessOpeningLetter(k,pursuit):null;
+  return {title:'公主开府来信',por:k,valid:()=>canOpenPrincess(k)&&!k.estate,text:letter?.text||`${kidName(k)}亲手递来一封信。\n「${PRINCESS_PURSUITS[pursuit].wish}」\n她已相中一处府邸，请你准她自理府中事务。`,choices:[
     {t:'准她开府，由她自理',f:()=>{
       if(!canOpenPrincess(k)||k.estate)return null;
       k.estate=createPrincessEstate(k,pursuit);
-      princessMemory(k,'princess_estate','获准开府，可以自行安排府中事务。');
+      princessMemory(k,'princess_estate',letter?`【开府来信】写给父皇：“${letter.line}”获准在京开府。${letter.yes}`:'获准开府，可以自行安排府中事务。');
       log(`${kidName(k)}开府，设于京城。`,1);
       save('auto');
-      return '她谢了恩，请你得空去府里看一看。';
+      return letter?.yes||'她谢了恩，请你得空去府里看一看。';
     }},
-    {t:'三个月后再议',f:()=>{if(!canOpenPrincess(k)||k.estate)return null;k.estateDeferred=S.turn+3;save('auto');return '她把府邸的图样留在御案上，等日后再谈。';}}
+    {t:'三个月后再议',f:()=>{if(!canOpenPrincess(k)||k.estate)return null;k.estateDeferred=S.turn+3;
+      if(letter){k.estateLetterRound=letter.round+1;princessMemory(k,'princess_estate',`【开府来信】写给父皇：“${letter.line}”父皇命三个月后再议。${letter.wait}`,'宫中',0);}
+      save('auto');return letter?.wait||'她把府邸的图样留在御案上，等日后再谈。';}}
   ]};
 }
 
@@ -431,7 +489,7 @@ function viewPrincessEstate(){
   if(!k?.alive||!e)return viewOut();
   const plan=PRINCESS_PURSUITS[e.pursuit];
   const ready=e.stage==='working'&&S.turn>=e.due;
-  const message=e.stage==='proposal'?plan.wish:ready||e.stage==='done'?plan.result:`${e.mode||'府中正在筹办'} · 约 ${e.due-S.turn} 个月后有回音`;
+  const message=e.stage==='proposal'?princessEstateProposal(k,plan):ready||e.stage==='done'?princessEstateMail(k,plan.result,1):`${e.mode||'府中正在筹办'} · 约 ${e.due-S.turn} 个月后有回音`;
   const local=princessEstateLocal(k);
   const mother=k.reign&&familyHostById(k.mom);
   const motherLink=mother?.familyArchive?`<button class="person-link" onclick="A.go('consort',${mother.id})">${esc(k.momName||fullName(mother))}</button>`:outsideMotherLink(k);
@@ -447,7 +505,7 @@ A.princessFollowup=function(id){
   const k=princessById(id),e=k?.estate,plan=PRINCESS_PURSUITS[e?.pursuit],f=e?.followup;
   const valid=()=>!S.over&&princessById(id)===k&&k.alive&&k.estate===e&&e.stage==='done'&&e.followup===f;
   if(modalOpen||!plan||!valid()||f&&!princessFollowupDue(e))return;
-  const {title,wish,result}=plan.next;
+  const {title,wish}=plan.next,result=princessEstateMail(k,plan.next.result,3);
   if(f){
     const ready=()=>valid()&&princessFollowupDue(e);
     pushEv({title:`公主府回信 · ${title}`,por:k,text:result,valid:ready,choices:[{t:'记入起居注',f:()=>{
@@ -465,7 +523,7 @@ A.princessFollowup=function(id){
     const line=`为${kidName(k)}商定「${title}」：${mode}，约 ${months} 个月后有回音。`;
     princessMemory(k,'princess_project',line);log(line);return line;
   };
-  pushEv({title:`公主府来信 · ${title}`,por:k,text:`「${wish}」`,valid,choices:[
+  pushEv({title:`公主府来信 · ${title}`,por:k,text:`「${princessEstateMail(k,wish,2)}」`,valid,choices:[
     {t:'拨十万两相助',cond:()=>E().treasury>=10,why:'国库不足',f:support('拨银相助',2,10)},
     {t:'交给她自己筹办',f:support('自行筹办',4,0)},{t:'改日再商量'}]});
 };
@@ -498,16 +556,17 @@ A.princessLetter=function(id){
       princessMemory(k,'princess_project',`${plan.title}：${mode}。`);
       save('auto');return `她写信道谢，预计 ${months} 个月后有回音。`;
     };
-    pushEv({title:`公主来信 · ${plan.title}`,por:k,text:plan.wish,choices:[
+    pushEv({title:`公主来信 · ${plan.title}`,por:k,text:princessEstateProposal(k,plan),choices:[
       {t:'拨银二十万两',cond:()=>E().treasury>=20,why:'国库不足',f:start('拨银相助',2,20)},
       {t:'替她引荐合适的人',f:start('引荐人手',3,0)},
       {t:'让她用府中人手慢慢办',f:start('自行筹办',4,0)}
     ]});
   }else if(e.stage==='working'&&S.turn>=e.due){
-    pushEv({title:'府中回信',por:k,text:plan.result,choices:[{t:'记入起居注',f:()=>{
+    const reply=princessEstateMail(k,plan.result,1);
+    pushEv({title:'府中回信',por:k,text:reply,choices:[{t:'记入起居注',f:()=>{
       if(e.stage!=='working')return null;
       e.stage='done';k[plan.stat]=clamp(k[plan.stat]+5);
-      princessMemory(k,'princess_result',plan.result);
+      princessMemory(k,'princess_result',reply);
       log(`${kidName(k)}：${plan.title}已办成。`,1);save('auto');return null;
     }},{t:'稍后再读'}]});
   }

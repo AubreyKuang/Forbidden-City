@@ -153,3 +153,12 @@ test('repeated task outcomes and annual preparations leave room for other people
 test('permanent residence elsewhere closes a childhood plan while keeping its named participants',()=>{
  const b=game();b.run(startChild+`continuityChoose(t,'child');k.estate={};S.turn=t.due;continuityTick();assert.equal(t.stage,'ended');assert.equal(t.other,k.id);`);
 });
+test('bereaved daughters remember real correspondence and keep the same story through decisions and reload',()=>{
+ let b=game();b.run(`var h=houseOf(a),p=h.father;p.daughterLetterNature='caring';
+ a.fatherLetters={father:p.id,gen:S.gen,lastReply:{kind:'money'},letter:{}};officialDeath(a,'father','在家中病故。');
+ var t=continuityThreads(a)[0];assert.equal(t.mourningKey,'money');S.turn=t.due;
+ PalaceActions.reset();A.continuePersonal(t.id);assert.match(curEv.title,/银封/);assert.match(curEv.choices[0].t,/银封/);save('auto');`);
+ b=restore(b);b.run(`assert.match(curEv.title,/银封/);choose(0);drain();var t=S.continuity.threads[0];S.turn=t.due;
+ A.continuePersonal(t.id);assert.match(curEv.text,/留钱自用/);choose(0);drain();
+ assert.match(byId(t.owner).story.at(-1).t,/往事/);`);
+});
