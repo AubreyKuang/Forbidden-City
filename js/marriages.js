@@ -197,15 +197,15 @@ function royalNatalMarriageProposal(){
       }}
     ]};
 }
-function royalNatalStory(k,p,c,title,text,relativeText,motherText=text){
+function royalNatalStory(k,p,c,title,text,relativeText,motherText=text,{publicRecord=true,source='外家婚帖',royalText=text}={}){
   const people=[k,p,c].filter(Boolean);
   for(const person of people){
     person.story ||= [];
-    story(person,`【${title}】${person===p?relativeText:person===c?motherText:text}`);
-    person.story.at(-1).life={kind:'family',title,turn:S.turn,gen:S.gen,source:'外家婚帖',summary:text,
+    story(person,`【${title}】${person===p?relativeText:person===c?motherText:royalText}`);
+    person.story.at(-1).life={kind:'family',title,turn:S.turn,gen:S.gen,source,summary:text,
       people:people.map(x=>({id:x.id,name:x.sex?x.name:fullName(x)}))};
   }
-  log(`【${title}】${text}`,1);
+  if(publicRecord)log(`【${title}】${text}`,1);
 }
 function royalNatalConsort(host,p){
   const face=makeGirl({sur:p.sur,given:p.given,age:natalAge(p),trait:p.trait,fam:{...host.fam}});
@@ -221,6 +221,7 @@ function royalNatalMarry(k,p,host,b){
   const face=natalPortrait(p);
   k.spouse={id:p.id,personId:p.id,natalHost:host.id,name:p.name,sur:p.sur,sex:p.sex,born:p.born,seed:p.seed,
     alive:true,official:face.official,artPortrait:p.artPortrait,trait:p.trait,background:`${c?c.sur:host.sur}氏外家`,marriedAt:S.turn};
+  if(royalNatalCourtshipActive()&&b.bond)k.spouse.trust=Math.round((b.bond.royal+b.bond.relative)/2);
   if(p.sex==='f')k.spouse.appearance={sur:p.sur,given:p.given,age:natalAge(p),seed:p.seed,artPortrait:p.artPortrait,trait:p.trait,rank:0};
   p.married=true;
   p.spouse={id:k.id,royalId:k.id,name:k.name,sur:E().sur,born:k.born,alive:true,marriedAt:S.turn};
@@ -234,13 +235,13 @@ function royalNatalMarry(k,p,host,b){
     addConsort(bride,empress()?6:8,'依幼时婚约成婚，迎入宫中');
   }else ensureMarriedLife(k);
 }
-function royalNatalCancel(k,p){
+function royalNatalCancel(k,p,outcome){
   const b=k.betrothal;
   delete k.betrothal;
   if(royalNatalEngaged(p)&&p.betrothal.personId===k.id)delete p.betrothal;
   k.natalMatchAsked=true;
-  const text=`${k.name}与${b.name}的婚约已撤销，旧婚帖另存礼部。`;
-  royalNatalStory(k,p,familyHostById(b.motherId),'婚约作罢',text,text);
+  const text=outcome?.text||`${k.name}与${b.name}的婚约已撤销，旧婚帖另存礼部。`;
+  royalNatalStory(k,p,familyHostById(b.motherId),'婚约作罢',text,outcome?.relativeText||text,text,{royalText:outcome?.royalText||text});
 }
 function royalNatalEndReign(ruler){
   if(!royalNatalEngaged(ruler))return;
@@ -266,8 +267,8 @@ function royalNatalMarriageTick(){
       royalNatalCancel(k,p);
       continue;
     }
-    if(S.turn>=b.due&&!k.jailed&&!k.templeStay&&!royalJourneyAway(k)&&!p.jailed&&!p.exiled)
-      royalNatalMarry(k,p,e.c,b);
+    const weddingReady=S.turn>=b.due&&!k.jailed&&!k.templeStay&&!royalJourneyAway(k)&&!p.jailed&&!p.exiled;
+    if(!royalNatalCourtshipTick(k,p,b,weddingReady)&&weddingReady)royalNatalMarry(k,p,e.c,b);
   }
 }
 function royalNatalPersonLink(view,id,name){
@@ -286,12 +287,172 @@ function royalNatalPartnerPanel(k){
   const e=b?natalEntry(b.host,b.personId):natalEntry(s.natalHost,s.personId);
   const name=e?.p.name||(b||s).name;
   const link=e?royalNatalPersonLink('natal',e.c.id+':'+e.p.id,name):esc(name);
-  return detailSection(b?'已定亲':'配偶档案',`<p>${b?'定亲对象':'配偶'} · ${link}${b?' · 等双方满十八岁后成婚。'+engagementTiming(b.due??(e&&royalNatalMarriageAge(k,e.p)),'待双方可以行礼时成婚。'):''}</p>`);
+  const undecided=b?.bond?.petition||b?.bond?.holdUntil>S.turn;
+  const timing=b&&!undecided?engagementTiming(b.due??(e&&royalNatalMarriageAge(k,e.p)),'待双方可以行礼时成婚。'):'';
+  return detailSection(b?'已定亲':'配偶档案',`<p>${b?'定亲对象':'配偶'} · ${link}${b?' · 双方满十八岁后依约成婚。'+timing:''}</p>`+
+    (b?royalNatalCourtshipPanel(k,e?.p):''));
 }
 function natalRoyalPartnerLine(p){
   const b=royalNatalEngaged(p)?p.betrothal:null,id=b?.personId??p.spouse?.royalId;
   if(id==null)return '';
-  const ruler=E().natalMarriageHeir,k=ruler?.id===id?ruler:royalById(id),name=k&&k===ruler?k.name+' · 当朝天子':k?kidName(k):(b||p.spouse).name;
+  const k=royalNatalById(id),name=k&&k===E().natalMarriageHeir?k.name+' · 当朝天子':k?kidName(k):(b||p.spouse).name;
   const link=k?royalNatalPersonLink(S.children.includes(k)?'kid':'relative',k.id,name):esc(name);
-  return `<p>${b?'已定亲':'配偶'} · ${link}${b?' · 等双方满十八岁后成婚':k?.alive===false?' · 已故':''}</p>`;
+  return `<p>${b?'已定亲':'配偶'} · ${link}${b?' · 双方满十八岁后依约成婚':k?.alive===false?' · 已故':''}</p>`+
+    (b&&k?royalNatalCourtshipPanel(k,p):'');
+}
+function royalNatalById(id){
+  const ruler=E().natalMarriageHeir;
+  return ruler?.id===id?ruler:royalById(id);
+}
+
+/* 婚帖上的两个人各有心意，随来往改变。外家的档案读取同一份婚约。 */
+const ROYAL_NATAL_CONTACTS={
+  letter:{age:8,months:6,title:'婚帖往来 · 书信',label:'让两人互通信札',chance:.12},
+  visit:{age:12,months:12,title:'婚帖往来 · 相见',label:'安排两人见面',chance:.06}
+};
+const royalNatalCourtshipActive=()=>journalContentVersion()>=119;
+function royalNatalInitialBond(k,p){
+  const key=k.id+':'+p.id;
+  return {royal:44+marriageHash(key+':royal-affection')%13,relative:44+marriageHash(key+':relative-affection')%13,last:{}};
+}
+function royalNatalContactReason(k,p,kind){
+  const rule=ROYAL_NATAL_CONTACTS[kind],b=k.betrothal;
+  if(!royalNatalCourtshipActive()||!royalNatalEngaged(k)||!royalNatalEngaged(p)||b.personId!==p.id||p.betrothal.personId!==k.id||
+     !k.alive||!p.alive||k.married||p.married||k.removedFromRoyal||p.consortId||!royalNatalParentageEligible(p))return '婚约已变';
+  if(b.bond?.petition)return '婚约正在等候裁决';
+  if(k.jailed||p.jailed||p.exiled||k.templeStay)return '两家暂时不便往来';
+  if(mourningActive())return '守丧期间暂缓来往';
+  if(kind==='gift')return S.month===1&&S.turn-(b.bond?.last.gift??-12)>=12?'':'岁礼每年正月互送一次';
+  if(Math.min(kidAge(k),natalAge(p))<rule.age)return `等两人都满${rule.age}岁`;
+  const wait=rule.months-(S.turn-(b.bond?.last[kind]??-12));
+  if(wait>0)return `还需等${wait}个月`;
+  if(kind==='visit'&&(k.away||royalJourneyAway(k)||p.away||p.commission||p.diplomaticJourney||p.incognitoCase))return '两人须同在京中';
+  return '';
+}
+function royalNatalExchange(k,p,kind){
+  if(royalNatalContactReason(k,p,kind))return null;
+  const b=k.betrothal,bond=b.bond||=royalNatalInitialBond(k,p);
+  const key=`${k.id}:${p.id}:${S.turn}:${kind}`,n=marriageHash(key),young=Math.min(kidAge(k),natalAge(p))<12;
+  const pickFor=(items,index=n)=>items[index%items.length];
+  const oldRoyal=bond.royal,oldRelative=bond.relative;
+  let title,summary,royalLine,relativeLine;
+  if(kind==='gift'){
+    const gifts=young?['描红纸','小风车','木制七巧板','彩纸灯笼','一对布老虎','刻花木陀螺']:
+      ['一笺梅花纸','一册新年诗抄','一轴小景','一柄竹骨扇','一匣桂花糕','一枚手编书签'];
+    const first=n%gifts.length,second=(first+1+(n>>>5)%(gifts.length-1))%gifts.length;
+    const fromRoyal=gifts[first],fromRelative=gifts[second];
+    title='正月互送岁礼';
+    summary=`两家拜年时，${k.name}托人送去${fromRoyal}，${p.name}也捎来了${fromRelative}。`;
+    royalLine=`把${fromRoyal}托给家里，收到${p.name}的${fromRelative}。${pickFor(['留了原来的包纸，回头好认出是谁送的。','拆开后就拿给身边的人看。','特意请送礼的人捎一句新岁安好。'])}`;
+    relativeLine=`给${k.name}挑了${fromRelative}，回礼是${fromRoyal}。${pickFor(['晚饭时才想起，还没问对方喜不喜欢自己挑的那一份。','大人问起谁送的，便把名字从头到尾念了一遍。','想着过几日若有机会，想亲口道一声谢。'],n>>>4)}`;
+    bond.royal=clamp(oldRoyal+1+(n%2));bond.relative=clamp(oldRelative+1+((n>>>7)%2));
+  }else{
+    const fit=marriageFit(k,p).score;
+    const chanceFor=(value)=>clamp(.51+(fit-58)/85+(value-50)/500,.2,.8);
+    const royalWarm=chance(chanceFor(oldRoyal)),relativeWarm=chance(chanceFor(oldRelative));
+    const topic=kind==='letter'?pickFor(young?['庭前新来的燕子','各自的课业','家里种的第一盆花','上元见过的灯'] :
+      ['近来读过的书','雨后出门所见','各自平日最舍不得放下的事','来年想学的一门本领']):
+      pickFor(['在花厅下了一局棋','在水榭旁看了半卷画','在长辈陪同下走过了梅径','在花厅各自挑了一本书']);
+    title=ROYAL_NATAL_CONTACTS[kind].title;
+    summary=`${k.name}与${p.name}${kind==='letter'?`互寄书信，谈起${topic}`:`${topic}，散时又各说了几句心里话`}。`;
+    const warm=kind==='letter'?['没想到对方还记得上封信里的一句闲话。回信纸短，又添了半页。','读到有趣的一处，赶紧圈起来，下回还想接着问。','把信读完了，又翻回去看了一遍开头。']:
+      ['意外发觉对方还记得上回的一句闲话，便多说了一点自己的事。','本来只想应一声，后来越说越有趣，散了还惦记下回。','说到彼此擅长的事，觉得听对方说话也有意思。'];
+    const cool=young?['最想说的事只得了一句问安，便把预备好的后半句咽下了。','对方惦记的是另一样事，原先想讲的那件也没了兴致。','还以为对方也会觉得有趣，过后才知道人家根本没留意。']:
+      ['兴致勃勃说起自己在意的事，等到的只有一句客气话，心里慢慢凉了。','想问清对方真正的打算，几句话过去，反倒觉得隔着一层。','谈到一半就想收住，心想照这样的相处，日后怕是有话也说不到一处。'];
+    royalLine=summary+pickFor(royalWarm?warm:cool,n>>>3);
+    const opening=kind==='letter'?`读了${k.name}写来的信，也说了些家中的事。`:`随长辈见了${k.name}，回来后又想了一遍两人说过的话。`;
+    relativeLine=opening+pickFor(relativeWarm?warm:cool,(n>>>3)+1);
+    const gain=kind==='letter'?4:7,loss=kind==='letter'?7:10;
+    bond.royal=clamp(oldRoyal+(royalWarm?gain:-loss));bond.relative=clamp(oldRelative+(relativeWarm?gain:-loss));
+  }
+  bond.last[kind]=S.turn;
+  bond.latest={text:summary,turn:S.turn,date:dateStr()};
+  royalNatalStory(k,p,null,title,summary,relativeLine,undefined,{publicRecord:false,source:'婚约往来',royalText:royalLine});
+  const change=(delta)=>delta>0?'+'+delta:String(delta);
+  return summary+`\n§${k.name}的好感 ${change(bond.royal-oldRoyal)} · ${p.name}的好感 ${change(bond.relative-oldRelative)}`;
+}
+A.royalNatalContact=function(id,kind){
+  if(!S||S.over||modalOpen||!Object.hasOwn(ROYAL_NATAL_CONTACTS,kind))return;
+  const k=royalNatalById(id);
+  if(!royalNatalEngaged(k))return;
+  const b=k.betrothal,p=natalEntry(b.host,b.personId)?.p;
+  if(royalNatalContactReason(k,p,kind))return;
+  const rule=ROYAL_NATAL_CONTACTS[kind];
+  const valid=()=>k.betrothal===b&&!royalNatalContactReason(k,p,kind);
+  pushEv({title:rule.title,cast:[k,natalPortrait(p)],valid,
+    text:kind==='letter'?`${k.name}与${p.name}各写了一封信。封口还没糊上，里头除了问安，也有几句想亲自说的话。`:
+      `两家长辈愿意陪同，择个清静时辰，让${k.name}与${p.name}在花厅见一面。`,
+    choices:[{t:kind==='letter'?'让两人把信递给对方':'准他们在长辈陪同下见面',f:()=>royalNatalExchange(k,p,kind)},
+      {t:'这次先作罢'}]});
+};
+function royalNatalPetitionEvent(k,p,b){
+  const bond=b.bond,petition=bond.petition;
+  const royal=petition.side==='royal',speaker=royal?k:p,other=royal?p:k;
+  const c=familyHostById(b.motherId);
+  const reasons=[
+    '几回把真心话说到一半，就想收回去。再往下过一辈子，我心里害怕。',
+    '家里提到婚期时我总盼那话早点过去。这份婚帖压在心里许久，我今日才敢开口。',
+    '礼数我都记得。可两个人每回有话，总像是各在各的屋里。我想求陛下准我们把旧约解了。'
+  ];
+  const reason=reasons[marriageHash(speaker.id+':dissolve-betrothal')%reasons.length];
+  const title='婚约问心 · 请求解约';
+  const valid=()=>k.betrothal===b&&royalNatalEngaged(p)&&p.betrothal.personId===k.id&&k.alive&&p.alive&&bond.petition===petition;
+  function resolve(choice){
+    if(!valid())return null;
+    delete bond.petition;
+    const start=`${speaker.name}向陛下禀明，想与${other.name}解除幼时所订的婚约。`;
+    if(choice==='release'){
+      const result='陛下准予解约，礼部撤下双方现行婚帖。两人此后可另议婚事。';
+      royalNatalCancel(k,p,{text:start+result,royalText:royal?'终于说出心事，蒙准解除旧约。':'接到解约的回话，亲自收起幼时交换的旧帖。',
+        relativeText:royal?'从家中得知旧约已解，把原先备好的回信放回了匣子。':'亲笔写明自己的想法，收到准予解约的回音。'});
+      return result;
+    }
+    const result=choice==='wait'?'礼部奉命暂缓婚期六个月，届时再问双方的心意。':'礼部奉命保留婚约，双方各自接到了答复。';
+    if(choice==='wait')bond.holdUntil=S.turn+6;
+    else{delete bond.holdUntil;bond.kept={royal:bond.royal,relative:bond.relative};}
+    royalNatalStory(k,p,c,title,start+result,
+      (royal?'得知'+k.name+'主动提起解约。':'终于亲口说了自己对旧约的想法。')+result,
+      `听完礼部转述，她把旧帖留在原处，又向家里问了问${p.name}的近况。`);
+    return result;
+  }
+  return {title,por:royal?k:natalPortrait(p),cast:[royal?natalPortrait(p):k],valid,
+    text:`${speaker.name}托人递进一封亲笔信，求解除与${other.name}幼时订下的婚约。信末写道：“${reason}”\n礼部候陛下裁决，再办理婚事。`,
+    choices:[{t:'准许解除婚约',f:()=>resolve('release')},{t:'暂缓半年，届时再问',f:()=>resolve('wait')},{t:'照旧保留婚约',f:()=>resolve('keep')}]};
+}
+function royalNatalCourtshipTick(k,p,b,weddingReady){
+  if(!royalNatalCourtshipActive())return false;
+  const bond=b.bond;
+  const held=(bond?.holdUntil??-1)>S.turn;
+  if(bond&&!bond.petition&&!held&&Math.min(kidAge(k),natalAge(p))>=15){
+    const sides=['royal','relative'].filter(side=>bond[side]<=36&&(!bond.kept||bond[side]<=bond.kept[side]-8));
+    const side=sides.sort((a,b)=>bond[a]-bond[b])[0];
+    if(side&&(S.turn>=b.due||chance(.25)))bond.petition={side};
+  }
+  if(bond?.petition){
+    if(PalaceActions.busy&&!mourningActive())pushEv(royalNatalPetitionEvent(k,p,b));
+    return true;
+  }
+  if(weddingReady&&!held)return false;
+  if(bond?.latest?.turn===S.turn)return held;
+  if(!royalNatalContactReason(k,p,'gift'))royalNatalExchange(k,p,'gift');
+  else for(const [kind,rule] of Object.entries(ROYAL_NATAL_CONTACTS)){
+    if(!royalNatalContactReason(k,p,kind)&&chance(rule.chance)){royalNatalExchange(k,p,kind);break;}
+  }
+  return held;
+}
+function royalNatalCourtshipPanel(k,p){
+  if(!royalNatalCourtshipActive()||!royalNatalEngaged(p)||!royalNatalEngaged(k)||p.betrothal.personId!==k.id)return '';
+  const bond=k.betrothal.bond||royalNatalInitialBond(k,p);
+  const status=bond.petition?'解约请求等候裁决':bond.holdUntil>S.turn?`婚期暂缓 · 约${bond.holdUntil-S.turn}个月后再议`:'';
+  const age=Math.min(kidAge(k),natalAge(p));
+  const next=age<8?'正月互送岁礼。两人都满八岁后可通信，满十二岁后可在京相见。':age<12?'两人都满十二岁后可在京相见。':'';
+  const actions=Object.entries(ROYAL_NATAL_CONTACTS).map(([kind,rule])=>{
+    if(age<rule.age)return '';
+    const why=royalNatalContactReason(k,p,kind);
+    return `<button class="btn sm" onclick="A.royalNatalContact(${royalActionArg(k.id)},'${kind}')" ${why?'disabled':''}>${rule.label}${why?`<small>${esc(why)}</small>`:''}</button>`;
+  }).join('');
+  return `<p><strong>彼此好感</strong> · ${esc(k.name)}对${esc(p.name)} ${bond.royal} / 100 · ${esc(p.name)}对${esc(k.name)} ${bond.relative} / 100</p>
+    ${status||next?`<p class="hint">${esc(status||next)}</p>`:''}
+    ${bond.latest?`<p class="hint">上次往来 · ${esc(bond.latest.date)} · ${esc(bond.latest.text)}</p>`:''}
+    ${actions?`<div class="acts">${actions}</div>`:''}`;
 }
