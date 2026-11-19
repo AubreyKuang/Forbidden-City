@@ -152,8 +152,8 @@ const outerKidsView=viewKids;
 viewKids=function(){return outerKidsView()+(outerActive()&&!S.over?outerLink('启御前密匣',"A.go('outer')"):'');};
 const outerLogView=viewLog;
 viewLog=function(){
-  const history=regnalChronicleActive()?outerLink('皇帝本纪',"A.go('regnal')"):'';
-  return outerLogView()+history+(outerActive()?(S.outerRegisters||[]).filter(b=>b.gen!==S.gen||S.over).map(b=>outerLink('野史拾遗 · '+b.era,`A.go('outer',${b.gen})`)).join(''):'');
+  const history=outerActive()?(S.outerRegisters||[]).filter(b=>b.gen!==S.gen||S.over).slice().reverse():[];
+  return outerLogView()+(history.length?detailFold('野史拾遗',`<div class="acts">${history.map(b=>outerLink(b.era+'朝',`A.go('outer',${b.gen})`)).join('')}</div>`):'');
 };
 
 const outerHaremView=viewHarem;

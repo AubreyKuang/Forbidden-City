@@ -56,12 +56,18 @@ function retainedKinship(c,role){
 }
 function retainedFamiliesPanel(){
   const hosts=familyCourtHosts().filter(c=>c.familyArchive),seen=new Set();
-  const branches=hosts.map(c=>{
+  const direct=new Set([S.flags.dowager?.personId,S.flags.birthDowager?.personId]);
+  const ordered=hosts.slice().sort((a,b)=>Number(direct.has(b.id))-Number(direct.has(a.id))||b.familyArchive.gen-a.familyArchive.gen);
+  const branches=ordered.map(c=>{
     const h=houseOf(c);if(!h||seen.has(h.father.id))return '';seen.add(h.father.id);
     const members=hosts.filter(x=>x.house?.father.id===h.father.id);
-    return `<details class="family-branch" open><summary>${esc(c.sur)}氏 · ${members.map(x=>esc(fullName(x)+' · '+retainedHostTitle(x))).join('、')}</summary><p class="hint">原有官职、存亡、婚姻、差事与纪事继续保留。称谓以本朝帝王为准。</p>${officialRoles(h).filter(r=>!r.startsWith('relative')).map(role=>`<p>${esc(retainedKinship(c,role))}：${officialLink(c,role)} · ${esc(officialOfficeLabel(officialPerson(h,role)))} · ${officialStatus(officialPerson(h,role))}</p>`).join('')}${familyHouseTree(c,true)}</details>`;
+    const from=members.some(p=>direct.has(p.id))?'太后母家':reignEra(c.familyArchive.gen)||'先朝';
+    return `<details class="family-branch"><summary><strong>${esc(c.sur)}氏</strong><span class="hint">${esc(from)} · ${members.length} 位宫眷</span></summary>
+      <div class="acts">${members.map(p=>`<button class="btn sm quiet" onclick="A.go('consort',${royalActionArg(p.id)})">${esc(fullName(p))}<small>${esc(retainedHostTitle(p))}</small></button>`).join('')}</div>
+      <dl class="family-kin-list">${officialRoles(h).filter(r=>!r.startsWith('relative')).map(role=>`<div><dt>${esc(retainedKinship(c,role))}</dt><dd>${officialLink(c,role)}<small>${esc(officialOfficeLabel(officialPerson(h,role)))} · ${esc(officialStatus(officialPerson(h,role)))}</small></dd></div>`).join('')}</dl>
+      ${detailFold('展开家谱',familyHouseTree(c,true))}</details>`;
   }).join('');
-  return branches?detailSection('太后母家与先朝外戚',branches):'';
+  return branches?`<details class="family-branch family-context"><summary><strong>太后母家与先朝外戚</strong><span class="hint">${seen.size} 支</span></summary>${branches}</details>`:'';
 }
 const inheritedFamilyView=viewFamily;
 viewFamily=function(){return inheritedFamilyView()+(retainedFamiliesActive()?retainedFamiliesPanel():'');};

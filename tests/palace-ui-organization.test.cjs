@@ -8,7 +8,11 @@ const childTextChanges=new Map([['宫内','宫中'],['已出宫','宫外'],['尚
 for(const c of cases)test(`layout preserves information and action availability: ${c[0]}`,()=>{
  const before=baseline.pages.find(p=>p.name===c[0]);
  const {html}=renderCase(c),after=signature(html);
- const remaining=after.controls.map(x=>JSON.stringify(x));
+ const remaining=after.controls.map(x=>{
+  const control={...x};
+  if(control.onclick?.startsWith('A.familyMode(')||control.onclick?.startsWith('UI.logF='))delete control['aria-pressed'];
+  return JSON.stringify(control);
+ });
  for(const original of before.controls){
   const control={...original};
   // The chronicle now submits one native form from either Enter or the search button.
@@ -30,6 +34,14 @@ for(const c of cases)test(`layout preserves information and action availability:
  // family views have dedicated end-to-end assertions in palace-layered-family.
  const expected=c[0]==='family-list'?[]:[...before.text];
  const fragments=['children','children-out'].includes(c[0])?expected.map(text=>childTextChanges.get(text)??text):expected;
+ if(c[0]==='home'){
+  // These three indicators are already readable in the HUD. The study displays
+  // the family register and uses the destination names as its shortcut labels.
+  fragments.splice(2,12,'永宁朝 · 第一代','勤政之君','文才 50 武略 50','储君 未立','皇嗣 2 位','太后','纪太后','后宫 2 人');
+  for(const text of ['岁入 · 官员调度 · 民情回访','查看珍饰 · 选人赏赐'])fragments.splice(fragments.indexOf(text),1);
+  const {html:hud}=renderCase(['hud',"(renderTop(),$('#top').innerHTML)"]);
+  for(const label of ['龙体','威望','民心'])assert.ok(hud.includes(label));
+ }
  for(const legacyFragment of fragments.sort((a,b)=>b.length-a.length)){
   const fragment=legacyFragment.replace('筛选不会删去原始记载。','');
   // The guide now describes the three-reply quota; its other instructions remain.
@@ -54,6 +66,23 @@ test('section jumps focus only the current page and do not change the world or s
  panel.contains=()=>false;b.run("jumpToPageSection('consort-history')");
  assert.equal(focused,1);assert.equal(scrolled,1);
  assert.equal(b.run('JSON.stringify(S)'),before);assert.deepEqual([...b.storage],stored);
+});
+
+test('the study and activity log open on the new reign while older entries with a reused era stay selectable',()=>{
+ const b=boot(6701);b.ctx.assert=assert;
+ b.run(`A.start();drain();S.gen=3;E().era='永宁';
+  S.history=[{era:'永宁',sur:'萧',name:'彻'},{era:'景祐',sur:'萧',name:'承安'}];
+  S.log=[{d:'永宁二年一月',t:'第一朝记录',b:1},
+    {d:'景祐元年一月',t:'━━ 第二代 ━━ 景祐元年',b:1},{d:'景祐元年二月',t:'第二朝记录',b:1},
+    {d:'永宁元年一月',t:'━━ 第三代 ━━ 永宁元年',b:1},{d:'永宁元年二月',t:'本朝记录',b:0}];
+  UI.homeBook='archive';UI.homeBookGen=2;UI.logReign=2;UI.logReignGen=2;
+  var before=JSON.stringify(S),home=()=>viewHome();
+  assert.match(home(),/data-home-book="current" aria-label="本朝事务">/);
+  assert.match(home(),/本朝记录/);assert.doesNotMatch(home(),/第一朝记录|第二朝记录/);
+  assert.match(viewLog(),/本朝记录/);assert.doesNotMatch(viewLog(),/第一朝记录|第二朝记录/);
+  UI.logReignGen=S.gen;UI.logReign=1;assert.match(viewLog(),/第一朝记录/);assert.doesNotMatch(viewLog(),/本朝记录|第二朝记录/);
+  UI.logReign='all';assert.match(viewLog(),/本朝记录.*第二朝记录.*第一朝记录/);
+  assert.equal(JSON.stringify(S),before);`);
 });
 
 test('consort page puts newest chronicle first and groups the three management actions',()=>{

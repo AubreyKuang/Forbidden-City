@@ -224,16 +224,21 @@ function dowagerBiography(d){
 }
 function dowagerCourtPanel(){
   const seniors=S.flags.seniorDowagers||[];
-  return dowagerCourtMembers().sort((a,b)=>Number(b.seniorSince!=null)-Number(a.seniorSince!=null)).map(d=>{
+  return `<div class="dowager-residents">${dowagerCourtMembers().map(d=>{
     const age=dowagerAge(d),index=seniors.indexOf(d);
     const dual=!!S.flags.birthDowager,birth=d===S.flags.birthDowager;
     const call=index>=0?`A.greetSeniorDowager(${index})`:birth?'A.greetBirthDowager()':dual?'A.greet()':'';
     const action=call&&d.alive?`<button class="btn jade" onclick="${call}">给${esc(d.name)}请安<small>精力−1</small></button>`:'';
+    const biography=dowagerBiography(d);
     const history=(index>=0||birth)&&d.story?.length?detailFold('人物纪事',detailStory({...d,id:d.memoryId||d.personId})):'';
     const residents=d.alive?S.children.filter(k=>raisedByDowager(k)&&upbringingDowager(k)===d&&k.princeSpouseOrigin):[];
     const children=residents.map(k=>`<button class="btn sm" onclick="A.go('kid',${k.id})">查看${esc(k.name)}</button>`).join('');
-    return `<section class="detail-head dowager-court">${porImg(dowagerPerson(d),160)}<div class="grow"><h3>${esc(d.name)}</h3><p>${esc(d.fullName||'')}${d.relation?' · '+esc(d.relation):''}</p><p>${age!=null?age+'岁 · ':''}${d.alive?esc(dowagerResidence(d)):'已故'}</p>${d.portrait?.trait?`<p>${esc(d.portrait.trait)} · ${esc(TRAITS[d.portrait.trait]?.d||'')}</p>`:''}${dowagerBiography(d)}${action}${children}${history}</div></section>`;
-  }).join('');
+    const room=d.alive?esc(dowagerResidence(d)):'已故';
+    return `<section class="dowager-court"><header>${porImg(dowagerPerson(d),76)}<div><p class="dowager-room">${room}</p><h3>${esc(d.name)}</h3>
+      <p>${esc(d.fullName||'')}${age!=null?` · ${age}岁`:''}</p>${d.relation?`<p>${esc(d.relation)}</p>`:''}</div></header>
+      ${action||children?`<div class="acts">${action}${children}</div>`:''}
+      ${biography?detailFold('生平',`${d.portrait?.trait?`<p>${esc(d.portrait.trait)} · ${esc(TRAITS[d.portrait.trait]?.d||'')}</p>`:''}${biography}`):''}${history}</section>`;
+  }).join('')}</div>`;
 }
 
 function royalBirthOrder(a,b){return a.born-b.born||a.id-b.id;}
@@ -362,20 +367,23 @@ A.royalKinReply=function(id,estateContact=false){
   if(!reply?.unread||((estateContact||journalContentVersion()<145)&&!royalKinContactMode(k,estateContact)))return;
   pushEv({title:estateContact?'王府回信':'皇亲回信',por:k,text:reply.text,choices:[{t:'收好回信',f:()=>{reply.unread=false;return null;}}]});
 };
-function royalRelativeCards(relatives){
+function royalKinUnread(){
+  return S.over?[]:listedRoyalKin().filter(k=>k.royalKinContact?.reply?.unread&&(journalContentVersion()>=145||royalKinContactMode(k)));
+}
+const royalKinSearchText=(k,era)=>[k.name,royalKinship(k),k.title,k.spouse?.name,era].filter(Boolean).join(' ').toLowerCase();
+function royalRelativeCards(relatives,era){
   if(!relatives.length)return '';
   const cards=relatives.map(k=>{
-    const outside=royalKinOutside(k),household=householdSummary(k);
-    const mountain=outside&&immortalAway(k);
-    const location=mountain?'在外修行':outside?'在外':'在京';
-    const root=mountain&&(k.immortal.root||k.immortalTalent);
-    return `<article class="card portrait-card"><button class="child-portrait" aria-label="查看${esc(k.name)}" onclick="A.go('relative',${k.id})">${porImg(k,84)}</button>
-      <div class="grow"><button class="person-link nm" onclick="A.go('relative',${k.id})">${esc(k.name)}</button>
-      <div><small>${esc(royalKinship(k))} · ${kidAge(k)}岁${k.title?' · '+esc(k.title):''}${k.spouse?' · '+esc(k.spouse.name):''}</small></div>
-      <div><span class="tag">${location}</span>${root?` <span class="tag y">${esc(root)}</span>`:''}${k.royalKinContact?.reply?.unread?' <span class="tag y">有回信</span>':''}</div>
-      ${household?`<span>${esc(household)}</span>`:''}${royalKinContactButtons(k)}</div></article>`;
+    const outside=royalKinOutside(k),mountain=outside&&immortalAway(k),root=mountain&&(k.immortal.root||k.immortalTalent);
+    const status=mountain?'在外修行':outside?'在外':'在京';
+    const profile=[royalKinship(k),k.title,`${kidAge(k)}岁`,k.spouse&&`伴侣 ${k.spouse.name}`].filter(Boolean);
+    const index=royalKinSearchText(k,era);
+    const hidden=index.includes((UI.royalKinQuery||'').trim().toLowerCase())?'':' hidden';
+    return `<article class="kin-person" data-kin-index="${esc(index)}"${hidden}>${porImg(k,50)}
+      <div class="kin-person-name"><button class="person-link nm" onclick="A.go('relative',${royalActionArg(k.id)})">${esc(k.name)}</button>
+      <p>${profile.map(esc).join(' · ')}</p><p>${status}${root?' · '+esc(root):''}</p></div>${royalKinContactButtons(k)}</article>`;
   });
-  return `<div class="grid portrait-grid">${cards.join('')}</div>`;
+  return `<div class="kin-people">${cards.join('')}</div>`;
 }
 const ROYAL_KIN_FILTERS=[['all','全部'],['capital','在京'],['outside','在外'],['unread','有回信']];
 A.royalKinFilter=function(key){
@@ -386,24 +394,62 @@ A.royalKinFilter=function(key){
 function royalKinRosterPanel(){
   const relatives=listedRoyalKin();
   if(!relatives.length)return '<p class="hint">目前没有在册的先朝亲族。</p>';
-  const lists={
-    all:relatives,capital:relatives.filter(k=>!royalKinOutside(k)),outside:relatives.filter(royalKinOutside),
-    unread:relatives.filter(k=>k.royalKinContact?.reply?.unread)
-  };
-  const key=ROYAL_KIN_FILTERS.find(([id])=>id===UI.royalKinFilter)?.[0]||'all',visible=lists[key];
-  const tabs=ROYAL_KIN_FILTERS.map(([id,label])=>`<button class="btn sm ${id===key?'on':''}" aria-pressed="${id===key}" onclick="A.royalKinFilter('${id}')">${label} ${lists[id].length}</button>`).join('');
-  const groups=[
-    ['兄弟姐妹',visible.filter(k=>k.reign===S.gen-1)],
-    ['伯叔与姑姑',visible.filter(k=>k.reign===S.gen-2)],
-    ['更早世代的宗亲',visible.filter(k=>k.reign!==S.gen-1&&k.reign!==S.gen-2)]
-  ];
-  const cards=groups.filter(([,kin])=>kin.length).map(([title,kin])=>`<h4>${title}</h4>${royalRelativeCards(kin)}`).join('');
-  const empty=key==='unread'?'暂无未读回信。':key==='capital'?'目前没有在京的皇亲。':'目前没有在外的皇亲。';
-  return detailSection('先朝亲族',`<div class="acts official-filters" id="home-kin-filters" role="group" aria-label="筛选皇亲">${tabs}</div>`+(cards||`<p class="hint">${empty}</p>`));
+  const lists={all:relatives,capital:relatives.filter(k=>!royalKinOutside(k)),outside:relatives.filter(royalKinOutside),
+    unread:relatives.filter(k=>k.royalKinContact?.reply?.unread)};
+  const key=Object.hasOwn(lists,UI.royalKinFilter)?UI.royalKinFilter:'all';
+  const tabs=ROYAL_KIN_FILTERS.map(([id,label])=>`<button class="btn sm" aria-pressed="${id===key}" onclick="A.royalKinFilter('${id}')">${label} ${lists[id].length}</button>`).join('');
+  const groups=new Map(),letters=key==='all'?royalKinUnread():[],query=(UI.royalKinQuery||'').trim().toLowerCase();
+  for(const person of lists[key]){
+    const reign=person.reign??0;
+    if(!groups.has(reign))groups.set(reign,[]);
+    groups.get(reign).push(person);
+  }
+  const sorted=[...groups].sort(([a],[b])=>b-a);let total=0;
+  const rows=sorted.map(([reign,people],i)=>{
+    const era=reignEra(reign),group=reign===S.gen-1?'兄弟姐妹':reign===S.gen-2?'伯叔与姑姑':'更早世代的宗亲';
+    const label=era?`${era}朝 · ${group}`:reign?`第${cnNum(reign)}代 · ${group}`:group;
+    const matches=people.filter(k=>royalKinSearchText(k,era).includes(query)).length;total+=matches;
+    return `<details class="family-branch kin-reign"${query||i===0?' open':''}${matches?'':' hidden'}><summary><strong>${esc(label)}</strong><span class="hint" data-kin-count>${matches} 人</span></summary>${royalRelativeCards(people,era)}</details>`;
+  });
+  const empty={unread:'暂无未读回信。',capital:'目前没有在京的皇亲。',outside:'目前没有在外的皇亲。'}[key]||'没有符合条件的皇亲。';
+  return `<div class="kin-directory">
+    ${letters.length?`<section class="kin-letters" aria-label="未读家书"><strong>未读家书</strong><div class="acts">${letters.map(k=>`<button class="btn sm jade" onclick="A.royalKinReply(${royalActionArg(k.id)})">读${esc(k.name)}的回信</button>`).join('')}</div></section>`:''}
+    <div class="reign-switch kin-filters" id="home-kin-filters" role="group" aria-label="筛选皇亲">${tabs}</div>
+    <label class="kin-search"><span>搜索皇亲</span><input type="search" value="${esc(UI.royalKinQuery||'')}" placeholder="姓名、封号、伴侣或年号" oninput="filterRoyalKin(this.value)"></label>
+    <div class="kin-reigns">${rows.join('')}</div><p class="hint" data-kin-empty="${empty}"${total?' hidden':''} role="status">${query?'没有符合条件的皇亲。':empty}</p></div>`;
+}
+function filterRoyalKin(value){
+  const previous=UI.royalKinQuery?.trim();
+  UI.royalKinQuery=value;
+  const query=value.trim().toLowerCase(),panel=$('#panel');
+  let total=0;
+  panel.querySelectorAll('.kin-reign').forEach((group,i)=>{
+    let count=0;
+    group.querySelectorAll('[data-kin-index]').forEach(row=>{
+      row.hidden=!row.dataset.kinIndex.includes(query);
+      if(!row.hidden)count++;
+    });
+    group.hidden=count===0;
+    if(query||previous)group.open=!!query||i===0;
+    group.querySelector('[data-kin-count]').textContent=`${count} 人`;
+    total+=count;
+  });
+  const empty=panel.querySelector('[data-kin-empty]');
+  if(empty){empty.hidden=total>0;empty.textContent=query?'没有符合条件的皇亲。':empty.dataset.kinEmpty;}
 }
 function viewRoyalRelative(){
   const ruler=E().natalMarriageHeir;
   if(ruler&&ruler.id===UI.sel)return `${personBackButton('family')}<header class="detail-head person-detail-head">${porImg('emp',224)}<div class="grow"><h2>${esc(E().sur+E().name)}</h2><p>当朝天子 · ${E().age}岁</p></div></header>${royalNatalPartnerPanel(ruler)}${detailSection('人物纪事',detailStory(ruler))}`;
   const k=royalById(UI.sel);if(!k)return viewFamily();
-  return `${personBackButton('family')}<header class="detail-head person-detail-head">${porImg(k,224)}<div class="grow"><h2>${esc(k.name)}</h2><p>${esc(royalKinship(k))} · ${kidAge(k)}岁</p><p>生母 ${esc(k.momName||'未记载')}</p>${princeEstateLink(k)}</div></header>${xieSharedProfilePanel(k)}${listedRoyalKin().includes(k)?royalKinContactButtons(k):''}${detailSection('亲族纪事',detailStory(k))}${immortalPanel(k)}${royalTravelPanel(k)}${marriagePanel(k)}${householdPanel(k)}${princeCirclePanel(k)}${detailSection('出使见闻',diplomaticTraitsPanel(k))}`;
+  const era=reignEra(k.reign),contact=listedRoyalKin().includes(k)?royalKinContactButtons(k):'';
+  const facts=[royalKinship(k),era&&`${era}朝`,k.alive?`${kidAge(k)}岁`:'已故'].filter(Boolean).join(' · ');
+  const estate=princeEstateLink(k),office=princeCirclePanel(k);
+  return `${personBackButton('home')}<header class="detail-head person-detail-head relative-identity">${porImg(k,132)}<div class="grow"><p>${esc(facts)}</p><h2>${esc(k.name)}</h2><p>生母 ${esc(k.momName||'未记载')}</p>
+    ${k.spouse?`<p>伴侣 ${esc(k.spouse.name)}</p>`:''}${estate?`<div class="acts">${estate}</div>`:''}</div></header>
+    ${contact?`<div class="relative-contact">${contact}</div>`:''}${xieSharedProfilePanel(k)}
+    ${pageChapters('relative',[
+      ['family','家人与往来',marriagePanel(k)+householdPanel(k),'家人'],
+      ['history','亲族纪事',detailStory(k),'纪事'],
+      ['experience','游历与差事',immortalPanel(k)+royalTravelPanel(k)+office+detailSection('出使见闻',diplomaticTraitsPanel(k)),'游历']
+    ],true)}`;
 }

@@ -61,10 +61,11 @@ function viewReignAnnals(){
   years.get(year).push(entry);
  }
  const pages=[...years.entries()],latest=pages.at(-1)?.[0];
- return `${pageHeading('皇帝本纪','',`<button class="btn sm" onclick="A.go('home');jumpToPageSection('home-collection')">王朝图鉴</button><button class="btn sm" onclick="A.go('log')">起居注</button>`)}
-   <div class="acts" aria-label="选择一朝本纪">${rulers.map(r=>`<button class="btn sm${r===ruler?' on':''}" aria-pressed="${r===ruler}" onclick="A.go('regnal',${r.gen})">${esc(r.miao||r.name)} · ${esc(r.era)}</button>`).join('')}</div>
-   <h3>${esc(ruler.name)} · ${esc(ruler.era)}${ruler.years!=null?` · 在位${ruler.years}年`:' · 在位中'}${ruler.closedAt?` · ${esc(ruler.closedAt)}定稿`:''}</h3>
-   ${pages.length?pages.map(([year,entries])=>`<details${year===latest?' open':''}><summary>${esc(year)} · ${entries.length}则</summary>
+ return `${pageHeading('皇帝本纪','',`<button class="btn sm" onclick="openHomeBook('archive');jumpToPageSection('home-collection')">王朝图鉴</button><button class="btn sm" onclick="openActivityLog(${ruler.gen})">起居注</button>`)}
+   <label class="reign-picker" for="annals-reign"><span>朝代</span><select id="annals-reign" onchange="A.go('regnal',Number(this.value))">
+     ${[...rulers].reverse().map(r=>`<option value="${r.gen}"${r===ruler?' selected':''}>${esc(reignOptionLabel(r.gen))}${r.miao?' · '+esc(r.miao):''}</option>`).join('')}</select></label>
+   <div class="annals-ruler"><h3>${esc(ruler.name)}</h3><p>${esc(ruler.era)}朝${ruler.years!=null?` · 在位${ruler.years}年`:' · 在位中'}${ruler.closedAt?` · ${esc(ruler.closedAt)}定稿`:''}</p></div>
+   ${pages.length?pages.map(([year,entries])=>`<details class="annals-year"${year===latest?' open':''}><summary>${esc(year)} · ${entries.length} 则</summary>
      <ul class="story">${entries.map(e=>`<li><time>${esc(e.d)}${e.kind?` · ${esc(e.kind)}`:''}</time>${e.title?`<strong>${esc(e.title)}</strong><p>批答：${esc(e.choice)}</p>${e.outcome?`<p>${esc(e.outcome)}</p>`:''}`:esc(e.t)}</li>`).join('')}</ul></details>`).join(''):'<p class="hint">这一朝尚无留存纪事。</p>'}`;
 }
 function chronicleYear(e){return e.d?.includes('年')?e.d.split('年')[0]+'年':e.d||'日期未详';}

@@ -32,7 +32,8 @@ const DOCK_ART={
 };
 function dockIcon(key){return `<svg class="dock-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${DOCK_ART[key]}"></path></svg>`;}
 function renderMenu(){const m=$('#menu');if(!S){m.innerHTML='';m.hidden=true;return}m.hidden=false;
-  const current={government:'court',ministries:'court',scholar:'court',fenghua:'home',jinyiwei:'court',residences:'harem',officials:'home',official:'home',jewelry:'home',natal:'family','white-spring-kin':'family',relative:'family',palace:'map',place:'map',banquet:'map',consort:'harem',kid:'kids',princess:'out',regnal:'log'}[UI.view]||UI.view;
+  const relativeFrom=personBackStack.findLast(source=>source.state===S&&['home','family','out'].includes(source.view))?.view;
+  const current={government:'court',ministries:'court',scholar:'court',fenghua:'home',jinyiwei:'court',residences:'harem',officials:'home',official:'home',jewelry:'home',natal:'family','white-spring-kin':'family',relative:relativeFrom||'family',palace:'map',place:'map',banquet:'map',consort:'harem',kid:'kids',princess:'out','prince-estate':'out',regnal:'log'}[UI.view]||UI.view;
   m.innerHTML=MENU.map(([k,l])=>`<button class="btn${current===k?' on':''}" ${current===k?'aria-current="page"':''} onclick="${k==='court'?"A.go('government')":`A.go('${k}')`}">${dockIcon(k)}<span>${l}</span></button>`).join('');
 }
 let panelRoute;
@@ -260,7 +261,12 @@ A.logCard=function(){
 };
 
 function viewFamily(){
-  if((UI.familyMode||'graph')==='graph')return `${pageHeading('家族关系树')}<div class="acts view-switch" role="group" aria-label="家族查看方式"><button class="btn sm on">关系图</button><button class="btn sm" onclick="A.familyMode('list')">家族列表</button></div>${dowagerFamilyPanel()}${familyGraphSVG()}${outsideBirthFamilyPanel()}${householdDescendantsPanel()}`;
+  const graph=(UI.familyMode||(S.gen>1?'list':'graph'))==='graph';
+  const heading=pageHeading('家族关系树',`${esc(E().era)}朝`,S.gen>1?'<button class="btn sm quiet" onclick="openHomeBook(\'kin\')">去御书房看皇亲</button>':'');
+  const modes=`<div class="reign-switch" role="group" aria-label="家族查看方式">${[['list','家族列表'],['graph','关系图']].map(([id,label])=>`<button class="btn sm" aria-pressed="${(id==='graph')===graph}" onclick="A.familyMode('${id}')">${label}</button>`).join('')}</div>`;
+  const dowagers=dowagerFamilyPanel();
+  const maternal=dowagers?`<details class="family-branch family-context"><summary>太后与母家</summary>${dowagers}</details>`:'';
+  if(graph)return `${heading}${modes}${familyGraphSVG()}${maternal}${outsideBirthFamilyPanel()}${householdDescendantsPanel()}`;
   const byClan=new Map(),kidsByMother=new Map();
   for(const k of S.children){
     if(!kidsByMother.has(k.mom))kidsByMother.set(k.mom,[]);
@@ -292,8 +298,8 @@ function viewFamily(){
   const branches=[...byClan].sort(([a],[b])=>Number(a==null)-Number(b==null)).map(([key,people])=>
     branch(whiteSpringRoyal(people[0])?'白泉王室 · 父王与王兄':familyVisibilityActive()?(hasClan(people[0])?clanName(key):people[0].sur+'家'):key?clanName(key):'未列家族',people,hasClan(people[0])?` · 势力 ${Math.max(...people.map(c=>rd(c.fam.p)))}`:'',key||'')).join('');
   const unlisted=S.children.filter(k=>!byId(k.mom)&&!k.birthSwap?.confirmed);
-  return `${pageHeading('家族关系树')}<div class="acts view-switch" role="group" aria-label="家族查看方式"><button class="btn sm" onclick="A.familyMode('graph')">关系图</button><button class="btn sm on">家族列表</button></div><p class="hint">皇嗣列在生母名下，另标养母。点名字可查看人物。</p>
-    ${dowagerFamilyPanel()}${branches||'<p class="hint">目前没有入宫的妃嫔。</p>'}${outsideBirthFamilyPanel()}${householdDescendantsPanel()}
+  return `${heading}${modes}${maternal}<section class="family-current" aria-label="本朝宫眷与皇嗣"><h3>本朝宫眷与皇嗣</h3>
+    ${branches||'<p class="hint">目前没有入宫的妃嫔。</p>'}</section>${outsideBirthFamilyPanel()}${householdDescendantsPanel()}
     ${unlisted.length?`<details class="family-branch"><summary>生母未载</summary><ul>${unlisted.map(childLine).join('')}</ul></details>`:''}`;
 }
 function dynastyLegacyPanel(legacy){
@@ -302,33 +308,80 @@ function dynastyLegacyPanel(legacy){
    <p>家训「${esc(legacy.lesson)}」 · 威望 +${legacy.renown} · ${stats[legacy.stat]} +${legacy.bonus}</p>
    ${legacy.trait?`<p>承袭特质「${esc(legacy.trait)}」 · ${stats[legacy.traitStat]} +${legacy.traitBonus}</p>`:''}`;
 }
+function reignEra(gen){
+  return gen===S.gen?E().era:S.history[gen-1]?.era||(S.regnalChronicles||[]).find(book=>book.gen===gen)?.era||'';
+}
+function reignOptionLabel(gen){
+  return [gen===S.gen?'本朝':`第${cnNum(gen)}代`,reignEra(gen)].filter(Boolean).join(' · ');
+}
+function activityLogRows(filter='all'){
+  if(filter==='all')return selectionChronicle(S.log);
+  const marker=e=>regnalAccessionMarker.test(e.t);
+  let inferred=Math.max(1,S.gen-S.log.filter(marker).length);
+  const epochs=Array.from({length:S.gen},(_,i)=>({gen:i+1,era:reignEra(i+1)})).filter(record=>record.era);
+  return selectionChronicle(S.log).flatMap(entry=>{
+    if(marker(entry))inferred=entry.gen??inferred+1;
+    else if(Number.isInteger(entry.gen))inferred=entry.gen;
+    const matches=epochs.filter(record=>entry.d?.startsWith(record.era));
+    const gen=entry.gen??(matches.length===1?matches[0].gen:inferred);
+    return filter===gen?[entry]:[];
+  });
+}
+const HOME_BOOKS=[['current','本朝事务'],['kin','皇亲列表'],['archive','王朝典藏']];
+function openHomeBook(key,resetScroll=true){
+  if(!HOME_BOOKS.some(([id])=>id===key))return;
+  UI.homeBook=key;UI.homeBookGen=S.gen;
+  if(UI.view!=='home'){A.go('home');return;}
+  const panel=$('#panel');
+  const overview=panel.querySelector?.('[data-study-overview]');
+  if(overview)overview.hidden=key!=='current';
+  panel.querySelectorAll('[data-home-book]').forEach(el=>{el.hidden=el.dataset.homeBook!==key;});
+  panel.querySelectorAll('[data-home-switch]').forEach(el=>el.setAttribute('aria-pressed',String(el.dataset.homeSwitch===key)));
+  if(resetScroll)panel.scrollTop=0;
+}
 function viewHome(){
-  const e=E(),h=harem(),k=kidsAlive(),heir=S.heir&&kidById(S.heir);
-  const recent=S.log.filter(l=>!l.t.startsWith('——')).slice(-8).reverse();
-  return `${pageHeading('御书房')}<div class="row home-overview">${porImg('emp',96)}<div class="grow">
-   <div><b style="font-size:17px">${esc(e.sur+e.name)}</b>　年号${esc(e.era)}　${S.gen>1?`第${cnNum(S.gen)}代　`:''}${e.style}之君${e.dynastyTrait?` · ${esc(e.dynastyTrait)}`:''}</div>
-   <div class="stats" style="margin-top:6px">${bar('龙体',e.health,'#4f9078')}${bar('威望',e.prestige,'#a87a26')}${bar('民心',e.people,'#3b5fa8')}${bar('文才',e.wen)}${bar('武略',e.wu)}</div>
-   <div style="margin-top:6px">后宫 ${h.length} 人${alive().some(c=>c.cold)?`（冷宫 ${alive().filter(c=>c.cold).length}）`:''}　皇嗣 ${k.length} 位　储君：${heir?esc(heir.name):'未立'}　${S.flags.dowager&&S.flags.dowager.alive?esc(S.flags.dowager.name)+'健在':''}
-     ${outerIntegration()?`<small class="hint" title="宫外子女的身世走漏会降低稳定。距上次风波满两个月后，每月恢复 2 点；恢复前低于 80 时，在宫妃嫔当月心情减 1。">后宫稳定 ${esc(haremStability())}/100</small>`:''}</div>
-   </div></div>
-
-   <div class="acts"><button class="btn primary" onclick="A.go('government')">治国理政<small>岁入 · 官员调度 · 民情回访</small></button><button class="btn jade" onclick="A.go('jewelry')">内库珍藏<small>查看珍饰 · 选人赏赐</small></button></div>
-   ${birthdayBanquetButtons()}${proudDemandNotice()}
-   ${pageChapters('home',[
-     ['recent','近事',`<ul class="story">${recent.map(l=>`<li class="${l.b?'big':''}"><time>${esc(l.d)}</time>${esc(l.t)}</li>`).join('')||'<li>尚无记载</li>'}</ul>`],
-     ['royal-kin','皇亲列表',palaceAdoptionPanel()+royalKinRosterPanel()],
-     ['fertility','太医院会诊',imperialFertilityPanel()],
-     ['goals','王朝目标',dynastyGoalsPanel()],
-     ...(journalContentVersion()>=85?[['collection','王朝图鉴',dynastyCodexPanel()]]:[]),
-     ...(e.dynastyLegacy?[["legacy",e.dynastyLegacy.crossGame?'前局传承':'先帝传承',dynastyLegacyPanel(e.dynastyLegacy)]]:[]),
-     ...(dynastyFollowupActive()&&e.diplomaticTraits?.length?[['foreign-traits','先前出使',diplomaticTraitsPanel(e)]]:[]),
-     ['court','朝堂与外家',courtBlocHTML()],
-     ['stewardship','协理六宫',typeof haremStewardPanel==='function'?haremStewardPanel():''],
-     ['story-consorts','剧情妃图鉴',storyConsortCodex()],
-     ...(typeof fenghuaReadable==='function'&&fenghuaReadable()? [[journalContentVersion()>=24?'notable-people':'fenghua',journalContentVersion()>=24?'风华人物志':'风华人物',fenghuaCodex()]]:[]),
-     ['keepsakes','家书与手稿',detailSection('从旧朝带来的家书与手稿',lifeWorksPanel(e))],
-     ['guide','起居与用度',`<p class="hint">每月有${maxEnergy()}点精力。每月最多批阅三份奏折，可先免费查看；亲自批复通常花 1 点；召幸、闲谈、探望皇嗣、出巡也要花精力。赏赐、晋封、选秀不花精力。精力用完后，处理完当前事件及后续便会自动转月；也可提前点「结束本月」。侍寝后若怀上龙胎，要到下个月末太医才诊得出喜脉。每位妃嫔都有一段专属故事，情分越深越容易推进。</p>`]
-   ])}`}
+  const e=E(),heir=S.heir&&kidById(S.heir),queen=empress();
+  const book=UI.homeBookGen===S.gen?UI.homeBook:'current';
+  const children=kidsAlive().filter(k=>!k.princeSpouseOrigin),dowagers=dowagerCourtMembers().filter(d=>d.alive);
+  const dowagerLabel=dowagers.length===1?`${dowagers[0].name==='太后'?dowagers[0].sur||'':''}${dowagers[0].name}`:`${dowagers.length} 位在慈宁宫`;
+  const letters=royalKinUnread().length,cold=alive().filter(c=>c.cold).length;
+  const recent=activityLogRows(S.gen).filter(l=>!l.t.startsWith('——')&&!regnalAccessionMarker.test(l.t)).slice(-5).reverse();
+  const bookPanel=(id,content)=>`<section data-home-book="${id}" aria-label="${HOME_BOOKS.find(([key])=>key===id)[1]}"${book!==id?' hidden':''}>${content}</section>`;
+  const historyAction='<button class="btn sm quiet" onclick="A.go(\'log\')">查看起居注</button>';
+  const current=`<div class="acts study-shortcuts"><button class="btn primary" onclick="A.go('government')">治国理政</button><button class="btn jade" onclick="A.go('jewelry')">内库珍藏</button></div>
+    ${proudDemandNotice()}
+    ${pageChapters('home',[
+      ['recent','本朝近事',`<ul class="story">${recent.map(l=>`<li class="${l.b?'big':''}"><time>${esc(l.d)}</time>${esc(l.t)}</li>`).join('')||'<li>尚无记载</li>'}</ul>${historyAction}${birthdayBanquetButtons()}`,'近事'],
+      ['fertility','太医院会诊',imperialFertilityPanel(),'会诊'],
+      ['goals','王朝目标',dynastyGoalsPanel(),'目标'],
+      ['stewardship','协理六宫',typeof haremStewardPanel==='function'?haremStewardPanel():'','协理'],
+      ['court','朝堂与外家',courtBlocHTML(),'外家'],
+      ['guide','起居与用度',detailFold('查看每月规则',`<p class="hint">每月有${maxEnergy()}点精力。每月最多批阅三份奏折，可先免费查看；亲自批复通常花 1 点；召幸、闲谈、探望皇嗣、出巡也要花精力。赏赐、晋封、选秀不花精力。精力用完后，处理完当前事件及后续便会自动转月；也可提前点「结束本月」。侍寝后若怀上龙胎，要到下个月末太医才诊得出喜脉。每位妃嫔都有一段专属故事，情分越深越容易推进。</p>`),'用度']
+    ],true)}`;
+  const kin=pageChapters('home',[
+    ['royal-kin','皇亲列表',royalKinRosterPanel()+palaceAdoptionPanel()]
+  ],true);
+  const archive=pageChapters('home',[
+    ...(journalContentVersion()>=85?[['collection','王朝图鉴',dynastyCodexPanel(),'图鉴']]:[]),
+    ...(e.dynastyLegacy?[['legacy',e.dynastyLegacy.crossGame?'前局传承':'先帝传承',dynastyLegacyPanel(e.dynastyLegacy),'传承']]:[]),
+    ...(dynastyFollowupActive()&&e.diplomaticTraits?.length?[['foreign-traits','先前出使',diplomaticTraitsPanel(e),'出使']]:[]),
+    ['keepsakes','家书与手稿',lifeWorksPanel(e),'家书'],
+    ['story-consorts','剧情妃图鉴',storyConsortCodex(),'剧情妃'],
+    ...(typeof fenghuaReadable==='function'&&fenghuaReadable()?[[journalContentVersion()>=24?'notable-people':'fenghua',journalContentVersion()>=24?'风华人物志':'风华人物',fenghuaCodex(),'风华人物']]:[])
+  ],true);
+  return `${pageHeading('御书房')}<div data-study-overview${book==='current'?'':' hidden'}><div class="home-overview study-identity">${porImg('emp',76)}<div class="study-person">
+    <p class="study-reign">${esc(e.era)}朝 · 第${cnNum(S.gen)}代</p><strong>${esc(e.sur+e.name)}</strong>
+    <p>${esc(e.style)}之君${e.dynastyTrait?` · ${esc(e.dynastyTrait)}`:''}</p>
+    <p class="study-skills">文才 ${rd(e.wen)}<span></span>武略 ${rd(e.wu)}</p></div></div>
+    <dl class="study-register"><div><dt>储君</dt><dd>${heir?`<button class="person-link" onclick="A.go('kid',${heir.id})">${esc(heir.name)}</button>`:'未立'}</dd></div>
+    <div><dt>中宫</dt><dd>${queen?parentLink(queen.id):'空悬'}</dd></div>
+    <div><dt>皇嗣</dt><dd><button class="person-link" onclick="A.go('kids')">${children.length} 位</button></dd></div>
+    <div><dt>太后</dt><dd>${dowagers.length?`<button class="person-link" onclick="A.go('place','cn')">${esc(dowagerLabel)}</button>`:'—'}</dd></div></dl>
+    <div class="study-palace-count"><button class="person-link" onclick="A.go('harem')">后宫 ${harem().length} 人${cold?` · 冷宫 ${cold} 人`:''}</button>
+    ${outerIntegration()?`<small class="hint" title="宫外子女的身世走漏会降低稳定。距上次风波满两个月后，每月恢复 2 点；恢复前低于 80 时，在宫妃嫔当月心情减 1。">后宫稳定 ${esc(haremStability())}/100</small>`:''}</div></div>
+    <div class="reign-switch study-books" role="group" aria-label="御书房分区">${HOME_BOOKS.map(([id,label])=>`<button class="btn" data-home-switch="${id}" aria-pressed="${book===id}" onclick="openHomeBook('${id}')">${label}${id==='kin'&&letters?` <small>${letters} 封回信</small>`:''}</button>`).join('')}</div>
+    ${bookPanel('current',current)}${bookPanel('kin',kin)}${bookPanel('archive',archive)}`;
+}
 
 function viewHarem(){
   const all=alive().filter(c=>!c.maid);const g=r=>all.filter(c=>!c.cold&&!c.templeStay&&!c.homeLeave&&r(c)).sort((a,b)=>b.rank-a.rank||b.favor-a.favor);
@@ -407,13 +460,15 @@ function actionGroup(title,content){
 function pageChapters(prefix,chapters,compact=false){
   const visible=chapters.filter(([, ,content])=>content?.trim());
   if(!visible.length)return '';
-  return `<nav class="section-jumps${compact?' section-jumps-compact':''}" aria-label="本页内容">${visible.map(([key,title,,shortTitle])=>`<a href="#${prefix}-${key}" onclick="event.preventDefault();jumpToPageSection('${prefix}-${key}')">${esc(compact&&shortTitle?shortTitle:title)}</a>`).join('')}</nav>
+  return `${visible.length>1?`<nav class="section-jumps${compact?' section-jumps-compact':''}" aria-label="本页内容">${visible.map(([key,title,,shortTitle])=>`<a href="#${prefix}-${key}" onclick="event.preventDefault();jumpToPageSection('${prefix}-${key}')">${esc(compact&&shortTitle?shortTitle:title)}</a>`).join('')}</nav>`:''}
     <div class="page-chapters">${visible.map(([key,title,content])=>`<section class="page-chapter" aria-labelledby="${prefix}-${key}"><h3 id="${prefix}-${key}" tabindex="-1" class="chapter-title">${esc(title)}</h3><div class="chapter-body">${content.replace(/<(\/?)h3(?=[\s>])/g,'<$1h4')}</div></section>`).join('')}</div>`;
 }
 function jumpToPageSection(id){
   // A read-only jump must not enter the gameplay action journal or change a save.
   const heading=document.getElementById(id);
   if(!heading||!$('#panel').contains(heading))return;
+  const book=heading.closest?.('[data-home-book]');
+  if(book?.hidden)openHomeBook(book.dataset.homeBook,false);
   heading.focus({preventScroll:true});heading.scrollIntoView({block:'start',behavior:'auto'});
 }
 
@@ -604,16 +659,33 @@ function viewKid(){
 function viewOut(){
   const o=[['garden','御花园','偶遇妃嫔、宫女，或独自散心'],['city','微服出宫','体察民情，也许会遇见有缘人'],['hunt','南苑围猎','武略越高越易成功，有受伤风险'],['temple','护国寺祈福','民心、龙体小增，本月更易得子'],['spa','温泉行宫',`休养龙体（国库-${SPA_COST}万两）`]];
   return `${pageHeading('出巡','每次出巡花费1点精力。')}<div class="grid destination-grid">${o.map(([k,n,d])=>`<button class="card" onclick="A.out('${k}')"><div class="grow"><div class="nm">${n}</div><div>${d}</div></div></button>`).join('')}</div>${rescuedGuestsPanel()}${princessEstatePanel()}${princeEstatesPanel()}${incognitoLedger()}${storyCastOutPanel()}`}
+function selectLogReign(value){
+  UI.logReignGen=S.gen;
+  UI.logReign=value==='all'?'all':Number(value);
+  renderPanel();$('#log-reign')?.focus?.({preventScroll:true});
+}
+function openActivityLog(gen){
+  UI.logReign=gen;UI.logReignGen=S.gen;A.go('log');
+}
 function viewLog(){
   // A month divider with nothing recorded after it is noise; keep only dividers that head real entries.
   const divider=l=>/^—— .+ ——$/.test(l?.t||'');
-  const L=selectionChronicle(S.log).filter(l=>UI.logF==='all'||l.b).filter((l,i,all)=>!divider(l)||(all[i+1]&&!divider(all[i+1]))).reverse();
-  const month=S.flags.lastMonthReview;
+  const chosen=UI.logReignGen===S.gen?UI.logReign:S.gen;
+  const selected=chosen==='all'||chosen>0&&chosen<=S.gen?chosen:S.gen;
+  const L=activityLogRows(selected).filter(l=>UI.logF==='all'||l.b).filter((l,i,all)=>!divider(l)||(all[i+1]&&!divider(all[i+1]))).reverse();
+  const review=S.flags.lastMonthReview;
+  const month=(selected==='all'||selected===S.gen&&review?.date?.startsWith(E().era))?review:null;
   const link=(id,child=false)=>{
     const person=child?kidById(id):byId(id);
     return person?`<button class="btn sm" onclick="A.go('${child?'kid':'consort'}',${person.id})">查看${esc(child?kidName(person):fullName(person))}</button>`:'';
   };
-  return `${pageHeading('起居注')}<div class="log-filter" role="group" aria-label="纪事筛选与留存"><button class="btn sm ${UI.logF==='all'?'on':''}" onclick="UI.logF='all';render()">全部</button><button class="btn sm ${UI.logF==='big'?'on':''}" onclick="UI.logF='big';render()">只看大事</button><button class="btn sm" onclick="A.logCard()">保存上月纪念卡</button>${journalContentVersion()>=85?'<button class="btn sm" onclick="A.go(\'home\');jumpToPageSection(\'home-collection\')">查看王朝图鉴</button>':''}${dynastyFollowupActive()?'<button class="btn sm" onclick="A.go(\'regnal\')">皇帝本纪</button>':''}</div>
+  const chooser=S.gen>1?`<label class="reign-picker" for="log-reign"><span>朝代</span><select id="log-reign" onchange="selectLogReign(this.value)">
+    ${Array.from({length:S.gen},(_,i)=>S.gen-i).map(gen=>`<option value="${gen}"${selected===gen?' selected':''}>${esc(reignOptionLabel(gen))}</option>`).join('')}
+    <option value="all"${selected==='all'?' selected':''}>历朝起居</option></select></label>`:'';
+  const archive=regnalChronicleActive()?`<button class="btn sm jade" onclick="A.go('regnal'${selected==='all'?'':','+selected})">皇帝本纪</button>`:'';
+  return `${pageHeading('起居注',selected==='all'?'历朝起居':esc(reignOptionLabel(selected)),archive)}
+   <div class="log-filter" role="group" aria-label="纪事筛选与留存">${chooser}<div class="reign-switch" role="group" aria-label="纪事范围"><button class="btn sm" aria-pressed="${UI.logF==='all'}" onclick="UI.logF='all';render()">全部</button><button class="btn sm" aria-pressed="${UI.logF==='big'}" onclick="UI.logF='big';render()">只看大事</button></div>
+   <button class="btn sm quiet" onclick="A.logCard()">保存上月纪念卡</button></div>
    ${month?`<section class="month-record"><h3>${esc(month.date)}回顾</h3>
     <p>月入 ${esc(month.inc)} 万两 · 支出 ${esc(month.exp)} 万两</p>
     ${month.finance&&[month.finance.opening,month.finance.closing,month.finance.other].every(Number.isFinite)?`<p>换月前国库 ${month.finance.opening} 万两 · 换月后 ${month.finance.closing} 万两${month.finance.other?` · 其他换月收支 ${month.finance.other>0?'+':''}${month.finance.other} 万两`:''}</p>`:''}
@@ -624,8 +696,8 @@ function viewLog(){
     ${(month.courts||(month.court?[month.court]:[])).map(court=>`<p><strong>${esc(court.title)}</strong> · ${esc(court.choice)}</p>${fmt(court.text)}${court.child?link(court.child,true):link(court.person)}`).join('')}
     ${month.people.map(person=>`<p>${esc(person.text)} ${link(person.id)}</p>`).join('')}
    </section>`:''}
-   ${S.history.length?`<p class="hint">历代：${S.history.map(h=>esc(`${h.shi?h.miao+h.shi+'皇帝':h.miao} ${h.sur}${h.name}（${h.era}，在位${h.yrs}年）`)).join('；')}</p>`:''}
-   <ul class="story" style="max-height:560px">${L.map(l=>`<li class="${l.b?'big':''}"><time>${esc(l.d)}</time>${esc(l.t)}</li>`).join('')}</ul>`}
+   ${L.length?`<ul class="story reign-log">${L.map(l=>`<li class="${l.b?'big':''}"><time>${esc(l.d)}</time>${esc(l.t)}</li>`).join('')}</ul>`:
+    `<p class="hint">${UI.logF==='big'?'所选朝代暂无大事记载。':'所选朝代暂无可查的起居记录。'}</p>`}`}
 function viewSys(){
   return `${pageHeading('存档','存档保存在本浏览器中；每月结束时会自动存档。剧情选择后也会保存，未完事件可继续。')}
    <p class="hint">游戏版本 v${PalaceActions.releaseVersion}</p>
