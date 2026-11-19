@@ -28,9 +28,9 @@ test('new domestic candidates can use all thirty colors without repeats, while f
   const b=game();b.run(`A.start();drain();S.consorts=[];S.cands=[];S.children=[];
     for(var i=0;i<NEW_DOMESTIC_CONSORT_PORTRAITS.length;i++)S.cands.push(makeGirl({age:22,fam:{t:'县令',p:20}}));
     var faces=S.cands.map(p=>p.artPortrait);assert.equal(new Set(faces).size,NEW_DOMESTIC_CONSORT_PORTRAITS.length);
-    for(var cell of [...COLOR_CONSORT_PORTRAITS,...FINERY_CONSORT_PORTRAITS])assert.ok(faces.includes(cell));
+    for(var cell of [...COLOR_CONSORT_PORTRAITS,...FINERY_CONSORT_PORTRAITS,...JEWELED_CONSORT_PORTRAITS])assert.ok(faces.includes(cell));
     for(var title of ['西域贡女','东瀛贵族','海西贵族']){
-      var g=makeGirl({age:22,fam:{t:title,p:20}});assert.ok(consortPortraits(g).includes(g.artPortrait));assert.ok(!COLOR_CONSORT_PORTRAITS.includes(g.artPortrait));assert.ok(!FINERY_CONSORT_PORTRAITS.includes(g.artPortrait));
+      var g=makeGirl({age:22,fam:{t:title,p:20}});assert.ok(consortPortraits(g).includes(g.artPortrait));assert.ok(!COLOR_CONSORT_PORTRAITS.includes(g.artPortrait));assert.ok(!FINERY_CONSORT_PORTRAITS.includes(g.artPortrait));assert.ok(!JEWELED_CONSORT_PORTRAITS.includes(g.artPortrait));
     }
   `);
 });

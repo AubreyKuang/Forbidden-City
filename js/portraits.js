@@ -176,7 +176,7 @@ const ROYAL_GROWTH_SETS={f:[380,383,392,395,489,492],m:[386,389,495,498]};
 const DESCENDANT_VARIANTS=29+ROYAL_GROWTH_SETS.m.length;
 const EXISTING_PRINCE_VARIANTS=4;
 const EXTRA_PRINCE_VARIANTS=LEGACY_DESCENDANT_VARIANTS-EXISTING_PRINCE_VARIANTS;
-const BEAUTY_PORTRAIT_START=92, YOUNG_ROYAL_PORTRAIT_START=136, PORTRAIT_COUNT=515;
+const BEAUTY_PORTRAIT_START=92, YOUNG_ROYAL_PORTRAIT_START=136, PORTRAIT_COUNT=521;
 // Opening-generation dowagers only. Inherited empresses keep their saved faces.
 const DOWAGER_PORTRAITS=Object.freeze(Array.from({length:18},(_,i)=>441+i));
 // Reserved story art never enters the random consort pools. Stable zero-based IDs.
@@ -229,7 +229,8 @@ const portraitSheets=[
   {start:489,rows:3,scale:4,src:'./assets/images/palace-royal-growth-colors.webp?v=1',image:document.createElement('img')},
   {start:501,rows:1,scale:4,src:'./assets/images/palace-lin-jianxi.webp?v=1',image:document.createElement('img')},
   {start:502,rows:1,scale:4,src:'./assets/images/palace-he-xingjian.webp?v=1',image:document.createElement('img')},
-  {start:503,rows:3,scale:4,src:'./assets/images/palace-consorts-ancient-finery.webp?v=1',image:document.createElement('img')}
+  {start:503,rows:3,scale:4,src:'./assets/images/palace-consorts-ancient-finery.webp?v=1',image:document.createElement('img')},
+  {start:515,rows:2,scale:4,src:'./assets/images/palace-consorts-jeweled.webp?v=1',image:document.createElement('img')}
 ];
 const portraitSheet=cell=>portraitSheets.slice().reverse().find(sheet=>cell>=sheet.start)||portraitSheets[0];
 function ensurePortraitSheet(cell){const sheet=portraitSheet(cell);if(!sheet.image.src)sheet.image.src=sheet.src;}
@@ -247,8 +248,10 @@ const WESTERN_PORTRAITS=[22,23,24,102,103,134,135,263,340,343];
 const EASTERN_PORTRAITS=[341,344],OVERSEAS_PORTRAITS=[342,345];
 const COLOR_CONSORT_PORTRAITS=Object.freeze(Array.from({length:30},(_,i)=>459+i));
 const FINERY_CONSORT_PORTRAITS=Object.freeze(Array.from({length:12},(_,i)=>503+i));
+const JEWELED_CONSORT_PORTRAITS=Object.freeze(Array.from({length:6},(_,i)=>515+i));
 const COLOR_DOMESTIC_CONSORT_PORTRAITS=[...CONSORT_PORTRAITS,...COLOR_CONSORT_PORTRAITS];
-const NEW_DOMESTIC_CONSORT_PORTRAITS=[...COLOR_DOMESTIC_CONSORT_PORTRAITS,...FINERY_CONSORT_PORTRAITS];
+const FINERY_DOMESTIC_CONSORT_PORTRAITS=[...COLOR_DOMESTIC_CONSORT_PORTRAITS,...FINERY_CONSORT_PORTRAITS];
+const NEW_DOMESTIC_CONSORT_PORTRAITS=[...FINERY_DOMESTIC_CONSORT_PORTRAITS,...JEWELED_CONSORT_PORTRAITS];
 const ALL_CONSORT_PORTRAITS=[...NEW_DOMESTIC_CONSORT_PORTRAITS,...WESTERN_PORTRAITS,...EASTERN_PORTRAITS,...OVERSEAS_PORTRAITS];
 const PORTRAIT_CLOTHES={
   422:'钩弋夫人·青玉云纹汉衣',
@@ -280,6 +283,7 @@ for(let cell=208;cell<216;cell++)PORTRAIT_CLOTHES[cell]='盛装华服';
 const consortPortraits=c=>(c.rescue||['西域贡女','西域流寓'].includes(c.fam?.t))?WESTERN_PORTRAITS:c.fam?.t==='东瀛贵族'?EASTERN_PORTRAITS:c.fam?.t==='海西贵族'?OVERSEAS_PORTRAITS:CONSORT_PORTRAITS;
 ['绛红牡丹','青玉兰香','孔雀蓝鹤','杏金银杏','紫藤书韵','海棠粉绣','墨绿竹影','浅蓝梅雪','橘红回眸','玄金菊华','藕紫莲影','黛蓝书信','冰蓝扶花','粉绿回眸','紫藤香囊','绣球蓝扇','绿粉捧桃','青莲披帛','鹅黄春绦','湖青玉笛','石榴折扇','月白紫藤','蜜桃香囊','青莲书韵','清荷玉露','雪梅红裘','月华绮梦','牡丹金绡','春燕轻纱','玉兰书香'].forEach((name,i)=>{PORTRAIT_CLOTHES[459+i]=name;});
 ['鹅黄春杏','湖青兰书','胭脂海棠','月白清霜','藕紫流萤','黛蓝银鹊','榴红金缕','粉翠蝶钗','青碧玉梳','宝蓝凤钗','珊瑚金梳','月白紫玉'].forEach((name,i)=>{PORTRAIT_CLOTHES[503+i]=name;});
+['金粉牡丹','蓝翎珠华','绛玫金凤','紫藤银蝶','翡翠金莲','月白玉笛'].forEach((name,i)=>{PORTRAIT_CLOTHES[515+i]=name;});
 
 const LEGACY_FATHER_PORTRAITS=[268,269,270,271,276,277,278,282,283,284,288,289,290];
 const LEGACY_BROTHER_PORTRAITS=[272,273,274,275,279,280,281,285,286,287,291,292,293];
@@ -367,13 +371,13 @@ function emperorPortraitCell(e){
 }
 
 function assignConsortPortrait(c,newlyCreated=false){
-  if(Object.values(STORY_CONSORT_PORTRAITS).includes(c.artPortrait)||COLOR_CONSORT_PORTRAITS.includes(c.artPortrait)||FINERY_CONSORT_PORTRAITS.includes(c.artPortrait))return;
+  if(Object.values(STORY_CONSORT_PORTRAITS).includes(c.artPortrait)||COLOR_CONSORT_PORTRAITS.includes(c.artPortrait)||FINERY_CONSORT_PORTRAITS.includes(c.artPortrait)||JEWELED_CONSORT_PORTRAITS.includes(c.artPortrait))return;
   // Older pending scenes and missing-art migrations retain the original seed mapping.
   // Strict true matters: Array.forEach passes a numeric index to this function.
   const base=consortPortraits(c);
   const version=journalContentVersion();
   const cells=newlyCreated===true&&version>=38&&base===CONSORT_PORTRAITS?
-    (version>=160?NEW_DOMESTIC_CONSORT_PORTRAITS:COLOR_DOMESTIC_CONSORT_PORTRAITS):base;
+    (version>=164?NEW_DOMESTIC_CONSORT_PORTRAITS:version>=160?FINERY_DOMESTIC_CONSORT_PORTRAITS:COLOR_DOMESTIC_CONSORT_PORTRAITS):base;
   if(cells.includes(c.artPortrait))return;
   const usage=new Map(cells.map(cell=>[cell,0]));
   const relatives=(S.children||[]).flatMap(k=>[k.spouse,...Object.values(k.marriageCandidates||{})]).filter(Boolean).map(p=>p.appearance).filter(Boolean);
@@ -441,7 +445,7 @@ function portraitCell(x){
   if(x.jinyiwei)return jinyiweiPortraitCell(x);
   if(x.official!==undefined)return journalContentVersion()>=19&&JINYIWEI_PORTRAITS.includes(x.artPortrait)?ordinaryOfficialPortrait(x):ALL_OFFICIAL_PORTRAITS.includes(x.artPortrait)?x.artPortrait:FAMILY_PORTRAIT_START+12+x.official;
   if(x.isMom)return 9;
-  if(COLOR_CONSORT_PORTRAITS.includes(x.artPortrait)||FINERY_CONSORT_PORTRAITS.includes(x.artPortrait))return x.artPortrait;
+  if(COLOR_CONSORT_PORTRAITS.includes(x.artPortrait)||FINERY_CONSORT_PORTRAITS.includes(x.artPortrait)||JEWELED_CONSORT_PORTRAITS.includes(x.artPortrait))return x.artPortrait;
   if(x.maid)return CONSORT_PORTRAITS.includes(x.artPortrait)?x.artPortrait:CONSORT_PORTRAITS[Math.floor(mulberry32(x.seed||7)()*CONSORT_PORTRAITS.length)];
   if(x.sex)return childPortraitCell(x);
   if(Object.values(STORY_CONSORT_PORTRAITS).includes(x.artPortrait))return x.artPortrait;
@@ -455,6 +459,7 @@ function portraitJewelry(rank,id){return JEWELRY[id]|| (rank===8?JEWELRY.phoenix
 // Coordinates are in the stable 112 × 140 portrait tile: brow centre and head width.
 // Half-length paintings need much smaller ornaments than the original close-ups.
 const PORTRAIT_HEADS={
+  515:[63,36,28],516:[64,35,28],517:[57,35,28],518:[64,34,28],519:[59,34,28],520:[64,35,28],
   503:[59,30,28],504:[62,29,28],505:[56,33,28],506:[65,32,28],507:[59,35,28],508:[61,31,28],
   509:[61,34,28],510:[61,34,28],511:[62,30,28],512:[66,33,28],513:[64,32,28],514:[64,33,28],
   501:[56,29,25],502:[56,26,27],

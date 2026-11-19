@@ -1,0 +1,197 @@
+{
+  "frame": [
+    448,
+    560
+  ],
+  "columns": 4,
+  "styleReference": 472,
+  "approved": "All six ornate headdress and costume portraits, retaining the approved face style and varied upper-body poses",
+  "portraits": [
+    {
+      "id": 515,
+      "atlas": "palace-consorts-jeweled.webp",
+      "source": "exec-826864b7-00bd-4f91-998b-2b662009d7a5.png",
+      "sourceSha256": "c5c8f063d0a6b5379f20be0190ba3e368d1f404d573794492095d298c22b713a",
+      "sourceSize": [
+        1374,
+        1145
+      ],
+      "cell": 0,
+      "tile": 0,
+      "crop": [
+        0,
+        0,
+        462,
+        571
+      ],
+      "bounds": [
+        3,
+        0,
+        462,
+        571
+      ],
+      "placed": [
+        4,
+        13,
+        440,
+        547
+      ],
+      "label": "金粉牡丹"
+    },
+    {
+      "id": 516,
+      "atlas": "palace-consorts-jeweled.webp",
+      "source": "exec-826864b7-00bd-4f91-998b-2b662009d7a5.png",
+      "sourceSha256": "c5c8f063d0a6b5379f20be0190ba3e368d1f404d573794492095d298c22b713a",
+      "sourceSize": [
+        1374,
+        1145
+      ],
+      "cell": 1,
+      "tile": 1,
+      "crop": [
+        462,
+        0,
+        913,
+        571
+      ],
+      "bounds": [
+        0,
+        1,
+        441,
+        571
+      ],
+      "placed": [
+        458,
+        8,
+        427,
+        552
+      ],
+      "label": "蓝翎珠华"
+    },
+    {
+      "id": 517,
+      "atlas": "palace-consorts-jeweled.webp",
+      "source": "exec-826864b7-00bd-4f91-998b-2b662009d7a5.png",
+      "sourceSha256": "c5c8f063d0a6b5379f20be0190ba3e368d1f404d573794492095d298c22b713a",
+      "sourceSize": [
+        1374,
+        1145
+      ],
+      "cell": 2,
+      "tile": 2,
+      "crop": [
+        913,
+        0,
+        1374,
+        571
+      ],
+      "bounds": [
+        0,
+        0,
+        460,
+        571
+      ],
+      "placed": [
+        900,
+        14,
+        440,
+        546
+      ],
+      "label": "绛玫金凤"
+    },
+    {
+      "id": 518,
+      "atlas": "palace-consorts-jeweled.webp",
+      "source": "exec-826864b7-00bd-4f91-998b-2b662009d7a5.png",
+      "sourceSha256": "c5c8f063d0a6b5379f20be0190ba3e368d1f404d573794492095d298c22b713a",
+      "sourceSize": [
+        1374,
+        1145
+      ],
+      "cell": 3,
+      "tile": 3,
+      "crop": [
+        0,
+        571,
+        464,
+        1145
+      ],
+      "bounds": [
+        0,
+        0,
+        464,
+        574
+      ],
+      "placed": [
+        1348,
+        16,
+        440,
+        544
+      ],
+      "label": "紫藤银蝶"
+    },
+    {
+      "id": 519,
+      "atlas": "palace-consorts-jeweled.webp",
+      "source": "exec-826864b7-00bd-4f91-998b-2b662009d7a5.png",
+      "sourceSha256": "c5c8f063d0a6b5379f20be0190ba3e368d1f404d573794492095d298c22b713a",
+      "sourceSize": [
+        1374,
+        1145
+      ],
+      "cell": 4,
+      "tile": 4,
+      "crop": [
+        464,
+        571,
+        912,
+        1145
+      ],
+      "bounds": [
+        0,
+        0,
+        448,
+        574
+      ],
+      "placed": [
+        8,
+        568,
+        431,
+        552
+      ],
+      "label": "翡翠金莲"
+    },
+    {
+      "id": 520,
+      "atlas": "palace-consorts-jeweled.webp",
+      "source": "exec-826864b7-00bd-4f91-998b-2b662009d7a5.png",
+      "sourceSha256": "c5c8f063d0a6b5379f20be0190ba3e368d1f404d573794492095d298c22b713a",
+      "sourceSize": [
+        1374,
+        1145
+      ],
+      "cell": 5,
+      "tile": 5,
+      "crop": [
+        912,
+        571,
+        1374,
+        1145
+      ],
+      "bounds": [
+        0,
+        0,
+        462,
+        574
+      ],
+      "placed": [
+        452,
+        573,
+        440,
+        547
+      ],
+      "label": "月白玉笛"
+    }
+  ]
+}

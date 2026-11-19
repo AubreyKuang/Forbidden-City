@@ -63,8 +63,8 @@ test('white and flower close-ups reuse their already approved matching half-body
 test('detail rendering and jewelry never change saved identities, pools or story assignments',()=>{
   const {run}=game();
   run(`{
-    assert.equal(PORTRAIT_COUNT,515);
-    assert.equal(ALL_CONSORT_PORTRAITS.length,193);
+    assert.equal(PORTRAIT_COUNT,521);
+    assert.equal(ALL_CONSORT_PORTRAITS.length,199);
     assert.equal(STORY_CONSORT_PORTRAITS.gouyi,422);
     const c=harem()[0];c.artPortrait=112;c.portraitOverride=112;
     const id=c.id;const before=JSON.stringify(S);
