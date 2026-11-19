@@ -139,7 +139,7 @@ function arrangeRecovery(game){
 }
 test('release continues the same petition in both diaries and a saved letter can be sent after reload',()=>{
  let game=family();arrangeRecovery(game);
- game.run(`c.trait='持重';A.uncold(c.id);
+ game.run(`c.trait='持重';A.go('consort',c.id);A.uncold(c.id);
   var n=c.palaceKinNews.find(n=>n.kind==='released'&&n.officialId===brother.id);
   assert.equal(c.rank,3);assert.equal(n.recovery.priorId,coldNote.id);assert.equal(n.recovery.help,'care');
   assert.match(n.fact,/获准离开冷宫，现依贵人位分/);
@@ -148,6 +148,7 @@ test('release continues the same petition in both diaries and a saved letter can
   assert.ok(c.story.some(s=>s.thread===timeline&&s.t.includes('衣物是你按例托人送来的')));
   assert.ok(brother.story.some(s=>s.thread===timeline&&s.t.includes('获准离开冷宫')));
   assert.match(palaceKinLettersPanel(c),/回信报平安/);
+  assert.match($('#panel').innerHTML,/回信报平安/);
   A.palaceKinResponse(c.id,n.id,'letter');assert.match(curEv.text,/我已经出了冷宫.*把夜觉养回来/s);save('1');`);
  game=boot(882,game.storage);game.ctx.assert=assert;
  game.run(`A.load('1');assert.equal(PalaceActions.blocked,false);assert.equal(curEv.title,'回信 · 出冷宫后的家书');
