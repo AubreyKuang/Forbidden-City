@@ -734,6 +734,7 @@ A.endMonth=function(){
     for(const k of S.royalRelatives||[])if(k.princeCareer)princeCircleTick(k);
   }
   const must=[passing?null:haremRemonstranceEvent(),passing?null:pendingImmortalEvent(),passing?null:pendingRoyalTravelEvent(),passing?null:pendingTravelInstitutionEvent(),passing?null:pendingRoyalSchoolRevision(),passing?null:pendingLocalChronicleReview(),passing?null:pendingClassicStory(),passing?null:pendingYiLandEvent(),passing?null:arcTick(),heirTick(),milestone(),parentageReportEvent(),birthSwapClueEvent(),birthSwapSearchReport(),pendingBirthSwapJustice(),pendingKinGreeting(),pendingMaternalKinCare(),pendingMaternalSisterArrival(),pendingDaoVoyage(),pendingTravelerEvent(),pendingOfficialReport(),pendingConcealedLoss(),...(legacyPendingAction()?[]:[pendingIncognitoReport(),passing?null:jingtishiEvent(),passing?null:selectionCouncilEvent()]),passing||typeof pendingHaremStewardEvent!=='function'?null:pendingHaremStewardEvent(),...(familyGardenActive()&&!passing?[familyGardenMonthlyEvent(),familyGardenDisputeEvent()]:[])].filter(Boolean),opt=[];
+  const firstNightReminder=passing?null:queenFirstNightReminder();if(firstNightReminder)must.push(firstNightReminder);
   const inquiry=pendingSisterInquiry();if(inquiry)must.unshift(inquiry);
   if(comingOfAge)must.unshift(comingOfAge);
   const affairWatch=journalContentVersion()>=101;
@@ -764,7 +765,7 @@ A.endMonth=function(){
   if(!passing){
   add(continuityMonthlyEvent(),9);
   add(pregnancyGardenEvent(true),8);
-  add(homeReturnSocialEvent(),8);add(natalVisitRequest(),7);add(awaitingNoticeEvent(),6);
+  add(homeReturnSocialEvent(),8);add(natalVisitRequest(),7);add(awaitingNoticeEvent(null,firstNightReminder?.firstNightConsort),6);
   add(pastLifeMonthlyEvent(),6);add(pregnancyPrayerMonthlyEvent(),6);add(residencePetitionEvent(),8);add(fiveBrotherMonthlyEvent(),6);add(travelerMonthlyEvent(),8);add(recoveredSwapEvent(),8);add(fosterPetitionEvent(),8);add(kinSuccessionEvent(),8);add(parentageClueEvent(),8);
   add(coldFosterPetitionEvent(),9);add(coldFriendPetitionEvent(),8);
   const tribute=jewelryTributeEvent();

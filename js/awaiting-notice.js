@@ -17,8 +17,8 @@ function awaitingNoticeWords(c){
     gentle:forgotten?'臣妾怕的不是今夜等不到，是陛下已经忘了臣妾。若能坐下来听几句话，也会安心些。':'臣妾尚未承召，偶尔会想，是不是哪里做得不好。知道不该乱想，却还是想听陛下说句话。'})[companionStyle(c)];
 }
 function awaitingNoticeVoice(c){return awaitingNoticeReason(c)?voiceLine('awaiting-notice','她犹豫着说起等待中的心事。',awaitingNoticeWords(c)):null;}
-function awaitingNoticeEvent(only){
-  const list=harem().filter(c=>(!only||c===only)&&awaitingNoticeReason(c)&&S.turn-(c.lastAwaitingNotice??-99)>=12);
+function awaitingNoticeEvent(only,skipId){
+  const list=harem().filter(c=>(!only||c===only)&&c.id!==skipId&&awaitingNoticeReason(c)&&S.turn-(c.lastAwaitingNotice??-99)>=12);
   if(!list.length||(!only&&!chance(.12)))return null;
   const c=pick(list),words=awaitingNoticeWords(c),valid=()=>!!awaitingNoticeReason(c);
   return {title:'未翻起的牌',por:c,present:[c],valid,onQueue:()=>{c.lastAwaitingNotice=S.turn;story(c,`【久候的心事】${words}`);cchg(c,{mood:-4});},
@@ -35,3 +35,46 @@ A.toggleGreenCard=function(id){
   const text=c.cardWithdrawn?'奉旨撤下绿头牌，暂停侍寝。':'奉旨恢复绿头牌，重新列入敬事房名册。';
   story(c,text);remember(c,'family',text);log(fullName(c)+text,1);render();
 };
+
+function firstNightWait(c){
+  const entry=c.enteredAt??c.accessionArrival?.started??(c.knownBeforeAccession&&S.gen===1?0:null);
+  return Number.isFinite(entry)?S.turn-entry:0;
+}
+function queenCanMentionFirstNight(q,c){
+  return inPalace(c)&&!c.maid&&c!==q&&c.age>=18&&firstNightWait(c)>=12&&
+    !(c.nights>0||c.imperialNights?.length||c.lastBirth>=0||S.children.some(k=>k.mom===c.id))&&
+    !(c.hp<40)&&!consortNightReason(c);
+}
+function queenFirstNightReminder(){
+  if(journalContentVersion()<107||S.over||mourningActive()||mourningNightPause())return null;
+  const q=empress(),d=S.flags.dowager;
+  const queenReady=()=>inPalace(q)&&q===empress()&&!(q.hp<40)&&!(q.illnessRecovery?.until>S.turn)&&
+    !(dowagerIll(d)&&d.lastYears.caregiver===q.id);
+  if(!queenReady())return null;
+  const book=S.flags.queenFirstNight?.gen===S.gen?S.flags.queenFirstNight:null;
+  if(book&&S.turn-book.last<6)return null;
+  const last=c=>book?.mentioned?.[c.id]??-Infinity;
+  const c=harem().filter(c=>queenCanMentionFirstNight(q,c)&&S.turn-last(c)>=12)
+    .sort((a,b)=>(last(a)-last(b))||firstNightWait(b)-firstNightWait(a)||a.id-b.id)[0];
+  if(!c)return null;
+  const name=fullName(c),months=firstNightWait(c);
+  const wait=Math.floor(months/12)+'年'+(months%12?'零'+months%12+'个月':'');
+  const valid=()=>!S.over&&!mourningActive()&&queenReady()&&queenCanMentionFirstNight(q,c);
+  return {title:'中宫奏事 · 久未承召',por:q,cast:[c],present:[q],firstNightConsort:c.id,valid,
+    text:`皇后${fullName(q)}将敬事房的名册翻到折角处：“陛下，${cName(c)}${name===cName(c)?'':'（'+name+'）'}入宫已有${wait}，名下还没有一回侍寝的记载。臣妾掌着六宫，理当替她提一句。若陛下今日不得空，臣妾也好代您问声安。”`,
+    onShow:()=>{
+      const ledger=book||(S.flags.queenFirstNight={gen:S.gen,mentioned:{}});
+      if(ledger.mentioned[c.id]===S.turn)return;
+      ledger.last=S.turn;ledger.mentioned[c.id]=S.turn;
+      story(q,`【久未承召】核阅敬事房名册，见${name}入宫${wait}尚未侍寝，便在御前为她提了一句。`);
+      log(`皇后奏及${name}入宫${wait}尚未承召。`);
+    },
+    choices:[
+      {t:'朕记下了，暂不安排'},
+      {t:'请皇后代朕问安',f:()=>{if(!valid())return null;
+        const text=`皇后遣人到${c.palace}传来陛下的问候。${name}听说自己的名字还被记着，向来人道了谢。`;
+        story(c,'【中宫传问安】'+text);story(q,`奉旨向${name}传了问候，回宫后听到了她的谢意。`);
+        return text+fx(cchg(c,{mood:4}));}},
+      {t:'今夜翻她的牌（精力−1）',cond:()=>valid()&&E().energy>=1,why:'此时不能翻牌或精力不足',f:()=>{if(valid()&&E().energy>=1)nightWith(c);return null;}}
+    ]};
+}
