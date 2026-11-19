@@ -313,7 +313,7 @@ HAREM.push(
 const maids=()=>alive().filter(c=>c.maid);
 function newMaid(where){const g=makeGirl({fam:{t:'宫女',p:3},age:ri(16,20)});g.maid=true;g.near=false;g.palace='尚衣局';g.favor=20;g.aff=20;S.consorts.push(g);deepen(g);story(g,`本是${where}的宫女，被陛下看中。`);return g}
 function promoteMaid(g,rank){const wasMaid=!!g.maid;g.maid=false;g.near=false;g.rank=rank;assignPalace(g);deepen(g);initRel(g);assignArc(g);S.ys.c++;if(journalContentVersion()>=30){clanKey(g);houseOf(g);}
-  story(g,`由宫女册封为${RANKS[rank]}，赐居${g.palace}。`);log(`宫女${fullName(g)}册封为${RANKS[rank]}。`,1);if(wasMaid&&journalContentVersion()>=99)queueStoryQueenWelcome(empress(),[g],'maid')}
+  story(g,`由宫女册封为${RANKS[rank]}，赐居${g.palace}。`);log(`宫女${fullName(g)}册封为${RANKS[rank]}。`,1);if(wasMaid&&journalContentVersion()>=100)queueStoryQueenWelcome(empress(),[g],'maid')}
 function maidNight(g){if(!inPalace(g)||g.preg||g.cardWithdrawn||consortRecoveryActive()&&consortNightReason(g))return;if(E().energy<=0){toast('本月精力已尽');return}nightWith(g);Q.splice(1,0,afterMaidNight(g))}
 function afterMaidNight(g){return {title:'天明',por:g,text:`天快亮时，${g.given}已经起身，跪在床边替你理好朝服，低着头不敢看你。\n她只是个宫女，往后如何，全凭陛下一句话。`,choices:[
   {t:'封为答应',f:()=>{promoteMaid(g,1);setXin(g,'欢喜','一夜承恩，封为答应');return `她磕头谢恩，搬进了${g.palace}。${fx(cchg(g,{mood:25,aff:10}))}`}},

@@ -101,7 +101,7 @@ function finishSelectionCourt(s,members){
   }
   const queen=empress();if(!members.length||!inPalace(queen)||!(s.residents||[]).includes(queen.id))return;
   s.council={queen:queen.id,members:members.map(c=>c.id),mode:selectionDisposition(queen),done:false};
-  if(journalContentVersion()>=99)queueStoryQueenWelcome(queen,members,'selection');
+  if(journalContentVersion()>=100)queueStoryQueenWelcome(queen,members,'selection');
 }
 A.selectionCouncil=function(){if(!modalOpen)pushEv(selectionCouncilEvent());};
 function selectionCouncilEvent(s=S.selection){

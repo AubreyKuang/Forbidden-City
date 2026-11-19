@@ -486,7 +486,7 @@ function viewConsort(){
       (act?detailSection('与孩子的日常',consortFamilyPanel(c)):'')+
       (act?detailSection('牵挂远方的孩子',motherConcernPanel(c)):'')+
       detailSection('孩子的身世',consortParentagePanel(c))+
-      fosterWishButton(c)+palaceSpeechPanel(c)+homeLeavePanel(c)+homeFamilyPanel(c)+maternalPanel(c)],
+      personalWardrobePanel(c,false)+fosterWishButton(c)+palaceSpeechPanel(c)+homeLeavePanel(c)+homeFamilyPanel(c)+maternalPanel(c)],
     ['affairs','册封与宫务',
       actionGroup('位分与居所',management)+actionGroup('敬事房',cardAction)+
       detailSection('御赐珍饰',jewelryPanel(c))+(act&&c.rank===8?birthdayBanquetButtons():'')],
@@ -578,7 +578,7 @@ function viewKid(){
     ['now','近况与心事',storyCastChildPanel(k)+childDispositionPanel(k)+(k.foreignLanguages?.length?detailSection('出使见闻',`<p>所学外语：${k.foreignLanguages.map(esc).join('、')}。</p>`+diplomaticTraitsPanel(k)):'')+immortalPanel(k)+royalTravelPanel(k)+continuityPanel(k)+
       (k.alive?initiativeHTML(k):'')+detailSection(a>=20?'婚事与心意':'少年心事',youthPanel(k))+
       detailSection('护国寺祈福',childTemplePanel(k))],
-    ['care','教养与封号',detailSection('教养与抚养',care)+detailSection('师承',childMentorPanel(k))+detailSection('成年志向与差务',princeCareerPanel(k)+princeFiefRequestPanel(k))+princeCirclePanel(k)+
+    ['care','教养与封号',personalWardrobePanel(k,true)+detailSection('教养与抚养',care)+detailSection('师承',childMentorPanel(k))+detailSection('成年志向与差务',princeCareerPanel(k)+princeFiefRequestPanel(k))+princeCirclePanel(k)+
       detailSection('封号与储位',titles?`<div class="acts">${titles}</div>`:'')+
       detailSection('其他属性',`<div class="stats">${bar('体魄',k.hp,'#a87a26')}${bar('野心',k.amb,'#6b4a33')}${bar('父爱',k.love,'#936375')}${k.sex==='m'&&a>=10?bar('支持',k.sup||0,'#617991'):''}</div>`)+
       detailSection('出生禀赋',childBirthPanel(k))],

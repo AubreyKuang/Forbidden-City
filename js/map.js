@@ -12,6 +12,8 @@ const PLACES=[
  {id:'wm',n:'午门',r:[90,119,20,7],d:[100,117],k:'view',v:'out',sc:'court'},
  {id:'lg',n:'冷宫',r:[10,16,26,14],d:[23,46],k:'palace',p:'冷宫',sc:'night'},
  {id:'wy',n:'文渊阁',r:[164,16,26,14],d:[177,46],k:'place',sc:'court'},
+ {id:'music',n:'南府乐房',r:[49,104,27,10],d:[62,100],k:'place',sc:'garden'},
+ {id:'wardrobe',n:'尚衣局',r:[12,33,25,10],d:[25,46],k:'place',sc:'harem'},
  {id:'js',n:'敬事房',r:[122,104,28,10],d:[136,100],k:'view',v:'cards',sc:'night'},
  {id:'ss',n:'上书房',r:[156,104,30,10],d:[171,100],k:'place',sc:'court'},
  {id:'cn',n:'慈宁宫',r:[14,104,30,10],d:[29,100],k:'place',sc:'harem'}];
@@ -425,6 +427,8 @@ function viewPalace(){const name=UI.sel,res=name==='冷宫'?alive().filter(c=>c.
   const count=res.length?(name==='冷宫'?`<p class="hint">冷宫里关着 ${res.length} 人。</p>`:`<p class="hint">住着 ${res.length} 位妃嫔。</p>`):'';
   return `<h2>${esc(name)}${backBtn}</h2><p class="hint">${note}</p>${residenceSummary(name)}${PALACES.includes(name)?'<div class="acts"><button class="btn" onclick="A.openResidence()">分配主位与同住</button></div>':''}${extra}${storyCastPalaceRoom(name)}${palaceRomanceAt(initiativePlace(null,null,{place:'p'+name}))}${palaceLifePanel(name)}${initiativesAt(initiativePlace(null,null,{place:'p'+name}))}${count}${res.length?`<div class="grid">${res.map(consortCard).join('')}</div>`:'<p class="hint">此处暂无人居住。</p>'}`}
 function viewPlace(){const id=UI.sel;
+  if(id==='music')return musicRoom();
+  if(id==='wardrobe')return wardrobeRoom();
   if(id==='qa')return viewDaoHall();
   if(id==='cj')return `<h2>宸极殿${backBtn}</h2><p>文武百官已在丹墀下候着。</p><div class="acts">${monthlyCourtButton()}<button class="btn jade" onclick="A.go('officials')">朝臣与外家 · 召见议事</button></div>`;
   if(id==='yh'){const here=[...NPC].filter(([i,n])=>n.where==='garden'&&!n.path.length).map(([i])=>byId(i)).filter(c=>inPalace(c)&&c.id!==gardenFamilyMoment()?.mother&&

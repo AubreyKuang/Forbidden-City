@@ -40,7 +40,7 @@ const STORY_QUEEN_WELCOMES={
  xiaoman:'“新地方认不清路，先记熟回自己院子的门。搬箱笼和做活的人也有名字，别把她们落在赏单外。”'
 };
 function storyQueenWelcomeEvent(q,people,source){
- if(journalContentVersion()<99||!inPalace(q)||q.rank!==8||S.over)return null;
+ if(journalContentVersion()<100||!inPalace(q)||q.rank!==8||S.over)return null;
  const line=STORY_QUEEN_WELCOMES[storyQueenKey(q)],members=people.filter(c=>c&&c!==q&&inPalace(c)&&!c.maid);
  if(!line||!members.length)return null;
  let shown=false,done=false;const gen=S.gen,valid=()=>!done&&S.gen===gen&&!S.over&&inPalace(q)&&q.rank===8&&members.every(inPalace);
@@ -72,7 +72,7 @@ const STORY_DOWAGER_REPLIES={
  xiaoman:['太后岑小满掰着手指问：“台前幕后的人都算上了么？漏了谁可不好。”','太后岑小满把手里的茶盏放下：“先数清楚，往后再商量。”']
 };
 function storyQueenDowagerDialogue(c,d,bond){
- if(journalContentVersion()<99||!d?.alive||!inPalace(c)||c.rank!==8)return '';
+ if(journalContentVersion()<100||!d?.alive||!inPalace(c)||c.rank!==8)return '';
  const line=STORY_QUEEN_DOWAGER_LINES[storyQueenKey(c)];if(!line)return '';
  const portrait=dowagerPerson(d),trait=portrait.trait||d.trait||'',grief=d.feeling?.kind==='悲恸';
  const own=STORY_DOWAGER_REPLIES[storyQueenKey(portrait)];
@@ -83,7 +83,7 @@ function storyQueenDowagerDialogue(c,d,bond){
  return `${line}${reply}`;
 }
 function storyQueenSelectionThought(c,stage,names,mode,what){
- if(journalContentVersion()<99||c?.rank!==8||!STORY_QUEEN_WELCOMES[storyQueenKey(c)])return null;
+ if(journalContentVersion()<100||c?.rank!==8||!STORY_QUEEN_WELCOMES[storyQueenKey(c)])return null;
  const line=STORY_QUEEN_WELCOMES[storyQueenKey(c)].replace(/^“|”$/g,'');
  const worry=mode==='jealous'||mode==='uneasy'?'她也有自己的不安，仍先说起该如何照应新人。':'她想着该如何照应来人，也留意自己的心情。';
  if(stage==='settled'&&!names.length)return {mode,text:'本次没有留下新人，她听过名册结果，嘱咐女官照例安排未留选者出宫。',quote:'没有留选，也盼她们回程平安。'};

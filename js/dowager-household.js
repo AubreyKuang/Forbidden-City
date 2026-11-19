@@ -89,7 +89,7 @@ function dowagerCompanyEvent(d,people){
  let done=false;const valid=()=>!done&&d.alive&&people.every(dowagerVisitReady);
  return trackDowagerTalk(d,{title:'慈宁宫 · 茶席有伴',por:dowagerPerson(d),cast:people,present:people,valid,
   text:`你到慈宁宫时，${people.map(fullName).join('、')}也在。宫人添上一盏茶。\n${descriptions.join('\n')}`,
-  onShow:()=>{noteDowagerCompany(d,people);startDowagerRumor(d,people);if(journalContentVersion()>=99){for(const c of people){const line=personalLines.get(c.id);if(line){story(c,'【慈宁宫相谈】'+line);dowagerRecord(d,'与皇后相谈',line);}}}},choices:[
+  onShow:()=>{noteDowagerCompany(d,people);startDowagerRumor(d,people);if(journalContentVersion()>=100){for(const c of people){const line=personalLines.get(c.id);if(line){story(c,'【慈宁宫相谈】'+line);dowagerRecord(d,'与皇后相谈',line);}}}},choices:[
    {t:'坐下一同说说话',f:()=>{if(!valid())return null;done=true;d.mood=clamp(d.mood+5);for(const c of people){changeDowagerBond(c,3,d);story(c,`【慈宁宫同坐】与陛下、太后一同喝茶，太后谈起${c.rank===8?'中宫往来与起居':'自己陪伴她的情分'}。`);cchg(c,{mood:4});}const text='你坐下来听她们说话，茶添了两回，窗下的笑声才渐渐歇下。';dowagerRecord(d,'茶席同坐',people.map(fullName).join('、')+'与皇帝留下相伴。');return text;}},
    {t:'让她们继续陪母后，先告退',f:()=>{if(!valid())return null;done=true;dowagerRecord(d,'茶席相伴',`皇帝问安后告退，${people.map(fullName).join('、')}仍留下说话。`);return '你问候过众人，留她们自在说话。';}}
   ]},'company',{months:2});
