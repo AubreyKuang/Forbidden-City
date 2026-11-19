@@ -1,4 +1,7 @@
 /* Fictional game balance, not a medical prediction. Identity never rerolls on load. */
+function belowConceptionAgeLimit(age,legacyCutoff){
+  return age<(PalaceActions.familyAgeLimits?45:legacyCutoff);
+}
 function consortFertilityBase(c){
   const saved=c?.fertility?.base;
   if(Number.isFinite(saved)&&saved>=.04&&saved<=.34)return saved;
@@ -9,7 +12,7 @@ function consortFertilityBase(c){
 }
 function ensureConsortFertility(c){if(c)c.fertility={base:consortFertilityBase(c)};}
 function consortFertilityFactor(c){
-  if(!c||!Number.isFinite(c.age)||c.age<18||c.age>=50||(c.hp??85)<25)return 0;
+  if(!c||!Number.isFinite(c.age)||c.age<18||!belowConceptionAgeLimit(c.age,50)||(c.hp??85)<25)return 0;
   const age=c.age<21?.85:c.age<30?1:c.age<35?.85:c.age<40?.65:c.age<45?.35:.12;
   const health=Math.max(.35,Math.min(1,.35+(c.hp??85)*.0065));
   return age*health*(c.trait==='体弱'?.75:1);

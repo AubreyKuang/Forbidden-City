@@ -3,9 +3,9 @@ const assert=require('node:assert/strict');
 const {world}=require('./court-family-browser-fixtures.cjs');
 const {boot}=require('./playtest-harness.cjs');
 
-function princeWorld(){
+function princeWorld(age=19){
   const game=world();game.ctx.assert=assert;
-  game.run(`var prince=makeKid(a,'m','承安');prince.born=S.turn-19*12;prince.pendingName=false;prince.title='睿亲王';prince.sup=61;prince.adult=true;`);
+  game.run(`var prince=makeKid(a,'m','承安');prince.born=S.turn-${age}*12;prince.pendingName=false;prince.title='睿亲王';prince.sup=61;prince.adult=true;`);
   return game;
 }
 
@@ -71,7 +71,7 @@ test('deferred quarterly items survive reload and funding cannot spend twice or 
 });
 
 test('the original household son succeeds after a death report and keeps the fief and docket on reload',()=>{
-  let game=princeWorld();game.run(`var id=prince.id;prince.away=true;prince.princeEstate={location:'西安',opened:0};
+  let game=princeWorld(40);game.run(`var id=prince.id;prince.away=true;prince.princeEstate={location:'西安',opened:0};
     prince.married=true;prince.spouse={...marriageCandidate(prince,'scholar'),marriedAt:0};var h=ensureMarriedLife(prince);
     var son={id:'grand-1-'+id+'-1',name:'承礼',sex:'m',born:S.turn-7*12,alive:true,seed:17,mother:prince.spouse.id,father:id,story:[]};h.children.push(son);
     assert.match(princeSuccessionTick().text,/请陛下核定世子/);assert.equal(princeSuccessionTick(),null);
@@ -89,7 +89,7 @@ test('the original household son succeeds after a death report and keeps the fie
 });
 
 test('a predeceased heir is reported once and the throne can designate another son',()=>{
-  const game=princeWorld();game.run(`openPrinceEstate(prince);prince.married=true;prince.spouse={...marriageCandidate(prince,'scholar'),marriedAt:0};
+  const game=princeWorld(40);game.run(`openPrinceEstate(prince);prince.married=true;prince.spouse={...marriageCandidate(prince,'scholar'),marriedAt:0};
     var first={id:'first-son',name:'景和',sex:'m',born:S.turn-10*12,alive:true,hp:0,seed:17,mother:prince.spouse.id,father:prince.id};
     var second={...first,id:'second-son',name:'景宁',born:S.turn-8*12,hp:90};ensureMarriedLife(prince).children.push(first,second);
     prince.princeEstate.succession={heir:first.id,nominated:first.id};var report=princeSuccessionTick();
@@ -101,7 +101,7 @@ test('a predeceased heir is reported once and the throne can designate another s
 });
 
 test('adoption retains the original child and parents through inheritance and a cold reload',()=>{
-  let game=princeWorld();game.run(`prince.away=true;prince.princeEstate={location:'太原',opened:0};
+  let game=princeWorld(40);game.run(`prince.away=true;prince.princeEstate={location:'太原',opened:0};
     prince.married=true;prince.spouse={...marriageCandidate(prince,'scholar'),marriedAt:0};ensureMarriedLife(prince);
     var brother=makeKid(a,'m','承宁');brother.pendingName=false;brother.born=prince.born;openPrinceEstate(brother);
     brother.married=true;brother.spouse={...marriageCandidate(brother,'scholar'),marriedAt:0};var h=ensureMarriedLife(brother);
@@ -125,4 +125,42 @@ test('a sonless deceased prince can receive a posthumous heir from a brother',()
     ensureMarriedLife(brother).children.push(son);assert.match(princeSuccessionTick().text,/请择嗣承袭/);
     A.princeReviewAdoption(prince.id);assert.match(curEv.choices[0].t,/过继并承袭/);choose(0);drain();
     assert.equal(princeEstatePlace(son),'开封');assert.equal(princeProbate(prince),false);assert.equal(S.log.filter(x=>x.t.includes('【袭爵】')).length,1);`);
+});
+
+test('a living prince petitions on his fortieth birthday, including an unanswered nomination from an older save',()=>{
+ const game=princeWorld(39);game.run(`prince.born=S.turn-40*12+1;openPrinceEstate(prince);
+ prince.married=true;prince.spouse={...marriageCandidate(prince,'scholar'),marriedAt:0};
+ var son={id:'forty-son',name:'景宁',sex:'m',born:S.turn-9*12,alive:true,mother:prince.spouse.id,father:prince.id};
+ ensureMarriedLife(prince).children.push(son);prince.princeEstate.succession={nominated:son.id};
+ assert.match(princeSuccessionPanel(prince),/年满四十/);assert.doesNotMatch(princeSuccessionPanel(prince),/批阅请封世子/);
+ A.princeReviewSuccession(prince.id);assert.equal(modalOpen,false);var notes=S.log.length;
+ assert.equal(princeSuccessionTick(),null);assert.equal(S.log.length,notes);
+ prince.princeEstate.succession.nominated=son.id;S.turn++;
+ assert.match(princeSuccessionTick().text,/请封世子/);assert.equal(princeSuccessionTick(),null);assert.match(princeSuccessionPanel(prince),/批阅请封世子/);
+ A.princeReviewSuccession(prince.id);choose(0);drain();assert.equal(princeHeir(prince),son);`);
+});
+
+test('an old review opened before forty replays and is then withdrawn without appointing an heir',()=>{
+ const game=princeWorld(40);game.run(`openPrinceEstate(prince);prince.married=true;prince.spouse={...marriageCandidate(prince,'scholar'),marriedAt:0};
+ ensureMarriedLife(prince).children.push({id:'prior-son',name:'景明',sex:'m',alive:true,born:S.turn-9*12,mother:prince.spouse.id,father:prince.id});
+ PalaceActions.reset();A.princeReviewSuccession(prince.id);save('1');`);
+ const key='chengongji_v1_1',data=JSON.parse(game.storage.get(key)),journal=data.pendingActions;
+ journal.version=126;for(const snapshot of [data,journal.base])snapshot.children.find(c=>c.name==='承安').born+=12;
+ game.storage.set(key,JSON.stringify(data));const resumed=boot(12,game.storage);resumed.ctx.assert=assert;resumed.run(`A.load('1');assert.equal(PalaceActions.blocked,false);
+ assert.equal(modalOpen,false);assert.equal(princeHeir(S.children.find(c=>c.name==='承安')),undefined);`);
+});
+
+test('a younger prince keeps a previously confirmed heir and must wait until forty to replace him by adoption',()=>{
+ const game=princeWorld(39);game.run(`prince.born=S.turn-40*12+1;openPrinceEstate(prince);prince.married=true;
+ prince.spouse={...marriageCandidate(prince,'scholar'),marriedAt:0};
+ var first={id:'earlier-heir',name:'景和',sex:'m',alive:true,born:S.turn-9*12,hp:90,mother:prince.spouse.id,father:prince.id};
+ ensureMarriedLife(prince).children.push(first);prince.princeEstate.succession={heir:first.id};
+ assert.equal(princeSuccessionTick(),null);assert.equal(princeHeir(prince),first);
+ var brother=makeKid(a,'m','承宁');brother.born=S.turn-32*12;brother.pendingName=false;openPrinceEstate(brother);brother.married=true;
+ brother.spouse={...marriageCandidate(brother,'scholar'),marriedAt:0};var nephew={...first,id:'nephew',name:'景明',father:brother.id,mother:brother.spouse.id};
+ ensureMarriedLife(brother).children.push(nephew);first.hp=0;
+ assert.match(princeSuccessionTick().text,/待王爷年满四十/);assert.doesNotMatch(princeSuccessionPanel(prince),/批阅过继/);
+ A.princeReviewAdoption(prince.id);assert.equal(modalOpen,false);S.turn++;
+ assert.match(princeSuccessionTick().text,/议请过继/);assert.equal(princeSuccessionTick(),null);
+ A.princeReviewAdoption(prince.id);choose(0);drain();assert.equal(princeHeir(prince),nephew);`);
 });

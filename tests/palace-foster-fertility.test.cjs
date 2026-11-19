@@ -48,3 +48,16 @@ test('an absent mother or a changed care arrangement invalidates the discussion'
 test('solitary petition and biological-mother responses preserve rare maternal tenderness',()=>{
  const {run}=world();run(`c.solitary={path:'both'};assert.match(fosterWishWords(c,k),/喜欢独坐/);m.solitary={path:'letters'};var ev=fosterMotherDiscussion(c,k);assert.match(ev.text,/这孩子.*不一样/s);`);
 });
+
+test('pregnancy stops at forty-five for consorts and maids, and a princess already expecting at forty-four still delivers',()=>{
+ const b=world();b.run(`S.flags.bless=S.turn;E().style='风流';
+ for(const maid of [false,true]){c.maid=maid;c.age=44;assert.ok(consortConceptionChance(c)>0);
+  c.age=45;assert.equal(consortConceptionChance(c),0);assert.equal(consortFertilityFactor(c),0);}
+ k.born=S.turn-45*12+1;k.married=true;k.spouse={...marriageCandidate(k,'scholar'),marriedAt:S.turn-10,trust:90};
+ assert.ok(startHouseholdPregnancy(k,k.spouse));var due=k.household.pregnancies[0].due;save('1');A.load('1');k=kidById(k.id);
+ S.turn=due;marriedLifeTick();assert.equal(kidAge(k),45);assert.equal(k.household.children.length,1);
+ k.household.lastBirthByMother={};assert.equal(startHouseholdPregnancy(k,k.spouse),false);
+ var son=makeKid(m,'m','承安');son.born=S.turn-55*12;son.pendingName=false;son.married=true;
+ son.spouse={...marriageCandidate(son,'scholar'),marriedAt:S.turn-10,trust:90,born:S.turn-45*12};
+ assert.equal(startHouseholdPregnancy(son,son.spouse),false);son.spouse.born+=12;assert.ok(startHouseholdPregnancy(son,son.spouse));`);
+});

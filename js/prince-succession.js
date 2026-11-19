@@ -2,6 +2,7 @@
 const princeSuccessionActive=()=>journalContentVersion()>=56;
 const princeAdoptionActive=()=>journalContentVersion()>=57;
 const royalActionArg=id=>esc(JSON.stringify(id));
+const princeNominationAge=k=>!PalaceActions.familyAgeLimits||kidAge(k)>=40;
 const princeSuccessionState=k=>k.princeEstate?.succession;
 function princelyDescendants(roots){
   if(!princeSuccessionActive())return [];
@@ -81,9 +82,10 @@ function princeHeirVacancy(k){
   delete state.heir;
   state.vacancy={id:heir.id,name:heir.name,at:S.turn};
   const next=princeSons(k)[0],adoption=princeAdoptionCandidates(k)[0];
+  if(PalaceActions.familyAgeLimits)state.petitionTurn=S.turn;
   state.nominated=next?.id??null;
   state.adoptionOffered=adoption?.son.id??null;
-  const request=next?(k.alive?'请旨重新册立世子':'请旨另议袭爵人选'):adoption?'请旨从兄弟家议立嗣子':'府中无在世子嗣，等候朝廷议定';
+  const request=k.alive&&!princeNominationAge(k)?'府中先办丧仪，待王爷年满四十再议世子':next?(k.alive?'请旨重新册立世子':'请旨另议袭爵人选'):adoption?'请旨从兄弟家议立嗣子':'府中无在世子嗣，等候朝廷议定';
   const line=`【世子讣报】${princeEstateLabel(k)}长史奏报世子${heir.name}${k.alive?'先于王爷离世':'尚未袭爵便已离世'}，${request}。`;
   princePersonNote(k,line);princePersonNote(heir,line);
   const birth=heir.princeAdoption?princeBiologicalParents(heir):{mother:princeSonMother(k,heir)};
@@ -101,6 +103,15 @@ function princeSuccessionTick(){
     if(k.alive&&!royalJourneyAway(k)&&kidAge(k)>=princeLifespan(k)){
       k.alive=false;k.deathReason='寿终';
     }
+    const pending=princeSuccessionState(k);
+    if(k.alive&&PalaceActions.familyAgeLimits){
+      // Unapproved petitions from older saves may already name a candidate before forty.
+      const birthday=S.turn-k.born===40*12;
+      if(pending&&!princeHeir(k)&&(!princeNominationAge(k)||birthday&&pending.petitionTurn!==S.turn&&!vacancy)){
+        delete pending.nominated;delete pending.adoptionOffered;
+      }
+      if(!princeNominationAge(k))continue;
+    }
     const sons=princeSons(k),estate=k.princeEstate||{},adoption=princeAdoptionCandidates(k)[0];
     if(k.alive&&(!princeEstateAvailable(k)||!sons.length&&!adoption||princeHeir(k)))continue;
     if(estate.succession?.successor)continue;
@@ -115,20 +126,21 @@ function princeSuccessionTick(){
       if(heir)princePersonNote(heir,`${line}他在灵前守丧，等候朝廷回旨。`);
       log(line,1);memorials.push({k,text:line});
     }else if(adoption&&state.adoptionOffered!==adoption.son.id){
-      state.adoptionOffered=adoption.son.id;
+      state.adoptionOffered=adoption.son.id;if(PalaceActions.familyAgeLimits)state.petitionTurn=S.turn;
       const line=`【议请过继】${princeEstateLabel(k)}无在世儿子，长史呈上兄弟各房宗谱，请旨择立嗣子。`;
       princePersonNote(k,line);log(line);
-      memorials.push({k,text:line});
+      memorials.push({k,text:line,nomination:k.alive});
     }else if(k.alive&&sons.length&&state.nominated!==sons[0].id){
-      state.nominated=sons[0].id;
+      state.nominated=sons[0].id;if(PalaceActions.familyAgeLimits)state.petitionTurn=S.turn;
       const line=`【请封世子】${princeEstateLabel(k)}长史奉表，请陛下核定世子。`;
       princePersonNote(k,line);princePersonNote(sons[0],`${line}府里已经核对他的生辰和宗谱。`);log(line);
-      memorials.push({k,text:line});
+      memorials.push({k,text:line,nomination:k.alive});
     }
   }
   if(!memorials.length)return null;
   const single=memorials.length===1;
-  return {title:'王府长史 · 请封与承袭',text:memorials.map(m=>m.text).join('\n'),choices:[
+  const visible=()=>memorials.filter(m=>!m.nomination||princeNominationAge(m.k));
+  return {title:'王府长史 · 请封与承袭',princePetition:true,valid:()=>visible().length>0,get text(){return visible().map(m=>m.text).join('\n');},choices:[
     {t:single?'前往王府批阅':'查看各府奏报',f:()=>{A.go(single?'prince-estate':'out',single?memorials[0].k.id:null);return null;}},{t:'稍后批阅'}]};
 }
 function princeSuccessionPanel(k){
@@ -136,9 +148,9 @@ function princeSuccessionPanel(k){
   const heir=princeHeir(k),sons=princeSons(k),id=royalActionArg(k.id);
   const vacancy=princeAdoptionActive()?princeSuccessionState(k)?.vacancy:null,adoption=princeAdoptionCandidates(k).length;
   const pendingLoss=princeAdoptionActive()&&princeSuccessionState(k)?.heir!==undefined&&!heir;
-  const text=k.alive?(heir?`世子 ${heir.name}`:pendingLoss?'世子已故，等长史递报。':vacancy?`原世子${vacancy.name}已故，世子位空缺。`:sons.length?'长史可呈表请封世子。':'王府目前无可请封的儿子。'):
+  const text=k.alive?(heir?`世子 ${heir.name}`:pendingLoss?'世子已故，等长史递报。':!princeNominationAge(k)?'王爷年满四十后，长史方可呈表请封世子。':vacancy?`原世子${vacancy.name}已故，世子位空缺。`:sons.length?'长史可呈表请封世子。':'王府目前无可请封的儿子。'):
     heir?`世子 ${heir.name} 等候袭爵。`:sons.length?'王爷生前未留下在世世子，长史请朝廷另议。':'暂无在世儿子可承袭。';
-  const canReview=!pendingLoss&&(k.alive?!heir&&princeEstateAvailable(k):princeProbate(k));
+  const canReview=!pendingLoss&&(k.alive?!heir&&princeNominationAge(k)&&princeEstateAvailable(k):princeProbate(k));
   const children=princeFamilyChildren(k),family=children.map(c=>{
     const adopted=princeAdoptionActive()&&c.princeAdoption;
     const birth=adopted&&adopted.family===k.id?princeBiologicalParents(c):null;
@@ -153,11 +165,11 @@ function princeSuccessionPanel(k){
 A.princeReviewSuccession=function(id){
   const k=princeEstateById(id);if(!princeSuccessionActive()||modalOpen||S.over||!k)return;
   const inherit=!k.alive,heir=princeHeir(k);
-  const valid=()=>!S.over&&princeEstateById(id)===k&&(!princeAdoptionActive()||princeSuccessionState(k)?.heir===undefined||!!princeHeir(k))&&(inherit?princeProbate(k):princeEstateAvailable(k)&&!princeHeir(k));
+  const valid=()=>!S.over&&princeEstateById(id)===k&&(!princeAdoptionActive()||princeSuccessionState(k)?.heir===undefined||!!princeHeir(k))&&(inherit?princeProbate(k):princeNominationAge(k)&&princeEstateAvailable(k)&&!princeHeir(k));
   const candidates=inherit&&heir?[heir]:princeSons(k);
   if(!valid()||!candidates.length)return;
   const replacement=princeAdoptionActive()&&!!princeSuccessionState(k)?.vacancy;
-  pushEv({title:inherit?'长史奏报 · 请袭王爵':replacement?'长史奏报 · 另立世子':'长史奏报 · 请封世子',por:k,valid,
+  pushEv({title:inherit?'长史奏报 · 请袭王爵':replacement?'长史奏报 · 另立世子':'长史奏报 · 请封世子',por:k,princePetition:true,valid,
     text:inherit?`长史奏请承袭${princeEstateLabel(k)}。爵位获准后，继承人在${princeEstatePlace(k)}原府居住。`:`${princeEstateLabel(k)}长史递上宗谱和生辰册，按王妃所生之子、年长者优先列名，请陛下示下。`,
     choices:[...candidates.map(son=>({t:`${inherit?'准':'封'}${son.name}${inherit?'承袭':'为世子'}`,person:son,f:()=>{
       if(!valid()||!princeSons(k).includes(son)||inherit&&princeHeir(k)&&princeHeir(k)!==son)return null;
@@ -169,10 +181,10 @@ A.princeReviewAdoption=function(id){
   const k=princeEstateById(id);
   if(!princeAdoptionActive()||modalOpen||S.over||!k)return;
   const inherit=!k.alive;
-  const valid=()=>!S.over&&princeEstateById(id)===k&&princeSuccessionState(k)?.heir===undefined&&!princeSons(k).length&&(inherit?princeProbate(k):princeEstateAvailable(k));
+  const valid=()=>!S.over&&princeEstateById(id)===k&&princeSuccessionState(k)?.heir===undefined&&!princeSons(k).length&&(inherit?princeProbate(k):princeNominationAge(k)&&princeEstateAvailable(k));
   const candidates=princeAdoptionCandidates(k);
   if(!valid()||!candidates.length)return;
-  pushEv({title:'长史奏报 · 议请过继',por:k,valid,
+  pushEv({title:'长史奏报 · 议请过继',por:k,princePetition:true,valid,
     text:`${princeEstateLabel(k)}无在世儿子。长史已核过宗谱，请从兄弟之家议立嗣子。受继者的生父母仍载在原有宗谱中。`,
     choices:[...candidates.map(({brother,son})=>({t:`准${brother.name}之子${son.name}过继${inherit?'并承袭':'为世子'}`,person:son,f:()=>{
       if(!valid()||!princeAdoptionCandidates(k).some(c=>c.brother===brother&&c.son===son))return null;

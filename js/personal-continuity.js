@@ -273,7 +273,7 @@ function continuityPanel(c){
   const threads=continuityThreads(c).filter(t=>continuityAvailable(t));
   const last=continuityThreads(c).filter(t=>t.stage==='ended'&&t.history.length).at(-1);
   const repairs=continuityThreads(c).filter(continuityRepairReady);
-  const letter=royalTravelActive()&&!c.sex&&c.story?.findLast(entry=>/^【旅途家书】/.test(entry.t));
+  const letter=royalTravelActive()&&!c.sex&&c.story?.findLast(entry=>/^【(?:旅途|同行)家书】/.test(entry.t));
   if(!threads.length&&!last&&!repairs.length&&!letter)return '';
   const reply=letter?`<article><strong>收到孩子的旅途家书</strong> <small class="hint">${esc(letter.d)}</small><p>${esc(letter.t.slice('【旅途家书】'.length))}</p></article>`:'';
   return `<section class="personal-continuity"><h3>近来牵挂的事</h3>${reply}${threads.map(t=>`<article><strong>${esc(continuityTitle(t))}</strong><p>${esc(t.cause)}</p><p>${esc(t.history.at(-1)?.text||continuityDesire(t))}</p>${S.turn>=t.due&&t.stage!=='settled'?`<button class="btn jade sm" onclick="A.continuePersonal(${t.id})">接着谈这件事 →</button>`:`<small class="hint">${t.stage==='settled'?'往后的日常会留下回响。':'事情还在继续，过些时日再来看看。'}</small>`}</article>`).join('')}${repairs.map(t=>`<p>${esc(byId(t.owner).personalConcerns[t.key].text)} <button class="btn sm" onclick="A.addressPersonalConcern(${t.id})">把那件事说清</button></p>`).join('')}${last?`<p class="continuity-kept"><span>一起走过</span> ${esc(last.history.at(-1).text)}</p>`:''}</section>`;

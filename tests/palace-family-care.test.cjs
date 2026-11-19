@@ -79,7 +79,7 @@ test('adult princes in the capital are outside the palace after opening and lega
 test('secret conception is rare, once per month and only for eligible adults continuing a relationship',()=>{
   const {run,force}=boot();run(secretFamily);force(0,0);run(`palaceParentageTick();assert.equal(lady.preg,1);assert.equal(lady.pregnancyFather.id,prince.id);assert.equal(lady.pregnancyFather.princeAge,22);
     var saved=JSON.stringify(lady.pregnancyFather);palaceParentageTick();assert.equal(JSON.stringify(lady.pregnancyFather),saved);save('1');load('1');lady=byId(lady.id);assert.equal(JSON.stringify(lady.pregnancyFather),saved);`);
-  for(const change of ["prince.born=S.turn-17*12;lady.age=18;lady.enteredAt=S.turn",'lady.cold=true','prince.templeStay={from:S.turn}','pair.status="ended"','lady.preg=3','lady.age=46']){
+  for(const change of ["prince.born=S.turn-17*12;lady.age=18;lady.enteredAt=S.turn",'lady.cold=true','prince.templeStay={from:S.turn}','pair.status="ended"','lady.preg=3','lady.age=45','lady.age=46']){
     const x=boot();x.run(secretFamily);x.run(change);x.force(0,0);x.run(`palaceParentageTick();assert.equal(lady.pregnancyFather,undefined);`);
   }
 });

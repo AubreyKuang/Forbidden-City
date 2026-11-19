@@ -79,7 +79,7 @@ function householdSummary(k){
 const householdBirthCount=k=>k.household.children.length+(royalAdoptionStoriesActive()?k.palaceAdoptedChildren?.length||0:0);
 function householdCanConceive(k,p){
   const woman=k.sex==='f'?k:p,h=ensureMarriedLife(k);
-  return householdActive(k)&&!whiteSpringInPalace(k)&&p?.alive!==false&&kidAge(k)>=18&&kidAge(p)>=18&&kidAge(woman)<=45&&
+  return householdActive(k)&&!whiteSpringInPalace(k)&&p?.alive!==false&&kidAge(k)>=18&&kidAge(p)>=18&&belowConceptionAgeLimit(kidAge(woman),46)&&
     !p.away&&!p.jailed&&!p.gone&&!p.cold&&householdBirthCount(k)+h.pregnancies.length<8&&!h.pregnancies.some(g=>g.mother===woman.id)&&
     S.turn-(h.lastBirthByMother[woman.id]??-99)>=18&&S.turn-(p.joinedAt??h.started)>=3&&(p.trust??k.spouse.trust)>=40;
 }

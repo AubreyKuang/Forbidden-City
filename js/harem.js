@@ -156,7 +156,7 @@ function restlessTrystTick(){
     if(life.last===S.turn)continue;
     life.last=S.turn;life.months=(life.months||0)+1;
     const tryst=life.tryst;
-    if(tryst?.witnessed||!gateTrystEligible(c))continue;
+    if(tryst?.witnessed||(c.guardTryst?.watch&&c.guardTryst.watch.gen===S.gen)||!gateTrystEligible(c))continue;
     const key=E().seed+':private-gate:'+S.gen+':'+c.id+':'+S.turn;
     const roll=kind=>voiceHash(key+':'+kind)/0x100000000;
     if(!tryst&&life.months>=6&&!life.keptLetter){
@@ -170,6 +170,7 @@ function restlessTrystTick(){
       life.tryst={guard:name,first:dateStr(),count:0,turn:S.turn};
     }
     const visit=life.tryst;visit.count++;visit.last=S.turn;
+    if(journalContentVersion()>=126&&!visit.intimate&&visit.count>1&&roll('intimacy')<.35)visit.intimate=true;
     if(roll('witness')<Math.min(.4,.10+(visit.count-1)*.05)){
       visit.witnessed=true;restlessAffairCaught(c);
     }
@@ -177,8 +178,71 @@ function restlessTrystTick(){
 }
 function pendingRestlessTrysts(){
   if(journalContentVersion()<118||mourningActive())return [];
-  return harem().filter(c=>c.restlessCourt?.tryst?.witnessed&&!c.restlessCourt.tryst.affairReported)
-    .map(c=>guardTrystEvent(c));
+  const reports=[];
+  for(const c of harem()){
+    const watch=c.guardTryst?.watch;
+    if(watch&&watch.gen===S.gen&&journalContentVersion()>=126){
+      if(!watch.affairReported&&S.turn>=watch.due)reports.push(gateTrystWatchReport(c));
+    }else if(c.restlessCourt?.tryst?.witnessed&&!c.restlessCourt.tryst.affairReported)reports.push(guardTrystEvent(c));
+  }
+  return reports;
+}
+function gateTrystFacts(visit){
+  return visit.intimate?'两人已有肌肤之亲。':'两人只到传信、私下相见这一步，尚无肌肤之亲。';
+}
+function gateTrystDecision(c,visit,order,delta){
+  if(visit.order)return null;
+  visit.order=order;delete visit.watch;
+  if(c.restlessCourt?.tryst===visit)delete c.restlessCourt.tryst;
+  c.guardTryst=visit;
+  const line=`${visit.first}初次与侍卫${visit.guard}相约，至今共赴约${cnNum(visit.count)}次。${gateTrystFacts(visit)}${order}`;
+  story(c,'【宫门私约】'+line);log(fullName(c)+'：'+line);
+  return gateTrystFacts(visit)+order+fx(cchg(c,{mood:delta}));
+}
+function gateTrystReport(c,secret){
+  const key=`gate-tryst:${S.gen}:${c.id}:${secret?.turn??S.turn}`;
+  const visit=secret||{guard:SUR[voiceHash(key+'姓')%SUR.length]+BOYC[voiceHash(key+'名')%BOYC.length],first:dateStr(),count:1,turn:S.turn,
+    intimate:voiceHash(key+'私情')%100<25};
+  const guard='侍卫'+visit.guard;
+  const evidence=visit.intimate?
+    `她在给${guard}的私信里提起两人曾同榻过夜。他在回笺中认下那一夜，说此后无论如何都不肯让她独自担着。`:
+    `她写给${guard}的笺上有一句：“廊下见你一面，我也欢喜。再往前一步，我还没应你。”回笺上只有四个字：“我等你应。”`;
+  const text=`值房核过换班门簿：${fullName(c)}自${visit.first}起与${guard}共赴约${cnNum(visit.count)}次。替他们递信的人悄悄呈上两封原笺。\n${evidence}\n密报所记：${gateTrystFacts(visit)}原笺已经放回，两人尚不知情。`;
+  return {title:affairReportTitle()+' · 宫门私约',por:affairDutyOfficer(),cast:[c],present:[c],text,
+    valid:()=>inPalace(c)&&!visit.order&&!visit.watch&&(secret?c.restlessCourt?.tryst===visit:!c.guardTryst||c.guardTryst===visit),
+    onQueue:()=>{S.flags.lastGuardTryst=S.turn;},
+    onShow:()=>{visit.intimate=!!visit.intimate;c.guardTryst=visit;fileAffairReport(visit,key,text,c);},
+    choices:[
+      {t:'将侍卫调离内廷',f:()=>gateTrystDecision(c,visit,'陛下将侍卫调离内廷，两人就此别过。',-8)},
+      {t:'封存此事',f:()=>gateTrystDecision(c,visit,'陛下封存了往来信件，此事不再追究。',-2)},
+      {t:'佯作不知，暗中留意',f:()=>{
+        if(visit.watch||visit.order)return null;
+        visit.watch={gen:S.gen,due:S.turn+ri(2,4),lead:pick(['part','letters','night'])};
+        if(c.restlessCourt?.tryst===visit)delete c.restlessCourt.tryst;
+        c.guardTryst=visit;
+        story(c,`【宫门私约·暗察】曾与${guard}私下往来。${gateTrystFacts(visit)}陛下密令照常换班，暂不惊动二人。`);
+        return '你合上门簿：“值房照常换班。往后若有实信，只报给朕。”当晚，角门的灯仍照旧点着。';
+      }}]};
+}
+function gateTrystWatchReport(c){
+  const visit=c.guardTryst,watch=visit.watch,guard='侍卫'+visit.guard;
+  const ending=gateTrystEligible(c)?watch.lead:'part';
+  const firstNight=ending==='night'&&!visit.intimate;
+  const observed=ending==='part'?`递信人带来了最后一封回笺。她把${guard}送来的旧物一并退回，只写：“往后见了，照宫里的规矩行礼吧。”此后两人再未赴约。`:
+    ending==='letters'?`这回${guard}在廊下等她。她把一张描过的花样塞给他，听见更鼓便先走了。值房看清，两人这次只见了面，各自回去。`:
+    firstNight?`值房呈上一封新笺。她提起昨夜第一次留${guard}同榻，他回信说，往日只敢隔灯与她说话，如今终究越过了这一步。两封信的日期与门簿相合。`:
+    `值房核对了两封新信：${guard}当夜依约留下，两人再次同寝，直到天将明才分别。`;
+  const text=fullName(c)+'与'+guard+'的暗察有了回音。\n'+observed+'\n密报所记：'+gateTrystFacts({intimate:visit.intimate||ending==='night'});
+  const valid=()=>inPalace(c)&&c.guardTryst===visit&&visit.watch===watch&&!visit.order;
+  return {title:affairReportTitle()+' · 宫门私约续报',por:affairDutyOfficer(),cast:[c],text,valid,
+    onShow:()=>{
+      if(watch.affairReported)return;
+      if(ending!=='part')visit.count++;
+      if(ending==='night')visit.intimate=true;
+      fileAffairReport(watch,`gate-tryst-follow:${watch.gen}:${c.id}:${visit.turn}`,text);
+    },
+    choices:[{t:'收起密卷，到此为止',f:()=>gateTrystDecision(c,visit,observed+'陛下阅毕续报，收卷结案。',-2)},
+      {t:'调开侍卫，断绝往来',f:()=>gateTrystDecision(c,visit,observed+'陛下命侍卫调离内廷。',-8)}]};
 }
 function guardTrystEvent(witnessedConsort){
   let c=witnessedConsort;
@@ -193,6 +257,7 @@ function guardTrystEvent(witnessedConsort){
   }
   const secret=witnessedConsort?.restlessCourt?.tryst;
   if(witnessedConsort&&(!secret?.witnessed||secret.affairReported))return null;
+  if(journalContentVersion()>=126)return gateTrystReport(c,secret);
   const guard=secret?'侍卫'+secret.guard:'值夜侍卫';
   const record=(order,delta)=>{
     c.guardTryst={...c.guardTryst,turn:S.turn,order};

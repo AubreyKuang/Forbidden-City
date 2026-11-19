@@ -88,3 +88,31 @@ test('an unseen repeat meeting leads to one dated compulsory report, a reloadabl
  assert.equal(c.story.filter(e=>e.t.includes('永宁二年正月初次与侍卫程安')).length,1);assert.equal(pendingRestlessTrysts().length,0);
  S.turn++;restlessTrystTick();assert.equal(c.restlessCourt.months,1);`);
 });
+
+test('undercover reports distinguish past intimacy from what happened on the latest visit, with one outcome per investigation',()=>{
+ for(const intimate of [false,true])for(const lead of ['part','letters','night']){
+  const g=restlessWorld();g.ctx.initial=intimate;g.ctx.ending=lead;
+  g.run(`var v={guard:'白璟',first:'康平十九年四月',turn:12,count:3,witnessed:true,intimate:initial};c.restlessCourt={months:10,last:S.turn,tryst:v};
+   var e=guardTrystEvent(c);pushEv(e);assert.ok(e.text.includes(initial?'已有肌肤之亲':'尚无肌肤之亲'));choose(2);drain();
+   assert.ok(v.watch.due>=S.turn+2&&v.watch.due<=S.turn+4);assert.equal(c.restlessCourt.tryst,undefined);
+   v.watch.lead=ending;S.turn=v.watch.due-1;assert.equal(pendingRestlessTrysts().length,0);S.turn++;
+   var follow=pendingRestlessTrysts()[0];assert.match(follow.title,/续报/);pushEv(follow);follow.onShow();
+   assert.equal(v.count,ending==='part'?3:4);var label=initial||ending==='night'?'已有肌肤之亲':'尚无肌肤之亲';assert.ok(follow.text.includes(label));
+   choose(0);drain();assert.equal(pendingRestlessTrysts().length,0);assert.equal(c.story.filter(e=>e.t.startsWith('【宫门私约】')&&e.t.includes(label)).length,1);
+   assert.match(chronicleSummary({t:'【宫门私约】共赴约三次。'}),/未记/);`);
+ }
+});
+test('watch orders, an open follow-up report and its final decision survive immediate cold reloads',()=>{
+ let g=restlessWorld();g.run(`S.turn=23;S.month=2;E().energy=5;c.restlessCourt={months:20,last:22,tryst:{count:1,guard:'程安',first:'永宁二年正月',turn:22,last:22}};
+ fit(24,(r,w)=>r<.18&&w<.14);PalaceActions.reset();A.endMonth();
+ for(let i=0;modalOpen&&!curEv.title.includes('密报 · 宫门私约')&&i<160;i++){if(modalResult)nextEv();else choose(0);}
+ choose(2);assert.ok(c.guardTryst.watch);`);
+ const reload=()=>{g=boot(19,g.storage);g.ctx.assert=assert;g.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);var c=harem().find(o=>o.guardTryst?.guard==='程安');`);};
+ reload();g.run(`assert.ok(c.guardTryst.watch);drain();assert.equal(pendingRestlessTrysts().length,0);
+ S.turn=c.guardTryst.watch.due-1;PalaceActions.reset();A.endMonth();
+ for(let i=0;modalOpen&&!curEv.title.endsWith('宫门私约续报')&&i<160;i++){if(modalResult)nextEv();else choose(0);}
+ assert.match(curEv.title,/宫门私约续报/);save('auto');`);
+ const observed=g.run(`JSON.stringify([curEv.text,c.guardTryst.count])`);reload();assert.equal(g.run(`JSON.stringify([curEv.text,c.guardTryst.count])`),observed);
+ g.run(`choose(0);`);reload();g.run(`drain();assert.equal(c.guardTryst.watch,undefined);assert.equal(pendingRestlessTrysts().length,0);
+ assert.equal(c.story.filter(e=>e.t.startsWith('【宫门私约】')&&e.t.includes('程安')).length,1);`);
+});

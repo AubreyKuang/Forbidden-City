@@ -54,10 +54,26 @@ function royalHeartTick(){
  if(state.pending&&!heartPendingValid())delete state.pending;
  xieLifeTick();
  if(state.pending||mourningActive()||S.turn-state.lastEvent<4)return;
- const people=S.children.filter(k=>S.turn-(k.lastHeart??-99)>=10&&(heartReady(k)||!k.xieAdmiration&&xieAdmirerReady(k)));if(!people.length||!chance(.28))return;
+ const people=S.children.filter(k=>S.turn-(k.lastHeart??-99)>=10&&(heartReady(k)||!k.xieAdmiration&&xieAdmirerReady(k)));
+ if(journalContentVersion()>=126){
+  const princess=people.find(k=>!k.xieAdmiration&&xieAdmirerReady(k)&&xieCanPursue(k));
+  if(princess&&chance(.09)){
+   state.pending={kind:'xiean',child:princess.id,stage:heartStage(princess),topic:null,turn:S.turn};
+   state.lastEvent=S.turn;return;
+  }
+ }
+ if(!people.length||!chance(.28))return;
  const k=pick(people),xie=xieAdmirerReady(k)&&!k.xieAdmiration&&chance({好奇:.55,好胜:.25,仁厚:.35,内敛:.5,爽直:.35,灵动:.65,审慎:.18,自矜:.4}[childDisposition(k)]);
  const topic=xie||!heartReady(k)?null:heartTopic(k);if(!xie&&!topic)return;
  state.pending={kind:xie?'xiean':'hope',child:k.id,stage:heartStage(k),topic,turn:S.turn};state.lastEvent=S.turn;
+}
+function duePrincessHeartEvent(){
+ if(journalContentVersion()<126||mourningActive())return null;
+ const d=heartState()?.pending;
+ if(!d)return null;
+ // A long-waiting ordinary conversation occupies the same slot as the first poetry scene.
+ if(d.kind!=='xiean'&&(S.turn-d.turn<6||!S.children.some(k=>!k.xieAdmiration&&xieAdmirerReady(k)&&xieCanPursue(k))))return null;
+ return heartEvent(kidById(d.child),d);
 }
 const heartChildTick=childLifeTick;
 childLifeTick=function(){heartChildTick();royalHeartTick();};
@@ -236,7 +252,14 @@ function nextXieMarriageChronicle(m,kind){
  return index<original.length?original[index]:added[index-original.length];
 }
 function xieLifeTick(){
- let p=xieAn();if(!p){if(S.turn>=6&&!mourningActive()&&S.children.some(k=>(heartReady(k)||xieHeartReady(k))&&kidAge(k)<(xieRomanceActive()?26:20))&&chance(.045))createXieAn();return;}
+ let p=xieAn();
+ if(!p){
+  if(S.turn<6||mourningActive())return;
+  const young=S.children.filter(k=>(heartReady(k)||xieHeartReady(k))&&kidAge(k)<(xieRomanceActive()?26:20));
+  const hasPrincess=journalContentVersion()>=126&&E().sur!=='谢'&&young.some(xieHeartReady);
+  if(young.length&&chance(hasPrincess ? .09 : .045))createXieAn();
+  return;
+ }
  if(!officialAlive(p))return;
  const pair=xieCouple();
  if(pair){

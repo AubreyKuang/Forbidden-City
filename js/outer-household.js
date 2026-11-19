@@ -65,6 +65,11 @@ function outerSibling(){
 function outerSister(m){
   return familyHostById(m.owner??m.host)?.house?.relatives?.find(p=>p.id===m.relative);
 }
+function outerMotherAge(m){
+  const sister=PalaceActions.familyAgeLimits&&m.relative!=null&&outerSister(m);
+  if(Number.isFinite(sister?.born))return natalAge(sister);
+  return Math.max(sister?.age??0,m.age+Math.floor((S.turn-m.created)/12));
+}
 function outerContactPresent(m){
   if(m.palaceWork)return false;
   if(m.relative==null)return true;
@@ -147,7 +152,7 @@ A.outerVisit=function(id){
   function visit(t,line,aff,trust,cost=0,intimate=false){
     choices.push({t,cond:()=>!cost||E().treasury>=cost,why:'国库不足',f:()=>{
       if(cost)chg({treasury:-cost});m.last=S.turn;m.meetings++;m.aff=clamp(m.aff+aff);m.trust=clamp(m.trust+trust);
-      if(intimate&&m.age+Math.floor((S.turn-m.created)/12)<48&&!m.preg&&S.turn>=(m.restUntil??0)&&chance(.38))m.preg={notice:S.turn+ri(1,2),due:S.turn+9};
+      if(intimate&&belowConceptionAgeLimit(outerMotherAge(m),48)&&!m.preg&&S.turn>=(m.restUntil??0)&&chance(.38))m.preg={notice:S.turn+ri(1,2),due:S.turn+9};
       if(intimate&&journalContentVersion()>=84&&m.relative!=null){
         const sister=outerSister(m);
         if(sister?.married&&!sister.widow&&sister.spouse?.alive!==false){

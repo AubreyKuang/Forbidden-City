@@ -272,3 +272,16 @@ test('the public annals retain published recognition, seal at death and stay sep
       assert.equal(outerRegisterView().includes('永远封存')||outerRegisterView().includes('永封'),${!publish});`);
   }
 });
+
+test('outer visits use the woman’s birthday, including an actual sister whose birthday precedes the encounter anniversary',()=>{
+ for(const relative of [true,false])for(const age of [44,45]){
+  const b=game();b.run(`A.outerMeet('市井','city');choose(0);drain();var m=outerBook().mothers[0];
+   m.meetings=5;m.aff=95;m.trust=95;S.turn++;m.age=${relative?44:age};m.created=S.turn;
+   if(${relative}){
+    var host=harem()[0],h=houseOf(host),sister=addNatalPerson(host,h,'f',${age},992,false);
+    m.host=m.owner=host.id;m.relative=sister.id;sister.born=S.turn-${age}*12;
+   }
+   assert.equal(outerMotherAge(m),${age});A.outerVisit(m.id);assert.match(curEv.choices[2].t,/明早/);Math.random=()=>0;choose(2);drain();
+   assert.equal(!!m.preg,${age===44});`);
+ }
+});

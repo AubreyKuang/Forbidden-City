@@ -124,7 +124,8 @@ function chronicleVisibleEntries(story){
  });
 }
 function chronicleSummary(entry){
- return entry.life?.summary?detailFold('查看这件事的原记',`<p>${esc(entry.life.summary)}</p>`):'';
+ const legacy=/^【宫门私约】/.test(entry.t)&&!entry.t.includes('肌肤之亲')?'<p class="hint">旧录只载私情，未记两人是否已有肌肤之亲。</p>':'';
+ return legacy+(entry.life?.summary?detailFold('查看这件事的原记',`<p>${esc(entry.life.summary)}</p>`):'');
 }
 function chronicleReader(person,{compact=false}={}){
  const source=person.story||[];if(!source.length)return '<p class="hint">尚无记载。</p>';

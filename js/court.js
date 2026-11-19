@@ -45,7 +45,7 @@ const COURT=[
    {t:'斥其谄媚，放鹿归山',f:()=>`你命人将白鹿放归山林。朝臣暗暗称是。${fx(chg({people:4,prestige:2}))}`}]}),
  ()=>({title:'蝗灾',text:'河南、山东飞蝗蔽日，禾稼尽毁。',choices:[
    {t:'开仓放粮（国库-200万两）',f:()=>{log('蝗灾，帝开仓放粮。');return `${fx(chg({treasury:-200,people:8}))}`}},
-   {t:'设坛祭天',f:()=>{if(typeof outerTripLead==='function')outerTripLead('altar');return chance(.4)?`祭天三日，忽降大雨，蝗群散去。${fx(chg({prestige:4}))}`:`蝗灾未止，百姓流亡。${fx(chg({people:-7}))}`}},
+   {t:'设坛祭天',f:()=>{if(typeof outerTripLead==='function')outerTripLead('altar');const rite=siblingTravelRite();return chance(.4)?`祭天三日，忽降大雨，蝗群散去。${rite}${fx(chg({prestige:4}))}`:`蝗灾未止，百姓流亡。${rite}${fx(chg({people:-7}))}`}},
    {t:'悬赏捕蝗，以蝗换粟',f:()=>`百姓争相捕蝗，灾情渐缓。${fx(chg({treasury:-80,people:4}))}`}]}),
  ()=>({title:'盐政',text:'户部尚书奏请整顿盐政：废除盐引世袭，可增岁入，但必触怒盐商与其背后的勋贵。',choices:[
    {t:'准奏，雷厉风行',f:()=>{log('帝整顿盐政。',1);return `盐税大增，勋贵怨声载道。${fx(chg({treasury:250,prestige:2,people:-3}))}`}},

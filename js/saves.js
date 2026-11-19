@@ -301,7 +301,11 @@ function showRestoredPalace(){
   $('#modal').hidden=true;
   UI.view='map';UI.banquet=null;setScene('court');
   const pending=S.pendingActions;delete S.pendingActions;
-  if(PalaceActions.restore(pending)){resetMapPosition(S.pos);dismissInvalidStoryOrigin();render();return;}
+  if(PalaceActions.restore(pending)){
+    resetMapPosition(S.pos);dismissInvalidStoryOrigin();
+    if(!modalResult&&curEv?.princePetition&&!curEv.valid())nextEv();
+    render();return;
+  }
   render();
   if(!PalaceActions.blocked)A.resumePendingScenes();
   else {setAutoSaveError('未完事件尚待处理，自动存档暂未写入。请先处理「未完事件无法续接」提示，或下载现有进度。');refreshAutoSaveStatus();pushEv(pendingRecoveryEvent());}

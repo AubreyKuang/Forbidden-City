@@ -218,3 +218,59 @@ test('an old route honors its existing promised return and a two-year itinerary 
   assert.match(e.text,/两年后归来/);e.choices[0].f();assert.equal(k.royalTravel.returnAt-S.turn,24);
   assert.match(ROYAL_TRAVEL_ITINERARIES.rivers.stops[1][2],/君向潇湘我向秦/);`);
 });
+
+function travelFamily(){
+ const b=world();b.run(`k.foster=null;
+ var addTraveler=(mom,sex,name)=>{const child=makeKid(mom,sex,name);child.born=k.born;child.hp=90;child.pendingName=false;return child;};
+ var p=addTraveler(f,'f','昭宁'),q=addTraveler(m,'m','元朗');
+ S.rel[rk(k,p)]=50;S.rel[rk(k,q)]=40;S.rel[rk(p,q)]=0;S.rel[rk(m,f)]=-55;
+ var roll=Math.random;`);return b;
+}
+test('both sexes can request and leave concurrently, including while another household member is abroad',()=>{
+ const b=travelFamily();
+ b.run(`S.rel[rk(k,p)]=S.rel[rk(k,q)]=0;
+  Math.random=()=>0;royalTravelTick();Math.random=roll;
+  assert.deepEqual(pendingRoyalTravelEvents().map(e=>e.por.id),[k.id,p.id,q.id]);
+  royalTravelEvent(k).choices[0].f();royalTravelEvent(p).choices[1].f();
+  var last=addTraveler(f,'m','清明');S.rel[rk(last,q)]=S.rel[rk(last,k)]=S.rel[rk(last,p)]=0;
+  S.turn++;Math.random=()=>0;royalTravelTick();Math.random=roll;
+  assert.ok(royalTravelAway(k));assert.equal(p.royalTravel.due,S.turn+5);assert.equal(last.royalTravel.stage,'request');
+  for(const c of [last,q])assert.ok(royalTravelEvent(c).choices[0].f());assert.equal([k,last,q].filter(royalTravelAway).length,3);`);
+});
+test('a joint petition survives reload and records shared letters, mothers making peace, ritual and one return proposal',()=>{
+ let b=travelFamily();b.run(`Math.random=()=>0;royalTravelTick();Math.random=roll;
+  assert.equal(travelInvitee(k).id,p.id);assert.equal(p.royalTravel,undefined);
+  assert.equal(pendingRoyalTravelEvents().length,2);S.flags.immortalPace={last:S.turn,lastOffer:S.turn};S.flags.dowager.alive=false;PalaceActions.reset();A.endMonth();
+  for(let i=0;modalOpen&&curEv.title!=='皇嗣请行 · 手足同游'&&i<120;i++){if(modalResult)nextEv();else choose(0);}
+  assert.equal(curEv.title,'皇嗣请行 · 手足同游');assert.match(curEv.text,/昭宁/);save('1');`);
+ b=boot(21,b.storage);b.ctx.assert=assert;b.run(`A.load('1');assert.equal(PalaceActions.blocked,false);var [k,p,q]=S.children;
+  var cash=E().treasury;choose(0);assert.equal(cash-E().treasury,40);drain();
+  var m=byId(k.mom),f=byId(p.mom),r=k.royalTravel,rr=p.royalTravel;assert.equal(travelSibling(p),k);
+  assert.equal(rr.returnAt,r.returnAt);assert.equal(childInPalace(p),false);assert.match(royalTravelPanel(p),/清和结伴/);
+  for(const c of [m,f,k,p])assert.equal(c.story.filter(e=>e.t.startsWith('【手足同行】')).length,1);
+  assert.match(m.story.find(e=>e.t.startsWith('【手足同行】')).t,/姜糖/);
+  assert.match(f.story.find(e=>e.t.startsWith('【手足同行】')).t,/追到门边/);
+  assert.match(monthlyGrainEvent(LOCUST_INDEX,{}).choices.find(o=>o.t==='设坛祭天').f(),/清和与昭宁尚在齐地临淄/);
+  assert.equal(siblingTravelRite(),'');for(const c of [m,f,k,p])assert.equal(c.story.filter(e=>e.t.startsWith('【在外逢祭】')).length,1);
+  S.turn=r.departed+2;var before=relGet(m,f);royalTravelTick();assert.equal(relGet(m,f),before+10);
+  for(const c of [m,f])assert.equal(c.story.filter(e=>e.t.startsWith('【同行家书】')&&e.t.includes('下次信到了')).length,1);
+  for(const c of [k,p])assert.equal(c.story.filter(e=>e.t.startsWith('【同行家书】')&&e.t.includes('两人署名')).length,1);
+  assert.match(continuityPanel(f),/收到孩子的旅途家书/);save('2');`);
+ b=boot(4,b.storage);b.ctx.assert=assert;b.run(`A.load('2');var [k,p]=S.children,m=byId(k.mom),f=byId(p.mom),r=k.royalTravel;
+  var before=relGet(m,f);royalTravelTick();assert.equal(relGet(m,f),before);assert.equal(k.royalTravel.lastLetter,p.royalTravel.lastLetter);
+  S.turn=r.departed+4;royalTravelTick();assert.equal(childWhereabouts(p),'登州海滨');assert.equal(relGet(m,f),before);
+  A.royalTravelRecall(p.id);assert.match(curEv.text,/两人一同/);choose(0);drain();
+  for(const c of [m,f,k,p])assert.equal(c.story.filter(e=>e.t.startsWith('【携手归京】')).length,1);
+  assert.equal(royalTravelAway(k)||royalTravelAway(p),false);assert.ok(r.proposals.home);assert.equal(p.royalTravel.proposals,undefined);
+  assert.equal(siblingTravelRite(),'');`);
+});
+test('cross-sex friends can pair, unrelated or estranged children cannot, and refusal and solo approval release the companion',()=>{
+ for(const choice of [1,2,3]){
+  const b=travelFamily();b.run(`S.rel[rk(k,p)]=-45;requestRoyalTravel(k);Math.random=()=>0;inviteTravelSiblings([k]);Math.random=roll;
+   assert.equal(travelInvitee(k),q);var e=royalTravelEvent(k),cash=E().treasury;
+   S.rel[rk(k,q)]=24;assert.equal(e.valid(),false);assert.equal(royalTravelEvent(k).cast,undefined);S.rel[rk(k,q)]=50;
+   assert.ok(e.choices[${choice}].f());assert.equal(royalTravelAway(q),false);
+   ${choice===2?"assert.equal(royalTravelEvent(k),null);S.turn+=6;assert.match(royalTravelEvent(k).title,/手足同游/);":
+    "assert.equal(travelInvitee(k),null);assert.equal(E().treasury,cash-"+(choice===1?20:0)+");"}`);
+ }
+});

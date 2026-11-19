@@ -28,3 +28,22 @@ for(const [name,payload] of Object.entries(require('./fixtures/royal-heart-legac
 test('growing attachment has one milestone and never rewrites the original refusal',()=>{const b=couple();b.run(`m.affection=59;S.turn+=3;`);b.force(0);b.run(`xieLifeTick();assert.ok(m.loveRemembered);assert.ok(p.story.some(s=>s.t.includes('辞婚未获准')));assert.equal(p.story.filter(s=>s.t.includes('【始知相思】')).length,1);S.turn+=3;`);b.force(0);b.run(`xieLifeTick();assert.equal(p.story.filter(s=>s.t.includes('【始知相思】')).length,1);`);});
 test('Xie rules do not disable unrelated couples or grant general matchmaking access to him',()=>{const b=w();b.run(`k.married=true;k.spouse={id:'ordinary',name:'顾怀清',sur:'顾',sex:'m',born:S.turn-22*12,alive:true,trust:80,marriedAt:S.turn-15};ensureMarriedLife(k);assert.equal(householdCanConceive(k,k.spouse),true);var n=k.story.length;recordHouseholdNews(k);assert.ok(k.story.length>n);var p=createXieAn();assert.ok(officialMarriageReason({p,key:'scholar:'+p.id,scholar:true}));assert.equal(householdCanConceive(k,k.spouse),true);`);});
 test('his dedicated face follows the real husband into older spouse copies without mutating saves',()=>{const b=couple();b.run(`delete k.spouse.storyPerson;var state=JSON.stringify(S);assert.equal(portraitCell(p),433);assert.equal(portraitCell(k.spouse),433);assert.match(porImg(k.spouse,112),/data-portrait-cell="433"/);assert.equal(JSON.stringify(S),state);`);});
+
+test('a princess raises the local poet discovery chance to nine percent, with the original rate elsewhere',()=>{
+ for(const [sex,age,roll,found] of [['f',18,.089,true],['f',18,.09,false],['m',18,.089,false],['f',26,.05,false]]){
+  const b=w(age,sex);b.run(`S.children=[k];E().sur='赵';S.turn=Math.max(S.turn,6);assert.equal(xieAn(),undefined);`);
+  b.force(roll);b.run(`xieLifeTick();assert.equal(!!xieAn(),${found});`);
+ }
+});
+test('a princess can bring up Xie An among many siblings, with one saved response and no repeat reading',()=>{
+ let b=w();b.run(`S.children=[k];E().sur='赵';var p=createXieAn();xieHouse(p).rootId=-1;
+  for(let i=0;i<8;i++){const son=makeKid(a,'m','皇子'+i);son.born=k.born;son.hp=90;son.pendingName=false;}
+  S.children.reverse();S.royalHeart={gen:S.gen,lastTick:-1,lastEvent:-99};`);
+ b.force(.089);b.run(`royalHeartTick();assert.equal(heartState().pending.child,k.id);assert.equal(heartState().pending.kind,'xiean');
+  assert.equal(duePrincessHeartEvent().title,'诗名与心意');PalaceActions.reset();A.endMonth();
+  for(let i=0;modalOpen&&curEv.title!=='诗名与心意'&&i<150;i++){if(modalResult)nextEv();else choose(0);}
+  assert.equal(curEv.title,'诗名与心意');assert.equal(Q.filter(e=>e.title==='诗名与心意').length,0);save('1');`);
+ b=boot(88,b.storage);b.ctx.assert=assert;b.run(`A.load('1');assert.equal(PalaceActions.blocked,false);assert.equal(curEv.title,'诗名与心意');choose(0);`);
+ b=boot(20,b.storage);b.ctx.assert=assert;b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);drain();var k=S.children.find(c=>c.sex==='f');
+ assert.equal(k.xieAdmiration.personId,xieAn().id);assert.equal(duePrincessHeartEvent(),null);assert.equal(k.story.filter(e=>e.t.startsWith('【诗名与心意】')).length,1);`);
+});
