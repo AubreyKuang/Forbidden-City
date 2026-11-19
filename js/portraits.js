@@ -557,7 +557,8 @@ function porImg(x,size=64){
     const outfit=x.fixedStory==='chuwan'&&Number.isInteger(x.enteredAt)?
       (x.rank>=6?'-grand':x.rank>=4?'-noble':'-court'):'';
     const portrait=whiteSpringKin?'white-spring-'+whiteSpringKin[1]:x.fixedStory+outfit;
-    return `<img class="por palace-portrait${x.cold||x.alive===false?' cold':''}" src="./assets/images/story-cast/${portrait}.webp?v=gouyi-style-3" alt="" width="${size}" height="${size*1.25}" style="object-fit:cover${size<=84?';object-view-box:inset(0 9% 18%)':''}">`;
+    const version=whiteSpringKin?'white-spring-royal-art-2':'gouyi-style-3';
+    return `<img class="por palace-portrait${x.cold||x.alive===false?' cold':''}" src="./assets/images/story-cast/${portrait}.webp?v=${version}" alt="" width="${size}" height="${size*1.25}" style="object-fit:cover${size<=84?';object-view-box:inset(0 9% 18%)':''}">`;
   }
   if(Number.isInteger(x?.courtCraneCell))return courtSpecialPortrait(x,size);
   if(x?.appearance)x=x.appearance;

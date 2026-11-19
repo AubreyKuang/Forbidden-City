@@ -48,6 +48,12 @@ test('both royal profiles open from admission and preserve their separate histor
    assert.match(porImg(king,size),/white-spring-king\\.webp/);
    assert.match(porImg(prince,size),/white-spring-prince\\.webp/);
  }
+ for(const person of [ah.father,ah.brother,a,q,lady,'emp'].filter(Boolean)){
+   assert.doesNotMatch(porImg(person,144),/white-spring-(king|prince)\\.webp/);
+ }
+ for(const p of [king,prince]){
+   assert.doesNotMatch(porImg({...p,id:'ordinary-figure'},34),/white-spring-(king|prince)\\.webp/);
+ }
  var admission=lady.story.find(e=>e.t.includes('，赐居'));
  assert.ok(king.story.some(e=>e.d===admission.d&&e.t.startsWith('【公主入宫】')));
  assert.ok(prince.story.some(e=>e.d===admission.d&&e.t.startsWith('【公主入宫】')));

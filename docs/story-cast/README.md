@@ -91,7 +91,7 @@
 
 | 父王 · 阿尔斯兰 | 王兄 · 伊利亚尔 |
 | --- | --- |
-| <img src="../../assets/images/story-cast/white-spring-king.webp" width="160" alt="阿尔斯兰穿靛青锦袍，手捧家书"> | <img src="../../assets/images/story-cast/white-spring-prince.webp" width="160" alt="伊利亚尔穿雾蓝骑装，腰间系着银铃"> |
+| <img src="../../assets/images/story-cast/white-spring-king.webp" width="160" alt="阿尔斯兰穿靛青锦袍，手捧家书"> | <img src="../../assets/images/story-cast/white-spring-prince.webp" width="160" alt="伊利亚尔身穿宽肩骑装，系着革带和银铃"> |
 
 
 **随贡来朝**。转月收到「岁首 · 各地进献」或随机首饰进贡时，有 35% 的机会在同一张礼单见到来使。八月和皇帝生辰月也有机会单独收到节礼贺表。若白泉父女可以来访，点「请父女入席，观白泉鼓舞」即可相见；原有贡银、首饰照常入库，无须另筹宫宴。
