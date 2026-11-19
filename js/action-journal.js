@@ -2,7 +2,7 @@
    never from serialized JavaScript. Each command owns its random draws and answers.
    The saved world remains the authority; replay is checked before it is displayed. */
 const PalaceActions=(()=>{
-  const version=123, excluded=new Set(['save','dismissSaveError','load','rewind','downloadSave','readSaveFile','undoImport','newGame','officialsFilter','officialsBloc','kidsKind','chronicleFilter','chronicleSearch','chronicleClear','chronicleThread']);
+  const version=124, excluded=new Set(['save','dismissSaveError','load','rewind','downloadSave','readSaveFile','undoImport','newGame','officialsFilter','officialsBloc','kidsKind','chronicleFilter','chronicleSearch','chronicleClear','chronicleThread']);
   const actions=new Map();
   let blocked=false,snapshotRequested=false,journal=null,depth=0,replaying=false,step=null,cursor=0,answer=0,saving=0,fields=null;
   const clone=x=>JSON.parse(JSON.stringify(x));

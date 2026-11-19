@@ -104,3 +104,34 @@ test('a shared house keeps the aunt identified for this particular birth in both
  assert.equal(sister.story.length,before);assert.match(expected.story.at(-1).t,/姨母牵挂/);
  assert.ok(!other.story.some(e=>e.t.startsWith('【姨母牵挂】')));`);
 });
+function auntVisitWorld(){
+ const b=setup();birth(b);b.run(`drain();recognizeOutsideChild(outsideParentageFamily(other,child),true);
+ var ward=kidById(child.id),dowager=ensureDowager(),household=dowagerLiving(dowager);
+ delete ward.outsideFamilyOrigin.auntId;ward.born=S.turn-8*12;S.turn++;
+ var notes=p=>p.story.filter(e=>e.t.startsWith('【姨母探望】')).map(e=>e.t);
+ var people=[ward,other,sister,dowager];`);return b;
+}
+test('a maternal aunt independently carries a message from a homesick child to her sister, once for each participant',()=>{
+ const b=auntVisitWorld();b.force(...Array(150).fill(0));b.run(`
+ dowagerTick();assert.deepEqual(people.map(p=>notes(p).length),[1,1,1,1]);
+ assert.match(notes(ward)[0],/姨母答应/);assert.match(notes(other)[0],/托人给姐妹/);
+ assert.match(notes(sister)[0],/还会打.*旧络子/);assert.match(notes(dowager)[0],/晚些时候再传饭/);
+ assert.ok(canVisitCiningChild(ward));assert.equal(notes(c).length,0);
+ for(let i=0;i<3;i++){dowagerTick();assert.equal(notes(ward).length,1);S.turn++;}
+ dowagerTick();assert.equal(notes(ward).length,2);`);
+});
+test('a quiet month, an absent aunt, a departed child or an unavailable mother never produces a false message',()=>{
+ const b=auntVisitWorld();b.force(.99);b.run(`ciningAuntVisitTick(dowager,household);assert.equal(notes(ward).length,0);`);
+ b.force(...Array(50).fill(0));b.run(`
+ other.homeLeave={until:S.turn+2};ciningAuntVisitTick(dowager,household);delete other.homeLeave;
+ S.heir=ward.id;ciningAuntVisitTick(dowager,household);S.heir=null;
+ sister.visit={host:other.id,until:S.turn+2};ciningAuntVisitTick(dowager,household);delete sister.visit;
+ assert.ok(people.every(p=>!notes(p).length));
+ sister.alive=false;ciningAuntVisitTick(dowager,household);
+ assert.equal(notes(sister).length,0);assert.match(notes(ward)[0],/当年怎样/);assert.doesNotMatch(notes(other)[0],/捎话/);`);
+});
+test('an ordinary visit brings family news without putting a spoken request in the mouth of an infant',()=>{
+ const b=auntVisitWorld();b.force(0,0,.9);b.run(`ward.born=S.turn;
+ ciningAuntVisitTick(dowager,household);assert.match(notes(ward)[0],/握住姨母/);
+ assert.doesNotMatch(notes(ward)[0],/答应|开口/);assert.match(notes(sister)[0],/小手的力气/);`);
+});

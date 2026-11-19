@@ -148,6 +148,7 @@ const livingDowagerTick=dowagerTick;
 dowagerTick=function(){livingDowagerTick();if(!dowagerLivingActive())return;const d=ensureDowager();if(!d?.alive)return;const h=dowagerLiving(d);if(h.lastTick===S.turn)return;h.lastTick=S.turn;
  if(d.feeling?.kind==='悲恸'&&S.turn-d.feeling.turn>12)d.feeling.kind='思念';
  prepareDowagerCompany(d);dowagerCrowdTick(d);dowagerDaoTick(d);
+ if(journalContentVersion()>=124)ciningAuntVisitTick(d,h);
 };
 const livingPunishEvent=punishEv;
 punishEv=function(a,v,crime){
@@ -170,9 +171,12 @@ dowagerCourtPanel=function(){const html=livingDowagerPanel();if(!dowagerLivingAc
 };
 
 // A stop in the children's rooms follows the audience, including any business the dowager raised.
-function canVisitCiningChild(k){
+function ciningOutsideChild(k){
   return !S.over&&raisedByDowager(k)&&k.outsideFamilyOrigin&&S.heir!==k.id&&
-    !k.pendingName&&k.dowagerUpbringing.lastVisit!==S.turn;
+    !k.pendingName;
+}
+function canVisitCiningChild(k){
+  return ciningOutsideChild(k)&&k.dowagerUpbringing.lastVisit!==S.turn;
 }
 function ciningChildKin(k){
   const origin=k.outsideFamilyOrigin,host=familyHostById(origin.host);
@@ -180,6 +184,48 @@ function ciningChildKin(k){
   const mother=byId(relative?.consortId)||byId(origin.motherId)||relative;
   const aunt=familyHostById(origin.auntId)||outsideChildAunt(host,relative,k.id);
   return {mother,aunt:aunt!==mother&&inPalace(aunt)?aunt:null};
+}
+function ciningAuntVisitTick(d,household){
+  if(S.turn-(household.lastAuntVisit??-Infinity)<3)return;
+  const visits=[];
+  for(const k of S.children){
+    if(!ciningOutsideChild(k)||S.turn<=k.dowagerUpbringing.turn)continue;
+    const {aunt,mother}=ciningChildKin(k);
+    if(!aunt||!dowagerVisitReady(aunt)||!mother)continue;
+    // This correspondence belongs to the family outside the palace.
+    const visitingHost=mother.visit&&byId(mother.visit.host);
+    if(S.consorts.includes(mother)||(visitingHost&&natalInPalace(visitingHost,mother)))continue;
+    visits.push({k,aunt,mother});
+  }
+  if(!visits.length||!chance(.25))return;
+  const {k,aunt,mother}=pick(visits),age=kidAge(k),kin=k.sex==='m'?'外甥':'外甥女';
+  const auntName=fullName(aunt),motherName=mother.name||k.momName;
+  household.lastAuntVisit=S.turn;
+  const missing=chance(.4);
+  let scene,news,answer;
+  if(missing&&age<2){
+    scene='正哭得打嗝，听姨母哼起娘亲常唱的小调，慢慢松开了攥着的拳头。';
+    news='孩子还认得你唱过的小调，听到第二句就安静了。';
+    answer='她把最后两句的唱词也托人带回，怕姐妹记不齐。';
+  }else if(missing&&age<7){
+    scene=mother.alive?'挨到姨母膝边，小声问：“娘想我的时候，也有人陪她坐坐吗？”':'挨到姨母膝边，央她再讲一件娘小时候的事。';
+    news='孩子问，你想念孩子的时候，可有人陪你坐坐？';
+    answer='她听罢眼眶一热，托来人答：“娘有人陪。下回见姨母，也抱抱她，算娘抱你的。”';
+  }else if(missing){
+    scene=mother.alive?'送姨母到门边才开口：“烦您同娘说，那年她教我打的结，我到现在都没忘。”':'解下自己打的络子给姨母看，还记得生母当年怎样一点点教自己收紧。';
+    news='孩子托我告诉你，当年你教的那个结，如今还会打。';
+    answer='她从针线篮里翻出旧络子，托人回话：“娘也一直收着你打的头一个。”';
+  }else{
+    [scene,news,answer]=age<2?
+      ['一把握住姨母伸来的手指，醒了好一会儿才肯松开。','今日精神好，握着我的手好一阵子。','她也记得那只小手的力气，听完才笑着放人回去。']:
+      age<7?['拉姨母去看窗边刚种下的豆子，约她下回来看芽。','孩子种了一颗豆子，日日记得去看。','她叫人在自家窗台也种下一颗，等下回比比哪边长得快。']:
+      ['同姨母下了一局棋，临别把未走完的几步摆在原处，等她下回来续。','今日我去陪孩子下棋，倒是我先想不出下一步了。','她听得笑了，叮嘱姐妹下次好好应战，别故意让棋。'];
+  }
+  const relay=mother.alive? `临走托人给姐妹${motherName}捎话：“${news}”`:'临走将姐妹小时候的乳名告诉太后，好让孩子日后问起时还有人记得。';
+  story(aunt,`【姨母探望】惦记${kin}${k.name}，特地去了趟慈宁宫。${k.name}${scene}${relay}`);
+  kstory(k,`【姨母探望】姨母${auntName}来看自己。${scene}`+(missing&&mother.alive&&age>=2?'姨母答应把这句话带给娘。':''));
+  if(mother.alive)story(mother,`【姨母探望】姐妹${auntName}去慈宁宫看过${k.name}，捎来口信：“${news}”${answer}`);
+  dowagerRecord(d,'姨母探望',`${auntName}来慈宁宫看${k.name}。看到孩子${missing?'依恋姨母的样子，便让她再坐一会儿，晚些时候再传饭。':'喜欢有人作伴，便叮嘱宫人下回她来时直接领到孩子跟前。'}`);
 }
 const CINING_CHILD_DAYS=[
   [
