@@ -228,7 +228,8 @@ function childPregnancyNews(m){
   const random=mulberry32(voiceHash('child-pregnancy:'+m.seed+':'+key));
   if(random()>=.55)return '';
   const k=children[Math.floor(random()*children.length)],age=kidAge(k),little=age<7,nature=childDisposition(k);
-  const attention=2+Number(little)+Number(['好胜','内敛','自矜'].includes(nature));
+  const follow=PalaceActions.siblingBirthNews;
+  const attention=follow&&age>=13?0:2+Number(little)+Number(['好胜','内敛','自矜'].includes(nature));
   const worry=2+Number(['审慎','仁厚'].includes(nature))+Number(m.trait==='体弱');
   const joy=3+Number(['灵动','好奇'].includes(nature));
   const roll=random()*(attention+worry+joy);
@@ -254,9 +255,91 @@ function childPregnancyNews(m){
     words=little?`等小娃娃会叫人，我想教的头一个词就是“${elder}”！`:age<14?`我挑了三样好玩的，样样都想留给小的。您说，小娃娃多大会跟着${elder}玩？`:`我小时候最爱听的那首歌还记得。等弟弟妹妹出世，哄睡的差事也让${elder}领一回吧。`;
     reply=little?'那你可得慢慢教。小娃娃头一声多半是哭，到时可别嫌人家唱得难听。':'这就给小的惦记上了？我先替小的应下，等见了面，你自己跟小的说。';
   }
+  if(follow){
+    m.siblingExpectation={key,child:k.id,kind};
+    if(age<=4){
+      if(kind==='attention')words='小娃娃来了，您还抱我吗？';
+      if(kind==='worry')words='生小娃娃会疼吗？我给您吹吹？';
+      if(kind==='joy')words=`小娃娃会叫我${elder}吗？我等着听。`;
+    }
+    if(kind==='attention'&&age>=10){
+      words='等小的来了，我还能照旧把自己写的东西拿给您看吗？若是哪日得空，您记得叫我。';
+      reply='到时候你把最想给我看的那一页折起来。你来，我就听你念。';
+    }
+    if(kind==='worry'&&age>=13)words='等您生产那天，请先叫人告诉我您可平安。弟弟妹妹的喜信，放在第二句也来得及。';
+    if(kind==='joy'&&age>=13)words=`等小的生下来，抱孩子的手势也教我一回吧。既做了${elder}，总该学会帮您换换手。`;
+  }
   const scene=away?`喜信捎到了${name}手中。回信里夹着一句：“${address}，${words}”${cName(m)}读到这里，亲笔回道：“${reply}”`:
     `听说有了喜脉，${name}来问${cName(m)}：“${address}，${words}”她听完，把孩子的手拢在掌心：“${reply}”`;
   kstory(k,`【听闻喜脉】得知${address}${fullName(m)}有孕，${feeling}。${scene}`);
   story(m,`【听闻喜脉】${scene}`);
   return scene;
+}
+
+// v153 stored the shared scene in both chronicles, but only the pregnancy key on the mother.
+function siblingExpectationAtBirth(m,key){
+  if(!key||key!==m.childPregnancyNotice)return null;
+  if(m.siblingExpectation?.key===key)return m.siblingExpectation;
+  const conceived=Number(key.split(':')[2]);
+  const entry=m.story?.findLast(e=>{
+    if(!e.t.startsWith('【听闻喜脉】'))return false;
+    const turn=selectionLogTurn(e.d);
+    return turn!==null&&turn>=conceived&&turn<=conceived+2;
+  });
+  if(!entry)return null;
+  const scene=entry.t.slice('【听闻喜脉】'.length);
+  for(const k of S.children){
+    const note=k.story?.findLast(e=>e.d===entry.d&&e.t.startsWith('【听闻喜脉】')&&e.t.endsWith(scene));
+    if(!note)continue;
+    const prefix=note.t.slice(0,-scene.length);
+    for(const [kind,feeling] of [['attention','怕往后分给自己的时候少了'],['worry','先惦记起母亲生产时的安危'],['joy','已经盼着与弟妹见面']]){
+      if(prefix.endsWith(feeling+'。'))return {key,child:k.id,kind};
+    }
+  }
+  return null;
+}
+
+function siblingBirthVisit(m,babies,loss=false){
+  const d=m.delivery;
+  if(!PalaceActions.siblingBirthNews||!d?.settled||d.siblingVisit||d.concealedLoss||d.swap||!babies.length||babies.some(k=>k.birthSwap?.occurred))return '';
+  const conceived=babies[0].birthCalendar?.conceived;
+  const key=d.siblingNoticeKey||(conceived!=null?`${S.gen}:${m.id}:${conceived}`:null);
+  const heard=siblingExpectationAtBirth(m,key),k=heard&&kidById(heard.child);
+  if(!k?.alive||k.missing||k.jailed||k.removedFromRoyal||kidAge(k)<3||
+    (k.mom!==m.id&&k.foster!==m.id)||(k.foster&&k.mom===m.id&&k.visitRule==='closed'))return '';
+  const age=kidAge(k),young=age<7,older=age>=13,address=childMotherAddress(k,m);
+  const name=kidName(k),baby=babies[0],sibling=baby.sex==='m'?'弟弟':'妹妹';
+  const group=babies.length===1?sibling:babies.every(b=>b.sex===baby.sex)?sibling+'们':'弟弟妹妹';
+  const away=!childInPalace(k)||!!(m.cold||m.homeLeave||m.templeStay);
+  let text;
+  if(!m.alive){
+    text=heard.kind==='worry'?`${name}听到产房的消息，头一句仍是：“${address}呢？”等来的却是她没能熬过生产的噩耗。`:
+      `听说${address}没能熬过生产，${name}把原先想说给她听的话留在了心里。`;
+  }else if(loss){
+    text=`${name}得知这一胎没能留住，${away?'托人捎话':'轻声问'}：“${address}，${young?'您疼不疼？':'您身子可好些了？'}”`;
+  }else if(heard.kind==='worry'){
+    const question=young?`${address}还疼吗？`:older?'先告诉我，她平安么？太医怎么说？':`${address}平安吗？我想先听她的消息。`;
+    text=away?`报喜的人才到，${name}先问：“${question}”听到母亲平安，才展开写着${group}名字的家书。`:
+      `${name}到门前，先问：“${question}”${cName(m)}听见，隔着帘应了一声：“我在呢。”听清那声回答，${name}才肯去看${group}。`;
+  }else if(heard.kind==='attention'){
+    const soft=older||voiceHash(heard.key+':first-look:'+k.id)%2===0;
+    if(away){
+      text=soft?`${name}在报喜的信末读到母亲专给自己留的话，回信说：“等见了面，也让我认一认${group}。”`:
+        `${name}听捎信人讲了好一会儿${group}，终于问：“${address}还有没有话单给我？”接到母亲另夹的小笺，才肯把家书好好收起来。`;
+    }else if(soft){
+      text=`${name}原想单独同${address}说句话，到了榻前，${sibling}的小手却恰好攥住一根指头。${young?'“您看，抓住我啦。”方才那点委屈，一下就忘了。':older?'怕惊醒襁褓里的人，便在母亲身旁坐下，把想说的话放轻了慢慢说。':'“本来还想同您多待一会儿。现在……等小的松了手，我再走吧。”'}`;
+    }else{
+      text=young?`${name}见${address}臂弯里睡着${sibling}，在榻边站了好一会儿才问：“那我坐哪儿？”她腾出身旁的地方，拍了拍褥子：“坐这儿，挨着我。”`:
+        `${name}听屋里人人都在夸${group}，把带来的东西往袖里藏了藏。${cName(m)}认出来，轻声问：“是专程带给我看的么？”这才挨着榻沿坐下，肯把自己的事讲完。`;
+    }
+  }else if(away){
+    text=`${name}听到${group}降生的喜讯，托人捎话：“${young?'等见面了，也让我抱一下好不好？':'等我回来，能让我学着抱一抱吗？我想亲手接一接。'}”`;
+  }else{
+    const ask=young?'我坐好，您帮我托着，让我抱一下，好不好？':older?`${address}歇一会儿。您看着，让我学着抱一抱？`:'我先把手洗了。能教我怎么抱才稳吗？';
+    text=`${name}看着刚赐了名的${group}，轻声问：“${ask}”${young?'乳母让孩子坐稳，自己托牢襁褓，把小小的一团轻轻靠在孩子臂弯里。':'乳母示意先坐稳，一手托头颈，一手托住襁褓。等怀里的'+sibling+'安静下来，'+name+'才抬头朝母亲笑了笑。'}`;
+  }
+  d.siblingVisit={child:k.id,kind:heard.kind};
+  const note='【产后家话】'+text;
+  story(m,note);kstory(k,note);
+  return '\n'+text;
 }

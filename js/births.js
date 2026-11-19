@@ -57,8 +57,10 @@ function birthEvent(c){
   const children=sexes.map(sex=>makeKid(c,sex,suggestName(sex)));
   registerMultipleBirth(children);
   const prayerKey=currentPregnancyPrayer(c)?.key,firstWishKey=careersActive()&&c.firstChildWish?.key===pregnancyPrayerKey(c)?c.firstChildWish.key:null;
+  const noticeKey=c.pregnancyCalendar||c.pregnancyFather?.conceived!=null?pregnancyPrayerKey(c):`${S.gen}:${c.id}:${S.turn-c.preg+1}`;
+  const siblingNoticeKey=PalaceActions.siblingBirthNews&&noticeKey===c.childPregnancyNotice?noticeKey:null;
   delete c.pregnancyFather;delete c.pregnancyCalendar;
-  c.delivery={children:children.map(k=>k.id),kind,omen,...(labels?{labels}:{}),date:dateStr(),turn:S.turn,...(prayerKey?{prayerKey}:{}),...(firstWishKey?{firstWishKey}:{}),settled:false,
+  c.delivery={children:children.map(k=>k.id),kind,omen,...(labels?{labels}:{}),date:dateStr(),turn:S.turn,...(siblingNoticeKey?{siblingNoticeKey}:{}),...(prayerKey?{prayerKey}:{}),...(firstWishKey?{firstWishKey}:{}),settled:false,
     difficult:chance(c.trait==='体弱'?.12:.03),originalLoss:count===1&&!!c.swapPlot&&!c.swapPlot.settled&&chance(.02),swap:false,templeAdvice:rollBirthTempleAdvice(children,omen)};
   c.preg=0;c.prot=false;c.swapRisk=false;c.lastBirth=S.turn+1;
   children.forEach((k,i)=>{
@@ -105,7 +107,7 @@ function birthLossEvent(c){
     text:`医官回报，${fullName(c)}产下的孩子出生时已无生息。${c.delivery.difficult?'产妇又因血崩未能挺过，太医回天乏术。':''}接生与出入记录已经核对，此事并非她的过错。`,choices:[{t:c.delivery.difficult?'按礼安葬母子':'妥善安葬，命太医照看她',f:()=>{
       if(c.delivery.settled)return null;c.delivery.settled=true;c.delivery.lossPending=false;
       const line=c.delivery.difficult?'亲生孩子出生时已无生息，产妇又因血崩薨逝，母子按礼安葬。':'亲生孩子出生时已无生息，按礼安葬，命太医照看产妇。';kstory(k,line);log(`${fullName(c)}产房传来哀讯，孩子未能存活。`,1);
-      if(c.delivery.difficult){c.alive=false;c.deathReason='产后血崩';if(journalContentVersion()>=81)recordConsortPassing(c);log(`${fullName(c)}因产后血崩薨逝。`,1);}else{setXin(c,'悲恸','初生孩子夭折');cchg(c,{mood:-25});}recordDeliveryOutcome(c,{loss:true});save('auto');return line;
+      if(c.delivery.difficult){c.alive=false;c.deathReason='产后血崩';if(journalContentVersion()>=81)recordConsortPassing(c);log(`${fullName(c)}因产后血崩薨逝。`,1);}else{setXin(c,'悲恸','初生孩子夭折');cchg(c,{mood:-25});}recordDeliveryOutcome(c,{loss:true});const visit=siblingBirthVisit(c,[k],true);save('auto');return line+visit;
     }}]};
 }
 function finishDelivery(c){
@@ -140,7 +142,7 @@ function finishDelivery(c){
   }
   if(delivery.templeAdvice){const advice=birthTempleAdviceEvent(kidById(delivery.templeAdvice));if(advice)follow.push(advice);}
   if(birthLabelsActive()&&Array.isArray(delivery.labels))follow.push(...birthLabelFollowups(children));
-  text+=pregnancyPrayerBirthEcho(c,children);
+  text+=pregnancyPrayerBirthEcho(c,children)+siblingBirthVisit(c,children);
   Q.unshift(...follow);return text+(delivery.kind?'\n孩子们的档案中已记下同生手足，可听国师贺生，日后也能看他们一起长大的故事。':'')+fx(effect);
 }
 /* A historical fact belongs in the mother's own chronicle even after death.

@@ -124,3 +124,39 @@ test('a month-end pregnancy notice survives loading before and after the answer 
  var m=byId(${mid}),k=kidById(${kid}),count=p=>p.story.filter(e=>e.t.includes('【听闻喜脉】')).length;
  assert.equal(count(m),1);assert.equal(count(k),1);drain();assert.equal(count(m),1);assert.equal(count(k),1);`);
 });
+
+test('the same sibling follows this pregnancy through naming, including old text-only saves and a twin batch',()=>{
+ const w=world();w.run(`a.preg=2;a.pregnancyCalendar={conceived:S.turn-1,term:10,nights:[]};
+ S.children=[foster];let seen=false;while(!seen){a.seed++;delete a.childPregnancyNotice;seen=!!childPregnancyNews(a);}
+ var heard=a.siblingExpectation;delete a.siblingExpectation;S.children.push(little);S.turn+=8;S.month+=8;
+ if(S.month>12){S.month-=12;S.year++;}
+ a.preg=10;var makeBirth=birthEvent(a);a.delivery.difficult=false;
+ var second=makeKid(a,'f','嘉容');second.pendingName=true;second.birthOrder=2;
+ a.delivery.children.push(second.id);a.delivery.kind='双胞胎';
+ birthNamingEvent(a).choices[0].f('嘉仪');assert.equal(a.delivery.siblingVisit,undefined);
+ var result=birthNamingEvent(a).choices[0].f('嘉容');assert.ok(result.text.includes(foster.name));
+ assert.equal(a.delivery.siblingVisit.child,heard.child);assert.equal(a.delivery.siblingVisit.kind,heard.kind);
+ const count=p=>p.story.filter(e=>e.t.startsWith('【产后家话】')).length;
+ assert.equal(count(a),1);assert.equal(count(foster),1);assert.equal(count(little),0);
+ assert.equal(finishDelivery(a),'');assert.equal(count(foster),1);
+ delete a.delivery.siblingVisit;assert.equal(siblingExpectationAtBirth(a,S.gen+':'+a.id+':0'),null);`);
+});
+test('age at announcement and at birth, grief, letters and both first reactions to sharing attention',()=>{
+ const w=world();w.run(`a.preg=2;a.pregnancyCalendar={conceived:S.turn-1,term:10,nights:[]};S.children=[baby];
+ assert.equal(childPregnancyNews(a),'');S.children=[elder];elder.born=S.turn-180;
+ let teen=new Set();for(let i=0;i<100;i++){delete a.childPregnancyNotice;a.seed=i;if(childPregnancyNews(a))teen.add(a.siblingExpectation.kind);}
+ assert.deepEqual([...teen].sort(),['joy','worry']);
+ const newborn=makeKid(a,'f','锦华');const visit=(kind,seed,person=little,loss=false)=>{
+   const key=S.gen+':'+a.id+':'+seed;a.childPregnancyNotice=key;a.siblingExpectation={key,child:person.id,kind};
+   a.delivery={settled:true,siblingNoticeKey:key};return siblingBirthVisit(a,[newborn],loss);
+ };
+ S.children.push(little,foster,baby);const variants=new Set();
+ for(let n=0;n<90;n++){const text=visit('attention',n);variants.add(text.includes('抓住我')?'soft':text.includes('那我坐哪儿')?'jealous':'unknown');}
+ assert.deepEqual([...variants].sort(),['jealous','soft']);
+ assert.match(visit('joy',1,foster),/能教我怎么抱/);assert.match(visit('joy',2,elder),/歇一会儿/);
+ assert.match(visit('worry',3,elder),/先告诉我，她平安么/);
+ assert.doesNotMatch(visit('attention',4,elder),/那我坐哪儿|委屈/);
+ assert.equal(visit('joy',4,baby),'');elder.estate=true;assert.match(visit('joy',5,elder),/捎话/);
+ assert.match(visit('joy',6,elder,true),/没能留住/);a.alive=false;assert.match(visit('worry',7,elder),/噩耗/);
+ `);
+});
