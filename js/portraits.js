@@ -552,10 +552,12 @@ function localPortrait(cell,rank,attrs,jewelry='',bust=false){
 }
 
 function porImg(x,size=64){
-  if(x?.fixedStory&&storyCastData(x.fixedStory)){
+  const whiteSpringKin=typeof x?.id==='string'&&/^white-spring-(king|prince)-\d+$/.exec(x.id);
+  if(whiteSpringKin||(x?.fixedStory&&storyCastData(x.fixedStory))){
     const outfit=x.fixedStory==='chuwan'&&Number.isInteger(x.enteredAt)?
       (x.rank>=6?'-grand':x.rank>=4?'-noble':'-court'):'';
-    return `<img class="por palace-portrait${x.cold||x.alive===false?' cold':''}" src="./assets/images/story-cast/${x.fixedStory}${outfit}.webp?v=gouyi-style-3" alt="" width="${size}" height="${size*1.25}" style="object-fit:cover${size<=84?';object-view-box:inset(0 9% 18%)':''}">`;
+    const portrait=whiteSpringKin?'white-spring-'+whiteSpringKin[1]:x.fixedStory+outfit;
+    return `<img class="por palace-portrait${x.cold||x.alive===false?' cold':''}" src="./assets/images/story-cast/${portrait}.webp?v=gouyi-style-3" alt="" width="${size}" height="${size*1.25}" style="object-fit:cover${size<=84?';object-view-box:inset(0 9% 18%)':''}">`;
   }
   if(Number.isInteger(x?.courtCraneCell))return courtSpecialPortrait(x,size);
   if(x?.appearance)x=x.appearance;

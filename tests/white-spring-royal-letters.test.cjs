@@ -44,7 +44,10 @@ test('Ayimu stays at court while ordinary consorts can visit home; an obsolete l
 test('both royal profiles open from admission and preserve their separate histories across old saves',()=>{
  const w=palace();w.run(`var king=family.father,prince=family.brother;
  assert.equal(king.name,'阿尔斯兰');assert.equal(prince.name,'伊利亚尔');
- assert.notEqual(king.portraitOverride,prince.portraitOverride);
+ for(const size of [34,144]){
+   assert.match(porImg(king,size),/white-spring-king\\.webp/);
+   assert.match(porImg(prince,size),/white-spring-prince\\.webp/);
+ }
  var admission=lady.story.find(e=>e.t.includes('，赐居'));
  assert.ok(king.story.some(e=>e.d===admission.d&&e.t.startsWith('【公主入宫】')));
  assert.ok(prince.story.some(e=>e.d===admission.d&&e.t.startsWith('【公主入宫】')));
