@@ -142,20 +142,39 @@ function registeredSelectionSister(c){
   const p=pick(people),g=natalConsortProfile(c,p);
   g.selectionNatalHost=c.id;g.kinNote=cName(c)+'的亲'+natalLabel(c,p);return g;
 }
-function familyNomineeAvailable(p){
-  return p?.sex==='f'&&p.alive&&!p.outsideFamilyOrigin&&!p.unconfirmedParentage&&(!p.outsideParentage||p.outsideParentage.status==='cleared')&&
-    !p.consortId&&!byId(p.id)&&!p.married&&!p.spouse&&!p.betrothal&&!p.widow&&!p.declined;
+function natalSisterMother(c,p){
+  const mother=c?.house?.relatives?.find(r=>r.id===(p.motherRelativeId??p.parentRelativeId));
+  return mother?.sex==='f'&&!mother.natalCollateral&&!mother.motherRelativeId&&!mother.parentRelativeId?mother:null;
 }
-function canNominateRelative(p){return familyNomineeAvailable(p)&&natalAge(p)>=15;}
 function familyNomineeNiece(c,p){
-  const mother=c.house?.relatives?.find(r=>r.id===(p.motherRelativeId??p.parentRelativeId));
-  return mother?.sex==='f'&&mother.id!==c.id&&!mother.natalCollateral&&!mother.motherRelativeId&&!mother.parentRelativeId;
+  const mother=natalSisterMother(c,p);
+  return !!mother&&mother.id!==c.id&&(!selectionNiecesActive()||mother.consortId!==c.id);
 }
-function canRegisterFamilyNominee(c,p){
-  return familyNomineeAvailable(p)&&(natalAge(p)>=15||journalContentVersion()>=131&&familyNomineeNiece(c,p));
+function familyNomineeOrigin(e){return e.originHost==null?e.c:familyHostById(e.originHost)||e.c;}
+const familyNomineesUseCivilRegister=()=>journalContentVersion()>=137;
+function familyNomineeParentage(p,c){
+  if(familyNomineesUseCivilRegister()&&natalSisterMother(c,p))return 'clear';
+  const data=p.outsideParentage,q=data?.privateInquiry;
+  if(!p.unconfirmedParentage&&(!data||data.status==='cleared'))return 'clear';
+  if(!selectionNiecesActive()||!natalSisterMother(c,p))return 'excluded';
+  if(['proved','stayed','recognized'].includes(data?.status)||q?.status==='complete'&&q.imperial)return 'excluded';
+  return q?.status==='complete'?'clear':'unsettled';
 }
-function familyNominationButton(c,p){
-  if(journalContentVersion()<84||!canRegisterFamilyNominee(c,p))return '';
+function familyNomineeAvailable(p,origin){
+  return p?.sex==='f'&&p.alive&&!p.outsideFamilyOrigin&&!p.consortId&&!byId(p.id)&&
+    !p.married&&!p.spouse&&!p.betrothal&&!p.widow&&!p.declined&&familyNomineeParentage(p,origin)!=='excluded';
+}
+function canRegisterFamilyNominee(c,p,origin=c){
+  return familyNomineeAvailable(p,origin)&&(natalAge(p)>=15||journalContentVersion()>=131&&
+    familyNomineeNiece(selectionNiecesActive()?origin:c,p));
+}
+function legacySelectionFamilyAwaitingClearance(g){
+  if(familyNomineesUseCivilRegister()||!selectionNiecesActive()||!g.familyNominee||!g.familyBranchOrigin)return false;
+  const e=natalEntry(g.selectionNatalHost,g.id);
+  return !!e&&familyNomineeParentage(e.p,familyNomineeOrigin(e))==='unsettled';
+}
+function familyNominationButton(c,p,origin=c){
+  if(journalContentVersion()<84||!canRegisterFamilyNominee(c,p,origin))return '';
   const pending=S.flags.familyNominees?.some(n=>n.relative===p.id),listed=S.cands.some(g=>g.id===p.id);
   const label=listed?'已在本届名册':natalAge(p)<15?(pending?'已预登记 · 满十五岁后入册':'预登记选秀 · 满十五岁后入册'):
     pending?'已荐入下届选秀':'荐入下届选秀';
@@ -164,7 +183,7 @@ function familyNominationButton(c,p){
 A.nominateRelative=function(id,relative){
   if(modalOpen||journalContentVersion()<84)return;
   const e=natalEntry(id,relative);
-  if(!e||!canRegisterFamilyNominee(e.c,e.p)||S.cands.some(g=>g.id===e.p.id))return;
+  if(!e||!canRegisterFamilyNominee(e.c,e.p,familyNomineeOrigin(e))||S.cands.some(g=>g.id===e.p.id))return;
   const nominees=S.flags.familyNominees||=[];
   if(nominees.some(n=>n.relative===e.p.id))return;
   nominees.push({host:e.c.id,relative:e.p.id});
@@ -178,7 +197,7 @@ function appendFamilyNominees(){
   for(const nominee of nominees){
     const {host,relative}=nominee;
     const e=natalEntry(host,relative);
-    if(!e||!canRegisterFamilyNominee(e.c,e.p))continue;
+    if(!e||!canRegisterFamilyNominee(e.c,e.p,familyNomineeOrigin(e)))continue;
     if(natalAge(e.p)<15){(S.flags.familyNominees||=[]).push(nominee);continue;}
     const {c,p}=e;
     let g=S.cands.find(g=>g.id===p.id);
@@ -194,7 +213,8 @@ function appendFamilyNominees(){
 function confirmSelectionSister(g){
   if(g.familyNominee){
     const e=natalEntry(g.selectionNatalHost,g.id);
-    if(!e||!canNominateRelative(e.p))return false;
+    const origin=e&&familyNomineeOrigin(e);
+    if(!e||natalAge(e.p)<15||!familyNomineeAvailable(e.p,origin)||familyNomineeParentage(e.p,origin)==='unsettled')return false;
     delete g.selectionNatalHost;delete g.familyNominee;
     if(g.familyBranchOrigin){
       e.p.consortId=g.id;delete e.p.visit;
@@ -225,7 +245,7 @@ function viewNatalRelative(){
   if(p.sex==='m'&&natalAge(p)>=18){UI.view='official';UI.sel=c.id+':relative'+p.id;return viewOfficial();}
   const age=natalAge(p),living=p.alive,visited=natalInPalace(c,p),privateVisit=marriedSisterVisitButton(c,p);
   return `${personBackButton('family')}<header class="detail-head person-detail-head">${porImg(natalPortrait(p),224)}<div class="grow"><h2>${esc(p.name)}</h2><p>${esc(fullName(c))}的${natalLabel(c,p)} · ${age}岁 · ${natalStatus(p)}${outsideChildBadge(p)}</p><p>${age<6?'尚在幼年':esc(natalTrait(p))}${age>=15&&p.sex==='f'&&restlessDisposition(p)?' <span class="tag y">不安于室</span>':''}</p></div></header>
-    <div class="acts natal-relative-actions">${natalVisitReady(c,p)?`<button class="btn" onclick="A.natalVisit(${c.id},${p.id})">准入宫探亲</button>`:''}${familyNominationButton(c,p)}
+    <div class="acts natal-relative-actions">${natalVisitReady(c,p)?`<button class="btn" onclick="A.natalVisit(${c.id},${p.id})">准入宫探亲</button>`:''}${familyNominationButton(c,p,familyNomineeOrigin(e))}
     ${living?`<button class="btn" onclick="A.natalLetter(${c.id},${p.id})" ${S.turn-(p.lastLetter??-99)>=3&&E().energy>0?'':'disabled'}>${age<3?'赐衣问安':'赐书问候'}<small>精力−1 · 每三个月一次</small></button>`:''}${privateVisit}${visited?`<button class="btn primary" onclick="A.natalMeet(${c.id},${p.id})">探亲相见</button><span>约${p.visit.until-S.turn}个月后归家</span>`:''}</div>
     ${detailSection('人物纪事',detailStory(p))}
     ${typeof natalAdmissionPanel==='function'?natalAdmissionPanel(c,p):''}

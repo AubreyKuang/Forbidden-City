@@ -16,7 +16,7 @@ function changeDowagerBond(c,delta,d=ensureDowager()){
 const dowagerBondLabel=(c,d)=>dowagerBond(c,d)>=65?'亲近':dowagerBond(c,d)<=40?'有些疏隔':'守礼往来';
 function dowagerRecord(d,title,text){
  d.story ||= [];story(d,`【${title}】${text}`);
- const id=d.personId||`dowager-${S.gen}`;
+ const id=d.personId||d.memoryId||`dowager-${S.gen}`;
  NPCMemory.record(S,{type:'dowager-family',time:S.turn,participants:[id],outcome:text},[{person:id,subject:id,interpretation:text,emotion:d.mood<40?-.5:.3,impact:65}]);
 }
 function dowagerNews(d,news){

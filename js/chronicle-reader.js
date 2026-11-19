@@ -78,6 +78,9 @@ function chroniclePersonTarget(id){
  if(consort)return {person:consort,view:'consort',id:number};
  if(child)return {person:child,view:S.children.includes(child)?'kid':'relative',id:number};
  if(scholar)return {person:scholar,view:'scholar',id};
+ if(typeof id==='string'&&id.startsWith('grand-')){
+  const entry=householdChildEntry(id);if(entry)return {person:entry.child,view:'household-child',id};
+ }
  for(const c of familyCourtHosts()){
   const h=c.house;if(!h)continue;
   for(const role of ['father',...brotherRoles(h)])if(String(h[role]?.id)===String(id))return {person:h[role],view:'official',id:`${c.id}:${role}`};

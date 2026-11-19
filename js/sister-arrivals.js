@@ -60,15 +60,19 @@ function mourningDaughterMemory(c,father){
  if(mail?.lastReply?.kind==='peace'&&father.daughterLetterNature==='caring')return {hurt:false,words:'我只给家里报了个平安，他也肯好好回我。如今倒庆幸，那封信我寄出去了。'};
  return null;
 }
-function sisterVigilScene(a,b,father){
+function sisterVigilBond(a,b){
  const bond=relGet(a,b),arc=friendshipArc(a,b);
  const tense=isRival(a,b)||isRival(b,a)||friendshipTense(a,b)||bond<0;
- const close=!tense&&(bond>=35||['close','renewed'].includes(arc?.stage));
+ if(tense)return 'tense';
+ return bond>=35||['close','renewed'].includes(arc?.stage)?'close':'neutral';
+}
+function sisterVigilScene(a,b,father){
+ const bond=sisterVigilBond(a,b);
  const first=mourningDaughterMemory(a,father),second=mourningDaughterMemory(b,father);
  const differ=first&&second&&first.hurt!==second.hurt;
  const name=fullName(a),other=fullName(b),remark=first||second,speaker=first?a:b;
  const recollection=remark?`${fullName(speaker)}低声道：“${remark.words}”`:'';
- if(close){
+ if(bond==='close'){
    const speech=remark?recollection+`${fullName(speaker===a?b:a)}把手覆在她手上：“你肯同我说，我就听着。”`:
      `${name}想念祭文，念到父亲的名字却哽住了。${other}挨着她坐下，把余下几句轻轻接了过去。`;
    return {title:'姐妹同祭',scene:speech,thoughts:[
@@ -76,7 +80,7 @@ function sisterVigilScene(a,b,father){
      `和${name}并肩坐到香尽。离开前又握了握她的手，这一点暖意我自己也舍不得放开。`],bond:6,mood:3};
  }
  const disagreementChance=differ ? .70 : remark ? .45 : .30;
- if(tense&&chance(disagreementChance)){
+ if(bond==='tense'&&chance(disagreementChance)){
    const hurt=first?.hurt?a:second?.hurt?b:null,listener=hurt===a?b:a;
    const answer=differ?(listener===a?first:second).words+'我这几日总想着那封信。你说的那些，我一时还接不上话。':'我今日只想好好敬爹一杯。这件事，我眼下听不进去。';
    const words=hurt?`${fullName(hurt)}说：“${(hurt===a?first:second).words}”${fullName(listener)}握着祭杯，隔了片刻才答：“${answer}”`:
@@ -85,7 +89,7 @@ function sisterVigilScene(a,b,father){
      [`我原想与${other}同署一张祭文，到最后才明白，她记得的爹与我记得的终究有些不同。`,`我让${name}留着她自己的那张。想念爹的话我也有，只想用自己的口气写。`];
    return {title:'各有一句祭辞',scene:words,thoughts,bond:-3,mood:-1};
  }
- if(tense)return {title:'今夜同守一灯',scene:`${name}把身旁的位置空了出来：“今日先陪爹坐会儿吧。”${other}停了停，还是坐下替她挡住了吹向烛芯的风。`+recollection,
+ if(bond==='tense')return {title:'今夜同守一灯',scene:`${name}把身旁的位置空了出来：“今日先陪爹坐会儿吧。”${other}停了停，还是坐下替她挡住了吹向烛芯的风。`+recollection,
    thoughts:[`过去有些话还梗在心里。可今日见${other}伸手护住灯火，我愿把另一只祭杯递给她。`,`${name}给我留了位置。我坐下陪她守到灯稳，旧事留待别日再谈。`],bond:3,mood:1};
  return {title:'灯前相伴',scene:`${name}斟酒，${other}把两炷香并排插好。`+(recollection||'行过礼，两人没有急着散，各留了一点工夫听对方说话。'),
    thoughts:[`与${other}同敬一杯，才知道有人同我记着今日。`,`${name}留在灯前听我说完。哪怕只是几句家常，也比独自咽下去好受些。`],bond:2,mood:1};
@@ -114,6 +118,8 @@ function sisterVigilTick(){
  }
 }
 function holdSisterVigil(father,sisters){
+ if(sisters.length>2&&journalContentVersion()>=134)return holdGroupSisterVigil(father,sisters);
+ // Preserve the original pair and random draws when replaying an older pending scene.
  const [a,b]=sisters.length===2?sisters:shuffle(sisters);
  const v=sisterVigilScene(a,b,father);
  father.death.sisterVigil={turn:S.turn,daughters:[a.id,b.id],title:v.title};
@@ -125,6 +131,64 @@ function holdSisterVigil(father,sisters){
  }
  relAdd(a,b,v.bond);
  pushEv({title:v.title,cast:[a,b],text:fact+'\n'+v.scene,choices:[{t:'知道了'}]});
+}
+function vigilNames(sisters){return sisters.map(fullName).join('、');}
+function groupVigilThought(c,seat,seats,father){
+ const {close,tense,neutral,leaves}=seat,lines=[];
+ const memory=mourningDaughterMemory(c,father);
+ if(memory)lines.push(memory.words);
+ if(close.length){
+   if(leaves)lines.push(`上香前握了握${vigilNames(close)}的手。有人晓得我心里难受，这一趟就值了。`);
+   else{
+     const staying=close.filter(other=>!seats.get(other).leaves),leaving=close.filter(other=>seats.get(other).leaves);
+     if(staying.length)lines.push(`有${vigilNames(staying)}陪我守着灯，我终于能慢慢把想对爹说的话说完。`);
+     if(leaving.length)lines.push(`${vigilNames(leaving)}来时握了握我的手。散时我还想留人再坐坐，到底没开口。`);
+   }
+ }
+ if(tense.length)lines.push(leaves?`见到${vigilNames(tense)}，旧事又涌了上来。我给爹上了一炷香，趁还能平静行礼，便先告辞了。`:
+   `在${vigilNames(tense)}跟前，我只低头向爹行礼。那些没说开的话，今日且搁一搁。`);
+ if(neutral.length)lines.push(`平日与${vigilNames(neutral)}少有来往，今日并肩向爹拜了三拜。`);
+ return lines.join('');
+}
+function holdGroupSisterVigil(father,sisters){
+ const seats=new Map(sisters.map(c=>[c,{close:[],tense:[],neutral:[],leaves:false}]));
+ const pairs=[];
+ for(const [i,a] of sisters.entries())for(const b of sisters.slice(i+1)){
+   const bond=sisterVigilBond(a,b);
+   seats.get(a)[bond].push(b);seats.get(b)[bond].push(a);pairs.push({a,b,bond});
+ }
+ for(const seat of seats.values()){
+   if(seat.tense.length)seat.leaves=chance(seat.close.length ? .25 : .65);
+ }
+ const title='姐妹共祭先父',fact=`${vigilNames(sisters)}在宫中设下素祭，共悼父亲${father.name}。`;
+ const early=sisters.filter(c=>seats.get(c).leaves),scene=['姐妹们依次拈香，在父亲的灵位前拜了三拜。'];
+ if(early.length===sisters.length)scene.push('礼毕，谁也没提再坐一会儿，姐妹们各自回了宫。');
+ else if(early.length)scene.push(`${vigilNames(early)}上过一炷香便先行告辞。余下的人把灯拨亮了些。`);
+ const companions=new Map();
+ for(const {a,b,bond} of pairs){
+   const stayed=!seats.get(a).leaves&&!seats.get(b).leaves;
+   if(bond==='close'&&stayed){
+     if(!companions.has(a))companions.set(a,[]);
+     companions.get(a).push(b);
+   }
+   if(bond==='close')relAdd(a,b,stayed?4:1);
+   if(bond==='tense'&&stayed)relAdd(a,b,1);
+ }
+ for(const [a,others] of companions)scene.push(`${fullName(a)}守着灯念祭文时，${vigilNames(others)}挨过去陪她坐了一阵。`);
+ if(!companions.size&&early.length<sisters.length)scene.push('灯前静了下来，只听得见香灰偶尔落进炉里的声音。');
+ const views=sisters.map(c=>{
+   const seat=seats.get(c),supported=seat.close.length>0;
+   const mood=seat.leaves?(supported?0:-1):supported?3:1;
+   cchg(c,{mood});
+   return {text:groupVigilThought(c,seat,seats,father),subject:father.id,emotion:mood/8};
+ });
+ father.death.sisterVigil={turn:S.turn,title,daughters:sisters.map(c=>c.id),leftEarly:early.map(c=>c.id)};
+ lifeRecord(sisters,'family',title,'【'+title+'】'+fact,'父亲丧讯',views);
+ sisters.forEach((c,i)=>{
+   const entry=c.story.at(-1);entry.thread='sister-vigil:'+S.gen+':'+father.id;
+   entry.t+=' '+views[i].text;
+ });
+ pushEv({title,cast:sisters,text:[fact,...scene].join('\n'),choices:[{t:'知道了'}]});
 }
 function sisterThread(c,g){return `sister:${S.gen}:${c.id}:${g.id}`;}
 function sisterNewcomerThought(c,g,feeling){

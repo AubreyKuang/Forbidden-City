@@ -13,7 +13,7 @@ function lifeRecord(people,kind,title,text,source='',thoughts=[]){
   p.story.at(-1).life={kind,title,turn:S.turn,gen:S.gen,people:names,source};
  }
  NPCMemory.record(S,{type:'personal-life',time:S.turn,participants:cast.map(p=>p.id),object:title,outcome:text},
-  cast.map((p,i)=>({person:p.id,subject:cast.find(o=>o!==p)?.id||'emperor',interpretation:typeof thoughts[i]==='string'?thoughts[i]:thoughts[i]?.text||text,
+  cast.map((p,i)=>({person:p.id,subject:thoughts[i]?.subject??(cast.find(o=>o!==p)?.id||'emperor'),interpretation:typeof thoughts[i]==='string'?thoughts[i]:thoughts[i]?.text||text,
    emotion:thoughts[i]?.emotion??.45,impact:75,channel:'participant'})));
 }
 function lifeHurt(c,text){

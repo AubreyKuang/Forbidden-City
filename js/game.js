@@ -756,6 +756,7 @@ A.endMonth=function(){
     const petition=pendingSisterCustody();if(petition)must.push(petition);
     const palaceChapter=storyCastLifeMonthly(castStories);if(palaceChapter)must.push(palaceChapter);
     const maidDispute=maidFavorDispute();if(maidDispute)must.push(maidDispute);
+    must.push(...pendingPrinceSpouseDiscoveries());
     if(!affairWatch){const guardAffair=guardAffairEvent();if(guardAffair)must.push(guardAffair);}
     const princeRivalry=princeCareerRivalryEvent();if(princeRivalry)must.push(princeRivalry);
     if(dynastyFollowupActive()){
@@ -850,11 +851,13 @@ function succeed(h){
     S.consorts=[];S.children=[];S.rel=retainedFamiliesActive()?S.rel:{};S.courtPolicy={};S.courtPolicyTurn=null;S.heir=null;S.cands=[];S.gen++;S.year=1;S.over=false;S.genChar=GEN_CHARS[(GEN_CHARS.indexOf(S.genChar)+1)%GEN_CHARS.length];
     delete S.selection;if(!legacyPendingAction())S.flags.haremAttendance={gen:S.gen,turn:S.turn};S.flags.lastXX=-99;if(selectionSkipTimingActive())delete S.flags.lastXXSkipped;delete S.flags.lastProudDemand;delete S.flags.scholarArc;delete S.flags.rareArcOwners;delete S.flags.arcPacing;delete S.flags.xinPacing;delete S.flags.lastLiteraryGathering;delete S.lastGardenBanquet;S.gardenPlans=[];seasonalTick();S.emp.energy=maxEnergy();
     log(`━━ 第${cnNum(S.gen)}代 ━━ ${v}元年，新帝${S.emp.sur}${h.name}登基，尊${S.flags.dowager.fullName||S.flags.dowager.name}为${S.flags.dowager.name}${S.flags.birthDowager?.alive?`，另尊生母${S.flags.birthDowager.fullName}为皇太后`:""}。`,1);
+    const seniorNotice=PalaceActions.longLivedDowagers?seniorDowagerAccessionLine():'';
+    if(seniorNotice)log(seniorNotice,1);
     if(S.emp.dynastyLegacy){const l=S.emp.dynastyLegacy;log(`【先帝传承】${l.predecessor}留下家训「${l.lesson}」。先朝声望使新君威望增加${l.renown}。`,1);}
     if(S.emp.age>=15&&!S.emp.natalMarriageHeir){const em=marriageEmpress(h)||makeGirl({fam:pick(FAMS.slice(0,4)),trait:pick(['温婉','聪慧','城府','骄矜'])});em.favor=35;em.aff=30;if(h.spouse)em.knownBeforeAccession=true;addConsort(em,8,h.spouse?'潜邸嫡妻，随新帝登基册立':'新帝登基，奉遗诏册立');if(h.spouse&&journalContentVersion()>=85)em.accessionArrival={gen:S.gen,started:S.turn};}
     inheritHousehold(h,empress());inheritLifeKeepsakes(h);S.ys={c:0,b:0,n:0};UI.kidsResidence='palace';
     migrate();UI.view='map';AU.sfx('gong');
-    return {title:'新朝家人',por:dowagerPerson(S.flags.dowager),text:`${v}元年，新帝登基，大赦天下。\n${S.flags.dowager.fullName||S.flags.dowager.name}${S.flags.dowager.alive?'尊为'+S.flags.dowager.name+'，居慈宁宫。':'已故，尊谥存于宗谱。'}${S.flags.birthDowager?.alive?'\n生母'+S.flags.birthDowager.fullName+'亦尊为皇太后。':''}\n潜邸妻儿与亲族的往来，由此接入新朝。`}}}]});
+    return {title:'新朝家人',por:dowagerPerson(S.flags.dowager),text:`${v}元年，新帝登基，大赦天下。\n${S.flags.dowager.fullName||S.flags.dowager.name}${S.flags.dowager.alive?'尊为'+S.flags.dowager.name+'，居慈宁宫。':'已故，尊谥存于宗谱。'}${S.flags.birthDowager?.alive?'\n生母'+S.flags.birthDowager.fullName+'亦尊为皇太后。':''}${seniorNotice?'\n'+seniorNotice:''}\n潜邸妻儿与亲族的往来，由此接入新朝。`}}}]});
 }
 
 /* ============ 开局 ============ */

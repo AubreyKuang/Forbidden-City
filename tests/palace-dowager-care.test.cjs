@@ -19,3 +19,30 @@ for(const stage of ['question','illness'])test(stage+' popup and subsequent care
  let b=world();b.run(`d.lastYears.askTurn=${stage==='question'?70:60};d.lastYears.asked=${stage==='illness'};S.turn=${stage==='question'?69:93};S.month=5;PalaceActions.reset();A.endMonth();`);const title=b.run('curEv.title'),state=b.run('JSON.stringify(d.lastYears)');
  b=boot(188,b.storage);b.ctx.assert=assert;b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);var d=ensureDowager();assert.equal(curEv.title,${JSON.stringify(title)});assert.equal(JSON.stringify(d.lastYears),${JSON.stringify(state)});choose(0);drain();save('auto');A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(dowagerLifePlan().deathTurn,100);`);
 });
+
+test('a long-lived dowager keeps her face, lifespan and history as the senior dowager across reigns',()=>{
+ let b=world();b.run(`d.age=43;d.atTurn=S.turn;delete d.lastYears;
+  assert.ok(dowagerYearsToLive(d,.98)>45*12);
+  assert.ok(dowagerYearsToLive(d,.01)<18*12);
+  var plan=dowagerLifePlan(d);plan.deathTurn=900;plan.askTurn=880;
+  var face=portraitCell(dowagerPerson(d));dowagerRecord(d,'旧事','还收着从前那封旧家书。');
+  E().age=45;S.turn=180;
+  var heir=makeKid(q,'m','承宁');heir.born=S.turn-19*12;heir.pendingName=false;
+  succeed(heir);choose(0,'景明');assert.match(modalResult.text,/受尊为.*太皇太后/);drain();
+  assert.equal(S.flags.seniorDowagers[0],d);assert.equal(dowagerLifePlan(d).deathTurn,900);
+  assert.equal(portraitCell(dowagerPerson(d)),face);
+  S.turn=360;var next=makeKid(empress(),'m','恒宁');next.born=S.turn-20*12;next.pendingName=false;
+  succeed(next);choose(0,'长乐');drain();assert.equal(S.gen,3);
+  assert.equal(S.flags.seniorDowagers[0],d);assert.ok(S.flags.seniorDowagers[1].personId);
+  assert.match(dowagerCourtPanel(),/太皇太后.*请安/);assert.match(dowagerCourtPanel(),/旧家书/);
+  save('1');`);
+ b=boot(991,b.storage);b.ctx.assert=assert;
+ b.run(`A.load('1');assert.equal(PalaceActions.blocked,false);var d=S.flags.seniorDowagers[0],main=S.flags.dowager;
+  E().energy=5;A.greetSeniorDowager(0);assert.match(curEv.title,/太皇太后/);choose(0);drain();
+  assert.match(d.story.at(-1).t,/来请安/);
+  S.turn=900;main.lastYears={deathTurn:999,askTurn:970,asked:false,warned:false};
+  S.flags.seniorDowagers[1].lastYears={deathTurn:1000,askTurn:990};
+  var ev=dowagerPassingEvent();assert.match(ev.title,/太皇太后崩逝/);pushEv(ev);
+  assert.equal(d.alive,false);assert.equal(main.alive,true);assert.equal(mourningOf(),d.mourning);
+  choose(1);drain();assert.equal(d.mourning.handled,true);`);
+});

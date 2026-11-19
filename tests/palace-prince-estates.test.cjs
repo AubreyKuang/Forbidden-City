@@ -9,6 +9,111 @@ function princeWorld(age=19){
   return game;
 }
 
+test('early low-trust couples have an awkward visit and separate chronicles, while a close couple does not',()=>{
+ const game=princeWorld(23);
+ game.run(`openPrinceEstate(prince);prince.married=true;
+   prince.spouse={...marriageCandidate(prince,'scholar'),marriedAt:S.turn,trust:36};
+   var p=prince.spouse,h=ensureMarriedLife(prince);recordHouseholdNews(prince);
+   assert.equal(h.pending.id,'newlywed');assert.match(p.story.at(-1).t,/新婚初识.*茶送到两处/);
+   A.householdVisit(prince.id);assert.equal(curEv.title,'新婚 · 话到嘴边');choose(0);drain();
+   assert.equal(p.trust,40);assert.match(p.story.at(-1).t,/同桌用饭/);
+   assert.ok(prince.story.some(x=>x.t.includes('新婚 · 话到嘴边')));
+   assert.equal(makeHouseholdScene(prince),null);
+   var princess=makeKid(a,'f','昭仪');princess.born=S.turn-21*12;princess.pendingName=false;
+   princess.married=true;princess.spouse={...marriageCandidate(princess,'scholar'),marriedAt:S.turn,trust:78};
+   ensureMarriedLife(princess);assert.equal(makeHouseholdScene(princess),null);
+   princess.spouse.trust=34;recordHouseholdNews(princess);assert.equal(princess.household.pending.id,'newlywed');
+   assert.match(householdSceneEvent(princess).text,/昭仪.*对方/);`);
+});
+
+test('the Wang residence and the collapsible family roster open the same child portrait and profile',()=>{
+ const game=princeWorld(30);
+ game.run(`openPrinceEstate(prince);prince.married=true;
+  prince.spouse={...marriageCandidate(prince,'scholar'),marriedAt:S.turn-72,trust:70};
+  var h=ensureMarriedLife(prince),id='grand-'+prince.id;
+  h.children.push({id,name:'景行',sex:'m',born:S.turn-24,alive:true,seed:21,portraitVariant:3,
+    motherName:prince.spouse.name,fatherName:prince.name,father:prince.id,mother:prince.spouse.id,lit:41,mar:26,vir:38,hp:91,story:[{d:dateStr(),t:'初学识字。'}]});
+  A.go('prince-estate',prince.id);assert.match(viewPrinceEstate(),/household-child/);assert.match(viewPrinceEstate(),/景行/);
+  A.go('household-child',id);assert.match(viewHouseholdChild(),/景行/);assert.match(viewHouseholdChild(),/class="por /);
+  assert.match(viewHouseholdChild(),/生父.*承安/);assert.match(viewHouseholdChild(),/体魄/);assert.match(viewHouseholdChild(),/初学识字/);
+  assert.equal(chroniclePersonTarget(id).person,h.children[0]);assert.match(viewHouseholdChild(),/返回王府/);
+  A.backPerson('family');assert.equal(UI.view,'prince-estate');
+  assert.match(viewFamily(),/<details class="family-branch"><summary><strong>皇子公主的子女/);
+  UI.familyMode='list';assert.match(viewFamily(),/皇子公主的子女/);`);
+});
+
+test('a Wang consort can refuse a private visit or agree once without telling the prince',()=>{
+ let game=princeWorld(25);
+ game.run(`E().age=45;openPrinceEstate(prince);prince.married=true;
+  prince.spouse={...marriageCandidate(prince,'scholar'),marriedAt:S.turn-12,trust:31,willing:false};
+  ensureMarriedLife(prince);var p=prince.spouse;
+  A.princeSpouseVisit(prince.id);assert.equal(curEv.title,'王府 · 私下求见');
+  assert.equal(curEv.choices.length,1);choose(0);drain();assert.equal(p.princePrivateVisit.meetings,0);
+  A.princeSpouseVisit(prince.id);assert.equal(modalOpen,false);
+  S.turn++;p.willing=true;p.seed=Array.from({length:300},(_,i)=>i+1).find(seed=>mulberry32(voiceHash('prince-spouse-visit:'+seed+':'+(E().seed||S.gen)))()<.62);
+  PalaceActions.reset();A.princeSpouseVisit(prince.id);assert.equal(curEv.choices.length,2);save('1');`);
+ game=boot(83,game.storage);game.ctx.assert=assert;
+ game.run(`A.load('1');assert.equal(PalaceActions.blocked,false);var prince=S.children.find(k=>k.name==='承安'),p=prince.spouse,energy=E().energy;
+  choose(0);assert.equal(E().energy,energy-1);drain();assert.equal(p.princePrivateVisit.meetings,1);
+  assert.match(p.story.at(-1).t,/亲口应允/);assert.doesNotMatch(prince.story.map(x=>x.t).join(''),/王府私会/);
+  assert.ok(!(S.reignAnnals||[]).some(e=>e.title==='王府 · 私下求见'));
+  S.turn++;prince.away=true;A.princeSpouseVisit(prince.id);assert.equal(modalOpen,false);
+  prince.away=false;p.born=S.turn-17*12;A.princeSpouseVisit(prince.id);assert.equal(modalOpen,false);`);
+});
+
+test('a noticed private meeting reaches the next month, with two private accounts and lasting fallout after a reload',()=>{
+ let game=princeWorld(27);
+ game.run(`E().age=45;openPrinceEstate(prince);prince.married=true;prince.temperament='仁厚';
+   var p=prince.spouse={...marriageCandidate(prince,'scholar'),marriedAt:S.turn-40,trust:78,willing:true};
+   p.marriageNature={...marriageNature(p),temperament:'沉静'};
+   p.seed=Array.from({length:300},(_,i)=>i+1).find(seed=>mulberry32(voiceHash('prince-spouse-visit:'+seed+':'+(E().seed||S.gen)))()<.10);
+   ensureMarriedLife(prince).nextNews=S.turn+48;
+   A.princeSpouseVisit(prince.id);choose(0);drain();assert.equal(p.princePrivateVisit.meetings,1);
+   assert.equal(p.princePrivateVisit.noticed,undefined);
+   S.turn++;A.princeSpouseVisit(prince.id);`);
+ game.force(.01);
+ game.run(`choose(0);drain();var visit=p.princePrivateVisit;assert.equal(visit.meetings,2);assert.equal(visit.noticedAt,S.turn);
+   assert.match(prince.story.at(-1).t,/王府闲话.*没.*准话/);assert.equal(pendingPrinceSpouseDiscoveries().length,0);
+   var seek=title=>{for(var n=0;modalOpen&&n<150;n++){
+     if(!modalResult&&curEv.title===title)return;
+     if(modalResult)nextEv();else choose(curEv.choices.findLastIndex(c=>!c.cond||c.cond()));
+   }throw Error('Missing '+title);};
+   A.endMonth();seek('王府 · 私约说开');
+   assert.match(curEv.text,/账册阖上.*亲口答允/s);assert.match(curEv.text,/责问偏厅当差的宫人.*先听你亲口说/s);
+   save('1');`);
+ game=boot(84,game.storage);game.ctx.assert=assert;
+ game.run(`A.load('1');assert.equal(PalaceActions.blocked,false);assert.equal(curEv.title,'王府 · 私约说开');
+   var prince=S.children.find(k=>k.name==='承安'),p=prince.spouse,visit=p.princePrivateVisit;
+   choose(0);assert.equal(visit.discovery.before,78);assert.equal(p.trust,66);
+   assert.match(prince.story.at(-1).t,/王府私约说开.*父皇.*答应止住/);assert.match(p.story.at(-1).t,/王府私约说开.*替我留着灯/);
+   drain();assert.match(princeSpouseVisitPanel(prince),/私下往来已止/);
+   A.princeSpouseVisit(prince.id);assert.equal(modalOpen,false);
+   A.princeFamilyMemo(prince.id,p.id);assert.match(curEv.text,/王府私约说开.*替我留着灯/);drain();
+   A.endMonth();assert.ok(![curEv,...Q].some(e=>e?.title==='王府 · 风波之后'));drain();
+   A.endMonth();var follow=[curEv,...Q].find(e=>e?.title==='王府 · 风波之后');assert.match(follow.text,/重新请她同桌用饭/);
+   drain();assert.equal(visit.discovery.followed,true);assert.equal(p.trust,68);
+   assert.match(prince.story.at(-1).t,/王府风波之后.*照常待值夜/);assert.match(p.story.at(-1).t,/王府风波之后.*肯听的时候才说/);
+   for(const person of [prince,p])assert.equal(person.story.filter(e=>e.t.includes('【王府私约说开】')).length,1);
+   assert.equal(pendingPrinceSpouseDiscoveries().length,0);
+   assert.ok(!S.reignAnnals.some(e=>['王府 · 私约说开','王府 · 风波之后'].includes(e.title)));
+   assert.ok(!S.log.some(e=>/王府私约说开|王府风波之后/.test(e.t)));`);
+});
+
+test('an old rumour continues for a distant marriage and survives a temporary absence',()=>{
+ const game=princeWorld(27);
+ game.run(`E().age=45;openPrinceEstate(prince);prince.married=true;prince.temperament='自矜';
+   var p=prince.spouse={...marriageCandidate(prince,'scholar'),marriedAt:S.turn-40,trust:35};
+   p.marriageNature={...marriageNature(p),temperament:'好胜'};ensureMarriedLife(prince);
+   var visit=p.princePrivateVisit={gen:S.gen,meetings:2,last:S.turn-1,noticed:true};
+   p.away=true;assert.equal(pendingPrinceSpouseDiscoveries().length,0);p.away=false;
+   visit.gen--;assert.equal(pendingPrinceSpouseDiscoveries().length,0);visit.gen++;
+   pushEv(pendingPrinceSpouseDiscoveries()[0]);assert.match(curEv.text,/声音虽有些发颤.*把门掩好.*原先就少问彼此的心事/s);
+   choose(1);drain();assert.equal(p.trust,27);
+   assert.match(prince.story.at(-1).t,/晚膳摆在书房/);assert.match(p.story.at(-1).t,/我自己做的决定/);
+   S.turn+=2;pushEv(pendingPrinceSpouseDiscoveries()[0]);assert.match(curEv.text,/见客的安排先互相知会/);
+   choose(0);drain();assert.equal(p.trust,27);assert.match(p.story.at(-1).t,/把每句话辩到底/);`);
+});
+
 test('a prince moves from a capital residence to a named fief and later returns',()=>{
   const game=princeWorld();game.run(`openPrinceEstate(prince);var id=prince.id;A.go('prince-estate',id);
     assert.match(viewPrinceEstate(),/睿亲王府/);assert.match(viewPrinceEstate(),/到王府探望/);

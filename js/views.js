@@ -37,7 +37,7 @@ function renderMenu(){const m=$('#menu');if(!S){m.innerHTML='';m.hidden=true;ret
 }
 let panelRoute;
 let personBackStack=[];
-const PERSON_DETAIL_VIEWS=['consort','kid','relative','official','natal','white-spring-kin'];
+const PERSON_DETAIL_VIEWS=['consort','kid','relative','official','natal','white-spring-kin','household-child'];
 function rememberPersonRoute(view,id){
   if(!PERSON_DETAIL_VIEWS.includes(view)){personBackStack=[];return;}
   if(!PERSON_DETAIL_VIEWS.includes(UI.view)||personBackStack.at(-1)?.state!==S)personBackStack=[];
@@ -75,7 +75,7 @@ function renderPanel(){
   const route=JSON.stringify([v,UI.sel]);
   if(!S)p.innerHTML=v==='new'?viewNew():viewTitle();
   else if(v==='regnal'&&regnalChronicleActive())p.innerHTML=viewRegnalChronicle();
-  else p.innerHTML=({government:viewGovernment,residences:viewResidences,officials:officialsRoster,official:viewOfficial,ministries:typeof viewMinistries==='function'?viewMinistries:viewGovernment,scholar:typeof viewScholar==='function'?viewScholar:viewGovernment,jinyiwei:typeof viewJinyiwei==='function'?viewJinyiwei:viewGovernment,jewelry:viewJewelryVault,natal:viewNatalRelative,'white-spring-kin':viewWhiteSpringKin,relative:viewRoyalRelative,family:viewFamily,map:viewMap,palace:viewPalace,place:viewPlace,banquet:viewBanquet,home:viewHome,fenghua:typeof viewFenghuaPerson==='function'?viewFenghuaPerson:viewHome,harem:viewHarem,consort:viewConsort,cards:viewCards,xx:viewXX,outer:typeof outerRegisterView==="function"?outerRegisterView:viewKids,kids:viewKids,kid:viewKid,princess:viewPrincessEstate,'prince-estate':viewPrinceEstate,out:viewOut,log:viewLog,sys:viewSys}[v]||viewHome)();
+  else p.innerHTML=({government:viewGovernment,residences:viewResidences,officials:officialsRoster,official:viewOfficial,ministries:typeof viewMinistries==='function'?viewMinistries:viewGovernment,scholar:typeof viewScholar==='function'?viewScholar:viewGovernment,jinyiwei:typeof viewJinyiwei==='function'?viewJinyiwei:viewGovernment,jewelry:viewJewelryVault,natal:viewNatalRelative,'white-spring-kin':viewWhiteSpringKin,relative:viewRoyalRelative,family:viewFamily,map:viewMap,palace:viewPalace,place:viewPlace,banquet:viewBanquet,home:viewHome,fenghua:typeof viewFenghuaPerson==='function'?viewFenghuaPerson:viewHome,harem:viewHarem,consort:viewConsort,cards:viewCards,xx:viewXX,outer:typeof outerRegisterView==="function"?outerRegisterView:viewKids,kids:viewKids,kid:viewKid,princess:viewPrincessEstate,'prince-estate':viewPrinceEstate,'household-child':viewHouseholdChild,out:viewOut,log:viewLog,sys:viewSys}[v]||viewHome)();
   if(S&&v==='xx')rememberSelectionBlurt(selectionCurrent());
   if(route!==panelRoute){p.scrollTop=0;panelRoute=route;}
 }
@@ -260,7 +260,7 @@ A.logCard=function(){
 };
 
 function viewFamily(){
-  if((UI.familyMode||'graph')==='graph')return `${pageHeading('家族关系树')}<div class="acts view-switch" role="group" aria-label="家族查看方式"><button class="btn sm on">关系图</button><button class="btn sm" onclick="A.familyMode('list')">家族列表</button></div>${dowagerFamilyPanel()}${familyGraphSVG()}${outsideBirthFamilyPanel()}${royalRelativesPanel()}`;
+  if((UI.familyMode||'graph')==='graph')return `${pageHeading('家族关系树')}<div class="acts view-switch" role="group" aria-label="家族查看方式"><button class="btn sm on">关系图</button><button class="btn sm" onclick="A.familyMode('list')">家族列表</button></div>${dowagerFamilyPanel()}${familyGraphSVG()}${outsideBirthFamilyPanel()}${royalRelativesPanel()}${householdDescendantsPanel()}`;
   const byClan=new Map(),kidsByMother=new Map();
   for(const k of S.children){
     if(!kidsByMother.has(k.mom))kidsByMother.set(k.mom,[]);
@@ -293,7 +293,7 @@ function viewFamily(){
     branch(whiteSpringRoyal(people[0])?'白泉王室 · 父王与王兄':familyVisibilityActive()?(hasClan(people[0])?clanName(key):people[0].sur+'家'):key?clanName(key):'未列家族',people,hasClan(people[0])?` · 势力 ${Math.max(...people.map(c=>rd(c.fam.p)))}`:'',key||'')).join('');
   const unlisted=S.children.filter(k=>!byId(k.mom)&&!k.birthSwap?.confirmed);
   return `${pageHeading('家族关系树')}<div class="acts view-switch" role="group" aria-label="家族查看方式"><button class="btn sm" onclick="A.familyMode('graph')">关系图</button><button class="btn sm on">家族列表</button></div><p class="hint">皇嗣列在生母名下，另标养母。点名字可查看人物。</p>
-    ${dowagerFamilyPanel()}${branches||'<p class="hint">目前没有入宫的妃嫔。</p>'}${outsideBirthFamilyPanel()}${royalRelativesPanel()}
+    ${dowagerFamilyPanel()}${branches||'<p class="hint">目前没有入宫的妃嫔。</p>'}${outsideBirthFamilyPanel()}${royalRelativesPanel()}${householdDescendantsPanel()}
     ${unlisted.length?`<details class="family-branch"><summary>生母未载</summary><ul>${unlisted.map(childLine).join('')}</ul></details>`:''}`;
 }
 function dynastyLegacyPanel(legacy){

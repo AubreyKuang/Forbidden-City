@@ -61,11 +61,12 @@ test('couple scenes reflect reading, quiet time, lively streets and the actual l
     k.away=true;assert.ok(!royalDomesticNews(k,k.spouse).some(row=>row.title==='花街同游'));`);
 });
 
-test('a married royal power couple can petition to tour and keep the same partner through return',()=>{
-  const b=married('f');
+for(const [sex,name] of [['m','乔妤黛'],['f','乔明达']])test('a married royal can tour with their named spouse: '+sex,()=>{
+  const b=married(sex);
   b.run(`var spouse=k.spouse;
     assert.match(householdPanel(k),/商议夫妻同游/);
-    A.planBetrothedTravel(k.id);assert.match(curEv.text,/一同署了请出京游历的折子/);
+    k.spouse.name='${name}';k.spouse.sur='乔';delete k.spouse.given;
+    A.planBetrothedTravel(k.id);assert.equal(porName(curEv.cast[0]),'${name}');assert.ok(curEv.text.includes('${name}'));assert.match(curEv.text,/一同署了请出京游历的折子/);
     assert.match(curEv.choices[0].t,/准两人结伴/);
     choose(0);drain();
     assert.equal(royalTravelCompanion(k),spouse);assert.equal(householdActive(k),false);
