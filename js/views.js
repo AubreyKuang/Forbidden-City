@@ -132,9 +132,9 @@ function dowagerFamilyPanel(){
   const portrait=dowagerPerson(d);
   const kin=S.consorts.filter(c=>!c.maid&&clanKey(c)===d.clan);
   return `<section class="dowager-family" aria-label="太后与母家亲族">
-    <div class="dowager-line"><div class="dowager-person">${porImg({...portrait,alive:d.alive},64)}<span><strong>${esc(name)}</strong><small>${d.alive?'慈宁宫':'已故'}</small></span></div>
+    <div class="dowager-line"><div class="dowager-person">${porImg({...portrait,alive:d.alive},64)}<span><strong>${esc(name)}</strong><small>${d.alive?esc(dowagerResidence(d)):'已故'}</small></span></div>
       <span class="family-link">${esc(d.relation||'母子')} →</span><button class="btn quiet dowager-person" onclick="A.go('home')">${porImg('emp',52)}<span><strong>${esc(E().sur+E().name)}</strong><small>皇帝</small></span></button></div>
-    ${S.flags.birthDowager?`<div class="dowager-line">${porImg(dowagerPerson(S.flags.birthDowager),64)}<span><strong>${esc(S.flags.birthDowager.name)}</strong><small>生母 · ${esc(S.flags.birthDowager.fullName)}${S.flags.birthDowager.alive?'':' · 已故'}</small></span></div>`:''}
+    ${S.flags.birthDowager?`<div class="dowager-line">${porImg(dowagerPerson(S.flags.birthDowager),64)}<span><strong>${esc(S.flags.birthDowager.name)}</strong><small>生母 · ${esc(S.flags.birthDowager.fullName)}${S.flags.birthDowager.alive?' · '+esc(dowagerResidence(S.flags.birthDowager)):' · 已故'}</small></span></div>`:''}
     <div class="dowager-clan"><span class="family-link">母家同族 ↳</span><div><strong>${esc(clanName(d.clan))}</strong>
       <p class="hint">${kin.length?kin.map(c=>esc(fullName(c))).join('、'):'尚无母家族女入宫'}</p><small>下方按父亲分支，同父姐妹共用一个父亲节点。</small></div></div></section>`;
 }
@@ -542,7 +542,7 @@ function viewKids(){
   const groups={palace:living.filter(k=>!childHasLeftPalace(k)),out:living.filter(childHasLeftPalace)};
   const selected=UI.kidsResidence==='out'?'out':'palace';
   const [kind,kindLabel]=KIDS_KIND_FILTERS.find(([id])=>id===UI.kidsKind)||KIDS_KIND_FILTERS[0];
-  const matches=k=>kind==='all'||k.sex===kind;
+  const matches=k=>kind==='all'||!k.princeSpouseOrigin&&k.sex===kind;
   const visible=groups[selected].filter(matches),past=S.children.filter(k=>!k.alive&&matches(k));
   const residenceLabel=selected==='palace'?'宫中':'宫外';
   const grid=ks=>`<div class="grid portrait-grid">${ks.map(childListCard).join('')}</div>`;
@@ -569,10 +569,10 @@ function viewKid(){
     <div class="acts">${a>=6?`<button class="btn ${k.tutor?'on':''}" onclick="A.kidTutor(${k.id})">${k.tutor?'已延请太傅':'延请太傅'}<small>每月5万两</small></button>`:''}
     ${a<14?`<button class="btn" onclick="A.foster(${k.id})">${foster?'换一位养母':'交给妃嫔抚养'}</button>`:''}
     ${foster&&mom?.alive?`<button class="btn" onclick="A.unfoster(${k.id})">抱回生母身边</button>`:''}</div>`:'';
-  const titles=k.alive&&!k.removedFromRoyal&&!k.templeStay&&!royalJourneyAway(k)?`${k.sex==='m'&&a>=5&&S.heir!==k.id&&!storyCastHeirBar(k)?`<button class="btn" onclick="A.kidHeir(${k.id})">立为太子</button>`:''}
+  const titles=k.alive&&!k.princeSpouseOrigin&&!k.removedFromRoyal&&!k.templeStay&&!royalJourneyAway(k)?`${k.sex==='m'&&a>=5&&S.heir!==k.id&&!storyCastHeirBar(k)?`<button class="btn" onclick="A.kidHeir(${k.id})">立为太子</button>`:''}
     ${(journalContentVersion()>=40?royalChildTitleReady(k):a>=12)?`<button class="btn" onclick="A.kidTitle(${k.id})">赐封号</button>`:''}`.trim():'';
   const household=householdPanel(k);
-  const familyChapter=['family','亲缘与婚配',palaceAdoptionOriginPanel(k)+princessActions(k)+princeEstateLink(k)+multipleBirthPanel(k)+
+  const familyChapter=['family','亲缘与婚配',princeSpouseOriginPanel(k)+palaceAdoptionOriginPanel(k)+princessActions(k)+princeEstateLink(k)+multipleBirthPanel(k)+
       detailSection('身世与安置',parentagePanel(k))+outsideParentagePanel(null,k)+detailSection('府中认回的孩子',recognizedChildrenPanel(k))+
       (k.alive?detailSection('与母亲的日常',kidFamilyPanel(k)):'')+detailSection('宫中关系',k.alive?kidRelLine(k):'')];
   const vitals=`<div class="detail-vitals">${bar('才学',k.lit,'#617991')}${bar('武艺',k.mar,'#92504a')}${bar('品德',k.vir,'#517369')}</div>`;

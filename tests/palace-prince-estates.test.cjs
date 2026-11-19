@@ -149,7 +149,8 @@ test('a rare private conception is concealed until a sealed inquiry, then surviv
    assert.equal(p.princePrivateVisit.paternityConfirmed,true);assert.equal(princeSpouseDiscoveryEvent(prince),null);
    assert.match(princeSpouseVisitPanel(prince),/私下往来已止/);
    A.princeSpouseVisit(prince.id);assert.equal(modalOpen,false);
-   assert.match(prince.story.at(-1).t,/王府亲缘密卷.*取什么名字/);assert.match(p.story.at(-1).t,/王府亲缘密卷.*往后还愿不愿听/);
+   assert.match(prince.story.findLast(e=>e.t.startsWith('【王府亲缘密卷】')).t,/取什么名字/);assert.match(p.story.findLast(e=>e.t.startsWith('【王府亲缘密卷】')).t,/往后还愿不愿听/);
+   assert.match(prince.story.at(-1).t,/王府留养.*大人的为难/);assert.match(p.story.at(-1).t,/王府留养.*缝了一半的小被/);
    assert.ok(!S.reignAnnals.some(e=>/王府亲缘|胎月起疑|孕信密呈/.test(e.title)));
    assert.ok(!S.log.some(e=>/生父为皇帝|王府密查/.test(e.t)));
    S.turn=h.pregnancies[0].due;marriedLifeTick();marriedLifeTick();
@@ -190,6 +191,46 @@ test('saying no, an old pregnancy, and an unlucky private meeting do not create 
    S.turn+=3;assert.equal(startHouseholdPregnancy(prince,p),true);S.turn+=3;
    A.princeSpouseVisit(prince.id);choose(0);drain();
    assert.equal(prince.household.pregnancies.length,1);assert.equal(princeSpouseParentageCases(prince).length,0);`);
+});
+
+test('a sealed placement waits for birth, then the actual child moves to the selected dowager after reload',()=>{
+ let game=princeParentageWorld(75,'仁厚','敏感');
+ game.run(`var main=S.flags.dowager=makeDowager(q,'嫡母'),birth=S.flags.birthDowager=makeDowager(a,'生母');setupJyw();
+   assert.ok(startHouseholdPregnancy(prince,p,{privateVisit:true}));
+   var g=prince.household.pregnancies[0],dossier=princeSpouseParentageCases(prince)[0];dossier.status='investigating';dossier.due=S.turn;
+   PalaceActions.reset();A.princeSpousePaternity(prince.id,dossier.key);choose(1);
+   assert.equal(curEv.title,'王府密议 · 孩子的去处');
+   choose(curEv.choices.findIndex(c=>c.t.includes('慈宁宫西殿')));assert.match(modalResult.text,/先顾她的身子/);drain();
+   assert.equal(dossier.placement.status,'waiting');assert.equal(S.children.length,1);
+   assert.match(princeSpouseParentagePanel(prince),/待出生后/);assert.equal(pendingPrinceSpousePlacements().length,0);
+   assert.match(p.story.at(-1).t,/王府接养密议.*枕边/);
+   S.turn=g.due-1;PalaceActions.reset();A.endMonth();seek(/王府密信 · 孩子已出生/);save('1');`);
+ game=boot(898,game.storage);game.ctx.assert=assert;
+ game.run(`A.load('1');assert.equal(PalaceActions.blocked,false);assert.equal(curEv.title,'王府密信 · 孩子已出生');
+   var prince=S.children.find(k=>k.name==='承安'),p=prince.spouse,dossier=princeSpouseParentageCases(prince)[0];
+   var baby=prince.household.children[0],original=baby.id,firstPortrait=portraitCell(baby),firstName=baby.name;
+   choose(0);drain();assert.equal(prince.household.children.length,0);assert.equal(dossier.placement.status,'palace');
+   assert.equal(householdBirthCount(prince),1);assert.equal(dossier.placement.palaceId,baby.id);
+   assert.equal(kidById(baby.id),baby);assert.equal(baby.princeSpouseOrigin.formerId,original);assert.equal(baby.name,firstName);
+   assert.equal(portraitCell(baby),firstPortrait);assert.equal(upbringingDowager(baby),S.flags.birthDowager);
+   assert.match(childResidence(baby),/西殿/);assert.match(kidName(baby),/宗室寄养/);
+   assert.match(prince.story.findLast(e=>e.t.startsWith('【王府送别】')).t,/再抱一会儿/);assert.match(p.story.findLast(e=>e.t.startsWith('【王府送别】')).t,/小被/);
+   assert.equal(eligiblePalaceSon(baby),false);assert.equal(pendingPrinceSpousePlacements().length,0);
+   assert.ok(!S.log.some(e=>/密接入宫|王府送别/.test(e.t)));
+   A.go('kid',baby.id);assert.match(viewKid(),/来处密记/);assert.match(viewKid(),/慈宁宫西殿/);`);
+});
+
+test('an unavailable planned caregiver can be replaced by a specific consort in an old resolved case',()=>{
+ const game=princeParentageWorld(42,'自矜','好胜');
+ game.run(`S.flags.dowager=makeDowager(q,'太后');
+   startHouseholdPregnancy(prince,p,{privateVisit:true});var g=prince.household.pregnancies[0],dossier=princeSpouseParentageCases(prince)[0];dossier.status='complete';
+   A.princeSpousePlacement(prince.id,dossier.key);choose(0);drain();assert.equal(dossier.placement.seat,'main');
+   S.flags.dowager.alive=false;S.turn=g.due;var baby=deliverHouseholdChild(prince,g);
+   A.princeSpousePlacement(prince.id,dossier.key);assert.match(curEv.text,/无法接养/);choose(0);
+   var index=curEv.choices.findIndex(c=>c.person?.id===a.id);assert.ok(index>=0);choose(index);drain();
+   assert.equal(dossier.placement.palaceId,baby.id);assert.equal(fosterOf(baby),a);assert.equal(youngChildMother(baby),a);
+   assert.match(prince.story.at(-1).t,/多留一夜/);assert.match(p.story.at(-1).t,/亲口告诉她/);assert.match(a.story.at(-1).t,/接养宗亲/);
+   A.princeSpousePlacement(prince.id,dossier.key);assert.equal(modalOpen,false);`);
 });
 
 test('a prince moves from a capital residence to a named fief and later returns',()=>{

@@ -466,7 +466,7 @@ A.scholarTalk=function(id){
 PERSON_DETAIL_VIEWS.push('scholar');
 
 function ritesHeirEligible(k){
-  return k.alive&&k.sex==='m'&&!k.removedFromRoyal&&!k.jailed&&!k.templeStay&&!royalJourneyAway(k)&&kidAge(k)>=5&&!storyCastHeirBar(k);
+  return k.alive&&k.sex==='m'&&!k.princeSpouseOrigin&&!k.removedFromRoyal&&!k.jailed&&!k.templeStay&&!royalJourneyAway(k)&&kidAge(k)>=5&&!storyCastHeirBar(k);
 }
 function observeRitesVacancies(){
   let state=S.flags.ritesVacancies;

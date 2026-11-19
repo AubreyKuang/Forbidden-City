@@ -74,6 +74,10 @@ xieAdmirerReady=function(k){
  if(!xieRomanceActive())return romanceAdmirer(k);
  const p=xieAn(),h=xieHouse(p);
  if(!xieHeartReady(k)||kidAge(k)>25||!xiePresent(p)||!xieUnbound(p))return false;
+ if(PalaceActions.xieOnce&&!k.xieAdmiration){
+  const reader=p.xiean.readerId??p.xiean.pursuerId??royalHouseholds().find(child=>child.xieAdmiration?.personId===p.id)?.id;
+  if(reader!=null&&reader!==k.id)return false;
+ }
  const ageReady=PalaceActions.xiePoetryAge&&!k.xieAdmiration?xieAwaitsFirstReading(p)||p.age===XIE_DEBUT_AGE:p.age<=(xieStoryUpdated()?45:35);
  return ageReady&&
   !mothersOf(k).some(m=>houseOf(m)?.father.id===h?.rootId)&&E().sur!=='谢';

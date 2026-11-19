@@ -17,7 +17,7 @@ const PRINCESS_MATCHES = {
 const archivedPrincesses=()=>S.princessRelatives||[];
 const estatePrincesses=()=>[...kidsAlive().filter(k=>k.estate),...archivedPrincesses()].filter(k=>k.alive&&k.estate&&!royalJourneyAway(k));
 const princessById=id=>{const k=kidById(id)||archivedPrincesses().find(k=>k.id===id);return royalJourneyAway(k)?undefined:k;};
-const canOpenPrincess=k=>k?.alive&&!royalJourneyAway(k)&&!k.templeStay&&!k.removedFromRoyal&&k.sex==='f'&&kidAge(k)>=15&&!k.jailed;
+const canOpenPrincess=k=>k?.alive&&!k.princeSpouseOrigin&&!royalJourneyAway(k)&&!k.templeStay&&!k.removedFromRoyal&&k.sex==='f'&&kidAge(k)>=15&&!k.jailed;
 const princessPursuit=k=>k.lit>=Math.max(45,k.mar+7)?'books':k.mar>=45?'archery':'near';
 
 // Marriage hopes belong to the person, not to the estate's current project.

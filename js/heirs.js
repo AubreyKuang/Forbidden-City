@@ -1,7 +1,7 @@
 /* ============ 皇嗣 ============ */
 function suggestName(sex){const used=new Set(S.children.map(k=>k.name));let n,t=0;do{n=sex==='m'?S.genChar+pick(BOYC):pick(GIRLA)+pick(GIRLB)}while(used.has(n)&&++t<40);return n}
 function makeKid(c,sex,name,{outsideChild=null,origin=null,foster=null}={}){
-  const e=E(),father=conceptionFather(c);const ord=S.children.filter(k=>k.sex===sex).length+1;
+  const e=E(),father=conceptionFather(c);const ord=S.children.filter(k=>k.sex===sex&&!k.princeSpouseOrigin).length+1;
   const k={id:outsideChild?.id??S.nid++,name,sex,mom:c.id,momName:fullName(c),born:outsideChild?.born??S.turn,birthMonth:S.month,ord,
     lit:clamp(c.talent*.6+father.wen*.25+ri(-6,6)+(e.style==='文雅'?4:0)),mar:clamp(father.wu*.3+(c.trait==='将门'?18:0)+ri(0,15)+(e.style==='尚武'?8:0)),
     vir:clamp(c.virtue*.7+ri(0,12)),hp:clamp(55+ri(0,35)-(c.trait==='体弱'?15:0)),amb:clamp(c.scheme*.65+ri(0,18)),
@@ -202,7 +202,7 @@ A.kidVisit=function(id){const k=kidById(id);if(modalOpen||!k?.alive||k.removedFr
 };
 A.kidPolicy=function(id,p){const k=kidById(id);k.policy=p;AU.sfx('click');render()};
 A.kidTutor=function(id){const k=kidById(id);k.tutor=!k.tutor;if(k.tutor){kstory(k,'陛下延请当世大儒为师。');toast('已延请太傅（每月5万两）')}render()};
-A.kidHeir=function(id,fromRites=false){const k=kidById(id);if(!k?.alive||k.removedFromRoyal||k.templeStay||royalJourneyAway(k)||journalContentVersion()>=120&&k.jailed||k.sex!=='m'||kidAge(k)<5)return;if(storyCastHeirBar(k)){toast('礼部回禀：有异域血脉的皇嗣依本朝成例不得入主东宫。');return;}const old=S.heir&&kidById(S.heir);
+A.kidHeir=function(id,fromRites=false){const k=kidById(id);if(!k?.alive||k.princeSpouseOrigin||k.removedFromRoyal||k.templeStay||royalJourneyAway(k)||journalContentVersion()>=120&&k.jailed||k.sex!=='m'||kidAge(k)<5)return;if(storyCastHeirBar(k)){toast('礼部回禀：有异域血脉的皇嗣依本朝成例不得入主东宫。');return;}const old=S.heir&&kidById(S.heir);
   pushEv({title:'册立太子',por:k,valid:()=>k.alive&&!royalJourneyAway(k)&&(journalContentVersion()<120||!k.jailed)&&(!fromRites||!S.heir&&ritesHeirEligible(k)),text:old?`太子${old.name}尚在。改立${k.name}为太子，必将引起朝野震动（威望-6）。`:`立${kidName(k)}为皇太子，昭告天下？`,choices:[
     {t:'册立太子',f:()=>{if(!k.alive||royalJourneyAway(k)||journalContentVersion()>=120&&k.jailed)return null;let s='';if(old){s=chg({prestige:-6});kstory(old,'被废去太子之位。');old.amb=clamp(old.amb+20)}else s=chg({prestige:5});
       S.heir=k.id;delete k.princeEstate;k.away=false;kstory(k,'被册立为皇太子，入主东宫。');{const mm=byId(k.foster||k.mom);if(mm&&mm.alive)setXin(mm,mm.scheme>=55?'野心':'欢喜',`${k.name}被立为太子`)}log(`立${k.name}为皇太子。`,1);
@@ -212,7 +212,7 @@ A.kidHeir=function(id,fromRites=false){const k=kidById(id);if(!k?.alive||k.remov
 A.kidTitle=function(id){const k=kidById(id);if(!k?.alive||royalJourneyAway(k))return;if(journalContentVersion()>=40){pushEv(royalChildTitleEvent(k));return;}pushEv({title:k.sex==='m'?'封王':'公主封号',por:k,text:k.sex==='m'?'请拟王号（一至二字）：':'请为公主拟封号（二字）：',input:{def:k.sex==='m'?pick(['睿','恭','诚','和','裕','庆','端','宁'])+'亲王':pick(['昭阳','长乐','永安','和静','宁华','嘉柔']),max:4},
   choices:[{t:'赐封',f:v=>{k.title=v+(k.sex==='f'&&!v.endsWith('公主')?'公主':'');if(k.sex==='m'&&kidAge(k)>=16)openPrinceEstate(k);kstory(k,`受封为${k.title}。`);log(`封${k.name}为${k.title}。`);return `${k.name}叩谢父皇恩典，自此称${k.title}。`}},{t:'作罢'}]})};
 function royalChildTitleReady(k){
-  return k?.alive&&!k.pendingName&&!k.removedFromRoyal&&!k.templeStay&&!k.jailed&&!royalJourneyAway(k);
+  return k?.alive&&!k.princeSpouseOrigin&&!k.pendingName&&!k.removedFromRoyal&&!k.templeStay&&!k.jailed&&!royalJourneyAway(k);
 }
 function royalChildTitleEvent(k){
   if(!royalChildTitleReady(k))return null;
@@ -289,7 +289,7 @@ function kidEvent(){
       return {title:'顽童',por:k,text:`${kidName(k)}${w[0]}。`,choices:[
       {t:'罚跪一个时辰',f:()=>{k.vir=clamp(k.vir+4);k.love=clamp(k.love-5);kstory(k,`${a}岁，${w[1]}，被罚跪一个时辰。`);return '§品德+4　父爱-5'}},
       {t:'一笑置之',f:()=>{k.amb=clamp(k.amb+3);k.love=clamp(k.love+3);kstory(k,`${a}岁，${w[1]}，父皇一笑置之。`);return '§父爱+3'}}]}}
-    if(k.sex==='m'&&!storyCastHeirBar(k)&&a>=12&&k.amb>=60&&S.heir&&S.heir!==k.id&&chance(.5)){const h=kidById(S.heir);if(h&&h.alive) return {title:'兄弟阋墙',por:k,text:`有宫人密报：${kidName(k)}私下结交朝臣，对太子颇有微词。`,choices:[
+    if(k.sex==='m'&&!k.princeSpouseOrigin&&!storyCastHeirBar(k)&&a>=12&&k.amb>=60&&S.heir&&S.heir!==k.id&&chance(.5)){const h=kidById(S.heir);if(h&&h.alive) return {title:'兄弟阋墙',por:k,text:`有宫人密报：${kidName(k)}私下结交朝臣，对太子颇有微词。`,choices:[
       {t:'严厉申斥',f:()=>{k.amb=clamp(k.amb-15);k.love=clamp(k.love-10);kstory(k,'私结朝臣，被父皇严厉申斥。');return '§野心-15　父爱-10'}},
       {t:'暗中观察',f:()=>{k.amb=clamp(k.amb+5);return '你没有声张。'}},
       {t:'改立他为太子',chronicle:false,f:()=>{A.kidHeir(k.id);return null}}]}}
@@ -298,7 +298,7 @@ function kidEvent(){
 }
 function royalComingOfAgeEvent(){
   if(journalContentVersion()<53)return null;
-  const grown=kidsAlive().filter(k=>S.turn-k.born===15*12).sort(royalBirthOrder);
+  const grown=kidsAlive().filter(k=>!k.princeSpouseOrigin&&S.turn-k.born===15*12).sort(royalBirthOrder);
   if(!grown.length)return null;
   const lists=[['皇子','m'],['公主','f']].flatMap(([label,sex])=>{
     const names=grown.filter(k=>k.sex===sex).map(kidName);
@@ -311,7 +311,7 @@ function royalComingOfAgeEvent(){
     onQueue:()=>log(`${reporter}奏报本月皇嗣成年。${lists.join('；')}。`),choices:[{t:'知道了'}]};
 }
 function milestone(){
-  for(const k of kidsAlive()){if(k.templeStay||royalJourneyAway(k))continue;const a=kidAge(k);
+  for(const k of kidsAlive()){if(k.princeSpouseOrigin||k.templeStay||royalJourneyAway(k))continue;const a=kidAge(k);
     if(k.sex==='f'){const event=princessMilestone(k);if(event)return event;}
     if(k.sex==='m'&&a>=16&&!k.adult){k.adult=true;if(dynastyFollowupActive()&&!k.princeCareer&&childCanVisitCourt(k))choosePrinceVocation(k);if(S.heir===k.id)continue;return {title:'皇子成年',por:k,valid:()=>k.alive&&!royalJourneyAway(k)&&!k.templeStay&&!k.jailed,text:`${kidName(k)}年满十六，按祖制当封王开府。`,choices:[
       {t:'封亲王，留京辅政',f:()=>{if(!k.alive||royalJourneyAway(k))return null;openPrinceEstate(k);const keepTitle=journalContentVersion()>=40&&k.title?.endsWith('亲王');if(!keepTitle)A.kidTitle(k.id);k.amb=clamp(k.amb+10);return keepTitle?`${k.name}沿用「${k.title}」封号，留京开府。`:null}},
@@ -321,11 +321,11 @@ function milestone(){
 }
 
 /* ============ 夺嫡 ============ */
-function supTick(k){if(k.sex!=='m'||!k.alive||k.templeStay||royalJourneyAway(k)||k.removedFromRoyal||k.away||k.jailed)return;if(kidAge(k)<10)return;const m=byId(k.foster||k.mom);
+function supTick(k){if(k.sex!=='m'||!k.alive||k.princeSpouseOrigin||k.templeStay||royalJourneyAway(k)||k.removedFromRoyal||k.away||k.jailed)return;if(kidAge(k)<10)return;const m=byId(k.foster||k.mom);
   const d=k.amb/140+(m&&m.alive&&!m.cold?m.fam.p/220+(m.rank>=6?.25:0):0)+(S.heir===k.id?.5:0)+(k.lit+k.vir)/400-(k.amb<30?.4:0);
   k.sup=clamp((k.sup||0)+d-.25)}
 function heirTick(){
-  const sons=kidsAlive().filter(k=>k.sex==='m'&&!storyCastHeirBar(k)&&!k.templeStay&&!royalJourneyAway(k)&&!k.away&&!k.jailed);if(!sons.length)return null;
+  const sons=kidsAlive().filter(k=>k.sex==='m'&&!k.princeSpouseOrigin&&!storyCastHeirBar(k)&&!k.templeStay&&!royalJourneyAway(k)&&!k.away&&!k.jailed);if(!sons.length)return null;
   const heir=S.heir&&kidById(S.heir);
   const reb=sons.find(k=>k.id!==S.heir&&kidAge(k)>=16&&k.amb>=78&&(k.sup||0)>=65&&(E().prestige<60||E().health<45));
   if(reb&&chance(.3))return coupEvent(reb);

@@ -1,5 +1,5 @@
 const imperialHeirStoriesActive=()=>journalContentVersion()>=64;
-const eligiblePalaceSon=k=>!!k?.alive&&k.sex==='m'&&!k.pendingName&&!k.removedFromRoyal&&!k.lost;
+const eligiblePalaceSon=k=>!!k?.alive&&k.sex==='m'&&!k.princeSpouseOrigin&&!k.pendingName&&!k.removedFromRoyal&&!k.lost;
 function laterImperialSon(k,adopted){
   if(!eligiblePalaceSon(k)||k.palaceAdoption||k.birthSwap?.confirmed&&k.birthSwap.occurred)return false;
   if(knownBiologicalFather(k)&&k.parentage.father.kind!=='emperor')return false;

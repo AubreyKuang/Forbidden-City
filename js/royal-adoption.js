@@ -92,11 +92,11 @@ function princeAdoptionContactTick(){
   }
 }
 
-const palaceNeedsSon=()=>!S.children.some(k=>k.sex==='m'&&k.alive&&!k.lost&&!k.removedFromRoyal);
+const palaceNeedsSon=()=>!S.children.some(k=>k.sex==='m'&&k.alive&&!k.lost&&!k.removedFromRoyal&&!k.princeSpouseOrigin);
 function availableRoyalWards(){
   return royalHouseholds().filter(k=>!k.princeAdoptionOrigin&&!k.removedFromRoyal).flatMap(father=>
     (father.household?.children||[]).filter(child=>adoptionLiving(child)&&kidAge(child)>=0&&kidAge(child)<15&&
-      !child.princeAdoption&&!child.princelySuccession&&princeSuccessionState(father)?.heir!==child.id)
+      !child.princeAdoption&&!child.princelySuccession&&!princeSpouseParentageCases(father).some(x=>x.childId===child.id&&x.placement?.status==='waiting')&&princeSuccessionState(father)?.heir!==child.id)
       .map(child=>({father,child,mother:princeSonMother(father,child)})));
 }
 const royalWardGuardian=({father,mother})=>[mother,father.spouse,...father.household?.concubines||[]].find(adoptionLiving);
@@ -105,15 +105,19 @@ function palaceWardPending(){
   const pending=S.flags.palaceWard;
   return pending&&availableRoyalWards().find(r=>r.father.id===pending.father&&r.child.id===pending.child&&royalWardNeedsCare(r));
 }
+function moveHouseholdChildToPalace(father,child,fields){
+  father.household.children=father.household.children.filter(c=>c!==child);
+  child.id=S.nid++;
+  Object.assign(child,fields,{ord:S.children.filter(k=>k.sex===child.sex&&!k.princeSpouseOrigin).length+1,birthMonth:((S.month-1-(S.turn-child.born)%12+12)%12)+1,
+    policy:'均衡',love:50,sup:0,adult:false,tutor:false,pendingName:false,title:''});
+  delete child.courtGuest;
+  S.children.push(child);ensureChildDisposition(child);initKidRel(child);
+}
 function takeRoyalWard({father,child,mother},petition){
   const original=child.name,originalId=child.id,queen=empress(),care=inPalace(queen)?queen:null;
   const orphan=petition&&!royalWardGuardian({father,mother});
-  father.household.children=father.household.children.filter(c=>c!==child);
-  Object.assign(child,{id:S.nid++,name:child.given||child.name,mom:null,momName:mother?.name||child.motherName||'未记载',foster:care?.id||null,
-    ord:S.children.filter(k=>k.sex===child.sex).length+1,birthMonth:((S.month-1-(S.turn-child.born)%12+12)%12)+1,
-    policy:'均衡',love:50,sup:0,adult:false,tutor:false,pendingName:false,title:'',palaceAdoption:{father:father.id,fatherName:father.name,motherId:mother?.id,motherName:mother?.name||child.motherName,original,originalId,at:S.turn,orphan}});
-  delete child.courtGuest;
-  S.children.push(child);ensureChildDisposition(child);initKidRel(child);
+  moveHouseholdChildToPalace(father,child,{name:child.given||child.name,mom:null,momName:mother?.name||child.motherName||'未记载',foster:care?.id||null,
+    palaceAdoption:{father:father.id,fatherName:father.name,motherId:mother?.id,motherName:mother?.name||child.motherName,original,originalId,at:S.turn,orphan}});
   (father.palaceAdoptedChildren||=[]).push(child.id);
   if(S.flags.palaceWard?.child===originalId)delete S.flags.palaceWard;
   const line=`【宗亲入继】${original}${orphan?'失怙且府中无人能照料，奉旨':'奉旨'}接入宫中，列入皇嗣。${care?`交${cName(care)}抚养。`:'由宫中乳母与随侍照护。'}`;

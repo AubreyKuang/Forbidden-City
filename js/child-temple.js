@@ -19,7 +19,7 @@ function childWhereabouts(k){
   return '宫中';
 }
 function openPrinceEstate(k,record=true){
-  if(!k||k.sex!=='m'||!k.alive||royalJourneyAway(k)||k.pendingName||k.removedFromRoyal||S.heir===k.id||kidAge(k)<16||k.princeEstate||
+  if(!k||k.sex!=='m'||!k.alive||k.princeSpouseOrigin||royalJourneyAway(k)||k.pendingName||k.removedFromRoyal||S.heir===k.id||kidAge(k)<16||k.princeEstate||
     journalContentVersion()>=120&&(k.jailed||k.templeStay))return false;
   k.princeEstate={opened:S.turn,location:'京城'};packChildKeepsake(k);
   if(journalContentVersion()>=120)delete k.princeEstateDeferredUntil;
@@ -27,7 +27,7 @@ function openPrinceEstate(k,record=true){
   return true;
 }
 function princeEstateOpenReady(k){
-  return journalContentVersion()>=120&&!S.over&&!!k&&S.children.includes(k)&&k.sex==='m'&&kidAge(k)>=16&&
+  return journalContentVersion()>=120&&!S.over&&!!k&&S.children.includes(k)&&!k.princeSpouseOrigin&&k.sex==='m'&&kidAge(k)>=16&&
     !k.pendingName&&S.heir!==k.id&&childInPalace(k)&&!k.princeEstate&&!k.estate;
 }
 A.princeOpenEstate=function(id){

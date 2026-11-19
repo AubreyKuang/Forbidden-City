@@ -4,9 +4,12 @@ function approvedMotherResidence(k){
   return journalContentVersion()>=105&&k?.motherResidence?.choice==='stay'&&
     k.motherResidence.caregiver===(k.foster||k.mom)&&kidAge(k)<childResidenceAdultAge(k);
 }
+function upbringingDowager(k){
+  const r=k?.dowagerUpbringing,d=r?.seat==='birth'?S.flags.birthDowager:S.flags.dowager;
+  return r?.gen===S.gen&&d?.alive&&r.personId===(d.personId??null)?d:null;
+}
 function raisedByDowager(k){
-  const r=k?.dowagerUpbringing,d=S.flags.dowager;
-  return !!r&&r.gen===S.gen&&d?.alive&&r.personId===(d.personId??null)&&!k.foster&&
+  return !!upbringingDowager(k)&&!k.foster&&
     childInPalace(k)&&!k.married&&kidAge(k)<15;
 }
 function youngChildMother(k){
@@ -29,7 +32,7 @@ function childResidence(k){
     if(kidAge(k)>=16&&!k.princeEstate)return '宫中 · 尚未开府';
   }
   if(!childInPalace(k)||k.married||k.pendingName)return '';
-  if(raisedByDowager(k))return '由太后抚养 · 慈宁宫';
+  if(raisedByDowager(k)){const d=upbringingDowager(k);return `由${S.flags.birthDowager?d.name:'太后'}抚养 · ${dowagerResidence(d)}`;}
   const mother=youngChildMother(k);
   if(mother)return `随${childResidenceCareLabel(k,mother)}${cName(mother)}同住 · ${mother.palace}`;
   if(kidAge(k)<6)return '暂由乳母照料，未随母同住';

@@ -441,5 +441,5 @@ function viewPlace(){const id=UI.sel;
       ${initiativesAt(id)||(school||historyAt(id)?'':'<p class="hint">此刻只有当值宫人在这里。</p>')}
       <button class="btn" onclick="A.go('${school?'kids':'log'}')">${school?'查看皇嗣':'翻阅起居注'}</button>`;
   }
-  if(id==='cn'){const d=S.flags.dowager;return `<header class="cining-heading"><h2>慈宁宫</h2><div class="cining-actions">${backBtn}${d?.alive?'<button class="btn primary" onclick="A.greet()">给太后请安<small>精力-1</small></button>':''}</div></header>${dowagerCourtPanel()}${d&&d.alive?`<p>${dowagerLivingActive()&&dowagerCompanyPeople(d).length?esc(d.name)+'与'+dowagerCompanyPeople(d).map(c=>esc(fullName(c))).join('、')+'坐在窗下说话。':esc(d.name)+'正在佛堂诵经。'}</p>`:mourningPlacePanel()}${initiativesAt('cn')}`}
+  if(id==='cn'){const d=S.flags.dowager;return `<header class="cining-heading"><h2>慈宁宫</h2><div class="cining-actions">${backBtn}${d?.alive&&!S.flags.birthDowager?'<button class="btn primary" onclick="A.greet()">给太后请安<small>精力-1</small></button>':''}</div></header>${dowagerCourtPanel()}${d&&d.alive?`<p>${dowagerLivingActive()&&dowagerCompanyPeople(d).length?esc(d.name)+'与'+dowagerCompanyPeople(d).map(c=>esc(fullName(c))).join('、')+'坐在窗下说话。':esc(d.name)+'正在佛堂诵经。'}</p>`:mourningPlacePanel()}${initiativesAt('cn')}`}
   return viewMap()}

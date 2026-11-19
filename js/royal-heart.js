@@ -2,7 +2,7 @@
 const royalHeartActive=()=>!!S&&!S.over&&journalContentVersion()>=20;
 const xieStoryUpdated=()=>journalContentVersion()>=58;
 const heartStage=k=>kidAge(k)<16?'early':kidAge(k)<20?'young':'adult';
-const heartSingleChild=k=>royalHeartActive()&&S.children.includes(k)&&kidAge(k)>=(k.outerRegisterId?18:12)&&!k.pendingName&&!k.married&&!k.spouse&&!k.betrothal&&k.hp>=45;
+const heartSingleChild=k=>royalHeartActive()&&S.children.includes(k)&&!k.princeSpouseOrigin&&kidAge(k)>=(k.outerRegisterId?18:12)&&!k.pendingName&&!k.married&&!k.spouse&&!k.betrothal&&k.hp>=45;
 const heartReady=k=>heartSingleChild(k)&&childCanVisitCourt(k);
 const xieCapitalEstate=k=>journalContentVersion()>=53&&!!k?.estate&&k.sex==='f'&&k.estate.route!=='frontier'&&k.princessMarriage!=='frontier';
 const xieCanMeetPrincess=k=>childCanVisitCourt(k)||(xieCapitalEstate(k)&&canOpenPrincess(k)&&!k.away);
@@ -114,9 +114,14 @@ function startXieReadingAge(p){
  }
 }
 const xieAn=()=>scholarList().find(p=>p.storyPerson==='xiean');
+function xieStorySeen(){
+ return !!(S.flags.xieStoryId!=null||xieAn()||(S.capitalHouses||[]).some(h=>typeof h.id==='string'&&h.id.startsWith('capital-xie-'))||
+  royalHouseholds().some(k=>k.xieAdmiration||k.princessMarriage==='xiean'));
+}
 const xiePresent=p=>royalHeartActive()&&!!p&&officialAlive(p)&&!p.exiled&&!p.dismissed&&!p.commission&&!p.incognitoCase&&!p.away;
 function createXieAn(){
  if(!royalHeartActive())return null;if(xieAn())return xieAn();
+ if(PalaceActions.xieOnce&&xieStorySeen())return null;
  const roots=officialEntries().filter(e=>e.role==='father'&&officialAlive(e.p)&&e.p.age>=50&&familyIsNoble(e.c)),root=roots.length&&chance(.35)?pick(roots):null;
  const house={id:root?'capital-'+root.p.id:`capital-xie-${S.gen}-${S.nid}`,name:root?`${root.c.sur}氏${root.h.title||'世家'}`:pick(['乌衣谢氏','临川谢氏','会稽谢氏']),seat:'上京',
   relation:root?(root.c.sur==='谢'?'谱载同宗旁支':'谱载母族外亲'):'本家子弟',rootKey:root?.key,rootId:root?.p.id};
@@ -126,6 +131,7 @@ function createXieAn(){
   temperament:'疏朗自持',ability:92,merit:0,trust:40,career:'commoner',office:'布衣诗客',post:'布衣诗客',essay:'以诗名动上京，不应仕进',education:null,artPortrait:433,
   xiean:{...(PalaceActions.xiePoetryAge?{readingStarted:false}:{}),houseId:house.id,met:S.turn,lastNews:S.turn,newsIndex:0,noConcubines:true,noRemarriage:true},willing:false});
  (S.scholars ||= []).push(p);
+ if(PalaceActions.xieOnce)S.flags.xieStoryId=p.id;
  scholarRecord(p,`【京华初闻】${house.name}的${house.relation}谢安，${PalaceActions.xiePoetryAge?'年少时便以诗名动上京':(age===21?'二十一':'二十二')+'岁，以诗名动上京'}。${root?`家谱与${root.p.name}一房已有记载，非凭同姓攀附。`:'这一房独立登记，并非哪位妃嫔的父兄。'}他不愿以诗名求官，尚未婚配。`);
  return p;
 }
@@ -147,7 +153,8 @@ function xieRumorEvent(p){
 }
 const heartOut=A.out;
 A.out=function(kind){
- if(kind==='city'&&royalHeartActive()&&!modalOpen&&E().energy>0&&!mourningActive()&&S.turn-(S.flags.xieCityAttempt??-99)>=4){
+ if(kind==='city'&&royalHeartActive()&&!modalOpen&&E().energy>0&&!mourningActive()&&S.turn-(S.flags.xieCityAttempt??-99)>=4&&
+   (!PalaceActions.xieOnce||!xieStorySeen())){
   S.flags.xieCityAttempt=S.turn;const p=xieAn();
   if((!p||xiePresent(p))&&chance(p?.28:.12)){if(!useE())return;setScene('city');pushEv(xieRumorEvent(p||createXieAn()));return;}
  }
@@ -189,7 +196,7 @@ function xieAdmirationEvent(k,d){
  };
  const estate=xieCapitalEstate(k),opening=estate?'请你到府中一叙，案上摊着一卷谢安的诗。':'案头多了一卷谢安的诗。';
  return chronicleEvent({title:adult?'诗名与心意':'读诗怀想',por:k,present:estate?[]:[k],valid,
-  onShow:()=>{if(PalaceActions.xiePoetryAge)startXieReadingAge(p);},
+  onShow:()=>{if(PalaceActions.xiePoetryAge)startXieReadingAge(p);if(PalaceActions.xieOnce)p.xiean.readerId??=k.id;},
   displayTitle:(adult?'诗名与心意':'读诗怀想')+' · 谢安名动京城',
   poemPrelude:{poet:p,title:'夜过芦汀',verse:['桨歇不惊眠鹭梦，','一船明月过芦花。'],
    account:(xieAwaitsFirstReading(p)||p.age===XIE_DEBUT_AGE?'谢安年少便有诗名，今年二十一岁。':'')+'曲水诗会上，谢安吟罢，席间静了片刻。一位素来挑剔的老翰林先开了口：“好一个‘一船’！我写了半辈子月亮，竟没想过它也能载上船。”他向谢安讨了原稿，亲笔在卷尾题了“惊才绝艳”四字。三日后，京城渡口有人念起上句，邻舟一个撑篙的孩子脆生生地接了下句。'},
@@ -273,7 +280,7 @@ function nextXieMarriageChronicle(m,kind){
 function xieLifeTick(){
  let p=xieAn();
  if(!p){
-  if(S.turn<6||mourningActive())return;
+  if(S.turn<6||mourningActive()||PalaceActions.xieOnce&&xieStorySeen())return;
   const young=S.children.filter(k=>(heartReady(k)||xieHeartReady(k))&&kidAge(k)<(xieRomanceActive()?26:20));
   const hasPrincess=journalContentVersion()>=130&&E().sur!=='谢'&&young.some(xieHeartReady);
   if(young.length&&chance(hasPrincess ? .09 : .045))createXieAn();

@@ -45,3 +45,18 @@ test('pending tea company and its result reload with identical people, memories 
 test('a real version 19 pending greeting retains its old rolls and words after upgrade',()=>{
  const data=require('./fixtures/dowager-greeting-legacy-v19.json'),b=boot(821,new Map([['chengongji_v1_auto',JSON.stringify(data)]]));b.ctx.assert=assert;b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(curEv.title,'慈宁宫');assert.equal(S.flags.dowager.household,undefined);choose(0);save('auto');A.load('auto');assert.equal(PalaceActions.blocked,false);drain();`);
 });
+
+test('the emperor can separately visit his legal mother in the east hall and birth mother in the west hall',()=>{
+ const b=world();b.ctx.assert=assert;
+ b.run(`var main=S.flags.dowager,biological=S.flags.birthDowager=makeDowager(other,'生母 · 尊为皇太后');
+   UI.sel='cn';assert.match(viewPlace(),/慈宁宫东殿/);assert.match(viewPlace(),/慈宁宫西殿/);
+   assert.match(viewPlace(),/A\.greet\(\).*A\.greetBirthDowager\(\)/s);
+   E().energy=10;var previous=main.story.length;PalaceActions.reset();
+   A.greetBirthDowager();assert.equal(curEv.title,'慈宁宫西殿 · 西殿初叙');assert.equal(E().energy,9);
+   save('1');A.load('1');assert.equal(PalaceActions.blocked,false);assert.equal(curEv.title,'慈宁宫西殿 · 西殿初叙');
+   choose(0);drain();assert.equal(S.flags.dowager.story.length,previous);
+   assert.ok(S.flags.birthDowager.story.some(e=>e.t.includes('西殿初叙')));
+   A.greet();assert.ok(modalOpen);assert.notEqual(curEv.por?.dowagerName,S.flags.birthDowager.name);drain();
+   S.flags.dowager.alive=false;assert.match(viewPlace(),/A\.greetBirthDowager/);
+   A.greetBirthDowager();assert.match(curEv.title,/慈宁宫西殿/);drain();`);
+});

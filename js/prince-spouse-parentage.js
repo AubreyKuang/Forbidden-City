@@ -23,7 +23,7 @@ function princeSpouseParentageActive(k,record){
     (record.status==='complete'||k.household.pregnancies.some(g=>g.princeParentage===record.key)||k.household.children.some(c=>c.id===record.childId));
 }
 const princeSpouseParentageWife=(k,record)=>k.spouse?.id===record.mother&&k.spouse.alive!==false?k.spouse:null;
-const princeSpouseParentageChild=(k,record)=>k.household.children.find(c=>c.id===record.childId);
+const princeSpouseParentageChild=(k,record)=>record.placement?.palaceId!=null?royalById(record.placement.palaceId):k.household.children.find(c=>c.id===record.childId);
 const princeSpouseParentageName=(k,record)=>princeSpouseParentageChild(k,record)?.name||record.motherName+'腹中的孩子';
 const princeSpouseParentageFather=record=>record.imperialFather?`皇帝${record.imperialFather}`:record.princeName;
 function princeSpouseParentageNote(person,record,title,text){
@@ -104,10 +104,8 @@ function princeSpouseParentageReport(k,record){
     intimate?'她原以为还来得及同他说心里话，到此时才问，他往后还愿不愿听。':distant?'她把两处屋里的照料划分说清，独自留下理好孩子的东西。':'她请他先给自己几日，让她想清怎么继续过日子。':
     intimate?'她也想慢慢拾回从前能把话说开的日子。':distant?'身世既明，她总算能专心过自己的日子。':'她愿从照料孩子的几件小事重新同他相处。'):'';
   const result=`锦衣卫核明，${princeSpouseParentageName(k,record)}的生父为${princeSpouseParentageFather(record)}。`;
-  return {title:'锦衣卫回奏 · 王府亲缘',por:jinyiwei()?.commander,cast:[k.alive?k:null,p],sealedAnnals:true,
-    valid:()=>princeSpouseParentageActive(k,record)&&record.status==='investigating'&&S.turn>=record.due,
-    text:`锦衣卫先以请脉原簿厘清时日，再核对那段日子的行止与经手人证词。诸项对得上，回报才封送御前，也分别告知了王府当事人。\n${result}\n${prince}\n${wife}`,
-    choices:[{t:'封存回奏，依王府旧册照料孩子',f:()=>{
+  const canPlan=imperial&&PalaceActions.princeSpousePlacement&&princeSpousePlacementSubject(k,record);
+  const seal=()=>{
       record.status='complete';record.completed=S.turn;
       const visit=p?.princePrivateVisit;
       if(imperial&&visit?.gen===record.gen)visit.paternityConfirmed=true;
@@ -115,8 +113,15 @@ function princeSpouseParentageReport(k,record){
       princeSpouseParentageNote(p,record,'王府亲缘密卷',result+wife);
       const delta=imperial?(intimate?-9:distant?-5:-7):(intimate?5:distant?1:3);
       const change=k.alive&&p&&k.married?changeHouseholdAffection(k,delta):0;
-      return '回奏封入密卷。孩子的名册和照料仍按王府旧例办理。'+(change?fx(`夫妻感情${change>0?'+'+change:'−'+Math.abs(change)}`):'');
-    }}]};
+      return change?fx(`夫妻感情${change>0?'+'+change:'−'+Math.abs(change)}`):'';
+  };
+  return {title:'锦衣卫回奏 · 王府亲缘',por:jinyiwei()?.commander,cast:[k.alive?k:null,p],sealedAnnals:true,
+    valid:()=>princeSpouseParentageActive(k,record)&&record.status==='investigating'&&S.turn>=record.due,
+    text:`锦衣卫先以请脉原簿厘清时日，再核对那段日子的行止与经手人证词。诸项对得上，回报才封送御前，也分别告知了王府当事人。\n${result}\n${prince}\n${wife}`,
+    choices:[{t:'封存回奏，依王府旧册照料孩子',f:()=>{
+      const effect=seal(),news=canPlan&&keepPrinceSpouseChild(k,record);
+      return (news||'回奏封入密卷。孩子的名册和照料仍按王府旧例办理。')+effect;
+    }},...(canPlan?[{t:'封存回奏，安排秘密接入宫中',f:()=>{seal();pushNow(princeSpousePlacementEvent(k,record));return null;}}]:[])]};
 }
 function pendingPrinceSpouseParentage(){
   if(!PalaceActions.princeSpouseParentage||S.over||mourningActive())return [];
@@ -141,8 +146,13 @@ function princeSpouseParentageRow(k,record){
   const ready=record.status==='open',due=record.status==='investigating'&&S.turn>=record.due;
   const state=record.status==='complete'?`已核明生父为${princeSpouseParentageFather(record)}`:
     ready?(record.suspected?'王爷曾问及胎月，亲缘待核':'可秘密查证亲缘'):due?'锦衣卫回奏已到':`密查中 · 还需 ${record.due-S.turn} 个月`;
-  const action=ready||due?` <button class="btn sm jade" onclick="A.princeSpousePaternity(${royalActionArg(k.id)},${royalActionArg(record.key)})" ${ready&&!jinyiweiCommanderReady()?'disabled':''}>${due?'听取密奏':'请锦衣卫查证'}${ready&&!jinyiweiCommanderReady()?'<small>需有在任指挥使</small>':''}</button>`:'';
-  return `<p>${esc(princeSpouseParentageName(k,record))} · ${esc(state)}${action}</p>`;
+  const args=`${royalActionArg(k.id)},${royalActionArg(record.key)}`;
+  const action=ready||due?` <button class="btn sm jade" onclick="A.princeSpousePaternity(${args})" ${ready&&!jinyiweiCommanderReady()?'disabled':''}>${due?'听取密奏':'请锦衣卫查证'}${ready&&!jinyiweiCommanderReady()?'<small>需有在任指挥使</small>':''}</button>`:'';
+  const plan=record.placement,child=plan?.status==='palace'&&princeSpouseParentageChild(k,record);
+  const placement=plan?.status==='waiting'?` · ${record.childId?'已出生，待接养':'待出生后，由'+esc(plan.name)+'接养'}`:plan?.status==='estate'?' · 王府留养':child?' · 已秘密接入宫中':'';
+  const placeAction=child?` <button class="btn sm" onclick="A.go('${S.children.includes(child)?'kid':'relative'}',${royalActionArg(child.id)})">查看孩子</button>`:
+    princeSpousePlacementReady(k,record)?` <button class="btn sm jade" onclick="A.princeSpousePlacement(${args})">${plan?.status==='waiting'&&record.childId?'办理接养':'商议孩子的去处'}</button>`:'';
+  return `<p>${esc(princeSpouseParentageName(k,record))} · ${esc(state)}${placement}${action}${placeAction}</p>`;
 }
 function princeSpouseParentagePanel(k,records=princeSpouseParentageCases(k)){
   return detailSection('王府亲缘密卷',records.map(record=>princeSpouseParentageRow(k,record)).join(''));

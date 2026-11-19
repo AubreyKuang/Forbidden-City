@@ -2,7 +2,7 @@
    never from serialized JavaScript. Each command owns its random draws and answers.
    The saved world remains the authority; replay is checked before it is displayed. */
 const PalaceActions=(()=>{
-  const version=143, excluded=new Set(['save','dismissSaveError','load','rewind','downloadSave','readSaveFile','undoImport','newGame','officialsFilter','officialsBloc','kidsKind','chronicleFilter','chronicleSearch','chronicleClear','chronicleThread']);
+  const version=144, excluded=new Set(['save','dismissSaveError','load','rewind','downloadSave','readSaveFile','undoImport','newGame','officialsFilter','officialsBloc','kidsKind','chronicleFilter','chronicleSearch','chronicleClear','chronicleThread']);
   const actions=new Map();
   let blocked=false,snapshotRequested=false,journal=null,depth=0,replaying=false,step=null,cursor=0,answer=0,saving=0,fields=null;
   const clone=x=>JSON.parse(JSON.stringify(x));
@@ -46,7 +46,7 @@ const PalaceActions=(()=>{
     if(name==='start'){journal=null;blocked=false;}
     const before=S?clone(S):null,prior=journal?clone(journal):null,priorUI=clone(UI);
     if(!journal&&!modalOpen&&!Q.length){
-      journal={version,outerHouseholds:true,outerHouseholdUpdates:true,exclusiveStoryOrigins:true,immortalDiscoveryNews:true,betrothalJourneys:true,immortalPeerAdmiration:true,maritalEstates:true,luwanFrontierChronicles:true,luwanFrontierVisuals:true,maidFavorDisputes:true,longLivedDowagers:true,earlyMarriedLife:true,princeSpouseDiscovery:true,princeSpouseParentage:true,xiePoetryAge:true,maternalWeddingTalk:true,base:S?clone(world(S)):null,ui:clone(UI),steps:[]};
+      journal={version,outerHouseholds:true,outerHouseholdUpdates:true,exclusiveStoryOrigins:true,immortalDiscoveryNews:true,betrothalJourneys:true,immortalPeerAdmiration:true,maritalEstates:true,luwanFrontierChronicles:true,luwanFrontierVisuals:true,maidFavorDisputes:true,longLivedDowagers:true,earlyMarriedLife:true,princeSpouseDiscovery:true,princeSpouseParentage:true,xieOnce:true,princeSpousePlacement:true,xiePoetryAge:true,maternalWeddingTalk:true,base:S?clone(world(S)):null,ui:clone(UI),steps:[]};
     }
     const current={name,args:clone(args),monthNotice:true,rolls:[],answers:[],saves:[],ui:clone(UI)};
     // A fresh decision in an unfinished older scene uses today's age rules on future replays.
@@ -174,6 +174,8 @@ const PalaceActions=(()=>{
     get earlyMarriedLife(){return !journal||journal.earlyMarriedLife===true;},
     get princeSpouseDiscovery(){return !journal||journal.princeSpouseDiscovery===true;},
     get princeSpouseParentage(){return !journal||journal.princeSpouseParentage===true;},
+    get xieOnce(){return !journal||journal.xieOnce===true;},
+    get princeSpousePlacement(){return !journal||journal.princeSpousePlacement===true;},
     get betrothalJourneys(){return !journal||journal.betrothalJourneys===true;},
     get immortalDiscoveryNews(){return !journal||journal.immortalDiscoveryNews===true;},
     get exclusiveStoryOrigins(){return !journal||journal.exclusiveStoryOrigins===true;},

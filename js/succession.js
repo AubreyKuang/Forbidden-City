@@ -4,6 +4,26 @@ function dowagerCourtMembers(){
   const f=S?.flags;
   return f?[f.dowager,f.birthDowager,...(f.seniorDowagers||[])].filter(Boolean):[];
 }
+function dowagerResidence(d){
+  if(d===S.flags.birthDowager)return '慈宁宫西殿';
+  return d===S.flags.dowager&&S.flags.birthDowager?'慈宁宫东殿':'慈宁宫';
+}
+A.greetBirthDowager=function(){
+  const d=S.flags.birthDowager;
+  if(!d?.alive||modalOpen||S.over||!useE())return;
+  const seen=d.conversations?.topics?.['own-room']!=null;
+  const ev=seen?dowagerEverydayEvent(d):trackDowagerTalk(d,{
+    title:'西殿初叙',por:dowagerPerson(d),text:`${d.name}让人把窗下的椅子挪近些：“你小时候怕打雷，总找个由头来问我一句话。如今有了自己的朝廷，还肯走到西殿来，哀家也能听听你近来的日子。”`,
+    choices:[{t:'在生母身边坐坐，听她说往事',f:()=> '你在她窗下坐了许久。她说起几桩旁人早已忘了的小时候的事，临走还嘱你得空再来。'}]
+  },'own-room');
+  if(!ev)return;
+  const title=ev.title.replace(/^慈宁宫 · /,'');
+  pushEv({...ev,title:`${dowagerResidence(d)} · ${title}`,choices:ev.choices.map(choice=>({...choice,f:()=>{
+    const line=choice.f?.();
+    if(line)dowagerRecord(d,title,line);
+    return line;
+  }}))});
+};
 function dowagerAge(d,turn=d.mourning?.turn??S.turn){
   return Number.isFinite(d.age)?d.age+Math.max(0,Math.floor((turn-(d.atTurn??0))/12)):null;
 }
@@ -122,7 +142,7 @@ function inheritDowager(h){
   const rosterEnabled=journalContentVersion()>=45;
   const relatives=S.children.filter(k=>k.id!==h.id).map(k=>{
     const elder=rosterEnabled?royalBirthOrder(k,h)<0:k.born<=h.born;
-    return {...k,reign:S.gen,kinship:k.sex==='m'?(elder?'皇兄':'皇弟'):(elder?'皇姐':'皇妹')};
+    return {...k,reign:S.gen,kinship:k.princeSpouseOrigin?'宗室寄养':k.sex==='m'?(elder?'皇兄':'皇弟'):(elder?'皇姐':'皇妹')};
   });
   S.royalRelatives=[...new Map([...(S.royalRelatives||[]),...relatives].map(k=>[k.id,k])).values()];
   if(rosterEnabled)(S.royalKinRoster||={})[S.gen]=royalKinCandidates(relatives).slice(0,ROYAL_KIN_PER_REIGN).map(k=>k.id);
@@ -206,15 +226,20 @@ function dowagerCourtPanel(){
   const seniors=S.flags.seniorDowagers||[];
   return dowagerCourtMembers().sort((a,b)=>Number(b.seniorSince!=null)-Number(a.seniorSince!=null)).map(d=>{
     const age=dowagerAge(d),index=seniors.indexOf(d);
-    const action=index>=0&&d.alive?`<button class="btn jade" onclick="A.greetSeniorDowager(${index})">给${esc(d.name)}请安<small>精力−1</small></button>`:'';
-    const history=index>=0&&d.story?.length?detailFold('人物纪事',detailStory({...d,id:d.memoryId||d.personId})):'';
-    return `<section class="detail-head dowager-court">${porImg(dowagerPerson(d),160)}<div class="grow"><h3>${esc(d.name)}</h3><p>${esc(d.fullName||'')}${d.relation?' · '+esc(d.relation):''}</p>${age!=null?`<p>${age}岁 · ${d.alive?'慈宁宫':'已故'}</p>`:''}${d.portrait?.trait?`<p>${esc(d.portrait.trait)} · ${esc(TRAITS[d.portrait.trait]?.d||'')}</p>`:''}${dowagerBiography(d)}${action}${history}</div></section>`;
+    const dual=!!S.flags.birthDowager,birth=d===S.flags.birthDowager;
+    const call=index>=0?`A.greetSeniorDowager(${index})`:birth?'A.greetBirthDowager()':dual?'A.greet()':'';
+    const action=call&&d.alive?`<button class="btn jade" onclick="${call}">给${esc(d.name)}请安<small>精力−1</small></button>`:'';
+    const history=(index>=0||birth)&&d.story?.length?detailFold('人物纪事',detailStory({...d,id:d.memoryId||d.personId})):'';
+    const residents=d.alive?S.children.filter(k=>raisedByDowager(k)&&upbringingDowager(k)===d&&k.princeSpouseOrigin):[];
+    const children=residents.map(k=>`<button class="btn sm" onclick="A.go('kid',${k.id})">查看${esc(k.name)}</button>`).join('');
+    return `<section class="detail-head dowager-court">${porImg(dowagerPerson(d),160)}<div class="grow"><h3>${esc(d.name)}</h3><p>${esc(d.fullName||'')}${d.relation?' · '+esc(d.relation):''}</p><p>${age!=null?age+'岁 · ':''}${d.alive?esc(dowagerResidence(d)):'已故'}</p>${d.portrait?.trait?`<p>${esc(d.portrait.trait)} · ${esc(TRAITS[d.portrait.trait]?.d||'')}</p>`:''}${dowagerBiography(d)}${action}${children}${history}</div></section>`;
   }).join('');
 }
 
 function royalBirthOrder(a,b){return a.born-b.born||a.id-b.id;}
 function royalKinCandidates(relatives){return relatives.filter(k=>k.alive&&!k.removedFromRoyal).sort(royalBirthOrder);}
 function royalKinship(k){
+  if(k.princeSpouseOrigin)return '宗室寄养';
   if(k.reign===S.gen-1)return k.kinship||'宗亲';
   if(k.reign===S.gen-2){
     if(k.sex==='f')return '皇姑';

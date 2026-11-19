@@ -30,7 +30,7 @@ test('a fifteen-year-old forced bride starts separation only on the actual weddi
 test('engagement ends on death without fabricating a wedding or widowhood',()=>{const b=w();b.run(`k.born=S.turn-14*12;xieMarriageRefusal(k,p).choices[0].f();var n=k.story.length;k.alive=false;S.turn+=12;xieBetrothalTick(p);assert.equal(k.story.length,n);assert.equal(p.betrothal,undefined);assert.equal(p.xiean.engagement,undefined);assert.ok(!p.married&&!p.xiean.marriage&&!p.xiean.widowed);assert.ok(p.xiean.lifelongSingle);`);});
 test('underage engagement result survives replay with neither party mislabeled married',()=>{let b=w();b.run(`k.born=S.turn-12*12;PalaceActions.reset();A.xieMarriage(k.id);choose(0);save('auto');`);b=boot(90,b.storage);b.ctx.assert=assert;b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.ok(xieAn().betrothal);assert.ok(!xieAn().married);drain();`);});
 test('many princesses may admire, but only the boldest starts one durable pursuit',()=>{const b=w('内敛');b.run(`var brave=makeKid(a,'f','明昭');brave.pendingName=false;brave.born=S.turn-18*12;brave.hp=90;brave.temperament='爽直';brave.xieAdmiration={personId:p.id,outcome:'admired'};assert.ok(xieAdmirerReady(k)&&xieAdmirerReady(brave));assert.equal(xieMarriageRefusal(k,p),null);var ev=xieMarriageRefusal(brave,p);assert.ok(ev);assert.equal(p.xiean.pursuerId,brave.id);ev.choices[2].f();brave.betrothal={name:'别人'};assert.equal(xieMarriageRefusal(k,p),null);assert.equal(p.xiean.pursuerId,brave.id);assert.ok(xieAdmirerReady(k));`);});
-test('secondary admirers can talk about poetry but cannot request duplicate marriage',()=>{const b=declined();b.run(`var other=makeKid(a,'f','清和');other.pendingName=false;other.born=S.turn-18*12;other.hp=90;other.temperament='爽直';S.royalHeart={gen:S.gen,pending:{kind:'xiean',child:other.id,stage:'young'}};assert.ok(xieAdmirerReady(other));var ev=xieAdmirationEvent(other,heartState().pending);assert.ok(ev);assert.ok(!ev.choices.some(c=>c.t.includes('是否愿意议婚')));ev.choices[0].f();assert.equal(other.xieAdmiration.outcome,'admired');assert.equal(p.xiean.pursuerId,k.id);assert.equal(xieMarriageReady(other),false);`);});
+test('the first reader keeps her route and another princess cannot replay the introduction',()=>{const b=declined();b.run(`var other=makeKid(a,'f','清和');other.pendingName=false;other.born=S.turn-18*12;other.hp=90;other.temperament='爽直';S.royalHeart={gen:S.gen,pending:{kind:'xiean',child:other.id,stage:'young'}};assert.equal(xieAdmirerReady(other),false);assert.equal(xieAdmirationEvent(other,heartState().pending),null);assert.equal(p.xiean.pursuerId,k.id);assert.equal(xieMarriageReady(other),false);`);});
 test('quiet route becomes a real lifelong bachelor after eighteen months, with continuing poetry',()=>{const b=declined(true);b.run(`assert.equal(path.kind,'solitude');S.turn+=17;xiePathTick(p);assert.ok(!p.xiean.lifelongSingle);S.turn++;xiePathTick(p);assert.equal(path.kind,'free');assert.equal(p.xiean.lifelongSingle,true);assert.equal(xieMarriageReady(k),false);assert.ok(!p.married);S.turn+=6;`);b.force(0);b.run(`xieLifeTick();assert.ok(p.story.some(s=>s.t.includes('终身不娶')));assert.ok(p.story.some(s=>s.t.includes('独自乘舟')));assert.ok(!xieBridgeReady());`);});
 test('player can redirect the initial solitary inclination through an actual poetry invitation',()=>{const b=declined(true);b.run(`S.turn++;A.xieBridge('meet');choose(0);drain();assert.equal(path.kind,'return');assert.equal(path.pending,'meeting');assert.ok(k.story.some(s=>s.t.includes('留一席相逢')));assert.ok(p.story.some(s=>s.t.includes('留一席相逢')));assert.equal(xieBridgeReady(),false);xiePathEvent().choices[0].f();assert.equal(path.stage,1);assert.ok(!p.married&&!k.married);`);});
 test('encouragement helps her express herself, with cost, cooldown and no immediate proposal',()=>{const b=declined();b.run(`S.turn++;var energy=E().energy;A.xieBridge('courage');choose(0);drain();assert.equal(E().energy,energy-1);assert.equal(path.pending,'meeting');assert.ok(k.story.some(s=>s.t.includes('亲笔寄心')));assert.ok(p.story.some(s=>s.t.includes('认真回信')));assert.ok(!k.betrothal&&!k.married);xiePathEvent().choices[0].f();assert.equal(xieBridgeReady(),false);S.turn+=3;assert.ok(xieBridgeReady());`);});
@@ -382,4 +382,21 @@ test('refusal actions appear once near the visit on both princess pages and foll
    assert.ok(!html.includes("A.xieBridge('meet')"));xiePathEvent().choices[1].f();
    assert.ok(!getView().includes('A.xieAfterRefusal()'));`);
  }
+});
+
+test('an accession keeps the original Xie An and the new ruler’s married sister, without a second introduction',()=>{
+ let b=mature('仁厚');
+ b.run(`var husbandId=p.id,wifeId=k.id;var successor=makeKid(a,'m','承安');successor.born=S.turn-22*12;
+   successor.pendingName=false;successor.hp=95;S.heir=successor.id;PalaceActions.reset();
+   succeed(successor);choose(0,'长宁');drain();
+   assert.equal(S.gen,2);assert.equal(xieAn().id,husbandId);assert.equal(xieCouple().k.id,wifeId);
+   assert.equal(xieCouple().k.spouse.personId,husbandId);assert.match(royalKinship(xieCouple().k),/皇妹/);
+   E().energy=20;delete S.flags.xieCityAttempt;save('1');`);
+ b=boot(123,b.storage);b.ctx.assert=assert;
+ b.run(`A.load('1');assert.equal(PalaceActions.blocked,false);var p=xieAn(),k=xieCouple().k;
+   assert.ok(p.married&&k.married);var before=p.story.filter(e=>e.t.includes('【市井声名】')).length;`);
+ b.force(0);
+ b.run(`A.out('city');assert.notEqual(curEv?.title,'上京风流 · 谢安');drain();
+   assert.equal(p.story.filter(e=>e.t.includes('【市井声名】')).length,before);
+   S.scholars=S.scholars.filter(s=>s!==p);assert.equal(xieStorySeen(),true);assert.equal(createXieAn(),null);`);
 });

@@ -229,6 +229,7 @@ function cName(c){
 const fullName=c=>c.sur+c.given;
 function kidName(k){
   if(k.removedFromRoyal)return k.name;
+  if(k.princeSpouseOrigin)return `宗室寄养 ${k.name}`;
   const base=k.sex==='m'?`皇${ORD[k.ord-1]||k.ord}子`:`${ORD[k.ord-1]||k.ord}公主`;
   if(S.heir===k.id) return `太子 ${k.name}`;
   return `${k.title||base} ${k.name}`;
@@ -758,6 +759,7 @@ A.endMonth=function(){
     const maidDispute=maidFavorDispute();if(maidDispute)must.push(maidDispute);
     must.push(...pendingPrinceSpouseDiscoveries());
     must.push(...pendingPrinceSpouseParentage());
+    must.push(...pendingPrinceSpousePlacements());
     if(!affairWatch){const guardAffair=guardAffairEvent();if(guardAffair)must.push(guardAffair);}
     const princeRivalry=princeCareerRivalryEvent();if(princeRivalry)must.push(princeRivalry);
     if(dynastyFollowupActive()){
@@ -816,11 +818,11 @@ function deathEvent(why){
   const score=e.prestige*.5+e.people*.5;
   const shi=score>=80?'圣':score>=68?'文':score>=56?'景':score>=44?'恭':score>=32?'哀':'炀';
   const miao=['太祖','太宗','高宗','仁宗','宣宗','英宗','宪宗','孝宗','穆宗','神宗'][S.gen-1]||'睿宗';
-  const sons=kidsAlive().filter(k=>k.sex==='m'&&!k.jailed&&!(journalContentVersion()>=85?royalJourneyAway(k):immortalAway(k))&&!storyCastHeirBar(k));let heir=S.heir&&kidById(S.heir);if(!heir||!heir.alive||(journalContentVersion()>=85?royalJourneyAway(heir):immortalAway(heir))||storyCastHeirBar(heir))heir=sons.sort((a,b)=>a.born-b.born)[0];
+  const sons=kidsAlive().filter(k=>k.sex==='m'&&!k.princeSpouseOrigin&&!k.jailed&&!(journalContentVersion()>=85?royalJourneyAway(k):immortalAway(k))&&!storyCastHeirBar(k));let heir=S.heir&&kidById(S.heir);if(!heir||!heir.alive||heir.princeSpouseOrigin||(journalContentVersion()>=85?royalJourneyAway(heir):immortalAway(heir))||storyCastHeirBar(heir))heir=sons.sort((a,b)=>a.born-b.born)[0];
   const nC=S.consorts.length,nK=S.children.length;
   let t= why==='民变'?`流民四起，叛军攻破京城。${e.era}${cnNum(yrs)}年，${e.sur}${e.name}自缢于宫中，享年${e.age}岁。`
     :`${dateStr()}，${e.sur}${e.name}崩于养心殿，享年${e.age}岁，在位${yrs}年。`;
-  t+=`\n庙号${miao}，谥曰「${shi}皇帝」。\n一生册封后妃${nC}人，育皇子${S.children.filter(k=>k.sex==='m').length}人、公主${S.children.filter(k=>k.sex==='f').length}人。`;
+  t+=`\n庙号${miao}，谥曰「${shi}皇帝」。\n一生册封后妃${nC}人，育皇子${S.children.filter(k=>k.sex==='m'&&!k.princeSpouseOrigin).length}人、公主${S.children.filter(k=>k.sex==='f'&&!k.princeSpouseOrigin).length}人。`;
   if(why==='民变')heir=null;
   t+=heir?`\n遗诏：传位于${kidName(heir)}。`:why==='民变'?'\n社稷倾覆，国祚至此而终。':kidsAlive().some(k=>k.sex==='m'&&royalDiplomaticAway(k))?'\n皇子出使在外或尚未获释，未能及时归京继统，由宗室旁支承继大统。':immortalEnabled()&&kidsAlive().some(k=>k.sex==='m'&&immortalAway(k))?'\n皇子长留山门，未列入继统之序，宗室旁支承继大统。山中的亲人仍在人世。':kidsAlive().some(k=>k.sex==='m'&&storyCastHeirBar(k))?'\n礼部依异域皇嗣的储位成例议定，由宗室旁支继统。':'\n膝下无子，宗室旁支入继大统，本朝血脉至此而终。';
   S.history.push({sur:e.sur,name:e.name,era:e.era,yrs,miao,shi});

@@ -132,7 +132,8 @@ function viewHouseholdChild(){
     ${stats?detailSection('禀赋与体魄',`<div class="stats">${stats}</div>`):''}
     ${detailSection('人物纪事',detailStory(c))}`;
 }
-const householdBirthCount=k=>k.household.children.length+(royalAdoptionStoriesActive()?k.palaceAdoptedChildren?.length||0:0);
+const householdBirthCount=k=>k.household.children.length+(royalAdoptionStoriesActive()?k.palaceAdoptedChildren?.length||0:0)+
+  princeSpouseParentageCases(k).filter(record=>record.placement?.status==='palace').length;
 const householdKnownPregnancies=h=>h.pregnancies.filter(g=>(g.privateUntil??-Infinity)<=S.turn);
 function householdCanConceive(k,p,{privateVisit=false}={}){
   const woman=k.sex==='f'?k:p,h=ensureMarriedLife(k);
