@@ -134,7 +134,8 @@ A.postCandidates=function(id){
 };
 function governmentTaskEvent(id,docket){
   if(S.over||!OFFICIAL_TASKS[id])return null;
-  const t=OFFICIAL_TASKS[id],entries=officialEntries().filter(e=>officialActionReady(e,'commission')&&t.army===(e.h.bloc==='army'));
+  const t=OFFICIAL_TASKS[id],entries=officialEntries().filter(e=>officialActionReady(e,'commission')&&
+    t.army===(journalContentVersion()>=147?officialMilitary(e.p,e.h):e.h.bloc==='army'));
   return {title:t.title,text:`需 ${t.months} 个月，拨款 ${t.cost} 万两。${t.brief||'择人领差，办结后据实回奏。'}\n${entries.length?'请选承办官员。':'暂无可领此差的官员，可等在外官员回奏后再安排。'}`,choices:[
     ...entries.map(e=>({t:`${e.p.name} · ${e.p.office||e.p.post} · 才干 ${e.p.ability}`,person:e.p,cond:()=>officialActionReady(e,'commission')&&E().energy>0&&E().treasury>=t.cost,why:'精力或国库不足，或已有未结差事',f:()=>assignOfficialTask(e,id,docket)})),{t:'暂缓'}]};
 }

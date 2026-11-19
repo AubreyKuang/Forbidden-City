@@ -68,9 +68,29 @@ test('minister reviews link to existing court pages and preserve the original co
     var treasury=E().treasury,energy=E().energy;
     A.ministryDocket(find('war').id);choose(0);assert.equal(curEv.title,OFFICIAL_TASKS.border.title);
     choose(curEv.choices.length-1);assert.equal(E().treasury,treasury);assert.equal(E().energy,energy);assert.equal(find('war').followup,undefined);
+    assert.equal(find('war').closed,undefined);assert.ok(ministryDocketReady(find('war')));
     A.ministryDocket(find('works').id);choose(0);assert.equal(curEv.title,OFFICIAL_TASKS.water.title);
     assert.equal(E().treasury,treasury);choose(0);drain();
-    assert.equal(E().treasury,treasury-OFFICIAL_TASKS.water.cost);assert.equal(E().energy,energy-1);assert.ok(floodDikeReady());`);
+    assert.equal(E().treasury,treasury-OFFICIAL_TASKS.water.cost);assert.equal(E().energy,energy-1);assert.ok(floodDikeReady());
+    assert.ok(find('works').closed);assert.equal(find('works').followup.type,'water');`);
+});
+
+test('a second minister takes over pending memorials and a temporary assignment does not leave the seat vacant',()=>{
+  const game=court();
+  game.run(`var old=ministryHead('revenue').p;
+    old.commission={due:S.turn+1};assert.equal(ministryHead('revenue').p,old);
+    assert.equal(ministryReady('revenue'),false);assert.match(viewMinistries(),/尚书有差在身/);
+    A.ministryAppoint('revenue');assert.equal(modalOpen,false);
+    delete old.commission;approve('revenue');
+    var d=ministryDockets()[0],newHead=makeScholar();
+    newHead.ability=80;newHead.temperament='谨慎';newHead.appointedTurn=S.turn-24;S.scholars.push(newHead);
+    A.ministryAppoint('revenue');choose(curEv.choices.findIndex(c=>c.person===newHead));drain();
+    assert.equal(ministryHead('revenue').p,newHead);assert.notEqual(old.office,'户部尚书');
+    S.turn+=2;S.month+=2;A.ministryDocket(d.id);
+    assert.ok(curEv.text.includes(d.headName+'主办'));assert.ok(curEv.text.includes(newHead.name+'接续署理'));
+    choose(curEv.choices.findIndex(c=>c.t==='看过回奏，照实归档'));drain();
+    assert.equal(d.headId,old.id);assert.equal(d.reviewedBy,newHead.name);
+    assert.match(newHead.story.at(-1).t,/逐页核过/);assert.ok(viewMinistries().includes('接办 '+newHead.name));`);
 });
 
 for(const outcome of ['success','setback','interrupted'])test('the works feature archives the actual '+outcome+' from the commissioner',()=>{
@@ -93,8 +113,11 @@ for(const solved of [true,false])test('a justice referral records '+(solved?'pro
   game.run(`setupJyw();var minister=makeScholar();minister.post=minister.office='刑部尚书';S.scholars.push(minister);
     var x=openPalaceCase({kind:'harem',title:'香囊疑案',crime:'香囊藏麝',culprit:b.id,victim:a.id});
     A.ministryAct('justice');choose(0);drain();S.turn+=2;S.month+=2;
-    var d=ministryDockets()[0];A.ministryDocket(d.id);choose(0);assert.match(curEv.title,/锦衣卫密查/);choose(0);drain();
-    assert.equal(x.ministryDocket,d.id);assert.equal(d.followup.date,undefined);S.turn++;S.month++;`);
+    var d=ministryDockets()[0];A.ministryDocket(d.id);choose(0);assert.match(curEv.title,/锦衣卫密查/);
+    choose(curEv.choices.findIndex(c=>c.t==='暂缓'));drain();
+    assert.equal(d.closed,undefined);assert.equal(d.followup,undefined);assert.equal(x.status,'cold');
+    A.ministryDocket(d.id);choose(0);choose(0);drain();
+    assert.ok(d.closed);assert.equal(x.ministryDocket,d.id);assert.equal(d.followup.date,undefined);S.turn++;S.month++;`);
   game.force(solved?.1:.99);
   game.run(`jinyiweiTick();assert.equal(x.status,${JSON.stringify(solved?'solved':'cold')});assert.equal(curEv.title,'锦衣卫密报');
     choose(curEv.choices.length-1);drain();assert.equal(d.followup.outcome,${JSON.stringify(solved?'success':'setback')});

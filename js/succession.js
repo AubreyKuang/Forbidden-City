@@ -23,6 +23,7 @@ A.greetBirthDowager=function(){
     if(line)dowagerRecord(d,title,line);
     return line;
   }}))});
+  if(journalContentVersion()>=147)offerCiningChildVisit(d);
 };
 function dowagerAge(d,turn=d.mourning?.turn??S.turn){
   return Number.isFinite(d.age)?d.age+Math.max(0,Math.floor((turn-(d.atTurn??0))/12)):null;

@@ -233,6 +233,35 @@ test('an unavailable planned caregiver can be replaced by a specific consort in 
    A.princeSpousePlacement(prince.id,dossier.key);assert.equal(modalOpen,false);`);
 });
 
+test('a dowager visit follows the actual ward to her hall and sends only a private household letter',()=>{
+ let game=princeParentageWorld(74,'仁厚','敏感');
+ game.run(`S.flags.dowager=makeDowager(q,'嫡母');S.flags.birthDowager=makeDowager(a,'生母');
+   startHouseholdPregnancy(prince,p,{privateVisit:true});
+   var g=prince.household.pregnancies[0],dossier=princeSpouseParentageCases(prince)[0];
+   S.turn=g.due;var k=deliverHouseholdChild(prince,g);dossier.status='complete';
+   A.princeSpousePlacement(prince.id,dossier.key);choose(1);drain();
+   assert.equal(upbringingDowager(k),S.flags.birthDowager);
+   A.greet();assert.ok(!Q.some(e=>e.title.includes('请安之后')));drain();
+   var energy=E().energy;A.greetBirthDowager();choose(0);if(modalResult)nextEv();
+   assert.equal(curEv.title,'慈宁宫西殿 · 请安之后');choose(0);
+   assert.equal(curEv.title,'慈宁宫西殿 · 探望'+k.name);assert.match(curEv.text,/伸出手/);
+   assert.equal(E().energy,energy-1);save('1');`);
+ game=boot(792,game.storage);game.ctx.assert=assert;
+ game.run(`A.load('1');assert.equal(PalaceActions.blocked,false);
+   var prince=S.children.find(k=>k.name==='承安'),p=prince.spouse,k=S.children.find(k=>k.princeSpouseOrigin);
+   assert.equal(curEv.title,'慈宁宫西殿 · 探望'+k.name);var mood=k.mood??65;
+   choose(1);drain();
+   assert.equal(k.mood,Math.min(100,mood+4));assert.match(k.story.at(-1).t,/慈宁宫探望/);
+   assert.match(S.flags.birthDowager.story.at(-1).t,/寄养日常/);
+   assert.match(prince.story.at(-1).t,/慈宁宫平安信.*念给王妃/);assert.match(p.story.at(-1).t,/慈宁宫平安信.*手指/);
+   assert.ok(!S.log.some(e=>e.t.includes('慈宁宫平安信')||e.t.includes('探望'+k.name)));
+   A.greetBirthDowager();assert.ok(!Q.some(e=>e.title.includes('请安之后')));drain();
+   k.born=S.turn-8*12;k.temperament='内敛';S.turn++;
+   A.greetBirthDowager();choose(0);if(modalResult)nextEv();choose(0);
+   assert.match(curEv.text,/只剩几个人/);choose(0);drain();
+   assert.equal(prince.story.filter(e=>e.t.startsWith('【慈宁宫平安信】')).length,1);`);
+});
+
 test('a prince moves from a capital residence to a named fief and later returns',()=>{
   const game=princeWorld();game.run(`openPrinceEstate(prince);var id=prince.id;A.go('prince-estate',id);
     assert.match(viewPrinceEstate(),/睿亲王府/);assert.match(viewPrinceEstate(),/到王府探望/);

@@ -372,13 +372,73 @@ function ciningChildVisit(k){
     }
   }]};
 }
-function offerCiningChildVisit(){
-  const children=S.children.filter(canVisitCiningChild);
+function canVisitPrincelyWard(k,d){
+  return !!k.princeSpouseOrigin&&!k.pendingName&&!S.over&&S.heir!==k.id&&raisedByDowager(k)&&
+    upbringingDowager(k)===d&&k.dowagerUpbringing.lastVisit!==S.turn;
+}
+function princelyWardVisit(k,d){
+  if(!canVisitPrincelyWard(k,d))return null;
+  const care=k.dowagerUpbringing,valid=()=>k.dowagerUpbringing===care&&canVisitPrincelyWard(k,d);
+  const room=dowagerResidence(d),age=kidAge(k),visits=care.visits||0;
+  const days=CINING_CHILD_DAYS[age<2?0:age<7?1:2];
+  const [news,activity]=days[visits%days.length];
+  const quiet=['内敛','审慎','自矜'].includes(childDisposition(k));
+  const sick=(k.hp??100)<35;
+  const report=sick?'这几日有些乏，乳母照旧守着，午觉睡得比昨日久些。':news;
+  const moment=sick?'隔着帐子听你说了一会儿话，才安心睡去。':age<2?
+    '听见熟悉的说话声，循声伸出手来。':quiet?
+      '先把预备给你看的东西挪到桌边。等屋里只剩几个人，才指给你看。':
+      '一见你就招手，急着把今日的新鲜事从头说一遍。';
+  const origin=k.princeSpouseOrigin,prince=royalById(origin.estate);
+  const dossier=princeSpouseParentageCases(prince).find(r=>r.key===origin.dossier&&r.placement?.palaceId===k.id);
+  const currentWife=()=>dossier?princeSpouseParentageWife(prince,dossier):null;
+  const canSend=()=>!!dossier&&(prince.alive||!!currentWife());
+  const finish=send=>{
+    if(!valid()||(send&&!canSend()))return null;
+    care.lastVisit=S.turn;care.visits=visits+1;
+    k.mood=clamp((k.mood??65)+4);
+    kstory(k,`【慈宁宫探望】在${room}见了前来请安的陛下。${moment}`+
+      (age>=2&&!sick?activity.replace(/父皇/g,'陛下'):'')+(send?'太后让宫人照着这些家常写了平安信。':''));
+    dowagerRecord(d,'寄养日常',`陛下请安后来看${k.name}。她说起孩子这几日的起居：“${report}”`+
+      (send?'让妥当的宫人将近况夹入写往王府的家信。':''));
+    if(!send)return '你留下陪孩子坐了一会儿。太后让宫人再添一盏茶，等孩子自己说完。';
+    const opening=`收到${room}递来的家信，听说${k.name}近日的起居。${report}`;
+    const wife=currentWife();
+    const princeReply=({
+      内敛:'他静静看了两遍，将信夹在孩子从前住处的钥匙匣里。',
+      审慎:'他对着信问明孩子的衣食，回信只问下回何时可再得音讯。',
+      自矜:'他当着来人只道有劳，回到屋里，才把报安的话从头读了一遍。',
+      仁厚:wife?'他请来人替自己谢过养育的人，又把最宽心的那句念给王妃听。':
+        '他回信先谢过养育的人，又请来人代为约好下封信的日子。'
+    })[childDisposition(prince)]||'他把回信写好，又问可否将孩子留在府中的旧玩具捎过去。';
+    const motherReply=({
+      温厚:'她先谢过照料的人，回信时又添了一句，哪一日有空，也告诉她孩子爱吃什么。',
+      爽朗:'她读到家常琐事时终于笑出来，忙写了一段府里的趣事请人带回。',
+      矜持:'她依礼谢过来人，回房才把那几句家常另抄下来，夹在妆匣里。',
+      好胜:'她将信里问不到的衣食列了两项，亲笔回去，等候下一封家信。',
+      敏感:'她手指在孩子名字上停了片刻，才把前几日备着的小物交给送信的人。',
+      沉静:'她把信折进从前收小衣的箱子，只托人回一句，家中也平安。'
+    });
+    princeSpouseParentageNote(prince,dossier,'慈宁宫平安信',opening+princeReply);
+    if(wife)princeSpouseParentageNote(wife,dossier,'慈宁宫平安信',opening+(motherReply[marriageNature(wife).temperament]||motherReply.沉静));
+    return '太后把孩子的近况写进家信，托熟悉的宫人递到王府。';
+  };
+  return {title:`${room} · 探望${k.name}`,por:dowagerPerson(d),cast:[k],valid,sealedAnnals:true,
+    text:`${d.name}领你进里间，轻声说：“${report}”\n${k.name}${moment}`,
+    choices:[{t:'留下陪孩子坐坐',f:()=>finish(false)},
+      ...(canSend()?[{t:'陪孩子坐坐，给王府捎封平安信',cond:canSend,why:'府中原接信人已不在',f:()=>finish(true)}]:[])]};
+}
+function offerCiningChildVisit(d=S.flags.dowager){
+  const extended=journalContentVersion()>=147;
+  const ready=k=>extended&&k.princeSpouseOrigin?canVisitPrincelyWard(k,d):
+    canVisitCiningChild(k)&&(!extended||d===S.flags.dowager&&upbringingDowager(k)===d);
+  const children=S.children.filter(ready);
   if(!children.length)return;
-  pushEv({title:'慈宁宫 · 请安之后',por:dowagerPerson(S.flags.dowager),
+  const room=extended?dowagerResidence(d):'慈宁宫';
+  pushEv({title:room+' · 请安之后',por:dowagerPerson(d),sealedAnnals:extended&&children.some(k=>k.princeSpouseOrigin),
     text:'请安的事说完，宫人来问，陛下可要顺路去看看太后跟前的孩子？',
-    valid:()=>children.some(canVisitCiningChild),
-    choices:[...children.map(k=>({t:'顺便看看'+k.name,person:k,cond:()=>canVisitCiningChild(k),f:()=>{
-      const ev=ciningChildVisit(k);if(ev)pushNow(ev);return null;
+    valid:()=>children.some(ready),
+    choices:[...children.map(k=>({t:'顺便看看'+k.name,person:k,cond:()=>ready(k),f:()=>{
+      const ev=extended&&k.princeSpouseOrigin?princelyWardVisit(k,d):ciningChildVisit(k);if(ev)pushNow(ev);return null;
     }})),{t:'今日先回去'}]});
 }

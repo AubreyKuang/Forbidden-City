@@ -67,7 +67,12 @@ const MINISTRY_FOLLOWUPS={
 };
 function beginMinistryFollowup(docket,type,details={}){
   if(journalContentVersion()<68||!docket||docket.followup)return false;
-  docket.followup={type,...details};return true;
+  docket.followup={type,...details};
+  if(journalContentVersion()>=147&&type!=='tax'){
+    const label=type==='case'?ministryCaseReferralLabel(palaceCases().find(x=>x.id===details.caseId)):ministryTaskReferralLabel(type);
+    settleMinistryDocket(docket,label);
+  }
+  return true;
 }
 function finishMinistryFollowup(id,outcome,result){
   if(journalContentVersion()<68||!id)return;
@@ -144,10 +149,31 @@ function settleMinistryDocket(docket,decision){
   const title=MINISTRY_REVIEWS[docket.ministry],line=`【六部纪事 · ${title}】${decision}。`;
   const person=courtPerson(docket.headKey);
   if(person?.p.id===docket.headId&&officialServing(person.p))story(person.p,line);
-  log(line,1);
+  const successor=ministryDocketSuccessor(docket);
+  if(successor){
+    docket.reviewedBy=successor.p.name;
+    story(successor.p,`${line}接手${docket.headName}任内旧折，${ministryHandoverLine(successor.p)}`);
+  }
+  log(line+(successor?`现任尚书${successor.p.name}接续署理，原折保留${docket.headName}具名。`:''),1);
 }
+function ministryDocketSuccessor(docket){
+  if(journalContentVersion()<147)return null;
+  const head=ministryHead(docket.ministry);
+  return head&&head.p.id!==docket.headId&&officialServing(head.p)?head:null;
+}
+function ministryHandoverLine(p){
+  return ({
+    持正:'将原办与续办分别署名，日后可各按原卷查考。',
+    谨慎:'逐页核过原批与附件，把还缺凭据的地方标了出来。',
+    进取:'另列一纸限期，把本任要接着办的事逐件记清。',
+    圆融:'先问原来的经手人，把口头交代逐件添在卷后。'
+  })[p.temperament]||'核对原折与续办事项，另署接手日期。';
+}
+const ministryTaskReferralLabel=id=>`择官办理${OFFICIAL_TASKS[id].title}`;
+const ministryCaseReferralLabel=item=>`调卷复核「${item.title}」`;
 function ministryDocketEvent(docket){
   const id=docket.ministry,title=MINISTRY_REVIEWS[id],valid=()=>ministryDockets().includes(docket)&&ministryDocketReady(docket);
+  const successor=ministryDocketSuccessor(docket);
   const choices=[];
   const redirect=(label,view,personId)=>choices.push({t:label,f:()=>{
     if(!valid())return null;
@@ -155,12 +181,16 @@ function ministryDocketEvent(docket){
     if(personId!=null)A.go(view,personId);else A.go(view);
     return '复议已经记入六部案簿。';
   }});
-  const forward=(label,factory)=>choices.push({t:label,f:()=>{
+  const forward=(label,factory,referral=false)=>choices.push({t:label,f:()=>{
     if(!valid())return null;
     const event=factory();if(!event)return '相关回奏或案卷已有变化，仍可把本折归档。';
-    settleMinistryDocket(docket,label);pushNow(event);return null;
+    if(referral&&journalContentVersion()>=147){
+      const check=event.valid;
+      event.valid=()=>valid()&&(!check||check());
+    }else settleMinistryDocket(docket,label);
+    pushNow(event);return null;
   }});
-  const task=id=>forward(`择官办理${OFFICIAL_TASKS[id].title}`,()=>governmentTaskEvent(id,docket));
+  const task=id=>forward(ministryTaskReferralLabel(id),()=>governmentTaskEvent(id,docket),true);
   let follow='';
   if(id==='personnel'){
     const pending=careerPeople().find(person=>careerEligible(person.p)&&person.p.report?.outcome==='setback');
@@ -191,7 +221,7 @@ function ministryDocketEvent(docket){
   if(id==='justice'){
     const cold=palaceCases().find(item=>item.kind==='harem'&&caseReady(item));
     follow=cold?`秋审已过，「${cold.title}」一卷仍有未查清的线索。刑部请调原卷复核，照旧凭证据行事。`:'本批秋审回奏已复点。卷外传言另作记录，现有未结案仍可在案簿查看。';
-    if(cold&&jinyiweiCommanderReady())forward(`调卷复核「${cold.title}」`,()=>jinyiweiInvestigationEvent(cold,docket));
+    if(cold&&jinyiweiCommanderReady())forward(ministryCaseReferralLabel(cold),()=>jinyiweiInvestigationEvent(cold,docket),true);
     else redirect('查看锦衣卫旧案与线索','jinyiwei');
   }
   if(id==='works'){
@@ -199,7 +229,8 @@ function ministryDocketEvent(docket){
     follow=ready?'险段现有一笔修堤减免可用。工部另列了疏通农渠的差事，可视农时安排。':docket.success?'此次督修曾经验收。如今河工簿上已无待用的赈济减免，可另择官岁修。':'上次督修未验收，工部请由承办官重核险段和料银，再呈工簿。';
     task(ready?'water':'dikes');
   }
-  return {title:`${MINISTRIES[id].name}回奏 · ${title}`,valid,text:`${docket.date}由${docket.headName}主办「${MINISTRIES[id].action}」。\n原折：${docket.summary}\n${follow}`,choices:[
+  const handover=successor?`\n现由${successor.p.name}接续署理。已将原折和附件留存，待御批后续办署名。`:'';
+  return {title:`${MINISTRIES[id].name}回奏 · ${title}`,valid,text:`${docket.date}由${docket.headName}主办「${MINISTRIES[id].action}」。${handover}\n原折：${docket.summary}\n${follow}`,choices:[
     ...choices,{t:'看过回奏，照实归档',f:()=>{if(!valid())return null;settleMinistryDocket(docket,'回奏已阅，照实归档');return '原折和本次复议均已存入六部案簿。';}},
     {t:'留中，下次再议'}
   ]};
@@ -213,7 +244,7 @@ function ministryDocketSection(){
   const all=ministryDockets().slice().reverse(),active=d=>!d.closed||d.followup&&!d.followup.read;
   const rows=[...all.filter(active),...all.filter(d=>!active(d)).slice(0,6)];
   return detailSection('六部回奏与纪事',rows.length?`<ul class="story">${rows.map(d=>
-    `<li><time>${esc(d.date)}</time><b>${esc(MINISTRIES[d.ministry].name+' · '+MINISTRY_REVIEWS[d.ministry])}</b> · ${esc(d.headName)}
+    `<li><time>${esc(d.date)}</time><b>${esc(MINISTRIES[d.ministry].name+' · '+MINISTRY_REVIEWS[d.ministry])}</b> · ${esc(d.headName)}${d.reviewedBy?' · 接办 '+esc(d.reviewedBy):''}
       <p>${esc(d.closed?`${d.closed} · ${d.decision}`:d.due==null?'待恩科放榜':ministryDocketReady(d)?'回奏已至':`${Math.max(0,d.due-S.turn)}个月后回奏`)}</p>
       ${d.followup?`<p>${esc(MINISTRY_FOLLOWUPS[d.followup.type][0])} · ${esc(ministryFollowupStatus(d.followup))}</p>`:''}
       ${ministryAftermathReady(d)?`<button class="btn sm jade" onclick="A.ministryAftermath('${d.id}')">阅看后续纪事</button>`:''}
@@ -235,7 +266,9 @@ const EXAM_INTERVALS=[1,3,5,10];
 const regularExamInterval=()=>EXAM_INTERVALS.includes(S.ministries?.examInterval)?S.ministries.examInterval:3;
 const examIntervalLabel=years=>years===1?'每年一科':`每${cnNum(years)}年一科`;
 function ministryHead(id){
-  const title=`${MINISTRIES[id].name}尚书`,holds=x=>x&&officialServing(x.p)&&x.p.office===title;
+  const title=`${MINISTRIES[id].name}尚书`;
+  const holds=x=>x&&x.p.office===title&&(journalContentVersion()>=147?
+    officialAlive(x.p)&&!x.p.retired&&!x.p.exiled&&!x.p.dismissed&&!['student','commoner'].includes(x.p.career):officialServing(x.p));
   // 调任他职即视为卸任本部；未经任命时，家世本就官居此职的父兄即是现任尚书。
   const person=courtPerson(S.ministries?.heads?.[id]);if(holds(person))return person;
   const kin=officialEntries().map(e=>({p:e.p,key:e.key,e,bloc:e.h.bloc})).filter(holds),scholars=scholarList().map(p=>({p,key:'scholar:'+p.id,scholar:true,bloc:p.outerChildId&&p.bloc==='army'?'army':'civil'})).filter(holds);
@@ -251,7 +284,7 @@ function ministryCandidates(id){
 }
 function ministryOdds(id){const head=ministryHead(id);return head?.4+head.p.ability/200:0;}
 function ministryReady(id){
-  const m=MINISTRIES[id];if(!m||!S||S.over||!ministryHead(id))return false;
+  const m=MINISTRIES[id];if(!m||!S||S.over||!officialServing(ministryHead(id)?.p))return false;
   if(S.turn-(S.ministries?.used?.[id]??-99)<MINISTRY_GAP)return false;
   if(E().energy<1||E().treasury<m.cost)return false;
   if(id==='rites')return !examPending()&&S.turn-lastExamTurn()>=24;
@@ -355,11 +388,14 @@ A.ministryAct=function(id){
 };
 A.ministryAppoint=function(id){
   if(modalOpen||S.over||!MINISTRIES[id])return;
-  const m=MINISTRIES[id],list=ministryCandidates(id),current=ministryHead(id);
+  const m=MINISTRIES[id],current=ministryHead(id);
+  const canReplace=()=>journalContentVersion()<147||ministryHead(id)?.p===current?.p&&(!current||officialServing(current.p));
+  if(!canReplace())return;
+  const list=ministryCandidates(id);
   pushEv({title:`${m.name}尚书人选`,text:`${m.name}掌${m.duty}。${current?`现任尚书${current.p.name}。`:'尚书一职空缺。'}\n候选须在任、才干55以上，且不兼掌他部；新科进士须在翰林院历练两年。${list.length?'':'\n眼下没有合格人选。'}`,
     choices:[...list.map(x=>({t:`${x.p.name} · ${x.p.office||x.p.post} · 才干${rd(x.p.ability)}${x.scholar?(x.p.registrySource==='founding'?' · 先朝旧臣':x.p.entryRoute?' · '+x.p.entryRoute+'出身':' · 进士出身'):' · '+blocName(x.bloc)}`,person:x.p,
-      cond:()=>E().energy>=1&&officialServing(x.p)&&!ministryHeldBy(x.p),why:'精力不足或已不在任',f:()=>{
-        if(!useE())return null;
+      cond:()=>canReplace()&&E().energy>=1&&officialServing(x.p)&&!ministryHeldBy(x.p),why:'精力不足或已不在任',f:()=>{
+        if(!canReplace()||!useE())return null;
         const st=ministryState(),old=ministryHead(id);st.heads[id]=x.key;
         if(old&&old.p!==x.p){if(careersActive())careerSetOffice(old,'内阁学士','卸任尚书，改授新职');else{old.p.office='内阁学士';old.p.post=old.p.office;}courtPersonRecord(old,`卸任${m.name}尚书，改任内阁学士。`);}
         if(careersActive())careerSetOffice(x,`${m.name}尚书`,'奉旨出掌六部');else{x.p.office=`${m.name}尚书`;x.p.post=x.p.office;}x.p.trust=clamp(x.p.trust+3);
@@ -434,12 +470,13 @@ function viewMinistries(){
   const card=([id,m])=>{
     const head=ministryHead(id),used=S.ministries?.used?.[id],wait=used==null?0:Math.max(0,MINISTRY_GAP-(S.turn-used));
     const schedules=id==='rites'&&journalContentVersion()>=33;
-    const why=!head?'尚书空缺':wait?`${wait}个月后可再办`:id==='rites'&&(examPending()||S.turn-lastExamTurn()<24)?'两科之间须隔两年':id==='works'&&S.flags.floodDikeGen===S.gen?'河工已修固':E().energy<1?'精力不足':E().treasury<m.cost?'国库不足':'';
+    const onAssignment=head&&!officialServing(head.p);
+    const why=!head?'尚书空缺':onAssignment?'尚书有差在身':wait?`${wait}个月后可再办`:id==='rites'&&(examPending()||S.turn-lastExamTurn()<24)?'两科之间须隔两年':id==='works'&&S.flags.floodDikeGen===S.gen?'河工已修固':E().energy<1?'精力不足':E().treasury<m.cost?'国库不足':'';
     return `<article class="card ministry-card"><div class="ministry-head">${head?porImg(head.p,56):''}<div><h3>${m.name}<small> · ${m.duty}</small></h3>
       <p>${head?`尚书 ${head.scholar?`<button class="person-link" onclick="A.go('scholar','${head.p.id}')">${esc(head.p.name)}</button>`:officialLink(head.e.c,head.e.role)} · 才干${rd(head.p.ability)}`:'<span class="hint">尚书空缺</span>'}</p></div></div>
       <p class="hint">${schedules?`正科${examIntervalLabel(regularExamInterval())}，三月殿试。${nextExamLabel()}。可另奏开恩科。`:m.brief+(id==='rites'?` ${nextExamLabel()}。`:'')}</p>
       <div class="acts"><button class="btn sm jade" onclick="A.ministryAct('${id}')" ${ministryReady(id)?'':'disabled'}>${m.action}<small>精力−1${m.cost?' · 国库−'+m.cost:''}${why?' · '+why:''}</small></button>
-      <button class="btn sm" onclick="A.ministryAppoint('${id}')">${head?'改任尚书':'任命尚书'}</button>${schedules?`<button class="btn sm" onclick="A.examSchedule()" ${S.over?'disabled':''}>调整正科周期</button>`:''}</div></article>`;
+      <button class="btn sm" onclick="A.ministryAppoint('${id}')" ${onAssignment?'disabled':''}>${head?'改任尚书':'任命尚书'}</button>${schedules?`<button class="btn sm" onclick="A.examSchedule()" ${S.over?'disabled':''}>调整正科周期</button>`:''}</div></article>`;
   };
   const scholars=scholarList().filter(p=>!p.registrySource).slice().reverse();
   return `<button class="btn quiet sm detail-back" onclick="A.go('government')">← 返回治国理政</button><h2>六部</h2>${examSchedulePanel(false)}<p class="hint">尚书由在任且才干 55 以上的官员出任，一人不兼两部。各部每年可办一件大事，成败看尚书才干。</p>
