@@ -199,3 +199,42 @@ test('身世未明随本人从应选到留牌，旧存档凭家籍恢复，其�
  assert.match(consortTraitTags(g),restless);assert.equal(JSON.stringify(S),saved);
  assert.doesNotMatch(consortTraitTags(g),/宫外皇嗣|生父为皇帝/);`);
 });
+
+test('知情姨母记得当年劝避嫌、盼入宫或伤心的反应，三份纪事各有视角',()=>{
+ for(const [reaction,speech,diary] of [['afraid','替大人','避嫌'],['hopeful','一顿热饭','相伴'],['sad','脚疼','没去送']]){
+  const b=nieceSelection({uncertain:true});Object.assign(b.ctx,{reaction,speech,diary});
+  b.run(`other.sisterAffairKnowledge={[sister.id]:{sister:sister.id,name:sister.name,reaction,turn:S.turn-48,letter:{sent:S.turn-45}}};
+   niece.outsideParentage.privateInquiry={status:'complete',imperial:true};var before=JSON.stringify(niece.outsideParentage);
+   A.xxTake(nieceId);choose(0);assert.ok(modalResult.text.includes(reaction==='afraid'?'长辈的事':speech));drain();
+   var girl=byId(nieceId),find=p=>p.story.filter(e=>e.thread==='niece-confidence:'+other.id+':'+nieceId);
+   assert.ok(find(other)[0].t.includes(diary));assert.equal(find(sister).length,1);assert.equal(find(girl).length,1);
+   assert.match(find(sister)[0].t,/女儿/);assert.doesNotMatch(find(girl)[0].t,/回信|避嫌的信|私下相见|生父|盼姐妹|亲笔信/);
+   assert.equal(JSON.stringify(niece.outsideParentage),before);S.turn++;nieceHandwrittenMailTick();assert.equal(find(girl).length,1);`);
+ }
+});
+test('未触发察觉的姨母到下月亲收手书才知情，读档、同胞与其他姨母的知情记录相互独立',()=>{
+ const b=nieceSelection({uncertain:true});b.run(`
+ var second=makeGirl({sur:other.sur,given:'清兰',age:35,trait:'善妒'});addConsort(second,3,'入宫');second.house=other.house;
+ second.sisterAffairKnowledge={[sister.id]:{sister:sister.id,name:sister.name,reaction:'sad',turn:S.turn-50}};
+ other.sisterAffairKnowledge={999:{sister:999,name:'旁人',reaction:'hopeful'}};
+ A.xxTake(nieceId);choose(0);drain();var g=byId(nieceId),sid=sister.id,aid=other.id,secondId=second.id;
+ assert.equal(sisterAffairKnowledge(other,sister),undefined);assert.equal(sisterAffairKnowledge(second,sister).reaction,'sad');
+ var mail=()=>g.story.filter(e=>e.life?.title==='姨甥私语 · 生母手书');nieceHandwrittenMailTick();assert.equal(mail().length,0);
+ PalaceActions.reset();save('auto');A.load('auto');drain();g=byId(nieceId);other=byId(aid);sister=natalEntry(aid,sid).p;S.turn++;nieceHandwrittenMailTick();
+ assert.equal(curEv.title,'姨甥私语 · 入宫以后');assert.match(curEv.text,/亲笔信/);drain();
+ assert.equal(sisterAffairKnowledge(other,sister).source,'handwritten');
+ assert.equal(sisterAffairKnowledge(byId(secondId),sister).source,undefined);
+ assert.equal(mail().length,1);assert.equal(sister.story.filter(e=>e.life?.title==='姨甥私语 · 生母手书').length,1);
+ assert.match(other.story.at(-1).t,/才知道/);assert.doesNotMatch(mail()[0].t,/当年曾与陛下|生父是/);
+ S.turn++;nieceHandwrittenMailTick();assert.equal(mail().length,1);`);
+});
+test('落选、无该标签或生母已故，不能靠手书凭空知情；旧档留牌可续收',()=>{
+ for(const mode of ['lost','ordinary','deceased','legacy']){
+  const b=nieceSelection({uncertain:mode!=='ordinary'});b.ctx.mode=mode;
+  b.run(`if(mode==='lost'){A.xxDrop(nieceId);drain();}else{A.xxTake(nieceId);choose(0);drain();}
+   var g=byId(nieceId);if(mode==='deceased')sister.alive=false;if(mode==='legacy')delete g.nieceConfidenceMail;
+   S.turn++;nieceHandwrittenMailTick();drain();
+   assert.equal(!!sisterAffairKnowledge(other,sister),mode==='legacy');
+   assert.equal(sister.story.some(e=>e.life?.title==='姨甥私语 · 生母手书'),mode==='legacy');`);
+ }
+});

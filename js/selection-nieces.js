@@ -101,22 +101,22 @@ function selectionNieceAunts(people,mother,relative,preferredId){
     return {a,score,bond};
   }).sort((x,y)=>Number(y.a.id===preferredId)-Number(x.a.id===preferredId)||y.score-x.score||x.a.id-y.a.id);
 }
-function selectionNieceFamily(g){
+function selectionNieceFamily(g,admitted=false){
   if(!selectionNiecesActive())return null;
   const origin=g.familyBranchOrigin;
   if(origin){
     const e=natalEntry(origin.host,origin.relative),mother=e&&natalSisterMother(e.c,e.p);
     if(!mother||!e.p.alive)return null;
-    return {relative:e.p,aunts:selectionNieceAunts(paternalFamily(e.c),mother,e.p,g.selectionNatalHost)};
+    return {relative:e.p,mother,aunts:selectionNieceAunts(paternalFamily(e.c),mother,e.p,g.selectionNatalHost)};
   }
   const child=nieceSelectionEntryActive()&&g.outerHouseholdId!=null?outerChild(g.outerHouseholdId):null;
-  if(child?.familySelection!=='listed')return null;
+  if(!child||child.familySelection!=='listed'&&!(admitted&&byId(g.id)===g))return null;
   const m=outerMother(child.mother);
   if(m?.relative==null)return null;
   const relative={id:child.id,name:child.alias};
   const host=familyHostById(m.owner??m.host),mother=outerSister(m)||{id:m.relative};
   const people=[...(host?paternalFamily(host):[]),familyHostById(m.host)];
-  return {relative,aunts:selectionNieceAunts(people,mother,relative,m.host),outer:{m,child}};
+  return {relative,mother:outerSister(m),aunts:selectionNieceAunts(people,mother,relative,m.host),outer:{m,child}};
 }
 function selectionNieceThought(p,outcome,bond){
   if(outcome==='entered')return [
@@ -140,12 +140,96 @@ function selectionNieceThought(p,outcome,bond){
     '我知道她未必为我惋惜，好在她没有拿结果刺我。出了这扇门，日子仍是我自己的。'
   ][bond];
 }
+const NIECE_CONFIDENCE_WORDS={
+  afraid:{
+    words:'往后若有人拿你娘年轻时的事打听，尽可说那是长辈的事。有人再难为你，来找我，我陪你回话。',
+    aunt:'最怕两家的闲话追进宫来。见她捏着袖口，便先教了她一句能脱身的答话。',
+    mother:'在给女儿的回信里只叮嘱了一件事：有人盘问就去找姨母，不必独自应付。',
+    niece:'把姨母教的那句话默念了一遍。原来碰到不愿答的话，也可以把话推回去。'
+  },
+  hopeful:{
+    words:'从前我常想，你娘要是也住得近些，我们就能常吃一顿热饭。今日来的是你。想吃什么、想过什么日子，姨母听你自己说。',
+    aunt:'曾盼姐妹能在宫里相伴。给外甥女添茶时，特意问了她自己的口味。',
+    mother:'回信问女儿头一餐吃得可口，又嘱她有不惯的地方尽管告诉姨母。',
+    niece:'姨母问起最喜欢的菜，我才发现她一直等着我自己开口，便说想吃娘常做的那碗面。'
+  },
+  sad:{
+    words:'我跟你娘有些话，到今天也没说顺。你不必替她解释，更不用替我捎话。来，先坐，赶了这一天的礼数，脚疼不疼？',
+    aunt:'想起姐妹间的伤心事，起先没能迎上前。见孩子站着不敢坐，便亲手把脚凳挪了过去。',
+    mother:'把写给姐妹又没寄出去的几句话留在自己手里，只问女儿脚上的鞋合不合适。',
+    niece:'原怕姨母要我替娘回话。她只问鞋磨不磨脚，我便敢把磨红的脚跟给她看了。'
+  }
+};
+function nieceConfidenceNote(p,title,thread,text){
+  p.story||=[];story(p,`【${title}】${text}`);
+  Object.assign(p.story.at(-1),{thread,life:{kind:'family',title,turn:S.turn,gen:S.gen}});
+}
+function welcomeNieceInPrivate(g,f,a,known,byLetter=false){
+  const voice=NIECE_CONFIDENCE_WORDS[known.reaction],mother=f.mother;
+  const mom=byId(mother.consortId)||mother,an=fullName(a),gn=fullName(g),mn=mother.name||fullName(mom);
+  const title=byLetter?'姨甥私语 · 生母手书':'姨甥私语 · 初见';
+  const thread=`niece-confidence:${a.id}:${g.id}`;
+  const written=known.letter?.sent!=null;
+  const memory=byLetter?'拆开'+mn+'的亲笔信，才知道姐妹当年曾与陛下私下相见。':
+    known.source==='handwritten'?'想起'+mn+'早先亲笔告诉她的往事。':
+    written?({afraid:'想起当年亲笔劝'+mn+'避嫌的信。',hopeful:'想起当年写信问'+mn+'愿不愿入宫相伴。',sad:'想起写给'+mn+'的那封信，信里曾说自己为什么没去送她。'}[known.reaction]):'想起当年察觉'+mn+'私事时的心情。';
+  const spoken=byLetter&&known.reaction==='sad'?'我今天心里有点乱，不是你的缘故。来，把脚歇一歇。大人的事，没人该来问你。':byLetter&&known.reaction==='hopeful'?'看你娘的信，我也想她了。你们娘俩口味像不像？今儿你自己点菜，回头好写信告诉她。':voice.words;
+  const auntThought=byLetter&&known.reaction==='hopeful'?'读罢才生出姐妹若能常在一处该多好的念头，先给孩子添了茶。':voice.aunt;
+  nieceConfidenceNote(a,title,thread,memory+auntThought+`同${gn}独处时说：“${spoken}”`);
+  nieceConfidenceNote(g,title,thread,`姨母${an}单独同我说：“${spoken}”`+voice.niece);
+  if(f.relative!==g&&!f.outer)f.relative.story.push({...g.story.at(-1)});
+  if(mom.alive!==false){
+    const line=byLetter?`得知女儿${gn}留在宫里，亲笔写信给${an}：“我有件旧事没同你说过。当年我与陛下私下见过。倘若有人拿那些年月问孩子，求你照看她，别让她替大人回话。”`:
+      `接到女儿${gn}留牌的消息，想到女儿如今能同姨母${an}见面。`+voice.mother;
+    nieceConfidenceNote(mom,title,thread,line);
+    if(mom!==mother)mother.story.push({...mom.story.at(-1)});
+  }
+  const intro=byLetter?`${mn}寄来亲笔信，把当年的私下往来告诉了${an}，托她照看女儿。
+`:'';
+  return intro+`姨母${an}私下同${gn}说：“${spoken}”`;
+}
+function nieceHandwrittenMailTick(){
+  if(journalContentVersion()<162||S.over)return;
+  for(const g of S.consorts){
+    if(!g.alive||g.gone||!inPalace(g)||!g.familyBranchOrigin&&g.outerHouseholdId==null)continue;
+    let mail=g.nieceConfidenceMail,f;
+    if(!mail){
+      // An older save may already have a retained niece. Only revisit an actual selection recorded for her aunt.
+      if(!palaceUnclearOrigin(g)||!g.story.some(e=>e.life?.title===NIECE_SELECTION_TITLES.kept))continue;
+      f=selectionNieceFamily(g,true);if(!f?.mother)continue;
+      const waiting=f.aunts.filter(({a})=>g.story.some(e=>e.life?.title===NIECE_SELECTION_TITLES.kept&&e.thread?.endsWith(':'+a.id+':'+g.id)));
+      mail=g.nieceConfidenceMail={due:S.turn,waiting:waiting.map(({a})=>a.id)};
+    }
+    if(!mail.waiting.length||S.turn<mail.due)continue;
+    f||=selectionNieceFamily(g,true);if(!f?.mother)continue;
+    const mother=f.mother,mom=byId(mother.consortId)||mother,notice=[];
+    mail.waiting=mail.waiting.filter(id=>{
+      const a=byId(id);if(!a?.alive||a.gone)return false;
+      if(!inPalace(a))return true;
+      let known=sisterAffairKnowledge(a,mother);
+      const byLetter=!known;
+      if(byLetter){
+        if(mom.alive===false||mom.gone)return false;
+        if(mom.cold||mom.templeStay)return true;
+        const voice=selectionNieceVoice(a),relation=relGet(a,mother);
+        const reaction=relation<0||a.trait==='善妒'?'sad':relation>=30||voice==='warm'?'hopeful':'afraid';
+        known=(a.sisterAffairKnowledge||={})[mother.id]={sister:mother.id,name:mother.name,reaction,turn:S.turn,source:'handwritten'};
+      }
+      if(NIECE_CONFIDENCE_WORDS[known.reaction])notice.push(welcomeNieceInPrivate(g,f,a,known,byLetter));
+      return false;
+    });
+    if(notice.length)pushEv({title:'姨甥私语 · 入宫以后',por:g,text:notice.join('\n'),choices:[{t:'记下这次相见'}]});
+  }
+}
+
 function recordSelectionNiece(g,outcome,s=S.selection,family=selectionNieceFamily(g)){
   if(!s?.batch||!family)return '';
   const {relative:p,aunts,outer}=family,title=NIECE_SELECTION_TITLES[outcome],subject=outcome==='kept'||outer?g:p;
   const fact={entered:`${p.name}列入本届秀女名册，按礼入储秀宫候选。`,
     kept:`${p.name}殿前留牌，初封${RANKS[g.rank]}。`,lost:`${p.name}此次未留牌，将随家人归去。`}[outcome];
-  let reply='';
+  let reply='',privateReply='';
+  const privateWelcome=journalContentVersion()>=162&&outcome==='kept'&&family.mother&&palaceUnclearOrigin(g);
+  if(privateWelcome)g.nieceConfidenceMail||={due:S.turn+1,waiting:[]};
   for(const {a,bond} of aunts){
     const thread=`selection-niece:${s.batch}:${a.id}:${p.id}`;
     if(subject.story.some(e=>e.thread===thread&&e.life?.title===title))continue;
@@ -160,9 +244,16 @@ function recordSelectionNiece(g,outcome,s=S.selection,family=selectionNieceFamil
       const copy=subject===p?g:p;
       if(copy!==subject)copy.story.push({...entry});
     }
+    if(privateWelcome&&byId(a.id)===a){
+      const known=sisterAffairKnowledge(a,family.mother);
+      if(known&&NIECE_CONFIDENCE_WORDS[known.reaction]&&inPalace(a)){
+        const spoken=welcomeNieceInPrivate(g,family,a,known);
+        privateReply||=spoken;
+      }else g.nieceConfidenceMail.waiting.push(a.id);
+    }
     reply||=message;
   }
-  return reply;
+  return privateReply||reply;
 }
 function selectionNieceArrivalNote(c){
   const prefix=`selection-niece:${S.selection?.batch}:`;

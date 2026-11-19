@@ -88,7 +88,7 @@ function sisterAwarenessMailTick(){
     if(!c.sisterAffairKnowledge||!inPalace(c))continue;
     for(const known of Object.values(c.sisterAffairKnowledge)){
       const letter=known.letter;
-      if(letter?.closed||!Object.hasOwn(SISTER_AWARENESS_LETTERS,known.reaction))continue;
+      if(known.source==='handwritten'||letter?.closed||!Object.hasOwn(SISTER_AWARENESS_LETTERS,known.reaction))continue;
       const p=c.house?.relatives?.find(p=>p.id===known.sister);
       if(!p)continue;
       const spouseId=letter?.spouseId??known.spouseId??p.marriedSisterAffair?.spouseId;

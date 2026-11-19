@@ -731,6 +731,7 @@ A.endMonth=function(){
   courtFamilyReplyTick();
   palaceKinMailTick();
   sisterAwarenessMailTick();
+  nieceHandwrittenMailTick();
   if(journalContentVersion()>=96)childUpbringingMonth();
   if(journalContentVersion()>=115)whiteSpringFamilyParcelTick();
   const passing=dowagerPassingEvent();if(passing)pushEv(passing);
