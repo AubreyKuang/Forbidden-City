@@ -735,12 +735,16 @@ A.endMonth=function(){
   const must=[passing?null:haremRemonstranceEvent(),passing?null:pendingImmortalEvent(),passing?null:pendingRoyalTravelEvent(),passing?null:pendingTravelInstitutionEvent(),passing?null:pendingRoyalSchoolRevision(),passing?null:pendingLocalChronicleReview(),passing?null:pendingClassicStory(),passing?null:pendingYiLandEvent(),passing?null:arcTick(),heirTick(),milestone(),parentageReportEvent(),birthSwapClueEvent(),birthSwapSearchReport(),pendingBirthSwapJustice(),pendingKinGreeting(),pendingMaternalKinCare(),pendingMaternalSisterArrival(),pendingDaoVoyage(),pendingTravelerEvent(),pendingOfficialReport(),pendingConcealedLoss(),...(legacyPendingAction()?[]:[pendingIncognitoReport(),passing?null:jingtishiEvent(),passing?null:selectionCouncilEvent()]),passing||typeof pendingHaremStewardEvent!=='function'?null:pendingHaremStewardEvent(),...(familyGardenActive()&&!passing?[familyGardenMonthlyEvent(),familyGardenDisputeEvent()]:[])].filter(Boolean),opt=[];
   const inquiry=pendingSisterInquiry();if(inquiry)must.unshift(inquiry);
   if(comingOfAge)must.unshift(comingOfAge);
+  const affairWatch=journalContentVersion()>=101;
+  const affairReports=affairWatch?princeAffairReports():[];
+  must.unshift(...affairReports);
+  if(affairWatch){const guard=guardAffairEvent();if(guard)must.unshift(guard);}
   if(!passing){
     if(journalContentVersion()>=88&&!mourningActive())must.push(...ritesVacancyPetitions());
     const castStories=storyCastMonthlyEvents();must.push(...castStories);
     const petition=pendingSisterCustody();if(petition)must.push(petition);
     const palaceChapter=storyCastLifeMonthly(castStories);if(palaceChapter)must.push(palaceChapter);
-    const guardAffair=guardAffairEvent();if(guardAffair)must.push(guardAffair);
+    if(!affairWatch){const guardAffair=guardAffairEvent();if(guardAffair)must.push(guardAffair);}
     const princeRivalry=princeCareerRivalryEvent();if(princeRivalry)must.push(princeRivalry);
     if(dynastyFollowupActive()){
       const counterIntelligence=pendingCounterIntelligenceEvent();if(counterIntelligence)must.push(counterIntelligence);
@@ -764,7 +768,7 @@ A.endMonth=function(){
   const tribute=jewelryTributeEvent();
   add(revenue?.jewelry?tribute:tributeEnvoyEvent(tribute),7);add(jewelryRequestEvent(),7);
   add(chance(.8)?festival():null,5);add(chance(.75)?haremEvent():null,6);
-  add(chance(.65)?quirkEvent():null,5);add(chance(.5)?histEvent():null,6);add(chance(.4)?courtEvent():null,4);add(palaceRomanceEvent(),8);add(courtFriendshipEvent(),9);add(motherAppealEvent(),9);
+  add(chance(.65)?quirkEvent():null,5);add(chance(.5)?histEvent():null,6);add(chance(.4)?courtEvent():null,4);if(!affairReports.length)add(palaceRomanceEvent(),8);add(courtFriendshipEvent(),9);add(motherAppealEvent(),9);
   add(chance(.3)?youthEvent():null,7);add(chance(.45)?kidEvent():null,4);add(chance(.55)?xinEvent():null,6);add(monthlyMaidEvent(),4);add(chance(.3)?fosterEvent():null,4);add(chance(.45)?relEvent():null,5);add(chance(.35)?clanEvent():null,5);add(chance(.45)?factionEvent():null,6);add(chance(.5)?visitorEvent():null,5);add(chance(.15)?dowagerEvent():null,3);
   add(typeof kinCourtEvent==='function'?kinCourtEvent():null,6);add(typeof betrothalEvent==='function'?betrothalEvent():null,5);
   }

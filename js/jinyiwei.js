@@ -250,7 +250,7 @@ function guardProtectionTick(){
    guard.loyalty=clamp(guard.loyalty+(c.mood>=65?.2:c.mood<35?-.3:0));
    c.mood=clamp(c.mood+(guard.loyalty>=65?.2:guard.loyalty<35?-.3:0));
  }
- if(bond.stage===3&&!bond.discovered){bond.secrecy=clamp(bond.secrecy-3);if(chance((100-bond.secrecy)/250))bond.discovered=true;}
+ if(bond.stage===3&&!bond.discovered){bond.secrecy=clamp(bond.secrecy-3);if(journalContentVersion()>=101||chance((100-bond.secrecy)/250))bond.discovered=true;}
 }
 function guardAffairEvent(){
  const guard=intelligenceAgent('guard'),bond=guard?.protection,c=bond&&byId(bond.consort);
@@ -273,7 +273,11 @@ function guardAffairEvent(){
    }else return null;
    story(c,`【守宫旧事】私下来往被发现。${result}`);log(`【守宫旧事】${fullName(c)}与${guard.name}的往来被发现。${result}`,1);save('auto');return result;
  };
- return {title:'守宫旧事 · 密报',por:c,present:[c],valid,text:`守宫的${guard.name}与${cName(c)}往来日久，从彼此照应到暗生情意，如今有人发现了两人的私下相见。消息尚未传开。\n保密值 ${rd(bond.secrecy)}/100；数值越低，越容易被人发现。${guard.name}仍是你的情报人员，曾受命查访宫中案件。`,choices:[
+ const autoReport=journalContentVersion()>=101;
+ const reportText=`守门人与换班侍卫分别回话：${guard.name}卸值后，又折回去私会${fullName(c)}。值房已核过交班时辰，两人也承认了私下的情意。请陛下裁处。`;
+ return {title:autoReport?affairReportTitle()+' · 守宫旧事':'守宫旧事 · 密报',por:autoReport?affairDutyOfficer():c,cast:autoReport?[c]:undefined,present:[c],valid,
+  onShow:autoReport?()=>fileAffairReport(bond,'guard-affair:'+S.gen+':'+c.id+':'+bond.started,reportText):undefined,
+  text:autoReport?reportText:`守宫的${guard.name}与${cName(c)}往来日久，从彼此照应到暗生情意，如今有人发现了两人的私下相见。消息尚未传开。\n保密值 ${rd(bond.secrecy)}/100；数值越低，越容易被人发现。${guard.name}仍是你的情报人员，曾受命查访宫中案件。`,choices:[
   {t:'压下消息，保全二人',f:()=>resolve('protect')},
   {t:'调离侍卫，各自安置',f:()=>resolve('transfer')},
   {t:'嫁祸旁人',cond:()=>harem().some(p=>p!==c&&p.rank<8),why:'宫中没有可被牵连的人',f:()=>resolve('frame')},
@@ -437,6 +441,7 @@ function viewJinyiwei(){
   if(!j)return `${back}<h2>锦衣卫</h2><p>锦衣卫可密查宫闱疑案、核实风闻奏事、搜查宫室。尚未设立。</p><div class="acts"><button class="btn jade" onclick="A.establishJinyiwei()">设立锦衣卫<small>精力−1 · 国库−50</small></button></div>${casesSection()}`;
   const c=j.commander;
   return `${back}<header class="detail-head">${porImg(c,160)}<div class="grow"><p>锦衣卫</p><h2>${esc(c.name)}</h2><p>指挥使 · ${c.age}岁 · ${officialStatus(c)} · ${esc(c.temperament)}</p></div></header>
+    <p class="hint">宫中一旦查实妃嫔与皇子或守宫侍卫私会，值房会主动密奏。</p>
     <div class="detail-vitals">${bar('才干',c.ability)}${bar('功绩',c.merit)}${bar('信任',c.trust)}</div>
     ${casesSection()}${intelligencePanel()}
     ${detailSection('搜查宫室',`<p class="hint">只有确有案底的人才可能被搜出物证；搜不出东西，被搜者记恨、六宫不安。同一人一年内只搜一次。</p><div class="acts">${harem().map(x=>`<button class="btn sm" onclick="A.jinyiweiSearch(${x.id})" ${searchReady(x)?'':'disabled'}>${esc(cName(x))}<small>${esc(x.palace||'')}</small></button>`).join('')}</div>`)}
