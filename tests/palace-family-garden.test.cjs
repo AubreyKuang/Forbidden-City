@@ -24,3 +24,19 @@ for(const [kind,seed] of [['outing',37],['dispute',5]])test('real month transiti
  w.run(`choose(0);A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(S.familyGarden.history.length,1);assert.equal(S.familyGarden.history[0].outcome,'${kind==='outing'?'join':'fair'}');`);
 });
 test('separating after inquiry remembers that facts were already established',()=>{const w=world();conflict(w);w.run(`choose(0);choose(1);assert.match(modalResult.text,/经过虽已查明/);assert.doesNotMatch(modalResult.text,/未再查问/);assert.match(relLine(a),/查明后暂分开/);`);});
+
+test('matching temperaments still give distinct accounts, and each mother answers the actual finding',()=>{
+ for(const [age,offenderRoll,trait,temperament] of [[5,0,'温婉','好胜'],[8,.99,'持重','内敛'],[7,0,'善妒','仁厚']]){
+  const w=world();w.run(`a.trait=b.trait='${trait}';ka.temperament=kb.temperament='${temperament}';ka.born=kb.born=S.turn-${age}*12;`);
+  conflict(w,[0,0,offenderRoll,.99]);
+  const opening=w.run('curEv.text'),lines=opening.split('\n').slice(1);
+  const quotes=lines.map(line=>line.match(/：“(.+?)”$/)?.[1]);
+  assert.equal(quotes.length,4);assert.ok(quotes.every(Boolean));assert.equal(new Set(quotes).size,4);
+  assert.match(quotes[0],age<6?/还在转/:/壶口/);
+  w.run('choose(0)');const finding=w.run('curEv.text');
+  const [offender,victim]=offenderRoll===0?['ka','kb']:['kb','ka'];
+  assert.ok(finding.includes(w.run(`fullName(byId(${offender}.mom))+'看向'+${offender}.name`)));
+  assert.ok(finding.includes(w.run(`fullName(byId(${victim}.mom))+'把手递给'+${victim}.name`)));
+  for(const line of lines)assert.ok(!finding.includes(line));
+ }
+});

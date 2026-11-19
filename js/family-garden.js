@@ -52,12 +52,26 @@ function familyGardenChildWords(k){
  if(kidAge(k)<6)return ['内敛','审慎'].includes(childDisposition(k))?'我想先看一看，再和你一起玩。':'这回轮到你啦，玩过了再给我，好不好？';
  return {好奇:'我还想换个办法试试，看看会不会不一样。',好胜:'我还想再练一回。不过说好了，这次先轮到你。',仁厚:'这次让你先来，我在旁边帮你拿着。',内敛:'我不急，等你说完，再告诉你我的主意。',爽直:'说好要轮流的，我们都得记着。',灵动:'我又想到一个玩法，先试一小回，好不好？',审慎:'先把东西收拢，免得一会儿找不到。',自矜:'这是我自己琢磨的办法，你看看还有哪里能改。'}[childDisposition(k)];
 }
-function familyGardenQuarrelVoice(k){
+function familyGardenQuarrelVoice(k,reply,line){
  const nature=childDisposition(k);
- if(['内敛','审慎'].includes(nature))return `${k.name}攥着衣角，几次想解释，又被旁人的话打断。`;
- if(nature==='仁厚')return `${k.name}眼圈发红，想说自己也有委屈，却又怕对方受罚。`;
- if(nature==='好奇')return `${k.name}急着从头讲自己看见的经过，越说越想问清谁定的规矩。`;
- return `${k.name}急着说：“不能只听对方讲，我也有话要说！”`;
+ let gesture;
+ if(['内敛','审慎'].includes(nature))gesture=reply?'等四下静了，才小声接话':'捏着衣角，小声说';
+ else if(nature==='仁厚')gesture=reply?'听完，轻轻摇了摇头':'咽下眼泪，慢慢开口';
+ else if(nature==='好奇')gesture=reply?'掰着手指数了数':'蹲下比画方才的情形';
+ else gesture=reply?'忍不住插嘴':'抢着开口';
+ return `${k.name}${gesture}：“${line}”`;
+}
+function familyGardenQuarrelMother(m,k,reply){
+ const name=fullName(m);
+ if(['骄纵','骄矜','善妒'].includes(m.trait))return reply?
+  `${name}侧身护住${k.name}：“一个个围着做什么？让孩子抬起头来回话。”`:
+  `${name}把${k.name}拉到身边：“有我在。你心里委屈的是哪一桩？说给陛下听。”`;
+ if(['持重','聪慧','城府'].includes(m.trait))return reply?
+  `${name}回头看了看花架：“方才那位随侍就站在这里。陛下若要问，臣妾去唤。”`:
+  `${name}问${k.name}：“你们开玩以前，说好怎样才算一回？”`;
+ return reply?
+  `${name}替${k.name}理了理衣领：“我过来时，只见你们两个挤在一处。花架边上那位姐姐一直在，要不要听听她瞧见了什么？”`:
+  `${name}蹲到${k.name}跟前：“别急，慢慢讲。你们原先说好怎么玩的？”`;
 }
 function familyGardenEvent(channel='garden'){
  const pairs=familyGardenPairs();if(!pairs.length)return null;
@@ -102,7 +116,8 @@ function familyGardenDisputeEvent(){
  const pushed=chance(['好胜','爽直','灵动'].includes(childDisposition(offender))?.5:.2),object=Math.min(kidAge(ka),kidAge(kb))<6?'木陀螺':'投壶的竹箭';
  const n={kind:'dispute',a:a.id,b:b.id,ka:ka.id,kb:kb.id,turn:S.turn,offender:offender.id,pushed,object};let shown=false,done=false;
  const valid=()=>!done&&familyGardenPresent(n)&&(shown||familyGardenDisputePairs().some(p=>p.ka===ka&&p.kb===kb));
- const response=(m,k)=>['骄纵','骄矜','善妒'].includes(m.trait)?`${fullName(m)}先把${k.name}拉到身边：“孩子不能白受委屈，总得问个明白。”`:['持重','聪慧','城府'].includes(m.trait)?`${fullName(m)}忍住急意：“请先问过在场的人。若真是自家孩子不对，臣妾不会包庇。”`:`${fullName(m)}一边查看${k.name}，一边说：“先让他们各自把话说完，别催着认错。”`;
+ const lines=object==='木陀螺'?['它还在转呢！就是歪了一点，我还能把它抽起来。','都躺平啦！上回我的一倒，你就说轮到你了。']:['竹箭在壶口上打了个转，又掉出来了。这也算我投过一回吗？','可我方才投偏了，也没多投一支呀。'];
+ const offenderMother=offender===ka?a:b,victimMother=offender===ka?b:a;
  const truth=`随侍分别回话：${offender.name}没等轮到自己，就取走了${victim.name}手里的${object}。${victim.name}拉住不放，${offender.name}${pushed?'情急推了对方一下，随侍立刻将两人分开，查看过并无伤处':'又说对方输不起，两人越说越急'}。最初的过错在${offender.name}抢先取物，并不是双方同样有错。`;
  const finish=mode=>{
   if(!valid())return null;done=true;n.outcome=mode;
@@ -115,9 +130,9 @@ function familyGardenDisputeEvent(){
   relAdd(a,b,delta);familyGardenNote(n,text,status);
   familyGardenRecord(n,'孩子争执的处置',text,[`${fullName(b)}原与我没有多少往来；这次孩子的事${mode==='fair'?'幸而问清，以后也该把规矩说在前面。':'留下了心结，今后再见也难免防备。'}`,`与${fullName(a)}因孩子的争执相识。${mode==='fair'?'听明白经过，才知道不能只凭一时心疼替孩子断是非。':'话还没有说清，彼此已多了些隔阂。'}`,mode==='fair'?(ka===offender?'我先抢了东西，须归还道歉；有话也能慢慢说。':'父皇听清了经过，我的委屈有人听见。'):'大人的处置让我仍记着这回争执。',mode==='fair'?(kb===offender?'我先抢了东西，须归还道歉；有话也能慢慢说。':'我把自己的话说完了，不必把没做的事也认下来。'):'这回没能把话说清，暂时不想再一起玩。']);return text;
  };
- const inquiry=()=>({title:'童争 · 问清经过',cast:[a,b,ka,kb],present:[a,b,ka,kb],valid,text:truth+'\n'+response(a,ka)+'\n'+response(b,kb),choices:[{t:'按实责教，归还道歉，听双方说开',f:()=>finish('fair')},{t:'先各自领回，暂不调解',f:()=>finish('separate')}]});
+ const inquiry=()=>({title:'童争 · 问清经过',cast:[a,b,ka,kb],present:[a,b,ka,kb],valid,text:truth+`\n${fullName(offenderMother)}看向${offender.name}：“你方才只说轮到谁，怎么没告诉我，东西还在人家手里？”\n${fullName(victimMother)}把手递给${victim.name}：“原来你急的是这个。我这会儿听明白了。”`,choices:[{t:'按实责教，归还道歉，听双方说开',f:()=>finish('fair')},{t:'先各自领回，暂不调解',f:()=>finish('separate')}]});
  return {title:pushed?'童争 · 一时推搡':'童争 · 各执一词',cast:[a,b,ka,kb],present:[a,b,ka,kb],valid,
- text:`${fullName(a)}与${fullName(b)}往日没有多少来往。今日两家的孩子在御花园争起${object}，${pushed?'争执中有人推搡，随侍已将两人分开，未见受伤':'吵得都红了脸'}，宫人请你裁断。\n${familyGardenQuarrelVoice(ka)}${familyGardenQuarrelVoice(kb)}事情还须问清。\n${response(a,ka)}\n${response(b,kb)}`,
+ text:`${fullName(a)}与${fullName(b)}往日没有多少来往。今日两家的孩子在御花园争起${object}，${pushed?'争执中有人推搡，随侍已将两人分开，未见受伤':'吵得都红了脸'}，宫人请你裁断。\n${familyGardenQuarrelVoice(ka,false,lines[0])}\n${familyGardenQuarrelVoice(kb,true,lines[1])}\n${familyGardenQuarrelMother(a,ka,false)}\n${familyGardenQuarrelMother(b,kb,true)}`,
  onShow:()=>{if(shown)return;shown=true;const s=familyGardenState(true);n.id=s.next++;s.lastDispute=S.turn;ka.lastGardenDispute=kb.lastGardenDispute=S.turn;s.history.push(n);if(s.history.length>40)s.history.shift();relAdd(a,b,-6);relAdd(ka,kb,-8);cchg(a,{mood:-3});cchg(b,{mood:-3});familyGardenRecord(n,'孩子争执牵动两家',`${kidName(ka)}与${kidName(kb)}在御花园因${object}起了争执${pushed?'，并有推搡':''}；随侍及时分开，两位母亲各自担忧，经过尚待查明。`);familyGardenNote(n,`两家因${ka.name}、${kb.name}的争执有了嫌隙，尚未查明经过。`,'尚待查明');},
  choices:[{t:'各自说一遍，再问在场随侍',f:()=>{if(!valid())return null;n.inquired=true;pushNow(inquiry());return null;}},{t:'各自领回，先别再争',f:()=>finish('separate')},{t:`先信${ka.name}，让另一边赔礼`,f:()=>finish('side-a')},{t:`先信${kb.name}，让另一边赔礼`,f:()=>finish('side-b')}]
  };
