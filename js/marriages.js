@@ -228,14 +228,27 @@ function royalNatalMarry(k,p,host,b){
   p.married=true;
   p.spouse={id:k.id,royalId:k.id,name:k.name,sur:E().sur,born:k.born,alive:true,marriedAt:S.turn};
   if(p.sex==='m')p.royalSpouseId=k.id;
-  const text=`${name}与${p.name}都已满十八岁，依幼时所定的婚约行礼成婚。礼部将两人的旧婚帖与成婚日期一同存档。`;
-  royalNatalStory(k,p,c,'依约成婚',text,`礼成后，${p.name}将两家旧日交换的婚帖收进新居。`,
-    `婚礼这日，她找出当年问过的那张生辰纸。纸角已黄，当初挨着写下的两个名字还清楚。`);
+  let scene;
+  if(betrothalWeddingsActive()){
+    const history=k.spouse.betrothalHistory=betrothalWeddingHistory(k,p,b);
+    scene=betrothalWeddingRecord(k,p,c,name,history);
+  }else{
+    const text=`${name}与${p.name}都已满十八岁，依幼时所定的婚约行礼成婚。礼部将两人的旧婚帖与成婚日期一同存档。`;
+    royalNatalStory(k,p,c,'依约成婚',text,`礼成后，${p.name}将两家旧日交换的婚帖收进新居。`,
+      `婚礼这日，她找出当年问过的那张生辰纸。纸角已黄，当初挨着写下的两个名字还清楚。`);
+  }
   if(ruling){
     const bride=royalNatalConsort(host,p);
     bride.favor=35;bride.aff=30;bride.knownBeforeAccession=true;
     addConsort(bride,empress()?6:8,'依幼时婚约成婚，迎入宫中');
-  }else ensureMarriedLife(k);
+  }else{
+    const h=ensureMarriedLife(k);
+    if(scene){
+      const {royal,relative}=k.spouse.betrothalHistory;
+      h.harmony=clamp(Math.round((royal+relative+Math.min(royal,relative))/3));
+    }
+  }
+  if(scene&&PalaceActions.busy)pushNow({title:'依约成婚 · 行礼',cast:[k,face],text:scene,choices:[{t:'贺两人礼成'}]});
 }
 function royalNatalCancel(k,p,outcome){
   const b=k.betrothal;
@@ -251,6 +264,9 @@ function royalNatalEndReign(ruler){
   const b=ruler.betrothal;
   royalNatalCancel(ruler,natalEntry(b.host,b.personId)?.p);
 }
+function royalNatalWeddingReady(k,p,b){
+  return S.turn>=b.due&&!k.jailed&&!k.templeStay&&!royalJourneyAway(k)&&!p.jailed&&!p.exiled&&!p.royalCompanionTrip;
+}
 function royalNatalMarriageTick(){
   if(!royalNatalMatchActive())return;
   const ruler=E().natalMarriageHeir;
@@ -261,6 +277,7 @@ function royalNatalMarriageTick(){
       const p=natalEntry(k.spouse.natalHost,k.spouse.personId)?.p;
       if(p?.alive===false)k.spouse.alive=false;
       if(k.alive===false&&p?.spouse?.royalId===k.id)p.spouse.alive=false;
+      if(betrothalWeddingsActive()&&k===ruler&&k.alive&&k.spouse.alive!==false)betrothalMarriageNews(k,p);
     }
     if(!royalNatalEngaged(k))continue;
     const b=k.betrothal,e=natalEntry(b.host,b.personId),p=e?.p;
@@ -270,8 +287,10 @@ function royalNatalMarriageTick(){
       royalNatalCancel(k,p);
       continue;
     }
-    const weddingReady=S.turn>=b.due&&!k.jailed&&!k.templeStay&&!royalJourneyAway(k)&&!p.jailed&&!p.exiled&&!p.royalCompanionTrip;
-    if(!royalNatalCourtshipTick(k,p,b,weddingReady)&&weddingReady)royalNatalMarry(k,p,e.c,b);
+    const weddingReady=royalNatalWeddingReady(k,p,b);
+    if(royalNatalCourtshipTick(k,p,b,weddingReady))continue;
+    if(betrothalWeddingInquiry(k,p,e.c,b,weddingReady))continue;
+    if(weddingReady)royalNatalMarry(k,p,e.c,b);
   }
 }
 function royalNatalPersonLink(view,id,name){
@@ -374,6 +393,10 @@ function royalNatalExchange(k,p,kind){
   bond.last[kind]=S.turn;
   bond.latest={text:summary,turn:S.turn,date:dateStr()};
   royalNatalStory(k,p,null,title,summary,relativeLine,undefined,{publicRecord:false,source:'婚约往来',royalText:royalLine});
+  if(betrothalWeddingsActive()){
+    k.story.at(-1).life.affection=[bond.royal,bond.relative];
+    p.story.at(-1).life.affection=[bond.royal,bond.relative];
+  }
   const change=(delta)=>delta>0?'+'+delta:String(delta);
   return summary+`\n§${k.name}的好感 ${change(bond.royal-oldRoyal)} · ${p.name}的好感 ${change(bond.relative-oldRelative)}`;
 }
@@ -449,7 +472,7 @@ function royalNatalCourtshipTick(k,p,b,weddingReady){
 function royalNatalCourtshipPanel(k,p){
   if(!royalNatalCourtshipActive()||!royalNatalEngaged(p)||!royalNatalEngaged(k)||p.betrothal.personId!==k.id)return '';
   const bond=k.betrothal.bond||royalNatalInitialBond(k,p);
-  const status=bond.petition?'解约请求等候裁决':bond.holdUntil>S.turn?`婚期暂缓 · 约${bond.holdUntil-S.turn}个月后再议`:'';
+  const status=bond.petition?'解约请求等候裁决':bond.holdUntil>S.turn?`婚期暂缓 · 约${bond.holdUntil-S.turn}个月后再议`:bond.weddingInquiry?.plan?'两人已问过婚期，婚礼正在备办。':'';
   const age=Math.min(kidAge(k),natalAge(p));
   const next=age<8?'正月互送岁礼。两人都满八岁后可通信，满十二岁后可在京相见。':age<12?'两人都满十二岁后可在京相见。':'';
   const actions=Object.entries(ROYAL_NATAL_CONTACTS).map(([kind,rule])=>{

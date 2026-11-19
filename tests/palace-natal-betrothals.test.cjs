@@ -253,3 +253,102 @@ test('a royal petitioner can be granted more time and eventually marry if the pl
     choose(2);drain();assert.ok(bond.kept);assert.equal(bond.petition,undefined);
     S.turn++;royalNatalMarriageTick();assert.equal(k.married,true);assert.equal(p.married,true);`);
 });
+
+function courtshipHistory(sex='m'){
+  const b=engaged(sex);
+  b.force(.01,.01,.01,.01);
+  b.run(`var bond=k.betrothal.bond={royal:76,relative:78,last:{}};
+    S.turn=k.born+12*12;S.month=1;royalNatalExchange(k,p,'gift');
+    S.turn+=7;S.month=8;royalNatalExchange(k,p,'letter');
+    S.turn+=5;S.month=1;royalNatalExchange(k,p,'visit');
+    assert.equal(betrothalMemories(k,p,k.betrothal.turn).length,3);`);
+  return b;
+}
+const seekWeddingScene=(title)=>`for(let i=0;modalOpen&&curEv.title!=='${title}'&&i<90;i++){
+  if(modalResult)nextEv();else choose(curEv.choices.findIndex(c=>!c.cond||c.cond()));
+}
+assert.equal(curEv?.title,'${title}');`;
+
+test('longtime mutual affection prompts them to ask together at the latest on their wedding month',()=>{
+  const b=courtshipHistory('f');
+  b.run(`${dueMonth}
+    ${seekWeddingScene('两心问婚期')}
+    assert.equal(k.married,false);
+    assert.match(curEv.text,new RegExp(k.name));assert.match(curEv.text,new RegExp(p.name));`);
+  const loaded=boot(163,b.storage);loaded.ctx.assert=assert;
+  loaded.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);
+    var k=S.children[0],p=natalEntry(k.betrothal.host,k.betrothal.personId).p,turn=S.turn;
+    assert.equal(curEv.title,'两心问婚期');choose(0);
+    assert.equal(S.turn,turn);assert.equal(k.married,true);
+    nextEv();assert.equal(curEv.title,'依约成婚 · 行礼');
+    assert.match(curEv.text,/从简/);assert.match(curEv.text,/相视/);
+    assert.match(curEv.text,/互寄书信/);
+    drain();
+    for(const person of [k,p]){
+      assert.equal(person.story.filter(e=>e.life?.title==='两心问婚期').length,1);
+      assert.equal(person.story.filter(e=>e.life?.title==='依约成婚').length,1);
+    }
+    assert.notEqual(k.story.at(-1).t,p.story.at(-1).t);`);
+});
+
+test('agreeing to an early question keeps the eighteen-year wedding gate and carries the chosen plan',()=>{
+  const b=courtshipHistory();
+  b.run(`S.turn=k.born+17*12;var b=k.betrothal;
+    var inquiry=b.bond.weddingInquiry={turn:S.turn};
+    var ev=betrothalWeddingInquiryEvent(k,p,a,b,inquiry);
+    assert.match(ev.text,/都满十八岁/);
+    ev.choices[1].f();assert.equal(k.married,false);assert.equal(inquiry.plan,'family');
+    assert.equal(ev.valid(),false);assert.match(marriagePanel(k),/婚礼正在备办/);
+    S.turn=b.due-1;royalNatalMarriageTick();assert.equal(k.married,false);
+    S.turn=b.due;royalNatalMarriageTick();assert.equal(k.married,true);
+    assert.match(p.story.at(-1).life.summary,/长辈依二人所请到场见证/);`);
+});
+
+test('high affection alone or one-sided affection leaves out the joint inquiry',()=>{
+  const onlyScore=engaged();
+  onlyScore.run(`k.betrothal.bond={royal:95,relative:95,last:{}};
+    ${dueMonth}
+    ${seekWeddingScene('依约成婚 · 行礼')}
+    assert.equal(k.married,true);assert.ok(!k.story.some(e=>e.life?.title==='两心问婚期'));drain();`);
+  const uneven=courtshipHistory();
+  uneven.run(`bond.royal=77;bond.relative=45;
+    ${dueMonth}
+    ${seekWeddingScene('依约成婚 · 行礼')}
+    assert.match(curEv.text,/把手里的礼单叠齐/);
+    assert.doesNotMatch(curEv.text,/笑意都落/);
+    assert.equal(k.spouse.trust,61);assert.ok(k.household.harmony<61);
+    assert.notEqual(k.story.at(-1).t,p.story.at(-1).t);drain();`);
+});
+
+test('courtship memories carry into different married anecdotes and both original chronicles',()=>{
+  const b=courtshipHistory();
+  b.run(`var due=k.betrothal.due;S.turn=due;royalNatalMarriageTick();
+    var h=k.household,start=k.spouse.trust;
+    assert.ok(h.harmony>=72);
+    var wedding=k.story.find(e=>e.life?.title==='依约成婚');
+    assert.match(wedding.life.summary,/互寄书信/);
+    PalaceActions.reset();save('auto');`);
+  const loaded=boot(318,b.storage);loaded.ctx.assert=assert;
+  loaded.run(`A.load('auto');drain();var k=S.children[0],p=natalEntry(k.spouse.natalHost,k.spouse.personId).p,h=k.household;
+    var start=k.spouse.trust;
+    for(let i=0;i<3;i++){S.turn=h.nextNews;marriedLifeTick();}
+    var royal=k.story.filter(e=>e.life?.source==='婚后旧约'),relative=p.story.filter(e=>e.life?.source==='婚后旧约');
+    assert.equal(royal.length,3);assert.equal(relative.length,3);
+    assert.deepEqual(royal.map(e=>e.life.title),['把信里的话接下去','为相见留一张桌','拆开旧岁礼']);
+    assert.ok(royal.every((e,i)=>e.t!==relative[i].t&&/旧记/.test(e.life.summary)));
+    assert.equal(h.history.filter(e=>e.type==='household_betrothal').length,3);
+    assert.ok(k.spouse.trust>start);
+    S.turn=h.nextNews;marriedLifeTick();assert.equal(p.story.filter(e=>e.life?.source==='婚后旧约').length,3);`);
+});
+
+test('a real childhood keepsake or journey from the same engagement appears in the wedding and married life',()=>{
+  const b=courtshipHistory();
+  b.run(`var b=k.betrothal;
+    b.childhood={count:1,last:S.turn,items:['折歪尾巴的纸燕']};
+    betrothalPairRecord({k,p,b},'两小无猜 · 燕尾朝哪儿','他们一起拾回纸燕。','替人捡纸燕。','想着下回再折。');
+    betrothalPairRecord({k,p,b},'同行手记 · 河埠','两人记下河埠晨雾。','在案边添了一笔。','把航程说了一遍。');
+    S.turn=b.due;royalNatalMarriageTick();
+    assert.match(k.story.at(-1).t,/折歪尾巴的纸燕/);
+    S.turn++;recordHouseholdNews(k);assert.match(p.story.at(-1).life.summary,/拾回纸燕/);
+    S.turn++;recordHouseholdNews(k);assert.match(p.story.at(-1).life.summary,/河埠晨雾/);`);
+});

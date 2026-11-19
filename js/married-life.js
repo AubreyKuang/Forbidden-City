@@ -64,10 +64,10 @@ function householdMother(k){
 }
 function householdLiving(k){return !!(k?.alive&&!k.princeAdoptionOrigin&&!k.removedFromRoyal&&k.married&&k.spouse?.alive!==false&&!k.jailed&&!k.gone&&!S.over);}
 function householdActive(k){return householdLiving(k)&&!k.templeStay&&(!betrothalJourneysActive()||!royalTravelAway(k));}
-function householdRecord(k,type,text){
+function householdRecord(k,type,text,{chronicle=true}={}){
   const h=ensureMarriedLife(k);if(!h)return;
   h.history.push({d:dateStr(),turn:S.turn,type,t:text});if(h.history.length>60)h.history.shift();
-  princessMemory(k,type,text,k.away||k.princessMarriage==='frontier'?'府中来信':k.sex==='f'?'公主府':'皇子府');
+  if(chronicle)princessMemory(k,type,text,k.away||k.princessMarriage==='frontier'?'府中来信':k.sex==='f'?'公主府':'皇子府');
 }
 function householdPeople(k){return [k.spouse,...(ensureMarriedLife(k)?.concubines||[])].filter(Boolean);}
 function householdSummary(k){
@@ -156,6 +156,7 @@ function householdSceneEvent(k){
 }
 function recordHouseholdNews(k){
   const h=ensureMarriedLife(k),p=k.spouse;if(!householdActive(k))return;
+  if(betrothalWeddingsActive()&&p.natalHost!=null&&betrothalMarriageNews(k,natalEntry(p.natalHost,p.personId)?.p,h))return;
   const mother=householdMother(k),near=!k.away&&k.princessMarriage!=='frontier';
   const fit=marriageFit(k,p),good=p.trust>=55;
   const choices=[
