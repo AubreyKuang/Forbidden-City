@@ -40,7 +40,7 @@ function consortChatTopics(c){
     if(memory)return {key:'relations',stage:'',text:memory,narrative:true};
     return {key:'relations',stage:`她说起${fullName(o)}。`,text:relGet(c,o)<0?'我与她还不投契，有些事想法不同。':hobby?`下回得了闲，臣妾想约她${CONSORT_HOBBIES[hobby].activity}。`:'与她说话，臣妾觉得自在。'};
   });
-  if(journalContentVersion()>=101)for(const known of Object.values(c.sisterAffairKnowledge||{})){
+  if(journalContentVersion()>=102)for(const known of Object.values(c.sisterAffairKnowledge||{})){
     const relative=c.house?.relatives?.find(p=>p.id===known.sister);
     const admitted=!!relative?.consortId;
     const words={afraid:`那件事臣妾一直担心，只怕外头议论，牵连${known.name}与家里。`,

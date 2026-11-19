@@ -14,7 +14,7 @@ function queueOutsidePregnancyNotice(c,mother,preg){
   const commander=jinyiweiCommanderReady()?jinyiwei().commander:null;
   const title=commander?'锦衣卫密报 · 宫外孕讯':'宫外来信 · 有孕';
   let subject=mother.name;
-  if(journalContentVersion()>=101&&c){
+  if(journalContentVersion()>=102&&c){
     // The household may have several sisters in the palace; prefer the one
     // recorded when this particular private meeting took place.
     const recorded=byId(preg.reportingHost??mother.marriedSisterAffair?.host);

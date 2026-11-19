@@ -49,10 +49,10 @@ function sisterMarriageReflection(p,meetings){
 }
 // Knowledge belongs to a particular consort and sister, and survives changes of marriage.
 function sisterAffairKnowledge(c,p){
-  return journalContentVersion()>=101?c.sisterAffairKnowledge?.[p.id]:null;
+  return journalContentVersion()>=102?c.sisterAffairKnowledge?.[p.id]:null;
 }
 function discoverSisterAffair(c,p,affair){
-  if(journalContentVersion()<101||affair.meetings<2)return;
+  if(journalContentVersion()<102||affair.meetings<2)return;
   for(const witness of paternalFamily(c).filter(person=>person.id!==p.id&&S.consorts.includes(person)&&inPalace(person))){
     if(sisterAffairKnowledge(witness,p)||!chance(.08))continue;
     const relation=relGet(witness,p);

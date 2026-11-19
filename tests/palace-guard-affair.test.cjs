@@ -3,7 +3,7 @@ function start(){const b=boot(55001);b.ctx.assert=assert;b.run(`A.start();drain(
 function develop(b){b.force(.001,.001);b.run(`for(let month=1;month<=30;month++){S.turn=month;guardProtectionTick();}assert.equal(guard.protection.stage,3);assert.equal(guard.protection.discovered,true);`);}
 test('guard relationship develops across months and discovery survives a save',()=>{
  let b=start();develop(b);b.run(`assert.ok(c.story.some(e=>e.t.includes('挡过一场雨')));save('auto');`);
- b=boot(3,b.storage);b.ctx.assert=assert;b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);var guard=intelligenceAgent('guard'),c=byId(guard.protection.consort),affairScene=guardAffairEvent();assert.equal(affairScene.title,'守宫旧事 · 密报');assert.match(affairScene.text,/保密值/);assert.match(intelligencePanel(),/保密值/);
+ b=boot(3,b.storage);b.ctx.assert=assert;b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);var guard=intelligenceAgent('guard'),c=byId(guard.protection.consort),affairScene=guardAffairEvent();assert.equal(affairScene.title,'锦衣卫密报 · 守宫旧事');assert.match(affairScene.text,/私会/);assert.match(intelligencePanel(),/保密值/);
   pushEv(affairScene);choose(0);drain();assert.match(guard.protection.ended,/保全/);assert.ok(c.story.some(e=>e.t.includes('私下来往被发现')));assert.equal(guardAffairEvent(),null);`);
 });
 
@@ -19,9 +19,9 @@ test('a guard in love may conceal evidence involving the protected consort',()=>
 
 test('the discovery event returns after refresh with its choices intact',()=>{
  let b=start();b.run(`guard.protection.stage=3;guard.protection.months=30;guard.protection.discovered=true;
-  E().energy=4;A.endMonth();for(let i=0;modalOpen&&curEv.title!=='守宫旧事 · 密报'&&i<100;i++){if(modalResult)nextEv();else choose(0);}
-  assert.equal(curEv.title,'守宫旧事 · 密报');save('auto');`);
- b=boot(3,b.storage);b.ctx.assert=assert;b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(curEv.title,'守宫旧事 · 密报');
+  E().energy=4;A.endMonth();for(let i=0;modalOpen&&curEv.title!=='锦衣卫密报 · 守宫旧事'&&i<100;i++){if(modalResult)nextEv();else choose(0);}
+  assert.equal(curEv.title,'锦衣卫密报 · 守宫旧事');save('auto');`);
+ b=boot(3,b.storage);b.ctx.assert=assert;b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(curEv.title,'锦衣卫密报 · 守宫旧事');
   choose(1);drain();assert.match(intelligenceAgent('guard').protection.ended,/调离/);`);
 });
 

@@ -112,6 +112,7 @@ function recordJinyiweiNotice(note){
 }
 function jinyiweiRareNotice(ev,people){
   const version=journalContentVersion();
+  if(version>=101&&ev.title==='回廊相依'&&S.palaceRomance?.pairs?.[ev.cast?.map(p=>p.id).join('-')]?.affairReported)return '';
   if(version<56||version>=65&&JINYIWEI_URGENT_EVENTS.has(ev.title)||!Object.hasOwn(JINYIWEI_RARE_NOTICES,ev.title)||!jinyiweiCommanderReady())return '';
   const note=jinyiweiRareNote(ev,people);
   recordJinyiweiNotice(note);
@@ -135,6 +136,33 @@ function jinyiweiRareAlert(ev){
   return {title:`锦衣卫急报 · ${note.title}`,por:commander,jinyiweiNoticeKey:note.key,
     text:`${commander.name}递来密札：\n${note.text}\n密札已存。请陛下接阅原事，再决定如何处置。`,
     choices:[{t:'阅毕，查看原事'}]};
+}
+
+// Confirmed relationships are reported independently of patrol rolls and ambient event quotas.
+function affairDutyOfficer(){return jinyiweiCommanderReady()?jinyiwei().commander:null;}
+function affairReportTitle(){return jinyiwei()?'锦衣卫密报':'宫门值房密报';}
+function fileAffairReport(subject,key,text){
+  if(subject.affairReported)return;
+  subject.affairReported=true;
+  if(affairDutyOfficer()){
+    recordJinyiweiNotice({key,title:'宫闱私情',text,date:dateStr(),turn:S.turn,urgent:true});
+  }else log(`【${affairReportTitle()}】${text}`,1);
+}
+function princeAffairReports(){
+  if(S.palaceRomance?.gen!==S.gen)return [];
+  const reports=[];
+  for(const pair of Object.values(S.palaceRomance.pairs)){
+    if(pair.affairReported||pair.status!=='active'||(pair.stage<3&&pair.conceivedAt==null))continue;
+    const {prince,consort}=romancePeople(pair);if(!prince||!consort)continue;
+    const names=fullName(consort)+'与'+kidName(prince);
+    const text=pair.stage>=3?`回廊当值的随侍亲见${names}牵手相拥。值房已将目击者所述与当夜值簿核过，具名密呈御前。`:
+      `值房分别问过守门人与当夜随侍，两份口供对得上：${names}曾避开众人，私下幽会。两人的往来已经核实。`;
+    const canReview=pair.stage===3&&romancePending(pair);
+    reports.push({title:affairReportTitle()+' · 皇子与宫眷',por:affairDutyOfficer(),cast:[consort,prince],text,
+      onShow:()=>fileAffairReport(pair,'affair:'+S.gen+':'+pair.key,text),
+      choices:canReview?[{t:'传问两人，御前处置',f:()=>{pushNow(palaceRomanceEvent(pair));return null;}},{t:'收下密报，稍后过问'}]:[{t:'收下密报'}]});
+  }
+  return reports;
 }
 
 function jinyiweiFeudAlert(previous){
