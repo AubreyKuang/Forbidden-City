@@ -72,6 +72,9 @@ function selectionDisposition(c){
 }
 function selectionThought(c,stage,names){
   const mode=selectionDisposition(c),what=stage==='planned'?'听说又要选秀':'听说'+(names.length?names.join('、')+'留选入宫':'本次没有留下新人');
+  if(queenEmptySelectionActive()&&stage==='settled'&&!names.length&&c.rank!==8){
+    const own=storyConsortEmptySelectionThought(c,mode);if(own)return own;
+  }
   const personal=storyQueenSelectionThought(c,stage,names,mode,what);if(personal)return personal;
   if(stage==='settled'&&!names.length)return {mode,text:mode==='jealous'||mode==='uneasy'?'得知这次没有留下新人，她暗暗松了口气，面上仍守着礼数。':'本次没有留下新人，她听过名册的结果，照常料理自己的日子。',quote:mode==='helpful'?'既然没有留人，也盼她们平安回家，不必在宫门外空等。':'听说这回没有留新人。名册既已合上，便照旧过日子吧。'};
   const lines={
@@ -93,13 +96,15 @@ function captureSelectionCourt(){
 }
 function finishSelectionCourt(s,members){
   if(legacyPendingAction()||!s||s.courtSettled)return;s.courtSettled=true;
-  const names=members.map(fullName);
-  for(const id of s.residents||[]){const c=byId(id);if(!inPalace(c))continue;
+  const names=members.map(fullName),queen=empress();
+  const queenEmpty=queenEmptySelectionActive()&&!members.length&&s.batch&&!s.accepted?.length&&!S.over&&inPalace(queen);
+  for(const id of s.residents||[]){const c=byId(id);if(!inPalace(c)||queenEmpty&&c===queen)continue;
     const r=selectionThought(c,'settled',names);c.selectionConcern={...r,batch:s.batch,stage:'settled',turn:S.turn};
     if(members.length)cchg(c,{mood:r.mode==='jealous'?-5:r.mode==='uneasy'?-2:0});
     story(c,'【选秀礼毕·六宫议论】'+r.text);
   }
-  const queen=empress();if(!members.length||!inPalace(queen)||!(s.residents||[]).includes(queen.id))return;
+  if(queenEmpty){queenEmptySelectionReaction(queen,s);return;}
+  if(!members.length||!inPalace(queen)||!(s.residents||[]).includes(queen.id))return;
   s.council={queen:queen.id,members:members.map(c=>c.id),mode:selectionDisposition(queen),done:false};
   if(journalContentVersion()>=100)queueStoryQueenWelcome(queen,members,'selection');
 }
