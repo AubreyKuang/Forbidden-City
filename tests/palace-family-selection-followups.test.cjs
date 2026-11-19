@@ -96,19 +96,27 @@ for(const explicit of [true,false])test('declined nieces keep both histories aft
  assert.match(notices(niece).at(-1).t,explicit?/日子仍是我自己的/:/搁了几日的活计/);
  save('1');A.load('1');drain();assert.equal(notices(natalEntry(auntId,nieceId).p).length,2);`);
 });
-test('uncertain nieces can use the profile button and attend without exposing sealed parentage',()=>{
+test('uncertain nieces can be retained and titled through the ordinary selection without checking parentage',()=>{
  const b=nieceSelection({uncertain:true,trait:'沉静'});
  b.run(`assert.match(viewSelectionAudience(),/窗纸上的影子/);
- A.xxTake(nieceId);assert.match(curEv.title,/礼部核名/);
- assert.doesNotMatch(curEv.text,/亲生|皇嗣/);drain();
- assert.equal(byId(nieceId),undefined);assert.ok(S.cands.some(c=>c.id===nieceId));
- niece.outsideParentage.privateInquiry={status:'complete',imperial:false};
- A.xxTake(nieceId);choose(0);drain();
- assert.equal(byId(nieceId).id,nieceId);assert.equal(niece.unconfirmedParentage,true);`);
- const confirmed=nieceSelection({uncertain:true});
- confirmed.run(`niece.outsideParentage.privateInquiry={status:'complete',imperial:true};
- A.xxTake(nieceId);choose(0);drain();assert.equal(byId(nieceId),undefined);
- assert.ok(!S.cands.some(c=>c.id===nieceId));A.go('natal',profile);assert.doesNotMatch(viewNatalRelative(),/荐入下届选秀/);`);
+ var sealed=JSON.stringify(niece.outsideParentage);
+ A.xxTake(nieceId);assert.equal(curEv.title,'留牌子');assert.match(curEv.choices[0].t,/封为/);
+ choose(0);assert.match(modalResult.text,/姨母/);drain();
+ assert.equal(byId(nieceId).id,nieceId);assert.equal(niece.unconfirmedParentage,true);
+ assert.equal(JSON.stringify(niece.outsideParentage),sealed);
+ assert.match(notices(other).at(-1).life.title,/留牌入宫/);assert.match(notices(byId(nieceId)).at(-1).life.title,/留牌入宫/);`);
+});
+test('a sealed finding does not affect selection and later case handling keeps one identity',()=>{
+ const b=nieceSelection({uncertain:true});
+ b.run(`niece.outsideParentage.privateInquiry={status:'complete',imperial:true};
+ A.xxTake(nieceId);assert.equal(curEv.title,'留牌子');choose(0);drain();
+ assert.equal(byId(nieceId).id,nieceId);assert.equal(niece.consortId,nieceId);
+ var f=outsideParentageFamily(other,niece);
+ assert.equal(outsideParentageEvent(f,true),null);assert.equal(recognizeOutsideChild(f),null);
+ niece.outsideParentage.status='investigating';niece.outsideParentage.due=S.turn;
+ pushEv(outsideParentageEvent(f));assert.equal(curEv.title,'宫外身世回奏');
+ choose(0);assert.match(modalResult.text,/已有名册/);drain();
+ assert.equal(S.consorts.filter(c=>c.id===nieceId).length,1);assert.equal(kidById(nieceId),undefined);`);
 });
 test('next actual selection rechecks marriage and keeps valid nominated sisters across skipped selections',()=>{
  const b=setup();b.run(`var friend=addNatalPerson(other,oh,'f',17,106,false);

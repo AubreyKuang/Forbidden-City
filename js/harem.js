@@ -28,7 +28,7 @@ A.xxDrop=function(id){
   S.cands=S.cands.filter(x=>x.id!==id);AU.sfx('click');render()
 };
 A.xxTake=function(id){const c=S.cands.find(x=>x.id===id);if(!c)return;
-  if(selectionFamilyAwaitingClearance(c)){
+  if(legacySelectionFamilyAwaitingClearance(c)){
     pushEv({title:'礼部核名 · 外家户帖',por:c,text:`${fullName(c)}可依原籍参加本届选秀。现有家籍尚有亲缘待核之处，留牌前须先核清；这张名帖暂留在本届名册。`,choices:[{t:'先留她的名帖'}]});
     return;
   }

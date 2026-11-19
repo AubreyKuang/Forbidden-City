@@ -151,7 +151,9 @@ function familyNomineeNiece(c,p){
   return !!mother&&mother.id!==c.id&&(!selectionNiecesActive()||mother.consortId!==c.id);
 }
 function familyNomineeOrigin(e){return e.originHost==null?e.c:familyHostById(e.originHost)||e.c;}
+const familyNomineesUseCivilRegister=()=>journalContentVersion()>=137;
 function familyNomineeParentage(p,c){
+  if(familyNomineesUseCivilRegister()&&natalSisterMother(c,p))return 'clear';
   const data=p.outsideParentage,q=data?.privateInquiry;
   if(!p.unconfirmedParentage&&(!data||data.status==='cleared'))return 'clear';
   if(!selectionNiecesActive()||!natalSisterMother(c,p))return 'excluded';
@@ -166,8 +168,8 @@ function canRegisterFamilyNominee(c,p,origin=c){
   return familyNomineeAvailable(p,origin)&&(natalAge(p)>=15||journalContentVersion()>=131&&
     familyNomineeNiece(selectionNiecesActive()?origin:c,p));
 }
-function selectionFamilyAwaitingClearance(g){
-  if(!selectionNiecesActive()||!g.familyNominee||!g.familyBranchOrigin)return false;
+function legacySelectionFamilyAwaitingClearance(g){
+  if(familyNomineesUseCivilRegister()||!selectionNiecesActive()||!g.familyNominee||!g.familyBranchOrigin)return false;
   const e=natalEntry(g.selectionNatalHost,g.id);
   return !!e&&familyNomineeParentage(e.p,familyNomineeOrigin(e))==='unsettled';
 }
