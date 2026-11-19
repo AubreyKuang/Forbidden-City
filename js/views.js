@@ -514,7 +514,7 @@ function viewConsort(){
   if(act&&awaitingNoticeReason(c))conversations+=`<button class="btn" onclick="A.awaitingNotice(${c.id})">听她说久候的心事</button>`;
   const houseNews=courtFamilyPending(c);
   if(houseNews.length&&courtFamilyCanReply(c))acts+=`<button class="btn sm jade" onclick="A.courtFamilyReply(${c.id},'${houseNews[0].id}')">听她谈前朝家书</button>`;
-  const family=(act?fosterLine(c)+clanLine(c)+conKidLine(c)+relLine(c):'')+houseLine(c)+fiveBrotherPanel(c);
+  const family=queenWardFamilyPanel(c)+(act?fosterLine(c)+clanLine(c)+conKidLine(c)+relLine(c):'')+houseLine(c)+fiveBrotherPanel(c);
   return `${personBackButton('harem')}
    <header class="detail-head consort-detail-head">${porImg(c,224)}<div class="grow">
     <p>${esc(fullName(c))} · ${c.age}岁 · ${c.alive?c.gone?'已出宫':c.homeLeave?homeLeaveStatus(c):c.templeStay?'护国寺':esc(residenceLabel(c)):esc([c.passingDate,consortPassingReason(c)||'已故'].filter(Boolean).join(' · '))}</p>

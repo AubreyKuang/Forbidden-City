@@ -42,6 +42,7 @@ function natalPregnancyTick(){
   if(!careersActive())return;
   const seen=new Set();for(const c of S.consorts){const h=houseOf(c);if(!h||seen.has(h.father.id))continue;seen.add(h.father.id);
     for(const p of natalPeople(h).slice()){
+      queenKinCareMonth(c,h,p);
       const preg=p.natalPregnancy;if(!preg||!p.alive||p.consortId)continue;
       if(marriedSisterAffairsActive())noteMarriedSisterPregnancy(p,preg);
       if(journalContentVersion()>=89&&preg.unconfirmed&&S.turn-preg.conceived>=1&&!preg.privateNoticeQueued)queueOutsidePregnancyNotice(c,p,preg);
@@ -99,3 +100,87 @@ function natalFatherPanel(p){
   if(!p.fatherId)return '';const father=careerPeople().find(x=>x.p.id===p.fatherId);
   return detailSection('父系亲缘',`<p>父亲：${father?careerLink(father):esc(p.fatherName||'家中未详录')}${father?' · '+esc(officialStatus(father.p)):''}</p>`);
 }
+
+// These children keep their original names and family records, including after palace adoption.
+function queenWardResident(p){
+  const care=p?.kinCare;
+  return care?.decision==='adopt'&&!care.returned&&p.alive&&natalAge(p)<18&&inPalace(byId(care.queen));
+}
+function queenWardChildPanel(c,p){
+  const care=p.kinCare;
+  if(!['adopt','aid'].includes(care?.decision))return '';
+  const status=queenWardResident(p)?'现随养母住在'+byId(care.queen).palace:care.decision==='aid'?'留在原家，由宫中照拂':'曾入宫受养';
+  return detailSection('外家安置',`<p>${esc(status)}。生母${esc(care.motherName)} · ${care.decision==='adopt'?'养母':'请旨照料'}${esc(care.queenName)}。</p>`);
+}
+function queenWardFamilyPanel(q){
+  const entries=(q.kinWards||[]).map(ref=>natalEntry(ref.host,ref.child)).filter(Boolean);
+  if(!entries.length)return '';
+  return detailSection('抚养的外家孩子',entries.map(({c,p})=>
+    `<button class="person-link" onclick="A.go('natal','${c.id}:${p.id}')">${p.sex==='m'?'养子':'养女'} ${esc(p.name)} ↗</button> · ${natalAge(p)}岁 · ${queenWardResident(p)?'同住宫中':esc(natalStatus(p))}`).join('<br>'));
+}
+function kinCareRecord(people,line){
+  for(const p of new Set(people.filter(Boolean))){p.story||=[];story(p,'【外家安置】'+line);}
+}
+function queenKinCareMonth(c,h,child){
+  if(journalContentVersion()<159||!child.alive)return;
+  const care=child.kinCare;
+  if(care?.decision==='adopt'&&!care.returned&&!queenWardResident(child)){
+    care.returned=true;
+    kinCareRecord([child,byId(care.queen)],natalAge(child)>=18?`${child.name}已经成人，辞别宫中住处，在外安家，仍以${child.sex==='m'?'养子':'养女'}之礼问候养母。`:`养母已不能在宫中照料${child.name}，由原家接回抚养。`);
+  }
+  if(care?.decision==='aid'&&!care.receipt&&S.turn>=care.turn+3){
+    care.receipt=true;
+    kinCareRecord([child,byId(care.aunt),byId(care.queen)],`家里为${child.name}送来回信：先前宫中送去的银钱已支给乳母，孩子的襁褓也换大了一号。`);
+  }
+  // A save without the original modal may still carry its unanswered petition.
+  if(care?.decision==='pending'){
+    if(care.turn>=S.turn||S.turn-child.born>6||care.queen!==empress()?.id)return;
+  }else if(care)return;
+  if(child.consortId||child.exiled||child.unconfirmedParentage||child.outsideFamilyOrigin||!child.parentRelativeId||
+    S.turn<=child.born||S.turn-child.born>6)return;
+  const m=h.relatives.find(p=>p.id===child.parentRelativeId);
+  if(!m||m.alive||m.death?.kind!=='childbirth'||m.death.turn!==child.born||m.parentRelativeId||m.motherRelativeId||m.natalCollateral)return;
+  const q=empress();if(!inPalace(q))return;
+  const sisters=paternalFamily(c).filter(s=>S.consorts.includes(s)&&inPalace(s)&&['姐姐','妹妹'].includes(natalLabel(s,m)));
+  const aunt=sisters.includes(q)?q:sisters.sort((a,b)=>relGet(q,b)-relGet(q,a)||a.id-b.id)[0];
+  if(!aunt)return;
+  const roll=marriageHash('kin-care:'+child.id+':'+q.id)%100;
+  if(aunt!==q&&roll>=(relGet(q,aunt)<0?30:65)){child.kinCare={decision:'quiet'};return;}
+  const father=maritalFather(m,{fatherId:child.fatherId})?.p||m.spouse;
+  const fatherAlive=!!father&&father.alive!==false&&!m.widow;
+  const consent=!fatherAlive||marriageHash('kin-care-consent:'+child.id)%100<65;
+  const guardian=fatherAlive?father.name:'家中长辈',ward=child.sex==='m'?'养子':'养女';
+  const letter=consent?`${guardian}托人来问，若宫里肯接去照看，能否留着孩子原来的名字，往后也让两家常通音信。`:
+    `${guardian}把孩子的小衣一件件理好，回信说：“想把孩子留在家里。若宫中肯替我家寻个可靠的乳母，我就能腾出手料理她的后事了。”`;
+  const plea=aunt===q?`“${m.name}是臣妾的${natalLabel(q,m)}。上封家书还在同我商量孩子的小名，如今信上写的是${child.name}的生辰，旁边就是她的忌日。”`:
+    `${cName(q)}将${cName(aunt)}的家书递给你：“她的${natalLabel(aunt,m)}${m.name}没能熬过生产。信里记下了孩子的名字，${child.name}。臣妾读到这里，想为这孩子求个恩典。”`;
+  const valid=()=>byId(q.id)===q&&inPalace(q)&&q===empress()&&inPalace(aunt)&&child.alive&&!child.consortId&&child.kinCare?.decision==='pending'&&child.kinCare.queen===q.id;
+  child.kinCare={decision:'pending',queen:q.id,queenName:fullName(q),aunt:aunt.id,motherName:m.name,turn:S.turn};
+  function decide(decision){
+    if(!valid()||decision==='adopt'&&!consent||decision==='aid'&&E().treasury<5)return null;
+    const record=child.kinCare;record.decision=decision;record.turn=S.turn;
+    let line;
+    if(decision==='adopt'){
+      (q.kinWards||=[]).push({host:c.id,child:child.id});delete child.visit;
+      if(S.flags.familyNominees)S.flags.familyNominees=S.flags.familyNominees.filter(n=>n.relative!==child.id);
+      line=`依家中所愿，${child.name}入${q.palace}，成为${cName(q)}的${ward}。皇后收下襁褓，也收好了写着生母${m.name}姓名的生辰帖，约定家里仍可来信问候。`;
+    }else if(decision==='aid'){
+      chg({treasury:-5});line=`${child.name}留在原家。陛下拨了五万两作抚育之资，命内务府访得可靠乳母，由家中择用。皇后嘱家里过三个月捎一句平安。`;
+    }else line=`陛下让${guardian}照旧抚养${child.name}。${cName(q)}收起生辰帖，亲自写了一封慰问信送还家中。`;
+    kinCareRecord([child,aunt,q,fatherAlive?father:null],line);log(line,1);return line;
+  }
+  pushEv({title:'皇后请旨 · 襁褓何依',por:q,valid, text:plea+'\n'+letter+'\n'+(consent?`皇后道：“臣妾愿收${child.name}做${ward}。若让孩子留在家里，也求陛下照拂一程。”`:'皇后道：“家里舍不得分开，便让他们守在一起。陛下能不能帮他们过了这一阵？”'),
+    choices:[...(consent?[{t:`准皇后收为${ward}，接入宫中`,f:()=>decide('adopt')}]:[]),
+      {t:'留在原家，拨五万两照拂',cond:()=>E().treasury>=5,why:'国库不足五万两',f:()=>decide('aid')},
+      {t:'由原家照料，准皇后写信慰问',f:()=>decide('family')}]});
+}
+
+A.visitQueenWard=function(host,id){
+  if(!S||S.over||modalOpen)return;
+  const e=natalEntry(host,id),p=e?.p;if(!p||!queenWardResident(p))return;
+  const q=byId(p.kinCare.queen),age=natalAge(p),name=p.name;
+  const text=age<2?`${fullName(q)}把你引到摇篮边。乳母刚哄睡${name}，小手还攥着被角。她放轻了声音：“今日吃得好，睡得也安稳。下回给家里写信，我就这样告诉他们。”`:
+    age<7?`${name}听见养母唤自己的名字，从小案旁跑过来，把刚叠好的纸船递到你面前：“这是要给家里看的。”`:
+    `${name}在${q.palace}读外家来信，见你来了便合上信纸问安。养母已替孩子备好纸墨，让回信里的话自己写。`;
+  pushEv({title:'探望养子女',por:natalPortrait(p),cast:[q],valid:()=>queenWardResident(p),text,choices:[ok1]});
+};
