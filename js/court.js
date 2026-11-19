@@ -574,6 +574,7 @@ function monthlyFloodEvent(brief){
         if(chance(odds/100)){
           for(const member of clanMembers(clanKey(consort)))member.fam.p=clamp(member.fam.p+5,0,95);
           father.merit=clamp(father.merit+12);officialRecord(consort,'father',`奉旨${terms.label}，办妥赈务，家族在朝中更受倚重。`,{emotion:.6});
+          courtFamilyNewsFor(consort,'father','merit',terms.label,'黄河赈务已经办妥，灾地收到救济，户部按实录入功簿。',null,true);
           return `${audited?'户部核对了粮银账目。':''}${father.name}办妥了赈务，其家族势力上升。${fx(chg({treasury:-cost,people:terms.people,prestige:2}),cchg(consort,{aff:8,mood:10}))}`;
         }
         officialRecord(consort,'father','督办赈灾失利，遭御史问责。',{emotion:-.5});
@@ -598,14 +599,19 @@ function monthlyFloodEvent(brief){
 const IMPEACHMENT_INDEX=3;
 const FIRST_IMPEACHMENT_TURN=3;
 function impeachmentSubject(id){
-  return harem().find(c=>c.id===id&&houseOf(c)?.father.alive&&!c.fam.t.includes('（获罪）'));
+  const linked=courtFamilyRepliesActive(),c=linked?byId(id):harem().find(c=>c.id===id);
+  if(!c?.alive||c.gone||c.maid)return null;
+  const p=houseOf(c)?.father;
+  return p?.alive&&!c.fam.t.includes('（获罪）')&&(!linked||!p.dismissed&&!p.exiled)?c:null;
 }
 function pinImpeachment(person){
   const matching=chance(.5);
   return {person,matching,guilty:chance(matching ? .85 : .45)};
 }
 function newImpeachment(){
-  const eligible=harem().filter(c=>c.fam.p>=35&&houseOf(c)?.father.alive&&!c.fam.t.includes('（获罪）')&&(typeof kinMarriageActive!=='function'||!kinMarriageActive()||houseOf(c).father.career!=='commoner'));
+  const eligible=harem().filter(c=>c.fam.p>=35&&houseOf(c)?.father.alive&&!c.fam.t.includes('（获罪）')&&
+    (!courtFamilyRepliesActive()||!c.house.father.dismissed&&!c.house.father.exiled)&&
+    (typeof kinMarriageActive!=='function'||!kinMarriageActive()||houseOf(c).father.career!=='commoner'));
   return eligible.length?pinImpeachment(pick(eligible).id):null;
 }
 function impeachmentEvent(brief){
@@ -614,7 +620,8 @@ function impeachmentEvent(brief){
   const consort=impeachmentSubject(file.person);
   if(!consort)return null;
   const review=brief.review===true;
-  const father=houseOf(consort).father.name;
+  const officer=houseOf(consort).father,father=officer.name;
+  const familyNews=(kind,fact)=>courtFamilyNewsFor(consort,'father',kind,'赈银案',fact,`relief:${officer.id}:${file.familyCaseTurn??S.turn}`,kind!=='pending');
   const report=`御史弹劾${father}截留赈银八十万两，呈上的抄账记着只入库二十万两。库房摘要记着入库${file.matching?'二十':'一百'}万两。`;
   const evidence=file.matching?'两份账目相符。原始签押尚未调来。':'两份账目不合。若即日下旨，只能先采信御史的抄账。';
   const finding=file.guilty?'查得原始签押，一百万两赈银中仅二十万两入库，余款流入私账。':'查得原始签押，赈银已全数入库。御史所呈抄账有误。';
@@ -623,34 +630,50 @@ function impeachmentEvent(brief){
       f:()=>{
         if(file.guilty){
           consort.fam={t:consort.fam.t+'（获罪）',p:Math.max(0,consort.fam.p-30)};
-          story(consort,'其父贪墨案发，被革职查办。她在宫中脱簪待罪。');
+          if(courtFamilyRepliesActive()){
+            officer.dismissed=true;
+            const commission=officer.commission;
+            if(commission){
+              officer.away=commission.wasAway;
+              delete officer.commission;
+              finishMinistryFollowup(commission.ministryDocket,'interrupted','原承办官已因赈银案革职，尚未办结的差务须另行委派。');
+            }
+          }
+          if(!familyNews('proven','原始签押证实截留赈银，奉旨革职，八十万两追回入库。'))
+            story(consort,'其父贪墨案发，被革职查办。她在宫中脱簪待罪。');
           log(`${father}贪墨案发，革职查办。`,1);
           return `查实赈银遭截留，追回八十万两。${fx(chg({people:6,prestige:4,treasury:80}),cchg(consort,{mood:-30,aff:-12}))}`;
         }
         if(!review){
-          story(consort,'其父被误革，原始账目呈上后才复职。她仍记得那道急旨。');
+          if(!familyNews('restored','先按御史抄账革职，原始账目随后证实赈银全数入库，朝廷已收回成命。'))
+            story(consort,'其父被误革，原始账目呈上后才复职。她仍记得那道急旨。');
           return `革职的旨意已经下达，原簿随后证实赈银全数入库。你只得收回成命。${fx(chg({prestige:-5}),cchg(consort,{mood:-12,aff:-8}))}`;
         }
-        story(consort,'其父遭弹劾，查无实据，得还清白。');
+        if(!familyNews('cleared','原簿证实赈银全数入库，朝廷公布原簿，还其清白。'))
+          story(consort,'其父遭弹劾，查无实据，得还清白。');
         return `赈银已全数入库，${father}得还清白。${fx(chg({prestige:1}),cchg(consort,{aff:6}))}`;
       }};
   let choices=[verdict,
     {t:'留中不发',f:()=>{
-      story(consort,'其父遭弹劾，陛下将奏折压下。她心中感念。');
+      if(!familyNews('held','御史参奏截留赈银，原奏被留中，朝廷尚未查定。'))
+        story(consort,'其父遭弹劾，陛下将奏折压下。她心中感念。');
       return `你把奏折压下了。${fx(chg({people:-5}),cchg(consort,{aff:10}))}`;
     }},
-    {t:'罚俸一年，以儆效尤',outcome:'吏部把罚俸的朱批抄送户部。消息传入内廷，她在案前坐了许久。',f:()=>fx(chg({people:2}),cchg(consort,{mood:-8}))},
+    {t:'罚俸一年，以儆效尤',outcome:'吏部把罚俸的朱批抄送户部。消息传入内廷，她在案前坐了许久。',f:()=>{
+      familyNews('penalized','御史参奏截留赈银，朝廷已罚俸一年，原始账册尚未核验。');
+      return fx(chg({people:2}),cchg(consort,{mood:-8}));
+    }},
   ];
   if(review){
     const alternative=file.guilty
       ? {t:'责令退银，留任察看',preview:'国库 +80 万两 · 民心 +2 · 威望 −2 · 她的心情 −8',
         f:()=>{
-          story(consort,'其父退清截留的赈银，仍留任察看。她松了口气。');
+          if(!familyNews('proven','查实截留赈银，已如数退还，奉旨留任察看。'))story(consort,'其父退清截留的赈银，仍留任察看。她松了口气。');
           return `${father}如数退还八十万两，暂留原任。朝中仍有人质疑量罚过轻。${fx(chg({treasury:80,people:2,prestige:-2}),cchg(consort,{mood:-8}))}`;
         }}
       : {t:'私下告知查实结果，撤销弹劾',preview:'她的情分 +10、心情 +6',
         f:()=>{
-          story(consort,'陛下查清父亲的案子，私下让她知道父亲已无事。');
+          if(!familyNews('cleared','刑部核验原簿后撤销弹劾，查实结果私下送进家中。'))story(consort,'陛下查清父亲的案子，私下让她知道父亲已无事。');
           return `刑部撤销弹劾，将查实结果告知${father}一家。${fx(cchg(consort,{aff:10,mood:6}))}`;
         }};
     choices=[verdict,alternative];
@@ -659,12 +682,17 @@ function impeachmentEvent(brief){
       preview:`国库 +30 万两 · 民心 +5 · 威望 +1 · 她的心情 −12 · 停止独立督办赈务 ${RELIEF_SUSPENSION_MONTHS} 个月`,
       f:()=>{
         houseOf(consort).father.reliefResumeTurn=S.turn+RELIEF_SUSPENSION_MONTHS+1;
-        story(consort,'其父退清赈银，留任但停办赈务三个月。户部将其中五十万两直接拨往灾区。');
+        if(!familyNews('proven','查实截留赈银，已退清。留任停办赈务三个月，款项另由户部拨济。'))
+          story(consort,'其父退清赈银，留任但停办赈务三个月。户部将其中五十万两直接拨往灾区。');
         log(`${father}退清截留的赈银，户部直拨五十万两赈灾，涉案官员停办赈务三个月。`,1);
         return `${father}退还八十万两，保留原任，停办赈务三个月。户部直拨五十万两救急，余款入库。${fx(chg({treasury:30,people:5,prestige:1}),cchg(consort,{mood:-12}))}`;
       }});
   }else choices.push({t:'封存账册，下月复审',preview:'下月的奏折改为查账回奏 · 届时仍须批复',
     f:()=>{
+      if(courtFamilyRepliesActive()){
+        file.familyCaseTurn=S.turn;
+        familyNews('pending','御史参奏截留赈银，朝廷已封存原账，等候复审。');
+      }
       S.flags.impeachmentReview={gen:S.gen,turn:S.turn+1,file};
       return '账册已封存。下月可在月度奏折查看查账回奏。';
     }});

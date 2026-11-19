@@ -49,7 +49,7 @@ function frontierDispatch(e,{cost=300,odds=.6,named=false}={}){
   r.request=e.p.temperament==='圆融'&&daughter?'daughter':e.p.temperament==='进取'?'promotion':'silver';
   if(daughter)r.daughter={kind:daughter.kind,id:daughter.id};
   officialRecord(e.c,e.role,'领兵出征北境，王师告捷，军功录册，待陛下论赏。',{emotion:.7});
-  if(!e.outside)officialFamilyReaction(e,'success','北境出征');
+  if(!e.outside)officialFamilyReaction(e,'success','北境出征','北境军报已到，王师告捷，军功录册，等候御前论赏。');
   const effect=chg({treasury:-cost,prestige:named?8:5});
   pushNow(frontierRewardEvent(r));
   return `王师告捷。${r.post}${r.name}率部击退来敌，捷报与功册一同呈上。\n陛下龙颜大悦，召他入殿，准备论功行赏。${fx(effect)}`;

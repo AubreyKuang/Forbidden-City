@@ -45,7 +45,9 @@ createLocalReport=function(person){
   p.merit=clamp((p.merit??0)+(rating==='exceptional'?22:rating==='excellent'?14:good?8:-5));
   if(good)chg({people,treasury:revenue});
   S.flags.localMeritRecent=[...(S.flags.localMeritRecent||[]),task.id].slice(-3);
-  courtPersonRecord(person,`【呈奏】${p.report.title}。${p.report.text} 待御批。`);noteLocalChronicle(person,p.report);careerFamilyEcho(person,'submitted',p.report.text,p.report);return p.report;
+  courtPersonRecord(person,`【呈奏】${p.report.title}。${p.report.text} 待御批。`);
+  if(good)recordCourtFamilyNews(person.e,{kind:'merit',task:p.report.title,fact:`地方实绩已核验，${p.report.title}完成${done}${task.unit}，回奏已呈御前。`});
+  noteLocalChronicle(person,p.report);careerFamilyEcho(person,'submitted',p.report.text,p.report);return p.report;
 };
 const localMeritsOriginalTarget=careerTarget;
 careerTarget=function(person,direction){

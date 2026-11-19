@@ -512,6 +512,8 @@ function viewConsort(){
   }
   if(act&&!c.maid){cardAction=`<button class="btn quiet" onclick="A.toggleGreenCard(${c.id})">${c.cardWithdrawn?'恢复绿头牌':'撤下绿头牌'}</button>`;}
   if(act&&awaitingNoticeReason(c))conversations+=`<button class="btn" onclick="A.awaitingNotice(${c.id})">听她说久候的心事</button>`;
+  const houseNews=courtFamilyPending(c);
+  if(houseNews.length&&courtFamilyCanReply(c))acts+=`<button class="btn sm jade" onclick="A.courtFamilyReply(${c.id},'${houseNews[0].id}')">听她谈前朝家书</button>`;
   const family=(act?fosterLine(c)+clanLine(c)+conKidLine(c)+relLine(c):'')+houseLine(c)+fiveBrotherPanel(c);
   return `${personBackButton('harem')}
    <header class="detail-head consort-detail-head">${porImg(c,224)}<div class="grow">
@@ -538,7 +540,7 @@ function viewConsort(){
     ['family','家人与孩子',
       actionGroup('探亲与省亲',familyActions)+
       detailSection('白泉王室亲眷',whiteSpringKinLinks(c))+natalVisitorsPanel(c)+
-      whiteSpringFriendPanel(c)+sisterPalaceConcernPanel(c)+
+      whiteSpringFriendPanel(c)+sisterPalaceConcernPanel(c)+courtFamilyNewsPanel(c)+
       detailSection('家族与人际',`${kids.length?`<div>子女：${kids.map(k=>`<button class="btn quiet sm" onclick="A.go('kid',${k.id})">${esc(k.name)}</button>`).join(' ')}</div>`:''}${family}`)+
       marriedSisterChildrenPanel(c)+
       (act?detailSection('与孩子的日常',consortFamilyPanel(c)):'')+

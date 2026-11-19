@@ -27,7 +27,7 @@ function restlessDisposition(p){
  if(journalContentVersion()<84||!p||!Number.isFinite(p.seed)||!randomPalaceAffairsAllowed(p))return false;
  // Newly generated selection candidates keep their assigned value forever;
  // existing characters and pre-existing relatives retain the original rule.
- if(journalContentVersion()>=149&&typeof p.selectionRestless==='boolean')return p.selectionRestless;
+ if(journalContentVersion()>=150&&typeof p.selectionRestless==='boolean')return p.selectionRestless;
  return voiceHash(p.seed+':restless')%100<8;
 }
 const CONSORT_DISTINCTIONS=[

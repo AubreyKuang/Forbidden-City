@@ -122,7 +122,7 @@ function postingTick(){
     const good=chance(.3+e.p.ability/160),task=`${r.office}半年考课`;
     const text=good?`${e.p.name}到任后核清积案，任内办事期限与账目相合，吏部考课为良。`:`${e.p.name}到任后未能理清积案，吏部要求列出限期补办清单，不能只报喜讯。`;
     e.p.merit=clamp(e.p.merit+(good?10:-5));chg({people:good?3:-2});
-    officialRecord(e.c,e.role,text,{emotion:good?.5:-.4});officialFamilyReaction(e,good?'success':'setback',task);
+    officialRecord(e.c,e.role,text,{emotion:good?.5:-.4});officialFamilyReaction(e,good?'success':'setback',task,good?'到任后的半年考课已出。积案已核清，期限与账目相符，考评为良。':undefined);
     e.p.report={title:task,text,outcome:good?'success':'setback',turn:S.turn};
   }
 }
