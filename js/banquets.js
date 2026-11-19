@@ -355,7 +355,7 @@ function viewBanquet() {
         }).join('')}</ol><div class="grid">${guestCards}</div>`}
     <p class="banquet-selection" role="status">已选：${draft.ranked?'按位分排座':draft.all?'全员宴请':'自选宾客'} · ${GARDEN_ACTIVITIES[draft.activity].label} · ${people.length} 位宾客</p><h3>席间活动</h3><div class="acts">${Object.entries(GARDEN_ACTIVITIES).map(([key,act])=>
       `<button class="btn sm ${draft.activity===key?'on':''}" aria-pressed="${draft.activity===key}" onclick="A.banquetActivity('${key}')">${act.label}</button>`).join('')}</div>
-    ${patronProgramPanel(draft,feast)}${envoySeatsPanel(draft)}${gardenDancePanel(draft)}${workshopBanquetPanel(draft,people)}
+    ${betrothalJourneysActive()?betrothedBanquetGuests(draft,people):''}${patronProgramPanel(draft,feast)}${envoySeatsPanel(draft)}${gardenDancePanel(draft)}${workshopBanquetPanel(draft,people)}
     <div class="acts"><button class="btn gold" ${problem?'disabled':''} onclick="A.holdBanquet()">开宴<small>精力-1 · ${feast.cost?`国库-${feast.cost}万两`:feast.sponsor?'娘家出资':'筹备时已拨款'}</small></button></div>
     ${problem?`<p class="hint">${problem}</p>`:''}`;
 }
@@ -527,6 +527,7 @@ function playBanquet(draft,feast,people,tables,move) {
   if (demand) pushNow(proudDemandEvent(demand,people));
   pushNow({title:`${feast.title} · ${label}`, cast:people.slice(0,4), gardenTables:draft.ranked||draft.kind==='garden'?tables:null,
     text:`§${result}${promise}\n${lines.slice(0,6).join('\n')}`, choices:[ok1]});
+  if(betrothalJourneysActive())for(const meeting of betrothedBanquetEvents(draft,feast,people).reverse())pushNow(meeting);
   const incident=banquetFriendshipIncident(people,feast.title,feast.host);
   if(incident)pushNow({title:incident.title,cast:incident.cast,text:incident.text,choices:[{t:'记下席间这件事'}]});
   const guest=banquetArtistEvent(draft,feast);if(guest)pushNow(guest);

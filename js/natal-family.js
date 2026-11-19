@@ -66,7 +66,7 @@ function natalPortrait(p){
   const age=natalAge(p);
   return age<18?{...p,courtGuest:true}:p.sex==='m'?{...p,official:2}:{...p,sex:undefined,age,courtGuest:false};
 }
-function natalStatus(p){return !p.alive?'已故':p.consortId?'已入宫':p.visit?'入宫探亲':royalNatalEngaged(p)?'已定亲':natalAge(p)<6?'家中幼儿':natalAge(p)<18?'在家读书':p.married?'已婚':p.betrothal?'议亲中':p.career==='commoner'?p.post:'居于娘家';}
+function natalStatus(p){return !p.alive?'已故':p.consortId?'已入宫':p.royalCompanionTrip?'结伴游历中':p.visit?'入宫探亲':royalNatalEngaged(p)?'已定亲':natalAge(p)<6?'家中幼儿':natalAge(p)<18?'在家读书':p.married?'已婚':p.betrothal?'议亲中':p.career==='commoner'?p.post:'居于娘家';}
 function natalEntry(id,relative){const c=familyHostById(id),h=c&&houseOf(c),p=h?.relatives?.find(p=>p.id===+relative);return p?{c,h,p}:null;}
 function natalRecord(c,p,text,emotion=0){
   story(p,text);
@@ -79,7 +79,7 @@ function natalFamilyLinks(c){
   const h=c.house;if(!h)return '';
   return natalPeople(h).map(p=>`<div>${natalLabel(c,p)}：<button class="person-link" onclick="A.go('${p.sex==='m'&&natalAge(p)>=18?'official':'natal'}','${c.id}:${p.sex==='m'&&natalAge(p)>=18?'relative'+p.id:p.id}')">${esc(p.name)} ↗</button> <span class="hint">${natalAge(p)}岁 · ${p.sex==='m'?(p.post+' · '):''}${natalStatus(p)}</span></div>`).join('');
 }
-function natalVisitReady(c,p){return inPalace(c)&&!c.maid&&p.alive&&!p.consortId&&!p.visit&&(p.sex==='f'||natalAge(p)<13)&&
+function natalVisitReady(c,p){return inPalace(c)&&!c.maid&&p.alive&&!p.consortId&&!p.visit&&!p.royalCompanionTrip&&(p.sex==='f'||natalAge(p)<13||betrothedYouthVisitReady(p))&&
   S.turn-(p.lastVisit??-99)>=12&&!mourningActive()&&!natalPeople(c.house).some(x=>x.visit);}
 function natalInPalace(c,p){return !!p.visit&&p.visit.host===c.id&&S.turn<p.visit.until&&p.alive&&inPalace(c)&&!p.consortId;}
 function natalRomanceReady(c,p){return !p.parentRelativeId&&natalInPalace(c,p)&&p.sex==='f'&&natalAge(p)>=18&&!p.married&&!p.betrothal&&!p.declined;}
@@ -95,12 +95,13 @@ function natalVisitEvent(c,p){
 }
 function natalMeetingEvent(c,p){
   if(!natalInPalace(c,p))return null;
-  const age=natalAge(p),child=age<18;
+  const age=natalAge(p),child=age<18,betrothed=childhoodBetrothalVisit(c,p);
   const scene=age<3?'由长辈抱着，在帘下听见说话声便转过头来':child?'把家中带来的小物一件件摆好，认真说着读书与起居的小事':
     ({温婉:'把家人的问候慢慢说清，又问她近来睡得可好',活泼:'说起家乡街巷的新鲜事，听见通报便收声行礼',沉静:'在窗边陪她坐着，偶尔补上一句家中的近况',才女:'带来一本旧书，在页边留着两人都认得的批注',爽直:'先问她过得如何，见你到来便大方行礼',聪慧:'将家中近况分说明白，也留意到她欲言又止的神色',
      温厚:'把家人的问候一一带到，又叮嘱她保重身子',有文才:'带来一本旧书，在页边留着两人都认得的批注'}[natalTrait(p)]);
   return {title:'探亲相见',por:natalPortrait(p),cast:[c],present:[c],valid:()=>natalInPalace(c,p),text:`你来到${c.palace}，见${fullName(c)}的${natalLabel(c,p)}${p.name}正在探亲。${p.name}${scene}。${child?'随行长辈始终在旁照看。':''}`,choices:[
     {t:age<3?'问起家中的照料':'听她们说家中近况',f:()=>{if(!natalInPalace(c,p))return null;natalSceneRecord(c,p,`探亲时与陛下一同谈起家中近况。${fullName(c)}把这次见面记了下来。`,.4);relAdd(c,p,4);return '你听完家中的近况，将余下的时辰留给亲人相聚。';}},
+    ...(betrothed?[{t:'请两个孩子在长辈身边见一面',cond:()=>betrothed.valid(),f:()=>{pushNow(betrothed);return null;}}]:[]),
     ...(natalRomanceReady(c,p)?[{t:'一见倾心，询问她是否愿意入宫',f:()=>{if(!natalRomanceReady(c,p))return null;pushNow(natalCourtshipEvent(c,p));return null;}}]:[]),
     {t:'让亲人自在说话',f:()=>{if(!natalInPalace(c,p))return null;natalSceneRecord(c,p,'陛下留下亲人独处的时辰，没有打断探亲。',.2);return '廊下渐渐静了，亲人可以把尚未说完的话慢慢说完。';}}
   ]};

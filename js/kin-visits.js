@@ -2,16 +2,16 @@
    Version 10 scenes keep their original choices and random draws when replayed. */
 const kinVisitsEnabled=()=>journalContentVersion()>=11;
 function visitingMarriageReady(c,p){
-  return kinVisitsEnabled()&&natalInPalace(c,p)&&!p.parentRelativeId&&p.sex==='f'&&natalAge(p)>=20&&!p.married&&!p.spouse;
+  return kinVisitsEnabled()&&natalInPalace(c,p)&&!p.parentRelativeId&&p.sex==='f'&&natalAge(p)>=20&&!p.married&&!p.spouse&&!royalNatalEngaged(p);
 }
 const kinVisitsRomanceReady=natalRomanceReady;
 natalRomanceReady=function(c,p){
   if(!kinVisitsEnabled())return kinVisitsRomanceReady(c,p);
-  return !p.parentRelativeId&&natalInPalace(c,p)&&p.sex==='f'&&natalAge(p)>=18&&!p.married&&!p.spouse&&!p.betrothal?.arranged&&!p.declined;
+  return !p.parentRelativeId&&natalInPalace(c,p)&&p.sex==='f'&&natalAge(p)>=18&&!p.married&&!p.spouse&&!p.betrothal?.arranged&&!royalNatalEngaged(p)&&!p.declined;
 };
 const kinVisitsMeeting=natalMeetingEvent;
 natalMeetingEvent=function(c,p){
-  if(kinVisitsEnabled()&&natalInPalace(c,p)&&p.betrothal&&!matchStillOpen(p.betrothal.match)){
+  if(kinVisitsEnabled()&&natalInPalace(c,p)&&p.betrothal?.match&&!matchStillOpen(p.betrothal.match)){
     const m=p.betrothal.match,e=allianceEntry(m),reason=e?.p.alive===false?'已离世':e?.p.married?'已经另结婚姻':'已不适合继续议亲';
     delete p.betrothal;p.marriageChecked=S.turn;
     natalRecord(c,p,`${p.name}探亲时收到家中回信：原议亲对象${m.name}${reason}，原亲事作罢，婚事需另议。`,0);

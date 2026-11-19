@@ -216,11 +216,13 @@ function royalNatalConsort(host,p){
 }
 function royalNatalMarry(k,p,host,b){
   const c=familyHostById(b.motherId),ruling=k===E().natalMarriageHeir,name=ruling?'新帝'+k.name:kidName(k);
+  const childhood=betrothalJourneysActive()&&childhoodBetrothalPair(k)?.p===p;
   delete k.betrothal;delete p.betrothal;delete p.visit;
   k.married=true;
   const face=natalPortrait(p);
   k.spouse={id:p.id,personId:p.id,natalHost:host.id,name:p.name,sur:p.sur,sex:p.sex,born:p.born,seed:p.seed,
     alive:true,official:face.official,artPortrait:p.artPortrait,trait:p.trait,background:`${c?c.sur:host.sur}氏外家`,marriedAt:S.turn};
+  if(childhood)k.spouse.childhoodBetrothal={turn:b.turn,childhood:b.childhood};
   if(royalNatalCourtshipActive()&&b.bond)k.spouse.trust=Math.round((b.bond.royal+b.bond.relative)/2);
   if(p.sex==='f')k.spouse.appearance={sur:p.sur,given:p.given,age:natalAge(p),seed:p.seed,artPortrait:p.artPortrait,trait:p.trait,rank:0};
   p.married=true;
@@ -237,6 +239,7 @@ function royalNatalMarry(k,p,host,b){
 }
 function royalNatalCancel(k,p,outcome){
   const b=k.betrothal;
+  if(betrothalJourneysActive())finishBetrothedTravel(k,'separated');
   delete k.betrothal;
   if(royalNatalEngaged(p)&&p.betrothal.personId===k.id)delete p.betrothal;
   k.natalMatchAsked=true;
@@ -267,7 +270,7 @@ function royalNatalMarriageTick(){
       royalNatalCancel(k,p);
       continue;
     }
-    const weddingReady=S.turn>=b.due&&!k.jailed&&!k.templeStay&&!royalJourneyAway(k)&&!p.jailed&&!p.exiled;
+    const weddingReady=S.turn>=b.due&&!k.jailed&&!k.templeStay&&!royalJourneyAway(k)&&!p.jailed&&!p.exiled&&!p.royalCompanionTrip;
     if(!royalNatalCourtshipTick(k,p,b,weddingReady)&&weddingReady)royalNatalMarry(k,p,e.c,b);
   }
 }
@@ -288,17 +291,19 @@ function royalNatalPartnerPanel(k){
   const name=e?.p.name||(b||s).name;
   const link=e?royalNatalPersonLink('natal',e.c.id+':'+e.p.id,name):esc(name);
   const undecided=b?.bond?.petition||b?.bond?.holdUntil>S.turn;
-  const timing=b&&!undecided?engagementTiming(b.due??(e&&royalNatalMarriageAge(k,e.p)),'待双方可以行礼时成婚。'):'';
+  const waiting=royalTravelAway(k)?'归来后再依礼成婚。':'待双方可以行礼时成婚。';
+  const timing=b&&!undecided?engagementTiming(b.due??(e&&royalNatalMarriageAge(k,e.p)),waiting):'';
   return detailSection(b?'已定亲':'配偶档案',`<p>${b?'定亲对象':'配偶'} · ${link}${b?' · 双方满十八岁后依约成婚。'+timing:''}</p>`+
-    (b?royalNatalCourtshipPanel(k,e?.p):''));
+    (b?royalNatalCourtshipPanel(k,e?.p):'')+betrothedTravelButton(k));
 }
 function natalRoyalPartnerLine(p){
   const b=royalNatalEngaged(p)?p.betrothal:null,id=b?.personId??p.spouse?.royalId;
   if(id==null)return '';
   const k=royalNatalById(id),name=k&&k===E().natalMarriageHeir?k.name+' · 当朝天子':k?kidName(k):(b||p.spouse).name;
   const link=k?royalNatalPersonLink(S.children.includes(k)?'kid':'relative',k.id,name):esc(name);
-  return `<p>${b?'已定亲':'配偶'} · ${link}${b?' · 双方满十八岁后依约成婚':k?.alive===false?' · 已故':''}</p>`+
-    (b&&k?royalNatalCourtshipPanel(k,p):'');
+  const timing=b&&(royalTravelAway(k)?' · 归来后再依礼成婚':' · 双方满十八岁后依约成婚');
+  return `<p>${b?'已定亲':'配偶'} · ${link}${timing||(k?.alive===false?' · 已故':'')}</p>`+
+    (b&&k?royalNatalCourtshipPanel(k,p):'')+companionTravelPanel(p);
 }
 function royalNatalById(id){
   const ruler=E().natalMarriageHeir;
@@ -320,6 +325,7 @@ function royalNatalContactReason(k,p,kind){
   if(!royalNatalCourtshipActive()||!royalNatalEngaged(k)||!royalNatalEngaged(p)||b.personId!==p.id||p.betrothal.personId!==k.id||
      !k.alive||!p.alive||k.married||p.married||k.removedFromRoyal||p.consortId||!royalNatalParentageEligible(p))return '婚约已变';
   if(b.bond?.petition)return '婚约正在等候裁决';
+  if(p.royalCompanionTrip)return '两人正在结伴游历';
   if(k.jailed||p.jailed||p.exiled||k.templeStay)return '两家暂时不便往来';
   if(mourningActive())return '守丧期间暂缓来往';
   if(kind==='gift')return S.month===1&&S.turn-(b.bond?.last.gift??-12)>=12?'':'岁礼每年正月互送一次';

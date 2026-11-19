@@ -13,7 +13,7 @@ function initialNatalSpouse(p,age){
 function natalLifeTick(){
  const seen=new Set();for(const c of S.consorts){const h=houseOf(c);if(!h||seen.has(h)||!c.alive||c.gone)continue;seen.add(h);
   for(const p of natalPeople(h).slice()){
-   if(!p.alive||p.exiled||p.visit||p.consortId)continue;const age=natalAge(p),life=p.lifeCourse||=( {} );
+   if(!p.alive||p.exiled||p.visit||p.consortId||p.royalCompanionTrip)continue;const age=natalAge(p),life=p.lifeCourse||=( {} );
    if(p.married&&!p.spouse&&age>=18)p.spouse=initialNatalSpouse(p,age);
    if(age>=18&&!life.adult){life.adult=S.turn;natalLifeRecord(c,[p],'家中也有前程',`${p.name}已到成年，家书里说起自己的打算：${p.sex==='m'?'先把学业与生计安排踏实；有功名也须依程序候选，并非自然有官可做':'想有自己擅长的事情，也愿按自己的心意考虑婚事'}。`);}
    if(age<18||S.turn-(life.last??life.adult??S.turn)<24||life.year===S.year)continue;life.year=S.year;

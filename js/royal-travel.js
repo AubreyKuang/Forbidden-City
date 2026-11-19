@@ -166,7 +166,9 @@ function royalTravelPlace(k){
  return royalItinerary(r)?.stops[r.stop]?.[1]??ROYAL_TRAVEL_ROUTES[r.route][r.stop].place;
 }
 function royalTravelCanLeave(k){
- return immortalCanLeave(k)&&!k.lost&&!k.betrothal&&!['noticed','invited'].includes(k.immortal?.stage);
+ if(!k||k.lost||['noticed','invited'].includes(k.immortal?.stage))return false;
+ if(!k.married)return immortalCanLeave(k)&&(!k.betrothal||!!betrothedTravelPair(k));
+ return immortalLocal(k)&&kidAge(k)>=16&&k.hp>=50&&S.heir!==k.id&&!!betrothedTravelPair(k);
 }
 function royalTravelMotherFeeling(c,k,kind){
  if(kind==='departure'){
@@ -202,8 +204,10 @@ function royalTravelTick(){
  if(S.turn-(S.flags.lastRoyalTravelRequest??-99)<18||S.children.some(k=>k.royalTravel?.stage==='request'&&royalTravelCanLeave(k)))return;
  const candidates=S.children.filter(k=>!k.royalTravel&&royalTravelCanLeave(k));
  if(!candidates.length||!chance(.02))return;
- const k=pick(candidates);
- k.royalTravel=current?{stage:'request',itinerary:pickW(Object.entries(ROYAL_TRAVEL_ITINERARIES).map(([id,r])=>({id,w:r.w}))).id,due:S.turn,history:[]}:
+ requestRoyalTravel(pick(candidates));
+}
+function requestRoyalTravel(k){
+ k.royalTravel=journalContentVersion()>=46?{stage:'request',itinerary:pickW(Object.entries(ROYAL_TRAVEL_ITINERARIES).map(([id,r])=>({id,w:r.w}))).id,due:S.turn,history:[]}:
   {stage:'request',route:ri(0,ROYAL_TRAVEL_ROUTES.length-1),due:S.turn,history:[]};
  S.flags.lastRoyalTravelRequest=S.turn;
 }
@@ -211,9 +215,9 @@ function royalTravelVoice(k){
  if(!royalTravelAway(k))return null;
  const r=k.royalTravel,stop=royalItinerary(r)?.stops[r.stop];
  const {place,sight}=stop?{place:stop[1],sight:stop[2]}:ROYAL_TRAVEL_ROUTES[r.route][r.stop];
- const address=S.children.includes(k)?'父皇':'陛下';
+ const address=S.children.includes(k)?'父皇':'陛下',companion=royalTravelCompanion(k);
  return voiceLine('travel-letter',`从${place}送来的信，背面还夹着一小幅沿途画的舆图。`,
-  `${address}，我在${place}一切平安。${sight}${royalTravelMothers(k).length?'也请转告母亲，按说好的日子，我还会再写信来。':''}`);
+  `${address}，我在${place}一切平安。${sight}${companion?`${companion.name}也在驿站写了自己的见闻，托我一道报平安。`:''}${royalTravelMothers(k).length?'也请转告母亲，按说好的日子，我还会再写信来。':''}`);
 }
 function receiveRoyalTravelLetter(k,danger=''){
  k.royalTravel.lastLetter=S.turn;
@@ -222,12 +226,15 @@ function receiveRoyalTravelLetter(k,danger=''){
  if(danger){
   for(const c of royalTravelMothers(k))if(S.consorts.includes(c)){const worry=reconcileMotherConcern(c);if(worry)worry.value=clamp(worry.value+12);}
  }else comfortJourneyMothers(k);
- return text;
+ const together=recordCompanionTravelStop(k,danger);
+ return text+(together?'\n'+together:'');
 }
 function returnRoyalTraveler(k){
  const r=k.royalTravel;
+ reconcileBetrothedTravel(k);
+ const together=finishBetrothedTravel(k,'returned');
  r.stage='returned';r.returnPlace=S.children.includes(k)?null:'京中宗亲居所';delete r.due;
- const text=`${k.name}结束游历，平安回到${childWhereabouts(k)}，带回沿途写成的手记。`;
+ const text=`${k.name}结束游历，平安回到${childWhereabouts(k)}，带回沿途写成的手记。${together?'\n'+together:''}`;
  recordRoyalTravel(k,'游历归来',text,'return');
  if(journalContentVersion()>=46){
   r.returnNotice=text;
@@ -240,6 +247,7 @@ function returnRoyalTraveler(k){
 }
 function royalTravelReturnAt(r){return r.returnAt??(r.extended?r.due:r.departed+12);}
 function advanceRoyalTravel(k){
+ reconcileBetrothedTravel(k);
  if(!k.alive||!royalTravelAway(k))return;
  const r=k.royalTravel,route=royalItinerary(r);
  if(S.turn>=royalTravelReturnAt(r)){returnRoyalTraveler(k);return;}
@@ -424,20 +432,32 @@ function royalTravelEvent(k){
   if(news||route||!firstStop)return news;
  }
  if(!(S.turn>=r.due))return null;
+ const companion=requesting&&betrothedTravelPair(k);
+ const matchingCompanion=()=>{
+  const current=betrothedTravelPair(k);
+  return companion?current?.p===companion.p&&current.b.turn===companion.b.turn:!current;
+ };
  let resolved=false;
  const valid=()=>!resolved&&k.royalTravel===r&&!S.over&&!mourningActive()&&k.alive&&!k.lost&&!k.jailed&&!k.removedFromRoyal&&S.turn>=r.due&&
-  (requesting?r.stage==='request'&&royalTravelCanLeave(k):royalTravelAway(k)&&firstStop===(r.stop===0));
+  (requesting?r.stage==='request'&&royalTravelCanLeave(k)&&matchingCompanion():royalTravelAway(k)&&firstStop===(r.stop===0));
  const finish=f=>()=>{if(!valid())return null;resolved=true;const result=f();save('auto');return result;};
- if(requesting&&valid())return {title:'皇嗣请行 · 游历山河',por:k,valid,
-  text:`${kidName(k)}带着一张自己标过的舆图来见你：“父皇，我想出去看看。书里说江河有汛、山路难行，可我还没见过那些靠着河和山过日子的人。”\n${route?`拟走「${route.name}」，经${route.stops.map(stop=>stop[1]).join('、')}，约定${royalTravelDuration(route.months)}后归来，沿途会寄家书。`:`第一程拟往${ROYAL_TRAVEL_ROUTES[r.route][0].place}，约一年归来，沿途会托驿站寄信。`}`,choices:[
-   {t:'准其启程，置办行装 · 国库−20',cond:()=>E().treasury>=20,why:'国库不足',f:()=>{
-    if(E().treasury<20)return null;
-    return finish(()=>{chg({treasury:-20});Object.assign(r,{stage:'traveling',stop:0,departed:S.turn,due:S.turn+6,lastLetter:-99});
-     if(route){r.returnAt=S.turn+route.months;r.nextStop=0;delete r.due;}
-     delete k.initiative;k.tutor=false;
-     const text=`${k.name}辞别亲人，带着行囊和驿路图启程，先往${royalTravelPlace(k)}。${route?`约定${royalTravelDuration(route.months)}后归来。`:''}`;
-     recordRoyalTravel(k,'离宫游历',text,'departure');return text;})();
-   }},
+ const departure=(label,partner)=>({t:label+' · 国库−20',cond:()=>E().treasury>=20,why:'国库不足',f:()=>{
+  if(E().treasury<20)return null;
+  return finish(()=>{
+   chg({treasury:-20});
+   Object.assign(r,{stage:'traveling',stop:0,departed:S.turn,due:S.turn+6,lastLetter:-99});
+   if(route){r.returnAt=S.turn+route.months;r.nextStop=0;delete r.due;}
+   delete k.initiative;k.tutor=false;
+   const together=partner?startBetrothedTravel(partner):'';
+   const text=`${k.name}辞别亲人，带着行囊和驿路图启程，先往${royalTravelPlace(k)}。${route?`约定${royalTravelDuration(route.months)}后归来。`:''}${together?'\n'+together:''}`;
+   recordRoyalTravel(k,'离宫游历',text,'departure');
+   return text;
+  })();
+ }});
+ if(requesting&&valid())return {title:'皇嗣请行 · 游历山河',por:k,cast:companion?[natalPortrait(companion.p)]:undefined,valid,
+  text:`${kidName(k)}带着一张自己标过的舆图来见你：“父皇，我想出去看看。书里说江河有汛、山路难行，可我还没见过那些靠着河和山过日子的人。”\n${route?`拟走「${route.name}」，经${route.stops.map(stop=>stop[1]).join('、')}，约定${royalTravelDuration(route.months)}后归来，沿途会寄家书。`:`第一程拟往${ROYAL_TRAVEL_ROUTES[r.route][0].place}，约一年归来，沿途会托驿站寄信。`}${companion?betrothedTravelReply(companion):''}`,choices:[
+   departure(companion?'准两人结伴启程':'准其启程，置办行装',companion),
+   ...(companion?[departure('这程由皇嗣只带随侍启程',null)]:[]),
    {t:'先备好行程，半年后再议',f:finish(()=>{r.due=S.turn+6;return '行期暂缓，孩子暂留京中。';})},
    {t:'这趟先作罢',f:finish(()=>{r.stage='closed';delete r.due;kstory(k,'此次请行未获准，先把自己标过的舆图收好。');return '孩子暂留京中。';})}]};
  if(!royalTravelAway(k)||!valid())return null;
@@ -465,7 +485,8 @@ function royalTravelPanel(k){
  if(!royalTravelActive()||!k.royalTravel)return '';
  const r=k.royalTravel,away=royalTravelAway(k),event=royalTravelEvent(k);
  const remaining=away&&journalContentVersion()>=46?Math.max(0,royalTravelReturnAt(r)-S.turn):null;
- const text=away?`正在${royalTravelPlace(k)}游历。${remaining===null?'':remaining?`距约定归期还有${royalTravelDuration(remaining)}。`:'今日归期已到。'}`:({request:'等候商议游历行程。',returned:'游历已毕，带回了沿途手记。',closed:'这次没有启程。'})[r.stage];
+ const companion=royalTravelCompanion(k);
+ const text=away?`正在${royalTravelPlace(k)}${companion?`与${companion.name}结伴`:''}游历。${remaining===null?'':remaining?`距约定归期还有${royalTravelDuration(remaining)}。`:'今日归期已到。'}`:({request:'等候商议游历行程。',returned:'游历已毕，带回了沿途手记。',closed:'这次没有启程。'})[r.stage];
  const projects=Object.entries(r.proposals||{}).flatMap(([key,{project}])=>{
   if(!project)return [];
   const [kind,phase]=project.expand?['推广',project.expand]:project.repair?['改进',project.repair]:['试办',project];

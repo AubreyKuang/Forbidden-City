@@ -63,7 +63,7 @@ function householdMother(k){
   return byId(id)||(S.previousCourts||[]).slice().reverse().flatMap(c=>c.consorts).find(c=>c.id===id);
 }
 function householdLiving(k){return !!(k?.alive&&!k.princeAdoptionOrigin&&!k.removedFromRoyal&&k.married&&k.spouse?.alive!==false&&!k.jailed&&!k.gone&&!S.over);}
-function householdActive(k){return householdLiving(k)&&!k.templeStay;}
+function householdActive(k){return householdLiving(k)&&!k.templeStay&&(!betrothalJourneysActive()||!royalTravelAway(k));}
 function householdRecord(k,type,text){
   const h=ensureMarriedLife(k);if(!h)return;
   h.history.push({d:dateStr(),turn:S.turn,type,t:text});if(h.history.length>60)h.history.shift();
