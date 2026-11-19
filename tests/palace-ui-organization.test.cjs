@@ -43,7 +43,8 @@ for(const c of cases)test(`layout preserves information and action availability:
   for(const label of ['龙体','威望','民心'])assert.ok(hud.includes(label));
  }
  for(const legacyFragment of fragments.sort((a,b)=>b.length-a.length)){
-  const fragment=legacyFragment.replace('筛选不会删去原始记载。','');
+  const fragment=legacyFragment.replace('筛选不会删去原始记载。','')
+    .replace('楚庶人',c[0]==='cold'?'楚妃':'楚庶人');
   // The guide now describes the three-reply quota; its other instructions remain.
   const updated=c[0]==='home'?fragment.replace('上朝可先免费查看本月奏折，亲自批复通常花 1 点','每月最多批阅三份奏折，可先免费查看；亲自批复通常花 1 点'):fragment;
   assert.ok(text.includes(updated),`Missing text: ${updated}`);
@@ -52,6 +53,13 @@ for(const c of cases)test(`layout preserves information and action availability:
  const ids=[...html.matchAll(/\sid="([^"]+)"/g)].map(m=>m[1]);
  assert.equal(new Set(ids).size,ids.length,'Duplicate DOM IDs');
  for(const [,id] of html.matchAll(/href="#([^"]+)"/g))assert.ok(ids.includes(id),`Broken section link: ${id}`);
+});
+
+test('the cold-palace profile distinguishes confinement from formal demotion to commoner',()=>{
+ const {html}=renderCase(['commoner','viewConsort()','c.cold=true;c.coldCommoner=true;c.palace="冷宫";UI.sel=c.id']);
+ const text=signature(html).text;
+ assert.ok(text.includes('楚庶人'));
+ assert.ok(text.includes('楚怜 · 18岁 · 冷宫'));
 });
 
 test('section jumps focus only the current page and do not change the world or save',()=>{
