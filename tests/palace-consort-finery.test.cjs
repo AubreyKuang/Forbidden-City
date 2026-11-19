@@ -2,7 +2,7 @@ const assert=require('node:assert/strict'),{test}=require('node:test');
 const fs=require('node:fs'),path=require('node:path');
 const {boot}=require('./playtest-harness.cjs');
 const manifest=require('../docs/consort-finery-sources.json');
-const legacy=require('./fixtures/consort-finery-legacy-v156.json');
+const legacyCases=[require('./fixtures/consort-finery-legacy-v156.json'),require('./fixtures/consort-finery-legacy-v158.json')];
 function game(storage=new Map()){const b=boot(941,storage);b.ctx.assert=assert;return b;}
 
 test('all twelve approved finery portraits render both views and preserve identities through save, rank and maid changes',()=>{
@@ -42,15 +42,16 @@ test('a finery empress retains her saved portrait when she becomes the next reig
     assert.equal(portraitCell(dowagerPerson(S.flags.dowager)),507);`);
 });
 
-for(const [name,data] of Object.entries(legacy))test('published v156 '+name+' retains its portrait allocation across pending-scene reload',()=>{
+for(const legacy of legacyCases)for(const [name,data] of Object.entries(legacy))test('published v'+data.pendingActions.version+' '+name+' retains its portrait allocation across pending-scene reload',()=>{
+  const version=data.pendingActions.version;
   let b=game(new Map([['chengongji_v1_auto',JSON.stringify(data)]]));
-  b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,156);`);
+  b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,${version});`);
   const faces=s=>[...s.consorts,...s.cands].map(c=>[c.id,c.artPortrait]);
   assert.deepEqual(JSON.parse(b.run('JSON.stringify([...S.consorts,...S.cands].map(c=>[c.id,c.artPortrait]))')),faces(data));
   if(name==='selection-before'){
     b.force(...legacy['selection-after'].pendingActions.steps.at(-1).rolls);
     b.run(`choose(0);save('auto');`);b=game(b.storage);
-    b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,156);`);
+    b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,${version});`);
     assert.deepEqual(JSON.parse(b.run('JSON.stringify([...S.consorts,...S.cands].map(c=>[c.id,c.artPortrait]))')),faces(legacy['selection-after']));
   }
   b.run(`assert.ok(S.cands.every(c=>!FINERY_CONSORT_PORTRAITS.includes(c.artPortrait)));
