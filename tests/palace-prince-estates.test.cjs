@@ -114,6 +114,84 @@ test('an old rumour continues for a distant marriage and survives a temporary ab
    choose(0);drain();assert.equal(p.trust,27);assert.match(p.story.at(-1).t,/把每句话辩到底/);`);
 });
 
+function princeParentageWorld(trust,princeNature,wifeNature){
+ const game=princeWorld(27);
+ game.run(`E().age=45;openPrinceEstate(prince);prince.married=true;prince.temperament='${princeNature}';
+   var p=prince.spouse={...marriageCandidate(prince,'scholar'),marriedAt:S.turn-40,trust:${trust},willing:true};
+   p.marriageNature={...marriageNature(p),temperament:'${wifeNature}'};
+   p.seed=Array.from({length:300},(_,i)=>i+1).find(seed=>mulberry32(voiceHash('prince-spouse-visit:'+seed+':'+(E().seed||S.gen)))()<.10);
+   ensureMarriedLife(prince).nextNews=S.turn+48;
+   var seek=pattern=>{for(var n=0;modalOpen&&n<150;n++){
+     if(!modalResult&&pattern.test(curEv.title))return;
+     if(modalResult)nextEv();else choose(curEv.choices.findLastIndex(c=>!c.cond||c.cond()));
+   }throw Error('Missing '+pattern);};`);
+ return game;
+}
+
+test('a rare private conception is concealed until a sealed inquiry, then survives a reload and a single household birth',()=>{
+ let game=princeParentageWorld(78,'仁厚','敏感');
+ game.run(`setupJyw();A.princeSpouseVisit(prince.id);`);
+ game.force(.029);
+ game.run(`choose(0);drain();var h=prince.household,g=h.pregnancies[0],dossier=princeSpouseParentageCases(prince)[0];
+   assert.equal(h.pregnancies.length,1);assert.equal(dossier.imperialFather,E().sur+E().name);
+   assert.match(householdPanel(prince),/暂无孕信/);assert.doesNotMatch(viewJinyiwei(),/王府亲缘密卷/);
+   A.endMonth();assert.ok(![curEv,...Q].some(e=>/胎月起疑|孕信密呈/.test(e?.title)));drain();
+   A.endMonth();seek(/王府 · (胎月起疑|孕信密呈)/);assert.match(curEv.text,/头一个把孕信说给他听/);
+   var energy=E().energy,treasury=E().treasury;choose(0);assert.equal(dossier.status,'investigating');
+   assert.equal(E().energy,energy-1);assert.equal(E().treasury,treasury-15);drain();
+   assert.match(viewJinyiwei(),/密查中 · 还需 2 个月/);assert.doesNotMatch(viewJinyiwei(),/已核明生父/);
+   A.endMonth();drain();A.endMonth();seek(/锦衣卫回奏 · 王府亲缘/);save('1');`);
+ game=boot(991,game.storage);game.ctx.assert=assert;
+ game.run(`A.load('1');assert.equal(PalaceActions.blocked,false);
+   var prince=S.children.find(k=>k.name==='承安'),p=prince.spouse,h=prince.household,dossier=princeSpouseParentageCases(prince)[0];
+   assert.match(curEv.text,/生父为皇帝.*王妃与孩子可还安稳.*缝到一半的小被/s);
+   choose(0);drain();assert.equal(dossier.status,'complete');assert.equal(p.trust,69);
+   assert.equal(p.princePrivateVisit.paternityConfirmed,true);assert.equal(princeSpouseDiscoveryEvent(prince),null);
+   assert.match(princeSpouseVisitPanel(prince),/私下往来已止/);
+   A.princeSpouseVisit(prince.id);assert.equal(modalOpen,false);
+   assert.match(prince.story.at(-1).t,/王府亲缘密卷.*取什么名字/);assert.match(p.story.at(-1).t,/王府亲缘密卷.*往后还愿不愿听/);
+   assert.ok(!S.reignAnnals.some(e=>/王府亲缘|胎月起疑|孕信密呈/.test(e.title)));
+   assert.ok(!S.log.some(e=>/生父为皇帝|王府密查/.test(e.t)));
+   S.turn=h.pregnancies[0].due;marriedLifeTick();marriedLifeTick();
+   assert.equal(h.children.length,1);assert.equal(dossier.childId,h.children[0].id);
+   assert.equal(h.children[0].father,prince.id);assert.ok(!S.children.includes(h.children[0]));
+   A.go('household-child',dossier.childId);assert.match(viewHouseholdChild(),/宗谱所载父亲.*承安/s);assert.match(viewHouseholdChild(),/已核明生父为皇帝/);
+   assert.equal(pendingPrinceSpouseParentage().length,0);`);
+});
+
+test('the husband may suspect a child he fathered, and the deferred investigation is available in both places once appointed',()=>{
+ const game=princeParentageWorld(42,'自矜','好胜');
+ game.run(`assert.equal(startHouseholdPregnancy(prince,p),true);S.turn++;
+   A.princeSpouseVisit(prince.id);choose(0);drain();
+   var h=prince.household,dossier=princeSpouseParentageCases(prince)[0];assert.equal(h.pregnancies.length,1);
+   assert.equal(dossier.imperialFather,null);p.princePrivateVisit.noticed=true;
+   var oldSeed=prince.seed;prince.seed=Array.from({length:40},(_,i)=>i+1).find(seed=>{prince.seed=seed;return princeSpouseParentageSuspicion(prince,dossier);})||oldSeed;
+   A.endMonth();seek(/王府 · 胎月起疑/);assert.match(curEv.text,/贺喜的人散去.*往往分开/s);
+   assert.equal(curEv.choices.length,1);choose(0);drain();assert.equal(dossier.status,'open');
+   assert.match(princeSpouseParentagePanel(prince),/亲缘待核.*需有在任指挥使/s);
+   setupJyw();assert.match(viewJinyiwei(),/请锦衣卫查证/);
+   A.princeSpousePaternity(prince.id,dossier.key);assert.equal(curEv.title,'锦衣卫密查 · 王府亲缘');
+   var treasury=E().treasury;E().treasury=0;choose(0);assert.equal(dossier.status,'open');E().treasury=treasury;
+   choose(0);drain();S.turn=dossier.due;A.princeSpousePaternity(prince.id,dossier.key);
+   assert.match(curEv.text,/生父为承安.*走到门口又折回来.*她这些日子的难堪/s);
+   choose(0);drain();assert.equal(p.trust,43);assert.equal(dossier.status,'complete');
+   assert.equal(p.princePrivateVisit.paternityConfirmed,undefined);
+   assert.match(prince.story.at(-1).t,/各过各的日子/);assert.match(p.story.at(-1).t,/专心过自己的日子/);
+   A.princeSpousePaternity(prince.id,dossier.key);assert.equal(modalOpen,false);`);
+});
+
+test('saying no, an old pregnancy, and an unlucky private meeting do not create a new pregnancy',()=>{
+ const game=princeParentageWorld(60,'审慎','沉静');
+ game.run(`p.willing=false;A.princeSpouseVisit(prince.id);choose(0);drain();
+   assert.equal(prince.household.pregnancies.length,0);assert.equal(p.princePrivateVisit.lastMeeting,undefined);
+   S.turn++;p.willing=true;A.princeSpouseVisit(prince.id);`);
+ game.force(.03);
+ game.run(`choose(0);drain();assert.equal(prince.household.pregnancies.length,0);
+   S.turn+=3;assert.equal(startHouseholdPregnancy(prince,p),true);S.turn+=3;
+   A.princeSpouseVisit(prince.id);choose(0);drain();
+   assert.equal(prince.household.pregnancies.length,1);assert.equal(princeSpouseParentageCases(prince).length,0);`);
+});
+
 test('a prince moves from a capital residence to a named fief and later returns',()=>{
   const game=princeWorld();game.run(`openPrinceEstate(prince);var id=prince.id;A.go('prince-estate',id);
     assert.match(viewPrinceEstate(),/睿亲王府/);assert.match(viewPrinceEstate(),/到王府探望/);
