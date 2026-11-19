@@ -13,7 +13,17 @@ function queueOutsidePregnancyNotice(c,mother,preg){
   preg.privateNoticeQueued=true;
   const commander=jinyiweiCommanderReady()?jinyiwei().commander:null;
   const title=commander?'锦衣卫密报 · 宫外孕讯':'宫外来信 · 有孕';
-  const text=`${mother.name}已有身孕。她此前曾与你私下相见，受孕时日仍需核对，不能仅凭这封消息断定孩子的生父。她暂在原家养护。`;
+  let subject=mother.name;
+  if(journalContentVersion()>=101&&c){
+    // The household may have several sisters in the palace; prefer the one
+    // recorded when this particular private meeting took place.
+    const recorded=byId(preg.reportingHost??mother.marriedSisterAffair?.host);
+    const host=recorded&&paternalFamily(c).some(person=>person.id===recorded.id)?recorded:c;
+    const kin=Number.isFinite(mother.born)?natalLabel(host,mother):'姐妹';
+    const status=!host.alive?'已故':host.gone?'已离宫的':host.cold?'冷宫中的':'';
+    subject=`${status}${cName(host)}（${fullName(host)}）的${kin}${mother.name}`;
+  }
+  const text=`${subject}已有身孕。她此前曾与你私下相见，受孕时日仍需核对，不能仅凭这封消息断定孩子的生父。她暂在原家养护。`;
   log(`【宫外孕讯】${text}`,1);
   if(commander)story(commander,`【宫外孕讯】${text}`);
   pushEv({title,por:commander||natalPortrait(mother),text,choices:[{t:'记下消息，先让她安心养护'}]});

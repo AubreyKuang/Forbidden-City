@@ -47,6 +47,27 @@ function sisterMarriageReflection(p,meetings){
   return meetings===1?`她与${husband}照常用了晚饭，说起白日的琐事，唯独略过与你相见的那一段。`:
     `听${husband}说起下个月的家事，她应了一声。心里有话压着，却始终没能开口。`;
 }
+// Knowledge belongs to a particular consort and sister, and survives changes of marriage.
+function sisterAffairKnowledge(c,p){
+  return journalContentVersion()>=101?c.sisterAffairKnowledge?.[p.id]:null;
+}
+function discoverSisterAffair(c,p,affair){
+  if(journalContentVersion()<101||affair.meetings<2)return;
+  for(const witness of paternalFamily(c).filter(person=>person.id!==p.id&&S.consorts.includes(person)&&inPalace(person))){
+    if(sisterAffairKnowledge(witness,p)||!chance(.08))continue;
+    const relation=relGet(witness,p);
+    const reaction=pickW([{v:'afraid',w:3},{v:'sad',w:relation<0?4:3},{v:'hopeful',w:relation>=30?4:2}]).v;
+    const record=(witness.sisterAffairKnowledge||={})[p.id]={reaction,sister:p.id,name:p.name,turn:S.turn};
+    const words={afraid:`她察觉你常去见已出嫁的${p.name}，心惊胆战，只怕消息传开，姐妹与两家都不得安宁。`,
+      sad:`她察觉你常去见已出嫁的${p.name}，独自伤心落泪，既难过又不知如何面对姐妹。`,
+      hopeful:`她察觉你常去见已出嫁的${p.name}，心里隐隐欢喜，盼着若姐妹自己愿意，有朝一日能入宫相伴。`};
+    story(witness,`【察觉姐妹私事】${words[reaction]}`);
+    pushEv({title:'姐妹私事 · 她已知晓',por:witness,valid:()=>inPalace(witness)&&sisterAffairKnowledge(witness,p)===record,
+      text:`${fullName(witness)}知道了你与她已出嫁的${natalLabel(witness,p)}${p.name}屡次私会。${words[reaction]}`,
+      choices:[{t:'听她说完'}]});
+  }
+}
+
 function marriedSisterEncounter(c,p){
   if(!marriedSisterAvailable(c,p)||p.marriedSisterAffair?.coerced||p.marriedSisterAffair?.lastMeeting===S.turn)return null;
   p.spouse ||= initialNatalSpouse(p,natalAge(p));
@@ -77,6 +98,7 @@ function marriedSisterEncounter(c,p){
         `【私下相会】她自己答应在${inPalaceNow?c.palace:'住处'}与你见面。${answer}`);
     }
     if(natalPregnancyReady(p)&&chance(.28))beginNatalPregnancy(c,p,{unconfirmed:true});
+    if(!coerced)discoverSisterAffair(c,p,affair);
     if(!coerced&&affair.meetings>=3&&!p.natalPregnancy&&S.turn-(affair.lastRequest??-99)>=12)pushEv(marriedSisterAdmissionRequest(c,p,affair));
     return coerced?'她的拒绝没有得到尊重。离开后，她请家人此后替她挡下私召。\n§精力−1 · 威望−8 · 民心−3':
       direct?`今夜，${p.name}自愿在${inPalaceNow?c.palace+'偏厅':'住处'}承宠。${inPalaceNow?'过后她理好衣裳，回到姐妹处，仍按原定日子归家。':'天明前她亲自送你出门，转身回到原来的家中。'}\n§精力−1`:
@@ -159,10 +181,12 @@ function marriedSisterAdmissionReview(c,p,valid){
   const royalWarning=d?.alive?dowagerPerson(d):queen;
   const voice=d?.alive?'太后':'皇后';
   const rumorCost=maritalFather(p,null)?4:2;
+  const known=sisterAffairKnowledge(c,p);
+  const reactionText=known?.reaction==='hopeful'?`她早已知道此事，曾盼姐妹能在一处，却仍要问清${p.name}是否真心愿意。`:known?.reaction==='sad'?`她早已知道此事，仍为姐妹与皇帝的往来伤心，如今听说入宫，更是低头落泪。`:known?.reaction==='afraid'?`她早已知道此事，听说要接姐妹入宫，更担心消息传开后两家如何自处。`:null;
   const objection=royalWarning?`${voice}听见要接臣民之妻入宫，亲自来劝你收回成命。`:'礼部请你收回成命，朝中已有议论。';
   return {title:d?.alive?'慈宁宫劝止':'请收回成命',por:royalWarning||natalPortrait(p),cast:[c,natalPortrait(p)].filter(person=>person!==royalWarning),valid,danger:true,
-    onShow:()=>{if(shown)return;shown=true;chg({prestige:-rumorCost});story(c,`【惊闻姐妹求入宫】她听见${p.name}竟有意入宫，惊讶之后再三问这话究竟有没有说错。`);if(d?.alive)dowagerRecord(d,'劝止召纳',`得知皇帝有意接已出嫁的${p.name}入宫，出言劝止。`);},
-    text:`${objection}\n${fullName(c)}听到消息，讶然道：“她的婚事已有归处，怎会突然走到这一步？”\n若执意册封，将解除原有婚姻，朝中与后宫还会有更大的反响。\n§消息传开 · 威望−${rumorCost}`,choices:[
+    onShow:()=>{if(shown)return;shown=true;chg({prestige:-rumorCost});story(c,reactionText?`【姐妹求入宫】${reactionText}`:`【惊闻姐妹求入宫】她听见${p.name}竟有意入宫，惊讶之后再三问这话究竟有没有说错。`);if(d?.alive)dowagerRecord(d,'劝止召纳',`得知皇帝有意接已出嫁的${p.name}入宫，出言劝止。`);},
+    text:`${objection}\n${reactionText?`${fullName(c)}听到消息。${reactionText}`:`${fullName(c)}听到消息，讶然道：“她的婚事已有归处，怎会突然走到这一步？”`}\n若执意册封，将解除原有婚姻，朝中与后宫还会有更大的反响。\n§消息传开 · 威望−${rumorCost}`,choices:[
       {t:'听劝，收回成命',f:()=>{if(!valid())return null;p.mood=clamp((p.mood??65)-10);story(p,'【入宫之议作罢】劝谏之后，先前的口头承诺收回。她回到家中，许久未再提起这件事。');return '你收回了先前的口头应允。她回到家里，姐妹间却多了一重难以开口的话。';}},
       {t:'执意解除旧婚，册为常在',cond:()=>valid()&&rankCount(2)<RANK_CAP[2],why:'常在位分已满',f:()=>{
         if(!valid()||rankCount(2)>=RANK_CAP[2])return null;
@@ -186,8 +210,11 @@ function admitMarriedSister(c,p,dowagerOpposed){
   }
   const g=makeNatalConsort(c,p);
   addConsort(g,2,'奉旨解除原婚后入宫');p.story=g.story.map(entry=>({...entry}));
-  cchg(c,{mood:-12,aff:-6});relAdd(c,g,-26);
-  story(c,`【姐妹入宫】你执意册封${p.name}，她震惊之余，也忧虑两家如何相见。`);
+  const known=sisterAffairKnowledge(c,p);
+  if(known?.reaction==='hopeful'){cchg(c,{mood:5,aff:2});relAdd(c,g,4);story(c,`【姐妹入宫】${p.name}终于入宫，她为姐妹能相伴而欢喜，也牵挂她离开旧家的处境。`);}
+  else if(known?.reaction==='sad'){cchg(c,{mood:-12,aff:-6});relAdd(c,g,-26);story(c,`【姐妹入宫】${p.name}入宫，她想起早已知道的往事，仍觉伤心，一时不知如何面对姐妹。`);}
+  else if(known?.reaction==='afraid'){cchg(c,{mood:-12,aff:-6});relAdd(c,g,-10);story(c,`【姐妹入宫】${p.name}入宫，她更担心外界议论，只盼姐妹与两家平安。`);}
+  else {cchg(c,{mood:-12,aff:-6});relAdd(c,g,-26);story(c,`【姐妹入宫】你执意册封${p.name}，她震惊之余，也忧虑两家如何相见。`);}
   for(const rival of harem().filter(o=>o!==g&&o!==c&&o.rank>=6)){
     relAdd(rival,g,rival.rank===8?-52:-38);
     story(rival,`【对新常在的非议】她得知${p.name}原有婚姻，尤其不满皇帝在劝阻后仍强行册封。`);

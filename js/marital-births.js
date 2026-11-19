@@ -30,6 +30,7 @@ function beginNatalPregnancy(c,p,{unconfirmed=false}={}){
     sex:chance(.5)?'m':'f',seed:ri(1,2e9),difficult:chance(.015)};
   if(unconfirmed){
     p.natalPregnancy.unconfirmed=true;
+    if(journalContentVersion()>=101)p.natalPregnancy.reportingHost=c.id;
     if(outsideParentageActive())Object.assign(p.natalPregnancy,{imperialParentage:chance(.55),conceptionGen:S.gen,conceptionEmperor:E().sur+E().name});
     (p.lifeCourse||={}).last=S.turn;return true;
   }

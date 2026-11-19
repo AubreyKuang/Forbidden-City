@@ -40,6 +40,14 @@ function consortChatTopics(c){
     if(memory)return {key:'relations',stage:'',text:memory,narrative:true};
     return {key:'relations',stage:`她说起${fullName(o)}。`,text:relGet(c,o)<0?'我与她还不投契，有些事想法不同。':hobby?`下回得了闲，臣妾想约她${CONSORT_HOBBIES[hobby].activity}。`:'与她说话，臣妾觉得自在。'};
   });
+  if(journalContentVersion()>=101)for(const known of Object.values(c.sisterAffairKnowledge||{})){
+    const relative=c.house?.relatives?.find(p=>p.id===known.sister);
+    const admitted=!!relative?.consortId;
+    const words={afraid:`那件事臣妾一直担心，只怕外头议论，牵连${known.name}与家里。`,
+      sad:`想到陛下与${known.name}的事，臣妾心里仍难过，也不知道该怎样面对她。`,
+      hopeful:admitted?`${known.name}如今能在宫中相伴，臣妾心里欢喜，也盼她过得安稳。`:`臣妾盼${known.name}过得好；若她自己愿意，将来姐妹能在一处便好了。`};
+    if(words[known.reaction])add('sister-affair-'+known.sister,()=>({key:'sister-affair-'+known.sister,stage:`她又提起${known.name}。`,text:words[known.reaction]}));
+  }
   const opening=consortVoicePhase(c)==='first',wish=WISHES[c.wish];
   if(!opening&&c.aff>=50&&wish&&!c.wishDone)add('wish',()=>{
     const known=c.wishKnown;c.wishKnown=true;
