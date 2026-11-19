@@ -7,7 +7,7 @@ test('a quiet child asks on an eligible birthday, with a higher chance for princ
 });
 test('permission follows the caregiver and ends on adulthood, departure or changed caregiver',()=>{
  for(const [sex,limit] of [['f',15],['m',16]]){const b=game(sex);b.run(`Math.random=()=>0;var ev=childMotherResidenceRequests()[0];ev.choices[0].f();assert.equal(child.motherResidence.choice,'stay');assert.equal(youngChildMother(child),mother);assert.match(childResidence(child),/同住/);assert.ok(nurseryChildren(mother.palace).includes(child));assert.ok(schoolChildren().includes(child));
- mother.palace='景仁宫';assert.match(childResidence(child),/景仁宫/);child.born=S.turn-(${limit}*12-1);assert.equal(youngChildMother(child),mother);child.born=S.turn-${limit}*12;assert.equal(youngChildMother(child),null);
+ mother.palace='景仁宫';assert.match(childResidence(child),/景仁宫/);mother.cold=true;assert.match(childResidence(child),/未与母亲同住/);mother.cold=false;child.born=S.turn-(${limit}*12-1);assert.equal(youngChildMother(child),mother);child.born=S.turn-${limit}*12;assert.equal(youngChildMother(child),null);
  child.born=S.turn-7*12;child.away=true;assert.equal(youngChildMother(child),null);child.away=false;var foster=harem().find(c=>c!==mother);child.foster=foster.id;assert.equal(youngChildMother(child),null);`);}
 });
 test('refusal assigns the shared residence and does not invent roommates',()=>{
@@ -18,7 +18,7 @@ test('older children may ask to return and foster mothers are the actual caregiv
  const b=game('f',10);b.run(`var foster=harem().find(c=>c!==mother);child.foster=foster.id;Math.random=()=>0;var ev=childMotherResidenceRequests()[0];assert.match(ev.text,/已不再随母同住/);ev.choices[0].f();assert.equal(youngChildMother(child),foster);assert.match(childResidence(child),/养母/);`);
 });
 test('a previous version cannot generate requests or alter the six-year-old residence',()=>{
- const b=game();b.run(`var old=Object.getOwnPropertyDescriptor(PalaceActions,'contentVersion');Object.defineProperty(PalaceActions,'contentVersion',{get:()=>103,configurable:true});Math.random=()=>0;assert.equal(childMotherResidenceRequests().length,0);child.motherResidence={choice:'stay',caregiver:mother.id};assert.equal(youngChildMother(child),null);assert.equal(childResidence(child),'');Object.defineProperty(PalaceActions,'contentVersion',old);`);
+ const b=game();b.run(`var old=Object.getOwnPropertyDescriptor(PalaceActions,'contentVersion');Object.defineProperty(PalaceActions,'contentVersion',{get:()=>104,configurable:true});Math.random=()=>0;assert.equal(childMotherResidenceRequests().length,0);child.motherResidence={choice:'stay',caregiver:mother.id};assert.equal(youngChildMother(child),null);assert.equal(childResidence(child),'');Object.defineProperty(PalaceActions,'contentVersion',old);`);
 });
 test('monthly request and its selected arrangement survive pending-scene reload',()=>{
  let b=game('f',6);b.run(`child.born++;E().health=100;E().people=90;E().treasury=5000;var seed=2;Math.random=()=>((seed=seed*16807%2147483647)/2147483647);PalaceActions.reset();A.endMonth();
@@ -30,7 +30,7 @@ test('monthly request and its selected arrangement survive pending-scene reload'
 });
 test('living maternal relatives may learn and discuss the actual decision with reactions for sons and daughters',()=>{
  for(const sex of ['f','m']){const b=game(sex);b.run(`var house=houseOf(mother),father=house.father;house.brother={id:'uncle-test',name:'外家兄长',alive:true,story:[]};Math.random=()=>0;var ev=childMotherResidenceRequests()[0];ev.choices[1].f();
- for(const [person,role] of [[father,'father'],[house.brother,'brother']]){assert.equal(person.motherResidenceNews.at(-1).child,child.id);assert.match(person.story.at(-1).t,/未允/);var talk=officialConversation({c:mother,p:person,role,h:house},'family');assert.match(talk,/${sex==='m'?'振作':'怜爱'}/);assert.match(talk,/念安/);}`);}
+ for(const [person,role] of [[father,'father'],[house.brother,'brother']]){assert.equal(person.motherResidenceNews.at(-1).child,child.id);assert.match(person.story.at(-1).t,/未允/);var talk=officialConversation({c:mother,p:person,role,h:house},'family');assert.match(talk,/${sex==='m'?'振作':'怜爱'}/);assert.match(talk,/念安/);child.alive=false;assert.match(officialConversation({c:mother,p:person,role,h:house},'family'),/难过/);child.alive=true;}`);}
 });
 test('only living relatives who actually hear the news can discuss it',()=>{
  const b=game();b.run(`var h=houseOf(mother);h.father.alive=false;h.brother={id:'uncle-test',name:'外家兄长',alive:true,story:[]};var count=0;Math.random=()=>count++===0?0:.99;var ev=childMotherResidenceRequests()[0];ev.choices[0].f();assert.equal(h.father.motherResidenceNews,undefined);assert.equal(h.brother.motherResidenceNews,undefined);assert.doesNotMatch(officialConversation({c:mother,p:h.brother,role:'brother',h},'family'),/念安/);`);

@@ -2,7 +2,7 @@
    Only newly generated people are assigned it; loading never rewrites a life. */
 const SOLITARY_PATHS={letters:'清雅才情',dao:'清心问道',both:'诗道兼修'};
 function isSolitary(c){return !!(!c?.sex&&SOLITARY_PATHS[c?.solitary?.path]);}
-function socialPair(a,b){return !isSolitary(a)&&!isSolitary(b);}
+function socialPair(a,b){return (!isSolitary(a)&&!isSolitary(b))||whiteSpringFriends(a,b);}
 function solitaryDao(c){return isSolitary(c)&&['dao','both'].includes(c.solitary.path);}
 function initSolitary(c){
   if(c.solitary!==undefined||c.age<16||c.fam.t==='宫女'||!['才女','好学','聪慧','淡泊','沉静','持重','体弱'].includes(c.trait))return;

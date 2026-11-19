@@ -1,7 +1,7 @@
 /* Young children live with their current caregiver; visits reveal domestic scenes. */
 function childResidenceAdultAge(k){return k.sex==='f'?15:16;}
 function approvedMotherResidence(k){
-  return journalContentVersion()>=104&&k?.motherResidence?.choice==='stay'&&
+  return journalContentVersion()>=105&&k?.motherResidence?.choice==='stay'&&
     k.motherResidence.caregiver===(k.foster||k.mom)&&kidAge(k)<childResidenceAdultAge(k);
 }
 function youngChildMother(k){
@@ -18,7 +18,8 @@ function childResidence(k){
   const mother=youngChildMother(k);
   if(mother)return `随${k.foster?'养母':'生母'}${cName(mother)}同住 · ${mother.palace}`;
   if(kidAge(k)<6)return '暂由乳母照料，未随母同住';
-  if(kidAge(k)>=childResidenceAdultAge(k)||journalContentVersion()<104)return '';
+  if(approvedMotherResidence(k))return '暂未与母亲同住 · 宫人照料';
+  if(kidAge(k)>=childResidenceAdultAge(k)||journalContentVersion()<105)return '';
   const sharing=k.motherResidence?.choice==='shared'||sharedChildResidents(k).some(o=>o.motherResidence?.choice==='shared');
   if(!sharing)return '';
   const place=k.sex==='f'?'公主居所':'皇子居所',peers=sharedChildResidents(k);
@@ -37,7 +38,7 @@ function shareMotherResidenceNews(k,stay){
   }
 }
 function childMotherResidenceRequests(){
-  if(journalContentVersion()<104||S.over)return [];
+  if(journalContentVersion()<105||S.over)return [];
   const events=[];
   for(const k of kidsAlive()){
     const age=kidAge(k),mother=byId(k.foster||k.mom);

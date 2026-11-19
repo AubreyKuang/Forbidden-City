@@ -147,7 +147,8 @@ function viewOfficial(){
 function officialConversation(e,topic){
   const {c,p,role,h}=e,kin=p.parentRelativeId?'姨母':role==='father'?'女儿':officialKinLabel(h,role)==='弟弟'?'姐姐':'妹妹';
   if(topic==='family'){
-    const childNews=journalContentVersion()>=104?p.motherResidenceNews?.at(-1):null;
+    const childNews=journalContentVersion()>=105?p.motherResidenceNews?.at(-1):null;
+    if(childNews&&kidById(childNews.child)?.alive===false)return `“${childNews.name}从前还想同母亲住在一处。如今想起那时的事，臣心中仍难过。”`;
     if(childNews)return childNews.sex==='m'?`“听说${childNews.name}曾求与母亲同住，${childNews.stay?'陛下已经应允':'陛下安排他迁往皇子居所'}。臣盼他慢慢振作，也愿给他时日学会独立。”`:`“听说${childNews.name}曾求与母亲同住，${childNews.stay?'陛下已经应允':'陛下安排她迁往公主居所'}。她依恋母亲的样子叫人怜爱，臣也盼她安心长大。”`;
     const relatives=paternalFamily(c).filter(x=>S.consorts.includes(x));
     if(relatives.some(x=>!x.alive))return '“家中还留着她旧时的书信。有些话，当年只当来日方长，如今再无机会问了。”';

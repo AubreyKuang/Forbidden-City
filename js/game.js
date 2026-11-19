@@ -290,6 +290,7 @@ function addConsort(c,rank,why,{major=false,recordAdmission=true}={}){
   if(journalContentVersion()>=81&&!recordAdmission&&c.natalOrigin?.via==='selection')story(c,'殿选留牌，依娘家原册核过姓名与亲缘。');
   if(journalContentVersion()<81||recordAdmission)familyAdmissionReactions(c);
   else if(journalContentVersion()>=82)prepareSelectionSisterFeelings(c);
+  if(admiresWhiteSpring(c)||whiteSpringRoyal(c))meetWhiteSpringMerchants();
 }
 
 /* ============ 弹窗与事件队列 ============ */
