@@ -134,21 +134,83 @@ const HAREM=[
    {t:'命人八百里快马送青梅',f:()=>{story(c,'孕中想吃家乡的青梅，陛下命人快马送来。');return fx(chg({treasury:-10,people:-1}),cchg(c,{mood:18,aff:10}))}},
    {t:'让御膳房想想办法',f:()=>fx(cchg(c,{mood:6}))}]}},
 ];
-function guardTrystEvent(){
-  if(journalContentVersion()<84||mourningActive()||S.turn-(S.flags.lastGuardTryst??0)<18)return null;
-  const eligible=harem().filter(c=>c.age>=18&&!c.maid&&randomPalaceAffairsAllowed(c)&&palaceAffairRankAllowed(c)&&!c.bond&&!c.preg&&c.aff<50&&c.favor<40&&!c.guardTryst&&
-    !['持重','痴情'].includes(c.trait)&&!isSolitary(c));
-  if(!eligible.length)return null;
-  // One opportunity per palace and month, including if several ambient events are requested.
-  const key=E().seed+':guard-tryst:'+S.turn,c=eligible[voiceHash(key+':who')%eligible.length];
-  if(voiceHash(key+':roll')%100>=(restlessDisposition(c)?6:2))return null;
-  const record=(order,delta)=>{c.guardTryst={...c.guardTryst,turn:S.turn,order};story(c,'【宫门私约】与值夜侍卫私下相恋。'+order);log(fullName(c)+'与侍卫的私约被发现。'+order);return order+fx(cchg(c,{mood:delta}));};
+function gateTrystEligible(c){
+  return inPalace(c)&&c.age>=18&&!c.maid&&randomPalaceAffairsAllowed(c)&&palaceAffairRankAllowed(c)&&!c.bond&&!c.preg&&c.aff<50&&c.favor<40&&
+    !['持重','痴情'].includes(c.trait)&&!isSolitary(c);
+}
+function restlessTrystBonus(c){
+  if(journalContentVersion()<118||c?.age<18||!restlessDisposition(c))return 0;
+  const months=c.restlessCourt?.months||0;
+  return .18*months/(12+months);
+}
+function restlessAffairCaught(c){
+  if(journalContentVersion()<118||!restlessDisposition(c)||c.age<18)return;
+  const life=c.restlessCourt||={};
+  life.months=0;life.last=S.turn;
+}
+function restlessTrystTick(){
+  if(journalContentVersion()<118||S.over||mourningActive())return;
+  for(const c of harem()){
+    if(c.age<18||!restlessDisposition(c))continue;
+    const life=c.restlessCourt||={};
+    if(life.last===S.turn)continue;
+    life.last=S.turn;life.months=(life.months||0)+1;
+    const tryst=life.tryst;
+    if(tryst?.witnessed||!gateTrystEligible(c))continue;
+    const key=E().seed+':private-gate:'+S.gen+':'+c.id+':'+S.turn;
+    const roll=kind=>voiceHash(key+':'+kind)/0x100000000;
+    if(!tryst&&life.months>=6&&!life.keptLetter){
+      life.keptLetter=true;
+      story(c,'【未寄的笺】她抄完一首词，在末尾空了半行。提笔几回，那句想请人同看月色的话，终究只夹进了自己的书里。');
+    }
+    const rate=(tryst ? .10 : .03)+restlessTrystBonus(c);
+    if(roll('invitation')>=rate)continue;
+    if(!tryst){
+      const name=SUR[voiceHash(key+':surname')%SUR.length]+BOYC[voiceHash(key+':given')%BOYC.length];
+      life.tryst={guard:name,first:dateStr(),count:0,turn:S.turn};
+    }
+    const visit=life.tryst;visit.count++;visit.last=S.turn;
+    if(roll('witness')<Math.min(.4,.10+(visit.count-1)*.05)){
+      visit.witnessed=true;restlessAffairCaught(c);
+    }
+  }
+}
+function pendingRestlessTrysts(){
+  if(journalContentVersion()<118||mourningActive())return [];
+  return harem().filter(c=>c.restlessCourt?.tryst?.witnessed&&!c.restlessCourt.tryst.affairReported)
+    .map(c=>guardTrystEvent(c));
+}
+function guardTrystEvent(witnessedConsort){
+  let c=witnessedConsort;
+  if(!c){
+    if(journalContentVersion()<84||mourningActive()||S.turn-(S.flags.lastGuardTryst??0)<18)return null;
+    const eligible=harem().filter(c=>gateTrystEligible(c)&&!c.guardTryst&&
+      !(journalContentVersion()>=118&&c.restlessCourt?.last===S.turn));
+    if(!eligible.length)return null;
+    const key=E().seed+':guard-tryst:'+S.turn;
+    c=eligible[voiceHash(key+':who')%eligible.length];
+    if(voiceHash(key+':roll')%100>=(restlessDisposition(c)?6:2))return null;
+  }
+  const secret=witnessedConsort?.restlessCourt?.tryst;
+  if(witnessedConsort&&(!secret?.witnessed||secret.affairReported))return null;
+  const guard=secret?'侍卫'+secret.guard:'值夜侍卫';
+  const record=(order,delta)=>{
+    c.guardTryst={...c.guardTryst,turn:S.turn,order};
+    if(secret){
+      delete c.restlessCourt.tryst;
+      story(c,'【宫门私约】'+secret.first+'初次与'+guard+'相约，至今共赴约'+cnNum(secret.count)+'次。'+order);
+    }else story(c,'【宫门私约】与值夜侍卫私下相恋。'+order);
+    log(fullName(c)+'与侍卫的私约被发现。'+order);
+    return order+fx(cchg(c,{mood:delta}));
+  };
   const report=journalContentVersion()>=103;
-  const text=report?`值房送来昨夜换班的门簿。随侍亲见${fullName(c)}赴约，她也交出了与值夜侍卫往来的短信：“是我约他来的。”当夜守门人已在证词上画押。`:
+  const text=secret?(secret.count===1?
+    `值夜将尽，${guard}仍等在角门。守门人亲眼看见${fullName(c)}把一页小笺递还给他。问到御前，她答：“是我先约他的。头一回见，就让人瞧见了。”`:
+    `值房把今夜的门簿与旧笺放在一起。${fullName(c)}认出头一页是${secret.first}写给${guard}的：“那回他捎来一枝桂花，我还同他说，下回别来了。”她停了停：“可第二封是我自己写的。”两人供述前后共赴约${cnNum(secret.count)}次，直到今夜才被撞见。`):report?`值房送来昨夜换班的门簿。随侍亲见${fullName(c)}赴约，她也交出了与值夜侍卫往来的短信：“是我约他来的。”当夜守门人已在证词上画押。`:
     `巡夜内侍禀报，昨夜换值之后，${cName(c)}还在廊下等那名侍卫。你召她问话，她从袖里取出两人往来的短信：“是我约他来的。他也待我有情。”`;
-  const visit={turn:S.turn};
-  return {title:report?affairReportTitle()+' · 宫门私约':'宫门私约',por:report?affairDutyOfficer():c,cast:report?[c]:undefined,present:[c],valid:()=>inPalace(c)&&(!c.guardTryst||c.guardTryst===visit),
-    onShow:report?()=>{c.guardTryst=visit;fileAffairReport(visit,'gate-tryst:'+S.gen+':'+c.id,text);}:undefined,
+  const visit=secret||{turn:S.turn};
+  return {title:report?affairReportTitle()+' · 宫门私约':'宫门私约',por:report?affairDutyOfficer():c,cast:report?[c]:undefined,present:[c],valid:()=>inPalace(c)&&(secret?c.restlessCourt?.tryst===visit:!c.guardTryst||c.guardTryst===visit),
+    onShow:report?()=>{c.guardTryst=visit;fileAffairReport(visit,'gate-tryst:'+S.gen+':'+c.id+(secret?':'+secret.turn:''),text,c);}:undefined,
     onQueue:()=>{S.flags.lastGuardTryst=S.turn;},
     text,
     choices:[{t:'将侍卫调离内廷',f:()=>record('侍卫奉调离开内廷，两人就此别过。',-8)},

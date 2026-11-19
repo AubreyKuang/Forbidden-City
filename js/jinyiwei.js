@@ -245,8 +245,16 @@ function guardProtectionTick(){
  bond.last=S.turn;bond.months++;
  if(bond.stage===2&&!randomPalaceAffairsAllowed(c))bond.stage=1;
  if(bond.months===6){bond.stage=1;story(c,`【守宫旧事】${guard.name}守了许久，记得她出门的习惯与院中的灯何时熄。`);}
- if(bond.months===18&&randomPalaceAffairsAllowed(c)&&c.aff<70&&!c.bond&&chance(clamp(.25+guard.loyalty/400-c.aff/400,.1,.5))){bond.stage=2;story(c,`【守宫旧事】${guard.name}为她挡过一场雨，两人的心意渐渐有了变化。`);}
- if(bond.months===30&&bond.stage===2){bond.stage=3;story(c,`【守宫旧事】她与${guard.name}私下相见，彼此都明白事情不能轻易让人知道。`);}
+ const laterMeeting=bond.months>18&&bond.stage===1&&journalContentVersion()>=118&&restlessDisposition(c);
+ if((bond.months===18||laterMeeting)&&randomPalaceAffairsAllowed(c)&&c.aff<70&&!c.bond){
+   const base=laterMeeting ? .03 : clamp(.25+guard.loyalty/400-c.aff/400,.1,.5);
+   if(chance(base+restlessTrystBonus(c))){
+     bond.stage=2;
+     if(journalContentVersion()>=118)bond.closeSince=bond.months;
+     story(c,`【守宫旧事】${guard.name}为她挡过一场雨，两人的心意渐渐有了变化。`);
+   }
+ }
+ if(bond.months===(bond.closeSince??18)+12&&bond.stage===2){bond.stage=3;story(c,`【守宫旧事】她与${guard.name}私下相见，彼此都明白事情不能轻易让人知道。`);}
  if(bond.stage>=2){
    guard.loyalty=clamp(guard.loyalty+(c.mood>=65?.2:c.mood<35?-.3:0));
    c.mood=clamp(c.mood+(guard.loyalty>=65?.2:guard.loyalty<35?-.3:0));
@@ -277,7 +285,7 @@ function guardAffairEvent(){
  const autoReport=journalContentVersion()>=101;
  const reportText=`守门人与换班侍卫分别回话：${guard.name}卸值后，又折回去私会${fullName(c)}。值房已核过交班时辰，两人也承认了私下的情意。请陛下裁处。`;
  return {title:autoReport?affairReportTitle()+' · 守宫旧事':'守宫旧事 · 密报',por:autoReport?affairDutyOfficer():c,cast:autoReport?[c]:undefined,present:[c],valid,
-  onShow:autoReport?()=>fileAffairReport(bond,'guard-affair:'+S.gen+':'+c.id+':'+bond.started,reportText):undefined,
+  onShow:autoReport?()=>fileAffairReport(bond,'guard-affair:'+S.gen+':'+c.id+':'+bond.started,reportText,c):undefined,
   text:autoReport?reportText:`守宫的${guard.name}与${cName(c)}往来日久，从彼此照应到暗生情意，如今有人发现了两人的私下相见。消息尚未传开。\n保密值 ${rd(bond.secrecy)}/100；数值越低，越容易被人发现。${guard.name}仍是你的情报人员，曾受命查访宫中案件。`,choices:[
   {t:'压下消息，保全二人',f:()=>resolve('protect')},
   {t:'调离侍卫，各自安置',f:()=>resolve('transfer')},

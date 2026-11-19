@@ -17,7 +17,7 @@ test('an adult marked married in the old household can open the visible private 
  const w=base();w.ctx.assert=assert;
  w.run(`sister.married=true;sister.willing=true;sister.visit={host:other.id,from:S.turn,until:S.turn+2};
    UI.sel=other.id+':'+sister.id;var panel=viewNatalRelative();
-   assert.ok(panel.includes('<h3>私下求见</h3>'));assert.match(panel,/在宫中私下求见/);assert.equal(sister.spouse,undefined);
+   assert.match(panel,/赐书问候[^]*?<\\/button><button [^>]*A.marriedSisterVisit[^>]*>在宫中私下求见/);assert.ok(panel.indexOf('在宫中私下求见')<panel.indexOf('人物纪事'));assert.equal(sister.spouse,undefined);
    PalaceActions.reset();A.marriedSisterVisit(other.id,sister.id);
    assert.match(curEv.title,/私下求见/);assert.match(curEv.text,/偏厅/);assert.equal(sister.spouse.id,'spouse:'+sister.id);`);
  const reloaded=boot(17,w.storage);reloaded.ctx.assert=assert;

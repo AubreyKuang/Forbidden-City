@@ -57,3 +57,34 @@ test('a marked ordinary queen can have both prince and night guard encounters wh
  var ev=guardTrystEvent();assert.match(ev.title,/锦衣卫密报/);pushEv(ev);assert.equal(lady.guardTryst.affairReported,true);choose(0);drain();assert.ok(lady.guardTryst.order);
  assert.equal(jinyiwei().rareNotices.filter(n=>n.text.includes(fullName(lady))&&n.text.includes('换班')).length,1);`);
 });
+
+function restlessWorld(){
+ const g=boot(231);g.ctx.assert=assert;
+ g.run(`A.start();drain();var c=harem().find(x=>x.rank!==8);Object.assign(c,{age:25,aff:15,favor:10,trait:'活泼',solitary:null});
+ while(!restlessDisposition(c))c.seed++;var traits=c.story.length;
+ var rolls=(seed,turn)=>{const key=seed+':private-gate:'+S.gen+':'+c.id+':'+turn;return ['invitation','witness'].map(k=>voiceHash(key+':'+k)/0x100000000);};
+ var fit=(turn,condition)=>{for(var seed=1;seed<1e5;seed++){if(condition(...rolls(seed,turn))){E().seed=seed;return;}}throw Error('no matching seed');};`);
+ return g;
+}
+test('restless chances build once per eligible month, survive saving and never apply to minors or authored companions',()=>{
+ const g=restlessWorld();g.run(`c.aff=80;for(let i=1;i<=40;i++){S.turn=i;restlessTrystTick();restlessTrystTick();assert.equal(restlessTrystBonus(c),.18*i/(12+i));}assert.equal(c.restlessCourt.tryst,undefined);
+ c.aff=10;S.turn++;fit(S.turn,(r,w)=>r>.04&&r<.14&&w>.4);restlessTrystTick();var secret=c.restlessCourt.tryst;
+ assert.ok(secret);assert.equal(secret.count,1);assert.equal(secret.witnessed,undefined);assert.equal(pendingRestlessTrysts().length,0);
+ assert.ok(!S.log.some(e=>e.t.includes(secret.guard)));assert.ok(!c.story.slice(traits).some(e=>e.t.includes(secret.guard)));
+ save('auto');A.load('auto');c=byId(c.id);assert.equal(c.restlessCourt.tryst.guard,secret.guard);restlessTrystTick();assert.equal(c.restlessCourt.tryst.count,1);
+ S.turn++;fit(S.turn,(r,w)=>r>.15&&r<.22&&w>.5);restlessTrystTick();assert.equal(c.restlessCourt.tryst.count,2);assert.equal(restlessTrystBonus(c),.18*42/54);
+ for(const prop of [{age:17},{fixedStory:'ayimu',age:25},{fixedStory:null,homeLeave:{}}]){
+  Object.assign(c,prop);S.turn++;restlessTrystTick();assert.equal(c.restlessCourt.last,42);
+ }`);
+});
+test('an unseen repeat meeting leads to one dated compulsory report, a reloadable choice and one chronicle entry',()=>{
+ let g=restlessWorld();g.run(`S.turn=23;S.month=2;E().energy=5;c.restlessCourt={months:20,last:22,tryst:{count:1,guard:'程安',first:'永宁二年正月',turn:22,last:22}};
+ fit(24,(r,w)=>r<.18&&w<.14);PalaceActions.reset();A.endMonth();
+ for(let i=0;modalOpen&&!curEv.title.includes('密报 · 宫门私约')&&i<160;i++){if(modalResult)nextEv();else choose(0);}
+ assert.ok(curEv.title.includes('密报 · 宫门私约'));assert.match(curEv.text,/程安/);assert.match(curEv.text,/共赴约二次/);
+ assert.equal(c.restlessCourt.months,0);assert.equal(c.restlessCourt.tryst.affairReported,true);save('auto');`);
+ g=boot(2,g.storage);g.ctx.assert=assert;g.run(`A.load('auto');assert.ok(!PalaceActions.blocked);assert.ok(curEv.title.includes('密报 · 宫门私约'));
+ var c=harem().find(x=>x.restlessCourt?.tryst?.guard==='程安');choose(1);drain();assert.equal(c.restlessCourt.tryst,undefined);
+ assert.equal(c.story.filter(e=>e.t.includes('永宁二年正月初次与侍卫程安')).length,1);assert.equal(pendingRestlessTrysts().length,0);
+ S.turn++;restlessTrystTick();assert.equal(c.restlessCourt.months,1);`);
+});

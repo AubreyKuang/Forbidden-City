@@ -42,3 +42,12 @@ test('verified discipline reduces rank and affects her family and son once',()=>
   assert.equal(c.rank,rank-1);assert.equal(c.fam.p,Math.max(0,power-5));assert.equal(son.sup,47);
   assert.ok(son.story.some(e=>e.t.includes('生母因宫中私情被降位')));assert.equal(guardAffairEvent(),null);`);
 });
+
+test('a restless consort who did not respond in month eighteen can warm to her assigned guard later',()=>{
+ const b=start();b.run(`while(!restlessDisposition(c))c.seed++;c.aff=30;c.restlessCourt={months:24};
+ var bond=guard.protection;bond.stage=1;bond.months=17;S.turn=18;`);
+ b.force(.99);b.run('guardProtectionTick();assert.equal(bond.stage,1);S.turn++;');
+ b.force(.12);b.run(`guardProtectionTick();assert.equal(bond.stage,2);assert.equal(bond.closeSince,19);
+ for(let t=20;t<=30;t++){S.turn=t;guardProtectionTick();}assert.equal(bond.stage,2);
+ S.turn=31;guardProtectionTick();assert.equal(bond.stage,3);pushEv(guardAffairEvent());assert.equal(c.restlessCourt.months,0);`);
+});

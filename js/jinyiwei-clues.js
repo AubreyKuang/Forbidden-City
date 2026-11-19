@@ -141,9 +141,10 @@ function jinyiweiRareAlert(ev){
 // Confirmed relationships are reported independently of patrol rolls and ambient event quotas.
 function affairDutyOfficer(){return jinyiweiCommanderReady()?jinyiwei().commander:null;}
 function affairReportTitle(){return jinyiwei()?'锦衣卫密报':'宫门值房密报';}
-function fileAffairReport(subject,key,text){
+function fileAffairReport(subject,key,text,c){
   if(subject.affairReported)return;
   subject.affairReported=true;
+  if(c)restlessAffairCaught(c);
   if(affairDutyOfficer()){
     recordJinyiweiNotice({key,title:'宫闱私情',text,date:dateStr(),turn:S.turn,urgent:true});
   }else log(`【${affairReportTitle()}】${text}`,1);
@@ -159,7 +160,7 @@ function princeAffairReports(){
       `值房分别问过守门人与当夜随侍，两份口供对得上：${names}曾避开众人，私下幽会。两人的往来已经核实。`;
     const canReview=pair.stage===3&&romancePending(pair);
     reports.push({title:affairReportTitle()+' · 皇子与宫眷',por:affairDutyOfficer(),cast:[consort,prince],text,
-      onShow:()=>fileAffairReport(pair,'affair:'+S.gen+':'+pair.key,text),
+      onShow:()=>fileAffairReport(pair,'affair:'+S.gen+':'+pair.key,text,consort),
       choices:canReview?[{t:'传问两人，御前处置',f:()=>{pushNow(palaceRomanceEvent(pair));return null;}},{t:'收下密报，稍后过问'}]:[{t:'收下密报'}]});
   }
   return reports;

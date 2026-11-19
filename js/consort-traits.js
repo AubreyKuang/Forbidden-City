@@ -27,7 +27,7 @@ function restlessDisposition(p){
  return journalContentVersion()>=84&&p&&Number.isFinite(p.seed)&&randomPalaceAffairsAllowed(p)&&voiceHash(p.seed+':restless')%100<8;
 }
 const CONSORT_DISTINCTIONS=[
- {id:'restless',name:'不安于室',groups:['romance'],priority:120,why:'容易对相投之人动心，私下相会时更可能回应。',test:restlessDisposition},
+ {id:'restless',name:'不安于室',groups:['romance'],priority:120,why:'成年后，久未事发，遇到相投之人会逐月更愿赴约。私会未被撞见，往后也更敢再约。',test:restlessDisposition},
  {id:'grace',name:'沉鱼落雁',groups:['looks'],priority:60,why:'容貌超过90，眉目容色出众。',test:c=>c.looks>90},
  {id:'poet',name:'咏絮之才',groups:['talent'],priority:60,why:'才情达到95，才思尤为出众。',talent:95,art:'letters',test:c=>c.talent>=95},
  {id:'both',name:'才貌双绝',groups:['looks','talent'],priority:100,why:'容貌至少85、才情至少90，兼具才貌。',talent:90,art:'any',test:c=>c.looks>=85&&c.talent>=90},

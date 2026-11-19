@@ -53,15 +53,23 @@ function shareMotherResidenceNews(k,stay){
     (p.story||=[]).push({d:dateStr(),t:`【孩子想随母同住】得知${k.name}向皇帝请求与母亲同住，${outcome}。${feeling}`});
   }
 }
+// A child's birthday answer also stays the same when loading the month before the move.
+function childMotherResidenceRoll(k){
+  return voiceHash('mother-residence:'+k.id+':'+(k.seed??k.born))%100;
+}
 function childMotherResidenceRequests(){
   if(journalContentVersion()<105||S.over)return [];
+  const sixthBirthdayOnly=journalContentVersion()>=118;
   const events=[];
   for(const k of kidsAlive()){
-    const age=kidAge(k),mother=byId(k.foster||k.mom);
+    const age=kidAge(k),mother=byId(k.foster||k.mom),monthsOld=S.turn-k.born;
     if(!childInPalace(k)||k.married||k.pendingName||age<6||age>=childResidenceAdultAge(k)||
-      (S.turn-k.born)%12!==0||k.motherResidence||!inPalace(mother)||!mother.palace||
+      (sixthBirthdayOnly?(monthsOld!==72||k.motherResidenceChecked):monthsOld%12!==0)||k.motherResidence||!inPalace(mother)||!mother.palace||
       !['内敛','审慎'].includes(childDisposition(k))||childTrust(k,mother)<45)continue;
-    if(!chance(k.sex==='f'?.35:.18))continue;
+    if(sixthBirthdayOnly){
+      k.motherResidenceChecked=true;
+      if(childMotherResidenceRoll(k)>=(k.sex==='m'?18:10))continue;
+    }else if(!chance(k.sex==='m'?.18:.35))continue;
     const turn=S.turn,gen=S.gen,caregiver=mother.id,address=childCareAddress(k,mother),place=k.sex==='f'?'公主居所':'皇子居所';
     const valid=()=>S.gen===gen&&S.turn===turn&&childInPalace(k)&&!k.married&&!k.pendingName&&!k.motherResidence&&
       (k.foster||k.mom)===caregiver&&inPalace(mother)&&kidAge(k)<childResidenceAdultAge(k);

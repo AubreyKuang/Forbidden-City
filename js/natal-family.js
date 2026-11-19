@@ -208,12 +208,11 @@ function viewNatalRelative(){
   const e=natalEntry(id,relative);if(!e)return viewFamily();
   const {c,h,p}=e;if(p.consortId){UI.view='consort';UI.sel=p.consortId;return viewConsort();}
   if(p.sex==='m'&&natalAge(p)>=18){UI.view='official';UI.sel=c.id+':relative'+p.id;return viewOfficial();}
-  const age=natalAge(p),living=p.alive,visited=natalInPalace(c,p);
+  const age=natalAge(p),living=p.alive,visited=natalInPalace(c,p),privateVisit=marriedSisterVisitButton(c,p);
   return `${personBackButton('family')}<header class="detail-head person-detail-head">${porImg(natalPortrait(p),224)}<div class="grow"><h2>${esc(p.name)}</h2><p>${esc(fullName(c))}的${natalLabel(c,p)} · ${age}岁 · ${natalStatus(p)}${outsideChildBadge(p)}</p><p>${age<6?'尚在幼年':esc(natalTrait(p))}${age>=15&&p.sex==='f'&&restlessDisposition(p)?' <span class="tag y">不安于室</span>':''}</p></div></header>
-    <div class="acts">${natalVisitReady(c,p)?`<button class="btn" onclick="A.natalVisit(${c.id},${p.id})">准入宫探亲</button>`:''}${familyNominationButton(c,p)}
-    ${living?`<button class="btn" onclick="A.natalLetter(${c.id},${p.id})" ${S.turn-(p.lastLetter??-99)>=3&&E().energy>0?'':'disabled'}>${age<3?'赐衣问安':'赐书问候'}<small>精力−1 · 每三个月一次</small></button>`:''}${visited?`<button class="btn primary" onclick="A.natalMeet(${c.id},${p.id})">探亲相见</button><span>约${p.visit.until-S.turn}个月后归家</span>`:''}</div>
+    <div class="acts natal-relative-actions">${natalVisitReady(c,p)?`<button class="btn" onclick="A.natalVisit(${c.id},${p.id})">准入宫探亲</button>`:''}${familyNominationButton(c,p)}
+    ${living?`<button class="btn" onclick="A.natalLetter(${c.id},${p.id})" ${S.turn-(p.lastLetter??-99)>=3&&E().energy>0?'':'disabled'}>${age<3?'赐衣问安':'赐书问候'}<small>精力−1 · 每三个月一次</small></button>`:''}${privateVisit}${visited?`<button class="btn primary" onclick="A.natalMeet(${c.id},${p.id})">探亲相见</button><span>约${p.visit.until-S.turn}个月后归家</span>`:''}</div>
     ${detailSection('人物纪事',detailStory(p))}
-    ${detailSection('私下求见',marriedSisterVisitButton(c,p))}
     ${typeof natalAdmissionPanel==='function'?natalAdmissionPanel(c,p):''}
     ${detailSection('家族往来',`${natalParentLinks(c,p)}<button class="btn quiet" onclick="A.go('consort',${c.id})">${esc(fullName(c))}</button>`+natalFamilyLinks(c))}
     ${natalFatherPanel(p)}${outsideParentagePanel(c,p)}${sisterPalaceConcernPanel(p)}${natalLifePanel(c,p)}${outsideHouseholdHusbandPanel(p)}`;
