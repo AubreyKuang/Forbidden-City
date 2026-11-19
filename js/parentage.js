@@ -19,7 +19,7 @@ function palaceParentageTick(){
   const pairs=Object.values(S.palaceRomance?.gen===S.gen?S.palaceRomance.pairs:{}).filter(p=>{
     const {prince:k,consort:c}=romancePeople(p);
     return ((p.status==='concealed'&&p.stage===3)||(p.status==='active'&&p.stage>=2&&p.stage<=3))&&p.conceivedAt==null&&!p.pending&&S.turn-(p.endedAt??p.started??S.turn)>=6&&
-      romanceEligible(k,c)&&romanceAdults(k,c)&&c.age<=45&&!c.preg&&(!c.delivery||c.delivery.settled)&&
+      romanceEligible(k,c)&&randomPalaceAffairsAllowed(c)&&romanceAdults(k,c)&&c.age<=45&&!c.preg&&(!c.delivery||c.delivery.settled)&&
       S.turn-c.lastBirth>=18&&c.aff<65&&!c.bond&&relGet(k,c)>=20;
   });
   if(!pairs.length)return;

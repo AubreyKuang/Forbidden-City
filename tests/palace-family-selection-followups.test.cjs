@@ -79,6 +79,6 @@ test('the preference changes opportunities for actual adult prince and guard eve
  S.turn++;lady.seed=marked;palaceRomanceTick();assert.equal(Object.values(palaceRomanceState().pairs)[0].consort,lady.id);
  for(let tries=0;tries<5000;tries++,S.turn++){let roll=voiceHash(E().seed+':guard-tryst:'+S.turn+':roll')%100;if(roll>=2&&roll<6)break;}
  lady.seed=ordinary;assert.equal(guardTrystEvent(),null);lady.seed=marked;var event=guardTrystEvent();
- assert.equal(event.title,'宫门私约');event.onQueue();event.choices[0].f();assert.ok(lady.guardTryst);assert.match(lady.story.at(-1).t,/调离|奉调/);
+ assert.equal(event.title,affairReportTitle()+' · 宫门私约');event.onQueue();event.choices[0].f();assert.ok(lady.guardTryst);assert.match(lady.story.at(-1).t,/调离|奉调/);
  lady.age=17;delete lady.guardTryst;S.turn+=18;assert.equal(guardTrystEvent(),null);`);
 });

@@ -1,9 +1,12 @@
 /* Descriptive distinctions follow real attributes. Nothing rolls during rendering. */
 const consortTraitsActive=()=>!!S&&journalContentVersion()>=59;
 const consortDistinctionStoriesActive=()=>journalContentVersion()>=67;
+// Story consorts keep their authored relationships, including when a former save is loaded.
+function randomPalaceAffairsAllowed(c){return journalContentVersion()<103||!(c?.gouyi||c?.hongjian||c?.fixedStory);}
+function palaceAffairRankAllowed(c){return c.rank!==8||(journalContentVersion()>=103&&restlessDisposition(c));}
 // Use the person's original seed so a relative keeps the same disposition at selection.
 function restlessDisposition(p){
- return journalContentVersion()>=84&&p&&Number.isFinite(p.seed)&&voiceHash(p.seed+':restless')%100<8;
+ return journalContentVersion()>=84&&p&&Number.isFinite(p.seed)&&randomPalaceAffairsAllowed(p)&&voiceHash(p.seed+':restless')%100<8;
 }
 const CONSORT_DISTINCTIONS=[
  {id:'restless',name:'不安于室',groups:['romance'],priority:120,why:'容易对相投之人动心，私下相会时更可能回应。',test:restlessDisposition},
@@ -90,6 +93,10 @@ function reconcileConsortDistinctions(){
   ensureConsortHealth(c);ensureConsortDistinctions(c);
   if(!c.alive||c.maid||!S.consorts.includes(c))continue;
   const noted=c.distinctions.noted;
+  if(!randomPalaceAffairsAllowed(c)&&noted.restless){
+    delete noted.restless;
+    if(c.story)c.story=c.story.filter(e=>!e.t?.startsWith('【人物特质·不安于室】'));
+  }
   for(const r of consortTraitLabels(c))if(!noted[r.id]){
    noted[r.id]={date:dateStr(),turn:S.turn};
    story(c,`【人物特质·${r.name}】${consortDistinctionStoriesActive()?CONSORT_DISTINCTION_NOTES[r.id]:r.why}`);
