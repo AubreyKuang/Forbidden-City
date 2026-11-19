@@ -136,16 +136,21 @@ const HAREM=[
 ];
 function guardTrystEvent(){
   if(journalContentVersion()<84||mourningActive()||S.turn-(S.flags.lastGuardTryst??0)<18)return null;
-  const eligible=harem().filter(c=>c.age>=18&&!c.maid&&c.rank!==8&&!c.bond&&!c.preg&&c.aff<50&&c.favor<40&&!c.guardTryst&&
+  const eligible=harem().filter(c=>c.age>=18&&!c.maid&&randomPalaceAffairsAllowed(c)&&palaceAffairRankAllowed(c)&&!c.bond&&!c.preg&&c.aff<50&&c.favor<40&&!c.guardTryst&&
     !['持重','痴情'].includes(c.trait)&&!isSolitary(c));
   if(!eligible.length)return null;
   // One opportunity per palace and month, including if several ambient events are requested.
   const key=E().seed+':guard-tryst:'+S.turn,c=eligible[voiceHash(key+':who')%eligible.length];
   if(voiceHash(key+':roll')%100>=(restlessDisposition(c)?6:2))return null;
-  const record=(order,delta)=>{c.guardTryst={turn:S.turn,order};story(c,'【宫门私约】与值夜侍卫私下相恋。'+order);log(fullName(c)+'与侍卫的私约被发现。'+order);return order+fx(cchg(c,{mood:delta}));};
-  return {title:'宫门私约',por:c,present:[c],valid:()=>inPalace(c)&&!c.guardTryst,
+  const record=(order,delta)=>{c.guardTryst={...c.guardTryst,turn:S.turn,order};story(c,'【宫门私约】与值夜侍卫私下相恋。'+order);log(fullName(c)+'与侍卫的私约被发现。'+order);return order+fx(cchg(c,{mood:delta}));};
+  const report=journalContentVersion()>=103;
+  const text=report?`值房送来昨夜换班的门簿。随侍亲见${fullName(c)}赴约，她也交出了与值夜侍卫往来的短信：“是我约他来的。”当夜守门人已在证词上画押。`:
+    `巡夜内侍禀报，昨夜换值之后，${cName(c)}还在廊下等那名侍卫。你召她问话，她从袖里取出两人往来的短信：“是我约他来的。他也待我有情。”`;
+  const visit={turn:S.turn};
+  return {title:report?affairReportTitle()+' · 宫门私约':'宫门私约',por:report?affairDutyOfficer():c,cast:report?[c]:undefined,present:[c],valid:()=>inPalace(c)&&(!c.guardTryst||c.guardTryst===visit),
+    onShow:report?()=>{c.guardTryst=visit;fileAffairReport(visit,'gate-tryst:'+S.gen+':'+c.id,text);}:undefined,
     onQueue:()=>{S.flags.lastGuardTryst=S.turn;},
-    text:`巡夜内侍禀报，昨夜换值之后，${cName(c)}还在廊下等那名侍卫。你召她问话，她从袖里取出两人往来的短信：“是我约他来的。他也待我有情。”`,
+    text,
     choices:[{t:'将侍卫调离内廷',f:()=>record('侍卫奉调离开内廷，两人就此别过。',-8)},
       {t:'封存此事',f:()=>record('陛下封存了信件，她回宫后亲手收起了最后一封回信。',-2)}]};
 }

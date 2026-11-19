@@ -8,14 +8,14 @@ function romanceKin(k){
   return [...new Set([k.mom,k.foster,...Object.keys(k.motherBonds||{}).map(Number)].filter(Boolean))].map(byId).filter(Boolean);
 }
 function romanceEligible(k,c){
-  if(!childCanVisitCourt(k)||k.sex!=='m'||kidAge(k)<15||!inPalace(c)||c.maid||c.outerHouseholdId||c.rank===8||c.age<15||Math.abs(kidAge(k)-c.age)>8)return false;
+  if(!childCanVisitCourt(k)||k.sex!=='m'||kidAge(k)<15||!inPalace(c)||c.maid||c.outerHouseholdId||!palaceAffairRankAllowed(c)||c.age<15||Math.abs(kidAge(k)-c.age)>8)return false;
   // Exclude people who entered while the prince was still a young child.
   if(!Number.isFinite(c.enteredAt)||c.enteredAt<k.born+15*12)return false;
   return c.sur!==E().sur&&!romanceKin(k).some(m=>m.id===c.id||m.sur===c.sur||clanKey(m)===clanKey(c)||m.kin?.[c.id]||c.kin?.[m.id]);
 }
 const romanceAdults=(k,c)=>kidAge(k)>=18&&c.age>=18;
 function romanceAffinity(k,c){
-  if(!romanceEligible(k,c)||c.preg||c.bond||['痴情','持重'].includes(c.trait)||c.aff>=50||c.favor>=40||c.virtue>=75||k.vir>=80||relGet(k,c)<18)return 0;
+  if(!romanceEligible(k,c)||!randomPalaceAffairsAllowed(c)||c.preg||c.bond||['痴情','持重'].includes(c.trait)||c.aff>=50||c.favor>=40||c.virtue>=75||k.vir>=80||relGet(k,c)<18)return 0;
   const hobby=consortHobby(c);
   if(k.lit>=55&&['读书','抚琴','对弈'].includes(hobby))return 3;
   if(k.mar>=55&&['骑射','投壶'].includes(hobby))return 3;
@@ -48,6 +48,10 @@ function palaceRomanceTick(){
   if(state.checkedTurn===S.turn||S.over||mourningActive())return;state.checkedTurn=S.turn;
   const active=Object.values(state.pairs).find(p=>p.status==='active');
   if(active){
+    if(!randomPalaceAffairsAllowed(byId(active.consort))&&active.stage<3){
+      if(active.conceivedAt==null||active.affairReported)closePalaceRomance(active,'此后只循宫礼相见，旧日往来就此打住。');
+      return;
+    }
     if(active.pending||S.turn<active.due||S.turn-state.lastScene<4)return;
     const {prince:k,consort:c}=romancePeople(active);
     if(c.aff>=65||c.bond||relGet(k,c)<15){closePalaceRomance(active,'她收起了旧笺，两人决定止于礼节，不再私下相约。');return;}
@@ -78,7 +82,9 @@ function palaceRomanceTick(){
 }
 function romancePending(pair){
   if(!pair||pair.status!=='active'||!pair.pending||mourningActive())return false;
-  const {prince:k,consort:c}=romancePeople(pair);return romanceEligible(k,c)&&(pair.stage<3||romanceAdults(k,c));
+  const {prince:k,consort:c}=romancePeople(pair);
+  if(pair.stage<3&&!randomPalaceAffairsAllowed(c))return false;
+  return romanceEligible(k,c)&&(pair.stage<3||romanceAdults(k,c));
 }
 function palaceRomanceEvent(pair){
   pair ||= Object.values(S.palaceRomance?.gen===S.gen?S.palaceRomance.pairs:{}).find(romancePending);

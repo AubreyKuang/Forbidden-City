@@ -243,8 +243,9 @@ function guardProtectionTick(){
  if(!intelligenceEnabled()||!bond||bond.ended||bond.last===S.turn)return;
  if(!inPalace(c)||c.age<18){bond.ended='处境改变，护卫差事结束。';return;}
  bond.last=S.turn;bond.months++;
+ if(bond.stage===2&&!randomPalaceAffairsAllowed(c))bond.stage=1;
  if(bond.months===6){bond.stage=1;story(c,`【守宫旧事】${guard.name}守了许久，记得她出门的习惯与院中的灯何时熄。`);}
- if(bond.months===18&&c.aff<70&&!c.bond&&chance(clamp(.25+guard.loyalty/400-c.aff/400,.1,.5))){bond.stage=2;story(c,`【守宫旧事】${guard.name}为她挡过一场雨，两人的心意渐渐有了变化。`);}
+ if(bond.months===18&&randomPalaceAffairsAllowed(c)&&c.aff<70&&!c.bond&&chance(clamp(.25+guard.loyalty/400-c.aff/400,.1,.5))){bond.stage=2;story(c,`【守宫旧事】${guard.name}为她挡过一场雨，两人的心意渐渐有了变化。`);}
  if(bond.months===30&&bond.stage===2){bond.stage=3;story(c,`【守宫旧事】她与${guard.name}私下相见，彼此都明白事情不能轻易让人知道。`);}
  if(bond.stage>=2){
    guard.loyalty=clamp(guard.loyalty+(c.mood>=65?.2:c.mood<35?-.3:0));
