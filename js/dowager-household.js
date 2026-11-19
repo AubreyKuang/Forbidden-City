@@ -206,6 +206,44 @@ function noteCiningLonging(k){
   if(months.at(-1)!==S.turn)months.push(S.turn);
   k.dowagerUpbringing.longingMonths=months.slice(-2);
 }
+// The memory belongs to this child's latest actual farewell.
+function ciningLongingChance(k,base){
+  const farewell=k.dowagerUpbringing?.farewell;
+  if(journalContentVersion()<128||!farewell)return base;
+  const elapsed=S.turn-farewell.turn;
+  if(elapsed<0||elapsed>6)return base;
+  const shift=elapsed<=3?.20:.10;
+  return base+(farewell.clung?shift:-shift);
+}
+function ciningMotherFarewell(k,aunt,mother,d,title,sight){
+  const age=kidAge(k),temper=childDisposition(k);
+  const sensitivity={内敛:.18,审慎:.12,仁厚:.10,爽直:.02,自矜:0,好胜:-.08,好奇:-.10,灵动:-.14};
+  const clung=chance((age<2?.65:age<7?.48:.30)+sensitivity[temper]);
+  const quiet=['内敛','审慎','自矜'].includes(temper);
+  let parting;
+  if(age<2){
+    parting=clung?'生母刚把孩子交到姨母怀里，孩子便攥紧她的袖边。她蹲下来又哼了一遍小调，那只小手才慢慢松开。':'生母轻拍了几下，孩子在她肩头睡熟。换到姨母怀里，小手仍舒展着，一直睡到掌灯。';
+  }else if(age<7){
+    if(clung)parting=quiet?'听见要走了，孩子没出声，只紧紧攥住娘的衣角。娘低头等了好久，孩子才肯把手交给姨母。':'生母才站起来，孩子便扑过去抱住她的腿：“娘，再坐一小会儿。”两人又挨着坐了一阵，才在门前道别。';
+    else parting=quiet?'孩子把娘带来的帕子折好收在枕边，轻轻道了声再见。这晚没再起来望门。':'孩子挑了一块桂花糕给娘带回家，跑去门口挥了挥手，回头又叫姨母来看碟里剩下的半块。';
+  }else if(clung){
+    parting=quiet?'孩子照礼送到廊下，手却还捏着娘的袖口。等旁人走远才轻声说：“我原以为，见过就不会这样想您了。”':'到了廊下，孩子又追上去牵住娘的手：“我还想跟您走几步。”直到姨母来送，才肯慢慢松手。';
+  }else if(temper==='仁厚'){
+    parting='孩子问清家里人都好，替娘理了理披风：“回去路上小心。我在祖母这里也好。”说完当真放下了心。';
+  }else{
+    parting=quiet?'孩子同娘约好下一封家书往哪里递，亲手替她挑起帘子。等她走远，才回案边把搁下的那页书读完。':'孩子送娘走到阶前，还笑着叮嘱她留心收信。回去便铺开纸，想把今天见面时来不及说的趣事画给她看。';
+  }
+  k.dowagerUpbringing.farewell={turn:S.turn,clung};
+  k.mood=clamp((k.mood??65)+(clung?2:8));
+  const heading='【'+title+'】',mom=mother.name,a=fullName(aunt);
+  story(aunt,heading+`领姐妹${mom}进慈宁宫见${k.name}。`+(clung?'临别见孩子舍不得，她请引路的宫人稍候，自己留在门边，等孩子把手伸过来。':'临别见孩子安稳，她陪姐妹慢慢往宫门走，把方才没来得及说的起居琐事讲给她听。'));
+  kstory(k,heading+sight+parting);
+  story(mother,heading+`随姐妹${a}到慈宁宫见了${k.name}。`+(clung?'临别时终究舍不得催孩子放手。回家解下外衣，想起方才的依恋，便坐下来给孩子写了几句话。':'临别见孩子安心，自己也松了口气。归家后，终于能把亲眼看见的笑模样说给家人听。'));
+  const after=age<2?(clung?'送走生母后，让乳母接着哼方才的调子，直到孩子松开攥紧的小手。':'听见孩子呼吸匀净，嘱人轻些落帘，别为行礼把孩子弄醒。'):clung?'临别见孩子难舍，嘱宫人让母亲慢慢告别。用晚膳时特意挪了把椅子，把孩子留在自己身旁。':'临别见孩子已经放下心，便照常摆晚饭，把白日见娘的事留给孩子自己慢慢说。';
+  dowagerRecord(d,title,`让${mom}在慈宁宫陪了${k.name}一晌。`+after);
+  return `${mom}随${a}进了慈宁宫。${sight}
+暮鼓前，${parting}`;
+}
 function offerCiningMotherVisit(k){
   const care=k.dowagerUpbringing;
   const ready=()=>{
@@ -226,6 +264,7 @@ function offerCiningMotherVisit(k){
     care.longingMonths=[];care.motherVisitRuling=S.turn;
     const title=allow?(k.sex==='m'?'慈宁宫母子相见':'慈宁宫母女相见'):'慈宁宫探亲未准';
     const sight=young?'生母才哼出头一句，孩子就循声扭过脸，伏在她肩上安静下来。':kidAge(k)<7?'孩子先躲在帘后看了一眼，认清是娘，连鞋都跑掉了一只。':'孩子原想规规矩矩地行礼，听见娘唤自己的小名，一肚子背好的话全忘了。';
+    if(allow&&journalContentVersion()>=128)return ciningMotherFarewell(k,aunt,mother,d,title,sight);
     const childLine=allow?sight:young?'傍晚又有些不安，姨母抱着走了一圈，听着熟悉的曲子才慢慢睡着。':'等到姨母回来，才知道这回见不到娘。坐了一会儿，托姨母回家信时添一句：“我还惦记她。”';
     story(aunt,'【'+title+'】'+(allow?`替${kin}${name}求得恩典，亲自领姐妹${momName}进慈宁宫。见两人依偎在一处，悄悄退到门边，替她们看着时辰。`:`替${kin}${name}求见生母未获准，将御前的答复捎给姐妹，亲口说给孩子听，又到慈宁宫多陪了一阵。`));
     kstory(k,'【'+title+'】'+childLine);
@@ -255,7 +294,7 @@ function ciningAuntVisitTick(d,household){
   const {k,aunt,mother}=pick(visits),age=kidAge(k),kin=k.sex==='m'?'外甥':'外甥女';
   const auntName=fullName(aunt),motherName=mother.name||k.momName;
   household.lastAuntVisit=S.turn;
-  const missing=chance(.4);
+  const missing=chance(ciningLongingChance(k,.4));
   if(journalContentVersion()>=127&&missing&&mother.alive)noteCiningLonging(k);
   let scene,news,answer;
   if(missing&&age<2){
@@ -303,7 +342,7 @@ function ciningChildVisit(k){
   const care=k.dowagerUpbringing,name=k.name,momName=mother?.name||k.momName;
   const visits=care.visits||0,days=CINING_CHILD_DAYS[band];
   const day=k.hp<35?['身子有些乏，我叫人把帘子放下了。今日在床边陪陪就好。','在枕边听见父皇来看望，很快又安静地歇下了。']:days[visits%days.length];
-  const missing=!!mother&&chance(.35);
+  const missing=!!mother&&chance(ciningLongingChance(k,.35));
   const memory=['听见旧日的摇篮调，手指抓住了从原家带来的被角。','轻轻问了一句：“娘也知道我住在这里吗？”',mother?.alive===false?'在窗纸上比画出原家门前的路，记起生母当年牵着自己走过。':'在窗纸上比画出原家门前的路，小声问可不可以给娘捎个信。'][band];
   const response=mother?.alive===false?['大家收好小被，让熟悉的曲子唱完。','太后陪孩子说起生母，答应把记得的事慢慢讲给孩子听。','你陪孩子把思念写在纸上，收在自己的书匣里。'][band]:
     '太后说：“惦记娘亲是应当的。在祖母这里，都可以说。”';

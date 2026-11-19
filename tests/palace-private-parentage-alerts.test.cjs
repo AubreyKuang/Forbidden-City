@@ -147,7 +147,7 @@ for(const allow of [true,false])test('repeated homesickness petitions the dowage
  b.run(`A.load('auto');assert.equal(curEv.title,'慈宁宫 · 姨母求恩');assert.equal(PalaceActions.blocked,false);
  const [id,host,mom]=ids,k=kidById(id),a=byId(host),m=natalEntry(host,mom).p,d=S.flags.dowager,care=k.dowagerUpbringing;
  var action=curEv.choices[${allow?0:1}];choose(${allow?0:1});assert.ok(modalResult);
- assert.deepEqual(care.longingMonths,[]);assert.equal(care.motherVisitRuling,S.turn);assert.equal(action.f(),null);
+ assert.deepEqual(care.longingMonths,[]);assert.equal(care.motherVisitRuling,S.turn);assert.equal(!!care.farewell,${allow});assert.equal(action.f(),null);
  for(const p of [a,k,m,d]){const notes=p.story.filter(e=>/^【慈宁宫(母子相见|母女相见|探亲未准)】/.test(e.t));
  assert.equal(notes.length,1);assert.match(notes[0].t,${allow?'/相见/':'/未准/'});}
  assert.ok(raisedByDowager(k));assert.ok(!m.visit);save('auto');A.load('auto');assert.equal(PalaceActions.blocked,false);drain();`);
@@ -171,3 +171,27 @@ for(const [sex,trait,age,temper,voice] of [['m','沉静',9,'内敛','舍不得']
   assert.match(ward.story.at(-1).t,/【初知身世】.*${voice}/);assert.ok(ward.mood${trait==='活泼'?'>':'<'}65);`);
  });
 }
+for(const [age,trait,roll,clung,line] of [
+ [1,'好奇',.45,true,'攥紧她的袖边'],[1,'内敛',.95,false,'在她肩头睡熟'],
+ [4,'爽直',.45,true,'抱住她的腿'],[4,'审慎',.85,false,'收在枕边'],
+ [9,'内敛',.45,true,'捏着娘的袖口'],[9,'灵动',.45,false,'笑着叮嘱']
+])test('the farewell follows age and temperament: '+age+' '+trait,()=>{
+ const b=auntVisitWorld();b.run(`ward.born=S.turn-${age}*12;ward.temperament='${trait}';
+ var care=ward.dowagerUpbringing;care.longingMonths=[S.turn-2,S.turn-1];offerCiningMotherVisit(ward);
+ var accept=curEv.choices[0].f;`);
+ b.force(roll);b.run(`var end=accept();assert.match(end,/${line}/);assert.equal(accept(),null);
+ assert.deepEqual(care.farewell,{turn:S.turn,clung:${clung}});
+ var tag=ward.sex==='m'?'【慈宁宫母子相见】':'【慈宁宫母女相见】';
+ var farewellLines=people.map(p=>p.story.filter(e=>e.t.startsWith(tag)));
+ assert.ok(farewellLines.every(lines=>lines.length===1));assert.equal(new Set(farewellLines.map(lines=>lines[0].t)).size,4);
+ assert.match(farewellLines[0][0].t,/${line}/);
+ S.turn++;var previousTurn=S.turn;
+ assert.ok(Math.abs(ciningLongingChance(ward,.35)-${clung?.55:.15})<.000001);
+ S.turn+=3;assert.ok(Math.abs(ciningLongingChance(ward,.4)-${clung?.50:.30})<.000001);
+ S.turn+=3;assert.equal(ciningLongingChance(ward,.35),.35);
+ S.turn=previousTurn;`);
+ // Choose a roll that would give the opposite result at either unmodified visit rate.
+ const nextRoll=clung?.45:.32;
+ b.force(nextRoll);b.run(`assert.equal(ciningChildVisit(ward).text.includes('惦记娘亲'),${clung});`);
+ b.force(0,0,nextRoll);b.run(`ciningAuntVisitTick(dowager,household);assert.equal(care.longingMonths.includes(S.turn),${clung});`);
+});
