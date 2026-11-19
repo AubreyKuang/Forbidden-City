@@ -60,7 +60,8 @@ function recordCourtFamilyNews(e,{kind,task,fact,caseKey,officialDuty,balancedFo
  if(!courtFamilyRepliesActive()||!e||!officialAlive(e.p))return false;
  const {c:host,p,role,h}=e,info=COURT_FAMILY_NEWS[kind];
  if(!(role==='father'||/^brother/.test(role)||role.startsWith('relative')&&!p.parentRelativeId&&!p.motherRelativeId&&!p.natalCollateral))return false;
- const relatives=paternalFamily(host).filter(c=>S.consorts.includes(c)&&c.alive&&!c.gone&&!c.maid&&officialPerson(c.house,role)?.id===p.id);
+ const relatives=paternalFamily(host).filter(c=>S.consorts.includes(c)&&c.alive&&!c.gone&&!c.maid&&
+  (!palaceKinResponseActive()||!palaceKinLettersBarred(c))&&officialPerson(c.house,role)?.id===p.id);
  if(!relatives.length)return false;
  const key=caseKey?caseKey+':'+kind:p.id+':'+S.turn+':'+kind+':'+task;
  for(const c of relatives){
@@ -141,6 +142,7 @@ function courtFamilyReplyTick(){
  if(!courtFamilyRepliesActive())return;
  for(const c of familyCourtHosts())for(const n of c.courtFamilyNews||[]){
   if(n.status!=='sent'||S.turn<n.due)continue;
+  if(palaceKinResponseActive()&&palaceKinLettersBarred(c)){n.status='returned';continue;}
   const p=courtFamilyOfficial(c,n);
   if(!officialAlive(p)){
    n.status='returned';

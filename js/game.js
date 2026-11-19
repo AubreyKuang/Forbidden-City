@@ -219,7 +219,7 @@ function dateStr(s=S){return `${s.emp.era}${s.year===1?'元':cnNum(s.year)}年${
 function cName(c){
   if(c.rescuedGuest)return fullName(c)+'姑娘';
   if(c.maid) return c.near?`贴身宫女${c.given}`:`宫女${c.given}`;
-  if(c.cold) return `${c.sur}庶人`;
+  if(c.cold&&(journalContentVersion()<PALACE_KIN_RESPONSE_JOURNAL||palaceKinCommoner(c))) return `${c.sur}庶人`;
   if(c.rank===8) return '皇后';
   if(journalContentVersion()>=24&&c.gouyi&&c.rank===2&&c.title==='瑞')return '瑞常在';
   if(c.title&&c.rank>=4) return c.title+RANKS[c.rank];
@@ -628,11 +628,11 @@ const A={
   depose(id){const c=byId(id);
     pushEv({title:'废后',danger:true,por:c,text:`废黜皇后乃动摇国本之事。是否废去${fullName(c)}的后位？`,choices:[
       {t:'降为贵妃，迁出坤宁宫',cond:()=>rankCount(6)<2,why:'贵妃之位已满',f:()=>{c.rank=6;assignPalace(c);const s=chg({prestige:-6});story(c,'被废去后位，降为贵妃。');log(`废皇后${fullName(c)}，降为贵妃。`,1);AU.sfx('sad');return `满朝哗然。${fx(s,cchg(c,{mood:-40,aff:-25}))}`}},
-      {t:'废为庶人，打入冷宫',f:()=>{c.cold=true;c.palace='冷宫';const s=chg({prestige:-10,people:-3});story(c,'被废去后位，打入冷宫。');log(`废皇后${fullName(c)}，打入冷宫。`,1);AU.sfx('sad');return `凤冠跌落在地，珠翠四散。${fx(s,cchg(c,{mood:-60,aff:-40}))}`}},
+      {t:'废为庶人，打入冷宫',f:()=>{c.cold=true;if(palaceKinResponseActive())c.coldCommoner=true;c.palace='冷宫';const s=chg({prestige:-10,people:-3});story(c,'被废去后位，打入冷宫。');log(`废皇后${fullName(c)}，打入冷宫。`,1);AU.sfx('sad');return `凤冠跌落在地，珠翠四散。${fx(s,cchg(c,{mood:-60,aff:-40}))}`}},
       {t:'作罢'}]})},
   cold(id){const c=byId(id);if(c.rank===8){A.depose(id);return}
     pushEv({title:'打入冷宫',danger:true,por:c,text:`将${cName(c)}打入冷宫？`,choices:[{t:'打入冷宫',f:()=>{const s=c.fam.p>=70?chg({prestige:-3}):'';c.cold=true;c.oldPalace=c.palace;c.palace='冷宫';story(c,'触怒天颜，被打入冷宫。');remember(c,'hurt','被打入冷宫');setXin(c,(c.scheme>60||c.t2==='记仇')?'怨恨':'心如死灰','被打入冷宫','emp');clanEcho(c,'down');log(`${fullName(c)}被打入冷宫。`,1);AU.sfx('sad');return `宫门落锁，杂草丛生。${fx(s,cchg(c,{mood:-40,aff:-20,favor:-30}))}`}},{t:'作罢'}]})},
-  uncold(id){const c=byId(id);c.cold=false;if(c.rank>3)c.rank=Math.max(0,Math.min(c.rank,3));assignPalace(c);const s=cchg(c,{mood:35,aff:10,favor:10});story(c,`蒙陛下开恩，出冷宫，复为${RANKS[c.rank]}。`);remember(c,'saved','出冷宫');c.xin={k:'平和',t:S.turn};setXin(c,'感激','被放出冷宫');log(`${fullName(c)}出冷宫，复为${RANKS[c.rank]}。`);AU.sfx('joy');toast(s);render()},
+  uncold(id){const c=byId(id);c.cold=false;if(palaceKinResponseActive())delete c.coldCommoner;if(c.rank>3)c.rank=Math.max(0,Math.min(c.rank,3));assignPalace(c);const s=cchg(c,{mood:35,aff:10,favor:10});story(c,`蒙陛下开恩，出冷宫，复为${RANKS[c.rank]}。`);remember(c,'saved','出冷宫');c.xin={k:'平和',t:S.turn};setXin(c,'感激','被放出冷宫');log(`${fullName(c)}出冷宫，复为${RANKS[c.rank]}。`);AU.sfx('joy');toast(s);render()},
   away(id){const c=byId(id);pushEv({title:'遣出宫',danger:true,por:c,text:`许${fullName(c)}出宫，往城外静慈庵带发修行？此后她便不在后宫名册之中。`,choices:[{t:'准她离宫',f:()=>{c.gone=true;story(c,'奉旨出宫，往静慈庵带发修行。青灯古佛，了此余生。');log(`${fullName(c)}出宫修行。`,1);return '马车驶出神武门，再没有回头。'}},{t:'作罢'}]})},
 };
 

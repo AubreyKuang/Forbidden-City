@@ -63,3 +63,71 @@ test('a proved offence only permits care, and release invalidates any still-pend
   A.uncold(c.id);assert.equal(palaceKinPetitionRows().length,0);assert.equal(ev.choices[0].f(),null);
   assert.equal(n.petition.decision,undefined);`);
 });
+
+test('a neglected woman reassures a distant father, confides in her brother, and each hears only what she actually sent',()=>{
+ let game=family();game.run(`c.trait='持重';c.favor=26;brother.away=true;
+  var old=JSON.parse(JSON.stringify(S));c.favor=24;courtFamilyLifeTick(old);
+  var f=c.palaceKinNews.find(n=>n.officialId===father.id),b=c.palaceKinNews.find(n=>n.officialId===brother.id);
+  assert.equal(palaceKinResponseReady(c,b,'letter'),false);
+  A.palaceKinResponse(c.id,f.id,'letter');assert.equal(curEv.title,'回信 · 宫中少见');
+  assert.match(curEv.text,/起居照常，你们且安心/);assert.doesNotMatch(curEv.text,/睡不安稳/);
+  choose(0);drain();assert.equal(f.responses.letter.mode,'peace');
+  S.turn++;S.month++;palaceKinMailTick();
+  assert.match(father.story.at(-1).t,/平安二字看了两遍/);
+  assert.ok(!brother.story.some(e=>e.t.includes('收到宫中家书')));
+  A.palaceKinResponse(c.id,b.id,'letter');assert.match(curEv.text,/夜里确有几回睡不安稳/);save('1');`);
+ game=boot(129,game.storage);game.ctx.assert=assert;
+ game.run(`A.load('1');assert.equal(PalaceActions.blocked,false);
+  var c=S.consorts.find(c=>fullName(c)==='许清容'),n=c.palaceKinNews.find(n=>n.letter==='received'&&!n.responses),p=courtFamilyOfficial(c,n);
+  choose(0);drain();assert.equal(n.responses.letter.mode,'open');assert.equal(n.responses.letter.status,'sent');
+  S.turn++;palaceKinMailTick();assert.equal(n.responses.letter.status,'sent');
+  S.turn++;palaceKinMailTick();palaceKinMailTick();assert.equal(n.responses.letter.status,'delivered');
+  var note=c.story.find(s=>s.occasion==='court-family:'+n.id+':letter-delivered');
+  assert.match(note.t,/后来|已经读过信/);assert.match(p.story.find(s=>s.occasion===note.occasion).t,/睡不安稳.*先问清能照应/);
+  assert.equal(c.story.filter(s=>s.occasion===note.occasion).length,1);
+  A.palaceKinResponse(c.id,n.id,'letter');assert.equal(modalOpen,false);`);
+});
+
+for(const [trait,mode] of [['活泼','thanks'],['持重','caution']])test('the same brother’s petition draws a distinct reply when she is '+trait,()=>{
+ const game=family();game.run(`c.trait='${trait}';A.cold(c.id);choose(0);drain();
+  assert.ok(c.cold);assert.equal(palaceKinCommoner(c),false);assert.doesNotMatch(cName(c),/庶人/);
+  S.turn++;S.month++;palaceKinMailTick();
+  var n=c.palaceKinNews.find(n=>n.petition);
+  assert.equal(palaceKinResponseReady(c,n,'petition'),false);
+  A.palaceKinPetition(n.id);choose(0);drain();
+  assert.ok(palaceKinResponseReady(c,n,'petition'));
+  A.palaceKinResponse(c.id,n.id,'petition');assert.match(curEv.text,/衣物，我已经收到了/);choose(0);drain();
+  assert.equal(n.responses.petition.mode,'${mode}');
+  S.turn++;palaceKinMailTick();var pair='court-family:'+n.id+':petition-delivered';
+  assert.match(brother.story.find(s=>s.occasion===pair).t,${mode==='thanks'?'/折尾的名字/':'/再递一折.*收回匣里/'});
+  assert.ok(c.story.some(s=>s.occasion===pair));assert.ok(palaceKinResponseReady(c,n,'letter'));
+  assert.equal(palaceKinResponseReady(c,n,'petition'),false);`);
+});
+
+for(const outcome of ['commoner','expelled'])test('an in-flight reply, old reply options, and new correspondence are shut off when she is '+outcome,()=>{
+ const game=family();game.run(`c.trait='持重';c.favor=26;
+  var old=JSON.parse(JSON.stringify(S));c.favor=24;courtFamilyLifeTick(old);
+  var n=c.palaceKinNews.find(n=>n.officialId===father.id),other=c.palaceKinNews.find(n=>n.officialId===brother.id);
+  A.palaceKinResponse(c.id,n.id,'letter');choose(0);drain();
+  var stale=palaceKinResponseEvent(c,other,'letter');
+  ${outcome==='commoner'?"q.rank=6;c.rank=8;A.depose(c.id);choose(1);":"A.away(c.id);choose(0);"}
+  drain();assert.equal(n.responses.letter.status,'returned');assert.equal(stale.valid(),false);assert.equal(stale.choices[0].f(),null);
+  assert.doesNotMatch(palaceKinLettersPanel(c),/回这封家书|回信谈陈情/);
+  var diarySizes=[c.story.length,father.story.length,brother.story.length];S.turn++;S.month++;palaceKinMailTick();
+  assert.deepEqual([c.story.length,father.story.length,brother.story.length],diarySizes);
+  assert.equal(palaceKinPetitionRows().length,0);assert.equal(c.palaceKinNews.filter(n=>n.kind==='cold').length,0);
+  var count=c.courtFamilyNews?.length||0;courtFamilyNewsFor(c,'father','merit','盐务','盐务办妥。');
+  assert.equal(c.courtFamilyNews?.length||0,count);`);
+});
+
+test('old formal verdicts are recognized by the signed record, and a restored palace title is eligible again',()=>{
+ const game=family();game.run(`c.cold=true;c.rank=0;
+  assert.equal(palaceKinCommoner(c),false);
+  story(c,fullName(a)+'因主使换婴被废为庶人，押入冷宫，案卷记明罪责。');
+  assert.equal(palaceKinCommoner(c),false);
+  story(c,fullName(c)+'因主使换婴被废为庶人，押入冷宫，案卷记明罪责。');
+  assert.equal(palaceKinCommoner(c),true);assert.match(cName(c),/庶人/);
+  A.uncold(c.id);A.cold(c.id);choose(0);drain();
+  assert.equal(palaceKinCommoner(c),false);assert.doesNotMatch(cName(c),/庶人/);
+  assert.ok(c.palaceKinNews.some(n=>palaceKinResponseReady(c,n,'letter')));`);
+});

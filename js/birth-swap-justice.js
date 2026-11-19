@@ -80,6 +80,7 @@ function resolveBirthSwapJustice(k,decision,confirmed=false){
   const name=a?fullName(a):'当年的主使';let line;
   if(decision==='cold'){
     const wasQueen=a.rank===8;a.oldPalace=a.cold?a.oldPalace:a.palace;a.rank=0;a.title='';a.cold=true;a.gone=false;a.palace='冷宫';delete a.templeStay;delete a.visitor;
+    if(palaceKinResponseActive())a.coldCommoner=true;
     if(wasQueen)chg({prestige:-10,people:-3});cchg(a,{mood:-45,aff:-35,favor:-35});clanEcho(a,'down');setXin(a,'怨恨','换婴案定罪，废为庶人');
     line=`${name}因主使换婴被废为庶人，押入冷宫，案卷记明罪责。`;
   }else if(decision==='demote'){

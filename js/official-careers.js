@@ -201,6 +201,7 @@ function courtFamilyLifeTick(previous){
   for(const c of S.consorts){
     const old=before.get(c.id);if(!old)continue;
     if(palaceKinFlowActive()&&old.cold&&!c.cold)delete c.palaceKinPetitionId;
+    if(palaceKinResponseActive()&&c.alive&&palaceKinLettersBarred(c)){closePalaceKinMail(c);continue;}
     if(whiteSpringRoyal(c)){whiteSpringFamilyChanges(c,old,previous);continue;}
     const newborn=S.children.filter(k=>k.mom===c.id&&!(previous.children||[]).some(o=>o.id===k.id));
     const kind=old.alive&&!c.alive?'death':!old.cold&&c.cold?'cold':expanded&&old.cold&&!c.cold?'released':c.rank<old.rank?'demoted':

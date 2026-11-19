@@ -123,6 +123,7 @@ function palaceKinReceiver(c,n){
 }
 function deliverPalaceKinLetter(c,p,n){
  if(n.letter!=='sent')return;
+ if(palaceKinResponseActive()&&palaceKinLettersBarred(c)){n.letter='returned';return;}
  if(!c.alive||c.gone||c.familyArchive){
   n.letter='returned';
   if(officialAlive(p))courtFamilyChronicle(p,c,p,n,'returned','寄还的家书','送往内廷的信原封退回，他将信收进家中旧匣。',-.35);
@@ -168,15 +169,20 @@ function recordPalaceKinNews(c,direct,kind,fact,key,stamp,old){
   }
  }
  if(c.palaceKinNews?.length>12)c.palaceKinNews=c.palaceKinNews.filter((n,i,all)=>n.letter==='sent'||
-  n.petition&&!n.petition.decision&&S.turn-n.turn<=6||i>=all.length-12);
+  n.petition&&!n.petition.decision&&S.turn-n.turn<=6||i>=all.length-12||
+  palaceKinResponseActive()&&Object.values(n.responses||{}).some(r=>r.status==='sent'));
 }
 function oftenPetitionsForKin(p,tie){
  return p.temperament==='进取'&&tie>=25||p.temperament==='圆融'&&tie>=50;
 }
 function palaceKinMailTick(){
  if(!palaceKinFlowActive())return;
- for(const c of familyCourtHosts())for(const n of c.palaceKinNews||[]){
-  if(n.letter==='sent'&&S.turn>=n.due)deliverPalaceKinLetter(c,courtFamilyOfficial(c,n),n);
+ for(const c of familyCourtHosts()){
+  if(palaceKinResponseActive()&&palaceKinLettersBarred(c)){closePalaceKinMail(c);continue;}
+  for(const n of c.palaceKinNews||[]){
+   if(n.letter==='sent'&&S.turn>=n.due)deliverPalaceKinLetter(c,courtFamilyOfficial(c,n),n);
+   if(palaceKinResponseActive())deliverPalaceKinResponses(c,n);
+  }
  }
  for(const {c,n,p} of palaceKinPetitionRows()){
   if(n.petition.filed)continue;
@@ -186,7 +192,7 @@ function palaceKinMailTick(){
 }
 function palaceKinPetitionRows(){
  if(!palaceKinFlowActive()||mourningActive())return [];
- return S.consorts.filter(c=>c.alive&&!c.gone&&c.cold).flatMap(c=>(c.palaceKinNews||[])
+ return S.consorts.filter(c=>c.alive&&!c.gone&&c.cold&&(!palaceKinResponseActive()||!palaceKinLettersBarred(c))).flatMap(c=>(c.palaceKinNews||[])
   .filter(n=>n.id===c.palaceKinPetitionId&&!n.petition?.decision&&n.gen===S.gen&&S.turn-n.turn<=6&&S.turn>=n.petition?.due)
   .map(n=>({c,n,p:courtFamilyOfficial(c,n)})).filter(({p})=>officialAlive(p)&&!p.exiled&&!p.dismissed));
 }
@@ -232,5 +238,115 @@ function palaceKinPetitionsPanel(){
 function palaceKinLettersPanel(c){
  if(!palaceKinFlowActive())return '';
  const notes=(c.palaceKinNews||[]).filter(n=>n.gen===S.gen&&n.letter==='received').slice(-4).reverse();
- return detailSection('娘家来信',notes.map(n=>`<p><strong>${esc(n.task)}</strong> · ${esc(n.kin+n.officialName)}<br>${esc(n.quote)}</p>`).join(''));
+ return detailSection('娘家来信',notes.map(n=>`<p><strong>${esc(n.task)}</strong> · ${esc(n.kin+n.officialName)}<br>${esc(n.quote)}</p>`+
+  palaceKinResponseButtons(c,n)).join(''));
+}
+
+const PALACE_KIN_RESPONSE_JOURNAL=158;
+const palaceKinResponseActive=()=>!!S&&!S.over&&journalContentVersion()>=PALACE_KIN_RESPONSE_JOURNAL;
+function palaceKinCommoner(c){
+ if(!c?.cold)return false;
+ if(c.coldCommoner)return true;
+ // Older saves recorded the actual decree only in the woman's chronicle.
+ const restored=/^蒙陛下开恩，出冷宫，复为/;
+ const swapText=`${fullName(c)}因主使换婴被废为庶人，押入冷宫，案卷记明罪责。`;
+ const revoked=text=>text==='被废去后位，打入冷宫。'||text===swapText;
+ const status=c.story?.findLast(entry=>restored.test(entry.t)||revoked(entry.t));
+ return !!status&&revoked(status.t);
+}
+function palaceKinLettersBarred(c){
+ return c.gone||palaceKinCommoner(c);
+}
+function closePalaceKinMail(c){
+ for(const n of c.palaceKinNews||[]){
+  if(n.letter==='sent')n.letter='returned';
+  for(const r of Object.values(n.responses||{}))if(r.status==='sent')r.status='returned';
+ }
+ for(const n of c.courtFamilyNews||[])if(n.status==='sent')n.status='returned';
+ delete c.palaceKinPetitionId;
+}
+function palaceKinResponseReady(c,n,stage){
+ if(!palaceKinResponseActive()||!c?.alive||c.maid||palaceKinLettersBarred(c)||!S.consorts.includes(c)||
+   !c.palaceKinNews?.includes(n)||n.gen!==S.gen||n.letter!=='received'||n.responses?.[stage])return false;
+ const p=courtFamilyOfficial(c,n);
+ return officialAlive(p)&&!p.exiled&&(stage==='letter'||stage==='petition'&&!!n.petition?.decision);
+}
+const PALACE_KIN_REPLY_ACK={
+ care:'你托人送来的衣物，我已经收到了。',
+ release:'旨意传到值房，我已离开冷宫。',
+ decline:'值房传了答复，原处分照旧。我这才知道你替我递了折。'
+};
+function palaceKinResponseDraft(c,p,n,stage){
+ const style=familyBearingStyle(c),tie=courtFamilyBond(c,p,n.role);
+ const greeting=tie>=25?(n.role==='father'?'爹，':n.kin+'，'):n.kin+'钧鉴。';
+ if(stage==='petition'){
+  const grateful=tie>=25&&['bright','gentle','studious'].includes(style);
+  const words=grateful?
+   (style==='bright'?'听说折尾署的是你的名字，我把话问了两遍，才敢信。知道有人记挂，这几日也好过了些。':'我把这封信写了又拆开，只想亲口谢你一声。你肯惦记我的起居，我心里踏实了许多。'):
+   (['proud','bright'].includes(style)?'这份心意我领了。往后有什么可先写信同我说，别再为我站到风口上。':'我领你的情，也怕旁人把我这件事算到你任上。下一回只捎家书便好，莫叫家门再多担一重。');
+  return {mode:grateful?'thanks':'caution',text:greeting+PALACE_KIN_REPLY_ACK[n.petition.decision]+words};
+ }
+ if(n.kind==='promoted'){
+  const words=tie<=-15?'贺信已收，宫中诸事依礼办妥。家里一向周全，谨奉回音。':
+   style==='studious'?'册上的字我看了许久。想起从前你教我写家书，倒是今日这一封信，最想自己一笔一画写完。':
+   style==='bright'?'贺信才展开，我便想起家里那顿饭。等你得空写下一封，告诉我那日都有谁在。':'贺信我收在册封那日的旧帖旁。家中有空照常写信来，我也想知道你近来过得如何。';
+  return {mode:'joy',text:greeting+words};
+ }
+ const candid=tie>=25&&['bright','measured','studious'].includes(style)||tie>=55&&style==='gentle';
+ const cold=n.kind==='cold',situation=cold?
+  (c.cold?'这里入夜确实凉，家里若方便，按例替我问一句秋衣和药。':'那时夜里常冷，如今已经迁出来，衣药也能照常领了。'):
+  '前些日子少有召见，夜里确有几回睡不安稳。';
+ const words=candid?situation+(style==='bright'?'这话我一直想写给你，今日总算写了出来。':'有些心事肯说出来，反倒能踏实睡一觉。'):
+  ['proud','measured','solitary'].includes(style)?'起居照常，你们且安心。家中各人的日子照旧过，有要紧的事，我自会写来。':
+   '衣食都好。我抄了些闲日读到的字句给你看，家里按时吃饭，莫为我熬夜。';
+ return {mode:candid?'open':'peace',text:greeting+words};
+}
+const PALACE_KIN_RESPONSES={
+ 持正:{joy:'知道礼仪都妥帖，我便安心。家里照旧过日子，你也好好过自己的日子。',peace:'你说平安，我领你的话。家中仍给你留着回信的人，有难处随时写来。',open:'信里那几件事我都记下了。能按例照应的会替你问，其余且由你慢慢说。',thanks:'知道话递到了便好。家人的心意你收着，后头的公事我会照章料理。',caution:'你担忧的分寸，我已听进去了。往后照例递家书，公事各依公事办。'},
+ 谨慎:{joy:'我把你说的那几句收在匣里。家里只照常吃了一顿饭，你可以放心。',peace:'我把平安二字看了两遍，怕你仍省略了什么。回话只问你夜里可还睡得好。',open:'你说的难处，我逐件记下了。送衣问药先照规矩来，其他的话且留在家书里。',thanks:'听说你收到回音，家里悬着的心才放下一点。你只管慢慢调理。',caution:'我原也想过会不会叫你为难。这封信我亲手收好，往后会先听你的意思。'},
+ 进取:{joy:'看到你的亲笔信，倒比听满门贺词更高兴。你若得空，再写一件你自己的喜事。',peace:'原先我已备下几个问话的人。读完信先把名单收了，等你愿意再写。',open:'我读到第二遍才留意你说的那处难处。先问清能照应哪一样，再动手办。',thanks:'知道你认得折尾的名字，我在案前坐了一阵。这番心思送到了，家里也就安了些。',caution:'我本打算再递一折，读完这封信，先将底稿收回匣里。你这句话，我得记着。'},
+ 圆融:{joy:'家里那桌饭还说起你。外头的贺词随它去，你肯写家常，我便愿意读。',peace:'家里有人追问，我只说信到了。等你想说得多一些，家里自然有人听。',open:'你的原话我留在自己这里。家中若要托人问起居，只传问候，不传你信里的心事。',thanks:'听你说心里踏实，我们也颇宽慰。往后要什么寻常东西，尽管照例写来。',caution:'外头来问的人我会挡回去。家书还是照常递，有话可以只说给家里。'}
+};
+function palaceKinResponseEvent(c,n,stage){
+ const valid=()=>palaceKinResponseReady(c,n,stage);
+ if(!valid())return null;
+ const p=courtFamilyOfficial(c,n),draft=palaceKinResponseDraft(c,p,n,stage);
+ const title=stage==='petition'?'回信 · 陈情之后':'回信 · '+n.task;
+ const route=c.cold?'值房准她封好家书，查验后交驿使递出。':
+  c.homeLeave||c.templeStay?'她请随行掌事托人递送。':'她将信封好，请内廷按常例递送。';
+ return {title,por:c,sealedAnnals:true,valid,text:`她给${n.kin}${p.name}写道：“${draft.text}”`,choices:[
+  {t:'准按例递出回信',f:()=>{
+   if(!valid())return null;
+   const away=p.away||p.commission||p.diplomaticJourney||p.incognitoCase;
+   (n.responses||={})[stage]={...draft,status:'sent',due:S.turn+(away?2:1)};
+   courtFamilyChronicle(c,c,p,n,stage+'-sent','娘家回信',`给${n.kin}${p.name}递信：“${draft.text}” ${route}`,.3);
+   return route;
+  }},{t:'先把信收好，改日再写'}]};
+}
+A.palaceKinResponse=function(id,newsId,stage){
+ if(modalOpen)return;
+ const c=byId(id),n=c?.palaceKinNews?.find(n=>n.id===newsId);
+ if(n)pushEv(palaceKinResponseEvent(c,n,stage));
+};
+function deliverPalaceKinResponses(c,n){
+ for(const [stage,r] of Object.entries(n.responses||{})){
+  if(r.status!=='sent'||S.turn<r.due)continue;
+  const p=courtFamilyOfficial(c,n);
+  if(!c.alive||!officialAlive(p)||p.exiled||n.gen!==S.gen){r.status='returned';continue;}
+  r.status='delivered';
+  const tie=courtFamilyBond(c,p,n.role);
+  const words=(PALACE_KIN_RESPONSES[p.temperament]||PALACE_KIN_RESPONSES.谨慎)[r.mode];
+  const response=(tie<=-15?'他读完先按礼回了两句，折好信才托人带话。':
+   tie>=25?'他又从头读了一遍，捏着信纸，停了半晌才请人捎话。':'他将她的回信收好，托来人带两句话。')+`“${words}”`;
+  courtFamilyChronicle(p,c,p,n,stage+'-delivered','收到宫中家书',`读到${fullName(c)}的回信：“${r.text}” ${response}`,.45);
+  courtFamilyChronicle(c,c,p,n,stage+'-delivered','娘家回信有音讯',`${n.kin}${p.name}已经读过信。送信人捎来话：“${words}”`,.4);
+ }
+}
+function palaceKinResponseButtons(c,n){
+ if(!palaceKinResponseActive()||palaceKinLettersBarred(c)||!c.alive)return '';
+ return ['letter','petition'].map(stage=>{
+  const r=n.responses?.[stage],label=stage==='letter'?'回这封家书':'回信谈陈情';
+  if(r)return `<span class="hint">${label} · ${{sent:'已寄出',delivered:'已收到回音',returned:'信未送达'}[r.status]}</span>`;
+  return palaceKinResponseReady(c,n,stage)?`<button class="btn sm jade" onclick="A.palaceKinResponse(${c.id},'${n.id}','${stage}')">${label}</button>`:'';
+ }).join(' ');
 }
