@@ -491,14 +491,16 @@ function viewPrincessEstate(){
   const ready=e.stage==='working'&&S.turn>=e.due;
   const message=e.stage==='proposal'?princessEstateProposal(k,plan):ready||e.stage==='done'?princessEstateMail(k,plan.result,1):`${e.mode||'府中正在筹办'} · 约 ${e.due-S.turn} 个月后有回音`;
   const local=princessEstateLocal(k);
+  const refusal=xiePrincessRefusalPanel(k);
   const mother=k.reign&&familyHostById(k.mom);
   const motherLink=mother?.familyArchive?`<button class="person-link" onclick="A.go('consort',${mother.id})">${esc(k.momName||fullName(mother))}</button>`:outsideMotherLink(k);
   return `<button class="btn quiet sm" onclick="A.go('out')">← 返回出巡</button>
     <header class="detail-head person-detail-head">${porImg(k,112)}<div class="grow"><p>${k.reign?princessKinship(k)+' · ':''}${kidAge(k)}岁 · ${local?'京城府邸':esc(royalKinContactPlace(k,'letter'))}</p><h2>${esc(kidName(k))} · 公主府</h2><p>生母 ${motherLink}</p></div></header>
+    ${refusal?princessEstateFamilyPanel(k)+refusal:''}
     ${pageChapters('princess-estate',[
       ['projects','府务',detailSection(plan.title,`<p>${esc(message)}</p>${e.stage==='proposal'||ready?`<button class="btn gold" onclick="A.princessLetter(${k.id})">${ready?'读她的回信':'读府中来信'}</button>`:''}`)+princessFollowupPanel(k,plan.next)],
       ['chronicle','府中记事',detailStory(k)],
-      ['family','亲眷与婚配',princessEstateFamilyPanel(k)+(xieCapitalEstate(k)?detailSection('婚事与心意',youthPanel(k)):'')+marriagePanel(k)+householdPanel(k)]
+      ['family','亲眷与婚配',(refusal?'':princessEstateFamilyPanel(k))+(xieCapitalEstate(k)?detailSection('婚事与心意',youthPanel(k)):'')+marriagePanel(k)+householdPanel(k)]
     ])}`;
 }
 A.princessFollowup=function(id){

@@ -122,7 +122,12 @@ function careerTick(){
   if(!careersActive()||S.flags.careerTick===S.turn)return;S.flags.careerTick=S.turn;
   ensureLocalOfficers();
   for(const p of scholarList()){
-    if(!officialAlive(p))continue;p.ageTrackedAt ??= S.turn;
+    if(!officialAlive(p))continue;
+    if(p.storyPerson==='xiean'&&PalaceActions.xiePoetryAge){
+      if(p.xiean.readingStarted===undefined)p.xiean.readingStarted=!xieAwaitsFirstReading(p);
+      if(!p.xiean.readingStarted){p.age=XIE_DEBUT_AGE;p.ageTrackedAt=S.turn;continue;}
+    }
+    p.ageTrackedAt ??= S.turn;
     const years=Math.max(0,Math.floor((S.turn-p.ageTrackedAt)/12));p.age+=years;p.ageTrackedAt+=years*12;
     if(p.age>=70&&!p.retired&&!p.commission&&!p.report){p.retired=true;scholarRecord(p,'年逾七十，依例致仕归乡。');}
   }

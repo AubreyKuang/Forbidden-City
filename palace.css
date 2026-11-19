@@ -966,3 +966,20 @@ button.family-room-person{cursor:pointer}button.family-room-person:hover{color:#
   .mbody:has(>.event-full-portrait){flex-direction:column}
   .event-full-portrait{flex:none;width:min(58vw,184px)}
 }
+
+/* The princess knows the poet by his verse before she sees his face. */
+.poem-prelude{display:grid;grid-template-columns:minmax(0,1fr) minmax(84px,28%);align-items:center;gap:6px 16px;margin-bottom:16px;padding:12px clamp(12px,3vw,24px);border-block:1px solid #b9a27c;background:linear-gradient(110deg,#fff7e4,#e8e8db);color:#42382e}
+.poem-leaf p,.poem-poet figcaption{margin:0;color:#6b5343;font-size:13px}
+.poem-leaf blockquote{margin:9px 0;font:500 clamp(18px,3vw,27px)/1.75 "Songti SC","Noto Serif CJK SC",serif}
+.poem-poet{grid-column:2;grid-row:1 / 3;align-self:center;min-width:0;margin:0;text-align:center}
+.poem-poet figcaption strong{display:block;font:600 16px/1.5 "Songti SC",serif;letter-spacing:.12em}
+.poem-poet .por{display:block;width:100%;height:auto;border:0;background:none;filter:blur(3px) saturate(.54);opacity:.76}
+.poem-account{grid-column:1;margin:0;font-size:14px;line-height:1.8}
+@media(max-width:560px){
+  .poem-prelude{gap:8px}
+  .poem-poet{grid-row:1}
+  .poem-account{grid-column:1/-1}
+  .poem-prelude+.mbody{display:flow-root}
+  .poem-prelude+.mbody>.mpor{float:left;width:64px;margin:0 12px 4px 0}
+  .poem-prelude+.mbody>.mpor .por{width:100%;height:auto}
+}

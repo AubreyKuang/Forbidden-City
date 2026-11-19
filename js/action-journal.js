@@ -41,12 +41,13 @@ const PalaceActions=(()=>{
     if(name==='start'){journal=null;blocked=false;}
     const before=S?clone(S):null,prior=journal?clone(journal):null,priorUI=clone(UI);
     if(!journal&&!modalOpen&&!Q.length){
-      journal={version,outerHouseholds:true,outerHouseholdUpdates:true,exclusiveStoryOrigins:true,immortalDiscoveryNews:true,betrothalJourneys:true,immortalPeerAdmiration:true,maritalEstates:true,luwanFrontierChronicles:true,luwanFrontierVisuals:true,maidFavorDisputes:true,base:S?clone(world(S)):null,ui:clone(UI),steps:[]};
+      journal={version,outerHouseholds:true,outerHouseholdUpdates:true,exclusiveStoryOrigins:true,immortalDiscoveryNews:true,betrothalJourneys:true,immortalPeerAdmiration:true,maritalEstates:true,luwanFrontierChronicles:true,luwanFrontierVisuals:true,maidFavorDisputes:true,xiePoetryAge:true,base:S?clone(world(S)):null,ui:clone(UI),steps:[]};
     }
     const current={name,args:clone(args),monthNotice:true,rolls:[],answers:[],saves:[],ui:clone(UI)};
     // A fresh decision in an unfinished older scene uses today's age rules on future replays.
     if(journal&&journal.version<130)current.familyAgeLimits=true;
     if(journal&&journal.version<133&&name==='choose')current.familyLossAnswer=true;
+    if(journal&&!journal.xiePoetryAge&&name==='choose'&&curEv?.poemPrelude)current.xiePoetryAnswer=true;
     // A newly answered return notice can continue even if its journal predates the reunion.
     if(name==='recallHomeLeave'||(name==='choose'&&curEv?.luwanFrontierReturn))current.luwanFrontierReunion=true;
     if(name==='start'){
@@ -167,6 +168,8 @@ const PalaceActions=(()=>{
     get immortalDiscoveryNews(){return !journal||journal.immortalDiscoveryNews===true;},
     get exclusiveStoryOrigins(){return !journal||journal.exclusiveStoryOrigins===true;},
     get outerHouseholdUpdates(){return !journal||journal.outerHouseholdUpdates===true;},
+    get xiePoetryAge(){return !journal||journal.xiePoetryAge===true;},
+    get xiePoetryAnswer(){return step?.xiePoetryAnswer===true;},
     get familyLossAnswer(){return !replaying||journal?.version>=133||step?.familyLossAnswer===true;},
     get familyAgeLimits(){return !replaying||journal?.version>=130||step?.familyAgeLimits===true;},
     get releaseVersion(){return version;},get contentVersion(){return journal?.version??version;},get legacy(){return journal?.version===2;},get immediateMonth(){return journal?.version===3&&!step?.monthNotice;},get blocked(){return blocked;},requestSnapshot(){snapshotRequested=true;},get busy(){return depth>0;},get replaying(){return replaying;},reset(){clearExhaustedMonthNotice();journal=null;blocked=false;}};

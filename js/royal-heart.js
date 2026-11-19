@@ -100,6 +100,19 @@ childVoicePool=function(k){
 };
 
 /* 谢安是架空剧情人物；同名与东山高卧的文学意象，不等于复刻东晋生平。 */
+const XIE_DEBUT_AGE=21;
+function xieAwaitsFirstReading(p){
+ const life=p.xiean;
+ if(life.readingStarted!==undefined)return !life.readingStarted;
+ // Earlier saves only recorded the daughter's reading and the subsequent relationship.
+ return !(p.married||p.spouse||p.betrothal||life.pursuerId!=null||life.path||life.engagement||life.marriage||life.widowed||
+  royalHouseholds().some(k=>k.xieAdmiration?.personId===p.id));
+}
+function startXieReadingAge(p){
+ if((PalaceActions.xiePoetryAge||PalaceActions.xiePoetryAnswer)&&xieAwaitsFirstReading(p)){
+  p.age=XIE_DEBUT_AGE;p.ageTrackedAt=S.turn;p.xiean.readingStarted=true;
+ }
+}
 const xieAn=()=>scholarList().find(p=>p.storyPerson==='xiean');
 const xiePresent=p=>royalHeartActive()&&!!p&&officialAlive(p)&&!p.exiled&&!p.dismissed&&!p.commission&&!p.incognitoCase&&!p.away;
 function createXieAn(){
@@ -108,12 +121,12 @@ function createXieAn(){
  const house={id:root?'capital-'+root.p.id:`capital-xie-${S.gen}-${S.nid}`,name:root?`${root.c.sur}氏${root.h.title||'世家'}`:pick(['乌衣谢氏','临川谢氏','会稽谢氏']),seat:'上京',
   relation:root?(root.c.sur==='谢'?'谱载同宗旁支':'谱载母族外亲'):'本家子弟',rootKey:root?.key,rootId:root?.p.id};
  (S.capitalHouses ||= []).push(house);
- const age=journalContentVersion()>=53?21:22;
+ const age=journalContentVersion()>=53?XIE_DEBUT_AGE:22;
  const p=makeScholar();Object.assign(p,{name:'谢安',sur:'谢',age,ageTrackedAt:S.turn,origin:house.name,registrySource:'story',storyPerson:'xiean',siblingsChecked:true,
   temperament:'疏朗自持',ability:92,merit:0,trust:40,career:'commoner',office:'布衣诗客',post:'布衣诗客',essay:'以诗名动上京，不应仕进',education:null,artPortrait:433,
-  xiean:{houseId:house.id,met:S.turn,lastNews:S.turn,newsIndex:0,noConcubines:true,noRemarriage:true},willing:false});
+  xiean:{...(PalaceActions.xiePoetryAge?{readingStarted:false}:{}),houseId:house.id,met:S.turn,lastNews:S.turn,newsIndex:0,noConcubines:true,noRemarriage:true},willing:false});
  (S.scholars ||= []).push(p);
- scholarRecord(p,`【京华初闻】${house.name}的${house.relation}谢安，${age===21?'二十一':'二十二'}岁，以诗名动上京。${root?`家谱与${root.p.name}一房已有记载，非凭同姓攀附。`:'这一房独立登记，并非哪位妃嫔的父兄。'}他不愿以诗名求官，尚未婚配。`);
+ scholarRecord(p,`【京华初闻】${house.name}的${house.relation}谢安，${PalaceActions.xiePoetryAge?'年少时便以诗名动上京':(age===21?'二十一':'二十二')+'岁，以诗名动上京'}。${root?`家谱与${root.p.name}一房已有记载，非凭同姓攀附。`:'这一房独立登记，并非哪位妃嫔的父兄。'}他不愿以诗名求官，尚未婚配。`);
  return p;
 }
 const xieHouse=p=>(S.capitalHouses||[]).find(h=>h.id===p?.xiean?.houseId);
@@ -169,13 +182,18 @@ function xieAdmirationEvent(k,d){
   内敛:'这首诗我已读过许多遍……我没有见过他，只是读到那一句，觉得心里有人轻轻应了一声。',爽直:'他的诗我喜欢，人还没有见过。若真有机会，我想当面听听，别总靠旁人猜。',灵动:'若能听他讲一次江上的故事，一定很有趣！我连该问什么都想好了。',审慎:'大家都说他好，可我不愿只凭传闻动心。能不能先知道他怎样待人？',自矜:'我原不爱凑诗坛的热闹。这首却留在案上许多天，想放下，又总去翻。'};
  let done=false;const valid=()=>!done&&heartState()?.pending===d&&xieAdmirerReady(k);
  const settle=mode=>{
-  if(!valid()||mode==='ask'&&xieRomanceActive()&&!xieCanPursue(k,p))return null;done=true;delete heartState().pending;k.lastHeart=S.turn;k.xieAdmiration={personId:p.id,turn:S.turn,outcome:mode==='release'?'declined':'admired'};
+  if(!valid()||mode==='ask'&&xieRomanceActive()&&!xieCanPursue(k,p))return null;startXieReadingAge(p);done=true;delete heartState().pending;k.lastHeart=S.turn;k.xieAdmiration={personId:p.id,turn:S.turn,outcome:mode==='release'?'declined':'admired'};
   const text=mode==='release'?'父皇笑说这份心意也许错付，劝她把传闻与眼前的人分开，暂不议婚。':mode==='ask'?'父皇答应先听谢安本人的意思，尚未定亲，也未许诺一定成全。':'父皇陪她读诗，答应不拿这份欣赏取笑她，也不急着拿去议婚。';
   heartRecord(k,adult?'诗名与心意':'读诗怀想',`她说：“${lines[style]}”${text}`,mode==='release'?'原来诗中人未必会成为同行人。难过仍在，也想保留一点自己的体面。':'这份欣赏终于说出口了，往后怎样，还不能只靠想象。');
   if(mode==='ask')pushNow(xieMarriageRefusal(k,p));return text;
  };
  const estate=xieCapitalEstate(k),opening=estate?'请你到府中一叙，案上摊着一卷谢安的诗。':'案头多了一卷谢安的诗。';
- return chronicleEvent({title:adult?'诗名与心意':'读诗怀想',por:k,present:estate?[]:[k],valid,text:`${kidName(k)}${opening}她${style==='内敛'?'收了又展开，终于低声说':style==='灵动'?'眼睛发亮地说':'翻到留了书签的那一页'}：“${lines[style]}”\n${adult?'她愿意让你问问他的心意，还没有婚约。':xieRomanceActive()?'她尚未满十五岁；即使议定亲事，也只订婚，待成年后再成婚。':'她尚在长成，这次只是读诗与欣赏，不安排与成年人的婚事。'}`,choices:[
+ return chronicleEvent({title:adult?'诗名与心意':'读诗怀想',por:k,present:estate?[]:[k],valid,
+  onShow:()=>{if(PalaceActions.xiePoetryAge)startXieReadingAge(p);},
+  displayTitle:(adult?'诗名与心意':'读诗怀想')+' · 谢安名动京城',
+  poemPrelude:{poet:p,title:'夜过芦汀',verse:['桨歇不惊眠鹭梦，','一船明月过芦花。'],
+   account:(xieAwaitsFirstReading(p)||p.age===XIE_DEBUT_AGE?'谢安年少便有诗名，今年二十一岁。':'')+'曲水诗会上，谢安吟罢，席间静了片刻。一位素来挑剔的老翰林先开了口：“好一个‘一船’！我写了半辈子月亮，竟没想过它也能载上船。”他向谢安讨了原稿，亲笔在卷尾题了“惊才绝艳”四字。三日后，京城渡口有人念起上句，邻舟一个撑篙的孩子脆生生地接了下句。'},
+  text:`${kidName(k)}${opening}她${style==='内敛'?'收了又展开，终于低声说':style==='灵动'?'眼睛发亮地说':'翻到留了书签的那一页'}：“${lines[style]}”\n${adult?'她愿意让你问问他的心意，还没有婚约。':xieRomanceActive()?'她尚未满十五岁；即使议定亲事，也只订婚，待成年后再成婚。':'她尚在长成，这次只是读诗与欣赏，不安排与成年人的婚事。'}`,choices:[
   {t:'陪她读诗，认真听完',f:()=>settle('listen')},...(discuss&&(!xieRomanceActive()||xieCanPursue(k,p))?[{t:'召谢安，先问他是否愿意议婚',f:()=>settle('ask')}]:[]),{t:'一笑了之，劝女儿别把诗名当知己',f:()=>settle('release')}]});
 }
 function xieMarriageReady(k,p=xieAn()){

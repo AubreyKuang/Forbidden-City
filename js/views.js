@@ -581,6 +581,7 @@ function viewKid(){
     <p>生母 ${outsideMotherLink(k)}${foster?` · 养母 ${parentLink(k.foster)}`:''}</p>${childResidence(k)?`<p class="hint">${esc(childResidence(k))}</p>${youngChildMother(k)?`<button class="btn sm jade" onclick="A.visitChildHome(${k.id})">去宫里看看 →</button>`:''}`:''}${birthTags(k)}${outsideChildBadge(k)}${childHasLeftPalace(k)?`<p class="hint">居处 · ${esc(childWhereabouts(k))}</p>`:''}</div></header>
    ${k.pendingName?pendingBirthPanel():''}
    ${k.alive&&!k.removedFromRoyal&&!k.estate&&!k.jailed&&!k.pendingName?`<div class="detail-actions" role="group" aria-label="人物操作"><span class="detail-action-label" aria-hidden="true">人物操作</span><div class="acts"><button class="btn primary" onclick="A.kidVisit(${k.id})">${childHasLeftPalace(k)?'写家书':'探望'}<small>精力-1</small></button>${princeEstateOpenReady(k)?`<button class="btn jade" onclick="A.princeOpenEstate(${k.id})">安排出宫开府</button>`:''}</div></div>`:''}
+   ${xiePrincessRefusalPanel(k)}
    ${marriagePanel(k)}
    ${household}
    ${k.married?'':vitals}

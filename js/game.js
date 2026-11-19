@@ -421,6 +421,11 @@ function eventIllustration(key){
   if(!Object.hasOwn(EVENT_ILLUSTRATIONS,key))return '';
   return `<figure class="event-illustration" data-illustration="${key}"><img src="./assets/images/story-${key}.webp" alt="" decoding="async" onload="this.classList.add('event-illustration-loaded')"><figcaption>${esc(EVENT_ILLUSTRATIONS[key])}</figcaption></figure>`;
 }
+function poemPreludeHTML({poet,title,verse,account}){
+  return `<section class="poem-prelude"><div class="poem-leaf"><p>${esc(poet.name)}《${esc(title)}》</p><blockquote>${verse.map(esc).join('<br>')}</blockquote></div>
+    <figure class="poem-poet">${porImg(poet,210)}<figcaption><strong>${esc(poet.name)}</strong>未曾谋面</figcaption></figure>
+    <p class="poem-account">${esc(account)}</p></section>`;
+}
 function openModal(ev){
   if(!modalOpen&&document.activeElement?.matches('button,input,select')) modalInvoker=document.activeElement;
   modalOpen=true;curEv=ev;modalResult=null;if(ev.onShow)ev.onShow();const b=$('#mbox');
@@ -430,7 +435,7 @@ function openModal(ev){
   const choicePeople=new Set(ev.choices.filter(c=>c.portrait||c.person).map(c=>(c.portrait||c.person).id??c.person));
   const showChoicePortraits=choicePeople.size>1;
   const arrival=ev.scene==='palace-arrival';
-  let h=`<h2 class="mtitle" id="event-title" tabindex="-1">${esc(ev.title)}</h2>${ev.scene==='mourning'?mourningScene():''}${eventIllustration(ev.illustration)}${arrival?palaceArrivalHTML(ev):ev.gardenTables?banquetSeating(ev.gardenTables):eventCast(people,ev)}<div class="mbody"${arrival?' hidden':''}>`;
+  let h=`<h2 class="mtitle" id="event-title" tabindex="-1">${esc(ev.displayTitle||ev.title)}</h2>${ev.scene==='mourning'?mourningScene():''}${eventIllustration(ev.illustration)}${ev.poemPrelude?poemPreludeHTML(ev.poemPrelude):''}${arrival?palaceArrivalHTML(ev):ev.gardenTables?banquetSeating(ev.gardenTables):eventCast(people,ev)}<div class="mbody"${arrival?' hidden':''}>`;
   if(people.length===1&&!ev.gardenTables){
     h+=ev.portraitArt?`<figure class="event-full-portrait"><img src="${esc(ev.portraitArt.src)}" alt="${esc(ev.portraitArt.alt)}"><figcaption>${esc(people[0].fixedStory&&S.consorts.includes(people[0])?fullName(people[0])+' · '+cName(people[0]):porName(people[0]))}</figcaption></figure>`:eventPortrait(people[0],112,true);
   }

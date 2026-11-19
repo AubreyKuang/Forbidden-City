@@ -5,7 +5,7 @@ function mature(trait='灵动'){const b=w(trait);b.run(`xieMarriageRefusal(k,p).
 function nextStage(b){b.run('S.turn+=3;');b.force(0);b.run('xiePathTick(p);');}
 test('an existing independent estate can start and finish the Xie An route after reload',()=>{
  let b=w();b.run(`delete k.xieAdmiration;A.openPrincess(k.id);choose(0);drain();save('auto');`);
- b=boot(89,b.storage);b.ctx.assert=assert;b.run(`A.load('auto');var k=S.children[0],p=xieAn();assert.equal(childInPalace(k),false);assert.ok(xieAdmirerReady(k));assert.equal(p.age,21);assert.match(p.story[0].t,/二十一岁/);S.turn++;`);
+ b=boot(89,b.storage);b.ctx.assert=assert;b.run(`A.load('auto');var k=S.children[0],p=xieAn();assert.equal(childInPalace(k),false);assert.ok(xieAdmirerReady(k));assert.equal(p.age,21);assert.match(p.story[0].t,/年少时便以诗名动上京/);S.turn++;`);
  b.force(0,0,0);b.run(`royalHeartTick();assert.equal(heartState().pending.kind,'xiean');
   A.go('princess',k.id);assert.match(viewPrincessEstate(),/听听年少心事/);assert.match(viewPrincessEstate(),/生母 <button/);
   A.royalHeart(k.id);assert.equal(curEv.title,'诗名与心意');choose(0);drain();assert.match(viewPrincessEstate(),/再问谢安的婚事/);
@@ -64,15 +64,26 @@ test('an actual old declined save can start the new aftermath after its old scen
 test('general poetry admiration does not fabricate a refusal or a new courtship',()=>{const b=w();b.run(`k.xieAdmiration.outcome='declined';xieLifeTick();assert.equal(p.xiean.path,undefined);assert.equal(p.xiean.pursuerId,undefined);`);});
 
 
-test('meeting Xie An early leaves time for a daughter born three years later to start the route',()=>{
- const b=w();
- b.run(`
-  k.born=S.turn+36;S.turn=k.born+12*12;careerTick();
-  assert.equal(kidAge(k),12);assert.equal(p.age,36);
-  assert.ok(xieAdmirerReady(k));assert.ok(xieMarriageRefusal(k,p));
-  p.age=45;assert.ok(xieAdmirerReady(k));
-  p.age=46;assert.equal(xieAdmirerReady(k),false);
- `);
+test('an early city encounter can precede the first princess reading by years without using up his debut age',()=>{
+ let b=w();b.run(`delete k.xieAdmiration;k.born=S.turn+36;var id=p.id;
+ xieRumorEvent(p);S.turn=k.born+12*12;careerTick();assert.equal(kidAge(k),12);assert.equal(p.age,21);
+ S.royalHeart={gen:S.gen,pending:{kind:'xiean',child:k.id,stage:heartStage(k)}};
+ assert.ok(duePrincessHeartEvent());assert.equal(p.xiean.readingStarted,false);
+ PalaceActions.reset();A.royalHeart(k.id);assert.equal(p.xiean.readingStarted,true);
+ assert.equal(p.ageTrackedAt,S.turn);assert.match(curEv.poemPrelude.account,/二十一岁/);save('auto');`);
+ b=boot(71,b.storage);b.ctx.assert=assert;b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);
+ var p=xieAn(),k=S.children[0],id=p.id,start=p.ageTrackedAt;assert.equal(p.age,21);choose(0);drain();
+ S.turn=start+11;careerTick();assert.equal(p.age,21);S.turn++;careerTick();assert.equal(p.age,22);
+ assert.ok(xieMarriageReady(k));var sister=makeKid(byId(k.mom),'f','昭和');sister.born=k.born;sister.pendingName=false;sister.hp=90;
+ assert.equal(xieAdmirerReady(sister),false);assert.equal(xieAn().id,id);`);
+});
+test('an older save with a 27-year-old poet distinguishes an unread poem from an established courtship',()=>{
+ for(const started of [false,true]){const b=w();b.run(`delete p.xiean.readingStarted;p.age=27;p.ageTrackedAt=S.turn;
+  ${started?'':"delete k.xieAdmiration;"}
+  if(${started}){S.turn+=12;careerTick();assert.equal(p.age,28);assert.ok(p.xiean.readingStarted);assert.ok(xieMarriageReady(k));}
+  else{S.royalHeart={gen:S.gen,pending:{kind:'xiean',child:k.id,stage:heartStage(k)}};var ev=duePrincessHeartEvent();assert.equal(p.age,27);
+   pushEv(ev);assert.equal(p.age,21);assert.equal(p.ageTrackedAt,S.turn);choose(0);drain();}
+ `);}
 });
 
 test('opening her capital estate preserves a pending meeting, including after a cold reload',()=>{
@@ -318,4 +329,27 @@ test('Xie engagement links the target and shows the actual due month, including 
  assert.ok(marriagePanel(k).includes(royalNatalPersonLink('scholar',p.id,p.name)));
  S.turn=k.betrothal.due;k.hp=40;xieBetrothalTick(p);assert.match(marriagePanel(k),/已到婚期/);
  assert.ok(xieEngagementPanel(p).includes(royalNatalPersonLink('kid',k.id,k.name)));`);
+});
+
+test('the imagined poet is visible in the reading but absent from the princess’s conversation and its memories',()=>{
+ const b=w();b.run(`delete k.xieAdmiration;k.born=S.turn-14*12;
+ S.royalHeart={gen:S.gen,pending:{kind:'xiean',child:k.id,stage:heartStage(k)}};
+ var ev=xieAdmirationEvent(k,heartState().pending),before=p.story.length;
+ assert.equal(ev.poemPrelude.poet,p);assert.deepEqual(eventPortraits(ev),[k]);assert.deepEqual(ev.present,[k]);
+ assert.match(poemPreludeHTML(ev.poemPrelude),/data-portrait-cell="433"/);ev.choices[0].f();
+ assert.equal(p.story.length,before);assert.deepEqual(k.story.at(-1).event.participants.map(x=>x.id),[k.id]);`);
+});
+test('refusal actions appear once near the visit on both princess pages and follow her current stage',()=>{
+ for(const estate of [false,true]){
+  const b=w();if(estate)b.run('A.openPrincess(k.id);choose(0);drain();');
+  b.run(`xieMarriageRefusal(k,p).choices[1].f();UI.sel=k.id;
+   var getView=${estate?'viewPrincessEstate':'viewKid'},visit=${estate?"'A.princessEstateCall('":"'A.kidVisit('"},html=getView();
+   assert.ok(html.indexOf(visit)>=0&&html.indexOf(visit)<html.indexOf('谢安辞婚之后'));
+   assert.ok(html.includes(\`A.xieBridge('courage')" disabled\`));
+   S.turn++;html=getView();assert.equal(html.split("A.xieBridge('meet')").length,2);
+   assert.ok(!xiePrincessRefusalPanel(makeKid(a,'f','昭和')));
+   A.xieBridge('courage');choose(0);drain();html=getView();assert.equal(html.split('A.xieAfterRefusal()').length,2);
+   assert.ok(!html.includes("A.xieBridge('meet')"));xiePathEvent().choices[1].f();
+   assert.ok(!getView().includes('谢安辞婚之后'));`);
+ }
 });

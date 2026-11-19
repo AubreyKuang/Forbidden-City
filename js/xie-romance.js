@@ -70,7 +70,9 @@ const romanceAdmirer=xieAdmirerReady;
 xieAdmirerReady=function(k){
  if(!xieRomanceActive())return romanceAdmirer(k);
  const p=xieAn(),h=xieHouse(p);
- return xieHeartReady(k)&&kidAge(k)<=25&&xiePresent(p)&&xieUnbound(p)&&p.age<=(xieStoryUpdated()?45:35)&&
+ if(!xieHeartReady(k)||kidAge(k)>25||!xiePresent(p)||!xieUnbound(p))return false;
+ const ageReady=PalaceActions.xiePoetryAge&&!k.xieAdmiration?xieAwaitsFirstReading(p)||p.age===XIE_DEBUT_AGE:p.age<=(xieStoryUpdated()?45:35);
+ return ageReady&&
   !mothersOf(k).some(m=>houseOf(m)?.father.id===h?.rootId)&&E().sur!=='谢';
 };
 function xiePathTarget(p=xieAn()){return p?.xiean.path&&royalById(p.xiean.path.childId);}
@@ -196,8 +198,9 @@ function xieBetrothalTick(p){
  if(expanded)engagement.news=index+1;
  xieCoupleRecord(p,k,...XIE_BETROTHAL_CHRONICLES[index%XIE_BETROTHAL_CHRONICLES.length]);
 }
+function xieBridgeWait(path){return Math.max(0,path.at+1-S.turn,(path.lastHelp??-99)+3-S.turn);}
 function xieBridgeReady(p=xieAn()){
- const path=p?.xiean.path;return xiePathAvailable(p)&&!path.pending&&path.stage<2&&S.turn-path.at>=1&&S.turn-(path.lastHelp??-99)>=3;
+ const path=p?.xiean.path;return xiePathAvailable(p)&&!path.pending&&path.stage<2&&xieBridgeWait(path)===0;
 }
 A.xieBridge=function(mode){
  const p=xieAn(),k=xiePathTarget(p),path=p?.xiean.path;if(modalOpen||!['meet','courage','leave'].includes(mode)||!xieBridgeReady(p))return;
@@ -268,13 +271,30 @@ A.xieFamilyTalk=function(){
   {t:'听他们说说家常 · 精力−1',cond:()=>valid()&&E().energy>0,why:'精力不足或两人不便相见',f:()=>{if(!valid()||!useE())return null;done=true;m.lastTalk=S.turn;m.last=S.turn;return xieRememberLate(pair,true);}},
   {t:'改日再叙'}]}));
 };
+function xieRefusalActions(p,showWait=false){
+ const path=p?.xiean.path;if(!xiePathEligible(p))return '';
+ const available=xiePathAvailable(p),pending=XIE_PHASE_ACTIONS[path.pending];
+ if(pending){
+  const next=path.pending==='meeting'&&path.meetingSource==='courage'?'读谢安的回笺':pending;
+  return available?`<button class="btn jade" onclick="A.xieAfterRefusal()">${next}</button>`:'<p class="hint">两人现在不便相见，这段心事暂缓，等方便时可继续。</p>';
+ }
+ if(path.stage>=2)return '';
+ const ready=xieBridgeReady(p);
+ if(!ready&&!showWait)return '';
+ const wait=xieBridgeWait(path),hint=!available?'两人现在不便相见，等方便时可再谈。':wait?`再过 ${wait} 个月，可与公主谈起这件事。`:'';
+ const disabled=ready?'':' disabled';
+ return `<div class="acts"><button class="btn jade" onclick="A.xieBridge('courage')"${disabled}>鼓励公主表达心意</button><button class="btn jade" onclick="A.xieBridge('meet')"${disabled}>安排相遇机会</button>${ready?`<button class="btn quiet" onclick="A.xieBridge('leave')">尊重独身的选择</button>`:''}</div>${hint?`<p class="hint">${hint}</p>`:''}`;
+}
+function xiePrincessRefusalPanel(k){
+ if(k.sex!=='f'||!xieRomanceActive())return '';
+ const p=xieAn();if(!p?.xiean.path||xiePathTarget(p)!==k)return '';
+ return detailSection('谢安辞婚之后',xieRefusalActions(p,true));
+}
 function xieRomancePanel(p=xieAn()){
  if(!xieRomanceActive()||!p)return '';
- const path=p.xiean.path,pending=XIE_PHASE_ACTIONS[path?.pending],awaiting=pending&&xiePathAvailable(p),pair=xieCouple();
- const next=path?.pending==='meeting'&&path.meetingSource==='courage'?'读谢安的回笺':pending;
- return (path?.kind==='free'?'<p>此生不婚 · 仍以诗酒会友，独身心意已写入纪事。</p>':'')+
-  (xieBridgeReady(p)?'<div class="actions"><button class="btn" onclick="A.xieBridge(\'meet\')">安排相遇机会</button><button class="btn" onclick="A.xieBridge(\'courage\')">鼓励公主表达心意</button><button class="btn" onclick="A.xieBridge(\'leave\')">尊重独身的选择</button></div>':'')+
-  (awaiting?`<button class="btn jade" onclick="A.xieAfterRefusal()">${next}</button>`:pending&&xiePathEligible(p)?'<p class="hint">两人现在不便相见，这段心事暂缓，等方便时可继续。</p>':'')+
+ const pair=xieCouple();
+ return (p.xiean.path?.kind==='free'?'<p>此生不婚 · 仍以诗酒会友，独身心意已写入纪事。</p>':'')+
+  xieRefusalActions(p)+
   (xieLateReady(pair)?`<button class="btn jade" onclick="A.xieFamilyTalk()" ${S.turn-(pair.m.lastTalk??-99)<6?'disabled':''}>听他们说说家常 · 精力−1</button>`:'');
 }
 const romanceScholarView=viewScholar;
@@ -292,6 +312,6 @@ marriageStatus=function(k){return xieRomanceActive()&&k.betrothal?.kind==='xiean
 const romanceKidView=viewKid;
 viewKid=function(){const html=romanceKidView(),k=kidById(UI.sel);return xieRomanceActive()&&k?.betrothal?.kind==='xiean'?html.replace('<h2>','<p>已订婚 · 谢安 · 尚未成婚</p><h2>'):html;};
 const romanceYouthPanel=youthPanel;
-youthPanel=function(k){const html=romanceYouthPanel(k);return html+(xieRomanceActive()&&xiePathTarget()===k?xieRomancePanel():'');};
+youthPanel=function(k){const html=romanceYouthPanel(k);return html+(xieRomanceActive()&&xieAn()?.xiean.path?.kind==='free'&&xiePathTarget()===k?xieRomancePanel():'');};
 const romanceHouseholdPanel=householdPanel;
 householdPanel=function(k){const html=romanceHouseholdPanel(k);return html+(xieCouple()?.k===k?xieRomancePanel():'');};
