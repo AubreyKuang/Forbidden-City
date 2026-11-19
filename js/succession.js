@@ -295,7 +295,7 @@ function royalKinContactButtons(k,estateContact=false){
   if(!mode&&(estateContact||journalContentVersion()<145))return '';
   if(!mode&&!unread)return '<small class="hint">暂不能往来</small>';
   const id=royalActionArg(k.id),args=estateContact?`${id},true`:id;
-  const button=unread?`<button class="btn sm jade" onclick="A.royalKinReply(${args})">读回信</button>`:
+  const button=unread?`<button class="btn sm jade" onclick="A.royalKinReply(${args})">${k.royalKinContact.reply.kind==='mountain'?'读山门家书':'读回信'}</button>`:
     `<button class="btn sm jade" onclick="A.royalKinContact(${args})" ${royalKinContactReady(k)?'':'disabled'}>${mode==='visit'?(estateContact?'到王府探望':'召见'):'寄家书'}<small>${pending?'等候回信':!royalKinContactReady(k)?'近期已经问候':'精力−1'}</small></button>`;
   return `<div class="acts"><span class="hint">${esc(k.jailed?'宗人府':royalKinContactPlace(k,mode))}</span>${button}</div>`;
 }
@@ -347,6 +347,75 @@ A.royalKinContact=function(id,estateContact=false){
       {t:'改日再说'}
     ]});
 };
+// Each enclosure travels with the letter so a later promotion cannot change what the emperor answers.
+function mountainEnclosures(k){
+  const r=k.immortal,sword=r.route==='sword';
+  if(r.stage==='learning')return [
+    ['山中的早课',sword?'头一天晨练，我嫌木剑轻，半个时辰后却连端粥的碗都在抖。如今能稳稳把粥端回座上了。':'头几日听晨钟，我总把隔涧的回声也数进去。今晨终于数对，师父叫我去唤同屋的人吃早饭。','记得初学时的这个早晨。肯把一件小事学明白，就值得写信回来。'],
+    ['山门饭牌','随信描来一块小木牌，是轮我去灶房添柴的凭记。师父说人人都要轮值，我已经会把湿柴挑出来了。','你把饭牌也描了寄来，宫里便知道你是怎样过日子的。下次也写写灶房里和你说话的人。']
+  ];
+  if(r.stage==='trial')return [
+    ['驿亭借宿','随师走到山脚，雨把路簿的墨洇了。驿亭卖茶的婆婆凭记性替我补出三处分岔。我把她说的地名抄了一张寄来。','收到你抄的小路图了。回程若再经过那座驿亭，替我向指路的人道一声谢。'],
+    ['渡口留笔','今日赶到渡口，末班船刚离岸。师父铺开行囊等明早，我才懂得把路程写满一页，不等于脚下走得完。','晚渡一夜也好。回信迟几日无妨，别为了赶驿使走夜路。']
+  ];
+  const office=immortalRankName(k);
+  if(office==='护山长老')return [
+    ['长老的值夜簿','如今轮到我做护山长老。昨夜一个小弟子怕黑，硬说是灯芯不好。我没有拆穿他，陪他把巡山的灯逐盏挑亮。','小时候也有人为你留灯。如今你肯陪一个孩子走完夜路，这笔值夜记得好。'],
+    ['故道重开','几位弟子问我，这条旧山道封了许多年，为何还留钥匙。我带他们去见山脚的樵户，才知道大雪时，那是乡里唯一能走的路。','钥匙交谁保管、雪天怎样开门，你和山下人商量。办妥了，下回写信说给我听。']
+  ];
+  if(office==='宗主')return [
+    ['宗主案头的空凳','坐上宗主的位子，来议事的人反倒只肯站着。我把从前用的矮凳搬回案前，今日终于有弟子坐下，把一句逆耳的话说完。','那张矮凳请留着。肯当面讲逆耳话的人，值得给他一个座位。'],
+    ['议事的旧印','新弟子捧来门印，请我定下明年的值守。我先让几个常守山口的人把雨季写进去，这才盖印。','你先问过守山口的人，想必这份轮值簿到了雨天也用得上。']
+  ];
+  if(office==='首席弟子'||office==='少主')return [
+    ['领同门下山','以'+office+'的身份领队，我忙着点行李，倒让最小的同门提醒大家带水。我把他的名字也写进了行簿。','既是他想到的，就该留下他的名字。你能记得这点，我很欢喜。'],
+    ['替同门递话','同门请我代问一件难开口的事。我打好了腹稿，临到师父跟前，才想起该给他留一句自己说的机会。','你肯把话头递还给他，这一趟就没有白去。']
+  ];
+  return [
+    ['旧座添新席','已在门中安顿下来。新入门的人坐在我当年的位置，也把饭碗摆错了边。我给他挪过来，忽然想给家里写封信。','信收到了。你已经能照看后来人，宫里读到这一句很安心。'],
+    ['窗下寄物','收拾住处，从旧行囊底翻出一截褪色的宫绦。我照着绦子打了一个结，画在信尾，看看宫里还有谁认得。','信尾的结收好了。以后见到相像的旧物，也能想起你山里的这扇窗。']
+  ];
+}
+function mountainKinLetterTick(){
+  if(journalContentVersion()<146)return;
+  const last=S.flags.mountainKinMail;
+  if(last?.checked===S.turn||S.turn-(last?.sent??-99)<4)return;
+  const candidates=listedRoyalKin().filter(k=>{
+    const r=k.immortal,c=k.royalKinContact;
+    return immortalAway(k)&&IMMORTAL_SECTS[r.route]&&royalKinContactMode(k)==='letter'&&
+      royalKinContactReady(k)&&S.turn>(r.departed??-99)&&S.turn-(c?.mountainSent??-99)>=8&&
+      S.turn-(r.lastLetter??-99)>=2&&!r.history?.some(e=>e.turn===S.turn);
+  });
+  if(!candidates.length)return;
+  const pace=S.flags.mountainKinMail||={};pace.checked=S.turn;
+  if(!chance(.15))return;
+  const k=pick(candidates),contact=k.royalKinContact||={},sect=IMMORTAL_SECTS[k.immortal.route];
+  const options=mountainEnclosures(k),pool=options.filter(([title])=>title!==contact.lastMountainSubject);
+  const [subject,body,answer]=pick(pool.length?pool:options);
+  const author=royalKinship(k)+k.name,recipient=E().sur+E().name;
+  const text=author+'托'+sect.name+'的驿使给'+recipient+'寄来家书。\n“'+body+'”';
+  contact.reply={kind:'mountain',subject,text,answer,unread:true,recipient,gen:S.gen};
+  contact.lastMountainSubject=subject;contact.mountainSent=S.turn;pace.sent=S.turn;
+  recordRoyalKinContact(k,'山门来信 · '+subject,text,sect.name);
+}
+function mountainKinMailEvent(k,letter){
+  const pending=()=>!S.over&&k.royalKinContact?.reply===letter&&letter.unread;
+  const canAnswer=()=>pending()&&!!royalKinContactMode(k)&&E().energy>0;
+  function answer(words){
+    if(!canAnswer()||!useE())return null;
+    letter.unread=false;letter.answered=S.turn;k.royalKinContact.last=S.turn;
+    const where=royalKinContactPlace(k,royalKinContactMode(k)),emperor=E().sur+E().name;
+    const ref=letter.gen===S.gen?'读罢《'+letter.subject+'》':'读到当年寄给'+letter.recipient+'的《'+letter.subject+'》';
+    const line=emperor+ref+'，亲笔回给'+k.name+'：“'+words+'” 信交专使送往'+where+'。';
+    recordRoyalKinContact(k,'御笔覆家书',line,'御书房');return line;
+  }
+  return {title:'山门家书 · '+letter.subject,por:k,valid:pending,text:letter.text,choices:[
+    {t:'回信说起「'+letter.subject+'」 · 精力−1',cond:canAnswer,why:'须能通信且尚有精力',f:()=>answer(letter.answer)},
+    {t:'写几句家常 · 精力−1',cond:canAnswer,why:'须能通信且尚有精力',f:()=>answer('今日把你的信放在书案边，闲下来又看了一遍。山中饭食可还惯？下回托人捎一句平安就好。')},
+    {t:'先留在案头',f:()=>null},
+    {t:'收存家书，不另回信',f:()=>{if(pending())letter.unread=false;return null;}}
+  ]};
+}
 function royalKinContactTick(){
   if(!S||S.over||journalContentVersion()<47)return;
   for(const k of royalHouseholds()){
@@ -360,11 +429,13 @@ function royalKinContactTick(){
     contact.reply={text,unread:true};
     recordRoyalKinContact(k,letter.estate?'王府回信':'皇亲回信',text,letter.estate?princeEstatePlace(k):'御书房');
   }
+  mountainKinLetterTick();
 }
 A.royalKinReply=function(id,estateContact=false){
   if(modalOpen||S.over||journalContentVersion()<47)return;
   const k=estateContact?princeEstateById(id):listedRoyalKin().find(k=>k.id===id),reply=k?.royalKinContact?.reply;
   if(!reply?.unread||((estateContact||journalContentVersion()<145)&&!royalKinContactMode(k,estateContact)))return;
+  if(reply.kind==='mountain'){pushEv(mountainKinMailEvent(k,reply));return;}
   pushEv({title:estateContact?'王府回信':'皇亲回信',por:k,text:reply.text,choices:[{t:'收好回信',f:()=>{reply.unread=false;return null;}}]});
 };
 function royalKinUnread(){
@@ -413,7 +484,7 @@ function royalKinRosterPanel(){
   });
   const empty={unread:'暂无未读回信。',capital:'目前没有在京的皇亲。',outside:'目前没有在外的皇亲。'}[key]||'没有符合条件的皇亲。';
   return `<div class="kin-directory">
-    ${letters.length?`<section class="kin-letters" aria-label="未读家书"><strong>未读家书</strong><div class="acts">${letters.map(k=>`<button class="btn sm jade" onclick="A.royalKinReply(${royalActionArg(k.id)})">读${esc(k.name)}的回信</button>`).join('')}</div></section>`:''}
+    ${letters.length?`<section class="kin-letters" aria-label="未读家书"><strong>未读家书</strong><div class="acts">${letters.map(k=>`<button class="btn sm jade" onclick="A.royalKinReply(${royalActionArg(k.id)})">读${esc(k.name)}的${k.royalKinContact.reply.kind==='mountain'?'山门家书':'回信'}</button>`).join('')}</div></section>`:''}
     <div class="reign-switch kin-filters" id="home-kin-filters" role="group" aria-label="筛选皇亲">${tabs}</div>
     <label class="kin-search"><span>搜索皇亲</span><input type="search" value="${esc(UI.royalKinQuery||'')}" placeholder="姓名、封号、伴侣或年号" oninput="filterRoyalKin(this.value)"></label>
     <div class="kin-reigns">${rows.join('')}</div><p class="hint" data-kin-empty="${empty}"${total?' hidden':''} role="status">${query?'没有符合条件的皇亲。':empty}</p></div>`;
