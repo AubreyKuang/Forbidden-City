@@ -1,5 +1,5 @@
 /* Shared outings and quarrels retain four real people and one saved outcome. */
-const FAMILY_GARDEN_RULES={garden:.18,monthly:.04,dispute:.08,outingGap:3,pairGap:8,disputeGap:8,childDisputeGap:12};
+const FAMILY_GARDEN_RULES={garden:.18,monthly:.04,dispute:.06,outingGap:3,pairGap:8,disputeGap:8,childDisputeGap:12};
 function familyGardenActive(){return !!S&&!S.over&&journalContentVersion()>=32;}
 function familyGardenState(create=false){
  if(S?.familyGarden?.gen===S.gen)return S.familyGarden;
@@ -93,7 +93,10 @@ function familyGardenDisputePairs(){
  return pairs;
 }
 function familyGardenDisputeEvent(){
- const pairs=familyGardenDisputePairs();if(!pairs.length||!chance(FAMILY_GARDEN_RULES.dispute))return null;
+ const pairs=familyGardenDisputePairs();
+ // Pending results from older releases replay with the original threshold.
+ const probability=journalContentVersion()>=113?FAMILY_GARDEN_RULES.dispute:.08;
+ if(!pairs.length||!chance(probability))return null;
  const {a,b,ka,kb}=pick(pairs),rash=k=>['好胜','爽直','灵动'].includes(childDisposition(k))?3:1;
  const offender=chance(rash(ka)/(rash(ka)+rash(kb)))?ka:kb,victim=offender===ka?kb:ka;
  const pushed=chance(['好胜','爽直','灵动'].includes(childDisposition(offender))?.5:.2),object=Math.min(kidAge(ka),kidAge(kb))<6?'木陀螺':'投壶的竹箭';
