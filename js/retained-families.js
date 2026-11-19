@@ -70,7 +70,7 @@ function retainedFamiliesPanel(){
   return branches?`<details class="family-branch family-context"><summary><strong>太后母家与先朝外戚</strong><span class="hint">${seen.size} 支</span></summary>${branches}</details>`:'';
 }
 const inheritedFamilyView=viewFamily;
-viewFamily=function(){return inheritedFamilyView()+(retainedFamiliesActive()?retainedFamiliesPanel():'');};
+viewFamily=function(){return inheritedFamilyView()+(UI.familyMode==='list'&&retainedFamiliesActive()?retainedFamiliesPanel():'');};
 const inheritedConsortView=viewConsort;
 viewConsort=function(){
   const c=!byId(UI.sel)&&familyHostById(UI.sel);

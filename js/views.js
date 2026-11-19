@@ -261,12 +261,12 @@ A.logCard=function(){
 };
 
 function viewFamily(){
-  const graph=(UI.familyMode||(S.gen>1?'list':'graph'))==='graph';
+  const graph=(UI.familyMode||'graph')==='graph';
   const heading=pageHeading('家族关系树',`${esc(E().era)}朝`,S.gen>1?'<button class="btn sm quiet" onclick="openHomeBook(\'kin\')">去御书房看皇亲</button>':'');
-  const modes=`<div class="reign-switch" role="group" aria-label="家族查看方式">${[['list','家族列表'],['graph','关系图']].map(([id,label])=>`<button class="btn sm" aria-pressed="${(id==='graph')===graph}" onclick="A.familyMode('${id}')">${label}</button>`).join('')}</div>`;
+  const modes=`<div class="reign-switch" role="group" aria-label="家族查看方式">${[['graph','关系图'],['list','家族列表']].map(([id,label])=>`<button class="btn sm" aria-pressed="${(id==='graph')===graph}" onclick="A.familyMode('${id}')">${label}</button>`).join('')}</div>`;
   const dowagers=dowagerFamilyPanel();
   const maternal=dowagers?`<details class="family-branch family-context"><summary>太后与母家</summary>${dowagers}</details>`:'';
-  if(graph)return `${heading}${modes}${familyGraphSVG()}${maternal}${outsideBirthFamilyPanel()}${householdDescendantsPanel()}`;
+  if(graph)return `${heading}${modes}${familyGraphSVG()}`;
   const byClan=new Map(),kidsByMother=new Map();
   for(const k of S.children){
     if(!kidsByMother.has(k.mom))kidsByMother.set(k.mom,[]);

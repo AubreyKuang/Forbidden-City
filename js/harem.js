@@ -7,6 +7,11 @@ function genCands(n=6){finishSelection();S.cands=[];for(let i=0;i<n;i++)S.cands.
     if(kin)S.cands[0]=kin;
   }
   if(journalContentVersion()>=84)appendFamilyNominees();
+  // Only people generated for this selection get the revised rate. A known
+  // relative already has a disposition and must keep it when joining a roster.
+  if(journalContentVersion()>=149)for(const c of S.cands){
+    if(c.selectionNatalHost==null&&!c.outerHouseholdId)c.selectionRestless=voiceHash(c.seed+':restless')%100<3;
+  }
   S.cands.forEach(c=>{deepen(c);initTimeTraveler(c);});assignPastLifeCandidates();S.selection={phase:'audience',current:S.cands[0]?.id,performed:[]};selectionBatch();captureSelectionCourt();S.flags.peek=3;S.flags.lastXX=S.turn;if(typeof outerSelectionCall==='function')outerSelectionCall();
   if(selectionNiecesActive())for(const c of S.cands)recordSelectionNiece(c,'entered');
   log(`${dateStr()}，开选秀，各地秀女入宫待选。`,journalContentVersion()<41)}

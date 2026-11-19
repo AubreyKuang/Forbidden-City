@@ -38,7 +38,7 @@ test('the Wang residence and the collapsible family roster open the same child p
   assert.match(viewHouseholdChild(),/生父.*承安/);assert.match(viewHouseholdChild(),/体魄/);assert.match(viewHouseholdChild(),/初学识字/);
   assert.equal(chroniclePersonTarget(id).person,h.children[0]);assert.match(viewHouseholdChild(),/返回王府/);
   A.backPerson('family');assert.equal(UI.view,'prince-estate');
-  assert.match(viewFamily(),/<details class="family-branch"><summary><strong>皇子公主的子女/);
+  UI.familyMode='graph';assert.doesNotMatch(viewFamily(),/皇子公主的子女/);
   UI.familyMode='list';assert.match(viewFamily(),/皇子公主的子女/);`);
 });
 

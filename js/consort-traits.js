@@ -24,7 +24,11 @@ function randomPalaceAffairsAllowed(c){return journalContentVersion()<103||!hasA
 function palaceAffairRankAllowed(c){return c.rank!==8||(journalContentVersion()>=103&&restlessDisposition(c));}
 // Use the person's original seed so a relative keeps the same disposition at selection.
 function restlessDisposition(p){
- return journalContentVersion()>=84&&p&&Number.isFinite(p.seed)&&randomPalaceAffairsAllowed(p)&&voiceHash(p.seed+':restless')%100<8;
+ if(journalContentVersion()<84||!p||!Number.isFinite(p.seed)||!randomPalaceAffairsAllowed(p))return false;
+ // Newly generated selection candidates keep their assigned value forever;
+ // existing characters and pre-existing relatives retain the original rule.
+ if(journalContentVersion()>=149&&typeof p.selectionRestless==='boolean')return p.selectionRestless;
+ return voiceHash(p.seed+':restless')%100<8;
 }
 const CONSORT_DISTINCTIONS=[
  {id:'restless',name:'不安于室',groups:['romance'],priority:120,why:'成年后，久未事发，遇到相投之人会逐月更愿赴约。私会未被撞见，往后也更敢再约。',test:restlessDisposition},
