@@ -247,7 +247,9 @@ function officialReportEvent(e){
   const report=e?.p.report;if(!report)return null;
   const {c,p,role}=e,valid=()=>!S.over&&p.report===report;
   const finish=(kind,cost=0)=>{
-    if(!valid()||E().treasury<cost||kind==='honor'&&p.memorialHonor)return null;delete p.report;chg({treasury:-cost});
+    const freeFuneral=PalaceActions.familyLossAnswer&&report.outcome==='death'&&kind==='record';
+    if(!valid()||!freeFuneral&&E().treasury<cost||kind==='honor'&&p.memorialHonor)return null;
+    delete p.report;if(!freeFuneral)chg({treasury:-cost});
     const text=kind==='honor'?'奉旨厚恤，家人收到祭文与抚恤银。':kind==='reward'?'差事办妥，奉旨另赐银帛。':kind==='accountable'?'责令补交失职说明，相关差务另派人接手。':'回奏已阅，善后依例办理。';
     if(kind==='honor')p.memorialHonor=true;
     if(kind==='reward'){p.lastReward=S.turn;p.rewardedMerit=p.merit;p.trust=clamp(p.trust+5);}

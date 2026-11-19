@@ -162,3 +162,22 @@ test('bereaved daughters remember real correspondence and keep the same story th
  A.continuePersonal(t.id);assert.match(curEv.text,/留钱自用/);choose(0);drain();
  assert.match(byId(t.owner).story.at(-1).t,/往事/);`);
 });
+
+test('deferring a father’s death invitation keeps it available in her profile without repeating the automatic notice',()=>{
+ let b=game();b.run(`var p=houseOf(a).father;officialDeath(a,'father','在家中病故。');var t=continuityThreads(a)[0];S.turn=t.due;
+ var notice=continuityMonthlyEvent();assert.ok(notice);pushEv(notice);choose(curEv.choices.length-1);drain();
+ S.turn+=4;assert.equal(continuityMonthlyEvent(),null);save('auto');`);
+ b=restore(b);b.run(`var t=S.continuity.threads[0],c=byId(t.owner),p=houseOf(c).father;
+ for(let i=0;i<3;i++){S.turn++;continuityTick();assert.equal(continuityMonthlyEvent(),null);}
+ assert.equal(p.alive,false);assert.equal(officialDeath(c,'father','在家中病故。'),false);
+ assert.equal(continuityReady(c).id,t.id);A.continuePersonal(t.id);choose(0);drain();
+ S.turn=t.due;assert.equal(continuityMonthlyEvent(),null);A.continuePersonal(t.id);assert.ok(!curEv.text.includes(t.cause));choose(0);drain();
+ assert.equal(t.stage,'settled');for(let i=0;i<24;i++){S.turn++;continuityTick();assert.equal(continuityMonthlyEvent(),null);}`);
+});
+test('a funeral report can be acknowledged in a treasury deficit and stays cleared after reload',()=>{
+ let b=game();b.run(`var p=houseOf(a).father;officialDeath(a,'father','奉差途中病故。');
+ p.report={title:'身故讣报',outcome:'death',text:p.death.reason,turn:S.turn};
+ E().treasury=-8;PalaceActions.reset();A.officialReport(a.id+':father');assert.equal(curEv.choices[0].cond(),false);
+ choose(1);assert.equal(E().treasury,-8);assert.equal(p.report,undefined);save('auto');`);
+ b=restore(b);b.run(`drain();assert.equal(pendingOfficialReport(),null);S.turn++;officialTaskTick();assert.equal(pendingOfficialReport(),null);`);
+});

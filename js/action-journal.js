@@ -2,7 +2,7 @@
    never from serialized JavaScript. Each command owns its random draws and answers.
    The saved world remains the authority; replay is checked before it is displayed. */
 const PalaceActions=(()=>{
-  const version=130, excluded=new Set(['save','dismissSaveError','load','rewind','downloadSave','readSaveFile','undoImport','newGame','officialsFilter','officialsBloc','kidsKind','chronicleFilter','chronicleSearch','chronicleClear','chronicleThread']);
+  const version=131, excluded=new Set(['save','dismissSaveError','load','rewind','downloadSave','readSaveFile','undoImport','newGame','officialsFilter','officialsBloc','kidsKind','chronicleFilter','chronicleSearch','chronicleClear','chronicleThread']);
   const actions=new Map();
   let blocked=false,snapshotRequested=false,journal=null,depth=0,replaying=false,step=null,cursor=0,answer=0,saving=0,fields=null;
   const clone=x=>JSON.parse(JSON.stringify(x));
@@ -46,6 +46,7 @@ const PalaceActions=(()=>{
     const current={name,args:clone(args),monthNotice:true,rolls:[],answers:[],saves:[],ui:clone(UI)};
     // A fresh decision in an unfinished older scene uses today's age rules on future replays.
     if(journal&&journal.version<130)current.familyAgeLimits=true;
+    if(journal&&journal.version<131&&name==='choose')current.familyLossAnswer=true;
     // A newly answered return notice can continue even if its journal predates the reunion.
     if(name==='recallHomeLeave'||(name==='choose'&&curEv?.luwanFrontierReturn))current.luwanFrontierReunion=true;
     if(name==='start'){
@@ -166,6 +167,7 @@ const PalaceActions=(()=>{
     get immortalDiscoveryNews(){return !journal||journal.immortalDiscoveryNews===true;},
     get exclusiveStoryOrigins(){return !journal||journal.exclusiveStoryOrigins===true;},
     get outerHouseholdUpdates(){return !journal||journal.outerHouseholdUpdates===true;},
+    get familyLossAnswer(){return !replaying||journal?.version>=131||step?.familyLossAnswer===true;},
     get familyAgeLimits(){return !replaying||journal?.version>=130||step?.familyAgeLimits===true;},
     get releaseVersion(){return version;},get contentVersion(){return journal?.version??version;},get legacy(){return journal?.version===2;},get immediateMonth(){return journal?.version===3&&!step?.monthNotice;},get blocked(){return blocked;},requestSnapshot(){snapshotRequested=true;},get busy(){return depth>0;},get replaying(){return replaying;},reset(){clearExhaustedMonthNotice();journal=null;blocked=false;}};
 })();
