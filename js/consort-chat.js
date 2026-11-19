@@ -52,6 +52,10 @@ function consortChatTopics(c){
     const words={afraid:`那件事臣妾一直担心，只怕外头议论，牵连${known.name}与家里。`,
       sad:`想到陛下与${known.name}的事，臣妾心里仍难过，也不知道该怎样面对她。`,
       hopeful:admitted?`${known.name}如今能在宫中相伴，臣妾心里欢喜，也盼她过得安稳。`:`臣妾盼${known.name}过得好；若她自己愿意，将来姐妹能在一处便好了。`};
+    if(journalContentVersion()>=157&&!admitted&&relative?.alive&&known.letter?.sent!=null){
+      if(known.letter.reply)words[known.reaction]+=' 她回信说：“'+known.letter.reply+'”';
+      else if(!known.letter.closed)words[known.reaction]+=' 臣妾已经给她写过信了，还在等她的回音。';
+    }
     if(words[known.reaction])add('sister-affair-'+known.sister,()=>({key:'sister-affair-'+known.sister,stage:`她又提起${known.name}。`,text:words[known.reaction]}));
   }
   const opening=consortVoicePhase(c)==='first',wish=WISHES[c.wish];

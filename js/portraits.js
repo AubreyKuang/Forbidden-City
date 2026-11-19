@@ -373,7 +373,7 @@ function assignConsortPortrait(c,newlyCreated=false){
   const base=consortPortraits(c);
   const version=journalContentVersion();
   const cells=newlyCreated===true&&version>=38&&base===CONSORT_PORTRAITS?
-    (version>=157?NEW_DOMESTIC_CONSORT_PORTRAITS:COLOR_DOMESTIC_CONSORT_PORTRAITS):base;
+    (version>=158?NEW_DOMESTIC_CONSORT_PORTRAITS:COLOR_DOMESTIC_CONSORT_PORTRAITS):base;
   if(cells.includes(c.artPortrait))return;
   const usage=new Map(cells.map(cell=>[cell,0]));
   const relatives=(S.children||[]).flatMap(k=>[k.spouse,...Object.values(k.marriageCandidates||{})]).filter(Boolean).map(p=>p.appearance).filter(Boolean);

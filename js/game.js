@@ -730,6 +730,7 @@ A.endMonth=function(){
   commonerFavorMonth();
   courtFamilyReplyTick();
   palaceKinMailTick();
+  sisterAwarenessMailTick();
   if(journalContentVersion()>=96)childUpbringingMonth();
   if(journalContentVersion()>=115)whiteSpringFamilyParcelTick();
   const passing=dowagerPassingEvent();if(passing)pushEv(passing);
