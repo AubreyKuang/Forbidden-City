@@ -55,12 +55,12 @@ function beginOutsidePaternityInquiry(f){
 }
 function privateImperialPlacement(f){
   const child=f?.child,d=child?.outsideParentage;
-  return journalContentVersion()>=120&&!S.over&&child?.alive&&d?.gen===S.gen&&d.imperial&&
+  return journalContentVersion()>=121&&!S.over&&child?.alive&&d?.gen===S.gen&&d.imperial&&
     d.privateInquiry?.imperial&&['quiet','reported','suppressed','investigating'].includes(d.status)&&
     f.household.relatives.includes(child)&&!kidById(child.id);
 }
 function offerDowagerPlacement(child){
-  return journalContentVersion()>=120&&S.flags.dowager?.alive&&natalAge(child)<15&&!child.married;
+  return journalContentVersion()>=121&&S.flags.dowager?.alive&&natalAge(child)<15&&!child.married;
 }
 function outsidePaternityResult(f){
   const child=f?.child,data=child?.outsideParentage,investigation=data?.privateInquiry;
@@ -283,7 +283,7 @@ function recognizeOutsideChild(f,withDowager=false){
   const origin={host:c.id,house:household.father.id,motherId:mother.id,fatherId:child.fatherId,fatherName:child.fatherName,name:oldName};
   const k=makeKid(attributes,child.sex,child.given||oldName,{outsideChild:child,origin,foster});
   household.relatives.splice(household.relatives.indexOf(child),1);
-  if(journalContentVersion()>=120){data.resolvedAt??=S.turn;delete child.unconfirmedParentage;}
+  if(journalContentVersion()>=121){data.resolvedAt??=S.turn;delete child.unconfirmedParentage;}
   data.status='recognized';
   const care=withDowager?'由太后接到慈宁宫亲自抚养。':foster?`由${fullName(foster)}协助照料。`:'宫中按例安顿。';
   if(withDowager){
@@ -330,7 +330,7 @@ function outsideParentagePanel(c,p){
   const q=data.privateInquiry;
   const privatePart=journalContentVersion()>=89&&p.unconfirmedParentage&&c?`<p>${q?.status==='complete'?`秘密查证已完成，生父已写明；孩子仍保留「身世未明」标签。`:q?.status==='investigating'?`锦衣卫核查中，${S.turn>=q.due?'回奏已到':`还需 ${q.due-S.turn} 个月`}。`:'可请锦衣卫只核查生父，不改变孩子身份。'}</p>${!q&&jinyiweiCommanderReady()&&!S.over?`<button class="btn jade" onclick="A.outsidePaternityInquiry(${c.id},${p.id})">请锦衣卫彻查生父</button>`:q?.status==='investigating'&&S.turn>=q.due&&!S.over?`<button class="btn jade" onclick="A.outsidePaternityReport(${c.id},${p.id})">听取锦衣卫回奏</button>`:''}`:'';
   const reopen=c&&q?.status==='complete'&&q.imperial&&data.imperial&&data.gen===S.gen&&p.alive&&
-    journalContentVersion()>=120&&p.unconfirmedParentage&&!S.over?`<button class="btn jade" onclick="A.outsideParentage(${c.id},${p.id},true)">认回宫中 · 决定孩子归处</button>`:'';
+    journalContentVersion()>=121&&p.unconfirmedParentage&&!S.over?`<button class="btn jade" onclick="A.outsideParentage(${c.id},${p.id},true)">认回宫中 · 决定孩子归处</button>`:'';
   return label||privatePart?detailSection('宫外身世',`${label?`<p>${esc(label)}</p>`:''}${action&&p.alive&&c&&data.gen===S.gen&&!S.over?`<button class="btn jade" onclick="A.outsideParentage(${c.id},${p.id})">${action}</button>`:''}${privatePart}${reopen}`):'';
 }
 
