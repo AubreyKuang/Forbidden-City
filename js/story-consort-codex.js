@@ -12,13 +12,17 @@ function storyConsortBadge(key){
   const tag=key==='gouyi'?'钩弋之遇 · 帝前展掌':key==='hongjian'?'笺铺知己 · 染笺题诗':STORY_CAST_TAGS[key];
   return tag?'<span class="tag y">'+esc(tag)+'</span>':'';
 }
+function storyResidentHistoryButton(resident){
+ const id=resident?.person?.id;
+ return id!=null&&familyHostById(id)?`<button class="btn" onclick="A.go('consort',${Number(id)})">查看人物纪事</button>`:'';
+}
 function storyConsortProgress(status){return '<small class="hint">经历 · '+esc(status)+'</small>';}
 function storyConsortCodex(){
   if(!S||journalContentVersion()<19)return '';
   return `<div class="story-consort-codex"><p class="hint">剧情妃有固定姓名、专属立绘与相遇故事。图鉴可随时翻阅，不会改变剧情进度。</p>${STORY_CONSORT_CODEX.filter(d=>d.key!=='hongjian'||typeof hongjianContent==='function'&&hongjianContent()).map(d=>{
     if(d.key==='hongjian')return hongjianCodexCard();
-    const seen=S.flags.gouyiSeen,p=S.consorts.find(c=>c.gouyi),status=p?(!p.alive?'已入宫 · 已故':p.gone?'已入宫 · 已离宫':'已入宫'):seen?.outcome==='归家'?'已相遇 · 归家':seen?'已相遇 · 尚未入宫':'尚未相遇';
+    const resident=livingStoryConsort('gouyi'),seen=S.flags.gouyiSeen,p=S.consorts.find(c=>c.gouyi),status=p?(!p.alive?'已入宫 · 已故':p.gone?'已入宫 · 已离宫':'已入宫'):seen?.outcome==='归家'?'已相遇 · 归家':seen?'已相遇 · 尚未入宫':'尚未相遇';
     const preview={id:'codex-'+d.key,sur:'赵',given:'令仪',age:22,trait:'沉静',rank:3,alive:true,seed:422,artPortrait:d.portrait,portraitOverride:d.portrait};
-    return `<article class="story-consort-card" data-story-consort="${d.key}"><div class="story-consort-picture">${porImg(preview,200)}${storyConsortProgress(status)}</div><div class="story-consort-copy"><h3>${d.epithet} · ${d.name}</h3>${storyConsortBadge(d.key)}<p>${d.introduction}</p><dl><dt>典故</dt><dd>${d.source}</dd><dt>触发方法</dt><dd>${d.route}<br>${d.conditions}</dd><dt>相遇与去留</dt><dd>${d.admission}</dd><dt>入宫后续</dt><dd>${d.sequel}</dd></dl><div class="acts">${p?`<button class="btn jade" onclick="A.go('consort',${p.id})">查看赵令仪的经历</button>`:!seen?'<button class="btn jade" onclick="A.go(\'out\')">前往出巡</button>':''}</div></div></article>`;
+    return `<article class="story-consort-card" data-story-consort="${d.key}"><div class="story-consort-picture">${porImg(preview,200)}${storyConsortProgress(resident?.status||status)}</div><div class="story-consort-copy"><h3>${d.epithet} · ${d.name}</h3>${storyConsortBadge(d.key)}<p>${d.introduction}</p><dl><dt>典故</dt><dd>${d.source}</dd><dt>触发方法</dt><dd>${d.route}<br>${d.conditions}</dd><dt>相遇与去留</dt><dd>${d.admission}</dd><dt>入宫后续</dt><dd>${d.sequel}</dd></dl><div class="acts">${p?`<button class="btn jade" onclick="A.go('consort',${p.id})">查看赵令仪的经历</button>`:resident?storyResidentHistoryButton(resident):!seen?'<button class="btn jade" onclick="A.go(\'out\')">前往出巡</button>':''}</div></div></article>`;
   }).join('')}${storyCastCodexCards()}</div>`;
 }
