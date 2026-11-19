@@ -50,8 +50,8 @@ function courtFamilyReactionLine(c,p,role,kind){
  return courtFamilyPosition(c,kind)+courtFamilyBondLine(c,p,role)+'她道：“'+courtFamilyQuote(c,kind)+'”';
 }
 function courtFamilyChronicle(person,c,p,n,stage,title,text,emotion){
- const thread='court-family:'+n.id;
- (person.story||=[]).push({d:dateStr(),t:'【'+title+'】'+text,thread,occasion:thread+':'+stage,
+ const thread='court-family:'+(n.recovery?.priorId||n.id);
+ (person.story||=[]).push({d:dateStr(),t:'【'+title+'】'+text,thread,occasion:'court-family:'+n.id+':'+stage,
   life:{kind:'family',title,turn:S.turn,gen:S.gen,source:n.task,people:[{id:c.id,name:fullName(c)},{id:p.id,name:p.name}]}});
  NPCMemory.record(S,{type:'court-family-news',time:S.turn,participants:[c.id,p.id],object:thread,outcome:text},
   [{person:person.id,subject:person===c?p.id:c.id,interpretation:text,emotion,impact:65}]);

@@ -131,3 +131,66 @@ test('old formal verdicts are recognized by the signed record, and a restored pa
   assert.equal(palaceKinCommoner(c),false);assert.doesNotMatch(cName(c),/庶人/);
   assert.ok(c.palaceKinNews.some(n=>palaceKinResponseReady(c,n,'letter')));`);
 });
+
+function arrangeRecovery(game){
+ game.run(`c.rank=5;story(c,'晋封为安妃。');A.cold(c.id);choose(0);drain();
+  var coldNote=c.palaceKinNews.find(n=>n.petition);
+  S.turn++;S.month++;palaceKinMailTick();A.palaceKinPetition(coldNote.id);choose(0);drain();`);
+}
+test('release continues the same petition in both diaries and a saved letter can be sent after reload',()=>{
+ let game=family();arrangeRecovery(game);
+ game.run(`c.trait='持重';A.uncold(c.id);
+  var n=c.palaceKinNews.find(n=>n.kind==='released'&&n.officialId===brother.id);
+  assert.equal(c.rank,3);assert.equal(n.recovery.priorId,coldNote.id);assert.equal(n.recovery.help,'care');
+  assert.match(n.fact,/获准离开冷宫，现依贵人位分/);
+  assert.match(n.quote,/上回递进去的衣物.*长出了一口气/);
+  var timeline='court-family:'+coldNote.id;
+  assert.ok(c.story.some(s=>s.thread===timeline&&s.t.includes('衣物是你按例托人送来的')));
+  assert.ok(brother.story.some(s=>s.thread===timeline&&s.t.includes('获准离开冷宫')));
+  assert.match(palaceKinLettersPanel(c),/回信报平安/);
+  A.palaceKinResponse(c.id,n.id,'letter');assert.match(curEv.text,/我已经出了冷宫.*把夜觉养回来/s);save('1');`);
+ game=boot(882,game.storage);game.ctx.assert=assert;
+ game.run(`A.load('1');assert.equal(PalaceActions.blocked,false);assert.equal(curEv.title,'回信 · 出冷宫后的家书');
+  var c=S.consorts.find(c=>fullName(c)==='许清容'),n=c.palaceKinNews.find(n=>n.kind==='released'&&n.recovery.help==='care');
+  var p=courtFamilyOfficial(c,n);choose(0);drain();S.turn++;S.month++;palaceKinMailTick();
+  var pair='court-family:'+n.id+':letter-delivered';
+  var court=p.story.find(s=>s.occasion===pair),palace=c.story.find(s=>s.occasion===pair);
+  assert.match(court.t,/那道折子的旧底/);assert.equal(court.thread,palace.thread);
+  assert.equal(court.thread,'court-family:'+n.recovery.priorId);
+  assert.equal(n.responses.letter.status,'delivered');`);
+});
+test('an intervening promotion is ordinary, while actual restoration links the previous discharge and an earlier petition',()=>{
+ const game=family();arrangeRecovery(game);
+ game.run(`A.uncold(c.id);var episode=c.palaceKinRecovery.id;
+  var discharged=c.palaceKinNews.find(n=>n.kind==='released'&&n.officialId===brother.id);
+  A.promote(c.id);choose(0);drain();assert.equal(c.rank,4);assert.ok(!c.palaceKinNews.some(n=>n.kind==='restored'));
+  father.away=true;A.promote(c.id);choose(0);drain();assert.equal(c.rank,5);
+  var restored=c.palaceKinNews.find(n=>n.kind==='restored'&&n.officialId===brother.id),late=c.palaceKinNews.find(n=>n.kind==='restored'&&n.officialId===father.id);
+  assert.equal(restored.recovery.episode,episode);assert.equal(restored.recovery.priorId,discharged.recovery.priorId);
+  assert.equal(restored.recovery.help,'care');assert.equal(late.letter,'sent');
+  assert.match(restored.fact,/恢复原位，复为妃/);
+  assert.ok(!c.story.some(s=>s.occasion==='court-family:'+late.id+':received'));
+  S.turn++;S.month++;palaceKinMailTick();assert.equal(late.letter,'received');
+  A.promote(c.id);choose(0);drain();assert.equal(c.rank,6);
+  assert.equal(c.palaceKinNews.filter(n=>n.kind==='restored'&&n.officialId===brother.id).length,1);`);
+});
+test('a fresh cold-palace stay never reuses a petition from the last stay, and a fresh draft is not called filed',()=>{
+ const game=family();arrangeRecovery(game);
+ game.run(`A.uncold(c.id);var previous=c.palaceKinRecovery.id;
+  A.cold(c.id);choose(0);drain();var episode=c.palaceKinRecovery.id;
+  var later=c.palaceKinNews.find(n=>n.coldEpisode===episode&&n.officialId===brother.id);
+  assert.ok(later.petition);assert.equal(later.petition.filed,undefined);
+  A.uncold(c.id);
+  var n=c.palaceKinNews.find(n=>n.kind==='released'&&n.recovery.episode===episode&&n.officialId===brother.id);
+  assert.notEqual(episode,previous);assert.equal(n.recovery.priorId,later.id);assert.equal(n.recovery.help,'letter');
+  assert.doesNotMatch(n.quote,/递过折/);assert.equal(palaceKinPetitionRows().length,0);`);
+});
+test('an old save that already released her can still link a future restoration to the earlier care',()=>{
+ const game=family();arrangeRecovery(game);
+ game.run(`A.uncold(c.id);
+  delete c.palaceKinRecovery;c.palaceKinNews=c.palaceKinNews.filter(n=>n.kind!=='released');
+  for(const n of c.palaceKinNews)delete n.coldEpisode;
+  A.promote(c.id);choose(0);drain();assert.equal(c.rank,4);assert.ok(!c.palaceKinNews.some(n=>n.kind==='restored'));
+  A.promote(c.id);choose(0);drain();var n=c.palaceKinNews.find(n=>n.kind==='restored'&&n.officialId===brother.id);
+  assert.ok(n);assert.equal(n.recovery.priorId,coldNote.id);assert.equal(n.recovery.help,'care');`);
+});
