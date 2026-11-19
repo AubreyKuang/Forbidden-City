@@ -130,6 +130,34 @@ function outsideParentageChronicle(family,title,lines){
   if(lines.emperor)log(`【${title}】${lines.emperor}`,1);
 }
 
+// This is a biographical label. The live case and its private findings stay on the original record.
+function hasUnclearBirthRecord(p){
+  return !!(p&&(p.unconfirmedParentage||p.unclearParentageOrigin||p.outsideParentage||
+    p.story?.some(entry=>entry.t?.startsWith('【身世未明】'))));
+}
+function carryParentageOrigin(person,source){
+  if(journalContentVersion()>=161&&hasUnclearBirthRecord(source))person.unclearParentageOrigin=true;
+}
+function palaceUnclearOrigin(c){
+  if(c.unclearParentageOrigin||c.unconfirmedParentage)return true;
+  const origin=c.familyBranchOrigin||c.natalOrigin;
+  const host=origin?.host??c.selectionNatalHost;
+  if(host==null&&c.outerHouseholdId==null)return false;
+  const source=host!=null?familyHostById(host)?.house?.relatives?.find(p=>p.id===(origin?.relative??c.id)):outerChild(c.outerHouseholdId);
+  return hasUnclearBirthRecord(c)||hasUnclearBirthRecord(source);
+}
+function consortParentageBadge(c){
+  return c&&journalContentVersion()>=161&&palaceUnclearOrigin(c)?unclearBirthBadge():'';
+}
+function restorePalaceParentageOrigins(){
+  if(journalContentVersion()<161)return;
+  for(const c of [...S.consorts,...(S.cands||[]),...(S.retainedFamilies||[])]){
+    if(palaceUnclearOrigin(c))c.unclearParentageOrigin=true;
+  }
+}
+function unclearBirthBadge(){
+  return '<span class="tag y" title="出生时留下的身世记录；现有身份以名册为准。">身世未明</span>';
+}
 function outsideChildBadge(k,outerSister=false){
   const data=k.outsideParentage;
   let label=k.unconfirmedParentage?'身世未明':'';
@@ -138,7 +166,10 @@ function outsideChildBadge(k,outerSister=false){
     else if(data?.status==='stayed'||data?.status==='proved')label='宫外皇嗣';
     else if(outerSister)label=k.pedigree==='认领'?'宫外归宗':'宫外血脉';
   }
-  return label?`<span class="tag y">${label}</span>`:'';
+  const status=label?`<span class="tag y">${label}</span>`:'';
+  if(journalContentVersion()<161||label==='身世未明')return status;
+  const prior=k.unclearParentageOrigin||k.unconfirmedParentage||(k.outsideFamilyOrigin&&hasUnclearBirthRecord(k));
+  return (prior?unclearBirthBadge():'')+status;
 }
 function outsideChildGrowing(child,mother,aunt,status){
   if(!child||child.alive===false||status==='cleared')return;

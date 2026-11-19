@@ -89,6 +89,7 @@ function outerSelectionPerson(k){
   const c=makeGirl({sur,given:k.given,age:kidAge(k),trait,fam:{...FAMS.find(f=>f.t==='寒门')}});
   Object.assign(c,{id:k.id,outerHouseholdId:k.id,birthMonth:birthMonth(k),looks:k.looks,talent:k.lit,virtue:k.vir,scheme:k.amb,
     portraitOverride:portraitCell({...k,courtGuest:true}),seed:k.seed,kinNote:k.mark+'，随身带着'+k.token});
+  carryParentageOrigin(c,k);
   deepen(c);
   return c;
 }

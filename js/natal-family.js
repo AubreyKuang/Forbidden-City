@@ -119,6 +119,8 @@ function natalCourtshipEvent(c,p){
 }
 function natalConsortProfile(c,p){
   const g=makeGirl({sur:p.sur,given:p.given,age:natalAge(p),trait:p.trait,fam:{...c.fam}});
+  carryParentageOrigin(g,p);
+  if(journalContentVersion()>=161&&typeof p.selectionRestless==='boolean')g.selectionRestless=p.selectionRestless;
   g.id=p.id;g.seed=p.seed;g.artPortrait=p.artPortrait;g.house=c.house;g.fatherId=c.fatherId;g.clan=clanKey(c);g.story=p.story.map(s=>({...s}));g.kin={};g.kinRival={};
   return g;
 }

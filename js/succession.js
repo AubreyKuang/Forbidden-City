@@ -239,7 +239,7 @@ function dowagerCourtPanel(){
     return `<section class="dowager-court"><header>${porImg(dowagerPerson(d),76)}<div><p class="dowager-room">${room}</p><h3>${esc(d.name)}</h3>
       <p>${esc(d.fullName||'')}${age!=null?` · ${age}岁`:''}</p>${d.relation?`<p>${esc(d.relation)}</p>`:''}</div></header>
       ${actions?`<div class="acts">${actions}</div>`:''}
-      ${biography?detailFold('生平',`${d.portrait?.trait?`<p>${esc(d.portrait.trait)} · ${esc(TRAITS[d.portrait.trait]?.d||'')}</p>`:''}${biography}`):''}${history}</section>`;
+      ${consortParentageBadge(d.portrait)}${biography?detailFold('生平',`${d.portrait?.trait?`<p>${esc(d.portrait.trait)} · ${esc(TRAITS[d.portrait.trait]?.d||'')}</p>`:''}${biography}`):''}${history}</section>`;
   }).join('')}</div>${storyTaifeiPanel()}`;
 }
 

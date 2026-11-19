@@ -76,7 +76,7 @@ const inheritedConsortView=viewConsort;
 viewConsort=function(){
   const c=!byId(UI.sel)&&familyHostById(UI.sel);
   if(!c?.familyArchive)return inheritedConsortView();
-  return `${personBackButton('family')}<header class="detail-head person-detail-head">${porImg(c,224)}<div class="grow"><h2>${esc(fullName(c))}</h2><p>${esc(retainedHostTitle(c))} · ${c.age}岁</p></div></header>${storyElderVisitButton(c.id)}${detailSection('人物纪事',detailStory(c))}${detailSection('母家亲族',familyHouseTree(c,true))}`;
+  return `${personBackButton('family')}<header class="detail-head person-detail-head">${porImg(c,224)}<div class="grow"><h2>${esc(fullName(c))}</h2><p>${esc(retainedHostTitle(c))} · ${c.age}岁 ${consortParentageBadge(c)}</p></div></header>${storyElderVisitButton(c.id)}${detailSection('人物纪事',detailStory(c))}${detailSection('母家亲族',familyHouseTree(c,true))}`;
 };
 const inheritedOfficialView=viewOfficial;
 viewOfficial=function(){

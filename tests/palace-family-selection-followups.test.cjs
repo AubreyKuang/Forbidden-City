@@ -185,3 +185,17 @@ test('withdraw early and adult nominations, save, reopen and register again',()=
  A.nominateRelative(hostId,id);A.cancelFamilyNomination(hostId,id);A.nominateRelative(hostId,id);genCands();
  assert.equal(S.cands.filter(g=>g.id===id).length,1);assert.doesNotMatch(familyNominationButton(e.c,e.p),/取消登记/);A.cancelFamilyNomination(hostId,id);assert.ok(S.cands.some(g=>g.id===id));`);
 });
+
+test('身世未明随本人从应选到留牌，旧存档凭家籍恢复，其他人的特质不被占用',()=>{
+ const b=nieceSelection({uncertain:true});b.run(`
+ candidate.selectionRestless=true;var badge=/>身世未明</,restless=/>不安于室</;
+ assert.match(viewSelectionAudience(),badge);assert.match(consortTraitTags(candidate),restless);
+ A.xxTake(nieceId);choose(0);drain();var g=byId(nieceId);assert.equal(g.unclearParentageOrigin,true);
+ assert.match(consortTraitTags(g),badge);assert.match(consortTraitTags(g),restless);
+ A.go('consort',g.id);assert.match(viewConsort(),badge);assert.match(viewHarem(),badge);
+ assert.doesNotMatch(consortTraitTags(other),badge);
+ delete g.unclearParentageOrigin;PalaceActions.reset();save('auto');A.load('auto');drain();
+ g=byId(nieceId);var saved=JSON.stringify(S);assert.match(consortTraitTags(g),badge);
+ assert.match(consortTraitTags(g),restless);assert.equal(JSON.stringify(S),saved);
+ assert.doesNotMatch(consortTraitTags(g),/宫外皇嗣|生父为皇帝/);`);
+});

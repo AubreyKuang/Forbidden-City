@@ -55,3 +55,17 @@ test('a commoner husband has his own readable notes even without a court officia
   const w=household();w.run(`sister.spouse={id:'spouse:'+sister.id,name:'陈文',alive:true};child.fatherId=sister.spouse.id;child.fatherName=sister.spouse.name;`);
   openCase(w);w.run(`choose(1);assert.match(sister.spouse.story.at(-1).t,/将疑问暂压/);UI.sel=host+':'+sister.id;assert.match(viewNatalRelative(),/陈文的身世纪事/);`);
 });
+
+test('归宗与太后接养可并列显示出生时的身世记录和原有标签',()=>{
+ for(const dowager of [false,true]){
+  const w=household();w.ctx.dowager=dowager;w.run(`drain();
+   child.birthLabels=['star'];child.birthLabelYears={star:3};child.birthLabelEvents={};
+   recognizeOutsideChild(outsideParentageFamily(other,child),dowager);
+   const ward=kidById(id);assert.equal(ward.outsideParentage.status,'recognized');assert.ok(!ward.unconfirmedParentage);
+   assert.ok(ward.unclearParentageOrigin);assert.equal(ward.birthLabelYears.star,3);
+   for(const label of ['身世未明','宫外归宗','文星流彩'])assert.ok(childListCard(ward).includes(label));
+   delete ward.unclearParentageOrigin;PalaceActions.reset();save('auto');A.load('auto');drain();A.go('kid',id);
+   assert.match(viewKid(),/身世未明/);assert.match(outsideChildBadge(kidById(id)),/宫外归宗/);
+   assert.equal(outsideChildBadge({}), '');`);
+ }
+});
