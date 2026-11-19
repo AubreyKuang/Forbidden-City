@@ -570,25 +570,28 @@ function viewKid(){
     ${foster&&mom?.alive?`<button class="btn" onclick="A.unfoster(${k.id})">抱回生母身边</button>`:''}</div>`:'';
   const titles=k.alive&&!k.removedFromRoyal&&!k.templeStay&&!royalJourneyAway(k)?`${k.sex==='m'&&a>=5&&S.heir!==k.id&&!storyCastHeirBar(k)?`<button class="btn" onclick="A.kidHeir(${k.id})">立为太子</button>`:''}
     ${(journalContentVersion()>=40?royalChildTitleReady(k):a>=12)?`<button class="btn" onclick="A.kidTitle(${k.id})">赐封号</button>`:''}`.trim():'';
+  const familyChapter=['family','亲缘与婚配',palaceAdoptionOriginPanel(k)+householdPanel(k)+princessActions(k)+princeEstateLink(k)+multipleBirthPanel(k)+
+      detailSection('身世与安置',parentagePanel(k))+outsideParentagePanel(null,k)+detailSection('府中认回的孩子',recognizedChildrenPanel(k))+
+      (k.alive?detailSection('与母亲的日常',kidFamilyPanel(k)):'')+detailSection('宫中关系',k.alive?kidRelLine(k):'')];
+  const vitals=`<div class="detail-vitals">${bar('才学',k.lit,'#617991')}${bar('武艺',k.mar,'#92504a')}${bar('品德',k.vir,'#517369')}</div>`;
   return `${personBackButton('kids')}
    <header class="detail-head person-detail-head">${porImg(k,224)}<div class="grow"><p>${status}</p><h2>${esc(kidName(k))}</h2>
     <p>生母 ${outsideMotherLink(k)}${foster?` · 养母 ${parentLink(k.foster)}`:''}</p>${childResidence(k)?`<p class="hint">${esc(childResidence(k))}</p>${youngChildMother(k)?`<button class="btn sm jade" onclick="A.visitChildHome(${k.id})">去宫里看看 →</button>`:''}`:''}${birthTags(k)}${outsideChildBadge(k)}${childHasLeftPalace(k)?`<p class="hint">居处 · ${esc(childWhereabouts(k))}</p>`:''}</div></header>
    ${k.pendingName?pendingBirthPanel():''}
    ${k.alive&&!k.removedFromRoyal&&!k.estate&&!k.jailed&&!k.pendingName?`<div class="detail-actions" role="group" aria-label="人物操作"><span class="detail-action-label" aria-hidden="true">人物操作</span><div class="acts"><button class="btn primary" onclick="A.kidVisit(${k.id})">${childHasLeftPalace(k)?'写家书':'探望'}<small>精力-1</small></button>${princeEstateOpenReady(k)?`<button class="btn jade" onclick="A.princeOpenEstate(${k.id})">安排出宫开府</button>`:''}</div></div>`:''}
    ${marriagePanel(k)}
-   <div class="detail-vitals">${bar('才学',k.lit,'#617991')}${bar('武艺',k.mar,'#92504a')}${bar('品德',k.vir,'#517369')}</div>
+   ${k.married?'':vitals}
    ${pageChapters('child',[
+    ...(k.married?[familyChapter]:[]),
     ['history','人物纪事',detailStory(k),'纪事'],
     ['now','近况与心事',characterVoiceHTML(k)+daoPracticePanel(k)+storyCastChildPanel(k)+childDispositionPanel(k)+(k.foreignLanguages?.length?detailSection('出使见闻',`<p>所学外语：${k.foreignLanguages.map(esc).join('、')}。</p>`+diplomaticTraitsPanel(k)):'')+immortalPanel(k)+royalTravelPanel(k)+continuityPanel(k)+
       (k.alive?initiativeHTML(k):'')+detailSection(a>=20?'婚事与心意':'少年心事',youthPanel(k))+
       detailSection('护国寺祈福',childTemplePanel(k))],
-    ['care','教养与封号',personalWardrobePanel(k,true)+detailSection('教养与抚养',care)+detailSection('师承',childMentorPanel(k))+detailSection('成年志向与差务',princeCareerPanel(k)+princeFiefRequestPanel(k))+princeCirclePanel(k)+
+    ['care','教养与封号',(k.married?vitals:'')+personalWardrobePanel(k,true)+detailSection('教养与抚养',care)+detailSection('师承',childMentorPanel(k))+detailSection('成年志向与差务',princeCareerPanel(k)+princeFiefRequestPanel(k))+princeCirclePanel(k)+
       detailSection('封号与储位',titles?`<div class="acts">${titles}</div>`:'')+
       detailSection('其他属性',`<div class="stats">${bar('体魄',k.hp,'#a87a26')}${bar('野心',k.amb,'#6b4a33')}${bar('父爱',k.love,'#936375')}${k.sex==='m'&&a>=10?bar('支持',k.sup||0,'#617991'):''}</div>`)+
       detailSection('出生禀赋',childBirthPanel(k))],
-    ['family','亲缘与婚配',palaceAdoptionOriginPanel(k)+householdPanel(k)+princessActions(k)+princeEstateLink(k)+multipleBirthPanel(k)+
-      detailSection('身世与安置',parentagePanel(k))+outsideParentagePanel(null,k)+detailSection('府中认回的孩子',recognizedChildrenPanel(k))+
-      (k.alive?detailSection('与母亲的日常',kidFamilyPanel(k)):'')+detailSection('宫中关系',k.alive?kidRelLine(k):'')],
+    ...(k.married?[]:[familyChapter]),
     ['past','往事与经历',historyPanel(k)+detailSection('宫墙往事',palaceRomancePanel(k))+
       detailSection('随身旧物',lifeWorksPanel(k))+lifeBiography(k)]
    ])}`;
