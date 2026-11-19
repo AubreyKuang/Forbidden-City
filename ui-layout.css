@@ -72,10 +72,18 @@
 .save-section>.acts{gap:10px}
 .log-filter{flex-wrap:wrap;align-items:center;gap:8px;margin-block:12px 20px}
 .log-filter>.btn:last-child{margin-left:auto}
-.chronicle-filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:12px}
-.chronicle-filters label{display:grid;gap:4px;min-width:0;align-content:start}
-.chronicle-filters select{width:100%;min-width:0;max-width:none;min-height:40px}
-.chronicle-tools input{min-height:42px;flex-basis:180px;max-width:100%}
+.chronicle-tools{display:grid;gap:10px;padding:12px;border:1px solid #d6d7c6;border-radius:12px;background:#f4f3ea}
+.chronicle-search{display:flex;align-items:center;gap:4px;margin:0;padding:3px;border:1px solid #95a99a;border-radius:10px;background:#fffdf6}
+.chronicle-search:focus-within{outline:2px solid var(--jade);outline-offset:1px}
+.chronicle-tools .chronicle-search input{min-width:0;width:100%;min-height:42px;padding:6px 8px;border:0;border-radius:7px;background:transparent;color:var(--ink);font:inherit;font-size:16px}
+.chronicle-search input:focus{outline:0}
+.chronicle-search .btn{flex:none;min-height:42px;padding-inline:12px}
+.chronicle-filters{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px}
+.chronicle-filters label{display:grid;gap:3px;min-width:0;color:#52645a;font-size:13px}
+.chronicle-filters select{width:100%;min-width:0}
+.chronicle-results{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px 8px}
+.chronicle-results .hint{margin:0}
+.chronicle-results .btn{min-height:40px}
 .residence-picker .btn{flex:0 1 auto;text-align:left;min-height:42px}
 .residence-selected>div{min-width:0}
 .residence-palace{display:flex;flex-direction:column;min-width:0}
@@ -128,29 +136,29 @@
  .detail-actions .acts{grid-template-columns:1fr}
 }
 
-/* Palace workshop rosters */
+/* Person and chronicle pickers */
 .workshop-picker{align-items:center}
-.workshop-select{position:relative;display:inline-flex;min-width:0;max-width:100%}
-.workshop-select select{
+:is(.workshop-select,.chronicle-select){position:relative;display:inline-flex;min-width:0;max-width:100%}
+:is(.workshop-select,.chronicle-select) select{
   appearance:none;box-sizing:border-box;max-width:100%;min-height:44px;
   padding:8px 2.3em 8px .9em;border:1px solid #a1afa0;border-radius:10px;
   background:#eaf0e6;color:#304d40;font:inherit;cursor:pointer;text-overflow:ellipsis;
 }
-.workshop-select::after{
+:is(.workshop-select,.chronicle-select)::after{
   content:"";position:absolute;right:.95em;top:50%;width:.45em;height:.45em;
   border:solid #52705c;border-width:0 1.5px 1.5px 0;transform:translateY(-70%) rotate(45deg);pointer-events:none;
 }
-.workshop-select select:hover{background:#e1eadc}
-.workshop-select select:focus-visible{outline:2px solid var(--jade);outline-offset:2px}
+:is(.workshop-select,.chronicle-select) select:hover{background:#e1eadc}
+:is(.workshop-select,.chronicle-select) select:focus-visible{outline:2px solid var(--jade);outline-offset:2px}
 @supports (appearance:base-select){
-  .workshop-select select,.workshop-select select::picker(select){appearance:base-select}
-  .workshop-select select::picker-icon{display:none}
-  .workshop-select select::picker(select){
+  :is(.workshop-select,.chronicle-select) select,:is(.workshop-select,.chronicle-select) select::picker(select){appearance:base-select}
+  :is(.workshop-select,.chronicle-select) select::picker-icon{display:none}
+  :is(.workshop-select,.chronicle-select) select::picker(select){
     margin-block:4px;padding:4px;border:1px solid #a1afa0;border-radius:10px;
     background:#f3f5ef;color:#304d40;box-shadow:0 5px 16px #263e3026;
     max-height:min(18rem,45vh);overflow:auto;
   }
-  .workshop-select option{min-height:40px;padding:6px 10px;border-radius:6px;font:inherit}
-  .workshop-select option:checked{background:#dce7d9}
-  .workshop-select option:hover,.workshop-select option:focus-visible{background:#cfdecc}
+  :is(.workshop-select,.chronicle-select) option{min-height:40px;padding:6px 10px;border-radius:6px;font:inherit}
+  :is(.workshop-select,.chronicle-select) option:checked{background:#dce7d9}
+  :is(.workshop-select,.chronicle-select) option:hover,:is(.workshop-select,.chronicle-select) option:focus-visible{background:#cfdecc}
 }
