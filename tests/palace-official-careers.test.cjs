@@ -52,7 +52,7 @@ test('sisters at home and in the palace keep their own reactions to promotion an
    c.upbringing={title:'吏部尚书',group:'noble',power:78,means:'ample'};
    relAdd(c,sister,70-relGet(c,sister));relAdd(c,other,-10-relGet(c,other));
    var old=JSON.parse(JSON.stringify(S));c.rank=5;courtFamilyLifeTick(old);courtFamilyLifeTick(old);
-   assert.match(p.palaceConcern.quote,/娘家可以依仗/);
+   assert.match(p.palaceConcern.quote,/晋封是你的喜事.*只写这封信道贺/);
    assert.match(sister.palaceConcern.quote,/真替她欢喜/);assert.match(other.palaceConcern.quote,/新位分有新规矩/);
    assert.equal(niece.palaceConcern,undefined);assert.equal(sister.story.filter(e=>e.life?.title==='宫中牵挂').length,1);
    old=JSON.parse(JSON.stringify(S));c.cold=true;courtFamilyLifeTick(old);

@@ -540,7 +540,7 @@ function viewConsort(){
     ['family','家人与孩子',
       actionGroup('探亲与省亲',familyActions)+
       detailSection('白泉王室亲眷',whiteSpringKinLinks(c))+natalVisitorsPanel(c)+
-      whiteSpringFriendPanel(c)+sisterPalaceConcernPanel(c)+courtFamilyNewsPanel(c)+
+      whiteSpringFriendPanel(c)+sisterPalaceConcernPanel(c)+courtFamilyNewsPanel(c)+palaceKinLettersPanel(c)+
       detailSection('家族与人际',`${kids.length?`<div>子女：${kids.map(k=>`<button class="btn quiet sm" onclick="A.go('kid',${k.id})">${esc(k.name)}</button>`).join(' ')}</div>`:''}${family}`)+
       marriedSisterChildrenPanel(c)+
       (act?detailSection('与孩子的日常',consortFamilyPanel(c)):'')+

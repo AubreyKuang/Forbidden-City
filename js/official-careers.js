@@ -200,6 +200,7 @@ function courtFamilyLifeTick(previous){
   const before=new Map((previous.consorts||[]).map(c=>[c.id,c]));
   for(const c of S.consorts){
     const old=before.get(c.id);if(!old)continue;
+    if(palaceKinFlowActive()&&old.cold&&!c.cold)delete c.palaceKinPetitionId;
     if(whiteSpringRoyal(c)){whiteSpringFamilyChanges(c,old,previous);continue;}
     const newborn=S.children.filter(k=>k.mom===c.id&&!(previous.children||[]).some(o=>o.id===k.id));
     const kind=old.alive&&!c.alive?'death':!old.cold&&c.cold?'cold':expanded&&old.cold&&!c.cold?'released':c.rank<old.rank?'demoted':
@@ -211,7 +212,12 @@ function courtFamilyLifeTick(previous){
     if(expanded)recordSisterPalaceConcerns(c,old,kind,fact,key,stamp);
     const penalty=journalContentVersion()>=88&&['cold','demoted'].includes(kind);
     const lostCrown=penalty&&old.rank===8;
-    const kin=careerPeople().filter(x=>officialAlive(x.p)).map(person=>({person,r:careerKin(person).find(r=>r.c.id===c.id)})).filter(x=>x.r);
+    let kin=careerPeople().filter(x=>officialAlive(x.p)).map(person=>({person,r:careerKin(person).find(r=>r.c.id===c.id)})).filter(x=>x.r);
+    if(palaceKinFlowActive()&&c.alive&&!c.gone&&PALACE_KIN_NEWS[kind]&&(kind!=='neglected'||!c.cold)){
+      const direct=kin.filter(({person,r})=>palaceKinDirect(c,person,r));
+      if(direct.length)recordPalaceKinNews(c,direct,kind,fact,key,stamp,old);
+      kin=kin.filter(item=>!direct.includes(item));
+    }
     const writers=penalty?familyPenaltyWriters(kin,key,stamp,lostCrown):null;
     for(const {person,r} of kin){
       if(r.type!=='blood'&&!['cold','demoted','birth','death'].includes(kind))continue;
