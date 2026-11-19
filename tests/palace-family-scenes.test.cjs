@@ -31,3 +31,35 @@ test('night chronicle uses the shown text and first company does not invent fami
 test('only guiren or higher can request ordinary, long-awaited or frail adoption',()=>{const b=world();b.run(`S.children=[];m.age=35;m.enteredAt=S.turn-36;m.nights=12;m.favor=90;m.lastBirth=-99;for(var trait of ['温婉','体弱']){m.trait=trait;m.hp=trait==='体弱'?30:90;for(var rank=0;rank<3;rank++){m.rank=rank;assert.equal(fosterPetitionReason(m),null);}m.rank=3;assert.ok(fosterPetitionReason(m));}`);});
 test('monthly notices are outside any collapsed palace panel',()=>{const b=world();b.run(`var html=viewMap(),notice=html.indexOf('aria-label="本月宫中消息"'),fold=html.indexOf('<details class="map-brief"');assert.ok(notice>0&&notice<fold);assert.doesNotMatch(html,/<summary>宫中动向/);`);});
 for(const fixture of JSON.parse(fs.readFileSync(__dirname+'/fixtures/family-scenes-legacy.json','utf8')))test('legacy pending '+fixture.mode+' preserves exact old scene then adopts new rules',()=>{const b=boot(999);b.ctx.assert=assert;b.ctx.fixture=fixture.save;b.run(`S=fixture;assert.equal(PalaceActions.restore(S.pendingActions),true);assert.equal(PalaceActions.contentVersion,fixture.pendingActions.version);assert.equal(PalaceActions.blocked,false);drain();assert.equal(familyScenesEnabled(),true);`);});
+test('night dialogue inventories, named voices and the quieter mood all reach the night scene',()=>{
+ const b=world();b.run(`assert.equal(Object.keys(NIGHT_VOICES).length,21);
+ assert.equal(Object.values(NIGHT_VOICES).flat().length,64);
+ assert.equal(Object.values(NIGHT_OPENINGS).flat().length,32);
+ assert.equal(Object.keys(STORY_NIGHT_VOICES).length,8);
+ assert.equal(new Set(Object.values(STORY_NIGHT_VOICES).flat()).size,40);
+ for(const key of Object.keys(STORY_NIGHT_VOICES)){
+   m.gouyi=key==='gouyi';m.hongjian=key==='hongjian';m.fixedStory=STORY_CAST[key]?key:null;
+   m.nights=2;m.mood=60;m.xin={k:'平和'};m.hp=90;
+   var usual=()=>nightVoice(m).split('\\n').at(-1);
+   var three=[usual(),usual(),usual()];
+   assert.equal(new Set(three).size,3);assert.ok(three.every(t=>STORY_NIGHT_VOICES[key].slice(0,3).includes(t)));
+   m.xin.k='委屈';var two=[usual(),usual()];assert.equal(new Set(two).size,2);
+   assert.ok(two.every(t=>STORY_NIGHT_VOICES[key].slice(3).includes(t)));
+ }
+ m.fixedStory='ayimu';m.mood=65;m.xin.k='悲恸';m.nights=0;
+ A.night(m.id);var entry=m.story.findLast(e=>e.t.startsWith('奉召侍寝。')).t.slice('奉召侍寝。'.length);
+ assert.ok(curEv.text.includes(entry));assert.match(entry,/初次奉召/);assert.match(entry,/仍在伤怀/);
+ assert.ok(STORY_NIGHT_VOICES.ayimu.slice(3).some(t=>entry.endsWith(t))); `);
+});
+test('night openings use actual tenure and age, including a first summons years after admission',()=>{
+ const b=world();b.run(`m.nights=0;m.enteredAt=S.turn-24;m.xin={k:'平和'};m.mood=50;m.hp=95;
+ assert.ok(NIGHT_OPENINGS.waited.includes(nightVoice(m).split('\\n')[0]));
+ m.nights=1;m.age=46;m.enteredAt=S.turn-150;m.lastPersonalAttention=S.turn;m.aff=50;
+ var observed=new Set(Array.from({length:60},()=>nightVoice(m).split('\\n')[0]));
+ assert.ok([...observed].every(t=>[...NIGHT_OPENINGS.mature,...NIGHT_OPENINGS.veteran].includes(t)));
+ assert.ok(NIGHT_OPENINGS.mature.some(t=>observed.has(t))&&NIGHT_OPENINGS.veteran.some(t=>observed.has(t)));
+ m.xin.k='委屈';assert.ok(LOW_NIGHT_VOICES.includes(nightVoice(m).split('\\n').at(-1)));
+ m.xin.k='平和';m.mood=80;m.age=20;m.enteredAt=S.turn;
+ var early=new Set(Array.from({length:60},()=>nightVoice(m).split('\\n')[0]));
+ assert.ok([NIGHT_OPENINGS.early,NIGHT_OPENINGS.young,NIGHT_OPENINGS.joyful].every(pool=>pool.some(t=>early.has(t))));`);
+});
