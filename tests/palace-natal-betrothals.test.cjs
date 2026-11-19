@@ -458,3 +458,33 @@ for(const sex of ['m','f'])test('a mother also hears about a regular arranged we
     drain();assert.equal(a.story.filter(e=>e.life?.title==='婚前听母亲说几句话').length,1);
     A.kidPolicy(k.id,'习武');assert.equal(a.story.filter(e=>e.life?.title==='婚前听母亲说几句话').length,1);`);
 });
+
+test('each mother’s own advice and each royal child’s answer are drawn from their actual identities',()=>{
+  const b=family();
+  b.run(`S.turn=k.born+19*12;
+    var voices=new Set();for(const trait of Object.keys(TRAITS)){a.trait=trait;
+      const scene=maternalWeddingEvent(k,p);assert.ok(scene.text.includes(MATERNAL_WEDDING_ADVICE[trait]));voices.add(MATERNAL_WEDDING_ADVICE[trait]);}
+    assert.equal(voices.size,Object.keys(TRAITS).length);
+    a.fixedStory='ayimu';assert.match(maternalWeddingEvent(k,p).text,/两人轮着击/);
+    var heard=new Set();for(const sex of ['m','f'])for(const temperament of Object.keys(CHILD_DISPOSITIONS)){
+      k.sex=sex;k.temperament=temperament;const line=WEDDING_CHILD_PLANS[temperament][sex];
+      assert.ok(maternalWeddingEvent(k,p).text.includes(line));heard.add(line);
+    }assert.equal(heard.size,16);`);
+});
+
+test('the private dowry album is stable, only some adult daughters receive one, and both remember it once',()=>{
+  const b=family('f');
+  b.run(`S.turn=k.born+18*12;k.married=true;k.spouse=p;
+    let has,plain;for(let i=0;i<32;i++){
+      p.id='gift-'+i;if(maternalWeddingEvent(k,p).text.includes('避火图'))has=p.id;else plain=p.id;
+    }assert.ok(has&&plain);p.id=has;
+    const giftScene=maternalWeddingEvent(k,p);assert.match(giftScene.text,/单独留了女儿/);
+    assert.equal(giftScene.text,maternalWeddingEvent(k,p).text);
+    k.born+=12;assert.doesNotMatch(maternalWeddingEvent(k,p).text,/避火图/);k.born-=12;
+    k.sex='m';assert.doesNotMatch(maternalWeddingEvent(k,p).text,/避火图/);k.sex='f';
+    k.away=true;const letter=maternalWeddingEvent(k,p);assert.match(letter.text,/亲笔写信/);assert.match(letter.text,/扁匣/);
+    assert.doesNotMatch(letter.text,/单独留了女儿/);letter.onShow();letter.onShow();
+    assert.equal(k.story.filter(e=>e.t.includes('避火图')).length,1);
+    assert.equal(a.story.filter(e=>e.t.includes('避火图')).length,1);
+    assert.equal(maternalWeddingEvent(k,p),null);`);
+});
