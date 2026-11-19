@@ -71,6 +71,7 @@ function familyTreeEntries(c,registry=familyTreeRegistry()){
   });
 }
 function familyHouseHeight(c){
+  if(whiteSpringRoyal(c)&&journalContentVersion()>=108)return 112;
   const h=houseOf(c);if(!h)return 68;
   if(!familyTreeExpanded(c,h.father.id,true))return 68;
   const registry=familyTreeRegistry();

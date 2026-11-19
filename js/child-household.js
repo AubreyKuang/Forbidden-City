@@ -54,9 +54,9 @@ function childMotherResidenceRequests(){
       k.motherResidence={choice:stay?'stay':'shared',caregiver,turn:S.turn};
       const peers=sharedChildResidents(k),names=peers.map(o=>o.name).join('、');
       shareMotherResidenceNews(k,stay);
-      if(stay){k.love=clamp((k.love??50)+4);kstory(k,`【求与母同住】${k.sex==='f'?'她':'他'}向父皇求准，获许在成年或出宫前继续随${address}住在${mother.palace}，仍按时读书。${journalContentVersion()>=108?'听见父皇应允，孩子欢喜地松了口气，赶紧把消息告诉母亲。':''}`);story(mother,`【孩子留在身边】${k.name}求准继续同住，往后仍在宫中一起起居。${journalContentVersion()>=108?'她见孩子安心下来，自己也欢喜，轻轻揽住孩子，答应陪着慢慢长大。':''}`);return `你答应了${k.name}。${k.sex==='f'?'她':'他'}在成年或出宫之前继续随${address}同住，课业照常。${journalContentVersion()>=108?'孩子欢喜地依偎在母亲身边，母亲也露出宽慰的笑。':''}`;}
-      k.love=clamp((k.love??50)-4);kstory(k,`【迁往共同居所】${k.sex==='f'?'她':'他'}盼着陪伴${address}，父皇没有应允，仍按安排搬往${place}${names?'，与'+names+'同住':'，暂由宫人照料'}。${journalContentVersion()>=108?'孩子听见后低下头，难过得眼圈发红，还是慢慢收好了东西。':''}`);story(mother,`【孩子迁居】${k.name}想留下同住未获准，依旨迁往${place}，她仍惦记着孩子。${journalContentVersion()>=108?'她心疼孩子，帮着收拾衣物，约好往后常去看望。':''}`);
-      return `${k.name}依旨迁往${place}${names?'，与'+names+'同住':'，眼下暂无其他适龄孩子，由宫人照料，日后与同住者一处起居'}。${journalContentVersion()>=108?'孩子难过地低下头，母亲心疼地陪着收拾行装。':''}`;
+      if(stay){k.love=clamp((k.love??50)+4);kstory(k,`【求与母同住】${k.sex==='f'?'她':'他'}向父皇求准，获许在成年或出宫前继续随${address}住在${mother.palace}，仍按时读书。${journalContentVersion()>=109?'听见父皇应允，孩子欢喜地松了口气，赶紧把消息告诉母亲。':''}`);story(mother,`【孩子留在身边】${k.name}求准继续同住，往后仍在宫中一起起居。${journalContentVersion()>=109?'她见孩子安心下来，自己也欢喜，轻轻揽住孩子，答应陪着慢慢长大。':''}`);return `你答应了${k.name}。${k.sex==='f'?'她':'他'}在成年或出宫之前继续随${address}同住，课业照常。${journalContentVersion()>=109?'孩子欢喜地依偎在母亲身边，母亲也露出宽慰的笑。':''}`;}
+      k.love=clamp((k.love??50)-4);kstory(k,`【迁往共同居所】${k.sex==='f'?'她':'他'}盼着陪伴${address}，父皇没有应允，仍按安排搬往${place}${names?'，与'+names+'同住':'，暂由宫人照料'}。${journalContentVersion()>=109?'孩子听见后低下头，难过得眼圈发红，还是慢慢收好了东西。':''}`);story(mother,`【孩子迁居】${k.name}想留下同住未获准，依旨迁往${place}，她仍惦记着孩子。${journalContentVersion()>=109?'她心疼孩子，帮着收拾衣物，约好往后常去看望。':''}`);
+      return `${k.name}依旨迁往${place}${names?'，与'+names+'同住':'，眼下暂无其他适龄孩子，由宫人照料，日后与同住者一处起居'}。${journalContentVersion()>=109?'孩子难过地低下头，母亲心疼地陪着收拾行装。':''}`;
     };
     events.push({title:'孩子请求随母同住',por:k,cast:[mother],valid,
       text:`${k.name}性子安静，迟疑了许久才开口：“父皇，我知道该长大了，可我夜里仍怕一个人。能不能让我继续跟${address}住在一处？”${age>6?`此前${k.sex==='f'?'她':'他'}已不再随母同住，如今想搬回${mother.palace}。`:`按宫中安排，${k.sex==='f'?'她':'他'}该搬往${place}。`}读书与其他安排仍照常。`,

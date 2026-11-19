@@ -32,12 +32,12 @@ const DOCK_ART={
 };
 function dockIcon(key){return `<svg class="dock-icon" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${DOCK_ART[key]}"></path></svg>`;}
 function renderMenu(){const m=$('#menu');if(!S){m.innerHTML='';m.hidden=true;return}m.hidden=false;
-  const current={government:'court',ministries:'court',scholar:'court',fenghua:'home',jinyiwei:'court',residences:'harem',officials:'home',official:'home',jewelry:'home',natal:'family',relative:'family',palace:'map',place:'map',banquet:'map',consort:'harem',kid:'kids',princess:'out',regnal:'log'}[UI.view]||UI.view;
+  const current={government:'court',ministries:'court',scholar:'court',fenghua:'home',jinyiwei:'court',residences:'harem',officials:'home',official:'home',jewelry:'home',natal:'family','white-spring-kin':'family',relative:'family',palace:'map',place:'map',banquet:'map',consort:'harem',kid:'kids',princess:'out',regnal:'log'}[UI.view]||UI.view;
   m.innerHTML=MENU.map(([k,l])=>`<button class="btn${current===k?' on':''}" ${current===k?'aria-current="page"':''} onclick="${k==='court'?"A.go('government')":`A.go('${k}')`}">${dockIcon(k)}<span>${l}</span></button>`).join('');
 }
 let panelRoute;
 let personBackStack=[];
-const PERSON_DETAIL_VIEWS=['consort','kid','relative','official','natal'];
+const PERSON_DETAIL_VIEWS=['consort','kid','relative','official','natal','white-spring-kin'];
 function rememberPersonRoute(view,id){
   if(!PERSON_DETAIL_VIEWS.includes(view)){personBackStack=[];return;}
   if(!PERSON_DETAIL_VIEWS.includes(UI.view)||personBackStack.at(-1)?.state!==S)personBackStack=[];
@@ -75,7 +75,7 @@ function renderPanel(){
   const route=JSON.stringify([v,UI.sel]);
   if(!S)p.innerHTML=v==='new'?viewNew():viewTitle();
   else if(v==='regnal'&&regnalChronicleActive())p.innerHTML=viewRegnalChronicle();
-  else p.innerHTML=({government:viewGovernment,residences:viewResidences,officials:officialsRoster,official:viewOfficial,ministries:typeof viewMinistries==='function'?viewMinistries:viewGovernment,scholar:typeof viewScholar==='function'?viewScholar:viewGovernment,jinyiwei:typeof viewJinyiwei==='function'?viewJinyiwei:viewGovernment,jewelry:viewJewelryVault,natal:viewNatalRelative,relative:viewRoyalRelative,family:viewFamily,map:viewMap,palace:viewPalace,place:viewPlace,banquet:viewBanquet,home:viewHome,fenghua:typeof viewFenghuaPerson==='function'?viewFenghuaPerson:viewHome,harem:viewHarem,consort:viewConsort,cards:viewCards,xx:viewXX,outer:typeof outerRegisterView==="function"?outerRegisterView:viewKids,kids:viewKids,kid:viewKid,princess:viewPrincessEstate,'prince-estate':viewPrinceEstate,out:viewOut,log:viewLog,sys:viewSys}[v]||viewHome)();
+  else p.innerHTML=({government:viewGovernment,residences:viewResidences,officials:officialsRoster,official:viewOfficial,ministries:typeof viewMinistries==='function'?viewMinistries:viewGovernment,scholar:typeof viewScholar==='function'?viewScholar:viewGovernment,jinyiwei:typeof viewJinyiwei==='function'?viewJinyiwei:viewGovernment,jewelry:viewJewelryVault,natal:viewNatalRelative,'white-spring-kin':viewWhiteSpringKin,relative:viewRoyalRelative,family:viewFamily,map:viewMap,palace:viewPalace,place:viewPlace,banquet:viewBanquet,home:viewHome,fenghua:typeof viewFenghuaPerson==='function'?viewFenghuaPerson:viewHome,harem:viewHarem,consort:viewConsort,cards:viewCards,xx:viewXX,outer:typeof outerRegisterView==="function"?outerRegisterView:viewKids,kids:viewKids,kid:viewKid,princess:viewPrincessEstate,'prince-estate':viewPrinceEstate,out:viewOut,log:viewLog,sys:viewSys}[v]||viewHome)();
   if(S&&v==='xx')rememberSelectionBlurt(selectionCurrent());
   if(route!==panelRoute){p.scrollTop=0;panelRoute=route;}
 }
@@ -198,7 +198,7 @@ function familyGraphSVG(){
       const {person:c,father,indices}=branch,cx=fatherX(branch),h=houseOf(c),stance=stanceOf(c),color=BLOC_COLOR[stance]||'#8a8277';
       wires+=`<path d="M${cx} 80 V${houseY}" stroke="#a68b68" stroke-dasharray="4 3"/>`;
       if(whiteSpringRoyal(c)){
-        cards+=`<div class="graph-card graph-house" style="${at(cx,houseY,houseHeight)}"><strong>白泉王室</strong><div>父王 · 王兄</div></div>`;
+        cards+=`<div class="graph-card graph-house" style="${at(cx,houseY,houseHeight)}">${whiteSpringKinLinks(c)||'<strong>白泉王室</strong><div>父王 · 王兄</div>'}</div>`;
         wires+=line(cx,houseY+houseHeight,cx,consortY,blood);
       }else if(h){
         const military=stance==='army'?1:0;
@@ -286,7 +286,7 @@ function viewFamily(){
     for(const c of people){const house=houseOf(c);const key=house?.father.id??c.id;if(!fathers.has(key))fathers.set(key,[]);fathers.get(key).push(c);}
     return `<details class="family-branch${familyGroupHidden(key)?' family-hidden':''}" data-family-key="${esc(key)}"><summary><strong>${esc(label)}</strong><span class="hint">${people.length} 人 · ${childCount} 位皇嗣${force}</span>${familyVisibilityButton(key,label)}</summary>
       ${familyGroupHidden(key)?'':[...fathers.values()].map(sisters=>{const father=houseOf(sisters[0])?.father;
-        return `<section class="paternal-branch">${father?(layeredFamilyActive()?familyHouseTree(sisters[0],true):officialFamilyLine(sisters[0]))+(sisters.length>1?'<p class="hint">亲姐妹同父，共用父兄履历。</p>':''):''}<ul>${sisters.map(member).join('')}</ul></section>`;
+        return `<section class="paternal-branch">${father?(layeredFamilyActive()?familyHouseTree(sisters[0],true):officialFamilyLine(sisters[0]))+(sisters.length>1?'<p class="hint">亲姐妹同父，共用父兄履历。</p>':''):whiteSpringKinLinks(sisters[0])}<ul>${sisters.map(member).join('')}</ul></section>`;
       }).join('')}</details>`;
   };
   const branches=[...byClan].sort(([a],[b])=>Number(a==null)-Number(b==null)).map(([key,people])=>
@@ -482,7 +482,7 @@ function viewConsort(){
       (act&&!c.cold?initiativeHTML(c):''),'近况'],
     ['family','家人与孩子',
       actionGroup('探亲与省亲',familyActions)+
-      natalVisitorsPanel(c)+
+      detailSection('白泉王室亲眷',whiteSpringKinLinks(c))+natalVisitorsPanel(c)+
       whiteSpringFriendPanel(c)+sisterPalaceConcernPanel(c)+
       detailSection('家族与人际',`${kids.length?`<div>子女：${kids.map(k=>`<button class="btn quiet sm" onclick="A.go('kid',${k.id})">${esc(k.name)}</button>`).join(' ')}</div>`:''}${family}`)+
       marriedSisterChildrenPanel(c)+

@@ -346,7 +346,7 @@ function initiativeHTML(person,venue){
     : `<button class="btn sm" onclick="A.answerInitiative(${person.id},${!!person.sex})">${esc(rule.choices?'到场看看':rule.button)}<small>${rule.choices?'观看无需精力':'精力-1'}</small></button>`;
   return `<section class="initiative-note">${venue?activityPortraits(person,cast.target):''}<strong>${esc(rule.title)}${place?' · '+place.n:''}${venue?` · ${esc(person.sex?kidName(person):cName(person))}`:''}</strong><p>${esc(move.text)}</p>
     ${move.effect?`<small>${esc(move.effect)}</small>`:''}${response}
-    ${rule.ref?`<small class="initiative-ref">参考 <a href="${INITIATIVE_SOURCES[rule.source]}" target="_blank" rel="noopener noreferrer">${esc(rule.ref)}</a></small>`:''}</section>${followup}`;
+    ${rule.ref?`<small class="initiative-ref">参考 ${esc(rule.ref)}</small>`:''}</section>${followup}`;
 }
 
 function initiativePeople(){

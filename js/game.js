@@ -433,7 +433,7 @@ function openModal(ev){
   if(people.length===1&&!ev.gardenTables){
     h+=ev.portraitArt?`<figure class="event-full-portrait"><img src="${esc(ev.portraitArt.src)}" alt="${esc(ev.portraitArt.alt)}"><figcaption>${esc(people[0].fixedStory&&S.consorts.includes(people[0])?fullName(people[0])+' · '+cName(people[0]):porName(people[0]))}</figcaption></figure>`:eventPortrait(people[0],112,true);
   }
-  h+=`<div class="mtext">${ev.jewelry?`<figure class="event-jewelry">${jewelryImage(ev.jewelry,88)}<figcaption>${esc(JEWELRY[ev.jewelry]?.name||'')}</figcaption></figure>`:''}${fmt(ev.text)}${rareNotice?`<p class="hint">${esc(rareNotice)}</p>`:''}${ev.ref?`<p class="ref">典出 · ${ev.refURL?`<a href="${esc(ev.refURL)}" target="_blank" rel="noopener noreferrer">${esc(ev.ref)}</a>`:esc(ev.ref)}</p>`:''}${ev.input?`<input id="minput" class="inp" maxlength="${ev.input.max||4}" value="${esc(ev.input.def||'')}" aria-label="输入">`:''}</div></div><div class="mch${showChoicePortraits?' event-choices':''}">`;
+  h+=`<div class="mtext">${ev.jewelry?`<figure class="event-jewelry">${jewelryImage(ev.jewelry,88)}<figcaption>${esc(JEWELRY[ev.jewelry]?.name||'')}</figcaption></figure>`:''}${fmt(ev.text)}${rareNotice?`<p class="hint">${esc(rareNotice)}</p>`:''}${ev.ref?`<p class="ref">典出 · ${esc(ev.ref)}</p>`:''}${ev.input?`<input id="minput" class="inp" maxlength="${ev.input.max||4}" value="${esc(ev.input.def||'')}" aria-label="输入">`:''}</div></div><div class="mch${showChoicePortraits?' event-choices':''}">`;
   ev.choices.forEach((c,i)=>{
     const ok=!c.cond||c.cond();
     const style=ev.danger?(c.f?' danger':' quiet'):c.primary||ev.choices.length===1||(ev.input&&i===0)?' primary':'';

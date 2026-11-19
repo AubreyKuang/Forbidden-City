@@ -8,7 +8,7 @@ function palace(){
 }
 test('the king and prince write when pregnancy is known and when actual babies are born across month end',()=>{
  const w=palace();
- w.run(`lady.preg=1;PalaceActions.reset();A.endMonth();drain();assert.ok(notes().some(x=>x.t.includes('·有孕】')));assert.equal(family.father.story.length,1);
+ w.run(`lady.preg=1;PalaceActions.reset();A.endMonth();drain();assert.ok(notes().some(x=>x.t.includes('·有孕】')));assert.equal(family.father.story.filter(e=>e.t.startsWith('【有孕】')).length,1);
  lady.preg=9;lady.pregnancyCalendar={term:10,conceived:S.turn-9,nights:[]};PalaceActions.reset();A.endMonth();drain();
  assert.equal(notes().filter(x=>x.t.includes('·诞育】')).length,1);assert.match(notes().find(x=>x.t.includes('·诞育】')).t,/皇子|公主/);
  assert.ok(family.brother.story.some(x=>x.t.includes('毡毯')));assert.ok(!lady.story.some(x=>x.t.includes('【娘家来信】')));
@@ -40,4 +40,28 @@ test('Ayimu stays at court while ordinary consorts can visit home; an obsolete l
  lady.homeLeave={from:S.turn,due:S.turn+2,reason:'省亲'};var aId=a.id;save('auto');A.load('auto');drain();
  assert.ok(inPalace(byId(id)));assert.equal(byId(id).homeLeave,undefined);
  assert.equal(byId(aId).homeLeave.due,S.turn+2);assert.ok(byId(id).whiteSpringFamily.father.alive);`);
+});
+test('both royal profiles open from admission and preserve their separate histories across old saves',()=>{
+ const w=palace();w.run(`var king=family.father,prince=family.brother;
+ assert.equal(king.name,'阿尔斯兰');assert.equal(prince.name,'伊利亚尔');
+ assert.notEqual(king.portraitOverride,prince.portraitOverride);
+ var admission=lady.story.find(e=>e.t.includes('，赐居'));
+ assert.ok(king.story.some(e=>e.d===admission.d&&e.t.startsWith('【公主入宫】')));
+ assert.ok(prince.story.some(e=>e.d===admission.d&&e.t.startsWith('【公主入宫】')));
+ for(const p of [king,prince]){
+   assert.ok(familyGraphSVG().includes(p.id));UI.familyMode='list';assert.ok(viewFamily().includes(p.id));
+   UI.sel=id;assert.ok(viewConsort().includes(p.id));UI.sel=p.id;
+   var html=viewWhiteSpringKin();assert.ok(html.includes(p.story[0].t));assert.ok(html.indexOf('person-detail-head')<html.indexOf('chronicle-filter-fold'));assert.ok(html.includes('按时间倒序'));assert.equal(chroniclePersonTarget(p.id).person,p);
+ }
+ whiteSpringLetter(lady,'有孕','有了身孕',['问起居','寄曲谱'],['回信','报平安'],'legacy');
+ family.latest.answered=true;king.name='父王';prince.name='王兄';
+ delete king.admissionRecorded;delete prince.admissionRecorded;
+ king.story.shift();prince.story.shift();king.alive=false;
+ save('auto');A.load('auto');drain();lady=byId(id);family=whiteSpringFamily(lady);
+ assert.equal(family.latest.answered,true);assert.equal(family.stamps['有孕'],'legacy');
+ assert.equal(family.father.alive,false);assert.equal(family.father.story.length,1);
+ assert.ok(family.father.story[0].t.includes('问起居'));
+ assert.ok(!family.brother.story.some(e=>e.t.includes('问起居')));
+ assert.equal(family.brother.story.filter(e=>e.t.startsWith('【公主入宫】')).length,1);
+ whiteSpringFamily(lady);assert.equal(family.brother.story.length,2);`);
 });
