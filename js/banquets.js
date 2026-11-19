@@ -397,7 +397,7 @@ function banquetSeating(tables) {
 
 function banquetTalent(p, toss) {
   if (p.sex) return toss ? p.mar : p.lit;
-  if (toss) return p.trait === '将门' || p.t2 === '擅骑射' ? 80 : 35;
+  if (toss) return p.trait === '将门' || consortHasQuirk(p,'擅骑射') ? 80 : 35;
   return p.talent + (p.like === '字画' ? 15 : 0);
 }
 
@@ -507,13 +507,16 @@ function playBanquet(draft,feast,people,tables,move) {
       cchg(queen,{mood:16,aff:8});
       remember(queen,'bday','陛下在我生辰亲自主持千秋宴。');
       story(queen,'生辰设千秋宴，众人来贺。');
-      lines.unshift('皇后受了众人的寿礼，请掌事姑姑把寿面先分给孩子们。');
+      lines.unshift(palaceDetailsActive()&&!people.some(p=>p.sex)?'皇后收下寿礼，请把第一碗寿面分给同席宾客。':'皇后受了众人的寿礼，请掌事姑姑把寿面先分给孩子们。');
     } else {
       chg({prestige:Math.min(5,2+successes)});
       for (const k of people.filter(p=>p.sex)) skillGain(k,'love',3);
-      lines.unshift('众人向陛下贺寿，年幼的皇嗣跟着母亲行礼。');
+      const little=people.find(p=>p.sex&&kidAge(p)<6),care=little&&people.find(p=>p.id===(little.foster||little.mom));
+      lines.unshift(!palaceDetailsActive()?'众人向陛下贺寿，年幼的皇嗣跟着母亲行礼。':little?
+        (care?fullName(care)+'在旁照看'+kidName(little)+'向御前贺寿。':kidName(little)+'在随侍照看下向御前贺寿。'):'席间众人举杯，依次向御前贺寿。');
     }
   }
+  const oldFriends=rememberBanquetFriends(tables,label);if(oldFriends)lines.push(oldFriends);
   const follow=S.gardenPlans?.find(plan=>plan.turn===S.turn+2);
   const promise=follow? `\n§${familyName(kidById(follow.child)||byId(follow.guest))}约好两个月后再来御花园。`:'';
   const result=toss?`${successes} 人投中，共 ${entries} 人试投`:`${successes} 人完成画作，共 ${entries} 人执笔`;

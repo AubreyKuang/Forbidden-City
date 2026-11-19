@@ -215,6 +215,7 @@ function princeEstateRecord(k,line){
 function settlePrinceFief(k,location,register=false){
     k.princeEstate={...k.princeEstate,opened:k.princeEstate?.opened??S.turn,location,...(register?{}:{lastMove:S.turn})};
     if(!register){k.away=true;k.sup=clamp((k.sup||0)-20);}
+    if(!register)packChildKeepsake(k);
     const line=register?`宗人府补录${k.name}的藩邸在${location}。`:`${k.name}奉诏离京，赴${location}就藩，由长史料理府务，地方政务仍归有司。`;
     princeEstateRecord(k,line);return line;
 }

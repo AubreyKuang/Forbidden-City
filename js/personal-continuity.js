@@ -74,7 +74,7 @@ function startChildContinuity(k,m,activity){
     k.lastPersonalPlanCheck=S.turn;if(!chance(.2))return;
   }
   const disposition=childDisposition(k),project=['好胜','爽直'].includes(disposition)?'archery':['仁厚','审慎'].includes(disposition)?'reading':'paint';
-  const parentProject=m.trait==='将门'||m.t2==='擅骑射'?'archery':m.trait==='巧手'?'paint':'reading';
+  const parentProject=m.trait==='将门'||consortHasQuirk(m,'擅骑射')?'archery':m.trait==='巧手'?'paint':'reading';
   const t=continuityStart('child',m,k.id,`${k.id}:${S.turn}`,{activity,project,parentProject,
     cause:`${dateStr()}，${fullName(m)}与${kidName(k)}一起${activity}。孩子想把下一回怎样做说给她听。`});
   if(t){k.lastPersonalPlan=S.turn;if(journalContentVersion()>=32){m.lastChildPlan=S.turn;S.flags.lastChildPlan=S.turn;}}

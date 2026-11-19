@@ -53,7 +53,7 @@ function familyActivity(k, mother, seeking) {
   const continued=continuityPractice(k,mother);if(continued)return continued;
   const activities = [];
   if (mother.trait === '才女' || mother.like === '字画') activities.push('paint');
-  if (kidAge(k) >= 6 && (mother.trait === '将门' || mother.t2 === '擅骑射')) activities.push('archery');
+  if (kidAge(k) >= 6 && (mother.trait === '将门' || consortHasQuirk(mother,'擅骑射'))) activities.push('archery');
   if (mother.t2 === '嗜甜' || mother.t2 === '擅厨艺') activities.push('cakes');
   if (kidAge(k) >= 5 && (k.policy === '读书' || mother.t2 === '好读史')) activities.push('reading');
   activities.push('walk');

@@ -60,8 +60,9 @@ function performWorkshopProgram(draft,people){
   if(!banquetProgramReady(draft,people,p)||draft.programTurn!==p.turn)return '';
   const c=byId(p.artist);delete workshopBook().program;cchg(c,{mood:4});
   const k=people.find(x=>x.sex&&kidAge(x)>=5&&kidAge(x)<15),cast=[c];
+  markPalaceRemembrance(c,'music',p.name);
   let text=p.show;
-  if(k){cast.push(k);text+=kidName(k)+'听准了末拍，拿筷子在掌心跟了一遍。';skillGain(k,'lit',1);relAdd(k,c,3);}
+  if(k){markPalaceRemembrance(k,'music',p.name);cast.push(k);text+=kidName(k)+'听准了末拍，拿筷子在掌心跟了一遍。';skillGain(k,'lit',1);relAdd(k,c,3);}
   lifeRecord(cast,'craft','席上献艺','【南府节目·'+p.name+'】'+text,'御花园小宴');log('御花园小宴，'+fullName(c)+'依南府节目单演了《'+p.name+'》。');
   return text;
 }
@@ -94,7 +95,7 @@ A.orderChildWardrobe=id=>orderWardrobe(kidById(id),true);
 A.orderConsortWardrobe=id=>orderWardrobe(byId(id),false);
 A.closeWardrobeOrder=function(){if(workshopAt('wardrobe')&&wardrobeOrder()){delete workshopBook().order;render();}};
 function personalWardrobePanel(r,child){
-  const o=workshopsActive()&&wardrobeOrder();return o&&o.id===r.id&&o.child===child?detailSection('尚衣局工单',wardrobeReceipt(o)):'';
+  const o=workshopsActive()&&wardrobeOrder();return (o&&o.id===r.id&&o.child===child?detailSection('尚衣局工单',wardrobeReceipt(o)):'')+remembrancePanel(r);
 }
 A.deliverWardrobe=function(){
   const o=wardrobeOrder();if(!workshopsActive()||S.over||modalOpen||!o||!wardrobeReady(o))return;
@@ -113,6 +114,7 @@ A.deliverWardrobe=function(){
       consortHobby(r)==='刺绣'?fullName(r)+'把香囊翻过来细看收针，又向绣娘问了转角处怎样藏线。':fullName(r)+'亲手挑了系带的长短，系在随身佩带上。';
     cchg(r,{mood:4,aff:2});
   }
+  markPalaceRemembrance(r,'wardrobe',o.item);
   delete workshopBook().order;
   lifeRecord(cast,'family','尚衣局交付','【尚衣局·'+o.item+'】'+line,'御赐衣物');
   log('尚衣局依旨将'+o.item+'送交'+(o.child?kidName(r):fullName(r))+'。');

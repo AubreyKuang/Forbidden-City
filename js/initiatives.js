@@ -177,7 +177,7 @@ const PALACE_INITIATIVES={
     start:()=>chg({treasury:4}), button:'请她教各宫核账', respond:c=>chg({treasury:12})+' · '+cchg(c,{aff:4})
   },
   gardenWalk:{
-    title:'邀友赏花', place:'yh', match:c=>!c.preg&&(['淡泊','活泼','好客'].includes(c.trait)||c.t2==='爱猫'||consortHobby(c)==='侍花'),
+    title:'邀友赏花', place:'yh', match:c=>!c.preg&&(['淡泊','活泼','好客'].includes(c.trait)||consortHasQuirk(c,'爱猫')||consortHobby(c)==='侍花'),
     target:initiativeAlly,
     text:(c,o)=>'她请'+cName(o)+'到御花园散步。两人绕过热闹的亭子，坐在树荫下聊了半日。',
     start:(c,o)=>{relAdd(c,o,4);return cchg(c,{mood:3})}, button:'把水榭留给她们', respond:(c,o)=>cchg(o,{mood:6})+' · '+cchg(c,{aff:3})
@@ -213,7 +213,7 @@ const PALACE_INITIATIVES={
     start:c=>cchg(c,{mood:4}), button:'拨一盆好炭（国库-8）', cost:8, respond:c=>cchg(c,{mood:8,aff:3})
   },
   archery:{
-    title:'带孩子练弓', match:c=>!c.preg&&(c.trait==='将门'||c.t2==='擅骑射'), target:c=>initiativeChild(c,6),
+    title:'带孩子练弓', match:c=>!c.preg&&(c.trait==='将门'||consortHasQuirk(c,'擅骑射')), target:c=>initiativeChild(c,6),
     text:(c,k)=>'她带'+k.name+'到南苑，先教站姿，再让孩子自己拉了第一张轻弓。',
     start:(c,k)=>{skillGain(k,'mar',2);return '武艺 +2';}, button:'到南苑看他们练习', respond:(c,k)=>{skillGain(k,'mar',2);skillGain(k,'love',3);return '武艺 +2 · 父爱 +3';}
   },

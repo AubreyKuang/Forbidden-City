@@ -38,7 +38,7 @@ const CONSORT_DISTINCTIONS=[
  {id:'music',name:'琴心雅韵',groups:['art'],priority:60,why:'平日爱好抚琴，才情至少90。',talent:90,art:'music',test:c=>consortHobby(c)==='抚琴'&&c.talent>=90},
  {id:'needle',name:'绣心巧手',groups:['art'],priority:75,why:'性情巧手、爱好刺绣，才情至少85。',talent:85,art:'needle',test:c=>c.trait==='巧手'&&consortHobby(c)==='刺绣'&&c.talent>=85},
  {id:'paint',name:'丹青妙笔',groups:['art'],priority:65,why:'喜爱字画，才情至少90。',likes:true,talent:90,art:'paint',test:c=>c.like==='字画'&&c.talent>=90},
- {id:'archer',name:'弓马娴熟',groups:['bearing'],priority:70,why:'性情出自将门，并且擅骑射或喜爱弓马。',test:c=>c.trait==='将门'&&(c.t2==='擅骑射'||c.like==='弓马'),visible:c=>c.t2==='擅骑射'&&(c.known||S.consorts.includes(c))||c.kl&&c.like==='弓马'},
+ {id:'archer',name:'弓马娴熟',groups:['bearing'],priority:70,why:'性情出自将门，并且擅骑射或喜爱弓马。',test:c=>c.trait==='将门'&&(consortHasQuirk(c,'擅骑射')||c.like==='弓马'),visible:c=>consortHasQuirk(c,'擅骑射')&&(c.known||S.consorts.includes(c))||c.kl&&c.like==='弓马'},
  {id:'humble',name:'寒门明珠',groups:['origin'],priority:75,why:'明确出身寒门，才情至少90；不以家族势力低就判为寒门。',talent:90,art:'any',test:c=>(c.upbringing?.title||c.fam?.t)==='寒门'&&c.talent>=90},
  {id:'quiet',name:'人淡如菊',groups:['temperament'],priority:80,why:'性情淡泊、心机不高于10、德行至少80。',known:true,test:c=>c.trait==='淡泊'&&c.scheme<=10&&c.virtue>=80},
  {id:'clever',name:'玲珑心窍',groups:['talent','scheme'],priority:85,why:'才情至少90、心机至少70，善于琢磨人情事理。',known:true,talent:90,art:'any',test:c=>c.talent>=90&&c.scheme>=70},
