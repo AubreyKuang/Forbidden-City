@@ -5,11 +5,11 @@ const hongjianActive=()=>hongjianContent()&&!S.over;
 const hongjianAdmitted=c=>!!c?.hongjian;
 const hongjianCurrent=c=>hongjianActive()&&hongjianAdmitted(c)&&S.consorts.includes(c)&&c.hongjian.gen===S.gen;
 const hongjianAvailable=c=>hongjianCurrent(c)&&inPalace(c)&&!maternalVoiceUrgent(c)&&!mourningActive();
-function hongjianCanInvite(p){return hongjianActive()&&!!p&&!p.hongjian&&fenghuaPresent(p)&&!mourningActive()&&p.age>=18&&E().age>=18&&S.turn-(p.fenghua.lastInvitation??-99)>=3;}
+function hongjianCanInvite(p){return hongjianActive()&&!livingStoryConsort('hongjian')&&!!p&&!p.hongjian&&fenghuaPresent(p)&&!mourningActive()&&p.age>=18&&E().age>=18&&S.turn-(p.fenghua.lastInvitation??-99)>=3;}
 function hongjianAdmissionRank(){return rankCount(3)<RANK_CAP[3]?3:rankCount(2)<RANK_CAP[2]?2:null;}
 Object.defineProperty(WOUNDS,'hongjian',{value:'她曾看见自己的诗被署成别人的名字，也曾因一纸宫中订单险些失去小铺。相识之后，陛下肯核对她的原稿、听她算清工钱，才慢慢有了入宫的心意。'});
 function admitHongjian(p){
- if(!hongjianActive()||!p||p.hongjian||p.fenghua.stage<3||!fenghuaPresent(p)||p.age<18||E().age<18)return null;
+ if(!hongjianActive()||livingStoryConsort('hongjian')||!p||p.hongjian||p.fenghua.stage<3||!fenghuaPresent(p)||p.age<18||E().age<18)return null;
  const rank=hongjianAdmissionRank();if(rank===null)return null;
  const oldId=p.id,history=p.story,identity={sur:p.sur,given:p.given,name:p.name,age:p.age,seed:p.seed,fenghua:p.fenghua,fenghuaKey:p.fenghuaKey,temperament:p.temperament};
  const c=makeGirl({sur:p.sur,given:p.given,age:p.age,trait:'聪慧',fam:{t:'花笺商户',p:18}});
@@ -26,7 +26,7 @@ function admitHongjian(p){
 }
 function hongjianInvitationEvent(p){
  if(!hongjianCanInvite(p))return null;const stage=p.fenghua.stage,ready=stage>=3;let done=false;
- const valid=()=>!done&&hongjianActive()&&!p.hongjian&&fenghuaPresent(p)&&!mourningActive()&&p.age>=18&&E().age>=18;
+ const valid=()=>!done&&hongjianActive()&&!livingStoryConsort('hongjian')&&!p.hongjian&&fenghuaPresent(p)&&!mourningActive()&&p.age>=18&&E().age>=18;
  return {title:ready?'薛红笺 · 愿与你入宫':'薛红笺 · 再相识一些',por:p,valid,text:ready?
   '花笺铺打烊后，你问她是否愿意入宫。薛红笺没有马上答，只将三样东西放在桌上：更正过署名的诗稿、按市价订立的契约，还有那张没有替你代笔的素笺。\n“起先我怕，进了宫，我写的东西便不再署自己的名，铺里的人也只剩下替贵人办差。后来你肯听我讲清这些。”\n她说已经教阿绫独立记账，店里的工钱也安排妥当。“我愿意。但不是把这间铺子送给陛下。是我这个人，想同你往后过日子。宫里的账，我可以帮着看；我的诗，也还要慢慢写。”':
   '你问她是否愿意入宫。薛红笺把手上的染纸架放好，认真想了一会儿。\n“如今说愿意，太像是看中了宫里的富贵；说不愿意，又像是没把陛下这些日子的相待放在心上。我想先把几件事做完，也让我们多认得彼此一点。”\n她还惦记自己的诗、铺中伙计的生计，以及一封能说真话的信。她没有把门关上，只请你别用一纸册封代替往后的相识。',choices:ready?[
@@ -63,8 +63,9 @@ function hongjianPanel(c){
 }
 function hongjianCodexCard(){
  if(!hongjianContent())return '';const p=fenghuaPerson('xueHongjian'),admitted=!!p?.hongjian,archive=admitted&&!S.consorts.includes(p),closed=S.fenghua?.admitted?.xueHongjian;
+ const resident=livingStoryConsort('hongjian');
  const status=archive?'前朝经历':admitted?(!p.alive?'已入宫 · 已故':p.gone?'已入宫 · 已离宫':'已入宫'):p?`已相识 · 宫外故事 ${Math.min(3,p.fenghua.stage)}/3`:closed?'前朝人物 · 旧事存于起居注':'尚未相遇';
- return `<article class="story-consort-card" data-story-consort="hongjian"><div class="story-consort-picture">${porImg(p||fenghuaPreview('xueHongjian'),200)}${storyConsortProgress(status)}</div><div class="story-consort-copy"><h3>薛红笺 · 笺铺知己</h3>${storyConsortBadge('hongjian')}<p><strong>明快通透</strong> · 会写诗，也会算工钱；愿意相爱，却不愿让自己的名字与手艺被买走。</p><dl><dt>来处与相遇</dt><dd>她在上京经营花笺铺，亲自染纸、接单、教徒。微服私访时在书肆或花笺铺偶遇，沿用固定立绘 438。</dd><dt>入宫心意</dt><dd>相识后可以询问她是否愿意入宫。先完成诗稿署名、宫中订单与亲笔信三段故事，她才会亲口答应。需双方成年；可暂缓，三个月后再谈。自愿入宫册为贵人，贵人额满则常在。</dd><dt>经营本事</dt><dd>嫔位及以上、在宫且未暂停经营时，月末为国库增加8万两；比较报价、稳定供货后可提升至每月14万两。降位至嫔以下、冷宫或离宫则暂停。每笔收入可在人物页和月度收支中核对。</dd><dt>协理六宫</dt><dd>熟悉宫中账务后，她会主动请领宫务；你也可从御书房直接任命她或其他妃嫔。任职者月末额外恩宠+10，上限100，同一时间一人。任职三个月后有宫务回奏，改任、卸任与任内经历均留册。</dd><dt>后宫故事</dt><dd>初来时如何安放算盘与诗稿；采购是否只信她一家；被议论以商邀宠时怎样避嫌；赈济中如何兼顾周转与工钱；把本事教给皇嗣；以及一盏灯下，不谈银钱的相伴。</dd></dl>${typeof fenghuaGuide==='function'?fenghuaGuide('xueHongjian',p):''}<div class="acts">${p?`<button class="btn jade" onclick="A.go('${admitted&&!archive?'consort':'fenghua'}',${admitted&&!archive?p.id:"'xueHongjian'"})">${admitted?'查看薛红笺与后宫纪事':'相见与询问入宫'}</button>`:closed?'':'<button class="btn jade" onclick="A.go(\'out\')">去书肆与花笺铺寻访</button>'}</div></div></article>`;
+ return `<article class="story-consort-card" data-story-consort="hongjian"><div class="story-consort-picture">${porImg(p||fenghuaPreview('xueHongjian'),200)}${storyConsortProgress(resident?.status||status)}</div><div class="story-consort-copy"><h3>薛红笺 · 笺铺知己</h3>${storyConsortBadge('hongjian')}<p><strong>明快通透</strong> · 会写诗，也会算工钱；愿意相爱，却不愿让自己的名字与手艺被买走。</p><dl><dt>来处与相遇</dt><dd>她在上京经营花笺铺，亲自染纸、接单、教徒。微服私访时在书肆或花笺铺偶遇，沿用固定立绘 438。</dd><dt>入宫心意</dt><dd>相识后可以询问她是否愿意入宫。先完成诗稿署名、宫中订单与亲笔信三段故事，她才会亲口答应。需双方成年；可暂缓，三个月后再谈。自愿入宫册为贵人，贵人额满则常在。</dd><dt>经营本事</dt><dd>嫔位及以上、在宫且未暂停经营时，月末为国库增加8万两；比较报价、稳定供货后可提升至每月14万两。降位至嫔以下、冷宫或离宫则暂停。每笔收入可在人物页和月度收支中核对。</dd><dt>协理六宫</dt><dd>熟悉宫中账务后，她会主动请领宫务；你也可从御书房直接任命她或其他妃嫔。任职者月末额外恩宠+10，上限100，同一时间一人。任职三个月后有宫务回奏，改任、卸任与任内经历均留册。</dd><dt>后宫故事</dt><dd>初来时如何安放算盘与诗稿；采购是否只信她一家；被议论以商邀宠时怎样避嫌；赈济中如何兼顾周转与工钱；把本事教给皇嗣；以及一盏灯下，不谈银钱的相伴。</dd></dl>${typeof fenghuaGuide==='function'?fenghuaGuide('xueHongjian',p):''}<div class="acts">${!p&&closed?'<button class="btn" onclick="A.go(\'log\')">旧事存于起居注</button>':resident&&!admitted?storyResidentHistoryButton(resident):p?`<button class="btn jade" onclick="A.go('${admitted&&!archive?'consort':'fenghua'}',${admitted&&!archive?p.id:"'xueHongjian'"})">${archive?'查看薛红笺的前朝经历':admitted?'查看薛红笺与后宫纪事':'相见与询问入宫'}</button>`:closed||resident?'':'<button class="btn jade" onclick="A.go(\'out\')">去书肆与花笺铺寻访</button>'}</div></div></article>`;
 }
 function hongjianGuestPanel(p){
  const wait=Math.max(0,3-(S.turn-(p.fenghua.lastInvitation??-99)));

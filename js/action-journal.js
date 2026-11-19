@@ -2,7 +2,7 @@
    never from serialized JavaScript. Each command owns its random draws and answers.
    The saved world remains the authority; replay is checked before it is displayed. */
 const PalaceActions=(()=>{
-  const version=150, excluded=new Set(['save','dismissSaveError','load','rewind','downloadSave','readSaveFile','undoImport','newGame','officialsFilter','royalKinFilter','officialsBloc','kidsKind','chronicleFilter','chronicleSearch','chronicleClear','chronicleThread']);
+  const version=151, excluded=new Set(['save','dismissSaveError','load','rewind','downloadSave','readSaveFile','undoImport','newGame','officialsFilter','royalKinFilter','officialsBloc','kidsKind','chronicleFilter','chronicleSearch','chronicleClear','chronicleThread']);
   const actions=new Map();
   let blocked=false,snapshotRequested=false,journal=null,depth=0,replaying=false,step=null,cursor=0,answer=0,saving=0,fields=null;
   const clone=x=>JSON.parse(JSON.stringify(x));
@@ -51,6 +51,7 @@ const PalaceActions=(()=>{
     const current={name,args:clone(args),monthNotice:true,rolls:[],answers:[],saves:[],ui:clone(UI)};
     // A fresh decision in an unfinished older scene uses today's age rules on future replays.
     if(journal&&journal.version<130)current.familyAgeLimits=true;
+    if(journal&&journal.version<150)current.uniqueStoryConsorts=true;
     if(journal&&journal.version<133&&name==='choose')current.familyLossAnswer=true;
     if(journal&&!journal.xiePoetryAge&&name==='choose'&&curEv?.poemPrelude)current.xiePoetryAnswer=true;
     if(journal&&journal.version<143&&name==='choose'&&['谢安主动提亲','迟来的心意 · 公主的答复'].includes(curEv?.title))current.xieFreshReply=true;
@@ -178,6 +179,7 @@ const PalaceActions=(()=>{
     get princeSpousePlacement(){return !journal||journal.princeSpousePlacement===true;},
     get betrothalJourneys(){return !journal||journal.betrothalJourneys===true;},
     get immortalDiscoveryNews(){return !journal||journal.immortalDiscoveryNews===true;},
+    get uniqueStoryConsorts(){return !journal||journal.version>=150||step?.uniqueStoryConsorts===true;},
     get exclusiveStoryOrigins(){return !journal||journal.exclusiveStoryOrigins===true;},
     get outerHouseholdUpdates(){return !journal||journal.outerHouseholdUpdates===true;},
     get maternalWeddingTalk(){return !journal||journal.maternalWeddingTalk===true;},

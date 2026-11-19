@@ -3,6 +3,27 @@ const consortTraitsActive=()=>!!S&&journalContentVersion()>=59;
 const consortDistinctionStoriesActive=()=>journalContentVersion()>=67;
 const hasAuthoredConsortStory=c=>!!(c?.fixedStory||c?.gouyi||c?.hongjian);
 const randomConsortOriginsAllowed=c=>!PalaceActions.exclusiveStoryOrigins||!hasAuthoredConsortStory(c);
+// Current household and dowager records take precedence over a snapshot from accession.
+function livingStoryConsort(key){
+ if(!key||!S||!PalaceActions.uniqueStoryConsorts)return null;
+ const match=c=>storyQueenKey(c)===key;
+ const current=S.consorts.find(c=>c.alive&&match(c));
+ if(current)return {person:current,status:current.gone?'已入宫 · 已离宫':'已入宫'};
+ const dowagers=dowagerCourtMembers();
+ const asDowager=(d,person)=>({person,status:d.seniorSince!=null?'太皇太后 · 慈宁宫':(d===S.flags.birthDowager?'生母皇太后':'皇太后')+' · '+dowagerResidence(d)});
+ for(const d of dowagers)if(d.alive&&match(d.portrait))return asDowager(d,d.portrait);
+ const seen=new Set(S.consorts.map(c=>c.id));
+ const records=[S.retainedFamilies||[],...(S.previousCourts||[]).slice().reverse().map(court=>court.consorts||[])];
+ for(const group of records)for(const c of group){
+  if(!match(c)||seen.has(c.id))continue;
+  const d=dowagers.find(d=>d.personId!=null&&d.personId===c.id);
+  seen.add(c.id);
+  if(d){if(d.alive)return asDowager(d,c);continue;}
+  const person=familyHostById(c.id)||c;
+  if(person.alive)return {person,status:person.gone?'先朝宫眷 · 已离宫':person.cold?'先朝宫眷 · 冷宫':'先朝太妃'};
+ }
+ return null;
+}
 function reconcileStoryConsortOrigins(){
  if(!S||!PalaceActions.exclusiveStoryOrigins)return;
  for(const c of [...S.consorts,...(S.cands||[]),...(S.shelteredGuests||[])]){
@@ -27,7 +48,7 @@ function restlessDisposition(p){
  if(journalContentVersion()<84||!p||!Number.isFinite(p.seed)||!randomPalaceAffairsAllowed(p))return false;
  // Newly generated selection candidates keep their assigned value forever;
  // existing characters and pre-existing relatives retain the original rule.
- if(journalContentVersion()>=150&&typeof p.selectionRestless==='boolean')return p.selectionRestless;
+ if(journalContentVersion()>=151&&typeof p.selectionRestless==='boolean')return p.selectionRestless;
  return voiceHash(p.seed+':restless')%100<8;
 }
 const CONSORT_DISTINCTIONS=[

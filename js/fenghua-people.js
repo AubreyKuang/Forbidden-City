@@ -22,7 +22,7 @@ const fenghuaPerson=key=>fenghuaAll().find(p=>p.fenghuaKey===key);
 function fenghuaState(){const s=S.fenghua ||= {lastCity:-99};s.people ||= [];s.attempts ||= {};return s;}
 const fenghuaPresent=p=>fenghuaActive()&&!!p&&!p.hongjian&&p.alive!==false&&!p.exiled&&!p.dismissed&&!p.commission&&!p.incognitoCase&&!p.away&&S.turn>=(p.fenghua?.awayUntil??-1);
 function fenghuaEntryReady(key){
- const d=FENGHUA_PEOPLE[key];return fenghuaActive()&&!!d&&fenghuaReleased(key)&&!fenghuaPerson(key)&&!S.fenghua?.admitted?.[key]&&!mourningActive()&&S.turn-(S.fenghua?.attempts?.[key]??-99)>=6&&
+ const d=FENGHUA_PEOPLE[key];return fenghuaActive()&&!!d&&fenghuaReleased(key)&&!(key==='xueHongjian'&&livingStoryConsort('hongjian'))&&!fenghuaPerson(key)&&!S.fenghua?.admitted?.[key]&&!mourningActive()&&S.turn-(S.fenghua?.attempts?.[key]??-99)>=6&&
   (d.entry!=='merit'||Number.isFinite(S.flags.lastMilitaryMerit)&&S.turn-S.flags.lastMilitaryMerit<=24);
 }
 function fenghuaPreview(key){const d=FENGHUA_PEOPLE[key];return {id:'fenghua-preview-'+key,name:d.name,sur:d.sur,given:d.given,age:d.age,seed:d.portrait,portraitOverride:d.portrait,alive:true};}
@@ -45,7 +45,7 @@ function fenghuaRecord(p,title,situation,choice,outcome,peers=[]){
 }
 function fenghuaMeetEvent(key){
  const d=FENGHUA_PEOPLE[key];if(!fenghuaEntryReady(key))return null;let done=false;
- const valid=()=>!done&&fenghuaActive()&&!fenghuaPerson(key)&&!S.fenghua?.admitted?.[key]&&!mourningActive();
+ const valid=()=>!done&&fenghuaActive()&&!(key==='xueHongjian'&&livingStoryConsort('hongjian'))&&!fenghuaPerson(key)&&!S.fenghua?.admitted?.[key]&&!mourningActive();
  return {title:d.name+(key==='linJianxi'?' · 竹径拾纸':' · 初识'),por:fenghuaPreview(key),valid,text:d.intro,choices:[
   {t:key==='shangguanLantai'?'依才录用，任掌书女官':key==='gaoHuaibi'?'按功册召见，让他把话说完':'听她说完，记下姓名'.replace('她',d.gender==='m'?'他':'她'),f:()=>{if(!valid())return null;done=true;const p=createFenghuaPerson(key);return `${p.name}已记入御书房「${key==='xueHongjian'&&typeof hongjianContent==='function'&&hongjianContent()?'剧情妃图鉴':'风华人物'}」，之后可以单独相见。${key==='gaoHuaibi'?'以游击之职列入官员名册，军功与原报捷者分别记载。':''}`;}},
   {t:'此次不相邀，留待以后',f:()=>{if(!valid())return null;done=true;log(`听闻${d.name}，此次未相邀。`);return '各自作别。过些时日，仍可能再有相识的机会。';}}

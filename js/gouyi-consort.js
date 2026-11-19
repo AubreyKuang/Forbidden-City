@@ -1,12 +1,12 @@
 /* 化用《汉书·外戚传》的河间奇女、帝前展掌。赵令仪之名及后续均为架空创作。 */
 function gouyiEncounter(){
-  if(!careersActive()||S.flags.gouyiSeen)return null;
+  if(!careersActive()||S.flags.gouyiSeen||livingStoryConsort('gouyi'))return null;
   const g=makeGirl({sur:'赵',given:'令仪',age:22,trait:'沉静',fam:{t:'良家子',p:12}});
   g.artPortrait=STORY_CONSORT_PORTRAITS.gouyi;g.portraitOverride=422;
   delete g.solitary;delete g.timeTraveler;g.t2='念旧';g.like='字画';g.hate='兵器';g.aff=40;g.hp=82;g.willing=true;
   g.gouyi={met:S.turn,opened:false,epithet:'钩弋夫人'};
   if(gouyiLifeActive())fixGouyiIdentity(g);
-  const valid=()=>!S.flags.gouyiSeen;
+  const valid=()=>!S.flags.gouyiSeen&&!livingStoryConsort('gouyi');
   return {title:'浩荡巡狩 · 河间奇女',por:g,illustration:'hezhong-river-bank',valid,ref:'化用《汉书·外戚传》；人物姓名与后续为架空创作。',text:'车驾巡至河间，旌旗沿河岸铺开。随行望气者说，此间有一位异于常人的女子。\n被引来的赵令仪已经二十二岁，两手自幼蜷握，旁人从未见她展掌。她不肯让人再试着掰开，只低声说：“民女不是供人取笑的奇物。”\n她抬眼看向御座，紧握的指节却轻轻动了一下。',choices:[
     {t:'屏退围观者，亲自问她是否愿意近前',f:()=>{if(!valid())return null;
       S.flags.gouyiSeen={id:g.id,turn:S.turn,outcome:'相见'};g.gouyi.opened=true;
@@ -17,7 +17,7 @@ function gouyiEncounter(){
   ]};
 }
 function gouyiAdmission(g){
-  const valid=()=>S.flags.gouyiSeen?.id===g.id&&S.flags.gouyiSeen.outcome==='相见';
+  const valid=()=>!livingStoryConsort('gouyi')&&S.flags.gouyiSeen?.id===g.id&&S.flags.gouyiSeen.outcome==='相见';
   const fallback=()=>journalContentVersion()>=24&&rankCount(3)>=RANK_CAP[3];
   const canAdmit=()=>fallback()?rankCount(2)<RANK_CAP[2]:rankCount(3)<RANK_CAP[3];
   return {title:'钩弋之遇 · 掌心初开',por:g,illustration:'west-window-second-tea',valid,text:'你让她坐稳，等她自己将手伸出。她只在你的注视与轻扶之下，缓缓舒开双掌，指尖像初展的叶。帘外的人屏住呼吸，随行望气者将这桩奇遇称作“钩弋”。\n她没有立刻谢恩，只望着自己的掌心许久：“原来我也能这样拿住一盏茶。”\n问及去留，她愿随驾入宫，但想先说明：自己有名字，也会害怕，并不懂如何当一个祥瑞。',choices:[
