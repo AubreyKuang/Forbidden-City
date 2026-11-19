@@ -86,7 +86,17 @@ const WOUNDS={
 // Read-only fallback for incomplete old saves; never invent a replacement childhood.
 const personalContextActive=()=>typeof PalaceActions==='undefined'||PalaceActions.contentVersion>=27;
 const GOUYI_PAST='自幼双手蜷握，她习惯把手藏在宽袖里。旁人记得的是奇症，她记得的却是河间窗下的雨声、茶香，还有不被追问的片刻清静。巡狩相见时，陛下先屏退围观者，等她愿意伸手，双掌才在御前缓缓舒开。她珍惜那日的相知，也一直想弄清缘由，更盼别人记住赵令仪这个名字。';
+const STORY_CONSORT_PAST={
+ qingyi:'她与陛下幼时相识，曾议过婚事。沈父因夺嫡时的奏章被削职返乡，婚议也因此中断。她后来从姑苏递来旧信，仍惦记母亲，也想亲口问清往事。',
+ luwan:'陆绾出身北境将门，随父兄见过军驿和战阵，也记得驿马受伤与沿途人的辛苦。她擅骑射，说话直爽，不愿只靠旁人替她讲北境。',
+ ayimu:'阿依慕是白泉国公主。她随父王赴宴，自选故乡的舞曲，带着母亲亲手缝的香囊；入宫后仍惦记白泉的家书、语言和互市。',
+ chuwan:'她曾随照养人姓方，凭两页有出入的户籍追查自己的来处。旧案查清后，她以楚晚之名继续生活，也一直惦记照养人的安身之处。',
+ suheng:'苏蘅在姑苏香铺长大，熟悉香材、铺契与伙计分账。她希望用自己的名字接下铺契，也记得经商时每一笔账都牵连着具体的人。',
+ xiaoman:'岑小满在京城灯市卖艺，懂铜钱戏法，接活先谈清工钱。她记得同台搭档、幕后师傅和大杂院里需要过冬衣物的孩子。'
+};
 function consortPastText(c){
+  if(journalContentVersion()>=98&&c?.fixedStory==='chuwan'&&c.sur!=='楚')return '她随照养人生活，以方晚之名递上两页有出入的户籍，只盼先安顿照养她的人，再由她自己决定是否查清来处。';
+  if(journalContentVersion()>=98&&Object.hasOwn(STORY_CONSORT_PAST,c?.fixedStory))return STORY_CONSORT_PAST[c.fixedStory];
   if(!personalContextActive()&&typeof WOUNDS[c.wound]==='string')return WOUNDS[c.wound];
   if(c.gouyi)return GOUYI_PAST;
   return c.wound!=='gouyi'&&Object.hasOwn(WOUNDS,c.wound)&&typeof WOUNDS[c.wound]==='string'?WOUNDS[c.wound]:'她的旧事还未说详，留待她愿意时，慢慢亲口讲起。';

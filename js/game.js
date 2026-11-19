@@ -614,7 +614,8 @@ const A={
         if(c.virtue<40) s+='　'+chg({people:-3});
         story(c,'钦天监择吉日，行册后大典，入主坤宁宫，母仪天下。');log(`册${fullName(c)}为皇后。`,1);
         harem().forEach(o=>{if(o!==c&&o.scheme>60)o.mood=clamp(o.mood-10)});
-        return `礼炮九响，百官朝贺。${fullName(c)}凤冠霞帔，自此母仪天下。${fx(s,cchg(c,{mood:30,aff:15}))}`}},{t:'再想想'}]})},
+        const result=`礼炮九响，百官朝贺。${fullName(c)}凤冠霞帔，自此母仪天下。${fx(s,cchg(c,{mood:30,aff:15}))}`;
+        if(journalContentVersion()>=98){const sequel=storyQueenCoronationEvent(c);if(sequel)pushNow(sequel);}return result;}},{t:'再想想'}]})},
   depose(id){const c=byId(id);
     pushEv({title:'废后',danger:true,por:c,text:`废黜皇后乃动摇国本之事。是否废去${fullName(c)}的后位？`,choices:[
       {t:'降为贵妃，迁出坤宁宫',cond:()=>rankCount(6)<2,why:'贵妃之位已满',f:()=>{c.rank=6;assignPalace(c);const s=chg({prestige:-6});story(c,'被废去后位，降为贵妃。');log(`废皇后${fullName(c)}，降为贵妃。`,1);AU.sfx('sad');return `满朝哗然。${fx(s,cchg(c,{mood:-40,aff:-25}))}`}},

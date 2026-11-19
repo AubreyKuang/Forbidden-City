@@ -109,6 +109,11 @@ function storyCastAdmit(c,r,reason){
   c.age+=S.year-r.metYear;storyCastHouse(c);
   const limit=RANK_CAP[d.rank];
   addConsort(c,limit&&rankCount(d.rank)>=limit?d.rank-1:d.rank,reason,{major:true});
+  if(journalContentVersion()>=98){
+    const identity={qingyi:['念旧','读书','诗书'],luwan:['擅骑射','骑射','弓马'],ayimu:['擅舞','侍花','香料'],chuwan:['念旧','读书','诗书'],suheng:['护短','对弈','香料'],xiaoman:['直言','投壶','点心']}[c.fixedStory];
+    if(identity){[c.t2,c.hobby,c.like]=identity;if(c.hate===c.like)c.hate='珠翠';}
+    if(c.fixedStory==='luwan'&&c.wish==='ride'||c.fixedStory==='chuwan'&&['mother','father'].includes(c.wish)){c.wish='poem';c.wishKnown=false;c.wishDone=false;}
+  }
   if(c.fixedStory==='qingyi'&&residenceSlot(c,'钟粹宫','side')){c.palace='钟粹宫';c.residenceRoom='side';}
   c.favor=35;c.aff=45;UI.view='consort';UI.sel=c.id;setScene('harem');
   return storyCastRecordLine(c,'她亲口应允入宫，册为'+cName(c)+'。',true);
