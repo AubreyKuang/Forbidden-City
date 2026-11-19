@@ -751,6 +751,7 @@ A.endMonth=function(){
     const petition=pendingSisterCustody();if(petition)must.push(petition);
     const palaceChapter=storyCastLifeMonthly(castStories);if(palaceChapter)must.push(palaceChapter);
     const maidDispute=maidFavorDispute();if(maidDispute)must.push(maidDispute);
+    must.push(...pendingPrinceSpouseDiscoveries());
     if(!affairWatch){const guardAffair=guardAffairEvent();if(guardAffair)must.push(guardAffair);}
     const princeRivalry=princeCareerRivalryEvent();if(princeRivalry)must.push(princeRivalry);
     if(dynastyFollowupActive()){
