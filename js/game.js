@@ -745,6 +745,7 @@ A.endMonth=function(){
   if(affairWatch){const guard=guardAffairEvent();if(guard)must.unshift(guard);}
   if(!passing){
     must.push(...childMotherResidenceRequests());
+    const familyMarriage=royalNatalMarriageProposal();if(familyMarriage)must.push(familyMarriage);
     if(journalContentVersion()>=88&&!mourningActive())must.push(...ritesVacancyPetitions());
     const castStories=storyCastMonthlyEvents();must.push(...castStories);
     const petition=pendingSisterCustody();if(petition)must.push(petition);
@@ -831,9 +832,11 @@ function succeed(h){
     if(royalTravelAway(h))returnRoyalTraveler(h);
     if(regnalChronicleActive()){closeRegnalChronicle();delete S.flags.outerSouthernTour;}
     if(typeof outerActive==="function"&&outerActive()&&outerBook())outerBook().closedTurn=S.turn;
+    royalNatalEndReign(old.natalMarriageHeir);
     inheritDowager(h);
     S.emp={sur:old.sur,name:h.name,era:v,age:Math.max(a,14),health:clamp(h.hp+10),prestige:clamp(35+h.vir/3),people:old.people,treasury:old.treasury,energy:3,nightsMonth:0,
       style:h.mar>h.lit+15?'尚武':h.lit>h.mar+15?'文雅':'勤政',wen:rd(h.lit),wu:rd(h.mar),seed:h.seed,portraitOverride:portraitCell(h),birthMonth:birthMonth(h)};
+    if(royalNatalEngaged(h))S.emp.natalMarriageHeir=h;
     if(journalContentVersion()>=85)applyDynastyLegacy(S.emp,{predecessor:old.sur+old.name,era:old.era,prestige:old.prestige,style:old.style,trait:rulerLegacyTrait(old)});
     if(dynastyFollowupActive()&&h.diplomaticTraits?.length)S.emp.diplomaticTraits=[...h.diplomaticTraits];
     keepAccededTravelProjects(h);
@@ -842,7 +845,7 @@ function succeed(h){
     delete S.selection;if(!legacyPendingAction())S.flags.haremAttendance={gen:S.gen,turn:S.turn};S.flags.lastXX=-99;if(selectionSkipTimingActive())delete S.flags.lastXXSkipped;delete S.flags.lastProudDemand;delete S.flags.scholarArc;delete S.flags.rareArcOwners;delete S.flags.arcPacing;delete S.flags.xinPacing;delete S.flags.lastLiteraryGathering;delete S.lastGardenBanquet;S.gardenPlans=[];seasonalTick();S.emp.energy=maxEnergy();
     log(`━━ 第${cnNum(S.gen)}代 ━━ ${v}元年，新帝${S.emp.sur}${h.name}登基，尊${S.flags.dowager.fullName||S.flags.dowager.name}为${S.flags.dowager.name}${S.flags.birthDowager?.alive?`，另尊生母${S.flags.birthDowager.fullName}为皇太后`:""}。`,1);
     if(S.emp.dynastyLegacy){const l=S.emp.dynastyLegacy;log(`【先帝传承】${l.predecessor}留下家训「${l.lesson}」。先朝声望使新君威望增加${l.renown}。`,1);}
-    if(S.emp.age>=15){const em=marriageEmpress(h)||makeGirl({fam:pick(FAMS.slice(0,4)),trait:pick(['温婉','聪慧','城府','骄矜'])});em.favor=35;em.aff=30;if(h.spouse)em.knownBeforeAccession=true;addConsort(em,8,h.spouse?'潜邸嫡妻，随新帝登基册立':'新帝登基，奉遗诏册立');if(h.spouse&&journalContentVersion()>=85)em.accessionArrival={gen:S.gen,started:S.turn};}
+    if(S.emp.age>=15&&!S.emp.natalMarriageHeir){const em=marriageEmpress(h)||makeGirl({fam:pick(FAMS.slice(0,4)),trait:pick(['温婉','聪慧','城府','骄矜'])});em.favor=35;em.aff=30;if(h.spouse)em.knownBeforeAccession=true;addConsort(em,8,h.spouse?'潜邸嫡妻，随新帝登基册立':'新帝登基，奉遗诏册立');if(h.spouse&&journalContentVersion()>=85)em.accessionArrival={gen:S.gen,started:S.turn};}
     inheritHousehold(h,empress());inheritLifeKeepsakes(h);S.ys={c:0,b:0,n:0};UI.kidsResidence='palace';
     migrate();UI.view='map';AU.sfx('gong');
     return {title:'新朝家人',por:dowagerPerson(S.flags.dowager),text:`${v}元年，新帝登基，大赦天下。\n${S.flags.dowager.fullName||S.flags.dowager.name}${S.flags.dowager.alive?'尊为'+S.flags.dowager.name+'，居慈宁宫。':'已故，尊谥存于宗谱。'}${S.flags.birthDowager?.alive?'\n生母'+S.flags.birthDowager.fullName+'亦尊为皇太后。':''}\n潜邸妻儿与亲族的往来，由此接入新朝。`}}}]});

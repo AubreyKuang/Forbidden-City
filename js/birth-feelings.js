@@ -80,12 +80,74 @@ function recordBirthOmenReactions(mother){
  const first=responses[0],other=responses.find(r=>r.close!==first.close);
  return news+'。\n'+[first,other].filter(Boolean).map(r=>r.line).join('\n');
 }
+const FAMILY_DAUGHTER_WISH_CHANCE=.25;
+function familyDaughterBirths(c){
+ const sons=[];let daughter=false;
+ for(const k of royalHouseholds()){
+  if(k.mom!==c.id||k.adoptedRoyal||k.outsideFamilyOrigin||k.pendingName||k.deathReason==='出生时已无生息')continue;
+  if(k.birthSwap?.occurred){
+   const original=k.birthSwap.original;
+   if(original?.sex==='f'&&original.alive!==false)daughter=true;
+   continue;
+  }
+  if(k.sex==='f')daughter=true;
+  if(k.sex==='m')sons.push(k);
+ }
+ return {sons,daughter};
+}
+function familyDaughterWriters(c){
+ if(whiteSpringRoyal(c))return whiteSpringFamily(c);
+ const h=houseOf(c);if(!h)return {};
+ const canWrite=p=>officialAlive(p)&&!p.exiled&&!p.jailed;
+ const motherBorn=h.natal?.memberBorn?.[c.id]??S.turn-c.age*12;
+ const brothers=[...brotherRoles(h).map(role=>h[role]).filter(p=>p.age>=c.age),
+  ...natalPeople(h).filter(p=>p.sex==='m'&&!p.parentRelativeId&&!p.motherRelativeId&&p.born<motherBorn)];
+ return {father:canWrite(h.father)?h.father:null,brother:brothers.find(canWrite)};
+}
+function familyDaughterLetter(c){
+ const delivery=c.delivery,kids=deliveryKids(c);
+ if(!c.alive||!delivery.settled||delivery.outcome?.loss||delivery.concealedLoss||delivery.swap||
+    !kids.length||kids.some(k=>!k.alive||k.sex!=='m'||k.birthSwap?.occurred))return null;
+ const {sons,daughter}=familyDaughterBirths(c);
+ if(daughter||sons.length<3||new Set(sons.map(k=>k.born)).size<2)return null;
+ const family=familyDaughterWriters(c),whiteSpring=whiteSpringRoyal(c);
+ const writers=['father','brother'].filter(role=>officialAlive(family[role])&&c.familyDaughterWishes?.[role]==null&&chance(FAMILY_DAUGHTER_WISH_CHANCE));
+ if(!writers.length)return null;
+ const lines={
+  father:whiteSpring?'得知你和孩子都平安，我便叫人添灯，夜里把信又读了两遍。往后若添一个外孙女，我想亲手给她削一匹小木马。给她哥哥们的也早留着。':
+    ['报喜的小厮话还没说完，我已叫厨房给家里添两个菜。听说孩子哭声响亮，甚好。以后家里若添个外孙女，我那匣子旧书也能再教一个孩子读。','你和孩子都安稳，家里才睡得踏实。你小时戴过的那只银铃我还收着，有朝一日若有个外孙女，真想听那铃声再响一回。'],
+  brother:whiteSpring?'我已挑了一面小鼓，请使团送给孩子。若哪年有了外甥女，我就把咱们小时候一起学的那支曲子也抄来，叫他们几个轮流敲。':
+    ['得信时我正在吃饭，欢喜得连筷子都放错了地方。几个外甥有伴很好。若日后添个外甥女，我早想当一回给她挑花灯的舅舅。','我给新来的小外甥备了木陀螺，哥哥们也各有一只。说件闲话给你听，我还盼哪天有个外甥女来拆我的礼，到时可得先找你问问她爱什么。']
+ };
+ const letters=writers.map(role=>{
+  const p=family[role],variants=lines[role];
+  return {role,p,line:Array.isArray(variants)?variants[marriageHash(p.id+':daughter-letter')%variants.length]:variants};
+ });
+ const title='报喜后的家书',names=kids.map(k=>k.name).join('、');
+ const text=`${fullName(c)}诞下${names}的喜信传到家里。接连几回都是皇子，家人先问过母子平安，这才提笔写了几句家常。
+`+
+  letters.map(({role,p,line})=>`${whiteSpring?(role==='father'?'父王':'王兄'):role==='father'?'父亲':'兄长'}${p.name}在信中写道：“${line}”`).join('\n');
+ const people=[{id:c.id,name:fullName(c)},...kids.map(k=>({id:k.id,name:k.name})),...letters.map(({p})=>({id:p.id,name:p.name}))];
+ const record=(p,line)=>{
+  p.story ||= [];story(p,`【${title}】${line}`);
+  p.story.at(-1).life={kind:'family',title,turn:S.turn,gen:S.gen,people,source:'报喜家书',summary:text};
+ };
+ return {title,por:c,text,choices:[{t:'收好家书',f:()=>`${fullName(c)}把家书收进妆匣，托人把孩子如今能吃能睡的消息带回去。`}],valid:()=>c.alive&&c.delivery===delivery,
+  onShow:()=>{
+   for(const {p,role,line} of letters){
+    (c.familyDaughterWishes||={})[role]=S.turn;
+    record(p,`写信贺${fullName(c)}平安生下${names}。信里写道：“${line}”`);
+   }
+   record(c,`娘家得知她与${names}平安，写信来贺。她读过${letters.map(({p})=>p.name).join('、')}的家书，把孩子眼下的起居也托人捎去。`);
+  }};
+}
 const birthFeelingsFinish=finishDelivery;
 finishDelivery=function(c){
  const fresh=c?.delivery&&!c.delivery.settled,result=birthFeelingsFinish(c);
  if(!fresh||journalContentVersion()<12)return result;
  const feeling=recordBirthFeeling(c);
  const reactions=journalContentVersion()>=80?recordBirthOmenReactions(c):'';
+ if(journalContentVersion()>=117&&PalaceActions.busy&&c.delivery.settled)pushEv(familyDaughterLetter(c));
  return [result,feeling,reactions].filter(Boolean).join('\n\n');
 };
 const birthFeelingsVoice=maternalVoice;

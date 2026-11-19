@@ -113,6 +113,7 @@ function natalVisitorsPanel(c){
 }
 function natalSpouseSummary(p){
   if(!p.spouse)return '';
+  if(p.spouse.royalId!=null)return natalRoyalPartnerLine(p);
   const partner=p.spouse.personId&&careerPeople().find(x=>x.p.id===p.spouse.personId);
   if(partner)return `<p>配偶：${careerLink(partner)} · ${esc(officialOfficeLabel(partner.p))} · ${partner.p.age}岁 · ${esc(officialStatus(partner.p))}</p>`;
   return `<p>配偶：${esc(p.spouse.name)}${p.spouse.desc?' · '+esc(p.spouse.desc):''} · ${Math.max(18,Math.floor((S.turn-p.spouse.born)/12))}岁${p.spouse.alive===false?' · 已故':''}</p>`;

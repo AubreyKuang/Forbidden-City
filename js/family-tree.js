@@ -107,6 +107,7 @@ natalLabel=function(c,p){
   return treeNatalLabel(c,p);
 };
 function natalParentLinks(c,p){
+  if(p.natalCollateral)return `<p>父亲：${esc(c.house.father.name)}的兄弟，另房家籍尚待补录。</p>`;
   if(!layeredFamilyActive()||!p.parentRelativeId)return `<p>${p.parentRelativeId?'母亲':'父亲'}：${p.parentRelativeId?`<button class="btn quiet" onclick="A.go('natal','${c.id}:${p.parentRelativeId}')">${esc(c.house.relatives.find(x=>x.id===p.parentRelativeId)?.name||'家中长辈')}</button>`:officialLink(c,'father')}</p>`;
   const n=familyTreeRegistry().nodes.find(n=>n.p.id===p.id),mother=n?.mother,father=n?.father;
   const motherLink=mother?(mother.p.consortId?`<button class="person-link" onclick="A.go('consort',${mother.p.consortId})">${esc(mother.p.name)}</button>`:`<button class="person-link" onclick="A.go('natal','${mother.c.id}:${mother.p.id}')">${esc(mother.p.name)}</button>`):'未详录';

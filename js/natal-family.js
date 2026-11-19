@@ -16,7 +16,7 @@ function initializeNatalFamily(c,h,family){
       addNatalPerson(c,h,sex,age,n,false);
     }
   }
-  h.natal.motherBorn=Math.min(h.natal.motherBorn,S.turn-(Math.max(c.age,...brotherRoles(h).map(r=>h[r].age),...h.relatives.map(p=>natalAge(p)))+18)*12);
+  h.natal.motherBorn=Math.min(h.natal.motherBorn,S.turn-(Math.max(c.age,...brotherRoles(h).map(r=>h[r].age),...h.relatives.filter(p=>!p.natalCollateral).map(natalAge))+18)*12);
   h.relatives ||= [];h.natal.memberBorn ||= {};
   for(const other of copies){
     for(const p of other.relatives||[]){
@@ -52,6 +52,12 @@ function addNatalPerson(c,h,sex,age,seed,birth=true){
   return p;
 }
 function natalLabel(c,p){
+  if(p.natalCollateral)return p.born<=(c.house?.natal?.memberBorn?.[c.id]??S.turn-c.age*12)?'堂姐':'堂妹';
+  const motherId=p.motherRelativeId, parentId=motherId??p.parentRelativeId;
+  if(journalContentVersion()>=117&&parentId){const parent=c.house?.relatives?.find(x=>x.id===parentId);
+    if(parent?.natalCollateral)return p.sex==='m'?'堂外甥':'堂外甥女';
+    if(motherId||parent?.sex==='f')return p.sex==='m'?'外甥':'外甥女';
+  }
   if(p.parentRelativeId){const parent=c.house?.relatives?.find(x=>x.id===p.parentRelativeId);return parent?.sex==='f'?(p.sex==='m'?'外甥':'外甥女'):(p.sex==='m'?'侄子':'侄女');}
   const born=c.house?.natal?.memberBorn?.[c.id]??S.turn-c.age*12;
   return p.sex==='m'?(p.born<born?'兄长':'弟弟'):(p.born<born?'姐姐':'妹妹');
@@ -60,7 +66,7 @@ function natalPortrait(p){
   const age=natalAge(p);
   return age<18?{...p,courtGuest:true}:p.sex==='m'?{...p,official:2}:{...p,sex:undefined,age,courtGuest:false};
 }
-function natalStatus(p){return !p.alive?'已故':p.consortId?'已入宫':p.visit?'入宫探亲':natalAge(p)<6?'家中幼儿':natalAge(p)<18?'在家读书':p.married?'已婚':p.betrothal?'议亲中':p.career==='commoner'?p.post:'居于娘家';}
+function natalStatus(p){return !p.alive?'已故':p.consortId?'已入宫':p.visit?'入宫探亲':royalNatalEngaged(p)?'已定亲':natalAge(p)<6?'家中幼儿':natalAge(p)<18?'在家读书':p.married?'已婚':p.betrothal?'议亲中':p.career==='commoner'?p.post:'居于娘家';}
 function natalEntry(id,relative){const c=familyHostById(id),h=c&&houseOf(c),p=h?.relatives?.find(p=>p.id===+relative);return p?{c,h,p}:null;}
 function natalRecord(c,p,text,emotion=0){
   story(p,text);
