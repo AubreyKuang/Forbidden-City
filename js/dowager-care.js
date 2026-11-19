@@ -81,7 +81,16 @@ dowagerDaoTick=function(d){if(dowagerCareActive()&&d.lastYears&&S.turn>=d.lastYe
 const careDowagerCompany=prepareDowagerCompany;
 prepareDowagerCompany=function(d){if(!dowagerIll(d))return careDowagerCompany(d);const c=byId(d.lastYears.caregiver);return dowagerLiving(d).company={turn:S.turn,people:c&&dowagerVisitReady(c)?[c.id]:[]};};
 const careDowagerEvent=dowagerEvent;
-dowagerEvent=function(){const d=ensureDowager();if(!dowagerIll(d))return careDowagerEvent();const c=byId(d.lastYears.caregiver),valid=()=>dowagerIll(d);return {title:'慈宁宫 · 病榻问安',cast:[dowagerPerson(d),...(c&&dowagerVisitReady(c)?[c]:[])],valid,text:`太后倚在软枕上，精神比从前短了。${c&&dowagerVisitReady(c)?fullName(c)+'把药盏交给宫人，轻声说今日已用了些粥。':'值守宫人轻声禀报今日饮食。'}\n“皇帝来了。坐一会儿吧，听你说几句，哀家心里也踏实。”`,choices:[{t:'坐在榻边陪母后说话',f:()=>{if(!valid())return null;dowagerRecord(d,'病中问安','皇帝来榻前陪坐，说起宫中家常，没有勉强她久谈。');return '你陪她坐到倦意渐起，才替她掖好被角，轻声告退。';}},{t:'问问侍疾安排',f:()=>{pushNow(dowagerCareSelection(d));return null;}}]};};
+dowagerEvent=function(){
+ const d=ensureDowager();if(!dowagerIll(d))return careDowagerEvent();
+ const c=byId(d.lastYears.caregiver),present=c&&dowagerVisitReady(c);
+ const personal=present?storyQueenDowagerDialogue(c,d,dowagerBond(c,d)):'';let shown=false;
+ const valid=()=>dowagerIll(d)&&(!personal||d.lastYears.caregiver===c.id&&dowagerVisitReady(c));
+ return {title:'慈宁宫 · 病榻问安',cast:[dowagerPerson(d),...(present?[c]:[])],valid,
+  text:`太后倚在软枕上，精神比从前短了。${present?fullName(c)+'把药盏交给宫人，轻声说今日已用了些粥。':'值守宫人轻声禀报今日饮食。'}${personal?'\n'+personal:''}\n“皇帝来了。坐一会儿吧，听你说几句，哀家心里也踏实。”`,
+  ...(personal?{onShow:()=>{if(shown||!valid()||!dowagerVisitReady(c))return;shown=true;story(c,'【慈宁宫侍疾相谈】'+personal);dowagerRecord(d,'侍疾时相谈',personal);}}:{}),
+  choices:[{t:'坐在榻边陪母后说话',f:()=>{if(!valid())return null;dowagerRecord(d,'病中问安','皇帝来榻前陪坐，说起宫中家常，没有勉强她久谈。');return '你陪她坐到倦意渐起，才替她掖好被角，轻声告退。';}},{t:'问问侍疾安排',f:()=>{pushNow(dowagerCareSelection(d));return null;}}]};
+};
 const careBeginMourning=beginDowagerMourning;
 beginDowagerMourning=function(d){const fresh=d.alive,c=dowagerCareActive()?byId(d.lastYears?.caregiver):null;careBeginMourning(d);if(!fresh||!dowagerCareActive())return;dowagerRecord(d,'慈宁宫送别',(d.lastYears?.warned?'病中由太医与宫人照护，终在慈宁宫离世。':'于慈宁宫离世，宫中举哀。')+(c?fullName(c)+'曾在榻前侍疾，留下最后一段相伴的纪事。':''));if(c){story(c,'【侍疾送别】太后离世，自己仍记得这些日子递过的药盏、听过的旧事。'+mourningReaction(c));if(c.clan!==d.clan){cchg(c,{mood:-12});setXin(c,'悲恸','曾在榻前侍疾的太后离世');}}};
 const careDowagerPanel=dowagerCourtPanel;
