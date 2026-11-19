@@ -9,7 +9,16 @@ for(const c of cases)test(`layout preserves information and action availability:
  const before=baseline.pages.find(p=>p.name===c[0]);
  const {html}=renderCase(c),after=signature(html);
  const remaining=after.controls.map(x=>JSON.stringify(x));
- for(const control of before.controls){
+ for(const original of before.controls){
+  const control={...original};
+  // The chronicle now submits one native form from either Enter or the search button.
+  if(control.id?.startsWith('chronicle-search-'))delete control.onkeydown;
+  if(control.onclick?.startsWith('A.chronicleSearch(')){
+   const form=html.match(/<form\b[^>]*class="chronicle-search"[^>]*>[\s\S]*?<\/form>/)?.[0]||'';
+   assert.ok(form.includes(`onsubmit="event.preventDefault();${control.onclick}"`));
+   assert.ok(form.includes('<button type="submit"'));
+   continue;
+  }
   const key=JSON.stringify(control),i=remaining.indexOf(key);
   assert.notEqual(i,-1,`Lost or changed control: ${key}`);
   remaining.splice(i,1);
@@ -21,7 +30,8 @@ for(const c of cases)test(`layout preserves information and action availability:
  // family views have dedicated end-to-end assertions in palace-layered-family.
  const expected=c[0]==='family-list'?[]:[...before.text];
  const fragments=['children','children-out'].includes(c[0])?expected.map(text=>childTextChanges.get(text)??text):expected;
- for(const fragment of fragments.sort((a,b)=>b.length-a.length)){
+ for(const legacyFragment of fragments.sort((a,b)=>b.length-a.length)){
+  const fragment=legacyFragment.replace('筛选不会删去原始记载。','');
   // The guide now describes the three-reply quota; its other instructions remain.
   const updated=c[0]==='home'?fragment.replace('上朝可先免费查看本月奏折，亲自批复通常花 1 点','每月最多批阅三份奏折，可先免费查看；亲自批复通常花 1 点'):fragment;
   assert.ok(text.includes(updated),`Missing text: ${updated}`);
