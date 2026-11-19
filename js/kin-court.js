@@ -300,7 +300,7 @@ function officialRowFamily(c){
   const kids=S.children.filter(k=>ids.has(k.mom)&&!k.removedFromRoyal).sort((a,b)=>a.born-b.born);
   return {members,kids};
 }
-function consortStatusTag(x){return !x.alive?'已故':x.gone?'出宫':x.cold?'冷宫':x.templeStay?'寺中':x.homeLeave?'省亲':'';}
+function consortStatusTag(x){return !x.alive?'已故':x.gone?'出宫':x.cold?'冷宫':x.templeStay?'寺中':x.homeLeave?'暂离宫中':'';}
 const OFFICIAL_FILTERS=[['serving','在朝'],['all','全部'],['away','外任与奉差'],['gone','故去与获罪']];
 function officialFilterMatch(p,filter){
   if(p.career==='student'||p.career==='commoner')return false;

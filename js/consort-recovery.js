@@ -33,7 +33,7 @@ function consortRecovery(c){
 function consortNightReason(c){
   if(!c)return '眼下不宜召见';
   if(mourningNightPause())return mourningNightMessage();
-  if(c.homeLeave&&journalContentVersion()>=88)return c.homeLeave.field?'外出 · 赴北境军驿':'外出省亲';
+  if(c.homeLeave&&journalContentVersion()>=88)return homeLeaveStatus(c);
   if(journalContentVersion()>=91){
     const d=S.flags.dowager;
     if(dowagerIll(d)&&d.lastYears.caregiver===c.id)return '正在为太后侍疾';
