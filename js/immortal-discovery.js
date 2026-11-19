@@ -111,7 +111,7 @@ function immortalAdmirationVoice(peer,address){
 }
 
 function shareImmortalPeerAdmiration(k){
- if(!PalaceActions.balancedImmortalDiscovery||mourningActive())return;
+ if(!PalaceActions.immortalPeerAdmiration||mourningActive())return;
  const r=k.immortal;
  if(!(S.turn>r.since))return;
  const admirers=r.discoveryNews?.admirers;

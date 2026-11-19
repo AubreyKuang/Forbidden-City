@@ -119,23 +119,24 @@ test('a legacy chronicle can preserve the lock after the discovered child is abs
    assert.equal(immortalDiscover(kidById(id)),false);assert.equal(kidById(id).immortal,undefined);`);
 });
 
-test('an old unseen prince seed is eligible under the new balance and can win the actual monthly discovery',()=>{
+test('unrevealed talents from the equal-odds release return to the original odds on the next discovery',()=>{
  let b=world();
- b.run(`m.rank=8;var son=child('m','承安',14,null);var id=son.id;
+ b.run(`m.rank=8;var son=child('m','承安',14,null);
    son.seed=Array.from({length:300},(_,i)=>i+1).find(seed=>
      rolledImmortalRoot({seed},.15)&&!rolledImmortalRoot({seed},.015));
-   assert.ok(son.seed);delete son.immortalTalentBalanced;
-   k.born=S.turn-8*12;var other=k.id;S.flags.immortalPace={last:-99,lastOffer:-99};
+   k.seed=Array.from({length:300},(_,i)=>i+1).find(seed=>
+     rolledImmortalRoot({seed},.24)&&!rolledImmortalRoot({seed},.15));
+   for(const p of [k,son]){assert.ok(p.seed);p.immortalTalent=rolledImmortalRoot(p,.15);p.immortalTalentBalanced=true;}
+   S.flags.immortalPace={last:-99,lastOffer:-99};
    PalaceActions.reset();save('1');`);
- const ids=JSON.parse(b.run('JSON.stringify([id,other])'));
+ const ids=JSON.parse(b.run('JSON.stringify([k.id,son.id])'));
  b=reopen(b);b.ctx.ids=ids;b.run(`A.load('1');`);b.force(0,0);
- b.run(`var [id,other]=ids,son=kidById(id);
-   assert.equal(son.immortalTalent,null);assert.equal(legacyImmortalBirthChance(son),.015);
-   var root=immortalRoot(son);assert.ok(root);immortalTick();
-   assert.equal(son.immortal.root,root);assert.equal(S.immortalDiscovery.id,id);
-   assert.equal(son.immortalTalentBalanced,true);
-   var daughter=kidById(other);daughter.born=S.turn-16*12;
-   assert.equal(immortalDiscover(daughter),false);assert.equal(daughter.immortal,undefined);`);
+ b.run(`var [daughter,son]=ids.map(kidById);
+   assert.equal(daughter.immortalTalent,null);assert.ok(son.immortalTalent);
+   assert.equal(immortalRoot(son),null);assert.equal(immortalBirthChance(son),.015);
+   var root=immortalRoot(daughter);assert.ok(root);immortalTick();
+   assert.equal(daughter.immortal.root,root);assert.equal(S.immortalDiscovery.id,daughter.id);
+   assert.equal(daughter.immortalTalentBalanced,undefined);assert.equal(son.immortal,undefined);`);
 });
 
 test('a confirmed discovery from an old save adds separate admiration from her younger brother and close sister once',()=>{

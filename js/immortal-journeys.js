@@ -16,24 +16,27 @@ const IMMORTAL_VOICES={
 function immortalEnabled(){return typeof PalaceActions==='undefined'||PalaceActions.contentVersion>=7;}
 function immortalPalaceLessonsEnabled(){return journalContentVersion()>=52;}
 function immortalAway(k){return !!(immortalEnabled()&&['learning','trial','sect'].includes(k?.immortal?.stage));}
-function legacyImmortalBirthChance(k){return k.sex==='f'?.24:k.birthTraits?.mother?.rank===8?.015:.06;}
+function immortalBirthChance(k){return k.sex==='f'?.24:k.birthTraits?.mother?.rank===8?.015:.06;}
 function rolledImmortalRoot(k,chance){
  const seed=String(k.seed||k.id),roll=mulberry32(voiceHash('immortal-root:'+seed))();
  return roll<chance?['木灵根','水灵根','金灵根','火灵根','土灵根','冰灵根','雷灵根'][voiceHash('root-kind:'+seed)%7]:null;
 }
 function immortalRoot(k){
  if(k.immortal?.root)return k.immortal.root;
- const saved=k.immortalTalent,balanced=PalaceActions.balancedImmortalDiscovery;
- if(saved!==undefined&&(!balanced||k.immortalTalentBalanced||saved!==rolledImmortalRoot(k,legacyImmortalBirthChance(k))))return saved;
- // An old, unrevealed result is evaluated under the same rule as a new birth.
- return rolledImmortalRoot(k,balanced ? .15 : legacyImmortalBirthChance(k));
+ const saved=k.immortalTalent,birthChance=immortalBirthChance(k);
+ // The brief equal-odds release can still have a pending action to replay.
+ const chance=PalaceActions.balancedImmortalDiscovery ? .15 : birthChance;
+ const savedChance=k.immortalTalentBalanced ? .15 : birthChance;
+ if(saved!==undefined&&(savedChance===chance||saved!==rolledImmortalRoot(k,savedChance)))return saved;
+ return rolledImmortalRoot(k,chance);
 }
 function initImmortalTalent(k){
  if(!immortalEnabled()||k.immortal)return;
  const balanced=PalaceActions.balancedImmortalDiscovery;
- if(k.immortalTalent===undefined||balanced&&!k.immortalTalentBalanced){
+ if(k.immortalTalent===undefined||balanced!==!!k.immortalTalentBalanced){
   k.immortalTalent=immortalRoot(k);
   if(balanced)k.immortalTalentBalanced=true;
+  else delete k.immortalTalentBalanced;
  }
 }
 function immortalPeople(){return royalHouseholds().filter(k=>k.immortal);}

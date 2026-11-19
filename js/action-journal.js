@@ -41,7 +41,7 @@ const PalaceActions=(()=>{
     if(name==='start'){journal=null;blocked=false;}
     const before=S?clone(S):null,prior=journal?clone(journal):null,priorUI=clone(UI);
     if(!journal&&!modalOpen&&!Q.length){
-      journal={version,outerHouseholds:true,outerHouseholdUpdates:true,exclusiveStoryOrigins:true,immortalDiscoveryNews:true,betrothalJourneys:true,balancedImmortalDiscovery:true,base:S?clone(world(S)):null,ui:clone(UI),steps:[]};
+      journal={version,outerHouseholds:true,outerHouseholdUpdates:true,exclusiveStoryOrigins:true,immortalDiscoveryNews:true,betrothalJourneys:true,immortalPeerAdmiration:true,base:S?clone(world(S)):null,ui:clone(UI),steps:[]};
     }
     const current={name,args:clone(args),monthNotice:true,rolls:[],answers:[],saves:[],ui:clone(UI)};
     if(name==='start'){
@@ -149,7 +149,8 @@ const PalaceActions=(()=>{
   }
   return {random,input,keepInput,payload,run,restore,valid,install,abandon,
     get outerHouseholds(){return !journal||journal.outerHouseholds===true;},
-    get balancedImmortalDiscovery(){return !journal||journal.balancedImmortalDiscovery===true;},
+    get balancedImmortalDiscovery(){return journal?.balancedImmortalDiscovery===true;},
+    get immortalPeerAdmiration(){return !journal||journal.immortalPeerAdmiration===true||journal.balancedImmortalDiscovery===true;},
     get betrothalJourneys(){return !journal||journal.betrothalJourneys===true;},
     get immortalDiscoveryNews(){return !journal||journal.immortalDiscoveryNews===true;},
     get exclusiveStoryOrigins(){return !journal||journal.exclusiveStoryOrigins===true;},
