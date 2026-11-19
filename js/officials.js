@@ -69,7 +69,8 @@ function officialRecord(c,role,text,{family=true,emotion=0}={}){
   log(`${p.name}：${text}`,1);
   if(journalContentVersion()>=47)princessGroomNews(p,text);
 }
-function officialFamilyReaction(e,kind,task){
+function officialFamilyReaction(e,kind,task,fact){
+ if(kind==='success'&&recordCourtFamilyNews(e,{kind:'merit',task,officialDuty:true,fact:fact||`办结「${task}」，实绩已有回报。`}))return;
  const {c,p,role,h}=e;
  for(const member of paternalFamily(c).filter(x=>S.consorts.includes(x)&&x.alive)){
   const kin=officialKinLabel(h,role,member),who=kin+p.name,formal=isSolitary(member)||['持重','聪慧','城府','将门','爽直'].includes(member.trait);
@@ -235,7 +236,7 @@ function officialTaskTick(){
         if(j.id==='pay'||j.id==='drills')chg({prestige:3});
       }
       p.merit=clamp(p.merit+(j.outcome==='success'?12:-6));chg({people:j.outcome==='success'?3:-1});officialRecord(c,role,text,{emotion:j.outcome==='success'?.5:-.3});
-      officialFamilyReaction(familyContact,j.outcome,j.title);
+      officialFamilyReaction(familyContact,j.outcome,j.title,text);
     }
     noteCommissionChapter(familyContact,j,true);
     p.report={text,outcome:j.outcome,title:j.title,turn:S.turn};if(careersActive())p.report.office=p.office||p.post;

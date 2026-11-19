@@ -217,6 +217,8 @@ function kinCourtImpeachEvent(pair,cast){
     :pair.rel>=KIN_COURT_FRIEND?`${cName(x.c)}与${cName(y.c)}在宫中本来交好，这道折子让两人都不好开口。`
     :`两家分属${blocName(x.h.bloc)}与${blocName(y.h.bloc)}，在朝中早有龃龉。`;
   const friendsBefore=pair.rel>=KIN_COURT_FRIEND;
+  const familyCase=`court-impeach:${x.p.id}:${y.p.id}:${S.turn}`;
+  const familyNews=(kind,fact)=>recordCourtFamilyNews(y,{kind,task:'同朝参本',fact,caseKey:familyCase,balancedFor:kind==='held'?null:y.c.id});
   const valid=()=>kinCourtStillValid(pair,cast,false);
   let done=false;
   const once=f=>(...args)=>{if(done||!valid())return null;done=true;return f(...args);};
@@ -230,10 +232,12 @@ function kinCourtImpeachEvent(pair,cast){
           y.p.trust=clamp(y.p.trust-5);y.p.merit=clamp(y.p.merit-6);x.p.trust=clamp(x.p.trust+2);
           officialRecord(x.c,x.role,`参劾${y.p.name}，经部核查属实。`,{emotion:.2});
           officialRecord(y.c,y.role,`遭${x.p.name}参劾，经部核查属实，罚俸半年。`,{emotion:-.5});
+          familyNews('proven',`遭${x.p.name}参劾，经部核查属实，罚俸半年。`);
         }else{
           x.p.trust=clamp(x.p.trust-6);
           officialRecord(x.c,x.role,`参劾${y.p.name}，查无实据，落了个“挟私攻讦”的名声。`,{emotion:-.4});
           officialRecord(y.c,y.role,`遭${x.p.name}参劾，经部核查查无实据，得还清白。`,{emotion:.3});
+          familyNews('cleared',`遭${x.p.name}参劾，经部核查无实据，得还清白。`);
         }
         const delta=friendsBefore?-12:-8;
         kinCourtPalaceEcho(cast,delta,{actorLine:proven?`${kinCourtKin(x)}${x.p.name}参劾${fullName(y.c)}家属实。她在宫中见了${cName(y.c)}，只觉对方眼神冷了。`:`${kinCourtKin(x)}${x.p.name}参劾${fullName(y.c)}家查无实据，她在宫里抬不起头，也怨对方家里不肯罢休。`,
@@ -245,6 +249,7 @@ function kinCourtImpeachEvent(pair,cast){
       {t:'留中不发',f:once(()=>{
         officialRecord(x.c,x.role,`参劾${y.p.name}的奏本留中不发。`);
         officialRecord(y.c,y.role,`被${x.p.name}参了一本，奏本留中不发。`,{emotion:-.2});
+        familyNews('held',`被${x.p.name}参了一本，奏本留中，朝廷暂无裁断。`);
         const delta=friendsBefore?-6:-4;
         kinCourtPalaceEcho(cast,delta,{actorLine:`${kinCourtKin(x)}${x.p.name}参${fullName(y.c)}家的折子被压下了。她知道这事瞒不住宫里。`,targetLine:targetHurt});
         kinCourtNote(pair,cast,'impeach-held',`参劾${y.p.name}，留中。`,delta);
@@ -254,6 +259,7 @@ function kinCourtImpeachEvent(pair,cast){
         x.p.trust=clamp(x.p.trust-5);y.p.trust=clamp(y.p.trust+1);
         officialRecord(x.c,x.role,`参劾${y.p.name}，被斥“挟私攻讦”。`,{emotion:-.4});
         officialRecord(y.c,y.role,`遭${x.p.name}参劾，陛下斥参本者挟私攻讦。`,{emotion:.3});
+        familyNews('rebuked',`遭${x.p.name}参劾，陛下斥参本者挟私攻讦，案由未交部核查。`);
         const delta=friendsBefore?-8:-6;
         kinCourtPalaceEcho(cast,delta,{actorLine:`${kinCourtKin(x)}${x.p.name}因参劾${fullName(y.c)}家受了斥责。她觉得陛下偏了心，对${cName(y.c)}更不服气。`,
           targetLine:`陛下替${kinCourtKin(y)}${y.p.name}说了话。她心中感念，对${fullName(x.c)}家却再难亲近。`});

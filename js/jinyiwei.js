@@ -393,6 +393,8 @@ function rumorReport(x,found){
     officialRecord(target.c,target.role,`锦衣卫查实其「${x.charge}」，罚俸半年。`,{emotion:-.5});officialRecord(actor.c,actor.role,`参劾${target.p.name}，经锦衣卫查实。`);}
   else{actor.p.trust=clamp(actor.p.trust-6);
     officialRecord(target.c,target.role,`被参「${x.charge}」，锦衣卫查明并无其事，得还清白。`,{emotion:.3});officialRecord(actor.c,actor.role,`参劾${target.p.name}，锦衣卫查无其事。`,{emotion:-.4});}
+  recordCourtFamilyNews(target,{kind:x.truth?'proven':'cleared',task:'锦衣卫复核参本',caseKey:x.id,
+    fact:x.truth?`所参「${x.charge}」经锦衣卫查实，罚俸半年。`:`所参「${x.charge}」经锦衣卫查明并无其事，得还清白。`});
   if(inPalace(actor.c)&&inPalace(target.c))relAdd(actor.c,target.c,delta);
   story(j.commander,`密查${target.p.name}被参一事，${x.truth?'查实':'查明不实'}。`);
   return {title:'锦衣卫密报',por:j.commander,cast:[j.commander,target.p,actor.p],text:`${j.commander.name}回奏：${target.p.name}被参「${x.charge}」一事，${x.truth?'确有其事，已取得驿递簿与证人口供':'查无其事，系同僚以讹传讹'}。`,choices:[{t:'依例处置'}]};
@@ -404,6 +406,8 @@ function jinyiweiRumorChoice(pair,cast,charge){
     const item=openPalaceCase({kind:'rumor',title:`${cast.y.p.name}被参`,crime:'风闻奏事',charge,accuser:cast.x.p.id,accuserKey:cast.x.key,targetId:cast.y.p.id,target:cast.y.key,truth:chance(.3),friendsBefore:pair.rel>=KIN_COURT_FRIEND});
     chg({treasury:-15});dispatchCase(item,15);
     officialRecord(cast.y.c,cast.y.role,`被${cast.x.p.name}参劾，奉旨交锦衣卫核实。`,{emotion:-.2});
+    recordCourtFamilyNews(cast.y,{kind:'pending',task:'锦衣卫复核参本',caseKey:item.id,
+      fact:`被参「${charge}」，已奉旨核实。家中只收到交查的消息。`});
     officialRecord(cast.x.c,cast.x.role,`参劾${cast.y.p.name}，奉旨交锦衣卫核实。`);
     return '缇骑已出京查访，下月回报。';
   }};
