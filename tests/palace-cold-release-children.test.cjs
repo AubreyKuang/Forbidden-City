@@ -43,3 +43,6 @@ test('older pending release preserves the original foster-care wording',()=>{
 test('the corrected deceased foster-mother report survives a pending-scene reload without rewriting the adoption',()=>{
  let b=world();b.run(`doFoster(little,b);b.alive=false;PalaceActions.reset();A.uncold(a.id);assert.match(curEv.text,/养母.*已故/);`);const child=b.run('little.id'),foster=b.run('b.id');b=boot(559,b.storage);b.ctx.assert=assert;b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.match(curEv.text,/养母.*已故/);assert.equal(kidById(${child}).foster,${foster});choose(0);drain();assert.equal(kidById(${child}).foster,${foster});`);
 });
+test('a released mother visits her heir in the Eastern Palace rather than moving him out',()=>{
+ const b=world();b.run(`little.sex='m';A.kidHeir(little.id);choose(0);drain();assert.equal(S.heir,little.id);PalaceActions.reset();A.uncold(a.id);assert.match(curEv.text,/清和已入主东宫/);assert.match(curEv.text,/仍住在东宫/);assert.equal(childWhereabouts(little),'东宫');assert.equal(youngChildMother(little),null);`);
+});

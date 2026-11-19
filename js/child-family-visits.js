@@ -127,6 +127,7 @@ function releaseMotherReunionChanges(previous){
    else if(unavailable)text=`${named}的${fosterStatus}。她悄悄去看孩子，先问乳母和随侍近来的起居；抚养名册仍照旧，她没有擅自改变安排。`;
    else if(blocked)text=`${named}已有${foster?fullName(foster):'养母'}照料，先前的禁探仍在。她急着打听孩子的近况，却只能托人送去问候，没有擅闯或改变抚养安排。`;
    else if(assigned)text=`${named}如今由${foster?fullName(foster):'养母'}抚养。她悄悄来探望，只在一旁确认孩子安好，怕惊动旁人；孩子仍按原安排生活，她没有擅自接走。`;
+   else if(journalContentVersion()>=119&&S.heir===k.id)text=`${named}已入主东宫。她急着去探望，问起孩子的起居和功课，也嘱托随侍细心照料；孩子仍住在东宫。`;
    else if(returnCare)text=age<6?`${named}尚未交由旁人抚养。她急忙去接孩子回到自己身边，又问乳母饮食、夜里睡得可安稳，往后仍由她与宫人照料。`:`${named}尚未交由旁人抚养。她急忙去看孩子，问清近来的起居和功课，重新照应孩子的日常，也听孩子慢慢说。`;
    else text=`她悄悄去看${named}，先问起孩子这些日子过得好不好。孩子的住处与现有安排照旧，她仍惦记着孩子。`;
    const words='“往后我会守好规矩，不再让你为我担惊受怕。你要好好的，我会一直惦记着你。”';
