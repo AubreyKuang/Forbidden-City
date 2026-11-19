@@ -70,7 +70,7 @@ const PALACE_INITIATIVES={
   },
   clayRabbit:{
     title:'中秋彩绘兔儿爷', seasonal:true, place:'yh', source:'rabbit', ref:'故宫博物院·泥制兔儿爷',
-    match:c=>S.month===8&&(c.trait==='活泼'||c.trait==='才女'||['念旧','爱猫'].includes(c.t2)),
+    match:c=>S.month===8&&(c.trait==='活泼'||c.trait==='才女'||c.t2==='念旧'||(journalContentVersion()>=141?consortHasQuirk(c,'爱猫'):c.t2==='爱猫')),
     target:c=>initiativeChild(c,4),
     text:(c,k)=>c.trait==='才女'
       ? `她给泥兔画了眉眼，刚要蘸红，${k.name}递来一碟青色：“它也能穿和我一样的衣裳吗？”`
