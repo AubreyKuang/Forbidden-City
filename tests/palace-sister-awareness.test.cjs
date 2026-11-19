@@ -37,3 +37,40 @@ test('older pending admission keeps its original senior consort reaction',()=>{
  const w=world();w.run(`var witness=makeGirl({sur:'魏',given:'明岚',age:26,trait:'温婉'});addConsort(witness,6,'入宫');witness.sisterAffairKnowledge={[sister.id]:{reaction:'hopeful',sister:sister.id,name:sister.name}};
  var original=Object.getOwnPropertyDescriptor(PalaceActions,'contentVersion');Object.defineProperty(PalaceActions,'contentVersion',{get:()=>110,configurable:true});admitMarriedSister(other,sister,true);assert.match(witness.story.at(-1).t,/对新常在的非议/);Object.defineProperty(PalaceActions,'contentVersion',original);`);
 });
+
+test('知情姐妹的三种反应各有私信与回音，隔月读档也只寄一次',()=>{
+ for(const [reaction,phrase,reply] of [['afraid','推了','屋里坐'],['sad','我没出去送','听见我了'],['hopeful','愿意进宫','想留在家里']]){
+  const w=world();Object.assign(w.ctx,{reaction,phrase,reply});
+  w.run(`other.sisterAffairKnowledge={[wifeId]:{reaction,sister:wifeId,name:sister.name,turn:S.turn}};
+   sister.willing=false;relAdd(other,sister,100);
+   var origRand=Math.random;Math.random=()=>0;
+   sisterAwarenessMailTick();assert.equal(other.sisterAffairKnowledge[wifeId].letter,undefined);
+   S.turn+=3;sisterAwarenessMailTick();sisterAwarenessMailTick();Math.random=origRand;
+   assert.equal(other.story.filter(e=>e.t.includes('【寄给姐妹的私信】')&&e.t.includes(phrase)).length,1);
+   assert.equal(sister.story.filter(e=>e.t.includes('【宫中姐妹来信】')&&e.t.includes(phrase)).length,1);
+   PalaceActions.reset();save('auto');A.load('auto');other=byId(hostId);sister=natalEntry(hostId,wifeId).p;
+   S.turn++;sisterAwarenessMailTick();sisterAwarenessMailTick();
+   assert.equal(other.story.filter(e=>e.t.includes('【收到姐妹回信】')&&e.t.includes(reply)).length,1);
+   assert.equal(sister.story.filter(e=>e.t.includes('【寄回姐妹家书】')&&e.t.includes(reply)).length,1);
+   assert.ok(consortChatTopics(other).find(t=>t.id==='sister-affair-'+wifeId).make().text.includes(reply));
+   assert.ok(sister.married);assert.ok(!sister.consortId);`);
+ }
+});
+test('同住暂缓，已改嫁或入宫即止，选择沉默不会反复掷骰',()=>{
+ const w=world();w.run(`var known={reaction:'afraid',sister:wifeId,turn:S.turn-6,name:sister.name,spouseId:sister.spouse.id};
+ other.sisterAffairKnowledge={[wifeId]:known};sister.visit={host:hostId,until:S.turn+2};Math.random=()=>0;
+ sisterAwarenessMailTick();assert.ok(!known.letter);delete sister.visit;other.cold=true;
+ sisterAwarenessMailTick();assert.ok(!known.letter);other.cold=false;Math.random=()=>.99;sisterAwarenessMailTick();
+ assert.ok(known.letter.closed);Math.random=()=>0;S.turn++;sisterAwarenessMailTick();assert.ok(!known.letter.sent);
+ delete known.letter;sister.spouse.id='different';sisterAwarenessMailTick();assert.ok(known.letter.closed);assert.ok(!known.letter.sent);
+ sister.spouse.id=known.spouseId;delete known.letter;sisterAwarenessMailTick();assert.equal(known.letter.sent,S.turn);
+ sister.consortId=wifeId;S.turn++;sisterAwarenessMailTick();assert.ok(known.letter.closed);assert.ok(!known.letter.reply);`);
+});
+test('同一个宫外姐妹收到不同发信人的家书时，分别按各自反应回信',()=>{
+ const w=world();w.run(`var witness=makeGirl({sur:'魏',given:'明岚',age:26,trait:'温婉'});addConsort(witness,6,'入宫');witness.house=other.house;
+ for(const [who,reaction] of [[other,'afraid'],[witness,'hopeful']])who.sisterAffairKnowledge={[wifeId]:{sister:wifeId,name:sister.name,turn:S.turn-4,reaction}};
+ Math.random=()=>0;sisterAwarenessMailTick();sisterAwarenessMailTick();assert.equal(sister.story.filter(e=>e.t.includes('【宫中姐妹来信】')).length,1);
+ S.turn++;sisterAwarenessMailTick();S.turn++;sisterAwarenessMailTick();
+ assert.match(other.sisterAffairKnowledge[wifeId].letter.reply,/提醒|悬着心/);assert.match(witness.sisterAffairKnowledge[wifeId].letter.reply,/入宫|一处/);
+ assert.equal(sister.story.filter(e=>e.t.includes('【寄回姐妹家书】')).length,2);`);
+});

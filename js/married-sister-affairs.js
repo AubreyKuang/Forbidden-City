@@ -58,6 +58,7 @@ function discoverSisterAffair(c,p,affair){
     const relation=relGet(witness,p);
     const reaction=pickW([{v:'afraid',w:3},{v:'sad',w:relation<0?4:3},{v:'hopeful',w:relation>=30?4:2}]).v;
     const record=(witness.sisterAffairKnowledge||={})[p.id]={reaction,sister:p.id,name:p.name,turn:S.turn};
+    if(journalContentVersion()>=157&&p.spouse?.id!=null)record.spouseId=p.spouse.id;
     const words={afraid:`她察觉你常去见已出嫁的${p.name}，心惊胆战，只怕消息传开，姐妹与两家都不得安宁。`,
       sad:`她察觉你常去见已出嫁的${p.name}，独自伤心落泪，既难过又不知如何面对姐妹。`,
       hopeful:`她察觉你常去见已出嫁的${p.name}，心里隐隐欢喜，盼着若姐妹自己愿意，有朝一日能入宫相伴。`};
@@ -65,6 +66,56 @@ function discoverSisterAffair(c,p,affair){
     pushEv({title:'姐妹私事 · 她已知晓',por:witness,valid:()=>inPalace(witness)&&sisterAffairKnowledge(witness,p)===record,
       text:`${fullName(witness)}知道了你与她已出嫁的${natalLabel(witness,p)}${p.name}屡次私会。${words[reaction]}`,
       choices:[{t:'听她说完'}]});
+  }
+}
+
+// A private letter follows the witness's original reaction, even if the sisters' relationship changes.
+const SISTER_AWARENESS_LETTERS={
+  afraid:'上回的事，我想了几夜。往后来探亲，咱们就在我屋里喝茶吧。若有人约你单独相见，你尽可以推了。我盼的是你回家以后也能睡个安稳觉。',
+  sad:'那日你走，我没出去送。不是没听见你叫我，是我怕一开口就哭。眼下我还难过，先别托我安排见面。你若肯说说自己的打算，我会把信看完。',
+  hopeful:'我常想，若你也愿意进宫，往后咱们隔一扇门就能说话了。可你在家也有牵挂。你究竟愿不愿走这条路？旁人怎么想不要紧，我想先听你说。'
+};
+function sisterAwarenessReply(c,p,reaction){
+  const distant=relGet(c,p)<0;
+  if(reaction==='afraid')return distant?'你的提醒我收到了。我知道有些场合该避嫌，往后我自己拿主意，也不叫你替我传话。':'上回只当你多心，读到最后一句，才知道你一直替我悬着心。再去看你，我就到你屋里坐。';
+  if(reaction==='sad')return distant?'我也记得那天你没来送。隔着这些旧事，一封信说不清。你不愿居中传话，我记下了。':'原来那天你听见我了。我一直以为你再也不肯理我。你说的我都记下了，往后也不叫你夹在中间。';
+  if(p.willing===false)return '你屋里的那盏茶，我也惦记。可来看你是一回事，搬进宫里又是另一回事。我想留在家里，你别替我开口。';
+  return distant?'你肯问我的心意，我领这份情。入宫是我自己的终身大事，我还想自己想一想。':'我也想过，若能在一处，夜里睡不着就找你说话。你先容我把家里的事想周全，等我自己拿定主意，再亲口说。';
+}
+function sisterAwarenessMailTick(){
+  if(journalContentVersion()<157||S.over)return;
+  for(const c of S.consorts){
+    if(!c.sisterAffairKnowledge||!inPalace(c))continue;
+    for(const known of Object.values(c.sisterAffairKnowledge)){
+      const letter=known.letter;
+      if(letter?.closed||!Object.hasOwn(SISTER_AWARENESS_LETTERS,known.reaction))continue;
+      const p=c.house?.relatives?.find(p=>p.id===known.sister);
+      if(!p)continue;
+      const spouseId=letter?.spouseId??known.spouseId??p.marriedSisterAffair?.spouseId;
+      if(!p.alive||p.consortId||p.widow||!p.married||!p.spouse||p.spouse.alive===false||
+        (spouseId!=null&&p.spouse.id!==spouseId)||p.marriedSisterAffair?.coerced||
+        (p.spouse.personId&&!officialAlive(maritalFather(p,null)?.p))){
+        known.letter={...letter,closed:true};continue;
+      }
+      if(p.visit&&S.turn<p.visit.until)continue;
+      const sender=fullName(c);
+      if(letter?.sent!=null){
+        if(S.turn<=letter.sent)continue;
+        const reply=sisterAwarenessReply(c,p,known.reaction);
+        story(p,`【寄回姐妹家书】给${sender}写回信：“${reply}”`);
+        story(c,`【收到姐妹回信】拆开${p.name}的信，读到她的亲笔答话：“${reply}”`);
+        Object.assign(letter,{reply,closed:true});continue;
+      }
+      // Old saves already remember who knew, and when. Only decide on their first eligible month.
+      const discovered=known.turn??(known.turn=S.turn);
+      if(S.turn<discovered+1+voiceHash(c.id+'|sister-letter|'+p.id)%3||S.flags.sisterAwarenessMailTurn===S.turn)continue;
+      if(!chance(.75)){known.letter={closed:true};continue;}
+      const words=SISTER_AWARENESS_LETTERS[known.reaction];
+      known.letter={sent:S.turn,spouseId:p.spouse.id};
+      S.flags.sisterAwarenessMailTurn=S.turn;
+      story(c,`【寄给姐妹的私信】斟酌数日，给${natalLabel(c,p)}${p.name}写道：“${words}”`);
+      story(p,`【宫中姐妹来信】收到${sender}的亲笔信：“${words}”`);
+    }
   }
 }
 
