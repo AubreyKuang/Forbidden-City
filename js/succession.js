@@ -234,12 +234,13 @@ function dowagerCourtPanel(){
     const history=(index>=0||birth)&&d.story?.length?detailFold('人物纪事',detailStory({...d,id:d.memoryId||d.personId})):'';
     const residents=d.alive?S.children.filter(k=>raisedByDowager(k)&&upbringingDowager(k)===d&&k.princeSpouseOrigin):[];
     const children=residents.map(k=>`<button class="btn sm" onclick="A.go('kid',${k.id})">查看${esc(k.name)}</button>`).join('');
+    const actions=action+storyElderVisitButton(d.personId)+children;
     const room=d.alive?esc(dowagerResidence(d)):'已故';
     return `<section class="dowager-court"><header>${porImg(dowagerPerson(d),76)}<div><p class="dowager-room">${room}</p><h3>${esc(d.name)}</h3>
       <p>${esc(d.fullName||'')}${age!=null?` · ${age}岁`:''}</p>${d.relation?`<p>${esc(d.relation)}</p>`:''}</div></header>
-      ${action||children?`<div class="acts">${action}${children}</div>`:''}
+      ${actions?`<div class="acts">${actions}</div>`:''}
       ${biography?detailFold('生平',`${d.portrait?.trait?`<p>${esc(d.portrait.trait)} · ${esc(TRAITS[d.portrait.trait]?.d||'')}</p>`:''}${biography}`):''}${history}</section>`;
-  }).join('')}</div>`;
+  }).join('')}</div>${storyTaifeiPanel()}`;
 }
 
 function royalBirthOrder(a,b){return a.born-b.born||a.id-b.id;}

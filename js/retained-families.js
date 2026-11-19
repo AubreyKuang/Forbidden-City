@@ -2,14 +2,15 @@
 const retainedFamiliesActive=()=>journalContentVersion()>=27;
 function familyCourtHosts(){return retainedFamiliesActive()?[...new Map([...(S.retainedFamilies||[]),...S.consorts].map(c=>[c.id,c])).values()]:S.consorts;}
 function familyHostById(id){return byId(Number(id))||(retainedFamiliesActive()?(S.retainedFamilies||[]).find(c=>c.id===Number(id)):null);}
+const retainConsortRecord=c=>c?.house||(journalContentVersion()>=154&&storyQueenKey(c));
 function reconcileRetainedFamilies(){
   if(!retainedFamiliesActive())return;
   const hosts=new Map((S.retainedFamilies||[]).map(c=>[c.id,c]));
   for(const court of [...(S.previousCourts||[])].reverse())for(const c of court.consorts||[]){
-    if(!c.house||hosts.has(c.id)||byId(c.id))continue;
+    if(!retainConsortRecord(c)||hosts.has(c.id)||byId(c.id))continue;
     hosts.set(c.id,{...c,familyArchive:{gen:court.gen,atTurn:court.turn??S.turn,age:c.age}});
   }
-  for(const d of dowagerCourtMembers())if(d?.portrait?.house&&!hosts.has(d.personId)&&!byId(d.personId)){
+  for(const d of dowagerCourtMembers())if(retainConsortRecord(d?.portrait)&&!hosts.has(d.personId)&&!byId(d.personId)){
     hosts.set(d.personId,{...d.portrait,id:d.personId,familyArchive:{gen:(d.seniorSince??S.gen+1)-2,atTurn:d.atTurn??S.turn,age:d.age??d.portrait.age}});
   }
   if(hosts.size)S.retainedFamilies=[...hosts.values()];
@@ -19,7 +20,7 @@ function reconcileRetainedFamilies(){
     const id=c.house.father.id;if(!houses.has(id))houses.set(id,c.house);else c.house=houses.get(id);
   }
   for(const d of dowagerCourtMembers()){
-    const c=hosts.get(d?.personId);if(c&&d.portrait)d.portrait.house=JSON.parse(JSON.stringify(c.house));
+    const c=hosts.get(d?.personId);if(c?.house&&d.portrait)d.portrait.house=JSON.parse(JSON.stringify(c.house));
   }
 }
 function retainAccessionFamilies(h){
@@ -27,7 +28,7 @@ function retainAccessionFamilies(h){
   reconcileRetainedFamilies();
   const hosts=new Map((S.retainedFamilies||[]).map(c=>[c.id,c]));
   for(const c of S.consorts){
-    if(!c.house)continue;
+    if(!retainConsortRecord(c))continue;
     hosts.set(c.id,{...JSON.parse(JSON.stringify(c)),familyArchive:{gen:S.gen,atTurn:S.turn,age:c.age}});
   }
   S.retainedFamilies=[...hosts.values()];
@@ -75,7 +76,7 @@ const inheritedConsortView=viewConsort;
 viewConsort=function(){
   const c=!byId(UI.sel)&&familyHostById(UI.sel);
   if(!c?.familyArchive)return inheritedConsortView();
-  return `${personBackButton('family')}<header class="detail-head person-detail-head">${porImg(c,224)}<div class="grow"><h2>${esc(fullName(c))}</h2><p>${esc(retainedHostTitle(c))} · ${c.age}岁</p></div></header>${detailSection('人物纪事',detailStory(c))}${detailSection('母家亲族',familyHouseTree(c,true))}`;
+  return `${personBackButton('family')}<header class="detail-head person-detail-head">${porImg(c,224)}<div class="grow"><h2>${esc(fullName(c))}</h2><p>${esc(retainedHostTitle(c))} · ${c.age}岁</p></div></header>${storyElderVisitButton(c.id)}${detailSection('人物纪事',detailStory(c))}${detailSection('母家亲族',familyHouseTree(c,true))}`;
 };
 const inheritedOfficialView=viewOfficial;
 viewOfficial=function(){
