@@ -13,12 +13,21 @@ function storyQueenKey(c){return c?.gouyi?'gouyi':c?.hongjian?'hongjian':Object.
 function storyQueenCoronationEvent(c){
  if(journalContentVersion()<98||!inPalace(c)||c.rank!==8)return null;
  const key=storyQueenKey(c),base=STORY_QUEEN_SCENES[key];if(!base)return null;
- let data=base;
+ let data=base,visitingPrincess=null;
+ if(journalContentVersion()>=112&&key==='ayimu'){
+  const visiting=estatePrincesses().find(k=>k.mom===c.id&&whiteSpringInPalace(k)&&!k.gone&&!k.jailed&&!k.templeStay&&
+    whiteSpringGrandchildren(k).some(child=>child.id===k.household.whiteSpringVisit.child));
+  visitingPrincess=visiting;
+  const situation=visiting?`${visiting.name}此刻正带孩子回宫探亲，白泉家书仍须随使团或商路往来；`:'白泉家书须随使团或商路往来；';
+  data={...base,text:base.text.replace('白泉的亲眷仍在故国，家书须随使团或商路往来；',situation)};
+ }
  if(key==='suheng'){
   const r=storyCastRecord('suheng');
   if(r?.id===c.id&&r.palaceStage>0)data={...base,text:base.text+'她记得自己曾擅自换香，知道旧事不能因册封抹去。',choices:[base.choices[0],['听她说起换香旧事与今后的分寸','她说起自己曾擅自换香的过错，随后同女官约好日后先核凭据再议处置。']]};
  }
- let done=false;const valid=()=>!done&&inPalace(c)&&c.rank===8&&!S.over;
+ let done=false;const valid=()=>!done&&inPalace(c)&&c.rank===8&&!S.over&&(!visitingPrincess||
+   visitingPrincess.alive&&visitingPrincess.estate&&!royalJourneyAway(visitingPrincess)&&whiteSpringInPalace(visitingPrincess)&&!visitingPrincess.gone&&!visitingPrincess.jailed&&!visitingPrincess.templeStay&&
+   whiteSpringGrandchildren(visitingPrincess).some(child=>child.id===visitingPrincess.household.whiteSpringVisit.child));
  return {title:data.title,por:c,valid,text:data.text,choices:data.choices.map(([label,conclusion])=>({t:label,f:()=>{
   if(!valid())return null;done=true;const text=`【册后心事】${conclusion}`;story(c,text);log(`${fullName(c)}册后：${conclusion}`,1);remember(c,'care',conclusion);cchg(c,{aff:3,mood:4});return conclusion;
  }}))};

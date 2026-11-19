@@ -31,3 +31,15 @@ test('a real v95 release result continues without injecting a new scene into its
 test('the published v96 foster-chronicle release result also replays unchanged',()=>{
  const data=require('./fixtures/cold-release-legacy-v96.json'),b=boot(558,new Map([['chengongji_v1_auto',JSON.stringify(data)]]));b.ctx.assert=assert;b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,96);assert.ok(modalResult);assert.ok(!Q.some(ev=>ev.title==='冷宫归来 · 惦念孩子'));drain();assert.equal(PalaceActions.contentVersion,PalaceActions.releaseVersion);`);
 });
+test('release acknowledges a deceased foster mother without changing care or fabricating her presence',()=>{
+ const b=world();b.run(`doFoster(little,b);b.alive=false;var foster=little.foster;PalaceActions.reset();A.uncold(a.id);assert.match(curEv.text,/养母.*已故/);assert.doesNotMatch(curEv.text,/如今由.*抚养/);assert.match(curEv.text,/抚养名册仍/);assert.equal(little.foster,foster);`);
+});
+test('release respects closed visits even if the foster mother is unavailable',()=>{
+ const b=world();b.run(`doFoster(little,b);b.homeLeave={};little.visitRule='closed';var before=little.story.length;PalaceActions.reset();A.uncold(a.id);assert.match(curEv.text,/暂时无法在宫中照料/);assert.match(curEv.text,/禁探仍在/);assert.equal(little.story.length,before);assert.equal(little.foster,b.id);assert.equal(little.visitRule,'closed');`);
+});
+test('older pending release preserves the original foster-care wording',()=>{
+ const b=world();b.run(`doFoster(little,b);b.alive=false;var old=Object.getOwnPropertyDescriptor(PalaceActions,'contentVersion');Object.defineProperty(PalaceActions,'contentVersion',{get:()=>111,configurable:true});PalaceActions.reset();A.uncold(a.id);assert.match(curEv.text,/如今由.*抚养/);assert.doesNotMatch(curEv.text,/已故/);Object.defineProperty(PalaceActions,'contentVersion',old);`);
+});
+test('the corrected deceased foster-mother report survives a pending-scene reload without rewriting the adoption',()=>{
+ let b=world();b.run(`doFoster(little,b);b.alive=false;PalaceActions.reset();A.uncold(a.id);assert.match(curEv.text,/养母.*已故/);`);const child=b.run('little.id'),foster=b.run('b.id');b=boot(559,b.storage);b.ctx.assert=assert;b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.match(curEv.text,/养母.*已故/);assert.equal(kidById(${child}).foster,${foster});choose(0);drain();assert.equal(kidById(${child}).foster,${foster});`);
+});

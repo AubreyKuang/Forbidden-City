@@ -362,8 +362,18 @@ function storyCastPalaceEvent(c){
     return null;
   }
   if(key==='chuwan'){
-    if(step===0)return scene('楚晚 · 方姓家书','她仍用旧时的称呼写信问照养人是否吃得下饭。'+(empress()?'中宫听说她这几日病了，悄悄送来药，又问旧臣可曾托人来过。':'照养人催她生病就要吃药。'),
-      storyCastChoice('安排按旧址送信',()=>{const q=empress();if(q&&q!==c)story(q,'遣人悄悄给楚晚送药，另问她有无收到旧臣捎来的口信。');return advance('仍旧给照养人写方姓名的平安信，第一次在宫中安心睡了一夜。');}));
+    if(step===0){
+      if(journalContentVersion()<112)return scene('楚晚 · 方姓家书','她仍用旧时的称呼写信问照养人是否吃得下饭。'+(empress()?'中宫听说她这几日病了，悄悄送来药，又问旧臣可曾托人来过。':'照养人催她生病就要吃药。'),
+        storyCastChoice('安排按旧址送信',()=>{const q=empress();if(q&&q!==c)story(q,'遣人悄悄给楚晚送药，另问她有无收到旧臣捎来的口信。');return advance('仍旧给照养人写方姓名的平安信，第一次在宫中安心睡了一夜。');}));
+      const queen=empress(),other=queen&&queen!==c&&inPalace(queen)?queen:null;
+      const ill=()=>c.hp<65||c.illnessRecovery?.until>S.turn;
+      const sick=!!ill();
+      const note=other?(sick?'皇后听说她身体不适，想遣人问候，也惦记着旧臣是否托人来过。':'皇后得知她在写信，想问书信是否顺利送出，以及旧臣可曾托人来过。'):'她把信仔细折好，惦记着旧址的人能否收到。';
+      const event=scene('楚晚 · 方姓家书','她仍用旧时的称呼写信问照养人是否吃得下饭。'+note,
+        storyCastChoice('安排按旧址送信',()=>{if(other&&inPalace(other)&&empress()===other)story(other,sick?'得知楚晚身体不适，遣人问候，另问她有无收到旧臣捎来的口信。':'遣人问楚晚家书是否顺利送出，另问她有无收到旧臣捎来的口信。');return advance('仍旧给照养人写方姓名的平安信，第一次在宫中安心睡了一夜。');}));
+      const valid=event.valid;event.valid=()=>valid()&&(empress()&&empress()!==c&&inPalace(empress())?empress():null)===other&&!!ill()===sick;
+      return event;
+    }
     if(step===1&&c.rank>=2)return scene('楚晚 · 署旧名作证','有一份旧案需要证词。她终于肯写下楚晚二字，证明照养人当年受了无妄之灾。',
       storyCastChoice('将她的证词交给核案官',()=>advance('晋位后首次署名楚晚，为照养人当年的冤事作证。')));
     const child=storyCastOffspring(c,8).find(k=>!k.chuAncestryTalk);
