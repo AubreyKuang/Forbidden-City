@@ -139,6 +139,55 @@ const WHITE_SPRING_VISITS={
   bells:{title:'合一回舞铃',text:'依约带来一枚旧商铃。阿依慕说，商铃是让队尾听见前路，舞铃却要等鼓。两人各执一铃试了几回，终于让最后一响落在同一拍上。',
     thoughts:['在家时怕铃摇轻了，队尾听不见。今日倒得把手收住，等那一记鼓下来。','她的商铃比我的沉。末了一遍，两声竟一齐落下，连廊下的乐工也回过了头。']}
 };
+/* A parcel is a real object in this pair's saved story, not a recurring
+   assumption that every merchant household has a living sender. */
+const WHITE_SPRING_FAMILY_GIFTS={
+  scarf:{name:'白泉织纹暖巾',origin:'白泉织坊',description:'一条织着细密斜纹的暖巾',response:'阿依慕翻过织边，认出熟悉的收线手法。她讲起家乡冬天怎样把布角掖好，又问这条暖巾是谁亲手挑的。',merchant:'她认出织法时，我才知道家人捎来的不只是一件御寒的东西。',princess:'她没有替我说那是乡愁，只等我自己指着织边讲起从前的冬天。'},
+  bird:{name:'西域候风小鸟',origin:'西域商路',description:'一只轻轻转动尾翼的小木鸟',response:'阿依慕先试着托稳木鸟，再请她轻轻吹一口气。尾翼颤动起来，两人又将它挪到窗边试风。她笑着说，这让她想起商队在风里等天晴。',merchant:'家里原说这是路上给孩子解闷的玩意，没想到她会认真试风，还说起等天晴的日子。',princess:'她把木鸟转给我看，我们一同在窗边试风。那一刻想起商路，却没有人催我把往事说完。'},
+  glass:{name:'西域琉璃花片',origin:'西域商路',description:'一枚可以透光的琉璃花片',response:'阿依慕把花片举到窗前，看日光从蓝绿之间透过去。她说颜色像路过白泉时见过的水，却也问起送来的人怎样认出了这块料。',merchant:'我只看出它透亮，她却看见了水色。她还问我家里怎样挑货，我便从头讲给她听。',princess:'那片琉璃让我想起白泉的水。她愿听我说，也讲起了自己家中挑货的讲究。'}
+};
+function whiteSpringFamilySenders(c){
+  const h=houseOf(c);if(!h)return [];
+  return ['father',...brotherRoles(h)].map(role=>({role,p:h[role],h})).filter(({p})=>officialAlive(p)&&!p.exiled&&!p.dismissed&&!p.away&&!p.commission&&!p.diplomaticJourney);
+}
+function whiteSpringFamilyParcelTick(){
+  if(journalContentVersion()<114||!S||S.over)return;
+  for(const c of S.consorts){
+    const tie=c.whiteSpringFriend,p=byId(tie?.princess);
+    if(!admiresWhiteSpring(c)||!p||!whiteSpringFriends(c,p)||!whiteSpringCanMeet(c)||!whiteSpringCanMeet(p)||friendshipTense(c,p)||relGet(c,p)<30||
+      tie.familyParcel||S.turn-(tie.met??S.turn)<3||S.turn-(tie.lastFamilyParcel??-99)<18)continue;
+    const used=tie.familyGiftHistory||[],available=Object.keys(WHITE_SPRING_FAMILY_GIFTS).filter(key=>!used.includes(key));
+    if(!available.length)continue;
+    const senders=whiteSpringFamilySenders(c);if(!senders.length||!chance(.08))continue;
+    const sender=pick(senders),key=pick(available),gift=WHITE_SPRING_FAMILY_GIFTS[key],label=officialKinLabel(sender.h,sender.role,c);
+    const parcel=tie.familyParcel={key,senderId:sender.p.id,sender:sender.p.name,relation:label,turn:S.turn};
+    (sender.p.story||=[]).push({d:dateStr(),t:`【给宫中${sender.role==='father'?'女儿':'姐妹'}的家礼】家中商队从${gift.origin}带回${gift.description}，托人随家书送给${fullName(c)}。`});
+    story(c,`【娘家捎来的新奇物件】${label}${sender.p.name}随家书送来${gift.description}，说是从${gift.origin}带回。她收好包裹，想起阿依慕与家乡的故事。`);
+    log(`${fullName(c)}收到${label}${sender.p.name}随家书送来的${gift.name}。`);
+    pushEv({title:'娘家来物 · '+gift.name,por:c,valid:()=>inPalace(c)&&!S.over&&tie.familyParcel===parcel,
+      text:`${fullName(c)}的${label}${sender.p.name}随家书捎来${gift.description}，是从${gift.origin}带回的。她小心打开包裹，想起阿依慕说过的家乡，想等两人方便时把它拿给她看。`,choices:[{t:'记下这份家礼'}]});
+  }
+}
+function whiteSpringFamilyGiftReady(c,p,tie){
+  return journalContentVersion()>=114&&!!tie?.familyParcel&&!!p&&!S.over&&whiteSpringFriends(c,p)&&whiteSpringCanMeet(c)&&whiteSpringCanMeet(p)&&
+    tie.last!==S.turn&&!friendshipTense(c,p)&&relGet(c,p)>=30&&!!WHITE_SPRING_FAMILY_GIFTS[tie.familyParcel.key];
+}
+A.whiteSpringFamilyGift=function(id){
+  const c=byId(id),tie=c?.whiteSpringFriend,p=byId(tie?.princess),parcel=tie?.familyParcel;
+  if(modalOpen||!whiteSpringFamilyGiftReady(c,p,tie))return;
+  const gift=WHITE_SPRING_FAMILY_GIFTS[parcel.key],valid=()=>tie.familyParcel===parcel&&whiteSpringFamilyGiftReady(c,p,tie);
+  const name=fullName(c),source=`${parcel.relation}${parcel.sender}此前随家书送来的${gift.name}`;
+  pushEv({title:'白泉旧缘 · '+gift.name,cast:[c,p],present:[c,p],valid,
+    text:`${name}将${source}仔细包好，想亲手送给阿依慕。她想先遣人问好时辰，等两人都方便时再亲自带过去。`,
+    choices:[{t:'让她亲手送给阿依慕',f:()=>{
+      if(!valid())return null;
+      delete tie.familyParcel;(tie.familyGiftHistory||=[]).push(parcel.key);(tie.familyGiftsGiven||=[]).push({...parcel,given:S.turn});tie.lastFamilyParcel=S.turn;tie.last=S.turn;
+      relAdd(c,p,5);cchg(c,{mood:3});cchg(p,{mood:3});
+      const line=`${name}将${source}赠给阿依慕。${gift.response}`;
+      whiteSpringRecord([c,p],'白泉故乡礼',line,source,[gift.merchant,gift.princess]);
+      return `${name}亲手将${gift.name}交给阿依慕。${gift.response}`;
+    }},{t:'先将礼物收好'}]});
+};
 function whiteSpringFriendPanel(person){
   if(journalContentVersion()<104||!inPalace(person))return '';
   const isPrincess=person.fixedStory==='ayimu';
@@ -153,6 +202,14 @@ function whiteSpringFriendPanel(person){
     const tie=c.whiteSpringFriend,p=byId(tie?.princess);
     if(!p||!whiteSpringFriends(c,p)||!whiteSpringCanMeet(c)||!whiteSpringCanMeet(p))continue;
     const companion=isPrincess?c:p;
+    if(journalContentVersion()>=114&&tie.familyParcel){
+      const parcel=tie.familyParcel,gift=WHITE_SPRING_FAMILY_GIFTS[parcel.key];
+      if(gift)rows.push(`<p>${esc(fullName(c))}收到${esc(parcel.relation+parcel.sender)}此前送来的${esc(gift.name)}，想与阿依慕分享。</p><button class="btn jade sm" onclick="A.whiteSpringFamilyGift(${c.id})" ${whiteSpringFamilyGiftReady(c,p,tie)?'':'disabled'}>带着${esc(gift.name)}去见阿依慕</button>`);
+    }
+    if(journalContentVersion()>=114&&tie.familyGiftsGiven?.length){
+      const given=tie.familyGiftsGiven.map(item=>WHITE_SPRING_FAMILY_GIFTS[item.key]?.name).filter(Boolean);
+      if(given.length)rows.push(`<p class="hint">曾亲手送给阿依慕：${given.map(esc).join('、')}。</p>`);
+    }
     const actions=Object.entries(WHITE_SPRING_VISITS).filter(([key])=>!tie[key]).map(([key,v])=>
       `<button class="btn jade sm" onclick="A.whiteSpringVisit(${c.id},'${key}')" ${S.over||tie.last===S.turn||friendshipTense(c,p)||relGet(c,p)<30?'disabled':''}>${v.title}</button>`).join('');
     rows.push(`<p>与<button class="person-link" onclick="A.go('consort',${companion.id})">${esc(fullName(companion))}</button>有白泉铃声这段旧缘。</p>`+

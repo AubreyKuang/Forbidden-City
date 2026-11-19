@@ -121,7 +121,7 @@ function releaseMotherReunionChanges(previous){
    const blocked=assigned&&k.visitRule==='closed';
    const returnCare=!assigned&&age<14&&!k.married&&!k.pendingName;
    let text;
-   const unavailable=journalContentVersion()>=112&&assigned&&(!foster||!inPalace(foster));
+   const unavailable=journalContentVersion()>=114&&assigned&&(!foster||!inPalace(foster));
    const fosterStatus=!foster?'抚养名册仍记有养母，眼下无法核实其近况':!foster.alive?`养母${fullName(foster)}已故，抚养名册仍保留着她的名字`:`养母${fullName(foster)}暂时无法在宫中照料孩子`;
    if(unavailable&&blocked)text=`${named}的${fosterStatus}，先前的禁探仍在。她急着打听孩子近况，只托人问候，没有擅自改变抚养或探视安排。`;
    else if(unavailable)text=`${named}的${fosterStatus}。她悄悄去看孩子，先问乳母和随侍近来的起居；抚养名册仍照旧，她没有擅自改变安排。`;

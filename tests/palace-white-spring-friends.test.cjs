@@ -86,3 +86,33 @@ test('retention from the roster tells the full memory even when Ayimu has yet to
  choose(0);drain();assert.equal(merchant.whiteSpringFriend.allegiance,undefined);
  admit(ay);assert.equal(merchant.whiteSpringFriend.allegiance,ay.id);assert.equal(facOf(merchant),ay);`);
 });
+test('a real family parcel may arrive and can be gifted exactly once with individual memories',()=>{
+ const w=setup();w.run(`admit(ay);admit(merchant);drain();var house=houseOf(merchant),father=house.father;S.turn+=3;var before=father.story?.length||0;Math.random=()=>0;whiteSpringFamilyParcelTick();
+ assert.match(curEv.title,/娘家来物/);var parcel=merchant.whiteSpringFriend.familyParcel;assert.equal(parcel.senderId,father.id);assert.equal(parcel.relation,'父亲');assert.equal(father.story.length,before+1);assert.match(father.story.at(-1).t,/家礼/);assert.ok(merchant.story.some(e=>/娘家捎来/.test(e.t)));
+ whiteSpringFamilyParcelTick();assert.equal(father.story.length,before+1);choose(0);drain();assert.match(whiteSpringFriendPanel(merchant),/带着白泉织纹暖巾去见阿依慕/);assert.match(whiteSpringFriendPanel(ay),/带着白泉织纹暖巾去见阿依慕/);
+ A.whiteSpringFamilyGift(merchant.id);assert.match(curEv.title,/白泉旧缘/);assert.doesNotMatch(curEv.text,/认出熟悉的收线手法/);choose(1);drain();assert.ok(merchant.whiteSpringFriend.familyParcel);assert.equal(entries(merchant,'白泉故乡礼'),0);
+ A.whiteSpringFamilyGift(merchant.id);choose(0);assert.match(modalResult.text,/认出熟悉的收线手法/);assert.equal(merchant.whiteSpringFriend.familyParcel,undefined);assert.deepEqual(Array.from(merchant.whiteSpringFriend.familyGiftHistory),['scarf']);assert.equal(merchant.whiteSpringFriend.familyGiftsGiven[0].senderId,father.id);assert.match(whiteSpringFriendPanel(ay),/曾亲手送给阿依慕：白泉织纹暖巾/);assert.equal(entries(merchant,'白泉故乡礼'),1);assert.equal(entries(ay,'白泉故乡礼'),1);assert.notEqual(merchant.story.find(e=>e.life?.title==='白泉故乡礼').t,ay.story.find(e=>e.life?.title==='白泉故乡礼').t);drain();whiteSpringFamilyParcelTick();assert.equal(merchant.whiteSpringFriend.familyParcel,undefined);`);
+});
+test('parcels require a real available family sender, an established friendship and both people in the palace',()=>{
+ const w=setup();w.run(`admit(merchant);admit(ay);drain();S.turn+=3;var house=houseOf(merchant);house.father.alive=false;for(const role of brotherRoles(house))house[role].alive=false;Math.random=()=>0;whiteSpringFamilyParcelTick();assert.equal(merchant.whiteSpringFriend.familyParcel,undefined);
+ house.brother={id:'sender-brother',name:'商家兄长',age:27,alive:true,story:[]};house.brother.away=true;whiteSpringFamilyParcelTick();assert.equal(merchant.whiteSpringFriend.familyParcel,undefined);house.brother.away=false;
+ ay.homeLeave={};whiteSpringFamilyParcelTick();assert.equal(merchant.whiteSpringFriend.familyParcel,undefined);delete ay.homeLeave;relAdd(merchant,ay,-80);whiteSpringFamilyParcelTick();assert.equal(merchant.whiteSpringFriend.familyParcel,undefined);
+ relAdd(merchant,ay,100);whiteSpringFamilyParcelTick();assert.equal(merchant.whiteSpringFriend.familyParcel.senderId,'sender-brother');assert.match(merchant.whiteSpringFriend.familyParcel.relation,/兄/);assert.equal(house.brother.story.length,1);assert.match(house.brother.story[0].t,/给宫中姐妹的家礼/);assert.doesNotMatch(house.brother.story[0].t,/女儿/);`);
+});
+test('a parcel remains hers when the recipient is absent or a proposed gift is deferred',()=>{
+ const w=setup();w.run(`admit(merchant);admit(ay);drain();S.turn+=3;Math.random=()=>0;whiteSpringFamilyParcelTick();choose(0);drain();A.whiteSpringFamilyGift(merchant.id);var ev=curEv;ay.cold=true;assert.equal(ev.valid(),false);assert.equal(ev.choices[0].f(),null);assert.ok(merchant.whiteSpringFriend.familyParcel);assert.equal(entries(ay,'白泉故乡礼'),0);`);
+});
+test('a v113 pending action cannot create a new family parcel',()=>{
+ const w=setup();w.run(`admit(merchant);admit(ay);drain();S.turn+=3;var prior=Object.getOwnPropertyDescriptor(PalaceActions,'contentVersion');Object.defineProperty(PalaceActions,'contentVersion',{get:()=>113,configurable:true});Math.random=()=>0;whiteSpringFamilyParcelTick();assert.equal(merchant.whiteSpringFriend.familyParcel,undefined);Object.defineProperty(PalaceActions,'contentVersion',prior);`);
+});
+test('a real month-end parcel and the proposed gift survive refresh without duplicating family records',()=>{
+ let w=setup();w.run(`admit(merchant);admit(ay);drain();S.turn+=3;E().health=100;E().people=90;E().treasury=5000;var oldRandom=Math.random,seed=5;Math.random=()=>new Error().stack.includes('whiteSpringFamilyParcelTick')?0:((seed=seed*16807%2147483647)/2147483647);PalaceActions.reset();A.endMonth();
+ for(var i=0;i<100&&!curEv?.title?.startsWith('娘家来物');i++){if(modalResult)nextEv();else if(modalOpen){var j=curEv.choices.findIndex(c=>!c.cond||c.cond());assert.ok(j>=0);choose(j);}else break;}assert.match(curEv?.title,/娘家来物/);`);
+ const id=w.run('merchant.id');w=boot(170,w.storage);w.ctx.assert=assert;w.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.match(curEv.title,/娘家来物/);var m=byId(${id}),father=houseOf(m).father;assert.equal(father.story.filter(e=>e.t.startsWith('【给宫中女儿的家礼】')).length,1);choose(0);drain();A.whiteSpringFamilyGift(m.id);assert.match(curEv.title,/白泉旧缘/);`);
+ w=boot(171,w.storage);w.ctx.assert=assert;w.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.match(curEv.title,/白泉旧缘/);var m=byId(${id}),princess=byId(m.whiteSpringFriend.princess);choose(0);assert.equal(m.whiteSpringFriend.familyParcel,undefined);assert.equal(m.story.filter(e=>e.life?.title==='白泉故乡礼').length,1);assert.equal(princess.story.filter(e=>e.life?.title==='白泉故乡礼').length,1);`);
+});
+test('family gifts have a cooldown and never repeat the same object',()=>{
+ const w=setup();w.run(`admit(merchant);admit(ay);drain();S.turn+=3;Math.random=()=>0;
+ for(const expected of ['scarf','bird','glass']){whiteSpringFamilyParcelTick();assert.equal(merchant.whiteSpringFriend.familyParcel.key,expected);choose(0);drain();A.whiteSpringFamilyGift(merchant.id);choose(0);drain();S.turn+=18;}
+ assert.deepEqual(Array.from(merchant.whiteSpringFriend.familyGiftHistory),['scarf','bird','glass']);whiteSpringFamilyParcelTick();assert.equal(merchant.whiteSpringFriend.familyParcel,undefined);assert.equal(entries(merchant,'白泉故乡礼'),3);assert.equal(entries(ay,'白泉故乡礼'),3);`);
+});

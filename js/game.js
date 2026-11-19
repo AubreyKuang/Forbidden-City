@@ -722,6 +722,7 @@ A.endMonth=function(){
   reconcileResidences();archivePastLives();travelerLifeTick();daoLifeTick();immortalTick();royalTravelTick();travelInstitutionTick();childTempleTick();relTick();consortSocialTick();kidRelTick();clanTick();dowagerTick();initiativeTick();familyLifeTick();childLifeTick(true);courtTick();yiLandTick();natalFamilyTick();seasonalTick();palaceDutiesTick();palaceRomanceTick();guardProtectionTick();diplomacyTick();palaceParentageTick();marriedLifeTick();royalKinContactTick();personalExperienceTick();journeyTick();maternalTick();historyTick();continuityTick();personalLifeTick();livedRelationshipsTick();
   commonerFavorMonth();
   if(journalContentVersion()>=96)childUpbringingMonth();
+  if(journalContentVersion()>=114)whiteSpringFamilyParcelTick();
   const passing=dowagerPassingEvent();if(passing)pushEv(passing);
   const princeSuccession=princeSuccessionTick();
   const fertilityReview=imperialFertilityEvent();

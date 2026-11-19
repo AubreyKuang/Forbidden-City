@@ -9,7 +9,8 @@ function world(){const b=boot(782);b.ctx.assert=assert;b.run(`A.start();drain();
 for(const [left,right] of [[true,true],[true,false],[false,true],[false,false]])test(`friends' selection outcomes ${left}/${right} preserve people and replay once`,()=>{
  const w=world();w.run(`var aid=a.id,bid=b.id;if(${left})take(a);else A.xxDrop(a.id);refresh();b=selectionPeer(S.selection,bid);
  if(${right})take(b);else A.xxDrop(b.id);refresh();A.xxEnd();`);
- if(!left&&!right){w.run(`assert.equal(modalOpen,false);assert.equal(S.selection,undefined);assert.ok(!byId(aid)&&!byId(bid));`);return;}
+ if(!left&&!right){w.run(`assert.equal(curEv.title,QUEEN_EMPTY_TITLE);assert.equal(Q.length,0);
+   assert.equal(S.selection,undefined);assert.ok(!byId(aid)&&!byId(bid));refresh();choose(1);drain();`);return;}
  w.run(`assert.equal(curEv.title,${left&&right?"'留选后的悄悄话'":"'宫门前的私语'"});assert.match(curEv.text,/清微/);assert.match(curEv.text,/兰音/);refresh();
  choose(0);refresh();var kept=byId(${left?'aid':'bid'});assert.equal(kept.selectionBonds.length,1);assert.equal(kept.selectionBonds[0].otherKept,${left&&right});
  assert.ok(kept.story.some(x=>x.life?.title===${left&&right?"'留选后的悄悄话'":"'宫门前的私语'"}));
