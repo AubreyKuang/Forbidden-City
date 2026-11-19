@@ -247,7 +247,11 @@ function marriedSisterChildrenPanel(c){
   if(!marriedSisterAffairsActive()||!c.natalOrigin)return '';
   const children=natalChildrenOf(c,c.natalOrigin.relative);
   const mother=c.house?.relatives?.find(p=>p.id===c.natalOrigin.relative);
-  return detailSection('原家子女',children.map(p=>`<p><button class="person-link" onclick="A.go('natal','${c.id}:${p.id}')">${esc(p.outsideFamilyOrigin?.name||p.name)} ↗</button> ${outsideChildBadge(p)}</p>`).join(''))+
+  return detailSection('原家子女',children.map(p=>{
+    const link=`<button class="person-link" onclick="A.go('natal','${c.id}:${p.id}')">${esc(p.outsideFamilyOrigin?.name||p.name)} ↗</button> ${outsideChildBadge(p)}`;
+    const nomination=nieceSelectionEntryActive()&&familyNominationButton(c,p);
+    return nomination?`<div class="acts">${link}${nomination}</div>`:`<p>${link}</p>`;
+  }).join(''))+
     (mother?outsideHouseholdHusbandPanel(mother):'');
 }
 

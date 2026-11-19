@@ -295,8 +295,9 @@ function outerMonthly(){
   for(const k of b.children){
     if(k.lastTick===S.turn)continue;k.lastTick=S.turn;
     const m=outerMother(k.mother),age=kidAge(k),birthday=(S.turn-k.born)%12===0;
+    const atPalace=nieceSelectionEntryActive()&&!!k.palaceRank;
     if(outerIntegration()){
-      if(age>=18)k.pending=k.pending.filter(key=>key!=='school');
+      if(age>=18||atPalace)k.pending=k.pending.filter(key=>key!=='school');
       if(k.palaceRank)outerReconcileResident(k,m);
     }
     if(journalContentVersion()>=84&&m.relative!=null&&!k.sealed){
@@ -333,9 +334,12 @@ function outerMonthly(){
       if(age>=6&&S.turn-(k.lastVisit??k.born)>=24)k.trust=clamp(k.trust-(k.placement==='断联'?2:.5));
 
       if(age===3)outerNote(m,k,'三岁家报','收家书',`信里说孩子近来少生病，笑起来很像${m.name}。信末印着一只沾了糕粉的手。`,'“这个手印，也是我的名字吗？”');
-      if(age===6||outerIntegration()&&age>6&&age<18&&k.schoolAge!==age)outerQueue(k,'school');
+      if(!atPalace&&(age===6||outerIntegration()&&age>6&&age<18&&k.schoolAge!==age))outerQueue(k,'school');
       if(age===10)outerQueue(k,'father');
-      if(age===18){outerQueue(k,'adult');outerNote(m,k,'成年','收成人礼家书',`${k.alias}将旧户帖上的幼名描了一遍，问明年能否自己署名。`,'“往后若有我的事，先问问我。”');}
+      if(age===18){
+        if(!atPalace&&!(nieceSelectionEntryActive()&&k.familySelection))outerQueue(k,'adult');
+        outerNote(m,k,'成年','收成人礼家书',`${k.alias}将旧户帖上的幼名描了一遍，问明年能否自己署名。`,'“往后若有我的事，先问问我。”');
+      }
       if(age>18)outerAnnual(k,m,age);
     }
     if(k.path==='宫中留名'&&!k.pending.includes('recognizedFace')&&chance(.035+(100-k.secret)/700+(m.host ? .05 : 0))){

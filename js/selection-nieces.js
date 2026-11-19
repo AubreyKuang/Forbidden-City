@@ -94,17 +94,29 @@ function selectionNieceVoice(a){
   if(['骄矜','骄纵','好胜','善妒','城府','贪财'].includes(a.trait))return 'proud';
   return 'warm';
 }
-function selectionNieceFamily(g){
-  const origin=g.familyBranchOrigin;
-  if(!selectionNiecesActive()||!origin)return null;
-  const e=natalEntry(origin.host,origin.relative),mother=e&&natalSisterMother(e.c,e.p);
-  if(!mother||!e.p.alive)return null;
-  const aunts=paternalFamily(e.c).filter(a=>a.id!==mother.id&&a.id!==mother.consortId&&a.id!==g.id&&
+function selectionNieceAunts(people,mother,relative,preferredId){
+  return [...new Set(people)].filter(a=>a&&a.id!==mother.id&&a.id!==mother.consortId&&a.id!==relative.id&&
     a.alive&&!a.gone&&!a.maid&&!a.familyArchive&&!a.cold).map(a=>{
-    const score=relGet(a,e.p),bond=score<=-20||isRival(a,e.p)||isRival(e.p,a)?2:score>=35?0:1;
+    const score=relGet(a,relative),bond=score<=-20||isRival(a,relative)||isRival(relative,a)?2:score>=35?0:1;
     return {a,score,bond};
-  }).sort((x,y)=>Number(y.a.id===g.selectionNatalHost)-Number(x.a.id===g.selectionNatalHost)||y.score-x.score||x.a.id-y.a.id);
-  return {relative:e.p,aunts};
+  }).sort((x,y)=>Number(y.a.id===preferredId)-Number(x.a.id===preferredId)||y.score-x.score||x.a.id-y.a.id);
+}
+function selectionNieceFamily(g){
+  if(!selectionNiecesActive())return null;
+  const origin=g.familyBranchOrigin;
+  if(origin){
+    const e=natalEntry(origin.host,origin.relative),mother=e&&natalSisterMother(e.c,e.p);
+    if(!mother||!e.p.alive)return null;
+    return {relative:e.p,aunts:selectionNieceAunts(paternalFamily(e.c),mother,e.p,g.selectionNatalHost)};
+  }
+  const child=nieceSelectionEntryActive()&&g.outerHouseholdId!=null?outerChild(g.outerHouseholdId):null;
+  if(child?.familySelection!=='listed')return null;
+  const m=outerMother(child.mother);
+  if(m?.relative==null)return null;
+  const relative={id:child.id,name:child.alias};
+  const host=familyHostById(m.owner??m.host),mother=outerSister(m)||{id:m.relative};
+  const people=[...(host?paternalFamily(host):[]),familyHostById(m.host)];
+  return {relative,aunts:selectionNieceAunts(people,mother,relative,m.host),outer:{m,child}};
 }
 function selectionNieceThought(p,outcome,bond){
   if(outcome==='entered')return [
@@ -130,7 +142,7 @@ function selectionNieceThought(p,outcome,bond){
 }
 function recordSelectionNiece(g,outcome,s=S.selection,family=selectionNieceFamily(g)){
   if(!s?.batch||!family)return '';
-  const {relative:p,aunts}=family,title=NIECE_SELECTION_TITLES[outcome],subject=outcome==='kept'?g:p;
+  const {relative:p,aunts,outer}=family,title=NIECE_SELECTION_TITLES[outcome],subject=outcome==='kept'||outer?g:p;
   const fact={entered:`${p.name}列入本届秀女名册，按礼入储秀宫候选。`,
     kept:`${p.name}殿前留牌，初封${RANKS[g.rank]}。`,lost:`${p.name}此次未留牌，将随家人归去。`}[outcome];
   let reply='';
@@ -139,17 +151,22 @@ function recordSelectionNiece(g,outcome,s=S.selection,family=selectionNieceFamil
     if(subject.story.some(e=>e.thread===thread&&e.life?.title===title))continue;
     const line=NIECE_SELECTION_VOICES[selectionNieceVoice(a)][outcome][bond];
     const message=`姨母${fullName(a)}${inPalace(a)?'听到消息，托宫人传来话':'在宫外得了家信，托人带来一页回札'}：“${line}”`;
-    livedRecord([a,subject],'family',title,thread,`【${title}】${fact}${message}`,['',selectionNieceThought(p,outcome,bond)]);
+    const thought=selectionNieceThought(p,outcome,bond);
+    livedRecord([a,subject],'family',title,thread,`【${title}】${fact}${message}`,['',thought]);
     const entry=subject.story.at(-1);
     entry.life.reply=message;
-    const copy=subject===p?g:p;
-    if(copy!==subject)copy.story.push({...entry});
+    if(outer)outerNote(outer.m,outer.child,title,NIECE_SELECTION_TITLES[outcome],fact+message,`“${thought}”`);
+    else{
+      const copy=subject===p?g:p;
+      if(copy!==subject)copy.story.push({...entry});
+    }
     reply||=message;
   }
   return reply;
 }
 function selectionNieceArrivalNote(c){
   const prefix=`selection-niece:${S.selection?.batch}:`;
-  const entry=c.familyBranchOrigin&&c.story.find(e=>e.life?.title===NIECE_SELECTION_TITLES.entered&&e.thread?.startsWith(prefix));
-  return entry?.life.reply?`<p class="hint">${esc(entry.life.reply)}</p>`:'';
+  const entry=(c.familyBranchOrigin||nieceSelectionEntryActive()&&c.outerHouseholdId!=null)&&
+    c.story.find(e=>e.life?.title===NIECE_SELECTION_TITLES.entered&&e.thread?.startsWith(prefix));
+  return entry?.life?.reply?`<p class="hint">${esc(entry.life.reply)}</p>`:'';
 }

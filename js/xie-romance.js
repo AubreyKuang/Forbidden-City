@@ -1,6 +1,9 @@
 /* Original romance, gated so unfinished older scenes keep their recorded answers. */
 const xieRomanceActive=()=>royalHeartActive()&&journalContentVersion()>=22;
+const xieSharedCourtshipActive=()=>journalContentVersion()>=143||PalaceActions.xieFreshReply;
 const XIE_PHASE_ACTIONS={meeting:'赴诗会，重新相识',knowing:'看两人如何渐渐相知',proposal:'查看谢安的求亲书帖',answer:'听公主亲口答复'};
+const xieCourtshipAffection=path=>path?.affection??([24,42,65][Math.min(2,path?.stage??0)]);
+const xieProposalAffection=p=>xieSharedCourtshipActive()?Math.max(65,xieCourtshipAffection(p.xiean.path)):65;
 const xieUnbound=p=>!!p&&!p.married&&!p.spouse&&!p.royalSpouseId&&!p.betrothal&&!p.xiean.widowed;
 const XIE_FREE_WORDS=[
  '春日曲水流觞，他临水写诗，衣袖沾了酒也不在意。有人提起旧日婚议，他从容道：“是我无意成家，不是公主有半分不好。”散席仍独自乘舟。',
@@ -87,6 +90,10 @@ function xiePathClose(p,k,text){
  scholarRecord(p,'【各自珍重】'+text+'他收好这一段心事，仍以诗酒自遣，此后不再议婚。');
  if(k?.alive)heartRecord(k,'各自珍重',text,'旧事留在记忆里，往后的生活仍属于自己。');
 }
+function xieOfferProposal(path){
+ if(xieSharedCourtshipActive()&&path.pending==='proposal'&&!path.proposalShown&&PalaceActions.busy&&
+    !Q.some(ev=>ev.title==='谢安主动提亲'))pushEv(xiePathEvent());
+}
 function xiePathTick(p){
  const path=p?.xiean.path;
  if(!xieRomanceActive()||!path)return;
@@ -103,7 +110,8 @@ function xiePathTick(p){
  if(!xieUnbound(p)){path.kind='closed';delete path.pending;return;}
  if(!xiePathEligible(p,k)){xiePathClose(p,k,!k?.alive?'听闻公主已逝，谢安将未能说完的话收进旧诗。':k.betrothal||k.married||k.spouse?'得知公主已有婚约或归处，谢安没有再提旧日婚议，也没有打扰她的生活。':'旧日心意已变，谢安不再以往事打扰公主。');return;}
  if(path.kind==='solitude'){if(S.turn-path.at>=18)xiePathClose(p,k,'辞婚后一年半，两人没有继续相知。谢安认真想过，决定将此生留给山川、诗酒与朋友，终身不娶。');return;}
- if(path.pending||!xiePathAvailable(p,k))return;
+ if(path.pending){xieOfferProposal(path);return;}
+ if(!xiePathAvailable(p,k))return;
  const elapsed=S.turn-path.last;
  if(xieStoryUpdated()&&path.stage===2&&elapsed>=1&&!path.beforeProposal){
   xieCoupleRecord(p,k,...XIE_BEFORE_PROPOSAL[xieTemperamentGroup(k)]);path.beforeProposal=true;
@@ -116,7 +124,8 @@ function xiePathTick(p){
   heartRecord(k,'旧诗未干',sorrow+'她准许侍女转达自己尚未放下的心情，也说明不愿用难过逼他点头。','原来放下一段心意，不能只凭一句算了。',-.25);
   scholarRecord(p,'【听闻旧事】经公主准许，侍女转告她近日的伤心。谢安不忍，却自省：“若只为不见她落泪便许婚，往后才是真正误她。”他愿先在诗会相识，不作婚诺。');
  }
- log(path.stage===2?'谢安亲自递来求亲的书帖，可到他的档案听他说明心意。':'谢安与公主的旧日心事有了后续，可到两人的档案查看。',1);
+ log(path.stage===2?(xieSharedCourtshipActive()?'谢安亲自递来求亲书帖，从两人的档案都可接续。':'谢安亲自递来求亲的书帖，可到他的档案听他说明心意。'):'谢安与公主的旧日心事有了后续，可到两人的档案查看。',1);
+ xieOfferProposal(path);
 }
 function xiePathEvent(){
  const p=xieAn(),k=xiePathTarget(p),path=p?.xiean.path,phase=path?.pending;
@@ -139,7 +148,9 @@ function xiePathEvent(){
   const first=phase==='meeting',row=XIE_KNOWING[childDisposition(k)];
   const scene=letter?'谢安的回笺夹着她原先写的那一页。他把纸边折到她写自己志趣的地方，添了一行小字：“这一段写得好。若殿下还愿意说，我想听完。”公主把来信读了两遍，提笔又搁下。':first?'谢安愿在有亲友同席的诗会上与公主交谈。公主收到邀请，仍想认识传闻之外的他，也明白这不是婚约。':row[0];
   return chronicleEvent({title:letter?'一页回笺':first?'旧诗之外，重新相识':'渐识卿心',cast:[k,p],present:first?[]:xieCapitalEstate(k)?[p]:[k,p],valid,text:scene+'\n'+(first?'这一次可以给彼此一个认识的机会，也可以就此放下。':'交谈渐渐超出了诗句，两人都在认识对方真实的日常。'),choices:[
-   {t:letter?'公主回信，愿与他再谈':first?'公主愿意赴会，让两人重新相识':'让他们按自己的心意继续来往',f:()=>{if(!finish())return null;path.stage++;
+   {t:letter?'公主回信，愿与他再谈':first?'公主愿意赴会，让两人重新相识':'让他们按自己的心意继续来往',f:()=>{if(!finish())return null;
+    if(xieSharedCourtshipActive())path.affection=clamp(xieCourtshipAffection(path)+(first?18:23));
+    path.stage++;
     const text=letter?'公主回信：“我的字还没写到末页，你倒肯在这一句停下来。下回见面，我说剩下的，你也得说一件诗里没有的事。”谢安把手边拟了一半的客套回信揉掉，重新写下一个“好”字。':first&&updated?'诗会上，公主摊开他的旧诗，指着涂改过的两字问取舍。谢安把自己的草稿推过去：“原来这一句，还有人肯问我为什么改。”他笑着问起她案头正读的书。散席时，两人只约下次再谈。':first?'公主应邀赴诗会。谢安认真听她说完喜欢哪一句，也问了她平日的志趣。散席时只约再谈，并未订婚。':scene;
     xieCoupleRecord(p,k,first?'重新相识':'渐识卿心',text,first?'愿再见她，是想认识这个人，不能拿怜惜当成爱。':row[1],first?'这回我也想亲眼认识他，若不合适，仍有说不的余地。':'他开始记住我说的小事。我也渐渐看见诗名以外的他。');return text;}},
    {t:'公主决定放下，转达她的告别',f:goodbye},defer('暂缓，改日再听','这段相识暂缓，仍可从两人的档案继续。')]});
@@ -147,23 +158,57 @@ function xiePathEvent(){
  if(phase==='proposal'){
   const declaration=xieStoryUpdated()?'从前辞婚，谢安确无此意；今日求娶，也是真心。':`从前辞婚，是草民真无此意；如今求娶，也是真心。`;
   const request=xieStoryUpdated()?'还请陛下准许再向殿下问一句。若她不愿，谢安绝不拿迟来的心意为难她。':`求陛下容我再问她一句。若她不愿，草民绝不拿迟来的心意为难她。`;
-  return chronicleEvent({title:'谢安主动提亲',por:p,present:[p],valid,text:`谢安亲自递来求亲书帖，为${kidName(k)}郑重一礼。\n“${declaration}最初不忍她伤心，后来才明白，自己已在盼每一次见面。”\n“${request}”`,choices:[
-  {t:'转告公主，听她亲口答复',f:()=>{if(!finish())return null;path.pending='answer';scholarRecord(p,`【主动求娶】亲自为${kidName(k)}递上求亲书帖，坦陈数次相识后的心意，尚未订婚，等她亲口答复。`);pushNow(xiePathEvent());return null;}},
+  return chronicleEvent({title:'谢安主动提亲',por:p,present:[p],valid,onShow:()=>{if(xieSharedCourtshipActive())path.proposalShown=true;},text:`谢安亲自递来求亲书帖，为${kidName(k)}郑重一礼。\n“${declaration}最初不忍她伤心，后来才明白，自己已在盼每一次见面。”\n“${request}”`,choices:[
+  {t:'转告公主，听她亲口答复',f:()=>{if(!finish())return null;path.pending='answer';scholarRecord(p,`【主动求娶】亲自为${kidName(k)}递上求亲书帖，坦陈数次相识后的心意，尚未订婚，等她亲口答复。`);
+   if(xieSharedCourtshipActive())xieCoupleRecord(p,k,'书帖送到时',`${k.name}听明白谢安是亲自来求娶的，一时笑得说不出话。等能开口了，第一句便是：“我愿意。请把这句原话告诉他。”`,
+    '等了许久，听到的竟正是自己盼的那句话。','最欢喜的是，这一回是他自己走来的。');
+   pushNow(xiePathEvent());return null;}},
    defer('暂留书帖，稍后再议','书帖留在案上，尚未转达。日后可从两人的档案重新查看。')]});
  }
- if(phase==='answer')return chronicleEvent({title:'迟来的心意 · 公主的答复',por:k,present:xieCapitalEstate(k)?[]:[k],valid,text:`${kidName(k)}读完亲笔书帖，许久才抬起头。\n他记着相处时她说过的话，也写明愿照顾她的一生。她曾喜欢过他，今日仍可以重新选择。`,choices:[
+ const shared=xieSharedCourtshipActive();
+ const delight={lively:'她读到末尾，眼睛一下亮了，忍不住把书帖举起来问：“是他亲手送来的？那我可要亲笔回他！”',
+  gentle:'她又笑又眼红，把书帖按在胸前好一会儿：“这句话我盼过。真正听到，还是比想过的每一回都高兴。”',
+  quiet:'她把亲笔书帖读了两遍，怎么也抿不住嘴角。提笔时第一张纸落了一团墨，她笑着另换一张，端端正正写了“我愿意”。'};
+ if(phase==='answer')return chronicleEvent({title:'迟来的心意 · 公主的答复',por:k,present:xieCapitalEstate(k)?[]:[k],valid,
+  text:shared?`${kidName(k)}知道谢安亲自来求娶，欢喜得一时不知先说哪句话。\n${delight[xieTemperamentGroup(k)]}`:
+    `${kidName(k)}读完亲笔书帖，许久才抬起头。\n他记着相处时她说过的话，也写明愿照顾她的一生。她曾喜欢过他，今日仍可以重新选择。`,choices:[
   {t:(kidAge(k)<15?'她仍愿意，先订婚，满十五岁再成婚':'她仍愿意，成全两人的婚事')+' · 国库−50',cond:()=>valid()&&E().treasury>=50,why:'须双方仍无婚约，且国库足够',f:()=>{
-   if(E().treasury<50||!finish())return null;chg({treasury:-50});return kidAge(k)<15?xieBetroth(k,p,'proposal'):xieCelebrate(k,p,'proposal',65);
-  }},{t:'她已放下这段心事，婉拒提亲',f:goodbye},defer('让她再想一想','公主把书帖留下慢慢考虑。待她想好了，可从两人的档案听她答复。')]});
+   if(E().treasury<50||!finish())return null;chg({treasury:-50});return kidAge(k)<15?xieBetroth(k,p,'proposal'):xieCelebrate(k,p,'proposal',xieProposalAffection(p));
+  }},...(shared?[defer('让她欢喜片刻，稍后安排婚事','公主把求亲书帖收好，笑着同家人说了半晌。婚事晚些再安排，届时从任一人的档案都可继续。')]:
+   [{t:'她已放下这段心事，婉拒提亲',f:goodbye},defer('让她再想一想','公主把书帖留下慢慢考虑。待她想好了，可从两人的档案听她答复。')])]});
  return null;
 }
 A.xieAfterRefusal=function(){if(!modalOpen)pushEv(xiePathEvent());};
+const XIE_CORRESPONDENCE=[
+ ['书边再留一行','公主寄去一页游记，说写山路的那一句读着太省事。谢安第二日回了三处岔路，末尾请她挑一处接着写。','她看见的山路，自有我从前不留心的地方。','有来有往，便是一件让人盼着的事。'],
+ ['一张市桥小图','谢安在信封背面画了市桥，公主把他遗漏的热饼摊补在桥脚。两人轮流添了三笔，约好以后对着图走一回。','想给她看一座桥，回来却多认了一处摊子。','这张草图我先留下，不忙着把它画好。'],
+ ['未说完的下半句','公主托人带来半首诗，谢安在下半页留了空白，另寄一张纸，说可以等两个人都想好了再填。','同她写诗，慢一点也无妨。','他肯一起等一个恰当的字。']
+];
+function xieCorrespondenceReady(p=xieAn()){
+ const path=p?.xiean.path;
+ return xieSharedCourtshipActive()&&path?.kind==='return'&&path.stage>=1&&!path.pending&&xiePathAvailable(p);
+}
+A.xieCorrespond=function(){
+ const p=xieAn(),k=xiePathTarget(p),path=p?.xiean.path;
+ if(modalOpen||!xieCorrespondenceReady(p)||S.turn-(path.lastLetter??-99)<2)return;
+ let done=false;const valid=()=>!done&&p.xiean.path===path&&xieCorrespondenceReady(p)&&S.turn-(path.lastLetter??-99)>=2;
+ pushEv(chronicleEvent({title:'诗笺往来',cast:[k,p],valid,text:`${k.name}与谢安各有一页尚未说完的话，可以托人把书信送到对方手里。`,choices:[
+  {t:'请两人互递一封信 · 精力−1',cond:()=>valid()&&E().energy>0,why:'精力不足或暂不便通信',f:()=>{
+   if(!valid()||!useE())return null;
+   done=true;path.lastLetter=S.turn;
+   const n=path.letters||0,before=xieCourtshipAffection(path),row=XIE_CORRESPONDENCE[n%XIE_CORRESPONDENCE.length];
+   path.letters=n+1;path.affection=clamp(before+7);
+   xieCoupleRecord(p,k,...row);
+   return row[1]+(path.affection>before?`\n§好感＋${path.affection-before}`:'');
+  }},{t:'留待改日'}]}));
+};
 function xieBetroth(k,p,origin){
  const mutual=origin==='proposal',at=S.turn;
  k.betrothal={kind:'xiean',personId:p.id,name:p.name,at,origin,due:k.born+15*12};p.betrothal={kind:'xiean',personId:k.id,name:k.name,at,origin};
- p.xiean.engagement={childId:k.id,at,last:at,origin,affection:mutual?65:18};k.xieAdmiration.outcome='betrothed';
+ p.xiean.engagement={childId:k.id,at,last:at,origin,affection:mutual?xieProposalAffection(p):18};k.xieAdmiration.outcome='betrothed';
  if(p.xiean.path)p.xiean.path.kind='betrothed';
- const text=mutual?'公主答应谢安的提亲，因尚未满十五岁，先登记婚约。两人仍各居原处，待成年再成婚。':'谢安辞婚未获准，陛下坚持定亲。公主尚未满十五岁，礼部只登记婚约，双方仍各居原处；此时尚非夫妻，分房一年也未开始计时。';
+ const text=mutual?'公主答应谢安的提亲，因尚未满十五岁，先登记婚约。两人仍各居原处，待成年再成婚。':xieSharedCourtshipActive()?
+  '谢安辞婚未获准，陛下坚持定亲。公主尚未满十五岁，礼部登记婚约，待到婚期再议礼事。':'谢安辞婚未获准，陛下坚持定亲。公主尚未满十五岁，礼部只登记婚约，双方仍各居原处；此时尚非夫妻，分房一年也未开始计时。';
  xieCoupleRecord(p,k,mutual?'两心定约':'奉旨定亲',text,mutual?'既已相知，便认真等她长成，不让婚约催促她的日子。':'帝命已下，我会守约有礼，也不会把尚未长成的她当作妻子相待。',mutual?'婚约定下了，往后的读书与生活，仍要认真过好。':'愿往后能真正认识他；今天定下的是婚约，还不是婚后的生活。');
  const mom=byId(k.mom);if(mom?.alive)story(mom,`【女儿订婚】${kidName(k)}与谢安订婚，待满十五岁后再成婚，尚未出嫁。`);
  return text;
@@ -173,9 +218,13 @@ function xieCelebrate(k,p,origin,affection){
  delete k.betrothal;delete p.betrothal;delete p.xiean.engagement;if(p.xiean.path)p.xiean.path.kind='married';
  k.married=true;k.princessMarriage='xiean';k.xieAdmiration.outcome=loving?'mutual':'forced';p.married=true;p.royalSpouseId=k.id;p.spouseName=k.name;
  if(xieCapitalEstate(k))k.estate.route='xiean';
- k.spouse={id:p.id,personId:p.id,scholarId:p.id,name:p.name,sur:p.sur,sex:'m',seed:p.seed,official:p.official,artPortrait:433,born:S.turn-p.age*12,alive:true,background:'京中诗客 · '+(loving?'两心相许':'奉旨尚主'),marriedAt:S.turn,trust:loving?60:38,marriageNature:{temperament:'温厚',hobby:'books',spending:'节俭',space:'需要独处'}};
+ const trust=loving?(xieSharedCourtshipActive()?Math.max(60,affection-5):60):38;
+ k.spouse={id:p.id,personId:p.id,scholarId:p.id,name:p.name,sur:p.sur,sex:'m',seed:p.seed,official:p.official,artPortrait:433,born:S.turn-p.age*12,alive:true,background:'京中诗客 · '+(loving?'两心相许':'奉旨尚主'),marriedAt:S.turn,trust,marriageNature:{temperament:'温厚',hobby:'books',spending:'节俭',space:'需要独处'}};
  p.xiean.marriage={childId:k.id,at:S.turn,last:S.turn,news:0,affection,separateUntil:loving?null:S.turn+12,joinedAt:loving?S.turn:null,origin,startedWithLove:loving};ensureMarriedLife(k);openMaritalEstate(k);
- const text=(engaged?'公主已满十五岁，双方依婚约举行婚礼。':'公主亲口答应谢安的提亲，两人自愿成婚。')+(loving?'谢安说：“这一回是我走向你。往后的风雨，不必一个人等。”两人已相知相许，婚后共同生活，不设一年分房。':'谢安仍未有相同心意，却愿温柔照应，不让妻子因帝命受委屈。两人从今日起约定先分房一年，慢慢相知。')+'他不纳妾，妻亡也不再娶。';
+ const vows=loving?(xieSharedCourtshipActive()?'谢安说：“这一回是我走向你。以后回家晚了，也有人等我说完这一路的见闻。”公主笑着应他，说明日醒来，先把那首未写完的诗接下去。':
+  '谢安说：“这一回是我走向你。往后的风雨，不必一个人等。”两人已相知相许，婚后共同生活，不设一年分房。'):
+  (xieSharedCourtshipActive()?'谢安愿给妻子留足安顿的时日。两人说好，先从陪伴与照应这些寻常事做起。':'谢安仍未有相同心意，却愿温柔照应，不让妻子因帝命受委屈。两人从今日起约定先分房一年，慢慢相知。');
+ const text=(engaged?'公主已满十五岁，双方依婚约举行婚礼。':'公主亲口答应谢安的提亲，两人自愿成婚。')+vows+'他不纳妾，妻亡也不再娶。';
  xieCoupleRecord(p,k,loving?'两心相许':'践约成婚',text,loving?'曾经的拒绝不必抹去，今天的心动也无需再藏。':'相守始于旨意，待她周全却该出于自己的责任。',loving?'婚礼之前我们已认真相知，如今不必再把彼此隔在门外。':'成为夫妻了，也仍愿等真正的心意生长。');
  const mom=byId(k.mom);if(mom?.alive)story(mom,`【女儿成婚】${kidName(k)}${origin==='proposal'?'接受谢安主动提亲':'与谢安依约'}成婚。${loving?'听闻两人相知相许，她终于放下几分旧日的忧心。':'知道谢安仍守着分寸，她既盼女儿被照应，也忧心真心未至。'}`);
  log(`${kidName(k)}与谢安举行婚礼。`,1);return text;
@@ -276,7 +325,8 @@ function xieRefusalActions(p,showWait=false){
  const available=xiePathAvailable(p),pending=XIE_PHASE_ACTIONS[path.pending];
  if(pending){
   const next=path.pending==='meeting'&&path.meetingSource==='courage'?'读谢安的回笺':pending;
-  return available?`<button class="btn jade" onclick="A.xieAfterRefusal()">${next}</button>`:'<p class="hint">两人现在不便相见，这段心事暂缓，等方便时可继续。</p>';
+  const button=`<button class="btn jade" onclick="A.xieAfterRefusal()" ${available?'':'disabled'}>${next}</button>`;
+  return available?button:(xieSharedCourtshipActive()?button:'')+'<p class="hint">两人现在不便相见，这段心事暂缓，等方便时可继续。</p>';
  }
  if(path.stage>=2)return '';
  const ready=xieBridgeReady(p);
@@ -290,12 +340,34 @@ function xiePrincessRefusalPanel(k){
  const p=xieAn();if(!p?.xiean.path||xiePathTarget(p)!==k)return '';
  return detailSection('谢安辞婚之后',xieRefusalActions(p,true));
 }
-function xieRomancePanel(p=xieAn()){
+function xieSharedTarget(p){
+ const k=royalById(p.royalSpouseId??p.xiean.engagement?.childId) || xiePathTarget(p);
+ if(k)return k;
+ const d=heartState()?.pending;
+ if(d?.kind==='xiean'&&heartPendingValid(d))return kidById(d.child);
+ return S.children.find(k=>xieMarriageReady(k,p));
+}
+function xieSharedProfilePanel(k){
+ return xieSharedCourtshipActive()&&k?.sex==='f'?xieRomancePanel(xieAn(),k):'';
+}
+function xieRomancePanel(p=xieAn(),from=null){
  if(!xieRomanceActive()||!p)return '';
- const pair=xieCouple();
- return (p.xiean.path?.kind==='free'?'<p>此生不婚 · 仍以诗酒会友，独身心意已写入纪事。</p>':'')+
-  xieRefusalActions(p)+
-  (xieLateReady(pair)?`<button class="btn jade" onclick="A.xieFamilyTalk()" ${S.turn-(pair.m.lastTalk??-99)<6?'disabled':''}>听他们说说家常 · 精力−1</button>`:'');
+ const path=p.xiean.path,pair=xieCouple();
+ const status=path?.kind==='free'?'<p>此生不婚 · 仍以诗酒会友，独身心意已写入纪事。</p>':'';
+ const family=xieLateReady(pair)?`<button class="btn jade" onclick="A.xieFamilyTalk()" ${S.turn-(pair.m.lastTalk??-99)<6?'disabled':''}>听他们说说家常 · 精力−1</button>`:'';
+ if(!xieSharedCourtshipActive())return status+xieRefusalActions(p)+family;
+ const k=xieSharedTarget(p);
+ if(!k?.alive||from&&from!==k)return from?'':status;
+ const d=heartState()?.pending,read=d?.kind==='xiean'&&d.child===k.id&&heartPendingValid(d);
+ const early=read?`<button class="btn jade" onclick="A.royalHeart(${k.id})">听听${kidAge(k)<20?'年少心事':'如今的婚事想法'}</button>`:
+   xieMarriageReady(k,p)?`<button class="btn jade" onclick="A.xieMarriage(${k.id})">再问谢安的婚事</button>`:'';
+ const letters=xieCorrespondenceReady(p)?`<button class="btn" onclick="A.xieCorrespond()" ${S.turn-(path.lastLetter??-99)<2?'disabled':''}>让两人互通书信 · 精力−1</button>`:'';
+ const encourage=xieEncourageReady(pair)?'<button class="btn jade" onclick="A.xieEncourage()">劝两人多相伴</button>':'';
+ const affection=pair?.m?.affection??p.xiean.engagement?.affection??(xiePathEligible(p,k)?xieCourtshipAffection(path):null);
+ const partner=from?royalNatalPersonLink('scholar',p.id,p.name):royalNatalPersonLink(S.children.includes(k)?'kid':'relative',k.id,kidName(k));
+ const actions=early+letters+encourage+family;
+ return detailSection(from?'与谢安的来往':`与${kidName(k)}的来往`,
+   `<p>${partner}${affection==null?'':` · 好感 ${affection} / 100`}</p>${status}${xieRefusalActions(p,true)}${actions?`<div class="acts">${actions}</div>`:''}`);
 }
 const romanceScholarView=viewScholar;
 viewScholar=function(){const html=romanceScholarView(),p=scholarById(UI.sel);return p?.storyPerson==='xiean'?html.replace('</header>','</header>'+xieEngagementPanel(p)+xieRomancePanel(p)):html;};
@@ -303,7 +375,8 @@ function xieEngagementPanel(p=xieAn(),fromChild=false){
  const e=p?.xiean.engagement,k=e&&royalById(e.childId);if(!xieRomanceActive()||!e||!k)return '';
  const partner=fromChild?royalNatalPersonLink('scholar',p.id,p.name):royalNatalPersonLink('kid',k.id,k.name);
  const timing=engagementTiming(k.betrothal?.due??k.born+15*12,'待双方可相见、身体安好且服丧期满后行礼。');
- return detailSection('订婚 · 待成年成婚',`<p>定亲对象 · ${partner} · ${timing}</p><p>${esc(k.name)}与谢安已有婚约。${kidAge(k)<15?'公主尚未满十五岁，待成年后再举行婚礼。':'公主已满十五岁，待双方都可相见时举行婚礼。'}两人尚非夫妻，不进入婚后家事。</p><p>${e.origin==='proposal'?'两心定约':'奉旨定亲'} · ${e.affection>=60?'已渐相知':'仍在了解彼此'}。${e.origin==='forced'&&e.affection<60?'若成婚时仍未相爱，届时才开始一年分房。':'成婚时已有感情，不设一年分房。'}</p>`);
+ const oldNote=xieSharedCourtshipActive()?'':e.origin==='forced'&&e.affection<60?'若成婚时仍未相爱，届时才开始一年分房。':'成婚时已有感情，不设一年分房。';
+ return detailSection('订婚 · 待成年成婚',`<p>定亲对象 · ${partner} · ${timing}</p><p>${esc(k.name)}与谢安已有婚约。${kidAge(k)<15?'公主尚未满十五岁，待成年后再举行婚礼。':'公主已满十五岁，待双方都可相见时举行婚礼。'}两人尚非夫妻${xieSharedCourtshipActive()?'。':'，不进入婚后家事。'}</p><p>${e.origin==='proposal'?'两心定约':'奉旨定亲'} · ${e.affection>=60?'已渐相知':'仍在了解彼此'}。${oldNote}</p>`);
 }
 const romanceMarriagePanel=marriagePanel;
 marriagePanel=function(k){return xieRomanceActive()&&k.betrothal?.kind==='xiean'?xieEngagementPanel(xieAn(),true):romanceMarriagePanel(k);};
@@ -312,6 +385,6 @@ marriageStatus=function(k){return xieRomanceActive()&&k.betrothal?.kind==='xiean
 const romanceKidView=viewKid;
 viewKid=function(){const html=romanceKidView(),k=kidById(UI.sel);return xieRomanceActive()&&k?.betrothal?.kind==='xiean'?html.replace('<h2>','<p>已订婚 · 谢安 · 尚未成婚</p><h2>'):html;};
 const romanceYouthPanel=youthPanel;
-youthPanel=function(k){const html=romanceYouthPanel(k);return html+(xieRomanceActive()&&xieAn()?.xiean.path?.kind==='free'&&xiePathTarget()===k?xieRomancePanel():'');};
+youthPanel=function(k){const html=romanceYouthPanel(k);return html+(!xieSharedCourtshipActive()&&xieRomanceActive()&&xieAn()?.xiean.path?.kind==='free'&&xiePathTarget()===k?xieRomancePanel():'');};
 const romanceHouseholdPanel=householdPanel;
-householdPanel=function(k){const html=romanceHouseholdPanel(k);return html+(xieCouple()?.k===k?xieRomancePanel():'');};
+householdPanel=function(k){const html=romanceHouseholdPanel(k);return html+(!xieSharedCourtshipActive()&&xieCouple()?.k===k?xieRomancePanel():'');};

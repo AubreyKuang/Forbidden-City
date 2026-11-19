@@ -49,6 +49,31 @@ test('a real selection calls an adult daughter, warns before audience, and resol
     A.outerCare(k.id,'withdraw');choose(0);drain();assert.equal(c.gone,true);assert.equal(k.path,'出宫归家');
     assert.equal(outerBook().notes.filter(n=>n.title==='认出身世').length,1);`);
 });
+for(const keep of [true,false])test('the private register can directly nominate a niece and record '+(keep?'retention':'dismissal'),()=>{
+ const b=game();b.ctx.keep=keep;
+ b.run(`var aunt=empress(),h=houseOf(aunt),sister=addNatalPerson(aunt,h,'f',23,7654321,false);
+ A.outerMeet('姊妹','natal',aunt.id,sister.id);choose(0);drain();
+ var m=outerBook().mothers[0];outerBirth(m);var k=outerBook().children[0];k.sex='f';
+ A.outerPetition(k.id);choose(1);drain();
+ k.born=S.turn-179;k.knowledge='怀疑';S.flags.lastXX=-99;PalaceActions.reset();
+ assert.match(outerRegisterView(),/预登记选秀 · 满十五岁后入册/);
+ A.outerNominateNiece(k.id);A.outerNominateNiece(k.id);
+ assert.match(outerRegisterView(),/已预登记/);
+ assert.equal(outerBook().notes.filter(n=>n.title==='荐入选秀').length,1);
+ A.xxDecree();drain();assert.ok(!S.cands.some(c=>c.id===k.id));assert.equal(k.familySelection,'pending');
+ A.xxEnd();drain();S.turn=k.born+180;S.flags.lastXX=-99;PalaceActions.reset();
+ A.xxDecree();assert.ok(!modalOpen);assert.equal(S.cands.filter(c=>c.id===k.id).length,1);
+ var candidate=S.cands.find(c=>c.id===k.id);
+ A.xxMeet(k.id);assert.match(viewSelectionAudience(),/姨母/);
+ if(keep){A.xxTake(k.id);assert.equal(curEv.title,'留牌子');choose(0);drain();assert.equal(byId(k.id),candidate);}
+ else{A.xxDrop(k.id);assert.equal(byId(k.id),undefined);}
+ A.xxEnd();drain();
+ assert.equal(k.familySelection,undefined);assert.equal(k.knowledge,'怀疑');
+ var title=keep?'姨甥定榜 · 留牌入宫':'姨甥定榜 · 宫门辞归';
+ assert.equal(outerBook().notes.filter(n=>n.child===k.id&&n.title===title).length,1);
+ assert.equal(aunt.story.filter(e=>e.life?.title===title).length,1);
+ assert.match(outerRegisterView(),keep?/选秀 · 已入宫/:/荐入下届选秀/);`);
+});
 test('an aspiring son appears on a completed real exam, keeps a real career and can decline late recognition',()=>{
   const b=household();b.run(`k.sex='m';A.outerPetition(k.id);choose(2);drain();k.born=S.turn-18*12;k.lit=85;k.path='候会试';
     var before=(S.scholars||[]).length;var exam=examEvent();assert.equal(k.officialId,undefined);

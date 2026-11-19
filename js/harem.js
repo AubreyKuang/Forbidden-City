@@ -22,8 +22,9 @@ A.xxPeek=function(id){const c=S.cands.find(x=>x.id===id);if(!c||c.known)return;i
 A.xxDrop=function(id){
   const c=S.cands.find(x=>x.id===id);
   if(c){
+    const reply=recordSelectionNiece(c,'lost');
     outerSelectionDismissed(c);
-    if(recordSelectionNiece(c,'lost'))toast('姨母的回话已写入两人的人物纪事。');
+    if(reply)toast('姨母的回话已写入两人的人物纪事。');
   }
   S.cands=S.cands.filter(x=>x.id!==id);AU.sfx('click');render()
 };

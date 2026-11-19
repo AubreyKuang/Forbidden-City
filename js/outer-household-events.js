@@ -56,10 +56,32 @@ function outerExamResults(){
   if(!outerActive())return;
   for(const k of outerBook()?.children||[])if(k.path==='候会试'&&!k.sealed)outerAttemptOffice(k,outerMother(k.mother),k.path);
 }
+function outerNieceNominationReason(k){
+  if(k.pedigree==='认领'||kidById(k.id))return '已列皇嗣';
+  if(k.palaceRank||byId(k.id))return '已入宫';
+  if(k.sealed)return '档案已封存';
+  if(k.claim)return '正在办理归宗';
+  if(k.married||k.spouse||k.widow)return '已有婚事';
+  if(k.betrothal)return '已定亲';
+  if(k.placement==='待安置')return '尚待安置';
+  return '';
+}
+function outerNieceCanNominate(k){
+  return nieceSelectionEntryActive()&&outerIntegration()&&k?.sex==='f'&&outerMother(k.mother)?.relative!=null&&
+    !outerNieceNominationReason(k);
+}
 function outerSelectionCall(){
   if(!outerActive())return;
-  for(const k of outerBook()?.children||[])if(k.path==='候选秀'&&kidAge(k)>=18&&!k.sealed&&!k.claim&&k.pedigree!=='认领'){
-    outerQueue(k,'roster');const ev=outerPendingEvent(k,'roster');if(ev)pushEv(ev);
+  for(const k of outerBook()?.children||[]){
+    if(nieceSelectionEntryActive()&&k.familySelection==='pending'){
+      if(!outerNieceCanNominate(k)||kidAge(k)<15)continue;
+      k.familySelection='listed';k.path='待殿选';
+      k.pending=k.pending.filter(key=>!['roster','audience'].includes(key));
+      if(!S.cands.some(c=>c.id===k.id))S.cands.push(outerSelectionPerson(k));
+      outerNote(outerMother(k.mother),k,'选秀入册','依现有户籍应选','礼部照交来的名帖列名，随本届秀女一同应选。');
+    }else if(k.path==='候选秀'&&kidAge(k)>=18&&!k.sealed&&!k.claim&&k.pedigree!=='认领'){
+      outerQueue(k,'roster');const ev=outerPendingEvent(k,'roster');if(ev)pushEv(ev);
+    }
   }
 }
 function outerSelectionPerson(k){
@@ -71,9 +93,14 @@ function outerSelectionPerson(k){
   return c;
 }
 function outerSelectionEligible(k){
+  if(nieceSelectionEntryActive()&&k?.familySelection==='listed')return outerNieceCanNominate(k)&&kidAge(k)>=15&&k.path==='待殿选';
   return k?.sex==='f'&&kidAge(k)>=18&&!k.sealed&&!k.claim&&k.pedigree!=='认领'&&k.path==='待殿选';
 }
 function outerSelectionAdmitted(k,c){
+  if(nieceSelectionEntryActive()&&k.familySelection==='listed'){
+    delete k.familySelection;
+    k.pending=k.pending.filter(key=>!['adult','school'].includes(key));
+  }
   k.path='宫中留名';
   k.palaceRank=RANKS[c.rank];
   k.secret=clamp(k.secret-12);
@@ -84,6 +111,7 @@ function outerSelectionDismissed(c){
   if(!outerIntegration()||!c.outerHouseholdId)return;
   const k=outerChild(c.outerHouseholdId);
   if(k?.path!=='待殿选')return;
+  if(nieceSelectionEntryActive())delete k.familySelection;
   k.path='自立门户';
   outerNote(outerMother(k.mother),k,'殿选出宫','送还原籍','她拿回原籍文书，在城门口买了两包母亲爱吃的糖。','“总算可以回去问她了。”');
 }
@@ -97,8 +125,8 @@ function outerReleaseResidence(k,reason,recognizing=false){
   return c;
 }
 function outerReconcileResident(k,m){
-  if(k.sex!=='f'||k.sealed||k.pedigree==='认领'||kidAge(k)<18)return;
   const c=byId(k.id);
+  if(k.sex!=='f'||k.sealed||k.pedigree==='认领'||kidAge(k)<18&&!(nieceSelectionEntryActive()&&c?.outerHouseholdId===k.id))return;
   if(!c){
     const resident=outerSelectionPerson(k);
     addConsort(resident,Math.max(0,RANKS.indexOf(k.palaceRank)),'依旧册归入内廷',{recordAdmission:false});
@@ -118,6 +146,7 @@ function outerRoyalEntry(k,m){
   const official=k.officialId&&scholarById(k.officialId);
   let formerResident;
   if(outerIntegration()){
+    if(nieceSelectionEntryActive())delete k.familySelection;
     S.cands=S.cands.filter(c=>c.outerHouseholdId!==k.id);
     formerResident=outerReleaseResidence(k,'奉旨交还宫牌，改列宗室玉牒。',true);
     k.recognizedTurn=S.turn;

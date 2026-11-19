@@ -25,7 +25,7 @@ test('Xie An estate eligibility still rejects other marriages, betrothal and abs
 });
 for(const age of [11,12,14,15,20,25,26])test('new pursuit starts only at ages 12 through 25: '+age,()=>{const b=w();b.run(`k.born=S.turn-${age}*12;assert.equal(!!xieMarriageRefusal(k,p),${age>=12&&age<=25});`);});
 for(const origin of ['forced','proposal'])test('under fifteen '+origin+' creates only reciprocal engagement, not a household',()=>{const b=w();b.run(`k.born=S.turn-14*12;`);if(origin==='forced')b.run(`xieMarriageRefusal(k,p).choices[0].f();`);else{b.force(.99);b.run(`xieMarriageRefusal(k,p).choices[1].f();p.xiean.path.pending='answer';xiePathEvent().choices[0].f();`);}b.run(`assert.ok(!k.married&&!p.married&&!k.spouse&&!k.household);assert.equal(k.betrothal.personId,p.id);assert.equal(p.betrothal.personId,k.id);assert.equal(p.xiean.marriage,undefined);assert.ok(!heartReady(k));assert.ok(!xieBridgeReady());assert.equal(xieMarriageRefusal(k,p),null);UI.sel=k.id;assert.match(viewKid(),/已订婚/);assert.match(marriagePanel(k),/尚非夫妻/);UI.sel=p.id;assert.match(viewScholar(),/已订婚/);var at=S.turn;S.turn+=11;`);b.force(.99);b.run(`xieBetrothalTick(p);assert.ok(!k.married);S.turn=at+12;assert.equal(kidAge(k),15);assert.equal(marriageReady(k),false);xieBetrothalTick(p);assert.ok(k.married&&p.married);assert.equal(k.betrothal,undefined);assert.equal(p.betrothal,undefined);assert.equal(p.xiean.marriage.at,S.turn);assert.equal(p.xiean.marriage.joinedAt,${origin==='forced'?'null':'S.turn'});assert.equal(p.xiean.marriage.separateUntil,${origin==='forced'?'S.turn+12':'null'});assert.equal(householdCanConceive(k,k.spouse),false);`);});
-test('forced betrothal that grew into affection does not impose separation at the wedding',()=>{const b=w();b.run(`k.born=S.turn-14*12;xieMarriageRefusal(k,p).choices[0].f();p.xiean.engagement.affection=65;S.turn+=12;xieBetrothalTick(p);assert.equal(p.xiean.marriage.joinedAt,S.turn);assert.equal(p.xiean.marriage.separateUntil,null);assert.ok(p.xiean.marriage.startedWithLove);assert.ok(k.story.some(s=>s.t.includes('成婚，不设一年分房'))||k.story.some(s=>s.t.includes('婚后共同生活，不设一年分房')));`);});
+test('an affectionate engagement and wedding let the couple’s feelings speak for themselves',()=>{const b=w();b.run(`k.born=S.turn-14*12;xieMarriageRefusal(k,p).choices[0].f();p.xiean.engagement.affection=65;assert.doesNotMatch(xieEngagementPanel(p),/分房/);S.turn+=12;xieBetrothalTick(p);assert.equal(p.xiean.marriage.joinedAt,S.turn);assert.equal(p.xiean.marriage.separateUntil,null);assert.ok(p.xiean.marriage.startedWithLove);assert.match(k.story.at(-1).t,/未写完的诗/);assert.doesNotMatch(k.story.at(-1).t,/分房/);`);});
 test('a fifteen-year-old forced bride starts separation only on the actual wedding date',()=>{const b=w();b.run(`k.born=S.turn-15*12;xieMarriageRefusal(k,p).choices[0].f();assert.ok(k.married);assert.equal(p.xiean.marriage.joinedAt,null);assert.equal(p.xiean.marriage.separateUntil,S.turn+12);`);});
 test('engagement ends on death without fabricating a wedding or widowhood',()=>{const b=w();b.run(`k.born=S.turn-14*12;xieMarriageRefusal(k,p).choices[0].f();var n=k.story.length;k.alive=false;S.turn+=12;xieBetrothalTick(p);assert.equal(k.story.length,n);assert.equal(p.betrothal,undefined);assert.equal(p.xiean.engagement,undefined);assert.ok(!p.married&&!p.xiean.marriage&&!p.xiean.widowed);assert.ok(p.xiean.lifelongSingle);`);});
 test('underage engagement result survives replay with neither party mislabeled married',()=>{let b=w();b.run(`k.born=S.turn-12*12;PalaceActions.reset();A.xieMarriage(k.id);choose(0);save('auto');`);b=boot(90,b.storage);b.ctx.assert=assert;b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.ok(xieAn().betrothal);assert.ok(!xieAn().married);drain();`);});
@@ -37,7 +37,7 @@ test('encouragement helps her express herself, with cost, cooldown and no immedi
 test('respecting solitude closes pursuit explicitly without cancelling his public life',()=>{const b=declined();b.run(`S.turn++;A.xieBridge('leave');choose(0);drain();assert.equal(path.kind,'free');assert.ok(p.xiean.lifelongSingle);assert.equal(xiePathEvent(),null);assert.ok(xiePresent(p));assert.ok(xieAudienceEvent(p,false));assert.ok(k.story.some(s=>s.t.includes('彼此珍重')));`);});
 for(const trait of ['灵动','好奇','好胜','爽直','仁厚','审慎','内敛','自矜'])test('a voluntary proposal grows from knowing '+trait,()=>{const b=declined(false,trait);nextStage(b);b.run(`assert.equal(path.pending,'meeting');xiePathEvent().choices[0].f();assert.equal(path.stage,1);`);nextStage(b);b.run(`assert.equal(path.pending,'knowing');xiePathEvent().choices[0].f();assert.ok(p.story.some(s=>s.t.includes(XIE_KNOWING['${trait}'][1])));assert.equal(path.stage,2);`);nextStage(b);b.run(`assert.equal(path.pending,'proposal');var ev=xiePathEvent();assert.ok(ev.text.includes('后来才明白'));ev.choices[0].f();assert.equal(path.pending,'answer');assert.ok(!p.married&&!k.married);choose(0);drain();assert.ok(k.married&&p.married);assert.equal(k.spouse.personId,p.id);assert.equal(p.xiean.marriage.origin,'proposal');assert.equal(k.xieAdmiration.outcome,'mutual');assert.equal(p.xiean.marriage.joinedAt,S.turn);assert.equal(portraitCell(k.spouse),433);assert.ok(a.story.some(s=>s.t.includes('主动提亲')));assert.ok(p.story.some(s=>s.t.includes('辞婚获准')));assert.ok(k.story.some(s=>s.t.includes('两心相许')));`);});
 test('courting the same princess can continue after her twentieth birthday',()=>{const b=declined();b.run(`k.born-=36;assert.equal(kidAge(k),21);S.turn+=3;`);b.force(0);b.run(`xiePathTick(p);assert.equal(path.pending,'meeting');assert.ok(xiePathEvent());`);});
-test('a princess may decline his late proposal and her answer stays final',()=>{const b=declined();b.run(`path.stage=2;path.pending='answer';xiePathEvent().choices[1].f();assert.equal(path.kind,'free');assert.ok(!p.married&&!k.married);assert.equal(xiePathEvent(),null);assert.ok(!xieBridgeReady());`);});
+test('her joyful answer can leave the arrangements for later',()=>{const b=declined();b.run(`path.stage=2;path.pending='answer';var ev=xiePathEvent();assert.match(ev.text,/欢喜|眼睛一下亮了/);assert.ok(!ev.choices.some(c=>/放下|婉拒/.test(c.t)));ev.choices[1].f();assert.equal(path.pending,'answer');assert.ok(!p.married&&!k.married);assert.ok(xiePathEvent());`);});
 for(const change of ['k.betrothal={name:"他人"}','k.married=true','k.spouse={name:"他人"}','k.alive=false','p.married=true','p.betrothal={}','p.alive=false','p.away=true','k.away=true','k.hp=20'])test('pending new pursuit rechecks eligibility: '+change,()=>{const b=declined();b.run(`path.pending='answer';var ev=xiePathEvent(),money=E().treasury,n=k.story.length;${change};assert.equal(ev.choices[0].f(),null);assert.equal(E().treasury,money);assert.equal(k.story.length,n);`);});
 test('death closes her route without giving the dead a new memory or assigning another princess',()=>{const b=declined();b.run(`var n=k.story.length;k.alive=false;S.turn++;xiePathTick(p);assert.equal(k.story.length,n);assert.equal(path.kind,'free');assert.equal(p.xiean.pursuerId,k.id);assert.equal(xiePathEvent(),null);`);});
 test('temporary absence pauses courtship, not the lifelong vow decision',()=>{const b=declined();b.run(`k.away=true;S.turn+=6;xiePathTick(p);assert.equal(path.kind,'return');assert.equal(path.pending,undefined);assert.ok(!xieBridgeReady());k.away=false;S.turn++;`);b.force(0);b.run(`xiePathTick(p);assert.equal(path.pending,'meeting');`);});
@@ -134,9 +134,39 @@ test('the letter is playable separately from the invitation and preserves her fi
   A.xieAfterRefusal();assert.equal(curEv.title,'一页回笺');choose(0);
   assert.match(modalResult.text,/诗里没有的事/);drain();
   assert.equal(path.stage,1);assert.equal(path.meetingSource,undefined);
-  path.pending='answer';A.xieAfterRefusal();choose(1);
-  assert.match(modalResult.text,/当年盼你点头是真的/);
-  assert.match(modalResult.text,/谢殿下相告/);assert.equal(path.kind,'free');
+  path.pending='knowing';A.xieAfterRefusal();choose(1);
+  assert.match(modalResult.text,/这一回就作罢/);
+  assert.match(modalResult.text,/皆出自己心意/);assert.equal(path.kind,'free');
+ `);
+});
+test('both profiles share the same courtship, letters and affection through marriage',()=>{
+ const b=declined();b.run(`
+  path.pending='meeting';UI.sel=k.id;assert.match(viewKid(),/赴诗会，重新相识/);
+  UI.sel=p.id;assert.match(viewScholar(),/赴诗会，重新相识/);
+  A.xieAfterRefusal();choose(0);drain();assert.equal(path.affection,42);
+  A.xieCorrespond();assert.equal(curEv.title,'诗笺往来');choose(0);drain();
+  assert.equal(path.affection,49);assert.match(xieSharedProfilePanel(k),/好感 49/);assert.match(viewScholar(),/好感 49/);
+  A.xieCorrespond();assert.equal(modalOpen,false);
+  path.pending='knowing';A.xieAfterRefusal();choose(0);drain();assert.equal(path.affection,72);
+  path.pending='proposal';A.xieAfterRefusal();choose(0);
+  assert.match(curEv.text,/欢喜/);assert.equal(curEv.choices.length,2);choose(0);drain();
+  assert.equal(p.xiean.marriage.affection,72);
+  assert.ok(p.story.some(e=>e.t.includes('书帖送到时'))&&k.story.some(e=>e.t.includes('书帖送到时')));
+  assert.match(xieSharedProfilePanel(k),/好感 72/);assert.match(viewScholar(),/好感 72/);
+ `);
+});
+test('the proposal automatically opens once and deferring leaves both entries available',()=>{
+ let b=declined();
+ b.run(`path.stage=2;path.pending='proposal';PalaceActions.reset();
+  A.endMonth();
+  for(let i=0;modalOpen&&curEv.title!=='谢安主动提亲'&&i<80;i++){if(modalResult)nextEv();else choose(curEv.choices.findLastIndex(c=>!c.cond||c.cond()));}
+  assert.equal(curEv.title,'谢安主动提亲');save('1');`);
+ b=boot(89,b.storage);b.ctx.assert=assert;
+ b.run(`A.load('1');assert.equal(PalaceActions.blocked,false);assert.equal(curEv.title,'谢安主动提亲');
+  choose(1);var p=xieAn(),k=xiePathTarget(p),path=p.xiean.path;
+  assert.ok(path.proposalShown);assert.equal(path.pending,'proposal');
+  assert.match(xieSharedProfilePanel(k),/查看谢安的求亲书帖/);assert.match(xieRomancePanel(p),/查看谢安的求亲书帖/);
+  drain();A.endMonth();assert.ok(![curEv,...Q].some(e=>e?.title==='谢安主动提亲'));drain();
  `);
 });
 
@@ -280,7 +310,7 @@ test('upgrading a marriage keeps prior entries and carries the swapped order acr
 test('after parting each goes on with a life of their own and the princess remembers it once',()=>{
  const b=declined(false,'审慎');
  b.run(`
-  path.pending='answer';xiePathEvent().choices[1].f();
+  path.pending='knowing';xiePathEvent().choices[1].f();
   k.estate={pursuit:'books'};k.away=true;S.turn+=6;xiePathTick(p);
   assert.ok(!path.partingRemembered);
   k.away=false;xiePathTick(p);S.turn++;xiePathTick(p);
@@ -344,12 +374,12 @@ test('refusal actions appear once near the visit on both princess pages and foll
   const b=w();if(estate)b.run('A.openPrincess(k.id);choose(0);drain();');
   b.run(`xieMarriageRefusal(k,p).choices[1].f();UI.sel=k.id;
    var getView=${estate?'viewPrincessEstate':'viewKid'},visit=${estate?"'A.princessEstateCall('":"'A.kidVisit('"},html=getView();
-   assert.ok(html.indexOf(visit)>=0&&html.indexOf(visit)<html.indexOf('谢安辞婚之后'));
+   assert.ok(html.indexOf(visit)>=0&&html.indexOf(visit)<html.indexOf('与谢安的来往'));
    assert.ok(html.includes(\`A.xieBridge('courage')" disabled\`));
    S.turn++;html=getView();assert.equal(html.split("A.xieBridge('meet')").length,2);
    assert.ok(!xiePrincessRefusalPanel(makeKid(a,'f','昭和')));
    A.xieBridge('courage');choose(0);drain();html=getView();assert.equal(html.split('A.xieAfterRefusal()').length,2);
    assert.ok(!html.includes("A.xieBridge('meet')"));xiePathEvent().choices[1].f();
-   assert.ok(!getView().includes('谢安辞婚之后'));`);
+   assert.ok(!getView().includes('A.xieAfterRefusal()'));`);
  }
 });

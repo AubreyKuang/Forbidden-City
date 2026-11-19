@@ -142,10 +142,12 @@ function registeredSelectionSister(c){
   const p=pick(people),g=natalConsortProfile(c,p);
   g.selectionNatalHost=c.id;g.kinNote=cName(c)+'的亲'+natalLabel(c,p);return g;
 }
+const nieceSelectionEntryActive=()=>journalContentVersion()>=143;
 function natalSisterMother(c,p){
   const mother=c?.house?.relatives?.find(r=>r.id===(p.motherRelativeId??p.parentRelativeId));
-  return mother?.sex==='f'&&!mother.natalCollateral&&!mother.motherRelativeId&&!mother.parentRelativeId?mother:null;
+  return mother?.sex==='f'&&(!mother.natalCollateral||nieceSelectionEntryActive())&&!mother.motherRelativeId&&!mother.parentRelativeId?mother:null;
 }
+const familyNomineeMaternalRecord=(c,p)=>!!natalSisterMother(c,p)||p.motherRelativeId!=null;
 function familyNomineeNiece(c,p){
   const mother=natalSisterMother(c,p);
   return !!mother&&mother.id!==c.id&&(!selectionNiecesActive()||mother.consortId!==c.id);
@@ -153,6 +155,7 @@ function familyNomineeNiece(c,p){
 function familyNomineeOrigin(e){return e.originHost==null?e.c:familyHostById(e.originHost)||e.c;}
 const familyNomineesUseCivilRegister=()=>journalContentVersion()>=137;
 function familyNomineeParentage(p,c){
+  if(nieceSelectionEntryActive()&&familyNomineeMaternalRecord(c,p))return 'clear';
   if(familyNomineesUseCivilRegister()&&natalSisterMother(c,p))return 'clear';
   const data=p.outsideParentage,q=data?.privateInquiry;
   if(!p.unconfirmedParentage&&(!data||data.status==='cleared'))return 'clear';
@@ -166,7 +169,7 @@ function familyNomineeAvailable(p,origin){
 }
 function canRegisterFamilyNominee(c,p,origin=c){
   return familyNomineeAvailable(p,origin)&&(natalAge(p)>=15||journalContentVersion()>=131&&
-    familyNomineeNiece(selectionNiecesActive()?origin:c,p));
+    (nieceSelectionEntryActive()?familyNomineeMaternalRecord(origin,p):familyNomineeNiece(selectionNiecesActive()?origin:c,p)));
 }
 function legacySelectionFamilyAwaitingClearance(g){
   if(familyNomineesUseCivilRegister()||!selectionNiecesActive()||!g.familyNominee||!g.familyBranchOrigin)return false;
@@ -174,7 +177,13 @@ function legacySelectionFamilyAwaitingClearance(g){
   return !!e&&familyNomineeParentage(e.p,familyNomineeOrigin(e))==='unsettled';
 }
 function familyNominationButton(c,p,origin=c){
-  if(journalContentVersion()<84||!canRegisterFamilyNominee(c,p,origin))return '';
+  if(journalContentVersion()<84)return '';
+  if(!canRegisterFamilyNominee(c,p,origin)){
+    if(!nieceSelectionEntryActive()||p.sex!=='f'||!p.outsideFamilyOrigin&&!familyNomineeMaternalRecord(origin,p))return '';
+    const reason=p.outsideFamilyOrigin?'已列皇嗣':p.consortId||byId(p.id)?'已入宫':!p.alive?'已故':
+      p.married||p.spouse||p.widow?'已有婚事':p.betrothal?'已定亲':p.declined?'曾谢绝留宫':'未满入册年龄';
+    return `<small class="hint">选秀 · ${reason}</small>`;
+  }
   const pending=S.flags.familyNominees?.some(n=>n.relative===p.id),listed=S.cands.some(g=>g.id===p.id);
   const label=listed?'已在本届名册':natalAge(p)<15?(pending?'已预登记 · 满十五岁后入册':'预登记选秀 · 满十五岁后入册'):
     pending?'已荐入下届选秀':'荐入下届选秀';

@@ -54,6 +54,20 @@ test('a niece can register early from her profile and retain her identity in the
  var g=byId(nieceId);assert.equal(natalEntry(auntId,nieceId).p.consortId,g.id);assert.equal(g.familyBranchOrigin.host,auntId);
  assert.ok(g.story.some(e=>e.t.includes('礼部留存了选秀名帖')));`);
 });
+test('a mother’s children list offers nomination for a young collateral niece with uncertain parentage',()=>{
+ const b=setup();b.run(`sister.natalCollateral=true;
+ var niece=addNatalPerson(other,oh,'f',14,210,false);
+ niece.motherRelativeId=sister.id;niece.married=false;niece.unconfirmedParentage=true;
+ niece.outsideParentage={gen:S.gen,status:'quiet',imperial:true};var id=niece.id;
+ A.go('natal',other.id+':'+sister.id);
+ assert.match(viewNatalRelative(),/预登记选秀 · 满十五岁后入册/);
+ A.go('natal',other.id+':'+id);assert.match(viewNatalRelative(),/堂外甥女.*身世未明/);
+ assert.match(viewNatalRelative(),/预登记选秀/);
+ niece.betrothal={match:{name:'约婚',desc:''}};assert.match(viewNatalRelative(),/选秀 · 已定亲/);delete niece.betrothal;
+ A.nominateRelative(other.id,id);S.turn=niece.born+180;genCands();
+ A.xxTake(id);assert.equal(curEv.title,'留牌子');choose(0);drain();assert.ok(byId(id));
+ assert.ok(other.story.some(e=>e.life?.title==='姨甥定榜 · 留牌入宫'));`);
+});
 function nieceSelection({trait='温婉',relation=45,willing=true,uncertain=false}={}){
  const b=setup();Object.assign(b.ctx,{trait,relation,willing,uncertain});
  b.run(`sister.married=true;other.trait=trait;

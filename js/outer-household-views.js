@@ -1,4 +1,24 @@
 const outerLink=(label,action,disabled=false)=>`<button class="btn sm" ${disabled?'disabled':''} onclick="${action}">${esc(label)}</button>`;
+function outerNieceNominationControl(k,m,age){
+  if(!nieceSelectionEntryActive()||!outerIntegration()||k.sex!=='f'||m.relative==null)return '';
+  const reason=outerNieceNominationReason(k);
+  if(reason)return `<small class="hint">选秀 · ${esc(reason)}</small>`;
+  const listed=S.cands.some(c=>c.outerHouseholdId===k.id),pending=k.familySelection==='pending'||k.path==='候选秀';
+  const label=listed?'已在本届名册':age<15?(pending?'已预登记 · 满十五岁后入册':'预登记选秀 · 满十五岁后入册'):
+    pending?'已荐入下届选秀':'荐入下届选秀';
+  const canSubmit=!listed&&k.familySelection!=='pending';
+  return `<button class="btn sm gold" ${canSubmit?'':'disabled'} onclick="A.outerNominateNiece(${k.id})">${esc(canSubmit&&pending?'改为直接荐入下届选秀':label)}</button>`;
+}
+A.outerNominateNiece=function(id){
+  if(!S||S.over||modalOpen||!nieceSelectionEntryActive())return;
+  const k=outerChild(id);
+  if(!outerNieceCanNominate(k)||k.familySelection||S.cands.some(c=>c.id===id))return;
+  const early=kidAge(k)<15;
+  k.familySelection='pending';
+  outerNote(outerMother(k.mother),k,'荐入选秀',early?'预留名帖':'下届入册',
+    early?'名帖先收于密匣，等她满十五岁后，随实际开选送去。':'已经登记，实际开选时照现有户籍送名帖入册。');
+  render();toast(early?'已预登记，满十五岁后开选时入册':'已登记，下次开选时入册');
+};
 function outerWritable(k){return outerActive()&&!S.over&&!modalOpen&&k&&!k.sealed&&k.pedigree!=='认领';}
 A.outerPetition=function(id){const k=outerChild(id);if(k&&!modalOpen){const ev=outerPendingEvent(k);if(ev)pushEv(ev);}};
 A.outerCare=function(id,task){
@@ -101,6 +121,7 @@ function outerCard(b,k,frozen){
   }
   if(k.claim)lines.push('归宗待办 · '+k.claim.step);
   const controls=[];
+  if(!frozen){const nomination=outerNieceNominationControl(k,m,age);if(nomination)controls.push(nomination);}
   if(!frozen&&!k.sealed){
     if(k.pending.length)controls.push(outerLink('阅待办家书',`A.outerPetition(${k.id})`));
     if(k.pedigree!=='认领'&&k.placement!=='待安置'){

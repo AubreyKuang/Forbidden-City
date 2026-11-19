@@ -2,7 +2,7 @@
    never from serialized JavaScript. Each command owns its random draws and answers.
    The saved world remains the authority; replay is checked before it is displayed. */
 const PalaceActions=(()=>{
-  const version=142, excluded=new Set(['save','dismissSaveError','load','rewind','downloadSave','readSaveFile','undoImport','newGame','officialsFilter','officialsBloc','kidsKind','chronicleFilter','chronicleSearch','chronicleClear','chronicleThread']);
+  const version=143, excluded=new Set(['save','dismissSaveError','load','rewind','downloadSave','readSaveFile','undoImport','newGame','officialsFilter','officialsBloc','kidsKind','chronicleFilter','chronicleSearch','chronicleClear','chronicleThread']);
   const actions=new Map();
   let blocked=false,snapshotRequested=false,journal=null,depth=0,replaying=false,step=null,cursor=0,answer=0,saving=0,fields=null;
   const clone=x=>JSON.parse(JSON.stringify(x));
@@ -53,6 +53,7 @@ const PalaceActions=(()=>{
     if(journal&&journal.version<130)current.familyAgeLimits=true;
     if(journal&&journal.version<133&&name==='choose')current.familyLossAnswer=true;
     if(journal&&!journal.xiePoetryAge&&name==='choose'&&curEv?.poemPrelude)current.xiePoetryAnswer=true;
+    if(journal&&journal.version<143&&name==='choose'&&['谢安主动提亲','迟来的心意 · 公主的答复'].includes(curEv?.title))current.xieFreshReply=true;
     // A newly answered return notice can continue even if its journal predates the reunion.
     if(name==='recallHomeLeave'||(name==='choose'&&curEv?.luwanFrontierReturn))current.luwanFrontierReunion=true;
     if(name==='start'){
@@ -180,6 +181,7 @@ const PalaceActions=(()=>{
     get maternalWeddingTalk(){return !journal||journal.maternalWeddingTalk===true;},
     get xiePoetryAge(){return !journal||journal.xiePoetryAge===true;},
     get xiePoetryAnswer(){return step?.xiePoetryAnswer===true;},
+    get xieFreshReply(){return step?.xieFreshReply===true;},
     get familyLossAnswer(){return !replaying||journal?.version>=133||step?.familyLossAnswer===true;},
     get familyAgeLimits(){return !replaying||journal?.version>=130||step?.familyAgeLimits===true;},
     get releaseVersion(){return version;},get contentVersion(){return journal?.version??version;},get legacy(){return journal?.version===2;},get immediateMonth(){return journal?.version===3&&!step?.monthNotice;},get blocked(){return blocked;},requestSnapshot(){snapshotRequested=true;},get busy(){return depth>0;},get replaying(){return replaying;},reset(){clearExhaustedMonthNotice();journal=null;blocked=false;}};
