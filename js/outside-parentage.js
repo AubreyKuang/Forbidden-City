@@ -272,6 +272,13 @@ function outsideParentageEvent(f,fromPrivate=false){
     ...(offerDowagerPlacement(child)?[{t:'认回宫中，由太后抚养',f:()=>canPlace()&&offerDowagerPlacement(child)?recognizeOutsideChild(f,true):null}]:[])]};
 }
 
+function outsideChildAunt(host,relative,childId){
+  if(!host)return null;
+  const pregnancy=relative?.pregnancyHistory?.find(p=>p.childId===childId);
+  const preferred=familyHostById(pregnancy?.reportingHost??relative?.marriedSisterAffair?.host);
+  return preferred&&paternalFamily(host).includes(preferred)?preferred:host;
+}
+
 function recognizeOutsideChild(f,withDowager=false){
   const {c,household,child,mother,husband}=f;
   const data=child.outsideParentage,oldName=child.name;
@@ -281,6 +288,12 @@ function recognizeOutsideChild(f,withDowager=false){
   const foster=withDowager||inPalace(royalMother)||age>=14?null:inPalace(c)?c:empress();
   const attributes={...mother,rank:mother.rank??0,talent:mother.talent??50,virtue:mother.virtue??50,scheme:mother.scheme??35,pregnancyFather:null};
   const origin={host:c.id,house:household.father.id,motherId:mother.id,fatherId:child.fatherId,fatherName:child.fatherName,name:oldName};
+  let aunt=c;
+  if(journalContentVersion()>=122){
+    const relative=household.relatives.find(p=>p.id===outsideMotherId(child));
+    aunt=outsideChildAunt(c,relative,child.id);
+    origin.auntId=aunt.id;
+  }
   const k=makeKid(attributes,child.sex,child.given||oldName,{outsideChild:child,origin,foster});
   household.relatives.splice(household.relatives.indexOf(child),1);
   if(journalContentVersion()>=121){data.resolvedAt??=S.turn;delete child.unconfirmedParentage;}
@@ -291,11 +304,11 @@ function recognizeOutsideChild(f,withDowager=false){
     k.dowagerUpbringing={gen:S.gen,personId:d.personId??null,turn:S.turn};
     dowagerRecord(d,'慈宁宫抚养',`将${oldName}接到慈宁宫，先向原家问清孩子吃睡的习惯，嘱人把带来的旧物放在床边。`);
   }
-  outsideParentageChronicle({...f,child:k},'认回宫中',{
+  outsideParentageChronicle({...f,c:aunt,child:k},'认回宫中',{
     husband:'他送到门前，替孩子理了理衣襟，才转身回屋。孩子随身用过的东西，他仍收着。',
     mother:withDowager?'她亲手收好孩子用惯的东西，把起居习惯逐项告诉慈宁宫来接的人。':foster?`她把孩子用惯的${age<3?'被褥':'衣物与旧书'}交给${fullName(foster)}，一件件说清孩子的习惯。`:'她陪孩子收好旧物，重又说起从前在家里的那些日子。',
     child:`原先由${formerHome}照料，今日认回宫中。原家的姓名、来路与旧日纪事一同留下。${withDowager?care:''}`,
-    aunt:`她听说${oldName}认回宫中，想起原家照料这些年的情分，盼孩子往后仍有机会问候故人。`,
+    aunt:journalContentVersion()>=122&&withDowager?`得知姐妹所生的${oldName}已认回宗谱，由太后接到慈宁宫抚养。她把孩子进宫的日子写在家书末尾，惦记着姐妹，也惦记孩子认不认新床。`:`她听说${oldName}认回宫中，想起原家照料这些年的情分，盼孩子往后仍有机会问候故人。`,
     emperor:`你认回${oldName}，以原有名字列入皇室宗谱。${care}`});
   return `${kidName(k)}已列入皇室宗谱。孩子照原有年龄和名字入宫，昔日在原家的纪事也随身保留。${withDowager?care:''}`;
 }

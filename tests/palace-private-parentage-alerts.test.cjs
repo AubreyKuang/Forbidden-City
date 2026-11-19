@@ -75,3 +75,32 @@ test('old privately confirmed cases can be revisited without another investigati
  A.outsideParentage(host,child.id,true);choose(0);drain();assert.ok(kidById(child.id));assert.equal(E().energy,energy);assert.equal(E().treasury,gold);
  assert.ok(!oh.relatives.includes(child));`);
 });
+test('a Cining greeting can include a homesick child and four separate chronicles after reload',()=>{
+ let b=setup();birth(b);b.run(`choose(0);drain();var q=child.outsideParentage.privateInquiry;q.status='complete';
+ A.outsideParentage(host,child.id,true);choose(curEv.choices.findIndex(x=>x.t==='认回宫中，由太后抚养'));drain();
+ var k=kidById(child.id);delete k.outsideFamilyOrigin.auntId;k.born=S.turn-8*12;k.hp=80;
+ var month=S.turn,start=E().energy;PalaceActions.reset();A.greet();
+ for(let i=0;modalOpen&&curEv.title!=='慈宁宫 · 请安之后'&&i<75;i++){if(modalResult)nextEv();else choose(curEv.choices.findIndex(x=>!x.cond||x.cond()));}
+ assert.equal(curEv.title,'慈宁宫 · 请安之后');assert.equal(E().energy,start-1);`);
+ b.force(0);b.run(`choose(0);assert.match(curEv.title,/慈宁宫 · 探望/);assert.match(curEv.text,/给娘捎个信/);save('auto');`);
+ const ids=b.run('[k.id,host,motherId]');b=boot(73,b.storage);b.ctx.assert=assert;b.ctx.ids=ids;
+ b.run(`A.load('auto');assert.match(curEv.text,/给娘捎个信/);choose(0);drain();
+ const [id,host,mom]=ids,k=kidById(id),a=byId(host),m=natalEntry(host,mom).p,d=S.flags.dowager;
+ assert.equal(k.dowagerUpbringing.visits,1);assert.equal(canVisitCiningChild(k),false);
+ for(const [p,t] of [[d,'说起孩子的近况'],[k,'慈宁宫探望'],[m,'慈宁宫家音'],[a,'姨母牵挂']]){
+  assert.equal(p.story.filter(e=>e.t.startsWith('【'+t+'】')).length,1,t);
+ }
+ assert.ok(a.story.at(-1).t.includes(k.name));assert.ok(m.story.at(-1).t.includes(a.given));
+ S.turn++;assert.ok(canVisitCiningChild(k));k.born=S.turn;var ev=ciningChildVisit(k);assert.doesNotMatch(ev.text,/给娘捎个信|父皇猜/);
+ S.heir=id;assert.equal(canVisitCiningChild(k),false);`);
+});
+test('a shared house keeps the aunt identified for this particular birth in both new and old placements',()=>{
+ const b=setup();b.run(`var expected=makeKin(other,'亲');addConsort(expected,3,'入宫');
+ originalPreg.reportingHost=expected.id;`);birth(b);b.run(`choose(0);drain();
+ var f=outsideParentageFamily(other,child);recognizeOutsideChild(f,true);
+ var k=kidById(child.id);assert.equal(k.outsideFamilyOrigin.auntId,expected.id);
+ delete k.outsideFamilyOrigin.auntId;assert.equal(ciningChildKin(k).aunt,expected);
+ sister.alive=false;var before=sister.story.length,ev=ciningChildVisit(k);ev.choices[0].f();
+ assert.equal(sister.story.length,before);assert.match(expected.story.at(-1).t,/姨母牵挂/);
+ assert.ok(!other.story.some(e=>e.t.startsWith('【姨母牵挂】')));`);
+});

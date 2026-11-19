@@ -214,8 +214,10 @@ function festival(){const m=S.month,h=harem();if(!h.length)return null;
   return null;
 }
 
-A.greet=function(){if(!S.flags.dowager?.alive){A.go('place','cn');return;}if(!useE())return;const ev=dowagerEvent();if(ev){pushEv(ev);return}
-  pushEv({title:'请安',por:dowagerPerson(S.flags.dowager),text:`${S.flags.dowager.name}${pick(['拉着你的手问长问短，叮嘱你夜里早些歇息。','说起你小时候爬树摔破了膝盖，笑出了眼泪。','让你尝了尝她亲手做的素点心。'])}${fx(chg({prestige:1,health:1}))}`,choices:[ok1]})};
+A.greet=function(){if(!S.flags.dowager?.alive){A.go('place','cn');return;}if(!useE())return;const ev=dowagerEvent();
+  pushEv(ev||{title:'请安',por:dowagerPerson(S.flags.dowager),text:`${S.flags.dowager.name}${pick(['拉着你的手问长问短，叮嘱你夜里早些歇息。','说起你小时候爬树摔破了膝盖，笑出了眼泪。','让你尝了尝她亲手做的素点心。'])}${fx(chg({prestige:1,health:1}))}`,choices:[ok1]});
+  if(journalContentVersion()>=122)offerCiningChildVisit();
+};
 
 /* ============ 母亲入宫小住 ============ */
 function momVisitState(c){

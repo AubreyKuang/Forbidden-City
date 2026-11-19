@@ -168,3 +168,76 @@ dowagerCourtPanel=function(){const html=livingDowagerPanel();if(!dowagerLivingAc
  const company=d.alive?dowagerCompanyPeople(d):[],recent=(d.story||[]).slice(-6).reverse();
  return html+(d.feeling?`<p>心境：${esc(d.feeling.kind)} · 念及${esc(fullName(byId(d.feeling.person)||{sur:'',given:'旧人'}))}</p>`:'')+(company.length?`<p>本月慈宁宫来往：${company.map(c=>`<button class="person-link" onclick="A.go('consort',${c.id})">${esc(fullName(c))}</button>（${dowagerBondLabel(c,d)}）`).join('、')}</p>`:'')+(recent.length?detailSection('慈宁宫纪事',`<ul class="story">${recent.map(s=>`<li><time>${esc(s.d)}</time>${esc(s.t)}</li>`).join('')}</ul>`):'');
 };
+
+// A stop in the children's rooms follows the audience, including any business the dowager raised.
+function canVisitCiningChild(k){
+  return !S.over&&raisedByDowager(k)&&k.outsideFamilyOrigin&&S.heir!==k.id&&
+    !k.pendingName&&k.dowagerUpbringing.lastVisit!==S.turn;
+}
+function ciningChildKin(k){
+  const origin=k.outsideFamilyOrigin,host=familyHostById(origin.host);
+  const relative=host&&natalEntry(host.id,origin.motherId)?.p;
+  const mother=byId(relative?.consortId)||byId(origin.motherId)||relative;
+  const aunt=familyHostById(origin.auntId)||outsideChildAunt(host,relative,k.id);
+  return {mother,aunt:aunt!==mother&&inPalace(aunt)?aunt:null};
+}
+const CINING_CHILD_DAYS=[
+  [
+    ['前晚让风声惊醒了一回。乳母把旧日的小被放在手边，昨晚睡得沉些了。','睡醒后攥着被角，安安稳稳地听了一会儿人声。'],
+    ['乳母轻轻敲一敲摇篮沿，便听得出声音从哪边来。今早自己伸出手，也照样拍了两下。','听父皇学着拍了两下摇篮沿，朝声音那边伸出了手。'],
+    ['早上听见廊下的雀叫，就朝亮处转脸。咱们把摇篮挪到窗边，让孩子看了一会儿树影。','躺在摇篮里，眼睛跟着窗纸上的树影慢慢转。']
+  ],[
+    ['前两日吃粥，总要看一眼旁人的碗才肯动勺。今日自己挑了只青碗，把粥喝完了。','把用过的小青碗指给父皇看，碗沿还有一粒没擦净的米。'],
+    ['宫人收帕子的时候，也凑过来帮忙。最小那条叠了三回，虽歪一些，倒舍不得叫人拆了。','给父皇看自己叠的小帕子，又从头叠了一遍。'],
+    ['昨日蹲在阶边看蚂蚁搬糕屑，问它们冷了住哪儿。今日一早，又来找那条小路。','拉着父皇到阶边，找了半晌，总算又看见一只蚂蚁。']
+  ],[
+    ['这两日自己收拾了书案。哪一格放纸、哪一格收旧物，都有自己的主意，宫人也得先问一声。','领父皇看自己的书案，把常用的几样东西一件件指给他看。'],
+    ['和宫人下棋，昨日输了还留着棋局。今早吃饭前，又去看那枚棋子该放哪一格。','请父皇坐在棋盘另一边，试了试昨晚没想通的那一步。'],
+    ['这几天在描窗外的树。起先每片叶子都要画，昨晚忽然懂得给风留点地方了。','展开一张画到一半的树影，请父皇猜哪一枝是风吹动的。']
+  ]
+];
+function ciningChildVisit(k){
+  if(!canVisitCiningChild(k))return null;
+  const d=S.flags.dowager,{mother,aunt}=ciningChildKin(k),age=kidAge(k),band=age<2?0:age<7?1:2;
+  const care=k.dowagerUpbringing,name=k.name,momName=mother?.name||k.momName;
+  const visits=care.visits||0,days=CINING_CHILD_DAYS[band];
+  const day=k.hp<35?['身子有些乏，我叫人把帘子放下了。今日在床边陪陪就好。','在枕边听见父皇来看望，很快又安静地歇下了。']:days[visits%days.length];
+  const missing=!!mother&&chance(.35);
+  const memory=['听见旧日的摇篮调，手指抓住了从原家带来的被角。','轻轻问了一句：“娘也知道我住在这里吗？”',mother?.alive===false?'在窗纸上比画出原家门前的路，记起生母当年牵着自己走过。':'在窗纸上比画出原家门前的路，小声问可不可以给娘捎个信。'][band];
+  const response=mother?.alive===false?['大家收好小被，让熟悉的曲子唱完。','太后陪孩子说起生母，答应把记得的事慢慢讲给孩子听。','你陪孩子把思念写在纸上，收在自己的书匣里。'][band]:
+    '太后说：“惦记娘亲是应当的。在祖母这里，都可以说。”';
+  const text=`请安过后，你到慈宁宫看${name}。太后说：“${day[0]}”`+(missing?'\n'+name+memory+response:'');
+  return {title:'慈宁宫 · 探望'+name,por:dowagerPerson(d),cast:[dowagerPerson(d),k],text,valid:()=>canVisitCiningChild(k),choices:[{
+    t:mother?.alive?(missing?'陪一会儿，给生母捎句话':'陪孩子坐坐，给生母报平安'):'陪孩子坐一会儿',
+    f:()=>{
+      if(!canVisitCiningChild(k))return null;
+      care.lastVisit=S.turn;care.visits=visits+1;
+      const childLine=day[1]+(missing?memory:'');
+      kstory(k,'【慈宁宫探望】'+childLine);
+      dowagerRecord(d,'说起孩子的近况',`皇帝请安后来看${name}。说给他听：“${day[0]}”`+(missing?'又陪孩子想了一会儿生母。':''));
+      if(mother?.alive){
+        const courier=aunt?`姐妹${fullName(aunt)}托人带来口信`:'慈宁宫托人带来口信';
+        const reaction=missing?(band===0?'听说孩子听旧曲仍会抓住被角，便把从前哄睡时唱的末两句也写了回去。':'知道孩子还念着自己，回话说家中都好，想娘的时候随时都可以再捎话。'):'听到这些日常琐事，终于知道孩子在慈宁宫过着怎样的日子。她在回话里问了孩子明天的起居。';
+        story(mother,`【慈宁宫家音】${courier}，说陛下去看了${name}。${day[1]}${reaction}`);
+      }
+      if(aunt){
+        const kin=k.sex==='m'?'外甥':'外甥女';
+        const reply=mother?.alive?(missing?`听说孩子想念${momName}，她替母亲和孩子捎了口信，两边都有了回音。`:`她记下这件小事，特地给姐妹${momName}报了平安。`):
+          '她将自己记得的姐妹旧事说给慈宁宫的宫人听，好让孩子日后问起时有人能答。';
+        story(aunt,`【姨母牵挂】太后捎话来，说起${kin}${name}今日见父皇的情形。${reply}`);
+      }
+      log(`请安后在慈宁宫探望${name}，听太后说起孩子近况。`);
+      return mother?.alive?'你陪孩子坐了一会儿，又将孩子的近况捎给生母。':'你陪孩子坐了一会儿，临走替太后掩好窗扇。';
+    }
+  }]};
+}
+function offerCiningChildVisit(){
+  const children=S.children.filter(canVisitCiningChild);
+  if(!children.length)return;
+  pushEv({title:'慈宁宫 · 请安之后',por:dowagerPerson(S.flags.dowager),
+    text:'请安的事说完，宫人来问，陛下可要顺路去看看太后跟前的孩子？',
+    valid:()=>children.some(canVisitCiningChild),
+    choices:[...children.map(k=>({t:'顺便看看'+k.name,person:k,cond:()=>canVisitCiningChild(k),f:()=>{
+      const ev=ciningChildVisit(k);if(ev)pushNow(ev);return null;
+    }})),{t:'今日先回去'}]});
+}
