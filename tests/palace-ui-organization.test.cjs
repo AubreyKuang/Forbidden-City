@@ -55,3 +55,19 @@ test('section jumps focus only the current page and do not change the world or s
  assert.equal(focused,1);assert.equal(scrolled,1);
  assert.equal(b.run('JSON.stringify(S)'),before);assert.deepEqual([...b.storage],stored);
 });
+
+test('consort page puts newest chronicle first and groups the three management actions',()=>{
+ const {html}=renderCase(['timeline','viewConsort()',`UI.sel=c.id;for(let i=0;i<8;i++){S.turn++;story(c,'时间测试'+i)}`]);
+ const row=html.match(/<div class="consort-quick-management"[^>]*>([\s\S]*?)<\/div>/)?.[1]||'';
+ assert.match(row,/安排居所[\s\S]*晋封[\s\S]*撤下绿头牌/);
+ assert.ok(html.indexOf('consort-detail-head')<html.indexOf('consort-detail-actions'));
+ assert.ok(html.indexOf('consort-detail-actions')<html.indexOf('id="consort-history"'));
+ assert.ok(html.indexOf('consort-quick-management')<html.indexOf('id="consort-history"'));
+ assert.ok(html.indexOf('id="consort-history"')<html.indexOf('id="consort-now"'));
+ const timeline=html.slice(html.indexOf('id="consort-history"'),html.indexOf('id="consort-now"'));
+ assert.match(timeline,/按时间倒序，最近记载在前/);
+ assert.ok(timeline.indexOf('时间测试7')<timeline.indexOf('时间测试6'));
+ assert.ok(timeline.indexOf('时间测试2')<timeline.indexOf('翻阅更早的纪事'));
+ assert.ok(timeline.indexOf('翻阅更早的纪事')<timeline.indexOf('时间测试1'));
+ assert.match(timeline,/<details class="chronicle-filter-fold"/);
+});

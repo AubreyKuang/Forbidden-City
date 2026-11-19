@@ -22,7 +22,7 @@ async function click(page,label){await page.locator('#modal').getByRole('button'
 async function finish(page){if(await page.locator('#modal[open]').count()){const buttons=page.locator('#modal .mch button');assert.equal(await buttons.count(),1);await buttons.click();}}
 function named(data,given){return data.consorts.find(c=>c.given===given);}
 async function person(page,id){await page.locator('#menu').getByRole('button',{name:'后宫',exact:true}).click();await page.locator(`[onclick="A.go('consort',${id})"]`).first().click();}
-async function chronicle(page,needle){await page.getByRole('textbox',{name:'搜索人物纪事',exact:true}).fill(needle);await page.getByRole('button',{name:'搜索纪事',exact:true}).click();
+async function chronicle(page,needle){if(await page.locator('.chronicle-filter-fold:not([open]) > summary').count())await page.locator('.chronicle-filter-fold:not([open]) > summary').click();await page.getByRole('textbox',{name:'搜索人物纪事',exact:true}).fill(needle);await page.getByRole('button',{name:'搜索纪事',exact:true}).click();
  const item=page.locator('#panel li:visible').filter({hasText:needle}).last();await item.scrollIntoViewIfNeeded();assert.ok((await item.innerText()).includes(needle));}
 async function runCase(page,r){
  const fixture=r.name==='decline'?'declines-palace':r.name.startsWith('friend-')?(r.name==='friend-later'?'old-friends-later':'old-friends'):'visiting-sister';

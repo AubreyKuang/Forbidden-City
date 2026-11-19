@@ -99,7 +99,7 @@ async function check(page,name,choice,run,viewport){
    await page.getByRole('button',{name:'寄家书 · 精力−1',exact:true}).click();await stableReload(page,run,'family-letter');await endResult(page);
    await openPerson(page,before.k.id,'kid');assert.equal(await page.getByRole('button',{name:'寄家书 · 精力−1',exact:true}).isDisabled(),true);
    for(const [kind,p] of [['birth-mother',before.m],['foster-mother',before.f]]){
-    await openPerson(page,p.id,'consort');await page.getByRole('textbox',{name:'搜索人物纪事',exact:true}).fill('辞阙入山');await page.getByRole('button',{name:'搜索纪事',exact:true}).click();
+    await openPerson(page,p.id,'consort');if(await page.locator('.chronicle-filter-fold:not([open]) > summary').count())await page.locator('.chronicle-filter-fold:not([open]) > summary').click();await page.getByRole('textbox',{name:'搜索人物纪事',exact:true}).fill('辞阙入山');await page.getByRole('button',{name:'搜索纪事',exact:true}).click();
     const entry=page.locator('#panel li:visible').filter({hasText:'辞阙入山'}).last();
     await entry.scrollIntoViewIfNeeded();assert.ok((await entry.innerText()).includes('清和'));if(viewport==='desktop')await shot(page,'master-'+kind+'-chronicle');
    }

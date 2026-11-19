@@ -13,7 +13,7 @@ async function menu(page,name){await page.locator('#menu').getByRole('button',{n
 async function click(page,label){await page.locator('#modal').getByRole('button',{name:label}).click();}
 async function finish(page){assert.ok((await read(page)).result);await page.locator('#modal .mch button').click();}
 async function person(page,id){await menu(page,'后宫');await page.locator(`[onclick="A.go('consort',${id})"]`).first().click();}
-async function history(page,needle){await page.getByRole('textbox',{name:'搜索人物纪事',exact:true}).fill(needle);await page.getByRole('button',{name:'搜索纪事',exact:true}).click();const item=page.locator('#panel li:visible').filter({hasText:needle}).last();await item.scrollIntoViewIfNeeded();assert.ok(await item.isVisible());}
+async function history(page,needle){if(await page.locator('.chronicle-filter-fold:not([open]) > summary').count())await page.locator('.chronicle-filter-fold:not([open]) > summary').click();await page.getByRole('textbox',{name:'搜索人物纪事',exact:true}).fill(needle);await page.getByRole('button',{name:'搜索纪事',exact:true}).click();const item=page.locator('#panel li:visible').filter({hasText:needle}).last();await item.scrollIntoViewIfNeeded();assert.ok(await item.isVisible());}
 async function run(page,r){
  const name=r.name;await importCase(page,name);await reload(page,r,'imported');
  if(name.startsWith('dowager-')){

@@ -122,7 +122,7 @@ function chronicleVisibleEntries(story){
   brotherExchanges.add(key);return true;
  });
 }
-function chronicleReader(person){
+function chronicleReader(person,{compact=false}={}){
  const source=person.story||[];if(!source.length)return '<p class="hint">尚无记载。</p>';
  const entries=chronicleVisibleEntries(source);
  const key=`${S.gen}:${person.id}`,f=UI.chronicleFilters?.[key]||{},years=[...new Set(source.map(chronicleYear))].reverse(),people=[...new Map(source.flatMap(chronicleCast).filter(p=>p.id!==person.id).map(p=>[p.id,p])).values()];
@@ -135,14 +135,16 @@ function chronicleReader(person){
  });
  const active=Object.values(f).some(Boolean),list=a=>`<ul class="story">${a.join('')}</ul>`;
  const filters=select('year','年份',years.map(y=>[y,y]))+select('topic','主题',LIFE_CHAPTERS.map(c=>[c.key,c.title]))+(people.length?select('person','人物',people.map(p=>[p.id,p.name])):'');
- return `<div class="chronicle-tools">
+ const toolbar=`<div class="chronicle-tools">
    <form role="search" aria-label="人物纪事" class="chronicle-search" onsubmit="event.preventDefault();A.chronicleSearch('${key}')">
      <input id="chronicle-search-${key}" aria-label="搜索人物纪事" enterkeyhint="search" maxlength="100" placeholder="搜索人名、往事或一句话" value="${esc(f.query||'')}">
      <button type="submit" class="btn jade sm">搜索纪事</button>
    </form>
    <div class="chronicle-filters">${filters}</div>
-   <div class="chronicle-results"><p class="hint" role="status">${f.thread?'正在回看同一件事的前因与后续 · ':''}共${entries.length}则${active?`，找到${results.length}则`:''}。</p>${active?`<button type="button" class="btn quiet sm" onclick="A.chronicleClear('${key}')">显示全部纪事</button>`:''}</div>
- </div>${rows.length?(active?list(rows):list(rows.slice(0,6))+(rows.length>6?detailFold(`翻阅更早的纪事（${rows.length-6}条）`,list(rows.slice(6))):'')):'<p class="hint">没有符合筛选的纪事，可清除筛选重新翻看。</p>'}`;
+   <div class="chronicle-results"><p class="hint" role="status">按时间倒序，最近记载在前 · ${f.thread?'正在回看同一件事的前因与后续 · ':''}共${entries.length}则${active?`，找到${results.length}则`:''}。</p>${active?`<button type="button" class="btn quiet sm" onclick="A.chronicleClear('${key}')">显示全部纪事</button>`:''}</div>
+ </div>`;
+ const controls=compact?`<details class="chronicle-filter-fold"${active?' open':''}><summary>搜索与筛选</summary>${toolbar}</details><p class="chronicle-order hint">按时间倒序，最近记载在前 · 共${entries.length}则${active?`，找到${results.length}则`:''}。</p>`:toolbar;
+ return `${controls}${rows.length?(active?list(rows):list(rows.slice(0,6))+(rows.length>6?detailFold(`翻阅更早的纪事（${rows.length-6}条）`,list(rows.slice(6))):'')):'<p class="hint">没有符合筛选的纪事，可清除筛选重新翻看。</p>'}`;
 }
 A.chronicleFilter=function(key,field,value){if(!['year','topic','person'].includes(field))return;((UI.chronicleFilters||={})[key]||={})[field]=String(value);render();};
 A.chronicleSearch=function(key){((UI.chronicleFilters||={})[key]||={}).query=(document.getElementById?.('chronicle-search-'+key)||$('[id="chronicle-search-'+key+'"]'))?.value?.trim().slice(0,100)||'';render();};

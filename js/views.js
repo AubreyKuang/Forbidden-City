@@ -404,10 +404,10 @@ function pageHeading(title,description='',actions=''){
 function actionGroup(title,content){
   return content?.trim()?`<div class="action-group" role="group" aria-label="${esc(title)}"><p class="action-group-label">${esc(title)}</p><div class="acts">${content}</div></div>`:'';
 }
-function pageChapters(prefix,chapters){
+function pageChapters(prefix,chapters,compact=false){
   const visible=chapters.filter(([, ,content])=>content?.trim());
   if(!visible.length)return '';
-  return `<nav class="section-jumps" aria-label="本页内容">${visible.map(([key,title])=>`<a href="#${prefix}-${key}" onclick="event.preventDefault();jumpToPageSection('${prefix}-${key}')">${esc(title)}</a>`).join('')}</nav>
+  return `<nav class="section-jumps${compact?' section-jumps-compact':''}" aria-label="本页内容">${visible.map(([key,title,,shortTitle])=>`<a href="#${prefix}-${key}" onclick="event.preventDefault();jumpToPageSection('${prefix}-${key}')">${esc(compact&&shortTitle?shortTitle:title)}</a>`).join('')}</nav>
     <div class="page-chapters">${visible.map(([key,title,content])=>`<section class="page-chapter" aria-labelledby="${prefix}-${key}"><h3 id="${prefix}-${key}" tabindex="-1" class="chapter-title">${esc(title)}</h3><div class="chapter-body">${content.replace(/<(\/?)h3(?=[\s>])/g,'<$1h4')}</div></section>`).join('')}</div>`;
 }
 function jumpToPageSection(id){
@@ -422,7 +422,7 @@ function viewConsort(){
   const act=c.alive&&!c.gone;
   const kids=S.children.filter(k=>k.mom===c.id);
   const st=(l,v,hid)=>hid?`<div class="bar"><span>${l}</span><i></i><em>??</em></div>`:bar(l,v,'#8e6f57');
-  let acts='', management='', familyActions='', conversations='', cardAction='', penalties='';
+  let acts='', management='', quickManagement='', familyActions='', conversations='', cardAction='', penalties='';
   if(act&&c.maid){
     acts+=`<button class="btn" onclick="A.night(${c.id})" ${consortNightReason(c)?'disabled':''}>召幸<small>${consortNightReason(c)||'精力-1'}</small></button>`;
     acts+=`<button class="btn primary" onclick="A.chat(${c.id})">闲话家常<small>精力-1</small></button>`;
@@ -445,8 +445,8 @@ function viewConsort(){
     if(brotherSupportContext(c))conversations+=`<button class="btn" onclick="A.brotherSupport(${c.id})">听她谈兄长与家书</button>`;
     if(firstChildWishContext(c))conversations+=`<button class="btn" onclick="A.firstChildWish(${c.id})">听她说这一胎的盼望</button>`;
     if(c.rescue?.familyContact==='confirmed')familyActions+=`<button class="btn" onclick="A.rescuedReturn(${c.id})">商议归乡</button>`;
-    if(c.rank!==8)management+=`<button class="btn" onclick="A.openResidence(${c.id})">安排居所<small>主位 · 同住 · 换宫</small></button>`;
-    if(c.rank<7)management+=`<button class="btn" onclick="A.promote(${c.id})">晋封<small>→${RANKS[c.rank+1]}</small></button>`;
+    if(c.rank!==8)quickManagement+=`<button class="btn" onclick="A.openResidence(${c.id})">安排居所<small>主位 · 同住 · 换宫</small></button>`;
+    if(c.rank<7)quickManagement+=`<button class="btn" onclick="A.promote(${c.id})">晋封<small>→${RANKS[c.rank+1]}</small></button>`;
     if(c.rank>0&&c.rank<8)penalties+=`<button class="btn danger" onclick="A.demote(${c.id})">降位</button>`;
     if(c.rank>=4)management+=`<button class="btn" onclick="A.rename(${c.id})">改封号</button>`;
     if(c.rank>=5&&c.rank<8&&!empress()&&!c.outerHouseholdId)management+=`<button class="btn" onclick="A.crown(${c.id})">册立皇后</button>`;
@@ -459,24 +459,26 @@ function viewConsort(){
   if(act&&awaitingNoticeReason(c))conversations+=`<button class="btn" onclick="A.awaitingNotice(${c.id})">听她说久候的心事</button>`;
   const family=(act?fosterLine(c)+clanLine(c)+conKidLine(c)+relLine(c):'')+houseLine(c)+fiveBrotherPanel(c);
   return `${personBackButton('harem')}
-   <header class="detail-head">${porImg(c,224)}<div class="grow">
+   <header class="detail-head consort-detail-head">${porImg(c,224)}<div class="grow">
     <p>${esc(fullName(c))} · ${c.age}岁 · ${c.alive?c.gone?'已出宫':c.homeLeave?'娘家 · 暂离宫中':c.templeStay?'护国寺':esc(residenceLabel(c)):esc([c.passingDate,consortPassingReason(c)||'已故'].filter(Boolean).join(' · '))}</p>
     <h2>${esc(cName(c))}</h2>${consortHomePlace(c)?`<button class="btn sm jade" onclick="A.visitConsortHome(${c.id})">去宫里看看 →</button>`:''}
     <p>${esc(c.fam.t)} · ${esc(c.trait)} ${solitaryTag(c)}${dowagerKinTag(c)}${consortTraitTags(c)}${c.preg>=2?` <span class="tag r">有孕${c.preg}月</span>`:''}</p>
-    ${dowagerCareActive()&&c.dowagerKin?.gen===S.gen?`<p class="hint">太后母家侄女 · 陛下的母族表亲；潜邸时奉先帝之命成婚。</p>`:c.imperialKin?`<p class="hint">入宫亲缘 · ${esc(c.imperialKin.relation)}，经${esc(c.imperialKin.via)}引见。</p>`:''}
-    ${PORTRAIT_CLOTHES[portraitCell(c)]?`<p>衣着 · ${PORTRAIT_CLOTHES[portraitCell(c)]}</p>`:''}
-    ${characterVoiceHTML(c)}${daoPracticePanel(c)}
    </div></header>
-   ${acts?`<div class="detail-actions" role="group" aria-label="人物操作"><span class="detail-action-label" aria-hidden="true">人物操作</span><div class="acts">${acts}</div></div>`:''}
+   ${acts?`<div class="detail-actions consort-detail-actions" role="group" aria-label="人物操作"><span class="detail-action-label" aria-hidden="true">人物操作</span><div class="acts">${acts}</div></div>`:''}
+   ${quickManagement||cardAction?`<div class="consort-quick-management" role="group" aria-label="位分与居所">${quickManagement}${cardAction}</div>`:''}
    <div class="detail-vitals">${bar('恩宠',c.favor)}${bar('心情',c.mood,'#517369')}${bar('情分',c.aff,'#936375')}</div>
    ${pageChapters('consort',[
+    ['history','人物纪事',chronicleReader(c,{compact:true}),'纪事'],
     ['now','近况与心事',
+      `${dowagerCareActive()&&c.dowagerKin?.gen===S.gen?`<p class="hint">太后母家侄女 · 陛下的母族表亲；潜邸时奉先帝之命成婚。</p>`:c.imperialKin?`<p class="hint">入宫亲缘 · ${esc(c.imperialKin.relation)}，经${esc(c.imperialKin.via)}引见。</p>`:''}
+    ${PORTRAIT_CLOTHES[portraitCell(c)]?`<p>衣着 · ${PORTRAIT_CLOTHES[portraitCell(c)]}</p>`:''}
+    ${characterVoiceHTML(c)}${daoPracticePanel(c)}`+(act?arcLine(c):'')+
       consortTraitPanel(c)+consortHealthPanel(c)+birthCarePanel(c)+deliveryMemorialPanel(c)+(typeof haremStewardPersonPanel==='function'?haremStewardPersonPanel(c):'')+(typeof hongjianPanel==='function'?hongjianPanel(c):'')+
       actionGroup('听她说说',conversations)+
       detailSection('近况与性情',`<p class="hint">${esc(TRAITS[c.trait]?.d||'性情沿用旧日记载。')} · 侍寝 ${c.nights||0} 次</p>${act?xinDetail(c)+deepLine(c):''}<div class="stats">${st('容貌',c.looks)}${st('才情',c.talent)}${st('德行',c.virtue)}${st('心机',c.scheme,!c.known)}</div>`)+
       continuityPanel(c)+personalLifePanel(c)+detailSection('人和事的后续',cohortLifePanel(c)+parentEpisodePanel(c))+
       detailSection('孕中祈愿',pregnancyPrayerPanel(c))+detailSection('寺中清修',consortTemplePanel(c))+
-      (act&&!c.cold?initiativeHTML(c):'')],
+      (act&&!c.cold?initiativeHTML(c):''),'近况'],
     ['family','家人与孩子',
       actionGroup('探亲与省亲',familyActions)+
       natalVisitorsPanel(c)+
@@ -486,16 +488,15 @@ function viewConsort(){
       (act?detailSection('与孩子的日常',consortFamilyPanel(c)):'')+
       (act?detailSection('牵挂远方的孩子',motherConcernPanel(c)):'')+
       detailSection('孩子的身世',consortParentagePanel(c))+
-      personalWardrobePanel(c,false)+fosterWishButton(c)+palaceSpeechPanel(c)+homeLeavePanel(c)+homeFamilyPanel(c)+maternalPanel(c)],
+      personalWardrobePanel(c,false)+fosterWishButton(c)+palaceSpeechPanel(c)+homeLeavePanel(c)+homeFamilyPanel(c)+maternalPanel(c),'家人'],
     ['affairs','册封与宫务',
-      actionGroup('位分与居所',management)+actionGroup('敬事房',cardAction)+
-      detailSection('御赐珍饰',jewelryPanel(c))+(act&&c.rank===8?birthdayBanquetButtons():'')],
-    ['history','往事与纪事',
+      actionGroup('位分与宫务',management)+
+      detailSection('御赐珍饰',jewelryPanel(c))+(act&&c.rank===8?birthdayBanquetButtons():''),'宫务'],
+    ['past','往事与经历',
       storyCastPanel(c)+detailSection('宫墙往事',palaceRomancePanel(c))+journeyPanel(c)+solitaryPanel(c)+pastLifePanel(c)+
-      timeTravelerPanel(c)+personalExperiencePanel(c)+historyPanel(c)+lifeBiography(c)+
-      detailSection('人物纪事',(act?arcLine(c):'')+detailStory(c))],
-    ['decisions','处置',detailFold('处置',penalties?`<div class="acts">${penalties}</div>`:'')]
-   ])}`;
+      timeTravelerPanel(c)+personalExperiencePanel(c)+historyPanel(c)+lifeBiography(c),'往事'],
+    ['decisions','处置',detailFold('处置',penalties?`<div class="acts">${penalties}</div>`:''),'处置']
+   ],true)}`;
 }
 function viewCards(){
   const cards=harem().concat(alive().filter(c=>c.homeLeave&&!c.maid&&!c.cold&&!c.templeStay));
@@ -585,7 +586,7 @@ function viewKid(){
     ['family','亲缘与婚配',palaceAdoptionOriginPanel(k)+marriagePanel(k)+householdPanel(k)+princessActions(k)+princeEstateLink(k)+multipleBirthPanel(k)+
       detailSection('身世与安置',parentagePanel(k))+outsideParentagePanel(null,k)+detailSection('府中认回的孩子',recognizedChildrenPanel(k))+
       (k.alive?detailSection('与母亲的日常',kidFamilyPanel(k)):'')+detailSection('宫中关系',k.alive?kidRelLine(k):'')],
-    ['history','往事与纪事',historyPanel(k)+detailSection('宫墙往事',palaceRomancePanel(k))+
+    ['past','往事与经历',historyPanel(k)+detailSection('宫墙往事',palaceRomancePanel(k))+
       detailSection('随身旧物',lifeWorksPanel(k))+lifeBiography(k)+detailSection('人物纪事',detailStory(k))]
    ])}`;
 }
