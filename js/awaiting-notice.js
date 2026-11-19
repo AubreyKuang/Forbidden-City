@@ -37,12 +37,12 @@ A.toggleGreenCard=function(id){
 };
 
 function firstNightWait(c){
-  const entry=c.enteredAt??c.accessionArrival?.started??(c.knownBeforeAccession&&S.gen===1?0:null);
+  const entry=c.enteredAt??(c.accessionArrival?.gen===S.gen?c.accessionArrival.started:null)??(c.knownBeforeAccession&&S.gen===1?0:null);
   return Number.isFinite(entry)?S.turn-entry:0;
 }
 function queenCanMentionFirstNight(q,c){
   return inPalace(c)&&!c.maid&&c!==q&&c.age>=18&&firstNightWait(c)>=12&&
-    !(c.nights>0||c.imperialNights?.length||c.lastBirth>=0||S.children.some(k=>k.mom===c.id))&&
+    !(c.nights>0||c.imperialNights?.length)&&
     !(c.hp<40)&&!consortNightReason(c);
 }
 function queenFirstNightReminder(){
@@ -58,10 +58,13 @@ function queenFirstNightReminder(){
     .sort((a,b)=>(last(a)-last(b))||firstNightWait(b)-firstNightWait(a)||a.id-b.id)[0];
   if(!c)return null;
   const name=fullName(c),months=firstNightWait(c);
-  const wait=Math.floor(months/12)+'年'+(months%12?'零'+months%12+'个月':'');
+  const years=Math.floor(months/12),wait=(years<100?cnNum(years):years)+'年'+(months%12?'零'+cnNum(months%12)+'个月':'');
+  const words=Number.isFinite(last(c))?
+    `前次奏过${name}的事。如今她入宫已有${wait}，敬事房簿上仍是空的。臣妾再来问一句，可要先替陛下去看看她？`:
+    `${c.palace}的${name}入宫已有${wait}，敬事房簿上还没有她侍寝的记载。臣妾掌着六宫，理当替她提一句。若陛下今日不得空，臣妾也好代您问声安。`;
   const valid=()=>!S.over&&!mourningActive()&&queenReady()&&queenCanMentionFirstNight(q,c);
   return {title:'中宫奏事 · 久未承召',por:q,cast:[c],present:[q],firstNightConsort:c.id,valid,
-    text:`皇后${fullName(q)}将敬事房的名册翻到折角处：“陛下，${cName(c)}${name===cName(c)?'':'（'+name+'）'}入宫已有${wait}，名下还没有一回侍寝的记载。臣妾掌着六宫，理当替她提一句。若陛下今日不得空，臣妾也好代您问声安。”`,
+    text:`皇后${fullName(q)}将名册翻到折角处：“陛下，${words}”`,
     onShow:()=>{
       const ledger=book||(S.flags.queenFirstNight={gen:S.gen,mentioned:{}});
       if(ledger.mentioned[c.id]===S.turn)return;
