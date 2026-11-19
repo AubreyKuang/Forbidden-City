@@ -170,7 +170,7 @@ function restlessTrystTick(){
       life.tryst={guard:name,first:dateStr(),count:0,turn:S.turn};
     }
     const visit=life.tryst;visit.count++;visit.last=S.turn;
-    if(journalContentVersion()>=126&&!visit.intimate&&visit.count>1&&roll('intimacy')<.35)visit.intimate=true;
+    if(journalContentVersion()>=130&&!visit.intimate&&visit.count>1&&roll('intimacy')<.35)visit.intimate=true;
     if(roll('witness')<Math.min(.4,.10+(visit.count-1)*.05)){
       visit.witnessed=true;restlessAffairCaught(c);
     }
@@ -181,7 +181,7 @@ function pendingRestlessTrysts(){
   const reports=[];
   for(const c of harem()){
     const watch=c.guardTryst?.watch;
-    if(watch&&watch.gen===S.gen&&journalContentVersion()>=126){
+    if(watch&&watch.gen===S.gen&&journalContentVersion()>=130){
       if(!watch.affairReported&&S.turn>=watch.due)reports.push(gateTrystWatchReport(c));
     }else if(c.restlessCourt?.tryst?.witnessed&&!c.restlessCourt.tryst.affairReported)reports.push(guardTrystEvent(c));
   }
@@ -257,7 +257,7 @@ function guardTrystEvent(witnessedConsort){
   }
   const secret=witnessedConsort?.restlessCourt?.tryst;
   if(witnessedConsort&&(!secret?.witnessed||secret.affairReported))return null;
-  if(journalContentVersion()>=126)return gateTrystReport(c,secret);
+  if(journalContentVersion()>=130)return gateTrystReport(c,secret);
   const guard=secret?'侍卫'+secret.guard:'值夜侍卫';
   const record=(order,delta)=>{
     c.guardTryst={...c.guardTryst,turn:S.turn,order};

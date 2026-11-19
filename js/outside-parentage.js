@@ -310,7 +310,8 @@ function recognizeOutsideChild(f,withDowager=false){
     child:`原先由${formerHome}照料，今日认回宫中。原家的姓名、来路与旧日纪事一同留下。${withDowager?care:''}`,
     aunt:journalContentVersion()>=122&&withDowager?`得知姐妹所生的${oldName}已认回宗谱，由太后接到慈宁宫抚养。她把孩子进宫的日子写在家书末尾，惦记着姐妹，也惦记孩子认不认新床。`:`她听说${oldName}认回宫中，想起原家照料这些年的情分，盼孩子往后仍有机会问候故人。`,
     emperor:`你认回${oldName}，以原有名字列入皇室宗谱。${care}`});
-  return `${kidName(k)}已列入皇室宗谱。孩子照原有年龄和名字入宫，昔日在原家的纪事也随身保留。${withDowager?care:''}`;
+  const feeling=royalRecognitionFeeling(k,child);
+  return `${kidName(k)}已列入皇室宗谱。孩子照原有年龄和名字入宫，昔日在原家的纪事也随身保留。${withDowager?care:''}`+(feeling?'\n'+feeling:'');
 }
 
 function outsideMotherLink(k){

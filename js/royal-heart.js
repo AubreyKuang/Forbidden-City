@@ -55,7 +55,7 @@ function royalHeartTick(){
  xieLifeTick();
  if(state.pending||mourningActive()||S.turn-state.lastEvent<4)return;
  const people=S.children.filter(k=>S.turn-(k.lastHeart??-99)>=10&&(heartReady(k)||!k.xieAdmiration&&xieAdmirerReady(k)));
- if(journalContentVersion()>=126){
+ if(journalContentVersion()>=130){
   const princess=people.find(k=>!k.xieAdmiration&&xieAdmirerReady(k)&&xieCanPursue(k));
   if(princess&&chance(.09)){
    state.pending={kind:'xiean',child:princess.id,stage:heartStage(princess),topic:null,turn:S.turn};
@@ -68,7 +68,7 @@ function royalHeartTick(){
  state.pending={kind:xie?'xiean':'hope',child:k.id,stage:heartStage(k),topic,turn:S.turn};state.lastEvent=S.turn;
 }
 function duePrincessHeartEvent(){
- if(journalContentVersion()<126||mourningActive())return null;
+ if(journalContentVersion()<130||mourningActive())return null;
  const d=heartState()?.pending;
  if(!d)return null;
  // A long-waiting ordinary conversation occupies the same slot as the first poetry scene.
@@ -256,7 +256,7 @@ function xieLifeTick(){
  if(!p){
   if(S.turn<6||mourningActive())return;
   const young=S.children.filter(k=>(heartReady(k)||xieHeartReady(k))&&kidAge(k)<(xieRomanceActive()?26:20));
-  const hasPrincess=journalContentVersion()>=126&&E().sur!=='谢'&&young.some(xieHeartReady);
+  const hasPrincess=journalContentVersion()>=130&&E().sur!=='谢'&&young.some(xieHeartReady);
   if(young.length&&chance(hasPrincess ? .09 : .045))createXieAn();
   return;
  }

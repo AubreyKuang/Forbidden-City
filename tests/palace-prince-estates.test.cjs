@@ -145,7 +145,7 @@ test('an old review opened before forty replays and is then withdrawn without ap
  ensureMarriedLife(prince).children.push({id:'prior-son',name:'景明',sex:'m',alive:true,born:S.turn-9*12,mother:prince.spouse.id,father:prince.id});
  PalaceActions.reset();A.princeReviewSuccession(prince.id);save('1');`);
  const key='chengongji_v1_1',data=JSON.parse(game.storage.get(key)),journal=data.pendingActions;
- journal.version=126;for(const snapshot of [data,journal.base])snapshot.children.find(c=>c.name==='承安').born+=12;
+ journal.version=129;for(const snapshot of [data,journal.base])snapshot.children.find(c=>c.name==='承安').born+=12;
  game.storage.set(key,JSON.stringify(data));const resumed=boot(12,game.storage);resumed.ctx.assert=assert;resumed.run(`A.load('1');assert.equal(PalaceActions.blocked,false);
  assert.equal(modalOpen,false);assert.equal(princeHeir(S.children.find(c=>c.name==='承安')),undefined);`);
 });

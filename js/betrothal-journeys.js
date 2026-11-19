@@ -143,7 +143,9 @@ function betrothedTravelPair(k){
  if(!pair)return null;
  const {p,b}=pair;
  if(b.bond?.petition||b.bond?.royal<=36||b.bond?.relative<=36||k.household?.pregnancies?.length)return null;
- return natalAge(p)>=16&&(p.hp??100)>=50&&!p.visit&&!p.away&&!p.jailed&&!p.exiled&&!p.royalCompanionTrip&&
+ const age=royalNatalAge('journey');
+ if(royalNatalEarlierAges()&&kidAge(k)<age)return null;
+ return natalAge(p)>=age&&(p.hp??100)>=50&&!p.visit&&!p.away&&!p.jailed&&!p.exiled&&!p.royalCompanionTrip&&
   !p.natalPregnancy&&!p.commission&&!p.diplomaticJourney&&!p.incognitoCase&&!p.yiAudit?pair:null;
 }
 

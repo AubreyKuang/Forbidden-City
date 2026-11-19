@@ -135,7 +135,8 @@ function outerRoyalEntry(k,m){
   outerAward('认祖归宗');if(k.alerts.includes(20))outerAward('满城风雨');
   if(k.officialId){const p=scholarById(k.officialId);if(p){p.retired=true;story(p,'奉旨交卸旧职，归宗入玉牒。');}}
   const heir=kidById(S.heir);if(heir&&k.sex==='m'){heir.sup=clamp(heir.sup-3);kstory(heir,'宗人府重录同辈排行，东宫收到了一份新玉牒。');}
-  return outerNote(m,k,'认祖归宗','核定玉牒',`宗人府把${k.royalName}的名字写入玉牒，另在原户帖上注明归宗年月。`,kidAge(k)>=10?'“请把养我的人的名字，也留在我这一页上。”':'孩子带着家里用惯的那床小被进了宫。');
+  const feeling=royalRecognitionFeeling(royal,k);
+  return outerNote(m,k,'认祖归宗','核定玉牒',`宗人府把${k.royalName}的名字写入玉牒，另在原户帖上注明归宗年月。`,feeling||(kidAge(k)>=10?'“请把养我的人的名字，也留在我这一页上。”':'孩子带着家里用惯的那床小被进了宫。'));
 }
 function outerDiscoverers(m){
   const people=[{role:'旧宫女',name:'当年替内廷传过家书的老宫女'}],q=empress(),d=S.flags.dowager,aunt=byId(m.host);

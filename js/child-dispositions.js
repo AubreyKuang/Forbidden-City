@@ -33,3 +33,27 @@ function childDispositionPanel(k){
   const key=childDisposition(k);
   return `<section class="child-disposition"><strong>性情 · ${esc(key)}</strong><p>${esc(CHILD_DISPOSITIONS[key].d)}</p><small class="hint">教养会增长本领，经历会留下心事。</small></section>`;
 }
+
+// A child's established character follows them from the family register into the royal one.
+function royalRecognitionFeeling(k,previous){
+  if(journalContentVersion()<127)return '';
+  const familiar={活泼:'灵动',沉静:'内敛',爽直:'爽直',温厚:'仁厚',温婉:'仁厚',聪慧:'好奇'};
+  const disposition=CHILD_DISPOSITIONS[previous.temperament]?previous.temperament:familiar[previous.trait]||childDisposition(k);
+  k.temperament=disposition;
+  const title=k.sex==='m'?'皇子':'公主',age=kidAge(k);
+  const moments={
+    好奇:[5,'盯着帘子上的金线，伸手去够。','仰头问：“那我能去看看写着我名字的那本书吗？”','眼睛一下亮起来，想亲眼看一看宗谱，也想弄明白当年怎么会在宫外长大。'],
+    好胜:[4,'扶着摇篮沿试着坐起来，跌回软褥又撑了一次。','听说宫里也有旁的孩子，忙问他们在学什么，自己也要学。','听说往后能同别的皇嗣一道读书，心里欢喜，最想知道头一堂课能不能跟得上。'],
+    仁厚:[-3,'换了人抱便四下找熟悉的脸，好一阵才肯松手。','先问：“那家里人想我了怎么办？”','听完反倒鼻子一酸。众人都在贺自己进宫，却少有人问家里送行的人此刻是什么心情。'],
+    内敛:[-6,'听见陌生人齐声道贺便往襁褓里缩，等屋里静了才肯睁眼。','一直攥着旧衣角，等旁人走开才承认：“我想回家睡。”','众人越是道贺，越觉得那声称呼陌生。等屋里安静下来，才承认自己舍不得从前的日子。'],
+    爽直:[-2,'被簇拥着换了衣裳，委屈地哭出声，抱回熟悉的小被才肯歇。','脱口问：“那为什么今天才来接我？”','当面问起为何今日才认亲。能知道自己的来历，自然高兴，可那些独自猜过的年月也是真的。'],
+    灵动:[6,'听得帘钩碰响，跟着咯咯笑，一路望着晃动的流苏。','高高兴兴跟着进门，没走两步就回头问能不能把家里的玩伴也请来。','听见新称呼先笑了，兴致勃勃地认门认路，又琢磨怎样把沿途的见闻讲给家里人听。'],
+    审慎:[-4,'到了陌生床上总不肯睡，直到摸着旧被的包边才安稳。','挨个问清夜里睡哪里、明早谁来叫，这才肯跨进门。','把新称呼轻轻念了一遍，心里仍没底。先问清以后家书往哪里递，才肯让人收起带来的行李。'],
+    自矜:[3,'有人围过来看便偏过脸，静下来后独自端详起新衣上的花纹。','听见有人恭喜便挺直了背，又认真叮嘱：“我的小名也要记住。”','听到宣名时站得笔直，暗自欢喜。等人散了，又郑重请掌册的人把自己原来的名字念了一遍。']
+  };
+  const [change,baby,little,older]=moments[disposition];
+  const line=age<3?`旁人唤作“${title}”，还听不懂这称呼。${baby}`:`得知自己原是${title}，${age<7?little:older}`;
+  k.mood=clamp((k.mood??65)+change);
+  kstory(k,'【初知身世】'+line);
+  return line;
+}

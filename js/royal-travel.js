@@ -166,6 +166,8 @@ function royalTravelPlace(k){
 }
 function royalTravelCanLeave(k){
  if(!k||k.lost||['noticed','invited'].includes(k.immortal?.stage))return false;
+ if(royalNatalEarlierAges()&&(k.married||royalNatalEngaged(k)))
+  return immortalLocal(k)&&k.hp>=50&&S.heir!==k.id&&!!betrothedTravelPair(k);
  if(!k.married)return immortalCanLeave(k)&&(!k.betrothal||!!betrothedTravelPair(k));
  return immortalLocal(k)&&kidAge(k)>=16&&k.hp>=50&&S.heir!==k.id&&!!betrothedTravelPair(k);
 }
@@ -261,7 +263,7 @@ function siblingTravelLetter(k,p,danger){
  return result;
 }
 function siblingTravelRite(){
- if(journalContentVersion()<126)return '';
+ if(journalContentVersion()<130)return '';
  const notes=[];
  for(const k of royalHouseholds()){
   const p=travelSibling(k);
@@ -285,7 +287,7 @@ function royalTravelTick(){
   if(journalContentVersion()>=47)for(const k of [...relatives,...royalTravelAcceded()])advanceRoyalTravelProjects(k);
  }
  if(mourningActive())return;
- if(journalContentVersion()>=126){
+ if(journalContentVersion()>=130){
   const invited=new Set(S.children.filter(o=>o.royalTravel?.invitedSibling).map(o=>travelInvitee(o)?.id));
   const requests=S.children.filter(k=>!k.royalTravel&&!invited.has(k.id)&&royalTravelCanLeave(k)&&chance(.02));
   for(const k of requests)requestRoyalTravel(k);
@@ -543,7 +545,7 @@ function royalTravelEvent(k){
   if(news||route||!firstStop)return news;
  }
  if(!(S.turn>=r.due))return null;
- if(requesting&&journalContentVersion()>=126&&S.children.some(o=>o!==k&&o.royalTravel?.invitedSibling===k.id&&travelInvitee(o)===k))return null;
+ if(requesting&&journalContentVersion()>=130&&S.children.some(o=>o!==k&&o.royalTravel?.invitedSibling===k.id&&travelInvitee(o)===k))return null;
  const companion=requesting&&betrothedTravelPair(k),sibling=requesting?travelInvitee(k):null;
  const matchingCompanion=()=>{
   const current=betrothedTravelPair(k);
@@ -574,7 +576,7 @@ function royalTravelEvent(k){
  if(requesting&&valid())return {title:sibling?'皇嗣请行 · 手足同游':'皇嗣请行 · 游历山河',por:k,cast:sibling?[sibling]:companion?[natalPortrait(companion.p)]:undefined,valid,
   text:`${kidName(k)}带着一张自己标过的舆图来见你：“父皇，我想出去看看。书里说江河有汛、山路难行，可我还没见过那些靠着河和山过日子的人。”\n${route?`拟走「${route.name}」，经${route.stops.map(stop=>stop[1]).join('、')}，约定${royalTravelDuration(route.months)}后归来，沿途会寄家书。`:`第一程拟往${ROYAL_TRAVEL_ROUTES[r.route][0].place}，约一年归来，沿途会托驿站寄信。`}${sibling?`\n${sibling.name}也从袖里取出一张图。两张纸的折痕恰好对上：“我们商量好些日子了。一路上我认驿站，${k.name}记见闻，想请父皇准我们一道去。”`:companion?betrothedTravelReply(companion):''}`,choices:[
    departure(companion||sibling?'准两人结伴启程':'准其启程，置办行装',companion,sibling),
-   ...(companion||sibling?[departure(sibling?`这程只准${k.name}带随侍启程`:'这程由皇嗣只带随侍启程',null)]:[]),
+   ...(sibling||companion&&(!royalNatalEarlierAges()||kidAge(k)>=16)?[departure(sibling?`这程只准${k.name}带随侍启程`:'这程由皇嗣只带随侍启程',null)]:[]),
    {t:'先备好行程，半年后再议',f:finish(()=>{r.due=S.turn+6;return sibling?'两人收起舆图，相约半年后再来请行。':'行期暂缓，孩子暂留京中。';})},
    {t:'这趟先作罢',f:finish(()=>{r.stage='closed';delete r.due;delete r.invitedSibling;if(sibling){const note='【同游未行】'+k.name+'与'+sibling.name+'一同请行未获准，两人把合画的舆图留了下来。';kstory(k,note);kstory(sibling,note);return note;}kstory(k,'此次请行未获准，先把自己标过的舆图收好。');return '孩子暂留京中。';})}]};
  if(!royalTravelAway(k)||!valid())return null;
@@ -600,7 +602,7 @@ function pendingRoyalTravelEvent(){
 }
 function pendingRoyalTravelEvents(){
  const first=pendingRoyalTravelEvent(),events=first?[first]:[];
- if(journalContentVersion()>=126){
+ if(journalContentVersion()>=130){
   for(const k of S.children){
    if(k.royalTravel?.stage!=='request'||first?.por===k)continue;
    const request=royalTravelEvent(k);

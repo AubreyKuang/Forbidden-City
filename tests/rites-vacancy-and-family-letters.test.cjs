@@ -40,7 +40,7 @@ test('punishment letters respect sender limits, kinship, verdict, and the loss o
 test('the card records absence during family leave and rechecks pregnancy and availability on return',()=>{
   const w=setup();w.run(`
     c.preg=2;c.hp=90;assert.ok(startHomeLeave(c,1));var card=()=>viewCards().match(new RegExp('<button class="pai" [^>]*A.night\\\\('+c.id+'\\\\)[^>]*>[\\\\s\\\\S]*?</button>'))[0];
-    assert.match(card(),/disabled/);assert.match(card(),/外出省亲/);assert.doesNotMatch(card(),/有孕/);
+    assert.match(card(),/disabled/);assert.match(card(),/暂离宫中 · 娘家/);assert.doesNotMatch(card(),/有孕/);
     var energy=E().energy;A.night(c.id);assert.equal(E().energy,energy);
     returnHomeLeave(c);assert.match(card(),/有孕在身/);
     c.preg=0;assert.doesNotMatch(card(),/disabled|省亲|有孕/);`);

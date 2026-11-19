@@ -85,6 +85,10 @@ function officialFamilyReaction(e,kind,task){
    transfer:[`${who}${task}。她想到家书今后该寄往哪里，也惦记新任上的责任。`,formal?`${who}${task}，臣妾记下了。任上所需请按公务核给，别叫家里的情分坏了用人的规矩。`:`${who}${task}，以后家书的去处也变了。臣妾替他高兴，也怕他一路奔波，只盼有封平安的信。`,'思念',1,2],
    recall:[`${who}奉诏复出，她感激朝廷仍记得家人的才干，也担心操劳。`,`${who}重受任用，臣妾感激，也盼他量力而行，不要连自己的身体都忘了。`,'感激',2,2]
   };
+  if(kind==='death'&&role==='father'&&journalContentVersion()>=129){
+   const gesture={gentle:'她将送信人领到一旁，低低问了几句家里的情形。',proud:'她把丧信接得很稳，等人散了才把脸别过去。',bright:'她追问了一句，又忽然停住，仿佛答话的人还会是父亲。',measured:'她先记下了报丧的日子，写到父亲的名字时，墨在纸上洇开了。',studious:'她把讣信从头看了一遍，折起后，又摊开看了一遍。',solitary:'她掩上门，一个人坐了一阵，才让人把冷掉的茶换去。'}[familyBearingStyle(member)];
+   lines.death=[who+'去世。'+gesture,fatherGriefVoice(member,p),'悲恸',0,0];
+  }
   const a=lines[kind];if(!a)continue;
   member.familyDuty={relativeId:p.id,role,name:p.name,kin,kind,task,turn:S.turn,text:a[0],quote:a[1]};
   if(!['悲恸','心如死灰','怨恨'].includes(xinOf(member)))setXin(member,a[2],`${who}：${task||kind}`);

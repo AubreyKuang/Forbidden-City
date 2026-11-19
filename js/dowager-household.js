@@ -149,6 +149,9 @@ dowagerTick=function(){livingDowagerTick();if(!dowagerLivingActive())return;cons
  if(d.feeling?.kind==='悲恸'&&S.turn-d.feeling.turn>12)d.feeling.kind='思念';
  prepareDowagerCompany(d);dowagerCrowdTick(d);dowagerDaoTick(d);
  if(journalContentVersion()>=124)ciningAuntVisitTick(d,h);
+ if(journalContentVersion()>=127){
+   for(const k of S.children.filter(ciningOutsideChild))offerCiningMotherVisit(k);
+ }
 };
 const livingPunishEvent=punishEv;
 punishEv=function(a,v,crime){
@@ -185,6 +188,96 @@ function ciningChildKin(k){
   const aunt=familyHostById(origin.auntId)||outsideChildAunt(host,relative,k.id);
   return {mother,aunt:aunt!==mother&&inPalace(aunt)?aunt:null};
 }
+function ciningLongingMonths(k){
+  const care=k.dowagerUpbringing;
+  if(care.longingMonths)return care.longingMonths;
+  // Published chronicles already tell us which visits involved missing home.
+  const months=[];
+  const known=/^【(慈宁宫探望|姨母探望)】.*(旧日的摇篮调|娘也知道我住在这里吗|给娘捎个信|哼起娘亲常唱的小调|娘想我的时候|那年她教我打的结)/;
+  const dates=new Set(k.story.filter(e=>known.test(e.t)).map(e=>e.d));
+  for(let ago=11;dates.size&&ago>=0;ago--){
+    const abs=(S.year-1)*12+S.month-1-ago;
+    if(abs>=0&&dates.has(dateStr({...S,year:Math.floor(abs/12)+1,month:abs%12+1})))months.push(S.turn-ago);
+  }
+  return care.longingMonths=months.slice(-2);
+}
+function noteCiningLonging(k){
+  const months=ciningLongingMonths(k);
+  if(months.at(-1)!==S.turn)months.push(S.turn);
+  k.dowagerUpbringing.longingMonths=months.slice(-2);
+}
+// The memory belongs to this child's latest actual farewell.
+function ciningLongingChance(k,base){
+  const farewell=k.dowagerUpbringing?.farewell;
+  if(journalContentVersion()<128||!farewell)return base;
+  const elapsed=S.turn-farewell.turn;
+  if(elapsed<0||elapsed>6)return base;
+  const shift=elapsed<=3?.20:.10;
+  return base+(farewell.clung?shift:-shift);
+}
+function ciningMotherFarewell(k,aunt,mother,d,title,sight){
+  const age=kidAge(k),temper=childDisposition(k);
+  const sensitivity={内敛:.18,审慎:.12,仁厚:.10,爽直:.02,自矜:0,好胜:-.08,好奇:-.10,灵动:-.14};
+  const clung=chance((age<2?.65:age<7?.48:.30)+sensitivity[temper]);
+  const quiet=['内敛','审慎','自矜'].includes(temper);
+  let parting;
+  if(age<2){
+    parting=clung?'生母刚把孩子交到姨母怀里，孩子便攥紧她的袖边。她蹲下来又哼了一遍小调，那只小手才慢慢松开。':'生母轻拍了几下，孩子在她肩头睡熟。换到姨母怀里，小手仍舒展着，一直睡到掌灯。';
+  }else if(age<7){
+    if(clung)parting=quiet?'听见要走了，孩子没出声，只紧紧攥住娘的衣角。娘低头等了好久，孩子才肯把手交给姨母。':'生母才站起来，孩子便扑过去抱住她的腿：“娘，再坐一小会儿。”两人又挨着坐了一阵，才在门前道别。';
+    else parting=quiet?'孩子把娘带来的帕子折好收在枕边，轻轻道了声再见。这晚没再起来望门。':'孩子挑了一块桂花糕给娘带回家，跑去门口挥了挥手，回头又叫姨母来看碟里剩下的半块。';
+  }else if(clung){
+    parting=quiet?'孩子照礼送到廊下，手却还捏着娘的袖口。等旁人走远才轻声说：“我原以为，见过就不会这样想您了。”':'到了廊下，孩子又追上去牵住娘的手：“我还想跟您走几步。”直到姨母来送，才肯慢慢松手。';
+  }else if(temper==='仁厚'){
+    parting='孩子问清家里人都好，替娘理了理披风：“回去路上小心。我在祖母这里也好。”说完当真放下了心。';
+  }else{
+    parting=quiet?'孩子同娘约好下一封家书往哪里递，亲手替她挑起帘子。等她走远，才回案边把搁下的那页书读完。':'孩子送娘走到阶前，还笑着叮嘱她留心收信。回去便铺开纸，想把今天见面时来不及说的趣事画给她看。';
+  }
+  k.dowagerUpbringing.farewell={turn:S.turn,clung};
+  k.mood=clamp((k.mood??65)+(clung?2:8));
+  const heading='【'+title+'】',mom=mother.name,a=fullName(aunt);
+  story(aunt,heading+`领姐妹${mom}进慈宁宫见${k.name}。`+(clung?'临别见孩子舍不得，她请引路的宫人稍候，自己留在门边，等孩子把手伸过来。':'临别见孩子安稳，她陪姐妹慢慢往宫门走，把方才没来得及说的起居琐事讲给她听。'));
+  kstory(k,heading+sight+parting);
+  story(mother,heading+`随姐妹${a}到慈宁宫见了${k.name}。`+(clung?'临别时终究舍不得催孩子放手。回家解下外衣，想起方才的依恋，便坐下来给孩子写了几句话。':'临别见孩子安心，自己也松了口气。归家后，终于能把亲眼看见的笑模样说给家人听。'));
+  const after=age<2?(clung?'送走生母后，让乳母接着哼方才的调子，直到孩子松开攥紧的小手。':'听见孩子呼吸匀净，嘱人轻些落帘，别为行礼把孩子弄醒。'):clung?'临别见孩子难舍，嘱宫人让母亲慢慢告别。用晚膳时特意挪了把椅子，把孩子留在自己身旁。':'临别见孩子已经放下心，便照常摆晚饭，把白日见娘的事留给孩子自己慢慢说。';
+  dowagerRecord(d,title,`让${mom}在慈宁宫陪了${k.name}一晌。`+after);
+  return `${mom}随${a}进了慈宁宫。${sight}
+暮鼓前，${parting}`;
+}
+function offerCiningMotherVisit(k){
+  const care=k.dowagerUpbringing;
+  const ready=()=>{
+    if(!ciningOutsideChild(k)||k.dowagerUpbringing!==care)return false;
+    const months=ciningLongingMonths(k);
+    return months.length>=2&&S.turn-months[0]<12&&S.turn-(care.motherVisitRuling??-Infinity)>=6;
+  };
+  if(!ready())return;
+  const {aunt,mother}=ciningChildKin(k),d=S.flags.dowager;
+  if(!aunt||!mother)return;
+  const valid=()=>ready()&&dowagerVisitReady(aunt)&&mother.alive&&!S.consorts.includes(mother)&&!mother.consortId&&
+    !(mother.visit&&S.turn<mother.visit.until)&&!mother.royalCompanionTrip&&!mourningActive();
+  if(!valid())return;
+  const kin=k.sex==='m'?'外甥':'外甥女',name=k.name,auntName=fullName(aunt),momName=mother.name;
+  const young=kidAge(k)<2;
+  const settle=allow=>{
+    if(!valid())return null;
+    care.longingMonths=[];care.motherVisitRuling=S.turn;
+    const title=allow?(k.sex==='m'?'慈宁宫母子相见':'慈宁宫母女相见'):'慈宁宫探亲未准';
+    const sight=young?'生母才哼出头一句，孩子就循声扭过脸，伏在她肩上安静下来。':kidAge(k)<7?'孩子先躲在帘后看了一眼，认清是娘，连鞋都跑掉了一只。':'孩子原想规规矩矩地行礼，听见娘唤自己的小名，一肚子背好的话全忘了。';
+    if(allow&&journalContentVersion()>=128)return ciningMotherFarewell(k,aunt,mother,d,title,sight);
+    const childLine=allow?sight:young?'傍晚又有些不安，姨母抱着走了一圈，听着熟悉的曲子才慢慢睡着。':'等到姨母回来，才知道这回见不到娘。坐了一会儿，托姨母回家信时添一句：“我还惦记她。”';
+    story(aunt,'【'+title+'】'+(allow?`替${kin}${name}求得恩典，亲自领姐妹${momName}进慈宁宫。见两人依偎在一处，悄悄退到门边，替她们看着时辰。`:`替${kin}${name}求见生母未获准，将御前的答复捎给姐妹，亲口说给孩子听，又到慈宁宫多陪了一阵。`));
+    kstory(k,'【'+title+'】'+childLine);
+    story(mother,'【'+title+'】'+(allow?`由姐妹${auntName}领进慈宁宫，终于亲眼见到${name}。${sight}临别替孩子掖好衣领，当日随宫人出宫。`:`等来姐妹${auntName}的口信，才知这回不能入宫看${name}。把原准备当面说的家常写成短信，请她替自己念给孩子听。`));
+    dowagerRecord(d,title,allow?`替${auntName}转奏得准，命人在慈宁宫里间留座，让${momName}和${name}好好坐了一晌。送走生母后，仍照常留孩子在身边。`:`听过${auntName}所求，转奏未准。见${name}惦念生母，嘱咐姨母照旧替两边递家音。`);
+    k.mood=clamp((k.mood??65)+(allow?8:-3));
+    return allow?`${momName}随${auntName}进了慈宁宫。${sight}暮鼓前，姨母送她出宫，太后留下陪孩子用饭。`:`太后让${auntName}坐下：“你先替哀家给你姐妹带句话，孩子的家书，这里随时肯收。”这次探亲暂缓。`;
+  };
+  pushEv({title:'慈宁宫 · 姨母求恩',por:aunt,cast:[dowagerPerson(d),k],valid,
+    text:`${auntName}向太后禀道：“${name}已经几次想娘。臣妾往返捎话，总有说不尽的地方。求您许我姐妹${momName}来一趟，看看孩子，当日便送她回去。”
+太后请你定夺：“孩子仍由我照看。让他们在我这里见上一面，皇帝意下如何？”`,
+    choices:[{t:'准生母入慈宁宫探望',f:()=>settle(true)},{t:'暂不准入宫，仍许通家信',f:()=>settle(false)}]});
+}
 function ciningAuntVisitTick(d,household){
   if(S.turn-(household.lastAuntVisit??-Infinity)<3)return;
   const visits=[];
@@ -201,7 +294,8 @@ function ciningAuntVisitTick(d,household){
   const {k,aunt,mother}=pick(visits),age=kidAge(k),kin=k.sex==='m'?'外甥':'外甥女';
   const auntName=fullName(aunt),motherName=mother.name||k.momName;
   household.lastAuntVisit=S.turn;
-  const missing=chance(.4);
+  const missing=chance(ciningLongingChance(k,.4));
+  if(journalContentVersion()>=127&&missing&&mother.alive)noteCiningLonging(k);
   let scene,news,answer;
   if(missing&&age<2){
     scene='正哭得打嗝，听姨母哼起娘亲常唱的小调，慢慢松开了攥着的拳头。';
@@ -248,7 +342,7 @@ function ciningChildVisit(k){
   const care=k.dowagerUpbringing,name=k.name,momName=mother?.name||k.momName;
   const visits=care.visits||0,days=CINING_CHILD_DAYS[band];
   const day=k.hp<35?['身子有些乏，我叫人把帘子放下了。今日在床边陪陪就好。','在枕边听见父皇来看望，很快又安静地歇下了。']:days[visits%days.length];
-  const missing=!!mother&&chance(.35);
+  const missing=!!mother&&chance(ciningLongingChance(k,.35));
   const memory=['听见旧日的摇篮调，手指抓住了从原家带来的被角。','轻轻问了一句：“娘也知道我住在这里吗？”',mother?.alive===false?'在窗纸上比画出原家门前的路，记起生母当年牵着自己走过。':'在窗纸上比画出原家门前的路，小声问可不可以给娘捎个信。'][band];
   const response=mother?.alive===false?['大家收好小被，让熟悉的曲子唱完。','太后陪孩子说起生母，答应把记得的事慢慢讲给孩子听。','你陪孩子把思念写在纸上，收在自己的书匣里。'][band]:
     '太后说：“惦记娘亲是应当的。在祖母这里，都可以说。”';
@@ -272,6 +366,7 @@ function ciningChildVisit(k){
           '她将自己记得的姐妹旧事说给慈宁宫的宫人听，好让孩子日后问起时有人能答。';
         story(aunt,`【姨母牵挂】太后捎话来，说起${kin}${name}今日见父皇的情形。${reply}`);
       }
+      if(journalContentVersion()>=127&&missing&&mother?.alive){noteCiningLonging(k);offerCiningMotherVisit(k);}
       log(`请安后在慈宁宫探望${name}，听太后说起孩子近况。`);
       return mother?.alive?'你陪孩子坐了一会儿，又将孩子的近况捎给生母。':'你陪孩子坐了一会儿，临走替太后掩好窗扇。';
     }

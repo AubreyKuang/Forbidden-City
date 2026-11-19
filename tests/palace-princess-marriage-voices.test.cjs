@@ -165,3 +165,14 @@ test('settled old saves supply a missing marital estate and keep established pro
  var before=JSON.stringify(k.estate);settleMarriedPrincessEstates();assert.equal(JSON.stringify(k.estate),before);
  var sister=makeKid(empress(),'f','云宁');sister.born=S.turn-18*12;sister.betrothal={kind:'xiean'};settleMarriedPrincessEstates();assert.equal(sister.estate,undefined);`);
 });
+test('estate letters give eight princesses distinct voices and carry a deferred petition through to approval',()=>{
+ let b=world();b.run(`var letters=new Set(),posts=new Set();
+ for(const temperament of Object.keys(CHILD_DISPOSITIONS)){k.temperament=temperament;
+ const ev=princessOpening(k);letters.add(ev.text);posts.add(princessEstateMail(k,'校书',0));assert.match(ev.text,/旧书/);}
+ assert.equal(letters.size,8);assert.equal(posts.size,8);k.temperament='内敛';PalaceActions.reset();
+ A.openPrincess(k.id);var first=curEv.text;save('auto');`);const first=b.run('first');b=reload(b);b.ctx.first=first;
+ b.run(`var k=S.children.find(k=>k.name==='淑月');assert.equal(curEv.text,first);
+ choose(1);drain();assert.ok(!k.estate);assert.match(k.story.at(-1).t,/三个月/);S.turn+=3;
+ A.openPrincess(k.id);assert.notEqual(curEv.text,first);assert.match(curEv.text,/上回/);choose(0);drain();
+ assert.equal(k.estate.pursuit,'books');assert.match(k.story.at(-1).t,/悄悄/);`);
+});
