@@ -207,7 +207,13 @@ function palaceFactions(){
 }
 function favoredPalaceFactions(){
  const h=harem(),prior=S.flags.palaceFactionState?.gen===S.gen?S.flags.palaceFactionState.members:{},map={},L=[],assigned=new Set();
- const candidates=h.filter(c=>!isSolitary(c)&&(c.rank>=5||c.rank===4&&c.favor>=45||c.favor>=60||prior[c.id]===c.id&&c.favor>=45))
+ const sworn=whiteSpringFaction(h);
+ if(sworn){
+  const {princess,followers}=sworn;
+  L.push(princess);map[princess.id]=followers;
+  for(const c of [princess,...followers])assigned.add(c.id);
+ }
+ const candidates=h.filter(c=>!assigned.has(c.id)&&!isSolitary(c)&&(c.rank>=5||c.rank===4&&c.favor>=45||c.favor>=60||prior[c.id]===c.id&&c.favor>=45))
   .sort((a,b)=>(b.rank*20+b.favor)-(a.rank*20+a.favor)||a.id-b.id);
  const eligible=new Set(candidates.map(c=>c.id));for(const c of candidates)map[c.id]=[];
  const allied=(a,b)=>a!==b&&socialPair(a,b)&&relGet(a,b)>=30&&!isRival(a,b)&&!isRival(b,a);
@@ -215,7 +221,8 @@ function favoredPalaceFactions(){
  const best=(c,people)=>people.filter(l=>allied(c,l)).sort((a,b)=>score(c,b)-score(c,a)||a.id-b.id)[0];
  // Reserve potential leaders first. Each supporter chooses her closest actual
  // ally, so an empress cannot consume another woman's entire circle by rank.
- for(const c of h.filter(c=>!eligible.has(c.id))){const leader=best(c,candidates);if(leader){map[leader.id].push(c);assigned.add(c.id);}}
+ const possibleLeaders=[...L,...candidates];
+ for(const c of h.filter(c=>!assigned.has(c.id)&&!eligible.has(c.id))){const leader=best(c,possibleLeaders);if(leader){map[leader.id].push(c);assigned.add(c.id);}}
  for(const c of candidates)if(map[c.id].length){L.push(c);assigned.add(c.id);}
  for(const c of candidates){
   if(assigned.has(c.id))continue;
@@ -281,13 +288,14 @@ function consortSocialLine(c){
   if(!other||S.turn-note.turn>=3)return '';
   return `<div>近来往来 · 与 <button class="btn quiet sm" onclick="A.go('consort',${other.id})">${esc(fullName(other))}</button> 在${esc(note.place)}${esc(note.activity)}。</div>`;
 }
+const factionLeaderName=c=>whiteSpringAdmirationActive()&&c.fixedStory==='ayimu'?fullName(c):cName(c);
 function facHTML(){const f=factions();if(!f.L.length&&!f.neutral.length)return '';
   const box=(t,arr)=>`<div class="card" style="cursor:default;flex-direction:column"><div class="nm">${t}</div><div>${arr.length?arr.map(c=>`<span class="tag">${esc(cName(c))}</span>`).join(''):'<span class="hint">尚无依附者</span>'}</div></div>`;
-  return `<section class="harem-factions" aria-label="后宫派系"><h3>派系</h3><p class="hint">随实际交情形成，可有多派，也可不入任何派系。各派并非天然互为仇敌。${journalContentVersion()>=30?'高位或得宠的妃嫔可凭实际交好组织一派；成员更看重交情，也会保留原来的归属。':''}</p><div class="grid">${f.L.map(l=>box(esc(cName(l))+'一派',f.map[l.id])).join('')}${f.neutral.length?box('无派系',f.neutral):''}</div></section>`}
+  return `<section class="harem-factions" aria-label="后宫派系"><h3>派系</h3><p class="hint">随实际交情形成，可有多派，也可不入任何派系。各派并非天然互为仇敌。${journalContentVersion()>=30?'高位或得宠的妃嫔可凭实际交好组织一派；成员更看重交情，也会保留原来的归属。':''}</p><div class="grid">${f.L.map(l=>box(esc(factionLeaderName(l))+'一派',f.map[l.id])).join('')}${f.neutral.length?box('无派系',f.neutral):''}</div></section>`}
 function relLine(c){if(!c.alive||c.gone)return '';
   const h=harem().filter(o=>o!==c).map(o=>[o,relGet(c,o)]).sort((a,b)=>b[1]-a[1]);
   const good=h.filter(x=>x[1]>=30&&socialPair(c,x[0])&&!friendshipTense(c,x[0])).slice(0,4),respect=h.filter(x=>x[1]>=30&&!socialPair(c,x[0])).slice(0,4),bad=h.filter(x=>x[1]<=-30).slice(-4),fac=c.cold?null:facOf(c);
-  return `<div>派系：${fac?(fac===c?'一派之首':esc(cName(fac))+'一派'):'无派系'}${good.length?`　交好：${good.map(([o])=>`<span class="tag g">${esc(cName(o))}</span>`).join('')}`:''}${respect.length?`　敬重：${respect.map(([o])=>`<span class="tag">${esc(cName(o))}</span>`).join('')}`:''}${bad.length?`　交恶：${bad.map(([o])=>`<span class="tag r">${esc(cName(o))}</span>`).join('')}`:''}</div>${selectionCohortHTML(c)}${consortSocialLine(c)}${friendFavorPanel(c)}${friendshipPanel(c)}`}
+  return `<div>派系：${fac?(fac===c?'一派之首':esc(factionLeaderName(fac))+'一派'):'无派系'}${good.length?`　交好：${good.map(([o])=>`<span class="tag g">${esc(cName(o))}</span>`).join('')}`:''}${respect.length?`　敬重：${respect.map(([o])=>`<span class="tag">${esc(cName(o))}</span>`).join('')}`:''}${bad.length?`　交恶：${bad.map(([o])=>`<span class="tag r">${esc(cName(o))}</span>`).join('')}`:''}</div>${selectionCohortHTML(c)}${consortSocialLine(c)}${friendFavorPanel(c)}${friendshipPanel(c)}`}
 HAREM.push(
  function clash(){const f=factions();if(f.L.length<2)return null;
   const pairs=f.L.flatMap((a,i)=>f.L.slice(i+1).filter(b=>relGet(a,b)<10||isRival(a,b)||isRival(b,a)).map(b=>[a,b]));

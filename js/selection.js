@@ -108,6 +108,9 @@ const NERVOUS_REACTIONS={
   骄矜:'她谢恩时仪态一丝不乱，出了殿门才悄悄问身边宫人，自己的位分在同批中排第几。'
 };
 function newcomerReaction(c){
+  if(whiteSpringAdmirationActive()&&c.whiteSpringFriend?.admission!=null){
+    return '她收拾好了箱笼，仍忍不住想笑。'+(whiteSpringResident(S.consorts)?'进了宫，终于可以等一个合礼的日子、当面向阿依慕问安。':'从前只听娘家人讲白泉的事，如今真留了下来，她盼以后有机会当面见见阿依慕。');
+  }
   return {
     solitary:'她向同来的几人依礼道别，将书匣交给宫人，独自认了回宫的路。有人邀她晚间闲坐，她温言辞谢，并无怠慢之意。',
     careful:'她将名册上的位分与各宫住处听得仔细，先请教了明日请安的次序，才松开一直捏着的袖边。',
@@ -251,10 +254,10 @@ function viewSelectionArrivals(){
 A.xxWelcome=function(id){if(modalOpen)return;const c=byId(id);if(c)pushEv(newcomerWelcomeEvent(c));};
 function viewSelectionAudience(){
   const c=selectionCurrent();if(!c)return '';
-  const speech=selectionSpeech(c),shown=S.selection?.performed?.includes(c.id);
+  const speech=selectionSpeech(c),shown=S.selection?.performed?.includes(c.id),whiteSpring=whiteSpringSelectionHint(c);
   return `<section class="selection-audience selection-scene" aria-label="秀女觐见"><header><div><p>储秀宫 · 依次觐见</p><h2>${esc(fullName(c))}</h2><p>${c.age}岁 · ${esc(c.fam.t)}之女</p>${solitaryTag(c)}${dowagerKinTag(c)}${consortTraitTags(c)}</div><button class="btn sm" onclick="A.xxRoster()">直接看名册</button></header>
-    <div class="audience-body"><div class="audience-portrait">${porImg(c,210)}</div><div class="audience-dialogue"><p>${esc(shown?speech.talent:speech.stage)}</p><blockquote>“${esc(shown?speech.reply:speech.line)}”</blockquote><p class="hint">${esc(pastLifeSelectionHint(c))}</p>${portraitResemblanceHint(c)?`<p class="hint">${esc(portraitResemblanceHint(c))}</p>`:''}<p class="hint">${esc(c.kinNote||'')} ${shown?'已看过才艺，可继续觐见或回名册留选。':'可听她展示所长，再统一决定留谁。'}</p></div></div>
-    <footer><span>${S.cands.indexOf(c)+1} / ${S.cands.length} 位候选</span><div class="acts"><button class="btn" onclick="A.xxPerform(${c.id})" ${shown?'disabled':''}>展示才艺 · ${esc(consortHobby(c))}</button><button class="btn gold" onclick="A.xxNext(${c.id})">${S.cands.indexOf(c)===S.cands.length-1?'看完，回名册留选':'请下一位'}</button></div></footer></section>${selectionDiscussionPanel()}`;
+    <div class="audience-body"><div class="audience-portrait">${porImg(c,210)}</div><div class="audience-dialogue"><p>${esc(shown?speech.talent:speech.stage)}</p><blockquote>“${esc(shown?speech.reply:speech.line)}”</blockquote>${whiteSpring?`<p>${esc(whiteSpring)}</p>`:''}<p class="hint">${esc(pastLifeSelectionHint(c))}</p>${portraitResemblanceHint(c)?`<p class="hint">${esc(portraitResemblanceHint(c))}</p>`:''}<p class="hint">${esc(c.kinNote||'')} ${shown?'已看过才艺，可继续觐见或回名册留选。':'可听她展示所长，再统一决定留谁。'}</p></div></div>
+    <footer><span>${S.cands.indexOf(c)+1} / ${S.cands.length} 位候选</span><div class="acts">${whiteSpringSelectionButton(c)}<button class="btn" onclick="A.xxPerform(${c.id})" ${shown?'disabled':''}>展示才艺 · ${esc(consortHobby(c))}</button><button class="btn gold" onclick="A.xxNext(${c.id})">${S.cands.indexOf(c)===S.cands.length-1?'看完，回名册留选':'请下一位'}</button></div></footer></section>${selectionDiscussionPanel()}`;
 }
 A.xxRoster=function(){if(modalOpen)return;S.selection={...(S.selection||{}),phase:'roster'};save('auto');render();};
 A.xxMeet=function(id){if(modalOpen||!S.cands.some(c=>c.id===id))return;S.selection={...(S.selection||{}),phase:'audience',current:id};save('auto');render();};

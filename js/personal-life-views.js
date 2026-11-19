@@ -40,6 +40,6 @@ function lifeBiography(person){
   const first=c.entries[0].entry,last=c.entries.at(-1).entry,people=[...new Map(c.entries.flatMap(({entry})=>entry.life?.people||entry.event?.participants||[]).filter(p=>p.id!==person.id).map(p=>[p.id,p])).values()];
   return `<article><h4>${c.title}</h4><p class="hint">${esc(first.d)}${first.d!==last.d?' — '+esc(last.d):''} · ${c.entries.length}则纪事</p>
    <p>${esc(last.t.length>120?last.t.slice(0,120)+'…':last.t)}</p>${people.length?`<div>${people.slice(-6).map(lifePersonLink).join(' ')}</div>`:''}
-   ${detailFold('翻阅这一篇的原始纪事',`<ul class="story">${c.entries.map(({entry})=>`<li><time>${esc(entry.d)}</time>${esc(entry.t)}${entry.life?.source?`<p class="hint">缘起：${esc(entry.life.source)}</p>`:''}${entry.event&&!entry.event.embedded?`<p>事由：${esc(entry.event.situation)}<br>回应：${esc(entry.event.choice)}<br>${esc(entry.event.outcome)}</p>`:''}</li>`).join('')}</ul>`)}</article>`;
+   ${detailFold('翻阅这一篇的原始纪事',`<ul class="story">${c.entries.map(({entry})=>`<li><time>${esc(entry.d)}</time>${esc(entry.t)}${chronicleSummary(entry)}${entry.life?.source?`<p class="hint">缘起：${esc(entry.life.source)}</p>`:''}${entry.event&&!entry.event.embedded?`<p>事由：${esc(entry.event.situation)}<br>回应：${esc(entry.event.choice)}<br>${esc(entry.event.outcome)}</p>`:''}</li>`).join('')}</ul>`)}</article>`;
  }).join('')}</div>${subjective.length?detailFold('她心中所记'.replace('她',person.sex==='m'?'他':'她'),subjective.map(m=>`<p>“${esc(m.interpretation)}”</p>`).join('')):''}`);
 }

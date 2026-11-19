@@ -71,7 +71,7 @@ function consortTraitLabels(c,options){
   if(r.groups.some(g=>groups.has(g)))return false;r.groups.forEach(g=>groups.add(g));return true;
  });
 }
-function consortTraitTags(c){return (admiresWhiteSpring(c)?'<span class="tag y" title="曾听娘家商队讲过白泉公主的故事，盼有一日亲自相识。">仰慕阿依慕</span>':'')+consortTraitLabels(c).slice(0,2).map(r=>`<span class="tag y consort-trait-tag" title="${esc(r.why)}">${r.name}</span>`).join('');}
+function consortTraitTags(c){return (admiresWhiteSpring(c)?'<span class="tag y" title="尚在娘家时便听过白泉公主的旧闻，盼有一日亲自相识。">仰慕阿依慕</span>':'')+consortTraitLabels(c).slice(0,2).map(r=>`<span class="tag y consort-trait-tag" title="${esc(r.why)}">${r.name}</span>`).join('');}
 function consortTraitPanel(c){
  const labels=consortTraitLabels(c);if(!labels.length)return '';
  return `<section class="detail-section"><h3>人物特质</h3>${labels.map(r=>`<p><span class="tag y consort-trait-tag">${r.name}</span> <span class="hint">${esc(r.why)}</span></p>`).join('')}</section>`;

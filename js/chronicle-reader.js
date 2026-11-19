@@ -71,7 +71,7 @@ function chronicleYear(e){return e.d?.includes('年')?e.d.split('年')[0]+'年':
 function chronicleTopic(e){return (LIFE_CHAPTERS.find(c=>e.life?.kind?c.key===e.life.kind:c.re.test(e.t))||LIFE_CHAPTERS.at(-1)).key;}
 function chronicleThread(e){return e.thread||(e.life?.source?`life:${e.life.gen}:${e.life.title}:${e.life.source}`:'');}
 function chronicleCast(e){return [...new Map([...(e.life?.people||[]),...(e.event?.participants||[])].map(p=>[p.id,p])).values()];}
-function chronicleMatches(e,f={}){return (!f.year||chronicleYear(e)===f.year)&&(!f.topic||chronicleTopic(e)===f.topic)&&(!f.person||chronicleCast(e).some(p=>String(p.id)===f.person))&&(!f.thread||chronicleThread(e)===f.thread)&&(!f.query||[e.d,e.t,e.life?.source,e.event?.situation,e.event?.choice,e.event?.outcome,...chronicleCast(e).map(p=>p.name)].join(' ').toLocaleLowerCase().includes(f.query.toLocaleLowerCase()));}
+function chronicleMatches(e,f={}){return (!f.year||chronicleYear(e)===f.year)&&(!f.topic||chronicleTopic(e)===f.topic)&&(!f.person||chronicleCast(e).some(p=>String(p.id)===f.person))&&(!f.thread||chronicleThread(e)===f.thread)&&(!f.query||[e.d,e.t,e.life?.summary,e.life?.source,e.event?.situation,e.event?.choice,e.event?.outcome,...chronicleCast(e).map(p=>p.name)].join(' ').toLocaleLowerCase().includes(f.query.toLocaleLowerCase()));}
 function chroniclePersonTarget(id){
  if(typeof id==='string'&&id.startsWith('white-spring-'))return whiteSpringKinTarget(id);
  const number=Number(id),consort=familyHostById(number),child=royalById(number),scholar=scholarById(id);
@@ -123,6 +123,9 @@ function chronicleVisibleEntries(story){
   brotherExchanges.add(key);return true;
  });
 }
+function chronicleSummary(entry){
+ return entry.life?.summary?detailFold('查看这件事的原记',`<p>${esc(entry.life.summary)}</p>`):'';
+}
 function chronicleReader(person,{compact=false}={}){
  const source=person.story||[];if(!source.length)return '<p class="hint">尚无记载。</p>';
  const entries=chronicleVisibleEntries(source);
@@ -132,7 +135,7 @@ function chronicleReader(person,{compact=false}={}){
  const rows=results.map(({e,i})=>{
   const ev=e.event,thread=chronicleThread(e),related=thread?source.filter(x=>chronicleThread(x)===thread):[],cast=chronicleCast(e).filter(p=>p.id!==person.id);
   const context=ev&&!ev.embedded?detailFold('回看事由与处理',`<p>${esc(ev.title)} · ${esc((ev.participants||[]).map(p=>p.name).join('、'))}</p><p>${esc(ev.situation)}</p><p>陛下回应：${esc(ev.choice)}</p>${ev.outcome?`<p>${esc(ev.outcome)}</p>`:''}`):'';
-  return `<li><time>${esc(e.d)}</time>${esc(e.t)}${e.life?.source?`<p class="hint">缘起：${esc(e.life.source)}</p>`:''}${cast.length?`<div class="chronicle-cast">相关人物：${cast.map(chroniclePersonLink).join(' ')}</div>`:''}${related.length>1?`<button class="btn quiet sm" onclick="A.chronicleThread('${key}',${i})">回看前因与后续 · ${related.length}则</button>`:''}${context}</li>`;
+  return `<li><time>${esc(e.d)}</time>${esc(e.t)}${chronicleSummary(e)}${e.life?.source?`<p class="hint">缘起：${esc(e.life.source)}</p>`:''}${cast.length?`<div class="chronicle-cast">相关人物：${cast.map(chroniclePersonLink).join(' ')}</div>`:''}${related.length>1?`<button class="btn quiet sm" onclick="A.chronicleThread('${key}',${i})">回看前因与后续 · ${related.length}则</button>`:''}${context}</li>`;
  });
  const active=Object.values(f).some(Boolean),list=a=>`<ul class="story">${a.join('')}</ul>`;
  const filters=select('year','年份',years.map(y=>[y,y]))+select('topic','主题',LIFE_CHAPTERS.map(c=>[c.key,c.title]))+(people.length?select('person','人物',people.map(p=>[p.id,p.name])):'');
