@@ -61,7 +61,9 @@ const RECTIFICATION_PLANS={
  进取:'臣请领一份限期清单。两月后，请把新数与今日这道折子摆在一起看。',
  圆融:'臣先约经手的人一道对册。能当场说清的先补，争执的部分另附双方的说法。'
 };
+const schoolFollowupsActive=()=>journalContentVersion()>=141;
 function localRectificationTick(){
+ if(schoolFollowupsActive())restoreSchoolOutcomes();
  if(!S.flags.localRectifications?.length)return;
  const pending=[];
  for(const ref of S.flags.localRectifications){
@@ -74,7 +76,9 @@ function localRectificationTick(){
   if(!r||!officialAlive(p)){delete p.rectification;continue;}
   if(!careerEligible(p)||(p.office||p.post)!==r.office){
     r.rectification='原任已变或不能继续办差，旧折移交衙门待核。';
-    courtPersonRecord(person,'【原折移交】'+r.title+'。'+r.rectification);delete p.rectification;continue;
+    courtPersonRecord(person,'【原折移交】'+r.title+'。'+r.rectification);
+    if(schoolFollowupsActive()){r.schoolOutcome='transfer';sendSchoolOutcome(person,r);}
+    delete p.rectification;continue;
   }
   if(p.report){pending.push(ref);continue;}
   const remaining=r.target-r.done,finished=chance(localMeritOdds(p));
@@ -96,7 +100,12 @@ function rectificationReport(person,r){
     const line=r.finished?'准予销案。原折的疏漏与这回的补过，一并存档。':'只核准有凭据的部分。往后考课，仍可查到未销的数目。';
     if(r.finished)p.merit=clamp((p.merit||0)+3);
     courtPersonRecord(person,'【御批】'+r.title+'。'+line);log(p.name+'补呈'+r.title+'。'+r.text+line);
-    delete p.report;return line;
+    delete p.report;
+    const original=schoolFollowupsActive()&&p.reportHistory?.find(entry=>entry.id===r.source);
+    if(!original)return line;
+    original.schoolOutcome=r.finished?'complete':'partial';
+    const reply=sendSchoolOutcome(person,original);
+    return reply?line+'\n\n'+reply:line;
   }}]};
 }
 
@@ -110,6 +119,72 @@ const SCHOOL_CASE_QUESTIONS={
  审慎:'让我先看是哪一任上的事。前任留下的缺口，不能全算在接手的人头上。',
  自矜:'我愿意写自己的批注。要是算错了，也请把我改过的地方留着。'
 };
+const SCHOOL_CASE_REPLIES={
+ 好奇:['两册上的数这回对上了。我还想看看验收的人怎样各自记下第一笔。','这页空着，是谁还没来作证？先替我留着这个问号。','两任交接时，两个人都要重新点一次么？我想看交出去的那份清单。'],
+ 好胜:['这回我遮住折尾也算对了。上回少的那几笔，今天总算能添上去。','加上这回补的还是差一截。我先不看折尾，再算一次差多少。','我算的是原任交走时的数。等新任来报，我再和自己比一回。'],
+ 仁厚:['那几个等得最久的人，也该听见这个消息。可有人捎信给他们？','已经办妥的人有了着落。还在等的人，知道下一回该去哪里问吗？','官员可以换任，那些等着的人还在原处。有人告诉他们今后找谁么？'],
+ 内敛:['请看旧纸的背面。我那时没敢念出的问题，今天在下面添了答案。','我原先写问号的地方还要空着。等真有下文，我自己来填。','我只在页角记下交接的日子。缺着的那行，等下一封信再写。'],
+ 爽直:['如今两行一样长了。这一页可以写个“完”字了。','把还欠的另起一行写。下回翻开，就晓得先看哪里。','那就写“移交”。办妥没有，总得等下一任查过才知道。'],
+ 灵动:['两色棋子终于一对一排齐了！上回缺着的那一角，我还记得。','我把余下的棋子装在小袋里。等凭据到了，再拿出来摆。','我另画一条线。线左边摆旧任的棋，右边留给接任的人。'],
+ 审慎:['原折、补册的具名我都看过了。这回核销的数，我另注在后来那一栏。','先写补办的是哪一任，再把缺据的圈起来。往后换了人也看得明白。','这正是我当初问任期的缘故。请把两任的名字分写在交接日两旁。'],
+ 自矜:['原先的批注我还留着。今天另写一行，落我自己的款。','请别替我把“未清”两个字擦掉。等凭据齐了，我自己改。','请把交接日留在我的批注旁。往后再看，才知道我当初读到哪一步。']
+};
+// Version 139 recorded the exact question and lesson on the child's dated entry.
+function archivedSchoolLesson(report){
+ const thread=localChronicleThread(report);
+ for(const k of kidsAlive()){
+  const note=k.story?.find(e=>e.thread===thread&&e.life?.gen===S.gen&&e.life?.title==='上书房读地方奏折');
+  if(!note)continue;
+  const voice=Object.keys(SCHOOL_CASE_QUESTIONS).find(key=>note.t.includes(SCHOOL_CASE_QUESTIONS[key]));
+  if(voice)return {gen:S.gen,student:k.id,voice,numbers:note.t.includes('自己的算式')};
+ }
+ return null;
+}
+// An older signed case has its original receipt and the official's dated decision, but no schoolOutcome.
+function restoreSchoolOutcomes(){
+ if(!S.flags.schoolDocket||S.flags.schoolOutcomesChecked===S.gen)return;
+ S.flags.schoolOutcomesChecked=S.gen;
+ for(const person of careerPeople())for(const r of person.p.reportHistory||[]){
+  if(!r.rectification||r.schoolOutcome||person.p.report?.source===r.id)continue;
+  if(r.rectification.startsWith('原任已变'))r.schoolOutcome='transfer';
+  else{
+   const title=r.title+' · 善后复核',receipt='【补呈原折】'+title+'。',approval='【御批】'+title+'。';
+   const notes=person.p.story||[],i=notes.findIndex(e=>e.t===receipt+r.rectification);
+   if(i<0)continue;
+   const next=notes.slice(i+1).find(e=>e.t.startsWith(receipt)||e.t.startsWith(approval));
+   if(!next?.t.startsWith(approval))continue;
+   r.schoolOutcome=next.t.startsWith(approval+'准予销案')?'complete':'partial';
+  }
+  sendSchoolOutcome(person,r);
+ }
+}
+function sendSchoolOutcome(person,r){
+ if(!r.schoolOutcome||r.schoolDelivered)return '';
+ const lesson=r.schoolLesson||archivedSchoolLesson(r);
+ if(lesson?.gen!==S.gen)return '';
+ const k=kidById(lesson.student),p=person.p;
+ if(!k?.alive||k.removedFromRoyal||k.jailed)return '';
+ const voice=lesson.voice,question=SCHOOL_CASE_QUESTIONS[voice],replies=SCHOOL_CASE_REPLIES[voice];
+ if(!replies)return '';
+ const delivery=childInPalace(k)?'太傅把删名抄件夹回旧课本，交给'+kidName(k):'太傅将删名抄件随信寄给'+kidName(k);
+ const reply=replies[{complete:0,partial:1,transfer:2}[r.schoolOutcome]];
+ const text=delivery+'。《'+r.title+'》后来怎样了？'+r.rectification+' '+k.name+'翻到当初问的那句：“'+question+'”'+(lesson.numbers?'又取出自己上回列的算式，逐行对了一遍。':'又看了一遍上回写给太傅的访查问题。')+'“'+reply+'”';
+ r.schoolDelivered=true;
+ const thread=localChronicleThread(r),occasion='school-reply:'+S.gen+':'+r.id;
+ characterChapter(k,thread,'family','旧折有了下文',[p],text);
+ k.story.at(-1).occasion=occasion;
+ if(officialAlive(p)){
+  const answer=r.schoolOutcome==='transfer'?'我已交出旧册。没有验过的那部分，不能记在我的任上。':{
+   持正:'当初据实报了缺，这孩子今日才有两本真账可对。',
+   谨慎:'幸好原册的空行没让人涂去，小小一行也有人接着追问。',
+   进取:'原以为只须向御前交卷。原来还有一个人从头到尾看着我怎样办差。',
+   圆融:'从前来问进度的多是同僚。今日这张课笺，我也想让经手的人看看。'
+  }[p.temperament]||'我把这张课笺和原折收在了一处。';
+  characterChapter(p,thread,'days','上书房捎来课笺',[k],'《'+r.title+'》的抄件送到后，太傅转来'+kidName(k)+'读后的话：“'+reply+'” '+p.name+'记道：“'+answer+'”');
+  p.story.at(-1).occasion=occasion;
+ }
+ return text;
+}
 function schoolCaseAvailable(){
  const r=S.flags.schoolDocket;
  return palaceDetailsActive()&&!S.over&&r?.gen===S.gen&&!r.student&&S.turn>=r.ready&&S.turn<r.ready+6?r:null;
@@ -125,7 +200,7 @@ A.readSchoolDocket=function(id){
  const k=kidById(id),r=schoolCaseAvailable();
  const valid=()=>!!r&&schoolCaseAvailable()===r&&UI.view==='place'&&UI.sel==='ss'&&schoolCaseStudent(k);
  if(modalOpen||!valid())return;
- const question=SCHOOL_CASE_QUESTIONS[childDisposition(k)],line=`${r.name}在《${r.title}》中原报定额${r.target}${r.unit}，核实${r.done}${r.unit}。`;
+ const voice=childDisposition(k),question=SCHOOL_CASE_QUESTIONS[voice],line=`${r.name}在《${r.title}》中原报定额${r.target}${r.unit}，核实${r.done}${r.unit}。`;
  const answer=(numbers)=>{
   if(!valid()||!useE())return null;
   r.student=k.id;const text=line+k.name+'读到这里问：“'+question+'”'+(numbers?'你取了算筹，陪孩子核对原报与定额。孩子把自己的算式留在抄本背面。':'你请孩子想一想册里省去了谁的声音。孩子给太傅写下一句下次访查时想问的话。');
@@ -133,6 +208,12 @@ A.readSchoolDocket=function(id){
   kstory(k,'【地方奏折入课】'+text);characterChapter(k,localChronicleThread(r),'family','上书房读地方奏折',[],'',{append:true});
   const person=courtPerson(r.key);
   if(person?.p.id===r.author&&officialAlive(person.p))courtPersonRecord(person,'【任上旧折】太傅取《'+r.title+'》作课本，'+kidName(k)+'读过删名抄件。');
+  const original=schoolFollowupsActive()&&person?.p.id===r.author&&person.p.reportHistory?.find(entry=>entry.id===r.id);
+  if(original){
+   original.schoolLesson={gen:S.gen,student:k.id,voice,numbers};
+   const reply=sendSchoolOutcome(person,original);
+   if(reply)return text+'\n\n'+reply;
+  }
   return text;
  };
  pushEv({title:'上书房 · 读地方旧折',por:k,valid,text:line+'\n'+k.name+'：“'+question+'”',choices:[

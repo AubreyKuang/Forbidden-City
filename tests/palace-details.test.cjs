@@ -51,3 +51,53 @@ test('同月同名的两次相遇可各自对读，查看不改存档',()=>{
  compareChronicleOccasion(details);assert.match(output.innerHTML,/第一张夹进书里/);assert.doesNotMatch(output.innerHTML,/第二张/);assert.equal(JSON.stringify(S),saved);
  details.dataset.index++;compareChronicleOccasion(details);assert.match(output.innerHTML,/第二张贴在窗前/);`);
 });
+
+function schoolCase(){
+ const b=game();b.run(`var official=courtPerson(a.id+':father'),f=official.p;
+ f.office=f.post='清河知县';f.age=48;f.alive=true;f.retired=false;f.career='official';f.temperament='谨慎';
+ var original=f.report={id:'school-water',edition:24,kind:'local',taskId:'water',office:f.office,turn:S.turn,title:'清河修堤',done:6,target:12,unit:'段险堤',text:'已验六段。',outcome:'setback',verified:true};
+ careerReportEvent(official).choices.find(c=>c.t.includes('责令')).f();
+ var archived=f.reportHistory.at(-1);S.turn++;A.arrivePlace('ss');`);
+ return b;
+}
+test('上书房八种原问各有办妥与未清的反应，原折换下仍通知原读者且仅送一回',()=>{
+ for(const [i,voice] of ['好奇','好胜','仁厚','内敛','爽直','灵动','审慎','自矜'].entries()){
+  for(const complete of [true,false]){
+   const b=schoolCase();b.ctx.voice=voice;b.ctx.complete=complete;b.ctx.numbers=i%2===0;
+   b.run(`elder.temperament=voice;A.readSchoolDocket(elder.id);choose(numbers?0:1);drain();
+   S.flags.schoolDocket={gen:S.gen,id:'different',student:little.id};elder.temperament='仁厚';S.turn++;`);
+   b.force(complete?0:.999);b.run(`localRectificationTick();assert.equal(f.report.finished,complete);
+   var decide=careerReportEvent(official).choices[0].f,reply=decide(),ch=elder.story.at(-1),min=f.story.at(-1);
+   assert.ok(reply.includes(SCHOOL_CASE_QUESTIONS[voice]));assert.ok(reply.includes(SCHOOL_CASE_REPLIES[voice][complete?0:1]));
+   assert.ok(reply.includes(numbers?'逐行对了一遍':'访查问题'));assert.ok(reply.includes(complete?'共12/12':'共9/12'));
+   assert.equal(ch.occasion,min.occasion);assert.notEqual(ch.t,min.t);assert.equal(ch.thread,localChronicleThread(archived));
+   assert.ok(min.t.includes('空行'));assert.equal(archived.done,6);assert.ok(!little.story.some(e=>e.occasion===ch.occasion));
+   assert.ok(!decide());assert.equal(sendSchoolOutcome(official,archived),'');`);
+  }
+ }
+});
+test('补报先获御批或调任移交，迟读的孩子仍能合读，离宫后收到家书',()=>{
+ for(const transfer of [false,true]){
+  const b=schoolCase();b.ctx.transfer=transfer;b.force(0);
+  b.run(`S.turn++;if(transfer)f.office=f.post='户部郎中';localRectificationTick();
+   if(!transfer)careerReportEvent(official).choices[0].f();
+   assert.ok(!archived.schoolDelivered);A.readSchoolDocket(elder.id);choose(1);
+   assert.ok(archived.schoolDelivered);assert.ok(elder.story.at(-1).t.includes(transfer?'移交':'共12/12'));drain();`);
+ }
+ const b=schoolCase();b.run(`A.readSchoolDocket(elder.id);choose(1);drain();elder.estate={opened:S.turn};S.turn++;`);
+ b.force(0);b.run(`localRectificationTick();assert.match(careerReportEvent(official).choices[0].f(),/随信寄给/);`);
+});
+test('旧档从具名课堂纪事复原原问和选择，已核销与仍待批的案卷区分处理',()=>{
+ const b=schoolCase();b.run(`A.readSchoolDocket(elder.id);choose(1);drain();delete archived.schoolLesson;S.turn++;localRectificationTick();
+ delete S.flags.schoolOutcomesChecked;restoreSchoolOutcomes();assert.ok(!archived.schoolOutcome);
+ var verdict=careerReportEvent(official).choices[0].f();assert.match(verdict,/空白处/);assert.match(verdict,/访查问题/);
+ elder.story.pop();f.story.pop();delete archived.schoolDelivered;delete archived.schoolOutcome;delete S.flags.schoolOutcomesChecked;
+ restoreSchoolOutcomes();assert.ok(archived.schoolDelivered);assert.equal(elder.story.at(-1).occasion,f.story.at(-1).occasion);
+ var n=elder.story.length;restoreSchoolOutcomes();assert.equal(elder.story.length,n);`);
+});
+test('中秋会认后来养成的爱猫喜好，已故父亲的按钮明确写作追褒',()=>{
+ const b=game();b.run(`a.t2='怕雷';a.trait='持重';a.wish='cat';a.wishDone=false;A.wish(a.id);drain();S.month=8;
+ assert.ok(PALACE_INITIATIVES.clayRabbit.match(a));assert.equal(a.t2,'怕雷');
+ officialDeath(a,'father','病故。');drain();a.fam.p=22;a.wish='father';a.wishKnown=true;a.wishDone=false;
+ assert.match(deepLine(a),/追褒其父，赐诏家中/);`);
+});
