@@ -140,6 +140,7 @@ function princessMemory(k,type,text,location='公主府',emotion=.7){
 }
 
 function createPrincessEstate(k,pursuit){
+  packChildKeepsake(k);
   return {pursuit,opened:S.turn,stage:'proposal',nextVisit:S.turn+2,route:k.princessMarriage||(k.married?'married':'independent')};
 }
 function openMaritalEstate(k){

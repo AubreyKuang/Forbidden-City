@@ -39,7 +39,7 @@ function npcRoutine(c,roll) {
   if(pregnancyPrayerVisitors().includes(c))return {where:'dao-pregnancy',dest:PLACES.find(p=>p.id==='qa').d};
   if(daoVisitors().includes(c))return {where:'dao',dest:PLACES.find(p=>p.id==='qa').d};
   const hobby=consortHobby(c);
-  const gardenBias=['活泼','淡泊'].includes(c.trait)||c.t2==='爱猫'||CONSORT_HOBBIES[hobby].place==='御花园';
+  const gardenBias=['活泼','淡泊'].includes(c.trait)||consortHasQuirk(c,'爱猫')||CONSORT_HOBBIES[hobby].place==='御花园';
   const studyBias=['才女','好学'].includes(c.trait)||c.t2==='好读史'||hobby==='读书';
   const friends=harem().filter(o=>o!==c&&socialPair(c,o)&&relGet(c,o)>=25)
     .sort((a,b)=>relGet(c,b)-relGet(c,a)+
@@ -437,7 +437,7 @@ function viewPlace(){const id=UI.sel;
   if(id==='ss'||id==='wy'){
     const school=id==='ss';
     return `<h2>${school?'上书房':'文渊阁'}${backBtn}</h2>
-      ${school?schoolPanel():travelBookPanel()}${classicStoryPanel(school?'school':'library')}${palaceRomanceAt(id)}${historyAt(id)}${multipleAt(id)}${seasonalPlacePanel(id)}
+      ${school?schoolPanel()+schoolDocketPanel():travelBookPanel()}${classicStoryPanel(school?'school':'library')}${palaceRomanceAt(id)}${historyAt(id)}${multipleAt(id)}${seasonalPlacePanel(id)}
       ${initiativesAt(id)||(school||historyAt(id)?'':'<p class="hint">此刻只有当值宫人在这里。</p>')}
       <button class="btn" onclick="A.go('${school?'kids':'log'}')">${school?'查看皇嗣':'翻阅起居注'}</button>`;
   }

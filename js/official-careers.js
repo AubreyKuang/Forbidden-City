@@ -108,7 +108,7 @@ function ensureLocalOfficers(){
     S.scholars.push(p);scholarRecord(p,`吏部核录：现任${officialOfficeLabel(p)}，在${region}办差。${careerKinText({p,scholar:true,key:'scholar:'+p.id})}。`,false);
   }
 }
-function localReportEligible(person){const p=person.p;return careerEligible(p)&&!p.report&&!p.postReview&&S.turn-(p.lastLocalReport??p.appointedTurn??-99)>=6&&/知县|县令|知府|知州|同知|通判|道员|总督/.test(p.office||p.post||'');}
+function localReportEligible(person){const p=person.p;return careerEligible(p)&&!p.rectification&&!p.report&&!p.postReview&&S.turn-(p.lastLocalReport??p.appointedTurn??-99)>=6&&/知县|县令|知府|知州|同知|通判|道员|总督/.test(p.office||p.post||'');}
 function createLocalReport(person){
   const p=person.p,task=pick(LOCAL_REPORTS),good=chance(clamp(p.ability*.65+p.trust*.2,20,90)/100),done=good?task.target:Math.floor(task.target*ri(35,68)/100);
   const outcome=good?'success':'setback',region=p.region||(p.office||p.post).replace(/知县|县令|知府|知州|同知|通判|道员|总督/g,'')||'任所';
@@ -131,6 +131,7 @@ function careerTick(){
     const years=Math.max(0,Math.floor((S.turn-p.ageTrackedAt)/12));p.age+=years;p.ageTrackedAt+=years*12;
     if(p.age>=70&&!p.retired&&!p.commission&&!p.report){p.retired=true;scholarRecord(p,'年逾七十，依例致仕归乡。');}
   }
+  if(palaceDetailsActive())localRectificationTick();
   const localReportInterval=journalContentVersion()>=42?6:3;
   if(S.turn-(S.flags.lastLocalReport??0)<localReportInterval)return;
   const pool=careerPeople().filter(localReportEligible).sort((a,b)=>(a.p.lastLocalReport??-99)-(b.p.lastLocalReport??-99));
@@ -141,6 +142,7 @@ courtTick=function(...args){const result=careersBaseTick.apply(this,args);career
 
 function careerReportEvent(person){
   const p=person?.p,r=p?.report;if(!r)return null;
+  if(r.kind==='rectification')return rectificationReport(person,r);
   const valid=()=>!S.over&&p.report===r;
   const sameOffice=()=>!r.office||r.office===(p.office||p.post);
   const ready=()=>valid()&&careerEligible(p)&&sameOffice();
@@ -155,12 +157,22 @@ function careerReportEvent(person){
     const appointment=kind==='central'?localCentralTarget(person):['promote','demote'].includes(kind)?target(kind):null;
     const labels={promote:'实绩卓著，准予升任',central:'地方殊绩，破格擢入中央',commend:'下诏褒奖，留任推行善政',demote:'实绩不称，降职任用',reward:'嘉奖实绩，赏银十五万两',accountable:'申斥疏漏，责令补报善后',record:'阅毕，存档备考'};
     let decision=labels[kind];delete p.report;
+    if(palaceDetailsActive()&&kind==='accountable'&&localMeritReport(r)&&r.done<r.target){
+      p.rectification={id:r.id,due:S.turn+2};
+      (S.flags.localRectifications||=[]).push({key:person.key,id:p.id});
+      decision+='。限两个月后将补办数与原折同呈。'+p.name+'答：“'+(RECTIFICATION_PLANS[p.temperament]||RECTIFICATION_PLANS.谨慎)+'”';
+    }
     if(appointment)decision=careerSetOffice(person,appointment[1],decision);
     if(kind==='reward'){chg({treasury:-15});p.trust=clamp(p.trust+5);p.lastReward=S.turn;p.rewardedMerit=p.merit;}
     if(kind==='commend')p.trust=clamp(p.trust+3);
     if(kind==='accountable'||kind==='demote')p.trust=clamp(p.trust-5);
     const text=`【御批】${r.title}：${r.text} 批复：${decision}${decision.endsWith('。')?'':'。'}`;
     (p.reportHistory ||= []).push({turn:S.turn,d:dateStr(),...r,decision});
+    if(palaceDetailsActive()&&localMeritReport(r)){
+      const old=S.flags.schoolDocket;
+      if(!old||old.gen!==S.gen||old.student||S.turn>=old.ready+6)
+        S.flags.schoolDocket={gen:S.gen,ready:S.turn+1,id:r.id,name:p.name,key:person.key,author:p.id,title:r.title,done:r.done,target:r.target,unit:r.unit};
+    }
     courtPersonRecord(person,text);if(kind==='commend')proposeYiLand(person,r);noteLocalChronicle(person,r,kind);careerFamilyEcho(person,kind==='commend'?'reward':kind,`${r.title}：${r.text} 批复：${decision}`,r);
     if(person.e&&['reward','accountable','promote','demote','central','commend'].includes(kind))officialFamilyReaction(person.e,['promote','central','commend'].includes(kind)?'reward':kind==='demote'?'accountable':kind,r.title+'；'+decision);save('auto');return text;
   };

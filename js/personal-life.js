@@ -12,9 +12,10 @@ function lifeRecord(people,kind,title,text,source='',thoughts=[]){
   (p.sex?kstory:story)(p,text);
   p.story.at(-1).life={kind,title,turn:S.turn,gen:S.gen,people:names,source};
  }
- NPCMemory.record(S,{type:'personal-life',time:S.turn,participants:cast.map(p=>p.id),object:title,outcome:text},
+ const event=NPCMemory.record(S,{type:'personal-life',time:S.turn,participants:cast.map(p=>p.id),object:title,outcome:text},
   cast.map((p,i)=>({person:p.id,subject:thoughts[i]?.subject??(cast.find(o=>o!==p)?.id||'emperor'),interpretation:typeof thoughts[i]==='string'?thoughts[i]:thoughts[i]?.text||text,
    emotion:thoughts[i]?.emotion??.45,impact:75,channel:'participant'})));
+ if(palaceDetailsActive()&&event&&cast.length>1)for(const p of cast)p.story.at(-1).occasion='life:'+S.gen+':'+event.id;
 }
 function lifeHurt(c,text){
  const l=lifeState(c);l.boundary={gen:S.gen,cause:lifeCause(text),date:dateStr(),turn:S.turn,acknowledged:false,respect:0};
@@ -183,7 +184,7 @@ function personalLifeTick(){
  }
  for(const k of S.children.filter(k=>k.alive&&!k.jailed&&!k.removedFromRoyal&&!k.templeStay))for(const w of k.keepsakes||[]){
   if(w.echo||kidAge(k)<16||S.turn-w.received<12)continue;
-  w.echo=S.turn;const c=byId(w.from),canTell=c&&familyVisitAllowed(k,c),act=LIFE_CRAFTS[w.hobby].echo;
+  w.echo=S.turn;const c=byId(w.from),canTell=c&&familyVisitAllowed(k,c),act=w.grownEcho||LIFE_CRAFTS[w.hobby].echo;
   const t=`${k.name}${act}。这本《${w.title}》是${w.date}由${w.authors.map(a=>a.name).join('、')}整理、后来由${w.fromName}交到手里的。${canTell?`又把自己的新心得当面说给${fullName(c)}听。`:c?.alive?'写下新的心得，收在册页里。':'如今翻起，仍认得当年的笔迹。'}`;
   lifeRecord([k,canTell?c:null],'family',w.title,t,w.source,[`小时候收下的《${w.title}》，如今自己用起来，才添了新的体会。`,`${k.name}用自己的办法续写这一本，原来也已长大了。`]);log(t);
  }

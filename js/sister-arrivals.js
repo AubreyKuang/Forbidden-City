@@ -54,6 +54,11 @@ function familyAdmissionReactions(g,selection=false){
 // A quiet vigil belongs to the daughters who actually meet, once per father's death.
 function mourningDaughterMemory(c,father){
  const mail=c.fatherLetters?.father===father.id?c.fatherLetters:null;
+ if(palaceDetailsActive()&&mail?.latest?.title?.startsWith('未能送到的')){
+   const silver=mail.latest.text.includes('银封退回');
+   return {hurt:true,words:silver?'那包银子又回到了我手里，封口还是我自己系的。我写的那封信，爹终究没拆开。':'送出去的信原样回来了。写的时候还嫌纸短，今日倒想不起哪一句最该先念给爹听。'};
+ }
+ if(palaceDetailsActive()&&mail?.lastReply?.kind==='boundary'&&mail.lastReply.quote&&mail.lastReply.turn>=(c.fatherHeirPressure?.turn??0))return {hurt:false,words:'我同爹说过，有些事我应承不了。他回信给我，我还收着最后那句：“'+mail.lastReply.quote+'”'};
  if(c.fatherHeirPressure)return {hurt:true,words:'爹来信问我什么时候能有个皇子。那时我多盼他也问一句，我过得好不好。'};
  if(mail?.letter&&father.daughterLetterNature==='demanding')return {hurt:true,words:'爹在信里催我照应家门。我知道他有他的难处，可我接信那天，也是真的难过。'};
  if(mail?.lastReply?.kind==='money'&&father.daughterLetterNature==='caring')return {hurt:false,words:'我把银子捎回去，他收下了，还怕我舍不得给自己花。那封回信，我到现在还收着。'};
@@ -96,6 +101,7 @@ function sisterVigilScene(a,b,father){
 }
 function sisterVigilTick(){
  if(S.over)return;
+ if(palaceDetailsActive())deliverVigilCopies();
  const families=new Map();
  let tree;
  for(const c of S.consorts){
@@ -174,8 +180,19 @@ function holdGroupSisterVigil(father,sisters){
    if(bond==='close')relAdd(a,b,stayed?4:1);
    if(bond==='tense'&&stayed)relAdd(a,b,1);
  }
- for(const [a,others] of companions)scene.push(`${fullName(a)}守着灯念祭文时，${vigilNames(others)}挨过去陪她坐了一阵。`);
+ if(palaceDetailsActive()&&companions.size){
+   const [reader,friends]=[...companions].sort((x,y)=>y[1].length-x[1].length)[0];
+   scene.push(fullName(reader)+'念到祭文末尾，嗓子有些哑。'+fullName(friends[0])+'把水盏推到她手边，等她自己把最后一个字念完。');
+ }else for(const [a,others] of companions)scene.push(`${fullName(a)}守着灯念祭文时，${vigilNames(others)}挨过去陪她坐了一阵。`);
  if(!companions.size&&early.length<sisters.length)scene.push('灯前静了下来，只听得见香灰偶尔落进炉里的声音。');
+ if(palaceDetailsActive()){
+   const recipient=early.find(c=>seats.get(c).close.some(o=>!seats.get(o).leaves));
+   if(recipient){
+     const writer=seats.get(recipient).close.filter(o=>!seats.get(o).leaves).sort((a,b)=>relGet(recipient,b)-relGet(recipient,a))[0];
+     scene.push('临走前，'+fullName(recipient)+'折回半步，轻声托'+fullName(writer)+'：“你们念的那篇，回头替我抄一份，好么？”');
+     (S.flags.vigilCopies||=[]).push({gen:S.gen,due:S.turn+1,writer:writer.id,to:recipient.id,father:father.id,name:father.name});
+   }
+ }
  const views=sisters.map(c=>{
    const seat=seats.get(c),supported=seat.close.length>0;
    const mood=seat.leaves?(supported?0:-1):supported?3:1;
@@ -189,6 +206,21 @@ function holdGroupSisterVigil(father,sisters){
    entry.t+=' '+views[i].text;
  });
  pushEv({title,cast:sisters,text:[fact,...scene].join('\n'),choices:[{t:'知道了'}]});
+}
+function deliverVigilCopies(){
+ const copies=S.flags.vigilCopies;if(!copies)return;
+ S.flags.vigilCopies=copies.filter(note=>{
+  if(note.gen!==S.gen)return false;
+  if(S.turn<note.due)return true;
+  const a=byId(note.writer),b=byId(note.to);
+  if(!a?.alive||!b?.alive||a.gone||b.gone)return false;
+  if(!inPalace(a)||!inPalace(b))return S.turn<note.due+2;
+  const text=fullName(a)+'依约把祭父'+note.name+'的祭文抄在素纸上，让人送给先行离席的'+fullName(b)+'。';
+  livedRecord([a,b],'family','补送一页祭文','sister-vigil:'+S.gen+':'+note.father,text,['那天她走得早，可我答应她的事还记得。','那晚没能坐到最后。今日关起门来，终于把那几行字从头念到了尾。']);
+  if(sisterVigilBond(a,b)!=='tense')relAdd(a,b,2);
+  return false;
+ });
+ if(!S.flags.vigilCopies.length)delete S.flags.vigilCopies;
 }
 function sisterThread(c,g){return `sister:${S.gen}:${c.id}:${g.id}`;}
 function sisterNewcomerThought(c,g,feeling){

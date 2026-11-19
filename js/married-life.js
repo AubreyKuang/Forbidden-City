@@ -90,7 +90,7 @@ function householdSummary(k){
   const h=k.household;if(!h||kidAge(k)<18||!k.married)return '';
   const registered=princeResidentChildren(k);
   const children=[...registered,...(k.recognizedChildren||[]).map(kidById).filter(Boolean)].filter(c=>c.alive!==false),sons=children.filter(c=>c.sex==='m').length;
-  return `${sons}子${children.length-sons}女${h.pregnancies.length?' · 有喜':''}${h.concubines.length?' · 妾室'+h.concubines.length+'人':''}`;
+  return `${sons}子${children.length-sons}女${householdKnownPregnancies(h).length?' · 有喜':''}${h.concubines.length?' · 妾室'+h.concubines.length+'人':''}`;
 }
 function householdChildLink(k,c){
   return `<button class="btn quiet family-person" onclick="A.go('household-child',${royalActionArg(c.id)})">${porImg(c,56)}<span><strong>${esc(c.name)}</strong><small>${c.alive===false?'已故':kidAge(c)+'岁'} · ${c.princeAdoption?.family===k.id?'嗣子':c.sex==='m'?'子':'女'}${c.motherName?' · 生母'+esc(c.motherName):''}</small></span></button>`;
@@ -119,30 +119,41 @@ function viewHouseholdChild(){
   const entry=householdChildEntry(UI.sel);
   if(!entry)return viewFamily();
   const {k,child:c}=entry,birth=princeBiologicalParents(c);
+  const parentage=princeSpouseParentageCases(k).find(x=>x.childId===c.id&&x.status!=='news');
   const parent=(label,p,name)=>`<p>${label} ${p?`<button class="person-link" onclick="A.go('${S.children.includes(p)?'kid':princeEstateEligible(p)?'prince-estate':'relative'}',${royalActionArg(p.id)})">${esc(name||p.name)}</button>`:esc(name||'未载')}</p>`;
   const stats=[['lit','才学','#617991'],['mar','武艺','#92504a'],['vir','德行','#517369'],['hp','体魄','#a87a26']]
     .filter(([key])=>Number.isFinite(c[key])).map(([key,label,color])=>bar(label,c[key],color)).join('');
   const adoptive=c.princeAdoption&&royalById(c.princeAdoption.family);
   return `${personBackButton('family')}<header class="detail-head person-detail-head">${porImg(c,224)}<div class="grow">
     <p>${c.alive===false?'已故':kidAge(c)+'岁'} · ${c.sex==='m'?'男':'女'}${c.title?' · '+esc(c.title):''}</p><h2>${esc(c.name)}</h2>
-    ${parent('生父',k.sex==='m'?birth.father||k:null,c.fatherName)}${parent('生母',k.sex==='f'?k:null,birth.mother?.name||c.motherName)}
+    ${parent(parentage?'宗谱所载父亲':'生父',k.sex==='m'?birth.father||k:null,c.fatherName)}${parent('生母',k.sex==='f'?k:null,birth.mother?.name||c.motherName)}
     ${adoptive?parent('嗣父',adoptive):''}${c.deathReason?`<p>${esc(c.deathReason)}</p>`:''}</div></header>
+    ${parentage?princeSpouseParentagePanel(k,[parentage]):''}
     ${stats?detailSection('禀赋与体魄',`<div class="stats">${stats}</div>`):''}
     ${detailSection('人物纪事',detailStory(c))}`;
 }
 const householdBirthCount=k=>k.household.children.length+(royalAdoptionStoriesActive()?k.palaceAdoptedChildren?.length||0:0);
-function householdCanConceive(k,p){
+const householdKnownPregnancies=h=>h.pregnancies.filter(g=>(g.privateUntil??-Infinity)<=S.turn);
+function householdCanConceive(k,p,{privateVisit=false}={}){
   const woman=k.sex==='f'?k:p,h=ensureMarriedLife(k);
   return householdActive(k)&&!whiteSpringInPalace(k)&&p?.alive!==false&&kidAge(k)>=18&&kidAge(p)>=18&&belowConceptionAgeLimit(kidAge(woman),46)&&
     !p.away&&!p.jailed&&!p.gone&&!p.cold&&householdBirthCount(k)+h.pregnancies.length<8&&!h.pregnancies.some(g=>g.mother===woman.id)&&
-    S.turn-(h.lastBirthByMother[woman.id]??-99)>=18&&S.turn-(p.joinedAt??h.started)>=3&&(p.trust??k.spouse.trust)>=40;
+    S.turn-(h.lastBirthByMother[woman.id]??-99)>=18&&S.turn-(p.joinedAt??h.started)>=3&&(privateVisit||(p.trust??k.spouse.trust)>=40);
 }
 function householdMotherName(k,p){return k.sex==='f'?k.name:(p.id===k.spouse.id?'正妻':'妾室')+p.name;}
-function startHouseholdPregnancy(k,p){
-  if(!householdCanConceive(k,p))return false;
+function startHouseholdPregnancy(k,p,{privateVisit=false}={}){
+  if(!householdCanConceive(k,p,{privateVisit}))return false;
   const h=ensureMarriedLife(k),woman=k.sex==='f'?k:p;
   const together=h.pregnancies.some(g=>g.conceived===S.turn),name=householdMotherName(k,p);
-  h.pregnancies.push({mother:woman.id,father:k.sex==='m'?k.id:p.id,partner:p.id,conceived:S.turn,conceivedDate:dateStr(),due:S.turn+9});
+  const pregnancy={mother:woman.id,father:k.sex==='m'?k.id:p.id,partner:p.id,conceived:S.turn,conceivedDate:dateStr(),due:S.turn+9};
+  h.pregnancies.push(pregnancy);
+  if(privateVisit){
+    pregnancy.privateUntil=S.turn+2;
+    filePrinceSpouseParentage(k,p,pregnancy,true);
+    return true;
+  }
+  if(PalaceActions.princeSpouseParentage&&k.sex==='m'&&p===k.spouse&&p.princePrivateVisit?.gen===S.gen&&p.princePrivateVisit.lastMeeting===S.turn-1)
+    filePrinceSpouseParentage(k,p,pregnancy,false);
   householdRecord(k,'household_pregnancy',`${together?'同月，':''}${name}${together?'亦':''}有喜，已分别安排照护，预期九个月后添丁。${together?'同一月里两处院落都传来喜讯，府中添了几分忙碌。':''}`);
   log(`${kidName(k)}府上报喜：${name}有孕。`,1);return true;
 }
@@ -161,6 +172,8 @@ function deliverHouseholdChild(k,pregnancy){
     mother:pregnancy.mother,motherName:woman.name,father:pregnancy.father,fatherName:k.sex==='m'?k.name:p.name,
     lit:clamp(k.lit*.5+(p.appearance?.talent||50)*.35+ri(0,10)),vir:clamp(k.vir*.5+(p.appearance?.virtue||50)*.35+ri(0,10)),mar:clamp(k.mar*.55+ri(4,20)),hp:ri(65,95),amb:ri(15,50)};
   h.children.push(baby);h.lastBirth=S.turn;h.lastBirthByMother[woman.id]=S.turn;
+  const parentage=princeSpouseParentageCases(k).find(x=>x.key===pregnancy.princeParentage);
+  if(parentage)parentage.childId=baby.id;
   householdRecord(k,'household_birth',`${householdMotherName(k,p)}平安诞下${sex==='m'?'一子':'一女'}，取名${baby.name}。现有${householdSummary(k)}。`);
   log(`${kidName(k)}府中添丁，${baby.name}降生。`,1);whiteSpringBirthLetter(k,baby);return baby;
 }
@@ -241,7 +254,7 @@ function recordHouseholdNews(k){
   if(p.fatherName)choices.push({id:'inlaws',delta:2,text:`${p.fatherName}家来信问安，${p.name}与${k.name}一同回信。两家旧习不同，他们把节礼的轻重提前商量清楚。`});
   const baby=princeResidentChildren(k).find(c=>c.alive!==false);
   if(baby)choices.push({id:'child',delta:3,text:kidAge(baby)<1?`${k.name}与${p.name}轮流照看${baby.name}，才发觉小儿一个笑容也能让两人说上半日。`:`${baby.name}渐渐有了自己的脾气。${k.name}与${p.name}起初各有教法，后来约好先听孩子说完。`});
-  if(h.pregnancies.length)choices.push({id:'expecting',delta:3,text:`小家近来为将添的孩子收拾起居。${k.name}与${p.name}把旁的安排放慢，先顾好饮食与休息。`});
+  if(householdKnownPregnancies(h).length)choices.push({id:'expecting',delta:3,text:`小家近来为将添的孩子收拾起居。${k.name}与${p.name}把旁的安排放慢，先顾好饮食与休息。`});
   const richer=richerPrincessMarriage(k);
   const record=richer&&k.officialMarriageId&&officialMarriageRecord(k.officialMarriageId);
   const groom=richer&&(record?officialMarriagePerson(record.groom)?.p:scholarById(p.scholarId));
@@ -313,7 +326,7 @@ function householdPanel(k){
   const h=ensureMarriedLife(k);if(!h||kidAge(k)<15)return '';
   const residents=princeResidentChildren(k);
   const p=k.spouse,fit=marriageFit(k,p),adult=kidAge(k)>=18&&kidAge(p)>=18,concubineReason=householdConcubineReason(k);
-  const pregnant=adult?h.pregnancies.map(g=>{const person=g.mother===k.id?k:householdPeople(k).find(p=>p.id===g.mother);return person?`${esc(k.sex==='f'?k.name:householdMotherName(k,person))}有孕 · ${Math.min(10,S.turn-g.conceived+1)}个月`:'';}).filter(Boolean):[];
+  const pregnant=adult?householdKnownPregnancies(h).map(g=>{const person=g.mother===k.id?k:householdPeople(k).find(p=>p.id===g.mother);return person?`${esc(k.sex==='f'?k.name:householdMotherName(k,person))}有孕 · ${Math.min(10,S.turn-g.conceived+1)}个月`:'';}).filter(Boolean):[];
   return `<section class="household-panel"><h3>家人与往来</h3><p>${esc(p.name)} · ${esc(marriageNature(p).temperament)} · ${esc(COUPLE_HOBBIES[marriageNature(p).hobby])} · ${esc(marriageNature(p).spending)}</p>
     <p class="hint">${esc(fit.common.join('、')||'各有所长')}；${esc(fit.different.join('；')||'相处习惯较为接近')}。</p>
     ${bar(householdAffectionLabel(),p.trust,'#936375')}${bar('府中和睦',h.harmony??60,'#517369')}

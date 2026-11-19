@@ -63,14 +63,37 @@ function consortCompatibility(a,b){
     (a.like&&a.like===b.like?1:0)-(a.hate&&a.hate===b.like?1:0)-(b.hate&&b.hate===a.like?1:0);
 }
 const GIFTN={'诗书':'一套宋版诗集','琴谱':'一卷失传的古琴谱','字画':'一幅前朝名家山水','珠翠':'一匣东珠点翠头面','绸缎':'十匹江南云锦','花草':'一盆十八学士茶花','点心':'御膳房新制的八珍糕','香料':'一盒南海龙涎香','佛经':'一部泥金《法华经》','弓马':'一匹西域小红马'};
+const palaceDetailsActive=()=>journalContentVersion()>=139;
+function consortHasQuirk(c,key){return c?.t2===key||!!c?.learnedQuirks?.includes(key);}
+function learnWishQuirk(c,key){
+ if(!palaceDetailsActive()){c.t2=key;return;}
+ if(!consortHasQuirk(c,key))(c.learnedQuirks||=[]).push(key);
+}
+function wishFather(c){
+ if(!c.familyBranchOrigin)return c.house?.father;
+ const n=familyTreeRegistry().nodes.find(n=>n.p.id===c.familyBranchOrigin.relative);
+ return n?.father?.p||(n?.fatherId!=null&&scholarById(n.fatherId));
+}
+function wishObstacle(c){
+ if(!palaceDetailsActive())return '';
+ if(c.wish==='father'&&!wishFather(c))return '尚无可核对的父亲履历';
+ if(c.wish==='fire'&&(S.month!==1||mourningActive()))return '待服丧期外的正月上元再放烟火';
+ if(c.wish==='ride'&&(c.preg||c.hp<45||consortRecovery(c)))return '等身体适合骑马再去南苑';
+ const cost={fire:40,south:150,cat:2}[c.wish];
+ return cost&&E().treasury<cost?'国库尚不足以支付'+cost+'万两':'';
+}
 const WISHES={
  mother:{t:'想再见母亲一面',btn:'接她母亲入宫小住（国库-15万两）',cond:c=>momVisitState(c).ready,f:c=>{chg({treasury:-15});momVisit(c,ri(2,3));return '她母亲进宫来了，要在宫里住上几个月。母女俩一见面就抱头哭了。'}},
- father:{t:'想为父亲求一个清白名声',btn:'下旨褒奖她父亲（威望-2）',f:c=>{chg({prestige:-2});c.fam.p=Math.min(95,c.fam.p+8);return '圣旨送到她老家，她父亲跪在门口，哭得像个孩子。'}},
+ father:{t:'想为父亲求一个清白名声',btn:'下旨褒奖她父亲（威望-2）',f:c=>{chg({prestige:-2});c.fam.p=Math.min(95,c.fam.p+8);if(palaceDetailsActive()){
+  const p=wishFather(c);
+  if(!officialAlive(p))return c.sur+'氏家中收下了写有'+p.name+'姓名的诏书。她将抄本折好，留到下一回祭父时亲手读。';
+  story(p,'女儿的心愿上达御前，收到褒奖家门的诏书。');return p.name+'接旨后，把诏书读到女儿的名字，又从头读了一遍。';
+ }return '圣旨送到她老家，她父亲跪在门口，哭得像个孩子。'}},
  child:{t:'想要一个孩子',btn:null},
  south:{t:'想去江南看一眼',btn:'带她南巡（国库-150万两，龙体-2）',f:c=>{chg({treasury:-150,health:-2,people:2});return '烟雨江南，画舫笙歌。她靠在船舷上说，这辈子值了。'}},
  title:{t:'想要一个属于自己的封号',btn:'赐她封号',cond:c=>!c.title,f:c=>{grantConsortTitle(c,pick(TITLES.filter(t=>!harem().some(x=>x.title===t))));return `你赐她「${c.title}」字为号。她把那个字写了一遍又一遍。`}},
- ride:{t:'想学骑马',btn:'亲自教她骑马（精力-1）',cond:()=>E().energy>0,f:c=>{E().energy--;c.t2='擅骑射';return '她在南苑摔了三回，第四回终于稳稳地跑完一圈，回头冲你笑。'}},
- cat:{t:'想养一只猫',btn:'送她一只狮子猫（国库-2万两）',f:c=>{chg({treasury:-2});c.t2='爱猫';c.catAbsent=false;return '雪白的狮子猫一进门就钻进了她怀里。她给它起名叫“团圆”。'}},
+ ride:{t:'想学骑马',btn:'亲自教她骑马（精力-1）',cond:()=>E().energy>0,f:c=>{E().energy--;learnWishQuirk(c,'擅骑射');return '她在南苑摔了三回，第四回终于稳稳地跑完一圈，回头冲你笑。'}},
+ cat:{t:'想养一只猫',btn:'送她一只狮子猫（国库-2万两）',f:c=>{chg({treasury:-2});learnWishQuirk(c,'爱猫');c.catAbsent=false;return '雪白的狮子猫一进门就钻进了她怀里。她给它起名叫“团圆”。'}},
  fire:{t:'想看一场烟火',btn:'上元夜放烟火（国库-40万两）',f:c=>{chg({treasury:-40});harem().forEach(o=>o.mood=clamp(o.mood+5));return '火树银花不夜天。她仰着头，烟火映在她眼睛里。'}},
  poem:{t:'想要陛下亲笔写的诗',btn:'为她写一首诗（精力-1）',cond:()=>E().energy>0,f:c=>{E().energy--;return '你写了四句，字不算好，诗也平平。她却裱起来挂在了床头。'}},
 };
@@ -175,9 +198,9 @@ function rememberQuarrel(a,b,winner){
     })));
 }
 function deepLine(c){deepen(c);if(c.wish==='title'&&c.title&&!c.wishDone){c.wishDone=true}const w=WISHES[c.wish]||{t:'旧日心愿，原记暂未详',unknown:true};
-  return `<div style="margin-top:4px">小性子：<span class="tag">${c.t2}</span>　喜好：${c.kl?`<span class="tag g">${c.like}</span>不喜<span class="tag r">${c.hate}</span>`:'<span class="hint">多闲谈才知道</span>'}</div>
+  return `<div style="margin-top:4px">小性子：<span class="tag">${c.t2}</span>${(c.learnedQuirks||[]).map(q=>'<span class="tag g">'+esc(q)+'</span>').join('')}　喜好：${c.kl?`<span class="tag g">${c.like}</span>不喜<span class="tag r">${c.hate}</span>`:'<span class="hint">多闲谈才知道</span>'}</div>
   <div>平日消遣：<span class="tag">${esc(c.hobby)}</span></div>
-  <div>心愿：${c.wishKnown?`${esc(w.t)}${c.wishDone?' <span class="tag y">已成全</span>':w.unknown?'':w.btn?` <button class="btn sm jade" onclick="A.wish(${c.id})" ${inPalace(c)?'':'disabled'}>${esc(w.btn)}</button>`:' <span class="hint">（生下孩子便成全了）</span>'}`:`<span class="hint">${c.aff>=50?'情分已够，多闲谈几次，她也许会说出心愿':'情分到 50 以后，闲谈时她也许会说'}</span>`}</div>
+  <div>心愿：${c.wishKnown?`${esc(w.t)}${c.wishDone?' <span class="tag y">已成全</span>':w.unknown?'':w.btn?` <button class="btn sm jade" onclick="A.wish(${c.id})" ${inPalace(c)&&!wishObstacle(c)?'':'disabled'}>${esc(w.btn)}</button>${wishObstacle(c)?' <small>'+esc(wishObstacle(c))+'</small>':''}`:' <span class="hint">（生下孩子便成全了）</span>'}`:`<span class="hint">${c.aff>=50?'情分已够，多闲谈几次，她也许会说出心愿':'情分到 50 以后，闲谈时她也许会说'}</span>`}</div>
   ${c.woundKnown?`<div>往事：${esc(consortPastText(c))}</div>`:`<div class="hint">往事：${c.aff>=65?'情分已够，多闲谈几次，她也许会对你说起':'情分到 65 以后，她也许会对你说起'}</div>`}${typeof gouyiPastPanel==='function'?gouyiPastPanel(c):''}`}
 function accessionArrivalConversation(c){
  const arrival=c?.accessionArrival;
@@ -259,12 +282,12 @@ A.chat=function(id,fromEvent=false){
 A.gift=function(id){const c=byId(id);if(modalOpen||S.over||!inPalace(c))return;deepen(c);
   let opts=shuffle(LIKES).slice(0,4);if(c.kl&&!opts.includes(c.like))opts[0]=c.like;
   pushEv({title:'赏赐',por:c,text:`赏${cName(c)}些什么好？日常礼物每样国库-20万两${c.maid?'':'，也可挑选内库已有的珍饰'}。${c.kl?`\n你记得她喜欢${c.like}，不喜${c.hate}。`:'\n你还不知道她喜欢什么。'}`,choices:[...opts.map(g=>({t:GIFTN[g],cond:()=>E().treasury>=20,f:()=>giveGift(c,g)})),...(!c.maid?[{t:'选一件内库首饰',f:()=>{A.jewelryChoose(c.id);return null;}}]:[]),{t:'算了'}]})};
-function giveGift(c,g){if(S.over||!inPalace(c)||E().treasury<20)return null;chg({treasury:-20});AU.sfx('coin');if(g==='绸缎')c.robeC=pick(RPAL[rTier(c.rank)]);
+function giveGift(c,g){if(S.over||!inPalace(c)||E().treasury<20)return null;chg({treasury:-20});if(GIFTN[g])markPalaceRemembrance(c,'gift',GIFTN[g],g===c.hate?'disliked':g===c.like?'liked':'');AU.sfx('coin');if(g==='绸缎')c.robeC=pick(RPAL[rTier(c.rank)]);
   if(g==='珠翠'&&journalContentVersion()>=33)jewelryGiftReactions(c,GIFTN[g]);
   if(g===c.like){c.kl=true;remember(c,'gift',GIFTN[g]);if(!continuityBlocksSoothing(c,xinOf(c)))setXin(c,'欢喜',`得了心爱的${g}`);story(c,`陛下赏了${GIFTN[g]}，正是她心头所好。`);return `她眼睛一亮，捧在手里看了又看。${fx(cchg(c,{mood:25,aff:routineAffection(c,8)}))}\n§你记住了：她喜欢${g}`}
   if(g===c.hate){story(c,`陛下赏了${GIFTN[g]}，并非她的喜好；她谢恩时颇为勉强。`);return `她谢了恩，笑容却有些勉强。宫女悄悄说，主子向来不喜${g}。${fx(cchg(c,{mood:-5}))}`;}
   const big=c.trait==='贪财'&&(g==='珠翠'||g==='绸缎');story(c,`陛下赏了${GIFTN[g]}。`);return `她欢欢喜喜地谢了恩。${fx(cchg(c,{mood:big?20:10,aff:routineAffection(c,3)}))}`}
-A.wish=function(id){const c=byId(id);if(!inPalace(c))return;const w=WISHES[c.wish];if(!w||!w.btn||c.wishDone)return;if(w.cond&&!w.cond(c)){toast('眼下还办不到');return}
+A.wish=function(id){const c=byId(id);if(!inPalace(c))return;const w=WISHES[c.wish];if(!w||!w.btn||c.wishDone)return;const reason=wishObstacle(c);if(reason||w.cond&&!w.cond(c)){toast(reason||'眼下还办不到');return}
   const t=w.f(c);c.wishDone=true;setXin(c,NEGX.includes(xinOf(c))?'释然':'欢喜',`心愿「${w.t}」得偿`);remember(c,'wish',w.t);story(c,`陛下成全了她的心愿：${w.t}。`);log(`帝成全${fullName(c)}的心愿：${w.t}。`);
   pushEv({title:'成全',por:c,sfx:'joy',text:t+fx(cchg(c,{aff:22,mood:30})),choices:[ok1]})};
 
@@ -321,7 +344,7 @@ const QEV={
 她停了一下：“臣妾不是记仇，只是这件事还没有说清。”`,choices:[
    {t:'笑着劝和',f:()=>{relAdd(c,o,5);return fx(cchg(c,{mood:3}))}},{t:'冷落那一位',f:()=>{relAdd(c,o,-5);return fx(cchg(c,{mood:8}),cchg(o,{favor:-8,mood:-8}))}}]}},
 };
-function quirkEvent(){for(const c of shuffle(harem())){deepen(c);if(['悲恸','心如死灰'].includes(xinOf(c))||S.turn-(c.qcd??-99)<10)continue;const ev=QEV[c.t2]?.(c);if(ev&&ambientEventReady(ev))return {...ev,present:ev.present||[c,...eventPortraits(ev)],onQueue:()=>{c.qcd=S.turn}};}return null}
+function quirkEvent(){for(const c of shuffle(harem())){deepen(c);if(['悲恸','心如死灰'].includes(xinOf(c))||S.turn-(c.qcd??-99)<10)continue;const keys=[c.t2,...(c.learnedQuirks||[])];const ev=QEV[keys.length>1?pick(keys):c.t2]?.(c);if(ev&&ambientEventReady(ev))return {...ev,present:ev.present||[c,...eventPortraits(ev)],onQueue:()=>{c.qcd=S.turn}};}return null}
 
 /* ============ 心境 ============ */
 const XIN={

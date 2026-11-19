@@ -21,7 +21,7 @@ function childWhereabouts(k){
 function openPrinceEstate(k,record=true){
   if(!k||k.sex!=='m'||!k.alive||royalJourneyAway(k)||k.pendingName||k.removedFromRoyal||S.heir===k.id||kidAge(k)<16||k.princeEstate||
     journalContentVersion()>=120&&(k.jailed||k.templeStay))return false;
-  k.princeEstate={opened:S.turn,location:'京城'};
+  k.princeEstate={opened:S.turn,location:'京城'};packChildKeepsake(k);
   if(journalContentVersion()>=120)delete k.princeEstateDeferredUntil;
   if(record){childSeparationMemory(k,`${k.name}在京开府，迁出宫中，自此居于皇子府。`,.1);log(`${k.name}在京开府，迁居皇子府。`);}
   return true;

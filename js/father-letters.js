@@ -153,7 +153,7 @@ function fatherLetterReturn(c){
  if(mail.gen!==S.gen||mail.father!==p?.id){delete s.pending;return false;}
  if(p.alive===false){
   delete s.pending;if(mail.kind==='money')s.purse++;
-  if(c.alive)fatherLetterRecord(c,mail.topic?'未能送到的家书':'未能送到的银封',`${fullName(c)}此前寄出的${mail.kind==='money'?'银封与家书':'家书'}未及送达，便传来父亲${p.name}的讣讯。${mail.kind==='money'?'银封退回，仍归她的体己。':'送出的信也随递信人带回。'}`,'原以为来日还能听见父亲回话，如今只剩一封没能读给他听的信。','',{toFather:false,emotion:-.8});
+  if(c.alive)fatherLetterRecord(c,(palaceDetailsActive()?mail.kind!=='money':mail.topic)?'未能送到的家书':'未能送到的银封',`${fullName(c)}此前寄出的${mail.kind==='money'?'银封与家书':'家书'}未及送达，便传来父亲${p.name}的讣讯。${mail.kind==='money'?'银封退回，仍归她的体己。':'送出的信也随递信人带回。'}`,'原以为来日还能听见父亲回话，如今只剩一封没能读给他听的信。','',{toFather:false,emotion:-.8});
   return true;
  }
  if(S.turn<mail.due||p.exiled||p.dismissed||p.incognitoCase)return false;

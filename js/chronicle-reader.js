@@ -130,6 +130,21 @@ function chronicleSummary(entry){
  const legacy=/^【宫门私约】/.test(entry.t)&&!entry.t.includes('肌肤之亲')?'<p class="hint">旧录只载私情，未记两人是否已有肌肤之亲。</p>':'';
  return legacy+(entry.life?.summary?detailFold('查看这件事的原记',`<p>${esc(entry.life.summary)}</p>`):'');
 }
+function compareChronicleOccasion(details){
+ if(!details.open)return;
+ const output=details.querySelector('div');
+ const owner=details.dataset.owner,index=Number(details.dataset.index);
+ const find=id=>chroniclePersonTarget(id)?.person||fenghuaAll().find(p=>String(p.id)===String(id)||p.hongjian?.previousId===id);
+ const p=find(owner),entry=p?.story?.[index];if(!entry)return;
+ const notes=[];
+ for(const ref of chronicleCast(entry)){
+  if(String(ref.id)===owner)continue;
+  const other=find(ref.id),notesOf=other?.story||[];
+  const note=(entry.occasion&&notesOf.find(e=>e.occasion===entry.occasion))||(entry.sceneOccasion&&notesOf.find(e=>e.sceneOccasion===entry.sceneOccasion));
+  if(note)notes.push('<p><strong>'+esc(ref.name)+'</strong>　'+esc(note.t===entry.t?'两份纪事同录了上面这段经过。':note.t)+'</p>');
+ }
+ output.innerHTML=notes.join('')||'<p class="hint">现存档案里只找到这一份原记。</p>';
+}
 function chronicleReader(person,{compact=false}={}){
  const source=person.story||[];if(!source.length)return '<p class="hint">尚无记载。</p>';
  const entries=chronicleVisibleEntries(source);
@@ -139,7 +154,7 @@ function chronicleReader(person,{compact=false}={}){
  const rows=results.map(({e,i})=>{
   const ev=e.event,thread=chronicleThread(e),related=thread?source.filter(x=>chronicleThread(x)===thread):[],cast=chronicleCast(e).filter(p=>p.id!==person.id);
   const context=ev&&!ev.embedded?detailFold('回看事由与处理',`<p>${esc(ev.title)} · ${esc((ev.participants||[]).map(p=>p.name).join('、'))}</p><p>${esc(ev.situation)}</p><p>陛下回应：${esc(ev.choice)}</p>${ev.outcome?`<p>${esc(ev.outcome)}</p>`:''}`):'';
-  return `<li><time>${esc(e.d)}</time>${esc(e.t)}${chronicleSummary(e)}${e.life?.source?`<p class="hint">缘起：${esc(e.life.source)}</p>`:''}${cast.length?`<div class="chronicle-cast">相关人物：${cast.map(chroniclePersonLink).join(' ')}</div>`:''}${related.length>1?`<button class="btn quiet sm" onclick="A.chronicleThread('${key}',${i})">回看前因与后续 · ${related.length}则</button>`:''}${context}</li>`;
+  return `<li><time>${esc(e.d)}</time>${esc(e.t)}${chronicleSummary(e)}${e.life?.source?`<p class="hint">缘起：${esc(e.life.source)}</p>`:''}${cast.length?`<div class="chronicle-cast">相关人物：${cast.map(chroniclePersonLink).join(' ')}</div>`:''}${related.length>1?`<button class="btn quiet sm" onclick="A.chronicleThread('${key}',${i})">回看前因与后续 · ${related.length}则</button>`:''}${context}${cast.length&&(e.occasion||e.sceneOccasion)?`<details data-owner="${esc(String(person.id))}" data-index="${i}" ontoggle="compareChronicleOccasion(this)"><summary>对读当事人纪事</summary><div></div></details>`:''}</li>`;
  });
  const active=Object.values(f).some(Boolean),list=a=>`<ul class="story">${a.join('')}</ul>`;
  const filters=select('year','年份',years.map(y=>[y,y]))+select('topic','主题',LIFE_CHAPTERS.map(c=>[c.key,c.title]))+(people.length?select('person','人物',people.map(p=>[p.id,p.name])):'');

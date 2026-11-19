@@ -154,7 +154,7 @@ function porSpec(x){
     return x.sex==='m'?{kind:'prince',seed:x.seed,robe:S.heir===x.id?'#d9a92f':'#3b5fa8',crown:S.heir===x.id}:{kind:'f',seed:x.seed,hs:x.seed%2?1:4,bang:2,robe:'#e07a9c',rank:4,pibo:PIBO[x.seed%6]}}
   if(x.maid)return {kind:'f',seed:x.seed,hs:4,bang:2,robe:seasonTint('#7f9db3'),rank:0,cs:0,pat:5,lin:'#eef2f4',fur:S&&season()===3};
   return {kind:'f',seed:x.seed,hs:x.seed%6,bang:(x.seed>>3)%4,robe:seasonTint(robeOf(x)),rank:x.rank,crown:x.rank===8&&!x.cold,
-    pibo:(x.seed>>12)%3?PIBO[(x.seed>>5)%6]:null,cs:(x.trait==='将门'||x.t2==='擅骑射')?2:[0,1,3,0][(x.seed>>6)%4],pat:(x.seed>>9)%6,lin:LINS[(x.seed>>14)%4],
+    pibo:(x.seed>>12)%3?PIBO[(x.seed>>5)%6]:null,cs:(x.trait==='将门'||consortHasQuirk(x,'擅骑射'))?2:[0,1,3,0][(x.seed>>6)%4],pat:(x.seed>>9)%6,lin:LINS[(x.seed>>14)%4],
     fur:!!S&&season()===3&&!x.cold};
 }
 const RPAL=[['#9fb3a8','#a9b8c9','#c9b8a6','#b7c4a0','#c4b0c8','#d8c9a8'],['#8fb8d6','#9ccaa4','#e3a3b8','#d8b26a','#b9a3dc','#e8c5a0','#7fb3b0'],

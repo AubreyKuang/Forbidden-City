@@ -453,7 +453,7 @@ function viewJinyiwei(){
     <p class="hint">宫中一旦查实妃嫔与皇子或守宫侍卫私会，值房会主动密奏。</p>
     <div class="detail-vitals">${bar('才干',c.ability)}${bar('功绩',c.merit)}${bar('信任',c.trust)}</div>
     ${detailSection('指挥使纪事',detailStory(c))}
-    ${casesSection()}${intelligencePanel()}
+    ${casesSection()}${jinyiweiPrinceSpouseParentagePanel()}${intelligencePanel()}
     ${detailSection('搜查宫室',`<p class="hint">只有确有案底的人才可能被搜出物证；搜不出东西，被搜者记恨、六宫不安。同一人一年内只搜一次。</p><div class="acts">${harem().map(x=>`<button class="btn sm" onclick="A.jinyiweiSearch(${x.id})" ${searchReady(x)?'':'disabled'}>${esc(cName(x))}<small>${esc(x.palace||'')}</small></button>`).join('')}</div>`)}
     `;
 }

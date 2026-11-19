@@ -30,6 +30,7 @@ function chronicleEvent(ev){
         const records=S.historicalCodex||=[];
         records.push({d:dateStr(),turn:S.turn,title:ev.title,ref:ev.ref,choice:decision,outcome});
       }
+      let occasion;
       for(const p of people){
         if(!S.consorts.includes(p)&&!S.children.includes(p)&&(legacyPendingAction()||p.official===undefined))continue;
         const entries=(p.story||[]).slice(before.get(p));
@@ -38,6 +39,10 @@ function chronicleEvent(ev){
           (p.sex?kstory:story)(p,`【${ev.title} · ${names.map(p=>p.name).join('、')}】${situation}\n陛下回应：${decision}。${outcome?'\n'+outcome:''}`);
           entry=p.story.at(-1);
           embedded=true;
+        }
+        if(palaceDetailsActive()&&people.length>1){
+          occasion??='scene:'+S.gen+':'+nextReignEntryOrder();
+          entry.sceneOccasion=occasion;
         }
         entry.event={title:ev.title,participants:names,situation,choice:decision,outcome,embedded};
         // This is the player's historical record, not automatic private knowledge.

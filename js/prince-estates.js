@@ -70,7 +70,7 @@ function princeSpouseVisitReady(k){
 function princeSpouseVisitPanel(k){
   if(!princeSpouseVisitReady(k))return '';
   const visit=k.spouse.princePrivateVisit,already=visit?.gen===S.gen&&visit.last===S.turn;
-  if(visit?.gen===S.gen&&visit.discovery)return '<p class="muted">事已在府中说开，私下往来已止。</p>';
+  if(visit?.gen===S.gen&&(visit.discovery||visit.paternityConfirmed))return '<p class="muted">事已在府中说开，私下往来已止。</p>';
   return `<div class="acts"><button class="btn quiet" onclick="A.princeSpouseVisit(${royalActionArg(k.id)})" ${already?'disabled':''}>私下求见王妃<small>${already?'本月已问过她的意思':'先问她是否愿意见面'}</small></button></div>`;
 }
 A.princeSpouseVisit=function(id){
@@ -78,8 +78,9 @@ A.princeSpouseVisit=function(id){
   if(modalOpen||!princeSpouseVisitReady(k))return;
   const p=k.spouse,gen=S.gen,turn=S.turn;
   const previous=p.princePrivateVisit?.gen===gen?p.princePrivateVisit:null;
-  if(previous?.discovery||previous?.last===turn)return;
+  if(previous?.discovery||previous?.paternityConfirmed||previous?.last===turn)return;
   const trust=p.trust??50,nature=marriageNature(p).temperament;
+  const parentageActive=PalaceActions.princeSpouseParentage;
   const odds=(trust>=70?.10:trust<45?.62:.37)+(['爽朗','好胜'].includes(nature)?.12:0);
   const willing=p.willing!==false&&mulberry32(voiceHash(`prince-spouse-visit:${p.seed||p.id}:${E().seed||gen}`))()<odds;
   let done=false;
@@ -107,7 +108,10 @@ A.princeSpouseVisit=function(id){
       if(PalaceActions.princeSpouseDiscovery)visit.noticedAt=turn;
       kstory(k,'【王府闲话】听内侍说偏厅近来曾单独待客，问了来人是谁，仍没人能给个准话。他把这件事记在心里。');
     }
-    return '你依她的意思在偏厅坐下。说罢话，从原路告辞，仍让她按自己的意思料理府里的往来。'+fx('精力−1');
+    if(parentageActive)notePrinceSpouseMeeting(k,p,visit);
+    const after=parentageActive?'她亲自掩了帘，问过彼此的意思，两人才相携往里间去。待夜色下来，你仍从原路告辞。':
+      '你依她的意思在偏厅坐下。说罢话，从原路告辞，仍让她按自己的意思料理府里的往来。';
+    return after+fx('精力−1');
   };
   pushEv({title:'王府 · 私下求见',por:p,valid,sealedAnnals:true,text:`${princeEstateLabel(k)}的偏厅还温着茶。\n${opening}\n${reply}`,
     choices:[...(willing?[{t:'应她的意思，留在偏厅相会 · 精力−1',cond:()=>E().energy>0,f:()=>settle(true)}]:[]),
@@ -133,7 +137,7 @@ const CONSORT_DISCOVERY_REACTIONS={
 };
 function princeSpouseDiscoveryEvent(k){
   const p=k.spouse,visit=p?.princePrivateVisit;
-  if(visit?.gen!==S.gen||!visit.noticed||visit.meetings<2)return null;
+  if(visit?.gen!==S.gen||!visit.noticed||visit.meetings<2||visit.paternityConfirmed&&!visit.discovery)return null;
   const available=()=>k.spouse===p&&p.princePrivateVisit===visit&&visit.gen===S.gen&&princeSpouseVisitReady(k)&&householdCoupleInTown(k,p);
   if(!available())return null;
   const [princeAction,princeMemory]=PRINCE_DISCOVERY_REACTIONS[childDisposition(k)];
@@ -204,7 +208,7 @@ function viewPrinceEstate(){
       ['history','王府记事',detailStory(k)],
       ['dockets','长史奏报',princeDocketPanel(k)],
       ['succession','世子与袭爵',princeSuccessionPanel(k)],
-      ['family','家人与往来',princeAdoptionContactPanel(k)+royalKinContactButtons(k,true)+marriagePanel(k)+princeSpouseVisitPanel(k)+householdPanel(k)+princeCirclePanel(k)]
+      ['family','家人与往来',princeAdoptionContactPanel(k)+royalKinContactButtons(k,true)+marriagePanel(k)+princeSpouseVisitPanel(k)+princeSpouseParentagePanel(k)+householdPanel(k)+princeCirclePanel(k)]
     ])}`;
 }
 function princeEstateRecord(k,line){
@@ -215,6 +219,7 @@ function princeEstateRecord(k,line){
 function settlePrinceFief(k,location,register=false){
     k.princeEstate={...k.princeEstate,opened:k.princeEstate?.opened??S.turn,location,...(register?{}:{lastMove:S.turn})};
     if(!register){k.away=true;k.sup=clamp((k.sup||0)-20);}
+    if(!register)packChildKeepsake(k);
     const line=register?`宗人府补录${k.name}的藩邸在${location}。`:`${k.name}奉诏离京，赴${location}就藩，由长史料理府务，地方政务仍归有司。`;
     princeEstateRecord(k,line);return line;
 }

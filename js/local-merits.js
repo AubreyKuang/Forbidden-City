@@ -54,3 +54,88 @@ careerTarget=function(person,direction){
   // A county achievement normally advances the local career; exceptional service has a separate capital appointment.
   return [[2,'两江总督'],[6,'盐运使'],[7,'道员'],[8,'知府'],[9,'同知'],[10,'知州'],[11,'通判'],[13,'知县']].filter(([grade])=>grade<officialGrade(person.p)).at(-1)||target;
 };
+
+const RECTIFICATION_PLANS={
+ 持正:'先把错漏的数目张榜，请有异议的人直接来核。办砸了是臣的名字，不该先找书吏顶罪。',
+ 谨慎:'臣想把已验与待验分成两册。若赶不及，也只报确实补上的数。',
+ 进取:'臣请领一份限期清单。两月后，请把新数与今日这道折子摆在一起看。',
+ 圆融:'臣先约经手的人一道对册。能当场说清的先补，争执的部分另附双方的说法。'
+};
+function localRectificationTick(){
+ if(!S.flags.localRectifications?.length)return;
+ const pending=[];
+ for(const ref of S.flags.localRectifications){
+  const person=courtPerson(ref.key);
+  if(!person||person.p.id!==ref.id)continue;
+  const p=person.p,order=p.rectification;
+  if(!order)continue;
+  if(S.turn<order.due){pending.push(ref);continue;}
+  const r=p.reportHistory?.find(entry=>entry.id===order.id);
+  if(!r||!officialAlive(p)){delete p.rectification;continue;}
+  if(!careerEligible(p)||(p.office||p.post)!==r.office){
+    r.rectification='原任已变或不能继续办差，旧折移交衙门待核。';
+    courtPersonRecord(person,'【原折移交】'+r.title+'。'+r.rectification);delete p.rectification;continue;
+  }
+  if(p.report){pending.push(ref);continue;}
+  const remaining=r.target-r.done,finished=chance(localMeritOdds(p));
+  const extra=finished?remaining:Math.floor(remaining/2);
+  const tally=`原折验明${r.done}${r.unit}，本次补验${extra}${r.unit}，共${r.done+extra}/${r.target}。`;
+  const line=finished?'尚缺各项已逐一核销。':'余项仍缺凭据，另列在未销册里。';
+  r.rectification=tally+line;
+  p.report={kind:'rectification',source:r.id,title:r.title+' · 善后复核',text:tally+line,turn:S.turn,finished};
+  delete p.rectification;courtPersonRecord(person,'【补呈原折】'+p.report.title+'。'+p.report.text);
+  careerFamilyEcho(person,'submitted',p.report.title+'。'+p.report.text);
+ }
+ if(pending.length)S.flags.localRectifications=pending;else delete S.flags.localRectifications;
+}
+function rectificationReport(person,r){
+ const p=person.p,valid=()=>!S.over&&officialAlive(p)&&p.report===r;
+ return {title:r.title,por:p,valid,text:p.name+'呈上两份并排装订的册子。'+r.text,choices:[{
+  t:r.finished?'核销清单，记其补过':'核入已办数，未办处留案',f:()=>{
+    if(!valid())return null;
+    const line=r.finished?'准予销案。原折的疏漏与这回的补过，一并存档。':'只核准有凭据的部分。往后考课，仍可查到未销的数目。';
+    if(r.finished)p.merit=clamp((p.merit||0)+3);
+    courtPersonRecord(person,'【御批】'+r.title+'。'+line);log(p.name+'补呈'+r.title+'。'+r.text+line);
+    delete p.report;return line;
+  }}]};
+}
+
+const SCHOOL_CASE_QUESTIONS={
+ 好奇:'这两个数是谁分头去点的？若都抄自同一本册子，怎知道没一块抄错？',
+ 好胜:'我先把折尾遮起来算一遍，再和官员验过的数对一对，行吗？',
+ 仁厚:'册上记到了的有人去问。没有写在册上的人，要往哪里诉说？',
+ 内敛:'我在旁边空白处写了一个疑问。父皇看这一行便好，不用叫我当众念。',
+ 爽直:'写的是应办多少，还是已经办了多少？我想先把这两行分开。',
+ 灵动:'要不拿两色棋子来摆，一堆算定额，一堆算办成的？这样就不会看串行了。',
+ 审慎:'让我先看是哪一任上的事。前任留下的缺口，不能全算在接手的人头上。',
+ 自矜:'我愿意写自己的批注。要是算错了，也请把我改过的地方留着。'
+};
+function schoolCaseAvailable(){
+ const r=S.flags.schoolDocket;
+ return palaceDetailsActive()&&!S.over&&r?.gen===S.gen&&!r.student&&S.turn>=r.ready&&S.turn<r.ready+6?r:null;
+}
+function schoolCaseStudent(k){return childInPalace(k)&&!k.pendingName&&kidAge(k)>=8&&kidAge(k)<16&&k.hp>=45;}
+function schoolDocketPanel(){
+ const r=schoolCaseAvailable();if(!r)return '';
+ const students=kidsAlive().filter(schoolCaseStudent);
+ return students.length?detailSection('从奏折里读一件地方事','<p>'+esc(r.name)+'的《'+esc(r.title)+'》已经御批，太傅留了一份删去百姓姓名的抄件。</p>'+
+   workshopPicker('school-docket',students,'读这份抄件','readSchoolDocket',E().energy>0)):'';
+}
+A.readSchoolDocket=function(id){
+ const k=kidById(id),r=schoolCaseAvailable();
+ const valid=()=>!!r&&schoolCaseAvailable()===r&&UI.view==='place'&&UI.sel==='ss'&&schoolCaseStudent(k);
+ if(modalOpen||!valid())return;
+ const question=SCHOOL_CASE_QUESTIONS[childDisposition(k)],line=`${r.name}在《${r.title}》中原报定额${r.target}${r.unit}，核实${r.done}${r.unit}。`;
+ const answer=(numbers)=>{
+  if(!valid()||!useE())return null;
+  r.student=k.id;const text=line+k.name+'读到这里问：“'+question+'”'+(numbers?'你取了算筹，陪孩子核对原报与定额。孩子把自己的算式留在抄本背面。':'你请孩子想一想册里省去了谁的声音。孩子给太傅写下一句下次访查时想问的话。');
+  skillGain(k,numbers?'lit':'vir',3);
+  kstory(k,'【地方奏折入课】'+text);characterChapter(k,localChronicleThread(r),'family','上书房读地方奏折',[],'',{append:true});
+  const person=courtPerson(r.key);
+  if(person?.p.id===r.author&&officialAlive(person.p))courtPersonRecord(person,'【任上旧折】太傅取《'+r.title+'》作课本，'+kidName(k)+'读过删名抄件。');
+  return text;
+ };
+ pushEv({title:'上书房 · 读地方旧折',por:k,valid,text:line+'\n'+k.name+'：“'+question+'”',choices:[
+  {t:'一起核实这笔数 · 精力−1',cond:()=>E().energy>0,f:()=>answer(true)},
+  {t:'想一想册外的人 · 精力−1',cond:()=>E().energy>0,f:()=>answer(false)}, {t:'改日再读'}]});
+};
