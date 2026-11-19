@@ -71,3 +71,15 @@ test('consort page puts newest chronicle first and groups the three management a
  assert.ok(timeline.indexOf('翻阅更早的纪事')<timeline.indexOf('时间测试1'));
  assert.match(timeline,/<details class="chronicle-filter-fold"/);
 });
+
+test('children and officials show their chronicles after the person and actions but before detailed chapters',()=>{
+ const child=renderCase(['child','viewKid()',`UI.sel=k.id;story(k,'最新纪事核对')`]).html;
+ assert.ok(child.indexOf('detail-head')<child.indexOf('detail-actions'));
+ assert.ok(child.indexOf('detail-actions')<child.indexOf('id="child-history"'));
+ assert.ok(child.indexOf('id="child-history"')<child.indexOf('id="child-now"'));
+ assert.ok(child.indexOf('最新纪事核对')<child.indexOf('id="child-now"'));
+ const official=renderCase(['official','viewOfficial()',`UI.sel=c.id+':father';var p=houseOf(c).father;p.story||=[];p.story.push({d:dateStr(),t:'官员最新纪事'});`]).html;
+ assert.ok(official.indexOf('detail-head')<official.indexOf('detail-actions'));
+ assert.ok(official.indexOf('detail-actions')<official.indexOf('官员最新纪事'));
+ assert.ok(official.indexOf('官员最新纪事')<official.indexOf('家族往来'));
+});

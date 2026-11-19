@@ -418,11 +418,11 @@ function viewPrincessEstate(){
   const mother=k.reign&&familyHostById(k.mom);
   const motherLink=mother?.familyArchive?`<button class="person-link" onclick="A.go('consort',${mother.id})">${esc(k.momName||fullName(mother))}</button>`:outsideMotherLink(k);
   return `<button class="btn quiet sm" onclick="A.go('out')">← 返回出巡</button>
-    <header class="detail-head">${porImg(k,112)}<div class="grow"><p>${k.reign?princessKinship(k)+' · ':''}${kidAge(k)}岁 · ${local?'京城府邸':esc(royalKinContactPlace(k,'letter'))}</p><h2>${esc(kidName(k))} · 公主府</h2><p>生母 ${motherLink}</p></div></header>
+    <header class="detail-head person-detail-head">${porImg(k,112)}<div class="grow"><p>${k.reign?princessKinship(k)+' · ':''}${kidAge(k)}岁 · ${local?'京城府邸':esc(royalKinContactPlace(k,'letter'))}</p><h2>${esc(kidName(k))} · 公主府</h2><p>生母 ${motherLink}</p></div></header>
     ${pageChapters('princess-estate',[
       ['projects','府务',detailSection(plan.title,`<p>${esc(message)}</p>${e.stage==='proposal'||ready?`<button class="btn gold" onclick="A.princessLetter(${k.id})">${ready?'读她的回信':'读府中来信'}</button>`:''}`)+princessFollowupPanel(k,plan.next)],
-      ['family','亲眷与婚配',princessEstateFamilyPanel(k)+(xieCapitalEstate(k)?detailSection('婚事与心意',youthPanel(k)):'')+marriagePanel(k)+householdPanel(k)],
-      ['chronicle','府中记事',detailStory(k)]
+      ['chronicle','府中记事',detailStory(k)],
+      ['family','亲眷与婚配',princessEstateFamilyPanel(k)+(xieCapitalEstate(k)?detailSection('婚事与心意',youthPanel(k)):'')+marriagePanel(k)+householdPanel(k)]
     ])}`;
 }
 A.princessFollowup=function(id){

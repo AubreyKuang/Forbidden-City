@@ -312,11 +312,12 @@ function xieRelationshipLabel(p){
 }
 viewScholar=function(){
  const p=scholarById(UI.sel);if(!royalHeartActive()||p?.storyPerson!=='xiean')return xieScholarView();
- const pair=xieCouple();return `${personBackButton('officials')}<header class="detail-head">${porImg(p,224)}<div class="grow"><p>京华诗客 · 固定人物</p><h2>谢安</h2><p>${p.age}岁 · ${esc(p.temperament)} · ${officialAlive(p)?xieRelationshipLabel(p):'已故'}</p><p>布衣诗客 · 未受官职</p></div></header>
+ const pair=xieCouple();return `${personBackButton('officials')}<header class="detail-head person-detail-head">${porImg(p,224)}<div class="grow"><p>京华诗客 · 固定人物</p><h2>谢安</h2><p>${p.age}岁 · ${esc(p.temperament)} · ${officialAlive(p)?xieRelationshipLabel(p):'已故'}</p><p>布衣诗客 · 未受官职</p></div></header>
   ${detailSection('世家与来处',xieHouseHTML(p))}${detailSection('诗名与风骨','<p>惊才绝艳，不愿以声名求官。江湖往来仍只有传言。他温柔待人，却不轻许仕途与婚事。</p>')}
   ${xiePresent(p)?`<button class="btn primary" onclick="A.xieAudience()" ${S.turn-(p.lastAudience??-99)<3||E().energy<1?'disabled':''}>单独召见 · 精力−1</button>`:''}
+  ${detailSection('人物纪事',detailStory(p))}
   ${pair?detailSection('夫妻与家事',`<p>妻子：<button class="person-link" onclick="A.go('${S.children.includes(pair.k)?'kid':'relative'}',${pair.k.id})">${esc(pair.k.name)}${pair.k.alive?'':' · 已故'}</button></p><p>不纳妾，妻亡不再娶。${pair.m?.joinedAt==null&&pair.k.alive?'婚初分房，情分由日常相处慢慢积累。':''}</p>`):''}
-  ${detailSection('人物纪事',detailStory(p))}`;
+  `;
 };
 const xieOfficials=officialsTable;
 officialsTable=function(){const html=xieOfficials(),p=xieAn();return html+(royalHeartActive()&&p?detailSection('京中名士',`<p>${careerLink({p,scholar:true,key:'scholar:'+p.id})} · ${esc(p.origin)} · ${p.age}岁 · ${p.married||p.betrothal?.kind==='xiean'?xieRelationshipLabel(p):'以诗名世'}${officialAlive(p)?'':' · 已故'}</p><p class="hint">未受官职，另列名士；可进人物页召见问诗、提出任用。</p>`):'');};

@@ -6,12 +6,12 @@ test('a quiet child asks on an eligible birthday, with a higher chance for princ
  const b=game();b.run(`Math.random=()=>0;child.temperament='好胜';assert.equal(childMotherResidenceRequests().length,0);child.temperament='内敛';child.born--;assert.equal(childMotherResidenceRequests().length,0);child.born++;mother.cold=true;assert.equal(childMotherResidenceRequests().length,0);`);
 });
 test('permission follows the caregiver and ends on adulthood, departure or changed caregiver',()=>{
- for(const [sex,limit] of [['f',15],['m',16]]){const b=game(sex);b.run(`Math.random=()=>0;var ev=childMotherResidenceRequests()[0];ev.choices[0].f();assert.equal(child.motherResidence.choice,'stay');assert.equal(youngChildMother(child),mother);assert.match(childResidence(child),/同住/);assert.ok(nurseryChildren(mother.palace).includes(child));assert.ok(schoolChildren().includes(child));
+ for(const [sex,limit] of [['f',15],['m',16]]){const b=game(sex);b.run(`Math.random=()=>0;var ev=childMotherResidenceRequests()[0];ev.choices[0].f();assert.equal(child.motherResidence.choice,'stay');assert.match(child.story.at(-1).t,/欢喜/);assert.match(mother.story.at(-1).t,/欢喜/);assert.equal(youngChildMother(child),mother);assert.match(childResidence(child),/同住/);assert.ok(nurseryChildren(mother.palace).includes(child));assert.ok(schoolChildren().includes(child));
  mother.palace='景仁宫';assert.match(childResidence(child),/景仁宫/);mother.cold=true;assert.match(childResidence(child),/未与母亲同住/);mother.cold=false;child.born=S.turn-(${limit}*12-1);assert.equal(youngChildMother(child),mother);child.born=S.turn-${limit}*12;assert.equal(youngChildMother(child),null);
  child.born=S.turn-7*12;child.away=true;assert.equal(youngChildMother(child),null);child.away=false;var foster=harem().find(c=>c!==mother);child.foster=foster.id;assert.equal(youngChildMother(child),null);`);}
 });
 test('refusal assigns the shared residence and does not invent roommates',()=>{
- const b=game();b.run(`Math.random=()=>0;var ev=childMotherResidenceRequests()[0];var result=ev.choices[1].f();assert.match(result,/暂无其他适龄孩子/);assert.match(childResidence(child),/暂无其他同住的公主/);assert.equal(youngChildMother(child),null);
+ const b=game();b.run(`Math.random=()=>0;var ev=childMotherResidenceRequests()[0];var result=ev.choices[1].f();assert.match(result,/暂无其他适龄孩子/);assert.match(child.story.at(-1).t,/难过/);assert.match(mother.story.at(-1).t,/心疼/);assert.match(childResidence(child),/暂无其他同住的公主/);assert.equal(youngChildMother(child),null);
  var sibling=makeKid(mother,'f','静好');sibling.born=S.turn-7*12;assert.match(childResidence(child),/静好同住/);assert.match(childResidence(sibling),/念安同住/);sibling.away=true;assert.match(childResidence(child),/暂无其他同住的公主/);`);
 });
 test('older children may ask to return and foster mothers are the actual caregiver',()=>{
@@ -41,4 +41,7 @@ test('an informed grandfather has an explicit conversation option even when othe
 test('officials without the news and older pending conversations do not gain the new option',()=>{
  const b=game();b.run(`var h=houseOf(mother);E().energy=4;PalaceActions.reset();A.officialAct(mother.id+':father','talk');assert.ok(!curEv.choices.some(c=>c.t.includes('谈孩子请求同住')));drain();
  delete h.father.lastAudience;E().energy=4;h.father.motherResidenceNews=[{name:child.name,child:child.id,sex:'f',stay:true}];var old=Object.getOwnPropertyDescriptor(PalaceActions,'contentVersion');Object.defineProperty(PalaceActions,'contentVersion',{get:()=>105,configurable:true});PalaceActions.reset();A.officialAct(mother.id+':father','talk');assert.ok(!curEv.choices.some(c=>c.t.includes('谈孩子请求同住')));Object.defineProperty(PalaceActions,'contentVersion',old);`);
+});
+test('a pending request from before the emotional follow-up replays its original text',()=>{
+ for(const choice of [0,1]){const b=game();b.run(`var original=Object.getOwnPropertyDescriptor(PalaceActions,'contentVersion');Object.defineProperty(PalaceActions,'contentVersion',{get:()=>107,configurable:true});Math.random=()=>0;var ev=childMotherResidenceRequests()[0];var result=ev.choices[${choice}].f();assert.doesNotMatch(result,/欢喜地依偎|孩子难过地低下头/);assert.doesNotMatch(child.story.at(-1).t,/欢喜地松|眼圈发红/);assert.doesNotMatch(mother.story.at(-1).t,/自己也欢喜|她心疼孩子/);Object.defineProperty(PalaceActions,'contentVersion',original);`);}
 });

@@ -33,7 +33,7 @@ function rescuedGuestEvent(g){
 }
 A.rescuedGuest=function(id){if(modalOpen)return;const ev=rescuedGuestEvent((S.shelteredGuests||[]).find(g=>g.id===id));if(ev)pushEv(ev);};
 A.rescuedReturn=function(id){const c=byId(id);if(modalOpen||!inPalace(c)||c.rescue?.familyContact!=='confirmed')return;pushEv({title:'归信之后',por:c,text:'她已核实远方亲人的回信，提出归乡相见的心愿。若准她离宫，她会带走信笺与路引，这段宫中身份也随之结束。',choices:[{t:'尊重她的心愿，安排归乡 · 国库−20',cond:()=>E().treasury>=20&&!c.preg,f:()=>{if(!inPalace(c)||E().treasury<20||c.preg)return null;chg({treasury:-20});c.gone=true;story(c,'寻亲后自愿离宫归乡，陛下安排了护送。');log(`${fullName(c)}循已核实的家书归乡。`,1);return '她带着家书离宫。昔日相救与相伴仍保留在彼此纪事里。';}},{t:'先继续通信，改日再议'}]});};
-function rescuedGuestsPanel(){return (S.shelteredGuests||[]).filter(g=>!g.gone).map(g=>`<section class="personal-experience"><h3>宫中客舍 · ${esc(fullName(g))}</h3><p>成年异乡来客 · 自愿暂住，尚未册封</p><p>${esc(rescueVoice(g).lines[0])}</p><button class="btn jade" onclick="A.rescuedGuest(${g.id})">探问近况与去留</button>${journeyPanel(g)}<h3>人物纪事</h3>${detailStory(g)}</section>`).join('');}
+function rescuedGuestsPanel(){return (S.shelteredGuests||[]).filter(g=>!g.gone).map(g=>`<section class="personal-experience"><h3>宫中客舍 · ${esc(fullName(g))}</h3><p>成年异乡来客 · 自愿暂住，尚未册封</p><p>${esc(rescueVoice(g).lines[0])}</p><button class="btn jade" onclick="A.rescuedGuest(${g.id})">探问近况与去留</button><h3>人物纪事</h3>${detailStory(g)}${journeyPanel(g)}</section>`).join('');}
 
 /* Prejudice belongs to actors and institutions; it is not a truth about origins. */
 const outsiderConsort=c=>!!c.rescue||['西域贡女','西域流寓','东瀛贵族','海西贵族'].includes(c.fam.t);

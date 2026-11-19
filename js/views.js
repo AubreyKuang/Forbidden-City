@@ -395,7 +395,7 @@ function dynastyGoalsPanel(){
 function detailFold(title,content){
   return content?`<details class="detail-fold"><summary>${title}</summary><div class="detail-content">${content}</div></details>`:'';
 }
-function detailStory(person){return chronicleReader(person);}
+function detailStory(person){return chronicleReader(person,{compact:true});}
 
 // Layout helpers only: every section stays expanded and keeps its original controls.
 function pageHeading(title,description='',actions=''){
@@ -571,13 +571,14 @@ function viewKid(){
   const titles=k.alive&&!k.removedFromRoyal&&!k.templeStay&&!royalJourneyAway(k)?`${k.sex==='m'&&a>=5&&S.heir!==k.id&&!storyCastHeirBar(k)?`<button class="btn" onclick="A.kidHeir(${k.id})">立为太子</button>`:''}
     ${(journalContentVersion()>=40?royalChildTitleReady(k):a>=12)?`<button class="btn" onclick="A.kidTitle(${k.id})">赐封号</button>`:''}`.trim():'';
   return `${personBackButton('kids')}
-   <header class="detail-head">${porImg(k,224)}<div class="grow"><p>${status}</p><h2>${esc(kidName(k))}</h2>
-    <p>生母 ${outsideMotherLink(k)}${foster?` · 养母 ${parentLink(k.foster)}`:''}</p>${childResidence(k)?`<p class="hint">${esc(childResidence(k))}</p>${youngChildMother(k)?`<button class="btn sm jade" onclick="A.visitChildHome(${k.id})">去宫里看看 →</button>`:''}`:''}${birthTags(k)}${outsideChildBadge(k)}${childHasLeftPalace(k)?`<p class="hint">居处 · ${esc(childWhereabouts(k))}</p>`:''}${characterVoiceHTML(k)}${daoPracticePanel(k)}</div></header>
+   <header class="detail-head person-detail-head">${porImg(k,224)}<div class="grow"><p>${status}</p><h2>${esc(kidName(k))}</h2>
+    <p>生母 ${outsideMotherLink(k)}${foster?` · 养母 ${parentLink(k.foster)}`:''}</p>${childResidence(k)?`<p class="hint">${esc(childResidence(k))}</p>${youngChildMother(k)?`<button class="btn sm jade" onclick="A.visitChildHome(${k.id})">去宫里看看 →</button>`:''}`:''}${birthTags(k)}${outsideChildBadge(k)}${childHasLeftPalace(k)?`<p class="hint">居处 · ${esc(childWhereabouts(k))}</p>`:''}</div></header>
    ${k.pendingName?pendingBirthPanel():''}
    ${k.alive&&!k.removedFromRoyal&&!k.estate&&!k.jailed&&!k.pendingName?`<div class="detail-actions" role="group" aria-label="人物操作"><span class="detail-action-label" aria-hidden="true">人物操作</span><div class="acts"><button class="btn primary" onclick="A.kidVisit(${k.id})">${childHasLeftPalace(k)?'写家书':'探望'}<small>精力-1</small></button></div></div>`:''}
    <div class="detail-vitals">${bar('才学',k.lit,'#617991')}${bar('武艺',k.mar,'#92504a')}${bar('品德',k.vir,'#517369')}</div>
    ${pageChapters('child',[
-    ['now','近况与心事',storyCastChildPanel(k)+childDispositionPanel(k)+(k.foreignLanguages?.length?detailSection('出使见闻',`<p>所学外语：${k.foreignLanguages.map(esc).join('、')}。</p>`+diplomaticTraitsPanel(k)):'')+immortalPanel(k)+royalTravelPanel(k)+continuityPanel(k)+
+    ['history','人物纪事',detailStory(k),'纪事'],
+    ['now','近况与心事',characterVoiceHTML(k)+daoPracticePanel(k)+storyCastChildPanel(k)+childDispositionPanel(k)+(k.foreignLanguages?.length?detailSection('出使见闻',`<p>所学外语：${k.foreignLanguages.map(esc).join('、')}。</p>`+diplomaticTraitsPanel(k)):'')+immortalPanel(k)+royalTravelPanel(k)+continuityPanel(k)+
       (k.alive?initiativeHTML(k):'')+detailSection(a>=20?'婚事与心意':'少年心事',youthPanel(k))+
       detailSection('护国寺祈福',childTemplePanel(k))],
     ['care','教养与封号',personalWardrobePanel(k,true)+detailSection('教养与抚养',care)+detailSection('师承',childMentorPanel(k))+detailSection('成年志向与差务',princeCareerPanel(k)+princeFiefRequestPanel(k))+princeCirclePanel(k)+
@@ -588,7 +589,7 @@ function viewKid(){
       detailSection('身世与安置',parentagePanel(k))+outsideParentagePanel(null,k)+detailSection('府中认回的孩子',recognizedChildrenPanel(k))+
       (k.alive?detailSection('与母亲的日常',kidFamilyPanel(k)):'')+detailSection('宫中关系',k.alive?kidRelLine(k):'')],
     ['past','往事与经历',historyPanel(k)+detailSection('宫墙往事',palaceRomancePanel(k))+
-      detailSection('随身旧物',lifeWorksPanel(k))+lifeBiography(k)+detailSection('人物纪事',detailStory(k))]
+      detailSection('随身旧物',lifeWorksPanel(k))+lifeBiography(k)]
    ])}`;
 }
 function viewOut(){

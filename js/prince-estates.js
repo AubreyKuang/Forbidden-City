@@ -75,13 +75,13 @@ function viewPrinceEstate(){
     ${!local&&!princeFief(k)&&princeMoveReady(k)?`<button class="btn" onclick="A.princeRegisterFief(${id})">补录藩地</button>`:''}</div>`:'';
   const state=!k.alive?'王爷薨逝，府中治丧，暂由长史理事。':!princeEstateAvailable(k)?`${childWhereabouts(k)} · 暂停王府往来`:k.royalKinContact?.pending?'家书已经寄出，等收到回信后再议行止。':!local&&wait?`回京还需等 ${wait} 个月。`:local?'在京居住，可到府探望，也可另议出京就藩。':'藩邸由王府料理，地方政务仍归有司。';
   return `<button class="btn quiet sm" onclick="A.go('out')">← 返回出巡</button>
-    <header class="detail-head">${porImg(k,112)}<div class="grow"><p>${esc(caption)} · ${k.alive?kidAge(k)+'岁':'已薨'}</p><h2>${esc(princeEstateLabel(k))}</h2><p>${esc(k.reign?`${royalKinship(k)} ${k.name}`:k.name)}${birth?.father?` · 生父 <button class="person-link" onclick="A.princeFamilyMemo(${id},${royalActionArg(birth.father.id)})">${esc(birth.father.name)}</button>`:''} · 生母 ${motherLink}</p></div></header>
+    <header class="detail-head person-detail-head">${porImg(k,112)}<div class="grow"><p>${esc(caption)} · ${k.alive?kidAge(k)+'岁':'已薨'}</p><h2>${esc(princeEstateLabel(k))}</h2><p>${esc(k.reign?`${royalKinship(k)} ${k.name}`:k.name)}${birth?.father?` · 生父 <button class="person-link" onclick="A.princeFamilyMemo(${id},${royalActionArg(birth.father.id)})">${esc(birth.father.name)}</button>`:''} · 生母 ${motherLink}</p></div></header>
     ${pageChapters('prince-estate',[
       ['residence','居处与藩务',detailSection('居处',`<p>${esc(state)}</p>${res}${princeFiefRequestPanel(k)}`)],
+      ['history','王府记事',detailStory(k)],
       ['dockets','长史奏报',princeDocketPanel(k)],
       ['succession','世子与袭爵',princeSuccessionPanel(k)],
-      ['family','家人与往来',princeAdoptionContactPanel(k)+royalKinContactButtons(k,true)+marriagePanel(k)+householdPanel(k)+princeCirclePanel(k)],
-      ['history','王府记事',detailStory(k)]
+      ['family','家人与往来',princeAdoptionContactPanel(k)+royalKinContactButtons(k,true)+marriagePanel(k)+householdPanel(k)+princeCirclePanel(k)]
     ])}`;
 }
 function princeEstateRecord(k,line){

@@ -441,12 +441,13 @@ function viewJinyiwei(){
   const back=`<button class="btn quiet sm detail-back" onclick="A.go('government')">← 返回治国理政</button>`,j=jinyiwei();
   if(!j)return `${back}<h2>锦衣卫</h2><p>锦衣卫可密查宫闱疑案、核实风闻奏事、搜查宫室。尚未设立。</p><div class="acts"><button class="btn jade" onclick="A.establishJinyiwei()">设立锦衣卫<small>精力−1 · 国库−50</small></button></div>${casesSection()}`;
   const c=j.commander;
-  return `${back}<header class="detail-head">${porImg(c,160)}<div class="grow"><p>锦衣卫</p><h2>${esc(c.name)}</h2><p>指挥使 · ${c.age}岁 · ${officialStatus(c)} · ${esc(c.temperament)}</p></div></header>
+  return `${back}<header class="detail-head person-detail-head">${porImg(c,160)}<div class="grow"><p>锦衣卫</p><h2>${esc(c.name)}</h2><p>指挥使 · ${c.age}岁 · ${officialStatus(c)} · ${esc(c.temperament)}</p></div></header>
     <p class="hint">宫中一旦查实妃嫔与皇子或守宫侍卫私会，值房会主动密奏。</p>
     <div class="detail-vitals">${bar('才干',c.ability)}${bar('功绩',c.merit)}${bar('信任',c.trust)}</div>
+    ${detailSection('指挥使纪事',detailStory(c))}
     ${casesSection()}${intelligencePanel()}
     ${detailSection('搜查宫室',`<p class="hint">只有确有案底的人才可能被搜出物证；搜不出东西，被搜者记恨、六宫不安。同一人一年内只搜一次。</p><div class="acts">${harem().map(x=>`<button class="btn sm" onclick="A.jinyiweiSearch(${x.id})" ${searchReady(x)?'':'disabled'}>${esc(cName(x))}<small>${esc(x.palace||'')}</small></button>`).join('')}</div>`)}
-    ${detailFold('指挥使履历',detailStory(c))}`;
+    `;
 }
 function casesSection(){
   const list=palaceCases().slice().reverse(),label={cold:'未破',investigating:'密查中',solved:'已破',closed:'已结'};

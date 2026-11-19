@@ -186,3 +186,9 @@
 .chronicle-filter-fold .chronicle-tools{margin-top:6px}
 .chronicle-order{margin:4px 0 10px}
 @media(max-width:600px){.consort-detail-actions .acts{grid-template-columns:repeat(3,minmax(0,1fr))}#panel .consort-detail-actions .btn{font-size:12px}}
+@media(max-width:600px){
+ #panel .person-detail-head{flex-direction:row;align-items:flex-start;text-align:left;flex-wrap:nowrap;gap:12px;padding:12px}
+ #panel .person-detail-head .por{width:96px;height:120px;object-fit:contain}
+ #panel .person-detail-head .grow{width:auto;min-width:0;flex:1}
+ #panel .person-detail-head p{font-size:13px;line-height:1.5}
+}

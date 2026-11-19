@@ -72,7 +72,7 @@ function hongjianGuestPanel(p){
 }
 function hongjianProfile(c){
  if(S.consorts.includes(c)){const sel=UI.sel;UI.sel=c.id;try{return viewConsort();}finally{UI.sel=sel;}}
- return `${personBackButton('home')}<header class="detail-head">${porImg(c,224)}<div><h2>薛红笺 · 前朝经历</h2><p>入宫、相伴与经营往事保留在旧朝，当前不可再次纳入。</p></div></header>${hongjianPanel(c)}${detailSection('人物纪事',detailStory(c))}`;
+ return `${personBackButton('home')}<header class="detail-head person-detail-head">${porImg(c,224)}<div><h2>薛红笺 · 前朝经历</h2><p>入宫、相伴与经营往事保留在旧朝，当前不可再次纳入。</p></div></header>${detailSection('人物纪事',detailStory(c))}${hongjianPanel(c)}`;
 }
 const hongjianVisit=A.fenghuaVisit;
 A.fenghuaVisit=function(key){const p=fenghuaPerson(key);if(hongjianContent()&&p?.hongjian)return A.hongjianStory(p.id);return hongjianVisit(key);};
