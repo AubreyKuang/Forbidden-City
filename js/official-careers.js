@@ -221,6 +221,7 @@ function courtFamilyLifeTick(previous){
       const coldStamp=familyKind==='cold'&&palaceKinRecoveryActive()?c.palaceKinRecovery?.id:null;
       if(direct.length)recordPalaceKinNews(c,direct,familyKind,recovery?.fact||fact,recovery?c.id+':'+familyKind:key,
         recovery?.stamp||coldStamp||stamp,old,recovery);
+      if(recovery&&direct.length&&!modalOpen&&UI.view==='consort'&&byId(UI.sel)===c)render();
       kin=kin.filter(item=>!direct.includes(item));
     }
     const writers=penalty?familyPenaltyWriters(kin,key,stamp,lostCrown):null;
