@@ -335,15 +335,16 @@ function royalRelativeCards(relatives){
   });
   return `<div class="grid portrait-grid">${cards.join('')}</div>`;
 }
-function royalRelativesPanel(){
-  return detailSection('先朝亲族',royalRelativeCards(listedRoyalKin()));
-}
 function royalKinRosterPanel(){
   const relatives=listedRoyalKin();
-  const siblings=royalRelativeCards(relatives.filter(k=>k.reign===S.gen-1));
-  const elders=royalRelativeCards(relatives.filter(k=>k.reign===S.gen-2));
-  return detailSection('兄弟姐妹',siblings)+detailSection('伯叔与姑姑',elders)||
-    '<p class="hint">目前没有在册的兄弟姐妹、伯叔或姑姑。</p>';
+  if(!relatives.length)return '<p class="hint">目前没有在册的先朝亲族。</p>';
+  const groups=[
+    ['兄弟姐妹',relatives.filter(k=>k.reign===S.gen-1)],
+    ['伯叔与姑姑',relatives.filter(k=>k.reign===S.gen-2)],
+    ['更早世代的宗亲',relatives.filter(k=>k.reign!==S.gen-1&&k.reign!==S.gen-2)]
+  ];
+  return detailSection('先朝亲族',groups.filter(([,kin])=>kin.length)
+    .map(([title,kin])=>`<h4>${title}</h4>${royalRelativeCards(kin)}`).join(''));
 }
 function viewRoyalRelative(){
   const ruler=E().natalMarriageHeir;

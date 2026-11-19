@@ -260,7 +260,7 @@ A.logCard=function(){
 };
 
 function viewFamily(){
-  if((UI.familyMode||'graph')==='graph')return `${pageHeading('家族关系树')}<div class="acts view-switch" role="group" aria-label="家族查看方式"><button class="btn sm on">关系图</button><button class="btn sm" onclick="A.familyMode('list')">家族列表</button></div>${dowagerFamilyPanel()}${familyGraphSVG()}${outsideBirthFamilyPanel()}${royalRelativesPanel()}${householdDescendantsPanel()}`;
+  if((UI.familyMode||'graph')==='graph')return `${pageHeading('家族关系树')}<div class="acts view-switch" role="group" aria-label="家族查看方式"><button class="btn sm on">关系图</button><button class="btn sm" onclick="A.familyMode('list')">家族列表</button></div>${dowagerFamilyPanel()}${familyGraphSVG()}${outsideBirthFamilyPanel()}${householdDescendantsPanel()}`;
   const byClan=new Map(),kidsByMother=new Map();
   for(const k of S.children){
     if(!kidsByMother.has(k.mom))kidsByMother.set(k.mom,[]);
@@ -293,7 +293,7 @@ function viewFamily(){
     branch(whiteSpringRoyal(people[0])?'白泉王室 · 父王与王兄':familyVisibilityActive()?(hasClan(people[0])?clanName(key):people[0].sur+'家'):key?clanName(key):'未列家族',people,hasClan(people[0])?` · 势力 ${Math.max(...people.map(c=>rd(c.fam.p)))}`:'',key||'')).join('');
   const unlisted=S.children.filter(k=>!byId(k.mom)&&!k.birthSwap?.confirmed);
   return `${pageHeading('家族关系树')}<div class="acts view-switch" role="group" aria-label="家族查看方式"><button class="btn sm" onclick="A.familyMode('graph')">关系图</button><button class="btn sm on">家族列表</button></div><p class="hint">皇嗣列在生母名下，另标养母。点名字可查看人物。</p>
-    ${dowagerFamilyPanel()}${branches||'<p class="hint">目前没有入宫的妃嫔。</p>'}${outsideBirthFamilyPanel()}${royalRelativesPanel()}${householdDescendantsPanel()}
+    ${dowagerFamilyPanel()}${branches||'<p class="hint">目前没有入宫的妃嫔。</p>'}${outsideBirthFamilyPanel()}${householdDescendantsPanel()}
     ${unlisted.length?`<details class="family-branch"><summary>生母未载</summary><ul>${unlisted.map(childLine).join('')}</ul></details>`:''}`;
 }
 function dynastyLegacyPanel(legacy){

@@ -1139,7 +1139,7 @@ test('succession preserves the previous empress and birth mother portraits and i
   const {run}=boot();run(`var queen=empress(),mother=harem().find(c=>c!==queen);queen.portraitOverride=242;mother.portraitOverride=243;var son=makeKid(mother,'m','承宁'),sister=makeKid(mother,'f','清嘉');son.born=sister.born=S.turn-240;son.married=true;son.spouse={...marriageCandidate(son,'scholar'),marriedAt:S.turn-24};ensureMarriedLife(son);S.turn+=3;startHouseholdPregnancy(son,son.spouse);S.turn+=9;deliverHouseholdChild(son,son.household.pregnancies[0]);var baby=son.household.children[0],wifeFace=portraitCell(son.spouse),queenId=queen.id,motherId=mother.id;
     succeed(son);choose(0);drain();assert.equal(S.flags.dowager.personId,queenId);assert.equal(S.flags.birthDowager.personId,motherId);assert.equal(portraitCell(dowagerPerson(S.flags.dowager)),242);assert.equal(portraitCell(dowagerPerson(S.flags.birthDowager)),243);assert.equal(portraitCell(empress()),wifeFace);
     assert.equal(S.children.length,1);assert.equal(S.children[0].born,baby.born);assert.equal(S.children[0].name,baby.given);assert.equal(S.children[0].mom,empress().id);assert.equal(S.ys.b,0);
-    UI.sel='cn';assert.match(viewPlace(),/嫡母.*先帝皇后/);assert.ok(viewPlace().includes('data-portrait-cell="242"'));assert.match(royalRelativesPanel(),/清嘉/);
+    UI.sel='cn';assert.match(viewPlace(),/嫡母.*先帝皇后/);assert.ok(viewPlace().includes('data-portrait-cell="242"'));assert.match(royalKinRosterPanel(),/清嘉/);
     var snapshot=JSON.stringify(S);S=JSON.parse(snapshot);migrate();assert.equal(portraitCell(dowagerPerson(S.flags.dowager)),242);S.flags.dowager.lastOffer=S.turn;A.greet();assert.equal(portraitCell(curEv.por),242);drain();`);
 });
 
@@ -1166,8 +1166,9 @@ test('study roster preserves ten living siblings at accession and re-labels them
     assert.match(roster,/清宁[\\s\\S]*皇姑/);assert.doesNotMatch(roster,/宗亲7/);
     A.go('relative',auntId);assert.match(viewRoyalRelative(),/皇姑/);assert.match(viewRoyalRelative(),/昔日随生母读书/);
     royalById(olderId).alive=false;assert.doesNotMatch(royalKinRosterPanel(),/承和|宗亲7/);
-    S.gen++;assert.equal(royalKinship(royalById(auntId)),'宗亲');assert.doesNotMatch(royalKinRosterPanel(),/清宁/);
-    assert.match(royalRelativesPanel(),/清宁/);`);
+    S.gen++;assert.equal(royalKinship(royalById(auntId)),'宗亲');assert.match(royalKinRosterPanel(),/更早世代的宗亲[\\s\\S]*清宁/);
+    for(const mode of ['graph','list']){UI.familyMode=mode;assert.doesNotMatch(viewFamily(),/先朝亲族/);}
+    assert.equal((royalKinRosterPanel().match(/>清宁<\\/button>/g)||[]).length,1);`);
 });
 
 test('archived local and distant relatives use audiences and letters, with persistent mirrored diaries',()=>{
