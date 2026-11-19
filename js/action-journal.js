@@ -16,6 +16,11 @@ const PalaceActions=(()=>{
         const d=s.flags[key],c=s.retainedFamilies.find(c=>c.id===d?.personId);
         if(c?.house&&d?.portrait?.house){const portrait={...d.portrait};delete portrait.house;copy.flags[key]={...d,portrait};}
       }
+      if(s.flags.seniorDowagers)copy.flags.seniorDowagers=s.flags.seniorDowagers.map(d=>{
+        const c=s.retainedFamilies.find(c=>c.id===d.personId);
+        if(!c?.house||!d.portrait?.house)return d;
+        const portrait={...d.portrait};delete portrait.house;return {...d,portrait};
+      });
     }
     // Once summoned, this is a display cache of the canonical maid, not another person.
     const candidate=s?.flags?.maidAudience;
@@ -41,7 +46,7 @@ const PalaceActions=(()=>{
     if(name==='start'){journal=null;blocked=false;}
     const before=S?clone(S):null,prior=journal?clone(journal):null,priorUI=clone(UI);
     if(!journal&&!modalOpen&&!Q.length){
-      journal={version,outerHouseholds:true,outerHouseholdUpdates:true,exclusiveStoryOrigins:true,immortalDiscoveryNews:true,betrothalJourneys:true,immortalPeerAdmiration:true,maritalEstates:true,luwanFrontierChronicles:true,luwanFrontierVisuals:true,maidFavorDisputes:true,base:S?clone(world(S)):null,ui:clone(UI),steps:[]};
+      journal={version,outerHouseholds:true,outerHouseholdUpdates:true,exclusiveStoryOrigins:true,immortalDiscoveryNews:true,betrothalJourneys:true,immortalPeerAdmiration:true,maritalEstates:true,luwanFrontierChronicles:true,luwanFrontierVisuals:true,maidFavorDisputes:true,longLivedDowagers:true,earlyMarriedLife:true,base:S?clone(world(S)):null,ui:clone(UI),steps:[]};
     }
     const current={name,args:clone(args),monthNotice:true,rolls:[],answers:[],saves:[],ui:clone(UI)};
     // A fresh decision in an unfinished older scene uses today's age rules on future replays.
@@ -163,6 +168,8 @@ const PalaceActions=(()=>{
     get replayRollsExhausted(){return replaying&&step&&cursor===step.rolls.length;},
     get immortalPeerAdmiration(){return !journal||journal.immortalPeerAdmiration===true||journal.balancedImmortalDiscovery===true;},
     get maidFavorDisputes(){return !journal||journal.maidFavorDisputes===true;},
+    get longLivedDowagers(){return !journal||journal.longLivedDowagers===true;},
+    get earlyMarriedLife(){return !journal||journal.earlyMarriedLife===true;},
     get betrothalJourneys(){return !journal||journal.betrothalJourneys===true;},
     get immortalDiscoveryNews(){return !journal||journal.immortalDiscoveryNews===true;},
     get exclusiveStoryOrigins(){return !journal||journal.exclusiveStoryOrigins===true;},

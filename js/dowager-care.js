@@ -17,10 +17,24 @@ function initializeDowagerOpening(){
  const text=`皇后${fullName(q)}出自太后母家，是太后的侄女；其父${q.house.father.name}与太后为同胞手足。潜邸婚姻之外，也有这层母族亲缘。`;
  story(q,'【母家亲缘】'+text);story(q.house.father,'【母家亲缘】'+text);dowagerRecord(d,'母家晚辈',text);log(text);
 }
+function dowagerYearsToLive(d,roll){
+ if(!PalaceActions.longLivedDowagers)return 36+Math.floor(Math.log(1-roll)/Math.log(1-.006))+1;
+ rememberDowagerAge(d);
+ const bands=[[54,67,.15],[68,79,.45],[80,89,.30],[90,99,.10]];
+ const minimum=dowagerAge(d,S.turn)+3;
+ const remaining=bands.filter(([,last])=>last>=minimum);
+ const weights=remaining.map(([first,last,weight])=>weight*(last-Math.max(first,minimum)+1)/(last-first+1));
+ let draw=roll*weights.reduce((sum,weight)=>sum+weight,0),target=minimum;
+ for(const [i,[first,last]] of remaining.entries()){
+  if(draw<weights[i]){target=Math.min(last,Math.max(first,minimum)+Math.floor(draw/weights[i]*(last-Math.max(first,minimum)+1)));break;}
+  draw-=weights[i];
+ }
+ return Math.max(37,(target-d.age)*12+(d.atTurn??0)-S.turn);
+}
 function dowagerLifePlan(d=ensureDowager()){
  if(!dowagerCareActive()||!d?.alive)return null;
  if(!d.lastYears){
-  const wait=Math.floor(Math.log(1-R())/Math.log(1-.006))+1,deathTurn=S.turn+36+wait;
+  const deathTurn=S.turn+dowagerYearsToLive(d,R());
   d.lastYears={deathTurn,askTurn:deathTurn-ri(12,36),asked:false,warned:false,caregiver:null,lastCare:-1,history:[]};
  }
  return d.lastYears;
@@ -75,7 +89,18 @@ function dowagerCareTick(){
 const careDowagerTick=dowagerTick;
 dowagerTick=function(){careDowagerTick();if(dowagerCareActive())dowagerCareTick();};
 const careDowagerPassing=dowagerPassingEvent;
-dowagerPassingEvent=function(){if(!dowagerCareActive())return careDowagerPassing();const d=ensureDowager();if(!d?.alive)return careDowagerPassing();const p=dowagerLifePlan(d);return S.turn>=p.deathTurn?dowagerFuneralEvent(d):null;};
+dowagerPassingEvent=function(){
+ if(!dowagerCareActive())return careDowagerPassing();
+ const main=ensureDowager();
+ if(!PalaceActions.longLivedDowagers){
+  if(!main?.alive)return careDowagerPassing();
+  return S.turn>=dowagerLifePlan(main).deathTurn?dowagerFuneralEvent(main):null;
+ }
+ for(const d of dowagerCourtMembers()){
+  if(d.alive?S.turn>=dowagerLifePlan(d).deathTurn:d.mourning&&!d.mourning.handled)return dowagerFuneralEvent(d);
+ }
+ return null;
+};
 const careDowagerDaoTick=dowagerDaoTick;
 dowagerDaoTick=function(d){if(dowagerCareActive()&&d.lastYears&&S.turn>=d.lastYears.askTurn)return;return careDowagerDaoTick(d);};
 const careDowagerCompany=prepareDowagerCompany;

@@ -9,8 +9,8 @@ function reconcileRetainedFamilies(){
     if(!c.house||hosts.has(c.id)||byId(c.id))continue;
     hosts.set(c.id,{...c,familyArchive:{gen:court.gen,atTurn:court.turn??S.turn,age:c.age}});
   }
-  for(const d of [S.flags.dowager,S.flags.birthDowager])if(d?.portrait?.house&&!hosts.has(d.personId)&&!byId(d.personId)){
-    hosts.set(d.personId,{...d.portrait,id:d.personId,familyArchive:{gen:S.gen-1,atTurn:d.atTurn??S.turn,age:d.age??d.portrait.age}});
+  for(const d of dowagerCourtMembers())if(d?.portrait?.house&&!hosts.has(d.personId)&&!byId(d.personId)){
+    hosts.set(d.personId,{...d.portrait,id:d.personId,familyArchive:{gen:(d.seniorSince??S.gen+1)-2,atTurn:d.atTurn??S.turn,age:d.age??d.portrait.age}});
   }
   if(hosts.size)S.retainedFamilies=[...hosts.values()];
   // Rejoin JSON copies to one live household. Current households have priority.
@@ -18,7 +18,7 @@ function reconcileRetainedFamilies(){
   for(const c of [...S.consorts,...hosts.values()])if(c.house?.father?.id){
     const id=c.house.father.id;if(!houses.has(id))houses.set(id,c.house);else c.house=houses.get(id);
   }
-  for(const d of [S.flags.dowager,S.flags.birthDowager]){
+  for(const d of dowagerCourtMembers()){
     const c=hosts.get(d?.personId);if(c&&d.portrait)d.portrait.house=JSON.parse(JSON.stringify(c.house));
   }
 }
@@ -37,13 +37,13 @@ function retainAccessionFamilies(h){
 function retainedFamilyAgeTick(){
   if(!retainedFamiliesActive())return;
   for(const c of S.retainedFamilies||[]){
-    const d=[S.flags.dowager,S.flags.birthDowager].find(d=>d?.personId===c.id),a=c.familyArchive;
+    const d=dowagerCourtMembers().find(d=>d?.personId===c.id),a=c.familyArchive;
     if(d?.alive===false)c.alive=false;
     if(c.alive&&a)c.age=a.age+Math.max(0,Math.floor((S.turn-a.atTurn)/12));
   }
 }
 function retainedHostTitle(c){
-  const d=[S.flags.dowager,S.flags.birthDowager].find(d=>d?.personId===c.id);
+  const d=dowagerCourtMembers().find(d=>d?.personId===c.id);
   return d?`${d.relation||'皇太后'}${d.alive?'':' · 已故'}`:c.familyArchive?`第${cnNum(c.familyArchive.gen)}代宫眷${c.alive?'':' · 已故'}`:'本朝宫眷';
 }
 function retainedKinship(c,role){
@@ -80,7 +80,7 @@ const inheritedOfficialRecord=officialRecord;
 officialRecord=function(c,role,text,options){
   inheritedOfficialRecord(c,role,text,options);
   if(!retainedFamiliesActive())return;
-  for(const d of [S.flags.dowager,S.flags.birthDowager]){
+  for(const d of dowagerCourtMembers()){
     const mother=familyHostById(d?.personId);if(!d?.alive||!mother?.familyArchive||mother.house?.father.id!==c.house?.father.id)continue;
     const p=officialPerson(c.house,role),kin=officialKinLabel(c.house,role,mother);
     const feeling=!officialAlive(p)?'讣信送到，她抚着旧信许久未语，家中少了一人，尊位也不能减轻这份失落。':/降|疏漏|失职|革职|流放|未尽/.test(text)?'她心中忧虑，盼先查清实情，也叮嘱家人承担应尽的责任。':/赏|升|擢|办结|嘉奖/.test(text)?'她为家人欣慰，又嘱咐得意时更须谨慎，不可倚仗宫中亲缘。':'她记下家人的近况，关切任上的辛劳，也盼往后平安来信。';
@@ -92,7 +92,7 @@ officialRecord=function(c,role,text,options){
 const inheritedOfficialConversation=officialConversation;
 officialConversation=function(e,topic){
   if(retainedFamiliesActive()&&e.c.familyArchive&&topic==='family'){
-    const d=[S.flags.dowager,S.flags.birthDowager].find(d=>d?.personId===e.c.id);
+    const d=dowagerCourtMembers().find(d=>d?.personId===e.c.id);
     return d?.alive?`“${e.role==='father'?'女儿':'家中姐妹'}如今尊为太后，臣仍惦记她的起居。家门虽与皇室有亲，任上该尽的本分，一分也不敢少。”`:d?'“太后虽已不在，家中仍收着旧日来信。臣记得的是亲人，也会守好今日的本分。”':'“朝代更迭，家人的书信与旧事还在。臣只盼各自安好，任上的事也不负新朝所托。”';
   }
   return inheritedOfficialConversation(e,topic);

@@ -1,5 +1,48 @@
 /* Keep identities, families and portraits when the point of view changes reign. */
 const ROYAL_KIN_PER_REIGN=10;
+function dowagerCourtMembers(){
+  const f=S?.flags;
+  return f?[f.dowager,f.birthDowager,...(f.seniorDowagers||[])].filter(Boolean):[];
+}
+function dowagerAge(d,turn=d.mourning?.turn??S.turn){
+  return Number.isFinite(d.age)?d.age+Math.max(0,Math.floor((turn-(d.atTurn??0))/12)):null;
+}
+function rememberDowagerAge(d){
+  if(!Number.isFinite(d.age)){d.age=E().age+19+voiceHash('dowager-age:'+String(d.seed||d.sur||d.name))%8;d.atTurn=S.turn;}
+}
+function retainSeniorDowagers(){
+  const previous=[S.flags.dowager,S.flags.birthDowager].filter(d=>d?.alive);
+  if(!previous.length)return;
+  const senior=S.flags.seniorDowagers||=[];
+  for(const d of previous){
+    rememberDowagerAge(d);
+    d.portrait||=dowagerPerson(d);
+    d.memoryId??=d.personId??'dowager-'+S.gen;
+    d.name=(d.sur||'')+'太皇太后';
+    d.relation='先帝母后 · 祖母辈';
+    d.seniorSince=S.gen+1;
+    if(d.lastYears?.caregiver!=null){d.lastYears.caregiver=null;d.lastYears.careAssigned=false;}
+    senior.push(d);
+    dowagerRecord(d,'晋尊太皇太后','新帝即位，她以祖母辈长者受尊为太皇太后，仍居慈宁宫。');
+  }
+}
+function seniorDowagerAccessionLine(){
+  return (S.flags.seniorDowagers||[]).filter(d=>d.alive&&d.seniorSince===S.gen)
+    .map(d=>`${d.fullName||'先帝的母后'}受尊为${d.name}，仍居慈宁宫。`).join('');
+}
+A.greetSeniorDowager=function(index){
+  const d=(S.flags.seniorDowagers||[])[index];
+  if(modalOpen||S.over||mourningActive()||!d?.alive||!useE())return;
+  const ill=dowagerIll(d);
+  pushEv({title:'慈宁宫 · '+d.name,por:dowagerPerson(d),valid:()=>d.alive&&!S.over,
+    text:ill?'她靠在软枕上，听见你来，仍让宫人给你搬了张靠近些的凳子。':
+      '她仍用从前那只茶盏，见你进门先问近来睡得好不好。说到先帝从前来请安，也常是这个时辰，她把茶盖合上，停了片刻。',
+    choices:[{t:ill?'陪她在榻边坐一会儿':'坐下听她说说先朝的家常',f:()=>{
+      d.mood=clamp((d.mood??65)+4);
+      const line=ill?'你陪她在榻边坐了一会儿。她说，听见晚辈的声音，便觉得屋里没有那么静。':'她讲起先帝小时候来请安，背熟了礼词却忘了带帽子。说完自己先笑了，叫你今天多坐一会儿。';
+      dowagerRecord(d,'慈宁宫问安',line);return line;
+    }}]});
+};
 function dowagerPerson(d){
   // Rendering must never overwrite a predecessor's saved appearance or roll RNG.
   let portrait=d?.portrait;
@@ -69,6 +112,7 @@ function inheritDowager(h){
   for(const id of [h.mom,empress()?.id])if(id!=null&&!past.excluded.includes(id))past.excluded.push(id);
   const mother=byId(h.mom),queen=empress();
   const main=queen||mother;
+  if(PalaceActions.longLivedDowagers)retainSeniorDowagers();
   S.flags.dowager=makeDowager(main,main?.id===h.mom?'生母 · 先帝皇后':queen?'嫡母 · 先帝皇后':'生母');
   if(!queen&&main)S.flags.dowager.relation='生母';
   S.flags.birthDowager=mother&&mother.id!==main?.id?makeDowager(mother,'生母 · 尊为皇太后'):null;
@@ -114,7 +158,7 @@ function archivedAdmissionDate(c,court){
   return dateStr({emp:court.emperor,year:1+Math.floor(elapsed/12),month:elapsed%12+1});
 }
 function dowagerBiography(d){
-  const opening=S.gen===1&&d.personId==null;
+  const opening=(S.gen===1||d.seniorSince!=null)&&d.personId==null;
   if(!opening&&d.personId==null)return '';
   const court=d.personId!=null&&S.previousCourts?.findLast(court=>(court.consorts||[]).some(c=>c.id===d.personId));
   const archived=court?.consorts?.find(c=>c.id===d.personId)||S.retainedFamilies?.find(c=>c.id===d.personId);
@@ -159,7 +203,13 @@ function dowagerBiography(d){
   return lines.map(line=>'<p>'+esc(line)+'</p>').join('');
 }
 function dowagerCourtPanel(){
-  return [S.flags.dowager,S.flags.birthDowager].filter(Boolean).map(d=>`<section class="detail-head dowager-court">${porImg(dowagerPerson(d),160)}<div class="grow"><h3>${esc(d.name)}</h3><p>${esc(d.fullName||'')}${d.relation?' · '+esc(d.relation):''}</p>${d.age?`<p>${d.age+Math.floor((S.turn-(d.atTurn||0))/12)}岁 · ${d.alive?'慈宁宫':'已故'}</p>`:''}${d.portrait?.trait?`<p>${esc(d.portrait.trait)} · ${esc(TRAITS[d.portrait.trait]?.d||'')}</p>`:''}${dowagerBiography(d)}</div></section>`).join('');
+  const seniors=S.flags.seniorDowagers||[];
+  return dowagerCourtMembers().sort((a,b)=>Number(b.seniorSince!=null)-Number(a.seniorSince!=null)).map(d=>{
+    const age=dowagerAge(d),index=seniors.indexOf(d);
+    const action=index>=0&&d.alive?`<button class="btn jade" onclick="A.greetSeniorDowager(${index})">给${esc(d.name)}请安<small>精力−1</small></button>`:'';
+    const history=index>=0&&d.story?.length?detailFold('人物纪事',detailStory({...d,id:d.memoryId||d.personId})):'';
+    return `<section class="detail-head dowager-court">${porImg(dowagerPerson(d),160)}<div class="grow"><h3>${esc(d.name)}</h3><p>${esc(d.fullName||'')}${d.relation?' · '+esc(d.relation):''}</p>${age!=null?`<p>${age}岁 · ${d.alive?'慈宁宫':'已故'}</p>`:''}${d.portrait?.trait?`<p>${esc(d.portrait.trait)} · ${esc(TRAITS[d.portrait.trait]?.d||'')}</p>`:''}${dowagerBiography(d)}${action}${history}</div></section>`;
+  }).join('');
 }
 
 function royalBirthOrder(a,b){return a.born-b.born||a.id-b.id;}

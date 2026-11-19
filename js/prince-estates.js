@@ -62,6 +62,55 @@ A.princeReviewFiefRequest=function(id){if(!modalOpen)pushEv(princeFiefRequestEve
 function princeFiefRequestPanel(k){
   return princeFiefRequestEvent(k)?`<div class="acts"><button class="btn sm jade" onclick="A.princeReviewFiefRequest(${royalActionArg(k.id)})">批阅请藩表</button></div>`:'';
 }
+function princeSpouseVisitReady(k){
+  const p=k?.spouse;
+  return !S.over&&!mourningActive()&&E().age>=18&&princeEstateAvailable(k)&&!k.away&&kidAge(k)>=18&&k.married&&
+    p?.alive!==false&&Number.isFinite(p?.born)&&kidAge(p)>=18&&!p.away&&!p.jailed&&!p.gone&&!p.cold;
+}
+function princeSpouseVisitPanel(k){
+  if(!princeSpouseVisitReady(k))return '';
+  const visit=k.spouse.princePrivateVisit,already=visit?.gen===S.gen&&visit.last===S.turn;
+  return `<div class="acts"><button class="btn quiet" onclick="A.princeSpouseVisit(${royalActionArg(k.id)})" ${already?'disabled':''}>私下求见王妃<small>${already?'本月已问过她的意思':'先问她是否愿意见面'}</small></button></div>`;
+}
+A.princeSpouseVisit=function(id){
+  const k=princeEstateById(id);
+  if(modalOpen||!princeSpouseVisitReady(k))return;
+  const p=k.spouse,gen=S.gen,turn=S.turn;
+  if(p.princePrivateVisit?.gen===gen&&p.princePrivateVisit.last===turn)return;
+  const previous=p.princePrivateVisit?.gen===gen?p.princePrivateVisit:null;
+  const trust=p.trust??50,nature=marriageNature(p).temperament;
+  const odds=(trust>=70?.10:trust<45?.62:.37)+(['爽朗','好胜'].includes(nature)?.12:0);
+  const willing=p.willing!==false&&mulberry32(voiceHash(`prince-spouse-visit:${p.seed||p.id}:${E().seed||gen}`))()<odds;
+  let done=false;
+  const valid=()=>!done&&S.gen===gen&&S.turn===turn&&k.spouse===p&&princeSpouseVisitReady(k);
+  const opening=previous?.meetings?'她听见你的脚步声，手里的杯子停了一下。':'听明白你想私下见她，王妃将门口的宫人留在原地，自己先答了话。';
+  const reply=!willing?'“谢过陛下。可我不愿私下相见，府里寻常的问候仍可照礼办。”':
+    trust>=70?'“我愿留这一会儿，可回到屋里以后，该怎么面对他，还得我自己想清楚。”':
+    ['沉静','矜持','敏感'].includes(nature)?'“我愿和陛下单独说几句话。这件事请只留在我们之间。”':
+      '“既然特地来问了，我便照实答。我愿留下，陛下也可以留下。”';
+  const settle=meet=>{
+    if(!valid()||meet&&(!willing||!useE()))return null;
+    done=true;
+    const visit=p.princePrivateVisit=previous||{gen,meetings:0};
+    visit.last=turn;
+    if(!meet){
+      princePersonNote(p,'【王府求见】'+(willing?'陛下问过自己的意思，今日只照常问候便告辞。':'她明言不愿私见，陛下听后告辞，未再相劝。'));
+      return willing?'你问过府里近况便起身告辞，留她照自己的安排过这一天。':'你听完便告辞。她回到原先坐的地方，接着料理手头的事。';
+    }
+    visit.meetings++;
+    const feeling=trust>=70?`后来${k.name}替她留了盏灯。她照常道谢，目光却停在灯芯上，没提今日见过谁。`:
+      `回去后，${k.name}同她照常说了几句府里的家常，她把方才相见的事留在了心里。`;
+    princePersonNote(p,'【王府私会】她亲口应允，在偏厅与你单独相会。'+feeling);
+    if(visit.meetings>=2&&!visit.noticed&&chance(.10)){
+      visit.noticed=true;
+      kstory(k,'【王府闲话】听内侍说偏厅近来曾单独待客，问了来人是谁，仍没人能给个准话。他把这件事记在心里。');
+    }
+    return '你依她的意思在偏厅坐下。说罢话，从原路告辞，仍让她按自己的意思料理府里的往来。'+fx('精力−1');
+  };
+  pushEv({title:'王府 · 私下求见',por:p,valid,sealedAnnals:true,text:`${princeEstateLabel(k)}的偏厅还温着茶。\n${opening}\n${reply}`,
+    choices:[...(willing?[{t:'应她的意思，留在偏厅相会 · 精力−1',cond:()=>E().energy>0,f:()=>settle(true)}]:[]),
+      {t:willing?'今日只作寻常问候':'尊重她的意思，告辞',f:()=>settle(false)}]});
+};
 function viewPrinceEstate(){
   const k=princeEstateById(UI.sel);if(!k)return viewOut();
   const id=royalActionArg(k.id);
@@ -81,7 +130,7 @@ function viewPrinceEstate(){
       ['history','王府记事',detailStory(k)],
       ['dockets','长史奏报',princeDocketPanel(k)],
       ['succession','世子与袭爵',princeSuccessionPanel(k)],
-      ['family','家人与往来',princeAdoptionContactPanel(k)+royalKinContactButtons(k,true)+marriagePanel(k)+householdPanel(k)+princeCirclePanel(k)]
+      ['family','家人与往来',princeAdoptionContactPanel(k)+royalKinContactButtons(k,true)+marriagePanel(k)+princeSpouseVisitPanel(k)+householdPanel(k)+princeCirclePanel(k)]
     ])}`;
 }
 function princeEstateRecord(k,line){
