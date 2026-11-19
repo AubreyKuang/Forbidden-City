@@ -51,6 +51,81 @@ function familyAdmissionReactions(g,selection=false){
   }
   delete g.selectionSisterFeelings;
 }
+// A quiet vigil belongs to the daughters who actually meet, once per father's death.
+function mourningDaughterMemory(c,father){
+ const mail=c.fatherLetters?.father===father.id?c.fatherLetters:null;
+ if(c.fatherHeirPressure)return {hurt:true,words:'爹来信问我什么时候能有个皇子。那时我多盼他也问一句，我过得好不好。'};
+ if(mail?.letter&&father.daughterLetterNature==='demanding')return {hurt:true,words:'爹在信里催我照应家门。我知道他有他的难处，可我接信那天，也是真的难过。'};
+ if(mail?.lastReply?.kind==='money'&&father.daughterLetterNature==='caring')return {hurt:false,words:'我把银子捎回去，他收下了，还怕我舍不得给自己花。那封回信，我到现在还收着。'};
+ if(mail?.lastReply?.kind==='peace'&&father.daughterLetterNature==='caring')return {hurt:false,words:'我只给家里报了个平安，他也肯好好回我。如今倒庆幸，那封信我寄出去了。'};
+ return null;
+}
+function sisterVigilScene(a,b,father){
+ const bond=relGet(a,b),arc=friendshipArc(a,b);
+ const tense=isRival(a,b)||isRival(b,a)||friendshipTense(a,b)||bond<0;
+ const close=!tense&&(bond>=35||['close','renewed'].includes(arc?.stage));
+ const first=mourningDaughterMemory(a,father),second=mourningDaughterMemory(b,father);
+ const differ=first&&second&&first.hurt!==second.hurt;
+ const name=fullName(a),other=fullName(b),remark=first||second,speaker=first?a:b;
+ const recollection=remark?`${fullName(speaker)}低声道：“${remark.words}”`:'';
+ if(close){
+   const speech=remark?recollection+`${fullName(speaker===a?b:a)}把手覆在她手上：“你肯同我说，我就听着。”`:
+     `${name}想念祭文，念到父亲的名字却哽住了。${other}挨着她坐下，把余下几句轻轻接了过去。`;
+   return {title:'姐妹同祭',scene:speech,thoughts:[
+     `原以为今日要自己撑过去。和${other}一道把这炷香敬完，胸口总算松了些。`,
+     `和${name}并肩坐到香尽。离开前又握了握她的手，这一点暖意我自己也舍不得放开。`],bond:6,mood:3};
+ }
+ const disagreementChance=differ ? .70 : remark ? .45 : .30;
+ if(tense&&chance(disagreementChance)){
+   const hurt=first?.hurt?a:second?.hurt?b:null,listener=hurt===a?b:a;
+   const answer=differ?(listener===a?first:second).words+'我这几日总想着那封信。你说的那些，我一时还接不上话。':'我今日只想好好敬爹一杯。这件事，我眼下听不进去。';
+   const words=hurt?`${fullName(hurt)}说：“${(hurt===a?first:second).words}”${fullName(listener)}握着祭杯，隔了片刻才答：“${answer}”`:
+     `${name}想在祭文里添一句父亲的好。${other}按住纸角：“这是你想对爹说的。我的那句，让我自己写吧。”两人各写了一张，谁也没再问对方写了什么。`;
+   const thoughts=hurt?[a,b].map(c=>c===hurt?'原想让她知道，我也想爹，只是还有委屈。话没说完，她已经低头去斟酒了。':'见她说起那些难过的事，我只盯着手里的杯子。今日我能陪她行礼，却还接不住这句话。'):
+     [`我原想与${other}同署一张祭文，到最后才明白，她记得的爹与我记得的终究有些不同。`,`我让${name}留着她自己的那张。想念爹的话我也有，只想用自己的口气写。`];
+   return {title:'各有一句祭辞',scene:words,thoughts,bond:-3,mood:-1};
+ }
+ if(tense)return {title:'今夜同守一灯',scene:`${name}把身旁的位置空了出来：“今日先陪爹坐会儿吧。”${other}停了停，还是坐下替她挡住了吹向烛芯的风。`+recollection,
+   thoughts:[`过去有些话还梗在心里。可今日见${other}伸手护住灯火，我愿把另一只祭杯递给她。`,`${name}给我留了位置。我坐下陪她守到灯稳，旧事留待别日再谈。`],bond:3,mood:1};
+ return {title:'灯前相伴',scene:`${name}斟酒，${other}把两炷香并排插好。`+(recollection||'行过礼，两人没有急着散，各留了一点工夫听对方说话。'),
+   thoughts:[`与${other}同敬一杯，才知道有人同我记着今日。`,`${name}留在灯前听我说完。哪怕只是几句家常，也比独自咽下去好受些。`],bond:2,mood:1};
+}
+function sisterVigilTick(){
+ if(S.over)return;
+ const families=new Map();
+ let tree;
+ for(const c of S.consorts){
+   if(c.maid||!inPalace(c))continue;
+   let father=c.house?.father;
+   if(c.familyBranchOrigin){
+     tree??=familyTreeRegistry();
+     const node=tree.nodes.find(n=>n.p.id===c.familyBranchOrigin.relative);
+     father=node?.father?.p||(node?.fatherId!=null&&scholarById(node.fatherId));
+   }
+   const death=father?.death;
+   if(father?.alive!==false||!Number.isFinite(death?.turn)||death.sisterVigil)continue;
+   const elapsed=S.turn-death.turn;
+   if(elapsed<1||elapsed>3||(c.enteredAt??death.turn)>death.turn)continue;
+   if(!families.has(father.id))families.set(father.id,{father,sisters:[]});
+   families.get(father.id).sisters.push(c);
+ }
+ for(const {father,sisters} of families.values()){
+   if(sisters.length>=2)holdSisterVigil(father,sisters);
+ }
+}
+function holdSisterVigil(father,sisters){
+ const [a,b]=sisters.length===2?sisters:shuffle(sisters);
+ const v=sisterVigilScene(a,b,father);
+ father.death.sisterVigil={turn:S.turn,daughters:[a.id,b.id],title:v.title};
+ const fact=`${fullName(a)}与${fullName(b)}在宫中设了一席素祭，共悼父亲${father.name}。`;
+ lifeRecord([a,b],'family',v.title,'【'+v.title+'】'+fact+v.scene,'父亲丧讯',v.thoughts.map(text=>({text,emotion:v.bond<0?-.4:.35})));
+ for(const [i,c] of [a,b].entries()){
+   const entry=c.story.at(-1);entry.thread='sister-vigil:'+S.gen+':'+father.id;entry.t+=' '+v.thoughts[i];
+   cchg(c,{mood:v.mood});
+ }
+ relAdd(a,b,v.bond);
+ pushEv({title:v.title,cast:[a,b],text:fact+'\n'+v.scene,choices:[{t:'知道了'}]});
+}
 function sisterThread(c,g){return `sister:${S.gen}:${c.id}:${g.id}`;}
 function sisterNewcomerThought(c,g,feeling){
  if(['rival','replaced','uneasy'].includes(feeling.kind))return ['骄纵','骄矜','好胜','城府'].includes(g.trait)?'我看得出她不痛快，可我也要有自己的日子；亲缘不能让我永远退让。':'原以为有亲人在便不那么怕，如今才懂，她也有失落。我愿守分寸，却不能替她消去所有不安。';
