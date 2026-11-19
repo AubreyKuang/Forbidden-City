@@ -72,6 +72,7 @@ function selectionDisposition(c){
 }
 function selectionThought(c,stage,names){
   const mode=selectionDisposition(c),what=stage==='planned'?'听说又要选秀':'听说'+(names.length?names.join('、')+'留选入宫':'本次没有留下新人');
+  const personal=storyQueenSelectionThought(c,stage,names,mode,what);if(personal)return personal;
   if(stage==='settled'&&!names.length)return {mode,text:mode==='jealous'||mode==='uneasy'?'得知这次没有留下新人，她暗暗松了口气，面上仍守着礼数。':'本次没有留下新人，她听过名册的结果，照常料理自己的日子。',quote:mode==='helpful'?'既然没有留人，也盼她们平安回家，不必在宫门外空等。':'听说这回没有留新人。名册既已合上，便照旧过日子吧。'};
   const lines={
     jealous:[`${what}，她在人前仍按礼数应下，独处时却觉得心口发闷。`,c.rank===8?'臣妾会守着中宫的体面。只是名单添了人，心里也会难受……臣妾也盼陛下还肯来听听我的话。':'臣妾知道不能拦着。可眼看又添新人，心里不舒服，也不愿假装全不在意。'],
@@ -100,6 +101,7 @@ function finishSelectionCourt(s,members){
   }
   const queen=empress();if(!members.length||!inPalace(queen)||!(s.residents||[]).includes(queen.id))return;
   s.council={queen:queen.id,members:members.map(c=>c.id),mode:selectionDisposition(queen),done:false};
+  if(journalContentVersion()>=99)queueStoryQueenWelcome(queen,members,'selection');
 }
 A.selectionCouncil=function(){if(!modalOpen)pushEv(selectionCouncilEvent());};
 function selectionCouncilEvent(s=S.selection){
