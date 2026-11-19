@@ -34,7 +34,7 @@ function betrothalWeddingInquiry(k,p,host,b,weddingReady){
   if(!bond||bond.weddingInquiry?.plan)return false;
   if(!bond.weddingInquiry){
     if(mourningActive()||k.jailed||k.templeStay||p.jailed||p.exiled||
-       Math.min(kidAge(k),natalAge(p))<17||Math.min(bond.royal,bond.relative)<72)return false;
+       Math.min(kidAge(k),natalAge(p))<royalNatalAge('inquiry')||Math.min(bond.royal,bond.relative)<72)return false;
     const memories=betrothalMemories(k,p,b.turn);
     const turns=[...new Set(memories.map(m=>m.turn))].sort((a,b)=>a-b);
     const recentRift=memories.some(m=>m.turn>S.turn-6&&m.affection&&Math.min(...m.affection)<60);
@@ -49,7 +49,7 @@ function betrothalWeddingInquiryEvent(k,p,host,b,inquiry){
   const afar=k.away||royalJourneyAway(k)||p.away||p.commission||p.diplomaticJourney||p.royalCompanionTrip;
   const opening=(afar?'礼部收到一封署着两人名字的信。':'两人一道来见礼官。')+
     (item?`他们提起幼时留下的${item}。`:last?`他们说起一段旧事。${last.text}`:'他们提起幼时交换的婚帖。');
-  const when=S.turn<b.due?'礼部算过日子，等两个人都满十八岁便可依约成婚。':
+  const when=S.turn<royalNatalWeddingDue(k,p,b)?`礼部算过日子，等两个人都满${cnNum(royalNatalAge('marriage'))}岁便可依约成婚。`:
     royalNatalWeddingReady(k,p,b)?'礼部已可以择日行礼。':'两个人年岁已足，礼部待两人可以行礼时再办。';
   const valid=()=>k.betrothal===b&&p.betrothal?.personId===k.id&&k.alive&&p.alive&&
     b.bond.weddingInquiry===inquiry&&!inquiry.plan&&!b.bond.petition;

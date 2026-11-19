@@ -48,7 +48,7 @@ test('a princess can be betrothed to a documented nephew and both profiles use t
     ev.onShow();ev.choices[0].f();
     assert.equal(k.betrothal.personId,p.id);assert.equal(p.betrothal.personId,k.id);
     assert.equal(natalStatus(p),'已定亲');assert.equal(marriageEligible(k),false);
-    assert.match(marriagePanel(k),/已定亲/);assert.match(marriagePanel(k),/距婚期还有 13 年/);
+    assert.match(marriagePanel(k),/已定亲/);assert.match(marriagePanel(k),/距婚期还有 10 年/);
     UI.sel=k.id;assert.ok(viewKid().indexOf('A.kidVisit(')<viewKid().indexOf('定亲对象'));
     assert.ok(marriagePanel(k).includes(royalNatalPersonLink('natal',a.id+':'+p.id,p.name)));assert.match(marriagePanel(k),new RegExp(p.name));
     assert.match(natalLifePanel(a,p),/已定亲/);assert.match(natalLifePanel(a,p),new RegExp(k.name));
@@ -64,7 +64,7 @@ test('a princess can be betrothed to a documented nephew and both profiles use t
     assert.ok(k.household);assert.equal(k.betrothal,undefined);assert.equal(p.betrothal,undefined);
     assert.match(marriagePanel(k),/配偶档案/);
     UI.view='natal';UI.sel=k.spouse.natalHost+':'+p.id;
-    assert.match(viewNatalRelative(),new RegExp(k.name));assert.equal(UI.view,'official');
+    assert.match(viewNatalRelative(),new RegExp(k.name));assert.equal(UI.view,'natal');assert.equal(natalStatus(p),'已婚');
     marriedLifeTick();assert.equal(k.story.filter(e=>e.life?.title==='依约成婚').length,1);`);
 });
 
@@ -99,7 +99,7 @@ test('a prince who accedes first carries the marriage promise into the new reign
   b.force(0,0);
   b.run(`var ev=royalNatalMarriageProposal();ev.onShow();ev.choices[0].f();
     var due=k.betrothal.due,id=p.id,host=a.id;
-    S.turn=k.born+15*12;succeed(k);choose(0,'长宁');drain();
+    S.turn=k.born+14*12;succeed(k);choose(0,'长宁');drain();
     var heir=E().natalMarriageHeir,bride=natalEntry(host,id).p;
     assert.ok(heir);assert.equal(bride.betrothal.personId,heir.id);
     assert.match(natalLifePanel(natalEntry(host,id).c,bride),/当朝天子/);
@@ -173,7 +173,7 @@ test('children swap distinct gifts once per New Year and the two profiles read t
   b.run(`var starting=royalNatalInitialBond(k,p);
     assert.match(marriagePanel(k),/彼此好感/);assert.match(natalLifePanel(a,p),/彼此好感/);
     assert.equal(k.betrothal.bond,undefined);
-    assert.doesNotMatch(marriagePanel(k),/互通信札|安排两人见面/);
+    assert.match(marriagePanel(k),/互通信札/);assert.doesNotMatch(marriagePanel(k),/安排两人见面/);
     S.month=1;royalNatalMarriageTick();royalNatalMarriageTick();
     var bond=k.betrothal.bond;
     assert.ok(bond.royal>starting.royal);assert.ok(bond.relative>starting.relative);
@@ -186,16 +186,17 @@ test('children swap distinct gifts once per New Year and the two profiles read t
 
 test('both need to reach the letter and meeting ages, with cooldowns and separate responses',()=>{
   const b=engaged('f');
-  b.run(`S.turn=k.born+8*12-1;
+  b.run(`S.turn=k.born+5*12-1;
     A.royalNatalContact(k.id,'letter');assert.equal(modalOpen,false);
     S.turn++;var initial=royalNatalInitialBond(k,p);
-    A.royalNatalContact(k.id,'letter');assert.match(curEv.title,/书信/);`);
+    A.royalNatalContact(k.id,'letter');assert.match(curEv.title,/书信/);assert.match(curEv.text,/长辈替他们写下问候/);`);
   b.force(.01,.99);
   b.run(`choose(0);drain();var bond=k.betrothal.bond;
     assert.equal(bond.royal,initial.royal+4);assert.equal(bond.relative,initial.relative-7);
-    assert.match(natalLifePanel(a,p),/还需等6个月/);assert.match(k.story.at(-1).t,/互寄书信/);
+    assert.match(natalLifePanel(a,p),/还需等6个月/);assert.match(k.story.at(-1).t,/托长辈帮着写信/);
     A.royalNatalContact(k.id,'letter');assert.equal(modalOpen,false);
-    S.turn=k.born+12*12; k.away=true;
+    S.turn=k.born+9*12-1;A.royalNatalContact(k.id,'visit');assert.equal(modalOpen,false);
+    S.turn++;k.away=true;
     assert.match(royalNatalContactReason(k,p,'visit'),/同在京中/);
     A.royalNatalContact(k.id,'visit');assert.equal(modalOpen,false);
     k.away=false;PalaceActions.reset();
@@ -212,10 +213,10 @@ test('both need to reach the letter and meeting ages, with cooldowns and separat
 
 test('letters and supervised meetings can also happen without a player visit',()=>{
   const b=engaged();
-  b.run(`S.turn=k.born+8*12;S.month=5;`);
+  b.run(`S.turn=k.born+5*12;S.month=5;`);
   b.force(.01,.01,.99);
-  b.run(`royalNatalMarriageTick();assert.match(k.betrothal.bond.latest.text,/书信/);
-    S.turn=k.born+12*12;S.month=3;`);
+  b.run(`royalNatalMarriageTick();assert.match(k.betrothal.bond.latest.text,/长辈帮着写信/);
+    S.turn=k.born+9*12;S.month=3;`);
   b.force(.99,.01,.99,.01);
   b.run(`royalNatalMarriageTick();assert.match(k.story.at(-1).life.title,/相见/);
     assert.equal(k.betrothal.bond.last.visit,S.turn);`);
@@ -291,12 +292,12 @@ test('longtime mutual affection prompts them to ask together at the latest on th
     assert.notEqual(k.story.at(-1).t,p.story.at(-1).t);`);
 });
 
-test('agreeing to an early question keeps the eighteen-year wedding gate and carries the chosen plan',()=>{
+test('agreeing to an early question keeps the fifteen-year wedding gate and carries the chosen plan',()=>{
   const b=courtshipHistory();
-  b.run(`S.turn=k.born+17*12;var b=k.betrothal;
+  b.run(`S.turn=k.born+14*12;var b=k.betrothal;
     var inquiry=b.bond.weddingInquiry={turn:S.turn};
     var ev=betrothalWeddingInquiryEvent(k,p,a,b,inquiry);
-    assert.match(ev.text,/都满十八岁/);
+    assert.match(ev.text,/都满十五岁/);
     ev.choices[1].f();assert.equal(k.married,false);assert.equal(inquiry.plan,'family');
     assert.equal(ev.valid(),false);assert.match(marriagePanel(k),/婚礼正在备办/);
     S.turn=b.due-1;royalNatalMarriageTick();assert.equal(k.married,false);
@@ -351,4 +352,56 @@ test('a real childhood keepsake or journey from the same engagement appears in t
     assert.match(k.story.at(-1).t,/折歪尾巴的纸燕/);
     S.turn++;recordHouseholdNews(k);assert.match(p.story.at(-1).life.summary,/拾回纸燕/);
     S.turn++;recordHouseholdNews(k);assert.match(p.story.at(-1).life.summary,/河埠晨雾/);`);
+});
+
+test('old engagement dates recalculate from the younger partner without resetting a deliberate postponement',()=>{
+  const b=engaged();
+  b.run(`var newDue=Math.max(k.born,p.born)+15*12,oldDue=newDue+36;
+    k.betrothal.due=p.betrothal.due=oldDue;
+    delete p.royalNatalPortrait;
+    S.turn=newDue-1;S.month=6;
+    assert.match(marriagePanel(k),/满十五岁.*距婚期还有 1 个月/);
+    assert.match(natalLifePanel(a,p),/满十五岁/);
+    assert.equal(k.betrothal.due,oldDue);assert.equal(p.betrothal.due,oldDue);
+    var bond=k.betrothal.bond={royal:66,relative:65,last:{},holdUntil:newDue+6};
+    royalNatalMarriageTick();
+    assert.equal(k.betrothal.due,newDue);assert.equal(p.betrothal.due,newDue);
+    S.turn=newDue+5;royalNatalMarriageTick();
+    assert.equal(k.married,false);assert.equal(bond.holdUntil,newDue+6);
+    S.turn++;royalNatalMarriageTick();assert.equal(k.married,true);assert.equal(p.married,true);
+    assert.equal(natalStatus(p),'已婚');`);
+});
+
+test('the old marriage timetable does not delay an eligible couple and the bride uses her adult portrait',()=>{
+  const b=engaged();
+  b.run(`var due=royalNatalMarriageAge(k,p);k.betrothal.due=p.betrothal.due=due+36;
+    delete p.royalNatalPortrait;
+    S.turn=p.born+15*12-1;assert.equal(portraitCell(natalPortrait(p)),childPortraitCell(p));
+    S.turn++;assert.ok(CONSORT_PORTRAITS.includes(portraitCell(natalPortrait(p))));
+    assert.equal(kidAge(k),14);royalNatalMarriageTick();assert.equal(k.married,false);
+    S.turn=due;assert.equal(kidAge(k),15);royalNatalMarriageTick();
+    assert.equal(k.married,true);assert.equal(k.spouse.marriedAt,due);
+    assert.equal(portraitCell(natalPortrait(p)),portraitCell(spouseAppearance(k)));`);
+});
+
+test('either partner can request release after both turn twelve',()=>{
+  const b=engaged('f');
+  b.run(`var bond=k.betrothal.bond={royal:28,relative:65,last:{}};
+    S.turn=k.born+12*12-1;S.month=6;bond.latest={turn:S.turn};
+    royalNatalMarriageTick();assert.equal(bond.petition,undefined);
+    S.turn++;bond.latest={turn:S.turn};`);
+  b.force(.01);
+  b.run(`royalNatalMarriageTick();assert.equal(bond.petition.side,'royal');assert.equal(k.married,false);`);
+});
+
+test('the engaged pair may start accompanied travel at thirteen before the new wedding age',()=>{
+  const b=engaged();
+  b.run(`k.hp=95;S.turn=k.born+13*12-1;
+    assert.equal(royalTravelCanLeave(k),false);
+    S.turn++;assert.equal(kidAge(k),13);assert.equal(royalTravelCanLeave(k),true);
+    A.planBetrothedTravel(k.id);assert.match(curEv.title,/游历山河/);
+    assert.ok(curEv.choices.some(o=>o.t.includes('结伴启程')));
+    assert.ok(!curEv.choices.some(o=>o.t.includes('只带随侍')));
+    choose(curEv.choices.findIndex(o=>o.t.includes('结伴启程')));drain();
+    assert.equal(royalTravelCompanion(k),p);assert.equal(k.married,false);`);
 });

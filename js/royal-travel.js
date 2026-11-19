@@ -167,6 +167,8 @@ function royalTravelPlace(k){
 }
 function royalTravelCanLeave(k){
  if(!k||k.lost||['noticed','invited'].includes(k.immortal?.stage))return false;
+ if(royalNatalEarlierAges()&&(k.married||royalNatalEngaged(k)))
+  return immortalLocal(k)&&k.hp>=50&&S.heir!==k.id&&!!betrothedTravelPair(k);
  if(!k.married)return immortalCanLeave(k)&&(!k.betrothal||!!betrothedTravelPair(k));
  return immortalLocal(k)&&kidAge(k)>=16&&k.hp>=50&&S.heir!==k.id&&!!betrothedTravelPair(k);
 }
@@ -457,7 +459,7 @@ function royalTravelEvent(k){
  if(requesting&&valid())return {title:'皇嗣请行 · 游历山河',por:k,cast:companion?[natalPortrait(companion.p)]:undefined,valid,
   text:`${kidName(k)}带着一张自己标过的舆图来见你：“父皇，我想出去看看。书里说江河有汛、山路难行，可我还没见过那些靠着河和山过日子的人。”\n${route?`拟走「${route.name}」，经${route.stops.map(stop=>stop[1]).join('、')}，约定${royalTravelDuration(route.months)}后归来，沿途会寄家书。`:`第一程拟往${ROYAL_TRAVEL_ROUTES[r.route][0].place}，约一年归来，沿途会托驿站寄信。`}${companion?betrothedTravelReply(companion):''}`,choices:[
    departure(companion?'准两人结伴启程':'准其启程，置办行装',companion),
-   ...(companion?[departure('这程由皇嗣只带随侍启程',null)]:[]),
+   ...(companion&&(!royalNatalEarlierAges()||kidAge(k)>=16)?[departure('这程由皇嗣只带随侍启程',null)]:[]),
    {t:'先备好行程，半年后再议',f:finish(()=>{r.due=S.turn+6;return '行期暂缓，孩子暂留京中。';})},
    {t:'这趟先作罢',f:finish(()=>{r.stage='closed';delete r.due;kstory(k,'此次请行未获准，先把自己标过的舆图收好。');return '孩子暂留京中。';})}]};
  if(!royalTravelAway(k)||!valid())return null;

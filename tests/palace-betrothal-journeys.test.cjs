@@ -83,9 +83,9 @@ for(const sex of ['m','f'])test('a royal '+sex+' can travel with their intended 
    assert.equal(p.spouse.royalId,k.id);assert.equal(k.betrothal,undefined);`);
 });
 
-test('both must be sixteen and free to travel, and recall, cancellation and a solo trip never strand the partner',()=>{
+test('both must be thirteen and free to travel, and recall, cancellation and a solo trip never strand the partner',()=>{
  const b=family();
- b.run(`S.turn=k.born+15*12;assert.equal(royalTravelCanLeave(k),false);
+ b.run(`S.turn=k.born+13*12-1;assert.equal(royalTravelCanLeave(k),false);
    ${ageUp}p.exiled=true;assert.equal(royalTravelCanLeave(k),false);p.exiled=false;
    A.planBetrothedTravel(kid);choose(0);drain();assert.ok(p.royalCompanionTrip);
    A.royalTravelRecall(kid);choose(0);drain();
