@@ -352,8 +352,8 @@ function storyCastPalaceEvent(c){
     if(child&&!child.whiteSpringStudy)return scene('阿依慕 · 教孩子白泉话',child.name+'能读一封家书了，问白泉国的外祖母平日如何称呼自己。',
       storyCastChoice('由阿依慕教孩子读家信',()=>{child.whiteSpringStudy=true;kstory(child,'随母学会家书的白泉语，也学了使团礼节。');return advance('给'+child.name+'讲白泉的家书称谓与使团礼节。');}));
     if(child?.whiteSpringStudy&&S.turn>=(r.tradeDue??0))return scene('白泉使者 · 互市议事','使者来核对今年开市时日。礼官请会白泉话的皇嗣旁听，必要时把两边的意思再说清。',
-      storyCastChoice('请'+child.name+'协助通译',()=>{const ok=chance(.55+(storyCastHeirBar(child) ? .20 : 0));r.tradeDue=S.turn+12;const line=ok?'译明两国礼单中的日期，互市按时议成。':'译清了条款，两方仍需回去复核。';kstory(child,'协助白泉使团通译。'+line);if(ok)chg({people:3,prestige:2});return storyCastRecordLine(c,line,true);}),
-      storyCastChoice('交礼官照常办理',()=>{r.tradeDue=S.turn+12;const ok=chance(.55);if(ok)chg({people:3,prestige:2});return storyCastRecordLine(c,ok?'礼官议定本年互市。':'使团和礼部另约时日复议。');}));
+      storyCastChoice('请'+child.name+'协助通译',()=>{const ok=chance(.55+(storyCastHeirBar(child) ? .20 : 0));r.tradeDue=S.turn+12;whiteSpringDeed(c,ok?'market':'review');const line=ok?'译明两国礼单中的日期，互市按时议成。':'译清了条款，两方仍需回去复核。';kstory(child,'协助白泉使团通译。'+line);if(ok)chg({people:3,prestige:2});return storyCastRecordLine(c,line,true);}),
+      storyCastChoice('交礼官照常办理',()=>{r.tradeDue=S.turn+12;const ok=chance(.55);whiteSpringDeed(c,ok?'market':'review');if(ok)chg({people:3,prestige:2});return storyCastRecordLine(c,ok?'礼官议定本年互市。':'使团和礼部另约时日复议。');}));
     if(r.butterflies===S.year||season()>1)return null;
     if(c.mood>=70)return scene('御花园 · 蝶落花枝','阿依慕读完白泉家书，在花树下忍不住笑了。一只蝴蝶落在她手边。',
       storyCastChoice('与她并看一会儿花蝶',()=>{r.butterflies=S.year;return storyCastRecordLine(c,'陛下同看过一阵花蝶，还听她讲了母亲信里的近况。')+fx(cchg(c,{aff:10}));}));
@@ -593,7 +593,7 @@ function storyCastFollowupEvent(c,r){
     if(chapter===0)return scene('阿依慕 · 随使团回乡的信',
       '近两回寄到白泉的家书走了不同驿路，其中一封到晚了。阿依慕请通译列出可以随商队带信的日子，自己在信尾写好回程驿名。',[
         choice('给家书留固定驿期 · 国库−8，情分+7',()=>{
-          if(E().treasury<8)return null;r.whiteSpringPost=true;
+          if(E().treasury<8)return null;r.whiteSpringPost=true;whiteSpringDeed(c,'post');
           return result('白泉使团领到固定驿期的札记。她终于能告诉母亲，几月能等到回信。',chg({treasury:-8})+'　'+cchg(c,{aff:7,mood:10}));
         },()=>E().treasury>=8),
         choice('先让商队捎这一封 · 情分+3',()=>result('请将出关的商队带上书信。她把通译写的驿名又看了一遍。',cchg(c,{aff:3})))]);
@@ -601,6 +601,7 @@ function storyCastFollowupEvent(c,r){
       const child=storyCastOffspring(c,7).find(k=>k.whiteSpringStudy&&childInPalace(k));
       return scene('白泉来使 · 核对开市日','使团送来回信，也请朝廷把两地的开市日写在同一张礼单上。'+(child?child.name+'能读白泉话，已经圈出有歧义的几处。':'阿依慕和通译逐条核过。'),[
         choice('准两边张贴同一份市期 · 民心+3',()=>{
+          whiteSpringDeed(c,'calendar');
           if(child){skillGain(child,'lit',3);kstory(child,'凭所学白泉话核对互市日期，才学+3。');}
           return result('两边都领到一份核对过的市期。阿依慕把母亲的回信收进匣里。',chg({people:3})+(child?'　'+child.name+'才学+3':''));
         })],child?[child]:[]);

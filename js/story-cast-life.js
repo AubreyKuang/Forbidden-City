@@ -100,7 +100,7 @@ function storyCastLifeAyimu(c,r,life,stage,scene){
     lifeChoice('拨驿费先试一趟 · 国库−8',s=>{s.path='试市';return lifeOutcome('试用一段共同驿程，通译把两边容易写错的日期列成小单。',chg({treasury:-8})+'　'+cchg(c,{aff:4}),2);},()=>E().treasury>=8),
     lifeChoice('等两边重签同一日期',s=>{s.path='重签';return lifeOutcome('阿依慕请两边从同一日重新起算，家书照现有商路递。',cchg(c,{aff:3}),3);})]);
   if(stage===1)return scene('驿路回单','第一张回单搁在她手边。'+(life.path==='试市'?'有一段路比预计慢，商队却已带回母亲的信。':'改好日期的两张凭签一起回来了，这回使团没有人多等一天。'),[
-    lifeChoice('核对回单，留一条家书驿路 · 情分+5',s=>{s.post=true;return lifeOutcome('两边留下同一条送家书的驿路，回路也列出日子。',cchg(c,{aff:5,mood:6}));}),
+    lifeChoice('核对回单，留一条家书驿路 · 情分+5',s=>{s.post=true;whiteSpringDeed(c,'post');return lifeOutcome('两边留下同一条送家书的驿路，回路也列出日子。',cchg(c,{aff:5,mood:6}));}),
     lifeChoice('让礼官复看商路清单 · 威望+2',()=>lifeOutcome('礼官收下重抄的清单，边关照日期验收。',chg({prestige:2})))]);
   if(stage===2)return scene('席上两种话','白泉使者带来了署名的礼单，说愿长年照新市期来。阿依慕还要问一遍，年幼的译生往后可以去哪里学两边的商话。',[
     lifeChoice('给译生留听讲席',()=>{
@@ -110,6 +110,7 @@ function storyCastLifeAyimu(c,r,life,stage,scene){
   return scene('核白泉互市','新一季花期过去，使团递来互市货簿。'+(child?child.name+'愿照母妃教的白泉话替两地核单。':'礼官请阿依慕帮着读船队送来的记载。'),[
     lifeChoice(child?'让'+child.name+'随礼官核对 · 议成率75%':'由礼官和阿依慕核对 · 议成率55%',()=>{
       const ok=chance(child ? .75 : .55);
+      whiteSpringDeed(c,ok?'market':'review');
       if(child){skillGain(child,'lit',2);kstory(child,ok?'核清白泉互市货簿，亲眼看两边盖印。':'复核白泉货簿后仍有一处日期待对，已记给两边的通译。');}
       return lifeOutcome(ok?'两地货单相合，白泉互市照期开市。':'货单仍有一处日期不合，留给两边下次复核。',(ok?chg({people:3,prestige:1}):cchg(c,{aff:2}))+(child?'　'+child.name+'才学+2':''));
     })],[child]);

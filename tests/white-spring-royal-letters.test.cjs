@@ -74,3 +74,25 @@ test('both royal profiles open from admission and preserve their separate histor
  assert.equal(family.brother.story.filter(e=>e.t.startsWith('【公主入宫】')).length,1);
  whiteSpringFamily(lady);assert.equal(family.brother.story.length,2);`);
 });
+test('the king and prince have distinct searchable premarriage memories without inventing reign dates',()=>{
+ const w=palace();w.run(`const before=JSON.stringify(family);
+ UI.sel=family.father.id;let html=viewWhiteSpringKin();
+ assert.match(html,/公主入宫前/);assert.match(html,/旱年的水签/);assert.doesNotMatch(html,/三国行记/);
+ UI.sel=family.brother.id;html=viewWhiteSpringKin();
+ assert.match(html,/春会夺彩/);assert.match(html,/三国行记/);assert.doesNotMatch(html,/旱年的水签/);
+ assert.equal(JSON.stringify(family),before);`);
+});
+test('home news arrives in two spaced chapters, keeps pending personal mail and respects deaths',()=>{
+ const w=palace();w.run(`whiteSpringLetter(lady,'有孕','有了身孕',['问起居','寄曲谱'],['回信','报平安'],'still-open');
+ const letter=family.latest,old={...lady};lady.enteredAt=S.turn-5;
+ const nextMonth=()=>whiteSpringFamilyChanges(lady,old,{turn:S.turn-1,children:[]});
+ nextMonth();assert.ok(!family.deeds?.saddle);
+ S.turn++;nextMonth();nextMonth();assert.equal(family.brother.story.filter(e=>e.t.includes('【一副旧鞍】')).length,1);
+ assert.equal(lady.story.filter(e=>e.t.includes('【白泉家音】')).length,1);assert.equal(family.latest,letter);
+ S.turn+=11;nextMonth();assert.ok(!family.deeds.interpreters);
+ family.father.alive=false;save('auto');A.load('auto');drain();lady=byId(id);family=whiteSpringFamily(lady);
+ S.turn++;nextMonth();nextMonth();assert.equal(family.brother.story.filter(e=>e.t.includes('【市口的小译席】')).length,1);
+ assert.ok(!family.father.story.some(e=>e.t.includes('【市口的小译席】')));
+ assert.equal(lady.story.filter(e=>e.t.includes('【白泉家音】')).length,2);
+ assert.equal(family.latest.stamp,'still-open');assert.equal(family.latest.answered,false);`);
+});

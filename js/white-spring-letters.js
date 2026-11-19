@@ -24,12 +24,68 @@ function whiteSpringFamily(c){
 }
 const WHITE_SPRING_KIN={
   father:{name:'阿尔斯兰',relation:'父王',title:'白泉国王',portrait:314,
-    bio:'亲自带阿依慕赴京求亲。国书上用王印，问女儿冷暖的私信却只署“父亲”。',
+    bio:'白泉是泉渠绕城的商路小国，本地出好马和毡，遇上旱年要向邻国换粮。阿尔斯兰熟悉渠上每一道水闸。给朝廷的国书上用王印，给女儿写信却只署“父亲”。',
     admission:'女儿留在京中。临别嘱她，往后白泉使者进京，哪怕只回一句平安，父亲也等着读。'},
   brother:{name:'伊利亚尔',relation:'王兄',title:'白泉王子',portrait:416,
-    bio:'阿依慕唯一的兄长。兄妹自小熟悉同一套鼓曲，妹妹远嫁后，他常把新曲和家里的消息一道寄去。',
+    bio:'阿依慕唯一的兄长。伊利亚尔身量高挑，肩背舒展，笑起来和妹妹有几分相像。白泉人认得这位春会上的好骑手，走商的人却更喜欢请他当通译。',
     admission:'听闻妹妹留在京中，把她最熟悉的那支鼓曲抄了一份，留待下趟使团捎去。'}
 };
+// These are undated memories from before the marriage, shared by new and existing saves.
+const WHITE_SPRING_PAST={
+  father:[
+    '【旱年的水签】做国王的第三年，城南的泉水只够轮灌。阿尔斯兰先从木牌上摘下王家马苑的水签，挂到最末。入秋时马瘦了一圈，城外的青稞却收成了。此后每逢分水，他都要亲眼看过渠尾那块田。',
+    '【两把木斗】边市上，两国商人都说对方少给了粮。阿尔斯兰把两家的木斗借来，装同一袋青稞，当众量了两遍。原来两边都叫一斗，大小却有差。次月开市，门房多了两只并排悬着的样斗。',
+    '【临行的针脚】赴京前，他陪女儿收拾行囊。礼单上列了六匹好马，阿依慕却在找母亲缝的旧香囊。他蹲下来替她从箱底摸出香囊，又把国书往旁边挪了挪，腾出一个她伸手就够得到的位置。'
+  ],
+  brother:[
+    '【春会夺彩】春会比骑，少年伊利亚尔在最后一圈俯身摘下彩环，先了半个马头过线。下马时银色束发带歪到了耳后，满场的人还在喊他的名字。他把赢来的青绸系在阿依慕的小鼓上，由她敲响散场的三拍。',
+    '【三国行记】第一次随商队出关，他在青石国住过马栈，在蒲海国跟摆渡人学算船钱，又到赤谷国听乐师排过一场春舞。回到白泉，给父王的是一本写着水站、渡钱和市日的路簿，给妹妹的是三支会唱却还不会记谱的曲子。',
+    '【送行前一夜】妹妹问，到了京城，若通译把她的话听岔了怎么办？伊利亚尔陪她把“我还没说完”这句官话练了几遍。他也许下心愿，要让两地懂彼此语言的人多起来，让妹妹想念家里时随时有话可捎。'
+  ]
+};
+const WHITE_SPRING_DEEDS={
+  post:{title:'两封回单',
+    father:'收到两边议定的驿期，特意问迟到的商旅还能不能递信。得知可以顺延，才把日期抄给王后，让她往后等女儿的信也有个准数。',
+    brother:'把京城送来的驿名与旧路簿逐站对过，发现一个水站在两国语中名字相差甚远。他把两个写法并在回单上，请驿人以后见到两种都收。'},
+  calendar:{title:'一张双历',
+    father:'照核准的日子，在市口贴出两种文字的市期，叫放牧人回山前也能抄上一份。开市还有些时日，毋须早早赶着马群来等。',
+    brother:'照妹妹和通译核定的市期，把白泉与京城的日期写在同一张纸上。他留出一行空白，请回程商人添上实际到关的日子。'},
+  market:{title:'开市那天',
+    father:'互市议成，叫人在市口支起旧时那两把样斗。第一车青稞称完，他才取下王印，给当日的交割簿盖印。',
+    brother:'开市的消息传来，带着初到的客商走了一遍市集。散市时他给妹妹留了句话：“往后谁提起白泉，愿他们也记得这里有人同他们做过一桩公道买卖。”'},
+  review:{title:'暂缓盖印',
+    father:'两边还要复议，便把空着的市期留在簿上，嘱人及早告知商队，免得大家白白在关口多等。',
+    brother:'把有歧义的写法抄作两栏，托使者带去请关内的通译也写一份。他在页边留了话：“让商人等准信。这件事该由我们问明白，别劳妹妹在宫里替人赔情。”'},
+  saddle:{title:'一副旧鞍',
+    father:'巡看驿马时，听驿人说有一副鞍垫总磨马背，便让他当面拆给自己看。这才知道几处马栈用的尺寸不同，记下了该添哪两种垫子。',
+    brother:'随送毡的商队试过一程驿马，自己垫上旧鞍才觉出驿人说的毛病。回程时给妹妹捎去一小角新毡：“你从前总嫌鼓槌硌手，拿这个把柄缠一圈。”',
+    news:'拆开兄长随商队捎来的软毡，照信上的样子缠好鼓槌。拿起来试了两拍，果然比从前趁手。'},
+  interpreters:{title:'市口的小译席',
+    father:'准许本国商旅在白泉市口借间空屋教两地商话。来请示的人问该收多少束脩，他想了想，只叫学成的人往后陪新来的客商走一回集。',
+    brother:'领着学商话的年轻人坐了一上午集市，叫他们把买卖双方的话各说给对方听。他给妹妹写道：“等他们再走熟几回，两边遇事便能坐下来讲清楚，也用不着事事托你去开口了。”',
+    news:'读到兄长教年轻人当通译的消息，又把他信里抄来的第一道习题念了一遍。她在纸边添上京里更常说的那个词，留着下回捎回白泉。'}
+};
+function whiteSpringDeed(c,key){
+  if(journalContentVersion()<116||!whiteSpringRoyal(c))return;
+  const f=whiteSpringFamily(c),deed=WHITE_SPRING_DEEDS[key];
+  const done=f.deeds||={};
+  if(done[key]||(!f.father.alive&&!f.brother.alive))return;
+  done[key]=true;
+  for(const role of ['father','brother']){
+    if(f[role].alive)story(f[role],'【'+deed.title+'】'+deed[role]);
+  }
+  if(deed.news&&f.brother.alive&&c.alive&&!c.gone)story(c,'【白泉家音】'+deed.news);
+}
+function whiteSpringHomeNews(c){
+  const f=whiteSpringFamily(c);
+  if(!f.father.alive&&!f.brother.alive)return;
+  const start=c.enteredAt??(f.newsStart??=S.turn);
+  if(!f.deeds?.saddle&&S.turn-start>=6){
+    whiteSpringDeed(c,'saddle');f.nextHomeNews=S.turn+12;
+  }else if(f.deeds?.saddle&&!f.deeds.interpreters&&S.turn>=f.nextHomeNews){
+    whiteSpringDeed(c,'interpreters');
+  }
+}
 function whiteSpringProfiles(c,family){
   if(journalContentVersion()<108)return family;
   for(const [role,data] of Object.entries(WHITE_SPRING_KIN)){
@@ -65,8 +121,10 @@ function viewWhiteSpringKin(){
   const target=whiteSpringKinTarget(UI.sel);
   if(!target)return personBackButton('family');
   const {c,role,person:p}=target,data=WHITE_SPRING_KIN[role];
+  const past=WHITE_SPRING_PAST[role].map(t=>({d:'公主入宫前',t}));
+  const chronicle={...p,story:[...past,...p.story]};
   return `${personBackButton('family')}<header class="detail-head person-detail-head">${porImg(p,144)}<div class="grow"><p>白泉王室 · ${data.title}${p.alive?'':' · 已故'}</p><h2>${p.name}</h2><p>${data.bio}</p>
-    <button class="btn quiet sm" onclick="A.go('consort',${c.id})">${role==='father'?'女儿':'妹妹'} · 阿依慕 ↗</button></div></header>${detailSection('人物纪事',detailStory(p))}`;
+    <button class="btn quiet sm" onclick="A.go('consort',${c.id})">${role==='father'?'女儿':'妹妹'} · 阿依慕 ↗</button></div></header>${detailSection('人物纪事',detailStory(chronicle))}`;
 }
 function whiteSpringLetter(c,kind,fact,voices,replies,stamp){
   const family=whiteSpringFamily(c);
@@ -93,6 +151,7 @@ function whiteSpringFamilyChanges(c,old,previous){
     return;
   }
   if(c.gone)return;
+  if(journalContentVersion()>=116&&S.turn>previous.turn&&!c.cold)whiteSpringHomeNews(c);
   if(old.preg<2&&c.preg>=2)send('有孕','有了身孕','报喜的国书我已看过两遍。我另写这封，只问女儿近日吃得下什么，夜里睡得好不好。','你小时候嫌我把摇篮曲唱走了调。我把曲子请人谱下了，等你想听时唱给小家伙。',['用白泉话回报孕中起居','在信末添了几句小时候的摇篮曲，告诉家人自己近来的胃口。']);
   const newborn=S.children.filter(k=>k.mom===c.id&&c.delivery?.children.includes(k.id)&&k.alive&&!previous.children?.some(o=>o.id===k.id));
   if(newborn.length){

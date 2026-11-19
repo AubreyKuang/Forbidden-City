@@ -113,3 +113,16 @@ for(const choice of [0,1])test('six keepsake scenes branch once and settle actua
  }else{assert.equal(kid.lit,50);assert.equal(kid.vir,44);assert.match(kid.story.map(e=>e.t).join(' '),/谱/);}
  `);
 });
+test('White Spring diplomatic journals follow the chosen post and actual market decision',()=>{
+ const b=world();b.ctx.assert=assert;
+ b.run(setup+`walk('ayimu',[0,0,0]);var ay=fixed.ayimu,fam=whiteSpringFamily(ay);
+ for(const p of [fam.father,fam.brother])assert.equal(p.story.filter(e=>e.t.startsWith('【两封回单】')).length,1);
+ var market=()=>A.storyCastLife(ay.id,'routine');market();`);
+ b.force(.99);b.run(`choose(0);drain();assert.ok(fam.deeds.review);assert.ok(!fam.deeds.market);
+ S.turn=storyCastRecord('ayimu').life.next;market();`);
+ b.force(0);b.run(`choose(0);drain();assert.ok(fam.deeds.market);
+ for(const p of [fam.father,fam.brother]){
+  assert.equal(p.story.filter(e=>e.t.startsWith('【暂缓盖印】')).length,1);
+  assert.equal(p.story.filter(e=>e.t.startsWith('【开市那天】')).length,1);
+ }`);
+});
