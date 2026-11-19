@@ -464,6 +464,7 @@ function viewConsort(){
     <h2>${esc(cName(c))}</h2>${consortHomePlace(c)?`<button class="btn sm jade" onclick="A.visitConsortHome(${c.id})">去宫里看看 →</button>`:''}
     <p>${esc(c.fam.t)} · ${esc(c.trait)} ${solitaryTag(c)}${dowagerKinTag(c)}${consortTraitTags(c)}${c.preg>=2?` <span class="tag r">有孕${c.preg}月</span>`:''}</p>
    </div></header>
+   ${!act?deliveryMemorialPanel(c):''}
    ${acts?`<div class="detail-actions consort-detail-actions" role="group" aria-label="人物操作"><span class="detail-action-label" aria-hidden="true">人物操作</span><div class="acts">${acts}</div></div>`:''}
    ${quickManagement||cardAction?`<div class="consort-quick-management" role="group" aria-label="位分与居所">${quickManagement}${cardAction}</div>`:''}
    <div class="detail-vitals">${bar('恩宠',c.favor)}${bar('心情',c.mood,'#517369')}${bar('情分',c.aff,'#936375')}</div>
@@ -473,7 +474,7 @@ function viewConsort(){
       `${dowagerCareActive()&&c.dowagerKin?.gen===S.gen?`<p class="hint">太后母家侄女 · 陛下的母族表亲；潜邸时奉先帝之命成婚。</p>`:c.imperialKin?`<p class="hint">入宫亲缘 · ${esc(c.imperialKin.relation)}，经${esc(c.imperialKin.via)}引见。</p>`:''}
     ${PORTRAIT_CLOTHES[portraitCell(c)]?`<p>衣着 · ${PORTRAIT_CLOTHES[portraitCell(c)]}</p>`:''}
     ${characterVoiceHTML(c)}${daoPracticePanel(c)}`+(act?arcLine(c):'')+
-      consortTraitPanel(c)+consortHealthPanel(c)+birthCarePanel(c)+deliveryMemorialPanel(c)+(typeof haremStewardPersonPanel==='function'?haremStewardPersonPanel(c):'')+(typeof hongjianPanel==='function'?hongjianPanel(c):'')+
+      consortTraitPanel(c)+consortHealthPanel(c)+birthCarePanel(c)+(act?deliveryMemorialPanel(c):'')+(typeof haremStewardPersonPanel==='function'?haremStewardPersonPanel(c):'')+(typeof hongjianPanel==='function'?hongjianPanel(c):'')+
       actionGroup('听她说说',conversations)+
       detailSection('近况与性情',`<p class="hint">${esc(TRAITS[c.trait]?.d||'性情沿用旧日记载。')} · 侍寝 ${c.nights||0} 次</p>${act?xinDetail(c)+deepLine(c):''}<div class="stats">${st('容貌',c.looks)}${st('才情',c.talent)}${st('德行',c.virtue)}${st('心机',c.scheme,!c.known)}</div>`)+
       continuityPanel(c)+personalLifePanel(c)+detailSection('人和事的后续',cohortLifePanel(c)+parentEpisodePanel(c))+
