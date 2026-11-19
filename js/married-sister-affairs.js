@@ -215,7 +215,24 @@ function admitMarriedSister(c,p,dowagerOpposed){
   else if(known?.reaction==='sad'){cchg(c,{mood:-12,aff:-6});relAdd(c,g,-26);story(c,`【姐妹入宫】${p.name}入宫，她想起早已知道的往事，仍觉伤心，一时不知如何面对姐妹。`);}
   else if(known?.reaction==='afraid'){cchg(c,{mood:-12,aff:-6});relAdd(c,g,-10);story(c,`【姐妹入宫】${p.name}入宫，她更担心外界议论，只盼姐妹与两家平安。`);}
   else {cchg(c,{mood:-12,aff:-6});relAdd(c,g,-26);story(c,`【姐妹入宫】你执意册封${p.name}，她震惊之余，也忧虑两家如何相见。`);}
-  for(const rival of harem().filter(o=>o!==g&&o!==c&&o.rank>=6)){
+  // Other sisters may also have learned of this particular relationship.
+  // Their saved reactions apply even when another sister received the request.
+  const aware=journalContentVersion()>=111?harem().filter(o=>o!==g&&o!==c&&sisterAffairKnowledge(o,p)):[];
+  for(const relative of aware){
+    const reaction=sisterAffairKnowledge(relative,p).reaction;
+    if(reaction==='hopeful'){
+      relAdd(relative,g,4);story(relative,`【姐妹入宫】她早知${p.name}与皇帝的往来，如今姐妹能在宫中相伴，她欢喜之余也惦记着对方离开旧家的处境。`);
+      story(g,`【初入宫门】${cName(relative)}见到她，悄悄问起往后的起居，愿与她互相照应。`);
+    }else if(reaction==='sad'){
+      relAdd(relative,g,-18);story(relative,`【姐妹入宫】她早已为${p.name}与皇帝的往来伤心，如今见姐妹入宫，仍不知该怎样相处。`);
+      story(g,`【初入宫门】${cName(relative)}见她时沉默了许久，她知道姐妹心里还有难过。`);
+    }else{
+      relAdd(relative,g,-8);story(relative,`【姐妹入宫】她早已知道${p.name}与皇帝的往来，如今更担心宫外议论，盼两家平安。`);
+      story(g,`【初入宫门】${cName(relative)}悄声提醒她留意宫外议论，又问她住得安不安稳。`);
+    }
+  }
+  const rivals=harem().filter(o=>o!==g&&o!==c&&!aware.includes(o)&&o.rank>=6);
+  for(const rival of rivals){
     relAdd(rival,g,rival.rank===8?-52:-38);
     story(rival,`【对新常在的非议】她得知${p.name}原有婚姻，尤其不满皇帝在劝阻后仍强行册封。`);
     story(g,`【初入宫门】${cName(rival)}在请安时态度冷淡，她听出对方仍在议论自己的来处。`);
@@ -223,7 +240,7 @@ function admitMarriedSister(c,p,dowagerOpposed){
   const prestige=16+(husband?5:0)+(dowagerOpposed?6:0),people=dowagerOpposed?8:5;
   chg({prestige:-prestige,people:-people});
   log(`${p.name}的旧婚奉旨解除，她随后册为常在。朝中与后宫均有议论。`,1);
-  return `${p.name}已册为常在。旧婚及宫外子女载在原有档案里，宫里也有人因此与她生出嫌隙。\n§威望−${prestige} · 民心−${people}`;
+  return `${p.name}已册为常在。旧婚及宫外子女载在原有档案里，${journalContentVersion()>=111&&known?.reaction!=='sad'&&!!known&&!rivals.length&&!aware.some(o=>sisterAffairKnowledge(o,p).reaction==='sad')?'宫中众人各有心思':'宫里也有人因此与她生出嫌隙'}。\n§威望−${prestige} · 民心−${people}`;
 }
 
 function marriedSisterChildrenPanel(c){

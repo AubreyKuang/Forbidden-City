@@ -27,3 +27,13 @@ test('different sisters retain independent reactions for the same consort',()=>{
  assert.equal(other.sisterAffairKnowledge[sister.id].reaction,'afraid');assert.equal(other.sisterAffairKnowledge[second.id].reaction,'hopeful');
  assert.ok(consortChatTopics(other).some(t=>t.id==='sister-affair-'+sister.id));assert.ok(consortChatTopics(other).some(t=>t.id==='sister-affair-'+second.id));`);
 });
+test('each other sister keeps her own recorded reaction when the married sister enters the palace',()=>{
+ for(const reaction of ['hopeful','sad','afraid']){const w=world();w.run(`var witness=makeGirl({sur:'魏',given:'明岚',age:26,trait:'温婉'});addConsort(witness,6,'入宫');witness.house=other.house;other.sisterAffairKnowledge={[sister.id]:{reaction:'hopeful',sister:sister.id,name:sister.name}};witness.sisterAffairKnowledge={[sister.id]:{reaction:'${reaction}',sister:sister.id,name:sister.name,turn:S.turn}};
+ var before=relGet(witness,sister),result=admitMarriedSister(other,sister,true),g=byId(sister.id),text=witness.story.at(-1).t;
+ assert.match(text,/${reaction==='hopeful'?'欢喜':reaction==='sad'?'伤心':'担心'}/);assert.doesNotMatch(text,/对新常在的非议/);assert.match(g.story.at(-1).t,/${reaction==='hopeful'?'照应':reaction==='sad'?'难过':'议论'}/);
+ assert.${reaction==='sad'?'match':'doesNotMatch'}(result,/生出嫌隙/);`);}
+});
+test('older pending admission keeps its original senior consort reaction',()=>{
+ const w=world();w.run(`var witness=makeGirl({sur:'魏',given:'明岚',age:26,trait:'温婉'});addConsort(witness,6,'入宫');witness.sisterAffairKnowledge={[sister.id]:{reaction:'hopeful',sister:sister.id,name:sister.name}};
+ var original=Object.getOwnPropertyDescriptor(PalaceActions,'contentVersion');Object.defineProperty(PalaceActions,'contentVersion',{get:()=>110,configurable:true});admitMarriedSister(other,sister,true);assert.match(witness.story.at(-1).t,/对新常在的非议/);Object.defineProperty(PalaceActions,'contentVersion',original);`);
+});

@@ -31,6 +31,12 @@ function consortChatTopics(c){
     if(bond?.motherView&&S.turn-bond.turn>=0&&S.turn-bond.turn<=6)return {key:'child',stage:`她说起${k.name}近来的一件事。`,text:bond.motherView,narrative:true};
     return {key:'child',stage:`话题慢慢转到了${k.name}身上。`,text:childHasLeftPalace(k)?`${k.name}如今有了自己的日子，臣妾替孩子高兴，也牵挂着。得闲有封信来便好了。`:age<3?`${k.name}还小，臣妾想把这些日子好好记住。`:age<10?`${k.name}一天比一天有主意了，臣妾也想多听听孩子自己的话。`:`${k.name}长大了，有些心事不肯全说。臣妾只盼有难处时，孩子还肯来找我。`};
   });
+  for(const k of children){
+    const home=currentMotherResidenceConversation(k);if(!home||home.mother!==c)continue;
+    add('mother-residence-'+k.id,()=>({key:'mother-residence-'+k.id,stage:`她说起${k.name}近来的居处。`,text:home.stay
+      ?isSolitary(c)?`${k.name}留在身边，臣妾心里安稳。平日各自读书，晚间再说几句话，就很好。`:`${k.name}能继续住在身边，臣妾很宽慰。课业也没有落下，请陛下放心。`
+      :isSolitary(c)?`${k.name}搬过去后，屋里安静了许多。臣妾已约好去看孩子，也盼${k.sex==='f'?'她':'他'}慢慢住惯。`:`${k.name}刚搬过去，臣妾有些牵挂。会常去看孩子，也想等${k.sex==='f'?'她':'他'}慢慢熟悉新住处。`}));
+  }
   const people=harem().filter(o=>o!==c&&((relGet(c,o)>=30&&socialPair(c,o))||relGet(c,o)<=-30));
   if(people.length||fiveBrotherReady(c)||sisterTalkPartner(c))add('relations',()=>{
     const family=fiveBrotherChat(c)||sisterChatLine(c);

@@ -11,12 +11,17 @@ function youngChildMother(k){
 }
 function sharedChildResidents(k){
   return kidsAlive().filter(o=>o!==k&&o.sex===k.sex&&childInPalace(o)&&!o.married&&!o.pendingName&&
-    kidAge(o)>=6&&kidAge(o)<childResidenceAdultAge(o)&&!youngChildMother(o));
+    kidAge(o)>=6&&kidAge(o)<childResidenceAdultAge(o)&&!youngChildMother(o)&&
+    (journalContentVersion()<111||!approvedMotherResidence(o)));
+}
+function childResidenceCareLabel(k,mother){
+  if(journalContentVersion()>=111&&k.foster&&childCareAddress(k,mother)==='姨母')return '姨母';
+  return k.foster?'养母':'生母';
 }
 function childResidence(k){
   if(!childInPalace(k)||k.married||k.pendingName)return '';
   const mother=youngChildMother(k);
-  if(mother)return `随${k.foster?'养母':'生母'}${cName(mother)}同住 · ${mother.palace}`;
+  if(mother)return `随${childResidenceCareLabel(k,mother)}${cName(mother)}同住 · ${mother.palace}`;
   if(kidAge(k)<6)return '暂由乳母照料，未随母同住';
   if(approvedMotherResidence(k))return '暂未与母亲同住 · 宫人照料';
   if(kidAge(k)>=childResidenceAdultAge(k)||journalContentVersion()<105)return '';
@@ -24,6 +29,17 @@ function childResidence(k){
   if(!sharing)return '';
   const place=k.sex==='f'?'公主居所':'皇子居所',peers=sharedChildResidents(k);
   return peers.length?`${place} · 与${peers.map(o=>o.name).join('、')}同住`:`${place} · 宫人照料，暂无其他同住的${k.sex==='f'?'公主':'皇子'}`;
+}
+// The follow-up belongs to the particular caregiver and lasts only while the
+// arrangement still applies. Reading it never changes the saved world.
+function currentMotherResidenceConversation(k){
+  const r=k?.motherResidence,age=k&&kidAge(k);
+  if(journalContentVersion()<111||!r||!childInPalace(k)||k.married||k.pendingName||age>=childResidenceAdultAge(k)||
+    S.turn<r.turn||S.turn-r.turn>12||r.caregiver!==(k.foster||k.mom))return null;
+  const mother=byId(r.caregiver);if(!inPalace(mother))return null;
+  if(r.choice==='stay'&&youngChildMother(k)!==mother)return null;
+  if(r.choice==='shared'&&youngChildMother(k))return null;
+  return {mother,stay:r.choice==='stay',address:childCareAddress(k,mother)};
 }
 function shareMotherResidenceNews(k,stay){
   const birthMother=byId(k.mom),house=birthMother&&houseOf(birthMother);if(!house)return;
@@ -121,7 +137,7 @@ function palaceConversation(title,prop,people){
 }
 function palaceLifePanel(name){
   const found=palaceLifeScene(name),children=nurseryChildren(name);
-  const residents=children.length?`<section class="nursery-residents"><h3>随母同住的孩子</h3><div class="activity-portraits">${children.map(k=>`<button class="activity-person" onclick="A.go('kid',${k.id})">${porImg(k,68)}<span>${esc(k.name)} · ${kidAge(k)}岁</span></button>`).join('')}</div><p class="hint">${children.map(k=>esc(`${k.name}随${k.foster?'养母':'生母'}${cName(youngChildMother(k))}住在这里`)).join('；')}。</p></section>`:'';
+  const residents=children.length?`<section class="nursery-residents"><h3>随母同住的孩子</h3><div class="activity-portraits">${children.map(k=>`<button class="activity-person" onclick="A.go('kid',${k.id})">${porImg(k,68)}<span>${esc(k.name)} · ${kidAge(k)}岁</span></button>`).join('')}</div><p class="hint">${children.map(k=>esc(`${k.name}随${childResidenceCareLabel(k,youngChildMother(k))}${cName(youngChildMother(k))}住在这里`)).join('；')}。</p></section>`:'';
   if(!found)return residents;
   if(found.scene.kind==='guest')return youngGuestPanel(found,name)+residents;
   const {scene,child:k,mother}=found,act=scene.activity;

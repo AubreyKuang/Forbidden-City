@@ -171,7 +171,11 @@ function childVoicePool(k){
     lit:[`书中有一句，${self}近来总想不透。能说出道理，是否就一定做得到？`,`父皇，${self}想留一点自己的见解。即使不尽对，也请容我先讲完。`],
     vir:[`小时候只盼着长大，如今才知道，有些事没人替自己拿主意。${self}还想听听父皇当年怎样过来的。`,`父皇，${self}想把答应过的事做好。别人未必记得，自己却不该忘。`]
   };
-  return [childDispositionVoice(k),voiceLine(`study-${stat}`,`${who}放下手边的事，主动与你攀谈。`,a<12?young[stat]:older[stat]),historyVoice(k),multipleVoice(k)].filter(Boolean);
+  const home=currentMotherResidenceConversation(k);
+  const homeVoice=home&&voiceLine('mother-residence',`${who}说起最近的居处。`,home.stay
+    ?`父皇许我继续陪着${home.address}，我很高兴。我也会按时读书，不叫她担心。`
+    :`新住处还有些不习惯。我会慢慢学着照顾自己，只是还想常去看看${home.address}。`);
+  return [childDispositionVoice(k),voiceLine(`study-${stat}`,`${who}放下手边的事，主动与你攀谈。`,a<12?young[stat]:older[stat]),historyVoice(k),multipleVoice(k),homeVoice].filter(Boolean);
 }
 function characterVoice(person,mode='greeting'){
   if(!person?.alive||person.gone||person.pendingName)return null;

@@ -45,3 +45,19 @@ test('officials without the news and older pending conversations do not gain the
 test('a pending request from before the emotional follow-up replays its original text',()=>{
  for(const choice of [0,1]){const b=game();b.run(`var original=Object.getOwnPropertyDescriptor(PalaceActions,'contentVersion');Object.defineProperty(PalaceActions,'contentVersion',{get:()=>108,configurable:true});Math.random=()=>0;var ev=childMotherResidenceRequests()[0];var result=ev.choices[${choice}].f();assert.doesNotMatch(result,/欢喜地依偎|孩子难过地低下头/);assert.doesNotMatch(child.story.at(-1).t,/欢喜地松|眼圈发红/);assert.doesNotMatch(mother.story.at(-1).t,/自己也欢喜|她心疼孩子/);Object.defineProperty(PalaceActions,'contentVersion',original);`);}
 });
+test('recent mother-residence choices shape both child and caregiver conversation without contradicting later changes',()=>{
+ for(const choice of [0,1]){const b=game();b.run(`Math.random=()=>0;childMotherResidenceRequests()[0].choices[${choice}].f();var home=currentMotherResidenceConversation(child);assert.equal(home.mother,mother);assert.equal(home.stay,${choice===0});
+ var voice=childVoicePool(child).find(v=>v.key==='mother-residence');assert.ok(voice);assert.match(voice.lines.join(''),/${choice===0?'高兴':'不习惯'}/);
+ var topic=consortChatTopics(mother).find(t=>t.id==='mother-residence-'+child.id);assert.ok(topic);assert.match(topic.make().text,/${choice===0?'身边':'牵挂|安静'}/);
+ child.away=true;assert.equal(currentMotherResidenceConversation(child),null);child.away=false;mother.cold=true;assert.equal(currentMotherResidenceConversation(child),null);mother.cold=false;
+ S.turn+=13;assert.equal(currentMotherResidenceConversation(child),null);assert.ok(!consortChatTopics(mother).some(t=>t.id==='mother-residence-'+child.id));`);}
+});
+test('a child awaiting their unavailable caregiver is not counted as another child’s roommate',()=>{
+ const b=game();b.run(`var waiting=makeKid(mother,'f','静好');waiting.born=S.turn-7*12;waiting.motherResidence={choice:'stay',caregiver:mother.id,turn:S.turn};child.motherResidence={choice:'shared',caregiver:mother.id,turn:S.turn};mother.cold=true;
+ assert.match(childResidence(waiting),/宫人照料/);assert.match(childResidence(child),/暂无其他同住的公主/);mother.cold=false;assert.equal(youngChildMother(waiting),mother);assert.match(childResidence(child),/暂无其他同住的公主/);`);
+});
+test('an aunt who raises a child is named correctly and a solitary mother has a fitting follow-up',()=>{
+ const b=game();b.run(`var aunt=makeGirl({sur:mother.sur,given:'如岚',age:30,trait:'沉静'});addConsort(aunt,4,'入宫');aunt.kin||={};aunt.kin[mother.id]='亲姐';aunt.solitary={path:'letters'};child.foster=aunt.id;Math.random=()=>0;childMotherResidenceRequests()[0].choices[0].f();
+ assert.match(childResidence(child),/姨母/);assert.match(childVoicePool(child).find(v=>v.key==='mother-residence').lines.join(''),/姨母/);assert.match(consortChatTopics(aunt).find(t=>t.id==='mother-residence-'+child.id).make().text,/各自读书/);
+ var original=Object.getOwnPropertyDescriptor(PalaceActions,'contentVersion');Object.defineProperty(PalaceActions,'contentVersion',{get:()=>110,configurable:true});assert.equal(currentMotherResidenceConversation(child),null);assert.doesNotMatch(childResidence(child),/姨母/);Object.defineProperty(PalaceActions,'contentVersion',original);`);
+});
