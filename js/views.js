@@ -308,7 +308,8 @@ function viewHome(){
   return `${pageHeading('御书房')}<div class="row home-overview">${porImg('emp',96)}<div class="grow">
    <div><b style="font-size:17px">${esc(e.sur+e.name)}</b>　年号${esc(e.era)}　${S.gen>1?`第${cnNum(S.gen)}代　`:''}${e.style}之君${e.dynastyTrait?` · ${esc(e.dynastyTrait)}`:''}</div>
    <div class="stats" style="margin-top:6px">${bar('龙体',e.health,'#4f9078')}${bar('威望',e.prestige,'#a87a26')}${bar('民心',e.people,'#3b5fa8')}${bar('文才',e.wen)}${bar('武略',e.wu)}</div>
-   <div style="margin-top:6px">后宫 ${h.length} 人${alive().some(c=>c.cold)?`（冷宫 ${alive().filter(c=>c.cold).length}）`:''}　皇嗣 ${k.length} 位　储君：${heir?esc(heir.name):'未立'}　${S.flags.dowager&&S.flags.dowager.alive?esc(S.flags.dowager.name)+'健在':''}</div>
+   <div style="margin-top:6px">后宫 ${h.length} 人${alive().some(c=>c.cold)?`（冷宫 ${alive().filter(c=>c.cold).length}）`:''}　皇嗣 ${k.length} 位　储君：${heir?esc(heir.name):'未立'}　${S.flags.dowager&&S.flags.dowager.alive?esc(S.flags.dowager.name)+'健在':''}
+     ${outerIntegration()?`<small class="hint" title="宫外子女的身世走漏会降低稳定。距上次风波满两个月后，每月恢复 2 点；恢复前低于 80 时，在宫妃嫔当月心情减 1。">后宫稳定 ${esc(haremStability())}/100</small>`:''}</div>
    </div></div>
 
    <div class="acts"><button class="btn primary" onclick="A.go('government')">治国理政<small>岁入 · 官员调度 · 民情回访</small></button><button class="btn jade" onclick="A.go('jewelry')">内库珍藏<small>查看珍饰 · 选人赏赐</small></button></div>
@@ -334,7 +335,6 @@ function viewHarem(){
   const sec=(t,arr)=>arr.length?`<h3>${t}（${arr.length}）</h3><div class="grid portrait-grid">${arr.map(consortCard).join('')}</div>`:'';
   const dead=S.consorts.filter(c=>!c.alive||c.gone);
   return `${pageHeading('后宫','点击妃嫔查看详情、互动与她的故事。各位分名额：嫔6、妃4、贵妃2、皇贵妃1、皇后1。','<button class="btn jade" onclick="A.openResidence()">宫室分配 · 主位与同住</button>')}${haremRestraintPanel()}
-   ${outerIntegration()?bar('后宫稳定',haremStability(),'#816449'):''}
    ${sec('中宫',g(c=>c.rank===8))}${sec('妃位',g(c=>c.rank>=5&&c.rank<8))}${sec('嫔位',g(c=>c.rank===4))}${sec('小主',g(c=>c.rank<4))}${sec('回家省亲',all.filter(c=>c.homeLeave&&!c.cold))}${sec('寺中修行',all.filter(c=>c.templeStay&&!c.cold))}${sec('冷宫',all.filter(c=>c.cold))}${sec('贴身宫女',maids().filter(m=>m.near))}
    ${facHTML()}${dead.length?`<h3>故人</h3><div class="hint">${dead.map(c=>`<button class="btn sm" onclick="A.go('consort',${c.id})">${esc(fullName(c))}${c.gone?'（出宫）':'（已故）'}</button>`).join(' ')}</div>`:''}`}
 function detailSection(title,content){

@@ -244,7 +244,7 @@ test('education prompts annually once, and a stale school letter cannot change a
 test('a rumor independently lowers palace stability, which affects morale and recovers in quiet months',()=>{
   const b=household();b.run(`A.outerPetition(k.id);choose(1);drain();
     k.secret=59;S.turn++;outerMonthly();assert.match(curEv.title,/流言/);choose(0);drain();
-    assert.equal(haremStability(),96);assert.match(viewHarem(),/后宫稳定/);
+    assert.equal(haremStability(),96);assert.doesNotMatch(viewHarem(),/后宫稳定/);assert.ok(viewHome().includes('后宫稳定 96/100</small>'));
     k.secret=39;S.turn++;outerMonthly();choose(0);drain();assert.equal(haremStability(),88);
     k.secret=19;S.turn++;outerMonthly();choose(1);drain();assert.equal(haremStability(),73);
     var q=empress(),mood=q.mood;S.turn+=2;outerMonthly();drain();assert.equal(q.mood,mood-1);
