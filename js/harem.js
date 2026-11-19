@@ -7,7 +7,9 @@ function genCands(n=6){finishSelection();S.cands=[];for(let i=0;i<n;i++)S.cands.
     if(kin)S.cands[0]=kin;
   }
   if(journalContentVersion()>=84)appendFamilyNominees();
-  S.cands.forEach(c=>{deepen(c);initTimeTraveler(c);});assignPastLifeCandidates();S.selection={phase:'audience',current:S.cands[0]?.id,performed:[]};selectionBatch();captureSelectionCourt();S.flags.peek=3;S.flags.lastXX=S.turn;if(typeof outerSelectionCall==='function')outerSelectionCall();log(`${dateStr()}，开选秀，各地秀女入宫待选。`,journalContentVersion()<41)}
+  S.cands.forEach(c=>{deepen(c);initTimeTraveler(c);});assignPastLifeCandidates();S.selection={phase:'audience',current:S.cands[0]?.id,performed:[]};selectionBatch();captureSelectionCourt();S.flags.peek=3;S.flags.lastXX=S.turn;if(typeof outerSelectionCall==='function')outerSelectionCall();
+  if(selectionNiecesActive())for(const c of S.cands)recordSelectionNiece(c,'entered');
+  log(`${dateStr()}，开选秀，各地秀女入宫待选。`,journalContentVersion()<41)}
 A.xxDecree=function(){
   if(selectionSkipTimingActive()&&(modalOpen||S.over||S.cands.length))return;
   reconcileSelectionTiming();
@@ -19,24 +21,33 @@ A.xxDecree=function(){
 A.xxPeek=function(id){const c=S.cands.find(x=>x.id===id);if(!c||c.known)return;if(S.flags.peek<=0){toast('本次暗访次数已用尽');return}S.flags.peek--;c.known=true;AU.sfx('page');render()};
 A.xxDrop=function(id){
   const c=S.cands.find(x=>x.id===id);
-  if(c)outerSelectionDismissed(c);
+  if(c){
+    outerSelectionDismissed(c);
+    if(recordSelectionNiece(c,'lost'))toast('姨母的回话已写入两人的人物纪事。');
+  }
   S.cands=S.cands.filter(x=>x.id!==id);AU.sfx('click');render()
 };
 A.xxTake=function(id){const c=S.cands.find(x=>x.id===id);if(!c)return;
+  if(selectionFamilyAwaitingClearance(c)){
+    pushEv({title:'礼部核名 · 外家户帖',por:c,text:`${fullName(c)}可依原籍参加本届选秀。现有家籍尚有亲缘待核之处，留牌前须先核清；这张名帖暂留在本届名册。`,choices:[{t:'先留她的名帖'}]});
+    return;
+  }
   const ch=[0,1,2,3].map(r=>({t:`封为${RANKS[r]}`,f:()=>take(r)}));
   if(c.fam.p>=70) ch.push({t:'封为嫔（世家之女，可破格）',cond:()=>rankCount(4)<RANK_CAP[4],why:'嫔位已满',f:()=>take(4)});
   function take(r){if(!S.cands.some(x=>x.id===c.id)||S.consorts.some(x=>x.id===c.id)||rankCount(r)>=RANK_CAP[r])return null;const version=journalContentVersion();
     const outer=outerIntegration()&&c.outerHouseholdId?outerChild(c.outerHouseholdId):null;
     if(c.outerHouseholdId&&!outerSelectionEligible(outer))return '礼部复核未能通过，她这一张户帖暂且封存。';
+    const niece=selectionNieceFamily(c);
     if(version>=80&&!confirmSelectionSister(c)){S.cands=S.cands.filter(x=>x!==c);return '礼部复核名册，亲缘或参选资格未能核合，已撤去这张名牌。';}
     S.cands=S.cands.filter(x=>x!==c);
     addConsort(c,r,`${dateStr()}选秀入宫`,{major:version===40,recordAdmission:version<41});let s='';
     if(r>=3&&c.fam.p>=60)s=chg({prestige:2});
     if(r>=4&&!c.title)grantConsortTitle(c,pick(TITLES.filter(t=>!harem().some(x=>x.title===t))));
     const batch=selectionBatch();batch.accepted.push(c.id);
+    const auntReply=recordSelectionNiece(c,'kept',batch,niece);
     if(outer)outerSelectionAdmitted(outer,c);
     c.entryAdjustment={turn:S.turn,manner:entryManner(c),settled:false,pendingBatch:true};save('auto');
- AU.sfx('joy');return `${fullName(c)}叩首谢恩，入住${c.palace}。${fx(s)}${cousinFamiliesActive()&&c.cousinAdmissionText?"\n"+c.cousinAdmissionText:""}`}
+ AU.sfx('joy');return `${fullName(c)}叩首谢恩，入住${c.palace}。${fx(s)}${cousinFamiliesActive()&&c.cousinAdmissionText?"\n"+c.cousinAdmissionText:""}${auntReply?'\n'+auntReply:''}`}
   pushEv({title:'留牌子',por:c,text:`${fullName(c)}，年方${c.age}，${c.fam.t}之女。\n陛下欲赐何等位分？`,choices:[...ch,{t:'再想想'}]});
 };
 A.xxEnd=function(){if(modalOpen)return;finishSelection();save('auto');A.go(S.selection?.phase==='arrivals'?'xx':'harem')};
