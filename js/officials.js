@@ -144,12 +144,16 @@ function viewOfficial(){
     ${detailSection('家族往来',kin.map(x=>`<button class="btn quiet sm" onclick="A.go('consort',${x.id})">${esc(fullName(x))} · ${role==='father'?'女儿':'姐妹'}${x.alive?'':' · 已故'}</button>`).join(' ')+otherRoles.map(r=>`<p>${r==='father'?'父亲':role==='father'?'儿子':'兄弟'}：${officialLink(c,r)} · ${officialStatus(officialPerson(h,r))}</p>`).join(''))}
     ${officialSpousePanel({p,e,key})}${officialBrothersPanel({p,e,key})}${detailSection('血亲与姻亲',careerKinHTML({p,e,key}))}${typeof kinCourtPanel==='function'?kinCourtPanel(e):''}${detailSection('娘家手足',natalFamilyLinks(c))}${h.relatives?.includes(p)?natalLifePanel(c,p):''}${officialMarriagePanel(key)}${detailSection('个人履历与纪事',detailStory(p))}`;
 }
+function motherResidenceConversation(p){
+  const news=p.motherResidenceNews?.at(-1);if(!news)return '';
+  if(kidById(news.child)?.alive===false)return `“${news.name}从前还想同母亲住在一处。如今想起那时的事，臣心中仍难过。”`;
+  return news.sex==='m'?`“听说${news.name}曾求与母亲同住，${news.stay?'陛下已经应允':'陛下安排他迁往皇子居所'}。臣盼他慢慢振作，也愿给他时日学会独立。”`:`“听说${news.name}曾求与母亲同住，${news.stay?'陛下已经应允':'陛下安排她迁往公主居所'}。她依恋母亲的样子叫人怜爱，臣也盼她安心长大。”`;
+}
 function officialConversation(e,topic){
   const {c,p,role,h}=e,kin=p.parentRelativeId?'姨母':role==='father'?'女儿':officialKinLabel(h,role)==='弟弟'?'姐姐':'妹妹';
   if(topic==='family'){
-    const childNews=journalContentVersion()>=105?p.motherResidenceNews?.at(-1):null;
-    if(childNews&&kidById(childNews.child)?.alive===false)return `“${childNews.name}从前还想同母亲住在一处。如今想起那时的事，臣心中仍难过。”`;
-    if(childNews)return childNews.sex==='m'?`“听说${childNews.name}曾求与母亲同住，${childNews.stay?'陛下已经应允':'陛下安排他迁往皇子居所'}。臣盼他慢慢振作，也愿给他时日学会独立。”`:`“听说${childNews.name}曾求与母亲同住，${childNews.stay?'陛下已经应允':'陛下安排她迁往公主居所'}。她依恋母亲的样子叫人怜爱，臣也盼她安心长大。”`;
+    const childNews=journalContentVersion()>=105?motherResidenceConversation(p):'';
+    if(childNews)return childNews;
     const relatives=paternalFamily(c).filter(x=>S.consorts.includes(x));
     if(relatives.some(x=>!x.alive))return '“家中还留着她旧时的书信。有些话，当年只当来日方长，如今再无机会问了。”';
     if(relatives.some(x=>x.cold))return '“臣不敢以家事乱国法，只求她在冷宫有衣御寒，有药可医。”';
@@ -261,7 +265,10 @@ A.officialAct=function(key,action){
     ...[['service',p.career==='commoner'?'问生计与年景':p.career==='student'?'问学业与科名':'问任上见闻'],['family','问家中近况'],['duty','谈公私与用人']].map(([topic,t])=>({t:t+' · 精力−1',cond:()=>E().energy>=1,why:'精力不足',f:()=>{
       if(!valid()||!useE())return null;p.lastAudience=S.turn;p.trust=clamp(p.trust+4);const line=officialConversation(e,topic);
       officialRecord(c,role,`陛下${p.away||p.commission||p.diplomaticJourney||p.retired?'赐书垂询':'召见'}。${line}`,{family:topic==='family',emotion:.4});save('auto');return {text:line,por:p};
-    }})),{t:'改日再谈'}]});
+    }})),...(journalContentVersion()>=106&&p.motherResidenceNews?.length?[{t:'谈孩子请求同住 · 精力−1',cond:()=>E().energy>=1,why:'精力不足',f:()=>{
+      if(!valid()||!useE())return null;p.lastAudience=S.turn;p.trust=clamp(p.trust+4);const line=motherResidenceConversation(p);
+      officialRecord(c,role,`陛下问起孩子请求同住。${line}`,{family:true,emotion:.4});save('auto');return {text:line,por:p};
+    }}]:[]),{t:'改日再谈'}]});
   const labels={honor:'赐祭抚恤',reward:'论功赏赐',retire:'准予致仕',recall:'征召复出'};
   pushEv({title:labels[action]+' · '+p.name,por:p,valid,text:{honor:'将赐祭文与抚恤银给其家眷，故人的履历仍留在家族中。',reward:'按新增功绩赐银帛，嘉奖将记入本人履历与家眷纪事。',retire:'准其卸下差务归乡，今后仍可书信往来。',recall:'征召其重返原职，恢复承接差事的资格。'}[action],choices:[
     {t:'准奏'+(cost?' · 国库−'+cost:'')+' · 精力−1',cond:()=>E().energy>=1&&E().treasury>=cost,why:'精力或国库不足',f:()=>{

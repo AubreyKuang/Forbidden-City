@@ -35,3 +35,10 @@ test('living maternal relatives may learn and discuss the actual decision with r
 test('only living relatives who actually hear the news can discuss it',()=>{
  const b=game();b.run(`var h=houseOf(mother);h.father.alive=false;h.brother={id:'uncle-test',name:'外家兄长',alive:true,story:[]};var count=0;Math.random=()=>count++===0?0:.99;var ev=childMotherResidenceRequests()[0];ev.choices[0].f();assert.equal(h.father.motherResidenceNews,undefined);assert.equal(h.brother.motherResidenceNews,undefined);assert.doesNotMatch(officialConversation({c:mother,p:h.brother,role:'brother',h},'family'),/念安/);`);
 });
+test('an informed grandfather has an explicit conversation option even when other family stories take priority',()=>{
+ const b=game();b.run(`var h=houseOf(mother);Math.random=()=>0;childMotherResidenceRequests()[0].choices[0].f();E().energy=4;PalaceActions.reset();A.officialAct(mother.id+':father','talk');assert.match(curEv.title,/召见议事|赐书问候/);var index=curEv.choices.findIndex(c=>c.t.includes('谈孩子请求同住'));assert.ok(index>=0);choose(index);assert.match(modalResult.text,/念安/);assert.match(modalResult.text,/怜爱/);`);
+});
+test('officials without the news and older pending conversations do not gain the new option',()=>{
+ const b=game();b.run(`var h=houseOf(mother);E().energy=4;PalaceActions.reset();A.officialAct(mother.id+':father','talk');assert.ok(!curEv.choices.some(c=>c.t.includes('谈孩子请求同住')));drain();
+ delete h.father.lastAudience;E().energy=4;h.father.motherResidenceNews=[{name:child.name,child:child.id,sex:'f',stay:true}];var old=Object.getOwnPropertyDescriptor(PalaceActions,'contentVersion');Object.defineProperty(PalaceActions,'contentVersion',{get:()=>105,configurable:true});PalaceActions.reset();A.officialAct(mother.id+':father','talk');assert.ok(!curEv.choices.some(c=>c.t.includes('谈孩子请求同住')));Object.defineProperty(PalaceActions,'contentVersion',old);`);
+});
