@@ -74,12 +74,23 @@ addConsort=function(c,...args){
   if(familyBearingActive()&&!c.upbringing)c.upbringing={...familyUpbringing(c)};
   return bearingAddConsort(c,...args);
 };
+// An audience comes before the newcomer has a rank, rooms or an allowance.
+const SELECTION_FAMILY_CUES={
+  merchant:'报到家门时，她一眼就认出了案上缎子的织法。至于殿上的礼序，她仍留心听着。',
+  scholar:'引礼人展卷时，她侧了侧身，让光正落在字上。',
+  military:'引礼人一声唱名，她应声站定，两脚恰好齐在砖沿。',
+  medicine:'候见时有人站久了发晕，她扶人靠着廊柱歇了片刻，听见传唤才进来。',
+  farm:'她在阶下蹭净鞋底的泥，又低头看了看天色，才跟着引礼人上殿。',
+  foreign:'听到引礼人用本朝的读音报出家门，她轻声跟着念了一遍。'
+};
 const bearingSelectionSpeech=selectionSpeech;
 selectionSpeech=function(c){
   const speech=bearingSelectionSpeech(c);
-  if(!familyBearingActive()||travelerSelectionBlurt(c))return speech;
-  const v=familyBearingVoice({...c,enteredAt:S.turn});
-  speech.stage=v.stage+(selectionOldFriendHint(c)?'\n'+selectionOldFriendHint(c):'');speech.line=v.lines[0].replaceAll('臣妾','臣女');return speech;
+  if(familyBearingActive()&&!travelerSelectionBlurt(c)){
+    const cue=SELECTION_FAMILY_CUES[familyUpbringing(c).group];
+    if(cue)speech.stage=cue+'\n'+speech.stage;
+  }
+  return speech;
 };
 const bearingReaction=newcomerReaction;
 newcomerReaction=function(c){

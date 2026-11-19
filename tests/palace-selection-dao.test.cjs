@@ -22,6 +22,24 @@ function boot(seedValue=4242){
 test('selection audiences precede roster; performances, dismissal, rank and welcome persist',()=>{
  const {run}=boot();run(`genCands(3);var ids=S.cands.map(c=>c.id);assert.match(viewXX(),/秀女觐见/);A.xxPerform(ids[0]);var before=JSON.stringify(S);assert.match(viewXX(),/已看过才艺/);assert.equal(JSON.stringify(S),before);A.xxNext(ids[0]);assert.equal(selectionCurrent().id,ids[1]);A.xxNext(ids[1]);A.xxNext(ids[2]);assert.equal(selectionCurrent(),null);assert.match(viewXX(),/留牌子/);A.xxMeet(ids[0]);assert.match(viewXX(),/已看过才艺/);A.xxRoster();A.xxDrop(ids[2]);A.xxTake(ids[0]);var take=curEv.choices[1].f;take();assert.equal(S.consorts.filter(c=>c.id===ids[0]).length,1);assert.equal(take(),null);Q.length=0;modalOpen=false;var c=byId(ids[0]);assert.ok(!c.entryAdjustment.settled);save('1');assert.ok(load('1'));c=byId(ids[0]);assert.equal(newcomerWelcomeEvent(c),null);A.xxEnd();var ev=newcomerWelcomeEvent(c);ev.choices[0].f();assert.equal(c.entryAdjustment.answer,'reassured');assert.equal(ev.choices[0].f(),null);assert.equal(newcomerWelcomeEvent(c),null);assert.ok(newcomerVoice(c));S.turn+=6;assert.equal(newcomerVoice(c),null);`);
 });
+test('audiences distinguish every temperament in the same family, and every hobby at each skill level',()=>{
+ const {run}=boot();run(`var candidate=makeGirl({fam:{t:'县令',p:20}});delete candidate.timeTraveler;delete candidate.solitary;
+ candidate.scheme=20;var seen=new Set();
+ for(const trait of Object.keys(TRAITS)){
+   candidate.trait=trait;const lines=new Set();
+   for(let seed=1;seed<=20;seed++){candidate.seed=seed;const {line}=selectionSpeech(candidate);lines.add(line);}
+   assert.equal(lines.size,2,trait);for(const line of lines){assert.ok(!seen.has(line),trait);seen.add(line);}
+ }
+ candidate.trait='爽直';var plain=selectionSpeech(candidate).line;candidate.scheme=80;assert.notEqual(selectionSpeech(candidate).line,plain);
+ for(const talent of [39,40,69,70]){
+   candidate.talent=talent;const replies=new Set();
+   for(const hobby of Object.keys(CONSORT_HOBBIES)){candidate.hobby=hobby;replies.add(selectionSpeech(candidate).reply);}
+   assert.equal(replies.size,9);
+ }
+ for(const hobby of Object.keys(CONSORT_HOBBIES)){
+   candidate.hobby=hobby;assert.equal(new Set([39,40,70].map(n=>{candidate.talent=n;return selectionSpeech(candidate).reply;})).size,3);
+ }`);
+});
 test('discretion governs bold traits and new entrants never fabricate a favored cold consort',()=>{
  const {run}=boot();run(`var c=makeGirl({trait:'骄纵'});c.scheme=80;assert.equal(entryManner(c),'careful');c.scheme=10;assert.equal(entryManner(c),'bold');c.trait='温婉';c.talent=10;assert.equal(entryManner(c),'nervous');addConsort(c,2,'入宫');c.entryAdjustment={turn:S.turn,manner:'bold'};harem().filter(o=>o!==c).forEach(o=>{o.cold=true;o.favor=100;});assert.match(newcomerWelcomeEvent(c).text,/不好妄议圣意/);c.cold=true;assert.equal(newcomerWelcomeEvent(c),null);`);
 });
