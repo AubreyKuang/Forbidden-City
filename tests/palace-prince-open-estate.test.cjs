@@ -29,7 +29,7 @@ test('pending opening and completed residence survive reload without duplicated 
  b=boot(414,b.storage);b.ctx.assert=assert;b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(childWhereabouts(kidById(${id})),'京中皇子府');assert.equal(kidById(${id}).story.filter(x=>x.t.includes('在京开府')).length,1);`);
 });
 test('older pending actions do not gain the new residence displays or opening control',()=>{
- const b=world();b.run(`var old=Object.getOwnPropertyDescriptor(PalaceActions,'contentVersion');Object.defineProperty(PalaceActions,'contentVersion',{get:()=>118,configurable:true});S.heir=son.id;assert.equal(childWhereabouts(son),'宫中');assert.equal(childResidence(son),'');assert.equal(princeEstateOpenReady(son),false);Object.defineProperty(PalaceActions,'contentVersion',old);`);
+ const b=world();b.run(`var old=Object.getOwnPropertyDescriptor(PalaceActions,'contentVersion');Object.defineProperty(PalaceActions,'contentVersion',{get:()=>119,configurable:true});S.heir=son.id;assert.equal(childWhereabouts(son),'宫中');assert.equal(childResidence(son),'');assert.equal(princeEstateOpenReady(son),false);Object.defineProperty(PalaceActions,'contentVersion',old);`);
 });
 test('a six-year-old heir does not ask to move from his mother to the ordinary princes’ quarters',()=>{
  const b=world();b.run(`son.born=S.turn-6*12;son.temperament='内敛';son.seed=Array.from({length:1000},(_,i)=>i).find(i=>voiceHash('mother-residence:'+son.id+':'+i)%100<18);S.heir=son.id;assert.equal(childResidence(son),'东宫 · 皇太子居处');assert.ok(!childMotherResidenceRequests().some(ev=>ev.por===son));`);
@@ -39,4 +39,7 @@ test('deferral survives reload and can be ended early by an explicit decision',(
 });
 test('a genuine v118 pending appointment resumes before displaying the Eastern Palace',()=>{
  const data=require('./fixtures/prince-heir-pending-v118.json'),b=boot(416,new Map([['chengongji_v1_auto',JSON.stringify(data)]]));b.ctx.assert=assert;b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,118);assert.equal(curEv.title,'册立太子');choose(0);drain();assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,PalaceActions.releaseVersion);assert.equal(childWhereabouts(kidById(S.heir)),'东宫');`);
+});
+test('a genuine v119 pending appointment also completes before the new Eastern Palace display',()=>{
+ const data=require('./fixtures/prince-heir-pending-v119.json'),b=boot(417,new Map([['chengongji_v1_auto',JSON.stringify(data)]]));b.ctx.assert=assert;b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,119);assert.equal(curEv.title,'册立太子');choose(0);drain();assert.equal(PalaceActions.blocked,false);assert.equal(childWhereabouts(kidById(S.heir)),'东宫');`);
 });

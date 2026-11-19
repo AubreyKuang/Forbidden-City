@@ -5,7 +5,7 @@ function approvedMotherResidence(k){
     k.motherResidence.caregiver===(k.foster||k.mom)&&kidAge(k)<childResidenceAdultAge(k);
 }
 function youngChildMother(k){
-  if(!childInPalace(k)||k.married||k.pendingName||journalContentVersion()>=119&&S.heir===k.id||(kidAge(k)>=6&&!approvedMotherResidence(k)))return null;
+  if(!childInPalace(k)||k.married||k.pendingName||journalContentVersion()>=120&&S.heir===k.id||(kidAge(k)>=6&&!approvedMotherResidence(k)))return null;
   const mother=byId(k.foster||k.mom);
   return inPalace(mother)&&mother.palace&&mother.palace!=='冷宫'?mother:null;
 }
@@ -19,7 +19,7 @@ function childResidenceCareLabel(k,mother){
   return k.foster?'养母':'生母';
 }
 function childResidence(k){
-  if(journalContentVersion()>=119&&childInPalace(k)&&!k.pendingName&&k.sex==='m'){
+  if(journalContentVersion()>=120&&childInPalace(k)&&!k.pendingName&&k.sex==='m'){
     if(S.heir===k.id)return '东宫 · 皇太子居处';
     if(kidAge(k)>=16&&!k.princeEstate)return '宫中 · 尚未开府';
   }
@@ -67,7 +67,7 @@ function childMotherResidenceRequests(){
   const events=[];
   for(const k of kidsAlive()){
     const age=kidAge(k),mother=byId(k.foster||k.mom),monthsOld=S.turn-k.born;
-    if(!childInPalace(k)||k.married||k.pendingName||journalContentVersion()>=119&&S.heir===k.id||age<6||age>=childResidenceAdultAge(k)||
+    if(!childInPalace(k)||k.married||k.pendingName||journalContentVersion()>=120&&S.heir===k.id||age<6||age>=childResidenceAdultAge(k)||
       (sixthBirthdayOnly?(monthsOld!==72||k.motherResidenceChecked):monthsOld%12!==0)||k.motherResidence||!inPalace(mother)||!mother.palace||
       !['内敛','审慎'].includes(childDisposition(k))||childTrust(k,mother)<45)continue;
     if(sixthBirthdayOnly){

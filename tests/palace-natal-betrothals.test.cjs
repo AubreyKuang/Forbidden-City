@@ -152,3 +152,102 @@ test('a naturally triggered monthly proposal survives replay before any choice',
     assert.equal(curEv.title,'外家有约 · 娃娃亲');choose(0);drain();
     assert.equal(S.children[0].betrothal.kind,ROYAL_NATAL_MATCH);`);
 });
+
+function engaged(sex='m'){
+  const b=family(sex);
+  b.force(0,0);
+  b.run(`var ev=royalNatalMarriageProposal();ev.onShow();ev.choices[0].f();PalaceActions.reset();`);
+  return b;
+}
+const yearStep=`S.turn+=12;S.year++;S.month=1;`;
+const seekPetition=`for(let n=0;modalOpen&&!curEv.title.includes('请求解约')&&n<100;n++){
+  if(modalResult)nextEv();else choose(curEv.choices.findIndex(c=>!c.cond||c.cond()));
+}
+assert.equal(curEv?.title,'婚约问心 · 请求解约');`;
+const dueMonth=`S.turn=k.betrothal.due-1;S.month=6;k.adult=true;E().health=95;PalaceActions.reset();A.endMonth();`;
+
+test('children swap distinct gifts once per New Year and the two profiles read their independent scores',()=>{
+  const b=engaged();
+  b.run(`var starting=royalNatalInitialBond(k,p);
+    assert.match(marriagePanel(k),/彼此好感/);assert.match(natalLifePanel(a,p),/彼此好感/);
+    assert.equal(k.betrothal.bond,undefined);
+    assert.doesNotMatch(marriagePanel(k),/互通信札|安排两人见面/);
+    S.month=1;royalNatalMarriageTick();royalNatalMarriageTick();
+    var bond=k.betrothal.bond;
+    assert.ok(bond.royal>starting.royal);assert.ok(bond.relative>starting.relative);
+    for(const person of [k,p])assert.equal(person.story.filter(e=>e.life?.title==='正月互送岁礼').length,1);
+    assert.notEqual(k.story.at(-1).t,p.story.at(-1).t);
+    ${yearStep}
+    royalNatalMarriageTick();assert.equal(k.story.filter(e=>e.life?.title==='正月互送岁礼').length,2);
+    assert.ok(!p.betrothal.bond);`);
+});
+
+test('both need to reach the letter and meeting ages, with cooldowns and separate responses',()=>{
+  const b=engaged('f');
+  b.run(`S.turn=k.born+8*12-1;
+    A.royalNatalContact(k.id,'letter');assert.equal(modalOpen,false);
+    S.turn++;var initial=royalNatalInitialBond(k,p);
+    A.royalNatalContact(k.id,'letter');assert.match(curEv.title,/书信/);`);
+  b.force(.01,.99);
+  b.run(`choose(0);drain();var bond=k.betrothal.bond;
+    assert.equal(bond.royal,initial.royal+4);assert.equal(bond.relative,initial.relative-7);
+    assert.match(natalLifePanel(a,p),/还需等6个月/);assert.match(k.story.at(-1).t,/互寄书信/);
+    A.royalNatalContact(k.id,'letter');assert.equal(modalOpen,false);
+    S.turn=k.born+12*12; k.away=true;
+    assert.match(royalNatalContactReason(k,p,'visit'),/同在京中/);
+    A.royalNatalContact(k.id,'visit');assert.equal(modalOpen,false);
+    k.away=false;PalaceActions.reset();
+    A.royalNatalContact(k.id,'visit');assert.match(curEv.title,/相见/);`);
+  const loaded=boot(236,b.storage);loaded.ctx.assert=assert;
+  loaded.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.match(curEv.title,/相见/);
+    var k=S.children[0],p=natalEntry(k.betrothal.host,k.betrothal.personId).p,prior=k.betrothal.bond.royal;`);
+  loaded.force(.01,.01);
+  loaded.run(`choose(0);drain();assert.equal(k.betrothal.bond.royal,prior+7);
+    assert.match(marriagePanel(k),/还需等12个月/);
+    S.turn=k.betrothal.due;royalNatalMarriageTick();
+    assert.equal(k.married,true);assert.equal(k.spouse.trust,Math.round((prior+7+royalNatalInitialBond(k,p).relative)/2));`);
+});
+
+test('letters and supervised meetings can also happen without a player visit',()=>{
+  const b=engaged();
+  b.run(`S.turn=k.born+8*12;S.month=5;`);
+  b.force(.01,.01,.99);
+  b.run(`royalNatalMarriageTick();assert.match(k.betrothal.bond.latest.text,/书信/);
+    S.turn=k.born+12*12;S.month=3;`);
+  b.force(.99,.01,.99,.01);
+  b.run(`royalNatalMarriageTick();assert.match(k.story.at(-1).life.title,/相见/);
+    assert.equal(k.betrothal.bond.last.visit,S.turn);`);
+});
+
+test('unwilling relative petitions before the wedding, persists on reload, and can be released',()=>{
+  const b=engaged();
+  b.run(`k.betrothal.bond={royal:60,relative:26,last:{}};
+    ${dueMonth}
+    ${seekPetition}
+    assert.match(curEv.text,new RegExp(p.name+'托人'));assert.equal(k.married,false);
+    assert.equal(k.betrothal.bond.petition.side,'relative');`);
+  const loaded=boot(117,b.storage);loaded.ctx.assert=assert;
+  loaded.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.match(curEv.title,/请求解约/);
+    var k=S.children[0],p=natalEntry(k.betrothal.host,k.betrothal.personId).p;
+    choose(0);drain();
+    assert.equal(k.betrothal,undefined);assert.equal(p.betrothal,undefined);assert.equal(marriageEligible(k),true);
+    assert.equal(k.married,false);assert.equal(p.married,false);
+    assert.equal(k.story.filter(e=>e.life?.title==='婚约作罢').length,1);
+    assert.notEqual(k.story.at(-1).t,p.story.at(-1).t);`);
+});
+
+test('a royal petitioner can be granted more time and eventually marry if the player keeps the promise',()=>{
+  const b=engaged('f');
+  b.run(`k.betrothal.bond={royal:27,relative:62,last:{}};
+    ${dueMonth}
+    ${seekPetition}
+    assert.match(curEv.text,new RegExp(k.name+'托人'));
+    choose(1);drain();
+    var bond=k.betrothal.bond,until=bond.holdUntil;assert.equal(until,S.turn+6);
+    assert.match(marriagePanel(k),/婚期暂缓/);
+    S.turn=until-1;royalNatalMarriageTick();assert.equal(k.married,false);assert.equal(bond.petition,undefined);
+    A.endMonth();
+    ${seekPetition}
+    choose(2);drain();assert.ok(bond.kept);assert.equal(bond.petition,undefined);
+    S.turn++;royalNatalMarriageTick();assert.equal(k.married,true);assert.equal(p.married,true);`);
+});

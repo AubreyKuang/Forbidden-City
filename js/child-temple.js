@@ -1,6 +1,6 @@
 /* Saved journeys, care arrangements and mothers' concern for children living away. */
 function childWhereabouts(k){
-  if(journalContentVersion()>=119&&k?.sex==='m'&&S.heir===k.id&&childInPalace(k))return '东宫';
+  if(journalContentVersion()>=120&&k?.sex==='m'&&S.heir===k.id&&childInPalace(k))return '东宫';
   if(royalDiplomaticAway(k))return (DIPLOMACY_COUNTRIES[k.diplomaticJourney.country]?.name||'异国')+(k.diplomaticJourney.status==='detained'?' · 受留':' · 出使');
   const inWhiteSpring=k.spouse?.route==='whiteSpring';
   if(royalTravelAway(k))return royalTravelPlace(k);
@@ -20,14 +20,14 @@ function childWhereabouts(k){
 }
 function openPrinceEstate(k,record=true){
   if(!k||k.sex!=='m'||!k.alive||royalJourneyAway(k)||k.pendingName||k.removedFromRoyal||S.heir===k.id||kidAge(k)<16||k.princeEstate||
-    journalContentVersion()>=119&&(k.jailed||k.templeStay))return false;
+    journalContentVersion()>=120&&(k.jailed||k.templeStay))return false;
   k.princeEstate={opened:S.turn,location:'京城'};
-  if(journalContentVersion()>=119)delete k.princeEstateDeferredUntil;
+  if(journalContentVersion()>=120)delete k.princeEstateDeferredUntil;
   if(record){childSeparationMemory(k,`${k.name}在京开府，迁出宫中，自此居于皇子府。`,.1);log(`${k.name}在京开府，迁居皇子府。`);}
   return true;
 }
 function princeEstateOpenReady(k){
-  return journalContentVersion()>=119&&!S.over&&!!k&&S.children.includes(k)&&k.sex==='m'&&kidAge(k)>=16&&
+  return journalContentVersion()>=120&&!S.over&&!!k&&S.children.includes(k)&&k.sex==='m'&&kidAge(k)>=16&&
     !k.pendingName&&S.heir!==k.id&&childInPalace(k)&&!k.princeEstate&&!k.estate;
 }
 A.princeOpenEstate=function(id){
@@ -39,7 +39,7 @@ A.princeOpenEstate=function(id){
     choices:[{t:'准其出宫开府',f:()=>{if(!valid()||!openPrinceEstate(k))return null;return `${k.name}已在京城开府，迁入皇子府。`; }},{t:'暂缓六个月',f:()=>{if(!valid())return null;k.princeEstateDeferredUntil=S.turn+6;return '先暂缓六个月；此间仍可随时重新安排。';}}]});
 };
 function reconcilePrinceResidence(k){
-  if(journalContentVersion()>=119&&S.turn<(k.princeEstateDeferredUntil??0))return;
+  if(journalContentVersion()>=120&&S.turn<(k.princeEstateDeferredUntil??0))return;
   if(k.sex==='m'&&(kidAge(k)>=18||(k.adult&&kidAge(k)>=16)))openPrinceEstate(k,false);
 }
 function distantChildren(c){

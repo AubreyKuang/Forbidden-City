@@ -202,9 +202,9 @@ A.kidVisit=function(id){const k=kidById(id);if(modalOpen||!k?.alive||k.removedFr
 };
 A.kidPolicy=function(id,p){const k=kidById(id);k.policy=p;AU.sfx('click');render()};
 A.kidTutor=function(id){const k=kidById(id);k.tutor=!k.tutor;if(k.tutor){kstory(k,'陛下延请当世大儒为师。');toast('已延请太傅（每月5万两）')}render()};
-A.kidHeir=function(id,fromRites=false){const k=kidById(id);if(!k?.alive||k.removedFromRoyal||k.templeStay||royalJourneyAway(k)||journalContentVersion()>=119&&k.jailed||k.sex!=='m'||kidAge(k)<5)return;if(storyCastHeirBar(k)){toast('礼部回禀：有异域血脉的皇嗣依本朝成例不得入主东宫。');return;}const old=S.heir&&kidById(S.heir);
-  pushEv({title:'册立太子',por:k,valid:()=>k.alive&&!royalJourneyAway(k)&&(journalContentVersion()<119||!k.jailed)&&(!fromRites||!S.heir&&ritesHeirEligible(k)),text:old?`太子${old.name}尚在。改立${k.name}为太子，必将引起朝野震动（威望-6）。`:`立${kidName(k)}为皇太子，昭告天下？`,choices:[
-    {t:'册立太子',f:()=>{if(!k.alive||royalJourneyAway(k)||journalContentVersion()>=119&&k.jailed)return null;let s='';if(old){s=chg({prestige:-6});kstory(old,'被废去太子之位。');old.amb=clamp(old.amb+20)}else s=chg({prestige:5});
+A.kidHeir=function(id,fromRites=false){const k=kidById(id);if(!k?.alive||k.removedFromRoyal||k.templeStay||royalJourneyAway(k)||journalContentVersion()>=120&&k.jailed||k.sex!=='m'||kidAge(k)<5)return;if(storyCastHeirBar(k)){toast('礼部回禀：有异域血脉的皇嗣依本朝成例不得入主东宫。');return;}const old=S.heir&&kidById(S.heir);
+  pushEv({title:'册立太子',por:k,valid:()=>k.alive&&!royalJourneyAway(k)&&(journalContentVersion()<120||!k.jailed)&&(!fromRites||!S.heir&&ritesHeirEligible(k)),text:old?`太子${old.name}尚在。改立${k.name}为太子，必将引起朝野震动（威望-6）。`:`立${kidName(k)}为皇太子，昭告天下？`,choices:[
+    {t:'册立太子',f:()=>{if(!k.alive||royalJourneyAway(k)||journalContentVersion()>=120&&k.jailed)return null;let s='';if(old){s=chg({prestige:-6});kstory(old,'被废去太子之位。');old.amb=clamp(old.amb+20)}else s=chg({prestige:5});
       S.heir=k.id;delete k.princeEstate;k.away=false;kstory(k,'被册立为皇太子，入主东宫。');{const mm=byId(k.foster||k.mom);if(mm&&mm.alive)setXin(mm,mm.scheme>=55?'野心':'欢喜',`${k.name}被立为太子`)}log(`立${k.name}为皇太子。`,1);
       const m=byId(k.mom);if(m&&m.alive){cchg(m,{mood:25,aff:10});story(m,`其子${k.name}被立为太子。`)}
       harem().forEach(o=>{if(o.id!==k.mom&&o.scheme>60)o.mood=clamp(o.mood-12)});AU.sfx('gong');
