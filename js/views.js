@@ -575,6 +575,7 @@ function viewKid(){
     <p>生母 ${outsideMotherLink(k)}${foster?` · 养母 ${parentLink(k.foster)}`:''}</p>${childResidence(k)?`<p class="hint">${esc(childResidence(k))}</p>${youngChildMother(k)?`<button class="btn sm jade" onclick="A.visitChildHome(${k.id})">去宫里看看 →</button>`:''}`:''}${birthTags(k)}${outsideChildBadge(k)}${childHasLeftPalace(k)?`<p class="hint">居处 · ${esc(childWhereabouts(k))}</p>`:''}</div></header>
    ${k.pendingName?pendingBirthPanel():''}
    ${k.alive&&!k.removedFromRoyal&&!k.estate&&!k.jailed&&!k.pendingName?`<div class="detail-actions" role="group" aria-label="人物操作"><span class="detail-action-label" aria-hidden="true">人物操作</span><div class="acts"><button class="btn primary" onclick="A.kidVisit(${k.id})">${childHasLeftPalace(k)?'写家书':'探望'}<small>精力-1</small></button></div></div>`:''}
+   ${marriagePanel(k)}
    <div class="detail-vitals">${bar('才学',k.lit,'#617991')}${bar('武艺',k.mar,'#92504a')}${bar('品德',k.vir,'#517369')}</div>
    ${pageChapters('child',[
     ['history','人物纪事',detailStory(k),'纪事'],
@@ -585,7 +586,7 @@ function viewKid(){
       detailSection('封号与储位',titles?`<div class="acts">${titles}</div>`:'')+
       detailSection('其他属性',`<div class="stats">${bar('体魄',k.hp,'#a87a26')}${bar('野心',k.amb,'#6b4a33')}${bar('父爱',k.love,'#936375')}${k.sex==='m'&&a>=10?bar('支持',k.sup||0,'#617991'):''}</div>`)+
       detailSection('出生禀赋',childBirthPanel(k))],
-    ['family','亲缘与婚配',palaceAdoptionOriginPanel(k)+marriagePanel(k)+householdPanel(k)+princessActions(k)+princeEstateLink(k)+multipleBirthPanel(k)+
+    ['family','亲缘与婚配',palaceAdoptionOriginPanel(k)+householdPanel(k)+princessActions(k)+princeEstateLink(k)+multipleBirthPanel(k)+
       detailSection('身世与安置',parentagePanel(k))+outsideParentagePanel(null,k)+detailSection('府中认回的孩子',recognizedChildrenPanel(k))+
       (k.alive?detailSection('与母亲的日常',kidFamilyPanel(k)):'')+detailSection('宫中关系',k.alive?kidRelLine(k):'')],
     ['past','往事与经历',historyPanel(k)+detailSection('宫墙往事',palaceRomancePanel(k))+
