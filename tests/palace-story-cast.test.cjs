@@ -60,7 +60,7 @@ test('Lu Wan’s departure and return follow her actual children, father, brothe
   friend.hobby='读书';rider.hobby='骑射';relAdd(lu,friend,70);relAdd(lu,rider,60);
   S.turn++;S.flags.frontierCampaigns=[{gen:S.gen,turn:S.turn,id:'defeat',outcome:'defeat'}];
   var ids=[lu,small,older,absent,friend,rider,neutral].map(p=>p.id);
-  PalaceActions.reset();A.storyCastPalace(lu.id);choose(0);
+  npcSync();PalaceActions.reset();A.storyCastPalace(lu.id);choose(0);
   assert.match(modalResult.text,/明棠也来送行.*不肯把手松开.*哭了一会儿/);
   assert.match(older.story.at(-1).t,/抄在历上.*驿路是否还通/);
   assert.match(absent.story.at(-1).t,/从送来的家信里知道/);

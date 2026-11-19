@@ -396,6 +396,10 @@ function luwanFrontierReactions(c,leave,phase){
   return farewell;
 }
 
+function syncLuwanFrontierMap(){
+  // The map frame updates sprites. Older pending actions may also have recorded those draws.
+  if(!PalaceActions.luwanFrontierVisuals&&!PalaceActions.replayRollsExhausted)npcSync();
+}
 function storyCastFrontierReturn(c,early=false){
   const leave=c.homeLeave;
   delete c.homeLeave;
@@ -403,7 +407,7 @@ function storyCastFrontierReturn(c,early=false){
   storyCastRecordLine(c,text,true);
   if(PalaceActions.luwanFrontierChronicles)luwanFrontierReactions(c,leave,'return');
   else for(const k of storyCastOffspring(c,5)){if(k.fieldWorry){delete k.fieldWorry;k.mood=clamp(k.mood+10);}kstory(k,'亲眼见到母妃自北境回宫，这才放下心来。');}
-  npcSync();
+  syncLuwanFrontierMap();
   return text;
 }
 function storyCastFrontierTick(c){
@@ -441,7 +445,7 @@ function storyCastMilitaryEvent(c,w){
       const pupil=harem().find(o=>o!==c&&o.age<=24&&consortHobby(o)==='骑射');
       if(rival){relAdd(c,rival,-10);story(rival,'说起陆绾赴边地，脱口道「女子就该在宫里」，被陆绾听见。');story(c,'听见'+fullName(rival)+'说女子就该在宫里，对她少了几分好感。');}
       if(pupil){relAdd(pupil,c,20);story(pupil,'偷偷学陆绾骑马、学她说话，熟了成了她的小跟班。');story(c,'离宫前替'+fullName(pupil)+'订了一份骑射功课，叫她莫光学自己的腔调。');}
-      npcSync();return storyCastRecordLine(c,'奉旨赴北境军驿。保留位分居所，约三个月回宫，期间以家书往来。'+farewell,true);
+      syncLuwanFrontierMap();return storyCastRecordLine(c,'奉旨赴北境军驿。保留位分居所，约三个月回宫，期间以家书往来。'+farewell,true);
     },()=>homeLeaveEligible(c)),
     storyCastChoice('请她在京中协助接报调拨',()=>{c.castCampaign=w.id;return storyCastRecordLine(c,'在京核对了军马、伤员与军驿清单，给父兄回信交代各处递送的时日。');}),storyCastLater]};
 }
