@@ -683,7 +683,8 @@ function viewLog(){
     ${Array.from({length:S.gen},(_,i)=>S.gen-i).map(gen=>`<option value="${gen}"${selected===gen?' selected':''}>${esc(reignOptionLabel(gen))}</option>`).join('')}
     <option value="all"${selected==='all'?' selected':''}>历朝起居</option></select></label>`:'';
   const archive=regnalChronicleActive()?`<button class="btn sm jade" onclick="A.go('regnal'${selected==='all'?'':','+selected})">皇帝本纪</button>`:'';
-  return `${pageHeading('起居注',selected==='all'?'历朝起居':esc(reignOptionLabel(selected)),archive)}
+  const codex=journalContentVersion()>=85?'<button class="btn sm quiet" onclick="openHomeBook(\'archive\');jumpToPageSection(\'home-collection\')">查看王朝图鉴</button>':'';
+  return `${pageHeading('起居注',selected==='all'?'历朝起居':esc(reignOptionLabel(selected)),archive+codex)}
    <div class="log-filter" role="group" aria-label="纪事筛选与留存">${chooser}<div class="reign-switch" role="group" aria-label="纪事范围"><button class="btn sm" aria-pressed="${UI.logF==='all'}" onclick="UI.logF='all';render()">全部</button><button class="btn sm" aria-pressed="${UI.logF==='big'}" onclick="UI.logF='big';render()">只看大事</button></div>
    <button class="btn sm quiet" onclick="A.logCard()">保存上月纪念卡</button></div>
    ${month?`<section class="month-record"><h3>${esc(month.date)}回顾</h3>
