@@ -740,6 +740,7 @@ A.endMonth=function(){
   must.unshift(...affairReports);
   if(affairWatch){const guard=guardAffairEvent();if(guard)must.unshift(guard);}
   if(!passing){
+    must.push(...childMotherResidenceRequests());
     if(journalContentVersion()>=88&&!mourningActive())must.push(...ritesVacancyPetitions());
     const castStories=storyCastMonthlyEvents();must.push(...castStories);
     const petition=pendingSisterCustody();if(petition)must.push(petition);

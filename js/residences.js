@@ -83,13 +83,13 @@ function settleResidenceMove(c,plan,why='奉旨调整居所'){
     if(liking>=30){cchg(peer,{mood:4});relAdd(c,peer,3);}else if(liking<=-25)cchg(peer,{mood:-5});
   }
   for(const person of [...moved,...oldPeers])solitaryHouseholdTick(person);
-  resetMapPosition(S.pos);log(line);save('auto');return line+'随母居住的幼儿一同迁居；其他同宫妃嫔保留原来的住处。';
+  resetMapPosition(S.pos);log(line);save('auto');return line+(journalContentVersion()>=104?'随母居住的孩子一同迁居':'随母居住的幼儿一同迁居')+'；其他同宫妃嫔保留原来的住处。';
 }
 function residenceMoveEvent(c,name,room){
   const plan=residenceMovePlan(c,name,room);if(!plan)return null;
   const other=plan.swap&&byId(plan.swap),host=palaceHost(name);
   return {title:other?'两宫换居':'安排居所',cast:[c,other||host].filter(Boolean),valid:()=>JSON.stringify(residenceMovePlan(c,name,room))===JSON.stringify(plan),
-    text:`${fullName(c)}现居${residenceLabel(c)}。\n拟安排：${name}${room==='main'?'正殿，任一宫主位':`侧殿${host?'，与主位'+fullName(host)+'同住':'，此宫暂缺主位'}`}。${other?`\n${fullName(other)}将换至${c.palace}正殿；其他同宫人不随主位迁移。`:''}\n${palacePosition(name)}。随母幼儿一同迁居。此事需精力1。`,choices:[
+    text:`${fullName(c)}现居${residenceLabel(c)}。\n拟安排：${name}${room==='main'?'正殿，任一宫主位':`侧殿${host?'，与主位'+fullName(host)+'同住':'，此宫暂缺主位'}`}。${other?`\n${fullName(other)}将换至${c.palace}正殿；其他同宫人不随主位迁移。`:''}\n${palacePosition(name)}。${journalContentVersion()>=104?'随母居住的孩子一同迁居':'随母幼儿一同迁居'}。此事需精力1。`,choices:[
       {t:other?'下旨互换两宫':'按此安排',cond:()=>E().energy>0,f:()=>settleResidenceMove(c,plan)},
       {t:'暂不调整'}]};
 }

@@ -1,13 +1,67 @@
 /* Young children live with their current caregiver; visits reveal domestic scenes. */
+function childResidenceAdultAge(k){return k.sex==='f'?15:16;}
+function approvedMotherResidence(k){
+  return journalContentVersion()>=104&&k?.motherResidence?.choice==='stay'&&
+    k.motherResidence.caregiver===(k.foster||k.mom)&&kidAge(k)<childResidenceAdultAge(k);
+}
 function youngChildMother(k){
-  if(!childInPalace(k)||k.married||k.pendingName||kidAge(k)>=6)return null;
+  if(!childInPalace(k)||k.married||k.pendingName||(kidAge(k)>=6&&!approvedMotherResidence(k)))return null;
   const mother=byId(k.foster||k.mom);
   return inPalace(mother)&&mother.palace&&mother.palace!=='冷宫'?mother:null;
 }
+function sharedChildResidents(k){
+  return kidsAlive().filter(o=>o!==k&&o.sex===k.sex&&childInPalace(o)&&!o.married&&!o.pendingName&&
+    kidAge(o)>=6&&kidAge(o)<childResidenceAdultAge(o)&&!youngChildMother(o));
+}
 function childResidence(k){
-  if(!childInPalace(k)||k.married||k.pendingName||kidAge(k)>=6)return '';
+  if(!childInPalace(k)||k.married||k.pendingName)return '';
   const mother=youngChildMother(k);
-  return mother?`随${k.foster?'养母':'生母'}${cName(mother)}同住 · ${mother.palace}`:'暂由乳母照料，未随母同住';
+  if(mother)return `随${k.foster?'养母':'生母'}${cName(mother)}同住 · ${mother.palace}`;
+  if(kidAge(k)<6)return '暂由乳母照料，未随母同住';
+  if(kidAge(k)>=childResidenceAdultAge(k)||journalContentVersion()<104)return '';
+  const sharing=k.motherResidence?.choice==='shared'||sharedChildResidents(k).some(o=>o.motherResidence?.choice==='shared');
+  if(!sharing)return '';
+  const place=k.sex==='f'?'公主居所':'皇子居所',peers=sharedChildResidents(k);
+  return peers.length?`${place} · 与${peers.map(o=>o.name).join('、')}同住`:`${place} · 宫人照料，暂无其他同住的${k.sex==='f'?'公主':'皇子'}`;
+}
+function shareMotherResidenceNews(k,stay){
+  const birthMother=byId(k.mom),house=birthMother&&houseOf(birthMother);if(!house)return;
+  const people=[house.father,...brotherRoles(house).map(role=>house[role])],seen=new Set();
+  for(const p of people){
+    if(!officialAlive(p)||p.exiled||seen.has(p.id)||!chance(.5))continue;seen.add(p.id);
+    const news={child:k.id,name:k.name,sex:k.sex,stay,turn:S.turn,gen:S.gen};
+    (p.motherResidenceNews||=[]).push(news);
+    const outcome=stay?'皇帝已准其继续与照养的母亲同住':'皇帝未允，已安排其迁往共同居所';
+    const feeling=k.sex==='m'?'他盼孩子渐渐振作，也愿给孩子多一些时日学着独立。':'他想起孩子依恋母亲的样子，觉得可爱，也盼她安心长大。';
+    (p.story||=[]).push({d:dateStr(),t:`【孩子想随母同住】得知${k.name}向皇帝请求与母亲同住，${outcome}。${feeling}`});
+  }
+}
+function childMotherResidenceRequests(){
+  if(journalContentVersion()<104||S.over)return [];
+  const events=[];
+  for(const k of kidsAlive()){
+    const age=kidAge(k),mother=byId(k.foster||k.mom);
+    if(!childInPalace(k)||k.married||k.pendingName||age<6||age>=childResidenceAdultAge(k)||
+      (S.turn-k.born)%12!==0||k.motherResidence||!inPalace(mother)||!mother.palace||
+      !['内敛','审慎'].includes(childDisposition(k))||childTrust(k,mother)<45)continue;
+    if(!chance(k.sex==='f'?.35:.18))continue;
+    const turn=S.turn,gen=S.gen,caregiver=mother.id,address=childCareAddress(k,mother),place=k.sex==='f'?'公主居所':'皇子居所';
+    const valid=()=>S.gen===gen&&S.turn===turn&&childInPalace(k)&&!k.married&&!k.pendingName&&!k.motherResidence&&
+      (k.foster||k.mom)===caregiver&&inPalace(mother)&&kidAge(k)<childResidenceAdultAge(k);
+    const apply=stay=>{
+      if(!valid())return null;
+      k.motherResidence={choice:stay?'stay':'shared',caregiver,turn:S.turn};
+      const peers=sharedChildResidents(k),names=peers.map(o=>o.name).join('、');
+      shareMotherResidenceNews(k,stay);
+      if(stay){k.love=clamp((k.love??50)+4);kstory(k,`【求与母同住】${k.sex==='f'?'她':'他'}向父皇求准，获许在成年或出宫前继续随${address}住在${mother.palace}，仍按时读书。`);story(mother,`【孩子留在身边】${k.name}求准继续同住，往后仍在宫中一起起居。`);return `你答应了${k.name}。${k.sex==='f'?'她':'他'}在成年或出宫之前继续随${address}同住，课业照常。`;}
+      k.love=clamp((k.love??50)-4);kstory(k,`【迁往共同居所】${k.sex==='f'?'她':'他'}盼着陪伴${address}，父皇没有应允，仍按安排搬往${place}${names?'，与'+names+'同住':'，暂由宫人照料'}。`);story(mother,`【孩子迁居】${k.name}想留下同住未获准，依旨迁往${place}，她仍惦记着孩子。`);
+      return `${k.name}依旨迁往${place}${names?'，与'+names+'同住':'，眼下暂无其他适龄孩子，由宫人照料，日后与同住者一处起居'}。`;
+    };
+    events.push({title:'孩子请求随母同住',por:k,cast:[mother],valid,
+      text:`${k.name}性子安静，迟疑了许久才开口：“父皇，我知道该长大了，可我夜里仍怕一个人。能不能让我继续跟${address}住在一处？”${age>6?`此前${k.sex==='f'?'她':'他'}已不再随母同住，如今想搬回${mother.palace}。`:`按宫中安排，${k.sex==='f'?'她':'他'}该搬往${place}。`}读书与其他安排仍照常。`,
+      choices:[{t:'同意，成年或出宫前随母同住',f:()=>apply(true)},{t:`不同意，迁往${place}共同居住`,f:()=>apply(false)}]});
+  }
+  return events;
 }
 A.visitChildHome=function(id){
   if(!S||S.over||modalOpen)return;
@@ -24,6 +78,7 @@ A.visitConsortHome=function(id){
 const nurseryChildren=name=>kidsAlive().filter(k=>youngChildMother(k)?.palace===name);
 function nurseryActivity(k,m){
   const age=kidAge(k),address=childCareAddress(k,m)==='姨母'?'姨母':'娘',strict=['城府','骄矜','骄纵'].includes(m.trait),last=k.nurseryLastKind;
+  if(age>=6)return {id:'study-together',title:'灯下相伴',prop:'书册 · 茶盏',mother:`${cName(m)}听孩子讲起今日的功课，偶尔问上一句，等${k.sex==='f'?'她':'他'}慢慢说完。`,child:'孩子把书页摊开，坐在母亲身边，讲起白日遇见的新事。',stat:'lit'};
   if(age<1)return {id:'cradle',title:'窗下哄睡',prop:'软枕 · 小摇篮',mother:strict?'方才还在吩咐宫务，她听见孩子哼唧，声音不自觉地放轻了。':'她轻轻哼着家乡的小调，一只手护着孩子的后背。',child:'孩子攥住她的袖角，睫毛一颤一颤，渐渐睡熟了。'};
   if(age<3)return {id:'steps',title:'扶案学步',prop:'软垫 · 布老虎',mother:m.trait==='将门'?`“再走一步。${address}在这儿，接着你。”`:'她蹲下身张开双手，等孩子自己迈过门边的小垫子。',child:'孩子晃晃悠悠扑进她怀里，又回头去够那只布老虎。'};
   const options=[];
