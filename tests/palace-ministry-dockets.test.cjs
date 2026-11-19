@@ -66,9 +66,11 @@ test('minister reviews link to existing court pages and preserve the original co
     A.ministryDocket(find('personnel').id);choose(0);drain();assert.equal(UI.view,'officials');
     A.ministryDocket(find('justice').id);choose(0);drain();assert.equal(UI.view,'jinyiwei');
     var treasury=E().treasury,energy=E().energy;
+    var records=S.reignAnnals.length;
     A.ministryDocket(find('war').id);choose(0);assert.equal(curEv.title,OFFICIAL_TASKS.border.title);
     choose(curEv.choices.length-1);assert.equal(E().treasury,treasury);assert.equal(E().energy,energy);assert.equal(find('war').followup,undefined);
     assert.equal(find('war').closed,undefined);assert.ok(ministryDocketReady(find('war')));
+    assert.equal(S.reignAnnals.length,records);
     A.ministryDocket(find('works').id);choose(0);assert.equal(curEv.title,OFFICIAL_TASKS.water.title);
     assert.equal(E().treasury,treasury);choose(0);drain();
     assert.equal(E().treasury,treasury-OFFICIAL_TASKS.water.cost);assert.equal(E().energy,energy-1);assert.ok(floodDikeReady());
@@ -91,6 +93,19 @@ test('a second minister takes over pending memorials and a temporary assignment 
     choose(curEv.choices.findIndex(c=>c.t==='看过回奏，照实归档'));drain();
     assert.equal(d.headId,old.id);assert.equal(d.reviewedBy,newHead.name);
     assert.match(newHead.story.at(-1).t,/逐页核过/);assert.ok(viewMinistries().includes('接办 '+newHead.name));`);
+});
+
+test('the new minister keeps their handover credit when they take on the resulting commission',()=>{
+  const game=world();game.ctx.assert=assert;game.force(.01);
+  game.run(`var old=makeScholar();old.office=old.post='工部尚书';old.ability=95;S.scholars.push(old);
+    A.ministryAct('works');choose(0);drain();
+    var d=ministryDockets()[0],newHead=officialEntry(b.id+':brother').p;
+    A.ministryAppoint('works');choose(curEv.choices.findIndex(c=>c.person===newHead));drain();
+    assert.equal(ministryHead('works').p,newHead);
+    S.turn+=2;S.month+=2;A.ministryDocket(d.id);choose(0);
+    choose(curEv.choices.findIndex(c=>c.person===newHead));drain();
+    assert.equal(newHead.commission.ministryDocket,d.id);
+    assert.equal(d.reviewedBy,newHead.name);assert.equal(d.headId,old.id);`);
 });
 
 for(const outcome of ['success','setback','interrupted'])test('the works feature archives the actual '+outcome+' from the commissioner',()=>{

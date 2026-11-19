@@ -159,7 +159,7 @@ function settleMinistryDocket(docket,decision){
 function ministryDocketSuccessor(docket){
   if(journalContentVersion()<147)return null;
   const head=ministryHead(docket.ministry);
-  return head&&head.p.id!==docket.headId&&officialServing(head.p)?head:null;
+  return head&&head.p.id!==docket.headId&&(journalContentVersion()>=148||officialServing(head.p))?head:null;
 }
 function ministryHandoverLine(p){
   return ({
@@ -181,12 +181,13 @@ function ministryDocketEvent(docket){
     if(personId!=null)A.go(view,personId);else A.go(view);
     return '复议已经记入六部案簿。';
   }});
-  const forward=(label,factory,referral=false)=>choices.push({t:label,f:()=>{
+  const forward=(label,factory,referral=false)=>choices.push({t:label,chronicle:!referral||journalContentVersion()<148,f:()=>{
     if(!valid())return null;
     const event=factory();if(!event)return '相关回奏或案卷已有变化，仍可把本折归档。';
     if(referral&&journalContentVersion()>=147){
       const check=event.valid;
       event.valid=()=>valid()&&(!check||check());
+      if(journalContentVersion()>=148)event.choices=event.choices.map(choice=>choice.f?choice:{...choice,chronicle:false});
     }else settleMinistryDocket(docket,label);
     pushNow(event);return null;
   }});
