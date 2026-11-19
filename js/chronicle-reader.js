@@ -73,6 +73,7 @@ function chronicleThread(e){return e.thread||(e.life?.source?`life:${e.life.gen}
 function chronicleCast(e){return [...new Map([...(e.life?.people||[]),...(e.event?.participants||[])].map(p=>[p.id,p])).values()];}
 function chronicleMatches(e,f={}){return (!f.year||chronicleYear(e)===f.year)&&(!f.topic||chronicleTopic(e)===f.topic)&&(!f.person||chronicleCast(e).some(p=>String(p.id)===f.person))&&(!f.thread||chronicleThread(e)===f.thread)&&(!f.query||[e.d,e.t,e.life?.source,e.event?.situation,e.event?.choice,e.event?.outcome,...chronicleCast(e).map(p=>p.name)].join(' ').toLocaleLowerCase().includes(f.query.toLocaleLowerCase()));}
 function chroniclePersonTarget(id){
+ if(typeof id==='string'&&id.startsWith('white-spring-'))return whiteSpringKinTarget(id);
  const number=Number(id),consort=familyHostById(number),child=royalById(number),scholar=scholarById(id);
  if(consort)return {person:consort,view:'consort',id:number};
  if(child)return {person:child,view:S.children.includes(child)?'kid':'relative',id:number};

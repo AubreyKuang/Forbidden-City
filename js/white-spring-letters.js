@@ -2,7 +2,7 @@
 function whiteSpringRoyal(c){return c?.fixedStory==='ayimu'&&journalContentVersion()>=87;}
 function whiteSpringFamily(c){
   if(c.homeLeave&&!domesticHomeLeaveAllowed(c))delete c.homeLeave;
-  if(c.whiteSpringFamily)return c.whiteSpringFamily;
+  if(c.whiteSpringFamily)return whiteSpringProfiles(c,c.whiteSpringFamily);
   const former=c.house;
   const family=c.whiteSpringFamily={
     father:{id:'white-spring-king-'+c.id,name:'父王',alive:former?.father?.alive!==false,story:[]},
@@ -20,7 +20,53 @@ function whiteSpringFamily(c){
   }
   delete c.visitor;
   if(c.wish==='mother'||c.wish==='father'){c.wish='poem';c.wishKnown=false;c.wishDone=false;}
+  return whiteSpringProfiles(c,family);
+}
+const WHITE_SPRING_KIN={
+  father:{name:'阿尔斯兰',relation:'父王',title:'白泉国王',portrait:314,
+    bio:'亲自带阿依慕赴京求亲。国书上用王印，问女儿冷暖的私信却只署“父亲”。',
+    admission:'女儿留在京中。临别嘱她，往后白泉使者进京，哪怕只回一句平安，父亲也等着读。'},
+  brother:{name:'伊利亚尔',relation:'王兄',title:'白泉王子',portrait:416,
+    bio:'阿依慕唯一的兄长。兄妹自小熟悉同一套鼓曲，妹妹远嫁后，他常把新曲和家里的消息一道寄去。',
+    admission:'听闻妹妹留在京中，把她最熟悉的那支鼓曲抄了一份，留待下趟使团捎去。'}
+};
+function whiteSpringProfiles(c,family){
+  if(journalContentVersion()<108)return family;
+  for(const [role,data] of Object.entries(WHITE_SPRING_KIN)){
+    const p=family[role];
+    p.name=data.name;p.portraitOverride=data.portrait;
+    if(!p.admissionRecorded){
+      const entry=c.story?.find(e=>e.t.includes('，赐居'));
+      if(entry&&p.alive){
+        p.story.unshift({d:entry.d,t:'【公主入宫】'+data.admission});
+        p.admissionRecorded=true;
+      }
+    }
+  }
   return family;
+}
+function whiteSpringKinTarget(id){
+  const match=/^white-spring-(king|prince)-(\d+)$/.exec(id);
+  if(!match||journalContentVersion()<108)return null;
+  const c=familyHostById(Number(match[2]));
+  if(!whiteSpringRoyal(c))return null;
+  const role=match[1]==='king'?'father':'brother';
+  return {c,role,person:whiteSpringFamily(c)[role],view:'white-spring-kin',id};
+}
+function whiteSpringKinLinks(c){
+  if(!whiteSpringRoyal(c)||journalContentVersion()<108)return '';
+  const f=whiteSpringFamily(c);
+  return Object.entries(WHITE_SPRING_KIN).map(([role,data])=>{
+    const p=f[role];
+    return `<button class="graph-kin-person${p.alive?'':' deceased'}" onclick="A.go('white-spring-kin','${p.id}')" aria-label="查看${data.relation}${p.name}">${porImg(p,34)}<span class="graph-person"><strong>${p.name}</strong><small>${data.relation} · ${data.title}${p.alive?'':' · 已故'}</small></span></button>`;
+  }).join('');
+}
+function viewWhiteSpringKin(){
+  const target=whiteSpringKinTarget(UI.sel);
+  if(!target)return personBackButton('family');
+  const {c,role,person:p}=target,data=WHITE_SPRING_KIN[role];
+  return `${personBackButton('family')}<header class="detail-head">${porImg(p,144)}<div><p>白泉王室 · ${data.title}${p.alive?'':' · 已故'}</p><h2>${p.name}</h2><p>${data.bio}</p>
+    <button class="btn quiet sm" onclick="A.go('consort',${c.id})">${role==='father'?'女儿':'妹妹'} · 阿依慕 ↗</button></div></header>${detailSection('人物纪事',detailStory(p))}`;
 }
 function whiteSpringLetter(c,kind,fact,voices,replies,stamp){
   const family=whiteSpringFamily(c);
@@ -30,7 +76,7 @@ function whiteSpringLetter(c,kind,fact,voices,replies,stamp){
   for(const [role,quote] of [['father',voices[0]],['brother',voices[1]]]){
     const writer=family[role];if(!writer.alive)continue;
     story(writer,`【${kind}】得知阿依慕${fact}，在白泉写道：“${quote}”`);
-    passages.push(writer.name+'写道：“'+quote+'”');
+    passages.push((journalContentVersion()>=108?WHITE_SPRING_KIN[role].relation+writer.name:writer.name)+'写道：“'+quote+'”');
   }
   if(!passages.length)return;
   const record=storyCastRecord('ayimu');
@@ -80,7 +126,7 @@ function whiteSpringFamilyChanges(c,old,previous){
 function whiteSpringMailPanel(c){
   if(!whiteSpringRoyal(c))return '';
   const f=whiteSpringFamily(c),m=f.latest;
-  const notes=[f.father,f.brother].map(p=>p.story.length?`<details><summary>${p.name}的纪事</summary>${detailStory(p)}</details>`:'').join('');
+  const notes=journalContentVersion()>=108?whiteSpringKinLinks(c):[f.father,f.brother].map(p=>p.story.length?`<details><summary>${p.name}的纪事</summary>${detailStory(p)}</details>`:'').join('');
   const reply=m?.replies.length&&!m.answered&&c.alive&&!c.gone&&!S.over?`<button class="btn jade" onclick="A.whiteSpringReply(${c.id})">随使团回信</button>`:'';
   return detailSection('白泉王室家书',`<p>父王 · 王兄 · 来信随白泉使团递送</p>${m?`<p>${esc(m.date)} · ${esc(m.line)}</p>`:''}${reply}${notes}`);
 }
@@ -89,7 +135,10 @@ A.whiteSpringReply=function(id){
   const valid=()=>whiteSpringRoyal(c)&&c.alive&&!c.gone&&!S.over&&m&&m===c.whiteSpringFamily.latest&&!m.answered&&m.replies.length;
   if(modalOpen||!valid())return;
   const send=text=>{if(!valid())return null;m.answered=true;story(c,'【寄往白泉】'+text);
-    for(const p of [c.whiteSpringFamily.father,c.whiteSpringFamily.brother])if(p.alive)story(p,'【宫中回信】'+text);
+    for(const role of Object.keys(WHITE_SPRING_KIN)){
+      const p=c.whiteSpringFamily[role];
+      if(p.alive)story(p,'【宫中回信】'+text+(journalContentVersion()<108?'':role==='father'?' 读罢女儿的亲笔，把信折好，收进自己的信匣。':' 认出妹妹的字迹，把最后几行又读了一遍。'));
+    }
     return text;};
   pushEv({title:'寄往白泉的回信',por:c,text:m.line,choices:[{t:m.replies[0],f:()=>send('阿依慕'+m.replies[1])},
     {t:'只附亲笔平安笺',f:()=>send('阿依慕用白泉话写了一张短笺，署了小时候在家用的小名。')},{t:'留待下次使团'}]});
