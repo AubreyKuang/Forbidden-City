@@ -266,7 +266,7 @@ function viewFamily(){
   const modes=`<div class="reign-switch" role="group" aria-label="家族查看方式">${[['graph','关系图'],['list','家族列表']].map(([id,label])=>`<button class="btn sm" aria-pressed="${(id==='graph')===graph}" onclick="A.familyMode('${id}')">${label}</button>`).join('')}</div>`;
   const dowagers=dowagerFamilyPanel();
   const maternal=dowagers?`<details class="family-branch family-context"><summary>太后与母家</summary>${dowagers}</details>`:'';
-  if(graph)return `${heading}${modes}${familyGraphSVG()}`;
+  if(graph)return `${heading}${modes}${familyGraphSVG()}${maternal}`;
   const byClan=new Map(),kidsByMother=new Map();
   for(const k of S.children){
     if(!kidsByMother.has(k.mom))kidsByMother.set(k.mom,[]);
