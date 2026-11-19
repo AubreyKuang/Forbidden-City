@@ -174,7 +174,7 @@ function xieMarriageRefusal(k,p){
    k.married=true;k.princessMarriage='xiean';k.xieAdmiration.outcome='forced';p.married=true;p.royalSpouseId=k.id;p.spouseName=k.name;
    if(xieCapitalEstate(k))k.estate.route='xiean';
    k.spouse={id:p.id,personId:p.id,scholarId:p.id,name:p.name,sur:p.sur,sex:'m',seed:p.seed,official:p.official,artPortrait:p.artPortrait,born:S.turn-p.age*12,alive:true,background:'京中诗客 · 奉旨尚主',marriedAt:S.turn,trust:38,marriageNature:{temperament:'温厚',hobby:'books',spending:'节俭',space:'需要独处'}};
-   p.xiean.marriage={childId:k.id,at:S.turn,last:S.turn,news:0,affection:18,separateUntil:S.turn+12,joinedAt:null};ensureMarriedLife(k);
+   p.xiean.marriage={childId:k.id,at:S.turn,last:S.turn,news:0,affection:18,separateUntil:S.turn+12,joinedAt:null};ensureMarriedLife(k);openMaritalEstate(k);
    const text=`谢安辞婚未获准，陛下以爱女之心坚持赐婚。礼成后他对${kidName(k)}说：“此事非你之过。我虽未有相同心意，却不会让你在这里受委屈。”两人约定先分房一年，他不纳妾，也不让她为帝命赔罪。`;
    scholarRecord(p,'【奉旨尚主】'+text);heartRecord(k,'奉旨成婚',text,'终于与他成婚，却知道他的温柔还不是爱。愿往后的相知，不只靠这一道旨意。');
    const m=byId(k.mom);if(m?.alive)story(m,`【女儿成婚】${kidName(k)}奉旨嫁与谢安。听闻他曾辞婚，她既盼女儿有人照顾，也忧心帝命不能代替真心。`);return text;

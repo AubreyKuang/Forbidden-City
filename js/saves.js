@@ -464,4 +464,5 @@ function migrate(resetPosition=true){if(!S)return;reconcileImmortalDiscovery();f
   S.children.forEach(k=>{if(!Number.isFinite(k.sup))k.sup=0;reconcilePrinceResidence(k);});alive().forEach(reconcileMotherConcern);
   NPCMemory.upgrade(S);
   ensureJewelry();reconcileMultipleBirths();
+  settleMarriedPrincessEstates();
   if(resetPosition)resetMapPosition(S.pos)}

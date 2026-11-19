@@ -172,7 +172,7 @@ function xieCelebrate(k,p,origin,affection){
  k.married=true;k.princessMarriage='xiean';k.xieAdmiration.outcome=loving?'mutual':'forced';p.married=true;p.royalSpouseId=k.id;p.spouseName=k.name;
  if(xieCapitalEstate(k))k.estate.route='xiean';
  k.spouse={id:p.id,personId:p.id,scholarId:p.id,name:p.name,sur:p.sur,sex:'m',seed:p.seed,official:p.official,artPortrait:433,born:S.turn-p.age*12,alive:true,background:'京中诗客 · '+(loving?'两心相许':'奉旨尚主'),marriedAt:S.turn,trust:loving?60:38,marriageNature:{temperament:'温厚',hobby:'books',spending:'节俭',space:'需要独处'}};
- p.xiean.marriage={childId:k.id,at:S.turn,last:S.turn,news:0,affection,separateUntil:loving?null:S.turn+12,joinedAt:loving?S.turn:null,origin,startedWithLove:loving};ensureMarriedLife(k);
+ p.xiean.marriage={childId:k.id,at:S.turn,last:S.turn,news:0,affection,separateUntil:loving?null:S.turn+12,joinedAt:loving?S.turn:null,origin,startedWithLove:loving};ensureMarriedLife(k);openMaritalEstate(k);
  const text=(engaged?'公主已满十五岁，双方依婚约举行婚礼。':'公主亲口答应谢安的提亲，两人自愿成婚。')+(loving?'谢安说：“这一回是我走向你。往后的风雨，不必一个人等。”两人已相知相许，婚后共同生活，不设一年分房。':'谢安仍未有相同心意，却愿温柔照应，不让妻子因帝命受委屈。两人从今日起约定先分房一年，慢慢相知。')+'他不纳妾，妻亡也不再娶。';
  xieCoupleRecord(p,k,loving?'两心相许':'践约成婚',text,loving?'曾经的拒绝不必抹去，今天的心动也无需再藏。':'相守始于旨意，待她周全却该出于自己的责任。',loving?'婚礼之前我们已认真相知，如今不必再把彼此隔在门外。':'成为夫妻了，也仍愿等真正的心意生长。');
  const mom=byId(k.mom);if(mom?.alive)story(mom,`【女儿成婚】${kidName(k)}${origin==='proposal'?'接受谢安主动提亲':'与谢安依约'}成婚。${loving?'听闻两人相知相许，她终于放下几分旧日的忧心。':'知道谢安仍守着分寸，她既盼女儿被照应，也忧心真心未至。'}`);

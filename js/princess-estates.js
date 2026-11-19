@@ -139,12 +139,30 @@ function princessMemory(k,type,text,location='公主府',emotion=.7){
   ]);
 }
 
+function createPrincessEstate(k,pursuit){
+  return {pursuit,opened:S.turn,stage:'proposal',nextVisit:S.turn+2,route:k.princessMarriage||(k.married?'married':'independent')};
+}
+function openMaritalEstate(k){
+  if(k.sex!=='f'||!k.married||k.estate||!PalaceActions.maritalEstates||!canOpenPrincess(k)||k.away||k.pendingName||
+    k.parentage?.decision==='household'||k.birthSwap?.occurred&&k.parentage?.decision==='family')return '';
+  const estate=k.estate=createPrincessEstate(k,princessPursuit(k));
+  const frontier=estate.route==='frontier';
+  estate.location=frontier?princessMarriageLand(k):'京城';
+  const line=frontier?`婚后在${estate.location}立下公主府，与宫中仍以家书往来。`:'婚后迁入京中公主府。随行的宫人把最后一箱书送进新居，她提笔给宫里报了平安。';
+  princessMemory(k,'princess_estate',line,frontier?estate.location:'公主府');
+  log(kidName(k)+line,1);
+  return kidName(k)+line;
+}
+function settleMarriedPrincessEstates(){
+  if(S&&PalaceActions.maritalEstates)S.children.forEach(openMaritalEstate);
+}
+
 function princessOpening(k){
   const pursuit=princessPursuit(k);
   return {title:'公主开府来信',por:k,valid:()=>canOpenPrincess(k)&&!k.estate,text:`${kidName(k)}亲手递来一封信。\n「${PRINCESS_PURSUITS[pursuit].wish}」\n她已相中一处府邸，请你准她自理府中事务。`,choices:[
     {t:'准她开府，由她自理',f:()=>{
       if(!canOpenPrincess(k)||k.estate)return null;
-      k.estate={pursuit,opened:S.turn,stage:'proposal',nextVisit:S.turn+2,route:k.princessMarriage||(k.married?'married':'independent')};
+      k.estate=createPrincessEstate(k,pursuit);
       princessMemory(k,'princess_estate','获准开府，可以自行安排府中事务。');
       log(`${kidName(k)}开府，设于京城。`,1);
       save('auto');
@@ -207,7 +225,7 @@ function princessMatchReview(k,id){
   return {title:'灯下谈婚事',cast:[k,person],valid:()=>marriageReady(k),text:`${person.name} · ${kidAge(person)}岁 · ${match.name}\n${princessMarriageVoicesActive()?princessMatchVoice(k,id):match.note}\n${marriageProfileText(k,person)}${id==='official'?'\n婚仪需国库五十万两。':''}\n她把名帖推过来，等你回答。`,choices:[
     {t:id==='scholar'?'准她自择驸马':id==='frontier'?'允准和亲':'允准这门亲事',cond:()=>marriageReady(k)&&(id!=='official'||E().treasury>=50),f:()=>{
       if(!marriageReady(k)||(id==='official'&&E().treasury<50))return null;
-      const gains=settlePrincessMarriage(k,person,id);save('auto');return fx(gains);
+      const gains=settlePrincessMarriage(k,person,id),move=openMaritalEstate(k);save('auto');return move+fx(gains);
     }},
     {t:'先让两人谈谈日常',f:()=>{pushNow(marriageMeeting(k,person,()=>princessMatchReview(k,id)));return null;}},
     {t:'再看别的人选',f:()=>{pushNow(princessMarriage(k));return null;}},

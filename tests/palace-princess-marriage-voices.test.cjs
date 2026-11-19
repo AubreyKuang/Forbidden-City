@@ -148,3 +148,20 @@ for(const name of ['opening','review','married'])test('published v47 '+name+' ke
  const payload=require('./fixtures/princess-voices-legacy-v47.json')[name],b=boot(82,new Map([['chengongji_v1_auto',JSON.stringify(payload)]]));b.ctx.assert=assert;
  b.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);assert.equal(PalaceActions.contentVersion,47);assert.equal(S.children[0].marriageVoiceMemory,undefined);drain();assert.equal(PalaceActions.contentVersion,PalaceActions.releaseVersion);assert.equal(PalaceActions.blocked,false);var k=S.children[0];assert.equal(k.household.nextNews-k.household.started,2);`);
 });
+
+test('a wedding opens the princess estate immediately, including after postponing the independent estate',()=>{
+ for(const route of ['scholar','frontier']){
+  let b=world();b.run(`k.estateDeferred=S.turn+3;A.kidMarriage(k.id);choose(curEv.choices.findIndex(c=>c.t.includes(PRINCESS_MATCHES['${route}'].name)));
+   assert.equal(k.estate,undefined);choose(0);assert.equal(k.estate.route,'${route}');assert.equal(k.estate.location,'${route==='scholar'?'京城':'北境'}');assert.equal(childInPalace(k),false);
+   assert.equal(k.estate.stage,'proposal');assert.equal(k.story.filter(e=>e.t.includes('给宫里报了平安')||e.t.includes('立下公主府')).length,1);`);
+  const snapshot=b.run('JSON.stringify(k.estate)');b=reload(b);assert.equal(b.run("JSON.stringify(S.children.find(k=>k.name==='淑月').estate)"),snapshot);
+  b.run(`drain();var k=S.children.find(k=>k.name==='淑月');A.go('princess',k.id);assert.match(viewPrincessEstate(),/府务/);assert.equal(k.story.filter(e=>e.t.includes('给宫里报了平安')||e.t.includes('立下公主府')).length,1);`);
+ }
+});
+
+test('settled old saves supply a missing marital estate and keep established projects and unmarried betrothals',()=>{
+ let b=world();b.run(`k.married=true;k.spouse={id:'husband',name:'沈云',marriedAt:S.turn-4};save('auto');`);b=reload(b);
+ b.run(`var k=S.children.find(k=>k.name==='淑月');assert.ok(k.estate);k.estate.stage='working';k.estate.due=S.turn+3;
+ var before=JSON.stringify(k.estate);settleMarriedPrincessEstates();assert.equal(JSON.stringify(k.estate),before);
+ var sister=makeKid(empress(),'f','云宁');sister.born=S.turn-18*12;sister.betrothal={kind:'xiean'};settleMarriedPrincessEstates();assert.equal(sister.estate,undefined);`);
+});

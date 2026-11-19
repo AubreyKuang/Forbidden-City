@@ -2,7 +2,7 @@
    never from serialized JavaScript. Each command owns its random draws and answers.
    The saved world remains the authority; replay is checked before it is displayed. */
 const PalaceActions=(()=>{
-  const version=124, excluded=new Set(['save','dismissSaveError','load','rewind','downloadSave','readSaveFile','undoImport','newGame','officialsFilter','officialsBloc','kidsKind','chronicleFilter','chronicleSearch','chronicleClear','chronicleThread']);
+  const version=125, excluded=new Set(['save','dismissSaveError','load','rewind','downloadSave','readSaveFile','undoImport','newGame','officialsFilter','officialsBloc','kidsKind','chronicleFilter','chronicleSearch','chronicleClear','chronicleThread']);
   const actions=new Map();
   let blocked=false,snapshotRequested=false,journal=null,depth=0,replaying=false,step=null,cursor=0,answer=0,saving=0,fields=null;
   const clone=x=>JSON.parse(JSON.stringify(x));
@@ -30,7 +30,7 @@ const PalaceActions=(()=>{
     if(replaying){if(cursor>=step.rolls.length)throw Error('Missing recorded roll');return step.rolls[cursor++];}
     const value=Math.random();step.rolls.push(value);return value;
   }
-  function settle(previous){if(step?.name!=='start')trackConsortRanks(previous);reconcileDynastyGoals();reconcileConsortDistinctions();meetWhiteSpringMerchants();reconcileSelectionTiming();reconcileCousinFamilies();if(familyOriginsActive())reconcileFamilyOffices();courtFamilyLifeTick(previous);queenHeirFeelings(previous);familyRiseTick(previous);maternalTick();dowagerFamilyChanges(previous);palacePrayerChanges(previous);familyRememberDeathAges(previous);announceConsortPassings(previous);if(S){if(!blocked&&journalContentVersion()>=88)observeRitesVacancies();if(typeof haremStewardChanges==='function')haremStewardChanges();syncChildDisgrace();childMotherConsequences(previous);releaseMotherReunionChanges(previous);marriageBondConsequences(previous);gouyiCrownSettled(previous);imperialHeirStories(previous);imperialFertilityFollowups();jinyiweiFeudAlert(previous);if(journal?.version>=3)settleExhaustedMonth(previous);}}
+  function settle(previous){if(step?.name!=='start')trackConsortRanks(previous);reconcileDynastyGoals();reconcileConsortDistinctions();meetWhiteSpringMerchants();reconcileSelectionTiming();reconcileCousinFamilies();if(familyOriginsActive())reconcileFamilyOffices();courtFamilyLifeTick(previous);queenHeirFeelings(previous);familyRiseTick(previous);maternalTick();dowagerFamilyChanges(previous);palacePrayerChanges(previous);familyRememberDeathAges(previous);announceConsortPassings(previous);if(S){settleMarriedPrincessEstates();if(!blocked&&journalContentVersion()>=88)observeRitesVacancies();if(typeof haremStewardChanges==='function')haremStewardChanges();syncChildDisgrace();childMotherConsequences(previous);releaseMotherReunionChanges(previous);marriageBondConsequences(previous);gouyiCrownSettled(previous);imperialHeirStories(previous);imperialFertilityFollowups();jinyiweiFeudAlert(previous);if(journal?.version>=3)settleExhaustedMonth(previous);}}
   function input(selector){return fields?fields[selector]:$(selector)?.value;}
   function payload(){return {...S,pendingActions:journal||S?.pendingActions};}
   function run(name,args,fn){
@@ -41,7 +41,7 @@ const PalaceActions=(()=>{
     if(name==='start'){journal=null;blocked=false;}
     const before=S?clone(S):null,prior=journal?clone(journal):null,priorUI=clone(UI);
     if(!journal&&!modalOpen&&!Q.length){
-      journal={version,outerHouseholds:true,outerHouseholdUpdates:true,exclusiveStoryOrigins:true,immortalDiscoveryNews:true,betrothalJourneys:true,immortalPeerAdmiration:true,base:S?clone(world(S)):null,ui:clone(UI),steps:[]};
+      journal={version,outerHouseholds:true,outerHouseholdUpdates:true,exclusiveStoryOrigins:true,immortalDiscoveryNews:true,betrothalJourneys:true,immortalPeerAdmiration:true,maritalEstates:true,base:S?clone(world(S)):null,ui:clone(UI),steps:[]};
     }
     const current={name,args:clone(args),monthNotice:true,rolls:[],answers:[],saves:[],ui:clone(UI)};
     if(name==='start'){
@@ -62,9 +62,10 @@ const PalaceActions=(()=>{
       finally{globalThis.confirm=ask;save=persist;depth--;step=null;}
       if(journal)journal.pending=stamp();
       if(!modalOpen&&!Q.length){
-        const oldOrigins=journal&&!journal.exclusiveStoryOrigins;
+        const oldOrigins=journal&&!journal.exclusiveStoryOrigins,oldEstates=journal&&!journal.maritalEstates;
         journal=null;
         if(oldOrigins)reconcileStoryConsortOrigins();
+        if(oldEstates)settleMarriedPrincessEstates();
       }
       if(S&&!replaying){
         const ok=save('auto');
@@ -148,6 +149,7 @@ const PalaceActions=(()=>{
     return [...(pending.result||!pending.title?[]:[pending.title]),...(Array.isArray(pending.queue)?pending.queue:[])];
   }
   return {random,input,keepInput,payload,run,restore,valid,install,abandon,
+    get maritalEstates(){return !journal||journal.maritalEstates===true;},
     get outerHouseholds(){return !journal||journal.outerHouseholds===true;},
     get balancedImmortalDiscovery(){return journal?.balancedImmortalDiscovery===true;},
     get immortalPeerAdmiration(){return !journal||journal.immortalPeerAdmiration===true||journal.balancedImmortalDiscovery===true;},
