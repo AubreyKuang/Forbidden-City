@@ -38,6 +38,21 @@ test('a married sister’s daughter can be nominated from her own maternal-famil
  genCands();var matches=S.cands.filter(g=>g.id===niece.id);
  assert.equal(matches.length,1);assert.match(matches[0].kinNote,/外甥女/);`);
 });
+test('a niece can register early from her profile and retain her identity in the first selection after fifteen',()=>{
+ const b=setup();b.run(`sister.married=true;
+ var niece=addNatalPerson(other,oh,'f',14,210,false);
+ niece.motherRelativeId=sister.id;niece.married=false;
+ var nieceId=niece.id,auntId=other.id,momId=sister.id;
+ A.go('natal',auntId+':'+momId);assert.ok(viewNatalRelative().includes("A.go('natal','"+auntId+":"+nieceId+"')"));
+ A.go('natal',auntId+':'+nieceId);assert.match(viewNatalRelative(),/预登记选秀 · 满十五岁后入册/);
+ A.nominateRelative(auntId,nieceId);assert.match(viewNatalRelative(),/disabled>已预登记/);
+ A.load('auto');drain();genCands();assert.ok(!S.cands.some(p=>p.id===nieceId));assert.equal(S.flags.familyNominees.length,1);
+ var entry=natalEntry(auntId,nieceId);S.turn=entry.p.born+180;genCands();
+ assert.equal(S.cands.filter(p=>p.id===nieceId).length,1);assert.match(S.cands.find(p=>p.id===nieceId).kinNote,/外甥女/);
+ A.xxTake(nieceId);choose(0);drain();
+ var g=byId(nieceId);assert.equal(natalEntry(auntId,nieceId).p.consortId,g.id);assert.equal(g.familyBranchOrigin.host,auntId);
+ assert.ok(g.story.some(e=>e.t.includes('礼部留存了选秀名帖')));`);
+});
 test('next actual selection rechecks marriage and keeps valid nominated sisters across skipped selections',()=>{
  const b=setup();b.run(`var friend=addNatalPerson(other,oh,'f',17,106,false);
  A.nominateRelative(other.id,sister.id);A.nominateRelative(other.id,friend.id);friend.married=true;

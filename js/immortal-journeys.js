@@ -16,6 +16,7 @@ const IMMORTAL_VOICES={
 function immortalEnabled(){return typeof PalaceActions==='undefined'||PalaceActions.contentVersion>=7;}
 function immortalPalaceLessonsEnabled(){return journalContentVersion()>=52;}
 function immortalAway(k){return !!(immortalEnabled()&&['learning','trial','sect'].includes(k?.immortal?.stage));}
+const immortalQuietNewsActive=()=>journalContentVersion()>=131;
 function immortalBirthChance(k){return k.sex==='f'?.24:k.birthTraits?.mother?.rank===8?.015:.06;}
 function rolledImmortalRoot(k,chance){
  const seed=String(k.seed||k.id),roll=mulberry32(voiceHash('immortal-root:'+seed))();
@@ -59,6 +60,8 @@ function immortalMotherFeeling(c,k,kind){
  ['将门','爽直','持重'].includes(c.trait)?`她逐项问清行程，送走${role}后才发觉手心攥得生疼。口中说放心得下，夜里仍留了灯。`:
  `她反复检查${k.name}的行囊，想把熟悉的日子也装进去。知道${role}有自己的志向，仍忍不住落泪。`;
  if(kind==='return')return `她听到${k.name}平安归来的消息，先问有没有受伤，再想起问这些年的所得。山中的经历并未因此消失。`;
+ if(kind==='health-letter')return isSolitary(c)?`她把${k.name}的字条收在手边，等宫里有确切的消息，才好一并回信。`:
+  `她听说${k.name}在山里也惦记宫中，回信先报平安，又问驿路冷不冷，要不要添一双厚袜。`;
  if(kind==='news')return isSolitary(c)?`她听完${k.name}的消息，很久没说话，独自把旧衣领抚平，眼底却有难得的笑意。`:
  ['骄纵','骄矜','好客'].includes(c.trait)?`她忍不住向熟人说起${k.name}的近况，言语带着骄傲；回到房里，又惦记${role}几时能再有音信。`:
  `她记住${k.name}的每一句消息，既欣慰又想念。山门里的名望再高，在她心里仍是${role}。`;
@@ -160,10 +163,10 @@ function immortalRank(k,merit=k.immortal.merit){
  return years>=15&&merit>=8?3:years>=8&&merit>=4?2:years>=5&&merit>=2?1:0;
 }
 function immortalRankName(k,rank=k.immortal.rank){return ['门中弟子','首席弟子',['自矜','好胜','灵动'].includes(childDisposition(k))?'少主':'护山长老','宗主'][rank||0];}
-function immortalNews(k){
+function immortalNews(k,{temperamentOnly=false}={}){
  const r=k.immortal,d=IMMORTAL_SECTS[r.route],trait=childDisposition(k);
- if(E().health<55)return {topic:'山中问安',text:`${d.name}遣弟子送来一封问安书。${k.name}听说${S.children.includes(k)?'父皇':'陛下'}龙体欠安，只劝按时静养，不拿未经查验的丹药献入宫中。`,benefit:'health'};
- if(E().people<45)return {topic:'山门济民',text:`地方奏报提到${d.name}开仓煮粥、接济流民。有人认出主持事务的${k.name}曾在宫中长大，却始终称这份帮助是乡人的活路，未借机争名。`,benefit:'people'};
+ if(!temperamentOnly&&E().health<55)return {topic:'山中问安',text:`${d.name}遣弟子送来一封问安书。${k.name}听说${S.children.includes(k)?'父皇':'陛下'}龙体欠安，只劝按时静养，不拿未经查验的丹药献入宫中。`,benefit:'health'};
+ if(!temperamentOnly&&E().people<45)return {topic:'山门济民',text:`地方奏报提到${d.name}开仓煮粥、接济流民。有人认出主持事务的${k.name}曾在宫中长大，却始终称这份帮助是乡人的活路，未借机争名。`,benefit:'people'};
  const variants={
   仁厚:['渡口救人',`${k.name}带同门救起渡口落水的人，又陪着寻回失散的家人。`, 'people'],
   爽直:['护送商旅',`${k.name}在山下制止劫掠，护送商队走过险路；商人入京后将这段经历禀明。`,'people'],
@@ -175,6 +178,75 @@ function immortalNews(k){
   自矜:['以名担责',`${k.name}不肯借皇室身份求让步，却愿以自己的道名担保，让受冤的行旅得到查问。`,'prestige']
  };
  const v=variants[trait];return {topic:v[0],text:`${d.name}的消息由${r.merit%2?'行商':'游方道人'}带回。${v[1]}`,benefit:v[2]};
+}
+function immortalHealthLetter(k){
+ const r=k.immortal,d=IMMORTAL_SECTS[r.route],address=S.children.includes(k)?'父皇':'陛下';
+ const voices={
+  好奇:'我下山替师门送信时，见驿丞在药铺门前等了整一个下午。问了才知道，人在远处，只能从旁人的话里凑出一点消息。您若有精神，请亲笔写两字给我。',
+  好胜:'今日练剑，师父说我一连抢了三招，心根本不在场上。等您手稳了，写个“安”字给我，我拿它镇在剑谱下头。',
+  仁厚:'驿使若再进宫，烦请让他坐一坐、吃口热饭。他替我在山下多等了一夜。您得空回信，让他捎一句今日吃得下什么就好。',
+  内敛:'原只写了“珍重”，落款以后又添一行。等您肯起身看看窗外，请让人把先开的一枝折下压进回信里。我看见了就放心。',
+  爽直:'驿使只说一切如常，我问了三遍，他才说您连早膳都用得少。折子压着不会长腿，您让人收下去几本，算我远远求这一回。',
+  灵动:'我画了腰门前那只总踩我鞋的小猫，画坏的三张也都装进来了。若能逗您一笑，让宫人只说笑了几回便是。',
+  审慎:'回信不必写脉案，只告诉我这几日可曾睡足。山里驿路刚修好，下回报信能快两天，我已跟驿丞问定。',
+  自矜:'信递出去又被我讨回来一次。山里人人看惯了我拿得定主意，有些话我只肯写给您。我盼您早些能到窗前透一透气。'
+ };
+ const arrival=r.route==='sword'?'随下山的驿件送信，信夹在两片护剑谱的薄木板中间。':'托下山置办柴米的道童带信，纸上还印着按纸时留下的淡淡竹纹。';
+ return `${k.name}在${d.name}听闻${address}近来在宫中静养。${arrival}信上写道：“${address}，${voices[childDisposition(k)]}”`;
+}
+function immortalSectNews(k){
+ const r=k.immortal,d=IMMORTAL_SECTS[r.route],name=k.name,pronoun=k.sex==='m'?'他':'她';
+ if(E().people<45&&r.reliefReign!==S.gen)return {topic:'山门济民',benefit:'people',text:r.route==='sword'?
+  `山道通了以后，${name}带${d.name}的人把粮送到断炊的村里。第一日有人空手回去；次日${pronoun}托村里熟识各家的人一道分粮，把落下的户数补齐。`:
+  `${name}请${d.name}让出几间背风的空屋，将避荒人家领进去。头一锅粥煮得稠，后来的孩子分得少，第二日${pronoun}特意留了小锅给晚到的人。`};
+ const route=r.route==='sword'?[
+  ['剑穗还乡',`${name}把第一柄木剑的剑穗托商队带回。剑是去年劈断的，剑穗留着一处笨拙的结，认得出是在宫里学系的。`],
+  ['石阶下的灯',`华山雨后断了一段石阶。${name}与同门白日搬石，入夜便把灯放在缺处。山下卖豆腐的人路过，把半板新做的豆腐搁在灯旁。`],
+  ['借来的剑谱',`${name}借剑谱给年轻弟子，几日后书页间多了一张画错的步图。${name}索性拿那一页给同门讲，自己当初如何在同一处栽跟头。`]
+ ]:[
+  ['听泉辨路',`云岫山一夜大雨，里外两条水涧听来颠倒。${name}摸到下水处埋下旧瓦，带着同门逐段试过，才敢将新路写进山图。`],
+  ['松窗前的功课',`小道童听不清松枝和竹叶是哪里在响。${name}也闭眼坐在窗边，陪着辨了一下午，最后叫一声打翻茶盏的响动逗笑了。`],
+  ['谷口借一夜灯',`${name}在云岫山谷口守着客舍。摸黑来叩门的人找不着归路，借走廊灯，第二天清早提着灯回来，里面换上了自家新浇的蜡。`]
+ ];
+ const practice=r.practice==='care'?['雪岭结绳',`${name}想起头一回历练时宫中嘱咐过要照应同行的人。这回遇雪，便把绳子系给领路的新弟子，等众人尽数过岭才解开。`]:
+  r.practice==='skill'?['等风过涧',`${name}还留着头一回历练的家书。今日涧上风紧，同门说正好试身手，${name}却带大家等到午后风歇，再一道过去。`]:null;
+ const personal=immortalNews(k,{temperamentOnly:true});
+ const letters=[personal,...route.map(([topic,text])=>({topic,text})),...(practice?[{topic:practice[0],text:practice[1]}]:[])];
+ return letters[(r.sectLetters||0)%letters.length];
+}
+const immortalSectCorrespondent=k=>k.alive&&!k.pendingName&&!k.jailed&&!k.removedFromRoyal&&k.immortal.stage==='sect';
+function immortalSectHealthTick(people){
+ const health=E().health,previous=S.flags.immortalHealthLetter;
+ if(previous?.gen===S.gen){
+  if(health>=65)previous.recovered=true;
+  if(!previous.recovered||S.turn-previous.turn<24)return;
+ }
+ if(health>=55||health<=0||mourningActive())return;
+ const old=!previous&&people.flatMap(k=>k.immortal.history||[]).find(e=>e.d?.startsWith(E().era)&&e.title==='江湖牵念'&&e.text.includes('遣弟子送来一封问安书'));
+ if(old){S.flags.immortalHealthLetter={gen:S.gen,turn:old.turn};return;}
+ const k=people.filter(k=>S.turn>=(k.immortal.enrolled??k.immortal.departed+24)+6)
+  .sort((a,b)=>Number(S.children.includes(b))-Number(S.children.includes(a))||b.love-a.love)[0];
+ if(!k)return;
+ S.flags.immortalHealthLetter={gen:S.gen,turn:S.turn};
+ immortalRecord(k,'山中问安',immortalHealthLetter(k),'health-letter');
+}
+function immortalSectProgress(k,news,rank){
+ const r=k.immortal,skill=r.route==='sword'?'mar':'lit';
+ r.rank=rank;r.merit++;r.due=S.turn+18;
+ k[skill]=clamp(k[skill]+2);
+ if(news.benefit)chg({[news.benefit]:news.benefit==='people'?2:1});
+ if(news.topic==='山门济民')r.reliefReign=S.gen;
+ else if(news.topic)r.sectLetters=(r.sectLetters||0)+1;
+}
+function immortalSectPromotion(k,rank,base,finish){
+ const r=k.immortal,d=IMMORTAL_SECTS[r.route],office=immortalRankName(k,rank);
+ const duty=rank===1?'轮到新人上山时，第一段路从此由我领。':rank===2?'修路、送信和给下山弟子留的盘缠，如今都等我签字。上月的账还有一笔对不上，我仍得去问。':'师父交来的印比想的轻，下山求助的人却已等在门外。我想先听完他们的话，再把印盖下去。';
+ const text=`${d.master}${d.title}随本季驿件寄来亲笔信，门中已推${k.name}为${office}。${k.name}在末尾另写一行：“${duty}”`;
+ const answer=(reply)=>finish('山门扬名',`${text}信牒与师承核对无误，${k.name}现任${d.name}${office}。${reply}`,()=>immortalSectProgress(k,{},rank));
+ return {...base,title:'江湖闻名 · 故人仙踪',text,choices:[
+  {t:'将新任职写进家册，遣使贺一声',f:()=>answer('宫中记入家册，遣熟悉旧日驿路的使者送去贺信。')},
+  {t:'只寄一封家书，问起今后的差事',f:()=>answer('宫中把贺词留给家信，回问门中如今最难办的一桩事。')}
+ ]};
 }
 // Palace lessons continue the promise to wait; they never repeat the introduction.
 const IMMORTAL_PALACE_LESSONS=[
@@ -267,7 +339,9 @@ function immortalEvent(k){
   {t:'与师门道别，回到原来的生活',f:()=>{if(!valid())return null;done=true;immortalReturn(k);save('auto');return `${k.name}已平安归来，师承与问道的经历仍在。`;}}
  ]};
  if(stage==='sect'){
-  const news=immortalNews(k),rank=immortalRank(k,r.merit+1),promotion=rank>r.rank;
+  const rank=immortalRank(k,r.merit+1),promotion=rank>r.rank;
+  if(immortalQuietNewsActive())return promotion?immortalSectPromotion(k,rank,base,finish):null;
+  const news=immortalNews(k);
   return {...base,title:promotion?'江湖闻名 · 故人仙踪':'江湖来音 · '+news.topic,text:`${news.text}\n${promotion?`传闻中，${d.name}新任的${immortalRankName(k,rank)}，正用着${k.name}当年入山所留的姓名与师承。国师收到同印的山门信牒，等候核对。`:'送来的信牒留着熟悉的姓名与山门印记，国师可核明来处。'}\n${r.practice==='care'?'信里仍提到同行者的安危。':'信里仍记着当年“精进本领，也要平安”的叮嘱。'}\n“处江湖之远则忧其君。”离宫多年，${k.name}仍牵挂故国。`,choices:[
    {t:'核对信牒，听清这段消息',f:()=>finish(promotion?'山门扬名':'江湖牵念',`${news.text}信牒与师承核对无误，正是${k.name}。${promotion?`经多年修行与门中历练，现任${d.name}${immortalRankName(k,rank)}。`:''}宫中记下这段牵挂，没有擅召归来。`,()=>{r.rank=rank;r.merit++;r.due=S.turn+18;k[r.route==='sword'?'mar':'lit']=clamp(k[r.route==='sword'?'mar':'lit']+2);if(news.benefit==='people')chg({people:2});else if(news.benefit==='wen')chg({wen:1});else if(news.benefit==='prestige')chg({prestige:1});})},
    {t:'暂存传闻，半年后再核',f:()=>finish('仙踪待核',`有关${k.name}的山门消息暂存待核，没有凭传闻升改身份或给出赏赐。`,()=>{r.due=S.turn+6;})}
@@ -277,6 +351,17 @@ function immortalEvent(k){
 }
 function immortalTick(){
  if(!immortalEnabled()||S.over)return;
+ if(immortalQuietNewsActive()){
+  const correspondents=immortalPeople().filter(immortalSectCorrespondent);
+  immortalSectHealthTick(correspondents);
+  for(const k of correspondents){
+   const r=k.immortal;
+   if(S.turn<r.due||immortalRank(k,r.merit+1)>r.rank)continue;
+   const news=immortalSectNews(k);
+   immortalSectProgress(k,news,r.rank);
+   immortalRecord(k,news.topic,news.text,'sect-letter');
+  }
+ }
  if(journalContentVersion()>=49)for(const k of immortalPeople()){
   if(!k.alive||!S.children.includes(k))continue;
   immortalMaternalDiscovery(k);

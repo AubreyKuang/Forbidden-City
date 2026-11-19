@@ -58,11 +58,13 @@ function betrothalWeddingInquiryEvent(k,p,host,b,inquiry){
     inquiry.plan=plan;
     const arrangement=plan==='quiet'?'婚仪从简，两人各择一件珍重的物什带进新居。':'请两家长辈到场见证，两人一同给家中报喜。';
     const text=`${k.name}与${p.name}一道来问婚期。陛下准他们依婚帖备礼。${arrangement}`;
-    royalNatalStory(k,p,familyHostById(b.motherId),'两心问婚期',text,
+    const mother=maternalWeddingsActive()?maternalWeddingMother(k):familyHostById(b.motherId);
+    royalNatalStory(k,p,mother,'两心问婚期',text,
       `主动问起婚期，最想听的是${k.name}也亲口说愿早些把日子定下。`,
-      '听说两个人一道问起婚期，家中这才把幼时写过的生辰纸取出来。',
+      mother&&maternalWeddingsActive()?`听说${k.name}与${p.name}一道问起婚期。${maternalWeddingVoice(mother).news}`:
+        '听说两个人一道问起婚期，家中这才把幼时写过的生辰纸取出来。',
       {royalText:`和${p.name}一起定了婚礼的安排，回去便想亲手把这个消息写进家书。`});
-    if(royalNatalWeddingReady(k,p,b))royalNatalMarry(k,p,host,b);
+    if(royalNatalWeddingReady(k,p,b))royalNatalPrepareWedding(k,p,host,b);
     return arrangement;
   }
   return {title:'两心问婚期',cast:[k,natalPortrait(p)],valid,
@@ -139,7 +141,7 @@ function betrothalMarriageNews(k,p,h=null){
   const thoughts=(score,line)=>score<42?`${line}仍有些话说来费力，今日先说一件。`:
     score>=72?`${line}把下回想与对方说的事也一并记下。`:line;
   const delta=tone==='close'?4:tone==='uneven'&&current<60?1:2;
-  spouse.trust=clamp(current+delta);
+  if(h)changeHouseholdAffection(k,delta);else spouse.trust=clamp(current+delta);
   if(h){
     h.harmony=clamp((h.harmony??60)+delta);
     householdRecord(k,'household_betrothal',summary,{chronicle:false});

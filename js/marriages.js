@@ -59,7 +59,7 @@ function marriagePanel(k){
   if(royalNatalEngaged(k)||!k.alive||royalJourneyAway(k)||kidAge(k)<15||k.pendingName)return partner;
   const spouse=k.spouse;
   return `<section class="marriage-panel" aria-label="皇嗣婚事">${spouse?`<figure class="spouse-portrait">${porImg(spouseAppearance(k),112)}<figcaption>${k.sex==='f'?'驸马':'王妃'} · ${esc(spouse.name)}</figcaption></figure>`:''}<div class="grow"><strong>${esc(marriageStatus(k))}</strong><p class="hint">${spouse?esc(spouse.background||spouse.fatherName&&spouse.fatherName+'之子'||'双方心意已定'):
-    k.married?'这门婚事已经记入起居注。':'先看名帖、听本人意愿，再确认赐婚；也可以暂缓半年。'}</p>${Number.isFinite(spouse?.trust)?`<p class="hint">夫妻信任 ${rd(spouse.trust)} / 100${spouse.story?.length?' · '+esc(spouse.story[spouse.story.length-1].t):''}</p>`:''}</div>${marriageButton(k)}</section>`+partner;
+    k.married?'这门婚事已经记入起居注。':'先看名帖、听本人意愿，再确认赐婚；也可以暂缓半年。'}</p>${Number.isFinite(spouse?.trust)?`<p class="hint">${householdAffectionLabel()} ${rd(spouse.trust)} / ${royalHouseholdLifeActive()?k.household?.affectionLimit??100:100}${spouse.story?.length?' · '+esc(spouse.story[spouse.story.length-1].t):''}</p>`:''}</div>${marriageButton(k)}</section>`+partner;
 }
 function princeMarriage(k){
   const order=k.lit>=k.mar&&k.lit>=k.vir?['scholar','household','martial']:k.mar>=k.vir?['martial','household','scholar']:['household','scholar','martial'];
@@ -240,7 +240,7 @@ function royalNatalMarry(k,p,host,b){
   let scene;
   if(betrothalWeddingsActive()){
     const history=k.spouse.betrothalHistory=betrothalWeddingHistory(k,p,b);
-    scene=betrothalWeddingRecord(k,p,c,name,history);
+    scene=betrothalWeddingRecord(k,p,maternalWeddingsActive()?maternalWeddingMother(k):c,name,history);
   }else{
     const text=`${name}与${p.name}都已满十八岁，依幼时所定的婚约行礼成婚。礼部将两人的旧婚帖与成婚日期一同存档。`;
     royalNatalStory(k,p,c,'依约成婚',text,`礼成后，${p.name}将两家旧日交换的婚帖收进新居。`,
@@ -306,7 +306,7 @@ function royalNatalMarriageTick(){
     const weddingReady=royalNatalWeddingReady(k,p,b);
     if(royalNatalCourtshipTick(k,p,b,weddingReady))continue;
     if(betrothalWeddingInquiry(k,p,e.c,b,weddingReady))continue;
-    if(weddingReady)royalNatalMarry(k,p,e.c,b);
+    if(weddingReady)royalNatalPrepareWedding(k,p,e.c,b);
   }
 }
 function royalNatalPersonLink(view,id,name){

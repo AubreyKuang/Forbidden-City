@@ -281,8 +281,9 @@ test('longtime mutual affection prompts them to ask together at the latest on th
   loaded.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);
     var k=S.children[0],p=natalEntry(k.betrothal.host,k.betrothal.personId).p,turn=S.turn;
     assert.equal(curEv.title,'两心问婚期');choose(0);
-    assert.equal(S.turn,turn);assert.equal(k.married,true);
-    nextEv();assert.equal(curEv.title,'依约成婚 · 行礼');
+    assert.equal(S.turn,turn);assert.equal(k.married,false);
+    nextEv();assert.equal(curEv.title,'婚前听母亲说几句话');assert.equal(k.married,false);
+    choose(0);assert.equal(k.married,true);assert.equal(curEv.title,'依约成婚 · 行礼');
     assert.match(curEv.text,/从简/);assert.match(curEv.text,/相视/);
     assert.match(curEv.text,/互寄书信/);
     drain();
@@ -301,6 +302,7 @@ test('agreeing to an early question keeps the fifteen-year wedding gate and carr
     assert.match(ev.text,/都满十五岁/);
     ev.choices[1].f();assert.equal(k.married,false);assert.equal(inquiry.plan,'family');
     assert.equal(ev.valid(),false);assert.match(marriagePanel(k),/婚礼正在备办/);
+    assert.match(a.story.findLast(e=>e.life?.title==='两心问婚期').t,/想知道两个孩子问婚期时是什么神情/);
     S.turn=b.due-1;royalNatalMarriageTick();assert.equal(k.married,false);
     S.turn=b.due;royalNatalMarriageTick();assert.equal(k.married,true);
     assert.match(p.story.at(-1).life.summary,/长辈依二人所请到场见证/);`);
@@ -405,4 +407,54 @@ test('the engaged pair may start accompanied travel at thirteen before the new w
     assert.ok(!curEv.choices.some(o=>o.t.includes('只带随侍')));
     choose(curEv.choices.findIndex(o=>o.t.includes('结伴启程')));drain();
     assert.equal(royalTravelCompanion(k),p);assert.equal(k.married,false);`);
+});
+
+test('the mother speaks before an outside-family wedding and her recollection survives reloading',()=>{
+  const b=courtshipHistory();
+  b.run(`a.trait='持重';k.betrothal.childhood={count:1,last:S.turn,items:['折歪尾巴的纸燕']};
+    bond.royal=77;bond.relative=45;
+    ${dueMonth}
+    ${seekWeddingScene('婚前听母亲说几句话')}
+    assert.equal(k.married,false);assert.match(curEv.text,/礼单收好/);assert.match(curEv.text,/折歪尾巴的纸燕/);
+    assert.match(curEv.text,new RegExp(p.name+'，你若心里'));
+    assert.equal(a.story.filter(e=>e.life?.title==='婚前听母亲说几句话').length,1);`);
+  const loaded=boot(418,b.storage);loaded.ctx.assert=assert;
+  loaded.run(`A.load('auto');assert.equal(PalaceActions.blocked,false);
+    var k=S.children[0],m=byId(k.mom);
+    assert.equal(curEv.title,'婚前听母亲说几句话');assert.equal(k.married,false);
+    choose(0);assert.equal(curEv.title,'依约成婚 · 行礼');assert.equal(k.married,true);drain();
+    var entries=m.story.filter(e=>e.life?.title==='婚前听母亲说几句话');
+    assert.equal(entries.length,1);assert.match(entries[0].t,/折歪尾巴的纸燕/);
+    assert.ok(m.story.indexOf(entries[0])<m.story.findIndex(e=>e.life?.title==='依约成婚'));
+    assert.match(detailStory(m),/婚前听母亲说几句话/);`);
+});
+
+test('maternal advice distinguishes temperament, mutual affection, hesitation and letters from afar',()=>{
+  const b=courtshipHistory();
+  b.run(`var b=k.betrothal;S.turn=b.due;
+    a.trait='温婉';var soft=maternalWeddingEvent(k,p,b);
+    assert.match(soft.text,/活计放下/);assert.match(soft.text,/愿意等对方/);
+    a.trait='爽直';var frank=maternalWeddingEvent(k,p,b);
+    assert.match(frank.text,/两张凳子/);assert.notEqual(frank.text,soft.text);
+    bond.relative=36;bond.royal=35;k.away=true;
+    var fromAfar=maternalWeddingEvent(k,p,b);
+    assert.match(fromAfar.text,/亲笔写信/);assert.match(fromAfar.text,/今日先说一件/);
+    assert.doesNotMatch(fromAfar.text,/两张凳子/);
+    a.alive=false;assert.equal(maternalWeddingEvent(k,p,b),null);
+    k.away=false;royalNatalMarriageTick();assert.equal(k.married,false);assert.ok(bond.petition);
+    bond.kept={royal:bond.royal,relative:bond.relative};delete bond.petition;
+    royalNatalMarriageTick();assert.equal(k.married,true);
+    assert.ok(!a.story.some(e=>e.life?.title==='婚前听母亲说几句话'||e.life?.title==='依约成婚'));`);
+});
+
+for(const sex of ['m','f'])test('a mother also hears about a regular arranged wedding for a royal '+sex,()=>{
+  const b=family(sex);
+  b.run(`a.trait='活泼';S.turn=k.born+17*12;k.adult=true;PalaceActions.reset();
+    A.kidMarriage(k.id);
+    choose(curEv.choices.findIndex(c=>k.sex==='m'?c.t.startsWith('看看'):c.t.includes('进士')));
+    choose(0);
+    ${seekWeddingScene('婚前听母亲说几句话')}
+    assert.equal(k.married,true);assert.match(curEv.text,/笑着把它放下/);assert.match(curEv.text,new RegExp(k.spouse.name));
+    drain();assert.equal(a.story.filter(e=>e.life?.title==='婚前听母亲说几句话').length,1);
+    A.kidPolicy(k.id,'习武');assert.equal(a.story.filter(e=>e.life?.title==='婚前听母亲说几句话').length,1);`);
 });

@@ -110,7 +110,7 @@ function resolveParentage(k,decision,confirmedExecution=false){
     result=`${k.name}不再列作皇帝子女，送入${p.father.name}府中，由生父安排抚养。`;
     father.recognizedChildren ||= [];if(!father.recognizedChildren.includes(k.id))father.recognizedChildren.push(k.id);
     kstory(father,`接回亲生的${k.name}，改入府中家谱，承担照护。`);
-    if(father.spouse){father.spouse.trust=clamp((father.spouse.trust??60)-20);father.spouse.story ||= [];father.spouse.story.push({d:dateStr(),t:`得知丈夫与宫中妃嫔的往事，${k.name}被接回府中，夫妻信任受到影响。`});}
+    if(father.spouse){father.spouse.trust=clamp((father.spouse.trust??60)-20);father.spouse.story ||= [];father.spouse.story.push({d:dateStr(),t:`得知丈夫与宫中妃嫔的往事，${k.name}被接回府中，${householdAffectionLabel()}受到影响。`});}
     if(m?.alive)cchg(m,{mood:-20,aff:-8});
   }else if(decision==='temple'){
     if(k.templeStay){k.templeStay.reason='parentage';k.templeStay.due=null;}

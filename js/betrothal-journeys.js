@@ -11,7 +11,8 @@ function childhoodBetrothalPair(k){
 
 function betrothalPairRecord(pair,title,text,royalThought,relativeThought){
  const {k,p,b}=pair;
- livedRecord([k,p],'family',title,`childhood-betrothal:${k.id}:${p.id}:${b.turn}`,text,
+ if(b.marriedOnly)p.story ||= [];
+ livedRecord([k,p],'family',title,`${b.marriedOnly?'married-travel':'childhood-betrothal'}:${k.id}:${p.id}:${b.turn}`,text,
   [royalThought,relativeThought].filter((_,i)=>i===0?k.alive!==false:p.alive!==false));
 }
 
@@ -125,13 +126,18 @@ function marriedChildhoodPair(k){
 }
 
 function childhoodJourneyPair(k){
- return childhoodBetrothalPair(k)||marriedChildhoodPair(k);
+ const pair=childhoodBetrothalPair(k)||marriedChildhoodPair(k);
+ if(pair||!royalHouseholdLifeActive()||!k?.alive||!k.married||!k.spouse||k.spouse.alive===false||k.spouse.trust<58)return pair;
+ const p=k.spouse;
+ const official=p.personId!=null?careerPeople().find(e=>e.p.id===p.personId)?.p:null;
+ if(official&&(official.alive===false||official.away||official.commission||official.diplomaticJourney||official.incognitoCase))return null;
+ return {k,p,host:null,b:{turn:p.marriedAt,marriedOnly:true}};
 }
 
 function strengthenChildhoodBond({k,p,b},amount){
  relAdd(k,p,amount);
  if(k.married){
-  if(Number.isFinite(k.spouse.trust))k.spouse.trust=clamp(k.spouse.trust+amount);
+  if(Number.isFinite(k.spouse.trust))changeHouseholdAffection(k,amount);
  }else if(royalNatalCourtshipActive()){
   const bond=b.bond||=royalNatalInitialBond(k,p);
   bond.royal=clamp(bond.royal+amount);bond.relative=clamp(bond.relative+amount);
@@ -143,7 +149,7 @@ function betrothedTravelPair(k){
  if(!pair)return null;
  const {p,b}=pair;
  if(b.bond?.petition||b.bond?.royal<=36||b.bond?.relative<=36||k.household?.pregnancies?.length)return null;
- const age=royalNatalAge('journey');
+ const age=b.marriedOnly?18:royalNatalAge('journey');
  if(royalNatalEarlierAges()&&kidAge(k)<age)return null;
  return natalAge(p)>=age&&(p.hp??100)>=50&&!p.visit&&!p.away&&!p.jailed&&!p.exiled&&!p.royalCompanionTrip&&
   !p.natalPregnancy&&!p.commission&&!p.diplomaticJourney&&!p.incognitoCase&&!p.yiAudit?pair:null;
@@ -151,17 +157,18 @@ function betrothedTravelPair(k){
 
 function betrothedTravelButton(k){
  return !k.royalTravel&&royalTravelCanLeave(k)&&betrothedTravelPair(k)?
-  `<button class="btn jade" onclick="A.planBetrothedTravel(${k.id})">商议结伴游历</button>`:'';
+  `<button class="btn jade" onclick="A.planBetrothedTravel(${royalActionArg(k.id)})">${royalHouseholdLifeActive()&&k.married&&!marriedChildhoodPair(k)?'商议夫妻同游':'商议结伴游历'}</button>`:'';
 }
 
 A.planBetrothedTravel=function(id){
- const k=kidById(id);
+ const k=royalById(id);
  if(modalOpen||mourningActive()||!k||k.royalTravel||!royalTravelCanLeave(k)||!betrothedTravelPair(k))return;
  requestRoyalTravel(k);
  pushEv(royalTravelEvent(k));
 };
 
-function betrothedTravelReply({k,p}){
+function betrothedTravelReply({k,p,b}){
+ if(b.marriedOnly)return `\n${k.name}与${p.name}一同署了请出京游历的折子。两人各画了一处想去的地方，也已约好沿途写信报平安。`;
  const line=['沉静','温婉','温厚','才女','有文才'].includes(natalTrait(p))?
   '我愿意一道走。我也会带一本手记，想按自己的见闻慢慢写。':
   '这一路我也想去。到了地方，让我自己向当地人问路，可别把话都替我说完了。';
@@ -170,12 +177,14 @@ function betrothedTravelReply({k,p}){
 
 function startBetrothedTravel(pair){
  const {k,p,b,host}=pair,r=k.royalTravel;
- r.companion={host:host.id,personId:p.id,name:p.name,departed:S.turn,betrothalTurn:b.turn,stops:[]};
+ r.companion={host:host?.id??null,personId:p.id,name:p.name,departed:S.turn,betrothalTurn:b.turn,stops:[],
+  ...(b.marriedOnly?{marriedOnly:true}:{})};
  p.royalCompanionTrip={royalId:k.id,departed:S.turn};
  const item=b.childhood?.items?.at(-1);
  const plan=k.married?'沿途同看山河，也各写一本手记。':'按两家商定的行程分宿。';
  const text=`${k.name}与${p.name}商定结伴走这程路，随行长辈与侍从都已到齐。${plan}每到驿站报平安。${item?`行囊里还带着幼时留下的${item}。`:''}`;
- betrothalPairRecord(pair,'旧约同行',text,'小时候总在问对方喜欢什么。今日终于可以听听同一段路在对方眼里是什么模样。',
+ betrothalPairRecord(pair,b.marriedOnly?'夫妻同游':'旧约同行',text,
+  b.marriedOnly?'两人在府里常说些走一步便要做的事，出来之后，终于可以听听各自想走的是哪一条路。':'小时候总在问对方喜欢什么。今日终于可以听听同一段路在对方眼里是什么模样。',
   '这趟路是自己点头要走的。希望回家时，也有一册按自己眼光记下的见闻。');
  return text;
 }
@@ -183,8 +192,8 @@ function startBetrothedTravel(pair){
 function royalTravelCompanion(k){
  const r=k?.royalTravel,t=r?.companion;
  if(!t||t.ended!=null)return null;
- const e=natalEntry(t.host,t.personId);
- return e?.p.royalCompanionTrip?.royalId===k.id&&e.p.royalCompanionTrip.departed===t.departed?e.p:null;
+ const p=t.marriedOnly&&k.spouse?.id===t.personId?k.spouse:natalEntry(t.host,t.personId)?.p;
+ return p?.royalCompanionTrip?.royalId===k.id&&p.royalCompanionTrip.departed===t.departed?p:null;
 }
 
 function companionTravelPanel(p){
@@ -205,7 +214,7 @@ function recordCompanionTravelStop(k,danger){
   r.stop===1?`歇脚时${p.name}${quiet?'向店家借来一盏灯，按灯下看见的样子补画了一页':'和几个本地人聊熟了，记下他们怎么过日子'}。${k.name}原还想先写山水，翻到这一页，便请${p.name}先讲这一日。`:
   `最后一站，两人交换手记，各给对方挑出一个会记得很久的细节。临走约好，到京后要把自己那本从头讲一遍。`;
  const text=`两人行到${place}。${exchange}`;
- betrothalPairRecord({k,p,b:{turn:t.betrothalTurn}},'同行手记 · '+place,text,
+ betrothalPairRecord({k,p,b:{turn:t.betrothalTurn,marriedOnly:t.marriedOnly}},'同行手记 · '+place,text,
   danger?'两个人一起确认同行的人都平安，才敢真正松口气。':'同一处地方，我留心的事和对方看见的果然不同。',
   danger?'原以为回信最难写，真提起笔时，倒只想先写一句都平安。':'正好有人一起走，才会回头去问那些原本要忘掉的小事。');
  return text;
@@ -222,7 +231,7 @@ function finishBetrothedTravel(k,outcome){
   !k.alive?`归途改了。${p.name}由长辈陪同回原家，收着与${k.name}沿途合记的那几页。`:
   !p.alive?`${k.name}的同行人${p.name}已经离世。这一程剩下的路改由原随侍照应，两人的旧记仍然收好。`:
   `${k.name}与${p.name}因处境有变结束同行，随后由各自的长辈或随侍照应。先前的见闻已分别记下。`;
- betrothalPairRecord({k,p,b:{turn:t.betrothalTurn}},outcome==='returned'?'同行归来':'同行暂别',line,
+ betrothalPairRecord({k,p,b:{turn:t.betrothalTurn,marriedOnly:t.marriedOnly}},outcome==='returned'?'同行归来':'同行暂别',line,
   outcome==='returned'?'回京后还想约一次。也许这回只在廊下坐着，把路上漏说的事讲完。':'记得路上各自写过的话，哪怕眼下不能再一道走。',
   outcome==='returned'?'把自己的那册放在案上，最想留住的是一路上互相听见的那些话。':'手记还会留着。走过的那段路，自有走过时的样子。');
  return line;
