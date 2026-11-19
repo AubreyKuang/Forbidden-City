@@ -279,12 +279,14 @@ function xieRomancePanel(p=xieAn()){
 }
 const romanceScholarView=viewScholar;
 viewScholar=function(){const html=romanceScholarView(),p=scholarById(UI.sel);return p?.storyPerson==='xiean'?html.replace('</header>','</header>'+xieEngagementPanel(p)+xieRomancePanel(p)):html;};
-function xieEngagementPanel(p=xieAn()){
+function xieEngagementPanel(p=xieAn(),fromChild=false){
  const e=p?.xiean.engagement,k=e&&royalById(e.childId);if(!xieRomanceActive()||!e||!k)return '';
- return detailSection('订婚 · 待成年成婚',`<p>${esc(k.name)}与谢安已有婚约。${kidAge(k)<15?'公主尚未满十五岁，待成年后再举行婚礼。':'公主已满十五岁，待双方都可相见时举行婚礼。'}两人尚非夫妻，不进入婚后家事。</p><p>${e.origin==='proposal'?'两心定约':'奉旨定亲'} · ${e.affection>=60?'已渐相知':'仍在了解彼此'}。${e.origin==='forced'&&e.affection<60?'若成婚时仍未相爱，届时才开始一年分房。':'成婚时已有感情，不设一年分房。'}</p>`);
+ const partner=fromChild?royalNatalPersonLink('scholar',p.id,p.name):royalNatalPersonLink('kid',k.id,k.name);
+ const timing=engagementTiming(k.betrothal?.due??k.born+15*12,'待双方可相见、身体安好且服丧期满后行礼。');
+ return detailSection('订婚 · 待成年成婚',`<p>定亲对象 · ${partner} · ${timing}</p><p>${esc(k.name)}与谢安已有婚约。${kidAge(k)<15?'公主尚未满十五岁，待成年后再举行婚礼。':'公主已满十五岁，待双方都可相见时举行婚礼。'}两人尚非夫妻，不进入婚后家事。</p><p>${e.origin==='proposal'?'两心定约':'奉旨定亲'} · ${e.affection>=60?'已渐相知':'仍在了解彼此'}。${e.origin==='forced'&&e.affection<60?'若成婚时仍未相爱，届时才开始一年分房。':'成婚时已有感情，不设一年分房。'}</p>`);
 }
 const romanceMarriagePanel=marriagePanel;
-marriagePanel=function(k){return xieRomanceActive()&&k.betrothal?.kind==='xiean'?xieEngagementPanel():romanceMarriagePanel(k);};
+marriagePanel=function(k){return xieRomanceActive()&&k.betrothal?.kind==='xiean'?xieEngagementPanel(xieAn(),true):romanceMarriagePanel(k);};
 const romanceMarriageStatus=marriageStatus;
 marriageStatus=function(k){return xieRomanceActive()&&k.betrothal?.kind==='xiean'?'已订婚 · 谢安 · 尚未成婚':romanceMarriageStatus(k);};
 const romanceKidView=viewKid;

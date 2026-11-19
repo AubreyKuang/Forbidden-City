@@ -48,7 +48,9 @@ test('a princess can be betrothed to a documented nephew and both profiles use t
     ev.onShow();ev.choices[0].f();
     assert.equal(k.betrothal.personId,p.id);assert.equal(p.betrothal.personId,k.id);
     assert.equal(natalStatus(p),'已定亲');assert.equal(marriageEligible(k),false);
-    assert.match(marriagePanel(k),/已定亲/);assert.match(marriagePanel(k),new RegExp(p.name));
+    assert.match(marriagePanel(k),/已定亲/);assert.match(marriagePanel(k),/距婚期还有 13 年/);
+    UI.sel=k.id;assert.ok(viewKid().indexOf('A.kidVisit(')<viewKid().indexOf('定亲对象'));
+    assert.ok(marriagePanel(k).includes(royalNatalPersonLink('natal',a.id+':'+p.id,p.name)));assert.match(marriagePanel(k),new RegExp(p.name));
     assert.match(natalLifePanel(a,p),/已定亲/);assert.match(natalLifePanel(a,p),new RegExp(k.name));
     assert.notEqual(k.story.at(-1).t,p.story.at(-1).t);assert.notEqual(k.story.at(-1).t,a.story.at(-1).t);
     var kidId=k.id,natalId=p.id;S.turn=k.betrothal.due-1;royalNatalMarriageTick();assert.equal(k.married,false);

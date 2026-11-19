@@ -273,13 +273,20 @@ function royalNatalMarriageTick(){
 function royalNatalPersonLink(view,id,name){
   return `<button class="person-link" onclick="A.go('${view}',${royalActionArg(id)})">${esc(name)} ↗</button>`;
 }
+function engagementTiming(due,waiting){
+  if(!Number.isFinite(due))return waiting;
+  const months=Math.max(0,due-S.turn);
+  if(!months)return '已到婚期，'+waiting;
+  const years=Math.floor(months/12),rest=months%12;
+  return '距婚期还有 '+[years?years+' 年':'',rest?rest+' 个月':''].filter(Boolean).join(' ');
+}
 function royalNatalPartnerPanel(k){
   const b=royalNatalEngaged(k)?k.betrothal:null,s=k.spouse;
   if(!b&&s?.natalHost==null)return '';
   const e=b?natalEntry(b.host,b.personId):natalEntry(s.natalHost,s.personId);
   const name=e?.p.name||(b||s).name;
   const link=e?royalNatalPersonLink('natal',e.c.id+':'+e.p.id,name):esc(name);
-  return detailSection(b?'已定亲':'配偶档案',`<p>${b?'定亲对象':'配偶'} · ${link}${b?' · 等双方满十八岁后成婚':''}</p>`);
+  return detailSection(b?'已定亲':'配偶档案',`<p>${b?'定亲对象':'配偶'} · ${link}${b?' · 等双方满十八岁后成婚。'+engagementTiming(b.due??(e&&royalNatalMarriageAge(k,e.p)),'待双方可以行礼时成婚。'):''}</p>`);
 }
 function natalRoyalPartnerLine(p){
   const b=royalNatalEngaged(p)?p.betrothal:null,id=b?.personId??p.spouse?.royalId;

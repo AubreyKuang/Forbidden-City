@@ -4,14 +4,19 @@ function approvedMotherResidence(k){
   return journalContentVersion()>=105&&k?.motherResidence?.choice==='stay'&&
     k.motherResidence.caregiver===(k.foster||k.mom)&&kidAge(k)<childResidenceAdultAge(k);
 }
+function raisedByDowager(k){
+  const r=k?.dowagerUpbringing,d=S.flags.dowager;
+  return !!r&&r.gen===S.gen&&d?.alive&&r.personId===(d.personId??null)&&!k.foster&&
+    childInPalace(k)&&!k.married&&kidAge(k)<15;
+}
 function youngChildMother(k){
-  if(!childInPalace(k)||k.married||k.pendingName||(kidAge(k)>=6&&!approvedMotherResidence(k)))return null;
+  if(!childInPalace(k)||k.married||k.pendingName||raisedByDowager(k)||(kidAge(k)>=6&&!approvedMotherResidence(k)))return null;
   const mother=byId(k.foster||k.mom);
   return inPalace(mother)&&mother.palace&&mother.palace!=='冷宫'?mother:null;
 }
 function sharedChildResidents(k){
   return kidsAlive().filter(o=>o!==k&&o.sex===k.sex&&childInPalace(o)&&!o.married&&!o.pendingName&&
-    kidAge(o)>=6&&kidAge(o)<childResidenceAdultAge(o)&&!youngChildMother(o)&&
+    kidAge(o)>=6&&kidAge(o)<childResidenceAdultAge(o)&&!youngChildMother(o)&&!raisedByDowager(o)&&
     (journalContentVersion()<111||!approvedMotherResidence(o)));
 }
 function childResidenceCareLabel(k,mother){
@@ -20,6 +25,7 @@ function childResidenceCareLabel(k,mother){
 }
 function childResidence(k){
   if(!childInPalace(k)||k.married||k.pendingName)return '';
+  if(raisedByDowager(k))return '由太后抚养 · 慈宁宫';
   const mother=youngChildMother(k);
   if(mother)return `随${childResidenceCareLabel(k,mother)}${cName(mother)}同住 · ${mother.palace}`;
   if(kidAge(k)<6)return '暂由乳母照料，未随母同住';
@@ -63,7 +69,7 @@ function childMotherResidenceRequests(){
   const events=[];
   for(const k of kidsAlive()){
     const age=kidAge(k),mother=byId(k.foster||k.mom),monthsOld=S.turn-k.born;
-    if(!childInPalace(k)||k.married||k.pendingName||age<6||age>=childResidenceAdultAge(k)||
+    if(!childInPalace(k)||raisedByDowager(k)||k.married||k.pendingName||age<6||age>=childResidenceAdultAge(k)||
       (sixthBirthdayOnly?(monthsOld!==72||k.motherResidenceChecked):monthsOld%12!==0)||k.motherResidence||!inPalace(mother)||!mother.palace||
       !['内敛','审慎'].includes(childDisposition(k))||childTrust(k,mother)<45)continue;
     if(sixthBirthdayOnly){

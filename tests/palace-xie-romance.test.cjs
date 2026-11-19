@@ -311,3 +311,11 @@ test('estate visits cover late family talk without opening scenes for people awa
   assert.ok(p.story.some(e=>e.t.includes('【不期而遇的归处】')));
  `);
 });
+
+test('Xie engagement links the target and shows the actual due month, including a postponed ceremony',()=>{
+ const b=w();b.run(`k.born=S.turn-14*12;p.xiean.affection=80;xieBetroth(k,p,'proposal');
+ assert.match(marriagePanel(k),/距婚期还有 1 年/);
+ assert.ok(marriagePanel(k).includes(royalNatalPersonLink('scholar',p.id,p.name)));
+ S.turn=k.betrothal.due;k.hp=40;xieBetrothalTick(p);assert.match(marriagePanel(k),/已到婚期/);
+ assert.ok(xieEngagementPanel(p).includes(royalNatalPersonLink('kid',k.id,k.name)));`);
+});

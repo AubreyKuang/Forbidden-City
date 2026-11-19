@@ -369,7 +369,7 @@ function doFoster(k,c,options={}){if(familyScenesEnabled()&&(!childInPalace(k)||
   if(old&&old!==c&&!k.motherBonds?.[old.id]){(k.motherBonds ||= {})[old.id]={trust:childTrust(k,old)}}
   if(journalContentVersion()>=96)beginFosterAdjustment(k,c,old||m);
   preserveFormerCare(k,old,c);
-  k.foster=c.id;k.fosterT=S.turn;relAdd(c,k,Math.max(0,50-relGet(c,k)));
+  delete k.dowagerUpbringing;k.foster=c.id;k.fosterT=S.turn;relAdd(c,k,Math.max(0,50-relGet(c,k)));
   kstory(k,`交由${fullName(c)}抚养。`);story(c,`陛下将${kidName(k)}交给她抚养。`);log(`${kidName(k)}交由${fullName(c)}抚养。`,1);
   setXin(c,'欢喜',`得以抚养${k.name}`);let s=cchg(c,{aff:childless?12:6,mood:childless?20:8});
   if(m&&m.alive&&m!==c&&options.consensual){relAdd(m,c,8);cchg(m,{mood:-3});story(m,`与${fullName(c)}商议后，让她承担${k.name}的日常抚养，自己仍可探望。虽放心她的照护，分别时仍有不舍。`)}

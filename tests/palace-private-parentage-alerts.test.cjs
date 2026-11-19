@@ -37,8 +37,8 @@ test('birth alert can order three-month investigation without changing the uncle
 });
 test('saved non-imperial truth is not rewritten to the emperor',()=>{
  const b=setup(true,false);birth(b);b.run(`choose(0);drain();var q=child.outsideParentage.privateInquiry;S.turn=q.due;outsidePaternityTick();
-  assert.equal(curEv.title,'锦衣卫回奏 · 宫外生父');assert.match(curEv.text,new RegExp(child.fatherName));choose(0);drain();
-  assert.equal(child.unconfirmedParentage,true);assert.equal(q.imperial,false);assert.doesNotMatch(natalFatherPanel(child),/生父：皇帝/);`);
+  assert.equal(curEv.title,'锦衣卫回奏 · 宫外生父');assert.match(curEv.text,new RegExp(child.fatherName));assert.equal(curEv.choices.length,1);choose(0);drain();
+  assert.equal(child.unconfirmedParentage,true);assert.equal(q.imperial,false);assert.doesNotMatch(outsideParentagePanel(other,child),/决定孩子归处/);assert.doesNotMatch(natalFatherPanel(child),/生父：皇帝/);`);
 });
 test('parallel inquiries cannot silently change the unclear label',()=>{
  const b=setup();birth(b);b.run(`choose(0);drain();var data=child.outsideParentage,f=outsideParentageFamily(other,child);data.status='reported';
@@ -57,3 +57,21 @@ test('a real v100 pregnancy notice remains replayable with its original text',()
 });
 
 test('a new pregnancy pins the consort from the actual encounter',()=>{const b=setup();b.run(`assert.equal(originalPreg.reportingHost,other.id);`);});
+test('imperial private report opens placement directly, supports a pending reload and care by the dowager',()=>{
+ let b=setup();birth(b);b.run(`choose(0);drain();var q=child.outsideParentage.privateInquiry;S.turn=q.due;PalaceActions.reset();A.outsidePaternityReport(host,child.id);
+ choose(1);assert.equal(curEv.title,'骨肉归处');assert.ok(!kidById(child.id));save('auto');`);
+ const id=b.run('child.id');b=boot(72,b.storage);b.ctx.assert=assert;b.ctx.testId=id;
+ b.run(`A.load('auto');assert.equal(curEv.title,'骨肉归处');choose(curEv.choices.findIndex(x=>x.t==='认回宫中，由太后抚养'));drain();
+ const k=kidById(testId);assert.equal(k.outsideParentage.status,'recognized');
+ assert.match(childResidence(k),/太后抚养.*慈宁宫/);assert.ok(S.flags.dowager.story.some(e=>e.t.includes(k.name)));
+ assert.equal(S.children.filter(p=>p.id===testId).length,1);assert.ok(k.story.some(e=>e.t.includes('太后接到慈宁宫')));
+ S.flags.dowager.alive=false;assert.doesNotMatch(childResidence(k),/太后抚养/);`);
+});
+test('old privately confirmed cases can be revisited without another investigation or a living husband',()=>{
+ const b=setup();birth(b);b.run(`choose(0);drain();var q=child.outsideParentage.privateInquiry;q.status='complete';
+ var f=outsideParentageFamily(other,child);if(f.husband)f.husband.alive=false;
+ var energy=E().energy,gold=E().treasury;assert.match(outsideParentagePanel(other,child),/决定孩子归处/);
+ A.outsideParentage(host,child.id,true);choose(2);drain();assert.equal(child.unconfirmedParentage,true);
+ A.outsideParentage(host,child.id,true);choose(0);drain();assert.ok(kidById(child.id));assert.equal(E().energy,energy);assert.equal(E().treasury,gold);
+ assert.ok(!oh.relatives.includes(child));`);
+});
