@@ -62,3 +62,77 @@ test('only a previously favored maid has the attendant report, without a mistres
  assert.match(g.story.at(-1).event.situation,/内侍来报/);
  assert.match(XEV.委屈(empress()).text,/掌事姑姑.*小主/);`);
 });
+
+function maidDisputeWorld(){
+ const w=world();
+ w.run(`var queen=empress();queen.trait='温婉';
+  for(const c of harem()){c.favor=75;c.scheme=12;if(c!==queen)c.trait='温婉';}
+  var rival=makeGirl({sur:'宋',given:'婉宁',age:26,trait:'善妒'});addConsort(rival,3,'入宫');
+  rival.favor=10;rival.hp=95;delete rival.solitary;
+  var maid=(name,trait='温婉')=>{
+   const g=newMaid('尚衣局');g.sur='许';g.given=name;g.age=22;g.trait=trait;g.hp=95;
+   g.nights=1;g.imperialNights=[S.turn-1];g.favor=30;return g;
+  };
+  var g=maid('绮云');PalaceActions.reset();`);
+ return w;
+}
+
+test('a current maid’s real favor can rarely cause a dispute and several such maids raise the monthly chance',()=>{
+ const w=maidDisputeWorld();
+ w.run(`var random=Math.random;Math.random=()=>.025;assert.equal(maidFavorDispute(),null);
+  Math.random=()=>.024;var ev=maidFavorDispute();assert.equal(ev.por,g);assert.match(ev.text,/在廊下拦住.*行礼不周/);
+  assert.equal(S.flags.lastMaidFavorDispute,undefined);
+  Math.random=random;var second=maid('令秋');second.favor=29;
+  Math.random=()=>.04;ev=maidFavorDispute();assert.equal(ev.por,g);assert.match(ev.text,/不止一位宫女/);
+  Math.random=()=>.05;assert.equal(maidFavorDispute(),null);
+  g.favor=60;Math.random=()=>.06;assert.ok(maidFavorDispute());
+  pushEv(maidFavorDispute());assert.equal(S.flags.lastMaidFavorDispute,S.turn);
+  Math.random=()=>0;assert.equal(maidFavorDispute(),null);drain();
+  S.turn+=12;g.imperialNights=second.imperialNights=[S.turn-4];assert.equal(maidFavorDispute(),null);
+  g.imperialNights=[S.turn-1];g.maid=false;assert.equal(maidFavorDispute(),null);
+  g.maid=true;rival.homeLeave={from:S.turn,due:S.turn+1};assert.equal(maidFavorDispute(),null);`);
+});
+
+test('personality changes the reaction and Queen’s judgement, while a vacant throne still lets the Emperor decide',()=>{
+ const w=maidDisputeWorld();
+ w.run(`g.favor=65;g.trait='骄矜';g.mood=60;rival.trait='城府';
+  g.seed=Array.from({length:300},(_,i)=>i+1).find(seed=>mulberry32(voiceHash('maid-favor-pride:'+seed))()<.28);
+  var ev=maidFavorDisputeEvent(g,rival,queen,false);
+  assert.match(ev.text,/交接簿.*旧页从头重抄/);assert.match(ev.text,/抿嘴一笑.*瞧不上我/);
+  assert.match(ev.text,/宫里谁受了委屈/);
+  pushEv(ev);choose(1);assert.match(modalResult.text,/先让宫女坐下说完/);
+  assert.equal(g.mood,67);assert.equal(xinOf(g),'欢喜');assert.match(g.story.at(-1).t,/几分得意/);drain();
+  queen.trait='善妒';g.trait='温婉';g.favor=30;g.mood=60;
+  ev=maidFavorDisputeEvent(g,rival,queen,false);
+  assert.match(ev.text,/宫中怎么会没人议论/);assert.match(ev.text,/红了眼/);
+  pushEv(ev);choose(1);assert.match(modalResult.text,/敲打宫女以后谨慎行事/);assert.equal(g.mood,57);
+  assert.equal(xinOf(g),'委屈');assert.match(queen.story.at(-1).t,/自己介意/);drain();
+  queen.trait='持重';assert.match(maidFavorQueenResponse(queen).voice,/问当值的宫人/);
+  queen.trait='城府';assert.match(maidFavorQueenResponse(queen).voice,/私下问/);
+  queen.rank=7;ev=maidFavorDisputeEvent(g,rival,null,false);
+  assert.equal(ev.choices.length,2);assert.doesNotMatch(ev.text,/皇后/);
+  pushEv(ev);choose(1);assert.match(modalResult.text,/没有追问/);assert.equal(g.mood,50);drain();`);
+});
+
+test('the genuine month queue records each viewpoint and survives a save before and after the response',()=>{
+ let w=maidDisputeWorld();
+ w.run(`var ids=[g.id,rival.id,queen.id];g.favor=65;
+  var monthlyDispute=maidFavorDispute;
+  maidFavorDispute=()=>{const random=Math.random;try{Math.random=()=>.01;return monthlyDispute();}finally{Math.random=random;}};
+  A.endMonth();
+  for(let i=0;modalOpen&&curEv.title!==MAID_FAVOR_DISPUTE_TITLE&&i<150;i++){
+   if(modalResult)nextEv();else choose(curEv.choices.findIndex(c=>!c.cond||c.cond()));
+  }
+  assert.equal(curEv.title,MAID_FAVOR_DISPUTE_TITLE);assert.equal(curEv.por.id,ids[0]);save('1');`);
+ const ids=JSON.parse(w.run('JSON.stringify(ids)'));w=boot(501,w.storage);w.ctx.assert=assert;w.ctx.ids=ids;
+ w.run(`A.load('1');assert.equal(PalaceActions.blocked,false);assert.equal(curEv.title,MAID_FAVOR_DISPUTE_TITLE);
+   var entries=p=>p.story.filter(x=>x.event?.title===MAID_FAVOR_DISPUTE_TITLE);
+   assert.ok(ids.every(id=>entries(byId(id)).length===0));
+   choose(0);assert.match(modalResult.text,/撤回加派的差事/);save('2');
+   A.load('2');assert.equal(PalaceActions.blocked,false);assert.match(modalResult.text,/撤回加派的差事/);drain();
+   var [g,rival,queen]=ids.map(byId);
+   assert.match(entries(g)[0].t,/受召.*加派了差事/);assert.match(entries(rival)[0].t,/心下不平/);
+   assert.match(entries(queen)[0].t,/谁受了委屈/);
+   for(const id of ids)assert.equal(entries(byId(id)).length,1);
+   assert.equal(xinOf(g),'释然');assert.equal(S.flags.lastMaidFavorDispute,S.turn);`);
+});

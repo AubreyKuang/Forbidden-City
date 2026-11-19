@@ -41,7 +41,7 @@ const PalaceActions=(()=>{
     if(name==='start'){journal=null;blocked=false;}
     const before=S?clone(S):null,prior=journal?clone(journal):null,priorUI=clone(UI);
     if(!journal&&!modalOpen&&!Q.length){
-      journal={version,outerHouseholds:true,outerHouseholdUpdates:true,exclusiveStoryOrigins:true,immortalDiscoveryNews:true,betrothalJourneys:true,immortalPeerAdmiration:true,maritalEstates:true,luwanFrontierChronicles:true,luwanFrontierVisuals:true,base:S?clone(world(S)):null,ui:clone(UI),steps:[]};
+      journal={version,outerHouseholds:true,outerHouseholdUpdates:true,exclusiveStoryOrigins:true,immortalDiscoveryNews:true,betrothalJourneys:true,immortalPeerAdmiration:true,maritalEstates:true,luwanFrontierChronicles:true,luwanFrontierVisuals:true,maidFavorDisputes:true,base:S?clone(world(S)):null,ui:clone(UI),steps:[]};
     }
     const current={name,args:clone(args),monthNotice:true,rolls:[],answers:[],saves:[],ui:clone(UI)};
     // A fresh decision in an unfinished older scene uses today's age rules on future replays.
@@ -161,6 +161,7 @@ const PalaceActions=(()=>{
     get luwanFrontierReunion(){return !step||step.luwanFrontierReunion===true;},
     get replayRollsExhausted(){return replaying&&step&&cursor===step.rolls.length;},
     get immortalPeerAdmiration(){return !journal||journal.immortalPeerAdmiration===true||journal.balancedImmortalDiscovery===true;},
+    get maidFavorDisputes(){return !journal||journal.maidFavorDisputes===true;},
     get betrothalJourneys(){return !journal||journal.betrothalJourneys===true;},
     get immortalDiscoveryNews(){return !journal||journal.immortalDiscoveryNews===true;},
     get exclusiveStoryOrigins(){return !journal||journal.exclusiveStoryOrigins===true;},

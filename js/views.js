@@ -525,7 +525,7 @@ function parentLink(id,name){
   const c=byId(id);return c?`<button class="person-link" onclick="A.go('consort',${c.id})">${esc(name||fullName(c))}</button>`:esc(name||'未记载');
 }
 function childListCard(k){
-  return `<article class="card portrait-card child-card"><button class="child-portrait" aria-label="查看${esc(kidName(k))}" onclick="A.go('kid',${k.id})">${porImg(k,72)}</button><div class="grow"><button class="person-link nm" onclick="A.go('kid',${k.id})">${esc(kidName(k))}</button><div>${k.alive?kidAge(k)+'岁':k.lost?'下落不明':'已故'} · 生母 ${outsideMotherLink(k)}${fosterOf(k)?` · 养母 ${parentLink(k.foster)}`:''}</div>${birthTags(k)}${outsideChildBadge(k)}${royalNatalEngaged(k)?'<span class="tag y">已定亲</span>':''}${bar('才学',k.lit,'#3b5fa8')}${bar('武艺',k.mar,'#a3262a')}${bar('品德',k.vir,'#4f9078')}</div></article>`;
+  return `<article class="card portrait-card child-card"><button class="child-portrait" aria-label="查看${esc(kidName(k))}" onclick="A.go('kid',${k.id})">${porImg(k,72)}</button><div class="grow"><button class="person-link nm" onclick="A.go('kid',${k.id})">${esc(kidName(k))}</button><div>${k.alive?kidAge(k)+'岁':k.lost?'下落不明':'已故'} · 生母 ${outsideMotherLink(k)}${fosterOf(k)?` · 养母 ${parentLink(k.foster)}`:''}</div>${birthTags(k)}${outsideChildBadge(k)}${bar('才学',k.lit,'#3b5fa8')}${bar('武艺',k.mar,'#a3262a')}${bar('品德',k.vir,'#4f9078')}</div></article>`;
 }
 A.kidsResidence=function(group){
   if(!['palace','out'].includes(group))return;
