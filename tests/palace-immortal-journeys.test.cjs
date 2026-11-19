@@ -63,8 +63,32 @@ test('distant accounts vary with all eight dispositions and current health or pu
  const b=world();b.run(`immortalDiscover(k);immortalDepart(k);k.immortal.stage='sect';var lines=new Set();for(var t of Object.keys(CHILD_DISPOSITIONS)){k.temperament=t;lines.add(immortalNews(k).text);}assert.equal(lines.size,8);
  E().health=40;assert.equal(immortalNews(k).topic,'山中问安');assert.doesNotMatch(immortalNews(k).text,/仙丹治愈/);E().health=90;E().people=30;assert.equal(immortalNews(k).topic,'山门济民');`);
 });
-test('unverified rumors postpone identity changes without rewarding them',()=>{
- const b=world();b.run(`immortalDiscover(k);immortalDepart(k);k.immortal.stage='sect';k.immortal.merit=8;S.turn+=180;k.immortal.due=S.turn;var e=immortalEvent(k),prestige=E().prestige;e.choices[1].f();assert.equal(k.immortal.rank,0);assert.equal(k.immortal.merit,8);assert.equal(k.immortal.due,S.turn+6);assert.equal(E().prestige,prestige);`);
+test('a real promotion remains an event, and a private reply settles it without a second summons',()=>{
+ const b=world();b.run(`immortalDiscover(k);immortalDepart(k);k.immortal.stage='sect';k.immortal.merit=8;S.turn+=180;k.immortal.due=S.turn;E().health=40;
+ immortalTick();var e=pendingImmortalEvent();assert.match(e.title,/江湖闻名/);assert.match(e.text,/宗主/);assert.doesNotMatch(e.text,/龙体欠安|静养/);
+ var prestige=E().prestige;assert.match(e.choices[1].f(),/家信/);assert.equal(k.immortal.rank,3);assert.equal(k.immortal.merit,9);
+ assert.equal(k.immortal.due,S.turn+18);assert.equal(E().prestige,prestige);assert.equal(e.choices[1].f(),null);assert.equal(pendingImmortalEvent(),null);`);
+});
+test('a long illness receives one personal letter across the court, and quiet updates still build merit',()=>{
+ const b=world();b.run(`immortalDiscover(k);immortalDepart(k);k.immortal.stage='sect';k.immortal.practice='care';k.immortal.merit=1;k.love=95;
+ var other=makeKid(m,'m','云川');Object.assign(other.immortal={},k.immortal,{route:'sword',history:[]});other.love=35;
+ S.turn+=30;k.immortal.due=S.turn;other.immortal.due=S.turn;
+ var ep=()=>[k,other].flatMap(p=>p.immortal.history).filter(e=>e.title==='山中问安');
+ E().health=42;E().people=80;immortalTick();immortalTick();
+ assert.equal(ep().length,1);assert.match(ep()[0].text,/父皇.*静养.*一枝/);
+ assert.ok(m.story.some(e=>e.t.includes('山中问安')));assert.equal(E().health,42);assert.equal(k.immortal.merit,2);assert.equal(pendingImmortalEvent(),null);
+ assert.match(immortalPanel(k),/山中问安/);S.turn+=18;immortalTick();assert.equal(pendingImmortalEvent(),null);
+ assert.equal(ep().length,1);assert.notEqual(k.immortal.history.at(-1).title,k.immortal.history.at(-2).title);
+ E().health=70;S.turn+=8;immortalTick();E().health=42;S.turn++;immortalTick();
+ assert.equal(ep().length,2);assert.equal(pendingImmortalEvent(),null);save('1');`);
+ const c=boot(8,b.storage);c.ctx.assert=assert;c.run(`A.load('1');drain();var p=royalById(S.flags.immortalHealthLetter.gen===S.gen?S.children[0].id:0);assert.ok(p);
+ S.turn++;immortalTick();assert.equal(p.immortal.history.filter(e=>e.title==='山中问安').length,2);`);
+});
+test('a low-health save that has already received the old letter does not receive it again on upgrade',()=>{
+ const b=world();b.run(`immortalDiscover(k);immortalDepart(k);k.immortal.stage='sect';S.turn+=36;k.immortal.due=S.turn;
+ E().health=43;k.immortal.history.push({turn:S.turn-18,d:dateStr(),title:'江湖牵念',text:'清微门遣弟子送来一封问安书。'});
+ immortalTick();assert.equal(k.immortal.history.filter(e=>e.title==='山中问安').length,0);assert.equal(pendingImmortalEvent(),null);
+ assert.equal(S.flags.immortalHealthLetter.turn,S.turn-18);`);
 });
 test('letters are saved, rate limited and comfort the actual living mothers',()=>{
  const b=world();b.run(`immortalDiscover(k);immortalDepart(k);var energy=E().energy;A.immortalLetter(k.id);assert.equal(E().energy,energy-1);assert.match(curEv.text,/父皇/);drain();A.immortalLetter(k.id);assert.equal(E().energy,energy-1);assert.ok(f.story.some(e=>e.t.includes('青山家书')));save('1');`);

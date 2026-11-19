@@ -1148,6 +1148,7 @@ function courtTick(){
       }}
   }
   officialTaskTick();relativeStudyTick();
+  if(journalContentVersion()>=132)sisterVigilTick();
 }
 // Wins and defeats share a court-wide interval; sisters share their household's interval.
 function frontierReportReady(c){

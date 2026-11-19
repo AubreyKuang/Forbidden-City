@@ -146,7 +146,7 @@ function fatherLossInvitation(t){
   return t.kind==='family'&&t.role==='father'&&t.outcome==='death';
 }
 function continuityReady(c,forPopup=false){
-  return continuityThreads(c).filter(t=>!forPopup||journalContentVersion()<131||!fatherLossInvitation(t)||
+  return continuityThreads(c).filter(t=>!forPopup||journalContentVersion()<133||!fatherLossInvitation(t)||
     t.stage==='invitation'&&!(t.lastShown>=t.origin)&&t.snooze==null).filter(t=>continuityAvailable(t)&&t.stage!=='settled'&&S.turn>=t.due&&S.turn>=(t.snooze??0)&&(!forPopup||journalContentVersion()<32||t.kind!=='child'||t.childPopupStage!==t.stage&&S.turn-(continuityState()?.lastChildPopup??-99)>=6))
     .sort((a,b)=>(b.stage==='working')-(a.stage==='working')||continuityFocus(byId(b.owner))-continuityFocus(byId(a.owner))||a.due-b.due)[0];
 }
@@ -288,8 +288,8 @@ function continuityEvent(t){
   const c=byId(t.owner),tone=companionStyle(c);
   const line={proud:'“我在意的事，想当面说清。”',reserved:'“先前的事，我又想了几遍。想听听陛下的意思。”',direct:'“这回我有自己的打算，先让我说完。”',bright:'“又有一点新主意，这回可得认真听。”',maker:'“手里的东西还没收好，有几处想自己改一改。”',gentle:'“有一件事，臣妾一直放在心上。”'}[tone];
   return {title:continuityTitle(t)+' · '+fullName(c),cast:continuityCast(t),personalStory:true,valid,
-    onShow:()=>{if(journalContentVersion()>=131&&fatherLossInvitation(t))t.lastShown=S.turn;},
-    text:(journalContentVersion()>=131&&fatherLossInvitation(t)&&stage==='working'?'':t.cause+'\n')+(stage==='invitation'?continuityDesire(t)+'\n'+(fatherMourningScene(t)?'“'+fatherGriefVoice(c,continuityOfficial(t),1)+'”':line):continuityProgressText(t)),
+    onShow:()=>{if(journalContentVersion()>=133&&fatherLossInvitation(t))t.lastShown=S.turn;},
+    text:(journalContentVersion()>=133&&fatherLossInvitation(t)&&stage==='working'?'':t.cause+'\n')+(stage==='invitation'?continuityDesire(t)+'\n'+(fatherMourningScene(t)?'“'+fatherGriefVoice(c,continuityOfficial(t),1)+'”':line):continuityProgressText(t)),
     choices:[...continuityOptions(t).map(choice=>({t:choice.label+' · 精力−1',cond:()=>valid()&&E().energy>=1,why:'精力不足或人物处境已变',f:()=>valid()?continuityChoose(t,choice.id):null})),
       {t:'改日再来接着谈',f:()=>{if(valid())t.snooze=S.turn+3;return '这件事仍留在人物近况里，可以到宫中再谈。';}}]};
 }
@@ -314,7 +314,7 @@ function continuityTick(){
     }
     if(t.kind==='family'&&!officialAlive(other)&&t.outcome!=='death'){
       if(t.role==='father'&&journalContentVersion()>=129)t.mourningKey=fatherMourningKey(c,other);
-      if(journalContentVersion()>=131&&t.role==='father'){delete t.lastShown;delete t.snooze;}
+      if(journalContentVersion()>=133&&t.role==='father'){delete t.lastShown;delete t.snooze;}
       t.outcome='death';t.stage='invitation';t.origin=S.turn;t.due=S.turn+1;delete t.choice;delete t.followup;
       t.cause=`${other.death?.d||dateStr()}，${other.name}去世。${other.death?.reason||''}先前有关差事的往来，如今也成了家中的旧事。`;
       (c.personalConcerns||={})[t.key]={kind:'grief',text:`仍在整理${other.name}留下的家事。`,source:t.id};

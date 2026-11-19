@@ -142,31 +142,44 @@ function registeredSelectionSister(c){
   const p=pick(people),g=natalConsortProfile(c,p);
   g.selectionNatalHost=c.id;g.kinNote=cName(c)+'的亲'+natalLabel(c,p);return g;
 }
-function canNominateRelative(p){
+function familyNomineeAvailable(p){
   return p?.sex==='f'&&p.alive&&!p.outsideFamilyOrigin&&!p.unconfirmedParentage&&(!p.outsideParentage||p.outsideParentage.status==='cleared')&&
-    !p.consortId&&!byId(p.id)&&!p.married&&!p.spouse&&!p.betrothal&&!p.widow&&!p.declined&&natalAge(p)>=15;
+    !p.consortId&&!byId(p.id)&&!p.married&&!p.spouse&&!p.betrothal&&!p.widow&&!p.declined;
+}
+function canNominateRelative(p){return familyNomineeAvailable(p)&&natalAge(p)>=15;}
+function familyNomineeNiece(c,p){
+  const mother=c.house?.relatives?.find(r=>r.id===(p.motherRelativeId??p.parentRelativeId));
+  return mother?.sex==='f'&&mother.id!==c.id&&!mother.natalCollateral&&!mother.motherRelativeId&&!mother.parentRelativeId;
+}
+function canRegisterFamilyNominee(c,p){
+  return familyNomineeAvailable(p)&&(natalAge(p)>=15||journalContentVersion()>=131&&familyNomineeNiece(c,p));
 }
 function familyNominationButton(c,p){
-  if(journalContentVersion()<84||!canNominateRelative(p))return '';
+  if(journalContentVersion()<84||!canRegisterFamilyNominee(c,p))return '';
   const pending=S.flags.familyNominees?.some(n=>n.relative===p.id),listed=S.cands.some(g=>g.id===p.id);
-  return `<button class="btn gold" onclick="A.nominateRelative(${c.id},${p.id})" ${pending||listed?'disabled':''}>${listed?'已在本届名册':pending?'已荐入下届选秀':'荐入下届选秀'}</button>`;
+  const label=listed?'已在本届名册':natalAge(p)<15?(pending?'已预登记 · 满十五岁后入册':'预登记选秀 · 满十五岁后入册'):
+    pending?'已荐入下届选秀':'荐入下届选秀';
+  return `<button class="btn gold" onclick="A.nominateRelative(${c.id},${p.id})" ${pending||listed?'disabled':''}>${label}</button>`;
 }
 A.nominateRelative=function(id,relative){
   if(modalOpen||journalContentVersion()<84)return;
   const e=natalEntry(id,relative);
-  if(!e||!canNominateRelative(e.p)||S.cands.some(g=>g.id===e.p.id))return;
+  if(!e||!canRegisterFamilyNominee(e.c,e.p)||S.cands.some(g=>g.id===e.p.id))return;
   const nominees=S.flags.familyNominees||=[];
   if(nominees.some(n=>n.relative===e.p.id))return;
   nominees.push({host:e.c.id,relative:e.p.id});
-  story(e.p,'奉旨登记下届选秀，家人替她收好了礼部递来的名帖。');
-  save('auto');render();toast(e.p.name+'已登记，下次开选时入册');
+  const early=natalAge(e.p)<15;
+  story(e.p,early?'礼部留存了选秀名帖，记明须满十五岁后才可入册。':'奉旨登记下届选秀，家人替她收好了礼部递来的名帖。');
+  save('auto');render();toast(e.p.name+(early?'已预登记，满十五岁后开选时入册':'已登记，下次开选时入册'));
 };
 function appendFamilyNominees(){
   const nominees=S.flags.familyNominees||[];
   delete S.flags.familyNominees;
-  for(const {host,relative} of nominees){
+  for(const nominee of nominees){
+    const {host,relative}=nominee;
     const e=natalEntry(host,relative);
-    if(!e||!canNominateRelative(e.p))continue;
+    if(!e||!canRegisterFamilyNominee(e.c,e.p))continue;
+    if(natalAge(e.p)<15){(S.flags.familyNominees||=[]).push(nominee);continue;}
     const {c,p}=e;
     let g=S.cands.find(g=>g.id===p.id);
     if(!g){g=natalConsortProfile(c,p);S.cands.push(g);}

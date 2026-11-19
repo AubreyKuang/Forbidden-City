@@ -2,7 +2,7 @@
    never from serialized JavaScript. Each command owns its random draws and answers.
    The saved world remains the authority; replay is checked before it is displayed. */
 const PalaceActions=(()=>{
-  const version=131, excluded=new Set(['save','dismissSaveError','load','rewind','downloadSave','readSaveFile','undoImport','newGame','officialsFilter','officialsBloc','kidsKind','chronicleFilter','chronicleSearch','chronicleClear','chronicleThread']);
+  const version=133, excluded=new Set(['save','dismissSaveError','load','rewind','downloadSave','readSaveFile','undoImport','newGame','officialsFilter','officialsBloc','kidsKind','chronicleFilter','chronicleSearch','chronicleClear','chronicleThread']);
   const actions=new Map();
   let blocked=false,snapshotRequested=false,journal=null,depth=0,replaying=false,step=null,cursor=0,answer=0,saving=0,fields=null;
   const clone=x=>JSON.parse(JSON.stringify(x));
@@ -30,7 +30,7 @@ const PalaceActions=(()=>{
     if(replaying){if(cursor>=step.rolls.length)throw Error('Missing recorded roll');return step.rolls[cursor++];}
     const value=Math.random();step.rolls.push(value);return value;
   }
-  function settle(previous){if(step?.name!=='start')trackConsortRanks(previous);reconcileDynastyGoals();reconcileConsortDistinctions();meetWhiteSpringMerchants();reconcileSelectionTiming();reconcileCousinFamilies();if(familyOriginsActive())reconcileFamilyOffices();courtFamilyLifeTick(previous);queenHeirFeelings(previous);familyRiseTick(previous);maternalTick();dowagerFamilyChanges(previous);palacePrayerChanges(previous);familyRememberDeathAges(previous);announceConsortPassings(previous);if(S){settleMarriedPrincessEstates();if(!blocked&&journalContentVersion()>=88)observeRitesVacancies();if(typeof haremStewardChanges==='function')haremStewardChanges();syncChildDisgrace();childMotherConsequences(previous);releaseMotherReunionChanges(previous);marriageBondConsequences(previous);gouyiCrownSettled(previous);imperialHeirStories(previous);imperialFertilityFollowups();jinyiweiFeudAlert(previous);if(journal?.version>=3)settleExhaustedMonth(previous);}}
+  function settle(previous){maternalWeddingChanges(previous);if(step?.name!=='start')trackConsortRanks(previous);reconcileDynastyGoals();reconcileConsortDistinctions();meetWhiteSpringMerchants();reconcileSelectionTiming();reconcileCousinFamilies();if(familyOriginsActive())reconcileFamilyOffices();courtFamilyLifeTick(previous);queenHeirFeelings(previous);familyRiseTick(previous);maternalTick();dowagerFamilyChanges(previous);palacePrayerChanges(previous);familyRememberDeathAges(previous);announceConsortPassings(previous);if(S){settleMarriedPrincessEstates();if(!blocked&&journalContentVersion()>=88)observeRitesVacancies();if(typeof haremStewardChanges==='function')haremStewardChanges();syncChildDisgrace();childMotherConsequences(previous);releaseMotherReunionChanges(previous);marriageBondConsequences(previous);gouyiCrownSettled(previous);imperialHeirStories(previous);imperialFertilityFollowups();jinyiweiFeudAlert(previous);if(journal?.version>=3)settleExhaustedMonth(previous);}}
   function input(selector){return fields?fields[selector]:$(selector)?.value;}
   function payload(){return {...S,pendingActions:journal||S?.pendingActions};}
   function run(name,args,fn){
@@ -46,7 +46,7 @@ const PalaceActions=(()=>{
     const current={name,args:clone(args),monthNotice:true,rolls:[],answers:[],saves:[],ui:clone(UI)};
     // A fresh decision in an unfinished older scene uses today's age rules on future replays.
     if(journal&&journal.version<130)current.familyAgeLimits=true;
-    if(journal&&journal.version<131&&name==='choose')current.familyLossAnswer=true;
+    if(journal&&journal.version<133&&name==='choose')current.familyLossAnswer=true;
     // A newly answered return notice can continue even if its journal predates the reunion.
     if(name==='recallHomeLeave'||(name==='choose'&&curEv?.luwanFrontierReturn))current.luwanFrontierReunion=true;
     if(name==='start'){
@@ -167,7 +167,7 @@ const PalaceActions=(()=>{
     get immortalDiscoveryNews(){return !journal||journal.immortalDiscoveryNews===true;},
     get exclusiveStoryOrigins(){return !journal||journal.exclusiveStoryOrigins===true;},
     get outerHouseholdUpdates(){return !journal||journal.outerHouseholdUpdates===true;},
-    get familyLossAnswer(){return !replaying||journal?.version>=131||step?.familyLossAnswer===true;},
+    get familyLossAnswer(){return !replaying||journal?.version>=133||step?.familyLossAnswer===true;},
     get familyAgeLimits(){return !replaying||journal?.version>=130||step?.familyAgeLimits===true;},
     get releaseVersion(){return version;},get contentVersion(){return journal?.version??version;},get legacy(){return journal?.version===2;},get immediateMonth(){return journal?.version===3&&!step?.monthNotice;},get blocked(){return blocked;},requestSnapshot(){snapshotRequested=true;},get busy(){return depth>0;},get replaying(){return replaying;},reset(){clearExhaustedMonthNotice();journal=null;blocked=false;}};
 })();

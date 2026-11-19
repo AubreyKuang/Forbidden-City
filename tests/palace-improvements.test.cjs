@@ -919,7 +919,7 @@ test('romance develops across months with two portraits, persistent memories and
   force(0);run(`palaceRomanceTick();assert.equal(pair.stage,2);pushEv(palaceRomanceEvent(pair));choose(0);drain();S.turn=pair.due;`);
   force(0);run(`palaceRomanceTick();assert.equal(pair.stage,3);pushEv(palaceRomanceEvent(pair));assert.match(curEv.text,/轻轻回握/);assert.match(curEv.text,/短暂相拥/);
     prince.spouse={name:'许静宜'};var decision=curEv.choices[2].f;var prestige=E().prestige;choose(2);drain();
-    assert.equal(pair.status,'exposed');assert.equal(prince.spouse.trust,35);assert.match(marriagePanel(prince),/夫妻信任/);assert.equal(E().prestige,prestige-3);
+    assert.equal(pair.status,'exposed');assert.equal(prince.spouse.trust,35);assert.match(marriagePanel(prince),/夫妻感情/);assert.equal(E().prestige,prestige-3);
     decision();assert.equal(E().prestige,prestige-3);assert.equal(palaceRomanceLeads().length,0);
     assert.ok(prince.story.some(s=>s.t.includes('私情被随侍察觉')));assert.ok(lady.story.some(s=>s.t.includes('私情被随侍察觉')));
     save('auto');var key=pair.key;A.load('auto');drain();assert.equal(S.palaceRomance.pairs[key].status,'exposed');`);
@@ -1095,7 +1095,7 @@ const marriedFixture=`var mother=harem()[0];var son=makeKid(mother,'m','承宁')
 test('married households keep distinct fixed personalities and create varied regular chronicles without modals',()=>{
   const {run}=boot();run(marriedFixture);run(`var profiles=JSON.stringify([son.marriageNature,son.spouse.marriageNature]);for(var month=1;month<=36;month++){S.turn++;marriedLifeTick();}assert.ok(son.household.history.filter(x=>x.type==='household_daily').length>=5);assert.equal(modalOpen,false);
     var notes=son.household.history.filter(x=>x.type==='household_daily');for(var i=1;i<notes.length;i++)assert.notEqual(notes[i].t,notes[i-1].t);assert.equal(JSON.stringify([son.marriageNature,son.spouse.marriageNature]),profiles);
-    var snapshot=JSON.stringify(S);marriedLifeTick();assert.equal(JSON.stringify(S),snapshot);S=JSON.parse(snapshot);son=kidById(son.id);assert.equal(JSON.stringify([son.marriageNature,son.spouse.marriageNature]),profiles);assert.match(householdPanel(son),/夫妻信任|府中和睦/);`);
+    var snapshot=JSON.stringify(S);marriedLifeTick();assert.equal(JSON.stringify(S),snapshot);S=JSON.parse(snapshot);son=kidById(son.id);assert.equal(JSON.stringify([son.marriageNature,son.spouse.marriageNature]),profiles);assert.match(householdPanel(son),/夫妻感情|府中和睦/);`);
 });
 
 test('both princess and prince households record pregnancy, births and counts once, with an adult and recovery gate',()=>{
