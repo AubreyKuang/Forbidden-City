@@ -2,7 +2,7 @@
    never from serialized JavaScript. Each command owns its random draws and answers.
    The saved world remains the authority; replay is checked before it is displayed. */
 const PalaceActions=(()=>{
-  const version=114, excluded=new Set(['save','dismissSaveError','load','rewind','downloadSave','readSaveFile','undoImport','newGame','officialsFilter','officialsBloc','kidsKind','chronicleFilter','chronicleSearch','chronicleClear','chronicleThread']);
+  const version=115, excluded=new Set(['save','dismissSaveError','load','rewind','downloadSave','readSaveFile','undoImport','newGame','officialsFilter','officialsBloc','kidsKind','chronicleFilter','chronicleSearch','chronicleClear','chronicleThread']);
   const actions=new Map();
   let blocked=false,snapshotRequested=false,journal=null,depth=0,replaying=false,step=null,cursor=0,answer=0,saving=0,fields=null;
   const clone=x=>JSON.parse(JSON.stringify(x));
@@ -41,7 +41,7 @@ const PalaceActions=(()=>{
     if(name==='start'){journal=null;blocked=false;}
     const before=S?clone(S):null,prior=journal?clone(journal):null,priorUI=clone(UI);
     if(!journal&&!modalOpen&&!Q.length){
-      journal={version,outerHouseholds:true,outerHouseholdUpdates:true,base:S?clone(world(S)):null,ui:clone(UI),steps:[]};
+      journal={version,outerHouseholds:true,outerHouseholdUpdates:true,exclusiveStoryOrigins:true,base:S?clone(world(S)):null,ui:clone(UI),steps:[]};
     }
     const current={name,args:clone(args),monthNotice:true,rolls:[],answers:[],saves:[],ui:clone(UI)};
     if(name==='start'){
@@ -61,7 +61,11 @@ const PalaceActions=(()=>{
       try{if(S){settle(before);if(modalOpen)render();}}
       finally{globalThis.confirm=ask;save=persist;depth--;step=null;}
       if(journal)journal.pending=stamp();
-      if(!modalOpen&&!Q.length)journal=null;
+      if(!modalOpen&&!Q.length){
+        const oldOrigins=journal&&!journal.exclusiveStoryOrigins;
+        journal=null;
+        if(oldOrigins)reconcileStoryConsortOrigins();
+      }
       if(S&&!replaying){
         const ok=save('auto');
         // Only undo when writing would overwrite something newer or a save we must keep intact.
@@ -78,6 +82,7 @@ const PalaceActions=(()=>{
         if(snapshotRequested){snapshotRequested=false;if(ok)snapshotYear();}
         // A kept decision (saved, or held in play while storage is unavailable) may still reach the month's end.
         if(ok||!guarded)syncExhaustedMonthNotice();else clearExhaustedMonthNotice();
+        if(!guarded)dismissInvalidStoryOrigin();
       }
     }
   }
@@ -144,6 +149,7 @@ const PalaceActions=(()=>{
   }
   return {random,input,keepInput,payload,run,restore,valid,install,abandon,
     get outerHouseholds(){return !journal||journal.outerHouseholds===true;},
+    get exclusiveStoryOrigins(){return !journal||journal.exclusiveStoryOrigins===true;},
     get outerHouseholdUpdates(){return !journal||journal.outerHouseholdUpdates===true;},
     get releaseVersion(){return version;},get contentVersion(){return journal?.version??version;},get legacy(){return journal?.version===2;},get immediateMonth(){return journal?.version===3&&!step?.monthNotice;},get blocked(){return blocked;},requestSnapshot(){snapshotRequested=true;},get busy(){return depth>0;},get replaying(){return replaying;},reset(){clearExhaustedMonthNotice();journal=null;blocked=false;}};
 })();

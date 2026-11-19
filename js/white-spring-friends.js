@@ -150,11 +150,16 @@ function whiteSpringFamilySenders(c){
   const h=houseOf(c);if(!h)return [];
   return ['father',...brotherRoles(h)].map(role=>({role,p:h[role],h})).filter(({p})=>officialAlive(p)&&!p.exiled&&!p.dismissed&&!p.away&&!p.commission&&!p.diplomaticJourney);
 }
+function whiteSpringFamilyGiftPause(c,p){
+  if(mourningActive())return '宫中正在守丧，等这一段日子过去再约。';
+  if([c,p].some(person=>['悲恸','心如死灰'].includes(xinOf(person))))return '她们正有沉重心事，等情绪安稳些再约。';
+  return '';
+}
 function whiteSpringFamilyParcelTick(){
-  if(journalContentVersion()<114||!S||S.over)return;
+  if(journalContentVersion()<115||!S||S.over)return;
   for(const c of S.consorts){
     const tie=c.whiteSpringFriend,p=byId(tie?.princess);
-    if(!admiresWhiteSpring(c)||!p||!whiteSpringFriends(c,p)||!whiteSpringCanMeet(c)||!whiteSpringCanMeet(p)||friendshipTense(c,p)||relGet(c,p)<30||
+    if(!admiresWhiteSpring(c)||!p||!whiteSpringFriends(c,p)||!whiteSpringCanMeet(c)||!whiteSpringCanMeet(p)||whiteSpringFamilyGiftPause(c,p)||friendshipTense(c,p)||relGet(c,p)<30||
       tie.familyParcel||S.turn-(tie.met??S.turn)<3||S.turn-(tie.lastFamilyParcel??-99)<18)continue;
     const used=tie.familyGiftHistory||[],available=Object.keys(WHITE_SPRING_FAMILY_GIFTS).filter(key=>!used.includes(key));
     if(!available.length)continue;
@@ -169,8 +174,8 @@ function whiteSpringFamilyParcelTick(){
   }
 }
 function whiteSpringFamilyGiftReady(c,p,tie){
-  return journalContentVersion()>=114&&!!tie?.familyParcel&&!!p&&!S.over&&whiteSpringFriends(c,p)&&whiteSpringCanMeet(c)&&whiteSpringCanMeet(p)&&
-    tie.last!==S.turn&&!friendshipTense(c,p)&&relGet(c,p)>=30&&!!WHITE_SPRING_FAMILY_GIFTS[tie.familyParcel.key];
+  return journalContentVersion()>=115&&!!tie?.familyParcel&&!!p&&!S.over&&whiteSpringFriends(c,p)&&whiteSpringCanMeet(c)&&whiteSpringCanMeet(p)&&
+    tie.last!==S.turn&&!whiteSpringFamilyGiftPause(c,p)&&!friendshipTense(c,p)&&relGet(c,p)>=30&&!!WHITE_SPRING_FAMILY_GIFTS[tie.familyParcel.key];
 }
 A.whiteSpringFamilyGift=function(id){
   const c=byId(id),tie=c?.whiteSpringFriend,p=byId(tie?.princess),parcel=tie?.familyParcel;
@@ -202,11 +207,14 @@ function whiteSpringFriendPanel(person){
     const tie=c.whiteSpringFriend,p=byId(tie?.princess);
     if(!p||!whiteSpringFriends(c,p)||!whiteSpringCanMeet(c)||!whiteSpringCanMeet(p))continue;
     const companion=isPrincess?c:p;
-    if(journalContentVersion()>=114&&tie.familyParcel){
+    if(journalContentVersion()>=115&&tie.familyParcel){
       const parcel=tie.familyParcel,gift=WHITE_SPRING_FAMILY_GIFTS[parcel.key];
-      if(gift)rows.push(`<p>${esc(fullName(c))}收到${esc(parcel.relation+parcel.sender)}此前送来的${esc(gift.name)}，想与阿依慕分享。</p><button class="btn jade sm" onclick="A.whiteSpringFamilyGift(${c.id})" ${whiteSpringFamilyGiftReady(c,p,tie)?'':'disabled'}>带着${esc(gift.name)}去见阿依慕</button>`);
+      if(gift){
+        const reason=whiteSpringFamilyGiftPause(c,p)||(tie.last===S.turn?'这月已经相聚，下月可再约。':friendshipTense(c,p)||relGet(c,p)<30?'两人近来疏远，待交情转好再约。':'');
+        rows.push(`<p>${esc(fullName(c))}收到${esc(parcel.relation+parcel.sender)}此前送来的${esc(gift.name)}，想与阿依慕分享。</p><button class="btn jade sm" onclick="A.whiteSpringFamilyGift(${c.id})" ${whiteSpringFamilyGiftReady(c,p,tie)?'':'disabled'}>带着${esc(gift.name)}去见阿依慕</button>${reason?`<p class="hint">${esc(reason)}</p>`:''}`);
+      }
     }
-    if(journalContentVersion()>=114&&tie.familyGiftsGiven?.length){
+    if(journalContentVersion()>=115&&tie.familyGiftsGiven?.length){
       const given=tie.familyGiftsGiven.map(item=>WHITE_SPRING_FAMILY_GIFTS[item.key]?.name).filter(Boolean);
       if(given.length)rows.push(`<p class="hint">曾亲手送给阿依慕：${given.map(esc).join('、')}。</p>`);
     }

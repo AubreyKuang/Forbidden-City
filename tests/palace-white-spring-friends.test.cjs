@@ -102,8 +102,8 @@ test('parcels require a real available family sender, an established friendship 
 test('a parcel remains hers when the recipient is absent or a proposed gift is deferred',()=>{
  const w=setup();w.run(`admit(merchant);admit(ay);drain();S.turn+=3;Math.random=()=>0;whiteSpringFamilyParcelTick();choose(0);drain();A.whiteSpringFamilyGift(merchant.id);var ev=curEv;ay.cold=true;assert.equal(ev.valid(),false);assert.equal(ev.choices[0].f(),null);assert.ok(merchant.whiteSpringFriend.familyParcel);assert.equal(entries(ay,'白泉故乡礼'),0);`);
 });
-test('a v113 pending action cannot create a new family parcel',()=>{
- const w=setup();w.run(`admit(merchant);admit(ay);drain();S.turn+=3;var prior=Object.getOwnPropertyDescriptor(PalaceActions,'contentVersion');Object.defineProperty(PalaceActions,'contentVersion',{get:()=>113,configurable:true});Math.random=()=>0;whiteSpringFamilyParcelTick();assert.equal(merchant.whiteSpringFriend.familyParcel,undefined);Object.defineProperty(PalaceActions,'contentVersion',prior);`);
+test('a v114 pending action cannot create a new family parcel',()=>{
+ const w=setup();w.run(`admit(merchant);admit(ay);drain();S.turn+=3;var prior=Object.getOwnPropertyDescriptor(PalaceActions,'contentVersion');Object.defineProperty(PalaceActions,'contentVersion',{get:()=>114,configurable:true});Math.random=()=>0;whiteSpringFamilyParcelTick();assert.equal(merchant.whiteSpringFriend.familyParcel,undefined);Object.defineProperty(PalaceActions,'contentVersion',prior);`);
 });
 test('a real month-end parcel and the proposed gift survive refresh without duplicating family records',()=>{
  let w=setup();w.run(`admit(merchant);admit(ay);drain();S.turn+=3;E().health=100;E().people=90;E().treasury=5000;var oldRandom=Math.random,seed=5;Math.random=()=>new Error().stack.includes('whiteSpringFamilyParcelTick')?0:((seed=seed*16807%2147483647)/2147483647);PalaceActions.reset();A.endMonth();
@@ -115,4 +115,13 @@ test('family gifts have a cooldown and never repeat the same object',()=>{
  const w=setup();w.run(`admit(merchant);admit(ay);drain();S.turn+=3;Math.random=()=>0;
  for(const expected of ['scarf','bird','glass']){whiteSpringFamilyParcelTick();assert.equal(merchant.whiteSpringFriend.familyParcel.key,expected);choose(0);drain();A.whiteSpringFamilyGift(merchant.id);choose(0);drain();S.turn+=18;}
  assert.deepEqual(Array.from(merchant.whiteSpringFriend.familyGiftHistory),['scarf','bird','glass']);whiteSpringFamilyParcelTick();assert.equal(merchant.whiteSpringFriend.familyParcel,undefined);assert.equal(entries(merchant,'白泉故乡礼'),3);assert.equal(entries(ay,'白泉故乡礼'),3);`);
+});
+test('an already received parcel remains real even if its sender later dies',()=>{
+ const w=setup();w.run(`admit(merchant);admit(ay);drain();S.turn+=3;var father=houseOf(merchant).father;Math.random=()=>0;whiteSpringFamilyParcelTick();choose(0);drain();father.alive=false;
+ A.whiteSpringFamilyGift(merchant.id);assert.match(curEv.text,/此前随家书送来/);choose(0);drain();assert.equal(merchant.whiteSpringFriend.familyGiftsGiven[0].senderId,father.id);assert.equal(entries(merchant,'白泉故乡礼'),1);assert.equal(entries(ay,'白泉故乡礼'),1);`);
+});
+test('deep grief defers a cheerful reunion without deleting the gift or inventing a meeting',()=>{
+ const w=setup();w.run(`admit(merchant);admit(ay);drain();S.turn+=3;Math.random=()=>0;whiteSpringFamilyParcelTick();choose(0);drain();var p=merchant.whiteSpringFriend.familyParcel;ay.xin={k:'悲恸'};
+ assert.equal(whiteSpringFamilyGiftReady(merchant,ay,merchant.whiteSpringFriend),false);assert.match(whiteSpringFriendPanel(merchant),/沉重心事/);A.whiteSpringFamilyGift(merchant.id);assert.equal(modalOpen,false);assert.equal(merchant.whiteSpringFriend.familyParcel,p);assert.equal(entries(ay,'白泉故乡礼'),0);
+ ay.xin={k:'平和'};A.whiteSpringFamilyGift(merchant.id);assert.match(curEv.title,/白泉旧缘/);choose(0);drain();assert.equal(entries(ay,'白泉故乡礼'),1);`);
 });

@@ -3,7 +3,7 @@
 function oldFriendEligible(g,c){
   if(journalContentVersion()>=32&&!plausibleOldFriendPair(g,c))return false;
   return inPalace(c)&&!c.maid&&c.age>=18&&g.age>=18&&!g.kin?.[c.id]&&!c.kin?.[g.id]&&clanKey(g)!==clanKey(c)&&
-    !g.timeTraveler&&!c.timeTraveler&&!g.rescue&&!c.rescue&&Math.abs(g.fam.p-c.fam.p)<=40&&
+    !timeTravelerIdentity(g)&&!timeTravelerIdentity(c)&&!g.rescue&&!c.rescue&&Math.abs(g.fam.p-c.fam.p)<=40&&
     !/西域|东瀛|海西/.test(g.fam.t+c.fam.t)&&(c.oldCourtFriends||[]).length<3;
 }
 function makeOldFriendTie(g,c){

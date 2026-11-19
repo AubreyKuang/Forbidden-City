@@ -363,7 +363,7 @@ function storyCastPalaceEvent(c){
   }
   if(key==='chuwan'){
     if(step===0){
-      if(journalContentVersion()<114)return scene('楚晚 · 方姓家书','她仍用旧时的称呼写信问照养人是否吃得下饭。'+(empress()?'中宫听说她这几日病了，悄悄送来药，又问旧臣可曾托人来过。':'照养人催她生病就要吃药。'),
+      if(journalContentVersion()<115)return scene('楚晚 · 方姓家书','她仍用旧时的称呼写信问照养人是否吃得下饭。'+(empress()?'中宫听说她这几日病了，悄悄送来药，又问旧臣可曾托人来过。':'照养人催她生病就要吃药。'),
         storyCastChoice('安排按旧址送信',()=>{const q=empress();if(q&&q!==c)story(q,'遣人悄悄给楚晚送药，另问她有无收到旧臣捎来的口信。');return advance('仍旧给照养人写方姓名的平安信，第一次在宫中安心睡了一夜。');}));
       const queen=empress(),other=queen&&queen!==c&&inPalace(queen)?queen:null;
       const ill=()=>c.hp<65||c.illnessRecovery?.until>S.turn;

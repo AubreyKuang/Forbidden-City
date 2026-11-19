@@ -22,7 +22,7 @@ const NIGHT_VOICES={
  好学:['她带着一个想了几日的问题，听过你的解释，又提出自己的疑处，越谈越有精神。','她把今日新学的曲子轻轻哼了一段，错了便笑着重来，没有假作从不失手。','她终于舍得把书合上，说也想知道你读书以外喜欢做什么。'],
  孤高:['她不爱侍候的排场，只请人留一盏灯。说到一段自己真正喜欢的文字时，才肯多讲几句。','你们对半句诗各有见解，她没有因你的身份改口；你认真听完，她也愿意听完你的理由。','她平日不肯示人的小稿，今夜只给你看了一页。你应下不传出去，她才把纸展平。','她问你能否让今夜安静些。你屏退多余侍从，她低声道谢，神情比迎送时松弛了。']
 };
-function nightVoice(c){
+function legacyNightVoice(c){
  const key=isSolitary(c)?'孤高':c.trait,pool=NIGHT_VOICES[key]||NIGHT_VOICES.沉静;
  const recent=c.nightVoiceHistory||[],choices=pool.map((text,i)=>({id:key+':'+i,text})).filter(x=>!recent.slice(-2).includes(x.id));
  const line=pick(choices.length?choices:pool.map((text,i)=>({id:key+':'+i,text})));
@@ -37,4 +37,131 @@ function nightVoice(c){
  // Grief and serious illness change the whole evening, not only its opening.
  const body=['悲恸','心如死灰'].includes(xinOf(c))?'你陪她坐着，听她愿意说出的那一点旧事。沉默时也不催促。':c.hp<35?'你让她按自己的体力休息，只说了几句近况，没有强撑歌舞或笑意。':line.text;
  return opening+(opening?'\n':'')+body;
+}
+
+// Three everyday conversations and two quieter ones for each named consort.
+const STORY_NIGHT_VOICES={
+ gouyi:[
+  '赵令仪把橘皮一点点剥成一朵花，放到你案前。“在河间我最会这个。怎么进了京，人人只肯讲我那只手，却没人肯给我个橘子？”',
+  '说起河间的冬天，赵令仪拿两只茶盏摆出旧屋的方位。“太阳落到这只杯子后头，我娘就喊我收衣了。”你挪错一只，她笑着摆回来。',
+  '赵令仪请你念一遍她的名字。你念到“仪”，她轻轻应了一声：“这样好。外头那套称呼，我今日听够了。”',
+  '赵令仪把两手揣进袖里。“今晚上，咱们先不讲河间的奇事，好么？”你点头，她才慢慢说起自己想说的话。',
+  '赵令仪请你把帘子放下一半。她只想坐一会儿，也很高兴你肯等她自己开口。'],
+ hongjian:[
+  '薛红笺递来两张颜色相近的笺纸，请你挑一张。你挑中了偏深的，她迎着灯看：“巧了，白天我还嫌它染过了头。给你留着写回信吧。”',
+  '薛红笺读到自己的一句诗，故意空出最后一个字让你填。你的字和她的都不押韵，两人只好另起一行。',
+  '“你认得我的落款，认不认得我的笔迹？”薛红笺用左手写了半句，墨还没干，自己先露了笑。',
+  '薛红笺今夜没铺纸，只把砚台洗净搁在窗下。“今日一句也写不出。你若坐得住，就陪我听听外头。”',
+  '薛红笺把一张染花了的笺翻到背面，写了个小小的“歇”字。你也搁下手边的东西，陪她歇了这一更。'],
+ qingyi:[
+  '沈清漪学着小时候的口气喊了你一声，自己先笑起来。“在姑苏想过许多回重逢该说什么，真见着了，还是这句最顺口。”',
+  '沈清漪问你还记不记得从前躲雨的屋檐。你记得雨，她记得檐下那碗酸梅汤，两人的旧事这才凑全。',
+  '你提起“京城第一美人”，沈清漪把快凉的栗子塞进你手里：“这句谁都会说。你且说说，我从前爱吃糖炒的，还是水煮的？”',
+  '沈清漪提起姑苏，半句话又停了。你替她续了茶。过了一阵，她才说：“幸好今夜不用把这些年一口气讲完。”',
+  '沈清漪用家乡话低低叫了你一声。你也照旧应她。她把帕子叠好，没再勉强自己找话。'],
+ luwan:[
+  '陆绾拉过你的手，在掌心点出几下轻重：“听马走路，这一下总比旁的轻，多半该看看左后蹄。”你跟着敲了一遍，她说这回听对了。',
+  '灯芯爆响，陆绾说起北苑头一回给小马备鞍，鞍都系好了，马却把她的帽子叼走了。“这桩败仗，可别替我写进军报。”',
+  '陆绾把一截旧缰绳打了个结，让你试着单手解开。见你低头琢磨，她也凑过来：“别同它较劲，留一点余地就开了。”',
+  '陆绾解下护腕，搁在桌角。“今天不想讲边事。”你把茶推过去，她靠着椅背，终于让肩膀松下来。',
+  '陆绾说北地夜里听得见马嚼草，她睡不着时就听那个。你把窗推开一点，陪她听了一阵宫墙外的树声。'],
+ ayimu:[
+  '阿依慕把两只空盏倒扣过来，在盏底轻敲两拍。“到这里该停一下。”你果然停住了，她眼睛一亮：“连王兄小时候都抢过这一拍。”',
+  '阿依慕教你用白泉话说“好梦”。你把尾音念高了，她笑着摇头，拿手指在空中画了一道慢慢落下去的弧。',
+  '阿依慕解下袖边一枚银铃，放在你手里。你摇得太响，她便教你隔着衣袖轻轻一晃：“在家里，隔一道毡帘也认得谁回来了。”',
+  '阿依慕轻声问：“今晚能用家里的话说么？有一句，我总译得不像。”你听她用白泉话说完，才问她愿不愿意慢慢讲给你听。',
+  '阿依慕把银铃裹进帕子，今夜想让它静一静。你问白泉夜里看得见哪颗星，她隔着窗纸，给你指了个方向。'],
+ chuwan:[
+  '方晚把书翻到一处折角，问你更喜欢哪条批注。你看了半晌，才听出一条是她去年写的，一条是她今日同自己争的。',
+  '方晚用指尖在桌上写了个“晚”字。“小时候学写自己的名字，最怕这一笔挤到外头去。”她让你也写一个，认真比了比。',
+  '你替方晚展平一张卷了角的纸，她却把折痕留了下来：“这是我自己翻到这一页的记号。下回借你读，看你会停在哪一页。”',
+  '方晚把旧册放回匣底。“今晚我想说的，册子上没有。”你听她讲起照养她的人是怎样唤她回家吃饭的。',
+  '方晚请你读几行给她听。读到一半，她说这一页已经够了，仍把书留在你手边。'],
+ suheng:[
+  '苏蘅换了两次炉灰才放进一小片香。“今天让你猜个容易的。”你猜是花，她笑着揭了底：“是晒过的橘皮。姑苏人家窗台上就有。”',
+  '苏蘅拿两张纸裹同一味香，请你闻闻。你说左边淡些，她展开纸给你看：“是纸厚些。以前店里来客，我总得先问他要带多远。”',
+  '苏蘅说起姑苏铺子里那架总偏一点的秤。“我没舍得丢。谁手上短了分量，它可是第一个知道的。”她拿茶匙比给你看。',
+  '苏蘅把香炉盖上，说今晚只想闻热茶的气味。你让人添了水，她捧着杯子，才慢慢开了口。',
+  '苏蘅低头折好一张包香的纸，又把它展开。“以前在铺子里，心乱时总这么做。”你递过去另一张，她教你把四角折齐。'],
+ xiaoman:[
+  '岑小满借来一枚铜钱，约你盯紧她的左手。待你翻遍她两只手，她才把你自己的茶碟往前一推：“今夜这场，就收一口茶钱。”',
+  '岑小满说起头回在灯市收赏，钱掉进砖缝，满场的人都替她找。她用手一比：“那天最好笑的戏，还是散场以后那出。”',
+  '岑小满教你打一个响指，说声音脆了才压得住街头的嘈杂。你试了三回，她把最后半块糕推给你，算你的头一份赏钱。',
+  '岑小满把铜钱平放在桌上：“今夜歇场，陛下肯不肯陪个没戏看的？”你也搁下茶盖，听她说起灯市散场后的那条小巷。',
+  '岑小满捧着茶，难得没有接话。你也没有催她逗趣。茶凉了一点，她才问：“坐到这更打完，成不成？”']
+};
+const LOW_NIGHT_VOICES=[
+ '她把杯中浮起的茶梗拨到一边，低声说今日心里有点乱。你等着她挑一件愿意讲的事。',
+ '她问能否暂且不开窗，外头脚步声听得人心烦。窗掩上后，她才和你同坐到灯下。',
+ '她端着热茶暖了暖手：“若我说得没头没尾，也肯听么？”你点头，让她从记得最清的那一处讲起。'
+];
+const NIGHT_OPENINGS={
+ first:['这是她初次奉召。她刚要依礼问安，你请她先坐，慢慢说。','这是她初次奉召。茶房备了两样茶，你问她平日爱喝哪一样。'],
+ waited:['这是她初次奉召。进宫已满一年，她早已熟悉宫里的更声，却是头一回在这里听见。','这是她初次奉召。候了这么久，当初想好的那番问安词竟没用上。你给她斟了杯茶，听她从今天说起。'],
+ grief:['她仍在伤怀，只请你今晚坐一会儿。','她仍在伤怀。你让人把候着的乐工遣回，等她自己开口。'],
+ ill:['她今夜精神短些，你让人把靠垫放近，照她舒服的姿势坐。','她说今日容易乏，你应她一声，留下温水，让她随时歇息。'],
+ mother:['她惦记着母亲的病，坐下时还听着廊外，可有送家信的脚步。','她开口先问娘家的消息。你听她把担心的事一件件说完。'],
+ away:['久未这样相坐，她先问你还记不记得她惯用的那只杯子。','隔了好些个月，她对着你打量了片刻：“有些话，还是当面说容易。”'],
+ early:['入宫还没满一年，她已认得送茶宫人的脚步，门还没开就听出来了。','提到进宫后头一个月，她笑着数了数，那时连回自己住处的路都要多问一声。'],
+ settled:['在宫里住满了四季，她知道哪个窗扇入夜会响，顺手便扣好了。','说起入宫那年用过的物件，她指了指手边的杯子，原来一直留着。'],
+ veteran:['在宫中已过十年，她请你猜这扇窗外换过几回树。两人各自记起了不同的一年。','她说刚进宫时廊下也挂这样的灯。十来年下来，灯穗的结法倒是换过几回。'],
+ young:['她朝帘外看了一眼，问明日若有空，可否借本新书自己挑着读。','她有件才学会的小事想讲，话到嘴边改了两回，终于挑了自己最喜欢的讲法。'],
+ middle:['她将手边的事务暂且收好，给自己也斟了一杯：“剩下的，明早再理。”','她挑了个坐着最舒服的位置，请你尝一口她自己惯喝的茶。'],
+ mature:['她提起年轻时曾信以为真的一句话，笑问你如今还信不信。','她记得一支年轻时流行的小调，哼到中间停下来，等你替她接下一句。'],
+ joyful:['她今日心里快活，听到门响，嘴角便先弯了起来。','她把另一只茶杯也往灯下挪挪：“来得巧，我正想找个人说说话。”'],
+ low:['她这会儿没多少精神应酬，你把闲杂的人先遣了出去。','她迟迟没端起茶。你问今夜想怎样过，她说：“慢一点就好。”'],
+ close:['她给你留了惯坐的位置，自己也像往常一样坐得很自在。','你刚伸手，她已经把茶杯推了过来。两人一笑，省了那些问候。'],
+ shy:['她说了几句客套话才敢抬眼，你请她慢慢讲。','她坐得拘谨，你把茶点推近些，让她挑个自在的话头。']
+};
+function chooseNightPassage(c,field,groups,indexFor){
+ const recent=c[field]||[];
+ const entries=groups.flatMap(([key,pool])=>pool.map((text,i)=>({id:key+':'+i,text}))).filter(e=>e.text);
+ const fresh=entries.filter(e=>!recent.slice(-2).includes(e.id));
+ const alternatives=fresh.length?fresh:entries.filter(e=>e.id!==recent.at(-1));
+ const pool=alternatives.length?alternatives:entries;
+ const chosen=pool[indexFor(pool.length)];
+ c[field]=[...recent,chosen.id].slice(-2);
+ return chosen.text;
+}
+function nightVoice(c){
+ if(journalContentVersion()<114)return legacyNightVoice(c);
+ // Split the original single dialogue roll so unrelated outcomes keep their random draws.
+ let roll=R();
+ const indexFor=size=>{
+   const scaled=roll*size,index=Math.floor(scaled);
+   roll=scaled-index;
+   return index;
+ };
+ const mind=xinOf(c),first=!c.nights,months=Number.isInteger(c.enteredAt)?S.turn-c.enteredAt:null;
+ const grief=['悲恸','心如死灰'].includes(mind),tired=c.hp<35,motherIll=homeMother(c)?.status==='ill';
+ const low=['忧心','惶恐','清静被扰','怨恨','委屈','思念','嫉恨'].includes(mind)||c.mood<35;
+ const bright=['欢喜','释然','感激'].includes(mind)||c.mood>=75;
+ const firstKey=months>=12?'waited':'first';
+ const openings=[];
+ if(grief||tired||motherIll)openings.push(grief?'grief':tired?'ill':'mother');
+ else if(first)openings.push(firstKey);
+ else if(low)openings.push('low');
+ else{
+   if(months!==null)openings.push(months>=120?'veteran':months>=12?'settled':'early');
+   if(Number.isFinite(c.age))openings.push(c.age<=22?'young':c.age<40?'middle':'mature');
+   if(bright)openings.push('joyful');
+   if(c.aff<30||c.aff>=75)openings.push(c.aff<30?'shy':'close');
+   if(S.turn-(c.lastPersonalAttention??S.turn)>=6)openings.push('away');
+ }
+ const opener=openings.length?chooseNightPassage(c,'nightOpeningHistory',openings.map(k=>[k,NIGHT_OPENINGS[k]]),indexFor):'';
+ const storyKey=storyQueenKey(c),signature=STORY_NIGHT_VOICES[storyKey],quiet=grief||tired||motherIll||low;
+ let body;
+ if(signature){
+   body=chooseNightPassage(c,'nightVoiceHistory',[[storyKey+(quiet?'-quiet':''),quiet?signature.slice(3):signature.slice(0,3)]],indexFor);
+   if(storyKey==='chuwan')body=body.replace('方晚',storyCastName('chuwan'));
+ }else if(grief||tired){
+   body=grief?'你陪她坐着，听她愿意说出的那一点旧事。沉默时也不催促。':'你让她按自己的体力休息，只说了几句近况，没有强撑歌舞或笑意。';
+ }else if(low||motherIll){
+   body=chooseNightPassage(c,'nightVoiceHistory',[['quiet',LOW_NIGHT_VOICES]],indexFor);
+ }else{
+   const trait=isSolitary(c)?'孤高':c.trait,pool=NIGHT_VOICES[trait]||NIGHT_VOICES.沉静;
+   const eligible=first?pool.map(t=>/上回|上次|近日为何少来/.test(t)?null:t):pool;
+   body=chooseNightPassage(c,'nightVoiceHistory',[[trait,eligible]],indexFor);
+ }
+ return [first&&(grief||tired||motherIll)?'这是她初次奉召。':'',opener,body].filter(Boolean).join('\n');
 }

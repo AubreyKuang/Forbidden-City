@@ -14,7 +14,7 @@ function storyQueenCoronationEvent(c){
  if(journalContentVersion()<98||!inPalace(c)||c.rank!==8)return null;
  const key=storyQueenKey(c),base=STORY_QUEEN_SCENES[key];if(!base)return null;
  let data=base,visitingPrincess=null;
- if(journalContentVersion()>=114&&key==='ayimu'){
+ if(journalContentVersion()>=115&&key==='ayimu'){
   const visiting=estatePrincesses().find(k=>k.mom===c.id&&whiteSpringInPalace(k)&&!k.gone&&!k.jailed&&!k.templeStay&&
     whiteSpringGrandchildren(k).some(child=>child.id===k.household.whiteSpringVisit.child));
   visitingPrincess=visiting;

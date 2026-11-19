@@ -7,8 +7,14 @@ const TRAVELER_PASTS=[
   ['人造春天','我住的城里，花期可以由机器安排。那日系统报了一个错，春天忽然变成这里的深秋。'],
   ['归途断讯','我坐的车不需人驾。半途时间像折了一下，联络家人的讯息从此没有回声。']
 ];
+function timeTravelerIdentity(c){
+  return randomConsortOriginsAllowed(c)?c?.timeTraveler:null;
+}
+function travelerIdentityTag(c){
+  return PalaceActions.exclusiveStoryOrigins&&timeTravelerIdentity(c)?.known?'<span class="tag y">天外来客</span>':'';
+}
 function initTimeTraveler(c,force=false){
-  if(!c||c.maid||c.sex||c.age<16||c.pastLife)return null;
+  if(!c||!randomConsortOriginsAllowed(c)||c.maid||c.sex||c.age<16||c.pastLife)return null;
   if(c.timeTraveler)return c.timeTraveler;
   if(c.travelerChecked&&!force)return null;
   c.travelerChecked=true;
@@ -18,10 +24,10 @@ function initTimeTraveler(c,force=false){
   return c.timeTraveler={version:1,century,past:Math.floor(random()*3)+(century===22?3:0),known:false,
     closed:false,spoken:0,lastSpoke:null,pending:null,history:[],peers:[]};
 }
-function travelerEligible(c){return !!(inPalace(c)&&!c.maid&&c.age>=16&&(c.hp??100)>=40&&!S.over&&c.timeTraveler);}
+function travelerEligible(c){return !!(inPalace(c)&&!c.maid&&c.age>=16&&(c.hp??100)>=40&&!S.over&&timeTravelerIdentity(c));}
 function travelerRash(c){return !['聪慧','持重','城府'].includes(c.trait)&&(c.talent+c.scheme)/2<45;}
 function travelerSelectionBlurt(c){
-  if(!c?.timeTraveler||!travelerRash(c)||c.talent>40||c.scheme>=30)return null;
+  if(!timeTravelerIdentity(c)||!travelerRash(c)||c.talent>40||c.scheme>=30)return null;
   const century=c.timeTraveler.century===21?'二十一':'二十二';
   return {stage:'嬷嬷才报完名字，她便顾不得行礼，急急向前一步。宫人要提醒，她反倒把声音抬得更高。',
     line:`我不是这里的人！我来自公元${century}世纪，是时空乱流把我带来的。你们这里……是不是 AI、人工智能造出来的世界？有人能送我回去吗？`};
@@ -73,7 +79,7 @@ function finishTravelerReply(c,kind){
 function travelerConfessionEvent(c){
   if(!travelerReady(c))return null;const t=c.timeTraveler;
   const valid=()=>travelerReady(c);
-  return {title:travelerRash(c)?'不属于此世的话':'灯下的来处',por:c,present:[c],valid,cooldown:6,
+  return {title:travelerRash(c)?'不属于此世的话':'灯下的来处',randomOriginCast:[c],por:c,present:[c],valid,cooldown:6,
     onShow:()=>{if(!t.pending){t.pending='confession';t.known=true;S.flags.lastTravelerEvent=S.turn;save('auto');}},
     text:travelerConfessionText(c),choices:[
       {t:'相信她的来处，答应替她保密',f:()=>finishTravelerReply(c,'believe')},
@@ -90,7 +96,7 @@ function travelerConfessionEvent(c){
 }
 function travelerCustodyEvent(c){
   if(!travelerReady(c))return null;
-  return {title:'收押前再问',por:c,present:[c],danger:true,valid:()=>travelerReady(c),text:`只因这段异世之言，将${fullName(c)}押入冷宫？${c.rank===8?'这也意味着废去后位。':''}\n她会记住这次处置，不再向你倾诉这些往事。`,choices:[
+  return {title:'收押前再问',randomOriginCast:[c],por:c,present:[c],danger:true,valid:()=>travelerReady(c),text:`只因这段异世之言，将${fullName(c)}押入冷宫？${c.rank===8?'这也意味着废去后位。':''}\n她会记住这次处置，不再向你倾诉这些往事。`,choices:[
     {t:'押入冷宫',f:()=>{if(!travelerReady(c))return null;const t=c.timeTraveler;
       t.pending=null;t.known=true;t.closed=true;t.reaction='custody';t.lastSpoke=S.turn;t.spoken++;
       travelerRecord(c,'异世自述未获相信，被押入冷宫。从此不再向陛下讲述来处。',-1);
@@ -107,7 +113,7 @@ function travelerRitualEvent(c){
     cchg(c,{mood:ritual?5:8,aff:ritual?-2:3});
     const line=ritual?'奉旨由国师行禳解祈安之仪。仪式过后仍记得异世旧事，国师没有据此断言她有邪祟。':'国师听完异世自述，劝陛下先容她安居，不必急于以邪祟定名。';
     travelerRecord(c,line,ritual?-.1:.5);save('auto');return line;};
-  return {title:'国师问来处',cast:[daoMaster(),c],present:[c],valid,text:`${daoMaster().name}国师听完，先问她是否睡得安稳，又问她最惦念谁。\n“贫道可以设一场禳解祈安之仪，却不能只凭几句异言，便断她有邪祟。她说的来处，贫道也不曾见过。”\n她低声说：“我怕的不是鬼，是再也见不到家人。”`,choices:[
+  return {title:'国师问来处',randomOriginCast:[c],cast:[daoMaster(),c],present:[c],valid,text:`${daoMaster().name}国师听完，先问她是否睡得安稳，又问她最惦念谁。\n“贫道可以设一场禳解祈安之仪，却不能只凭几句异言，便断她有邪祟。她说的来处，贫道也不曾见过。”\n她低声说：“我怕的不是鬼，是再也见不到家人。”`,choices:[
     {t:'仍请国师行禳解祈安之仪 · 国库−10',cond:()=>E().treasury>=10,why:'国库不足',f:()=>finish(true)},
     {t:'听国师劝解，让她安心住下',f:()=>finish(false)}]};
 }
@@ -122,7 +128,7 @@ function travelerPairCandidates(){
   return pairs;
 }
 function travelerPairEvent(pair){
-  if(!pair)return null;const {a,b,key}=pair,stage=pair.state?.stage||0;
+  if(!pair||!timeTravelerIdentity(pair.a)||!timeTravelerIdentity(pair.b))return null;const {a,b,key}=pair,stage=pair.state?.stage||0;
   const valid=()=>travelerPairCandidates().some(p=>p.key===key);
   let state=pair.state;
   const finish=kind=>{if(!valid()||!state?.pending)return null;
@@ -136,13 +142,18 @@ function travelerPairEvent(pair){
       line=stage===0?`与${fullName(b)}试探着谈起“手机”和旧日纪年，疑心对方也曾见过另一个时代，尚未贸然相认。`:
         stage===1?`与${fullName(b)}核对旧日生活的细节后，终于彼此认作异世来客。两人的年代未必相同，却能听懂对方的乡愁。`:
         `与${fullName(b)}在灯下谈起远方家人。一个人说到忘了的声音，另一个人安静听完，谁也没有再急着证明什么。`;
-      if(state.stage===2){for(const [c,other] of [[a,b],[b,a]]){if(!c.timeTraveler.peers.includes(other.id))c.timeTraveler.peers.push(other.id);cchg(c,{mood:7});}}
+      if(state.stage===2)for(const [c,other] of [[a,b],[b,a]]){
+        const t=c.timeTraveler;
+        if(!t.peers.includes(other.id))t.peers.push(other.id);
+        if(PalaceActions.exclusiveStoryOrigins)t.known=true;
+        cchg(c,{mood:7});
+      }
     }
     const emotion=kind==='apart'?-.3:kind==='ask'&&[a,b].some(c=>c.timeTraveler.closed||c.aff<75)?-.15:.5;
     travelerRecord(a,line,emotion,b.id);travelerRecord(b,line.replaceAll(fullName(b),fullName(a)),emotion,a.id);
     save('auto');return line.startsWith('与')?fullName(a)+line:line;};
   const second=stage===1?(a.timeTraveler.century===b.timeTraveler.century?'她们从屏幕怎样亮起，谈到家中街道与旧时纪年。许多无人教过的细节，竟能一一接上。':'一个人说地铁票与手机，另一个人说星港与人造城。年代隔得远，记忆并不完全相同；她们反而更谨慎地追问，直到认出共同的旧世概念。'):'';
-  return {title:['似曾听过的词','原来你也记得','灯下说故乡'][Math.min(2,stage)],cast:[a,b],present:[a,b],valid,cooldown:6,
+  return {title:['似曾听过的词','原来你也记得','灯下说故乡'][Math.min(2,stage)],randomOriginCast:[a,b],cast:[a,b],present:[a,b],valid,cooldown:6,
     onShow:()=>{if(!state){const records=S.flags.travelerPairs||={};state=records[key]||={stage:0,last:null,pending:false};}state.pending=true;S.flags.lastTravelerEvent=S.turn;save('auto');},
     text:stage===0?`${fullName(a)}随口说出“手机”，${fullName(b)}的茶盏停在半空。\n“你说的，是拿在手中、会亮的那一种么？”\n两人望了望宫人，没有立即承认什么，只约好改日再谈。一个词，也可能只是巧合。`:
       stage===1?`${fullName(a)}与${fullName(b)}又在廊下相遇。${second}\n其中一人忽然问：“你也曾想过，这里会不会是人工智能造的世界？”另一人摇头：“我不知道。可想家，总不是假的。”`:
@@ -164,7 +175,7 @@ function travelerMonthlyEvent(){
   return people.length?travelerConfessionEvent(pick(people)):null;
 }
 function timeTravelerVoice(c){
-  const t=c.timeTraveler;if(!t)return null;
+  const t=timeTravelerIdentity(c);if(!t)return null;
   if(t.closed)return voiceLine('traveler-silent','她将一张写过字的纸收入匣中，换了话题。',['那一晚的话，陛下就当没有听过吧。臣妾今日只说眼前的事。','有些旧梦，不说也罢。窗下的花开了，陛下可看见了？']);
   if(!t.known)return travelerRash(c)?voiceLine('traveler-slip','她又说了一个宫人不懂的词，急着解释，却越说越乱。',['这地方怎么连一盏电灯也没有……算了，臣妾说不明白。','我明明记得回家的路，可出了这重门，就全不一样了。']):null;
   if(!travelerRash(c)&&c.aff<75)return null;
@@ -174,7 +185,7 @@ function timeTravelerVoice(c){
     '臣妾记得一些很远的事，却不是什么都会。若只凭记得几个词，就夸口能改天换地，那才是骗您。']);
 }
 function timeTravelerPanel(c){
-  const t=c.timeTraveler;if(!t?.known)return '';
+  const t=timeTravelerIdentity(c);if(!t?.known)return '';
   return `<section class="personal-experience"><h3>异世旧梦</h3><p>她自述来自公元${t.century===21?'二十一':'二十二'}世纪 · ${t.closed?'此后缄口':travelerRash(c)?'急于自证':'谨慎藏言'}</p><p class="hint">${esc(t.history.at(-1)?.text||'她第一次提起了不属于这个时代的往事。')}</p>${travelerReady(c)?`<button class="btn jade" onclick="A.travelerTalk(${c.id})">听她谈旧日<small>精力−1</small></button>`:''}</section>`;
 }
 A.travelerTalk=function(id){const c=byId(id);if(modalOpen||!travelerReady(c)||!useE())return;pushEv(travelerConfessionEvent(c));};

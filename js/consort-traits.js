@@ -1,8 +1,26 @@
 /* Descriptive distinctions follow real attributes. Nothing rolls during rendering. */
 const consortTraitsActive=()=>!!S&&journalContentVersion()>=59;
 const consortDistinctionStoriesActive=()=>journalContentVersion()>=67;
+const hasAuthoredConsortStory=c=>!!(c?.fixedStory||c?.gouyi||c?.hongjian);
+const randomConsortOriginsAllowed=c=>!PalaceActions.exclusiveStoryOrigins||!hasAuthoredConsortStory(c);
+function reconcileStoryConsortOrigins(){
+ if(!S||!PalaceActions.exclusiveStoryOrigins)return;
+ for(const c of [...S.consorts,...(S.cands||[]),...(S.shelteredGuests||[])]){
+  if(!hasAuthoredConsortStory(c))continue;
+  const past=c.pastLife,archive=S.pastLives;
+  if(past&&archive){
+   if(archive.claimed?.[past.source?.key]===c.id)delete archive.claimed[past.source.key];
+   if(archive.reigns?.[past.gen]===c.id)delete archive.reigns[past.gen];
+  }
+  delete c.timeTraveler;delete c.pastLife;delete c.solitary;
+ }
+}
+// Advance unanswered incompatible popups through the existing recorded next action.
+function dismissInvalidStoryOrigin(){
+ if(!modalResult&&curEv?.randomOriginCast?.some(hasAuthoredConsortStory))nextEv();
+}
 // Story consorts keep their authored relationships, including when a former save is loaded.
-function randomPalaceAffairsAllowed(c){return journalContentVersion()<103||!(c?.gouyi||c?.hongjian||c?.fixedStory);}
+function randomPalaceAffairsAllowed(c){return journalContentVersion()<103||!hasAuthoredConsortStory(c);}
 function palaceAffairRankAllowed(c){return c.rank!==8||(journalContentVersion()>=103&&restlessDisposition(c));}
 // Use the person's original seed so a relative keeps the same disposition at selection.
 function restlessDisposition(p){
@@ -62,7 +80,7 @@ function consortTraitPractice(c,rule){
  return rule.art==='any'?Object.keys(proof).length>0:!!proof[rule.art];
 }
 function consortTraitMatches(c,{reveal=false}={}){
- if(!consortTraitsActive()||!c||c.sex)return [];
+ if(!consortTraitsActive()||!c||c.sex||!randomConsortOriginsAllowed(c))return [];
  return CONSORT_DISTINCTIONS.filter(r=>r.test(c)&&consortTraitPractice(c,r)&&(reveal||(!r.known||c.known)&&(!r.likes||c.kl)&&(!r.visible||r.visible(c))))
    .sort((a,b)=>b.priority-a.priority);
 }
@@ -71,7 +89,7 @@ function consortTraitLabels(c,options){
   if(r.groups.some(g=>groups.has(g)))return false;r.groups.forEach(g=>groups.add(g));return true;
  });
 }
-function consortTraitTags(c){return (admiresWhiteSpring(c)?'<span class="tag y" title="尚在娘家时便听过白泉公主的旧闻，盼有一日亲自相识。">仰慕阿依慕</span>':'')+consortTraitLabels(c).slice(0,2).map(r=>`<span class="tag y consort-trait-tag" title="${esc(r.why)}">${r.name}</span>`).join('');}
+function consortTraitTags(c){if(!randomConsortOriginsAllowed(c))return '';return travelerIdentityTag(c)+(admiresWhiteSpring(c)?'<span class="tag y" title="尚在娘家时便听过白泉公主的旧闻，盼有一日亲自相识。">仰慕阿依慕</span>':'')+consortTraitLabels(c).slice(0,2).map(r=>`<span class="tag y consort-trait-tag" title="${esc(r.why)}">${r.name}</span>`).join('');}
 function consortTraitPanel(c){
  const labels=consortTraitLabels(c);if(!labels.length)return '';
  return `<section class="detail-section"><h3>人物特质</h3>${labels.map(r=>`<p><span class="tag y consort-trait-tag">${r.name}</span> <span class="hint">${esc(r.why)}</span></p>`).join('')}</section>`;
@@ -84,6 +102,7 @@ function recordConsortPractice(c,episode,outcome){
 }
 function reconcileConsortDistinctions(){
  if(!consortTraitsActive()||PalaceActions.blocked)return;
+ reconcileStoryConsortOrigins();
  // A retained selection entry can also be the admitted person. JSON separates
  // these references; restore the canonical person before recording milestones.
  for(const list of [S.cands,S.shelteredGuests])if(list)for(let i=0;i<list.length;i++){
