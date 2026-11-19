@@ -118,3 +118,50 @@ test('a legacy chronicle can preserve the lock after the discovered child is abs
  b.run(`A.load('1');assert.ok(S.immortalDiscovery);assert.equal(S.immortalDiscovery.id,null);
    assert.equal(immortalDiscover(kidById(id)),false);assert.equal(kidById(id).immortal,undefined);`);
 });
+
+test('an old unseen prince seed is eligible under the new balance and can win the actual monthly discovery',()=>{
+ let b=world();
+ b.run(`m.rank=8;var son=child('m','承安',14,null);var id=son.id;
+   son.seed=Array.from({length:300},(_,i)=>i+1).find(seed=>
+     rolledImmortalRoot({seed},.15)&&!rolledImmortalRoot({seed},.015));
+   assert.ok(son.seed);delete son.immortalTalentBalanced;
+   k.born=S.turn-8*12;var other=k.id;S.flags.immortalPace={last:-99,lastOffer:-99};
+   PalaceActions.reset();save('1');`);
+ const ids=JSON.parse(b.run('JSON.stringify([id,other])'));
+ b=reopen(b);b.ctx.ids=ids;b.run(`A.load('1');`);b.force(0,0);
+ b.run(`var [id,other]=ids,son=kidById(id);
+   assert.equal(son.immortalTalent,null);assert.equal(legacyImmortalBirthChance(son),.015);
+   var root=immortalRoot(son);assert.ok(root);immortalTick();
+   assert.equal(son.immortal.root,root);assert.equal(S.immortalDiscovery.id,id);
+   assert.equal(son.immortalTalentBalanced,true);
+   var daughter=kidById(other);daughter.born=S.turn-16*12;
+   assert.equal(immortalDiscover(daughter),false);assert.equal(daughter.immortal,undefined);`);
+});
+
+test('a confirmed discovery from an old save adds separate admiration from her younger brother and close sister once',()=>{
+ let b=world();
+ b.run(`var brother=child('m','承宁',6,null),closeMale=makeKid(f,'m','承岳'),
+     sister=makeKid(f,'f','昭安'),rival=child('f','昭蘅',15,null);
+   closeMale.born=S.turn-13*12;sister.born=S.turn-14*12;
+   closeMale.pendingName=sister.pendingName=false;sister.temperament='好胜';sister.away=true;
+   relAdd(k,closeMale,70);relAdd(k,sister,65);relAdd(k,rival,-100);
+   assert.equal(immortalDiscover(k),true);
+   k.seed=Array.from({length:300},(_,i)=>i+1).find(seed=>rolledImmortalRoot({seed},.24)&&!rolledImmortalRoot({seed},.15));
+   assert.ok(k.seed);delete k.immortalTalentBalanced;delete k.immortal.discoveryNews.admirers;
+   S.flags.immortalPace={last:S.turn,lastOffer:S.turn};var ids=[k.id,brother.id,sister.id,closeMale.id,rival.id];
+   PalaceActions.reset();save('1');`);
+ const ids=JSON.parse(b.run('JSON.stringify(ids)'));b=reopen(b);b.ctx.ids=ids;
+ b.run(`A.load('1');assert.equal(PalaceActions.blocked,false);
+   var [k,brother,sister,closeMale,rival]=ids.map(kidById),notes=p=>p.story.filter(e=>e.life?.title==='手足眼里的灵根');
+   assert.equal(immortalRoot(k),'水灵根');assert.equal(notes(brother).length,0);
+   A.endMonth();
+   assert.match(notes(brother)[0].t,/姐姐清和.*最神气/);
+   assert.match(notes(sister)[0].t,/姐姐清和.*真服气/);
+   assert.equal(notes(sister)[0].life.source,'手足间的家书');
+   assert.equal(notes(closeMale).length,0);assert.equal(notes(rival).length,0);
+   assert.equal(notes(k).length,2);assert.ok(notes(k).some(e=>e.t.includes('弟弟承宁')));
+   drain();save('2');A.load('2');assert.equal(PalaceActions.blocked,false);
+   S.turn++;immortalTick();immortalTick();
+   assert.equal(notes(kidById(ids[1])).length,1);assert.equal(notes(kidById(ids[2])).length,1);
+   assert.equal(notes(kidById(ids[0])).length,2);`);
+});

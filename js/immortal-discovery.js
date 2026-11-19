@@ -102,6 +102,48 @@ function shareImmortalDiscovery(k){
  r.familyHeard=true;
 }
 
+function immortalAdmirationVoice(peer,address){
+ const age=kidAge(peer),trait=childDisposition(peer);
+ if(age<8)return `“听说${address}手边亮了一点光。我想把它画下来，可画到第三张，还是觉得${address}亲手试的那一回最神气。”`;
+ if(['好胜','自矜'].includes(trait))return `“平时总想在哪件事上赢${address}一回。听完钦安殿的事，这回倒真服气。下次见面，我想请${address}讲讲第一下怎么敢试。”`;
+ if(['好奇','灵动','爽直'].includes(trait))return `“旁人都在问那点亮光。我倒想问${address}，国师递过玉磬时心里在想什么。换成我，手早就抖了。”`;
+ return `“书房里人人都在说那道光。我最佩服${address}肯自己试，也肯慢慢学。等人散了，我想亲口告诉${address}，我觉得这件事真了不起。”`;
+}
+
+function shareImmortalPeerAdmiration(k){
+ if(!PalaceActions.balancedImmortalDiscovery||mourningActive())return;
+ const r=k.immortal;
+ if(!(S.turn>r.since))return;
+ const admirers=r.discoveryNews?.admirers;
+ const eligible=kidsAlive().filter(p=>{
+  if(p===k||p.pendingName||p.lost||p.jailed||kidAge(p)<5)return false;
+  const close=relGet(k,p),sameMother=k.mom!=null&&p.mom===k.mom;
+  return close>=30||sameMother&&close>=0;
+ });
+ for(const sex of ['m','f']){
+  if(admirers?.[sex]!=null)continue;
+  const youngerBrother=p=>sex==='m'&&p.mom===k.mom&&royalBirthOrder(p,k)>0;
+  const p=eligible.filter(p=>p.sex===sex)
+   .sort((a,b)=>Number(youngerBrother(b))-Number(youngerBrother(a))||relGet(k,b)-relGet(k,a)||
+    Math.abs(kidAge(a)-kidAge(k))-Math.abs(kidAge(b)-kidAge(k))||a.id-b.id)[0];
+  if(!p)continue;
+  ((r.discoveryNews||={}).admirers||={})[sex]=p.id;
+  const older=royalBirthOrder(k,p)<0;
+  const address=k.sex==='f'?(older?'姐姐':'妹妹'):(older?'哥哥':'弟弟');
+  const peerRole=p.sex==='f'?(older?'妹妹':'姐姐'):(older?'弟弟':'哥哥');
+  const inCourt=childInPalace(k)&&childInPalace(p),voice=immortalAdmirationVoice(p,address);
+  const people=[{id:p.id,name:p.name},{id:k.id,name:k.name}];
+  const title='手足眼里的灵根',source=inCourt?'宫中手足相谈':'手足间的家书';
+  const opening=inCourt?`${p.name}找了个清静的时候，向${address}${k.name}说起钦安殿的事。`:
+   `${p.name}托亲人捎信给${address}${k.name}，提到问道册里记下的${r.root}。`;
+  immortalDiscoveryNote(p,k,title,opening+voice,people,source);
+  const answer=inCourt?
+   `${peerRole}${p.name}来谈试磬，眼里尽是好奇和佩服。${k.name}记下了这句当面说的话。`:
+   `${k.name}收到${peerRole}${p.name}的问候。信上写的都是些家常话，末尾那句真心的称赞，却叫自己读了两遍。`;
+  immortalDiscoveryNote(k,k,title,answer,people,source);
+ }
+}
+
 function immortalDiscoveryCourtVoice(p,k){
  if(p.sex){
   const young=kidAge(p)<12;

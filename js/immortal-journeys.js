@@ -16,13 +16,26 @@ const IMMORTAL_VOICES={
 function immortalEnabled(){return typeof PalaceActions==='undefined'||PalaceActions.contentVersion>=7;}
 function immortalPalaceLessonsEnabled(){return journalContentVersion()>=52;}
 function immortalAway(k){return !!(immortalEnabled()&&['learning','trial','sect'].includes(k?.immortal?.stage));}
-function immortalBirthChance(k){return k.sex==='f'?.24:k.birthTraits?.mother?.rank===8?.015:.06;}
-function immortalRoot(k){
- if(k.immortalTalent!==undefined)return k.immortalTalent;
- const roll=mulberry32(voiceHash('immortal-root:'+String(k.seed||k.id)))();
- return roll<immortalBirthChance(k)?['木灵根','水灵根','金灵根','火灵根','土灵根','冰灵根','雷灵根'][voiceHash('root-kind:'+String(k.seed||k.id))%7]:null;
+function legacyImmortalBirthChance(k){return k.sex==='f'?.24:k.birthTraits?.mother?.rank===8?.015:.06;}
+function rolledImmortalRoot(k,chance){
+ const seed=String(k.seed||k.id),roll=mulberry32(voiceHash('immortal-root:'+seed))();
+ return roll<chance?['木灵根','水灵根','金灵根','火灵根','土灵根','冰灵根','雷灵根'][voiceHash('root-kind:'+seed)%7]:null;
 }
-function initImmortalTalent(k){if(immortalEnabled()&&k.immortalTalent===undefined)k.immortalTalent=immortalRoot(k);}
+function immortalRoot(k){
+ if(k.immortal?.root)return k.immortal.root;
+ const saved=k.immortalTalent,balanced=PalaceActions.balancedImmortalDiscovery;
+ if(saved!==undefined&&(!balanced||k.immortalTalentBalanced||saved!==rolledImmortalRoot(k,legacyImmortalBirthChance(k))))return saved;
+ // An old, unrevealed result is evaluated under the same rule as a new birth.
+ return rolledImmortalRoot(k,balanced ? .15 : legacyImmortalBirthChance(k));
+}
+function initImmortalTalent(k){
+ if(!immortalEnabled()||k.immortal)return;
+ const balanced=PalaceActions.balancedImmortalDiscovery;
+ if(k.immortalTalent===undefined||balanced&&!k.immortalTalentBalanced){
+  k.immortalTalent=immortalRoot(k);
+  if(balanced)k.immortalTalentBalanced=true;
+ }
+}
 function immortalPeople(){return royalHouseholds().filter(k=>k.immortal);}
 function immortalPerson(id){return royalById(id);}
 function immortalMaster(k){const d=IMMORTAL_SECTS[k.immortal.route];return {daoMaster:true,daoTitle:d.title,cell:d.cell,name:d.master,alive:true};}
@@ -264,6 +277,7 @@ function immortalTick(){
  if(journalContentVersion()>=49)for(const k of immortalPeople()){
   if(!k.alive||!S.children.includes(k))continue;
   immortalMaternalDiscovery(k);
+  shareImmortalPeerAdmiration(k);
   const r=k.immortal;
   if(r.discoveryReflected||S.turn<=r.since||!['noticed','invited','closed'].includes(r.stage))continue;
   r.discoveryReflected=true;

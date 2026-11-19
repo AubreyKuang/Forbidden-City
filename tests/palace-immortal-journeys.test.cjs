@@ -7,10 +7,11 @@ function world(sex='f',age=16){
  var f=makeGirl({age:39,trait:'温婉'});addConsort(f,3,'入宫');var k=makeKid(m,sex,'清和');k.born=S.turn-age*12;k.hp=90;k.amb=10;k.lit=70;k.mar=30;k.pendingName=false;k.immortalTalent='水灵根';k.foster=f.id;
  k.temperament='内敛';k.daoPractice={path:'dao',visits:6};PalaceActions.reset();`);return b;
 }
-test('stable spiritual potential favors daughters, rarely sons and still fewer sons born to the empress',()=>{
+test('stable spiritual potential has the same baseline for daughters, sons and sons born to the empress',()=>{
  const b=world();b.run(`var counts=[];
  for(var type of ['daughter','son','legitimate']){var count=0;for(var seed=1;seed<=10000;seed++){var p={seed,sex:type==='daughter'?'f':'m',birthTraits:{mother:{rank:type==='legitimate'?8:3}}};if(immortalRoot(p))count++;}counts.push(count);}
- assert.ok(counts[0]>2100&&counts[0]<2700);assert.ok(counts[1]>450&&counts[1]<750);assert.ok(counts[2]>80&&counts[2]<230);
+ assert.ok(counts[0]>1350&&counts[0]<1650);
+ assert.deepEqual(Array.from(counts),[counts[0],counts[0],counts[0]]);
  var root=k.immortalTalent;k.birthTraits.mother.rank=8;m.rank=8;assert.equal(immortalRoot(k),root);
  var before=JSON.stringify(S);immortalRoot(k);immortalRoot(k);assert.equal(JSON.stringify(S),before);`);
 });
