@@ -215,3 +215,48 @@ function visitChildAfterConsequence(k){
   rememberConversation(k,{key:voice.key,stage:voice.stage,text,letter:childHasLeftPalace(k)},childWhereabouts(k));
   setScene('harem');pushEv({title:childHasLeftPalace(k)?'皇嗣家书':'探望皇嗣',por:k,cast:[],text:voice.stage+(voice.lines.length?'\n“'+text+'”':'')+(childHasLeftPalace(k)?'\n你在回信中回应了孩子的牵挂，嘱咐随侍妥善照料。':'')+fx(`父爱+10　${{lit:'才学',mar:'武艺',vir:'品德'}[stat]}+2`),choices:[{t:childHasLeftPalace(k)?'回信安慰，嘱咐好好照料':'轻声安慰，陪孩子坐一会儿'}]});return true;
 }
+
+// One child's answer accompanies the public pregnancy notice, after the player's decision.
+function childPregnancyNews(m){
+  if(!PalaceActions.childPregnancyNews||!inPalace(m)||m.maid||m.preg!==2)return '';
+  const key=pregnancyPrayerKey(m);
+  if(m.childPregnancyNotice===key)return '';
+  const children=kidsAlive().filter(k=>(k.mom===m.id||k.foster===m.id)&&kidAge(k)>=3&&!k.pendingName&&!k.missing&&!k.jailed&&
+    !(k.foster&&k.mom===m.id&&k.visitRule==='closed'));
+  if(!children.length)return '';
+  m.childPregnancyNotice=key;
+  const random=mulberry32(voiceHash('child-pregnancy:'+m.seed+':'+key));
+  if(random()>=.55)return '';
+  const k=children[Math.floor(random()*children.length)],age=kidAge(k),little=age<7,nature=childDisposition(k);
+  const attention=2+Number(little)+Number(['好胜','内敛','自矜'].includes(nature));
+  const worry=2+Number(['审慎','仁厚'].includes(nature))+Number(m.trait==='体弱');
+  const joy=3+Number(['灵动','好奇'].includes(nature));
+  const roll=random()*(attention+worry+joy);
+  const kind=roll<attention?'attention':roll<attention+worry?'worry':'joy';
+  const address=childMotherAddress(k,m),elder=k.sex==='f'?'姐姐':'哥哥';
+  const away=!childInPalace(k),name=kidName(k);
+  let words,reply,feeling;
+  if(kind==='attention'){
+    feeling='怕往后分给自己的时候少了';
+    words=little?'小娃娃要您抱，那我想您的时候，还能来找您吗？':age<14?'等小的来了，要同您说悄悄话，是不是得等小的睡着才行？':'本来想只说一句恭喜。可往后您忙着哄小的，我那些琐碎事，还说给谁听呢？';
+    if(k.foster===m.id&&age<14){
+      words=little?'等您有了自己的小娃娃，我还可以叫您一声娘吗？':'我知道小的是您亲生的。往后我有了高兴事，还能头一个来讲给您听吗？';
+      reply='你是我看着长的。添了小的，你在我跟前的位置，也没人能替。';
+    }else{
+      reply=away?'你寄来的信，我哪一封舍得搁下？往后有话，只管照旧写给我。':'你有你的话，小的有小的事。想同我说，就来告诉我，我给你留工夫。';
+    }
+  }else if(kind==='worry'){
+    feeling='先惦记起母亲生产时的安危';
+    words=little?'他们说生小娃娃会疼。到那天，有人陪您吗？':age<14?'人人都来问我想要弟弟还是妹妹。我倒想先问，您生的时候，疼了谁守着您？':'旁人都贺添丁，我却总惦着临盆那一关。到时候，请先捎一句您平安，再告诉我是弟弟还是妹妹。';
+    reply=little?'会有人陪我。你也怕的话，就告诉我，咱们不用藏着。':'我记下了。等那天过去，头一句先给你报我的平安。';
+  }else{
+    feeling='已经盼着与弟妹见面';
+    words=little?`等小娃娃会叫人，我想教的头一个词就是“${elder}”！`:age<14?`我挑了三样好玩的，样样都想留给小的。您说，小娃娃多大会跟着${elder}玩？`:`我小时候最爱听的那首歌还记得。等弟弟妹妹出世，哄睡的差事也让${elder}领一回吧。`;
+    reply=little?'那你可得慢慢教。小娃娃头一声多半是哭，到时可别嫌人家唱得难听。':'这就给小的惦记上了？我先替小的应下，等见了面，你自己跟小的说。';
+  }
+  const scene=away?`喜信捎到了${name}手中。回信里夹着一句：“${address}，${words}”${cName(m)}读到这里，亲笔回道：“${reply}”`:
+    `听说有了喜脉，${name}来问${cName(m)}：“${address}，${words}”她听完，把孩子的手拢在掌心：“${reply}”`;
+  kstory(k,`【听闻喜脉】得知${address}${fullName(m)}有孕，${feeling}。${scene}`);
+  story(m,`【听闻喜脉】${scene}`);
+  return scene;
+}

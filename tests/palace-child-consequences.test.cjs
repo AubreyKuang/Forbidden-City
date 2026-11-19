@@ -89,3 +89,38 @@ test('declining every carer returns to the unresolved incident without moving th
  choose(curEv.choices.length-1);assert.equal(curEv.title,'母亲遭逢变故');
  assert.ok(!S.flags.childFamilyIncidents.at(-1).resolved);choose(0);drain();assert.ok(!baby.foster);`);
 });
+
+test('public pregnancy news includes birth and foster children, all three feelings, letters and quiet pregnancies',()=>{
+ const w=world();w.run(`a.preg=2;a.pregnancyCalendar={conceived:42,term:10,nights:[]};
+ var cases=new Set(),heard=k=>k.story.filter(e=>e.t.startsWith('【听闻喜脉】')).length;
+ for(const [k,nature,away] of [[little,'好胜',false],[foster,'仁厚',false],[elder,'好奇',true]]){
+   S.children=[k,baby,stranger];k.temperament=nature;if(away){k.sex='m';k.princeEstate={};}
+   for(let n=1;n<=160;n++){
+     a.pregnancyCalendar.conceived=n;let before=heard(k),mom=heard(a);
+     let result=pregEvent(a).choices[2].f();
+     if(heard(k)===before){cases.add('quiet');assert.equal(heard(a),mom);}
+     else{
+       const entry=k.story.at(-1).t;assert.equal(heard(a),mom+1);
+       assert.ok(result.includes(a.story.at(-1).t.slice('【听闻喜脉】'.length)));
+       assert.equal(entry.includes('回信'),away);assert.match(entry,k===foster?/养母/:/母妃/);
+       for(const feeling of ['分给自己','生产时的安危','与弟妹见面'])if(entry.includes(feeling))cases.add(k.id+feeling);
+       if(entry.includes('与弟妹见面'))assert.ok(result.includes(away?'哥哥':'姐姐'));
+     }
+     assert.equal(childPregnancyNews(a),'');assert.equal(heard(baby)+heard(stranger),0);
+   }
+ }
+ assert.equal(cases.size,10);foster.visitRule='closed';S.children=[foster];b.preg=2;assert.equal(childPregnancyNews(b),'');`);
+});
+test('a month-end pregnancy notice survives loading before and after the answer with one chronicle apiece',()=>{
+ const w=world();w.run(`S.children=[foster];a.preg=1;a.pregnancyCalendar={conceived:S.turn,term:10,nights:[]};
+ while(mulberry32(voiceHash('child-pregnancy:'+a.seed+':'+pregnancyPrayerKey(a)))()>=.55)a.seed++;
+ var mid=a.id,kid=foster.id;PalaceActions.reset();A.endMonth();
+ for(let i=0;i<100&&modalOpen&&curEv.title!=='喜脉';i++){if(modalResult)nextEv();else choose(curEv.choices.findIndex(c=>!c.cond||c.cond()));}
+ assert.equal(curEv.title,'喜脉');save('1');`);
+ const mid=w.run('mid'),kid=w.run('kid');
+ const n=boot(40,w.storage);n.ctx.assert=assert;n.run(`A.load('1');assert.equal(PalaceActions.blocked,false);assert.equal(curEv.title,'喜脉');
+ choose(2);assert.ok(modalResult);save('2');`);
+ const r=boot(70,w.storage);r.ctx.assert=assert;r.run(`A.load('2');assert.equal(PalaceActions.blocked,false);assert.ok(modalResult);
+ var m=byId(${mid}),k=kidById(${kid}),count=p=>p.story.filter(e=>e.t.includes('【听闻喜脉】')).length;
+ assert.equal(count(m),1);assert.equal(count(k),1);drain();assert.equal(count(m),1);assert.equal(count(k),1);`);
+});
