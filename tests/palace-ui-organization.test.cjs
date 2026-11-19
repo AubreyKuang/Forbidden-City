@@ -83,3 +83,14 @@ test('children and officials show their chronicles after the person and actions 
  assert.ok(official.indexOf('detail-actions')<official.indexOf('官员最新纪事'));
  assert.ok(official.indexOf('官员最新纪事')<official.indexOf('家族往来'));
 });
+
+test('married children show family first and the chronicle second in both navigation and content',()=>{
+ for(const [who,partner] of [['k','沈明月'],['sister','林知远']]){
+  const {html}=renderCase(['married-child','viewKid()',`var person=${who};person.born=S.turn-240;person.married=true;person.spouse={name:'${partner}'};UI.sel=person.id;`]);
+  const chapters=Array.from(html.matchAll(/class="page-chapter" aria-labelledby="child-([^"]+)"/g),m=>m[1]);
+  assert.deepEqual(chapters.slice(0,2),['family','history']);
+  assert.equal(new Set(chapters).size,chapters.length);
+  assert.deepEqual(Array.from(html.matchAll(/href="#child-([^"]+)"/g),m=>m[1]),chapters);
+  assert.ok(html.includes('spouse-portrait')&&html.indexOf(partner)<html.indexOf('id="child-family"'));
+ }
+});
