@@ -74,7 +74,8 @@ test('Lu Wan’s departure and return follow her actual children, father, brothe
   var [luId,smallId,olderId,absentId,friendId,riderId,neutralId]=ids;
   var lu=byId(luId),h=houseOf(lu),small=kidById(smallId),older=kidById(olderId),absent=kidById(absentId),
       friend=byId(friendId),rider=byId(riderId),neutral=byId(neutralId);
-  var notes=p=>p.story.filter(e=>e.thread===('luwan-frontier:'+lu.id+':145'));
+  var notes=p=>p.story.filter(e=>e.thread===('luwan-frontier:'+lu.id+':145')&&e.life.title!=='归来相见');
+  var reunion=p=>p.story.filter(e=>e.life?.title==='归来相见');
   assert.match(viewHarem(),/暂离宫中（1）/);assert.doesNotMatch(viewHarem(),/回家省亲/);
   assert.match(consortCard(lu),/暂离宫中 · 北境军驿/);UI.sel=lu.id;assert.match(viewConsort(),/暂离宫中 · 北境军驿/);
   assert.equal(consortStatusTag(lu),'暂离宫中');assert.equal(consortNightReason(lu),'暂离宫中 · 北境军驿');
@@ -90,13 +91,42 @@ test('Lu Wan’s departure and return follow her actual children, father, brothe
   assert.match(notes(h.father).at(-1).t,/致仕.*旧簿/);assert.match(notes(h.brother).at(-1).t,/哪一站/);
   assert.match(notes(friend).at(-1).t,/给她留灯/);assert.match(notes(rider).at(-1).t,/弓收回原处/);
   A.storyCastComfort(small.id);assert.match(curEv.choices[0].t,/陪她/);drain();
-  nextMonth();
+  A.endMonth();
+  for(let i=0;modalOpen&&curEv.title!=='陆绾 · 北境归来'&&i<150;i++){
+    if(modalResult)nextEv();else choose(curEv.choices.findIndex(c=>!c.cond||c.cond()));
+  }
+  assert.equal(curEv.title,'陆绾 · 北境归来');choose(0);
+  assert.equal(curEv.title,'陆绾 · 归来相见');assert.deepEqual(curEv.cast.map(p=>p.id),[smallId,olderId]);
+  assert.match(curEv.text,/明棠一见陆绾就扑过去抱住她/);
+  assert.match(curEv.text,/承远.*我没事，也没等多久/);assert.match(curEv.text,/陆绾.*每听见一声马铃/);
+  assert.match(curEv.text,/这一封拖得太久/);
+  save('2');A.load('2');assert.equal(PalaceActions.blocked,false);assert.equal(curEv.title,'陆绾 · 归来相见');
+  assert.equal(reunion(byId(luId)).length,0);choose(1);
+  assert.match(modalResult.text,/把茶递给陆绾/);
+  save('3');A.load('3');assert.equal(PalaceActions.blocked,false);assert.match(modalResult.text,/把茶递给陆绾/);drain();
+  [lu,small,older,absent,friend,rider,neutral]=[byId(luId),kidById(smallId),kidById(olderId),kidById(absentId),byId(friendId),byId(riderId),byId(neutralId)];h=houseOf(lu);
+  assert.deepEqual(reunion(lu)[0].life.people.map(p=>p.id),[smallId,olderId]);
+  assert.match(reunion(lu)[0].t,/一路上憋着的那句想念.*急着回家/);
+  assert.match(reunion(small)[0].t,/又抱紧了一些/);assert.match(reunion(older)[0].t,/一直睡不踏实/);
+  assert.equal(reunion(absent).length,0);
+  for(const p of [lu,small,older])assert.equal(reunion(p).length,1);
   assert.equal(lu.homeLeave,undefined);assert.equal(older.fieldWorry,undefined);
   assert.match(notes(small).at(-1).t,/扑过去抱她/);assert.match(notes(absent).at(-1).t,/收到.*口信/);
   assert.match(notes(h.brother).at(-1).t,/回来就好/);assert.match(notes(friend).at(-1).t,/纸笺原样交还/);
   for(const p of [small,older,absent,friend,rider,h.father,h.brother])
     assert.deepEqual(notes(p).map(e=>e.life.title),['陆绾出征','前线家书','军驿失期','北境归来']);
   assert.equal(notes(neutral).length,0);`);
+});
+
+test('an early frontier recall reunites Lu Wan only with a child who can meet her in the palace',()=>{
+ const b=world();b.ctx.assert=assert;
+ b.run(`S.year=13;S.turn=144;E().age=40;var r=storyCastCreate('luwan');storyCastAdmit(r.person,r,'入宫');
+   var lu=byId(r.id),child=makeKid(lu,'f','明棠');child.pendingName=false;child.born=S.turn-12;
+   lu.homeLeave={from:S.turn-1,due:S.turn+3,field:true,delay:true,reason:'赴北境军驿'};
+   PalaceActions.reset();A.recallHomeLeave(lu.id);assert.equal(curEv.title,'陆绾 · 归来相见');
+   assert.match(curEv.text,/朝她张开两手/);assert.doesNotMatch(curEv.text,/这一封拖得太久/);drain();
+   child.away=true;lu.homeLeave={from:S.turn,due:S.turn+3,field:true,reason:'赴北境军驿'};
+   A.recallHomeLeave(lu.id);assert.equal(lu.homeLeave,undefined);assert.equal(modalOpen,false);`);
 });
 
 test('all six yellow tags reach the ordinary harem cards and new chapters change real game values',()=>{

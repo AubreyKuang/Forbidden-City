@@ -44,6 +44,8 @@ const PalaceActions=(()=>{
       journal={version,outerHouseholds:true,outerHouseholdUpdates:true,exclusiveStoryOrigins:true,immortalDiscoveryNews:true,betrothalJourneys:true,immortalPeerAdmiration:true,maritalEstates:true,luwanFrontierChronicles:true,luwanFrontierVisuals:true,base:S?clone(world(S)):null,ui:clone(UI),steps:[]};
     }
     const current={name,args:clone(args),monthNotice:true,rolls:[],answers:[],saves:[],ui:clone(UI)};
+    // A newly answered return notice can continue even if its journal predates the reunion.
+    if(name==='recallHomeLeave'||(name==='choose'&&curEv?.luwanFrontierReturn))current.luwanFrontierReunion=true;
     if(name==='start'){
       const selectors=['#f-sur','#f-name','#f-era','input[name=f-style]:checked'];
       if(journal?.version>=85)selectors.push('input[name=f-scenario]:checked');
@@ -154,6 +156,7 @@ const PalaceActions=(()=>{
     get balancedImmortalDiscovery(){return journal?.balancedImmortalDiscovery===true;},
     get luwanFrontierChronicles(){return !journal||journal.luwanFrontierChronicles===true;},
     get luwanFrontierVisuals(){return !journal||journal.luwanFrontierVisuals===true;},
+    get luwanFrontierReunion(){return !step||step.luwanFrontierReunion===true;},
     get replayRollsExhausted(){return replaying&&step&&cursor===step.rolls.length;},
     get immortalPeerAdmiration(){return !journal||journal.immortalPeerAdmiration===true||journal.balancedImmortalDiscovery===true;},
     get betrothalJourneys(){return !journal||journal.betrothalJourneys===true;},

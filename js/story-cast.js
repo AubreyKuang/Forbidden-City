@@ -286,12 +286,12 @@ function storyCastFrontier(c){
   return w&&w.id!==c.castCampaign?w:null;
 }
 
-const LUWAN_FRONTIER_CHAPTERS={departure:'陆绾出征',letter:'前线家书',delay:'军驿失期',return:'北境归来'};
-function luwanFrontierNote(p,c,leave,phase,line,source){
+const LUWAN_FRONTIER_CHAPTERS={departure:'陆绾出征',letter:'前线家书',delay:'军驿失期',return:'北境归来',reunion:'归来相见'};
+function luwanFrontierNote(p,c,leave,phase,line,source,people=[c]){
   const title=LUWAN_FRONTIER_CHAPTERS[phase];
   princePersonNote(p,'【'+title+'】'+line);
   Object.assign(p.story.at(-1),{thread:`luwan-frontier:${c.id}:${leave.from}`,
-    life:{kind:'family',title,gen:S.gen,turn:S.turn,people:[{id:c.id,name:fullName(c)}],source}});
+    life:{kind:'family',title,gen:S.gen,turn:S.turn,people:people.map(o=>({id:o.id,name:o.sex?o.name:fullName(o)})),source}});
 }
 function luwanFrontierFriends(c){
   return harem().filter(p=>p!==c&&relGet(c,p)>=30&&socialPair(c,p)&&!friendshipTense(c,p))
@@ -400,6 +400,53 @@ function syncLuwanFrontierMap(){
   // The map frame updates sprites. Older pending actions may also have recorded those draws.
   if(!PalaceActions.luwanFrontierVisuals&&!PalaceActions.replayRollsExhausted)npcSync();
 }
+function luwanReunionExchange(k){
+  const age=kidAge(k),trait=childDisposition(k);
+  if(age<3)return {
+    scene:k.name+'在乳母怀里盯了陆绾一会儿，忽然朝她张开两手。陆绾忙把才解下的护腕塞给宫人，伸手接住：“是娘。手有些凉，等我捂热了再摸你的脸。”',
+    child:'认出陆绾便伸手要抱。她怕手凉着自己，先在袖里捂热了双手。',
+    mother:'抱过'+k.name+'才察觉自己双手冻得发僵，索性先拿袖子捂暖，舍不得把孩子交还给乳母。'
+  };
+  if(age<8)return {
+    scene:k.name+'一见陆绾就扑过去抱住她，脸埋在她的斗篷里：“您怎么才回来？”陆绾猝不及防，往后退了半步，随即蹲下来把孩子抱稳：“让我也抱一会儿。这一路，我想这一抱想了好多回。”',
+    child:'迎面扑进陆绾怀里，原想问她去了哪里，听见她也想抱自己，便又抱紧了一些。',
+    mother:'被'+k.name+'扑得退了半步。蹲下来回抱时，终于把一路上憋着的那句想念说了出来。'
+  };
+  if(['审慎','内敛','自矜','好胜'].includes(trait))return {
+    scene:k.name+'起身行礼：“我没事，也没等多久。”说话时却把折得发软的归期纸条合进掌心。陆绾在旁边坐下：“我出最后一道关时，也说不急。结果每听见一声马铃，就问还有多远。你在我面前，尽可说等得难受。”',
+    child:'嘴上说自己没等多久，手里还攥着写有归期的纸条。陆绾讲起她一路数着马铃盼归，自己这才肯说，等信的那几夜一直睡不踏实。',
+    mother:'听'+k.name+'硬撑着说没事，便先承认自己过了最后一道关也急着回家，让孩子慢慢说完等信时的担心。'
+  };
+  return {
+    scene:k.name+'嘴上说“一切都好”，转头却把廊下的灯提进来，问她这些日子可曾睡过囫囵觉。陆绾接过灯：“在驿站睡是睡了，半夜醒来，有两回还以为你在隔壁。”说罢，她让孩子挨着自己坐，问那盏灯夜夜是谁去添的油。',
+    child:'端来等陆绾用的灯，问她在军驿歇得好不好。陆绾说半夜醒来还以为孩子就在隔壁，两人才一同坐下说起这些日子。',
+    mother:'见'+k.name+'提进等她时留的灯，便说起自己在驿站醒来还想着孩子就在隔壁。灯放下了，两人仍挨着坐了很久。'
+  };
+}
+function luwanFrontierReunion(c,leave){
+  if(!inPalace(c)||S.over)return null;
+  const children=storyCastOffspring(c).filter(k=>!k.lost&&childInPalace(k));
+  const cast=[children.find(k=>kidAge(k)<8),children.find(k=>kidAge(k)>=8)].filter(Boolean);
+  if(!cast.length)return null;
+  const exchanges=cast.map(luwanReunionExchange),late=leave.delay&&S.turn>=leave.due-1;
+  const apology=late?'陆绾把被驿站耽搁的回信摊到桌上：“这一封拖得太久，让你们空等了。下回若换了驿路，我会先托人捎一句准话。”':'';
+  let done=false;
+  const valid=()=>!done&&!S.over&&inPalace(c)&&cast.every(childInPalace);
+  const close=(label,result)=>({t:label,f:()=>{
+    if(!valid())return null;
+    done=true;
+    const source='北境归来后相见';
+    for(const [i,k] of cast.entries())luwanFrontierNote(k,c,leave,'reunion',exchanges[i].child+result,source);
+    luwanFrontierNote(c,c,leave,'reunion',exchanges.map(x=>x.mother).join('')+apology+result,source,cast);
+    return result;
+  }});
+  return {title:'陆绾 · 归来相见',por:c,cast,present:[c,...cast],valid,
+    text:['陆绾把随身带回的伤员簿交给内侍，叫他们先别摆接风席，只想先去看孩子。',...exchanges.map(x=>x.scene),apology].filter(Boolean).join('\n'),
+    choices:[
+      close('留她和孩子好好说说话','你让随侍都退到廊下。里头低声说了许久，送来的茶也添了第二回。'),
+      close('陪在身边，听她慢慢说','你把茶递给陆绾。她先问孩子这些日子过得怎样，听完才讲起归途。茶渐渐凉了，谁也不急着起身。')
+    ]};
+}
 function storyCastFrontierReturn(c,early=false){
   const leave=c.homeLeave;
   delete c.homeLeave;
@@ -408,6 +455,11 @@ function storyCastFrontierReturn(c,early=false){
   if(PalaceActions.luwanFrontierChronicles)luwanFrontierReactions(c,leave,'return');
   else for(const k of storyCastOffspring(c,5)){if(k.fieldWorry){delete k.fieldWorry;k.mood=clamp(k.mood+10);}kstory(k,'亲眼见到母妃自北境回宫，这才放下心来。');}
   syncLuwanFrontierMap();
+  if(early){
+    if(PalaceActions.luwanFrontierReunion)pushEv(luwanFrontierReunion(c,leave));
+  }else pushEv({title:'陆绾 · 北境归来',luwanFrontierReturn:true,por:c,text,choices:[{t:'听她讲完这趟差事',f:()=>{
+    if(PalaceActions.luwanFrontierReunion)pushNow(luwanFrontierReunion(c,leave));
+  }}]});
   return text;
 }
 function storyCastFrontierTick(c){
@@ -423,10 +475,7 @@ function storyCastFrontierTick(c){
     else for(const k of storyCastOffspring(c,5).filter(childInPalace)){k.fieldWorry=true;k.mood=clamp((k.mood??65)-10);kstory(k,'已经到了母妃先前说的归期，军驿却没有回信。忍不住问：“娘什么时候回来？” 心情−10。');}
     log('北境家书逾期，陆绾的孩子惦记母妃归期。',1);
   }
-  if(S.turn>=leave.due){
-    const text=storyCastFrontierReturn(c);
-    pushEv({title:'陆绾 · 北境归来',por:c,text,choices:[{t:'听她讲完这趟差事'}]});
-  }
+  if(S.turn>=leave.due)storyCastFrontierReturn(c);
 }
 function storyCastMilitaryEvent(c,w){
   return {title:'陆绾 · 边城来急报',por:c,valid:()=>inPalace(c)&&storyCastFrontier(c)?.id===w.id,
