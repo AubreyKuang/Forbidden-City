@@ -70,7 +70,9 @@ function immortalRecord(k,title,text,kind='news'){
 }
 function immortalMaternalDiscovery(k){
  const r=k.immortal;
- if(journalContentVersion()<49||r.familyHeard)return;
+ if(journalContentVersion()<49)return;
+ if(immortalDiscoveryNewsActive()){shareImmortalDiscovery(k);return;}
+ if(r.familyHeard)return;
  r.familyHeard=true;
  const m=byId(k.mom)||familyHostById(k.mom);
  if(!m)return;
@@ -115,8 +117,11 @@ function immortalTravelPetition(k){
 }
 function immortalDiscover(k){
  if(!immortalEnabled()||!immortalLocal(k)||kidAge(k)<12||k.immortal||!immortalRoot(k)||daoInterest(k)<=0)return false;
+ reconcileImmortalDiscovery();
+ if(immortalDiscoveryNewsActive()&&S.immortalDiscovery)return false;
  initImmortalTalent(k);
  k.immortal={root:k.immortalTalent,route:k.mar>k.lit||['好胜','爽直'].includes(childDisposition(k))?'sword':'cloud',stage:'noticed',since:S.turn,due:S.turn,history:[],merit:0,rank:0,lastLetter:-99};
+ if(immortalDiscoveryNewsActive())S.immortalDiscovery={id:k.id,gen:S.gen,turn:S.turn};
  immortalRecord(k,'灵根初显',`钦安殿试拂玉磬时，${k.name}指下亮起一线清光，竟与殿外松风相应。国师辨为${k.immortal.root}，记入问道册；仍须慢慢学习，未曾许诺长生。`,'discovery');immortalMaternalDiscovery(k);return true;
 }
 function immortalDepart(k){
@@ -267,7 +272,8 @@ function immortalTick(){
   if(mother?.alive)story(mother,`【灵根之后】她听说${k.name}还收着问道的手记。此事渐渐安静下来，她仍想找个机会问问孩子，知道自己有灵根后，最惦记的是什么。`);
  }
  const p=S.flags.immortalPace||={last:-99,lastOffer:-99};
- if(S.turn-p.last<6||mourningActive())return;
+ reconcileImmortalDiscovery();
+ if((immortalDiscoveryNewsActive()&&S.immortalDiscovery)||S.turn-p.last<6||mourningActive())return;
  p.last=S.turn;
  const candidates=S.children.filter(k=>immortalLocal(k)&&kidAge(k)>=12&&!k.immortal&&immortalRoot(k)&&daoInterest(k)>0);
  if(candidates.length&&chance(.35))immortalDiscover(pick(candidates));

@@ -735,7 +735,7 @@ A.endMonth=function(){
     princeFiefRequestTick();
     for(const k of S.royalRelatives||[])if(k.princeCareer)princeCircleTick(k);
   }
-  const must=[passing?null:haremRemonstranceEvent(),passing?null:pendingImmortalEvent(),passing?null:pendingRoyalTravelEvent(),passing?null:pendingTravelInstitutionEvent(),passing?null:pendingRoyalSchoolRevision(),passing?null:pendingLocalChronicleReview(),passing?null:pendingClassicStory(),passing?null:pendingYiLandEvent(),passing?null:arcTick(),heirTick(),milestone(),parentageReportEvent(),birthSwapClueEvent(),birthSwapSearchReport(),pendingBirthSwapJustice(),pendingKinGreeting(),pendingMaternalKinCare(),pendingMaternalSisterArrival(),pendingDaoVoyage(),pendingTravelerEvent(),pendingOfficialReport(),pendingConcealedLoss(),...(legacyPendingAction()?[]:[pendingIncognitoReport(),passing?null:jingtishiEvent(),passing?null:selectionCouncilEvent()]),passing||typeof pendingHaremStewardEvent!=='function'?null:pendingHaremStewardEvent(),...(familyGardenActive()&&!passing?[familyGardenMonthlyEvent(),familyGardenDisputeEvent()]:[])].filter(Boolean),opt=[];
+  const must=[passing?null:haremRemonstranceEvent(),passing?null:pendingImmortalEvent(),passing?null:immortalDiscoveryCourtEvent(),passing?null:pendingRoyalTravelEvent(),passing?null:pendingTravelInstitutionEvent(),passing?null:pendingRoyalSchoolRevision(),passing?null:pendingLocalChronicleReview(),passing?null:pendingClassicStory(),passing?null:pendingYiLandEvent(),passing?null:arcTick(),heirTick(),milestone(),parentageReportEvent(),birthSwapClueEvent(),birthSwapSearchReport(),pendingBirthSwapJustice(),pendingKinGreeting(),pendingMaternalKinCare(),pendingMaternalSisterArrival(),pendingDaoVoyage(),pendingTravelerEvent(),pendingOfficialReport(),pendingConcealedLoss(),...(legacyPendingAction()?[]:[pendingIncognitoReport(),passing?null:jingtishiEvent(),passing?null:selectionCouncilEvent()]),passing||typeof pendingHaremStewardEvent!=='function'?null:pendingHaremStewardEvent(),...(familyGardenActive()&&!passing?[familyGardenMonthlyEvent(),familyGardenDisputeEvent()]:[])].filter(Boolean),opt=[];
   const firstNightReminder=passing?null:queenFirstNightReminder();if(firstNightReminder)must.push(firstNightReminder);
   const inquiry=pendingSisterInquiry();if(inquiry)must.unshift(inquiry);
   if(comingOfAge)must.unshift(comingOfAge);
@@ -826,6 +826,7 @@ function deathEvent(why){
 function succeed(h){
   const old=E(),a=kidAge(h);
   pushNow({title:'新君登基',por:h,text:`${h.name}即将即位。请为新朝拟定年号（二字）：`,input:{def:pick(ERAS.filter(x=>x!==old.era)),max:2},choices:[{t:'改元',f:v=>{
+    reconcileImmortalDiscovery();
     rememberDynastyClans();
     if(royalTravelAway(h))returnRoyalTraveler(h);
     if(regnalChronicleActive()){closeRegnalChronicle();delete S.flags.outerSouthernTour;}
