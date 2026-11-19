@@ -198,6 +198,7 @@ function recordHouseholdNews(k){
 }
 function marriedLifeTick(){
   if(S.over)return;
+  royalNatalMarriageTick();
   for(const k of royalHouseholds()){
     if(k.princeAdoptionOrigin)continue;
     whiteSpringFamilyTick(k);

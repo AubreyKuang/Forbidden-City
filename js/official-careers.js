@@ -226,7 +226,7 @@ function familyPromotionThought(c,role){
 }
 function recordSisterPalaceConcerns(c,old,kind,fact,key,stamp){
   const h=houseOf(c);if(!h)return;
-  const sisters=[...natalPeople(h).filter(p=>p.sex==='f'&&!p.parentRelativeId&&!p.motherRelativeId&&natalAge(p)>=6),
+  const sisters=[...natalPeople(h).filter(p=>p.sex==='f'&&!p.natalCollateral&&!p.parentRelativeId&&!p.motherRelativeId&&natalAge(p)>=6),
     ...paternalFamily(c).filter(p=>p!==c&&S.consorts.includes(p)&&!p.gone)];
   const cause=['cold','demoted'].includes(kind)?familyPenaltyContext(c,old):null;
   for(const p of sisters){

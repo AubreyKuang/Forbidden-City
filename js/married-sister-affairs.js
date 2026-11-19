@@ -3,7 +3,7 @@ const marriedSisterAffairsActive=()=>journalContentVersion()>=34;
 
 function marriedSisterAvailable(c,p){
   return marriedSisterAffairsActive()&&!S.over&&!mourningActive()&&inPalace(c)&&p?.sex==='f'&&p.alive&&!p.consortId&&
-    !p.parentRelativeId&&!p.motherRelativeId&&p.married&&p.spouse?.alive!==false&&(!!p.spouse||journalContentVersion()>=40)&&!p.widow&&natalAge(p)>=18&&
+    !p.natalCollateral&&!p.parentRelativeId&&!p.motherRelativeId&&p.married&&p.spouse?.alive!==false&&(!!p.spouse||journalContentVersion()>=40)&&!p.widow&&natalAge(p)>=18&&
     (!p.spouse?.personId||officialAlive(maritalFather(p,null)?.p));
 }
 

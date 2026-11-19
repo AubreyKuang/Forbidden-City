@@ -22,10 +22,15 @@ function marriageCandidate(k,route){
 }
 function marriageEmpress(k){
   const spouse=k.married&&k.spouse;if(!spouse)return null;
+  if(spouse.natalHost!=null){
+    const e=natalEntry(spouse.natalHost,spouse.personId);
+    return e?.p.alive?royalNatalConsort(e.c,e.p):null;
+  }
   const em=spouse.appearance?JSON.parse(JSON.stringify(spouse.appearance)):makeGirl({sur:spouse.sur,given:spouse.name.slice((spouse.sur||'').length)});
   em.age=Math.max(15,kidAge(spouse));return em;
 }
 function marriageStatus(k){
+  if(royalNatalEngaged(k))return '已定亲 · '+k.betrothal.name;
   if(royalTravelAway(k))return '离宫游历，暂不议婚';
   if(immortalAway(k))return '山中修行，暂不议婚';
   if(!k.alive||k.templeStay||k.removedFromRoyal||kidAge(k)<15||k.pendingName)return '';
@@ -50,10 +55,11 @@ function spouseAppearance(k){
   return {sex:k.sex==='f'?'m':'f',born:k.born,seed,...person,courtGuest:true};
 }
 function marriagePanel(k){
-  if(!k.alive||royalJourneyAway(k)||kidAge(k)<15||k.pendingName)return '';
+  const partner=royalNatalPartnerPanel(k);
+  if(royalNatalEngaged(k)||!k.alive||royalJourneyAway(k)||kidAge(k)<15||k.pendingName)return partner;
   const spouse=k.spouse;
   return `<section class="marriage-panel" aria-label="皇嗣婚事">${spouse?`<figure class="spouse-portrait">${porImg(spouseAppearance(k),112)}<figcaption>${k.sex==='f'?'驸马':'王妃'} · ${esc(spouse.name)}</figcaption></figure>`:''}<div class="grow"><strong>${esc(marriageStatus(k))}</strong><p class="hint">${spouse?esc(spouse.background||spouse.fatherName&&spouse.fatherName+'之子'||'双方心意已定'):
-    k.married?'这门婚事已经记入起居注。':'先看名帖、听本人意愿，再确认赐婚；也可以暂缓半年。'}</p>${Number.isFinite(spouse?.trust)?`<p class="hint">夫妻信任 ${rd(spouse.trust)} / 100${spouse.story?.length?' · '+esc(spouse.story[spouse.story.length-1].t):''}</p>`:''}</div>${marriageButton(k)}</section>`;
+    k.married?'这门婚事已经记入起居注。':'先看名帖、听本人意愿，再确认赐婚；也可以暂缓半年。'}</p>${Number.isFinite(spouse?.trust)?`<p class="hint">夫妻信任 ${rd(spouse.trust)} / 100${spouse.story?.length?' · '+esc(spouse.story[spouse.story.length-1].t):''}</p>`:''}</div>${marriageButton(k)}</section>`+partner;
 }
 function princeMarriage(k){
   const order=k.lit>=k.mar&&k.lit>=k.vir?['scholar','household','martial']:k.mar>=k.vir?['martial','household','scholar']:['household','scholar','martial'];
@@ -83,3 +89,202 @@ A.kidMarriage=function(id){
   if(k.sex==='f'){A.princessMarriage(id);return;}
   pushEv(princeMarriage(k));save('auto');
 };
+
+/* 外家婚约保留双方的原人物档案，成年后接入皇嗣府中的婚后生活。 */
+const ROYAL_NATAL_MATCH='royal-natal';
+const ROYAL_NATAL_ADULT=18;
+const ROYAL_NATAL_AGE_GAP=36;
+const royalNatalMatchActive=()=>journalContentVersion()>=117;
+const royalNatalEngaged=p=>p?.betrothal?.kind===ROYAL_NATAL_MATCH;
+const royalNatalMarriageAge=(k,p)=>Math.max(k.born,p.born)+ROYAL_NATAL_ADULT*12;
+const royalNatalParentageEligible=p=>!p.outsideFamilyOrigin&&!p.unconfirmedParentage&&
+  (!p.outsideParentage||p.outsideParentage.status==='cleared');
+
+function royalNatalChildReady(k){
+  const age=kidAge(k);
+  return k.alive&&!k.pendingName&&!k.married&&!k.spouse&&!k.betrothal&&!k.natalMatchAsked&&
+    !k.adoptedRoyal&&!k.outerRegisterId&&!k.birthSwap?.occurred&&!k.removedFromRoyal&&
+    !k.jailed&&childInPalace(k)&&age>=2&&age<=11;
+}
+function royalNatalRelativeReady(k,p){
+  return p.alive&&p.sex===(k.sex==='m'?'f':'m')&&!p.consortId&&!p.visit&&!p.married&&!p.spouse&&!p.betrothal&&
+    royalNatalParentageEligible(p)&&natalAge(p)>=1&&Math.abs(k.born-p.born)<=ROYAL_NATAL_AGE_GAP;
+}
+function royalNatalFamilyOptions(c,k,h=c.house){
+  if(!h)return [];
+  const branches=[{c,h,collateral:false},...cousinFatherEntries(c).map(e=>({c:e.c,h:e.e.h,collateral:true}))];
+  const out=[];
+  for(const branch of branches){
+    const {h}=branch,people=h.relatives||[];
+    const mothers=new Map(people.filter(p=>p.sex==='f'&&!p.parentRelativeId&&!p.motherRelativeId&&
+      !p.consortId&&!p.outsideFamilyOrigin).map(p=>[p.id,p]));
+    for(const p of natalPeople(h)){
+      const mother=mothers.get(p.motherRelativeId??p.parentRelativeId);
+      if(mother&&royalNatalRelativeReady(k,p))
+        out.push({host:branch.c,p,mother,collateral:branch.collateral||!!mother.natalCollateral});
+    }
+  }
+  return out.sort((a,b)=>Number(a.collateral)-Number(b.collateral)||Math.abs(a.p.born-k.born)-Math.abs(b.p.born-k.born));
+}
+function royalNatalCanRegisterBranch(c){
+  return !!c.house?.natal&&!c.house.natal.marriageBranchRegistered;
+}
+function registerRoyalNatalBranch(c,k){
+  const h=c.house,seed=marriageHash(`royal-natal:${h.father.id}:${k.id}`);
+  const childAge=Math.max(1,kidAge(k)+(seed%3)-1);
+  const motherAge=Math.min(49,Math.max(c.age+2,childAge+19));
+  const elderAge=h.father.age,mother=addNatalPerson(c,h,'f',motherAge,seed,false);
+  h.father.age=elderAge;
+  mother.natalCollateral=true;
+  mother.married=true;
+  const father=initialNatalSpouse(mother,motherAge);
+  const surnames=SUR.filter(s=>s!==c.sur&&s!==E().sur);
+  father.sur=surnames[seed%surnames.length];father.name=father.sur+BROTHER_NAMES[seed%BROTHER_NAMES.length];
+  mother.spouse=father;
+  mother.lifeCourse={adult:S.turn,children:1,lastBirth:S.turn-childAge*12,last:S.turn};
+  const p=addNatalPerson(c,h,k.sex==='m'?'f':'m',childAge,voiceHash(seed+':child'),false);
+  p.sur=father.sur;p.name=p.sur+p.given;
+  p.parentRelativeId=mother.id;p.fatherId=father.id;p.fatherName=father.name;
+  h.natal.marriageBranchRegistered=true;
+  story(mother,`族谱补录：与${fullName(c)}为堂姐妹，嫁与${father.name}，育有${p.name}。`);
+  story(p,`由${mother.name}与${father.name}在家中抚养，随母亲一支载入外家名册。`);
+  return {host:c,p,mother,collateral:true};
+}
+function royalNatalMarriageProposal(){
+  if(!royalNatalMatchActive()||S.over||mourningActive()||S.turn-(S.flags.lastRoyalNatalProposal??-12)<12)return null;
+  const entries=S.children.filter(royalNatalChildReady).flatMap(k=>{
+    const c=byId(k.mom);
+    if(!inPalace(c)||c.maid||!c.house)return [];
+    const option=royalNatalFamilyOptions(c,k)[0];
+    return option||royalNatalCanRegisterBranch(c)?[{c,k,option}]:[];
+  });
+  const known=entries.filter(e=>e.option);
+  if(!entries.length||!chance(known.length ? .08 : .025))return null;
+  const direct=known.filter(e=>!e.option.collateral);
+  const {c,k,option}=pick(direct.length?direct:known.length?known:entries);
+  const {host,p,mother,collateral}=option||registerRoyalNatalBranch(c,k);
+  const relation=k.sex==='m'?'女儿':'儿子',name=kidName(k);
+  const introduction=collateral
+    ?`家书附了族谱里堂亲一房的近况。她的${host===c?natalLabel(c,mother):'堂亲'}${mother.name}有个${relation}，名叫${p.name}，今年${natalAge(p)}岁。`
+    :`她的${natalLabel(c,mother)}${mother.name}写信来，说${relation}${p.name}今年${natalAge(p)}岁。`;
+  const letters=[
+    '前些日子家里捎来两只小竹马，她一见就想起自己小时候和姐妹争骑一根竹竿的事。',
+    '她把两人的生辰写在一张纸上，挨在窗下算了半晌，笑说原来两个孩子隔得这样近。',
+    '信里还夹着小孩描的花样。她把纸铺平，想起小时候在外家过节，正是这一房亲眷陪她守岁。'
+  ];
+  const valid=()=>inPalace(c)&&royalNatalChildReady(k)&&royalNatalRelativeReady(k,p);
+  return {title:'外家有约 · 娃娃亲',por:c,cast:[k,natalPortrait(p)],present:[c],valid,
+    onShow:()=>{S.flags.lastRoyalNatalProposal=S.turn;},
+    text:`${fullName(c)}趁问安时提起一封家书。${introduction}${name}今年${kidAge(k)}岁，两个孩子年岁相近。${letters[marriageHash(k.id+':match-letter')%letters.length]}\n她想求陛下准两家先交换婚帖，等孩子们都满十八岁，照礼成婚。`,
+    choices:[
+      {t:'准两家交换婚帖',f:()=>{
+        if(!valid())return null;
+        const due=royalNatalMarriageAge(k,p);
+        k.betrothal={kind:ROYAL_NATAL_MATCH,host:host.id,personId:p.id,name:p.name,turn:S.turn,due,motherId:c.id};
+        p.betrothal={kind:ROYAL_NATAL_MATCH,personId:k.id,name:k.name,turn:S.turn,due};
+        const text=`${name}与${p.name}交换婚帖，订下婚约，待二人都满十八岁按礼成婚。`;
+        royalNatalStory(k,p,c,'外家定亲',text,`家里替${p.name}收好婚帖，另把宫中亲眷的名字与生辰抄在册中。`,
+          `她如愿为${k.name}与${p.name}换了婚帖。回娘家的信里又添一句，两个孩子的生辰往后都记着。`);
+        return text;
+      }},
+      {t:'等孩子长大，自行议婚',f:()=>{
+        if(!valid())return null;
+        k.natalMatchAsked=true;
+        const text=`${fullName(c)}曾提起与${p.name}家结亲。陛下让孩子们长大后再自行议婚，家中收到回音。`;
+        royalNatalStory(k,p,c,'婚议暂留',text,`${p.name}家收到回书，依旧照常与宫中亲眷通问。`,
+          `外家的婚事留待孩子们长大再议。她回信时先问${p.name}近来学会了什么。`);
+        return '家书送回外家，两家照常往来。';
+      }}
+    ]};
+}
+function royalNatalStory(k,p,c,title,text,relativeText,motherText=text){
+  const people=[k,p,c].filter(Boolean);
+  for(const person of people){
+    person.story ||= [];
+    story(person,`【${title}】${person===p?relativeText:person===c?motherText:text}`);
+    person.story.at(-1).life={kind:'family',title,turn:S.turn,gen:S.gen,source:'外家婚帖',summary:text,
+      people:people.map(x=>({id:x.id,name:x.sex?x.name:fullName(x)}))};
+  }
+  log(`【${title}】${text}`,1);
+}
+function royalNatalConsort(host,p){
+  const face=makeGirl({sur:p.sur,given:p.given,age:natalAge(p),trait:p.trait,fam:{...host.fam}});
+  face.id=p.id;face.seed=p.seed;face.artPortrait=p.artPortrait;
+  face.familyBranchOrigin={host:host.id,relative:p.id};
+  face.story=p.story.map(entry=>({...entry}));p.consortId=face.id;
+  return face;
+}
+function royalNatalMarry(k,p,host,b){
+  const c=familyHostById(b.motherId),ruling=k===E().natalMarriageHeir,name=ruling?'新帝'+k.name:kidName(k);
+  delete k.betrothal;delete p.betrothal;delete p.visit;
+  k.married=true;
+  const face=natalPortrait(p);
+  k.spouse={id:p.id,personId:p.id,natalHost:host.id,name:p.name,sur:p.sur,sex:p.sex,born:p.born,seed:p.seed,
+    alive:true,official:face.official,artPortrait:p.artPortrait,trait:p.trait,background:`${c?c.sur:host.sur}氏外家`,marriedAt:S.turn};
+  if(p.sex==='f')k.spouse.appearance={sur:p.sur,given:p.given,age:natalAge(p),seed:p.seed,artPortrait:p.artPortrait,trait:p.trait,rank:0};
+  p.married=true;
+  p.spouse={id:k.id,royalId:k.id,name:k.name,sur:E().sur,born:k.born,alive:true,marriedAt:S.turn};
+  if(p.sex==='m')p.royalSpouseId=k.id;
+  const text=`${name}与${p.name}都已满十八岁，依幼时所定的婚约行礼成婚。礼部将两人的旧婚帖与成婚日期一同存档。`;
+  royalNatalStory(k,p,c,'依约成婚',text,`礼成后，${p.name}将两家旧日交换的婚帖收进新居。`,
+    `婚礼这日，她找出当年问过的那张生辰纸。纸角已黄，当初挨着写下的两个名字还清楚。`);
+  if(ruling){
+    const bride=royalNatalConsort(host,p);
+    bride.favor=35;bride.aff=30;bride.knownBeforeAccession=true;
+    addConsort(bride,empress()?6:8,'依幼时婚约成婚，迎入宫中');
+  }else ensureMarriedLife(k);
+}
+function royalNatalCancel(k,p){
+  const b=k.betrothal;
+  delete k.betrothal;
+  if(royalNatalEngaged(p)&&p.betrothal.personId===k.id)delete p.betrothal;
+  k.natalMatchAsked=true;
+  const text=`${k.name}与${b.name}的婚约已撤销，旧婚帖另存礼部。`;
+  royalNatalStory(k,p,familyHostById(b.motherId),'婚约作罢',text,text);
+}
+function royalNatalEndReign(ruler){
+  if(!royalNatalEngaged(ruler))return;
+  const b=ruler.betrothal;
+  royalNatalCancel(ruler,natalEntry(b.host,b.personId)?.p);
+}
+function royalNatalMarriageTick(){
+  if(!royalNatalMatchActive())return;
+  const ruler=E().natalMarriageHeir;
+  const children=royalHouseholds();
+  if(ruler)children.push(ruler);
+  for(const k of children){
+    if(k.spouse?.natalHost!=null){
+      const p=natalEntry(k.spouse.natalHost,k.spouse.personId)?.p;
+      if(p?.alive===false)k.spouse.alive=false;
+      if(k.alive===false&&p?.spouse?.royalId===k.id)p.spouse.alive=false;
+    }
+    if(!royalNatalEngaged(k))continue;
+    const b=k.betrothal,e=natalEntry(b.host,b.personId),p=e?.p;
+    const linked=royalNatalEngaged(p)&&p.betrothal.personId===k.id;
+    if(!linked||!k.alive||k.removedFromRoyal||k.married||k.spouse||!p.alive||p.consortId||
+       p.married||p.spouse||!royalNatalParentageEligible(p)){
+      royalNatalCancel(k,p);
+      continue;
+    }
+    if(S.turn>=b.due&&!k.jailed&&!k.templeStay&&!royalJourneyAway(k)&&!p.jailed&&!p.exiled)
+      royalNatalMarry(k,p,e.c,b);
+  }
+}
+function royalNatalPersonLink(view,id,name){
+  return `<button class="person-link" onclick="A.go('${view}',${royalActionArg(id)})">${esc(name)} ↗</button>`;
+}
+function royalNatalPartnerPanel(k){
+  const b=royalNatalEngaged(k)?k.betrothal:null,s=k.spouse;
+  if(!b&&s?.natalHost==null)return '';
+  const e=b?natalEntry(b.host,b.personId):natalEntry(s.natalHost,s.personId);
+  const name=e?.p.name||(b||s).name;
+  const link=e?royalNatalPersonLink('natal',e.c.id+':'+e.p.id,name):esc(name);
+  return detailSection(b?'已定亲':'配偶档案',`<p>${b?'定亲对象':'配偶'} · ${link}${b?' · 等双方满十八岁后成婚':''}</p>`);
+}
+function natalRoyalPartnerLine(p){
+  const b=royalNatalEngaged(p)?p.betrothal:null,id=b?.personId??p.spouse?.royalId;
+  if(id==null)return '';
+  const ruler=E().natalMarriageHeir,k=ruler?.id===id?ruler:royalById(id),name=k&&k===ruler?k.name+' · 当朝天子':k?kidName(k):(b||p.spouse).name;
+  const link=k?royalNatalPersonLink(S.children.includes(k)?'kid':'relative',k.id,name):esc(name);
+  return `<p>${b?'已定亲':'配偶'} · ${link}${b?' · 等双方满十八岁后成婚':k?.alive===false?' · 已故':''}</p>`;
+}

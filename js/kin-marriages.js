@@ -117,7 +117,7 @@ function kinMarriageTick(){
       if(p.sex!=='f'||p.alive===false||p.visit)continue;
       const age=natalAge(p);
       if(p.married&&p.spouse&&!p.spouse.desc)p.spouse.desc=spouseFor(c,p,{alliance:false}).desc;
-      if(age<20||p.married)continue;
+      if(age<20||p.married||royalNatalEngaged(p))continue;
       if(journalContentVersion()>=15&&p.widow&&!p.betrothal)continue;
       if(age>=30){marrySister(c,p,p.betrothal&&matchStillOpen(p.betrothal.match)?p.betrothal.match:spouseFor(c,p,{alliance:false}),{quiet:!p.betrothal});continue;}
       // 头一回清点：家中早有安排的，照实补记；不靠抽签。
@@ -149,7 +149,7 @@ courtTick=function(...args){const result=kinMarriageBaseTick.apply(this,args);ki
 function betrothalCandidates(){
   const out=[];
   for(const c of harem()){const h=houseOf(c);if(!h)continue;
-    for(const p of natalPeople(h))if(p.sex==='f'&&p.alive!==false&&p.betrothal&&!p.betrothal.seen&&!p.married&&matchStillOpen(p.betrothal.match))out.push({c,h,p});}
+    for(const p of natalPeople(h))if(p.sex==='f'&&p.alive!==false&&p.betrothal&&!royalNatalEngaged(p)&&!p.betrothal.seen&&!p.married&&matchStillOpen(p.betrothal.match))out.push({c,h,p});}
   return out;
 }
 function betrothalEvent(){
@@ -183,6 +183,7 @@ function betrothalEvent(){
 
 /* —— 显示 —— */
 function natalMarriageLine(p){
+  if(royalNatalEngaged(p))return natalRoyalPartnerLine(p);
   if(p.betrothal&&!p.married)return `<p>议亲：${esc(p.betrothal.match.desc)}${esc(p.betrothal.match.name)}</p>`;
   return '';
 }
