@@ -1,11 +1,11 @@
 /* A social disposition, independent of talent and spiritual interests.
    Only newly generated people are assigned it; loading never rewrites a life. */
 const SOLITARY_PATHS={letters:'清雅才情',dao:'清心问道',both:'诗道兼修'};
-function isSolitary(c){return !!(!c?.sex&&SOLITARY_PATHS[c?.solitary?.path]);}
+function isSolitary(c){return !!(randomConsortOriginsAllowed(c)&&!c?.sex&&SOLITARY_PATHS[c?.solitary?.path]);}
 function socialPair(a,b){return (!isSolitary(a)&&!isSolitary(b))||whiteSpringFriends(a,b);}
 function solitaryDao(c){return isSolitary(c)&&['dao','both'].includes(c.solitary.path);}
 function initSolitary(c){
-  if(c.solitary!==undefined||c.age<16||c.fam.t==='宫女'||!['才女','好学','聪慧','淡泊','沉静','持重','体弱'].includes(c.trait))return;
+  if(!randomConsortOriginsAllowed(c)||c.solitary!==undefined||c.age<16||c.fam.t==='宫女'||!['才女','好学','聪慧','淡泊','沉静','持重','体弱'].includes(c.trait))return;
   const random=mulberry32(c.seed^0x173ca9);
   if(random()>=.16)return;
   const literary=['才女','好学','聪慧'].includes(c.trait);
@@ -64,7 +64,7 @@ function solitaryEvent(c){
     NPCMemory.record(S,{type:'solitary-trust',time:S.turn,location:c.palace,participants:[c.id],outcome:line},[{person:c.id,subject:'emperor',interpretation:line,emotion:kind==='press'?-.25:.65,impact:65}]);
     save('auto');return line+'\n'+answer;
   };
-  return {title:titles[stage],por:c,present:[c],valid,text,choices:[
+  return {title:titles[stage],randomOriginCast:[c],por:c,present:[c],valid,text,choices:[
     {t:stage===2?'相伴也各留清静 · 精力−1':'尊重她的选择，安静喝茶 · 精力−1',cond:()=>E().energy>0,f:()=>finish('respect')},
     {t:'认真谈谈，也说出不同看法 · 精力−1',cond:()=>E().energy>0,f:()=>finish('discuss')},
     {t:'劝她多赴宴、多结交 · 精力−1',cond:()=>E().energy>0,f:()=>finish('press')},

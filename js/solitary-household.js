@@ -38,13 +38,14 @@ function solitaryQuietEvent(c){
   const text=respect?'陛下请同宫各人商量安静时辰，闲访先通传、嬉闹另择地方；孩子哭病时仍先照顾，不以清静为由责罚乳母或孩子。她道：“臣妾求的就是这点余地。”':'陛下劝她习惯热闹。她仍依礼应下，却轻声说明：应付得来，并不意味着心里不累。';
   if(respect){c.quietHousehold.quietUntil=S.turn+3;solitaryHouseholdTick(c);}cchg(c,{aff:respect?4:-2,mood:respect?5:-3});story(c,`【留一段清静】${text}`);save('auto');return text;
  };
- return {title:'留一段清静',por:c,present:[c],valid,onQueue:()=>solitaryHouseholdTick(c),text:`${env.reason}。她将书放下：“礼数臣妾都能尽，只是想有一段无人催着开口的时辰。”${env.own.length?'说话间，她仍替自己身边的孩子理好衣领。':''}`,choices:[{t:'协调作息，给她独处的时辰 · 精力−1',cond:()=>E().energy>0,f:()=>finish(true)},{t:'劝她习惯热闹 · 精力−1',cond:()=>E().energy>0,f:()=>finish(false)},{t:'再看看各宫安排',f:()=>{A.openResidence(c.id);return null;}}]};
+ return {title:'留一段清静',randomOriginCast:[c],por:c,present:[c],valid,onQueue:()=>solitaryHouseholdTick(c),text:`${env.reason}。她将书放下：“礼数臣妾都能尽，只是想有一段无人催着开口的时辰。”${env.own.length?'说话间，她仍替自己身边的孩子理好衣领。':''}`,choices:[{t:'协调作息，给她独处的时辰 · 精力−1',cond:()=>E().energy>0,f:()=>finish(true)},{t:'劝她习惯热闹 · 精力−1',cond:()=>E().energy>0,f:()=>finish(false)},{t:'再看看各宫安排',f:()=>{A.openResidence(c.id);return null;}}]};
 }
 A.quietHousehold=function(id){if(!modalOpen)pushEv(solitaryQuietEvent(byId(id)));};
 function travelerQuietPair(person){
  const people=harem().filter(cohabAvailable);
  for(const quiet of people.filter(c=>isSolitary(c)&&(!person||c===person)))for(const traveler of people){
-  if(traveler===quiet||!traveler.timeTraveler||traveler.timeTraveler.closed||traveler.timeTraveler.pending||traveler.palace!==quiet.palace||relGet(quiet,traveler)<-20)continue;
+  const identity=timeTravelerIdentity(traveler);
+  if(traveler===quiet||!identity||identity.closed||identity.pending||traveler.palace!==quiet.palace||relGet(quiet,traveler)<-20)continue;
   const key=cohabKey(quiet,traveler),old=S.flags.travelerQuiet?.[key];
   if(S.turn-(old?.turn??-99)>=6)return {quiet,traveler,key};
  }return null;
@@ -59,7 +60,7 @@ function travelerQuietEvent(person){
   for(const [c,o] of [[q,t],[t,q]]){const text=`【廊下新词】${line.replaceAll('\n','')}${reply}`;story(c,text);c.neighborWord={turn:S.turn,other:o.id,kind};NPCMemory.record(S,{type:'traveler-quiet',time:S.turn,location:c.palace,participants:[q.id,t.id],outcome:text},[{person:c.id,subject:o.id,interpretation:text,emotion:kind==='tease'?-.25:.25,impact:55}]);}
   cchg(q,{mood:kind==='tease'?-4:2,aff:kind==='tease'?-3:1});save('auto');return reply;
  };
- return {title:'廊下的新词',cast:[q,t],present:[q,t],valid,text:line,choices:[{t:'问问这个词是什么意思',f:()=>finish('ask')},{t:'听她们说完，不打扰',f:()=>finish('listen')},{t:'拿这个词逗她，劝她多凑热闹',f:()=>finish('tease')}]};
+ return {title:'廊下的新词',randomOriginCast:[q,t],cast:[q,t],present:[q,t],valid,text:line,choices:[{t:'问问这个词是什么意思',f:()=>finish('ask')},{t:'听她们说完，不打扰',f:()=>finish('listen')},{t:'拿这个词逗她，劝她多凑热闹',f:()=>finish('tease')}]};
 }
 A.neighborWord=function(id){if(!modalOpen)pushEv(travelerQuietEvent(byId(id)));};
 HAREM.push(function householdQuietEncounter(){

@@ -25,24 +25,24 @@ function pastLifeCandidates(){
 function assignPastLifeCandidates(){
   const sources=pastLifeCandidates(),a=S.pastLives;
   if(a.reigns[S.gen]||!sources.length)return;
-  const people=S.cands.filter(c=>c.age>=18&&!c.kin&&!c.timeTraveler&&!c.pastLife);
+  const people=S.cands.filter(c=>randomConsortOriginsAllowed(c)&&c.age>=18&&!c.kin&&!timeTravelerIdentity(c)&&!c.pastLife);
   if(!people.length||!chance(.12))return;
   const c=pick(people),source=pick(sources);
   c.pastLife={source:JSON.parse(JSON.stringify(source)),gen:S.gen,stage:0,last:null,history:[],accepted:false};
 }
 function acceptPastLife(c){
-  const p=c.pastLife;if(!p)return;
+  const p=c.pastLife;if(!randomConsortOriginsAllowed(c)||!p)return;
   const a=archivePastLives();
   if(a.reigns[S.gen]||a.claimed[p.source.key]||a.excluded.includes(p.source.id)){delete c.pastLife;return;}
   a.claimed[p.source.key]=c.id;a.reigns[S.gen]=c.id;p.accepted=true;
   story(c,'选秀时，举止间仿佛有故人之姿。她仍以今生的姓名入宫，旧梦尚未向人提起。');
 }
 function pastLifeSelectionHint(c){
-  if(!c?.pastLife)return '';
+  if(!randomConsortOriginsAllowed(c)||!c?.pastLife)return '';
   return c.pastLife.source.gen===S.gen?'她抬眼时，你心头忽然一动，仿佛有故人之姿；待她开口，却又分明是另一人的声音。':
     '引见的老宫人忽然怔住，低声道：“仿佛有故人之姿。”她却只报上今生的姓名，并不知道这宫门里曾住过谁。';
 }
-function pastLifeEligible(c){return !!(inPalace(c)&&!c.maid&&c.age>=18&&!S.over&&c.pastLife?.accepted&&c.pastLife.gen===S.gen);}
+function pastLifeEligible(c){return !!(inPalace(c)&&!c.maid&&c.age>=18&&!S.over&&randomConsortOriginsAllowed(c)&&c.pastLife?.accepted&&c.pastLife.gen===S.gen);}
 function pastLifeReady(c){
   if(!pastLifeEligible(c)||c.pastLife.closed||c.pastLife.stage>=3||c.hp<40||['悲恸','怨恨','心如死灰','惶恐'].includes(xinOf(c)))return false;
   const p=c.pastLife;
@@ -84,7 +84,7 @@ function pastLifeEvent(c){
     cchg(c,{aff:kind==='close'?-2:4,mood:kind==='close'?-2:6});pastLifeRecord(c,line);save('auto');
     return line+`\n她说：“${kind==='close'?'臣妾知道了。以后便说眼前的事。':stage===2?'那就从今日这一盏茶开始吧。':'您肯听，臣妾便不急着把一切想明白。'}”`;
   };
-  return {title:['梦里回廊','前尘有名','此生如何相认'][stage],illustration:stage===0?'dream-corridor':undefined,por:c,present:[c],valid,text:pastLifeText(c),choices:[
+  return {title:['梦里回廊','前尘有名','此生如何相认'][stage],randomOriginCast:[c],illustration:stage===0?'dream-corridor':undefined,por:c,present:[c],valid,text:pastLifeText(c),choices:[
     {t:stage===2?'愿与她续缘，也珍重今生 · 精力−1':'屏退宫人，听她慢慢讲 · 精力−1',cond:()=>E().energy>0,why:'本月精力不足',f:()=>finish(stage===2?'renew':'listen')},
     ...(stage===2?[{t:'不问前世，只珍惜眼前的人 · 精力−1',cond:()=>E().energy>0,why:'本月精力不足',f:()=>finish('present')}]:[]),
     {t:'请她收起旧梦，此后不再追问 · 精力−1',cond:()=>E().energy>0,why:'本月精力不足',f:()=>finish('close')},
@@ -103,7 +103,7 @@ function pastLifeVoice(c){
     '那本梦札已经收好了。今生的日子，还等着臣妾一页一页写下去。']);
 }
 function pastLifePanel(c){
-  const p=c.pastLife;if(!p)return '';
+  const p=c.pastLife;if(!randomConsortOriginsAllowed(c)||!p)return '';
   const title=p.closed?'旧梦封缄':p.ending||['故人之姿','旧梦初醒','前尘渐明'][p.stage];
   return `<section class="personal-experience"><h3>前尘往事 · ${esc(title)}</h3><p>${esc(p.stage>=2?`梦中前身：${p.source.name} · ${p.source.era}年间 · ${p.source.trait}`:pastLifeSelectionHint(c))}</p>
     <p class="hint">今生仍是${esc(fullName(c))}，${c.age}岁，${esc(c.trait)}。${p.stage>=2?'旧册所记与她自述的魂梦分别保存。':'她还没有将这段缘由讲明。'}</p>
@@ -118,7 +118,7 @@ A.pastLifePriest=function(id){
   const c=byId(id),p=c?.pastLife;
   const valid=()=>pastLifeEligible(c)&&p.stage>=1&&!p.closed&&!p.priest;
   if(modalOpen||!p||!valid())return;
-  pushEv({title:'国师论前缘',cast:[daoMaster(),c],present:[c],valid,
+  pushEv({title:'国师论前缘',randomOriginCast:[c],cast:[daoMaster(),c],present:[c],valid,
     text:`${pastLifePriestHome(c)?'她在本宫静养，宫人将梦札递往钦安殿。国师阅毕，遣人送回一笺解语：':'钦安殿的灯静静燃着。'+daoMaster().name+'听完她的梦，停了很久。'}\n“若说魂梦借影，或有前缘；若说年月生死，却不能凭一梦倒改。贫道不会断言她便是故人，也不会要她舍去今生的名字。”\n“前尘若真有牵挂，未必是叫人照旧再活一遍。该相认时相认，该放下时，也让她自己选。”\n她说：“${pastLifeTone(c)}”`,choices:[
       {t:'记下国师的话，陪她坐一会儿 · 精力−1',cond:()=>E().energy>0,why:'本月精力不足',f:()=>{if(!valid()||!useE())return null;p.priest=true;const line=(pastLifePriestHome(c)?'在本宫同读国师送来的解梦笺。':'同赴钦安殿问前缘。')+'国师以魂梦借影相解，未断言轮回，劝两人珍重今生。';pastLifeRecord(c,line);save('auto');return line;}},
       {t:'暂且告辞'}]});
