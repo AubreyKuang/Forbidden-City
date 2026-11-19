@@ -13,7 +13,7 @@ function workshopAt(id){return workshopsActive()&&UI.view==='place'&&UI.sel===id
 function workshopChild(k){return childInPalace(k)&&!k.pendingName&&kidAge(k)<15;}
 function workshopPicker(id,people,label,action,enabled){
   if(!people.length)return '';
-  return `<div class="acts"><select id="${id}" aria-label="${label}">${people.map(p=>`<option value="${p.id}">${esc(p.sex?kidName(p):cName(p)+' · '+fullName(p))}</option>`).join('')}</select><button class="btn jade" ${enabled?'':'disabled'} onclick="A.${action}(Number(document.getElementById('${id}').value))">${label}</button></div>`;
+  return `<div class="acts workshop-picker"><span class="workshop-select"><select id="${id}" aria-label="${label}">${people.map(p=>`<option value="${p.id}">${esc(p.sex?kidName(p):cName(p)+' · '+fullName(p))}</option>`).join('')}</select></span><button class="btn jade" ${enabled?'':'disabled'} onclick="A.${action}(Number(document.getElementById('${id}').value))">${label}</button></div>`;
 }
 function rehearsalPiece(c){
   if(c.fixedStory==='ayimu')return {name:'白泉鼓引',line:'她把故乡的鼓句拆成三拍，教乐工等银铃声落尽再接末拍。',show:'阿依慕轻击鼓沿，乐工等她腕上的银铃停住才齐齐入拍。'};
@@ -30,7 +30,7 @@ function musicRoom(){
   const ready=!mourningActive()&&book?.lastRehearsal!==S.turn&&E().energy>0;
   return `<h2>南府乐房${backBtn}</h2>`+(p?
     `<p>节目单上留着${esc(fullName(byId(p.artist)))}的《${esc(p.name)}》，还能留 ${p.turn+6-S.turn} 个月。筹办御花园小宴时，先请本人入席，再勾选这个节目。</p><div class="acts">${banquetReady()&&!mourningActive()?'<button class="btn jade" onclick="A.openBanquet()">筹办御花园小宴</button>':''}<button class="btn quiet" onclick="A.withdrawWorkshopProgram()">撤下节目单</button></div>`:
-    `<p>为御花园小宴排一段节目。每月可排一次，耗 1 精力，节目单保留六个月。</p>`+
+    `<p>请妃嫔为御花园小宴排一段节目。少数人还可演一段自己的拿手戏。每月可排一次，耗 1 精力，节目单保留六个月。</p>`+
     (mourningActive()?'<p class="hint">宫中服丧，乐房暂歇。</p>':people.length?workshopPicker('music-artist',people,'请她排演','rehearseWorkshop',ready):'<p class="hint">眼下无人能来排演。</p>'));
 }
 A.rehearseWorkshop=function(id){

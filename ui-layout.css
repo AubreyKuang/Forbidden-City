@@ -127,3 +127,30 @@
  .action-group .acts{grid-template-columns:1fr}
  .detail-actions .acts{grid-template-columns:1fr}
 }
+
+/* Palace workshop rosters */
+.workshop-picker{align-items:center}
+.workshop-select{position:relative;display:inline-flex;min-width:0;max-width:100%}
+.workshop-select select{
+  appearance:none;box-sizing:border-box;max-width:100%;min-height:44px;
+  padding:8px 2.3em 8px .9em;border:1px solid #a1afa0;border-radius:10px;
+  background:#eaf0e6;color:#304d40;font:inherit;cursor:pointer;text-overflow:ellipsis;
+}
+.workshop-select::after{
+  content:"";position:absolute;right:.95em;top:50%;width:.45em;height:.45em;
+  border:solid #52705c;border-width:0 1.5px 1.5px 0;transform:translateY(-70%) rotate(45deg);pointer-events:none;
+}
+.workshop-select select:hover{background:#e1eadc}
+.workshop-select select:focus-visible{outline:2px solid var(--jade);outline-offset:2px}
+@supports (appearance:base-select){
+  .workshop-select select,.workshop-select select::picker(select){appearance:base-select}
+  .workshop-select select::picker-icon{display:none}
+  .workshop-select select::picker(select){
+    margin-block:4px;padding:4px;border:1px solid #a1afa0;border-radius:10px;
+    background:#f3f5ef;color:#304d40;box-shadow:0 5px 16px #263e3026;
+    max-height:min(18rem,45vh);overflow:auto;
+  }
+  .workshop-select option{min-height:40px;padding:6px 10px;border-radius:6px;font:inherit}
+  .workshop-select option:checked{background:#dce7d9}
+  .workshop-select option:hover,.workshop-select option:focus-visible{background:#cfdecc}
+}
