@@ -67,7 +67,7 @@ function natalPortrait(p){
   const royalBride=royalNatalEarlierAges()&&p.sex==='f'&&(p.royalNatalPortrait||royalNatalEngaged(p)||p.spouse?.royalId!=null);
   return age<(royalBride?royalNatalAge('marriage'):18)?{...p,courtGuest:true}:p.sex==='m'?{...p,official:2}:{...p,sex:undefined,age,courtGuest:false};
 }
-function natalStatus(p){return !p.alive?'已故':p.consortId?'已入宫':p.royalCompanionTrip?'结伴游历中':p.visit?'入宫探亲':royalNatalEngaged(p)?'已定亲':royalNatalEarlierAges()&&p.married&&p.spouse?.royalId!=null?'已婚':natalAge(p)<6?'家中幼儿':natalAge(p)<18?'在家读书':p.married?'已婚':p.betrothal?'议亲中':p.career==='commoner'?p.post:'居于娘家';}
+function natalStatus(p){return !p.alive?'已故':queenWardResident(p)?'由养母在宫中抚养':p.consortId?'已入宫':p.royalCompanionTrip?'结伴游历中':p.visit?'入宫探亲':royalNatalEngaged(p)?'已定亲':royalNatalEarlierAges()&&p.married&&p.spouse?.royalId!=null?'已婚':natalAge(p)<6?'家中幼儿':natalAge(p)<18?'在家读书':p.married?'已婚':p.betrothal?'议亲中':p.career==='commoner'?p.post:'居于娘家';}
 function natalEntry(id,relative){const c=familyHostById(id),h=c&&houseOf(c),p=h?.relatives?.find(p=>p.id===+relative);return p?{c,h,p}:null;}
 function natalRecord(c,p,text,emotion=0){
   story(p,text);
@@ -80,7 +80,7 @@ function natalFamilyLinks(c){
   const h=c.house;if(!h)return '';
   return natalPeople(h).map(p=>`<div>${natalLabel(c,p)}：<button class="person-link" onclick="A.go('${p.sex==='m'&&natalAge(p)>=18?'official':'natal'}','${c.id}:${p.sex==='m'&&natalAge(p)>=18?'relative'+p.id:p.id}')">${esc(p.name)} ↗</button> <span class="hint">${natalAge(p)}岁 · ${p.sex==='m'?(p.post+' · '):''}${natalStatus(p)}</span></div>`).join('');
 }
-function natalVisitReady(c,p){return inPalace(c)&&!c.maid&&p.alive&&!p.consortId&&!p.visit&&!p.royalCompanionTrip&&(p.sex==='f'||natalAge(p)<13||betrothedYouthVisitReady(p))&&
+function natalVisitReady(c,p){return !queenWardResident(p)&&inPalace(c)&&!c.maid&&p.alive&&!p.consortId&&!p.visit&&!p.royalCompanionTrip&&(p.sex==='f'||natalAge(p)<13||betrothedYouthVisitReady(p))&&
   S.turn-(p.lastVisit??-99)>=12&&!mourningActive()&&!natalPeople(c.house).some(x=>x.visit);}
 function natalInPalace(c,p){return !!p.visit&&p.visit.host===c.id&&S.turn<p.visit.until&&p.alive&&inPalace(c)&&!p.consortId;}
 function natalRomanceReady(c,p){return !p.parentRelativeId&&natalInPalace(c,p)&&p.sex==='f'&&natalAge(p)>=18&&!p.married&&!p.betrothal&&!p.declined;}
@@ -137,7 +137,7 @@ function selectionSisterEligible(p){
 }
 function registeredSelectionSister(c){
   // Only consult the household that already existed before the selection.
-  const people=(c.house?.relatives||[]).filter(selectionSisterEligible);
+  const people=(c.house?.relatives||[]).filter(p=>selectionSisterEligible(p)&&!S.flags.withdrawnFamilyNominees?.includes(p.id));
   if(!people.length)return null;
   const p=pick(people),g=natalConsortProfile(c,p);
   g.selectionNatalHost=c.id;g.kinNote=cName(c)+'的亲'+natalLabel(c,p);return g;
@@ -164,7 +164,7 @@ function familyNomineeParentage(p,c){
   return q?.status==='complete'?'clear':'unsettled';
 }
 function familyNomineeAvailable(p,origin){
-  return p?.sex==='f'&&p.alive&&!p.outsideFamilyOrigin&&!p.consortId&&!byId(p.id)&&
+  return p?.sex==='f'&&p.alive&&p.kinCare?.decision!=='adopt'&&!p.outsideFamilyOrigin&&!p.consortId&&!byId(p.id)&&
     !p.married&&!p.spouse&&!p.betrothal&&!p.widow&&!p.declined&&familyNomineeParentage(p,origin)!=='excluded';
 }
 function canRegisterFamilyNominee(c,p,origin=c){
@@ -178,16 +178,20 @@ function legacySelectionFamilyAwaitingClearance(g){
 }
 function familyNominationButton(c,p,origin=c){
   if(journalContentVersion()<84)return '';
+  const listed=S.cands.some(g=>g.id===p.id);
+  if(!listed&&S.flags.familyNominees?.some(n=>n.relative===p.id)){
+    const status=natalAge(p)<15?'已预登记 · 满十五岁后入册':'已荐入下届选秀';
+    return `<button class="btn gold" disabled>${status}</button> <button class="btn" onclick="A.cancelFamilyNomination(${c.id},${p.id})">取消登记</button>`;
+  }
+  if(p.kinCare?.decision==='adopt')return '<small class="hint">皇后养女</small>';
   if(!canRegisterFamilyNominee(c,p,origin)){
     if(!nieceSelectionEntryActive()||p.sex!=='f'||!p.outsideFamilyOrigin&&!familyNomineeMaternalRecord(origin,p))return '';
     const reason=p.outsideFamilyOrigin?'已列皇嗣':p.consortId||byId(p.id)?'已入宫':!p.alive?'已故':
       p.married||p.spouse||p.widow?'已有婚事':p.betrothal?'已定亲':p.declined?'曾谢绝留宫':'未满入册年龄';
     return `<small class="hint">选秀 · ${reason}</small>`;
   }
-  const pending=S.flags.familyNominees?.some(n=>n.relative===p.id),listed=S.cands.some(g=>g.id===p.id);
-  const label=listed?'已在本届名册':natalAge(p)<15?(pending?'已预登记 · 满十五岁后入册':'预登记选秀 · 满十五岁后入册'):
-    pending?'已荐入下届选秀':'荐入下届选秀';
-  return `<button class="btn gold" onclick="A.nominateRelative(${c.id},${p.id})" ${pending||listed?'disabled':''}>${label}</button>`;
+  const label=listed?'已在本届名册':natalAge(p)<15?'预登记选秀 · 满十五岁后入册':'荐入下届选秀';
+  return `<button class="btn gold" onclick="A.nominateRelative(${c.id},${p.id})" ${listed?'disabled':''}>${label}</button>`;
 }
 A.nominateRelative=function(id,relative){
   if(modalOpen||journalContentVersion()<84)return;
@@ -200,7 +204,20 @@ A.nominateRelative=function(id,relative){
   story(e.p,early?'礼部留存了选秀名帖，记明须满十五岁后才可入册。':'奉旨登记下届选秀，家人替她收好了礼部递来的名帖。');
   save('auto');render();toast(e.p.name+(early?'已预登记，满十五岁后开选时入册':'已登记，下次开选时入册'));
 };
+A.cancelFamilyNomination=function(id,relative){
+  if(!S||S.over||modalOpen||S.cands.some(g=>g.id===relative))return;
+  const e=natalEntry(id,relative),nominees=S.flags.familyNominees;
+  if(!e||!nominees?.some(n=>n.relative===relative))return;
+  S.flags.familyNominees=nominees.filter(n=>n.relative!==relative);
+  if(!e.p.parentRelativeId&&!e.p.motherRelativeId){
+    const withdrawn=S.flags.withdrawnFamilyNominees||=[];
+    if(!withdrawn.includes(relative))withdrawn.push(relative);
+  }
+  story(e.p,'家中领回礼部的选秀名帖，撤下了这次登记。');
+  save('auto');render();toast(e.p.name+'已取消选秀登记');
+};
 function appendFamilyNominees(){
+  delete S.flags.withdrawnFamilyNominees;
   const nominees=S.flags.familyNominees||[];
   delete S.flags.familyNominees;
   for(const nominee of nominees){
@@ -255,11 +272,11 @@ function viewNatalRelative(){
   const age=natalAge(p),living=p.alive,visited=natalInPalace(c,p),privateVisit=marriedSisterVisitButton(c,p);
   return `${personBackButton('family')}<header class="detail-head person-detail-head">${porImg(natalPortrait(p),224)}<div class="grow"><h2>${esc(p.name)}</h2><p>${esc(fullName(c))}的${natalLabel(c,p)} · ${age}岁 · ${natalStatus(p)}${outsideChildBadge(p)}</p><p>${age<6?'尚在幼年':esc(natalTrait(p))}${age>=15&&p.sex==='f'&&restlessDisposition(p)?' <span class="tag y">不安于室</span>':''}</p></div></header>
     <div class="acts natal-relative-actions">${natalVisitReady(c,p)?`<button class="btn" onclick="A.natalVisit(${c.id},${p.id})">准入宫探亲</button>`:''}${familyNominationButton(c,p,familyNomineeOrigin(e))}
-    ${living?`<button class="btn" onclick="A.natalLetter(${c.id},${p.id})" ${S.turn-(p.lastLetter??-99)>=3&&E().energy>0?'':'disabled'}>${age<3?'赐衣问安':'赐书问候'}<small>精力−1 · 每三个月一次</small></button>`:''}${privateVisit}${visited?`<button class="btn primary" onclick="A.natalMeet(${c.id},${p.id})">探亲相见</button><span>约${p.visit.until-S.turn}个月后归家</span>`:''}</div>
+    ${queenWardResident(p)?`<button class="btn primary" onclick="A.visitQueenWard(${c.id},${p.id})">去养母宫中探望</button>`:living?`<button class="btn" onclick="A.natalLetter(${c.id},${p.id})" ${S.turn-(p.lastLetter??-99)>=3&&E().energy>0?'':'disabled'}>${age<3?'赐衣问安':'赐书问候'}<small>精力−1 · 每三个月一次</small></button>`:''}${privateVisit}${visited?`<button class="btn primary" onclick="A.natalMeet(${c.id},${p.id})">探亲相见</button><span>约${p.visit.until-S.turn}个月后归家</span>`:''}</div>
     ${detailSection('人物纪事',detailStory(p))}
     ${typeof natalAdmissionPanel==='function'?natalAdmissionPanel(c,p):''}
     ${detailSection('家族往来',`${natalParentLinks(c,p)}<button class="btn quiet" onclick="A.go('consort',${c.id})">${esc(fullName(c))}</button>`+natalFamilyLinks(c))}
-    ${natalFatherPanel(p)}${outsideParentagePanel(c,p)}${sisterPalaceConcernPanel(p)}${natalLifePanel(c,p)}${outsideHouseholdHusbandPanel(p)}`;
+    ${queenWardChildPanel(c,p)}${natalFatherPanel(p)}${outsideParentagePanel(c,p)}${sisterPalaceConcernPanel(p)}${natalLifePanel(c,p)}${outsideHouseholdHusbandPanel(p)}`;
 }
 A.natalVisit=function(id,relative){if(modalOpen)return;const e=natalEntry(id,relative);if(e)pushEv(natalVisitEvent(e.c,e.p));};
 A.natalMeet=function(id,relative){if(modalOpen)return;const e=natalEntry(id,relative);if(e)pushEv(natalMeetingEvent(e.c,e.p));};

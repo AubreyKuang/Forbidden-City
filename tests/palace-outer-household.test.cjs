@@ -60,6 +60,9 @@ for(const keep of [true,false])test('the private register can directly nominate 
  A.outerNominateNiece(k.id);A.outerNominateNiece(k.id);
  assert.match(outerRegisterView(),/已预登记/);
  assert.equal(outerBook().notes.filter(n=>n.title==='荐入选秀').length,1);
+ assert.match(outerRegisterView(),/取消登记/);A.outerCancelNomination(k.id);A.outerCancelNomination(k.id);
+ assert.equal(k.familySelection,undefined);assert.equal(outerBook().notes.filter(n=>n.title==='选秀撤帖').length,1);
+ assert.doesNotMatch(outerRegisterView(),/onclick="A.outerCancelNomination/);A.outerNominateNiece(k.id);
  A.xxDecree();drain();assert.ok(!S.cands.some(c=>c.id===k.id));assert.equal(k.familySelection,'pending');
  A.xxEnd();drain();S.turn=k.born+180;S.flags.lastXX=-99;PalaceActions.reset();
  A.xxDecree();assert.ok(!modalOpen);assert.equal(S.cands.filter(c=>c.id===k.id).length,1);

@@ -104,7 +104,7 @@ function royalNatalWeddingDue(k,p,b){
   const due=p&&royalNatalMarriageAge(k,p);
   return Number.isFinite(due)?due:b?.due;
 }
-const royalNatalParentageEligible=p=>!p.outsideFamilyOrigin&&!p.unconfirmedParentage&&
+const royalNatalParentageEligible=p=>p.kinCare?.decision!=='adopt'&&!p.outsideFamilyOrigin&&!p.unconfirmedParentage&&
   (!p.outsideParentage||p.outsideParentage.status==='cleared');
 
 function royalNatalChildReady(k){

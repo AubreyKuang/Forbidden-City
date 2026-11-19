@@ -30,3 +30,24 @@ test('family-rise gossip requires recorded kin promotion and two actual rank ris
  careerSetOffice(ap,'翰林院修撰','实绩升任');assert.equal(a.familyRise.personId,ap.p.id);var old=JSON.parse(JSON.stringify(S));a.rank=4;familyRiseTick(old);assert.equal(a.familyRise.queued,undefined);old=JSON.parse(JSON.stringify(S));a.rank=5;familyRiseTick(old);assert.equal(a.familyRise.queued,S.turn);assert.match(curEv.title,/门第酸语/);var rel=relGet(q,a);choose(0);assert.equal(relGet(q,a),rel-3);assert.ok(a.story.some(s=>s.t.includes('门第之讥')));assert.ok(q.story.some(s=>s.t.includes('并非查实')));assert.equal(ap.p.office,'翰林院修撰');`);});
 test('private rank gossip does not give an absent consort omniscient knowledge',()=>{const z=w();z.run(`a.familyRise={key:e.key,personId:husband.id,name:husband.name,kin:'兄长',from:'知县',to:'知府',turn:S.turn};a.rank=6;q.rank=4;q.trait='城府';var count=a.story.length,oldRel=relGet(a,q);var ev=familyRiseEvent(a,q);ev.choices[1].f();assert.equal(a.story.length,count);assert.ok(q.story.some(s=>s.t.includes('光')||s.t.includes('晋位')));assert.equal(relGet(a,q),oldRel);`);});
 test('Gouyi has reserved face 422, stays fixed through admission and is absent from every random pool',()=>{const z=w();z.run(`assert.equal(STORY_CONSORT_PORTRAITS.gouyi,422);assert.equal(ALL_CONSORT_PORTRAITS.includes(422),false);A.out('procession');assert.equal(portraitCell(curEv.por),422);choose(0);choose(0);var g=S.consorts.find(c=>c.gouyi);assert.equal(g.portraitOverride,422);assert.equal(g.artPortrait,422);drain();g.rank=8;assignConsortPortrait(g);assert.equal(portraitCell(g),422);save('auto');`);const r=reload(z);r.run(`assert.equal(portraitCell(S.consorts.find(c=>c.gouyi)),422);`);});
+
+for(const [sex,decision] of [['m','adopt'],['f','adopt'],['f','aid'],['m','family']]){
+ test('the empress can settle a real newborn after her sister dies: '+sex+' '+decision,()=>{
+  const z=w();z.ctx.sex=sex;z.ctx.decision=decision;
+  z.run(`q.rank=3;a.rank=8;wed();beginNatalPregnancy(a,wife);wife.natalPregnancy.difficult=true;wife.natalPregnancy.sex=sex;
+  S.turn+=9;natalPregnancyTick();var baby=ah.relatives.find(p=>p.parentRelativeId===wife.id);
+  assert.ok(baby);assert.equal(baby.kinCare,undefined);S.turn++;
+  while((marriageHash('kin-care-consent:'+baby.id)%100<65)!==(decision!=='aid'))baby.id--;
+  natalPregnancyTick();assert.equal(curEv.title,'皇后请旨 · 襁褓何依');assert.ok(curEv.text.includes(wife.name)&&curEv.text.includes(baby.name));
+  assert.equal(curEv.choices.some(o=>o.t.startsWith('准皇后')),decision!=='aid');
+  const ci=decision==='adopt'?0:decision==='aid'?curEv.choices.findIndex(o=>o.t.includes('五万两')):curEv.choices.length-1;
+  const handle=curEv.choices[ci].f,before=E().treasury;choose(ci);assert.equal(handle(),null);drain();assert.equal(baby.kinCare.decision,decision);
+  assert.equal(before-E().treasury,decision==='aid'?5:0);assert.ok(husband.story.at(-1).t.includes(baby.name));
+  if(decision==='adopt'){assert.ok(queenWardResident(baby));assert.match(queenWardFamilyPanel(a),/养子|养女/);assert.equal(natalVisitReady(a,baby),false);
+   assert.equal(S.children.some(k=>k.id===baby.id),false);assert.equal(baby.fatherId,husband.id);A.visitQueenWard(a.id,baby.id);assert.match(curEv.text,/摇篮/);drain();}
+  S.turn+=3;natalPregnancyTick();natalPregnancyTick();assert.equal(baby.story.filter(e=>e.t.includes('支给乳母')).length,decision==='aid'?1:0);
+  save('auto');`);
+  const n=reload(z);n.run(`var a=empress(),baby=houseOf(a).relatives.find(p=>p.kinCare);
+  assert.equal(baby.kinCare.decision,'${decision}');assert.equal(queenWardResident(baby),${decision==='adopt'});natalPregnancyTick();assert.equal(modalOpen,false);`);
+ });
+}

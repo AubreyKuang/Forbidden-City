@@ -176,3 +176,12 @@ test('the preference changes opportunities for actual adult prince and guard eve
  assert.equal(event.title,affairReportTitle()+' · 宫门私约');event.onQueue();event.choices[0].f();assert.ok(lady.guardTryst);assert.match(lady.story.at(-1).t,/调离|奉调/);
  lady.age=17;delete lady.guardTryst;S.turn+=18;assert.equal(guardTrystEvent(),null);`);
 });
+
+test('withdraw early and adult nominations, save, reopen and register again',()=>{
+ const z=setup();z.run(`var p=addNatalPerson(other,oh,'f',14,628,false);p.parentRelativeId=sister.id;p.married=false;
+ var hostId=other.id,id=p.id;A.nominateRelative(hostId,id);assert.match(familyNominationButton(other,p),/取消登记/);
+ A.cancelFamilyNomination(hostId,id);A.cancelFamilyNomination(hostId,id);assert.equal(p.story.filter(e=>e.t.includes('撤下了这次登记')).length,1);
+ A.load('auto');drain();var e=natalEntry(hostId,id);e.p.born=S.turn-16*12;genCands();assert.ok(!S.cands.some(g=>g.id===id));
+ A.nominateRelative(hostId,id);A.cancelFamilyNomination(hostId,id);A.nominateRelative(hostId,id);genCands();
+ assert.equal(S.cands.filter(g=>g.id===id).length,1);assert.doesNotMatch(familyNominationButton(e.c,e.p),/取消登记/);A.cancelFamilyNomination(hostId,id);assert.ok(S.cands.some(g=>g.id===id));`);
+});

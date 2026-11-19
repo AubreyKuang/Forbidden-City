@@ -1,13 +1,17 @@
 const outerLink=(label,action,disabled=false)=>`<button class="btn sm" ${disabled?'disabled':''} onclick="${action}">${esc(label)}</button>`;
 function outerNieceNominationControl(k,m,age){
-  if(!nieceSelectionEntryActive()||!outerIntegration()||k.sex!=='f'||m.relative==null)return '';
+  if(!nieceSelectionEntryActive()||!outerIntegration()||k.sex!=='f')return '';
+  const cancel=!S.cands.some(c=>c.outerHouseholdId===k.id)&&k.familySelection!=='listed'&&(k.familySelection==='pending'||k.path==='候选秀')
+    ?`<button class="btn sm" onclick="A.outerCancelNomination(${k.id})">取消登记</button>`:'';
+  if(m.relative==null)return cancel||(k.withdrawnAdultSelection&&k.path==='自立门户'&&!outerNieceNominationReason(k)
+    ?`<button class="btn sm" onclick="A.outerRestoreNomination(${k.id})">重新登记选秀</button>`:'');
   const reason=outerNieceNominationReason(k);
-  if(reason)return `<small class="hint">选秀 · ${esc(reason)}</small>`;
+  if(reason)return `<small class="hint">选秀 · ${esc(reason)}</small>`+cancel;
   const listed=S.cands.some(c=>c.outerHouseholdId===k.id),pending=k.familySelection==='pending'||k.path==='候选秀';
   const label=listed?'已在本届名册':age<15?(pending?'已预登记 · 满十五岁后入册':'预登记选秀 · 满十五岁后入册'):
     pending?'已荐入下届选秀':'荐入下届选秀';
   const canSubmit=!listed&&k.familySelection!=='pending';
-  return `<button class="btn sm gold" ${canSubmit?'':'disabled'} onclick="A.outerNominateNiece(${k.id})">${esc(canSubmit&&pending?'改为直接荐入下届选秀':label)}</button>`;
+  return `<button class="btn sm gold" ${canSubmit?'':'disabled'} onclick="A.outerNominateNiece(${k.id})">${esc(canSubmit&&pending?'改为直接荐入下届选秀':label)}</button>`+cancel;
 }
 A.outerNominateNiece=function(id){
   if(!S||S.over||modalOpen||!nieceSelectionEntryActive())return;
@@ -18,6 +22,25 @@ A.outerNominateNiece=function(id){
   outerNote(outerMother(k.mother),k,'荐入选秀',early?'预留名帖':'下届入册',
     early?'名帖先收于密匣，等她满十五岁后，随实际开选送去。':'已经登记，实际开选时照现有户籍送名帖入册。');
   render();toast(early?'已预登记，满十五岁后开选时入册':'已登记，下次开选时入册');
+};
+A.outerCancelNomination=function(id){
+  const k=outerChild(id);
+  if(!outerWritable(k)||k.sex!=='f'||k.familySelection==='listed'||S.cands.some(c=>c.outerHouseholdId===id)||
+    (k.familySelection!=='pending'&&k.path!=='候选秀'))return;
+  delete k.familySelection;
+  if(k.path==='候选秀'){
+    k.path='自立门户';k.pending=k.pending.filter(n=>!['roster','audience'].includes(n));
+    if(outerMother(k.mother)?.relative==null)k.withdrawnAdultSelection=true;
+  }
+  outerNote(outerMother(k.mother),k,'选秀撤帖','取消登记','家里领回了名帖，下次开选时不用再为她送帖。');
+  save('auto');render();toast('已取消选秀登记');
+};
+A.outerRestoreNomination=function(id){
+  const k=outerChild(id);
+  if(!outerWritable(k)||!k.withdrawnAdultSelection||k.path!=='自立门户'||outerNieceNominationReason(k)||S.cands.some(c=>c.outerHouseholdId===id))return;
+  delete k.withdrawnAdultSelection;k.path='候选秀';
+  outerNote(outerMother(k.mother),k,'荐入选秀','重新登记','家里重新递了名帖，等下次礼部开选。');
+  save('auto');render();toast('已重新登记选秀');
 };
 function outerWritable(k){return outerActive()&&!S.over&&!modalOpen&&k&&!k.sealed&&k.pedigree!=='认领';}
 A.outerPetition=function(id){const k=outerChild(id);if(k&&!modalOpen){const ev=outerPendingEvent(k);if(ev)pushEv(ev);}};
