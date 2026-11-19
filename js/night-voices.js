@@ -113,17 +113,25 @@ const NIGHT_OPENINGS={
  close:['她给你留了惯坐的位置，自己也像往常一样坐得很自在。','你刚伸手，她已经把茶杯推了过来。两人一笑，省了那些问候。'],
  shy:['她说了几句客套话才敢抬眼，你请她慢慢讲。','她坐得拘谨，你把茶点推近些，让她挑个自在的话头。']
 };
-function chooseNightPassage(c,field,groups){
+function chooseNightPassage(c,field,groups,indexFor){
  const recent=c[field]||[];
  const entries=groups.flatMap(([key,pool])=>pool.map((text,i)=>({id:key+':'+i,text}))).filter(e=>e.text);
  const fresh=entries.filter(e=>!recent.slice(-2).includes(e.id));
  const alternatives=fresh.length?fresh:entries.filter(e=>e.id!==recent.at(-1));
- const chosen=pick(alternatives.length?alternatives:entries);
+ const pool=alternatives.length?alternatives:entries;
+ const chosen=pool[indexFor(pool.length)];
  c[field]=[...recent,chosen.id].slice(-2);
  return chosen.text;
 }
 function nightVoice(c){
  if(journalContentVersion()<114)return legacyNightVoice(c);
+ // Split the original single dialogue roll so unrelated outcomes keep their random draws.
+ let roll=R();
+ const indexFor=size=>{
+   const scaled=roll*size,index=Math.floor(scaled);
+   roll=scaled-index;
+   return index;
+ };
  const mind=xinOf(c),first=!c.nights,months=Number.isInteger(c.enteredAt)?S.turn-c.enteredAt:null;
  const grief=['悲恸','心如死灰'].includes(mind),tired=c.hp<35,motherIll=homeMother(c)?.status==='ill';
  const low=['忧心','惶恐','清静被扰','怨恨','委屈','思念','嫉恨'].includes(mind)||c.mood<35;
@@ -140,20 +148,20 @@ function nightVoice(c){
    if(c.aff<30||c.aff>=75)openings.push(c.aff<30?'shy':'close');
    if(S.turn-(c.lastPersonalAttention??S.turn)>=6)openings.push('away');
  }
- const opener=openings.length?chooseNightPassage(c,'nightOpeningHistory',openings.map(k=>[k,NIGHT_OPENINGS[k]])):'';
+ const opener=openings.length?chooseNightPassage(c,'nightOpeningHistory',openings.map(k=>[k,NIGHT_OPENINGS[k]]),indexFor):'';
  const storyKey=storyQueenKey(c),signature=STORY_NIGHT_VOICES[storyKey],quiet=grief||tired||motherIll||low;
  let body;
  if(signature){
-   body=chooseNightPassage(c,'nightVoiceHistory',[[storyKey+(quiet?'-quiet':''),quiet?signature.slice(3):signature.slice(0,3)]]);
+   body=chooseNightPassage(c,'nightVoiceHistory',[[storyKey+(quiet?'-quiet':''),quiet?signature.slice(3):signature.slice(0,3)]],indexFor);
    if(storyKey==='chuwan')body=body.replace('方晚',storyCastName('chuwan'));
  }else if(grief||tired){
    body=grief?'你陪她坐着，听她愿意说出的那一点旧事。沉默时也不催促。':'你让她按自己的体力休息，只说了几句近况，没有强撑歌舞或笑意。';
  }else if(low||motherIll){
-   body=chooseNightPassage(c,'nightVoiceHistory',[['quiet',LOW_NIGHT_VOICES]]);
+   body=chooseNightPassage(c,'nightVoiceHistory',[['quiet',LOW_NIGHT_VOICES]],indexFor);
  }else{
    const trait=isSolitary(c)?'孤高':c.trait,pool=NIGHT_VOICES[trait]||NIGHT_VOICES.沉静;
    const eligible=first?pool.map(t=>/上回|上次|近日为何少来/.test(t)?null:t):pool;
-   body=chooseNightPassage(c,'nightVoiceHistory',[[trait,eligible]]);
+   body=chooseNightPassage(c,'nightVoiceHistory',[[trait,eligible]],indexFor);
  }
  return [first&&(grief||tired||motherIll)?'这是她初次奉召。':'',opener,body].filter(Boolean).join('\n');
 }
