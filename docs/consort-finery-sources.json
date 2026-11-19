@@ -1,0 +1,383 @@
+{
+  "frame": [
+    448,
+    560
+  ],
+  "columns": 4,
+  "styleReference": 472,
+  "approved": "Twelve consorts: the corrected six-person revision and all six ancient-painting-inspired designs",
+  "portraits": [
+    {
+      "id": 503,
+      "atlas": "palace-consorts-ancient-finery.webp",
+      "source": "exec-88ec8ed5-9c60-417d-b8fe-676d70a824f1.png",
+      "sourceSha256": "17e04950b875720b51033f5cecd18e733beb5f74c17384e2c702fbc8a3dafe77",
+      "sourceSize": [
+        1374,
+        1145
+      ],
+      "cell": 0,
+      "tile": 0,
+      "crop": [
+        0,
+        0,
+        458,
+        573
+      ],
+      "bounds": [
+        46,
+        10,
+        453,
+        573
+      ],
+      "placed": [
+        24,
+        8,
+        399,
+        552
+      ],
+      "label": "鹅黄春杏"
+    },
+    {
+      "id": 504,
+      "atlas": "palace-consorts-ancient-finery.webp",
+      "source": "exec-88ec8ed5-9c60-417d-b8fe-676d70a824f1.png",
+      "sourceSha256": "17e04950b875720b51033f5cecd18e733beb5f74c17384e2c702fbc8a3dafe77",
+      "sourceSize": [
+        1374,
+        1145
+      ],
+      "cell": 1,
+      "tile": 1,
+      "crop": [
+        458,
+        0,
+        916,
+        573
+      ],
+      "bounds": [
+        12,
+        6,
+        454,
+        573
+      ],
+      "placed": [
+        457,
+        8,
+        430,
+        552
+      ],
+      "label": "湖青兰书"
+    },
+    {
+      "id": 505,
+      "atlas": "palace-consorts-ancient-finery.webp",
+      "source": "exec-88ec8ed5-9c60-417d-b8fe-676d70a824f1.png",
+      "sourceSha256": "17e04950b875720b51033f5cecd18e733beb5f74c17384e2c702fbc8a3dafe77",
+      "sourceSize": [
+        1374,
+        1145
+      ],
+      "cell": 2,
+      "tile": 2,
+      "crop": [
+        916,
+        0,
+        1374,
+        573
+      ],
+      "bounds": [
+        24,
+        0,
+        453,
+        573
+      ],
+      "placed": [
+        913,
+        8,
+        413,
+        552
+      ],
+      "label": "胭脂海棠"
+    },
+    {
+      "id": 506,
+      "atlas": "palace-consorts-ancient-finery.webp",
+      "source": "exec-88ec8ed5-9c60-417d-b8fe-676d70a824f1.png",
+      "sourceSha256": "17e04950b875720b51033f5cecd18e733beb5f74c17384e2c702fbc8a3dafe77",
+      "sourceSize": [
+        1374,
+        1145
+      ],
+      "cell": 3,
+      "tile": 3,
+      "crop": [
+        0,
+        573,
+        458,
+        1145
+      ],
+      "bounds": [
+        7,
+        0,
+        458,
+        572
+      ],
+      "placed": [
+        1350,
+        8,
+        435,
+        552
+      ],
+      "label": "月白清霜"
+    },
+    {
+      "id": 507,
+      "atlas": "palace-consorts-ancient-finery.webp",
+      "source": "exec-88ec8ed5-9c60-417d-b8fe-676d70a824f1.png",
+      "sourceSha256": "17e04950b875720b51033f5cecd18e733beb5f74c17384e2c702fbc8a3dafe77",
+      "sourceSize": [
+        1374,
+        1145
+      ],
+      "cell": 4,
+      "tile": 4,
+      "crop": [
+        458,
+        573,
+        941,
+        1145
+      ],
+      "bounds": [
+        2,
+        0,
+        483,
+        572
+      ],
+      "placed": [
+        4,
+        597,
+        440,
+        523
+      ],
+      "label": "藕紫流萤"
+    },
+    {
+      "id": 508,
+      "atlas": "palace-consorts-ancient-finery.webp",
+      "source": "exec-88ec8ed5-9c60-417d-b8fe-676d70a824f1.png",
+      "sourceSha256": "17e04950b875720b51033f5cecd18e733beb5f74c17384e2c702fbc8a3dafe77",
+      "sourceSize": [
+        1374,
+        1145
+      ],
+      "cell": 5,
+      "tile": 5,
+      "crop": [
+        941,
+        573,
+        1374,
+        1145
+      ],
+      "bounds": [
+        0,
+        0,
+        431,
+        572
+      ],
+      "placed": [
+        464,
+        568,
+        416,
+        552
+      ],
+      "label": "黛蓝银鹊"
+    },
+    {
+      "id": 509,
+      "atlas": "palace-consorts-ancient-finery.webp",
+      "source": "exec-41c7c9bf-7b90-4626-b2ce-579556fefafc.png",
+      "sourceSha256": "37f9677ec909e25f486720cc1944786f4a0801faf10bf0e6b0fa52964ae7c778",
+      "sourceSize": [
+        1374,
+        1145
+      ],
+      "cell": 0,
+      "tile": 6,
+      "crop": [
+        0,
+        0,
+        463,
+        572
+      ],
+      "bounds": [
+        12,
+        0,
+        463,
+        572
+      ],
+      "placed": [
+        902,
+        568,
+        435,
+        552
+      ],
+      "label": "榴红金缕"
+    },
+    {
+      "id": 510,
+      "atlas": "palace-consorts-ancient-finery.webp",
+      "source": "exec-41c7c9bf-7b90-4626-b2ce-579556fefafc.png",
+      "sourceSha256": "37f9677ec909e25f486720cc1944786f4a0801faf10bf0e6b0fa52964ae7c778",
+      "sourceSize": [
+        1374,
+        1145
+      ],
+      "cell": 1,
+      "tile": 7,
+      "crop": [
+        463,
+        0,
+        916,
+        572
+      ],
+      "bounds": [
+        0,
+        0,
+        444,
+        572
+      ],
+      "placed": [
+        1354,
+        568,
+        428,
+        552
+      ],
+      "label": "粉翠蝶钗"
+    },
+    {
+      "id": 511,
+      "atlas": "palace-consorts-ancient-finery.webp",
+      "source": "exec-41c7c9bf-7b90-4626-b2ce-579556fefafc.png",
+      "sourceSha256": "37f9677ec909e25f486720cc1944786f4a0801faf10bf0e6b0fa52964ae7c778",
+      "sourceSize": [
+        1374,
+        1145
+      ],
+      "cell": 2,
+      "tile": 8,
+      "crop": [
+        916,
+        0,
+        1374,
+        572
+      ],
+      "bounds": [
+        7,
+        8,
+        445,
+        572
+      ],
+      "placed": [
+        9,
+        1128,
+        429,
+        552
+      ],
+      "label": "青碧玉梳"
+    },
+    {
+      "id": 512,
+      "atlas": "palace-consorts-ancient-finery.webp",
+      "source": "exec-41c7c9bf-7b90-4626-b2ce-579556fefafc.png",
+      "sourceSha256": "37f9677ec909e25f486720cc1944786f4a0801faf10bf0e6b0fa52964ae7c778",
+      "sourceSize": [
+        1374,
+        1145
+      ],
+      "cell": 3,
+      "tile": 9,
+      "crop": [
+        0,
+        572,
+        460,
+        1145
+      ],
+      "bounds": [
+        8,
+        1,
+        460,
+        573
+      ],
+      "placed": [
+        454,
+        1128,
+        436,
+        552
+      ],
+      "label": "宝蓝凤钗"
+    },
+    {
+      "id": 513,
+      "atlas": "palace-consorts-ancient-finery.webp",
+      "source": "exec-41c7c9bf-7b90-4626-b2ce-579556fefafc.png",
+      "sourceSha256": "37f9677ec909e25f486720cc1944786f4a0801faf10bf0e6b0fa52964ae7c778",
+      "sourceSize": [
+        1374,
+        1145
+      ],
+      "cell": 4,
+      "tile": 10,
+      "crop": [
+        460,
+        572,
+        916,
+        1145
+      ],
+      "bounds": [
+        0,
+        0,
+        447,
+        573
+      ],
+      "placed": [
+        904,
+        1128,
+        431,
+        552
+      ],
+      "label": "珊瑚金梳"
+    },
+    {
+      "id": 514,
+      "atlas": "palace-consorts-ancient-finery.webp",
+      "source": "exec-41c7c9bf-7b90-4626-b2ce-579556fefafc.png",
+      "sourceSha256": "37f9677ec909e25f486720cc1944786f4a0801faf10bf0e6b0fa52964ae7c778",
+      "sourceSize": [
+        1374,
+        1145
+      ],
+      "cell": 5,
+      "tile": 11,
+      "crop": [
+        916,
+        572,
+        1374,
+        1145
+      ],
+      "bounds": [
+        10,
+        0,
+        458,
+        573
+      ],
+      "placed": [
+        1352,
+        1128,
+        432,
+        552
+      ],
+      "label": "月白紫玉"
+    }
+  ]
+}

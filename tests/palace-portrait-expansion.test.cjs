@@ -80,7 +80,7 @@ test('new allocation does not repaint existing consorts, legacy relatives or suc
     E().portraitOverride=302;assert.equal(portraitCell('emp'),302);
     for(var v=26;v<30;v++){var p={sex:'f',portraitVariant:v,born:S.turn-240};assert.equal(childPortraitCell(p),244+v-26);}
     for(var cell=248;cell<268;cell++)assert.ok([...CONSORT_PORTRAITS,...WESTERN_PORTRAITS].includes(cell));
-    assert.equal(ALL_CONSORT_PORTRAITS.length,181);
+    assert.equal(ALL_CONSORT_PORTRAITS.length,193);
   `);
 });
 
