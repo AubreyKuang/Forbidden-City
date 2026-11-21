@@ -3,6 +3,7 @@
 
   docs/taptap/icon-1024.png, icon-512.png   1:1 icon, square corners, opaque
   docs/taptap/banner-1920x1080.jpg          16:9 promo image with the game name
+  docs/taptap/banner-1440x1440.jpg          1:1 promo image (required with a portrait video)
 
 The title is the gold 「宸宫纪」 calligraphy already painted on palace-painted-cover.webp,
 lifted off its teal wall. The emperor is the yellow-robed portrait holding a memorial
@@ -80,12 +81,14 @@ def icon():
 def banner():
     cover = Image.open(ART / 'palace-painted-cover.webp').convert('RGB')
     cover.resize((1920, 1080), Image.LANCZOS).save(OUT / 'banner-1920x1080.jpg', quality=90)
+    # The square keeps the painted title on the left and the palace on the right.
+    cover.crop((60, 0, 1001, 941)).resize((1440, 1440), Image.LANCZOS).save(OUT / 'banner-1440x1440.jpg', quality=90)
 
 
 if __name__ == '__main__':
     OUT.mkdir(parents=True, exist_ok=True)
     icon()
     banner()
-    for f in ('icon-1024.png', 'icon-512.png', 'banner-1920x1080.jpg'):
+    for f in ('icon-1024.png', 'icon-512.png', 'banner-1920x1080.jpg', 'banner-1440x1440.jpg'):
         p = OUT / f
         print(f, Image.open(p).size, f'{p.stat().st_size / 1024:.0f}KB')

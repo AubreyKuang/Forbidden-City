@@ -11,6 +11,8 @@
 | 截图 ×4 | `docs/taptap/screenshots/01–04-*.png` | 1080×1920 竖屏，顶部配文，游戏画面占 84% |
 | 原始截图 | `docs/taptap/raw/*.png` | 1080×1620，不带配文 |
 | 16:9 宣传图 | `docs/taptap/banner-1920x1080.jpg` | 1920×1080，含游戏名，不含图标 |
+| 1:1 宣传图 | `docs/taptap/banner-1440x1440.jpg` | 1440×1440（试玩视频是竖屏时必填） |
+| 试玩视频 | `docs/taptap/gameplay-1080x1920.mp4` | 35 秒，1080×1920，H.264，第 1 秒就是批奏折 |
 | 隐私政策 | `privacy.html` | 合并到 main 后的地址：<https://aubreykuang.github.io/Forbidden-City/privacy.html> |
 
 重新生成：
@@ -18,6 +20,7 @@
 ```bash
 python3 scripts/build-taptap.py --version 1.0.0     # 游戏包，并打印体积报告
 node scripts/capture-taptap-screenshots.cjs         # 截图（需要 Node 22+ 和 Chrome）
+node scripts/record-taptap-video.cjs                # 试玩视频（另需 ffmpeg）
 python3 scripts/build-taptap-store-art.py           # 图标、宣传图
 ```
 
@@ -70,7 +73,6 @@ taptap-cli upload-h5-package dist/taptap/chengongji-h5-V1.0.0.zip --dev-id <开�
 
 ## 还没做 / 要在真机上确认
 
-- **试玩视频：** TapTap 资料页要求上传实机视频：15 秒以上，短边至少 540，前 5 秒要出现核心玩法。还没做。
 - **压缩包结构：** TapTap 官方上传工具打出的包是「一个英文文件夹 + index.html」。Issue 里写的是 index.html 直接放在根目录。默认按官方工具的结构打包；如果后台要求根目录，用 `python3 scripts/build-taptap.py --flat` 重新打一个。
 - **体积：** 当前约 39MB，在 60MB 以内。TapTap 审核规范里还有一条较旧的「小游戏包体 20MB 以下」，官方文档没写清楚是否适用于 H5。如果被卡，可以用 `--quality 60` 再压，但立绘会明显变糊，压之前先看效果。
 - **存档：** TapTap 文档没写 H5 容器里 IndexedDB 能不能用。游戏启动时会依次试 IndexedDB → `tap.setStorageSync` → localStorage，每一种都要先写入、读回成功才会用。真机上请开一局、换一个月，然后彻底关掉 TapTap 再打开，看自动存档还在不在。
