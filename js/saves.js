@@ -8,6 +8,7 @@ const SaveManager = (() => {
 
   function getStorage() {
     if(typeof PalaceStorage!=='undefined'&&PalaceStorage.store)return PalaceStorage.store;
+    if(typeof PalaceStorage!=='undefined'&&PalaceStorage.unsaved)return null;
     try { return globalThis.localStorage; } catch { return null; }
   }
 
@@ -186,9 +187,11 @@ function palaceSaveError(slot){
   const status=SaveManager.status(SaveManager.getStorage(),SKEY+slot);
   if(status==='newer')return '此存档由新版游戏保存，请打开新版继续。';
   if(status==='conflict')return '另一标签页已更新此存档。本页已暂停覆盖，可下载备份文件后重新读取。';
-  const e=SaveManager.getStorage()?.error||SaveManager.error;
+  const storage=SaveManager.getStorage();
+  if(!storage)return '当前环境不允许游戏保存数据，本局进度只在本次打开期间有效。请随时用「下载备份」把进度存到手机里。';
+  const e=storage.error||SaveManager.error;
   if(e?.name==='SaveConflictError')return '另一标签页已更新存档。本页已暂停覆盖，可下载备份文件后重新读取。';
-  if(e?.name==='QuotaExceededError'||e?.name==='NS_ERROR_DOM_QUOTA_REACHED'||e?.code===22||e?.code===1014)return '浏览器可用存储空间不足，眼下的进度尚未写入。请先下载备份文件，再释放设备空间后重试。';
+  if(e?.name==='QuotaExceededError'||e?.name==='NS_ERROR_DOM_QUOTA_REACHED'||e?.code===22||e?.code===1014||/exceed|quota|max ?size|storage.*full/i.test(e?.errMsg||''))return '可用存储空间不足，眼下的进度尚未写入。请先下载备份文件，再释放设备空间后重试。';
   if(e?.name==='SecurityError'||e?.name==='NotAllowedError')return '浏览器禁止了存档写入，眼下的进度尚未写入。请允许本站存储数据，或下载备份文件留存。';
   return '存档写入失败，眼下的进度尚未写入，之前的存档仍保留。请重试保存，或下载备份文件留存。';
 }
