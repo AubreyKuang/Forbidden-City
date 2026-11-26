@@ -723,5 +723,5 @@ function viewSys(){
 function rewindHTML(){
   const snaps=SaveManager.snapshots(SaveManager.getStorage(),SKEY+'auto').sort((a,b)=>b.day-a.day);
   if(!snaps.length)return '';
-  return `<section class="save-section"><h3>岁首快照</h3><p class="hint">每年正月自动留一份，最多四份。回到那年岁首，之后的事会重新发生。</p>${snaps.map(s=>`<div class="save-slot"><span class="save-slot-info">${esc(s.date||'')}</span><button class="btn sm" data-onclick="A.rewind(${s.index},${Number(s.savedAt)||0})">回到这里</button></div>`).join('')}</section>`;
+  return `<section class="save-section"><h3>岁首快照</h3><p class="hint">每年正月自动留一份，最多${['零','一','两','三','四','五','六'][PALACE_EDITION.saveSnapshots]||PALACE_EDITION.saveSnapshots}份。回到那年岁首，之后的事会重新发生。</p>${snaps.map(s=>`<div class="save-slot"><span class="save-slot-info">${esc(s.date||'')}</span><button class="btn sm" data-onclick="A.rewind(${s.index},${Number(s.savedAt)||0})">回到这里</button></div>`).join('')}</section>`;
 }

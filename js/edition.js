@@ -9,12 +9,15 @@ const PALACE_EDITION=(()=>{
   const allow=config&&config.allow&&typeof config.allow==='object'?config.allow:{};
   function allows(kind,key){const list=allow[kind];return !Array.isArray(list)||list.includes(key);}
   function locked(kind,key){return !allows(kind,key);}
+  // Small hosts keep fewer copies: config.saveSnapshots (rewind points, default 4) and
+  // features.saveBackups (the previous copy kept beside each slot, default on).
+  const saveSnapshots=config&&Number.isInteger(config.saveSnapshots)&&config.saveSnapshots>=0?config.saveSnapshots:4;
   const maxGenerations=config&&Number.isInteger(config.maxGenerations)&&config.maxGenerations>0?config.maxGenerations:null;
   // Features default to on; a host build can switch off what its container forbids,
   // e.g. {saveExport:false (no file download/import), browserStorage:false}.
   const features=config&&config.features&&typeof config.features==='object'?config.features:{};
   const feature=key=>features[key]===undefined?true:features[key];
-  return Object.freeze({name,allows,locked,maxGenerations,feature,limited:kind=>Array.isArray(allow[kind]),list:kind=>Array.isArray(allow[kind])?allow[kind].slice():null});
+  return Object.freeze({name,allows,locked,maxGenerations,saveSnapshots,feature,limited:kind=>Array.isArray(allow[kind]),list:kind=>Array.isArray(allow[kind])?allow[kind].slice():null});
 })();
 function editionAllows(kind,key){return PALACE_EDITION.allows(kind,key);}
 // A codex card for a character this edition does not open yet: no portrait, no route.

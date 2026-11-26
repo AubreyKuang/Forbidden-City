@@ -3,7 +3,7 @@
 // even when the container store is missing, too old, failing or full.
 const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
 const read=file=>fs.readFileSync(path.join(__dirname,'..',file),'utf8');
-const editionSource=read('js/edition.js'),storageSource=read('js/palace-storage.js');
+const editionSource=read('js/edition.js'),storageSource=read('js/palace-storage.js'),compressSource=read('js/save-compress.js');
 const KEY='chengongji_v1_auto';
 const bytes=v=>Buffer.byteLength(String(v));
 
@@ -45,7 +45,7 @@ async function open(xhs,{edition='xhs'}={}){
   const context=vm.createContext({setTimeout,clearTimeout,console:{...console,warn(){}},
     PALACE_EDITION_CONFIG:{edition,features:{browserStorage:false,saveExport:false}},
     localStorage:forbidden('localStorage'),sessionStorage:forbidden('sessionStorage'),indexedDB:forbidden('indexedDB'),xhs});
-  vm.runInContext(editionSource,context);vm.runInContext(storageSource,context);
+  vm.runInContext(editionSource,context);vm.runInContext(compressSource,context);vm.runInContext(storageSource,context);
   const store=await vm.runInContext('PalaceStorage.init()',context);
   return {store,error:vm.runInContext('PalaceStorage.startupError',context),context};
 }
@@ -73,6 +73,9 @@ test('a reign larger than one key is split under 1MB per key and restored byte f
   assert.ok(chunks.length>2,'several chunks');
   for(const v of host.data.values())assert.ok(bytes(v)<=1024*1024);
   assert.equal((await open(host.xhs)).store.getConfirmedItem(KEY),raw);
+  // Long saves are stored compressed: far fewer bytes than the raw JSON.
+  assert.equal(JSON.parse(host.data.get('cgx:'+KEY)).z,1);
+  assert.ok(host.used()<bytes(raw)/4,'compressed '+host.used()+' of '+bytes(raw));
   store.setItem(KEY,'short');assert.equal(await store.flush(),true);
   assert.equal([...host.data.keys()].filter(k=>k.startsWith('cgx:'+KEY+'#')).length,1,'old chunks are released');
 });
@@ -110,9 +113,11 @@ for(const [name,options,pattern] of [
 test('when the store fills during play the previous save is kept and the error is a quota error',async()=>{
   const host=fakeMiniTool({total:1200*1024});
   const {store}=await open(host.xhs);
-  store.setItem(KEY,JSON.stringify({a:'甲'.repeat(100000)}));assert.equal(await store.flush(),true);
+  // Pseudo-random text barely compresses, so it really fills the store.
+  let seed=7;const noise=n=>{let s='';for(let i=0;i<n;i++){seed=(Math.imul(seed,1664525)+1013904223)>>>0;s+=String.fromCharCode(0x4e00+seed%20000);}return s;};
+  store.setItem(KEY,JSON.stringify({a:noise(60000)}));assert.equal(await store.flush(),true);
   const before=store.getConfirmedItem(KEY);
-  store.setItem(KEY,JSON.stringify({a:'乙'.repeat(350000)}));assert.equal(await store.flush(),false);
+  store.setItem(KEY,JSON.stringify({a:noise(400000)}));assert.equal(await store.flush(),false);
   assert.equal(store.error.name,'QuotaExceededError');
   assert.equal(store.getConfirmedItem(KEY),before);
   assert.equal((await open(host.xhs)).store.getConfirmedItem(KEY),before);

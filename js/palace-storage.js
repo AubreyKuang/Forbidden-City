@@ -110,6 +110,22 @@ const PalaceStorage=(()=>{
     // The last three digits are a build serial: 9462004 is client 9.46.2, compared as 9462.
     return build?Math.floor(build/1000):0;
   }
+  // Long saves are compressed in segments (js/save-compress.js) with a pause between them,
+  // so a monthly autosave does not hold the page for the whole save at once. Each segment
+  // becomes one key; compressed text is ASCII, far under the 1MB key limit.
+  const XHS_SEGMENT=196608;
+  const pause=()=>new Promise(resolve=>setTimeout(resolve,0));
+  async function xhsPack(value){
+    if(typeof PalaceCompress==='undefined'||value.length<4096)return {z:0,parts:xhsSplit(value)};
+    const parts=[];
+    for(let i=0;i<value.length;i+=XHS_SEGMENT){
+      const part=PalaceCompress.compress(value.slice(i,i+XHS_SEGMENT));
+      if(utf8(JSON.stringify(part))>XHS_CHUNK_BYTES)return {z:0,parts:xhsSplit(value)};
+      parts.push(part);
+      if(i+XHS_SEGMENT<value.length)await pause();
+    }
+    return {z:1,parts};
+  }
   // Each stored value is itself a JSON string literal, so every key holds valid JSON.
   function xhsSplit(value){
     const parts=[];let i=0;
@@ -162,15 +178,15 @@ const PalaceStorage=(()=>{
     const head=async key=>{const raw=await getRaw(XHS_PREFIX+key);if(raw===null)return null;const h=JSON.parse(raw);return h&&typeof h.rev==='string'&&Number.isInteger(h.n)?h:null;};
     const read=async key=>{
       const h=await head(key);if(!h)return null;let out='';
-      for(let i=0;i<h.n;i++){const part=await getRaw(XHS_PREFIX+key+'#'+h.rev+':'+i);if(part===null)throw Error('存档分块缺失');out+=JSON.parse(part);}
+      for(let i=0;i<h.n;i++){const part=await getRaw(XHS_PREFIX+key+'#'+h.rev+':'+i);if(part===null)throw Error('存档分块缺失');const text=JSON.parse(part);out+=h.z?PalaceCompress.decompress(text):text;}
       return out;
     };
     const drop=async(key,h)=>{if(!h)return;for(let i=0;i<h.n;i++)await removeRaw(XHS_PREFIX+key+'#'+h.rev+':'+i);};
     const put=async(key,value)=>{
       const prior=await head(key);
       if(value===null){await removeRaw(XHS_PREFIX+key);await drop(key,prior);return;}
-      const parts=xhsSplit(value).map(p=>JSON.stringify(p));
-      const rev=Date.now().toString(36)+Math.random().toString(36).slice(2,6),manifest=JSON.stringify({rev,n:parts.length});
+      const packed=await xhsPack(value),parts=packed.parts.map(p=>JSON.stringify(p));
+      const rev=Date.now().toString(36)+Math.random().toString(36).slice(2,6),manifest=JSON.stringify({rev,n:parts.length,...(packed.z?{z:1}:{})});
       // Check the quota first: the new copy lands before the old one is released.
       const need=parts.reduce((n,p)=>n+utf8(p),0)+utf8(manifest);
       if(used+need>limit){

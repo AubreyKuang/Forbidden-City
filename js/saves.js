@@ -2,7 +2,8 @@
    v2: older saves are migrated instead of rejected, and a few dated snapshots are kept for rewinding. */
 const SaveManager = (() => {
   const version = 2;
-  const SNAPSHOTS = 4;
+  const SNAPSHOTS = typeof PALACE_EDITION !== 'undefined' ? PALACE_EDITION.saveSnapshots : 4;
+  const BACKUPS = typeof PALACE_EDITION === 'undefined' || PALACE_EDITION.feature('saveBackups');
   const observed = new Map();
   let lastError = null;
 
@@ -62,7 +63,7 @@ const SaveManager = (() => {
     }
   }
 
-  function save(storage, key, data, valid, { touch = false, alongside = [], backup = true, rewindKey } = {}) {
+  function save(storage, key, data, valid, { touch = false, alongside = [], backup = BACKUPS, rewindKey } = {}) {
     const changed = [];
     lastError = null;
     try {
@@ -124,6 +125,7 @@ const SaveManager = (() => {
   // Keep one snapshot per label. Oldest go first when storage is full.
   function snapshot(storage, key, data, valid, meta = {}) {
     if (status(storage, key) !== 'ready') return false;
+    if (!SNAPSHOTS) return false;
     const raw = JSON.stringify({ ...data, saveVersion: version });
     if (!decode(raw, valid)) return false;
     let list = readSnapshots(storage, key).filter(entry => entry.label !== meta.label);

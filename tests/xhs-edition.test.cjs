@@ -17,6 +17,7 @@ test('the edition config opens exactly one story consort and one fenghua person 
   assert.deepEqual(config.allow.fenghua,['shangguanLantai']);
   assert.equal(config.maxGenerations,3);
   assert.equal(config.features.saveExport,false);assert.equal(config.features.browserStorage,false);
+  assert.equal(config.features.saveBackups,false);assert.equal(config.saveSnapshots,1);
 });
 
 // Everything in the save that could hold one of the authored characters.
