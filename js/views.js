@@ -2,9 +2,9 @@
 function bar(l,v,c){v=rd(v);return `<div class="bar"><span>${l}</span><i><b style="width:${clamp(v)}%;${c?`background:${c}`:''}"></b></i><em>${v}</em></div>`}
 function renderTop(){
   const t=$('#top');
-  const devLaunch=typeof DEV==='undefined'?'':'<button id="dev-launch" type="button" aria-controls="dev-panel" onclick="DEV.open()">DEV · 金手指</button>';
-  const sound=`<span class="music-controls"><button id="snd" class="btn sm${AU.on?' on':''}" aria-pressed="${AU.on}" aria-labelledby="snd-label" onclick="AU.toggle()"><span aria-hidden="true">♪</span> <span id="snd-label">${AU.on?'声音：开':'开启声音'}</span></button>
-    <select id="music-track" aria-label="背景配乐" onchange="AU.selectTrack(this.value)">${Object.entries(PALACE_MUSIC).map(([id,track])=>
+  const devLaunch=typeof DEV==='undefined'?'':'<button id="dev-launch" type="button" aria-controls="dev-panel" data-onclick="DEV.open()">DEV · 金手指</button>';
+  const sound=`<span class="music-controls"><button id="snd" class="btn sm${AU.on?' on':''}" aria-pressed="${AU.on}" aria-labelledby="snd-label" data-onclick="AU.toggle()"><span aria-hidden="true">♪</span> <span id="snd-label">${AU.on?'声音：开':'开启声音'}</span></button>
+    <select id="music-track" aria-label="背景配乐" data-onchange="AU.selectTrack(this.value)">${Object.entries(PALACE_MUSIC).map(([id,track])=>
       `<option value="${id}"${AU.track===id?' selected':''}>${track.name}</option>`).join('')}</select></span>`;
   if(!S){t.innerHTML=`<span class="brand">宸宫纪</span><span class="sp"></span>${sound}${devLaunch}`;return}
   const e=E(),mx=maxEnergy();let pips='';for(let i=0;i<mx;i++)pips+=`<span class="pip${i<e.energy?'':' off'}"></span>`;
@@ -12,8 +12,8 @@ function renderTop(){
   t.innerHTML=`<div class="hud-identity">${porImg('emp',38)}<div class="hud-name"><span class="date">${esc(dateStr())}</span><span class="hud-person">${esc(e.sur+e.name)} · ${e.age}岁</span></div></div>
    <div class="hud-stats"><span class="st" title="${hd}">龙体 <b>${rd(e.health)}</b></span><span class="st">威望 <b>${rd(e.prestige)}</b></span><span class="st" title="民心范围 0–100">民心 <b>${rd(e.people)}</b>${e.people>=100?'<small>（上限）</small>':''}</span>
    <span class="st">国库 <b>${e.treasury}</b>万两</span><span class="st">精力 <b>${e.energy}／${mx}</b><span aria-hidden="true">${pips}</span></span></div>
-   <div class="hud-controls">${sound}${devLaunch}<button id="finish-month" class="btn gold sm hud-next" onclick="A.finishMonth()" ${S.over?'disabled':''}>结束本月 ▸</button></div>
-   ${lastAutoSaveError&&lastAutoSaveError!==dismissedSaveError?`<div class="hud-save-warning"><span role="status"><strong>未能存档</strong> · ${esc(lastAutoSaveError)}</span><button class="btn sm" onclick="A.save('auto')">重试</button><button class="btn sm" onclick="A.downloadSave()">下载备份</button><button class="btn sm" aria-label="关闭存档提示" onclick="A.dismissSaveError()">关闭</button></div>`:''}`;
+   <div class="hud-controls">${sound}${devLaunch}<button id="finish-month" class="btn gold sm hud-next" data-onclick="A.finishMonth()" ${S.over?'disabled':''}>结束本月 ▸</button></div>
+   ${lastAutoSaveError&&lastAutoSaveError!==dismissedSaveError?`<div class="hud-save-warning"><span role="status"><strong>未能存档</strong> · ${esc(lastAutoSaveError)}</span><button class="btn sm" data-onclick="A.save('auto')">重试</button><button class="btn sm" data-onclick="A.downloadSave()">下载备份</button><button class="btn sm" aria-label="关闭存档提示" data-onclick="A.dismissSaveError()">关闭</button></div>`:''}`;
 }
 const MENU=[['map','宫城'],['home','御书房'],['court','理政'],['harem','后宫'],['cards','翻牌子'],['xx','选秀'],['kids','皇嗣'],['family','家族'],['out','出巡'],['log','起居注'],['sys','存档']];
 // One restrained gold-line family, with distinct silhouettes at mobile sizes.
@@ -34,7 +34,7 @@ function dockIcon(key){return `<svg class="dock-icon" viewBox="0 0 32 32" fill="
 function renderMenu(){const m=$('#menu');if(!S){m.innerHTML='';m.hidden=true;return}m.hidden=false;
   const relativeFrom=personBackStack.findLast(source=>source.state===S&&['home','family','out'].includes(source.view))?.view;
   const current={government:'court',ministries:'court',scholar:'court',fenghua:'home',jinyiwei:'court',residences:'harem',officials:'home',official:'home',jewelry:'home',natal:'family','white-spring-kin':'family',relative:relativeFrom||'family',palace:'map',place:'map',banquet:'map',consort:'harem',kid:'kids',princess:'out','prince-estate':'out',regnal:'log'}[UI.view]||UI.view;
-  m.innerHTML=MENU.map(([k,l])=>`<button class="btn${current===k?' on':''}" ${current===k?'aria-current="page"':''} onclick="${k==='court'?"A.go('government')":`A.go('${k}')`}">${dockIcon(k)}<span>${l}</span></button>`).join('');
+  m.innerHTML=MENU.map(([k,l])=>`<button class="btn${current===k?' on':''}" ${current===k?'aria-current="page"':''} data-onclick="${k==='court'?"A.go('government')":`A.go('${k}')`}">${dockIcon(k)}<span>${l}</span></button>`).join('');
 }
 let panelRoute;
 let personBackStack=[];
@@ -53,14 +53,14 @@ function personBackButton(fallback){
   const view=source?.state===S?source.view:fallback;
   const label={residences:'宫室分配',officials:'官员表',official:'父兄详情',ministries:'六部',scholar:'朝臣详情',consort:'妃嫔详情',kid:'皇嗣详情',princess:'公主府','prince-estate':'王府',palace:'宫殿',place:'上一地点'}[view]||
     MENU.find(([id])=>id===view)?.[1]||'上一页';
-  return `<button class="btn quiet sm detail-back" onclick="A.backPerson('${fallback}')">← 返回${esc(label)}</button>`;
+  return `<button class="btn quiet sm detail-back" data-onclick="A.backPerson('${fallback}')">← 返回${esc(label)}</button>`;
 }
 // List pages reached from several places return to the page that opened them.
 const PAGE_ORIGIN_VIEWS=['officials','residences'];
 const PAGE_BACK_LABEL={home:'御书房',government:'治国理政',map:'宫城',harem:'后宫',family:'家族',kids:'皇嗣'};
 function pageBackButton(page,fallback){
   const from=UI.pageFrom?.[page],target=PAGE_BACK_LABEL[from]?from:fallback;
-  return `<button class="btn quiet sm detail-back" onclick="A.go('${target}')">← 返回${PAGE_BACK_LABEL[target]}</button>`;
+  return `<button class="btn quiet sm detail-back" data-onclick="A.go('${target}')">← 返回${PAGE_BACK_LABEL[target]}</button>`;
 }
 A.backPerson=function(fallback){
   const source=personBackStack.pop();
@@ -80,6 +80,7 @@ function renderPanel(){
   if(S&&v==='xx')rememberSelectionBlurt(selectionCurrent());
   if(route!==panelRoute){p.scrollTop=0;panelRoute=route;}
 }
+function returnToTitle(){S=null;UI.view='title';render();}
 function render(){
   if(exhaustedMonthNotice&&!exhaustedMonthReady())clearExhaustedMonthNotice();
   const app=$('#app');
@@ -92,15 +93,15 @@ function viewTitle(){
   const slots=['auto','1','2','3'].map(s=>({s,i:slotInfo(s)})).filter(x=>x.i);
   return `<div class="title-wrap"><div class="eyebrow">FORBIDDEN CITY · v${PalaceActions.releaseVersion}</div><h1>宸宫纪</h1>
    <p class="intro">在宫城里处理朝政、走访后宫，写下属于你的一朝本纪。</p>
-   <button class="btn gold" onclick="A.newGame()">新开一局</button>
-   ${slots.length?`<div class="save-list">${slots.map(x=>`<button class="btn sm" onclick="A.load('${x.s}')">读取${x.s==='auto'?'自动存档':'存档'+x.s}：${esc(x.i)}</button>`).join('')}</div>`:''}</div>`}
+   <button class="btn gold" data-onclick="A.newGame()">新开一局</button>
+   ${slots.length?`<div class="save-list">${slots.map(x=>`<button class="btn sm" data-onclick="A.load('${x.s}')">读取${x.s==='auto'?'自动存档':'存档'+x.s}：${esc(x.i)}</button>`).join('')}</div>`:''}</div>`}
 function viewNew(){
   const profile=journalContentVersion()>=85?dynastyProfile():[];
   const legacies=dynastyFollowupActive()?dynastyLegacySources():[];
   return `<section class="story-scene coronation-scene" aria-labelledby="coronation-title">
     <header><p>宸极殿</p><h2 id="coronation-title">登基大典</h2></header>
   </section>
-  <form class="coronation-form" onsubmit="event.preventDefault();A.start()">
+  <form class="coronation-form" data-onsubmit="event.preventDefault();A.start()">
     <input type="hidden" id="f-dynasty-meta" value="${esc(JSON.stringify(profile))}">
     <div class="coronation-names">
       <label>国姓<input id="f-sur" class="inp" maxlength="2" value="萧"></label>
@@ -120,11 +121,11 @@ function viewNew(){
       <label>先朝<select id="f-dynasty-legacy"><option value="">从本朝开始</option>
         ${legacies.map((r,i)=>`<option value="${i}">${esc(r.predecessor)} · ${esc(r.era)} · 声望 ${r.prestige} · ${esc(r.trait)} · ${r.slot==='auto'?'自动存档':`存档${r.slot}`}</option>`).join('')}
       </select></label><p class="hint">选定一位旧档君主，将他的声望、家训和一项特质传给新君。</p></fieldset>`:''}
-    <div class="coronation-actions"><button type="button" class="btn quiet sm" onclick="A.go('title')">返回</button><button type="submit" class="btn primary">登基</button></div>
+    <div class="coronation-actions"><button type="button" class="btn quiet sm" data-onclick="A.go('title')">返回</button><button type="submit" class="btn primary">登基</button></div>
   </form>`}
 function consortCard(c){
   const tags=[xinTag(c),c.visitor?'<span class="tag y">母亲在宫</span>':'',c.preg>=2?'<span class="tag r">有孕</span>':'',c.cold?'<span class="tag k">冷宫</span>':'',c.rank===8?'<span class="tag y">中宫</span>':''].join('');
-  return `<button class="card portrait-card" onclick="A.go('consort',${c.id})">${porImg(c,84)}<div class="grow"><div class="nm">${esc(cName(c))}</div><div>${esc(fullName(c))} · ${c.age}岁 · ${c.homeLeave?homeLeaveStatus(c):c.templeStay?'护国寺':esc(c.palace)}</div><div>${tags}<span class="tag">${c.trait}</span>${solitaryTag(c)}${dowagerKinTag(c)}${consortTraitTags(c)}</div>${bar('恩宠',c.favor)}${bar('心情',c.mood,'#4f9078')}</div></button>`}
+  return `<button class="card portrait-card" data-onclick="A.go('consort',${c.id})">${porImg(c,84)}<div class="grow"><div class="nm">${esc(cName(c))}</div><div>${esc(fullName(c))} · ${c.age}岁 · ${c.homeLeave?homeLeaveStatus(c):c.templeStay?'护国寺':esc(c.palace)}</div><div>${tags}<span class="tag">${c.trait}</span>${solitaryTag(c)}${dowagerKinTag(c)}${consortTraitTags(c)}</div>${bar('恩宠',c.favor)}${bar('心情',c.mood,'#4f9078')}</div></button>`}
 
 function dowagerFamilyPanel(){
   const d=ensureDowager();
@@ -134,7 +135,7 @@ function dowagerFamilyPanel(){
   const kin=S.consorts.filter(c=>!c.maid&&clanKey(c)===d.clan);
   return `<section class="dowager-family" aria-label="太后与母家亲族">
     <div class="dowager-line"><div class="dowager-person">${porImg({...portrait,alive:d.alive},64)}<span><strong>${esc(name)}</strong><small>${d.alive?esc(dowagerResidence(d)):'已故'}</small></span></div>
-      <span class="family-link">${esc(d.relation||'母子')} →</span><button class="btn quiet dowager-person" onclick="A.go('home')">${porImg('emp',52)}<span><strong>${esc(E().sur+E().name)}</strong><small>皇帝</small></span></button></div>
+      <span class="family-link">${esc(d.relation||'母子')} →</span><button class="btn quiet dowager-person" data-onclick="A.go('home')">${porImg('emp',52)}<span><strong>${esc(E().sur+E().name)}</strong><small>皇帝</small></span></button></div>
     ${S.flags.birthDowager?`<div class="dowager-line">${porImg(dowagerPerson(S.flags.birthDowager),64)}<span><strong>${esc(S.flags.birthDowager.name)}</strong><small>生母 · ${esc(S.flags.birthDowager.fullName)}${S.flags.birthDowager.alive?' · '+esc(dowagerResidence(S.flags.birthDowager)):' · 已故'}</small></span></div>`:''}
     <div class="dowager-clan"><span class="family-link">母家同族 ↳</span><div><strong>${esc(clanName(d.clan))}</strong>
       <p class="hint">${kin.length?kin.map(c=>esc(fullName(c))).join('、'):'尚无母家族女入宫'}</p><small>下方按父亲分支，同父姐妹共用一个父亲节点。</small></div></div></section>`;
@@ -203,9 +204,9 @@ function familyGraphSVG(){
         wires+=line(cx,houseY+houseHeight,cx,consortY,blood);
       }else if(h){
         const military=stance==='army'?1:0;
-        const kin=(person,role,office)=>person?`<button class="graph-kin-person${!person.alive?' deceased':''}" onclick="A.go('official','${c.id}:${role}')" aria-label="查看${esc(person.name)}">${porImg(person,34)}${label(person.name,`${role==='father'?(indices.length>1?'父亲 · 亲姐妹同父':'父亲'):officialKinLabel(h,role)} · ${officialStatus(person)} · ${office}`)}</button>`:'';
+        const kin=(person,role,office)=>person?`<button class="graph-kin-person${!person.alive?' deceased':''}" data-onclick="A.go('official','${c.id}:${role}')" aria-label="查看${esc(person.name)}">${porImg(person,34)}${label(person.name,`${role==='father'?(indices.length>1?'父亲 · 亲姐妹同父':'父亲'):officialKinLabel(h,role)} · ${officialStatus(person)} · ${office}`)}</button>`:'';
         cards+=`<div class="graph-card graph-house" data-father-id="${c.fatherId}" data-person-id="${esc(father.id)}" style="${at(cx,houseY,houseHeight)};--house-color:${color}">
-          ${layeredFamilyActive()?familyHouseTree(c):`${kin(father,'father',father.office)}${brotherRoles(h).map(role=>kin(h[role],role,h[role].post)).join('')}${natalPeople(h).map(p=>`<button class="graph-kin-person${p.alive?'':' deceased'}" onclick="A.go('natal','${c.id}:${p.id}')" aria-label="查看${esc(p.name)}">${porImg(natalPortrait(p),34)}${label(p.name,natalLabel(c,p)+' · '+natalAge(p)+'岁 · '+natalStatus(p))}</button>`).join('')}`}</div>`;
+          ${layeredFamilyActive()?familyHouseTree(c):`${kin(father,'father',father.office)}${brotherRoles(h).map(role=>kin(h[role],role,h[role].post)).join('')}${natalPeople(h).map(p=>`<button class="graph-kin-person${p.alive?'':' deceased'}" data-onclick="A.go('natal','${c.id}:${p.id}')" aria-label="查看${esc(p.name)}">${porImg(natalPortrait(p),34)}${label(p.name,natalLabel(c,p)+' · '+natalAge(p)+'岁 · '+natalStatus(p))}</button>`).join('')}`}</div>`;
         // One shared trunk and sibling rail; every daughter connects directly below her father.
         wires+=`<g class="paternal-links" data-parent-id="${esc(father.id)}">${line(cx,houseY+houseHeight,cx,consortY-19,blood)}${line(x(indices[0]),consortY-19,x(indices.at(-1)),consortY-19,blood)}
           ${indices.map(index=>`<path data-child-id="${people[index].id}" d="M${x(index)} ${consortY-19} V${consortY}" stroke="${blood}" stroke-width="1.8"><title>${esc(father.name)}之女 ${esc(fullName(people[index]))}</title></path>`).join('')}</g>`;
@@ -222,7 +223,7 @@ function familyGraphSVG(){
   people.forEach((c,i)=>{
     if(!positions.has(i))return;
     const cx=x(i),children=kids.get(c.id)||[],rail=cx-col/2+8;
-    cards+=`<button class="graph-card graph-consort${c.rank===8?' graph-crown':''}" style="${at(cx,consortY,consortHeight)}" onclick="A.go('consort',${c.id})">${porImg(c,52)}${label(fullName(c),!c.alive?'已故':c.gone?'已出宫':cName(c),c)}</button>`;
+    cards+=`<button class="graph-card graph-consort${c.rank===8?' graph-crown':''}" style="${at(cx,consortY,consortHeight)}" data-onclick="A.go('consort',${c.id})">${porImg(c,52)}${label(fullName(c),!c.alive?'已故':c.gone?'已出宫':cName(c),c)}</button>`;
     if(children.length){
       const last=childY+(children.length-1)*childStep+childHeight/2;
       wires+=`<path d="M${cx} ${consortBottom} v12 H${rail} V${last}" fill="none" stroke="${blood}" stroke-width="1.8"/>`;
@@ -230,7 +231,7 @@ function familyGraphSVG(){
     children.forEach((k,j)=>{
       const y=childY+j*childStep,foster=k.foster!==k.mom&&fosterOf(k),role=S.heir===k.id?'皇太子':k.sex==='m'?'皇子':'公主';
       wires+=line(rail,y+childHeight/2,cx-cardWidth/2,y+childHeight/2,blood);
-      cards+=`<button class="graph-card graph-child${S.heir===k.id?' graph-crown':''}" style="${at(cx,y,childHeight)}" onclick="A.go('kid',${k.id})">${porImg(k,44)}${label(k.name,role+(foster?' · 由'+fullName(foster)+'抚养':''),k)}</button>`;
+      cards+=`<button class="graph-card graph-child${S.heir===k.id?' graph-crown':''}" style="${at(cx,y,childHeight)}" data-onclick="A.go('kid',${k.id})">${porImg(k,44)}${label(k.name,role+(foster?' · 由'+fullName(foster)+'抚养':''),k)}</button>`;
     });
   });
   const legend=COURT_BLOCS.map(b=>`<span class="tag" style="border-color:${BLOC_COLOR[b.id]};color:${BLOC_COLOR[b.id]}">${b.name}</span>`).join('');
@@ -256,14 +257,17 @@ A.logCard=function(){
     for(const ch of '· '+l.t){if(g.measureText(row+ch).width>W-80){g.fillText(row,40,y);y+=19;row='  '+ch;if(y>H-60)break}else row+=ch}
     if(row&&y<=H-60){g.fillText(row,40,y);y+=24}}
   g.textAlign='center';g.fillStyle='#a08870';g.font=`11px ${font}`;g.fillText('宸宫纪 · 像素后宫',W/2,H-30);
+  // Hosts that forbid downloads save the card through their own album API instead.
+  if(typeof PALACE_HOST!=='undefined'&&PALACE_HOST&&typeof PALACE_HOST.saveCanvasImage==='function'){PALACE_HOST.saveCanvasImage(c,'起居注纪念卡');return}
+  if(!PALACE_EDITION.feature('saveExport')){toast('当前环境不能保存图片');return}
   if(!c.toBlob){toast('当前环境不能导出图片');return}
   c.toBlob(b=>{if(!b)return;const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`起居注-${dateStr()}.png`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)},'image/png');
 };
 
 function viewFamily(){
   const graph=(UI.familyMode||'graph')==='graph';
-  const heading=pageHeading('家族关系树',`${esc(E().era)}朝`,S.gen>1?'<button class="btn sm quiet" onclick="openHomeBook(\'kin\')">去御书房看皇亲</button>':'');
-  const modes=`<div class="reign-switch" role="group" aria-label="家族查看方式">${[['graph','关系图'],['list','家族列表']].map(([id,label])=>`<button class="btn sm" aria-pressed="${(id==='graph')===graph}" onclick="A.familyMode('${id}')">${label}</button>`).join('')}</div>`;
+  const heading=pageHeading('家族关系树',`${esc(E().era)}朝`,S.gen>1?'<button class="btn sm quiet" data-onclick="openHomeBook(\'kin\')">去御书房看皇亲</button>':'');
+  const modes=`<div class="reign-switch" role="group" aria-label="家族查看方式">${[['graph','关系图'],['list','家族列表']].map(([id,label])=>`<button class="btn sm" aria-pressed="${(id==='graph')===graph}" data-onclick="A.familyMode('${id}')">${label}</button>`).join('')}</div>`;
   const dowagers=dowagerFamilyPanel();
   const maternal=dowagers?`<details class="family-branch family-context"><summary>太后与母家</summary>${dowagers}</details>`:'';
   if(graph)return `${heading}${modes}${familyGraphSVG()}${maternal}`;
@@ -281,10 +285,10 @@ function viewFamily(){
   }
   const childLine=k=>{
     const foster=k.foster!==k.mom&&fosterOf(k);
-    return `<li><button class="btn quiet family-person" onclick="A.go('kid',${k.id})">${porImg(k,52)}
+    return `<li><button class="btn quiet family-person" data-onclick="A.go('kid',${k.id})">${porImg(k,52)}
       <span><span class="family-name-row"><strong>${esc(kidName(k))}</strong>${familyAgeNote(k)}</span>${foster?`<small class="hint">由${esc(fullName(foster))}抚养</small>`:''}${multipleIdentity(k)?`<small class="hint">${esc(multipleIdentity(k).name)}</small>`:''}</span></button></li>`;
   };
-  const member=c=>`<li><button class="btn quiet family-person" onclick="A.go('consort',${c.id})">${porImg(c,60)}
+  const member=c=>`<li><button class="btn quiet family-person" data-onclick="A.go('consort',${c.id})">${porImg(c,60)}
     <span><span class="family-name-row"><strong>${esc(fullName(c))}</strong>${familyAgeNote(c)}</span><small class="hint">${esc(!c.alive?'已故':c.gone?'已出宫':cName(c))}</small></span></button>
     ${kidsByMother.has(c.id)?`<ul>${kidsByMother.get(c.id).map(childLine).join('')}</ul>`:''}</li>`;
   const branch=(label,people,force='',key='')=>{
@@ -347,8 +351,8 @@ function viewHome(){
   const letters=royalKinUnread().length,cold=alive().filter(c=>c.cold).length;
   const recent=activityLogRows(S.gen).filter(l=>!l.t.startsWith('——')&&!regnalAccessionMarker.test(l.t)).slice(-5).reverse();
   const bookPanel=(id,content)=>`<section data-home-book="${id}" aria-label="${HOME_BOOKS.find(([key])=>key===id)[1]}"${book!==id?' hidden':''}>${content}</section>`;
-  const historyAction='<button class="btn sm quiet" onclick="A.go(\'log\')">查看起居注</button>';
-  const current=`<div class="acts study-shortcuts"><button class="btn primary" onclick="A.go('government')">治国理政</button><button class="btn jade" onclick="A.go('jewelry')">内库珍藏</button></div>
+  const historyAction='<button class="btn sm quiet" data-onclick="A.go(\'log\')">查看起居注</button>';
+  const current=`<div class="acts study-shortcuts"><button class="btn primary" data-onclick="A.go('government')">治国理政</button><button class="btn jade" data-onclick="A.go('jewelry')">内库珍藏</button></div>
     ${proudDemandNotice()}
     ${pageChapters('home',[
       ['recent','本朝近事',`<ul class="story">${recent.map(l=>`<li class="${l.b?'big':''}"><time>${esc(l.d)}</time>${esc(l.t)}</li>`).join('')||'<li>尚无记载</li>'}</ul>${historyAction}${birthdayBanquetButtons()}`,'近事'],
@@ -373,13 +377,13 @@ function viewHome(){
     <p class="study-reign">${esc(e.era)}朝 · 第${cnNum(S.gen)}代</p><strong>${esc(e.sur+e.name)}</strong>
     <p>${esc(e.style)}之君${e.dynastyTrait?` · ${esc(e.dynastyTrait)}`:''}</p>
     <p class="study-skills">文才 ${rd(e.wen)}<span></span>武略 ${rd(e.wu)}</p></div></div>
-    <dl class="study-register"><div><dt>储君</dt><dd>${heir?`<button class="person-link" onclick="A.go('kid',${heir.id})">${esc(heir.name)}</button>`:'未立'}</dd></div>
+    <dl class="study-register"><div><dt>储君</dt><dd>${heir?`<button class="person-link" data-onclick="A.go('kid',${heir.id})">${esc(heir.name)}</button>`:'未立'}</dd></div>
     <div><dt>中宫</dt><dd>${queen?parentLink(queen.id):'空悬'}</dd></div>
-    <div><dt>皇嗣</dt><dd><button class="person-link" onclick="A.go('kids')">${children.length} 位</button></dd></div>
-    <div><dt>太后</dt><dd>${dowagers.length?`<button class="person-link" onclick="A.go('place','cn')">${esc(dowagerLabel)}</button>`:'—'}</dd></div></dl>
-    <div class="study-palace-count"><button class="person-link" onclick="A.go('harem')">后宫 ${harem().length} 人${cold?` · 冷宫 ${cold} 人`:''}</button>
+    <div><dt>皇嗣</dt><dd><button class="person-link" data-onclick="A.go('kids')">${children.length} 位</button></dd></div>
+    <div><dt>太后</dt><dd>${dowagers.length?`<button class="person-link" data-onclick="A.go('place','cn')">${esc(dowagerLabel)}</button>`:'—'}</dd></div></dl>
+    <div class="study-palace-count"><button class="person-link" data-onclick="A.go('harem')">后宫 ${harem().length} 人${cold?` · 冷宫 ${cold} 人`:''}</button>
     ${outerIntegration()?`<small class="hint" title="宫外子女的身世走漏会降低稳定。距上次风波满两个月后，每月恢复 2 点；恢复前低于 80 时，在宫妃嫔当月心情减 1。">后宫稳定 ${esc(haremStability())}/100</small>`:''}</div></div>
-    <div class="reign-switch study-books" role="group" aria-label="御书房分区">${HOME_BOOKS.map(([id,label])=>`<button class="btn" data-home-switch="${id}" aria-pressed="${book===id}" onclick="openHomeBook('${id}')">${label}${id==='kin'&&letters?` <small>${letters} 封回信</small>`:''}</button>`).join('')}</div>
+    <div class="reign-switch study-books" role="group" aria-label="御书房分区">${HOME_BOOKS.map(([id,label])=>`<button class="btn" data-home-switch="${id}" aria-pressed="${book===id}" data-onclick="openHomeBook('${id}')">${label}${id==='kin'&&letters?` <small>${letters} 封回信</small>`:''}</button>`).join('')}</div>
     ${bookPanel('current',current)}${bookPanel('kin',kin)}${bookPanel('archive',archive)}`;
 }
 
@@ -387,9 +391,9 @@ function viewHarem(){
   const all=alive().filter(c=>!c.maid);const g=r=>all.filter(c=>!c.cold&&!c.templeStay&&!c.homeLeave&&r(c)).sort((a,b)=>b.rank-a.rank||b.favor-a.favor);
   const sec=(t,arr)=>arr.length?`<h3>${t}（${arr.length}）</h3><div class="grid portrait-grid">${arr.map(consortCard).join('')}</div>`:'';
   const dead=S.consorts.filter(c=>!c.alive||c.gone);
-  return `${pageHeading('后宫','点击妃嫔查看详情、互动与她的故事。各位分名额：嫔6、妃4、贵妃2、皇贵妃1、皇后1。','<button class="btn jade" onclick="A.openResidence()">宫室分配 · 主位与同住</button>')}${haremRestraintPanel()}
+  return `${pageHeading('后宫','点击妃嫔查看详情、互动与她的故事。各位分名额：嫔6、妃4、贵妃2、皇贵妃1、皇后1。','<button class="btn jade" data-onclick="A.openResidence()">宫室分配 · 主位与同住</button>')}${haremRestraintPanel()}
    ${sec('中宫',g(c=>c.rank===8))}${sec('妃位',g(c=>c.rank>=5&&c.rank<8))}${sec('嫔位',g(c=>c.rank===4))}${sec('小主',g(c=>c.rank<4))}${sec('暂离宫中',all.filter(c=>c.homeLeave&&!c.cold))}${sec('寺中修行',all.filter(c=>c.templeStay&&!c.cold))}${sec('冷宫',all.filter(c=>c.cold))}${sec('贴身宫女',maids().filter(m=>m.near))}
-   ${facHTML()}${dead.length?`<h3>故人</h3><div class="hint">${dead.map(c=>`<button class="btn sm" onclick="A.go('consort',${c.id})">${esc(fullName(c))}${c.gone?'（出宫）':'（已故）'}</button>`).join(' ')}</div>`:''}`}
+   ${facHTML()}${dead.length?`<h3>故人</h3><div class="hint">${dead.map(c=>`<button class="btn sm" data-onclick="A.go('consort',${c.id})">${esc(fullName(c))}${c.gone?'（出宫）':'（已故）'}</button>`).join(' ')}</div>`:''}`}
 function detailSection(title,content){
   return content?`<section class="detail-section"><h3>${title}</h3><div class="detail-content">${content}</div></section>`:'';
 }
@@ -415,10 +419,10 @@ function dynastyCodexPanel(){
  return `<p class="hint">图鉴根据本存档实际留下的记录整理；旧存档中未记录的典故不会凭空补写。</p>
  <details><summary>妃嫔图鉴 · ${consorts.length}</summary><div class="acts">${persons(consorts)||'尚无记录'}</div></details>
  <details><summary>历史典故 · ${historical.length}</summary><ul class="story">${historical.map(x=>`<li><time>${esc(x.d)}</time>${esc(x.title)} · ${esc(x.ref)} · ${esc(x.choice)}${x.reconstructed?' · 据人物纪事整理':''}</li>`).join('')||'<li>尚无记录。</li>'}</ul></details>
- <details><summary>皇帝本纪 · ${emperor.length}</summary><ul class="story">${emperor.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>${regnalChronicleActive()?'<button class="btn sm" onclick="A.go(\'regnal\')">翻阅皇帝本纪</button>':'<button class="btn sm" onclick="A.go(\'log\')">查看按时间记载的起居注</button>'}</details>
- <details><summary>服饰珍宝 · ${jewelry.length}</summary><p>${jewelry.map(([id])=>esc(JEWELRY[id].name)).join('、')||'尚无记录'}</p><button class="btn sm" onclick="A.go('jewelry')">查看内库</button></details>
+ <details><summary>皇帝本纪 · ${emperor.length}</summary><ul class="story">${emperor.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>${regnalChronicleActive()?'<button class="btn sm" data-onclick="A.go(\'regnal\')">翻阅皇帝本纪</button>':'<button class="btn sm" data-onclick="A.go(\'log\')">查看按时间记载的起居注</button>'}</details>
+ <details><summary>服饰珍宝 · ${jewelry.length}</summary><p>${jewelry.map(([id])=>esc(JEWELRY[id].name)).join('、')||'尚无记录'}</p><button class="btn sm" data-onclick="A.go('jewelry')">查看内库</button></details>
  <details><summary>皇嗣成长 · ${children.length}</summary><div class="acts">${persons(children)||'尚无记录'}</div></details>
- <details><summary>宫廷建筑 · ${PLACES.length}</summary><p>${PLACES.map(p=>esc(p.n)).join('、')}</p><button class="btn sm" onclick="A.go('map')">查看宫城</button></details>`;
+ <details><summary>宫廷建筑 · ${PLACES.length}</summary><p>${PLACES.map(p=>esc(p.n)).join('、')}</p><button class="btn sm" data-onclick="A.go('map')">查看宫城</button></details>`;
 }
 
 function dynastyGoalsPanel(){
@@ -430,8 +434,8 @@ function dynastyGoalsPanel(){
   };
   const chapter=scenario&&definition?`<h3>${esc(definition.name)}</h3><p>${esc(definition.description)}
     ${scenario.status==='won'?' · 已完成':scenario.status==='lost'?` · ${esc(scenario.failure||'期限已过')}`:scenario.deadline!=null?` · 剩余 ${Math.max(0,scenario.deadline-S.turn)} 个月`:''}</p>
-    ${scenario.id==='regent'?`<p>权臣掌控度 ${scenario.control}/100</p>${scenario.control>0&&scenario.gen===S.gen?`<button class="btn sm" onclick="A.lowerRegentControl()" ${scenario.lastReform===S.turn||E().energy<1?'disabled':''}>核对朝政 · 精力−1</button>`:''}`:''}
-    ${scenario.id==='founder'&&scenario.foundations?`<p class="hint">新朝须逐步立制、设仓、议政；每月最多筹办一项。设议政前不能采纳派系建议。</p><div class="acts">${Object.entries(DYNASTY_FOUNDATIONS).map(([id,item])=>`<button class="btn sm" onclick="A.establishDynastyFoundation('${id}')" ${scenario.foundations[id]||scenario.status!=='active'||scenario.lastFoundation===S.turn||E().energy<1||E().treasury<item.cost?'disabled':''}>${item.name} · 银${item.cost} · 精力−1${scenario.foundations[id]?' · 已完成':''}</button>`).join('')}</div>`:''}
+    ${scenario.id==='regent'?`<p>权臣掌控度 ${scenario.control}/100</p>${scenario.control>0&&scenario.gen===S.gen?`<button class="btn sm" data-onclick="A.lowerRegentControl()" ${scenario.lastReform===S.turn||E().energy<1?'disabled':''}>核对朝政 · 精力−1</button>`:''}`:''}
+    ${scenario.id==='founder'&&scenario.foundations?`<p class="hint">新朝须逐步立制、设仓、议政；每月最多筹办一项。设议政前不能采纳派系建议。</p><div class="acts">${Object.entries(DYNASTY_FOUNDATIONS).map(([id,item])=>`<button class="btn sm" data-onclick="A.establishDynastyFoundation('${id}')" ${scenario.foundations[id]||scenario.status!=='active'||scenario.lastFoundation===S.turn||E().energy<1||E().treasury<item.cost?'disabled':''}>${item.name} · 银${item.cost} · 精力−1${scenario.foundations[id]?' · 已完成':''}</button>`).join('')}</div>`:''}
     <ul class="story">${dynastyScenarioGoals().map(([name,value,target])=>`<li>${esc(name)} · ${Math.min(value,target)}/${target}</li>`).join('')}
     <li>隐藏目标 · ${scenario.hidden?esc(hiddenDescriptions[scenario.id])+' · 已达成':'???'}</li></ul>`:'';
   return `<section class="detail-section"><h3>王朝目标</h3>
@@ -440,9 +444,9 @@ function dynastyGoalsPanel(){
     <ul class="story">${DYNASTY_GOALS.map(goal=>{
       const entry=S.dynastyGoals?.[goal.id],progress=entry?.completed?goal.target:Math.min(goal.progress(),goal.target);
       return `<li><strong>${esc(goal.name)}</strong> · ${esc(goal.description)} · ${progress}/${goal.target}
-        ${entry?.claimed?' · 已领取':entry?.completed?`<button class="btn sm gold" onclick="A.claimDynastyGoal('${goal.id}')" ${S.over?'disabled':''}>领取 ${goal.reward} 万两</button>`:` · 赏银 ${goal.reward} 万两`}</li>`;
+        ${entry?.claimed?' · 已领取':entry?.completed?`<button class="btn sm gold" data-onclick="A.claimDynastyGoal('${goal.id}')" ${S.over?'disabled':''}>领取 ${goal.reward} 万两</button>`:` · 赏银 ${goal.reward} 万两`}</li>`;
     }).join('')}</ul>
-    <h3>隐藏成就</h3><ul class="story">${DYNASTY_HIDDEN_GOALS.map(goal=>{const entry=S.dynastyGoals?.[goal.id];return entry?.completed?`<li><strong>${esc(goal.name)}</strong> · ${esc(goal.description)} ${entry.claimed?'· 已领取':`<button class="btn sm gold" onclick="A.claimDynastyGoal('${goal.id}')" ${S.over?'disabled':''}>领取 ${goal.reward} 万两</button>`}</li>`:'<li>???</li>';}).join('')}</ul>
+    <h3>隐藏成就</h3><ul class="story">${DYNASTY_HIDDEN_GOALS.map(goal=>{const entry=S.dynastyGoals?.[goal.id];return entry?.completed?`<li><strong>${esc(goal.name)}</strong> · ${esc(goal.description)} ${entry.claimed?'· 已领取':`<button class="btn sm gold" data-onclick="A.claimDynastyGoal('${goal.id}')" ${S.over?'disabled':''}>领取 ${goal.reward} 万两</button>`}</li>`:'<li>???</li>';}).join('')}</ul>
   </section>`;
 }
 function detailFold(title,content){
@@ -460,7 +464,7 @@ function actionGroup(title,content){
 function pageChapters(prefix,chapters,compact=false){
   const visible=chapters.filter(([, ,content])=>content?.trim());
   if(!visible.length)return '';
-  return `${visible.length>1?`<nav class="section-jumps${compact?' section-jumps-compact':''}" aria-label="本页内容">${visible.map(([key,title,,shortTitle])=>`<a href="#${prefix}-${key}" onclick="event.preventDefault();jumpToPageSection('${prefix}-${key}')">${esc(compact&&shortTitle?shortTitle:title)}</a>`).join('')}</nav>`:''}
+  return `${visible.length>1?`<nav class="section-jumps${compact?' section-jumps-compact':''}" aria-label="本页内容">${visible.map(([key,title,,shortTitle])=>`<a href="#${prefix}-${key}" data-onclick="event.preventDefault();jumpToPageSection('${prefix}-${key}')">${esc(compact&&shortTitle?shortTitle:title)}</a>`).join('')}</nav>`:''}
     <div class="page-chapters">${visible.map(([key,title,content])=>`<section class="page-chapter" aria-labelledby="${prefix}-${key}"><h3 id="${prefix}-${key}" tabindex="-1" class="chapter-title">${esc(title)}</h3><div class="chapter-body">${content.replace(/<(\/?)h3(?=[\s>])/g,'<$1h4')}</div></section>`).join('')}</div>`;
 }
 function jumpToPageSection(id){
@@ -479,46 +483,46 @@ function viewConsort(){
   const st=(l,v,hid)=>hid?`<div class="bar"><span>${l}</span><i></i><em>??</em></div>`:bar(l,v,'#8e6f57');
   let acts='', management='', quickManagement='', familyActions='', conversations='', cardAction='', penalties='';
   if(act&&c.maid){
-    acts+=`<button class="btn" onclick="A.night(${c.id})" ${consortNightReason(c)?'disabled':''}>召幸<small>${consortNightReason(c)||'精力-1'}</small></button>`;
-    acts+=`<button class="btn primary" onclick="A.chat(${c.id})">闲话家常<small>精力-1</small></button>`;
-    acts+=`<button class="btn jade" onclick="A.gift(${c.id})">赏赐<small>国库-20</small></button>`;
-    management+=`<button class="btn" onclick="A.raiseMaid(${c.id},1)">册封为答应</button><button class="btn" onclick="A.raiseMaid(${c.id},0)">册封为官女子</button><button class="btn" onclick="A.maidNear(${c.id})">${c.near?'遣回尚衣局':'调到身边'}</button>`;
-    penalties+=`<button class="btn danger" onclick="A.maidOut(${c.id})">放出宫</button>`;
+    acts+=`<button class="btn" data-onclick="A.night(${c.id})" ${consortNightReason(c)?'disabled':''}>召幸<small>${consortNightReason(c)||'精力-1'}</small></button>`;
+    acts+=`<button class="btn primary" data-onclick="A.chat(${c.id})">闲话家常<small>精力-1</small></button>`;
+    acts+=`<button class="btn jade" data-onclick="A.gift(${c.id})">赏赐<small>国库-20</small></button>`;
+    management+=`<button class="btn" data-onclick="A.raiseMaid(${c.id},1)">册封为答应</button><button class="btn" data-onclick="A.raiseMaid(${c.id},0)">册封为官女子</button><button class="btn" data-onclick="A.maidNear(${c.id})">${c.near?'遣回尚衣局':'调到身边'}</button>`;
+    penalties+=`<button class="btn danger" data-onclick="A.maidOut(${c.id})">放出宫</button>`;
   } else if(act&&(c.templeStay||c.homeLeave)){
     // Temple status and return actions have their own section below.
   } else if(act&&!c.cold){
-    acts+=`<button class="btn" onclick="A.night(${c.id})" ${consortNightReason(c)?'disabled':''}>召幸侍寝<small>${consortNightReason(c)||'精力-1'}</small></button>`;
-    if(journalContentVersion()>=91&&c===empress()&&c.illnessRecovery?.until>S.turn)management+=`<button class="btn jade" onclick="A.queenCare()">安排或更换侍疾妃嫔</button>`;
-    acts+=`<button class="btn primary" onclick="A.chat(${c.id})">闲话家常<small>精力-1</small></button>`;
-    acts+=`<button class="btn jade" onclick="A.gift(${c.id})">赏赐<small>礼物 · 内库珍饰</small></button>`;
+    acts+=`<button class="btn" data-onclick="A.night(${c.id})" ${consortNightReason(c)?'disabled':''}>召幸侍寝<small>${consortNightReason(c)||'精力-1'}</small></button>`;
+    if(journalContentVersion()>=91&&c===empress()&&c.illnessRecovery?.until>S.turn)management+=`<button class="btn jade" data-onclick="A.queenCare()">安排或更换侍疾妃嫔</button>`;
+    acts+=`<button class="btn primary" data-onclick="A.chat(${c.id})">闲话家常<small>精力-1</small></button>`;
+    acts+=`<button class="btn jade" data-onclick="A.gift(${c.id})">赏赐<small>礼物 · 内库珍饰</small></button>`;
     familyActions+=momVisitButton(c);
-    if(domesticHomeLeaveAllowed(c))familyActions+=`<button class="btn" onclick="A.homeLeave(${c.id})" ${homeLeaveEligible(c)?'':'disabled'}>准回家省亲</button>`;
-    if(residencePetitionFor(c))conversations+=`<button class="btn" onclick="A.residencePetition(${c.id})">听她谈居处</button>`;
-    if(solitaryQuietEvent(c))conversations+=`<button class="btn" onclick="A.quietHousehold(${c.id})">听她谈清静</button>`;
-    if(travelerQuietPair(c))conversations+=`<button class="btn" onclick="A.neighborWord(${c.id})">听听廊下的新词</button>`;
-    if(resemblanceEvent(c))conversations+=`<button class="btn" onclick="A.resemblanceTalk(${c.id})">听听肖似之议</button>`;
-    if(brotherSupportContext(c))conversations+=`<button class="btn" onclick="A.brotherSupport(${c.id})">听她谈兄长与家书</button>`;
-    if(firstChildWishContext(c))conversations+=`<button class="btn" onclick="A.firstChildWish(${c.id})">听她说这一胎的盼望</button>`;
-    if(c.rescue?.familyContact==='confirmed')familyActions+=`<button class="btn" onclick="A.rescuedReturn(${c.id})">商议归乡</button>`;
-    if(c.rank!==8)quickManagement+=`<button class="btn" onclick="A.openResidence(${c.id})">安排居所<small>主位 · 同住 · 换宫</small></button>`;
-    if(c.rank<7)quickManagement+=`<button class="btn" onclick="A.promote(${c.id})">晋封<small>→${RANKS[c.rank+1]}</small></button>`;
-    if(c.rank>0&&c.rank<8)penalties+=`<button class="btn danger" onclick="A.demote(${c.id})">降位</button>`;
-    if(c.rank>=4)management+=`<button class="btn" onclick="A.rename(${c.id})">改封号</button>`;
-    if(c.rank>=5&&c.rank<8&&!empress()&&!c.outerHouseholdId)management+=`<button class="btn" onclick="A.crown(${c.id})">册立皇后</button>`;
-    penalties+=`<button class="btn danger" onclick="A.cold(${c.id})">${c.rank===8?'废后':'打入冷宫'}</button><button class="btn danger" onclick="A.away(${c.id})">遣出宫</button>`;
+    if(domesticHomeLeaveAllowed(c))familyActions+=`<button class="btn" data-onclick="A.homeLeave(${c.id})" ${homeLeaveEligible(c)?'':'disabled'}>准回家省亲</button>`;
+    if(residencePetitionFor(c))conversations+=`<button class="btn" data-onclick="A.residencePetition(${c.id})">听她谈居处</button>`;
+    if(solitaryQuietEvent(c))conversations+=`<button class="btn" data-onclick="A.quietHousehold(${c.id})">听她谈清静</button>`;
+    if(travelerQuietPair(c))conversations+=`<button class="btn" data-onclick="A.neighborWord(${c.id})">听听廊下的新词</button>`;
+    if(resemblanceEvent(c))conversations+=`<button class="btn" data-onclick="A.resemblanceTalk(${c.id})">听听肖似之议</button>`;
+    if(brotherSupportContext(c))conversations+=`<button class="btn" data-onclick="A.brotherSupport(${c.id})">听她谈兄长与家书</button>`;
+    if(firstChildWishContext(c))conversations+=`<button class="btn" data-onclick="A.firstChildWish(${c.id})">听她说这一胎的盼望</button>`;
+    if(c.rescue?.familyContact==='confirmed')familyActions+=`<button class="btn" data-onclick="A.rescuedReturn(${c.id})">商议归乡</button>`;
+    if(c.rank!==8)quickManagement+=`<button class="btn" data-onclick="A.openResidence(${c.id})">安排居所<small>主位 · 同住 · 换宫</small></button>`;
+    if(c.rank<7)quickManagement+=`<button class="btn" data-onclick="A.promote(${c.id})">晋封<small>→${RANKS[c.rank+1]}</small></button>`;
+    if(c.rank>0&&c.rank<8)penalties+=`<button class="btn danger" data-onclick="A.demote(${c.id})">降位</button>`;
+    if(c.rank>=4)management+=`<button class="btn" data-onclick="A.rename(${c.id})">改封号</button>`;
+    if(c.rank>=5&&c.rank<8&&!empress()&&!c.outerHouseholdId)management+=`<button class="btn" data-onclick="A.crown(${c.id})">册立皇后</button>`;
+    penalties+=`<button class="btn danger" data-onclick="A.cold(${c.id})">${c.rank===8?'废后':'打入冷宫'}</button><button class="btn danger" data-onclick="A.away(${c.id})">遣出宫</button>`;
   } else if(act&&c.cold){
-    acts+=`<button class="btn primary" onclick="A.uncold(${c.id})">放出冷宫</button>`;
-    penalties+=`<button class="btn danger" onclick="A.away(${c.id})">遣出宫</button>`;
+    acts+=`<button class="btn primary" data-onclick="A.uncold(${c.id})">放出冷宫</button>`;
+    penalties+=`<button class="btn danger" data-onclick="A.away(${c.id})">遣出宫</button>`;
   }
-  if(act&&!c.maid){cardAction=`<button class="btn quiet" onclick="A.toggleGreenCard(${c.id})">${c.cardWithdrawn?'恢复绿头牌':'撤下绿头牌'}</button>`;}
-  if(act&&awaitingNoticeReason(c))conversations+=`<button class="btn" onclick="A.awaitingNotice(${c.id})">听她说久候的心事</button>`;
+  if(act&&!c.maid){cardAction=`<button class="btn quiet" data-onclick="A.toggleGreenCard(${c.id})">${c.cardWithdrawn?'恢复绿头牌':'撤下绿头牌'}</button>`;}
+  if(act&&awaitingNoticeReason(c))conversations+=`<button class="btn" data-onclick="A.awaitingNotice(${c.id})">听她说久候的心事</button>`;
   const houseNews=courtFamilyPending(c);
-  if(houseNews.length&&courtFamilyCanReply(c))acts+=`<button class="btn sm jade" onclick="A.courtFamilyReply(${c.id},'${houseNews[0].id}')">听她谈前朝家书</button>`;
+  if(houseNews.length&&courtFamilyCanReply(c))acts+=`<button class="btn sm jade" data-onclick="A.courtFamilyReply(${c.id},'${houseNews[0].id}')">听她谈前朝家书</button>`;
   const family=queenWardFamilyPanel(c)+(act?fosterLine(c)+clanLine(c)+conKidLine(c)+relLine(c):'')+houseLine(c)+fiveBrotherPanel(c);
   return `${personBackButton('harem')}
    <header class="detail-head consort-detail-head">${porImg(c,224)}<div class="grow">
     <p>${esc(fullName(c))} · ${c.age}岁 · ${c.alive?c.gone?'已出宫':c.homeLeave?homeLeaveStatus(c):c.templeStay?'护国寺':esc(residenceLabel(c)):esc([c.passingDate,consortPassingReason(c)||'已故'].filter(Boolean).join(' · '))}</p>
-    <h2>${esc(cName(c))}</h2>${consortHomePlace(c)?`<button class="btn sm jade" onclick="A.visitConsortHome(${c.id})">去宫里看看 →</button>`:''}
+    <h2>${esc(cName(c))}</h2>${consortHomePlace(c)?`<button class="btn sm jade" data-onclick="A.visitConsortHome(${c.id})">去宫里看看 →</button>`:''}
     <p>${esc(c.fam.t)} · ${esc(c.trait)} ${solitaryTag(c)}${dowagerKinTag(c)}${consortTraitTags(c)}${c.preg>=2?` <span class="tag r">有孕${c.preg}月</span>`:''}</p>
    </div></header>
    ${!act?deliveryMemorialPanel(c):''}
@@ -541,7 +545,7 @@ function viewConsort(){
       actionGroup('探亲与省亲',familyActions)+
       detailSection('白泉王室亲眷',whiteSpringKinLinks(c))+natalVisitorsPanel(c)+
       whiteSpringFriendPanel(c)+sisterPalaceConcernPanel(c)+courtFamilyNewsPanel(c)+palaceKinLettersPanel(c)+
-      detailSection('家族与人际',`${kids.length?`<div>子女：${kids.map(k=>`<button class="btn quiet sm" onclick="A.go('kid',${k.id})">${esc(k.name)}</button>`).join(' ')}</div>`:''}${family}`)+
+      detailSection('家族与人际',`${kids.length?`<div>子女：${kids.map(k=>`<button class="btn quiet sm" data-onclick="A.go('kid',${k.id})">${esc(k.name)}</button>`).join(' ')}</div>`:''}${family}`)+
       marriedSisterChildrenPanel(c)+
       (act?detailSection('与孩子的日常',consortFamilyPanel(c)):'')+
       (act?detailSection('牵挂远方的孩子',motherConcernPanel(c)):'')+
@@ -560,29 +564,29 @@ function viewCards(){
   const cards=harem().concat(alive().filter(c=>c.homeLeave&&!c.maid&&!c.cold&&!c.templeStay));
   const h=cards.filter(c=>!c.cardWithdrawn).sort((a,b)=>b.rank-a.rank||b.favor-a.favor).concat(maids().filter(m=>m.near&&!m.cardWithdrawn));
   return `<h2>敬事房 · 翻牌子</h2>${mourningNightPause()?`<p class="hint" role="status">${mourningNightMessage()}；已有身孕者仍照常安胎、诊治和生产。</p>`:''}<p class="hint">敬事房呈上绿头牌。翻谁的牌子，今夜便召谁侍寝（精力-1）。本月已侍寝 ${E().nightsMonth||0} 次，一月超过三次有损龙体。</p>
-   ${h.length?`<div class="pais">${h.map(c=>`<button class="pai" ${consortNightReason(c)?'disabled':''} onclick="A.night(${c.id})"><strong>${esc(cName(c))}</strong><small>${consortNightReason(c)||'恩宠 '+rd(c.favor)}</small></button>`).join('')}</div>`:'<p class="hint">暂无可翻的绿头牌。可在妃嫔详情中恢复绿头牌。</p>'}${maidAudiencePanel()}`;
+   ${h.length?`<div class="pais">${h.map(c=>`<button class="pai" ${consortNightReason(c)?'disabled':''} data-onclick="A.night(${c.id})"><strong>${esc(cName(c))}</strong><small>${consortNightReason(c)||'恩宠 '+rd(c.favor)}</small></button>`).join('')}</div>`:'<p class="hint">暂无可翻的绿头牌。可在妃嫔详情中恢复绿头牌。</p>'}${maidAudiencePanel()}`;
 }
 function viewXX(){
   const last=selectionLastHeldTurn(),since=S.turn-last;
   if(selectionArrivalsRecent())return viewSelectionArrivals();
   if(!S.cands.length&&(!S.selection||S.selection.phase==='arrivals')) return `<h2>选秀</h2><p>距上次选秀：${last<0?'从未':`${Math.floor(since/12)}年${since%12}月`}。三年一度大选可在二月自动举行；${selectionSkipTimingActive()&&selectionFreeReady()?'目前可依例下旨开选，无须承担提前选秀的国库与民心代价。':'也可随时下旨，但未满三年会耗费国库、有损民心。'}</p>
-    <div class="acts"><button class="btn gold" onclick="A.xxDecree()">下旨选秀</button></div>`;
+    <div class="acts"><button class="btn gold" data-onclick="A.xxDecree()">下旨选秀</button></div>`;
   if(selectionCurrent())return viewSelectionAudience();
   return `${selectionDiscussionPanel()}<section class="story-scene selection-scene" aria-labelledby="selection-title">
     <header><p>储秀宫</p><h2 id="selection-title">选秀</h2></header>
-    <button class="btn gold" onclick="A.xxEnd()">确定名单，安排入宫</button>
+    <button class="btn gold" data-onclick="A.xxEnd()">确定名单，安排入宫</button>
    </section>
    <p>已留选 ${(S.selection?.accepted||[]).length} 人${(S.selection?.accepted||[]).length?' · '+S.selection.accepted.map(id=>parentLink(id)).join('、'):''}。${S.cands.length?'名单确定后，再看她们入宫时的反应。':'候选已全部处理，请确认本批名单。'}</p>
    <p class="hint">容貌、才情一望便知；德行、心机需要暗访（剩余 ${S.flags.peek} 次）。本月结束时未选的秀女会遣返回家。</p>
    <div class="grid portrait-grid">${S.cands.map(c=>`<div class="card portrait-card" style="cursor:default;flex-direction:column">
      <div class="row" style="gap:8px">${porImg(c,76)}<div class="grow"><div class="nm">${esc(fullName(c))}</div><div>${c.age}岁 · ${esc(c.fam.t)}之女</div>${c.kinNote?`<div><span class="tag y">${esc(c.kinNote)}</span></div>`:''}<div><span class="tag">${c.trait}</span>${solitaryTag(c)}${dowagerKinTag(c)}${consortTraitTags(c)} <span class="tag">${esc(consortHobby(c))}</span></div></div></div>
      ${portraitResemblanceHint(c)?`<p class="hint">${esc(portraitResemblanceHint(c))}</p>`:''}${c.pastLife?`<p class="hint">${esc(pastLifeSelectionHint(c))}</p>`:''}${bar('容貌',c.looks,'#8e6f57')}${bar('才情',c.talent,'#8e6f57')}${c.known?bar('德行',c.virtue,'#8e6f57')+bar('心机',c.scheme,'#8e6f57'):'<div class="bar"><span>德行</span><i></i><em>??</em></div><div class="bar"><span>心机</span><i></i><em>??</em></div>'}
-     <div class="acts" style="margin:4px 0 0"><button class="btn sm" onclick="A.xxMeet(${c.id})">再见一面</button><button class="btn sm gold" onclick="A.xxTake(${c.id})">留牌子</button><button class="btn sm" onclick="A.xxDrop(${c.id})">撂牌子</button>${c.known?'':`<button class="btn sm jade" onclick="A.xxPeek(${c.id})">暗访</button>`}</div></div>`).join('')}</div>`}
+     <div class="acts" style="margin:4px 0 0"><button class="btn sm" data-onclick="A.xxMeet(${c.id})">再见一面</button><button class="btn sm gold" data-onclick="A.xxTake(${c.id})">留牌子</button><button class="btn sm" data-onclick="A.xxDrop(${c.id})">撂牌子</button>${c.known?'':`<button class="btn sm jade" data-onclick="A.xxPeek(${c.id})">暗访</button>`}</div></div>`).join('')}</div>`}
 function parentLink(id,name){
-  const c=byId(id);return c?`<button class="person-link" onclick="A.go('consort',${c.id})">${esc(name||fullName(c))}</button>`:esc(name||'未记载');
+  const c=byId(id);return c?`<button class="person-link" data-onclick="A.go('consort',${c.id})">${esc(name||fullName(c))}</button>`:esc(name||'未记载');
 }
 function childListCard(k){
-  return `<article class="card portrait-card child-card"><button class="child-portrait" aria-label="查看${esc(kidName(k))}" onclick="A.go('kid',${k.id})">${porImg(k,72)}</button><div class="grow"><button class="person-link nm" onclick="A.go('kid',${k.id})">${esc(kidName(k))}</button><div>${k.alive?kidAge(k)+'岁':k.lost?'下落不明':'已故'} · 生母 ${outsideMotherLink(k)}${fosterOf(k)?` · 养母 ${parentLink(k.foster)}`:''}</div>${birthTags(k)}${outsideChildBadge(k)}${royalHouseholdLifeActive()&&k.alive&&k.household?.pregnancies?.length?
+  return `<article class="card portrait-card child-card"><button class="child-portrait" aria-label="查看${esc(kidName(k))}" data-onclick="A.go('kid',${k.id})">${porImg(k,72)}</button><div class="grow"><button class="person-link nm" data-onclick="A.go('kid',${k.id})">${esc(kidName(k))}</button><div>${k.alive?kidAge(k)+'岁':k.lost?'下落不明':'已故'} · 生母 ${outsideMotherLink(k)}${fosterOf(k)?` · 养母 ${parentLink(k.foster)}`:''}</div>${birthTags(k)}${outsideChildBadge(k)}${royalHouseholdLifeActive()&&k.alive&&k.household?.pregnancies?.length?
     `<span class="tag y">${k.sex==='f'?'公主有喜':'王府有喜'}</span>`:''}${bar('才学',k.lit,'#3b5fa8')}${bar('武艺',k.mar,'#a3262a')}${bar('品德',k.vir,'#4f9078')}</div></article>`;
 }
 A.kidsResidence=function(group){
@@ -609,10 +613,10 @@ function viewKids(){
     <p>${chanceHint} 出巡时去护国寺祈福，可提高当月机会。</p>
     <p>若陛下有子嗣方面的难处，连续十二个月各有一次可受孕的召幸且始终未有孕讯，太医院才会提出会诊。接到结论后，可在御书房寻访医者，或按宗人府礼例议请入继。</p>
     <p>符合条件的皇子满五岁后，可在其人物页选择「立为太子」。</p>
-    <div class="acts"><button class="btn sm" onclick="A.go('cards')">去翻牌子</button><button class="btn sm" onclick="A.go('out')">出巡与祈福</button></div></details>`;
-  return `${pageHeading('皇嗣','',`<button class="btn jade" onclick="A.visitMapActivity('ss')">去上书房看看 →</button>`)}${pendingBirthPanel()}${guide}${S.children.length?`
-    <div class="residence-tabs" role="group" aria-label="皇嗣居处">${[['palace','宫中'],['out','宫外']].map(([id,label])=>`<button class="btn ${selected===id?'primary on':''}" aria-pressed="${selected===id}" onclick="A.kidsResidence('${id}')">${label}<span>${groups[id].length}</span></button>`).join('')}</div>
-    <div class="acts official-filters" role="group" aria-label="皇嗣类别">${KIDS_KIND_FILTERS.map(([id,label])=>`<button class="btn sm ${kind===id?'on':''}" aria-pressed="${kind===id}" onclick="A.kidsKind('${id}')">${label}</button>`).join('')}</div>
+    <div class="acts"><button class="btn sm" data-onclick="A.go('cards')">去翻牌子</button><button class="btn sm" data-onclick="A.go('out')">出巡与祈福</button></div></details>`;
+  return `${pageHeading('皇嗣','',`<button class="btn jade" data-onclick="A.visitMapActivity('ss')">去上书房看看 →</button>`)}${pendingBirthPanel()}${guide}${S.children.length?`
+    <div class="residence-tabs" role="group" aria-label="皇嗣居处">${[['palace','宫中'],['out','宫外']].map(([id,label])=>`<button class="btn ${selected===id?'primary on':''}" aria-pressed="${selected===id}" data-onclick="A.kidsResidence('${id}')">${label}<span>${groups[id].length}</span></button>`).join('')}</div>
+    <div class="acts official-filters" role="group" aria-label="皇嗣类别">${KIDS_KIND_FILTERS.map(([id,label])=>`<button class="btn sm ${kind===id?'on':''}" aria-pressed="${kind===id}" data-onclick="A.kidsKind('${id}')">${label}</button>`).join('')}</div>
     <section aria-label="${residenceLabel}皇嗣">${visible.length?grid(visible):`<p class="hint">${residenceLabel}暂无${kind==='all'?'皇嗣':kindLabel}。</p>`}</section>
     ${past.length?`<details class="past-children"><summary>已故与失踪 · ${past.length}</summary>${grid(past)}</details>`:''}`:'<p class="hint">膝下尚无子嗣。</p>'}`;
 }
@@ -622,12 +626,12 @@ function viewKid(){
   const foster=fosterOf(k),mom=byId(k.mom);
   const status=[k.alive?`${a}岁`:k.lost?'下落不明':k.deathReason||'已故',k.married?'已婚嫁':royalNatalEngaged(k)?'已定亲':'',k.estate||k.princeEstate?'已开府':'',k.away?'已就藩':'',k.jailed?'圈禁于宗人府':'',k.removedFromRoyal?'不列皇嗣':''].filter(Boolean).join(' · ');
   const care=childInPalace(k)?`<div class="hint">当前方针：${esc(k.policy)} · 三岁起生效</div><div class="acts">
-    ${pol.map(p=>`<button class="btn sm ${k.policy===p?'on':''}" aria-pressed="${k.policy===p}" onclick="A.kidPolicy(${k.id},'${p}')">${p}</button>`).join('')}</div>
-    <div class="acts">${a>=6?`<button class="btn ${k.tutor?'on':''}" onclick="A.kidTutor(${k.id})">${k.tutor?'已延请太傅':'延请太傅'}<small>每月5万两</small></button>`:''}
-    ${a<14?`<button class="btn" onclick="A.foster(${k.id})">${foster?'换一位养母':'交给妃嫔抚养'}</button>`:''}
-    ${foster&&mom?.alive?`<button class="btn" onclick="A.unfoster(${k.id})">抱回生母身边</button>`:''}</div>`:'';
-  const titles=k.alive&&!k.princeSpouseOrigin&&!k.removedFromRoyal&&!k.templeStay&&!royalJourneyAway(k)?`${k.sex==='m'&&a>=5&&S.heir!==k.id&&!storyCastHeirBar(k)?`<button class="btn" onclick="A.kidHeir(${k.id})">立为太子</button>`:''}
-    ${(journalContentVersion()>=40?royalChildTitleReady(k):a>=12)?`<button class="btn" onclick="A.kidTitle(${k.id})">赐封号</button>`:''}`.trim():'';
+    ${pol.map(p=>`<button class="btn sm ${k.policy===p?'on':''}" aria-pressed="${k.policy===p}" data-onclick="A.kidPolicy(${k.id},'${p}')">${p}</button>`).join('')}</div>
+    <div class="acts">${a>=6?`<button class="btn ${k.tutor?'on':''}" data-onclick="A.kidTutor(${k.id})">${k.tutor?'已延请太傅':'延请太傅'}<small>每月5万两</small></button>`:''}
+    ${a<14?`<button class="btn" data-onclick="A.foster(${k.id})">${foster?'换一位养母':'交给妃嫔抚养'}</button>`:''}
+    ${foster&&mom?.alive?`<button class="btn" data-onclick="A.unfoster(${k.id})">抱回生母身边</button>`:''}</div>`:'';
+  const titles=k.alive&&!k.princeSpouseOrigin&&!k.removedFromRoyal&&!k.templeStay&&!royalJourneyAway(k)?`${k.sex==='m'&&a>=5&&S.heir!==k.id&&!storyCastHeirBar(k)?`<button class="btn" data-onclick="A.kidHeir(${k.id})">立为太子</button>`:''}
+    ${(journalContentVersion()>=40?royalChildTitleReady(k):a>=12)?`<button class="btn" data-onclick="A.kidTitle(${k.id})">赐封号</button>`:''}`.trim():'';
   const household=householdPanel(k);
   const familyChapter=['family','亲缘与婚配',princeSpouseOriginPanel(k)+palaceAdoptionOriginPanel(k)+princessActions(k)+princeEstateLink(k)+multipleBirthPanel(k)+
       detailSection('身世与安置',parentagePanel(k))+outsideParentagePanel(null,k)+detailSection('府中认回的孩子',recognizedChildrenPanel(k))+
@@ -635,10 +639,10 @@ function viewKid(){
   const vitals=`<div class="detail-vitals">${bar('才学',k.lit,'#617991')}${bar('武艺',k.mar,'#92504a')}${bar('品德',k.vir,'#517369')}</div>`;
   return `${personBackButton('kids')}
    <header class="detail-head person-detail-head">${porImg(k,224)}<div class="grow"><p>${status}</p><h2>${esc(kidName(k))}</h2>
-    <p>生母 ${outsideMotherLink(k)}${foster?` · 养母 ${parentLink(k.foster)}`:''}</p>${childResidence(k)?`<p class="hint">${esc(childResidence(k))}</p>${youngChildMother(k)?`<button class="btn sm jade" onclick="A.visitChildHome(${k.id})">去宫里看看 →</button>`:''}`:''}${birthTags(k)}${outsideChildBadge(k)}${childHasLeftPalace(k)?`<p class="hint">居处 · ${esc(childWhereabouts(k))}</p>`:''}</div></header>
+    <p>生母 ${outsideMotherLink(k)}${foster?` · 养母 ${parentLink(k.foster)}`:''}</p>${childResidence(k)?`<p class="hint">${esc(childResidence(k))}</p>${youngChildMother(k)?`<button class="btn sm jade" data-onclick="A.visitChildHome(${k.id})">去宫里看看 →</button>`:''}`:''}${birthTags(k)}${outsideChildBadge(k)}${childHasLeftPalace(k)?`<p class="hint">居处 · ${esc(childWhereabouts(k))}</p>`:''}</div></header>
    ${nieceSelectionEntryActive()&&k.sex==='f'&&k.outsideFamilyOrigin?'<p class="hint">选秀 · 已列皇嗣</p>':''}
    ${k.pendingName?pendingBirthPanel():''}
-   ${k.alive&&!k.removedFromRoyal&&!k.estate&&!k.jailed&&!k.pendingName?`<div class="detail-actions" role="group" aria-label="人物操作"><span class="detail-action-label" aria-hidden="true">人物操作</span><div class="acts"><button class="btn primary" onclick="A.kidVisit(${k.id})">${childHasLeftPalace(k)?'写家书':'探望'}<small>精力-1</small></button>${princeEstateOpenReady(k)?`<button class="btn jade" onclick="A.princeOpenEstate(${k.id})">安排出宫开府</button>`:''}</div></div>`:''}
+   ${k.alive&&!k.removedFromRoyal&&!k.estate&&!k.jailed&&!k.pendingName?`<div class="detail-actions" role="group" aria-label="人物操作"><span class="detail-action-label" aria-hidden="true">人物操作</span><div class="acts"><button class="btn primary" data-onclick="A.kidVisit(${k.id})">${childHasLeftPalace(k)?'写家书':'探望'}<small>精力-1</small></button>${princeEstateOpenReady(k)?`<button class="btn jade" data-onclick="A.princeOpenEstate(${k.id})">安排出宫开府</button>`:''}</div></div>`:''}
    ${xieSharedCourtshipActive()?xieSharedProfilePanel(k):xiePrincessRefusalPanel(k)}
    ${marriagePanel(k)}
    ${household}
@@ -660,7 +664,7 @@ function viewKid(){
 }
 function viewOut(){
   const o=[['garden','御花园','偶遇妃嫔、宫女，或独自散心'],['city','微服出宫','体察民情，也许会遇见有缘人'],['hunt','南苑围猎','武略越高越易成功，有受伤风险'],['temple','护国寺祈福','民心、龙体小增，本月更易得子'],['spa','温泉行宫',`休养龙体（国库-${SPA_COST}万两）`]];
-  return `${pageHeading('出巡','每次出巡花费1点精力。')}<div class="grid destination-grid">${o.map(([k,n,d])=>`<button class="card" onclick="A.out('${k}')"><div class="grow"><div class="nm">${n}</div><div>${d}</div></div></button>`).join('')}</div>${rescuedGuestsPanel()}${princessEstatePanel()}${princeEstatesPanel()}${incognitoLedger()}${storyCastOutPanel()}`}
+  return `${pageHeading('出巡','每次出巡花费1点精力。')}<div class="grid destination-grid">${o.map(([k,n,d])=>`<button class="card" data-onclick="A.out('${k}')"><div class="grow"><div class="nm">${n}</div><div>${d}</div></div></button>`).join('')}</div>${rescuedGuestsPanel()}${princessEstatePanel()}${princeEstatesPanel()}${incognitoLedger()}${storyCastOutPanel()}`}
 function selectLogReign(value){
   UI.logReignGen=S.gen;
   UI.logReign=value==='all'?'all':Number(value);
@@ -679,16 +683,16 @@ function viewLog(){
   const month=(selected==='all'||selected===S.gen&&review?.date?.startsWith(E().era))?review:null;
   const link=(id,child=false)=>{
     const person=child?kidById(id):byId(id);
-    return person?`<button class="btn sm" onclick="A.go('${child?'kid':'consort'}',${person.id})">查看${esc(child?kidName(person):fullName(person))}</button>`:'';
+    return person?`<button class="btn sm" data-onclick="A.go('${child?'kid':'consort'}',${person.id})">查看${esc(child?kidName(person):fullName(person))}</button>`:'';
   };
-  const chooser=S.gen>1?`<label class="reign-picker" for="log-reign"><span>朝代</span><select id="log-reign" onchange="selectLogReign(this.value)">
+  const chooser=S.gen>1?`<label class="reign-picker" for="log-reign"><span>朝代</span><select id="log-reign" data-onchange="selectLogReign(this.value)">
     ${Array.from({length:S.gen},(_,i)=>S.gen-i).map(gen=>`<option value="${gen}"${selected===gen?' selected':''}>${esc(reignOptionLabel(gen))}</option>`).join('')}
     <option value="all"${selected==='all'?' selected':''}>历朝起居</option></select></label>`:'';
-  const archive=regnalChronicleActive()?`<button class="btn sm jade" onclick="A.go('regnal'${selected==='all'?'':','+selected})">皇帝本纪</button>`:'';
-  const codex=journalContentVersion()>=85?'<button class="btn sm quiet" onclick="openHomeBook(\'archive\');jumpToPageSection(\'home-collection\')">查看王朝图鉴</button>':'';
+  const archive=regnalChronicleActive()?`<button class="btn sm jade" data-onclick="A.go('regnal'${selected==='all'?'':','+selected})">皇帝本纪</button>`:'';
+  const codex=journalContentVersion()>=85?'<button class="btn sm quiet" data-onclick="openHomeBook(\'archive\');jumpToPageSection(\'home-collection\')">查看王朝图鉴</button>':'';
   return `${pageHeading('起居注',selected==='all'?'历朝起居':esc(reignOptionLabel(selected)),archive+codex)}
-   <div class="log-filter" role="group" aria-label="纪事筛选与留存">${chooser}<div class="reign-switch" role="group" aria-label="纪事范围"><button class="btn sm" aria-pressed="${UI.logF==='all'}" onclick="UI.logF='all';render()">全部</button><button class="btn sm" aria-pressed="${UI.logF==='big'}" onclick="UI.logF='big';render()">只看大事</button></div>
-   <button class="btn sm quiet" onclick="A.logCard()">保存上月纪念卡</button></div>
+   <div class="log-filter" role="group" aria-label="纪事筛选与留存">${chooser}<div class="reign-switch" role="group" aria-label="纪事范围"><button class="btn sm" aria-pressed="${UI.logF==='all'}" data-onclick="UI.logF='all';render()">全部</button><button class="btn sm" aria-pressed="${UI.logF==='big'}" data-onclick="UI.logF='big';render()">只看大事</button></div>
+   <button class="btn sm quiet" data-onclick="A.logCard()">保存上月纪念卡</button></div>
    ${month?`<section class="month-record"><h3>${esc(month.date)}回顾</h3>
     <p>月入 ${esc(month.inc)} 万两 · 支出 ${esc(month.exp)} 万两</p>
     ${month.finance&&[month.finance.opening,month.finance.closing,month.finance.other].every(Number.isFinite)?`<p>换月前国库 ${month.finance.opening} 万两 · 换月后 ${month.finance.closing} 万两${month.finance.other?` · 其他换月收支 ${month.finance.other>0?'+':''}${month.finance.other} 万两`:''}</p>`:''}
@@ -702,20 +706,22 @@ function viewLog(){
    ${L.length?`<ul class="story reign-log">${L.map(l=>`<li class="${l.b?'big':''}"><time>${esc(l.d)}</time>${esc(l.t)}</li>`).join('')}</ul>`:
     `<p class="hint">${UI.logF==='big'?'所选朝代暂无大事记载。':'所选朝代暂无可查的起居记录。'}</p>`}`}
 function viewSys(){
-  return `${pageHeading('存档','存档保存在本浏览器中；每月结束时会自动存档。剧情选择后也会保存，未完事件可继续。')}
+  const fileBackup=PALACE_EDITION.feature('saveExport'),store=SaveManager.getStorage();
+  const storeHint=store?.kind==='indexeddb'?'已启用大容量本机存档；旧存档自动接续，人物纪事完整保留。':store?.kind==='xhs'?'存档写入小工具本机存储，写完会读回核对。':!store&&!fileBackup?'当前无法存档，本局进度只在本次游玩中保留。':'当前浏览器使用兼容存档，请定期下载备份文件。';
+  return `${pageHeading('存档',(store?.kind==='xhs'?'存档保存在本机':'存档保存在本浏览器中')+'；每月结束时会自动存档。剧情选择后也会保存，未完事件可继续。')}
    <p class="hint">游戏版本 v${PalaceActions.releaseVersion}</p>
    ${lastAutoSaveError?`<p role="status">${esc(lastAutoSaveError)}</p>`:''}
-   <p class="hint">${SaveManager.getStorage()?.kind==='indexeddb'?'已启用大容量本机存档；旧存档自动接续，人物纪事完整保留。':'当前浏览器使用兼容存档，请定期下载备份文件。'} 请等「正在写入」结束后再关闭页面。</p>
+   <p class="hint">${storeHint} 请等「正在写入」结束后再关闭页面。</p>
    <section class="save-section" aria-label="浏览器存档"><div class="save-slots">
-   ${['1','2','3'].map(s=>`<article class="save-slot"><div class="save-slot-info"><b>存档${s}</b><span class="hint">${esc(slotInfo(s)||'空')}</span></div><div class="save-slot-actions"><button class="btn sm gold" onclick="A.save('${s}')">保存</button><button class="btn sm" onclick="A.load('${s}')">读取</button></div></article>`).join('')}
-   <article class="save-slot"><div class="save-slot-info"><b>自动存档</b><span id="auto-save-summary" class="hint">${esc(slotInfo('auto')||'空')}</span><small id="auto-save-status" role="status" title="${esc(lastAutoSaveError)}">${esc(autoSaveStatusText())}</small></div><div class="save-slot-actions"><button class="btn sm" onclick="A.load('auto')">读取</button><button class="btn sm" onclick="A.save('auto')">立即保存</button></div></article>
+   ${['1','2','3'].map(s=>`<article class="save-slot"><div class="save-slot-info"><b>存档${s}</b><span class="hint">${esc(slotInfo(s)||'空')}</span></div><div class="save-slot-actions"><button class="btn sm gold" data-onclick="A.save('${s}')">保存</button><button class="btn sm" data-onclick="A.load('${s}')">读取</button></div></article>`).join('')}
+   <article class="save-slot"><div class="save-slot-info"><b>自动存档</b><span id="auto-save-summary" class="hint">${esc(slotInfo('auto')||'空')}</span><small id="auto-save-status" role="status" title="${esc(lastAutoSaveError)}">${esc(autoSaveStatusText())}</small></div><div class="save-slot-actions"><button class="btn sm" data-onclick="A.load('auto')">读取</button><button class="btn sm" data-onclick="A.save('auto')">立即保存</button></div></article>
    </div></section>
-   <section class="save-section"><h3>文件备份</h3><p class="hint">下载一个 JSON 文件留存；换浏览器时选择此文件恢复。备份不会复制到剪贴板。</p><div class="acts"><button class="btn sm gold" onclick="A.downloadSave()">下载备份文件</button><button class="btn sm" onclick="document.getElementById('save-file').click()">选择备份文件导入</button><input id="save-file" type="file" accept=".json,application/json" hidden onchange="A.readSaveFile(this)">${palaceImportBackup()?'<button class="btn sm" onclick="A.undoImport()">恢复导入前的进度</button>':''}</div></section>
+   ${fileBackup?`<section class="save-section"><h3>文件备份</h3><p class="hint">下载一个 JSON 文件留存；换浏览器时选择此文件恢复。备份不会复制到剪贴板。</p><div class="acts"><button class="btn sm gold" data-onclick="A.downloadSave()">下载备份文件</button><button class="btn sm" data-onclick="document.getElementById('save-file').click()">选择备份文件导入</button><input id="save-file" type="file" accept=".json,application/json" hidden data-onchange="A.readSaveFile(this)">${palaceImportBackup()?'<button class="btn sm" data-onclick="A.undoImport()">恢复导入前的进度</button>':''}</div></section>`:''}
    ${rewindHTML()}
-   <section class="save-section"><h3>其他</h3><div class="acts"><button class="btn sm" onclick="S=null;UI.view='title';render()">返回标题</button></div></section>`}
+   <section class="save-section"><h3>其他</h3><div class="acts"><button class="btn sm" data-onclick="returnToTitle()">返回标题</button></div></section>`}
 
 function rewindHTML(){
   const snaps=SaveManager.snapshots(SaveManager.getStorage(),SKEY+'auto').sort((a,b)=>b.day-a.day);
   if(!snaps.length)return '';
-  return `<section class="save-section"><h3>岁首快照</h3><p class="hint">每年正月自动留一份，最多四份。回到那年岁首，之后的事会重新发生。</p>${snaps.map(s=>`<div class="save-slot"><span class="save-slot-info">${esc(s.date||'')}</span><button class="btn sm" onclick="A.rewind(${s.index},${Number(s.savedAt)||0})">回到这里</button></div>`).join('')}</section>`;
+  return `<section class="save-section"><h3>岁首快照</h3><p class="hint">每年正月自动留一份，最多${['零','一','两','三','四','五','六'][PALACE_EDITION.saveSnapshots]||PALACE_EDITION.saveSnapshots}份。回到那年岁首，之后的事会重新发生。</p>${snaps.map(s=>`<div class="save-slot"><span class="save-slot-info">${esc(s.date||'')}</span><button class="btn sm" data-onclick="A.rewind(${s.index},${Number(s.savedAt)||0})">回到这里</button></div>`).join('')}</section>`;
 }

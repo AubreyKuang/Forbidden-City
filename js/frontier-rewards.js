@@ -132,7 +132,7 @@ A.frontierGeneral=function(id){
 function frontierPanel(){
  const records=(S.flags.frontierCampaigns||[]).filter(r=>r.gen===S.gen);if(!records.length)return '';
  const shown=[...new Set([...records.filter(r=>!r.reward&&r.outcome==='victory'),...records.slice(-3)])];
- return `<section class="detail-section"><h3>北境军功册</h3>${shown.map(r=>`<p>${esc(r.date)} · ${esc(r.name)} · ${r.outcome==='victory'?'王师告捷':'出征失利'}</p><p class="hint">${esc(r.reward?.text|| (r.outcome==='victory'?'军功待赏':'失利缘由已记入履历'))}</p><div class="acts"><button class="btn sm" onclick="A.frontierGeneral('${r.id}')">查看将领履历</button>${frontierCanReward(r)?`<button class="btn sm gold" onclick="A.frontierReward('${r.id}')">继续论功行赏</button>`:''}</div>`).join('')}</section>`;
+ return `<section class="detail-section"><h3>北境军功册</h3>${shown.map(r=>`<p>${esc(r.date)} · ${esc(r.name)} · ${r.outcome==='victory'?'王师告捷':'出征失利'}</p><p class="hint">${esc(r.reward?.text|| (r.outcome==='victory'?'军功待赏':'失利缘由已记入履历'))}</p><div class="acts"><button class="btn sm" data-onclick="A.frontierGeneral('${r.id}')">查看将领履历</button>${frontierCanReward(r)?`<button class="btn sm gold" data-onclick="A.frontierReward('${r.id}')">继续论功行赏</button>`:''}</div>`).join('')}</section>`;
 }
 const frontierGovernment=viewGovernment;
 viewGovernment=function(...args){return frontierGovernment.apply(this,args)+frontierPanel();};

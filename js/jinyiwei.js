@@ -301,21 +301,21 @@ function intelligencePanel(){
     const a=intelligenceAgent(id);
     const maids=dynastyFollowupActive()&&id==='maid'?maidsInIntelligenceReach():[];
     const review=a?.review,reviewText=review?(S.turn<review.due?`复核中 · 还需 ${review.due-S.turn} 个月`:
-      review.compromised?(review.infiltration&&!review.read?`复核查出暗中受人收买。<button class="btn sm" onclick="A.reviewCounterIntelligence('${id}')">阅览复奏</button>`:`复核查出暗中受人收买。<button class="btn sm" onclick="A.dismissIntelligenceAgent('${id}')">撤去差事</button>`):'复核未查出受人收买。'):'';
+      review.compromised?(review.infiltration&&!review.read?`复核查出暗中受人收买。<button class="btn sm" data-onclick="A.reviewCounterIntelligence('${id}')">阅览复奏</button>`:`复核查出暗中受人收买。<button class="btn sm" data-onclick="A.dismissIntelligenceAgent('${id}')">撤去差事</button>`):'复核未查出受人收买。'):'';
     return `<li><strong>${esc(source.name)}</strong> · ${esc(source.specialty)} · ${a?`${esc(a.name)} · 才干 ${a.ability} · 忠诚 ${a.loyalty}${a.palace?' · 驻守'+esc(a.palace):''}
-      <button class="btn sm" onclick="A.trainIntelligenceAgent('${id}')" ${S.over||a.trainingTurn===S.turn||E().energy<1||E().treasury<5?'disabled':''}>训练 · 精力−1 · 国库−5</button>
-      ${review?reviewText:`<button class="btn sm" onclick="A.investigateIntelligenceAgent('${id}')" ${S.over||E().energy<1||E().treasury<15?'disabled':''}>复核此人 · 精力−1 · 国库−15</button>`}
-      ${dynastyFollowupActive()&&id==='maid'?'<button class="btn quiet sm" onclick="A.releaseIntelligenceMaid()">卸下密差</button>':''}
-      ${dynastyFollowupActive()&&id==='eunuch'?(a.steward?' · 宫中总管 · 宫闱查访可信度估计 +5':`<button class="btn sm" onclick="A.appointIntelligenceSteward()" ${a.ability<55||a.loyalty<55||S.over||E().energy<1?'disabled':''}>任命宫中总管 · 才干及忠诚须满55 · 精力−1</button>`):''}
-      ${['eunuch','maid'].includes(id)?`<details><summary>安排驻守宫室</summary><div class="acts">${['坤宁宫',...PALACES].map(p=>`<button class="btn sm" onclick="A.assignIntelligencePalace('${id}','${esc(p)}')" ${a.palace===p||a.palaceTurn===S.turn||E().energy<1?'disabled':''}>${esc(p)}</button>`).join('')}</div><p class="hint">查访驻守宫室时，线索准确率有所提高；每月可调整一次。</p></details>`:''}`:
-      `<button class="btn sm" onclick="A.recruitIntelligenceAgent('${id}')" ${intelligenceRecruitmentLocked()?'disabled':''}>招募 · 精力−1 · 国库−10</button>
-      ${maids.map(person=>`<button class="btn sm" onclick="A.recruitIntelligenceAgent('maid',${person.id})" ${intelligenceRecruitmentLocked()?'disabled':''}>培养${esc(fullName(person))}为心腹 · 精力−1 · 国库−10</button>`).join('')}`}</li>`;
+      <button class="btn sm" data-onclick="A.trainIntelligenceAgent('${id}')" ${S.over||a.trainingTurn===S.turn||E().energy<1||E().treasury<5?'disabled':''}>训练 · 精力−1 · 国库−5</button>
+      ${review?reviewText:`<button class="btn sm" data-onclick="A.investigateIntelligenceAgent('${id}')" ${S.over||E().energy<1||E().treasury<15?'disabled':''}>复核此人 · 精力−1 · 国库−15</button>`}
+      ${dynastyFollowupActive()&&id==='maid'?'<button class="btn quiet sm" data-onclick="A.releaseIntelligenceMaid()">卸下密差</button>':''}
+      ${dynastyFollowupActive()&&id==='eunuch'?(a.steward?' · 宫中总管 · 宫闱查访可信度估计 +5':`<button class="btn sm" data-onclick="A.appointIntelligenceSteward()" ${a.ability<55||a.loyalty<55||S.over||E().energy<1?'disabled':''}>任命宫中总管 · 才干及忠诚须满55 · 精力−1</button>`):''}
+      ${['eunuch','maid'].includes(id)?`<details><summary>安排驻守宫室</summary><div class="acts">${['坤宁宫',...PALACES].map(p=>`<button class="btn sm" data-onclick="A.assignIntelligencePalace('${id}','${esc(p)}')" ${a.palace===p||a.palaceTurn===S.turn||E().energy<1?'disabled':''}>${esc(p)}</button>`).join('')}</div><p class="hint">查访驻守宫室时，线索准确率有所提高；每月可调整一次。</p></details>`:''}`:
+      `<button class="btn sm" data-onclick="A.recruitIntelligenceAgent('${id}')" ${intelligenceRecruitmentLocked()?'disabled':''}>招募 · 精力−1 · 国库−10</button>
+      ${maids.map(person=>`<button class="btn sm" data-onclick="A.recruitIntelligenceAgent('maid',${person.id})" ${intelligenceRecruitmentLocked()?'disabled':''}>培养${esc(fullName(person))}为心腹 · 精力−1 · 国库−10</button>`).join('')}`}</li>`;
   }).join('');
   const cases=palaceCases().filter(x=>caseOpen(x)&&['harem','rumor'].includes(x.kind));
   const missions=cases.map(file=>{
     const choices=Object.entries(agents).filter(([id])=>intelligenceAgent(id)&&INTELLIGENCE_SOURCES[id]?.kind===file.kind).flatMap(([id,a])=>{
-      if(file.kind==='rumor')return [`<button class="btn sm" onclick="A.intelligenceDispatch('${id}','${esc(file.id)}',null)">${esc(a.name)}查访 · 精力−1 · 国库−15</button>`];
-      return harem().filter(c=>c.id!==file.victim).map(c=>`<button class="btn sm" onclick="A.intelligenceDispatch('${id}','${esc(file.id)}',${c.id})">${esc(a.name)}查访${esc(cName(c))} · 精力−1 · 国库−15</button>`);
+      if(file.kind==='rumor')return [`<button class="btn sm" data-onclick="A.intelligenceDispatch('${id}','${esc(file.id)}',null)">${esc(a.name)}查访 · 精力−1 · 国库−15</button>`];
+      return harem().filter(c=>c.id!==file.victim).map(c=>`<button class="btn sm" data-onclick="A.intelligenceDispatch('${id}','${esc(file.id)}',${c.id})">${esc(a.name)}查访${esc(cName(c))} · 精力−1 · 国库−15</button>`);
     });
     return `<li><b>${esc(file.title)}</b><div class="acts">${choices.join('')||'尚无擅长此类查访的人手。'}</div></li>`;
   }).join('');
@@ -324,12 +324,12 @@ function intelligencePanel(){
     const file=palaceCases().find(item=>item.id===report.caseId),verified=file?.status==='solved';
     const truth=report.kind==='harem'?file?.culprit===report.suspect:file?.truth===true;
     const result=verified?` · 案卷查实后，此前线索${truth===report.conclusion?'相符':'有误'}`:'';
-    const action=ready&&report.accepted==null&&file?`<button class="btn sm" onclick="A.trustIntelligenceReport(${report.id})" ${S.over?'disabled':''}>采信线索</button>`:report.accepted!=null?' · 已采信':'';
+    const action=ready&&report.accepted==null&&file?`<button class="btn sm" data-onclick="A.trustIntelligenceReport(${report.id})" ${S.over?'disabled':''}>采信线索</button>`:report.accepted!=null?' · 已采信':'';
     return `<li><b>${esc(report.title)}</b> · 来源 ${esc(report.agentName)} · ${ready?`可靠度估计 ${report.accuracy}% · ${esc(report.suspectName)}${report.conclusion?'有涉案嫌疑':'暂未发现涉案线索'}。此为线索，须核实。${result}${action}`:`查访中 · 还需 ${report.due-S.turn} 个月`}</li>`;
   }).join('');
   const guard=agents.guard,protection=guard?.protection,guarded=protection&&byId(protection.consort);
-  const protectionPanel=guard?`<h4>宫室护卫</h4>${protection&&!protection.ended?`<p>${esc(guard.name)}正在守护${esc(guarded?fullName(guarded):'旧人')}。</p>${protection.discovered?`<p>往来已被发现 · 保密值 ${rd(protection.secrecy)}/100</p><button class="btn sm" onclick="A.reviewGuardAffair()">处理密报</button>`:''}`:
-    `${protection?`<p>${esc(protection.ended)}</p>`:'<p class="hint">可请这名情报人员兼任宫室护卫。</p>'}<div class="acts">${harem().filter(c=>c.age>=18&&!c.maid&&c.id!==protection?.consort).map(c=>`<button class="btn sm" onclick="A.assignPersonalGuard(${c.id})" ${E().energy<1?'disabled':''}>守护${esc(cName(c))} · 精力−1</button>`).join('')}</div>`}`:'';
+  const protectionPanel=guard?`<h4>宫室护卫</h4>${protection&&!protection.ended?`<p>${esc(guard.name)}正在守护${esc(guarded?fullName(guarded):'旧人')}。</p>${protection.discovered?`<p>往来已被发现 · 保密值 ${rd(protection.secrecy)}/100</p><button class="btn sm" data-onclick="A.reviewGuardAffair()">处理密报</button>`:''}`:
+    `${protection?`<p>${esc(protection.ended)}</p>`:'<p class="hint">可请这名情报人员兼任宫室护卫。</p>'}<div class="acts">${harem().filter(c=>c.age>=18&&!c.maid&&c.id!==protection?.consort).map(c=>`<button class="btn sm" data-onclick="A.assignPersonalGuard(${c.id})" ${E().energy<1?'disabled':''}>守护${esc(cName(c))} · 精力−1</button>`).join('')}</div>`}`:'';
   return detailSection('宫廷情报',`<p class="hint">查访需两个月，回报可能有误。锦衣卫案卷仍可另行调查。</p><ul class="story">${personnel}</ul>${protectionPanel}
     <h4>查访案卷</h4><ul class="story">${missions||'<li>暂无可查访的宫闱疑案或风闻案卷。</li>'}</ul>
     <h4>情报回报</h4><ul class="story">${reports||'<li>暂无回报。</li>'}</ul>`);
@@ -450,20 +450,20 @@ courtTick=function(...args){const result=jinyiweiBaseTick.apply(this,args);jinyi
 
 /* —— 页面 —— */
 function viewJinyiwei(){
-  const back=`<button class="btn quiet sm detail-back" onclick="A.go('government')">← 返回治国理政</button>`,j=jinyiwei();
-  if(!j)return `${back}<h2>锦衣卫</h2><p>锦衣卫可密查宫闱疑案、核实风闻奏事、搜查宫室。尚未设立。</p><div class="acts"><button class="btn jade" onclick="A.establishJinyiwei()">设立锦衣卫<small>精力−1 · 国库−50</small></button></div>${casesSection()}`;
+  const back=`<button class="btn quiet sm detail-back" data-onclick="A.go('government')">← 返回治国理政</button>`,j=jinyiwei();
+  if(!j)return `${back}<h2>锦衣卫</h2><p>锦衣卫可密查宫闱疑案、核实风闻奏事、搜查宫室。尚未设立。</p><div class="acts"><button class="btn jade" data-onclick="A.establishJinyiwei()">设立锦衣卫<small>精力−1 · 国库−50</small></button></div>${casesSection()}`;
   const c=j.commander;
   return `${back}<header class="detail-head person-detail-head">${porImg(c,160)}<div class="grow"><p>锦衣卫</p><h2>${esc(c.name)}</h2><p>指挥使 · ${c.age}岁 · ${officialStatus(c)} · ${esc(c.temperament)}</p></div></header>
     <p class="hint">宫中一旦查实妃嫔与皇子或守宫侍卫私会，值房会主动密奏。</p>
     <div class="detail-vitals">${bar('才干',c.ability)}${bar('功绩',c.merit)}${bar('信任',c.trust)}</div>
     ${detailSection('指挥使纪事',detailStory(c))}
     ${casesSection()}${jinyiweiPrinceSpouseParentagePanel()}${intelligencePanel()}
-    ${detailSection('搜查宫室',`<p class="hint">只有确有案底的人才可能被搜出物证；搜不出东西，被搜者记恨、六宫不安。同一人一年内只搜一次。</p><div class="acts">${harem().map(x=>`<button class="btn sm" onclick="A.jinyiweiSearch(${x.id})" ${searchReady(x)?'':'disabled'}>${esc(cName(x))}<small>${esc(x.palace||'')}</small></button>`).join('')}</div>`)}
+    ${detailSection('搜查宫室',`<p class="hint">只有确有案底的人才可能被搜出物证；搜不出东西，被搜者记恨、六宫不安。同一人一年内只搜一次。</p><div class="acts">${harem().map(x=>`<button class="btn sm" data-onclick="A.jinyiweiSearch(${x.id})" ${searchReady(x)?'':'disabled'}>${esc(cName(x))}<small>${esc(x.palace||'')}</small></button>`).join('')}</div>`)}
     `;
 }
 function casesSection(){
   const list=palaceCases().slice().reverse(),label={cold:'未破',investigating:'密查中',solved:'已破',closed:'已结'};
   const row=x=>`<li><time>${esc(x.d)}</time><b>${esc(x.title)}</b> · ${label[x.status]||x.status}${x.kind==='harem'?` · 受害：${esc(caseVictimName(x))}`:` · ${esc(x.charge||'')}`}${x.tries?` · 已查${x.tries}次`:''}
-    ${jinyiwei()&&x.status==='cold'?`<button class="btn sm" onclick="A.jinyiweiInvestigate('${x.id}')" ${caseReady(x)&&jinyiweiCommanderReady()?'':'disabled'}>派人密查${caseReady(x)?'':' · 半年内已查'}</button>`:''}</li>`;
+    ${jinyiwei()&&x.status==='cold'?`<button class="btn sm" data-onclick="A.jinyiweiInvestigate('${x.id}')" ${caseReady(x)&&jinyiweiCommanderReady()?'':'disabled'}>派人密查${caseReady(x)?'':' · 半年内已查'}</button>`:''}</li>`;
   return detailSection('案卷',list.length?`<ul class="story">${list.map(row).join('')}</ul>`:'<p class="hint">尚无未破的案子。后宫疑案未能查明时，会记入这里。</p>');
 }

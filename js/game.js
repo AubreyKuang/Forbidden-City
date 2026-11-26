@@ -283,7 +283,7 @@ function assignPalace(c){
   autoResidence(c);reconcileResidences();
 }
 function addConsort(c,rank,why,{major=false,recordAdmission=true}={}){
-  if(hasAuthoredConsortStory(c)&&livingStoryConsort(storyQueenKey(c)))return;
+  if(hasAuthoredConsortStory(c)&&(livingStoryConsort(storyQueenKey(c))||!editionAllows('story',storyQueenKey(c))))return;
   const previousKin=new Map(Object.keys(c.kin||{}).map(id=>[+id,S.rel?.[rk(c,{id:+id})]]));
   c.rank=rank; c.enteredAt=S.turn; c.enteredMonth=S.month; S.consorts.push(c); assignPalace(c); S.ys.c++; deepen(c); initRel(c); assignArc(c); acceptPastLife(c); initTimeTraveler(c); clanKey(c); if(c.kin)for(const id in c.kin){const o=byId(+id);if(o&&o.alive)relAdd(c,o,(previousKin.get(o.id)??(isRival(c,o)?-30:45))-relGet(c,o))}
   story(c,`${why}，封为${RANKS[rank]}，赐居${c.palace}。`);
@@ -326,7 +326,7 @@ function nextEv(){
   modalOpen=false;curEv=null;const modal=$('#modal');modal.close?.();modal.hidden=true;modal.setAttribute('data-scene','');checkEnd();render();
   if(!modalOpen&&invoker){
     const replacement=invoker.id?document.getElementById(invoker.id):
-      [...$('#app').querySelectorAll('button')].find(button=>button.getAttribute('onclick')===invoker.getAttribute('onclick'));
+      [...$('#app').querySelectorAll('button')].find(button=>button.getAttribute('data-onclick')===invoker.getAttribute('data-onclick'));
     const target=replacement||$('#panel');
     target.focus?.({preventScroll:true});
   }
@@ -421,7 +421,7 @@ const EVENT_ILLUSTRATIONS={
 };
 function eventIllustration(key){
   if(!Object.hasOwn(EVENT_ILLUSTRATIONS,key))return '';
-  return `<figure class="event-illustration" data-illustration="${key}"><img src="./assets/images/story-${key}.webp" alt="" decoding="async" onload="this.classList.add('event-illustration-loaded')"><figcaption>${esc(EVENT_ILLUSTRATIONS[key])}</figcaption></figure>`;
+  return `<figure class="event-illustration" data-illustration="${key}"><img src="./assets/images/story-${key}.webp" alt="" decoding="async" data-onload="this.classList.add('event-illustration-loaded')"><figcaption>${esc(EVENT_ILLUSTRATIONS[key])}</figcaption></figure>`;
 }
 function poemPreludeHTML({poet,title,verse,account}){
   return `<section class="poem-prelude"><div class="poem-leaf"><p>${esc(poet.name)}《${esc(title)}》</p><blockquote>${verse.map(esc).join('<br>')}</blockquote></div>
@@ -447,7 +447,7 @@ function openModal(ev){
     const style=ev.danger?(c.f?' danger':' quiet'):c.primary||ev.choices.length===1||(ev.input&&i===0)?' primary':'';
     const label=`${esc(c.t)}${c.preview?`<small class="choice-preview">${esc(c.preview)}</small>`:''}${!ok&&c.why?`<small>${esc(c.why)}</small>`:''}`;
     const portrait=showChoicePortraits&&(c.portrait||(typeof c.person==='object'?c.person:byId(c.person)));
-    h+=`<button class="btn${style}${portrait?' event-person-choice':''}" ${ok?'':'disabled'} onclick="choose(${i})">${portrait?`${porImg(portrait,60)}<span>${label}</span>`:label}</button>`;
+    h+=`<button class="btn${style}${portrait?' event-person-choice':''}" ${ok?'':'disabled'} data-onclick="choose(${i})">${portrait?`${porImg(portrait,60)}<span>${label}</span>`:label}</button>`;
   });
   b.innerHTML=h+'</div>';const modal=$('#modal');modal.setAttribute('data-scene',ev.scene||'');modal.hidden=false;b.scrollTop=0;
   if(!modal.open) modal.showModal?.();
@@ -487,7 +487,7 @@ function showRes(res,choice){
   const cast=res.por?'':eventCast(people,curEv);
   const portrait=res.por||(people.length===1&&people[0].storyPerson==='xiean'?people[0]:null);
   const illustration=eventIllustration(res.illustration);
-  b.innerHTML=`<h2 class="mtitle" id="event-title"${illustration?' tabindex="-1"':''}>${esc(res.title||curEv.title)}</h2>${curEv.scene==='mourning'?mourningScene():''}${illustration}${cast}<div class="mbody">${portrait?eventPortrait(portrait,96,false):''}<div class="mtext">${fmt(res.text)}</div></div><div class="mch"><button class="btn gold" onclick="nextEv()">继续</button></div>`;
+  b.innerHTML=`<h2 class="mtitle" id="event-title"${illustration?' tabindex="-1"':''}>${esc(res.title||curEv.title)}</h2>${curEv.scene==='mourning'?mourningScene():''}${illustration}${cast}<div class="mbody">${portrait?eventPortrait(portrait,96,false):''}<div class="mtext">${fmt(res.text)}</div></div><div class="mch"><button class="btn gold" data-onclick="nextEv()">继续</button></div>`;
   b.scrollTop=0;renderTop();
   $(illustration?'#event-title':'#mbox .mch button')?.focus?.({preventScroll:true});
 }
@@ -835,11 +835,12 @@ function deathEvent(why){
   if(regnalChronicleActive())closeRegnalChronicle();
   AU.sfx('gong');
   const ch=[];
-  if(heir) ch.push({t:`传位于${heir.name}，开启新朝`,f:()=>{succeed(heir);return null}});
+  if(heir) ch.push(editionReignLimitReached()?editionTrialEndChoice():{t:`传位于${heir.name}，开启新朝`,f:()=>{succeed(heir);return null}});
   ch.push({t:'重新开局',f:()=>{S=null;UI.view='title';return null}},{t:'翻阅起居注',f:()=>{UI.view='log';return null}});
   return {title:why==='民变'?'国破':'龙驭宾天',por:'emp',text:t,choices:ch};
 }
 function succeed(h){
+  if(editionReignLimitReached()){pushNow(editionTrialEndEvent());return;}
   const old=E(),a=kidAge(h);
   pushNow({title:'新君登基',por:h,text:`${h.name}即将即位。请为新朝拟定年号（二字）：`,input:{def:pick(ERAS.filter(x=>x!==old.era)),max:2},choices:[{t:'改元',f:v=>{
     reconcileImmortalDiscovery();

@@ -154,13 +154,13 @@ function princeSuccessionPanel(k){
   const children=princeFamilyChildren(k),family=children.map(c=>{
     const adopted=princeAdoptionActive()&&c.princeAdoption;
     const birth=adopted&&adopted.family===k.id?princeBiologicalParents(c):null;
-    const parents=birth?[['生父',birth.father],['生母',birth.mother]].map(([label,p])=>p?`<button class="person-link" onclick="A.princeFamilyMemo(${id},${royalActionArg(p.id)})">${label} ${esc(p.name)}</button>`:'').filter(Boolean).join(' · '):'';
-    return `<p>${esc(c.name)}${adopted?(adopted.family===k.id?' · 嗣子':' · 已过继'):''}${c.princelySuccession?' · 已袭爵':heir===c?' · 世子':''}${c.alive===false?' · 已故':''} <button class="btn sm" onclick="A.princeFamilyMemo(${id},${royalActionArg(c.id)})">读${esc(c.name)}的记事</button>${parents?`<br>${parents}`:''}</p>`;
+    const parents=birth?[['生父',birth.father],['生母',birth.mother]].map(([label,p])=>p?`<button class="person-link" data-onclick="A.princeFamilyMemo(${id},${royalActionArg(p.id)})">${label} ${esc(p.name)}</button>`:'').filter(Boolean).join(' · '):'';
+    return `<p>${esc(c.name)}${adopted?(adopted.family===k.id?' · 嗣子':' · 已过继'):''}${c.princelySuccession?' · 已袭爵':heir===c?' · 世子':''}${c.alive===false?' · 已故':''} <button class="btn sm" data-onclick="A.princeFamilyMemo(${id},${royalActionArg(c.id)})">读${esc(c.name)}的记事</button>${parents?`<br>${parents}`:''}</p>`;
   }).join('');
   const partners=[k.spouse,...k.household?.concubines||[]].filter(p=>p&&(p.story?.length||children.some(c=>c.mother===p.id)));
-  return `<p>${esc(text)}</p>${canReview&&sons.length?`<button class="btn jade" onclick="A.princeReviewSuccession(${id})">${k.alive?vacancy?'批阅另立世子':'批阅请封世子':'批阅请袭王爵'}</button>`:''}
-    ${canReview&&adoption?`<button class="btn jade" onclick="A.princeReviewAdoption(${id})">批阅过继</button>`:''}
-    ${k.princelySuccession?`<p><button class="btn sm" onclick="A.princeFamilyMemo(${id},${royalActionArg(k.princelySuccession.father)})">读先王的记事</button></p>`:''}${family}${palaceAdoptionFamilyLinks(k)}${partners.map(p=>`<p><button class="btn sm" onclick="A.princeFamilyMemo(${id},${royalActionArg(p.id)})">读${esc(p.name)}的记事</button></p>`).join('')}`;
+  return `<p>${esc(text)}</p>${canReview&&sons.length?`<button class="btn jade" data-onclick="A.princeReviewSuccession(${id})">${k.alive?vacancy?'批阅另立世子':'批阅请封世子':'批阅请袭王爵'}</button>`:''}
+    ${canReview&&adoption?`<button class="btn jade" data-onclick="A.princeReviewAdoption(${id})">批阅过继</button>`:''}
+    ${k.princelySuccession?`<p><button class="btn sm" data-onclick="A.princeFamilyMemo(${id},${royalActionArg(k.princelySuccession.father)})">读先王的记事</button></p>`:''}${family}${palaceAdoptionFamilyLinks(k)}${partners.map(p=>`<p><button class="btn sm" data-onclick="A.princeFamilyMemo(${id},${royalActionArg(p.id)})">读${esc(p.name)}的记事</button></p>`).join('')}`;
 }
 A.princeReviewSuccession=function(id){
   const k=princeEstateById(id);if(!princeSuccessionActive()||modalOpen||S.over||!k)return;

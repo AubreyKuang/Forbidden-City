@@ -42,4 +42,4 @@ childLifeTick=function(monthly=false){const result=outingLifeTick(monthly);if(mo
 const outingYouthEvent=youthEvent;
 youthEvent=function(){return palacePrayersActive()&&royalOutingEvent()||outingYouthEvent();};
 const outingYouthPanel=youthPanel;
-youthPanel=function(k){return outingYouthPanel(k)+(palacePrayersActive()&&S.royalOutings?.pending?.child===k.id&&royalOutingEligible(k)?`<p><button class="btn jade" onclick="A.royalOuting(${k.id})">${S.royalOutings.pending.sneak?'问问偷偷出宫的事':'听听出宫的打算'}</button></p>`:'');};
+youthPanel=function(k){return outingYouthPanel(k)+(palacePrayersActive()&&S.royalOutings?.pending?.child===k.id&&royalOutingEligible(k)?`<p><button class="btn jade" data-onclick="A.royalOuting(${k.id})">${S.royalOutings.pending.sneak?'问问偷偷出宫的事':'听听出宫的打算'}</button></p>`:'');};

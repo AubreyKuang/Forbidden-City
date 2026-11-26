@@ -56,6 +56,6 @@ function fiveBrotherMonthlyEvent(){
 }
 function fiveBrotherPanel(c){
   if(!fiveBrotherFamily(c))return '';
-  return `<p><span class="tag">五兄之妹 · 家中行六</span></p><p class="hint">五位兄长各有自己的履历与去处。她说起的家事会随他们的近况变化。</p>${inPalace(c)?`<button class="btn" onclick="A.fiveBrotherTalk(${c.id})" ${fiveBrotherReady(c)?'':'disabled'}>听她说起五位兄长<small>${c.aff<35?'情分35后愿意细说':fiveBrotherReady(c)?'精力−1 · 家中旧事':'这段家常已说过，过些时日再问'}</small></button>`:''}`;
+  return `<p><span class="tag">五兄之妹 · 家中行六</span></p><p class="hint">五位兄长各有自己的履历与去处。她说起的家事会随他们的近况变化。</p>${inPalace(c)?`<button class="btn" data-onclick="A.fiveBrotherTalk(${c.id})" ${fiveBrotherReady(c)?'':'disabled'}>听她说起五位兄长<small>${c.aff<35?'情分35后愿意细说':fiveBrotherReady(c)?'精力−1 · 家中旧事':'这段家常已说过，过些时日再问'}</small></button>`:''}`;
 }
 A.fiveBrotherTalk=function(id){if(!modalOpen)pushEv(fiveBrotherEvent(byId(id)));};

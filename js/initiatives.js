@@ -329,7 +329,10 @@ function activeInitiativeEcho(person) {
 // Use the same saved portrait as the character page, with a name for every participant.
 function activityPortraits(...people){
   const cast=[...new Set(people.filter(Boolean))];
-  return cast.length?`<div class="activity-portraits">${cast.map(p=>`<button class="activity-person" onclick="A.go('${p.sex?'kid':'consort'}',${p.id})" aria-label="查看${esc(porName(p))}">${porImg(p,68)}<span>${esc(porName(p))}</span></button>`).join('')}</div>`:'';
+  // Officials and kin have text ids and no profile here; they were never clickable (the
+  // unquoted id was a syntax error), so they stay a plain portrait.
+  const linkable=p=>Number.isFinite(p.id);
+  return cast.length?`<div class="activity-portraits">${cast.map(p=>linkable(p)?`<button class="activity-person" data-onclick="A.go('${p.sex?'kid':'consort'}',${p.id})" aria-label="查看${esc(porName(p))}">${porImg(p,68)}<span>${esc(porName(p))}</span></button>`:`<span class="activity-person">${porImg(p,68)}<span>${esc(porName(p))}</span></span>`).join('')}</div>`:'';
 }
 function initiativeHTML(person,venue){
   const move=currentInitiative(person), rule=PALACE_INITIATIVES[move?.id];
@@ -343,7 +346,7 @@ function initiativeHTML(person,venue){
   const place=PLACES.find(p=>p.id===placeId);
   const response=move.response
     ? `<small>你已回应 · ${esc(move.response)}</small>`
-    : `<button class="btn sm" onclick="A.answerInitiative(${person.id},${!!person.sex})">${esc(rule.choices?'到场看看':rule.button)}<small>${rule.choices?'观看无需精力':'精力-1'}</small></button>`;
+    : `<button class="btn sm" data-onclick="A.answerInitiative(${person.id},${!!person.sex})">${esc(rule.choices?'到场看看':rule.button)}<small>${rule.choices?'观看无需精力':'精力-1'}</small></button>`;
   return `<section class="initiative-note">${venue?activityPortraits(person,cast.target):''}<strong>${esc(rule.title)}${place?' · '+place.n:''}${venue?` · ${esc(person.sex?kidName(person):cName(person))}`:''}</strong><p>${esc(move.text)}</p>
     ${move.effect?`<small>${esc(move.effect)}</small>`:''}${response}
     ${rule.ref?`<small class="initiative-ref">参考 ${esc(rule.ref)}</small>`:''}</section>${followup}`;
@@ -361,7 +364,7 @@ function initiativeNotices(){
     const rule=PALACE_INITIATIVES[move.id];
     if(!rule)return '';
     const place=PLACES.find(q=>q.id===initiativePlace(rule,p,move));
-    return `<button class="btn sm" onclick="A.seeInitiative(${p.id},${!!p.sex})">${place?place.n+' · ':''}${esc(p.sex?kidName(p):cName(p))} · ${esc(rule.title)}${move.delivered?'后续':''}</button>`;
+    return `<button class="btn sm" data-onclick="A.seeInitiative(${p.id},${!!p.sex})">${place?place.n+' · ':''}${esc(p.sex?kidName(p):cName(p))} · ${esc(rule.title)}${move.delivered?'后续':''}</button>`;
   }).join('')}</div>`;
 }
 

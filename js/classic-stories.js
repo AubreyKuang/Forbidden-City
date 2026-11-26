@@ -168,8 +168,8 @@ function classicStoryPanel(place){
   const circle=classicCircle(),copy=S.classicStories?.works['circle-'+S.gen];
   if(!circle||circle.stage==='closed'&&!copy)return '';
   const pending=classicCircleEvent();
-  const action=copy?`<button class="btn sm" onclick="A.go('place','wy')">去文渊阁</button>`:
-   pending?`<button class="btn sm" onclick="A.classicGarden()">${circle.stage==='offer'?'听诗社的打算':'看新诗稿'}</button>`:'';
+  const action=copy?`<button class="btn sm" data-onclick="A.go('place','wy')">去文渊阁</button>`:
+   pending?`<button class="btn sm" data-onclick="A.classicGarden()">${circle.stage==='offer'?'听诗社的打算':'看新诗稿'}</button>`:'';
   return `<section class="detail-section"><h3>小园诗社</h3><p>${copy?'诗稿已收入文渊阁，可去翻阅。':circle.stage==='offer'?'园中有人递了花笺，愿同读诗。':'社中正在传阅诗稿，等两次社集后再议合卷。'}</p>${action}</section>`;
  }
  const school=place==='school';
@@ -178,8 +178,8 @@ function classicStoryPanel(place){
  const translations=school?[]:entries.filter(([,w])=>w.kind==='translation'&&!w.press);
  if(!works.length&&!translations.length)return '';
  return `<section class="detail-section"><h3>${school?'新到课本':'文渊阁抄本与印本'}</h3>
-  ${works.map(([key,w])=>`<div class="acts"><button class="btn sm" onclick="A.classicReadWork('${key}')">翻阅《${esc(w.title)}》</button>
+  ${works.map(([key,w])=>`<div class="acts"><button class="btn sm" data-onclick="A.classicReadWork('${key}')">翻阅《${esc(w.title)}》</button>
     <span class="hint">${esc(classicPressNotice(w))}</span>${!school&&(!w.press||!w.press.destination&&S.turn>=w.press.due)?
-    `<button class="btn sm" onclick="A.classicPress('${key}')">${w.press?'查看书样':'议付梓'}</button>`:''}</div>`).join('')}
-  ${translations.map(([key,w])=>`<button class="btn sm" onclick="A.classicPress('${key}')">付梓《${esc(w.title)}》</button>`).join('')}</section>`;
+    `<button class="btn sm" data-onclick="A.classicPress('${key}')">${w.press?'查看书样':'议付梓'}</button>`:''}</div>`).join('')}
+  ${translations.map(([key,w])=>`<button class="btn sm" data-onclick="A.classicPress('${key}')">付梓《${esc(w.title)}》</button>`).join('')}</section>`;
 }

@@ -65,7 +65,7 @@ function whiteSpringElderTalk(m,n){
 function storyElderVisitButton(id){
  const elder=storyElderResident(id);if(!elder)return '';
  const visited=elder.p.elderVisits?.turn===S.turn;
- return `<button class="btn jade" onclick="A.visitStoryElder(${Number(id)})"${visited||S.over||E().energy<=0?' disabled':''}>探望${esc(fullName(elder.p))}<small>${visited?'本月已探望':'精力−1'}</small></button>`;
+ return `<button class="btn jade" data-onclick="A.visitStoryElder(${Number(id)})"${visited||S.over||E().energy<=0?' disabled':''}>探望${esc(fullName(elder.p))}<small>${visited?'本月已探望':'精力−1'}</small></button>`;
 }
 
 function storyTaifeiPanel(){

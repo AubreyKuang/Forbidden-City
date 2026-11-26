@@ -10,7 +10,7 @@ async function click(page,name){await page.locator('#modal').getByRole('button',
 async function finish(page){assert.ok((await read(page)).result);await page.locator('#modal .mch button').click();}
 async function importCase(page,name){await page.goto(url);await page.getByRole('button',{name:'新开一局',exact:true}).click();await page.getByRole('button',{name:'登基',exact:true}).click();await click(page,'进入宫城');await page.locator('#menu').getByRole('button',{name:'存档',exact:true}).click();await page.locator('#save-file').setInputFiles(path.join(fixtures,name+'.json'));await page.waitForFunction(()=>S?.turn>=60);assert.equal((await read(page)).blocked,false);}
 async function navigate(page,name){
- if(name==='princess-entry'){await page.locator('#menu').getByRole('button',{name:'皇嗣',exact:true}).click();const id=(await read(page)).children[0].id;await page.locator(`[onclick="A.go('kid',${id})"]`).first().click();return;}
+ if(name==='princess-entry'){await page.locator('#menu').getByRole('button',{name:'皇嗣',exact:true}).click();const id=(await read(page)).children[0].id;await page.locator(`[data-onclick="A.go('kid',${id})"]`).first().click();return;}
  await page.locator('#menu').getByRole('button',{name:'理政',exact:true}).click();
  if(name==='guard'){await page.getByRole('button',{name:/锦衣卫/}).first().click();return;}
  await page.getByRole('button',{name:/官员表/}).click();await page.getByRole('button',{name:name==='guest'?'陆怀瑾':'沈明远',exact:true}).first().click();

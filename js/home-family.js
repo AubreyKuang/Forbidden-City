@@ -87,7 +87,7 @@ A.homeStory=function(id){if(modalOpen)return;const ev=homeCareEvent(byId(id));if
 function homeFamilyPanel(c){
  const r=c.homeLife?.returned,m=homeMother(c),ev=homeCareEvent(c),heard=c.homeLife?.heard;
  if(!m&&!r&&!heard)return '';
- return `<section class="personal-experience"><h3>归家与牵挂</h3>${m?`<p>家中病况：${{ill:'母亲病重 · 等候回音',recovering:'母亲病势暂稳 · 仍需调养',well:'家书报安 · 母亲渐愈'}[m.status]||'等待家书'}</p>`:''}${r?`<p>${esc(r.text)}</p>`:''}${heard&&S.turn-heard.turn<=6?`<p>与${esc(heard.name)}谈起归家：“${esc(heard.quote)}”</p>`:''}${ev?`<button class="btn jade" onclick="A.homeStory(${c.id})">${homeWorryActive(c)?'问问家中病况':'听她说归家后的心事'}<small>精力−1</small></button>`:''}${homeReturnSocialEvent(c)?`<button class="btn" onclick="A.homeConversation(${c.id})">听听宫中的归家闲话</button>`:''}</section>`;
+ return `<section class="personal-experience"><h3>归家与牵挂</h3>${m?`<p>家中病况：${{ill:'母亲病重 · 等候回音',recovering:'母亲病势暂稳 · 仍需调养',well:'家书报安 · 母亲渐愈'}[m.status]||'等待家书'}</p>`:''}${r?`<p>${esc(r.text)}</p>`:''}${heard&&S.turn-heard.turn<=6?`<p>与${esc(heard.name)}谈起归家：“${esc(heard.quote)}”</p>`:''}${ev?`<button class="btn jade" data-onclick="A.homeStory(${c.id})">${homeWorryActive(c)?'问问家中病况':'听她说归家后的心事'}<small>精力−1</small></button>`:''}${homeReturnSocialEvent(c)?`<button class="btn" data-onclick="A.homeConversation(${c.id})">听听宫中的归家闲话</button>`:''}</section>`;
 }
 function homeSocialTone(c){
  if(homeMother(c)&&homeMother(c).status!=='well'||c.homeLife?.returned?.reason==='探病')return 'care';

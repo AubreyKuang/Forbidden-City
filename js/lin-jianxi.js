@@ -238,14 +238,14 @@ A.linJianxiWalk=function(id){
 function linJianxiHeartPanel(k,p){
  if(!linJianxiReleased()||!k||!p||S.over)return '';
  const id=royalActionArg(k.id);
- if(linJianxiHearReady(k,p))return `<button class="btn jade" onclick="A.linJianxiHeart(${id})">听她说起林见溪</button>`;
- if(linJianxiFriendReady(k,p))return `<button class="btn jade" onclick="A.linJianxiFriend(${id})">读林见溪的画笺</button>`;
+ if(linJianxiHearReady(k,p))return `<button class="btn jade" data-onclick="A.linJianxiHeart(${id})">听她说起林见溪</button>`;
+ if(linJianxiFriendReady(k,p))return `<button class="btn jade" data-onclick="A.linJianxiFriend(${id})">读林见溪的画笺</button>`;
  if(!linJianxiPair(k,p))return '';
  if(linJianxiMeetingReady(k,p)){
   const label={invited:'安排亲友同席',met:'安排再见林见溪',return:'依约再见林见溪'}[k.linJianxi.phase];
-  return `<button class="btn jade" onclick="A.linJianxiVisit(${id})" ${fenghuaVisitReady(p)?'':'disabled'}>${label} · 精力 −1</button>`;
+  return `<button class="btn jade" data-onclick="A.linJianxiVisit(${id})" ${fenghuaVisitReady(p)?'':'disabled'}>${label} · 精力 −1</button>`;
  }
- if(linJianxiProposalReady(k,p))return `<button class="btn jade" onclick="A.linJianxiProposal(${id})">听林见溪的求亲回话</button>`;
+ if(linJianxiProposalReady(k,p))return `<button class="btn jade" data-onclick="A.linJianxiProposal(${id})">听林见溪的求亲回话</button>`;
  if(!linJianxiNearby(k,p))return '<p class="hint">待两人方便相见，再续与林见溪的约。</p>';
  return '<p class="hint">求亲书帖已收下，待公主想好了再答。</p>';
 }
@@ -263,9 +263,9 @@ householdPanel=function(k){
  if(!linJianxiReleased()||UI.view!=='princess')return html;
  const p=linJianxiPerson(),chapter=linJianxiHomeChapter(k,p);
  const title={lamp:'竹门有灯',bamboo:'竹径归来',child:'小儿问水'}[chapter];
- if(title)return html+detailSection('家常',`<button class="btn jade" onclick="A.linJianxiHome(${royalActionArg(k.id)})">听听${title}</button>`);
+ if(title)return html+detailSection('家常',`<button class="btn jade" data-onclick="A.linJianxiHome(${royalActionArg(k.id)})">听听${title}</button>`);
  if(!linJianxiWalkReady(k,p))return html;
- return html+detailSection('家常',`<button class="btn jade" onclick="A.linJianxiWalk(${royalActionArg(k.id)})">听听溪桥家常</button>`);
+ return html+detailSection('家常',`<button class="btn jade" data-onclick="A.linJianxiWalk(${royalActionArg(k.id)})">听听溪桥家常</button>`);
 };
 const linJianxiMarriageChanges=marriageBondConsequences;
 marriageBondConsequences=function(previous){

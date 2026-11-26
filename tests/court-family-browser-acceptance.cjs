@@ -9,7 +9,7 @@ async function layout(page,r){const d=await page.evaluate(()=>{const p=document.
 async function shot(page,name){await page.waitForLoadState('networkidle');await page.screenshot({path:path.join(shots,name+'.jpg'),type:'jpeg',quality:82});}
 async function click(page,name){await page.locator('#modal').getByRole('button',{name}).click();}
 async function finish(page){if(await page.locator('#modal[open]').count()){const b=page.locator('#modal .mch button');assert.equal(await b.count(),1);await b.click();}}
-async function profile(page,id){await page.locator('#menu').getByRole('button',{name:'后宫',exact:true}).click();await page.locator(`[onclick="A.go('consort',${id})"]`).first().click();}
+async function profile(page,id){await page.locator('#menu').getByRole('button',{name:'后宫',exact:true}).click();await page.locator(`[data-onclick="A.go('consort',${id})"]`).first().click();}
 async function run(page,r){
  await page.goto(url);await page.getByRole('button',{name:'新开一局',exact:true}).click();await page.getByRole('button',{name:'登基',exact:true}).click();await click(page,'进入宫城');await page.locator('#menu').getByRole('button',{name:'存档',exact:true}).click();
  await page.locator('#save-file').setInputFiles(path.join(fixtures,r.fixture+'.json'));await page.waitForFunction(()=>S?.turn>=60&&S?.turn<=80);await reload(page,r,'导入');await layout(page,r);
@@ -19,13 +19,13 @@ async function run(page,r){
   await shot(page,r.fixture+'-'+r.viewport);await click(page,label);await reload(page,r,'批奏');const d=await read(page),p=d.consorts.find(c=>c.id===other.id).house.brother;
   assert.ok(p.reportHistory.length===1);if(r.mode==='promote')assert.equal(p.office,'道员');if(r.mode==='demote')assert.equal(p.office,'同知');
   assert.ok(d.consorts.find(c=>c.id===host.id).house.relatives.find(p=>p.id===wife.id).story.some(s=>s.t.includes('河堤')));
-  await finish(page);await profile(page,host.id);await page.locator(`[onclick="A.go('natal','${host.id}:${wife.id}')"]`).first().click();assert.match(await page.locator('#panel').innerText(),/婚后心绪/);await shot(page,'wife-'+r.mode+'-'+r.viewport);
+  await finish(page);await profile(page,host.id);await page.locator(`[data-onclick="A.go('natal','${host.id}:${wife.id}')"]`).first().click();assert.match(await page.locator('#panel').innerText(),/婚后心绪/);await shot(page,'wife-'+r.mode+'-'+r.viewport);
  }else if(r.fixture==='widow-permission'){
   await click(page,r.mode==='allow'?'准其依本人意愿重新议亲':'尊重她眼下的步调，先不议亲');await reload(page,r,'再嫁意愿');const d=await read(page),p=d.consorts.find(c=>c.id===host.id).house.relatives.find(p=>p.id===wife.id);assert.equal(p.widow.authorized,r.mode==='allow');assert.ok(!p.betrothal);
  }else if(r.fixture==='widow-visit'||r.fixture==='sister-pregnancy'){
   await click(page,r.fixture==='sister-pregnancy'?'让姐妹相伴，安排太医问安':r.mode==='gift'?/^赐银照顾/:'让姐妹慢慢说，暂不催她振作');await reload(page,r,'探亲宽慰');await finish(page);await profile(page,host.id);assert.match(await page.locator('#panel').innerText(),/正在宫中小住/);await shot(page,r.fixture+'-'+r.mode+'-'+r.viewport);
  }else if(r.fixture==='sister-birth'||r.fixture==='sister-death'){
-  await profile(page,host.id);await page.locator(`[onclick="A.go('natal','${host.id}:${wife.id}')"]`).first().click();assert.match(await page.locator('#panel').innerText(),r.fixture==='sister-death'?/难产去世/:/平安生下/);await shot(page,r.fixture+'-'+r.viewport);await reload(page,r,'婚育纪事');
+  await profile(page,host.id);await page.locator(`[data-onclick="A.go('natal','${host.id}:${wife.id}')"]`).first().click();assert.match(await page.locator('#panel').innerText(),r.fixture==='sister-death'?/难产去世/:/平安生下/);await shot(page,r.fixture+'-'+r.viewport);await reload(page,r,'婚育纪事');
  }else if(r.fixture==='exam-roster'){
   assert.match(await page.locator('#modal').innerText(),/钦点三甲/);await shot(page,'exam-roster-'+r.viewport);await click(page,'交礼部按卷定次');await reload(page,r,'三甲已定');const d=await read(page);assert.equal(new Set(d.scholars.filter(p=>p.examRank).map(p=>p.name)).size,3);await finish(page);assert.match(await page.locator('#modal').innerText(),/探花议婚/);await reload(page,r,'殿试续议婚');
  }else if(r.fixture.startsWith('exam-')){

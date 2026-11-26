@@ -54,7 +54,7 @@ A.prayerGreeting=function(id){if(modalOpen)return;const c=byId(id),ev=palacePray
 function palacePrayerPanel(place,c){
  const people=c?[c]:harem();const available=people.filter(p=>palacePrayerReady(p)&&prayerPlace(p)===place);
  if(!available.length)return '';
- return detailSection(place==='home'?'本宫寄愿':place==='buddha'?'偏殿佛堂 · 为家人寄愿':'灯下寄愿',available.map(p=>`<article class="card">${porImg(p,92)}<div class="grow"><strong>${esc(fullName(p))}</strong><p>${place==='home'?'正在本宫静养，灯旁放着一封家信。':'正在灯前祈愿，似有家事挂心。'}</p><button class="btn jade" onclick="A.prayerGreeting(${p.id})">上前问候 · 精力−1</button></div></article>`).join(''));
+ return detailSection(place==='home'?'本宫寄愿':place==='buddha'?'偏殿佛堂 · 为家人寄愿':'灯下寄愿',available.map(p=>`<article class="card">${porImg(p,92)}<div class="grow"><strong>${esc(fullName(p))}</strong><p>${place==='home'?'正在本宫静养，灯旁放着一封家信。':'正在灯前祈愿，似有家事挂心。'}</p><button class="btn jade" data-onclick="A.prayerGreeting(${p.id})">上前问候 · 精力−1</button></div></article>`).join(''));
 }
 const prayerChildLifeTick=childLifeTick;
 childLifeTick=function(monthly=false){const result=prayerChildLifeTick();if(monthly)palacePrayerTick();return result;};

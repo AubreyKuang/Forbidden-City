@@ -6,7 +6,7 @@ function familyGroupHidden(key){return familyVisibilityActive()&&S.flags.hiddenF
 function familyVisibilityButton(key,label){
  if(!familyVisibilityActive())return '';
  const hidden=familyGroupHidden(key);
- return `<button class="btn sm family-visibility" data-family-toggle="${esc(key)}" aria-label="${hidden?'显示':'隐藏'}${esc(label)}整个家族" aria-expanded="${!hidden}" onclick="event.preventDefault();event.stopPropagation();A.familyVisibilityToggle(${esc(JSON.stringify(key))})">${hidden?'显示家族':'隐藏'}</button>`;
+ return `<button class="btn sm family-visibility" data-family-toggle="${esc(key)}" aria-label="${hidden?'显示':'隐藏'}${esc(label)}整个家族" aria-expanded="${!hidden}" data-onclick="event.preventDefault();event.stopPropagation();A.familyVisibilityToggle(${esc(JSON.stringify(key))})">${hidden?'显示家族':'隐藏'}</button>`;
 }
 A.familyVisibilityToggle=function(key){
  if(modalOpen||!familyVisibilityActive()||!S.consorts.some(c=>familyGroupKey(c)===key))return;
@@ -81,12 +81,12 @@ function familyTreePerson(c,p,role,relation,list=false){
   const royal=!!p.outsideFamilyOrigin;
   if(!royal&&list&&!role&&p.sex==='m'&&natalAge(p)>=18)role='relative'+p.id;
   const target=p.consortId?`'consort',${p.consortId}`:royal?`'kid',${p.id}`:role?`'official','${c.id}:${role}'`:`'natal','${c.id}:${p.id}'`,age=role?p.age:natalAge(p),status=royal?'已认回宫':role?officialStatus(p):natalStatus(p);
-  return `<button class="graph-kin-person${p.alive===false?' deceased':''}" onclick="A.go(${target})" aria-label="查看${esc(p.name)}">${porImg(role?p:natalPortrait(p),34)}<span class="graph-person"><strong>${esc(p.name)}</strong><small>${esc(relation)} · ${role?esc(status)+' · '+esc(p.office||p.post||''):age+'岁 · '+esc(status)}${outsideChildBadge(p)}</small>${role?`<small>${age}岁 · ${esc(officialOfficeLabel(p))}</small>`:''}</span></button>`;
+  return `<button class="graph-kin-person${p.alive===false?' deceased':''}" data-onclick="A.go(${target})" aria-label="查看${esc(p.name)}">${porImg(role?p:natalPortrait(p),34)}<span class="graph-person"><strong>${esc(p.name)}</strong><small>${esc(relation)} · ${role?esc(status)+' · '+esc(p.office||p.post||''):age+'岁 · '+esc(status)}${outsideChildBadge(p)}</small>${role?`<small>${age}岁 · ${esc(officialOfficeLabel(p))}</small>`:''}</span></button>`;
 }
 function familyHouseTree(c,list=false){
   const h=houseOf(c);if(!h)return '';
   const registry=familyTreeRegistry(),entries=familyTreeEntries(c,registry),open=familyTreeExpanded(c,h.father.id,true);
-  const toggle=(p,count,defaultOpen=false)=>`<button class="family-fold" aria-expanded="${familyTreeExpanded(c,p.id,defaultOpen)}" aria-label="${familyTreeExpanded(c,p.id,defaultOpen)?'收起':'展开'}${esc(p.name)}的${defaultOpen?'家人':'子女'}" onclick="A.familyTreeToggle(${c.id},'${p.id}',${defaultOpen})">${familyTreeExpanded(c,p.id,defaultOpen)?'−':'+'}${count?`<small>${count}</small>`:''}</button>`;
+  const toggle=(p,count,defaultOpen=false)=>`<button class="family-fold" aria-expanded="${familyTreeExpanded(c,p.id,defaultOpen)}" aria-label="${familyTreeExpanded(c,p.id,defaultOpen)?'收起':'展开'}${esc(p.name)}的${defaultOpen?'家人':'子女'}" data-onclick="A.familyTreeToggle(${c.id},'${p.id}',${defaultOpen})">${familyTreeExpanded(c,p.id,defaultOpen)?'−':'+'}${count?`<small>${count}</small>`:''}</button>`;
   return `<div class="family-house-tree"><div class="family-tree-row">${familyTreePerson(c,h.father,'father',paternalFamily(c).filter(x=>S.consorts.includes(x)).length>1?'父亲 · 亲姐妹同父':'父亲',list)}${entries.length?toggle(h.father,entries.length,true):''}</div>${open?`<div class="family-tree-branches">${entries.map(e=>{
     const expanded=familyTreeExpanded(c,e.p.id),label=e.role?officialKinLabel(h,e.role,c):natalLabel(c,e.p);
     return `<div class="family-tree-branch" data-relative-id="${e.p.id}"><div class="family-tree-row">${familyTreePerson(c,e.p,e.role,label,list)}${e.children.length?toggle(e.p,e.children.length):''}</div>${expanded&&e.children.length?`<div class="family-tree-descendants">${e.children.map(n=>`<div class="family-tree-row" data-family-child-id="${n.p.id}">${familyTreePerson(n.mother?.p.id===e.p.id?n.c:n.home,n.p,null,n.p.sex==='m'?'儿子':'女儿',list)}</div>`).join('')}</div>`:''}</div>`;
@@ -108,9 +108,9 @@ natalLabel=function(c,p){
 };
 function natalParentLinks(c,p){
   if(p.natalCollateral)return `<p>父亲：${esc(c.house.father.name)}的兄弟，另房家籍尚待补录。</p>`;
-  if(!layeredFamilyActive()||!p.parentRelativeId)return `<p>${p.parentRelativeId?'母亲':'父亲'}：${p.parentRelativeId?`<button class="btn quiet" onclick="A.go('natal','${c.id}:${p.parentRelativeId}')">${esc(c.house.relatives.find(x=>x.id===p.parentRelativeId)?.name||'家中长辈')}</button>`:officialLink(c,'father')}</p>`;
+  if(!layeredFamilyActive()||!p.parentRelativeId)return `<p>${p.parentRelativeId?'母亲':'父亲'}：${p.parentRelativeId?`<button class="btn quiet" data-onclick="A.go('natal','${c.id}:${p.parentRelativeId}')">${esc(c.house.relatives.find(x=>x.id===p.parentRelativeId)?.name||'家中长辈')}</button>`:officialLink(c,'father')}</p>`;
   const n=familyTreeRegistry().nodes.find(n=>n.p.id===p.id),mother=n?.mother,father=n?.father;
-  const motherLink=mother?(mother.p.consortId?`<button class="person-link" onclick="A.go('consort',${mother.p.consortId})">${esc(mother.p.name)}</button>`:`<button class="person-link" onclick="A.go('natal','${mother.c.id}:${mother.p.id}')">${esc(mother.p.name)}</button>`):'未详录';
+  const motherLink=mother?(mother.p.consortId?`<button class="person-link" data-onclick="A.go('consort',${mother.p.consortId})">${esc(mother.p.name)}</button>`:`<button class="person-link" data-onclick="A.go('natal','${mother.c.id}:${mother.p.id}')">${esc(mother.p.name)}</button>`):'未详录';
   const label=p.unconfirmedParentage||['proved','stayed'].includes(p.outsideParentage?.status)?'婚籍所载父亲':'父亲';
   return `<p>${label}：${father?officialLink(father.c,father.role):esc(p.fatherName||mother?.p.spouse?.name||'未详录')}</p><p>母亲：${motherLink}</p>${father?`<p class="hint">${marriedSisterAffairsActive()?'家谱保留父母两侧的亲缘入口。':`家谱列于父亲${esc(father.p.name)}名下，母系亲缘与原有纪事保留。`}</p>`:''}`;
 }

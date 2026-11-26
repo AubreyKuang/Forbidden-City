@@ -248,8 +248,8 @@ function ministryDocketSection(){
     `<li><time>${esc(d.date)}</time><b>${esc(MINISTRIES[d.ministry].name+' · '+MINISTRY_REVIEWS[d.ministry])}</b> · ${esc(d.headName)}${d.reviewedBy?' · 接办 '+esc(d.reviewedBy):''}
       <p>${esc(d.closed?`${d.closed} · ${d.decision}`:d.due==null?'待恩科放榜':ministryDocketReady(d)?'回奏已至':`${Math.max(0,d.due-S.turn)}个月后回奏`)}</p>
       ${d.followup?`<p>${esc(MINISTRY_FOLLOWUPS[d.followup.type][0])} · ${esc(ministryFollowupStatus(d.followup))}</p>`:''}
-      ${ministryAftermathReady(d)?`<button class="btn sm jade" onclick="A.ministryAftermath('${d.id}')">阅看后续纪事</button>`:''}
-      ${ministryDocketReady(d)?`<button class="btn sm jade" onclick="A.ministryDocket('${d.id}')">阅看${MINISTRIES[d.ministry].name}回奏</button>`:''}</li>`).join('')}</ul>`:'<p class="hint">六部奉准办差后，后续回奏会呈送到这里。</p>');
+      ${ministryAftermathReady(d)?`<button class="btn sm jade" data-onclick="A.ministryAftermath('${d.id}')">阅看后续纪事</button>`:''}
+      ${ministryDocketReady(d)?`<button class="btn sm jade" data-onclick="A.ministryDocket('${d.id}')">阅看${MINISTRIES[d.ministry].name}回奏</button>`:''}</li>`).join('')}</ul>`:'<p class="hint">六部奉准办差后，后续回奏会呈送到这里。</p>');
 }
 function initializeMinistryRoster(){
   if(journalContentVersion()<43||S.ministries?.foundingRoster)return;
@@ -465,7 +465,7 @@ function examSchedulePanel(showMinistries=true){
     <p>正科 · <strong>${esc(examIntervalLabel(regularExamInterval()))}</strong></p>
     <p>${esc(nextExamLabel())}。</p>
     <p class="hint">到期转入三月时自动呈上殿试，无须先任命礼部尚书。${winner?`最近一科：${esc(cnNum(last.year))}年${last.enke?'恩科':'正科'}，状元${esc(winner.name)}。`:''}</p>
-    <div class="acts"><button class="btn sm gold" onclick="A.examSchedule()" ${S.over?'disabled':''}>调整科举周期</button>${showMinistries?`<button class="btn sm" onclick="A.go('ministries')">礼部与新科进士</button>`:''}</div></section>`;
+    <div class="acts"><button class="btn sm gold" data-onclick="A.examSchedule()" ${S.over?'disabled':''}>调整科举周期</button>${showMinistries?`<button class="btn sm" data-onclick="A.go('ministries')">礼部与新科进士</button>`:''}</div></section>`;
 }
 function viewMinistries(){
   const card=([id,m])=>{
@@ -474,25 +474,25 @@ function viewMinistries(){
     const onAssignment=head&&!officialServing(head.p);
     const why=!head?'尚书空缺':onAssignment?'尚书有差在身':wait?`${wait}个月后可再办`:id==='rites'&&(examPending()||S.turn-lastExamTurn()<24)?'两科之间须隔两年':id==='works'&&S.flags.floodDikeGen===S.gen?'河工已修固':E().energy<1?'精力不足':E().treasury<m.cost?'国库不足':'';
     return `<article class="card ministry-card"><div class="ministry-head">${head?porImg(head.p,56):''}<div><h3>${m.name}<small> · ${m.duty}</small></h3>
-      <p>${head?`尚书 ${head.scholar?`<button class="person-link" onclick="A.go('scholar','${head.p.id}')">${esc(head.p.name)}</button>`:officialLink(head.e.c,head.e.role)} · 才干${rd(head.p.ability)}`:'<span class="hint">尚书空缺</span>'}</p></div></div>
+      <p>${head?`尚书 ${head.scholar?`<button class="person-link" data-onclick="A.go('scholar','${head.p.id}')">${esc(head.p.name)}</button>`:officialLink(head.e.c,head.e.role)} · 才干${rd(head.p.ability)}`:'<span class="hint">尚书空缺</span>'}</p></div></div>
       <p class="hint">${schedules?`正科${examIntervalLabel(regularExamInterval())}，三月殿试。${nextExamLabel()}。可另奏开恩科。`:m.brief+(id==='rites'?` ${nextExamLabel()}。`:'')}</p>
-      <div class="acts"><button class="btn sm jade" onclick="A.ministryAct('${id}')" ${ministryReady(id)?'':'disabled'}>${m.action}<small>精力−1${m.cost?' · 国库−'+m.cost:''}${why?' · '+why:''}</small></button>
-      <button class="btn sm" onclick="A.ministryAppoint('${id}')" ${onAssignment?'disabled':''}>${head?'改任尚书':'任命尚书'}</button>${schedules?`<button class="btn sm" onclick="A.examSchedule()" ${S.over?'disabled':''}>调整正科周期</button>`:''}</div></article>`;
+      <div class="acts"><button class="btn sm jade" data-onclick="A.ministryAct('${id}')" ${ministryReady(id)?'':'disabled'}>${m.action}<small>精力−1${m.cost?' · 国库−'+m.cost:''}${why?' · '+why:''}</small></button>
+      <button class="btn sm" data-onclick="A.ministryAppoint('${id}')" ${onAssignment?'disabled':''}>${head?'改任尚书':'任命尚书'}</button>${schedules?`<button class="btn sm" data-onclick="A.examSchedule()" ${S.over?'disabled':''}>调整正科周期</button>`:''}</div></article>`;
   };
   const scholars=scholarList().filter(p=>!p.registrySource).slice().reverse();
-  return `<button class="btn quiet sm detail-back" onclick="A.go('government')">← 返回治国理政</button><h2>六部</h2>${examSchedulePanel(false)}<p class="hint">尚书由在任且才干 55 以上的官员出任，一人不兼两部。各部每年可办一件大事，成败看尚书才干。</p>
+  return `<button class="btn quiet sm detail-back" data-onclick="A.go('government')">← 返回治国理政</button><h2>六部</h2>${examSchedulePanel(false)}<p class="hint">尚书由在任且才干 55 以上的官员出任，一人不兼两部。各部每年可办一件大事，成败看尚书才干。</p>
     ${ministryDocketSection()}
     <div class="grid ministry-grid">${Object.entries(MINISTRIES).map(card).join('')}</div>${travelFleetPanel()}
-    ${detailSection('新科进士',scholars.length?`<ul class="story">${scholars.map(p=>`<li><button class="person-link" onclick="A.go('scholar','${p.id}')">${esc(p.name)}</button> · ${esc(p.examYear?`${p.examRank}`:'')} · ${esc(officialOfficeLabel(p))} · ${officialStatus(p)} · 才干${rd(p.ability)}</li>`).join('')}</ul>`:`<p class="hint">尚无科举出身的朝臣。${nextExamLabel()}。</p>`)}`;
+    ${detailSection('新科进士',scholars.length?`<ul class="story">${scholars.map(p=>`<li><button class="person-link" data-onclick="A.go('scholar','${p.id}')">${esc(p.name)}</button> · ${esc(p.examYear?`${p.examRank}`:'')} · ${esc(officialOfficeLabel(p))} · ${officialStatus(p)} · 才干${rd(p.ability)}</li>`).join('')}</ul>`:`<p class="hint">尚无科举出身的朝臣。${nextExamLabel()}。</p>`)}`;
 }
 function viewScholar(){
   const p=scholarById(UI.sel);if(!p)return viewMinistries();
   const held=ministryHeldBy(p),ready=officialServing(p)&&S.turn-(p.lastAudience??-99)>=3&&E().energy>=1;
   return `${personBackButton('ministries')}<header class="detail-head person-detail-head">${porImg(p,224)}<div class="grow"><p>${p.entryRoute?esc(p.entryRoute)+'出身':p.registrySource==='founding'?'登基时在任':p.registrySource==='local'?(p.away?'地方官':'地方铨选出身'):p.registrySource==='family'?'外朝家族':'科举出身'} · ${esc(p.origin)}</p><h2>${esc(p.name)}</h2><p>${esc(officialOfficeLabel(p))}${held?'':''}</p><p>${p.age}岁 · <strong>${officialStatus(p)}</strong> · ${esc(p.temperament)} · ${esc(p.examYear?`${p.examRank}`:'')}</p></div></header>
     <div class="detail-vitals">${bar('才干',p.ability)}${bar('功绩',p.merit)}${bar('信任',p.trust)}</div>
-    <div class="detail-actions"><div class="acts"><button class="btn primary" onclick="A.scholarTalk('${p.id}')" ${ready?'':'disabled'}>召见垂询<small>精力 −1</small></button></div><p class="hint">问候每三个月一次。${p.registrySource==='founding'?'可在官员表中考课、调任，履历与任职一同保留。':'翰林院历练满两年、才干 55 以上可出任文职各部尚书。'}</p></div>
+    <div class="detail-actions"><div class="acts"><button class="btn primary" data-onclick="A.scholarTalk('${p.id}')" ${ready?'':'disabled'}>召见垂询<small>精力 −1</small></button></div><p class="hint">问候每三个月一次。${p.registrySource==='founding'?'可在官员表中考课、调任，履历与任职一同保留。':'翰林院历练满两年、才干 55 以上可出任文职各部尚书。'}</p></div>
     ${detailSection('个人履历与纪事',detailStory(p))}
-    ${p.report?detailSection('待阅回奏',`<p>${esc(p.report.text)}</p><button class="btn jade" onclick="A.officialReport('scholar:${p.id}')">阅看回奏</button>`):''}${officialBrothersPanel({p,key:'scholar:'+p.id,scholar:true})}${officialSpousePanel({p,key:'scholar:'+p.id,scholar:true})}${detailSection('家族亲缘',careerKinHTML({p,key:'scholar:'+p.id,scholar:true}))}${detailSection(['local','founding'].includes(p.registrySource)?'任内职责':'殿试策论',`<p>${esc(p.essay)}。</p>`)}${officialMarriagePanel('scholar:'+p.id)}`;
+    ${p.report?detailSection('待阅回奏',`<p>${esc(p.report.text)}</p><button class="btn jade" data-onclick="A.officialReport('scholar:${p.id}')">阅看回奏</button>`):''}${officialBrothersPanel({p,key:'scholar:'+p.id,scholar:true})}${officialSpousePanel({p,key:'scholar:'+p.id,scholar:true})}${detailSection('家族亲缘',careerKinHTML({p,key:'scholar:'+p.id,scholar:true}))}${detailSection(['local','founding'].includes(p.registrySource)?'任内职责':'殿试策论',`<p>${esc(p.essay)}。</p>`)}${officialMarriagePanel('scholar:'+p.id)}`;
 }
 A.scholarTalk=function(id){
   const p=scholarById(id);if(modalOpen||!p||!officialServing(p)||S.turn-(p.lastAudience??-99)<3||!useE())return;

@@ -44,7 +44,7 @@ function childMentorPanel(k){
   const current=childMentor(k),candidates=officialEntries().filter(e=>officialServing(e.p)&&!e.p.away);
   return `<p class="hint">选择在京任职的朝臣指导学业，满十六岁后师承仍会留在纪事中。任官变动后无法继续指导。</p>
     ${current?`<p>现任师长：${esc(current.p.name)}（才干 ${rd(current.p.ability)}）${officialServing(current.p)&&!current.p.away?'':' · 已不能授课'}</p>`:''}
-    <div class="acts">${candidates.map(e=>`<button class="btn sm ${e.p.id===k.mentorId?'on':''}" onclick="A.childMentor(${k.id},'${encodeURIComponent(e.key)}')">${esc(e.p.name)} · 才干${rd(e.p.ability)}</button>`).join('')||'<span class="hint">暂无可授课的在京朝臣。</span>'}${k.mentorId?`<button class="btn sm" onclick="A.childMentor(${k.id},'')">解除师承</button>`:''}</div>`;
+    <div class="acts">${candidates.map(e=>`<button class="btn sm ${e.p.id===k.mentorId?'on':''}" data-onclick="A.childMentor(${k.id},'${encodeURIComponent(e.key)}')">${esc(e.p.name)} · 才干${rd(e.p.ability)}</button>`).join('')||'<span class="hint">暂无可授课的在京朝臣。</span>'}${k.mentorId?`<button class="btn sm" data-onclick="A.childMentor(${k.id},'')">解除师承</button>`:''}</div>`;
 }
 A.childMentor=function(id,encoded){
  const k=kidById(id);if(journalContentVersion()<85||!k?.alive||!childInPalace(k)||kidAge(k)<6||kidAge(k)>=16)return;
@@ -134,7 +134,7 @@ function princeCareerPanel(k){
  const career=k.princeCareer,path=PRINCE_CAREERS[career?.path];
  return `<p class="hint">皇子成年后可选择一条发展方向，每积累十二个月完成一次差务；不在京或受限时暂停。更换方向须间隔一年。</p>
  ${path?`<p>当前方向：${path.name}${career.selfChosen?' · 本人志向':''} · ${path.work} · 进度 ${career.months}/12 · 已完成 ${career.completed} 次 · 势 ${career.momentum||0}</p><p class="hint">朝政立场：${({civil:'重视文官与民政',military:'重视武备与边防',clan:'重视外家与宗亲',trade:'重视民政与商贸',travel:'重视民政与见闻'})[career.path]}；母族 ${esc(byId(k.mom)?.fam?.t||'未记载')}。</p>`:'<p>尚未选择方向。</p>'}
- <div class="acts">${Object.entries(PRINCE_CAREERS).map(([id,p])=>`<button class="btn sm ${career?.path===id?'on':''}" onclick="A.princeCareer(${k.id},'${id}')" ${!childCanVisitCourt(k)||E().energy<1||career&&S.turn-career.assigned<12?'disabled':''}>${p.name} · 精力−1</button>`).join('')}</div>`;
+ <div class="acts">${Object.entries(PRINCE_CAREERS).map(([id,p])=>`<button class="btn sm ${career?.path===id?'on':''}" data-onclick="A.princeCareer(${k.id},'${id}')" ${!childCanVisitCourt(k)||E().energy<1||career&&S.turn-career.assigned<12?'disabled':''}>${p.name} · 精力−1</button>`).join('')}</div>`;
 }
 A.princeCareer=function(id,path){
  const k=kidById(id),p=PRINCE_CAREERS[path];if(journalContentVersion()<85||!p||!k||k.sex!=='m'||kidAge(k)<16||!childCanVisitCourt(k)||E().energy<1)return;
@@ -357,7 +357,7 @@ function coupEvent(k){return {title:'逼宫',por:k,valid:()=>k.alive&&!royalJour
 function abdicateEvent(k){S.over=true;const e=E();S.history.push({sur:e.sur,name:e.name,era:e.era,yrs:S.year,miao:'太上皇',shi:''});
   const text=`${dateStr()}，${e.sur}${e.name}禅位于${k.name}，移居西苑，称太上皇。`;
   if(regnalChronicleActive()){recordRegnalEntry('禅位',text);closeRegnalChronicle();}
-  return {title:'禅位',por:'emp',text,choices:[{t:`以${k.name}的身份继续`,f:()=>{succeed(k);return null}},{t:'重新开局',f:()=>{S=null;UI.view='title';return null}}]};}
+  return {title:'禅位',por:'emp',text,choices:[editionReignLimitReached()?editionTrialEndChoice():{t:`以${k.name}的身份继续`,f:()=>{succeed(k);return null}},{t:'重新开局',f:()=>{S=null;UI.view='title';return null}}]};}
 
 /* ============ 皇嗣抚养与过继 ============ */
 const fosterOf=k=>k.foster?byId(k.foster):null;
@@ -399,7 +399,7 @@ function fosterEvent(){const ks=kidsAlive().filter(k=>{const m=byId(k.mom),f=fos
    {t:'暂缓私下探望',f:()=>{A.familyVisitRule(k.id,'closed');relAdd(m,f,-15);setXin(m,'悲恸','不许她再见孩子');return fx(cchg(m,{mood:-20}),cchg(f,{aff:4}))}},
    {t:'把孩子还给生母',f:()=>{A.unfoster(k.id);return null}}]}}
 function fosterLine(c){const fk=S.children.filter(k=>k.foster===c.id&&k.alive),own=S.children.filter(k=>k.mom===c.id&&k.foster&&k.alive);
-  return (fk.length?`<div>养育：${fk.map(k=>`<button class="btn sm" onclick="A.go('kid',${k.id})">${esc(k.name)}</button>`).join(' ')}</div>`:'')+(own.length?`<div class="hint">亲生却交给旁人抚养：${own.map(k=>`${esc(k.name)}（养母${esc(fullName(fosterOf(k)))}）`).join('、')}</div>`:'')}
+  return (fk.length?`<div>养育：${fk.map(k=>`<button class="btn sm" data-onclick="A.go('kid',${k.id})">${esc(k.name)}</button>`).join(' ')}</div>`:'')+(own.length?`<div class="hint">亲生却交给旁人抚养：${own.map(k=>`${esc(k.name)}（养母${esc(fullName(fosterOf(k)))}）`).join('、')}</div>`:'')}
 
 /* ============ 人际关系：妃嫔、皇嗣 ============ */
 function relWord(v,kind,c,k){

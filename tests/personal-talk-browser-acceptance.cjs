@@ -13,7 +13,7 @@ async function shot(p,r,suffix=''){await p.evaluate(()=>document.fonts.ready);aw
    if(name==='chat'){
     const id=initial.consorts.find(c=>c.given==='知微').id;r.topics.push('mood');assert.match(initial.text,/身世已查明/);assert.doesNotMatch(initial.text,/许清容|最喜欢|心愿|孩子还小/);
     for(let i=0;i<9&&!['child','relations','wish'].every(t=>r.topics.includes(t));i++){
-     await p.locator('#modal').getByRole('button',{name:'好',exact:true}).click();await p.locator('#menu').getByRole('button',{name:'后宫',exact:true}).click();await p.locator('#panel [onclick="A.go(\'consort\','+id+')"]').first().click();await p.locator('#panel').getByRole('button',{name:/^闲话家常/}).click();const state=await read(p),c=state.consorts.find(c=>c.id===id),topic=c.chatThread.lastTopic;
+     await p.locator('#modal').getByRole('button',{name:'好',exact:true}).click();await p.locator('#menu').getByRole('button',{name:'后宫',exact:true}).click();await p.locator('#panel [data-onclick="A.go(\'consort\','+id+')"]').first().click();await p.locator('#panel').getByRole('button',{name:/^闲话家常/}).click();const state=await read(p),c=state.consorts.find(c=>c.id===id),topic=c.chatThread.lastTopic;
      assert.ok(!r.topics.includes(topic),'nonrepeating subject');r.topics.push(topic);assert.equal(state.energy,initial.energy-i-1);assert.equal(c.xin.k,'委屈');if(['child','relations','wish'].includes(topic))await shot(p,r,'-'+topic);await reload(p,r);
     }
     assert.ok(['child','relations','wish'].every(t=>r.topics.includes(t)));

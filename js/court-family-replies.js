@@ -182,6 +182,6 @@ function courtFamilyNewsPanel(c){
   const available=pending.includes(n)&&courtFamilyCanReply(c);
   const status=n.status==='sent'?'已寄，等候回音':n.status==='delivered'?'家书已有回音':n.status==='heard'?'曾私下谈过':n.status==='returned'?'家书退回':available?'待谈':'眼下未便回信';
   return `<p><strong>${esc(COURT_FAMILY_NEWS[n.kind].title)}</strong> · ${esc(n.kin+n.officialName)} · ${status}</p><p>${esc(n.date)} · ${esc(n.fact)}</p>`+
-   (available?`<button class="btn sm jade" onclick="A.courtFamilyReply(${c.id},'${n.id}')">听她谈这封家书</button>`:'');
+   (available?`<button class="btn sm jade" data-onclick="A.courtFamilyReply(${c.id},'${n.id}')">听她谈这封家书</button>`:'');
  }).join(''));
 }

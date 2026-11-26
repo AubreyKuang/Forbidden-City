@@ -101,13 +101,13 @@ A.widowFuture=function(id,relative){
 const maritalLifePanel=natalLifePanel;
 natalLifePanel=function(c,p){
   const person=p.spouse?.personId&&careerPeople().find(x=>x.p.id===p.spouse.personId);
-  return maritalLifePanel(c,p)+(p.maritalMood?detailSection('婚后心绪',`<p>${esc(p.maritalMood)}${p.maritalNews?' · '+esc(p.maritalNews.text):''}</p>${person?`<p>丈夫履历：${careerLink(person)} · ${esc(officialStatus(person.p))}</p>`:''}${p.widow?`<p>亡夫：${esc(p.widow.name)} · ${p.widow.imperial?'原为赐婚':'两家旧约'}。${p.widow.authorized?'已获准依本人意愿重新议亲。':'原婚姻保留记载，尚未重新议亲。'}</p>`:''}${p.widow?.meeting?`<button class="btn" onclick="A.widowMeeting(${c.id},${p.id})">听她谈新认识的人</button>`:''}${widowFutureReady(c,p)?`<button class="btn" onclick="A.widowFuture(${c.id},${p.id})">听她谈往后婚事<small>同意重议需精力−1</small></button>`:''}`):'');
+  return maritalLifePanel(c,p)+(p.maritalMood?detailSection('婚后心绪',`<p>${esc(p.maritalMood)}${p.maritalNews?' · '+esc(p.maritalNews.text):''}</p>${person?`<p>丈夫履历：${careerLink(person)} · ${esc(officialStatus(person.p))}</p>`:''}${p.widow?`<p>亡夫：${esc(p.widow.name)} · ${p.widow.imperial?'原为赐婚':'两家旧约'}。${p.widow.authorized?'已获准依本人意愿重新议亲。':'原婚姻保留记载，尚未重新议亲。'}</p>`:''}${p.widow?.meeting?`<button class="btn" data-onclick="A.widowMeeting(${c.id},${p.id})">听她谈新认识的人</button>`:''}${widowFutureReady(c,p)?`<button class="btn" data-onclick="A.widowFuture(${c.id},${p.id})">听她谈往后婚事<small>同意重议需精力−1</small></button>`:''}`):'');
 };
 function natalVisitorsPanel(c){
   if(!inPalace(c))return '';
   const visitors=natalPeople(houseOf(c)).filter(p=>p.visit&&p.visit.host===c.id&&natalInPalace(c,p));
   const relatives=visitors.map(p=>natalVisitorRow(natalPortrait(p),
-    `${esc(natalLabel(c,p))} <button class="person-link" onclick="A.go('natal','${c.id}:${p.id}')"><b>${esc(p.name)}</b> ↗</button>`,
+    `${esc(natalLabel(c,p))} <button class="person-link" data-onclick="A.go('natal','${c.id}:${p.id}')"><b>${esc(p.name)}</b> ↗</button>`,
     c.palace,p.visit.until-S.turn,'归家')).join('');
   return detailSection('娘家亲眷在宫中',motherVisitorRow(c)+relatives);
 }
@@ -119,7 +119,7 @@ function natalSpouseSummary(p){
   return `<p>配偶：${esc(p.spouse.name)}${p.spouse.desc?' · '+esc(p.spouse.desc):''} · ${Math.max(18,Math.floor((S.turn-p.spouse.born)/12))}岁${p.spouse.alive===false?' · 已故':''}</p>`;
 }
 function officialSpousePanel(person){
-  const wives=courtWives(person);return wives.length?detailSection('婚姻与家书',wives.map(({c,p})=>`<p>妻子：<button class="person-link" onclick="A.go('natal','${c.id}:${p.id}')">${esc(p.name)} ↗</button> · ${esc(natalStatus(p))}${p.maritalMood?' · '+esc(p.maritalMood):''}</p>`).join('')):'';
+  const wives=courtWives(person);return wives.length?detailSection('婚姻与家书',wives.map(({c,p})=>`<p>妻子：<button class="person-link" data-onclick="A.go('natal','${c.id}:${p.id}')">${esc(p.name)} ↗</button> · ${esc(natalStatus(p))}${p.maritalMood?' · '+esc(p.maritalMood):''}</p>`).join('')):'';
 }
 function widowSocialReady(c,p){return careersActive()&&inPalace(c)&&p.alive&&!p.consortId&&!p.visit&&!p.natalPregnancy&&p.widow?.authorized&&!p.married&&!p.betrothal&&p.willing!==false&&S.turn-p.widow.turn>=18&&S.turn-(p.widow.authorizedAt??S.turn)>=6;}
 function widowNewMeeting(c,p){

@@ -867,7 +867,7 @@ function monthlyCourtStatus(){
 function monthlyCourtButton(){
   const {count,limit,done}=monthlyCourtStatus();
   const unready=!founderCouncilReady();
-  return `<button class="btn primary" onclick="A.court()" ${done||unready?'disabled':''}>${unready?'须先设立议政':done?'本月奏折已办完':'本月奏折'} · ${count}/${limit}</button>`;
+  return `<button class="btn primary" data-onclick="A.court()" ${done||unready?'disabled':''}>${unready?'须先设立议政':done?'本月奏折已办完':'本月奏折'} · ${count}/${limit}</button>`;
 }
 function monthlyCourtEvent(){
   if(!monthlyCourtBatchEnabled())return singleMonthlyCourtEvent();
@@ -1026,9 +1026,9 @@ A.courtPolicy=function(id){
   save('auto');render();
 };
 function courtBlocHTML(){
-  return `<h3>朝堂势力</h3><div class="acts"><button class="btn jade" onclick="A.go('officials')">官员表 · 父兄与外家 →</button></div><div class="grid">${COURT_BLOCS.map(bloc=>{
+  return `<h3>朝堂势力</h3><div class="acts"><button class="btn jade" data-onclick="A.go('officials')">官员表 · 父兄与外家 →</button></div><div class="grid">${COURT_BLOCS.map(bloc=>{
     const unavailable=!founderCouncilReady()||S.courtPolicyTurn===S.turn||E().energy<=0||E().treasury< -bloc.cost.treasury||(bloc.id==='dowager'&&!S.flags.dowager?.alive);
-    return `<article class="card" style="display:block;cursor:default"><b>${bloc.name}</b><div>${bloc.interest}</div>${bar('影响力',courtStanding(bloc))}<button class="btn sm" onclick="A.courtPolicy('${bloc.id}')" ${unavailable?'disabled':''}>采纳建议 · 国库 ${bloc.cost.treasury}</button></article>`;
+    return `<article class="card" style="display:block;cursor:default"><b>${bloc.name}</b><div>${bloc.interest}</div>${bar('影响力',courtStanding(bloc))}<button class="btn sm" data-onclick="A.courtPolicy('${bloc.id}')" ${unavailable?'disabled':''}>采纳建议 · 国库 ${bloc.cost.treasury}</button></article>`;
   }).join('')}</div>`;
 }
 /* ============ 父兄、立场与朝局 ============ */

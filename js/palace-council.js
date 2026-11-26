@@ -137,7 +137,7 @@ function selectionDiscussionPanel(){
     const groups=new Map(),shown=residents.slice(0,5);
     for(const c of shown){const r=c.selectionConcern,key=r.text.slice(r.text.indexOf('，')+1).replace(/^她/,'');groups.set(key,[...(groups.get(key)||[]),c]);}
     const r=shown[0].selectionConcern,opening=r.stage==='planned'?'选秀的消息传到了六宫。':r.text.startsWith('得知这次没有留下新人')||r.text.startsWith('本次没有留下新人')?'这次选秀没有留下新人，六宫也得了消息。':r.text.slice(0,r.text.indexOf('，')).replace(/^听说/,'')+'，六宫各有心事。';
-    return `<section class="detail-section"><h3>六宫听说选秀之后</h3><p>${esc(opening)}</p>${[...groups].map(([text,people])=>`<p>${people.map(c=>parentLink(c.id)).join('、')}${people.length>1?'都':''}${esc(text)}</p>`).join('')}${selectionCouncilEvent()?'<button class="btn jade" onclick="A.selectionCouncil()">听听皇后的话</button>':''}</section>`;
+    return `<section class="detail-section"><h3>六宫听说选秀之后</h3><p>${esc(opening)}</p>${[...groups].map(([text,people])=>`<p>${people.map(c=>parentLink(c.id)).join('、')}${people.length>1?'都':''}${esc(text)}</p>`).join('')}${selectionCouncilEvent()?'<button class="btn jade" data-onclick="A.selectionCouncil()">听听皇后的话</button>':''}</section>`;
   }
-  return residents.length?`<section class="detail-section"><h3>六宫听说选秀之后</h3>${residents.slice(0,5).map(c=>`<p><b>${parentLink(c.id)}</b>：${esc(c.selectionConcern.text)}</p>`).join('')}${selectionCouncilEvent()?'<button class="btn jade" onclick="A.selectionCouncil()">听听皇后的话</button>':''}</section>`:'';
+  return residents.length?`<section class="detail-section"><h3>六宫听说选秀之后</h3>${residents.slice(0,5).map(c=>`<p><b>${parentLink(c.id)}</b>：${esc(c.selectionConcern.text)}</p>`).join('')}${selectionCouncilEvent()?'<button class="btn jade" data-onclick="A.selectionCouncil()">听听皇后的话</button>':''}</section>`:'';
 }

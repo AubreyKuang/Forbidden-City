@@ -188,8 +188,8 @@ function officialMarriagePanel(key){
   const person=courtPerson(key);if(!person)return '';
   const p=person.p,r=officialMarriageRecord(p.officialMarriageId),b=r&&officialMarriageBride(r.bride),reason=officialMarriageReason(person);
   const status=r?`${r.date}奉旨成婚 · ${r.brideName}${b?.p.alive===false?'（已故）':''}`:p.spouseName||p.spouse?.name?`配偶：${p.spouseName||p.spouse.name}`:reason||'尚未婚配';
-  return detailSection('婚事与家室',`<p>${esc(status)}</p>${b?.kind==='princess'?`<button class="btn jade" onclick="A.go('${journalContentVersion()>=47&&!S.children.includes(b.p)?'relative':'kid'}',${b.id})">看看${esc(b.p.name)}的近况</button>`:b?.kind==='family'&&!b.archived?`<button class="btn jade" onclick="A.go('natal','${b.host}:${b.id}')">查看${esc(b.p.name)}的纪事</button>`:''}
-    ${r?`<button class="btn quiet" onclick="A.officialMarriageHistory('${key}')">查看婚事纪事</button><button class="btn quiet" onclick="A.officialMarriageTalk('${key}')" ${p.alive!==false&&b&&b.p.alive!==false&&S.turn-r.lastTalk>=6?'':'disabled'}>问问婚后近况<small>每半年一次 · 精力−1</small></button>`:`<button class="btn gold" onclick="A.officialMarriage('${key}')" ${reason?'disabled':''}>议婚 / 赐婚</button>`}<p class="hint">${r?'婚姻不改变官员的原职与任用；双方纪事保留同一门婚事。':'先阅名帖、问双方心意，再确认赐婚。公主满十五岁可议；其他女子须满十八岁。'}</p>`);
+  return detailSection('婚事与家室',`<p>${esc(status)}</p>${b?.kind==='princess'?`<button class="btn jade" data-onclick="A.go('${journalContentVersion()>=47&&!S.children.includes(b.p)?'relative':'kid'}',${b.id})">看看${esc(b.p.name)}的近况</button>`:b?.kind==='family'&&!b.archived?`<button class="btn jade" data-onclick="A.go('natal','${b.host}:${b.id}')">查看${esc(b.p.name)}的纪事</button>`:''}
+    ${r?`<button class="btn quiet" data-onclick="A.officialMarriageHistory('${key}')">查看婚事纪事</button><button class="btn quiet" data-onclick="A.officialMarriageTalk('${key}')" ${p.alive!==false&&b&&b.p.alive!==false&&S.turn-r.lastTalk>=6?'':'disabled'}>问问婚后近况<small>每半年一次 · 精力−1</small></button>`:`<button class="btn gold" data-onclick="A.officialMarriage('${key}')" ${reason?'disabled':''}>议婚 / 赐婚</button>`}<p class="hint">${r?'婚姻不改变官员的原职与任用；双方纪事保留同一门婚事。':'先阅名帖、问双方心意，再确认赐婚。公主满十五岁可议；其他女子须满十八岁。'}</p>`);
 }
 A.officialMarriageHistory=function(key){
   const person=courtPerson(key),r=officialMarriageRecord(person?.p.officialMarriageId),b=r&&officialMarriageBride(r.bride);
@@ -224,7 +224,7 @@ function princessOfficialList(k,page=0){
 const officialMarriageBasePrincess=princessMarriage;
 princessMarriage=function(k){const event=officialMarriageBasePrincess(k);if(officialMarriageActive())event.choices.push({t:'从在任官员中择配',f:()=>{pushNow(princessOfficialList(k));return null;}});return event;};
 const officialMarriageBasePanel=marriagePanel;
-marriagePanel=function(k){const html=officialMarriageBasePanel(k),r=officialMarriageRecord(k.officialMarriageId),person=r&&officialMarriagePerson(r.groom);return html+(person&&!person.archived?`<button class="btn jade" onclick="A.go('${person.scholar?'scholar':'official'}','${person.scholar?person.p.id:person.key}')">查看驸马${esc(person.p.name)}的履历</button>`:'');};
+marriagePanel=function(k){const html=officialMarriageBasePanel(k),r=officialMarriageRecord(k.officialMarriageId),person=r&&officialMarriagePerson(r.groom);return html+(person&&!person.archived?`<button class="btn jade" data-onclick="A.go('${person.scholar?'scholar':'official'}','${person.scholar?person.p.id:person.key}')">查看驸马${esc(person.p.name)}的履历</button>`:'');};
 const officialMarriageBaseTick=marriedLifeTick;
 marriedLifeTick=function(){syncOfficialMarriages();return officialMarriageBaseTick();};
 const officialMarriageBaseDeath=officialDeath;

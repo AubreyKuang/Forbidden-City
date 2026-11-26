@@ -61,8 +61,8 @@ function viewReignAnnals(){
   years.get(year).push(entry);
  }
  const pages=[...years.entries()],latest=pages.at(-1)?.[0];
- return `${pageHeading('皇帝本纪','',`<button class="btn sm" onclick="openHomeBook('archive');jumpToPageSection('home-collection')">王朝图鉴</button><button class="btn sm" onclick="openActivityLog(${ruler.gen})">起居注</button>`)}
-   <label class="reign-picker" for="annals-reign"><span>朝代</span><select id="annals-reign" onchange="A.go('regnal',Number(this.value))">
+ return `${pageHeading('皇帝本纪','',`<button class="btn sm" data-onclick="openHomeBook('archive');jumpToPageSection('home-collection')">王朝图鉴</button><button class="btn sm" data-onclick="openActivityLog(${ruler.gen})">起居注</button>`)}
+   <label class="reign-picker" for="annals-reign"><span>朝代</span><select id="annals-reign" data-onchange="A.go('regnal',Number(this.value))">
      ${[...rulers].reverse().map(r=>`<option value="${r.gen}"${r===ruler?' selected':''}>${esc(reignOptionLabel(r.gen))}${r.miao?' · '+esc(r.miao):''}</option>`).join('')}</select></label>
    <div class="annals-ruler"><h3>${esc(ruler.name)}</h3><p>${esc(ruler.era)}朝${ruler.years!=null?` · 在位${ruler.years}年`:' · 在位中'}${ruler.closedAt?` · ${esc(ruler.closedAt)}定稿`:''}</p></div>
    ${pages.length?pages.map(([year,entries])=>`<details class="annals-year"${year===latest?' open':''}><summary>${esc(year)} · ${entries.length} 则</summary>
@@ -92,7 +92,7 @@ function chroniclePersonTarget(id){
 }
 function chroniclePersonLink(p){
  const target=chroniclePersonTarget(p.id);
- return target?`<button class="btn quiet sm" onclick="A.go('${target.view}',${esc(JSON.stringify(target.id))})">${esc(p.name)}</button>`:esc(p.name);
+ return target?`<button class="btn quiet sm" data-onclick="A.go('${target.view}',${esc(JSON.stringify(target.id))})">${esc(p.name)}</button>`:esc(p.name);
 }
 function chronicleGroupedLetters(story){
  const entries=[],groups=new Map();
@@ -150,22 +150,22 @@ function chronicleReader(person,{compact=false}={}){
  const source=person.story||[];if(!source.length)return '<p class="hint">尚无记载。</p>';
  const entries=chronicleVisibleEntries(source);
  const key=`${S.gen}:${person.id}`,f=UI.chronicleFilters?.[key]||{},years=[...new Set(source.map(chronicleYear))].reverse(),people=[...new Map(source.flatMap(chronicleCast).filter(p=>p.id!==person.id).map(p=>[p.id,p])).values()];
- const select=(field,title,options)=>`<label>${title}<span class="chronicle-select"><select aria-label="纪事${title}" onchange="A.chronicleFilter('${key}','${field}',this.value)"><option value="">全部</option>${options.map(([value,label])=>`<option value="${esc(value)}" ${String(f[field])===String(value)?'selected':''}>${esc(label)}</option>`).join('')}</select></span></label>`;
+ const select=(field,title,options)=>`<label>${title}<span class="chronicle-select"><select aria-label="纪事${title}" data-onchange="A.chronicleFilter('${key}','${field}',this.value)"><option value="">全部</option>${options.map(([value,label])=>`<option value="${esc(value)}" ${String(f[field])===String(value)?'selected':''}>${esc(label)}</option>`).join('')}</select></span></label>`;
  const results=entries.filter(({e})=>chronicleMatches(e,f)).reverse();
  const rows=results.map(({e,i})=>{
   const ev=e.event,thread=chronicleThread(e),related=thread?source.filter(x=>chronicleThread(x)===thread):[],cast=chronicleCast(e).filter(p=>p.id!==person.id);
   const context=ev&&!ev.embedded?detailFold('回看事由与处理',`<p>${esc(ev.title)} · ${esc((ev.participants||[]).map(p=>p.name).join('、'))}</p><p>${esc(ev.situation)}</p><p>陛下回应：${esc(ev.choice)}</p>${ev.outcome?`<p>${esc(ev.outcome)}</p>`:''}`):'';
-  return `<li><time>${esc(e.d)}</time>${esc(e.t)}${chronicleSummary(e)}${e.life?.source?`<p class="hint">缘起：${esc(e.life.source)}</p>`:''}${cast.length?`<div class="chronicle-cast">相关人物：${cast.map(chroniclePersonLink).join(' ')}</div>`:''}${related.length>1?`<button class="btn quiet sm" onclick="A.chronicleThread('${key}',${i})">回看前因与后续 · ${related.length}则</button>`:''}${context}${cast.length&&(e.occasion||e.sceneOccasion)?`<details data-owner="${esc(String(person.id))}" data-index="${i}" ontoggle="compareChronicleOccasion(this)"><summary>对读当事人纪事</summary><div></div></details>`:''}</li>`;
+  return `<li><time>${esc(e.d)}</time>${esc(e.t)}${chronicleSummary(e)}${e.life?.source?`<p class="hint">缘起：${esc(e.life.source)}</p>`:''}${cast.length?`<div class="chronicle-cast">相关人物：${cast.map(chroniclePersonLink).join(' ')}</div>`:''}${related.length>1?`<button class="btn quiet sm" data-onclick="A.chronicleThread('${key}',${i})">回看前因与后续 · ${related.length}则</button>`:''}${context}${cast.length&&(e.occasion||e.sceneOccasion)?`<details data-owner="${esc(String(person.id))}" data-index="${i}" data-ontoggle="compareChronicleOccasion(this)"><summary>对读当事人纪事</summary><div></div></details>`:''}</li>`;
  });
  const active=Object.values(f).some(Boolean),list=a=>`<ul class="story">${a.join('')}</ul>`;
  const filters=select('year','年份',years.map(y=>[y,y]))+select('topic','主题',LIFE_CHAPTERS.map(c=>[c.key,c.title]))+(people.length?select('person','人物',people.map(p=>[p.id,p.name])):'');
  const toolbar=`<div class="chronicle-tools">
-   <form role="search" aria-label="人物纪事" class="chronicle-search" onsubmit="event.preventDefault();A.chronicleSearch('${key}')">
+   <form role="search" aria-label="人物纪事" class="chronicle-search" data-onsubmit="event.preventDefault();A.chronicleSearch('${key}')">
      <input id="chronicle-search-${key}" aria-label="搜索人物纪事" enterkeyhint="search" maxlength="100" placeholder="搜索人名、往事或一句话" value="${esc(f.query||'')}">
      <button type="submit" class="btn jade sm">搜索纪事</button>
    </form>
    <div class="chronicle-filters">${filters}</div>
-   <div class="chronicle-results"><p class="hint" role="status">按时间倒序，最近记载在前 · ${f.thread?'正在回看同一件事的前因与后续 · ':''}共${entries.length}则${active?`，找到${results.length}则`:''}。</p>${active?`<button type="button" class="btn quiet sm" onclick="A.chronicleClear('${key}')">显示全部纪事</button>`:''}</div>
+   <div class="chronicle-results"><p class="hint" role="status">按时间倒序，最近记载在前 · ${f.thread?'正在回看同一件事的前因与后续 · ':''}共${entries.length}则${active?`，找到${results.length}则`:''}。</p>${active?`<button type="button" class="btn quiet sm" data-onclick="A.chronicleClear('${key}')">显示全部纪事</button>`:''}</div>
  </div>`;
  const controls=compact?`<details class="chronicle-filter-fold"${active?' open':''}><summary>搜索与筛选</summary>${toolbar}</details><p class="chronicle-order hint">按时间倒序，最近记载在前 · 共${entries.length}则${active?`，找到${results.length}则`:''}。</p>`:toolbar;
  return `${controls}${rows.length?(active?list(rows):list(rows.slice(0,6))+(rows.length>6?detailFold(`翻阅更早的纪事（${rows.length-6}条）`,list(rows.slice(6))):'')):'<p class="hint">没有符合筛选的纪事，可清除筛选重新翻看。</p>'}`;

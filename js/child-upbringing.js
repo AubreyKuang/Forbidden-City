@@ -78,7 +78,7 @@ function palaceSpeechPanel(c){
   if(journalContentVersion()<96||!consortHomeland(c))return '';
   const stage=palaceSpeechStage(c),ready=inPalace(c)&&!S.over&&stage<3;
   const detail=['正跟女官熟悉宫中称呼','已能用中原话问候、点茶','已能自己说明日常事务','能在中原话与'+homelandTongue(c)+'之间传意'][stage];
-  return detailSection('乡音与中原话','<p>'+esc(consortHomeland(c))+' · '+esc(detail)+'</p>'+(ready?'<button class="btn" onclick="A.practicePalaceSpeech('+c.id+')" '+(S.turn-(c.palaceSpeech?.last??-99)<3||E().energy<1?'disabled':'')+'>陪她练中原话<small>精力−1 · 每三个月一次</small></button>':''));
+  return detailSection('乡音与中原话','<p>'+esc(consortHomeland(c))+' · '+esc(detail)+'</p>'+(ready?'<button class="btn" data-onclick="A.practicePalaceSpeech('+c.id+')" '+(S.turn-(c.palaceSpeech?.last??-99)<3||E().energy<1?'disabled':'')+'>陪她练中原话<small>精力−1 · 每三个月一次</small></button>':''));
 }
 A.practicePalaceSpeech=function(id){
   const c=byId(id);if(modalOpen||S.over||journalContentVersion()<96||!inPalace(c)||!consortHomeland(c)||palaceSpeechStage(c)>=3||S.turn-(c.palaceSpeech?.last??-99)<3||!useE())return;

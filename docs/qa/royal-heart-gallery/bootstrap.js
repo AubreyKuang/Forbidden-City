@@ -25,7 +25,7 @@
    if(view==='romance-check'){
     A.go('scholar',p.id);const invite=[...document.querySelectorAll('#panel button')].find(b=>b.textContent.includes('安排相遇机会'));assert(invite,'撮合按钮未显示');invite.click();choice();close();
     assert(p.xiean.path.kind==='return'&&p.xiean.path.pending==='meeting','邀请未改变相识进展');
-    const follow=document.querySelector('#panel button[onclick="A.xieAfterRefusal()"]');assert(follow,'后续入口未显示');follow.click();choice();close();
+    const follow=document.querySelector('#panel button[data-onclick="A.xieAfterRefusal()"]');assert(follow,'后续入口未显示');follow.click();choice();close();
     assert(p.xiean.path.stage===1&&!p.married&&!k.married,'相识被误写成结婚');
     assert(p.xiean.pursuerId===id&&p.xiean.path.childId===id,'相识未绑定同一位追求者');
    }else{

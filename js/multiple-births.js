@@ -90,9 +90,9 @@ A.multipleTalk=function(id,topic){if(modalOpen||!S)return;const ev=multipleMomen
 function multipleBirthPanel(k){
   const info=multipleIdentity(k);if(!info)return '';
   const siblings=multipleMembers(k).filter(p=>p!==k),state=multipleState(k),ready=MULTIPLE_MOMENTS.filter(r=>multipleAvailable(k,r));
-  const links=siblings.map(o=>`<button class="btn quiet multiple-sibling" onclick="A.go('kid',${o.id})">${porImg(o,52)}<span>${esc(multipleRelation(k,o))} · ${esc(o.name)}<small>${esc(!o.alive?(o.lost?'下落不明':'已故'):childHasLeftPalace(o)?childWhereabouts(o):'宫中 · '+childDisposition(o))}</small></span></button>`).join('');
+  const links=siblings.map(o=>`<button class="btn quiet multiple-sibling" data-onclick="A.go('kid',${o.id})">${porImg(o,52)}<span>${esc(multipleRelation(k,o))} · ${esc(o.name)}<small>${esc(!o.alive?(o.lost?'下落不明':'已故'):childHasLeftPalace(o)?childWhereabouts(o):'宫中 · '+childDisposition(o))}</small></span></button>`).join('');
   return `<section class="multiple-birth-panel"><small class="history-eyebrow">同生手足 · ${esc(info.name)}</small><h3>同一天来，各有自己的名字</h3><div class="multiple-siblings">${links||'<p class="hint">旧档中的同生手足资料暂不完整。</p>'}</div><p class="hint">${esc(info.detail)}。${k.birthOrder?'诞生簿记为'+(['先降生','随后降生','最后降生'][k.birthOrder-1]||'同日降生')+'；':''}宫中排行仍各按皇子、公主记载。</p>
-    <div class="acts">${ready.map(r=>`<button class="btn jade" onclick="A.multipleTalk(${k.id},'${r.id}')">${esc(r.title)}<small>同生手足互动 · 精力−1</small></button>`).join('')}</div>
+    <div class="acts">${ready.map(r=>`<button class="btn jade" data-onclick="A.multipleTalk(${k.id},'${r.id}')">${esc(r.title)}<small>同生手足互动 · 精力−1</small></button>`).join('')}</div>
     ${!ready.length?`<p class="hint">${state&&S.turn-state.last<6?'上次的话还在心头，过些日子再聚。':'各自成长、安顿下来后，还会有新的话题。'}</p>`:''}
     ${state?.history?.length?`<details><summary>一起经历过的事</summary>${state.history.slice(-3).map(h=>`<p><strong>${esc(h.title)}</strong> · ${esc(h.text)}</p>`).join('')}</details>`:''}</section>`;
 }
@@ -116,4 +116,4 @@ function multipleLeads(){
   }
   return leads.slice(0,2);
 }
-function multipleAt(place){return multipleLeads().filter(l=>l.place===place).map(l=>`<section class="multiple-birth-panel"><small class="history-eyebrow">${esc(multipleIdentity(l.person).name)}</small><h3>${esc(l.title)}</h3><p>${esc(l.text)}</p><button class="btn jade" onclick="A.multipleTalk(${l.person.id},'${l.topic}')">听听他们的话<small>精力−1</small></button></section>`).join('');}
+function multipleAt(place){return multipleLeads().filter(l=>l.place===place).map(l=>`<section class="multiple-birth-panel"><small class="history-eyebrow">${esc(multipleIdentity(l.person).name)}</small><h3>${esc(l.title)}</h3><p>${esc(l.text)}</p><button class="btn jade" data-onclick="A.multipleTalk(${l.person.id},'${l.topic}')">听听他们的话<small>精力−1</small></button></section>`).join('');}

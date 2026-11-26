@@ -129,7 +129,7 @@ livedRelationshipsTick=function(...args){const result=gouyiLivedTick.apply(this,
 function gouyiInquiryPanel(c){
   if(!gouyiLifeActive()||!c?.gouyi)return '';
   const d=c.gouyi.inquiry,chapter=GOUYI_INQUIRIES[d?.pending?.stage],last=d?.history?.at(-1),ready=gouyiInquiryEligible(c),reaction=gouyiReactionEvent(c);
-  return `<section class="detail-section"><h3>令仪问缘</h3><p>河间旧事仍有未解之处，她也有自己的疑问。</p>${chapter?`<p>${esc(chapter.wish)}</p><button class="btn jade" onclick="A.gouyiInquiry(${c.id})" ${ready?'':'disabled'}>同赴钦安殿 · ${esc(chapter.title)}<small>相谈精力−1</small></button>${ready?'':'<p class="hint">待她回宫、身心安稳且便于出行时，再续这一问。</p>'}`:d?.stage===4?'<p>四次问答已收存；疑问仍在，往后由她慢慢求索。</p>':'<p class="hint">相处一些时日，她或许会主动提出前往钦安殿。</p>'}${last?`<p class="hint">${esc(last.date)} · ${esc(last.thought)}</p>`:''}${reaction?`<button class="btn" onclick="A.gouyiReaction(${c.id})">听听廊下的议论</button>`:''}</section>`;
+  return `<section class="detail-section"><h3>令仪问缘</h3><p>河间旧事仍有未解之处，她也有自己的疑问。</p>${chapter?`<p>${esc(chapter.wish)}</p><button class="btn jade" data-onclick="A.gouyiInquiry(${c.id})" ${ready?'':'disabled'}>同赴钦安殿 · ${esc(chapter.title)}<small>相谈精力−1</small></button>${ready?'':'<p class="hint">待她回宫、身心安稳且便于出行时，再续这一问。</p>'}`:d?.stage===4?'<p>四次问答已收存；疑问仍在，往后由她慢慢求索。</p>':'<p class="hint">相处一些时日，她或许会主动提出前往钦安殿。</p>'}${last?`<p class="hint">${esc(last.date)} · ${esc(last.thought)}</p>`:''}${reaction?`<button class="btn" data-onclick="A.gouyiReaction(${c.id})">听听廊下的议论</button>`:''}</section>`;
 }
 const gouyiPracticePanel=daoPracticePanel;
 daoPracticePanel=function(c){return gouyiPracticePanel(c)+gouyiInquiryPanel(c);};
@@ -179,10 +179,10 @@ function gouyiPastReady(c){
 function gouyiPastPanel(c){
   if(!personalContextActive()||!c?.gouyi)return '';
   const d=c.gouyi.past,done=(d?.stage||0)>=GOUYI_PAST_CHAPTERS.length;
-  if(done)return `<button class="btn sm" onclick="A.gouyiPast(${c.id})">重读河间旧事</button>`;
+  if(done)return `<button class="btn sm" data-onclick="A.gouyiPast(${c.id})">重读河间旧事</button>`;
   if(!inPalace(c))return '';
   const ready=gouyiPastReady(c),hint=c.aff<65?'情分到65后，她愿慢慢说起':d&&S.turn-d.last<3?'上回的旧事刚说过，过些日子再听':'听她说起入宫前后的寻常日子 · 精力−1';
-  return `<button class="btn sm" onclick="A.gouyiPast(${c.id})" ${ready?'':'disabled'}>听令仪讲河间旧事<small>${esc(hint)}</small></button>`;
+  return `<button class="btn sm" data-onclick="A.gouyiPast(${c.id})" ${ready?'':'disabled'}>听令仪讲河间旧事<small>${esc(hint)}</small></button>`;
 }
 function gouyiPastEvent(c){
   if(!personalContextActive()||!c?.gouyi)return null;

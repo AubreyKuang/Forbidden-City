@@ -1,7 +1,7 @@
 /* One durable care plan per delivery, rather than an automatic modal for every twin. */
 function birthCareKids(c){return deliveryKids(c).filter(k=>k.alive&&!k.pendingName&&!k.removedFromRoyal&&!k.jailed&&!k.templeStay&&kidAge(k)<1);}
 function birthCareOpen(c){return !!c?.delivery?.carePlan&&!c.delivery.carePlan.closed&&birthCareKids(c).length>0;}
-function birthCarePanel(c){return birthCareOpen(c)?`<section class="detail-section"><h3>同生手足的安置</h3><p>${birthCareKids(c).map(k=>esc(k.name)).join('、')}的照料可一并商议，也可分别安排。</p><button class="btn" onclick="A.birthCare(${c.id})">查看这一胎的照料安排</button></section>`:'';}
+function birthCarePanel(c){return birthCareOpen(c)?`<section class="detail-section"><h3>同生手足的安置</h3><p>${birthCareKids(c).map(k=>esc(k.name)).join('、')}的照料可一并商议，也可分别安排。</p><button class="btn" data-onclick="A.birthCare(${c.id})">查看这一胎的照料安排</button></section>`:'';}
 function birthCarePosthumous(c,ks,title,text){if(c.alive)return;story(c,'【身后家事】'+text);Object.assign(c.story.at(-1),{thread:`birth-care:${S.gen}:${c.id}:${c.delivery.turn}`,life:{kind:'family',title,turn:S.turn,gen:S.gen,people:ks.map(k=>({id:k.id,name:k.name}))}});}
 function birthCareRecord(c,ks,title,text){const carers=[...new Set(ks.map(fosterOf).filter(Boolean))];livedRecord([c,...carers,...ks],'family',title,`birth-care:${S.gen}:${c.id}:${c.delivery.turn}`,text,[]);birthCarePosthumous(c,ks,title,text);}
 function birthCareEvent(c){

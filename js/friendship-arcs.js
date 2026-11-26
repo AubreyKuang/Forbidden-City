@@ -161,7 +161,7 @@ function friendshipPanel(c){
  if(!friendshipArcsActive())return '';
  const notes=Object.values(c.friendshipNotes||{}).filter(n=>n.gen===S.gen).sort((a,b)=>b.turn-a.turn).slice(0,3);
  if(!notes.length)return '';
- return `<div class="friendship-history"><h4>交情流转</h4>${notes.map(n=>{const o=byId(n.other),label=o?.alive?FRIENDSHIP_STAGES[n.stage]:'旧交成追忆';return `<p>${parentLink(n.other)} · <strong>${esc(label)}</strong><br><span class="hint">${esc(n.anchor)}；后来「${esc(n.title)}」。</span><br>她记得：${esc(n.thought)}${o&&friendshipAvailable(c)&&o.alive&&friendshipTense(c,o)?`<br><button class="btn sm" onclick="A.friendshipTalk(${c.id},${o.id})">听她谈与${esc(fullName(o))}的旧交</button>`:''}</p>`;}).join('')}</div>`;
+ return `<div class="friendship-history"><h4>交情流转</h4>${notes.map(n=>{const o=byId(n.other),label=o?.alive?FRIENDSHIP_STAGES[n.stage]:'旧交成追忆';return `<p>${parentLink(n.other)} · <strong>${esc(label)}</strong><br><span class="hint">${esc(n.anchor)}；后来「${esc(n.title)}」。</span><br>她记得：${esc(n.thought)}${o&&friendshipAvailable(c)&&o.alive&&friendshipTense(c,o)?`<br><button class="btn sm" data-onclick="A.friendshipTalk(${c.id},${o.id})">听她谈与${esc(fullName(o))}的旧交</button>`:''}</p>`;}).join('')}</div>`;
 }
 const friendshipLivedTick=livedRelationshipsTick;
 livedRelationshipsTick=function(){friendshipLivedTick();friendshipArcTick();};

@@ -16,7 +16,7 @@ const FLOWER_SEEDS={
 };
 const seasonJournal=()=>S.seasonal||{};
 const ensureSeasonJournal=()=>S.seasonal ||= {};
-const seasonalButton=(label,action)=>`<button class="btn sm jade" onclick="${action}">${label}</button>`;
+const seasonalButton=(label,action)=>`<button class="btn sm jade" data-onclick="${action}">${label}</button>`;
 const activityCard=(title,body)=>`<section class="palace-activity"><h3>${title}</h3>${body}</section>`;
 const atSeasonPlace=place=>UI.view==='place'&&UI.sel===place;
 const lanternChildren=()=>kidsAlive().filter(k=>childInPalace(k)&&kidAge(k)>=5).sort((a,b)=>b.lit-a.lit||a.id-b.id).slice(0,2);

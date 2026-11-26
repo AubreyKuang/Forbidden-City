@@ -170,7 +170,7 @@ for(let i=0;i<HAREM.length;i++){const create=HAREM[i];const wrapped=(...args)=>{
 const livingDowagerPanel=dowagerCourtPanel;
 dowagerCourtPanel=function(){const html=livingDowagerPanel();if(!dowagerLivingActive())return html;const d=ensureDowager();if(!d)return html;
  const company=d.alive?dowagerCompanyPeople(d):[],recent=(d.story||[]).slice(-6).reverse();
- return html+(d.feeling?`<p>心境：${esc(d.feeling.kind)} · 念及${esc(fullName(byId(d.feeling.person)||{sur:'',given:'旧人'}))}</p>`:'')+(company.length?`<p>本月慈宁宫来往：${company.map(c=>`<button class="person-link" onclick="A.go('consort',${c.id})">${esc(fullName(c))}</button>（${dowagerBondLabel(c,d)}）`).join('、')}</p>`:'')+(recent.length?detailSection('慈宁宫纪事',`<ul class="story">${recent.map(s=>`<li><time>${esc(s.d)}</time>${esc(s.t)}</li>`).join('')}</ul>`):'');
+ return html+(d.feeling?`<p>心境：${esc(d.feeling.kind)} · 念及${esc(fullName(byId(d.feeling.person)||{sur:'',given:'旧人'}))}</p>`:'')+(company.length?`<p>本月慈宁宫来往：${company.map(c=>`<button class="person-link" data-onclick="A.go('consort',${c.id})">${esc(fullName(c))}</button>（${dowagerBondLabel(c,d)}）`).join('、')}</p>`:'')+(recent.length?detailSection('慈宁宫纪事',`<ul class="story">${recent.map(s=>`<li><time>${esc(s.d)}</time>${esc(s.t)}</li>`).join('')}</ul>`):'');
 };
 
 // A stop in the children's rooms follows the audience, including any business the dowager raised.

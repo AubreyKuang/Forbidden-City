@@ -229,11 +229,11 @@ function dowagerCourtPanel(){
     const age=dowagerAge(d),index=seniors.indexOf(d);
     const dual=!!S.flags.birthDowager,birth=d===S.flags.birthDowager;
     const call=index>=0?`A.greetSeniorDowager(${index})`:birth?'A.greetBirthDowager()':dual?'A.greet()':'';
-    const action=call&&d.alive?`<button class="btn jade" onclick="${call}">给${esc(d.name)}请安<small>精力−1</small></button>`:'';
+    const action=call&&d.alive?`<button class="btn jade" data-onclick="${call}">给${esc(d.name)}请安<small>精力−1</small></button>`:'';
     const biography=dowagerBiography(d);
     const history=(index>=0||birth)&&d.story?.length?detailFold('人物纪事',detailStory({...d,id:d.memoryId||d.personId})):'';
     const residents=d.alive?S.children.filter(k=>raisedByDowager(k)&&upbringingDowager(k)===d&&k.princeSpouseOrigin):[];
-    const children=residents.map(k=>`<button class="btn sm" onclick="A.go('kid',${k.id})">查看${esc(k.name)}</button>`).join('');
+    const children=residents.map(k=>`<button class="btn sm" data-onclick="A.go('kid',${k.id})">查看${esc(k.name)}</button>`).join('');
     const actions=action+storyElderVisitButton(d.personId)+children;
     const room=d.alive?esc(dowagerResidence(d)):'已故';
     return `<section class="dowager-court"><header>${porImg(dowagerPerson(d),76)}<div><p class="dowager-room">${room}</p><h3>${esc(d.name)}</h3>
@@ -297,8 +297,8 @@ function royalKinContactButtons(k,estateContact=false){
   if(!mode&&(estateContact||journalContentVersion()<145))return '';
   if(!mode&&!unread)return '<small class="hint">暂不能往来</small>';
   const id=royalActionArg(k.id),args=estateContact?`${id},true`:id;
-  const button=unread?`<button class="btn sm jade" onclick="A.royalKinReply(${args})">${k.royalKinContact.reply.kind==='mountain'?'读山门家书':'读回信'}</button>`:
-    `<button class="btn sm jade" onclick="A.royalKinContact(${args})" ${royalKinContactReady(k)?'':'disabled'}>${mode==='visit'?(estateContact?'到王府探望':'召见'):'寄家书'}<small>${pending?'等候回信':!royalKinContactReady(k)?'近期已经问候':'精力−1'}</small></button>`;
+  const button=unread?`<button class="btn sm jade" data-onclick="A.royalKinReply(${args})">${k.royalKinContact.reply.kind==='mountain'?'读山门家书':'读回信'}</button>`:
+    `<button class="btn sm jade" data-onclick="A.royalKinContact(${args})" ${royalKinContactReady(k)?'':'disabled'}>${mode==='visit'?(estateContact?'到王府探望':'召见'):'寄家书'}<small>${pending?'等候回信':!royalKinContactReady(k)?'近期已经问候':'精力−1'}</small></button>`;
   return `<div class="acts"><span class="hint">${esc(k.jailed?'宗人府':royalKinContactPlace(k,mode))}</span>${button}</div>`;
 }
 function royalKinWords(k,topic){
@@ -453,7 +453,7 @@ function royalRelativeCards(relatives,era){
     const index=royalKinSearchText(k,era);
     const hidden=index.includes((UI.royalKinQuery||'').trim().toLowerCase())?'':' hidden';
     return `<article class="kin-person" data-kin-index="${esc(index)}"${hidden}>${porImg(k,50)}
-      <div class="kin-person-name"><button class="person-link nm" onclick="A.go('relative',${royalActionArg(k.id)})">${esc(k.name)}</button>
+      <div class="kin-person-name"><button class="person-link nm" data-onclick="A.go('relative',${royalActionArg(k.id)})">${esc(k.name)}</button>
       <p>${profile.map(esc).join(' · ')}</p><p>${status}${root?' · '+esc(root):''}</p></div>${royalKinContactButtons(k)}</article>`;
   });
   return `<div class="kin-people">${cards.join('')}</div>`;
@@ -470,7 +470,7 @@ function royalKinRosterPanel(){
   const lists={all:relatives,capital:relatives.filter(k=>!royalKinOutside(k)),outside:relatives.filter(royalKinOutside),
     unread:relatives.filter(k=>k.royalKinContact?.reply?.unread)};
   const key=Object.hasOwn(lists,UI.royalKinFilter)?UI.royalKinFilter:'all';
-  const tabs=ROYAL_KIN_FILTERS.map(([id,label])=>`<button class="btn sm" aria-pressed="${id===key}" onclick="A.royalKinFilter('${id}')">${label} ${lists[id].length}</button>`).join('');
+  const tabs=ROYAL_KIN_FILTERS.map(([id,label])=>`<button class="btn sm" aria-pressed="${id===key}" data-onclick="A.royalKinFilter('${id}')">${label} ${lists[id].length}</button>`).join('');
   const groups=new Map(),letters=key==='all'?royalKinUnread():[],query=(UI.royalKinQuery||'').trim().toLowerCase();
   for(const person of lists[key]){
     const reign=person.reign??0;
@@ -486,9 +486,9 @@ function royalKinRosterPanel(){
   });
   const empty={unread:'暂无未读回信。',capital:'目前没有在京的皇亲。',outside:'目前没有在外的皇亲。'}[key]||'没有符合条件的皇亲。';
   return `<div class="kin-directory">
-    ${letters.length?`<section class="kin-letters" aria-label="未读家书"><strong>未读家书</strong><div class="acts">${letters.map(k=>`<button class="btn sm jade" onclick="A.royalKinReply(${royalActionArg(k.id)})">读${esc(k.name)}的${k.royalKinContact.reply.kind==='mountain'?'山门家书':'回信'}</button>`).join('')}</div></section>`:''}
+    ${letters.length?`<section class="kin-letters" aria-label="未读家书"><strong>未读家书</strong><div class="acts">${letters.map(k=>`<button class="btn sm jade" data-onclick="A.royalKinReply(${royalActionArg(k.id)})">读${esc(k.name)}的${k.royalKinContact.reply.kind==='mountain'?'山门家书':'回信'}</button>`).join('')}</div></section>`:''}
     <div class="reign-switch kin-filters" id="home-kin-filters" role="group" aria-label="筛选皇亲">${tabs}</div>
-    <label class="kin-search"><span>搜索皇亲</span><input type="search" value="${esc(UI.royalKinQuery||'')}" placeholder="姓名、封号、伴侣或年号" oninput="filterRoyalKin(this.value)"></label>
+    <label class="kin-search"><span>搜索皇亲</span><input type="search" value="${esc(UI.royalKinQuery||'')}" placeholder="姓名、封号、伴侣或年号" data-oninput="filterRoyalKin(this.value)"></label>
     <div class="kin-reigns">${rows.join('')}</div><p class="hint" data-kin-empty="${empty}"${total?' hidden':''} role="status">${query?'没有符合条件的皇亲。':empty}</p></div>`;
 }
 function filterRoyalKin(value){

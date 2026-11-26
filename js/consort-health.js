@@ -34,7 +34,7 @@ function consortHealthNeedsCare(c){return !!c?.alive&&!c.gone&&!c.cold&&(c.hp<60
 function consortHealthPanel(c){
  if(!consortTraitsActive()||!Number.isFinite(c.hp)||!c.alive)return '';
  const cooldown=Math.max(0,3-(S.turn-(c.healthProfile?.lastCare??-99))),need=consortHealthNeedsCare(c);
- return `<section class="detail-section consort-health"><h3>身体与调养</h3><p>健康 <strong>${rd(c.hp)}</strong> / 100${c.hp<50?' · 身子虚弱，宜静养':c.hp<65?' · 仍需留意调养':''}</p>${consortRecovery(c)?'<p class="hint">近日需静养，医官仍按原定期限安排照料。</p>':''}${need?`<button class="btn sm" onclick="A.consortHealthCare(${c.id})" ${cooldown||E().treasury<10?'disabled':''}>请太医调养<small>${cooldown?`还需${cooldown}个月`:'国库−10万两'}</small></button>`:''}</section>`;
+ return `<section class="detail-section consort-health"><h3>身体与调养</h3><p>健康 <strong>${rd(c.hp)}</strong> / 100${c.hp<50?' · 身子虚弱，宜静养':c.hp<65?' · 仍需留意调养':''}</p>${consortRecovery(c)?'<p class="hint">近日需静养，医官仍按原定期限安排照料。</p>':''}${need?`<button class="btn sm" data-onclick="A.consortHealthCare(${c.id})" ${cooldown||E().treasury<10?'disabled':''}>请太医调养<small>${cooldown?`还需${cooldown}个月`:'国库−10万两'}</small></button>`:''}</section>`;
 }
 A.consortHealthCare=function(id){
  const c=byId(id);if(modalOpen||!consortTraitsActive()||!consortHealthNeedsCare(c))return;

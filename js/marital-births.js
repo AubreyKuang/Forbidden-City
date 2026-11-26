@@ -90,8 +90,8 @@ officialSpousePanel=function(person){
   const children=[],seen=new Set();for(const c of S.consorts)for(const p of natalPeople(houseOf(c)))if(p.fatherId===person.p.id&&!seen.has(p.id)){children.push({c,p});seen.add(p.id);}
   const widow=person.p.widower,host=widow&&S.consorts.find(c=>natalPeople(houseOf(c)).some(p=>p.id===widow.wifeId));
   const recognized=outsideParentageActive()?S.children.filter(k=>k.outsideFamilyOrigin?.fatherId===person.p.id):[];
-  return birthsSpousePanel(person)+(widow?detailSection('亡妻',`<p>${host?`<button class="person-link" onclick="A.go('natal','${host.id}:${widow.wifeId}')">${esc(widow.name)} ↗</button>`:esc(widow.name)} · 难产去世。${esc(person.p.householdMood||'')}</p>`):'')+(children.length?detailSection('家中子女',children.map(({c,p})=>`<button class="person-link" onclick="A.go('natal','${c.id}:${p.id}')">${esc(p.name)} · ${natalAge(p)}岁 · ${p.sex==='m'?'儿子':'女儿'}</button>`).join(' ')):'')+
-    detailSection('曾在家中照料的孩子',recognized.map(k=>`<p><button class="person-link" onclick="A.go('kid',${k.id})">${esc(k.outsideFamilyOrigin.name)} ↗</button> · 已认回宫中</p>`).join(''));
+  return birthsSpousePanel(person)+(widow?detailSection('亡妻',`<p>${host?`<button class="person-link" data-onclick="A.go('natal','${host.id}:${widow.wifeId}')">${esc(widow.name)} ↗</button>`:esc(widow.name)} · 难产去世。${esc(person.p.householdMood||'')}</p>`):'')+(children.length?detailSection('家中子女',children.map(({c,p})=>`<button class="person-link" data-onclick="A.go('natal','${c.id}:${p.id}')">${esc(p.name)} · ${natalAge(p)}岁 · ${p.sex==='m'?'儿子':'女儿'}</button>`).join(' ')):'')+
+    detailSection('曾在家中照料的孩子',recognized.map(k=>`<p><button class="person-link" data-onclick="A.go('kid',${k.id})">${esc(k.outsideFamilyOrigin.name)} ↗</button> · 已认回宫中</p>`).join(''));
 };
 function natalFatherPanel(p){
   if(p.unconfirmedParentage){const result=p.outsideParentage?.privateInquiry;
@@ -116,7 +116,7 @@ function queenWardFamilyPanel(q){
   const entries=(q.kinWards||[]).map(ref=>natalEntry(ref.host,ref.child)).filter(Boolean);
   if(!entries.length)return '';
   return detailSection('抚养的外家孩子',entries.map(({c,p})=>
-    `<button class="person-link" onclick="A.go('natal','${c.id}:${p.id}')">${p.sex==='m'?'养子':'养女'} ${esc(p.name)} ↗</button> · ${natalAge(p)}岁 · ${queenWardResident(p)?'同住宫中':esc(natalStatus(p))}`).join('<br>'));
+    `<button class="person-link" data-onclick="A.go('natal','${c.id}:${p.id}')">${p.sex==='m'?'养子':'养女'} ${esc(p.name)} ↗</button> · ${natalAge(p)}岁 · ${queenWardResident(p)?'同住宫中':esc(natalStatus(p))}`).join('<br>'));
 }
 function kinCareRecord(people,line){
   for(const p of new Set(people.filter(Boolean))){p.story||=[];story(p,'【外家安置】'+line);}

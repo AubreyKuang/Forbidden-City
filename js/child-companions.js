@@ -45,7 +45,7 @@ const companionRelEvent=relEvent;
 relEvent=function(){return palacePrayersActive()&&childCompanionEvent()||companionRelEvent();};
 const companionPanel=youthPanel;
 youthPanel=function(k){const html=companionPanel(k),m=k.peerMemory,n=S.childCompanions?.pending;if(!palacePrayersActive()||!m)return html;const friend=kidById(m.person);
- return html+detailSection((k.peerVisits?.[m.person]||0)>=3?'常伴的人':'结伴与近事',`<p>${friend?esc(friend.name):'旧日同伴'} · ${esc(m.title)}</p><p>${esc(m.text)}</p>${n&&[n.a,n.b].includes(k.id)&&childCompanionEvent()?`<button class="btn jade" onclick="A.childCompanion(${k.id})">听听两人相处的近事</button>`:''}`);};
+ return html+detailSection((k.peerVisits?.[m.person]||0)>=3?'常伴的人':'结伴与近事',`<p>${friend?esc(friend.name):'旧日同伴'} · ${esc(m.title)}</p><p>${esc(m.text)}</p>${n&&[n.a,n.b].includes(k.id)&&childCompanionEvent()?`<button class="btn jade" data-onclick="A.childCompanion(${k.id})">听听两人相处的近事</button>`:''}`);};
 const companionVoice=childVoicePool;
 childVoicePool=function(k){const pool=companionVoice(k),m=k.peerMemory,friend=m&&kidById(m.person);if(!palacePrayersActive()||!childCompanionEligible(k)||!friend?.alive||S.turn-m.turn>12)return pool;
  return [...pool,voiceLine('named-companion','说到那位熟悉的同伴，语气自然起来。',`上回和${friend.name}一起${m.title}，到现在还记得。下回有了新主意，也想先说给${friend.name}听。`)];};

@@ -112,11 +112,11 @@ function pregnancyPrayerMonthlyEvent(){
 function pregnancyPrayerPanel(c){
   if(!pregnancyPrayerEligible(c))return '';
   const p=currentPregnancyPrayer(c),label=p?'重读孕中祈愿':pregnancyPrayerHome(c)?'请国师送祈愿笺':'同赴钦安殿问男女';
-  return `<p class="hint">${p?'这一胎的祈愿已收进匣里，可随时重读。':pregnancyPrayerHome(c)?'留在本宫休养，也可请国师送来祈愿。':'松风入殿，她或许有想问国师的话。'}</p><button class="btn jade" onclick="A.pregnancyPrayer(${c.id})">${label}<small>${p?'重读不耗精力':'精力−1 · 可另留平安灯'}</small></button>`;
+  return `<p class="hint">${p?'这一胎的祈愿已收进匣里，可随时重读。':pregnancyPrayerHome(c)?'留在本宫休养，也可请国师送来祈愿。':'松风入殿，她或许有想问国师的话。'}</p><button class="btn jade" data-onclick="A.pregnancyPrayer(${c.id})">${label}<small>${p?'重读不耗精力':'精力−1 · 可另留平安灯'}</small></button>`;
 }
 function pregnancyPrayerHall(){
   const women=harem().filter(pregnancyPrayerEligible),here=pregnancyPrayerVisitors();
-  return women.length?`<h3>孕中祈愿</h3><div class="grid">${women.map(c=>`<section class="card portrait-card">${porImg(c,92)}<div class="grow"><button class="person-link" onclick="A.go('consort',${c.id})">${esc(fullName(c))} · ${esc(cName(c))}</button><p>有孕${c.preg}月${here.includes(c)?' · 此刻在殿廊候见':''}</p>${pregnancyPrayerPanel(c)}</div></section>`).join('')}</div>`:'';
+  return women.length?`<h3>孕中祈愿</h3><div class="grid">${women.map(c=>`<section class="card portrait-card">${porImg(c,92)}<div class="grow"><button class="person-link" data-onclick="A.go('consort',${c.id})">${esc(fullName(c))} · ${esc(cName(c))}</button><p>有孕${c.preg}月${here.includes(c)?' · 此刻在殿廊候见':''}</p>${pregnancyPrayerPanel(c)}</div></section>`).join('')}</div>`:'';
 }
 function pregnancyPrayerBirthEcho(c,children){
   const p=c.pregnancyPrayer;if(!p||p.answered||c.delivery?.prayerKey!==p.key)return '';

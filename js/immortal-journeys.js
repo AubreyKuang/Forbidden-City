@@ -398,13 +398,13 @@ function immortalPanel(k){
  if(!immortalEnabled()||!k.immortal)return '';
  const r=k.immortal,d=IMMORTAL_SECTS[r.route],ready=!!immortalEvent(k),away=immortalAway(k);
  return `<section class="personal-experience"><h3>仙缘与江湖</h3>${immortalTags(k)}<p>${esc(d.name)} · 师承 ${esc(d.master+d.title)}${away?' · '+esc(immortalRankName(k))+' · 离家'+Math.floor((S.turn-r.departed)/12)+'年':''}</p><p>${{noticed:'仙师来访，尚未离宫。',invited:immortalPalaceLessonsEnabled()?(kidAge(k)<16?'在京读书习道，每半年听修习近况；满十六岁再议启程。':'在京继续修习，每半年有课业近况，仍可商议启程。'):'暂在京中读书习道，等待再议。',learning:'在山门学艺，第一年课业尚待完成。',trial:'随师历练，待满两年再议正式入门。',sect:'长留山门，不定归期；家书与江湖消息仍能相闻。',returned:'已经归来，保留师承与山中经历。',closed:'选择在人间生活，仍保留灵根与问道兴趣。'}[r.stage]}</p>
- ${k.alive&&!k.jailed&&!k.removedFromRoyal?`<div class="acts">${ready?`<button class="btn jade" onclick="A.immortalTalk(${k.id})">${away?'读山门消息':'谈谈仙缘'} →</button>`:''}${away?`<button class="btn" onclick="A.immortalLetter(${k.id})" ${S.turn-r.lastLetter<6?'disabled':''}>寄家书 · 精力−1</button><button class="btn quiet" onclick="A.immortalRecall(${k.id})">商议归来</button>`:''}</div>`:''}
+ ${k.alive&&!k.jailed&&!k.removedFromRoyal?`<div class="acts">${ready?`<button class="btn jade" data-onclick="A.immortalTalk(${k.id})">${away?'读山门消息':'谈谈仙缘'} →</button>`:''}${away?`<button class="btn" data-onclick="A.immortalLetter(${k.id})" ${S.turn-r.lastLetter<6?'disabled':''}>寄家书 · 精力−1</button><button class="btn quiet" data-onclick="A.immortalRecall(${k.id})">商议归来</button>`:''}</div>`:''}
  ${(r.history||[]).slice(-2).reverse().map(e=>`<p class="hint">${esc(e.d)} · ${esc(e.title)}<br>${esc(e.text)}</p>`).join('')}</section>`;
 }
 function immortalHall(){
  if(!immortalEnabled())return '';
  const people=immortalPeople().filter(k=>k.alive);if(!people.length)return '';
- return `<section class="palace-activity"><h3>山门与故国</h3><div class="grid">${people.map(k=>`<button class="card" onclick="A.go('${S.children.includes(k)?'kid':'relative'}',${k.id})">${porImg(k,64)}<span><strong>${esc(k.name)}</strong><small>${esc(IMMORTAL_SECTS[k.immortal.route].name)} · ${immortalAway(k)?esc(immortalRankName(k)):'尚在人间'}${immortalEvent(k)?' · 有新消息':''}</small></span></button>`).join('')}</div></section>`;
+ return `<section class="palace-activity"><h3>山门与故国</h3><div class="grid">${people.map(k=>`<button class="card" data-onclick="A.go('${S.children.includes(k)?'kid':'relative'}',${k.id})">${porImg(k,64)}<span><strong>${esc(k.name)}</strong><small>${esc(IMMORTAL_SECTS[k.immortal.route].name)} · ${immortalAway(k)?esc(immortalRankName(k)):'尚在人间'}${immortalEvent(k)?' · 有新消息':''}</small></span></button>`).join('')}</div></section>`;
 }
 A.immortalTalk=function(id){if(modalOpen)return;const ev=immortalEvent(immortalPerson(id));if(ev)pushEv(ev);};
 A.immortalLetter=function(id){

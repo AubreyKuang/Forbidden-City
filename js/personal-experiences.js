@@ -97,7 +97,7 @@ A.personalExperience=function(id){if(modalOpen)return;const ev=personalExperienc
 function personalExperiencePanel(c){
   const h=experienceState(c),e=experienceRule(c);if(!h)return '';
   const current=h.current,ready=!!personalExperienceEvent(c),waiting=current&&current.stage==='working'&&S.turn<current.due;
-  return `<section class="personal-experience"><h3>她自己的事</h3>${e?`<p><strong>${esc(e.title)}</strong> · ${esc(EXPERIENCE_GROUPS[e.group].name)}</p><p>${esc(current.stage==='offered'?e.begin:ready?'先前的事已有后话，等你来听。':'她正按自己的步调做这件事。')}</p>${inPalace(c)?`<button class="btn jade" onclick="A.personalExperience(${c.id})" ${ready?'':'disabled'}>${ready?'听她说说 →':waiting?`约${current.due-S.turn}个月后再来`:'孩子暂不便参与，陪伴暂缓'}</button>`:'<p class="hint">眼下不便相见，这段经历暂缓。</p>'}`:''}
+  return `<section class="personal-experience"><h3>她自己的事</h3>${e?`<p><strong>${esc(e.title)}</strong> · ${esc(EXPERIENCE_GROUPS[e.group].name)}</p><p>${esc(current.stage==='offered'?e.begin:ready?'先前的事已有后话，等你来听。':'她正按自己的步调做这件事。')}</p>${inPalace(c)?`<button class="btn jade" data-onclick="A.personalExperience(${c.id})" ${ready?'':'disabled'}>${ready?'听她说说 →':waiting?`约${current.due-S.turn}个月后再来`:'孩子暂不便参与，陪伴暂缓'}</button>`:'<p class="hint">眼下不便相见，这段经历暂缓。</p>'}`:''}
     ${h.history.length?`<ul class="story">${h.history.slice(-2).reverse().map(r=>`<li><time>${esc(r.d)}</time><strong>${esc(r.title)} · ${esc(r.outcome)}</strong> ${esc(r.t)}</li>`).join('')}</ul>`:''}</section>`;
 }
 function personalExperienceLeads(){

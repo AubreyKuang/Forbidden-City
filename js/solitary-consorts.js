@@ -75,7 +75,7 @@ function solitaryPanel(c){
   const s=c.solitary;
   return `<section class="personal-experience"><h3>一隅清静 · ${SOLITARY_PATHS[s.path]}</h3><p>不主动结交，不攀附结党；对人守礼，对所好自有坚持。</p><p>${esc(solitaryOrigin(c))}</p>
     ${s.history.map(h=>`<p>${esc(h.d)} · ${esc(h.text)}</p>`).join('')}
-    ${inPalace(c)&&s.stage<3?`<button class="btn jade" onclick="A.solitaryTalk(${c.id})" ${solitaryReady(c)?'':'disabled'}>听她谈独处与所好<small>精力−1</small></button>${solitaryReady(c)?'':'<p class="hint">入宫相处三个月后，随着情分渐深（25 / 45 / 65）再谈；每次相隔半年。病中或悲恸时，先照顾眼前。</p>'}`:''}</section>`;
+    ${inPalace(c)&&s.stage<3?`<button class="btn jade" data-onclick="A.solitaryTalk(${c.id})" ${solitaryReady(c)?'':'disabled'}>听她谈独处与所好<small>精力−1</small></button>${solitaryReady(c)?'':'<p class="hint">入宫相处三个月后，随着情分渐深（25 / 45 / 65）再谈；每次相隔半年。病中或悲恸时，先照顾眼前。</p>'}`:''}</section>`;
 }
 A.solitaryTalk=function(id){const c=byId(id);if(modalOpen||!solitaryReady(c))return;pushEv(solitaryEvent(c));};
 HAREM.push(function solitaryEncounter(){

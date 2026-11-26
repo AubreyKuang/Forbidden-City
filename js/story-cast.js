@@ -102,7 +102,7 @@ function storyCastHouse(c){
     father:{name:fixed.father,office:fixed.office,post:fixed.office,career:fixed.career,age:c.age+25,alive:true,away:key==='luwan',story:[]},
     brother:fixed.brother?{...fixed.brother,age:c.age+4,alive:true,story:[]}:null};
 }
-const storyCastAdmissionAllowed=(c,r)=>!livingStoryConsort(c.fixedStory)&&!r.id&&!r.closed&&!S.over&&!mourningActive()&&c.age>=15&&E().age>=15;
+const storyCastAdmissionAllowed=(c,r)=>editionAllows('story',c.fixedStory)&&!livingStoryConsort(c.fixedStory)&&!r.id&&!r.closed&&!S.over&&!mourningActive()&&c.age>=15&&E().age>=15;
 function storyCastAdmit(c,r,reason){
   if(!storyCastAdmissionAllowed(c,r))return null;
   const d=STORY_CAST[c.fixedStory];
@@ -200,6 +200,7 @@ function storyCastMeetEvent(key,r,feastTitle='御花园宫宴'){
 
 const STORY_CAST_PLACES={suzhou:'南巡苏州',drill:'北苑校场',envoy:'白泉国宫宴',register:'查阅地方旧籍',lantern:'京城灯市'};
 function storyCastMeetReady(key){
+  if(!editionAllows('story',key))return false;
   const r=storyCastRecord(key);
   if(key==='ayimu'&&whiteSpringBanquetActive()&&(mourningActive()||E().age<15))return false;
   return !livingStoryConsort(key)&&storyCastReady(key)&&!r?.closed&&!r?.id&&S.turn>=(r?.due??0)&&
@@ -218,16 +219,17 @@ A.storyCastDossier=function(key){
   pushEv({title:'档案 · '+fullName(c),por:c,text:STORY_CAST[key].intro+'\n'+c.story.map(e=>e.d+' '+e.t).join('\n'),choices:[{t:'合上档案'}]});
 };
 function storyCastVisitButton(key){
+  if(!editionAllows('story',key))return '';
   const r=storyCastRecord(key),ready=storyCastMeetReady(key)&&E().energy>0&&!S.over;
   if(r?.closed||r?.id||livingStoryConsort(key))return '';
   if(key==='xiaoman'&&r?.stage===1&&!r.performed&&S.turn>=r.due){
-    return `<button class="btn jade" onclick="A.openBanquet()">筹御花园小宴请岑小满献艺</button>`;
+    return `<button class="btn jade" data-onclick="A.openBanquet()">筹御花园小宴请岑小满献艺</button>`;
   }
   const d=STORY_CAST[key],name=key==='chuwan'&&!r?'地方旧籍':storyCastName(key,r);
   const banquet=key==='ayimu'&&whiteSpringBanquetActive();
   const label=banquet?(r?.stage?'听白泉公主回话':'赴白泉国宫宴') : r?.office?'往钟粹宫见沈清漪':r?.stage?'继续「'+name+'」的故事':'寻访'+name;
   const hint=banquet&&mourningActive()?'服丧期间暂缓设宴':banquet&&E().age<15?'陛下年满十五岁后赴宴':!storyCastReady(key)?d.route:r?.due>S.turn?'再等 '+(r.due-S.turn)+' 个月':'精力−1';
-  return `<button class="btn jade" onclick="A.storyCastVisit('${key}')" ${ready?'':'disabled'}>${esc(label)}<small>${esc(hint)}</small></button>`;
+  return `<button class="btn jade" data-onclick="A.storyCastVisit('${key}')" ${ready?'':'disabled'}>${esc(label)}<small>${esc(hint)}</small></button>`;
 }
 function storyCastOutPanel(){
   if(!storyCastActive())return '';
@@ -244,12 +246,13 @@ function storyCastGardenButton(){
 function storyCastCodexCards(){
   if(!storyCastActive())return '';
   return Object.entries(STORY_CAST).map(([key,d])=>{
+    if(!editionAllows('story',key))return editionLockedCard('story',key,fullName(d)+' · '+d.epithet);
     const r=storyCastRecord(key),resident=livingStoryConsort(key),p=resident?.person||storyCastPerson(r)||{...d,fixedStory:key,alive:true};
     const name=resident?fullName(p):key==='chuwan'&&!r?'姓名待考':storyCastName(key,r);
     const tag=storyConsortBadge(key);
     const badge=key==='chuwan'&&!r?.revealed?'<details><summary>查看特殊标签（含身世）</summary>'+tag+'</details>':tag;
     const guide=STORY_CAST_LIVES[key];
-    return `<article class="story-consort-card" data-story-consort="${key}"><div class="story-consort-picture">${porImg(p,200)}${storyConsortProgress(resident?.status||storyCastStatus(r))}</div><div class="story-consort-copy"><h3>${esc(name)} · ${esc(d.epithet)}</h3><div aria-label="人物特殊标签">${badge}</div><p>${esc(d.intro)}</p><p>${key==='ayimu'?'宫中':'出巡'} → ${esc(d.route)}</p><p>入宫主线 · ${esc(guide.title)}<br>日常 · ${esc(guide.routine)}<br>特殊事件 · ${esc(guide.secret)} → ${esc(guide.after)}</p>${key==='ayimu'?'<p>新年宫宴、中秋宫宴和皇帝万寿宴都可能有使臣来贺。筹宴时可在外宾席主动请白泉国王携阿依慕赴宴。入宫后，可在御花园小宴请她跳白泉舞。交好的妃嫔学过鼓点，往后同席可点名伴奏。亲生皇嗣带有异域血脉，皇子不可入储，公主成年后可和亲白泉。</p>':''}${COMMONER_STORIES[key]?'<p>街坊口碑 · 持续得宠影响民心，可在人物档案处理「'+esc(COMMONER_STORIES[key].title)+'」。</p>':''}<div class="acts">${resident&&!r?.id?storyResidentHistoryButton(resident):r?`<button class="btn" onclick="A.storyCastDossier('${key}')">查看经历</button>`:''}${storyCastVisitButton(key)}${palacePetitionReady(key)?`<button class="btn" onclick="A.storyPetition('${key}')">读${esc(COURT_PETITIONS[key].title)}</button>`:''}</div></div></article>`;
+    return `<article class="story-consort-card" data-story-consort="${key}"><div class="story-consort-picture">${porImg(p,200)}${storyConsortProgress(resident?.status||storyCastStatus(r))}</div><div class="story-consort-copy"><h3>${esc(name)} · ${esc(d.epithet)}</h3><div aria-label="人物特殊标签">${badge}</div><p>${esc(d.intro)}</p><p>${key==='ayimu'?'宫中':'出巡'} → ${esc(d.route)}</p><p>入宫主线 · ${esc(guide.title)}<br>日常 · ${esc(guide.routine)}<br>特殊事件 · ${esc(guide.secret)} → ${esc(guide.after)}</p>${key==='ayimu'?'<p>新年宫宴、中秋宫宴和皇帝万寿宴都可能有使臣来贺。筹宴时可在外宾席主动请白泉国王携阿依慕赴宴。入宫后，可在御花园小宴请她跳白泉舞。交好的妃嫔学过鼓点，往后同席可点名伴奏。亲生皇嗣带有异域血脉，皇子不可入储，公主成年后可和亲白泉。</p>':''}${COMMONER_STORIES[key]?'<p>街坊口碑 · 持续得宠影响民心，可在人物档案处理「'+esc(COMMONER_STORIES[key].title)+'」。</p>':''}<div class="acts">${resident&&!r?.id?storyResidentHistoryButton(resident):r?`<button class="btn" data-onclick="A.storyCastDossier('${key}')">查看经历</button>`:''}${storyCastVisitButton(key)}${palacePetitionReady(key)?`<button class="btn" data-onclick="A.storyPetition('${key}')">读${esc(COURT_PETITIONS[key].title)}</button>`:''}</div></div></article>`;
   }).join('');
 }
 
@@ -271,7 +274,7 @@ function storyCastChildPanel(k){
   if(!storyCastActive())return '';
   const tags=[k.jiangmenChild?'将门虎子':'',whiteSpringChild(k)?'异域血脉 · 出生武艺+20，魅力 '+k.charm+' · '+(k.sex==='m'?'依本朝礼例不可立为太子':k.spouse?.route==='whiteSpring'?'已作为和亲公主远嫁白泉国':k.married?'白泉国王室外孙女':'年满十五岁、未婚未订亲时可议白泉和亲'):'',k.fieldWorry?'担心母妃 · 心情 '+k.mood:''].filter(Boolean);
   return tags.length?detailSection('家世与近况',tags.map(t=>'<p>'+esc(t)+'</p>').join('')+
-    (k.fieldWorry?`<button class="btn" onclick="A.storyCastComfort(${k.id})">陪孩子等母妃的消息</button>`:'')):'';
+    (k.fieldWorry?`<button class="btn" data-onclick="A.storyCastComfort(${k.id})">陪孩子等母妃的消息</button>`:'')):'';
 }
 A.storyCastComfort=function(id){
   const k=kidById(id);
@@ -637,7 +640,7 @@ function commonerFavorPanel(c,r){
   if(!storyCastCivicActive()||!COMMONER_STORIES[c.fixedStory])return '';
   const p=r?.publicFavor,ev=commonerFavorEvent(c,r);
   const state=p?.done?'街坊的回执已记入纪事。':p?.plan?'已递出批复，约定两个月后收回帖。':'恩宠达到 65，连续三个转月在宫受宠，民心加 1；此后每人每六个月至多一次。';
-  return detailSection('街坊口碑','<p>'+state+'</p>'+(ev?`<button class="btn jade" onclick="A.commonerFavor(${c.id})" ${E().energy?'':'disabled'}>${esc(ev.title)}<small>精力−1</small></button>`:''));
+  return detailSection('街坊口碑','<p>'+state+'</p>'+(ev?`<button class="btn jade" data-onclick="A.commonerFavor(${c.id})" ${E().energy?'':'disabled'}>${esc(ev.title)}<small>精力−1</small></button>`:''));
 }
 function storyCastPanel(c){
   if(!storyCastActive()||!c.fixedStory)return '';
@@ -645,7 +648,7 @@ function storyCastPanel(c){
   const father=c.fixedStory==='chuwan'?'<p class="muted">生父 · 前朝楚国皇帝（已故）</p>':'';
   const guide=storyCastFollowupsActive()?storyCastFollowupGuide(c,storyCastRecord(c.fixedStory)):'';
   return whiteSpringMailPanel(c)+detailSection(esc(d.epithet),'<p>'+esc(d.intro)+'</p>'+father+guide+
-    (ev?`<button class="btn jade" onclick="A.storyCastPalace(${c.id})" ${E().energy?'':'disabled'}>${esc(ev.title)}<small>精力−1</small></button>`:''))+storyCastLifePanel(c)+commonerFavorPanel(c,storyCastRecord(c.fixedStory))+(c.fixedStory==='ayimu'?estatePrincesses().filter(k=>k.mom===c.id&&k.household?.whiteSpringVisit).map(whiteSpringFamilyPanel).join(''):'');
+    (ev?`<button class="btn jade" data-onclick="A.storyCastPalace(${c.id})" ${E().energy?'':'disabled'}>${esc(ev.title)}<small>精力−1</small></button>`:''))+storyCastLifePanel(c)+commonerFavorPanel(c,storyCastRecord(c.fixedStory))+(c.fixedStory==='ayimu'?estatePrincesses().filter(k=>k.mom===c.id&&k.household?.whiteSpringVisit).map(whiteSpringFamilyPanel).join(''):'');
 }
 function storyCastMonthlyEvents(){
   if(!storyCastActive())return [];

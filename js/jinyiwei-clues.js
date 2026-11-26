@@ -64,7 +64,7 @@ jinyiweiTick=function(){
 const clueCasesSection=casesSection;
 casesSection=function(){const base=clueCasesSection();if(!careersActive()||!jinyiwei())return base;
   const rows=(jinyiwei().clues||[]).slice().reverse(),labels={new:'待御览',assigned:'已循线查证',watching:'继续留意',shelved:'此次封存'};
-  return detailSection('巡访密札',rows.length?`<ul class="story">${rows.map(x=>`<li><time>${esc(x.d)}</time><b>${esc(x.title)}</b> · ${labels[x.status]}<p>${esc(x.text)}</p>${x.status==='new'?`<button class="btn sm" onclick="A.jinyiweiClue('${x.id}')">阅看线索</button>`:''}</li>`).join('')}</ul>`:'<p class="hint">缇骑会间隔数月从未破旧案、任内回奏中带回线索。有线索才呈报，传闻须再查证。</p>')+base;
+  return detailSection('巡访密札',rows.length?`<ul class="story">${rows.map(x=>`<li><time>${esc(x.d)}</time><b>${esc(x.title)}</b> · ${labels[x.status]}<p>${esc(x.text)}</p>${x.status==='new'?`<button class="btn sm" data-onclick="A.jinyiweiClue('${x.id}')">阅看线索</button>`:''}</li>`).join('')}</ul>`:'<p class="hint">缇骑会间隔数月从未破旧案、任内回奏中带回线索。有线索才呈报，传闻须再查证。</p>')+base;
 };
 
 const JINYIWEI_RARE_NOTICES={

@@ -17,7 +17,7 @@ async function importCase(page,name){await page.goto(url);await page.getByRole('
 async function menu(page,name){await page.locator('#menu').getByRole('button',{name,exact:true}).click();}
 async function click(page,label){await page.locator('#modal').getByRole('button',{name:label}).click();}
 async function finish(page){if(await page.locator('#modal[open]').count()){assert.ok((await read(page)).result);await page.locator('#modal .mch button').click();}}
-async function person(page,id){await menu(page,'后宫');await page.locator(`[onclick="A.go('consort',${id})"]`).first().click();}
+async function person(page,id){await menu(page,'后宫');await page.locator(`[data-onclick="A.go('consort',${id})"]`).first().click();}
 async function history(page,needle){if(await page.locator('.chronicle-filter-fold:not([open]) > summary').count())await page.locator('.chronicle-filter-fold:not([open]) > summary').click();await page.getByRole('textbox',{name:'搜索人物纪事',exact:true}).fill(needle);await page.getByRole('button',{name:'搜索纪事',exact:true}).click();const item=page.locator('#panel li:visible').filter({hasText:needle}).last();await item.scrollIntoViewIfNeeded();assert.ok(await item.isVisible());}
 async function portrait(page,cell){const d=await page.locator('.detail-head [data-headpiece]').evaluate(el=>{const image=el.closest('svg.portrait')||el.ownerSVGElement;return {cell:el.dataset.headpiece,x:+el.getAttribute('x'),y:+el.getAttribute('y'),width:+el.getAttribute('width'),height:+el.getAttribute('height'),badge:!!image.querySelector('circle')};});
  assert.equal(d.cell,String(cell));assert.ok(d.y<42&&d.x<65);assert.equal(d.badge,false);return d;}
@@ -27,7 +27,7 @@ async function run(page,r){
  if(name.startsWith('selection-')){
   const initial=await read(page),a=initial.cands[0],b=initial.cands[1],both=name==='selection-both'||name==='selection-rival';
   const decisions=name==='selection-neither'?[[a,false],[b,false]]:name==='selection-second'?[[a,false],[b,true]]:[[a,true],[b,both]];
-  for(const [p,keep] of decisions){await menu(page,'选秀');await page.locator(`[onclick="A.${keep?'xxTake':'xxDrop'}(${p.id})"]`).click();
+  for(const [p,keep] of decisions){await menu(page,'选秀');await page.locator(`[data-onclick="A.${keep?'xxTake':'xxDrop'}(${p.id})"]`).click();
    if(keep){await click(page,'封为常在');await finish(page);}await reload(page,r,'candidate-'+p.id);}
   await menu(page,'选秀');await page.getByRole('button',{name:'确定名单，安排入宫',exact:true}).click();
   if(name==='selection-neither'||name==='selection-rival'){assert.equal((await read(page)).title,null);assert.ok((await read(page)).consorts.every(p=>!p.selectionBonds));}
@@ -38,7 +38,7 @@ async function run(page,r){
   await reload(page,r,'batch-complete');
  }else if(name==='sister'||name==='married-sister'){
   const data=await read(page),host=data.consorts.find(p=>p.given==='知微'),sister=data.consorts.find(p=>p.given==='知柔'),guest=host.house.relatives.find(p=>p.visit);
-  await person(page,sister.id);await page.locator(`[onclick="A.go('natal','${sister.id}:${guest.id}')"]`).first().click();
+  await person(page,sister.id);await page.locator(`[data-onclick="A.go('natal','${sister.id}:${guest.id}')"]`).first().click();
   assert.match(await page.locator('#panel').innerText(),/询问留宫意愿/);await page.getByRole('button',{name:/询问留宫意愿/}).scrollIntoViewIfNeeded();await shot(page,name+'-'+r.viewport);
   if(name==='married-sister'){assert.equal(await page.getByRole('button',{name:/询问留宫意愿/}).isDisabled(),true);assert.match(await page.locator('#panel').innerText(),/已婚/);}
   else {await page.getByRole('button',{name:/询问留宫意愿/}).click();await reload(page,r,'courtship');assert.equal((await read(page)).title,'留宫之意');await click(page,'纳为常在');await reload(page,r,'admission');await finish(page);const admitted=(await read(page)).consorts.find(p=>p.id===guest.id);assert.ok(admitted);assert.equal(admitted.natalOrigin.host,host.id);}
@@ -52,7 +52,7 @@ async function run(page,r){
  }else if(name==='crowns'){
   const queen=(await read(page)).consorts.find(p=>p.rank===8);await person(page,queen.id);r.headpieces=[await portrait(page,0)];await shot(page,'empress-default-'+r.viewport);
   for(const [id,cell] of [['goldphoenix',2],['peony',3]]){
-   await page.locator(`[onclick="A.jewelryWear(${queen.id},'${id}')"]`).click();await reload(page,r,'wear-'+id);await person(page,queen.id);r.headpieces.push(await portrait(page,cell));await shot(page,'empress-'+id+'-'+r.viewport);
+   await page.locator(`[data-onclick="A.jewelryWear(${queen.id},'${id}')"]`).click();await reload(page,r,'wear-'+id);await person(page,queen.id);r.headpieces.push(await portrait(page,cell));await shot(page,'empress-'+id+'-'+r.viewport);
   }
   await page.getByRole('button',{name:'收起珍饰，恢复原装扮',exact:true}).click();await reload(page,r,'restore-default');await person(page,queen.id);await portrait(page,0);
   await menu(page,'后宫');assert.ok(await page.locator('[data-headpiece="0"]').count());await shot(page,'empress-roster-'+r.viewport);

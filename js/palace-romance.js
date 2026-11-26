@@ -137,7 +137,7 @@ function palaceRomanceLeads(){
   });
 }
 function palaceRomanceAt(place){
-  return palaceRomanceLeads().filter(l=>l.place===place).map(l=>`<section class="palace-activity"><h3>${esc(l.title)}</h3>${activityPortraits(...l.cast)}<p>${esc(l.text)}</p><button class="btn jade" onclick="A.reviewPalaceRomance('${l.romanceKey}')">走近过问 →</button></section>`).join('');
+  return palaceRomanceLeads().filter(l=>l.place===place).map(l=>`<section class="palace-activity"><h3>${esc(l.title)}</h3>${activityPortraits(...l.cast)}<p>${esc(l.text)}</p><button class="btn jade" data-onclick="A.reviewPalaceRomance('${l.romanceKey}')">走近过问 →</button></section>`).join('');
 }
 function palaceRomancePanel(person){
   if(S.palaceRomance?.gen!==S.gen)return '';
@@ -145,6 +145,6 @@ function palaceRomancePanel(person){
     const {prince,consort}=romancePeople(pair),other=person.sex?consort:prince;if(!other)return '';
     const unavailable=['active','concealed'].includes(pair.status)&&!romanceEligible(prince,consort);
     const label=unavailable?'往来已断':{active:pair.stage===1?'投契往来':pair.stage===2?'私笺传情':'私情已现',ended:'往来已断',exposed:'私情已公开',concealed:'未公开的私情'}[pair.status];
-    return `<p><strong>${esc(label)}</strong> · <button class="person-link" onclick="A.go('${person.sex?'consort':'kid'}',${other.id})">${esc(porName(other))}</button></p><p class="hint">${esc(pair.result||'随侍已将见闻禀来，尚待过问。')}</p>${romancePending(pair)?`<button class="btn sm" onclick="A.reviewPalaceRomance('${pair.key}')">查看这次见闻</button>`:''}`;
+    return `<p><strong>${esc(label)}</strong> · <button class="person-link" data-onclick="A.go('${person.sex?'consort':'kid'}',${other.id})">${esc(porName(other))}</button></p><p class="hint">${esc(pair.result||'随侍已将见闻禀来，尚待过问。')}</p>${romancePending(pair)?`<button class="btn sm" data-onclick="A.reviewPalaceRomance('${pair.key}')">查看这次见闻</button>`:''}`;
   }).join('');
 }

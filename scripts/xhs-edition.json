@@ -1,0 +1,18 @@
+{
+  "edition": "xhs",
+  "allow": {
+    "story": [
+      "ayimu"
+    ],
+    "fenghua": [
+      "shangguanLantai"
+    ]
+  },
+  "maxGenerations": 3,
+  "features": {
+    "saveExport": false,
+    "browserStorage": false,
+    "saveBackups": false
+  },
+  "saveSnapshots": 1
+}

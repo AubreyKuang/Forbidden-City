@@ -13,6 +13,7 @@ const FENGHUA_PEOPLE=Object.freeze({
 const fenghuaReadable=()=>!!S&&journalContentVersion()>=FENGHUA_VERSION;
 const fenghuaActive=()=>fenghuaReadable()&&!S.over;
 function fenghuaReleased(key){
+ if(!editionAllows('fenghua',key))return false;
  if(key==='linJianxi')return journalContentVersion()>=71&&typeof linJianxiPerson==='function';
  if(key==='heXingjian')return journalContentVersion()>=73&&typeof heXingjianPerson==='function';
  return true;
@@ -84,11 +85,12 @@ function fenghuaEvent(p,title,text,options,{peers=[],advance=true}={}){
 function fenghuaCodex(){
  if(!fenghuaReadable())return '';
  const x=(S.scholars||[]).find(p=>p.storyPerson==='xiean'),xie={name:'谢安',portrait:433,temperament:'疏朗自持',principle:'以诗名世，拒绝以诗名冒领官声。',route:'微服私访或皇嗣少年心事中听闻',summary:'召见、辞官、尚主与婚后相知。'};
- const cards=[{key:'xiean',d:xie,p:x},...Object.entries(FENGHUA_PEOPLE).filter(([key])=>fenghuaReleased(key)&&(key!=='xueHongjian'||typeof hongjianContent!=='function'||!hongjianContent())).map(([key,d])=>({key,d,p:fenghuaPerson(key)}))];
+ const cards=[{key:'xiean',d:xie,p:x},...Object.entries(FENGHUA_PEOPLE).filter(([key])=>(fenghuaReleased(key)||!editionAllows('fenghua',key))&&(key!=='xueHongjian'||typeof hongjianContent!=='function'||!hongjianContent())).map(([key,d])=>({key,d,p:fenghuaPerson(key)}))];
  return `<div class="story-consort-codex"><p class="hint">这里收录不入后宫的独立人物：名士、功臣、女官与宫外友人。可纳为妃并有后宫故事的人物另见「剧情妃图鉴」。点进已相识者可查看近况、相见与连续纪事。</p>${cards.map(({key,d,p})=>{
   if(key==='xiean'&&journalContentVersion()>=24)return notablePeopleCodex().replace('data-notable="xiean"','data-notable="xiean" data-fenghua="xiean"');
+  if(!editionAllows('fenghua',key))return editionLockedCard('fenghua',key,d.name+' · '+d.role);
   const preview=p||(key==='xiean' ?{name:d.name,sur:'谢',given:'安',portraitOverride:d.portrait,alive:true}:fenghuaPreview(key)),status=!p?'尚未相识':p.alive===false?'已故':p.exiled?'流放在外':p.away||p.commission||p.incognitoCase||S.turn<(p.fenghua?.awayUntil??-1)?'暂在外':p.dismissed?'已被罢免':key==='xiean'?'已相识':p.fenghua.role;
-  return `<article class="story-consort-card" data-fenghua="${key}"><div class="story-consort-picture">${porImg(preview,200)}<span class="tag y">${esc(status)}</span></div><div class="story-consort-copy"><h3>${d.name}</h3><p><strong>${d.temperament}</strong> · ${d.principle}</p><dl><dt>相遇方式</dt><dd>${d.route}</dd><dt>人物故事</dt><dd>${d.summary}</dd></dl>${typeof fenghuaGuide==='function'?fenghuaGuide(key,p):''}<div class="acts">${p?`<button class="btn jade" onclick="A.go('${key==='xiean'?'scholar':'fenghua'}','${key==='xiean'?p.id:key}')">查看人物与纪事</button>`:key==='shangguanLantai'||key==='gaoHuaibi'?`<button class="btn jade" onclick="A.fenghuaMeet('${key}')" ${fenghuaEntryReady(key)&&E().energy>0&&(key!=='shangguanLantai'||E().treasury>=10)?'':'disabled'}>${key==='shangguanLantai'?'举行女官选拔 · 精力1、国库10':'召见有功将士 · 精力1'}</button>`:d.entry==='east-factory'?'<button class="btn" onclick="A.go(\'jinyiwei\')">前往锦衣卫</button>':'<button class="btn" onclick="A.go(\'out\')">前往探访</button>'}</div></div></article>`;
+  return `<article class="story-consort-card" data-fenghua="${key}"><div class="story-consort-picture">${porImg(preview,200)}<span class="tag y">${esc(status)}</span></div><div class="story-consort-copy"><h3>${d.name}</h3><p><strong>${d.temperament}</strong> · ${d.principle}</p><dl><dt>相遇方式</dt><dd>${d.route}</dd><dt>人物故事</dt><dd>${d.summary}</dd></dl>${typeof fenghuaGuide==='function'?fenghuaGuide(key,p):''}<div class="acts">${p?`<button class="btn jade" data-onclick="A.go('${key==='xiean'?'scholar':'fenghua'}','${key==='xiean'?p.id:key}')">查看人物与纪事</button>`:key==='shangguanLantai'||key==='gaoHuaibi'?`<button class="btn jade" data-onclick="A.fenghuaMeet('${key}')" ${fenghuaEntryReady(key)&&E().energy>0&&(key!=='shangguanLantai'||E().treasury>=10)?'':'disabled'}>${key==='shangguanLantai'?'举行女官选拔 · 精力1、国库10':'召见有功将士 · 精力1'}</button>`:d.entry==='east-factory'?'<button class="btn" data-onclick="A.go(\'jinyiwei\')">前往锦衣卫</button>':'<button class="btn" data-onclick="A.go(\'out\')">前往探访</button>'}</div></div></article>`;
  }).join('')}</div>`;
 }
 function viewFenghuaPerson(){
@@ -96,10 +98,10 @@ function viewFenghuaPerson(){
  const friends=[...fenghuaAll(),...(S.scholars||[])].filter((x,i,a)=>(p.fenghua.friends.includes(x.id)||p.fenghua.friends.includes(x.hongjian?.previousId))&&a.indexOf(x)===i);
  const official=p.fenghuaKey==='gaoHuaibi',near=fenghuaPresent(p),reason=p.alive===false?'故人纪事仍在。':!near?'暂不能相见。':remaining?`再过${remaining}个月可相见。`:mourningActive()?'国丧期间暂缓雅集。':'相见消耗1点精力，每三个月一次。';
  return `${personBackButton('home')}<header class="detail-head person-detail-head">${porImg(p,224)}<div class="grow"><p>${esc(official?officialOfficeLabel(p):p.fenghua.role)}</p><h2>${esc(p.name)}</h2><p>${p.age}岁 · ${d.temperament}</p><p>${d.principle}</p></div></header>${bar('相知',p.fenghua.trust)}
-  <div class="acts"><button class="btn primary" onclick="A.fenghuaVisit('${p.fenghuaKey}')" ${ready?'':'disabled'}>${p.fenghuaKey==='linJianxi'?'相见 · 竹下交游':p.fenghua.stage<3?'相见 · 续说近事':'相见 · 日常交游'}</button>${official?'<button class="btn" onclick="A.go(\'government\')">前往军政任用</button>':''}</div><p class="hint">${reason}</p>
+  <div class="acts"><button class="btn primary" data-onclick="A.fenghuaVisit('${p.fenghuaKey}')" ${ready?'':'disabled'}>${p.fenghuaKey==='linJianxi'?'相见 · 竹下交游':p.fenghua.stage<3?'相见 · 续说近事':'相见 · 日常交游'}</button>${official?'<button class="btn" data-onclick="A.go(\'government\')">前往军政任用</button>':''}</div><p class="hint">${reason}</p>
   ${detailSection('经历与选择',detailStory(p))}
   <p class="hint">${d.summary} · 已记主线 ${Math.min(3,p.fenghua.stage)}/3 段${p.fenghua.stage>=3?'，仍可日常交游':''}。</p>
-  ${official?`<div class="detail-vitals">${bar('才干',p.ability)}${bar('功绩',p.merit)}${bar('信任',p.trust)}</div><p>${esc(officialStatus(p))} · 以军功入仕</p>${p.report?detailSection('待阅回奏',`<p>${esc(p.report.text)}</p><button class="btn jade" onclick="A.officialReport('scholar:${p.id}')">阅看回奏</button>`):''}${p.commission?detailSection('当前差事',`<p>${esc(p.commission.title)} · ${Math.max(0,p.commission.due-S.turn)}个月后回奏</p>`):''}${officialSpousePanel({p,key:'scholar:'+p.id,scholar:true})}${officialMarriagePanel('scholar:'+p.id)}`:''}${friends.length?detailSection('交游',friends.map(x=>`<p>${x.fenghuaKey?chroniclePersonLink(x):careerLink({p:x,scholar:true,key:'scholar:'+x.id})}${x.alive===false?' · 已故':''}</p>`).join('')):''}${p.fenghuaKey==='linJianxi'?linJianxiProfilePanel(p):''}${p.fenghuaKey==='heXingjian'?heXingjianPanel():''}${typeof fenghuaGuide==='function'?fenghuaGuide(p.fenghuaKey,p):''}${p.fenghuaKey==='xueHongjian'&&typeof hongjianContent==='function'&&hongjianContent()?hongjianGuestPanel(p):''}`;
+  ${official?`<div class="detail-vitals">${bar('才干',p.ability)}${bar('功绩',p.merit)}${bar('信任',p.trust)}</div><p>${esc(officialStatus(p))} · 以军功入仕</p>${p.report?detailSection('待阅回奏',`<p>${esc(p.report.text)}</p><button class="btn jade" data-onclick="A.officialReport('scholar:${p.id}')">阅看回奏</button>`):''}${p.commission?detailSection('当前差事',`<p>${esc(p.commission.title)} · ${Math.max(0,p.commission.due-S.turn)}个月后回奏</p>`):''}${officialSpousePanel({p,key:'scholar:'+p.id,scholar:true})}${officialMarriagePanel('scholar:'+p.id)}`:''}${friends.length?detailSection('交游',friends.map(x=>`<p>${x.fenghuaKey?chroniclePersonLink(x):careerLink({p:x,scholar:true,key:'scholar:'+x.id})}${x.alive===false?' · 已故':''}</p>`).join('')):''}${p.fenghuaKey==='linJianxi'?linJianxiProfilePanel(p):''}${p.fenghuaKey==='heXingjian'?heXingjianPanel():''}${typeof fenghuaGuide==='function'?fenghuaGuide(p.fenghuaKey,p):''}${p.fenghuaKey==='xueHongjian'&&typeof hongjianContent==='function'&&hongjianContent()?hongjianGuestPanel(p):''}`;
 }
 PERSON_DETAIL_VIEWS.push('fenghua');
 const fenghuaScholarView=viewScholar;
@@ -107,7 +109,7 @@ viewScholar=function(){const p=scholarById(UI.sel);if(p?.fenghuaKey){const prior
 const fenghuaScholarTalk=A.scholarTalk;
 A.scholarTalk=function(id){const p=scholarById(id);return p?.fenghuaKey?A.fenghuaVisit(p.fenghuaKey):fenghuaScholarTalk(id);};
 const fenghuaChronicleLink=chroniclePersonLink;
-chroniclePersonLink=function(ref){const p=fenghuaAll().find(x=>x.id===ref.id||x.hongjian?.previousId===ref.id);return p?`<button class="btn quiet sm" onclick="A.go('fenghua','${p.fenghuaKey}')">${esc(p.name)}</button>`:fenghuaChronicleLink(ref);};
+chroniclePersonLink=function(ref){const p=fenghuaAll().find(x=>x.id===ref.id||x.hongjian?.previousId===ref.id);return p?`<button class="btn quiet sm" data-onclick="A.go('fenghua','${p.fenghuaKey}')">${esc(p.name)}</button>`:fenghuaChronicleLink(ref);};
 const fenghuaChronicleThread=A.chronicleThread;
 A.chronicleThread=function(key,index){
  const id=String(key).slice(String(key).indexOf(':')+1),p=fenghuaAll().find(x=>String(x.id)===id||String(x.hongjian?.previousId)===id);

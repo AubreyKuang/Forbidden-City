@@ -69,8 +69,8 @@ function travelFleetPanel(){
   const status=v&&!v.returned?`奉命「${route.name}」，距归期还有${royalTravelDuration(Math.max(1,v.due-S.turn))}。`:
    v&&!v.read?`已从「${route.name}」返港，归报待阅。`:v?`上次奉命「${route.name}」，${v.returned}返港，现可派遣。`:'在港待命。';
   return `<li><strong>${esc(ship.name)}</strong> · ${esc(status)}
-  ${!v||v.read?`<button class="btn sm" onclick="A.travelShip(${ship.id})" ${S.over?'disabled':''}>派遣</button>`:
-   v.returned?`<button class="btn sm" onclick="A.travelShip(${ship.id})" ${S.over?'disabled':''}>查看归报</button>`:''}</li>`;
+  ${!v||v.read?`<button class="btn sm" data-onclick="A.travelShip(${ship.id})" ${S.over?'disabled':''}>派遣</button>`:
+   v.returned?`<button class="btn sm" data-onclick="A.travelShip(${ship.id})" ${S.over?'disabled':''}>查看归报</button>`:''}</li>`;
  }).join('')}</ul></section>`;
 }
 function travelBookPanel(){
@@ -81,8 +81,8 @@ function travelBookPanel(){
   const status=b.decision?'校阅已结案。':b.due==null?'':b.due<=S.turn?'校阅已回奏。':'副本已送去校阅。';
   return `<li><strong>《${esc(d.name)}》</strong> · ${esc(b.catalogued)}入藏
   ${sponsors.length?` · ${esc(sponsors.join('、'))}奏办`:''}<p>${esc(d.intro)}${esc(status)}</p>
-  <button class="btn sm" onclick="A.travelBook('${b.key}')" ${S.over?'disabled':''}>翻阅</button>
-  ${b.due<=S.turn&&!b.decision?`<button class="btn sm" onclick="A.travelBookReport('${b.key}')" ${S.over?'disabled':''}>看校阅回奏</button>`:''}</li>`;
+  <button class="btn sm" data-onclick="A.travelBook('${b.key}')" ${S.over?'disabled':''}>翻阅</button>
+  ${b.due<=S.turn&&!b.decision?`<button class="btn sm" data-onclick="A.travelBookReport('${b.key}')" ${S.over?'disabled':''}>看校阅回奏</button>`:''}</li>`;
  }).join('')}</ul></section>`;
 }
 function travelShipReport(ship){

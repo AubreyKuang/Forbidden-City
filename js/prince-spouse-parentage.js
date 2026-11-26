@@ -147,11 +147,11 @@ function princeSpouseParentageRow(k,record){
   const state=record.status==='complete'?`已核明生父为${princeSpouseParentageFather(record)}`:
     ready?(record.suspected?'王爷曾问及胎月，亲缘待核':'可秘密查证亲缘'):due?'锦衣卫回奏已到':`密查中 · 还需 ${record.due-S.turn} 个月`;
   const args=`${royalActionArg(k.id)},${royalActionArg(record.key)}`;
-  const action=ready||due?` <button class="btn sm jade" onclick="A.princeSpousePaternity(${args})" ${ready&&!jinyiweiCommanderReady()?'disabled':''}>${due?'听取密奏':'请锦衣卫查证'}${ready&&!jinyiweiCommanderReady()?'<small>需有在任指挥使</small>':''}</button>`:'';
+  const action=ready||due?` <button class="btn sm jade" data-onclick="A.princeSpousePaternity(${args})" ${ready&&!jinyiweiCommanderReady()?'disabled':''}>${due?'听取密奏':'请锦衣卫查证'}${ready&&!jinyiweiCommanderReady()?'<small>需有在任指挥使</small>':''}</button>`:'';
   const plan=record.placement,child=plan?.status==='palace'&&princeSpouseParentageChild(k,record);
   const placement=plan?.status==='waiting'?` · ${record.childId?'已出生，待接养':'待出生后，由'+esc(plan.name)+'接养'}`:plan?.status==='estate'?' · 王府留养':child?' · 已秘密接入宫中':'';
-  const placeAction=child?` <button class="btn sm" onclick="A.go('${S.children.includes(child)?'kid':'relative'}',${royalActionArg(child.id)})">查看孩子</button>`:
-    princeSpousePlacementReady(k,record)?` <button class="btn sm jade" onclick="A.princeSpousePlacement(${args})">${plan?.status==='waiting'&&record.childId?'办理接养':'商议孩子的去处'}</button>`:'';
+  const placeAction=child?` <button class="btn sm" data-onclick="A.go('${S.children.includes(child)?'kid':'relative'}',${royalActionArg(child.id)})">查看孩子</button>`:
+    princeSpousePlacementReady(k,record)?` <button class="btn sm jade" data-onclick="A.princeSpousePlacement(${args})">${plan?.status==='waiting'&&record.childId?'办理接养':'商议孩子的去处'}</button>`:'';
   return `<p>${esc(princeSpouseParentageName(k,record))} · ${esc(state)}${placement}${action}${placeAction}</p>`;
 }
 function princeSpouseParentagePanel(k,records=princeSpouseParentageCases(k)){

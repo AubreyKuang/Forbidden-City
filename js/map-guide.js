@@ -58,7 +58,7 @@ function hideMapGuide(){
 function showMapGuide(p){
   if(!mapGuideTip||!p||UI.view!=='map')return;
   hoverP=p;mapGuidePlace=p;
-  mapGuideTip.innerHTML=placeGuideHTML(p)+(mapGuideInspect?`<button class="btn sm jade" onclick="A.visitMapActivity('${p.id}')">前往${esc(p.n)} →</button>`:'<small>点击宫名直达 · Esc 收起提示</small>');
+  mapGuideTip.innerHTML=placeGuideHTML(p)+(mapGuideInspect?`<button class="btn sm jade" data-onclick="A.visitMapActivity('${p.id}')">前往${esc(p.n)} →</button>`:'<small>点击宫名直达 · Esc 收起提示</small>');
   mapGuideTip.hidden=false;mapGuideTip.setAttribute('role',mapGuideInspect?'region':'tooltip');
   if(mapGuideInspect){mapGuideTip.style.left='';mapGuideTip.style.top='';return;}
   // Clamp all four sides to the map so edge buildings never create horizontal scroll.

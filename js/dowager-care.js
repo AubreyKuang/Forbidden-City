@@ -119,4 +119,4 @@ dowagerEvent=function(){
 const careBeginMourning=beginDowagerMourning;
 beginDowagerMourning=function(d){const fresh=d.alive,c=dowagerCareActive()?byId(d.lastYears?.caregiver):null;careBeginMourning(d);if(!fresh||!dowagerCareActive())return;dowagerRecord(d,'慈宁宫送别',(d.lastYears?.warned?'病中由太医与宫人照护，终在慈宁宫离世。':'于慈宁宫离世，宫中举哀。')+(c?fullName(c)+'曾在榻前侍疾，留下最后一段相伴的纪事。':''));if(c){story(c,'【侍疾送别】太后离世，自己仍记得这些日子递过的药盏、听过的旧事。'+mourningReaction(c));if(c.clan!==d.clan){cchg(c,{mood:-12});setXin(c,'悲恸','曾在榻前侍疾的太后离世');}}};
 const careDowagerPanel=dowagerCourtPanel;
-dowagerCourtPanel=function(){const html=careDowagerPanel(),d=ensureDowager();if(!dowagerIll(d))return html;const c=byId(d.lastYears.caregiver);return html+detailSection('静养与侍疾',`<p>太后身体欠安，现由${c?parentLink(c.id):'太医院与宫人'}照护起居。</p><button class="btn jade" onclick="A.dowagerCare()">安排或更换侍疾妃嫔</button>`);};
+dowagerCourtPanel=function(){const html=careDowagerPanel(),d=ensureDowager();if(!dowagerIll(d))return html;const c=byId(d.lastYears.caregiver);return html+detailSection('静养与侍疾',`<p>太后身体欠安，现由${c?parentLink(c.id):'太医院与宫人'}照护起居。</p><button class="btn jade" data-onclick="A.dowagerCare()">安排或更换侍疾妃嫔</button>`);};

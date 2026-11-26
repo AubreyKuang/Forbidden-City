@@ -329,7 +329,7 @@ function xieRefusalActions(p,showWait=false){
  const available=xiePathAvailable(p),pending=XIE_PHASE_ACTIONS[path.pending];
  if(pending){
   const next=path.pending==='meeting'&&path.meetingSource==='courage'?'读谢安的回笺':pending;
-  const button=`<button class="btn jade" onclick="A.xieAfterRefusal()" ${available?'':'disabled'}>${next}</button>`;
+  const button=`<button class="btn jade" data-onclick="A.xieAfterRefusal()" ${available?'':'disabled'}>${next}</button>`;
   return available?button:(xieSharedCourtshipActive()?button:'')+'<p class="hint">两人现在不便相见，这段心事暂缓，等方便时可继续。</p>';
  }
  if(path.stage>=2)return '';
@@ -337,7 +337,7 @@ function xieRefusalActions(p,showWait=false){
  if(!ready&&!showWait)return '';
  const wait=xieBridgeWait(path),hint=!available?'两人现在不便相见，等方便时可再谈。':wait?`再过 ${wait} 个月，可与公主谈起这件事。`:'';
  const disabled=ready?'':' disabled';
- return `<div class="acts"><button class="btn jade" onclick="A.xieBridge('courage')"${disabled}>鼓励公主表达心意</button><button class="btn jade" onclick="A.xieBridge('meet')"${disabled}>安排相遇机会</button>${ready?`<button class="btn quiet" onclick="A.xieBridge('leave')">尊重独身的选择</button>`:''}</div>${hint?`<p class="hint">${hint}</p>`:''}`;
+ return `<div class="acts"><button class="btn jade" data-onclick="A.xieBridge('courage')"${disabled}>鼓励公主表达心意</button><button class="btn jade" data-onclick="A.xieBridge('meet')"${disabled}>安排相遇机会</button>${ready?`<button class="btn quiet" data-onclick="A.xieBridge('leave')">尊重独身的选择</button>`:''}</div>${hint?`<p class="hint">${hint}</p>`:''}`;
 }
 function xiePrincessRefusalPanel(k){
  if(k.sex!=='f'||!xieRomanceActive())return '';
@@ -358,15 +358,15 @@ function xieRomancePanel(p=xieAn(),from=null){
  if(!xieRomanceActive()||!p)return '';
  const path=p.xiean.path,pair=xieCouple();
  const status=path?.kind==='free'?'<p>此生不婚 · 仍以诗酒会友，独身心意已写入纪事。</p>':'';
- const family=xieLateReady(pair)?`<button class="btn jade" onclick="A.xieFamilyTalk()" ${S.turn-(pair.m.lastTalk??-99)<6?'disabled':''}>听他们说说家常 · 精力−1</button>`:'';
+ const family=xieLateReady(pair)?`<button class="btn jade" data-onclick="A.xieFamilyTalk()" ${S.turn-(pair.m.lastTalk??-99)<6?'disabled':''}>听他们说说家常 · 精力−1</button>`:'';
  if(!xieSharedCourtshipActive())return status+xieRefusalActions(p)+family;
  const k=xieSharedTarget(p);
  if(!k?.alive||from&&from!==k)return from?'':status;
  const d=heartState()?.pending,read=d?.kind==='xiean'&&d.child===k.id&&heartPendingValid(d);
- const early=read?`<button class="btn jade" onclick="A.royalHeart(${k.id})">听听${kidAge(k)<20?'年少心事':'如今的婚事想法'}</button>`:
-   xieMarriageReady(k,p)?`<button class="btn jade" onclick="A.xieMarriage(${k.id})">再问谢安的婚事</button>`:'';
- const letters=xieCorrespondenceReady(p)?`<button class="btn" onclick="A.xieCorrespond()" ${S.turn-(path.lastLetter??-99)<2?'disabled':''}>让两人互通书信 · 精力−1</button>`:'';
- const encourage=xieEncourageReady(pair)?'<button class="btn jade" onclick="A.xieEncourage()">劝两人多相伴</button>':'';
+ const early=read?`<button class="btn jade" data-onclick="A.royalHeart(${k.id})">听听${kidAge(k)<20?'年少心事':'如今的婚事想法'}</button>`:
+   xieMarriageReady(k,p)?`<button class="btn jade" data-onclick="A.xieMarriage(${k.id})">再问谢安的婚事</button>`:'';
+ const letters=xieCorrespondenceReady(p)?`<button class="btn" data-onclick="A.xieCorrespond()" ${S.turn-(path.lastLetter??-99)<2?'disabled':''}>让两人互通书信 · 精力−1</button>`:'';
+ const encourage=xieEncourageReady(pair)?'<button class="btn jade" data-onclick="A.xieEncourage()">劝两人多相伴</button>':'';
  const affection=pair?.m?.affection??p.xiean.engagement?.affection??(xiePathEligible(p,k)?xieCourtshipAffection(path):null);
  const partner=from?royalNatalPersonLink('scholar',p.id,p.name):royalNatalPersonLink(S.children.includes(k)?'kid':'relative',k.id,kidName(k));
  const actions=early+letters+encourage+family;
