@@ -70,7 +70,7 @@ test('a reign larger than one key is split under 1MB per key and restored byte f
   const {store}=await open(host.xhs);
   store.setItem(KEY,raw);assert.equal(await store.flush(),true);
   const chunks=[...host.data.keys()].filter(k=>k.startsWith('cgx:'+KEY+'#'));
-  assert.ok(chunks.length>2,'several chunks');
+  assert.ok(chunks.length>=1);
   for(const v of host.data.values())assert.ok(bytes(v)<=1024*1024);
   assert.equal((await open(host.xhs)).store.getConfirmedItem(KEY),raw);
   // Long saves are stored compressed: far fewer bytes than the raw JSON.
@@ -78,6 +78,17 @@ test('a reign larger than one key is split under 1MB per key and restored byte f
   assert.ok(host.used()<bytes(raw)/4,'compressed '+host.used()+' of '+bytes(raw));
   store.setItem(KEY,'short');assert.equal(await store.flush(),true);
   assert.equal([...host.data.keys()].filter(k=>k.startsWith('cgx:'+KEY+'#')).length,1,'old chunks are released');
+});
+
+test('text that does not compress is split raw across several keys under 1MB each',async()=>{
+  const host=fakeMiniTool();
+  let seed=3;const noise=n=>{let s='';for(let i=0;i<n;i++){seed=(Math.imul(seed,1664525)+1013904223)>>>0;s+=String.fromCharCode(0x4e00+seed%20000);}return s;};
+  const raw=JSON.stringify({a:noise(700000)});
+  const {store}=await open(host.xhs);
+  store.setItem(KEY,raw);assert.equal(await store.flush(),true);
+  assert.ok([...host.data.keys()].filter(k=>k.startsWith('cgx:'+KEY+'#')).length>2,'several chunks');
+  for(const v of host.data.values())assert.ok(bytes(v)<=1024*1024);
+  assert.equal((await open(host.xhs)).store.getConfirmedItem(KEY),raw);
 });
 
 test('iOS answers a missing key with data:"" and that reads as no save',async()=>{
@@ -142,4 +153,19 @@ test('game code in the xhs edition reaches no browser storage while saving is of
   assert.match(b.run(`palaceSaveError('auto')`),/当前无法存档/);
   assert.doesNotMatch(b.run(`viewSys()`),/下载备份|downloadSave|readSaveFile|type="file"/);
   assert.deepEqual(touched,[]);
+});
+
+test('when space runs out the rewind point gives way to the playable save',async()=>{
+  const host=fakeMiniTool({total:1300*1024});
+  let seed=11;const noise=n=>{let s='';for(let i=0;i<n;i++){seed=(Math.imul(seed,1664525)+1013904223)>>>0;s+=String.fromCharCode(0x4e00+seed%20000);}return s;};
+  const {store}=await open(host.xhs);
+  const snapKey=KEY+':snapshots';
+  store.setItem(snapKey,JSON.stringify([{raw:noise(150000)}]));assert.equal(await store.flush(),true);
+  store.setItem(KEY,JSON.stringify({a:noise(100000)}));assert.equal(await store.flush(),true);
+  const next=JSON.stringify({a:noise(230000)});
+  store.commit([[KEY,next]],{reclaim:[[snapKey,'[]']]});
+  assert.equal(await store.flush(),true);
+  assert.equal(store.getConfirmedItem(KEY),next);
+  assert.equal(store.getConfirmedItem(snapKey),'[]');
+  assert.equal((await open(host.xhs)).store.getConfirmedItem(KEY),next);
 });

@@ -110,10 +110,10 @@ const PalaceStorage=(()=>{
     // The last three digits are a build serial: 9462004 is client 9.46.2, compared as 9462.
     return build?Math.floor(build/1000):0;
   }
-  // Long saves are compressed in segments (js/save-compress.js) with a pause between them,
+  // Long saves are compressed in 1M-character segments (js/save-compress.js), pausing between them,
   // so a monthly autosave does not hold the page for the whole save at once. Each segment
   // becomes one key; compressed text is ASCII, far under the 1MB key limit.
-  const XHS_SEGMENT=196608;
+  const XHS_SEGMENT=1048576;
   const pause=()=>new Promise(resolve=>setTimeout(resolve,0));
   async function xhsPack(value){
     if(typeof PalaceCompress==='undefined'||value.length<4096)return {z:0,parts:xhsSplit(value)};
