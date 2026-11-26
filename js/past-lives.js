@@ -109,8 +109,8 @@ function pastLifePanel(c){
     <p class="hint">今生仍是${esc(fullName(c))}，${c.age}岁，${esc(c.trait)}。${p.stage>=2?'旧册所记与她自述的魂梦分别保存。':'她还没有将这段缘由讲明。'}</p>
     ${p.history.map(h=>`<p>${esc(h.d)} · ${esc(h.text)}</p>`).join('')}
     ${p.stage>=2?`<details><summary>翻阅故人的纪事</summary>${p.source.pages.map(h=>`<p>${esc(h.d)} · ${esc(h.t)}</p>`).join('')||'<p>旧册未留下更多私事。</p>'}</details>`:''}
-    ${pastLifeEligible(c)&&!p.closed&&p.stage<3?`<button class="btn jade" onclick="A.pastLifeTalk(${c.id})" ${pastLifeReady(c)?'':'disabled'}>听她谈前尘<small>精力−1</small></button>${pastLifeReady(c)?'':'<p class="hint">初入宫至少相处三个月；旧梦每次相隔半年，随着情分渐深（35 / 50 / 65）再谈。病中或悲恸时先照顾眼前。</p>'}`:''}
-    ${pastLifeEligible(c)&&p.stage>=1&&!p.closed&&!p.priest?`<button class="btn" onclick="A.pastLifePriest(${c.id})">${pastLifePriestHome(c)?'请国师送解梦笺':'同赴钦安殿问前缘'}<small>精力−1</small></button>`:''}</section>`;
+    ${pastLifeEligible(c)&&!p.closed&&p.stage<3?`<button class="btn jade" data-onclick="A.pastLifeTalk(${c.id})" ${pastLifeReady(c)?'':'disabled'}>听她谈前尘<small>精力−1</small></button>${pastLifeReady(c)?'':'<p class="hint">初入宫至少相处三个月；旧梦每次相隔半年，随着情分渐深（35 / 50 / 65）再谈。病中或悲恸时先照顾眼前。</p>'}`:''}
+    ${pastLifeEligible(c)&&p.stage>=1&&!p.closed&&!p.priest?`<button class="btn" data-onclick="A.pastLifePriest(${c.id})">${pastLifePriestHome(c)?'请国师送解梦笺':'同赴钦安殿问前缘'}<small>精力−1</small></button>`:''}</section>`;
 }
 A.pastLifeTalk=function(id){const c=byId(id);if(modalOpen||!pastLifeReady(c))return;pushEv(pastLifeEvent(c));};
 function pastLifePriestHome(c){return c.preg>=8||c.hp<40||c.trait==='体弱';}

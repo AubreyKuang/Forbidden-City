@@ -21,7 +21,7 @@ async function importCase(page,name){await page.goto(url);await page.getByRole('
 async function click(page,label){await page.locator('#modal').getByRole('button',{name:label}).click();}
 async function finish(page){if(await page.locator('#modal[open]').count()){const buttons=page.locator('#modal .mch button');assert.equal(await buttons.count(),1);await buttons.click();}}
 function named(data,given){return data.consorts.find(c=>c.given===given);}
-async function person(page,id){await page.locator('#menu').getByRole('button',{name:'后宫',exact:true}).click();await page.locator(`[onclick="A.go('consort',${id})"]`).first().click();}
+async function person(page,id){await page.locator('#menu').getByRole('button',{name:'后宫',exact:true}).click();await page.locator(`[data-onclick="A.go('consort',${id})"]`).first().click();}
 async function chronicle(page,needle){if(await page.locator('.chronicle-filter-fold:not([open]) > summary').count())await page.locator('.chronicle-filter-fold:not([open]) > summary').click();await page.getByRole('textbox',{name:'搜索人物纪事',exact:true}).fill(needle);await page.getByRole('button',{name:'搜索纪事',exact:true}).click();
  const item=page.locator('#panel li:visible').filter({hasText:needle}).last();await item.scrollIntoViewIfNeeded();assert.ok((await item.innerText()).includes(needle));}
 async function runCase(page,r){

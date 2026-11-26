@@ -93,7 +93,7 @@ function betrothedBanquetPairs(people){
 function betrothedBanquetGuests(draft,people){
  return detailSection('随长辈赴宴的外家孩子',betrothedBanquetPairs(people).map(({k,p})=>{
   const on=(draft.betrothedGuests||[]).includes(k.id);
-  return `<button class="btn sm ${on?'on':''}" aria-pressed="${on}" onclick="A.banquetBetrothed(${k.id})">${on?'已请':'请'}${esc(p.name)}随长辈赴宴</button>`;
+  return `<button class="btn sm ${on?'on':''}" aria-pressed="${on}" data-onclick="A.banquetBetrothed(${k.id})">${on?'已请':'请'}${esc(p.name)}随长辈赴宴</button>`;
  }).join(' '));
 }
 
@@ -157,7 +157,7 @@ function betrothedTravelPair(k){
 
 function betrothedTravelButton(k){
  return !k.royalTravel&&royalTravelCanLeave(k)&&betrothedTravelPair(k)?
-  `<button class="btn jade" onclick="A.planBetrothedTravel(${royalActionArg(k.id)})">${royalHouseholdLifeActive()&&k.married&&!marriedChildhoodPair(k)?'商议夫妻同游':'商议结伴游历'}</button>`:'';
+  `<button class="btn jade" data-onclick="A.planBetrothedTravel(${royalActionArg(k.id)})">${royalHouseholdLifeActive()&&k.married&&!marriedChildhoodPair(k)?'商议夫妻同游':'商议结伴游历'}</button>`:'';
 }
 
 A.planBetrothedTravel=function(id){

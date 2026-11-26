@@ -323,12 +323,12 @@ function officialsTable(){
     .sort((a,b)=>(officialAlive(b.p)-officialAlive(a.p))||((b.role==='father')-(a.role==='father'))||(b.p.merit-a.p.merit));
   const row=e=>{
     const {c,h,p,role,key}=e,{members,kids}=officialRowFamily(c),last=(p.story||[]).at(-1);
-    const consorts=members.map(x=>{const tag=consortStatusTag(x);return `<button class="person-link" onclick="A.go('consort',${x.id})">${esc(cName(x))}的${esc(officialKinLabel(h,role,x))}${tag?'（'+tag+'）':''}</button>`;}).join('');
-    const heirs=kids.map(k=>`<button class="person-link" onclick="A.go('kid',${k.id})">${esc(kidName(k))}${k.alive?'':'（已故）'}</button>`).join('')||'<span class="hint">—</span>';
+    const consorts=members.map(x=>{const tag=consortStatusTag(x);return `<button class="person-link" data-onclick="A.go('consort',${x.id})">${esc(cName(x))}的${esc(officialKinLabel(h,role,x))}${tag?'（'+tag+'）':''}</button>`;}).join('');
+    const heirs=kids.map(k=>`<button class="person-link" data-onclick="A.go('kid',${k.id})">${esc(kidName(k))}${k.alive?'':'（已故）'}</button>`).join('')||'<span class="hint">—</span>';
     const deed=last?`${last.d} · ${last.t}`:'尚无记载';
     const cell=(label,html,cls='')=>`<td data-label="${label}"${cls?` class="${cls}"`:''}><div>${html}</div></td>`;
     return `<tr class="${officialAlive(p)?'':'deceased'}">${[
-      cell('姓名',`<button class="person-link official-name" onclick="A.go('official','${key}')">${porImg(p,36)}<span>${esc(p.name)}</span></button>`),cell('年龄',`${p.age}岁`),cell('性格',esc(p.temperament||'未详')),
+      cell('姓名',`<button class="person-link official-name" data-onclick="A.go('official','${key}')">${porImg(p,36)}<span>${esc(p.name)}</span></button>`),cell('年龄',`${p.age}岁`),cell('性格',esc(p.temperament||'未详')),
       cell('官职',`${esc(officialOfficeLabel(p))}${p.honor?`<small>${esc(p.honor)}</small>`:''}`),
       cell('家族 · 宫中',`${esc(c.sur)}氏 · ${role==='father'?'家主':esc(officialKinLabel(h,role))}<div class="official-kin">${consorts||'<span class="hint">宫中无人</span>'}</div>`),
       cell('派系',`<span class="tag" style="border-color:${BLOC_COLOR[h.bloc]||'#999'}">${esc(blocName(h.bloc))}</span>`),
@@ -337,10 +337,10 @@ function officialsTable(){
       cell('皇嗣',`<div class="official-kin">${heirs}</div>`),
       cell('近期事迹',`${esc(String(deed).slice(0,64))}${String(deed).length>64?'…':''}`,'official-deed')].join('')}</tr>`;
   };
-  const chip=(id,label,current,action)=>`<button class="btn sm${current===id?' on':''}" aria-pressed="${current===id}" onclick="A.${action}('${id}')">${label}</button>`;
+  const chip=(id,label,current,action)=>`<button class="btn sm${current===id?' on':''}" aria-pressed="${current===id}" data-onclick="A.${action}('${id}')">${label}</button>`;
   // 科举出身的朝臣没有宫中亲眷，同表另列。
   const scholarRow=p=>{const cell=(label,html,cls='')=>`<td data-label="${label}"${cls?` class="${cls}"`:''}><div>${html}</div></td>`,last=(p.story||[]).at(-1),deed=last?`${last.d} · ${last.t}`:'尚无记载';
-    return `<tr class="${officialAlive(p)?'':'deceased'}">${[cell('姓名',`<button class="person-link official-name" onclick="A.go('scholar','${p.id}')">${porImg(p,36)}<span>${esc(p.name)}</span></button>`),cell('年龄',`${p.age}岁`),cell('性格',esc(p.temperament||'未详')),
+    return `<tr class="${officialAlive(p)?'':'deceased'}">${[cell('姓名',`<button class="person-link official-name" data-onclick="A.go('scholar','${p.id}')">${porImg(p,36)}<span>${esc(p.name)}</span></button>`),cell('年龄',`${p.age}岁`),cell('性格',esc(p.temperament||'未详')),
       cell('官职',esc(officialOfficeLabel(p))),cell('家族 · 宫中',`${esc(p.origin||'')} · ${esc(p.fenghuaKey==='gaoHuaibi'?'军功入仕':p.registrySource==='local'?'地方铨选':p.registrySource==='family'?(p.education||'家中子弟'):p.examRank||'进士')}<div class="official-kin">${careerKinHTML({p,key:'scholar:'+p.id,scholar:true})}</div>`),
       cell('派系',`<span class="tag" style="border-color:${BLOC_COLOR[scholarBloc(p)]}">${blocName(scholarBloc(p))}</span>`),cell('状态',officialStatus(p)),
       cell('才干/信任/功绩',`${rd(p.ability??0)} / ${rd(p.trust??0)} / ${rd(p.merit??0)}`,'official-nums'),cell('皇嗣','<span class="hint">—</span>'),

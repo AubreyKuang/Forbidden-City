@@ -436,7 +436,7 @@ function consortSocialTick(){
 function consortSocialLine(c){
   const note=c.lastSocial,other=note&&byId(note.other);
   if(!other||S.turn-note.turn>=3)return '';
-  return `<div>近来往来 · 与 <button class="btn quiet sm" onclick="A.go('consort',${other.id})">${esc(fullName(other))}</button> 在${esc(note.place)}${esc(note.activity)}。</div>`;
+  return `<div>近来往来 · 与 <button class="btn quiet sm" data-onclick="A.go('consort',${other.id})">${esc(fullName(other))}</button> 在${esc(note.place)}${esc(note.activity)}。</div>`;
 }
 const factionLeaderName=c=>whiteSpringAdmirationActive()&&c.fixedStory==='ayimu'?fullName(c):cName(c);
 function facHTML(){const f=factions();if(!f.L.length&&!f.neutral.length)return '';

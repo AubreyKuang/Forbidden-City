@@ -51,5 +51,5 @@ function friendFavorPanel(c){
  const note=c.friendFavorMoment,other=note&&byId(note.other);
  const last=note&&other&&!friendshipTense(c,other)&&S.turn-note.turn<12?`<p class="hint">与${parentLink(other.id)}说过的话：“${esc(note.said)}”<br>她答：“${esc(note.heard)}”</p>`:'';
  const friend=harem().filter(o=>o!==c&&friendFavorReady(c,o)).sort((a,b)=>relGet(c,b)-relGet(c,a))[0];
- return last+(friend?`<button class="btn sm" onclick="A.friendFavorTalk(${c.id},${friend.id})">听她与${esc(fullName(friend))}谈心</button>`:'');
+ return last+(friend?`<button class="btn sm" data-onclick="A.friendFavorTalk(${c.id},${friend.id})">听她与${esc(fullName(friend))}谈心</button>`:'');
 }

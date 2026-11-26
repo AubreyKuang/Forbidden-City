@@ -69,7 +69,8 @@ const STRING_VOICES={
   pipa:{length:1.55,decay:.27,noise:.4,attack:.003,filter:5.7},
   qin:{length:3.5,decay:.8,noise:.12,attack:.018,filter:2.7}
 };
-function savedMusicTrack(){try{const id=localStorage.getItem('palace-music-track');return Object.hasOwn(PALACE_MUSIC,id)?id:'stream';}catch{return 'stream';}}
+// Hosts without browser storage keep the music choice for this session only.
+function savedMusicTrack(){try{if(!PALACE_EDITION.feature('browserStorage'))return 'stream';const id=localStorage.getItem('palace-music-track');return Object.hasOwn(PALACE_MUSIC,id)?id:'stream';}catch{return 'stream';}}
 const SCORE_HARMONY=[[0,2],[3,6],[0,3],[0,2]]; // D–F♯, A–E, D–A, D–F♯
 const AU={track:savedMusicTrack(),musicDry:null,musicWet:null,ctx:null,on:false,bus:null,master:null,wet:null,fluteWave:null,timer:null,next:0,step:0,mode:'court',playingMode:'court',ks:new Map(),
   init(){ if(this.ctx) return true; try{
@@ -104,7 +105,7 @@ const AU={track:savedMusicTrack(),musicDry:null,musicWet:null,ctx:null,on:false,
   selectTrack(id){
     if(!Object.hasOwn(PALACE_MUSIC,id)||id===this.track)return;
     this.track=id;
-    try{localStorage.setItem('palace-music-track',id);}catch{}
+    try{if(PALACE_EDITION.feature('browserStorage'))localStorage.setItem('palace-music-track',id);}catch{}
     if(this.ctx){this.resetMusicBus();this.step=0;this.next=this.ctx.currentTime+.15;this.sched();}
   },
   out(vol,wet=1,music=false){const g=this.ctx.createGain();g.gain.value=vol;g.connect(music?this.musicDry:this.bus);if(wet){const w=this.ctx.createGain();w.gain.value=wet;g.connect(w);w.connect(music?this.musicWet:this.wet)}return g},

@@ -1,17 +1,17 @@
-const outerLink=(label,action,disabled=false)=>`<button class="btn sm" ${disabled?'disabled':''} onclick="${action}">${esc(label)}</button>`;
+const outerLink=(label,action,disabled=false)=>`<button class="btn sm" ${disabled?'disabled':''} data-onclick="${action}">${esc(label)}</button>`;
 function outerNieceNominationControl(k,m,age){
   if(!nieceSelectionEntryActive()||!outerIntegration()||k.sex!=='f')return '';
   const cancel=!S.cands.some(c=>c.outerHouseholdId===k.id)&&k.familySelection!=='listed'&&(k.familySelection==='pending'||k.path==='候选秀')
-    ?`<button class="btn sm" onclick="A.outerCancelNomination(${k.id})">取消登记</button>`:'';
+    ?`<button class="btn sm" data-onclick="A.outerCancelNomination(${k.id})">取消登记</button>`:'';
   if(m.relative==null)return cancel||(k.withdrawnAdultSelection&&k.path==='自立门户'&&!outerNieceNominationReason(k)
-    ?`<button class="btn sm" onclick="A.outerRestoreNomination(${k.id})">重新登记选秀</button>`:'');
+    ?`<button class="btn sm" data-onclick="A.outerRestoreNomination(${k.id})">重新登记选秀</button>`:'');
   const reason=outerNieceNominationReason(k);
   if(reason)return `<small class="hint">选秀 · ${esc(reason)}</small>`+cancel;
   const listed=S.cands.some(c=>c.outerHouseholdId===k.id),pending=k.familySelection==='pending'||k.path==='候选秀';
   const label=listed?'已在本届名册':age<15?(pending?'已预登记 · 满十五岁后入册':'预登记选秀 · 满十五岁后入册'):
     pending?'已荐入下届选秀':'荐入下届选秀';
   const canSubmit=!listed&&k.familySelection!=='pending';
-  return `<button class="btn sm gold" ${canSubmit?'':'disabled'} onclick="A.outerNominateNiece(${k.id})">${esc(canSubmit&&pending?'改为直接荐入下届选秀':label)}</button>`+cancel;
+  return `<button class="btn sm gold" ${canSubmit?'':'disabled'} data-onclick="A.outerNominateNiece(${k.id})">${esc(canSubmit&&pending?'改为直接荐入下届选秀':label)}</button>`+cancel;
 }
 A.outerNominateNiece=function(id){
   if(!S||S.over||modalOpen||!nieceSelectionEntryActive())return;

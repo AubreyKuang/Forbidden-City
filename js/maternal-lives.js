@@ -85,5 +85,5 @@ function maternalCareEvent(c,id){
 A.maternalCare=function(id,child){const ev=maternalCareEvent(byId(id),child);if(!modalOpen&&ev)pushEv(ev);};
 function maternalPanel(c){
  const entries=Object.entries(c.maternalLife?.children||{}).filter(([,r])=>r.kind!=='near');if(!entries.length)return '';
- return `<section class="personal-experience"><h3>牵挂与追思</h3>${entries.map(([id,r])=>{const k=kidById(Number(id));if(!k)return '';return `<p><strong>${esc(k.name)} · ${MATERNAL_STATUS[r.kind]}</strong>${r.retreat?' · '+r.retreat:''}</p><p>${esc(r.history.at(-1)?.text||'')}</p>${maternalCareEvent(c,k.id)?`<button class="btn jade" onclick="A.maternalCare(${c.id},${k.id})">听她谈这个孩子<small>精力−1</small></button>`:''}`;}).join('')}<p class="hint">抱养探望与出宫行程在孩子页安排。陪伴能让她愿意开口，无法抹去曾经的分离与失去。</p></section>`;
+ return `<section class="personal-experience"><h3>牵挂与追思</h3>${entries.map(([id,r])=>{const k=kidById(Number(id));if(!k)return '';return `<p><strong>${esc(k.name)} · ${MATERNAL_STATUS[r.kind]}</strong>${r.retreat?' · '+r.retreat:''}</p><p>${esc(r.history.at(-1)?.text||'')}</p>${maternalCareEvent(c,k.id)?`<button class="btn jade" data-onclick="A.maternalCare(${c.id},${k.id})">听她谈这个孩子<small>精力−1</small></button>`:''}`;}).join('')}<p class="hint">抱养探望与出宫行程在孩子页安排。陪伴能让她愿意开口，无法抹去曾经的分离与失去。</p></section>`;
 }

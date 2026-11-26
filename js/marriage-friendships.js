@@ -79,7 +79,7 @@ function marriageBondEvent(b){
 A.allianceTalk=function(key){if(!modalOpen)pushEv(marriageBondEvent(S.flags.marriageBonds?.[key]));};
 const marriageFriendshipsLine=relLine;
 relLine=function(c){return marriageFriendshipsLine(c)+Object.values(S.flags.marriageBonds||{}).filter(b=>b.gen===S.gen&&(b.a===c.id||b.b===c.id)).map(b=>{
- const other=byId(b.a===c.id?b.b:b.a);return `<p class="hint">姻亲 · ${other?parentLink(other.id):'家中旧亲'}：${esc(b.fact)}</p>${marriageBondEvent(b)?`<button class="btn sm jade" onclick="A.allianceTalk('${esc(b.key)}')">听她们谈姻亲家事</button>`:''}`;
+ const other=byId(b.a===c.id?b.b:b.a);return `<p class="hint">姻亲 · ${other?parentLink(other.id):'家中旧亲'}：${esc(b.fact)}</p>${marriageBondEvent(b)?`<button class="btn sm jade" data-onclick="A.allianceTalk('${esc(b.key)}')">听她们谈姻亲家事</button>`:''}`;
  }).join('');};
 const marriageFriendshipsMigrate=migrate;
 migrate=function(...args){const result=marriageFriendshipsMigrate.apply(this,args);repairMarriageBonds();return result;};

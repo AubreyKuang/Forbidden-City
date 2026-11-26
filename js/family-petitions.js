@@ -75,7 +75,7 @@ function pendingMaternalKinCare(){
 }
 A.maternalKinCare=function(id,mother){if(modalOpen)return;const c=byId(id),m=byId(mother);if(!c||!m)return;const ev=maternalKinCareEvent(m,c,true);if(ev)pushEv(ev);};
 function maternalKinCareButton(c){
- return S.consorts.filter(m=>!m.alive&&maternalKinCareEvent(m,c,true)).map(m=>`<button class="btn sm jade" onclick="A.maternalKinCare(${c.id},${m.id})">谈谈照看${esc(fullName(m))}的孩子</button>`).join('');
+ return S.consorts.filter(m=>!m.alive&&maternalKinCareEvent(m,c,true)).map(m=>`<button class="btn sm jade" data-onclick="A.maternalKinCare(${c.id},${m.id})">谈谈照看${esc(fullName(m))}的孩子</button>`).join('');
 }
 function petitionFoster(k,c,kin=false,consensual=false){
   if(S.over||c.hp<40||!(kin?maternalKinMatch(c,k):fosterPetitionMatch(c,k)))return null;
@@ -190,7 +190,7 @@ function coldFriendPetitionEvent(){
     ]};
 }
 A.fosterWish=function(id){if(modalOpen)return;const c=byId(id),ev=c&&fosterPetitionEvent(c);if(ev)pushEv(ev);};
-function fosterWishButton(c){return maternalSisterArrivalButton(c)+maternalKinCareButton(c)+(fosterPetitionPairs(c).length?`<button class="btn sm" onclick="A.fosterWish(${c.id})">听她谈抚养孩子</button>`:'');}
+function fosterWishButton(c){return maternalSisterArrivalButton(c)+maternalKinCareButton(c)+(fosterPetitionPairs(c).length?`<button class="btn sm" data-onclick="A.fosterWish(${c.id})">听她谈抚养孩子</button>`:'');}
 function kinSuccessionSource(c){
   return c&&!c.familyBranchOrigin&&!c.maid&&c.rank>=5&&c.age>=20&&hasClan(c)&&(!c.alive||c.cold||c.gone)&&!c.kinSuccessor&&!c.maternalArrival;
 }

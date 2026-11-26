@@ -353,7 +353,7 @@ function recognizeOutsideChild(f,withDowager=false){
 
 function outsideMotherLink(k){
   const origin=k.outsideFamilyOrigin;
-  return origin&&!byId(k.mom)?`<button class="person-link" onclick="A.go('natal','${origin.host}:${k.mom}')">${esc(k.momName)}</button>`:parentLink(k.mom,k.momName);
+  return origin&&!byId(k.mom)?`<button class="person-link" data-onclick="A.go('natal','${origin.host}:${k.mom}')">${esc(k.momName)}</button>`:parentLink(k.mom,k.momName);
 }
 
 function natalChildrenOf(c,id){
@@ -379,10 +379,10 @@ function outsideParentagePanel(c,p){
   const status=data.status,label=labels[status];
   const action={reported:'阅丈夫的家信',suppressed:'重阅身世旧案',investigating:S.turn>=data.due?'听取身世回奏':'',proved:'决定孩子归处'}[status];
   const q=data.privateInquiry;
-  const privatePart=journalContentVersion()>=89&&p.unconfirmedParentage&&c?`<p>${q?.status==='complete'?`秘密查证已完成，生父已写明；孩子仍保留「身世未明」标签。`:q?.status==='investigating'?`锦衣卫核查中，${S.turn>=q.due?'回奏已到':`还需 ${q.due-S.turn} 个月`}。`:'可请锦衣卫只核查生父，不改变孩子身份。'}</p>${!q&&jinyiweiCommanderReady()&&!S.over?`<button class="btn jade" onclick="A.outsidePaternityInquiry(${c.id},${p.id})">请锦衣卫彻查生父</button>`:q?.status==='investigating'&&S.turn>=q.due&&!S.over?`<button class="btn jade" onclick="A.outsidePaternityReport(${c.id},${p.id})">听取锦衣卫回奏</button>`:''}`:'';
+  const privatePart=journalContentVersion()>=89&&p.unconfirmedParentage&&c?`<p>${q?.status==='complete'?`秘密查证已完成，生父已写明；孩子仍保留「身世未明」标签。`:q?.status==='investigating'?`锦衣卫核查中，${S.turn>=q.due?'回奏已到':`还需 ${q.due-S.turn} 个月`}。`:'可请锦衣卫只核查生父，不改变孩子身份。'}</p>${!q&&jinyiweiCommanderReady()&&!S.over?`<button class="btn jade" data-onclick="A.outsidePaternityInquiry(${c.id},${p.id})">请锦衣卫彻查生父</button>`:q?.status==='investigating'&&S.turn>=q.due&&!S.over?`<button class="btn jade" data-onclick="A.outsidePaternityReport(${c.id},${p.id})">听取锦衣卫回奏</button>`:''}`:'';
   const reopen=c&&q?.status==='complete'&&q.imperial&&data.imperial&&data.gen===S.gen&&p.alive&&
-    journalContentVersion()>=121&&p.unconfirmedParentage&&!S.over?`<button class="btn jade" onclick="A.outsideParentage(${c.id},${p.id},true)">认回宫中 · 决定孩子归处</button>`:'';
-  return label||privatePart?detailSection('宫外身世',`${label?`<p>${esc(label)}</p>`:''}${action&&p.alive&&c&&data.gen===S.gen&&!S.over?`<button class="btn jade" onclick="A.outsideParentage(${c.id},${p.id})">${action}</button>`:''}${privatePart}${reopen}`):'';
+    journalContentVersion()>=121&&p.unconfirmedParentage&&!S.over?`<button class="btn jade" data-onclick="A.outsideParentage(${c.id},${p.id},true)">认回宫中 · 决定孩子归处</button>`:'';
+  return label||privatePart?detailSection('宫外身世',`${label?`<p>${esc(label)}</p>`:''}${action&&p.alive&&c&&data.gen===S.gen&&!S.over?`<button class="btn jade" data-onclick="A.outsideParentage(${c.id},${p.id})">${action}</button>`:''}${privatePart}${reopen}`):'';
 }
 
 function outsideHouseholdHusbandPanel(mother){
@@ -402,7 +402,7 @@ casesSection=function(){
     const h=houseOf(c);if(!h||seen.has(h.father.id))continue;seen.add(h.father.id);
     for(const child of h.relatives||[]){if(!child.unconfirmedParentage||!child.outsideParentage)continue;
       const q=child.outsideParentage.privateInquiry,label=q?.status==='complete'?'已核明生父':q?.status==='investigating'?S.turn>=q.due?'回奏已到':`查证中 · 还需 ${q.due-S.turn} 个月`:'可交办核查';
-      rows.push(`<li>${esc(child.name)} · 身世未明 · ${label} <button class="btn sm" onclick="A.go('natal','${c.id}:${child.id}')">查看孩子档案</button></li>`);
+      rows.push(`<li>${esc(child.name)} · 身世未明 · ${label} <button class="btn sm" data-onclick="A.go('natal','${c.id}:${child.id}')">查看孩子档案</button></li>`);
     }
   }
   return base+detailSection('宫外子女生父查证',rows.length?`<ul class="story">${rows.join('')}</ul>`:'<p class="hint">暂无待查宫外子女。</p>');

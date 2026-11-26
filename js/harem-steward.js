@@ -91,11 +91,11 @@ function haremStewardRosterEvent(page=0){
 A.openHaremSteward=function(){if(haremStewardActive()&&!modalOpen)pushEv(haremStewardRosterEvent());};
 function haremStewardPanel(){
  if(!haremStewardEnabled())return '';const c=haremStewardPerson();
- return `<section class="detail-section"><h3>协理六宫</h3><p>${c?`现任：${parentLink(c.id)} · ${esc(haremStewardReason(c))}`:'当前未任命。可选一位妃嫔协助处理各宫用度、宫人轮值与新人安顿。'}</p><p class="hint">每回合（月末）额外恩宠 +10，上限100。任命不改位分、不花精力；同一时间一人，随时可以改任或撤任。</p><button class="btn jade" onclick="A.openHaremSteward()" ${S.over?'disabled':''}>${c?'调整协理六宫人选':'任命协理六宫'}</button></section>`;
+ return `<section class="detail-section"><h3>协理六宫</h3><p>${c?`现任：${parentLink(c.id)} · ${esc(haremStewardReason(c))}`:'当前未任命。可选一位妃嫔协助处理各宫用度、宫人轮值与新人安顿。'}</p><p class="hint">每回合（月末）额外恩宠 +10，上限100。任命不改位分、不花精力；同一时间一人，随时可以改任或撤任。</p><button class="btn jade" data-onclick="A.openHaremSteward()" ${S.over?'disabled':''}>${c?'调整协理六宫人选':'任命协理六宫'}</button></section>`;
 }
 function haremStewardPersonPanel(c){
  if(!haremStewardEnabled()||!c.stewardship)return '';
- return `<section class="detail-section"><h3>宫务任职</h3><p>${haremStewardPerson()===c?`现任协理六宫 · ${esc(haremStewardReason(c))}`:'曾协理六宫，任职与交接保留于人物纪事。'}</p><button class="btn quiet sm" onclick="A.go('home')">去御书房安排宫务</button></section>`;
+ return `<section class="detail-section"><h3>宫务任职</h3><p>${haremStewardPerson()===c?`现任协理六宫 · ${esc(haremStewardReason(c))}`:'曾协理六宫，任职与交接保留于人物纪事。'}</p><button class="btn quiet sm" data-onclick="A.go('home')">去御书房安排宫务</button></section>`;
 }
 function hongjianStewardProposalReady(c){return hongjianAvailable(c)&&c.arc?.st>=2&&haremStewardEligible(c)&&haremStewardPerson()!==c&&!['accepted','declined'].includes(c.hongjian.stewardDecision)&&S.turn-(c.hongjian.lastStewardProposal??-99)>=12;}
 function hongjianStewardProposal(c){
@@ -110,7 +110,7 @@ function hongjianStewardProposal(c){
 A.hongjianSteward=function(id){if(modalOpen)return;const ev=hongjianStewardProposal(byId(id));if(ev)pushEv(ev);};
 function hongjianStewardPanel(c){
  const current=haremStewardPerson()===c,ready=hongjianStewardProposalReady(c);
- return `<h4>请分六宫之劳</h4><p>她在核账时发现重复领用与迟发用度，希望协理六宫，把每笔钱背后的人也照看好。完成前两段宫中故事后，可听她请缨；也可随时从御书房安排。任职三个月后，她会递上第一本宫务簿，和你商量如何如实回奏、合理分工。</p><p>${current?'已奉旨协理六宫，每月额外恩宠 +10，上限100。':c.hongjian.stewardDecision==='declined'?'她已听取另作安排的意思，不再重复请缨；日后仍可由御书房任命。':c.hongjian.stewardDecision==='deferred'?'此事暂缓，十二个月后可再谈；随时可由御书房直接任命。':'尚未任此差事。'}</p>${ready?`<button class="btn jade" onclick="A.hongjianSteward(${c.id})">听她谈协理六宫</button>`:''}`;
+ return `<h4>请分六宫之劳</h4><p>她在核账时发现重复领用与迟发用度，希望协理六宫，把每笔钱背后的人也照看好。完成前两段宫中故事后，可听她请缨；也可随时从御书房安排。任职三个月后，她会递上第一本宫务簿，和你商量如何如实回奏、合理分工。</p><p>${current?'已奉旨协理六宫，每月额外恩宠 +10，上限100。':c.hongjian.stewardDecision==='declined'?'她已听取另作安排的意思，不再重复请缨；日后仍可由御书房任命。':c.hongjian.stewardDecision==='deferred'?'此事暂缓，十二个月后可再谈；随时可由御书房直接任命。':'尚未任此差事。'}</p>${ready?`<button class="btn jade" data-onclick="A.hongjianSteward(${c.id})">听她谈协理六宫</button>`:''}`;
 }
 function haremStewardReport(){
  const c=haremStewardPerson(),a=haremStewardRecord(),term=c?.stewardship?.terms?.at(-1);

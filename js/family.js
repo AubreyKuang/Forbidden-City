@@ -156,7 +156,7 @@ function familyTimePanel(k, mothers) {
     return `<article class="family-time-row"><div><strong>${mother.id === k.mom ? '生母' : childCareAddress(k,mother)==='姨母'?'养母（仍唤姨母）':'养母'} · ${parentLink(mother.id)}</strong>
       <p class="hint">${traveling ? '离宫游历 · '+esc(royalTravelPlace(k)) : inPalace(mother) ? closeness : '如今无法相见'}</p>
       ${!traveling && bond?.activity ? `<p>${esc(UI.view === 'kid' ? bond.childView : bond.motherView)}</p>` : ''}</div>
-      ${ready ? `<button class="btn sm jade" onclick="A.familyTime(${k.id},${mother.id})">一起陪陪孩子<small>精力-1</small></button>` : ''}</article>`;
+      ${ready ? `<button class="btn sm jade" data-onclick="A.familyTime(${k.id},${mother.id})">一起陪陪孩子<small>精力-1</small></button>` : ''}</article>`;
   }).join('');
 }
 
@@ -164,14 +164,14 @@ function kidFamilyPanel(k) {
   const separated = childInPalace(k) && k.foster && inPalace(byId(k.mom));
   const rule = k.visitRule === 'open' ? '准许平日探望' : k.visitRule === 'closed' ? '暂缓私下探望' : '照宫中旧例';
   const controls = separated ? `<p class="hint">生母探望安排 · ${rule}</p><div class="acts">
-    <button class="btn sm" aria-pressed="${k.visitRule === 'open'}" onclick="A.familyVisitRule(${k.id},'open')">准许探望</button>
-    <button class="btn sm" aria-pressed="${k.visitRule === 'closed'}" onclick="A.familyVisitRule(${k.id},'closed')">暂缓探望</button></div>` : '';
+    <button class="btn sm" aria-pressed="${k.visitRule === 'open'}" data-onclick="A.familyVisitRule(${k.id},'open')">准许探望</button>
+    <button class="btn sm" aria-pressed="${k.visitRule === 'closed'}" data-onclick="A.familyVisitRule(${k.id},'closed')">暂缓探望</button></div>` : '';
   return familyTimePanel(k, mothersOf(k)) + careVisitorPanel(k) + controls;
 }
 
 function consortFamilyPanel(mother) {
   return S.children.filter(k => k.alive && (k.mom === mother.id || k.foster === mother.id)).map(k =>
-    `<div><button class="btn quiet sm" onclick="A.go('kid',${k.id})">${esc(kidName(k))}</button>${familyTimePanel(k,[mother])}</div>`
+    `<div><button class="btn quiet sm" data-onclick="A.go('kid',${k.id})">${esc(kidName(k))}</button>${familyTimePanel(k,[mother])}</div>`
   ).join('')+S.children.filter(k=>k.alive).map(k=>careVisitorPanel(k,mother)).join('');
 }
 

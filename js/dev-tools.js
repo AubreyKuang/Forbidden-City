@@ -139,6 +139,11 @@ const DEV={
     if(storage?.pending){$('#dev-status').textContent='修改已生效，正在写入测试存档…';storage.flush().then(ok=>{$('#dev-status').textContent=ok?text:palaceSaveError('auto');});}
     else $('#dev-status').textContent=text;
   },
+  // Panel handlers stay plain calls so they run without inline script.
+  jumpFromPanel(){DEV.jumpTime(Number($('#dev-time-amount').value),$('#dev-time-unit').value);},
+  safelySelect(key){DEV.safely(()=>DEV.select(key));},
+  previewQuick(){DEV.preview();},
+  previewFull(){DEV.preview(true);},
   safely(fn){try{if(palaceStorageOpening&&!PalaceStorage.store)throw Error('存档仍在读取，请稍后再试');fn()}catch(e){DEV.message(e.message)}},
   open(){ $('#dev-panel').hidden=false;clearExhaustedMonthNotice();DEV.refresh(); },
   close(){ $('#dev-panel').hidden=true;syncExhaustedMonthNotice(); },
@@ -159,7 +164,7 @@ const DEV={
       const options=field==='trait'?Object.keys(TRAITS):field==='palace'?['坤宁宫',...PALACES,'冷宫']:field==='rank'?RANKS:null;
       if(options)return `<label>${label}<select data-dev-field="${field}" data-dev-type="${field==='rank'?'number':'string'}">${options.map((o,i)=>`<option value="${esc(field==='rank'?i:o)}" ${(field==='rank'?i:o)===value?'selected':''}>${esc(o)}</option>`).join('')}</select></label>`;
       const bool=['alive','cold','gone','away','jailed','married','tutor'].includes(field),number=typeof value==='number'||['age','foster','sup','mom'].includes(field);
-      return `<label>${label}<input data-dev-field="${field}" data-dev-type="${bool?'boolean':number?'number':'string'}" type="${bool?'checkbox':number?'number':'text'}" ${field==='age'?'min="0" max="130" step="1" oninput="DEV.previewAge(this.value)"':''} ${bool?(value?'checked':''):`value="${esc(value??'')}"`}>${field==='age'?'<button type="button" class="btn sm jade" onclick="DEV.safely(DEV.saveAge)">应用年龄</button>':''}</label>`;
+      return `<label>${label}<input data-dev-field="${field}" data-dev-type="${bool?'boolean':number?'number':'string'}" type="${bool?'checkbox':number?'number':'text'}" ${field==='age'?'min="0" max="130" step="1" data-oninput="DEV.previewAge(this.value)"':''} ${bool?(value?'checked':''):`value="${esc(value??'')}"`}>${field==='age'?'<button type="button" class="btn sm jade" data-onclick="DEV.safely(DEV.saveAge)">应用年龄</button>':''}</label>`;
     }).join('');
     $('#dev-advanced').open=kind==='world';DEV.gallery();DEV.message('已读取当前属性。');
   },
@@ -174,7 +179,7 @@ const DEV={
       const current=kind==='kid'?childPortraitCell(p):p.portraitOverride??(kind==='emp'?emperorPortraitCell(p):portraitCell(p));
       const src=portraitAtlasReady(cell)?atlasPortrait(cell,0):'';
       const selected=kind==='kid'&&p.portraitOverride==null?childPortraitVariant(p)===value:current===cell;
-      return `<button type="button" class="dev-face" aria-pressed="${selected}" onclick="DEV.face(${value})">${src?`<img src="${src}" alt="">`:''}<span>${esc(label)}</span></button>`;
+      return `<button type="button" class="dev-face" aria-pressed="${selected}" data-onclick="DEV.face(${value})">${src?`<img src="${src}" alt="">`:''}<span>${esc(label)}</span></button>`;
     }).join('');
   },
   face(value){
@@ -204,16 +209,16 @@ const DEV={
 };
 function mountDevTools(){
   const root=document.createElement('div');root.innerHTML=`<section id="dev-panel" role="dialog" aria-label="金手指面板" hidden>
-    <div class="dev-head"><h2>金手指</h2><button class="btn sm" onclick="DEV.close()">收起</button></div><p class="dev-help">测试模式 · 独立测试存档。选择人物，修改数值或立绘，预览后保存。</p>
-    <div class="dev-actions"><button class="btn sm" onclick="DEV.safely(DEV.copyProduction)">载入正式版存档副本</button><button class="btn sm" onclick="DEV.safely(DEV.restore)">回退上一次修改</button></div>
-    <label class="dev-month-option"><input id="dev-auto-month" type="checkbox" onchange="DEV.setAutoMonth(this.checked)">精力耗尽后自动转月</label>
+    <div class="dev-head"><h2>金手指</h2><button class="btn sm" data-onclick="DEV.close()">收起</button></div><p class="dev-help">测试模式 · 独立测试存档。选择人物，修改数值或立绘，预览后保存。</p>
+    <div class="dev-actions"><button class="btn sm" data-onclick="DEV.safely(DEV.copyProduction)">载入正式版存档副本</button><button class="btn sm" data-onclick="DEV.safely(DEV.restore)">回退上一次修改</button></div>
+    <label class="dev-month-option"><input id="dev-auto-month" type="checkbox" data-onchange="DEV.setAutoMonth(this.checked)">精力耗尽后自动转月</label>
     <p class="dev-help">点完本月全部剧情和弹窗后进入下月。关闭后可手动结束本月。</p>
-    <section class="dev-time"><h3>跳过时间</h3><p class="dev-help">快进日历与人物年龄，便于预览成长。随机剧情、政务和生育不在这里自动结算，可回退上一次修改。</p><div class="dev-actions"><input id="dev-time-amount" type="number" min="1" max="1200" step="1" value="12" aria-label="跳过数量"><select id="dev-time-unit" aria-label="时间单位"><option value="month">个月</option><option value="year">年</option></select><button class="btn jade" onclick="DEV.safely(()=>DEV.jumpTime(Number($('#dev-time-amount').value),$('#dev-time-unit').value))">跳过并保存</button></div></section>
-    <label>编辑对象<select id="dev-target" onchange="DEV.safely(()=>DEV.select(this.value))"></select></label><div class="dev-actions"><button class="btn sm" onclick="DEV.refresh()">重新读取当前属性</button></div>
+    <section class="dev-time"><h3>跳过时间</h3><p class="dev-help">快进日历与人物年龄，便于预览成长。随机剧情、政务和生育不在这里自动结算，可回退上一次修改。</p><div class="dev-actions"><input id="dev-time-amount" type="number" min="1" max="1200" step="1" value="12" aria-label="跳过数量"><select id="dev-time-unit" aria-label="时间单位"><option value="month">个月</option><option value="year">年</option></select><button class="btn jade" data-onclick="DEV.safely(DEV.jumpFromPanel)">跳过并保存</button></div></section>
+    <label>编辑对象<select id="dev-target" data-onchange="DEV.safelySelect(this.value)"></select></label><div class="dev-actions"><button class="btn sm" data-onclick="DEV.refresh()">重新读取当前属性</button></div>
     <div id="dev-fields" class="dev-fields"></div><h3>立绘预览</h3><div id="dev-gallery" class="dev-gallery"></div>
-    <div class="dev-actions"><button class="btn jade" onclick="DEV.safely(()=>DEV.preview())">预览常用属性修改</button></div>
-    <details id="dev-advanced"><summary>完整属性 JSON</summary><p class="dev-help">这里可编辑其余数值、标记、家族、记忆和嵌套属性；人物编号与性别保持固定。皇嗣出生时间使用 born，常用年龄编辑会自动换算。</p><textarea id="dev-json" aria-label="完整属性 JSON" spellcheck="false"></textarea><button class="btn sm" onclick="DEV.safely(()=>DEV.preview(true))">预览完整属性修改</button></details>
-    <pre id="dev-preview" aria-label="修改预览"></pre><button id="dev-confirm" class="btn gold" disabled onclick="DEV.safely(DEV.confirm)">确认并保存修改</button><p id="dev-status" role="status"></p>
+    <div class="dev-actions"><button class="btn jade" data-onclick="DEV.safely(DEV.previewQuick)">预览常用属性修改</button></div>
+    <details id="dev-advanced"><summary>完整属性 JSON</summary><p class="dev-help">这里可编辑其余数值、标记、家族、记忆和嵌套属性；人物编号与性别保持固定。皇嗣出生时间使用 born，常用年龄编辑会自动换算。</p><textarea id="dev-json" aria-label="完整属性 JSON" spellcheck="false"></textarea><button class="btn sm" data-onclick="DEV.safely(DEV.previewFull)">预览完整属性修改</button></details>
+    <pre id="dev-preview" aria-label="修改预览"></pre><button id="dev-confirm" class="btn gold" disabled data-onclick="DEV.safely(DEV.confirm)">确认并保存修改</button><p id="dev-status" role="status"></p>
   </section>`;document.body.appendChild(root);
   try{DEV.autoMonth=localStorage.getItem('chengongji_dev_auto_month')!=='off';}catch{}
   $('#dev-auto-month').checked=DEV.autoMonth;

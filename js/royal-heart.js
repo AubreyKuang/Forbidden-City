@@ -88,7 +88,7 @@ youthPanel=function(k){
  const html=heartYouthPanel(k);if(!royalHeartActive())return html;
  const pending=heartPendingValid()&&heartState().pending.child===k.id&&(!xieSharedCourtshipActive()||heartState().pending.kind!=='xiean');
  const last=k.heartHopes?.last,x=k.xieAdmiration;
- return html+(pending?`<p>有几句关于将来的心事，还想与你说。</p><button class="btn jade" onclick="A.royalHeart(${k.id})">听听${kidAge(k)<20?'年少心事':'如今的婚事想法'}</button>`:'')+
+ return html+(pending?`<p>有几句关于将来的心事，还想与你说。</p><button class="btn jade" data-onclick="A.royalHeart(${k.id})">听听${kidAge(k)<20?'年少心事':'如今的婚事想法'}</button>`:'')+
   (last?`<p class="hint">曾谈起：“${esc(last.quote)}”</p>`:'')+(x?`<p>曾读谢安的诗 · ${esc({admired:'尚未议婚',declined:'心意未成',forced:'后来奉旨成婚',mutual:'后来两心相许'}[x.outcome]||'少年时的欣赏')}</p>`:'');
 };
 const heartVoicePool=childVoicePool;
@@ -120,7 +120,7 @@ function xieStorySeen(){
 }
 const xiePresent=p=>royalHeartActive()&&!!p&&officialAlive(p)&&!p.exiled&&!p.dismissed&&!p.commission&&!p.incognitoCase&&!p.away;
 function createXieAn(){
- if(!royalHeartActive())return null;if(xieAn())return xieAn();
+ if(!editionAllows('fenghua','xiean')||!royalHeartActive())return null;if(xieAn())return xieAn();
  if(PalaceActions.xieOnce&&xieStorySeen())return null;
  const roots=officialEntries().filter(e=>e.role==='father'&&officialAlive(e.p)&&e.p.age>=50&&familyIsNoble(e.c)),root=roots.length&&chance(.35)?pick(roots):null;
  const house={id:root?'capital-'+root.p.id:`capital-xie-${S.gen}-${S.nid}`,name:root?`${root.c.sur}氏${root.h.title||'世家'}`:pick(['乌衣谢氏','临川谢氏','会稽谢氏']),seat:'上京',
@@ -153,7 +153,7 @@ function xieRumorEvent(p){
 }
 const heartOut=A.out;
 A.out=function(kind){
- if(kind==='city'&&royalHeartActive()&&!modalOpen&&E().energy>0&&!mourningActive()&&S.turn-(S.flags.xieCityAttempt??-99)>=4&&
+ if(kind==='city'&&editionAllows('fenghua','xiean')&&royalHeartActive()&&!modalOpen&&E().energy>0&&!mourningActive()&&S.turn-(S.flags.xieCityAttempt??-99)>=4&&
    (!PalaceActions.xieOnce||!xieStorySeen())){
   S.flags.xieCityAttempt=S.turn;const p=xieAn();
   if((!p||xiePresent(p))&&chance(p?.28:.12)){if(!useE())return;setScene('city');pushEv(xieRumorEvent(p||createXieAn()));return;}
@@ -229,7 +229,7 @@ function xieMarriageRefusal(k,p){
 }
 A.xieMarriage=function(id){const k=kidById(id);if(!modalOpen)pushEv(xieMarriageRefusal(k,xieAn()));};
 const xieYouthPanel=youthPanel;
-youthPanel=function(k){return xieYouthPanel(k)+(!xieSharedCourtshipActive()&&xieMarriageReady(k)?`<button class="btn" onclick="A.xieMarriage(${k.id})">再问谢安的婚事</button>`:'');};
+youthPanel=function(k){return xieYouthPanel(k)+(!xieSharedCourtshipActive()&&xieMarriageReady(k)?`<button class="btn" data-onclick="A.xieMarriage(${k.id})">再问谢安的婚事</button>`:'');};
 
 function xieCouple(){const p=xieAn(),k=p?.royalSpouseId&&royalById(p.royalSpouseId);return p&&k?.spouse?.personId===p.id?{p,k,m:p.xiean.marriage}:null;}
 function xieCoupleRecord(p,k,title,text,his,hers){
@@ -280,7 +280,7 @@ function nextXieMarriageChronicle(m,kind){
 function xieLifeTick(){
  let p=xieAn();
  if(!p){
-  if(S.turn<6||mourningActive()||PalaceActions.xieOnce&&xieStorySeen())return;
+  if(!editionAllows('fenghua','xiean')||S.turn<6||mourningActive()||PalaceActions.xieOnce&&xieStorySeen())return;
   const young=S.children.filter(k=>(heartReady(k)||xieHeartReady(k))&&kidAge(k)<(xieRomanceActive()?26:20));
   const hasPrincess=journalContentVersion()>=130&&E().sur!=='谢'&&young.some(xieHeartReady);
   if(young.length&&chance(hasPrincess ? .09 : .045))createXieAn();
@@ -356,7 +356,7 @@ householdPanel=function(k){
  const html=xieHouseholdPanel(k),pair=xieCouple();if(!royalHeartActive()||pair?.k!==k)return html;
  const {p,m}=pair;if(!m)return html;
  if(xieSharedCourtshipActive())return detailSection('谢安与公主',`<p>${!k.alive?'妻子已故，旧物与往事长留。':!officialAlive(p)?'谢安已故，往事保留。':'谢安把两人的起居与家事放在心上。'} 谢安此生只守这一门婚事。</p>`)+html;
- return detailSection('谢安与公主',`<p>谢安始终不纳妾；若妻子先逝，也不再娶。</p><p>${!k.alive?'妻子已故，旧物与往事长留。':!officialAlive(p)?'谢安已故，往事保留。':m.joinedAt==null?'分房相处中 · '+Math.max(0,m.separateUntil-S.turn)+'个月后届满一年。尚未共同起居，不会有孕。':'已由双方商量共同起居，是否有孕仍依实际条件。'}</p>${bar('渐生情意',m.affection,'#936375')}${xieEncourageReady(pair)?'<button class="btn jade" onclick="A.xieEncourage()">劝两人多相伴</button>':''}`)+html;
+ return detailSection('谢安与公主',`<p>谢安始终不纳妾；若妻子先逝，也不再娶。</p><p>${!k.alive?'妻子已故，旧物与往事长留。':!officialAlive(p)?'谢安已故，往事保留。':m.joinedAt==null?'分房相处中 · '+Math.max(0,m.separateUntil-S.turn)+'个月后届满一年。尚未共同起居，不会有孕。':'已由双方商量共同起居，是否有孕仍依实际条件。'}</p>${bar('渐生情意',m.affection,'#936375')}${xieEncourageReady(pair)?'<button class="btn jade" data-onclick="A.xieEncourage()">劝两人多相伴</button>':''}`)+html;
 };
 const xieScholarView=viewScholar;
 function xieRelationshipLabel(p){
@@ -371,9 +371,9 @@ viewScholar=function(){
  const p=scholarById(UI.sel);if(!royalHeartActive()||p?.storyPerson!=='xiean')return xieScholarView();
  const pair=xieCouple();return `${personBackButton('officials')}<header class="detail-head person-detail-head">${porImg(p,224)}<div class="grow"><p>京华诗客 · 固定人物</p><h2>谢安</h2><p>${p.age}岁 · ${esc(p.temperament)} · ${officialAlive(p)?xieRelationshipLabel(p):'已故'}</p><p>布衣诗客 · 未受官职</p></div></header>
   ${detailSection('世家与来处',xieHouseHTML(p))}${detailSection('诗名与风骨','<p>惊才绝艳，不愿以声名求官。江湖往来仍只有传言。他温柔待人，却不轻许仕途与婚事。</p>')}
-  ${xiePresent(p)?`<button class="btn primary" onclick="A.xieAudience()" ${S.turn-(p.lastAudience??-99)<3||E().energy<1?'disabled':''}>单独召见 · 精力−1</button>`:''}
+  ${xiePresent(p)?`<button class="btn primary" data-onclick="A.xieAudience()" ${S.turn-(p.lastAudience??-99)<3||E().energy<1?'disabled':''}>单独召见 · 精力−1</button>`:''}
   ${detailSection('人物纪事',detailStory(p))}
-  ${pair?detailSection('夫妻与家事',`<p>妻子：<button class="person-link" onclick="A.go('${S.children.includes(pair.k)?'kid':'relative'}',${pair.k.id})">${esc(pair.k.name)}${pair.k.alive?'':' · 已故'}</button></p><p>不纳妾，妻亡不再娶。${!xieSharedCourtshipActive()&&pair.m?.joinedAt==null&&pair.k.alive?'婚初分房，情分由日常相处慢慢积累。':''}</p>`):''}
+  ${pair?detailSection('夫妻与家事',`<p>妻子：<button class="person-link" data-onclick="A.go('${S.children.includes(pair.k)?'kid':'relative'}',${pair.k.id})">${esc(pair.k.name)}${pair.k.alive?'':' · 已故'}</button></p><p>不纳妾，妻亡不再娶。${!xieSharedCourtshipActive()&&pair.m?.joinedAt==null&&pair.k.alive?'婚初分房，情分由日常相处慢慢积累。':''}</p>`):''}
   `;
 };
 const xieOfficials=officialsTable;

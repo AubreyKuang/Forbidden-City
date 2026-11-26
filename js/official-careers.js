@@ -28,7 +28,7 @@ function officialMilitary(p,h){
   return h?.bloc==='army';
 }
 function careerPeople(){return [...officialEntries().map(e=>({p:e.p,key:e.key,e,bloc:e.h.bloc})),...scholarList().map(p=>({p,key:'scholar:'+p.id,scholar:true,bloc:scholarCourtBloc(p)}))];}
-function careerLink(person){return `<button class="person-link" onclick="A.go('${person.scholar?'scholar':'official'}','${person.scholar?person.p.id:person.key}')">${esc(person.p.name)} ↗</button>`;}
+function careerLink(person){return `<button class="person-link" data-onclick="A.go('${person.scholar?'scholar':'official'}','${person.scholar?person.p.id:person.key}')">${esc(person.p.name)} ↗</button>`;}
 function careerEligible(p){return officialServing(p)&&p.age>=18&&!reliefSuspended(p)&&!!officialGrade(p);}
 function careerTarget(person,direction){
   if(!person||!careerEligible(person.p)||S.turn-(person.p.lastCareerChange??-99)<6)return null;
@@ -68,7 +68,7 @@ function careerKin(person){
 }
 function careerPeopleForMarriage(id){return officialEntries().find(e=>e.p.id===id)||(scholarById(id)?{p:scholarById(id),key:'scholar:'+id,scholar:true}:null);}
 function careerKinText(person){return careerKin(person).map(r=>`${fullName(r.c)}的${r.label}（${r.detail}）`).join('；')||'未登记宫中亲缘';}
-function careerKinHTML(person){return careerKin(person).map(r=>`<p><button class="person-link" onclick="A.go('consort',${r.c.id})">${esc(fullName(r.c))}${r.c.alive?'':'（已故）'}</button> · ${esc(r.label)}<small>${esc(r.detail)}</small></p>`).join('')||'<p class="hint">未登记宫中亲缘。同姓不等于同族。</p>';}
+function careerKinHTML(person){return careerKin(person).map(r=>`<p><button class="person-link" data-onclick="A.go('consort',${r.c.id})">${esc(fullName(r.c))}${r.c.alive?'':'（已故）'}</button> · ${esc(r.label)}<small>${esc(r.detail)}</small></p>`).join('')||'<p class="hint">未登记宫中亲缘。同姓不等于同族。</p>';}
 function careerFamilyEcho(person,kind,text,report){
   for(const r of careerKin(person).filter(r=>r.c.alive&&!r.c.gone)){
     const c=r.c,formal=isSolitary(c)||['持重','淡泊','聪慧','才女','好学','刚烈'].includes(c.trait),proud=['骄纵','骄矜','城府','善妒'].includes(c.trait);
@@ -189,7 +189,7 @@ pendingOfficialReport=function(){return careersBasePending()||(careersActive()?c
 const careersBaseRead=A.officialReport;
 A.officialReport=function(key){if(!careersActive()||!String(key).startsWith('scholar:'))return careersBaseRead(key);if(!modalOpen)pushEv(careerReportEvent(courtPerson(key)));};
 function careerReportsHTML(){
-  const pending=careerPeople().filter(x=>x.p.report);return detailSection('具名回奏',`<p class="hint">地方实绩每半年至多由一名符合条件的地方官呈报。回奏保留实绩、御批与亲眷反应。</p>${pending.map(x=>`<article class="card" style="display:block;cursor:default"><p>${careerLink(x)} · ${esc(officialOfficeLabel(x.p))}</p><p>${esc(x.p.report.text)}</p><button class="btn jade" onclick="A.officialReport('${x.key}')">批阅 · ${esc(x.p.report.title)}</button></article>`).join('')||'<p class="hint">暂无待批的具名回奏。</p>'}`);
+  const pending=careerPeople().filter(x=>x.p.report);return detailSection('具名回奏',`<p class="hint">地方实绩每半年至多由一名符合条件的地方官呈报。回奏保留实绩、御批与亲眷反应。</p>${pending.map(x=>`<article class="card" style="display:block;cursor:default"><p>${careerLink(x)} · ${esc(officialOfficeLabel(x.p))}</p><p>${esc(x.p.report.text)}</p><button class="btn jade" data-onclick="A.officialReport('${x.key}')">批阅 · ${esc(x.p.report.title)}</button></article>`).join('')||'<p class="hint">暂无待批的具名回奏。</p>'}`);
 }
 
 /* 身在前朝，也记挂宫里的女儿与姐妹。比较实际变化，绝不把读档当作新事件。 */
@@ -282,7 +282,7 @@ function recordSisterPalaceConcerns(c,old,kind,fact,key,stamp){
 }
 function sisterPalaceConcernPanel(p){
   const note=p.palaceConcern,c=note?.sister&&byId(note.c);
-  return c?detailSection('宫中牵挂',`<p>${esc(note.date)} · <button class="person-link" onclick="A.go('consort',${c.id})">${esc(fullName(c))} ↗</button></p><p>${esc(note.quote)}</p>`):'';
+  return c?detailSection('宫中牵挂',`<p>${esc(note.date)} · <button class="person-link" data-onclick="A.go('consort',${c.id})">${esc(fullName(c))} ↗</button></p><p>${esc(note.quote)}</p>`):'';
 }
 const careersBaseConversation=officialConversation;
 officialConversation=function(e,topic){const n=e.p.palaceConcern,c=n&&byId(n.c);return topic==='family'&&n&&c&&S.turn-n.turn<=12?`“${fullName(c)}的事，臣仍记挂着。${n.quote}”`:careersBaseConversation(e,topic);};

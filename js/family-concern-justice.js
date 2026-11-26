@@ -242,7 +242,7 @@ A.palaceKinPetition=function(id){
 function palaceKinPetitionsPanel(){
  const rows=palaceKinPetitionRows();
  return detailSection('外家陈情',rows.map(({c,n,p})=>`<p>${esc(p.name)}为${esc(fullName(c))}递折
-   <button class="btn sm jade" onclick="A.palaceKinPetition('${n.id}')">阅看陈情</button></p>`).join(''));
+   <button class="btn sm jade" data-onclick="A.palaceKinPetition('${n.id}')">阅看陈情</button></p>`).join(''));
 }
 function palaceKinLettersPanel(c){
  if(!palaceKinFlowActive())return '';
@@ -363,7 +363,7 @@ function palaceKinResponseButtons(c,n){
  return ['letter','petition'].map(stage=>{
   const r=n.responses?.[stage],label=stage==='letter'?(n.recovery?'回信报平安':'回这封家书'):'回信谈陈情';
   if(r)return `<span class="hint">${label} · ${{sent:'已寄出',delivered:'已收到回音',returned:'信未送达'}[r.status]}</span>`;
-  return palaceKinResponseReady(c,n,stage)?`<button class="btn sm jade" onclick="A.palaceKinResponse(${c.id},'${n.id}','${stage}')">${label}</button>`:'';
+  return palaceKinResponseReady(c,n,stage)?`<button class="btn sm jade" data-onclick="A.palaceKinResponse(${c.id},'${n.id}','${stage}')">${label}</button>`:'';
  }).join(' ');
 }
 

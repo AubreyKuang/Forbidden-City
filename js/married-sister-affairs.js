@@ -12,7 +12,7 @@ function marriedSisterVisitButton(c,p){
   if(!marriedSisterAvailable(c,p))return '';
   if(affair?.coerced)return '<p class="hint">她请家人谢绝私下求见。</p>';
   const exhausted=affair?.lastMeeting===S.turn;
-  return `<button class="btn primary" onclick="A.marriedSisterVisit(${c.id},${p.id})" ${exhausted?'disabled':''}>${natalInPalace(c,p)?'在宫中私下求见':'到她的住所求见'}${exhausted?'<small>本月已经见过</small>':''}</button>${journalContentVersion()>=49?'<p class="hint">求见只会先问她的心意。</p>':''}`;
+  return `<button class="btn primary" data-onclick="A.marriedSisterVisit(${c.id},${p.id})" ${exhausted?'disabled':''}>${natalInPalace(c,p)?'在宫中私下求见':'到她的住所求见'}${exhausted?'<small>本月已经见过</small>':''}</button>${journalContentVersion()>=49?'<p class="hint">求见只会先问她的心意。</p>':''}`;
 }
 
 function sisterPrivateChance(p){
@@ -299,7 +299,7 @@ function marriedSisterChildrenPanel(c){
   const children=natalChildrenOf(c,c.natalOrigin.relative);
   const mother=c.house?.relatives?.find(p=>p.id===c.natalOrigin.relative);
   return detailSection('原家子女',children.map(p=>{
-    const link=`<button class="person-link" onclick="A.go('natal','${c.id}:${p.id}')">${esc(p.outsideFamilyOrigin?.name||p.name)} ↗</button> ${outsideChildBadge(p)}`;
+    const link=`<button class="person-link" data-onclick="A.go('natal','${c.id}:${p.id}')">${esc(p.outsideFamilyOrigin?.name||p.name)} ↗</button> ${outsideChildBadge(p)}`;
     const nomination=nieceSelectionEntryActive()&&familyNominationButton(c,p);
     return nomination?`<div class="acts">${link}${nomination}</div>`:`<p>${link}</p>`;
   }).join(''))+

@@ -105,7 +105,7 @@ function birthSwapExecutionEvent(k){
 function pendingBirthSwapJustice(){return birthSwapJusticeEvent(S.children.find(k=>birthSwapCase(k)&&k.birthSwap.justice?.pending&&!k.birthSwap.justice.decision));}
 function birthSwapCasePanel(k){
   if(!birthSwapCase(k))return '';const s=k.birthSwap,a=byId(s.plotter);
-  return `<section class="swap-case"><p><strong>换婴案卷</strong> · ${s.justice?.decision?'成人已定罚':'成人问罪待办'}</p><p class="hint">${esc(s.justice?.result||`主使：${a?fullName(a):'当年的涉案人'}。孩子安置后，仍可另行问罪。`)}</p><p class="hint">${esc(s.originalStatus==='miscarried'?'早先小产已核实，无另一个足月亲生孩子可寻。':s.originalStatus==='stillborn'?'亲生孩子夭折已核实，殓葬与亲缘另立记录。':s.recovered?'原来的孩子已寻回。':s.search?.status==='searching'?'寻亲进行中，等待回奏。':'原来的孩子尚未寻到，线索仍在追查。')}</p><div class="acts"><button class="btn" onclick="A.swapOriginal(${k.id})">核对亲生孩子与寻亲</button>${!s.justice?.decision?`<button class="btn" onclick="A.swapJustice(${k.id})">审理换婴主使</button>`:''}</div></section>`;
+  return `<section class="swap-case"><p><strong>换婴案卷</strong> · ${s.justice?.decision?'成人已定罚':'成人问罪待办'}</p><p class="hint">${esc(s.justice?.result||`主使：${a?fullName(a):'当年的涉案人'}。孩子安置后，仍可另行问罪。`)}</p><p class="hint">${esc(s.originalStatus==='miscarried'?'早先小产已核实，无另一个足月亲生孩子可寻。':s.originalStatus==='stillborn'?'亲生孩子夭折已核实，殓葬与亲缘另立记录。':s.recovered?'原来的孩子已寻回。':s.search?.status==='searching'?'寻亲进行中，等待回奏。':'原来的孩子尚未寻到，线索仍在追查。')}</p><div class="acts"><button class="btn" data-onclick="A.swapOriginal(${k.id})">核对亲生孩子与寻亲</button>${!s.justice?.decision?`<button class="btn" data-onclick="A.swapJustice(${k.id})">审理换婴主使</button>`:''}</div></section>`;
 }
 A.swapOriginal=function(id){if(!modalOpen)pushEv(birthSwapOriginalEvent(kidById(id)));};
 A.swapJustice=function(id){if(!modalOpen)pushEv(birthSwapJusticeEvent(kidById(id)));};

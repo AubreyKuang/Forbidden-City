@@ -8,7 +8,7 @@ async function shot(page,r,suffix=''){await page.waitForLoadState('networkidle')
 async function click(page,name){await page.locator('#modal').getByRole('button',{name}).click();}
 async function menu(page,name){await page.locator('#menu').getByRole('button',{name,exact:true}).click();}
 async function importCase(page,name){await page.goto(url);await page.getByRole('button',{name:'新开一局',exact:true}).click();await page.getByRole('button',{name:'登基',exact:true}).click();await click(page,'进入宫城');await menu(page,'存档');await page.locator('#save-file').setInputFiles(path.join(fixtures,name+'.json'));await page.waitForFunction(()=>S?.turn>=60);assert.equal((await read(page)).blocked,false);}
-async function consort(page,id){await menu(page,'后宫');await page.locator(`#panel [onclick="A.go('consort',${id})"]`).first().click();}
+async function consort(page,id){await menu(page,'后宫');await page.locator(`#panel [data-onclick="A.go('consort',${id})"]`).first().click();}
 async function officer(page){await menu(page,'理政');await page.getByRole('button',{name:/官员表/}).click();await page.getByRole('button',{name:'沈明远',exact:true}).first().click();}
 async function guard(page){await menu(page,'理政');await page.getByRole('button',{name:/锦衣卫/}).first().click();}
 async function run(page,r){
@@ -33,7 +33,7 @@ async function run(page,r){
  }else if(name==='patrol-empty'){
   await guard(page);await page.getByRole('button',{name:/^巡察宫闱/}).click();await click(page,/按簿巡察/);assert.match((await read(page)).result.text,/未发现/);await reload(page,r,'无收获回报');await shot(page,r);
  }else if(name.startsWith('recovery-')){
-  await consort(page,c.id);const button=page.locator(`[onclick="A.night(${c.id})"]`);assert.ok(await button.isDisabled());assert.match(await button.innerText(),/调养.*3个月/);await shot(page,r);await menu(page,'翻牌子');assert.ok(await page.locator(`[onclick="A.night(${c.id})"]`).isDisabled());assert.equal((await read(page)).energy,initial.energy);await reload(page,r,'查看翻牌后');
+  await consort(page,c.id);const button=page.locator(`[data-onclick="A.night(${c.id})"]`);assert.ok(await button.isDisabled());assert.match(await button.innerText(),/调养.*3个月/);await shot(page,r);await menu(page,'翻牌子');assert.ok(await page.locator(`[data-onclick="A.night(${c.id})"]`).isDisabled());assert.equal((await read(page)).energy,initial.energy);await reload(page,r,'查看翻牌后');
  }else if(name==='family-tree'){
   await menu(page,'家族');await page.getByRole('button',{name:'展开沈明远的子女',exact:true}).click();const nodes=page.locator('[data-family-child-id]');assert.equal(await nodes.count(),1);const childId=await nodes.first().getAttribute('data-family-child-id');await shot(page,r);
   const box=page.locator('.graph-house').filter({has:page.getByRole('button',{name:'查看沈明远',exact:true})});const dimensions=await box.evaluate(e=>({client:e.clientHeight,content:e.scrollHeight}));assert.ok(dimensions.content<=dimensions.client+2,'expanded tree stays within its card');

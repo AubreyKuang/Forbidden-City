@@ -27,7 +27,7 @@ function envoyInvitationLabel(){
 }
 function envoySeatsPanel(draft){
   if(!hostsEnvoys(draft.kind))return '';
-  return '<h3>外宾席</h3><div class="acts"><button class="btn sm '+(draft.envoys?'on':'')+'" aria-pressed="'+!!draft.envoys+'" onclick="A.banquetEnvoys()">'+envoyInvitationLabel()+'</button></div><p class="hint">'+
+  return '<h3>外宾席</h3><div class="acts"><button class="btn sm '+(draft.envoys?'on':'')+'" aria-pressed="'+!!draft.envoys+'" data-onclick="A.banquetEnvoys()">'+envoyInvitationLabel()+'</button></div><p class="hint">'+
     (draft.envoys?'礼部已拟好请帖，开宴时为来使留席。再点可撤回。':'即使未发请帖，来使也可能在开宴时递上贺表。')+'</p>';
 }
 A.banquetEnvoys=function(){
@@ -122,7 +122,7 @@ function feastArtistReady(key){
 function patronProgramPanel(draft,feast){
  const sponsor=banquetPatron(draft.kind,feast);if(!sponsor)return '';
  const buttons=Object.keys(FEAST_ARTISTS).filter(feastArtistReady).map(key=>
-  `<button class="btn sm ${draft.artist===key?'on':''}" aria-pressed="${draft.artist===key}" onclick="A.banquetArtist('${key}')">${FEAST_ARTISTS[key]}</button>`).join('');
+  `<button class="btn sm ${draft.artist===key?'on':''}" aria-pressed="${draft.artist===key}" data-onclick="A.banquetArtist('${key}')">${FEAST_ARTISTS[key]}</button>`).join('');
  return buttons?'<h3>大臣荐艺</h3><p>'+esc((sponsor.p.office||sponsor.p.post)+sponsor.p.name)+'呈上节目单，请陛下择一入席。</p><div class="acts">'+buttons+'</div>':'';
 }
 A.banquetArtist=function(key){
@@ -174,11 +174,11 @@ function banquetKind(kind) {
 function birthdayBanquetButtons() {
   const feasts = ['emperor','empress'].map(kind=>[kind,banquetKind(kind)]).filter(([,feast])=>feast);
   const seasonal=Object.keys(seasonalCourtFeasts).filter(kind=>banquetKind(kind)?.ready).map(kind=>
-    `<button class="btn gold" onclick="A.openBanquet('${kind}')">筹办${seasonalCourtFeasts[kind].title}</button>`).join('');
+    `<button class="btn gold" data-onclick="A.openBanquet('${kind}')">筹办${seasonalCourtFeasts[kind].title}</button>`).join('');
   const family=storyIntroductionsActive()?harem().filter(familyBirthdayEligible).map(c=>
-    `<button class="btn gold" onclick="A.openBanquet('family-${c.id}')">娘家请贺 · ${esc(fullName(c))}生辰</button>`).join(''):'';
+    `<button class="btn gold" data-onclick="A.openBanquet('family-${c.id}')">娘家请贺 · ${esc(fullName(c))}生辰</button>`).join(''):'';
   return `<div class="acts">${family}${seasonal}${feasts.map(([kind,feast])=>feast.ready
-    ? `<button class="btn gold" onclick="A.openBanquet('${kind}')">筹办${feast.title}</button>`
+    ? `<button class="btn gold" data-onclick="A.openBanquet('${kind}')">筹办${feast.title}</button>`
     : `<span class="hint">${feast.title} · ${MONTHS[birthMonth(feast.host)-1]}${feast.host.birthFeastYear===S.year?'（本年已办）':''}</span>`).join('')}</div>`;
 }
 
@@ -222,7 +222,7 @@ function gardenDancePanel(draft){
   const seated=seatedForDance(draft,dancer);
   const options=[['solo','请阿依慕独舞'],...gardenDrummers(draft,dancer).map(c=>[c.id,'请'+fullName(c)+'伴鼓'])];
   return `<h3>白泉舞</h3>${seated?'':'<p class="hint">将阿依慕列入席单，便可请她献舞。</p>'}<div class="acts">${options.map(([key,label])=>
-    `<button class="btn sm ${draft.dance===key?'on':''}" aria-pressed="${draft.dance===key}" ${seated?'':'disabled'} onclick="A.banquetDance('${key}')">${esc(label)}</button>`).join('')}${draft.dance?`<button class="btn sm quiet" onclick="A.banquetDance('')">撤下舞曲</button>`:''}</div>`;
+    `<button class="btn sm ${draft.dance===key?'on':''}" aria-pressed="${draft.dance===key}" ${seated?'':'disabled'} data-onclick="A.banquetDance('${key}')">${esc(label)}</button>`).join('')}${draft.dance?`<button class="btn sm quiet" data-onclick="A.banquetDance('')">撤下舞曲</button>`:''}</div>`;
 }
 A.banquetDance=function(key){
   const draft=banquetDraft(),dancer=whiteSpringDancer(draft);
@@ -330,16 +330,16 @@ function viewBanquet() {
   const children=kidsAlive();
   const problem=banquetProblem(draft,feast,people);
   const guestCards = draft.all?'':banquetGuests(!!draft.ranked).filter(p=>!people.includes(p)).map(p=>
-    `<button class="card" ${!draft.ranked&&draft.seats.length>=4?'disabled':''} onclick="A.banquetGuest(${p.id})">${porImg(p,40)}
+    `<button class="card" ${!draft.ranked&&draft.seats.length>=4?'disabled':''} data-onclick="A.banquetGuest(${p.id})">${porImg(p,40)}
       <span class="grow"><strong>${esc(familyName(p))}</strong>
       ${p.sex?'':`<small>${esc(p.trait)} · ${esc(p.t2)}</small>`}
       <small>${esc(banquetGuestFamily(p,children))}</small></span></button>`).join('');
-  return `<h2>${feast.title} <button class="btn sm" onclick="arrive(gardenPlace())">返回御花园</button></h2>
+  return `<h2>${feast.title} <button class="btn sm" data-onclick="arrive(gardenPlace())">返回御花园</button></h2>
     <p class="hint">在世皇嗣 · ${banquetChildCount(children)}</p>
     ${draft.kind==='empress'?`<p class="hint">寿星皇后 · ${esc(banquetGuestFamily(feast.host,children))}</p>`:''}
-    <div class="acts"><button class="btn ${draft.all?'on':''}" aria-pressed="${draft.all}" onclick="A.banquetInviteAll(true)">全员宴请</button>
-    <button class="btn ${!draft.all&&!draft.ranked?'on':''}" aria-pressed="${!draft.all&&!draft.ranked}" onclick="A.banquetInviteAll(false)">自选宾客</button>
-    ${storyIntroductionsActive()?`<button class="btn ${draft.ranked?'on':''}" aria-pressed="${!!draft.ranked}" onclick="A.banquetRankSeats()">按位分一键排座</button>`:''}</div>
+    <div class="acts"><button class="btn ${draft.all?'on':''}" aria-pressed="${draft.all}" data-onclick="A.banquetInviteAll(true)">全员宴请</button>
+    <button class="btn ${!draft.all&&!draft.ranked?'on':''}" aria-pressed="${!draft.all&&!draft.ranked}" data-onclick="A.banquetInviteAll(false)">自选宾客</button>
+    ${storyIntroductionsActive()?`<button class="btn ${draft.ranked?'on':''}" aria-pressed="${!!draft.ranked}" data-onclick="A.banquetRankSeats()">按位分一键排座</button>`:''}</div>
     ${(draft.ranked||draft.kind==='garden')&&people.length?banquetSeating(arrangedBanquetTables(draft,people)):''}
     ${draft.all
       ? `<p class="hint">全邀在宫的妃嫔、宫人与皇嗣，共 ${people.length} 位，其中${banquetChildCount(people.filter(p=>p.sex))}。按家人分桌，幼童可观礼。</p>`
@@ -347,16 +347,16 @@ function viewBanquet() {
         <ol class="banquet-seats">${draft.seats.map((id,i)=>{
           const p=people.find(person=>person.id===id);
           return p?`<li><strong>${esc(familyName(p))}</strong><div class="acts">
-            ${storyIntroductionsActive()?`<button class="btn quiet sm" aria-label="将${esc(familyName(p))}移到首席" ${i===0?'disabled':''} onclick="A.banquetFirst(${id})">移到首席</button>`:''}
-            <button class="btn quiet sm" aria-label="${esc(familyName(p))}前移" ${i===0?'disabled':''} onclick="A.banquetMove(${i},-1)">前移</button>
-            <button class="btn quiet sm" aria-label="${esc(familyName(p))}后移" ${i===draft.seats.length-1?'disabled':''} onclick="A.banquetMove(${i},1)">后移</button>
-            <button class="btn quiet sm" aria-label="撤下${esc(familyName(p))}" ${draft.ranked&&p===feast.host?'disabled':''} onclick="A.banquetGuest(${id})">撤下</button></div>
+            ${storyIntroductionsActive()?`<button class="btn quiet sm" aria-label="将${esc(familyName(p))}移到首席" ${i===0?'disabled':''} data-onclick="A.banquetFirst(${id})">移到首席</button>`:''}
+            <button class="btn quiet sm" aria-label="${esc(familyName(p))}前移" ${i===0?'disabled':''} data-onclick="A.banquetMove(${i},-1)">前移</button>
+            <button class="btn quiet sm" aria-label="${esc(familyName(p))}后移" ${i===draft.seats.length-1?'disabled':''} data-onclick="A.banquetMove(${i},1)">后移</button>
+            <button class="btn quiet sm" aria-label="撤下${esc(familyName(p))}" ${draft.ranked&&p===feast.host?'disabled':''} data-onclick="A.banquetGuest(${id})">撤下</button></div>
             <div class="hint">${esc(banquetGuestFamily(p,children))}</div></li>`:'';
         }).join('')}</ol><div class="grid">${guestCards}</div>`}
     <p class="banquet-selection" role="status">已选：${draft.ranked?'按位分排座':draft.all?'全员宴请':'自选宾客'} · ${GARDEN_ACTIVITIES[draft.activity].label} · ${people.length} 位宾客</p><h3>席间活动</h3><div class="acts">${Object.entries(GARDEN_ACTIVITIES).map(([key,act])=>
-      `<button class="btn sm ${draft.activity===key?'on':''}" aria-pressed="${draft.activity===key}" onclick="A.banquetActivity('${key}')">${act.label}</button>`).join('')}</div>
+      `<button class="btn sm ${draft.activity===key?'on':''}" aria-pressed="${draft.activity===key}" data-onclick="A.banquetActivity('${key}')">${act.label}</button>`).join('')}</div>
     ${betrothalJourneysActive()?betrothedBanquetGuests(draft,people):''}${patronProgramPanel(draft,feast)}${envoySeatsPanel(draft)}${gardenDancePanel(draft)}${workshopBanquetPanel(draft,people)}
-    <div class="acts"><button class="btn gold" ${problem?'disabled':''} onclick="A.holdBanquet()">开宴<small>精力-1 · ${feast.cost?`国库-${feast.cost}万两`:feast.sponsor?'娘家出资':'筹备时已拨款'}</small></button></div>
+    <div class="acts"><button class="btn gold" ${problem?'disabled':''} data-onclick="A.holdBanquet()">开宴<small>精力-1 · ${feast.cost?`国库-${feast.cost}万两`:feast.sponsor?'娘家出资':'筹备时已拨款'}</small></button></div>
     ${problem?`<p class="hint">${problem}</p>`:''}`;
 }
 
@@ -589,7 +589,7 @@ function proudBanquetGuest(people) {
 
 function proudDemandNotice() {
   const c=proudBanquetGuest(harem());
-  return c?`<div class="acts"><button class="btn sm jade" onclick="A.hearProudDemand()">${esc(cName(c))} · ${c.preg>=2?'有孕请旨':'宫中起争执'}</button></div>`:'';
+  return c?`<div class="acts"><button class="btn sm jade" data-onclick="A.hearProudDemand()">${esc(cName(c))} · ${c.preg>=2?'有孕请旨':'宫中起争执'}</button></div>`:'';
 }
 
 A.hearProudDemand = function() {
@@ -674,7 +674,7 @@ function gardenFamilyMoment() {
 
 function gardenFamilyNotice() {
   const meeting=showGardenReunion();
-  if(meeting)return `<section class="initiative-note">${activityPortraits(meeting.first,meeting.second)}<p>${esc(meeting.reunion.text)}</p><button class="btn sm jade" onclick="A.joinGardenReunion()">去御花园赴约</button></section>`;
+  if(meeting)return `<section class="initiative-note">${activityPortraits(meeting.first,meeting.second)}<p>${esc(meeting.reunion.text)}</p><button class="btn sm jade" data-onclick="A.joinGardenReunion()">去御花园赴约</button></section>`;
   const moment=gardenFamilyMoment();
-  return moment?`<section class="initiative-note">${activityPortraits(kidById(moment.child),byId(moment.mother))}<p>${esc(moment.text)}</p><button class="btn sm quiet" onclick="A.go('kid',${moment.child})">看看孩子</button></section>`:'';
+  return moment?`<section class="initiative-note">${activityPortraits(kidById(moment.child),byId(moment.mother))}<p>${esc(moment.text)}</p><button class="btn sm quiet" data-onclick="A.go('kid',${moment.child})">看看孩子</button></section>`:'';
 }

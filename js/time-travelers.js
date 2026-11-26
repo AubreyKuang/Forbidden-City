@@ -186,6 +186,6 @@ function timeTravelerVoice(c){
 }
 function timeTravelerPanel(c){
   const t=timeTravelerIdentity(c);if(!t?.known)return '';
-  return `<section class="personal-experience"><h3>异世旧梦</h3><p>她自述来自公元${t.century===21?'二十一':'二十二'}世纪 · ${t.closed?'此后缄口':travelerRash(c)?'急于自证':'谨慎藏言'}</p><p class="hint">${esc(t.history.at(-1)?.text||'她第一次提起了不属于这个时代的往事。')}</p>${travelerReady(c)?`<button class="btn jade" onclick="A.travelerTalk(${c.id})">听她谈旧日<small>精力−1</small></button>`:''}</section>`;
+  return `<section class="personal-experience"><h3>异世旧梦</h3><p>她自述来自公元${t.century===21?'二十一':'二十二'}世纪 · ${t.closed?'此后缄口':travelerRash(c)?'急于自证':'谨慎藏言'}</p><p class="hint">${esc(t.history.at(-1)?.text||'她第一次提起了不属于这个时代的往事。')}</p>${travelerReady(c)?`<button class="btn jade" data-onclick="A.travelerTalk(${c.id})">听她谈旧日<small>精力−1</small></button>`:''}</section>`;
 }
 A.travelerTalk=function(id){const c=byId(id);if(modalOpen||!travelerReady(c)||!useE())return;pushEv(travelerConfessionEvent(c));};

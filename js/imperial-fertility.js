@@ -137,7 +137,7 @@ function imperialFertilityPanel(){
   const s=E().fertilityReview;if(s?.diagnosed==null)return '';
   const status=s.searchDue!=null?`等候寻医回奏 · 约 ${Math.max(0,s.searchDue-S.turn)} 个月`:(s.outcome||'太医院合议已经记入起居注。');
   return detailSection('太医院会诊',`<p>${esc(status)}</p><div class="acts">${s.searched||s.searchDue!=null?'':
-    `<button class="btn" onclick="A.seekImperialPhysician()" ${E().treasury<15?'disabled':''}>再请太医院寻访医者</button>`}${!s.kinFound&&palaceNeedsSon()?
-    `<button class="btn jade" onclick="A.imperialFertilityKin()">${jinyiweiCommanderReady()?'请锦衣卫核对宗亲名册':'请宗人府核对名册'}</button>`:''}</div>`)+
+    `<button class="btn" data-onclick="A.seekImperialPhysician()" ${E().treasury<15?'disabled':''}>再请太医院寻访医者</button>`}${!s.kinFound&&palaceNeedsSon()?
+    `<button class="btn jade" data-onclick="A.imperialFertilityKin()">${jinyiweiCommanderReady()?'请锦衣卫核对宗亲名册':'请宗人府核对名册'}</button>`:''}</div>`)+
     (imperialFertilityFollowupsActive()&&s.physician?.story.length?detailFold(`院使${esc(s.physician.name)}的纪事`,detailStory(s.physician)):'');
 }

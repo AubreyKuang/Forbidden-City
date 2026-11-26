@@ -940,7 +940,10 @@ button.family-room-person{cursor:pointer}button.family-room-person:hover{color:#
 .paternal-branch>.family-house-tree{max-width:400px}
 
 .story-consort-card{display:grid;grid-template-columns:minmax(150px,200px) minmax(0,1fr);gap:22px;padding:18px;border:1px solid #c8ad87;background:#fff8e9;border-radius:10px}
-.story-consort-picture{display:flex;align-items:center;flex-direction:column;gap:10px}.story-consort-picture>.por{max-width:100%;height:auto}
+.story-consort-picture{display:flex;align-items:center;flex-direction:column;gap:10px}
+/* Editions that do not open a character yet show a plain locked card (no portrait). */
+.edition-locked-portrait{width:160px;height:200px;max-width:100%;display:flex;align-items:center;justify-content:center;border:1px dashed #b89a72;border-radius:8px;background:#efe3cc;color:#8a6a48;font-size:15px;letter-spacing:.3em}
+.edition-locked .story-consort-copy p{color:#8a6a48}.story-consort-picture>.por{max-width:100%;height:auto}
 .story-consort-copy h3{margin-top:0}.story-consort-copy dl{margin:14px 0}.story-consort-copy dt{font-weight:700;color:#735336;margin-top:14px}.story-consort-copy dd{margin:5px 0 0;line-height:1.8}
 @media(max-width:600px){.story-consort-card{grid-template-columns:1fr;padding:14px;gap:14px}.story-consort-picture>.por{width:176px}}
 

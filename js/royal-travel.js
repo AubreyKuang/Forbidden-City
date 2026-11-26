@@ -626,8 +626,8 @@ function royalTravelPanel(k){
   return `<p class="hint">「${esc(royalItinerary(r)[key][0])}」${esc(progress)}</p>`;
  }).join('');
  return `<section class="personal-experience"><h3>山河行记</h3><p>${esc(text)}</p>${projects}<div class="acts">
- ${event?`<button class="btn jade" onclick="A.royalTravelTalk(${k.id})">${event.title.startsWith('游历奏议回报')?'看试办回报':event.travelProjectReport?'看回报与续议':r.stage==='returned'?'听归来奏议':away?'看旅途消息':'商议游历'}</button>`:''}
- ${away?`<button class="btn" onclick="A.royalTravelLetter(${k.id})" ${S.turn-r.lastLetter<6?'disabled':''}>寄家书 · 精力−1</button><button class="btn quiet" onclick="A.royalTravelRecall(${k.id})">商议提前归来</button>`:''}</div>
+ ${event?`<button class="btn jade" data-onclick="A.royalTravelTalk(${k.id})">${event.title.startsWith('游历奏议回报')?'看试办回报':event.travelProjectReport?'看回报与续议':r.stage==='returned'?'听归来奏议':away?'看旅途消息':'商议游历'}</button>`:''}
+ ${away?`<button class="btn" data-onclick="A.royalTravelLetter(${k.id})" ${S.turn-r.lastLetter<6?'disabled':''}>寄家书 · 精力−1</button><button class="btn quiet" data-onclick="A.royalTravelRecall(${k.id})">商议提前归来</button>`:''}</div>
  ${r.history.slice(-2).reverse().map(e=>`<p class="hint">${esc(e.d)} · ${esc(e.title)}<br>${esc(e.text)}</p>`).join('')}</section>`;
 }
 A.royalTravelTalk=function(id){if(!modalOpen)pushEv(royalTravelEvent(royalById(id)));};

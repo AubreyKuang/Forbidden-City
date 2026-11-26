@@ -338,8 +338,8 @@ function mapLeadPlace(lead){return lead.place?PLACES.find(p=>p.id===lead.place).
 function mapActivityPanel(leads){
   if(!leads.length)return '<p class="hint map-quiet">宫中暂静，可以到各宫走走。</p>';
   const card=lead=>`<article class="map-activity-card"><div><strong>${esc(lead.title)}</strong><small>${lead.continuity?'前事有后话':lead.expires?'本月邀约':'本月动向'}</small><p>${esc(lead.text)}</p></div>
-    ${activityPortraits(...lead.cast)}<button class="btn sm jade" onclick="${mapLeadAction(lead)}">${esc(lead.button||mapLeadPlace(lead)+' · '+lead.title)} →</button></article>`;
-  return `<section class="map-activity-panel" aria-label="本月值得一看">${leads.slice(0,2).map(card).join('')}</section>${leads.length>2?`<div class="initiative-notices">${leads.slice(2).map(lead=>`<button class="btn sm" onclick="${mapLeadAction(lead)}">${esc(mapLeadPlace(lead))} · ${esc(lead.title)}</button>`).join('')}</div>`:''}`;
+    ${activityPortraits(...lead.cast)}<button class="btn sm jade" data-onclick="${mapLeadAction(lead)}">${esc(lead.button||mapLeadPlace(lead)+' · '+lead.title)} →</button></article>`;
+  return `<section class="map-activity-panel" aria-label="本月值得一看">${leads.slice(0,2).map(card).join('')}</section>${leads.length>2?`<div class="initiative-notices">${leads.slice(2).map(lead=>`<button class="btn sm" data-onclick="${mapLeadAction(lead)}">${esc(mapLeadPlace(lead))} · ${esc(lead.title)}</button>`).join('')}</div>`:''}`;
 }
 A.visitMapActivity=function(place,resident){
   if(!S||S.over||modalOpen)return;
@@ -380,7 +380,7 @@ function mountMap(){const w=$('#mapwrap');if(!w)return;w.appendChild(MAPC);mount
   PLACES.forEach(p=>{const b=document.createElement('button');b.className='mlab'+(['qq','kn','cj','yh','sw','wm'].includes(p.id)?' landmark':'');b.textContent=p.n;const here=leads.filter(lead=>lead.place===p.id);if(here.length){b.className+=' has-activity';b.setAttribute('data-activity',String(here.length));b.setAttribute('aria-label',p.n+'，'+here.map(lead=>lead.title).join('、'));}if(lanternStop()?.place===p.id){b.className+=' seasonal-lit';}const [x,y,ww,h]=p.r;
     b.style.left=((x+ww/2)/MW*100)+'%';b.style.top=((y+(p.id==='yh'?h/2:h-2))/MH*100)+'%';
     bindMapGuide(b,p);w.appendChild(b)})}
-const backBtn=`<button class="btn sm" onclick="A.go('map')">◂ 返回宫城</button>`;
+const backBtn=`<button class="btn sm" data-onclick="A.go('map')">◂ 返回宫城</button>`;
 function mapMemorial(){
   const status=monthlyCourtStatus(),{done}=status;
   const pending=S.flags.impeachmentReview;
@@ -395,26 +395,26 @@ function viewMap(){
   const status=`${monthlyCourtBatchEnabled()?`本月已批 ${count}/${limit} 份 · `:''}${done?'奏折已批复':report+'待阅'}`;
   return `<section class="map-play" aria-label="宫城地图">
     <header class="map-location"><h2>宫城</h2>
-      <button id="map-next" class="btn sm jade" onclick="A.court()" aria-describedby="map-court-status" ${done?'disabled':''}>${done?'奏折已批复':'查看'+esc(report)}</button>
-      <button class="btn sm" onclick="A.go('residences')">分配住所</button>
+      <button id="map-next" class="btn sm jade" data-onclick="A.court()" aria-describedby="map-court-status" ${done?'disabled':''}>${done?'奏折已批复':'查看'+esc(report)}</button>
+      <button class="btn sm" data-onclick="A.go('residences')">分配住所</button>
       <span class="map-position" title="${position}">${position}</span>
     </header>
-    <section class="map-month-notices" aria-label="本月宫中消息">${mourningNotice()}${host?`<button class="btn sm jade" onclick="A.visitMapActivity('kn')">去坤宁宫见${esc(fullName(host))}</button>`:''}${mapActivityPanel(leads)}${princessMapNotice()}${birthdayBanquetButtons()}${proudDemandNotice()}</section>
+    <section class="map-month-notices" aria-label="本月宫中消息">${mourningNotice()}${host?`<button class="btn sm jade" data-onclick="A.visitMapActivity('kn')">去坤宁宫见${esc(fullName(host))}</button>`:''}${mapActivityPanel(leads)}${princessMapNotice()}${birthdayBanquetButtons()}${proudDemandNotice()}</section>
     <div id="mapwrap"></div>
     <div id="map-guide-preview" aria-live="polite"></div>
     <div class="map-dock">
-      <button id="map-guide-toggle" class="btn sm" aria-pressed="false" onclick="A.toggleMapGuide()">地点用途与玩法</button>
-      <details class="map-brief" ${UI.mapBriefOpen?'open':''} ontoggle="UI.mapBriefOpen=this.open">
+      <button id="map-guide-toggle" class="btn sm" aria-pressed="false" data-onclick="A.toggleMapGuide()">地点用途与玩法</button>
+      <details class="map-brief" ${UI.mapBriefOpen?'open':''} data-ontoggle="UI.mapBriefOpen=this.open">
         <summary>宫中事务与常平仓</summary>
         <div class="map-brief-content">
           <p id="map-court-status" class="hint">${esc(status)}</p>
-          ${S.flags.lastMonthReview?`<button class="btn sm" onclick="A.go('log')">上月回顾</button>`:''}
+          ${S.flags.lastMonthReview?`<button class="btn sm" data-onclick="A.go('log')">上月回顾</button>`:''}
           ${floodDikeReady()?'<p class="hint">黄河险堤已加固。日后一次直接赈济可少花 '+FLOOD_DIKE_SAVING+' 万两。</p>':''}
           <p class="hint">${grainReserveReady()?`常平仓有${grainReserveLabel()}备荒粮。遇到蝗灾月奏时可发放，免耗精力。`:'常平仓暂无备荒粮，可以向粮商买半批。'}</p>
           ${Number.isInteger(S.flags.localGrainPaymentTurn)?`<p class="hint">赈粮尾款 ${localGrainBalance()} 万两，将于${localGrainPaymentDue()?'本月底':'下月底'}结清。${localGrainPaymentDue()&&grainReserveReady()?'可到常平仓以粮抵款。':''}${localGrainExtensionAvailable()?'可在常平仓展期一次。':''}</p>`:''}
           ${autumnGrainOrderStatus()==='due'?`<p class="hint">预订的半批秋粮已到。${S.month===8?'本月可领粮、改期或退订。':'九月是最后的领取期限。'}</p>`:''}
           ${autumnGrainOrderStatus()==='delayed'?'<p class="hint">预订的半批秋粮已改到九月交付。</p>':''}
-          <button class="btn sm" onclick="A.grainReserve()">查看常平仓</button>
+          <button class="btn sm" data-onclick="A.grainReserve()">查看常平仓</button>
           <p class="map-legend">点宫殿名直达 · 点宫殿步行前往 · 点小人偶遇 · 绿点：有人活动 · 粉点：有孕 · 金点：选秀</p>
         </div>
       </details>
@@ -422,24 +422,24 @@ function viewMap(){
   </section>`;
 }
 function viewPalace(){const name=UI.sel,res=name==='冷宫'?alive().filter(c=>c.cold):harem().filter(c=>c.palace===name);
-  const extra=name==='储秀宫'&&S.cands.length?`<div class="acts"><button class="btn gold" onclick="A.go('xx')">秀女正在候选（${S.cands.length}人）</button></div>`:'';
+  const extra=name==='储秀宫'&&S.cands.length?`<div class="acts"><button class="btn gold" data-onclick="A.go('xx')">秀女正在候选（${S.cands.length}人）</button></div>`:'';
   const note=name==='冷宫'?'荒草萋萋，宫门深锁。':name==='坤宁宫'?'中宫所居，凤仪万方。':(PALACE_NOTES[name]||'宫门半掩，廊下挂着鸟笼。');
   const count=res.length?(name==='冷宫'?`<p class="hint">冷宫里关着 ${res.length} 人。</p>`:`<p class="hint">住着 ${res.length} 位妃嫔。</p>`):'';
-  return `<h2>${esc(name)}${backBtn}</h2><p class="hint">${note}</p>${residenceSummary(name)}${PALACES.includes(name)?'<div class="acts"><button class="btn" onclick="A.openResidence()">分配主位与同住</button></div>':''}${extra}${storyCastPalaceRoom(name)}${palaceRomanceAt(initiativePlace(null,null,{place:'p'+name}))}${palaceLifePanel(name)}${initiativesAt(initiativePlace(null,null,{place:'p'+name}))}${count}${res.length?`<div class="grid">${res.map(consortCard).join('')}</div>`:'<p class="hint">此处暂无人居住。</p>'}`}
+  return `<h2>${esc(name)}${backBtn}</h2><p class="hint">${note}</p>${residenceSummary(name)}${PALACES.includes(name)?'<div class="acts"><button class="btn" data-onclick="A.openResidence()">分配主位与同住</button></div>':''}${extra}${storyCastPalaceRoom(name)}${palaceRomanceAt(initiativePlace(null,null,{place:'p'+name}))}${palaceLifePanel(name)}${initiativesAt(initiativePlace(null,null,{place:'p'+name}))}${count}${res.length?`<div class="grid">${res.map(consortCard).join('')}</div>`:'<p class="hint">此处暂无人居住。</p>'}`}
 function viewPlace(){const id=UI.sel;
   if(id==='music')return musicRoom();
   if(id==='wardrobe')return wardrobeRoom();
   if(id==='qa')return viewDaoHall();
-  if(id==='cj')return `<h2>宸极殿${backBtn}</h2><p>文武百官已在丹墀下候着。</p><div class="acts">${monthlyCourtButton()}<button class="btn jade" onclick="A.go('officials')">朝臣与外家 · 召见议事</button></div>`;
+  if(id==='cj')return `<h2>宸极殿${backBtn}</h2><p>文武百官已在丹墀下候着。</p><div class="acts">${monthlyCourtButton()}<button class="btn jade" data-onclick="A.go('officials')">朝臣与外家 · 召见议事</button></div>`;
   if(id==='yh'){const here=[...NPC].filter(([i,n])=>n.where==='garden'&&!n.path.length).map(([i])=>byId(i)).filter(c=>inPalace(c)&&c.id!==gardenFamilyMoment()?.mother&&
       !initiativeMapScenes().some(scene=>scene.visitors.includes(c))&&!palaceRomanceLeads().some(lead=>lead.place==='yh'&&lead.cast.includes(c)));
-    return `<h2>御花园${backBtn}</h2><p>${['桃花开得正好，蜂蝶纷飞。','荷风送香，蝉鸣阵阵。','丹桂飘香，满地金黄。','红梅映雪，暗香浮动。'][season()]}</p><div class="acts"><button class="btn jade" onclick="A.go('place','qa')">钦安殿问道</button><button class="btn" onclick="A.out('garden')">园中漫步<small>精力-1</small></button>${banquetReady()?`<button class="btn gold" onclick="A.openBanquet()">筹办小宴</button>`:'<span class="hint">小宴每三个月可办一次</span>'}</div>${storyCastGardenButton()}${birthdayBanquetButtons()}${gardenFamilyNotice()}${palaceRomanceAt('yh')}${historyAt('yh')}${multipleAt('yh')}${seasonalPlacePanel('yh')}${duanwuPanel()}${classicStoryPanel('garden')}${initiativesAt('yh')}${here.length?`<h3>园中的人</h3><div class="grid">${here.map(c=>`<button class="card" onclick="meetConsort(byId(${c.id}))">${porImg(c,48)}<div class="grow"><div class="nm">${esc(cName(c))}</div><div>${esc(npcRoutineText(c,NPC.get(c.id)))}</div></div></button>`).join('')}</div>`:'<p class="hint">园中没有其他闲游的人。</p>'}`}
+    return `<h2>御花园${backBtn}</h2><p>${['桃花开得正好，蜂蝶纷飞。','荷风送香，蝉鸣阵阵。','丹桂飘香，满地金黄。','红梅映雪，暗香浮动。'][season()]}</p><div class="acts"><button class="btn jade" data-onclick="A.go('place','qa')">钦安殿问道</button><button class="btn" data-onclick="A.out('garden')">园中漫步<small>精力-1</small></button>${banquetReady()?`<button class="btn gold" data-onclick="A.openBanquet()">筹办小宴</button>`:'<span class="hint">小宴每三个月可办一次</span>'}</div>${storyCastGardenButton()}${birthdayBanquetButtons()}${gardenFamilyNotice()}${palaceRomanceAt('yh')}${historyAt('yh')}${multipleAt('yh')}${seasonalPlacePanel('yh')}${duanwuPanel()}${classicStoryPanel('garden')}${initiativesAt('yh')}${here.length?`<h3>园中的人</h3><div class="grid">${here.map(c=>`<button class="card" data-onclick="meetConsort(byId(${c.id}))">${porImg(c,48)}<div class="grow"><div class="nm">${esc(cName(c))}</div><div>${esc(npcRoutineText(c,NPC.get(c.id)))}</div></div></button>`).join('')}</div>`:'<p class="hint">园中没有其他闲游的人。</p>'}`}
   if(id==='ss'||id==='wy'){
     const school=id==='ss';
     return `<h2>${school?'上书房':'文渊阁'}${backBtn}</h2>
       ${school?schoolPanel()+schoolDocketPanel():travelBookPanel()}${classicStoryPanel(school?'school':'library')}${palaceRomanceAt(id)}${historyAt(id)}${multipleAt(id)}${seasonalPlacePanel(id)}
       ${initiativesAt(id)||(school||historyAt(id)?'':'<p class="hint">此刻只有当值宫人在这里。</p>')}
-      <button class="btn" onclick="A.go('${school?'kids':'log'}')">${school?'查看皇嗣':'翻阅起居注'}</button>`;
+      <button class="btn" data-onclick="A.go('${school?'kids':'log'}')">${school?'查看皇嗣':'翻阅起居注'}</button>`;
   }
-  if(id==='cn'){const d=S.flags.dowager;return `<header class="cining-heading"><h2>慈宁宫</h2><div class="cining-actions">${backBtn}${d?.alive&&!S.flags.birthDowager?'<button class="btn primary" onclick="A.greet()">给太后请安<small>精力-1</small></button>':''}</div></header>${dowagerCourtPanel()}${d&&d.alive?`<p>${dowagerLivingActive()&&dowagerCompanyPeople(d).length?esc(d.name)+'与'+dowagerCompanyPeople(d).map(c=>esc(fullName(c))).join('、')+'坐在窗下说话。':esc(d.name)+'正在佛堂诵经。'}</p>`:mourningPlacePanel()}${initiativesAt('cn')}`}
+  if(id==='cn'){const d=S.flags.dowager;return `<header class="cining-heading"><h2>慈宁宫</h2><div class="cining-actions">${backBtn}${d?.alive&&!S.flags.birthDowager?'<button class="btn primary" data-onclick="A.greet()">给太后请安<small>精力-1</small></button>':''}</div></header>${dowagerCourtPanel()}${d&&d.alive?`<p>${dowagerLivingActive()&&dowagerCompanyPeople(d).length?esc(d.name)+'与'+dowagerCompanyPeople(d).map(c=>esc(fullName(c))).join('、')+'坐在窗下说话。':esc(d.name)+'正在佛堂诵经。'}</p>`:mourningPlacePanel()}${initiativesAt('cn')}`}
   return viewMap()}

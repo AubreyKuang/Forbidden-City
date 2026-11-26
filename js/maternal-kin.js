@@ -57,7 +57,7 @@ A.kinCareTime=function(childId,consortId){
 function careVisitorPanel(k,only=null){
  return Object.entries(k.careVisitors||{}).map(([id,v])=>{const c=byId(+id);if(!c||only&&c!==only||c.id===(k.foster||k.mom))return '';
   const ready=careVisitorAllowed(k,c)&&v.last!==S.turn;
-  return `<article class="family-time-row"><div><strong>${esc(v.role)} · ${parentLink(c.id)}</strong><p class="hint">${esc(k.name)}的亲人往来 · 保留现有抚养</p>${v.text?`<p>${esc(v.text)}</p>`:''}${v.role==='原养母'&&familyScenesEnabled()&&c.alive&&childInPalace(k)?`<button class="btn quiet sm" onclick="A.formerCareRule(${k.id},${c.id})">${v.blocked?'恢复探视':'暂停探视'}</button>`:''}</div>${ready?`<button class="btn sm jade" onclick="A.kinCareTime(${k.id},${c.id})">陪${esc(k.name)}一会儿<small>精力−1</small></button>`:'<span class="hint">'+(v.last===S.turn?'本月已相伴':'眼下无法相见')+'</span>'}</article>`;
+  return `<article class="family-time-row"><div><strong>${esc(v.role)} · ${parentLink(c.id)}</strong><p class="hint">${esc(k.name)}的亲人往来 · 保留现有抚养</p>${v.text?`<p>${esc(v.text)}</p>`:''}${v.role==='原养母'&&familyScenesEnabled()&&c.alive&&childInPalace(k)?`<button class="btn quiet sm" data-onclick="A.formerCareRule(${k.id},${c.id})">${v.blocked?'恢复探视':'暂停探视'}</button>`:''}</div>${ready?`<button class="btn sm jade" data-onclick="A.kinCareTime(${k.id},${c.id})">陪${esc(k.name)}一会儿<small>精力−1</small></button>`:'<span class="hint">'+(v.last===S.turn?'本月已相伴':'眼下无法相见')+'</span>'}</article>`;
  }).join('');
 }
 
@@ -93,4 +93,4 @@ function pendingMaternalSisterArrival(){
  return m?maternalSisterArrival(m):null;
 }
 A.maternalSisterArrival=function(id){if(modalOpen)return;const ev=maternalSisterArrival(byId(id),true);if(ev)pushEv(ev);};
-function maternalSisterArrivalButton(m){return maternalSisterSource(m,true)?`<button class="btn sm jade" onclick="A.maternalSisterArrival(${m.id})">谈谈姐妹入宫照看孩子</button>`:'';}
+function maternalSisterArrivalButton(m){return maternalSisterSource(m,true)?`<button class="btn sm jade" data-onclick="A.maternalSisterArrival(${m.id})">谈谈姐妹入宫照看孩子</button>`:'';}

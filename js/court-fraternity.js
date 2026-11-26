@@ -41,7 +41,7 @@ function brotherNominationEvent(person,brother){
 }
 A.officialBrother=function(key,other){const p=courtPerson(key),b=courtPerson(other);if(!modalOpen&&p&&b&&officialBrothers(p).some(x=>x.p===b.p))pushEv(brotherNominationEvent(p,b));};
 function officialBrothersPanel(person){
-  const brothers=officialBrothers(person);return brothers.length?detailSection('兄弟与提携',brothers.map(x=>`<p>${x.p.age>person.p.age?'兄长':'弟弟'}：${careerLink(x)} · ${esc(officialOfficeLabel(x.p))} · ${esc(officialStatus(x.p))}</p>${brotherNomination(person,x)?`<button class="btn sm" onclick="A.officialBrother('${person.key}','${x.key}')">听取对${esc(x.p.name)}的举荐</button>`:''}`).join('')):'';
+  const brothers=officialBrothers(person);return brothers.length?detailSection('兄弟与提携',brothers.map(x=>`<p>${x.p.age>person.p.age?'兄长':'弟弟'}：${careerLink(x)} · ${esc(officialOfficeLabel(x.p))} · ${esc(officialStatus(x.p))}</p>${brotherNomination(person,x)?`<button class="btn sm" data-onclick="A.officialBrother('${person.key}','${x.key}')">听取对${esc(x.p.name)}的举荐</button>`:''}`).join('')):'';
 }
 function officialFraternityTick(){
   if(!careersActive()||S.flags.fraternityTick===S.turn)return;S.flags.fraternityTick=S.turn;initializeOutsideBrothers();

@@ -202,7 +202,7 @@ function deepLine(c){deepen(c);if(c.wish==='title'&&c.title&&!c.wishDone){c.wish
   const wishButton=father&&!officialAlive(father)?'追褒其父，赐诏家中（威望-2）':w.btn;
   return `<div style="margin-top:4px">小性子：<span class="tag">${c.t2}</span>${(c.learnedQuirks||[]).map(q=>'<span class="tag g">'+esc(q)+'</span>').join('')}　喜好：${c.kl?`<span class="tag g">${c.like}</span>不喜<span class="tag r">${c.hate}</span>`:'<span class="hint">多闲谈才知道</span>'}</div>
   <div>平日消遣：<span class="tag">${esc(c.hobby)}</span></div>
-  <div>心愿：${c.wishKnown?`${esc(w.t)}${c.wishDone?' <span class="tag y">已成全</span>':w.unknown?'':w.btn?` <button class="btn sm jade" onclick="A.wish(${c.id})" ${inPalace(c)&&!wishObstacle(c)?'':'disabled'}>${esc(wishButton)}</button>${wishObstacle(c)?' <small>'+esc(wishObstacle(c))+'</small>':''}`:' <span class="hint">（生下孩子便成全了）</span>'}`:`<span class="hint">${c.aff>=50?'情分已够，多闲谈几次，她也许会说出心愿':'情分到 50 以后，闲谈时她也许会说'}</span>`}</div>
+  <div>心愿：${c.wishKnown?`${esc(w.t)}${c.wishDone?' <span class="tag y">已成全</span>':w.unknown?'':w.btn?` <button class="btn sm jade" data-onclick="A.wish(${c.id})" ${inPalace(c)&&!wishObstacle(c)?'':'disabled'}>${esc(wishButton)}</button>${wishObstacle(c)?' <small>'+esc(wishObstacle(c))+'</small>':''}`:' <span class="hint">（生下孩子便成全了）</span>'}`:`<span class="hint">${c.aff>=50?'情分已够，多闲谈几次，她也许会说出心愿':'情分到 50 以后，闲谈时她也许会说'}</span>`}</div>
   ${c.woundKnown?`<div>往事：${esc(consortPastText(c))}</div>`:`<div class="hint">往事：${c.aff>=65?'情分已够，多闲谈几次，她也许会对你说起':'情分到 65 以后，她也许会对你说起'}</div>`}${typeof gouyiPastPanel==='function'?gouyiPastPanel(c):''}`}
 function accessionArrivalConversation(c){
  const arrival=c?.accessionArrival;

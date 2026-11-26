@@ -93,7 +93,7 @@ function householdSummary(k){
   return `${sons}子${children.length-sons}女${householdKnownPregnancies(h).length?' · 有喜':''}${h.concubines.length?' · 妾室'+h.concubines.length+'人':''}`;
 }
 function householdChildLink(k,c){
-  return `<button class="btn quiet family-person" onclick="A.go('household-child',${royalActionArg(c.id)})">${porImg(c,56)}<span><strong>${esc(c.name)}</strong><small>${c.alive===false?'已故':kidAge(c)+'岁'} · ${c.princeAdoption?.family===k.id?'嗣子':c.sex==='m'?'子':'女'}${c.motherName?' · 生母'+esc(c.motherName):''}</small></span></button>`;
+  return `<button class="btn quiet family-person" data-onclick="A.go('household-child',${royalActionArg(c.id)})">${porImg(c,56)}<span><strong>${esc(c.name)}</strong><small>${c.alive===false?'已故':kidAge(c)+'岁'} · ${c.princeAdoption?.family===k.id?'嗣子':c.sex==='m'?'子':'女'}${c.motherName?' · 生母'+esc(c.motherName):''}</small></span></button>`;
 }
 function householdChildGroups(){
   const seen=new Set();
@@ -120,7 +120,7 @@ function viewHouseholdChild(){
   if(!entry)return viewFamily();
   const {k,child:c}=entry,birth=princeBiologicalParents(c);
   const parentage=princeSpouseParentageCases(k).find(x=>x.childId===c.id&&x.status!=='news');
-  const parent=(label,p,name)=>`<p>${label} ${p?`<button class="person-link" onclick="A.go('${S.children.includes(p)?'kid':princeEstateEligible(p)?'prince-estate':'relative'}',${royalActionArg(p.id)})">${esc(name||p.name)}</button>`:esc(name||'未载')}</p>`;
+  const parent=(label,p,name)=>`<p>${label} ${p?`<button class="person-link" data-onclick="A.go('${S.children.includes(p)?'kid':princeEstateEligible(p)?'prince-estate':'relative'}',${royalActionArg(p.id)})">${esc(name||p.name)}</button>`:esc(name||'未载')}</p>`;
   const stats=[['lit','才学','#617991'],['mar','武艺','#92504a'],['vir','德行','#517369'],['hp','体魄','#a87a26']]
     .filter(([key])=>Number.isFinite(c[key])).map(([key,label,color])=>bar(label,c[key],color)).join('');
   const adoptive=c.princeAdoption&&royalById(c.princeAdoption.family);
@@ -336,7 +336,7 @@ function householdPanel(k){
     ${h.concubines.length?`<p>妾室：${h.concubines.map(p=>esc(p.name)+'（'+esc(marriageNature(p).temperament)+'）').join('、')}</p>`:''}
     ${h.project?`<p class="hint">${esc(h.project.title)} · 预计${Math.max(0,h.project.due-S.turn)}个月后有回音</p>`:''}
     ${h.pending?`<p class="initiative-note">府中近况：${esc(royalDomesticSceneRule(h.pending.id)?.title||'待询问')}</p>`:''}
-    ${householdActive(k)&&!whiteSpringInPalace(k)?`<div class="acts"><button class="btn jade" onclick="A.householdVisit(${royalActionArg(k.id)})">${k.away||k.princessMarriage==='frontier'?'读府中来信':'探望小家'} →</button><button class="btn" onclick="A.householdProject(${royalActionArg(k.id)})" ${h.project||S.turn-(h.lastProject??-99)<12?'disabled':''}>帮两人办件事</button>${adult&&k.sex==='m'?`<button class="btn" onclick="A.householdConcubine(${royalActionArg(k.id)})" title="${esc(concubineReason||'先听皇子的想法，再决定是否准许纳妾')}" ${concubineReason?'disabled':''}>询问皇子纳妾意愿${concubineReason?`<small>${esc(concubineReason)}</small>`:''}</button>`:''}${royalHouseholdLifeActive()&&k.sex==='m'?`<button class="btn" onclick="A.householdConcubineBan(${royalActionArg(k.id)},${!h.concubineBan})">${h.concubineBan?'解除纳妾禁令':'禁止皇子纳妾'}</button>`:''}${royalHouseholdLifeActive()&&p.natalHost==null?betrothedTravelButton(k):''}</div>`:''}
+    ${householdActive(k)&&!whiteSpringInPalace(k)?`<div class="acts"><button class="btn jade" data-onclick="A.householdVisit(${royalActionArg(k.id)})">${k.away||k.princessMarriage==='frontier'?'读府中来信':'探望小家'} →</button><button class="btn" data-onclick="A.householdProject(${royalActionArg(k.id)})" ${h.project||S.turn-(h.lastProject??-99)<12?'disabled':''}>帮两人办件事</button>${adult&&k.sex==='m'?`<button class="btn" data-onclick="A.householdConcubine(${royalActionArg(k.id)})" title="${esc(concubineReason||'先听皇子的想法，再决定是否准许纳妾')}" ${concubineReason?'disabled':''}>询问皇子纳妾意愿${concubineReason?`<small>${esc(concubineReason)}</small>`:''}</button>`:''}${royalHouseholdLifeActive()&&k.sex==='m'?`<button class="btn" data-onclick="A.householdConcubineBan(${royalActionArg(k.id)},${!h.concubineBan})">${h.concubineBan?'解除纳妾禁令':'禁止皇子纳妾'}</button>`:''}${royalHouseholdLifeActive()&&p.natalHost==null?betrothedTravelButton(k):''}</div>`:''}
     ${residents.length?detailSection('子女',`<div class="household-children">${residents.map(c=>householdChildLink(k,c)).join('')}</div>`):''}
     </section>${whiteSpringFamilyPanel(k)}`;
 }

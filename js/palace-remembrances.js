@@ -49,7 +49,7 @@ function canHearRemembrance(p,m){
 }
 function remembrancePanel(p){
  const entries=Object.entries(p.palaceRemembrances||{}).filter(([,m])=>canHearRemembrance(p,m));
- return entries.length?detailSection('上回的事',entries.map(([kind,m])=>`<button class="btn sm" onclick="A.hearRemembrance(${p.id},'${kind}',${!!p.sex})">再谈${esc(m.item)}</button>`).join('')):'';
+ return entries.length?detailSection('上回的事',entries.map(([kind,m])=>`<button class="btn sm" data-onclick="A.hearRemembrance(${p.id},'${kind}',${!!p.sex})">再谈${esc(m.item)}</button>`).join('')):'';
 }
 function remembranceWords(p,kind,item){
  if(p.sex){

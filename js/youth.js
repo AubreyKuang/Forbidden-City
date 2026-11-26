@@ -83,7 +83,7 @@ function youngGuestPanel({scene,child:k,host,mother,guest},name){
   const line={books:'他拾起滑落的书签，问起书中一处批注，两人竟各有不同的解法。',riding:'他谈起学骑射时跌下马的糗事，没夸自己本事多大，倒把公主逗笑了。',kindness:'宫人失手碰翻茶盏，他先扶稳托盘，再轻声说不必慌张。'}[guest.quality];
   return `<p class="hint">${esc(guest.fatherName)}奉召入宫，带${esc(guest.name)}来向姑母${esc(cName(host))}请安。${esc(k.name)}随${esc(cName(mother))}来小坐，恰好遇见。</p>`+
     palaceConversation('廊下初识','书签 · 茶盏',[{person:k,line:`她留意到：${line}`,action:`A.go('kid',${k.id})`},{person:guest,line:`${kidAge(guest)}岁 · ${guest.fatherName}之子。行过礼，他仍规规矩矩地站在姑母身旁。`}])+
-    (scene.result?`<p class="initiative-note" role="status">${esc(scene.result)}</p>`:`<div class="acts"><button class="btn jade" onclick="A.answerYoungGuest('listen')">私下听听公主的心意</button><button class="btn" onclick="A.answerYoungGuest('wait')">让他们先以书友相处</button></div>`);
+    (scene.result?`<p class="initiative-note" role="status">${esc(scene.result)}</p>`:`<div class="acts"><button class="btn jade" data-onclick="A.answerYoungGuest('listen')">私下听听公主的心意</button><button class="btn" data-onclick="A.answerYoungGuest('wait')">让他们先以书友相处</button></div>`);
 }
 A.answerYoungGuest=function(mode){
   if(S.over||modalOpen||UI.view!=='palace'||!['listen','wait'].includes(mode))return;

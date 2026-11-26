@@ -10,6 +10,8 @@ for(const c of cases)test(`layout preserves information and action availability:
  const {html}=renderCase(c),after=signature(html);
  const remaining=after.controls.map(x=>{
   const control={...x};
+  // The title button's assignment moved into a named function so it runs without inline script.
+  if(control.onclick==='returnToTitle()')control.onclick="S=null;UI.view='title';render()";
   if(control.onclick?.startsWith('A.familyMode(')||control.onclick?.startsWith('UI.logF='))delete control['aria-pressed'];
   return JSON.stringify(control);
  });

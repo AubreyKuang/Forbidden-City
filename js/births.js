@@ -172,7 +172,7 @@ function repairDeliveryChronicle(c){
 function deliveryMemorialPanel(c){
  if(c.alive||!c.deathRecord)return '';
  const d=c.deathRecord;
- return detailSection('终事 · 生产与离世',`<p><strong>${esc(d.date)} · ${esc(d.cause)}</strong></p><p>${esc(d.text)}</p><div class="acts">${d.children.filter(p=>kidById(p.id)).map(p=>`<button class="btn sm" onclick="A.go('kid',${p.id})">查看${esc(p.name)}的经历</button>`).join('')}</div>`);
+ return detailSection('终事 · 生产与离世',`<p><strong>${esc(d.date)} · ${esc(d.cause)}</strong></p><p>${esc(d.text)}</p><div class="acts">${d.children.filter(p=>kidById(p.id)).map(p=>`<button class="btn sm" data-onclick="A.go('kid',${p.id})">查看${esc(p.name)}的经历</button>`).join('')}</div>`);
 }
 function rollBirthTempleAdvice(children,omen){
   if(birthLabelsActive())return null; // All new labels share the single 3% / 80% draw.
@@ -208,5 +208,5 @@ function birthTempleAdviceEvent(k){
 }
 A.resumeBirth=function(id){const c=byId(id);if(c?.delivery&&!c.delivery.settled)pushEv(birthNamingEvent(c));};
 function pendingBirthPanel(){
-  const c=pendingDelivery();return c?`<p class="hint">${esc(fullName(c))}${c.delivery.lossPending?'的产房消息尚待处理':'新生的皇嗣尚待赐名'}。</p><button class="btn gold" onclick="A.resumeBirth(${c.id})">${c.delivery.lossPending?'处理产房消息':'继续赐名'}</button>`:'';
+  const c=pendingDelivery();return c?`<p class="hint">${esc(fullName(c))}${c.delivery.lossPending?'的产房消息尚待处理':'新生的皇嗣尚待赐名'}。</p><button class="btn gold" data-onclick="A.resumeBirth(${c.id})">${c.delivery.lossPending?'处理产房消息':'继续赐名'}</button>`:'';
 }

@@ -106,12 +106,12 @@ function finishMourningVisit(women,action,d=S.flags.dowager){
 }
 function mourningNotice(){
   const d=mourningDowager(),m=d?.mourning;if(!m||(m.legacy?m.lastVisitYear!=null:m.handled&&S.turn-m.turn>3))return '';
-  return `<section class="mourning-notice" role="status"><strong>${esc(d.name)}已故</strong><span>${m.handled?'慈宁宫已设灵，可前往追思、安抚族女。':'慈宁宫已悬素幡，丧仪尚待陛下安排。'}</span><button class="btn sm" onclick="A.visitMapActivity('cn')">前往慈宁宫 →</button></section>`;
+  return `<section class="mourning-notice" role="status"><strong>${esc(d.name)}已故</strong><span>${m.handled?'慈宁宫已设灵，可前往追思、安抚族女。':'慈宁宫已悬素幡，丧仪尚待陛下安排。'}</span><button class="btn sm" data-onclick="A.visitMapActivity('cn')">前往慈宁宫 →</button></section>`;
 }
 function mourningPlacePanel(){
   const d=S.flags.dowager,m=d?.mourning;
   if(!d||d.alive)return '';
   return `${mourningScene(d)}${activityPortraits(...mourningCast(d).slice(0,3))}<p>${esc(d.name)}已故${m?.date?' · '+esc(m.date):''}。</p>
     ${Object.keys(m?.reactions||{}).length?'<h3>送别时的身影</h3>':''}${Object.entries(m?.reactions||{}).slice(0,3).map(([id,text])=>{const c=byId(+id);return c?`<p>${parentLink(c.id)} · ${esc(text)}</p>`:'';}).join('')}
-    <button class="btn" onclick="A.openMourning()">${m?.handled?'上一炷香 · 追思太后':'料理太后丧仪'}</button>`;
+    <button class="btn" data-onclick="A.openMourning()">${m?.handled?'上一炷香 · 追思太后':'料理太后丧仪'}</button>`;
 }

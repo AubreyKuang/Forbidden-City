@@ -322,8 +322,8 @@ A.princessMarriage=function(id){
 function princessActions(k,showEstate=true){
   if(!canOpenPrincess(k))return '';
   const canRead=S.turn>=(k.estateDeferred??0);
-  return `<div class="acts">${k.estate?(showEstate?`<button class="btn jade" onclick="A.go('princess',${k.id})">公主府</button>`:''):
-    `<button class="btn jade" onclick="A.openPrincess(${k.id})" ${canRead?'':'disabled'}>${journalContentVersion()>=53?'商议开府':'开府来信'}${canRead?'':'<small>她暂且搁下了此事</small>'}</button>`}
+  return `<div class="acts">${k.estate?(showEstate?`<button class="btn jade" data-onclick="A.go('princess',${k.id})">公主府</button>`:''):
+    `<button class="btn jade" data-onclick="A.openPrincess(${k.id})" ${canRead?'':'disabled'}>${journalContentVersion()>=53?'商议开府':'开府来信'}${canRead?'':'<small>她暂且搁下了此事</small>'}</button>`}
     ${showEstate?'':marriageButton(k)}</div>`;
 }
 
@@ -336,12 +336,12 @@ const princessKinship=k=>journalContentVersion()>=45?royalKinship(k):k.reign===S
 const princessFollowupDue=e=>!!e.followup&&e.followup.finished===undefined&&S.turn>=e.followup.due;
 function princessMapNotice(){
   const k=estatePrincesses().find(({estate:e})=>e.stage==='proposal'||e.stage==='working'&&S.turn>=e.due||princessFollowupDue(e));
-  return k?`<div class="season-map-leads">${esc(k.name)}的府上送了信。 <button class="btn sm" onclick="A.go('princess',${k.id})">去公主府读信</button></div>`:'';
+  return k?`<div class="season-map-leads">${esc(k.name)}的府上送了信。 <button class="btn sm" data-onclick="A.go('princess',${k.id})">去公主府读信</button></div>`:'';
 }
 function princessEstatePanel(){
   const estates=estatePrincesses();
   if(!estates.length)return '';
-  return `<section class="palace-activity"><h3>公主府</h3><div class="grid">${estates.map(k=>`<button class="card" onclick="A.go('princess',${k.id})">${porImg(k,44)}
+  return `<section class="palace-activity"><h3>公主府</h3><div class="grid">${estates.map(k=>`<button class="card" data-onclick="A.go('princess',${k.id})">${porImg(k,44)}
     <span class="grow"><b>${esc(kidName(k))}</b><small>${k.reign?princessKinship(k)+' · ':''}${princessLetterLabel(k.estate)}</small></span></button>`).join('')}</div></section>`;
 }
 function princessLetterLabel(estate){
@@ -356,7 +356,7 @@ function princessFollowupPanel(k,project){
   if(e.stage!=='done')return '';
   const due=princessFollowupDue(e),finished=f?.finished!==undefined;
   const status=finished?project.result:!f?project.wish:due?'府里送来了办成这件事的回信。':`${f.mode} · 约 ${f.due-S.turn} 个月后有回音`;
-  return detailSection(project.title,`<p>${esc(status)}</p>${!finished&&(!f||due)?`<button class="btn ${due?'gold':'jade'}" onclick="A.princessFollowup(${k.id})">${due?'读续办回信':'商议这件事'}</button>`:''}`);
+  return detailSection(project.title,`<p>${esc(status)}</p>${!finished&&(!f||due)?`<button class="btn ${due?'gold':'jade'}" data-onclick="A.princessFollowup(${k.id})">${due?'读续办回信':'商议这件事'}</button>`:''}`);
 }
 const princessEstateLocal=k=>!k.away&&k.estate.route!=='frontier'&&k.princessMarriage!=='frontier'&&(!k.estate.location||k.estate.location==='京城');
 const princessEstateVisitReady=k=>!S.over&&!!k?.alive&&!!k.estate&&princessEstateLocal(k)&&!k.jailed&&!k.templeStay&&!k.removedFromRoyal&&S.turn>=(k.estate.nextCall??0);
@@ -472,9 +472,9 @@ function whiteSpringFamilyPanel(k){
   const v=h.whiteSpringVisit,guest=children.find(c=>c.id===v?.child);
   const status=guest?(v.stage==='invited'?'已捎信相邀，约下月抵京。':'正在宫中陪伴阿依慕，还有 '+Math.max(0,v.due-S.turn)+' 个月启程回白泉。'):
     !whiteSpringHostReady(m)?'眼下宫里无法接待探亲。':S.turn<h.whiteSpringNextVisit?'上次归宁后，再过 '+(h.whiteSpringNextVisit-S.turn)+' 个月可重邀。':'孩子满三岁后，可请公主带回宫中小住。';
-  const song=guest&&v.stage==='palace'&&!v.sang&&whiteSpringHostReady(m)?'<button class="btn jade" onclick="A.whiteSpringFamilySong('+royalActionArg(k.id)+')">陪三代人唱一支白泉旧曲</button>':'';
+  const song=guest&&v.stage==='palace'&&!v.sang&&whiteSpringHostReady(m)?'<button class="btn jade" data-onclick="A.whiteSpringFamilySong('+royalActionArg(k.id)+')">陪三代人唱一支白泉旧曲</button>':'';
   return detailSection('白泉外家', '<p>'+esc(guest?k.name+'与'+guest.name+' · '+status:status)+'</p>'+song+children.map(c=>
-    (whiteSpringCanInvite(k,c,m)?'<button class="btn jade" onclick="A.whiteSpringInvite('+royalActionArg(k.id)+','+royalActionArg(c.id)+')">请公主带'+esc(c.name)+'回宫小住</button>':'')+
+    (whiteSpringCanInvite(k,c,m)?'<button class="btn jade" data-onclick="A.whiteSpringInvite('+royalActionArg(k.id)+','+royalActionArg(c.id)+')">请公主带'+esc(c.name)+'回宫小住</button>':'')+
     '<details><summary>'+esc(c.name)+' · '+kidAge(c)+'岁 · '+whiteSpringKinTerm(c)+'的记事</summary>'+((c.story||[]).map(e=>'<p>'+esc(e.d)+'　'+esc(e.t)+'</p>').join('')||'<p>尚无记事。</p>')+'</details>').join(''));
 }
 
@@ -482,8 +482,8 @@ function princessEstateFamilyPanel(k){
   const e=k.estate,local=princessEstateLocal(k),wait=Math.max(0,(e.nextVisit??0)-S.turn);
   const callWait=Math.max(0,(e.nextCall??0)-S.turn);
   const frontier=(k.princessMarriage||e.route)==='frontier';
-  return detailSection('探望与家书',`<div class="acts">${local?`<button class="btn jade" onclick="A.princessEstateCall(${k.id})" ${princessEstateVisitReady(k)&&E().energy>0?'':'disabled'}>到公主府探望<small>${callWait?`还需 ${callWait} 个月`:'精力 −1'}</small></button>`:''}
-    ${(local||frontier)&&!whiteSpringInPalace(k)?`<button class="btn" onclick="A.princessVisit(${k.id})" ${wait?'disabled':''}>${local?'请她回宫探亲':'读'+princessMarriageLand(k)+'家书'}${wait?`<small>还需 ${wait} 个月</small>`:''}</button>`:''}</div>`);
+  return detailSection('探望与家书',`<div class="acts">${local?`<button class="btn jade" data-onclick="A.princessEstateCall(${k.id})" ${princessEstateVisitReady(k)&&E().energy>0?'':'disabled'}>到公主府探望<small>${callWait?`还需 ${callWait} 个月`:'精力 −1'}</small></button>`:''}
+    ${(local||frontier)&&!whiteSpringInPalace(k)?`<button class="btn" data-onclick="A.princessVisit(${k.id})" ${wait?'disabled':''}>${local?'请她回宫探亲':'读'+princessMarriageLand(k)+'家书'}${wait?`<small>还需 ${wait} 个月</small>`:''}</button>`:''}</div>`);
 }
 function viewPrincessEstate(){
   const k=princessById(UI.sel),e=k?.estate;
@@ -494,12 +494,12 @@ function viewPrincessEstate(){
   const local=princessEstateLocal(k);
   const refusal=xieSharedCourtshipActive()?xieSharedProfilePanel(k):xiePrincessRefusalPanel(k);
   const mother=k.reign&&familyHostById(k.mom);
-  const motherLink=mother?.familyArchive?`<button class="person-link" onclick="A.go('consort',${mother.id})">${esc(k.momName||fullName(mother))}</button>`:outsideMotherLink(k);
-  return `<button class="btn quiet sm" onclick="A.go('out')">← 返回出巡</button>
+  const motherLink=mother?.familyArchive?`<button class="person-link" data-onclick="A.go('consort',${mother.id})">${esc(k.momName||fullName(mother))}</button>`:outsideMotherLink(k);
+  return `<button class="btn quiet sm" data-onclick="A.go('out')">← 返回出巡</button>
     <header class="detail-head person-detail-head">${porImg(k,112)}<div class="grow"><p>${k.reign?princessKinship(k)+' · ':''}${kidAge(k)}岁 · ${local?'京城府邸':esc(royalKinContactPlace(k,'letter'))}</p><h2>${esc(kidName(k))} · 公主府</h2><p>生母 ${motherLink}</p></div></header>
     ${refusal?princessEstateFamilyPanel(k)+refusal:''}
     ${pageChapters('princess-estate',[
-      ['projects','府务',detailSection(plan.title,`<p>${esc(message)}</p>${e.stage==='proposal'||ready?`<button class="btn gold" onclick="A.princessLetter(${k.id})">${ready?'读她的回信':'读府中来信'}</button>`:''}`)+princessFollowupPanel(k,plan.next)],
+      ['projects','府务',detailSection(plan.title,`<p>${esc(message)}</p>${e.stage==='proposal'||ready?`<button class="btn gold" data-onclick="A.princessLetter(${k.id})">${ready?'读她的回信':'读府中来信'}</button>`:''}`)+princessFollowupPanel(k,plan.next)],
       ['chronicle','府中记事',detailStory(k)],
       ['family','亲眷与婚配',(refusal?'':princessEstateFamilyPanel(k))+(xieCapitalEstate(k)?detailSection('婚事与心意',youthPanel(k)):'')+marriagePanel(k)+householdPanel(k)]
     ])}`;

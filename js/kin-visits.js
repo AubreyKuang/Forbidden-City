@@ -55,7 +55,7 @@ function natalAdmissionReason(c,p){
 function natalAdmissionPanel(c,p){
   if(p.sex!=='f'||p.parentRelativeId||natalAge(p)<18||!p.alive||p.consortId)return '';
   const reason=natalAdmissionReason(c,p);
-  return `<div class="acts"><button class="btn gold" onclick="A.natalCourtship(${c.id},${p.id})" ${reason?'disabled':''}>询问留宫意愿<small>可纳为常在</small></button>${reason?`<span class="hint">暂不能纳妃：${esc(reason)}。</span>`:'<span class="hint">正在议亲也可询问；正式册封时才了结原亲事。</span>'}</div>`;
+  return `<div class="acts"><button class="btn gold" data-onclick="A.natalCourtship(${c.id},${p.id})" ${reason?'disabled':''}>询问留宫意愿<small>可纳为常在</small></button>${reason?`<span class="hint">暂不能纳妃：${esc(reason)}。</span>`:'<span class="hint">正在议亲也可询问；正式册封时才了结原亲事。</span>'}</div>`;
 }
 A.natalCourtship=function(id,relative){
   if(modalOpen)return;const e=natalEntry(id,relative);if(!e)return;

@@ -35,7 +35,7 @@ function whiteSpringMemoryRecorded(c){
 }
 function whiteSpringSelectionButton(c){
   if(!whiteSpringSelectionHint(c)||whiteSpringMemoryRecorded(c))return '';
-  return '<button class="btn" onclick="A.whiteSpringAudience('+c.id+')">听她讲白泉旧闻</button>';
+  return '<button class="btn" data-onclick="A.whiteSpringAudience('+c.id+')">听她讲白泉旧闻</button>';
 }
 A.whiteSpringAudience=function(id){
   if(modalOpen||!S||S.over||!whiteSpringAdmirationActive())return;
@@ -200,7 +200,7 @@ function whiteSpringFriendPanel(person){
   const rows=[];
   if(whiteSpringAdmirationActive()&&!isPrincess&&admiresWhiteSpring(person)){
     const ally=whiteSpringResident(harem());
-    if(ally)rows.push('<p>身在<button class="person-link" onclick="A.go(\'consort\','+ally.id+')">'+esc(fullName(ally))+'</button>一派，愿与她同进退。</p>');
+    if(ally)rows.push('<p>身在<button class="person-link" data-onclick="A.go(\'consort\','+ally.id+')">'+esc(fullName(ally))+'</button>一派，愿与她同进退。</p>');
     else if(!person.whiteSpringFriend?.princess)rows.push('<p class="hint">在娘家便听过白泉公主的旧闻，盼有朝一日当面请安。</p>');
   }
   for(const c of girls){
@@ -211,7 +211,7 @@ function whiteSpringFriendPanel(person){
       const parcel=tie.familyParcel,gift=WHITE_SPRING_FAMILY_GIFTS[parcel.key];
       if(gift){
         const reason=whiteSpringFamilyGiftPause(c,p)||(tie.last===S.turn?'这月已经相聚，下月可再约。':friendshipTense(c,p)||relGet(c,p)<30?'两人近来疏远，待交情转好再约。':'');
-        rows.push(`<p>${esc(fullName(c))}收到${esc(parcel.relation+parcel.sender)}此前送来的${esc(gift.name)}，想与阿依慕分享。</p><button class="btn jade sm" onclick="A.whiteSpringFamilyGift(${c.id})" ${whiteSpringFamilyGiftReady(c,p,tie)?'':'disabled'}>带着${esc(gift.name)}去见阿依慕</button>${reason?`<p class="hint">${esc(reason)}</p>`:''}`);
+        rows.push(`<p>${esc(fullName(c))}收到${esc(parcel.relation+parcel.sender)}此前送来的${esc(gift.name)}，想与阿依慕分享。</p><button class="btn jade sm" data-onclick="A.whiteSpringFamilyGift(${c.id})" ${whiteSpringFamilyGiftReady(c,p,tie)?'':'disabled'}>带着${esc(gift.name)}去见阿依慕</button>${reason?`<p class="hint">${esc(reason)}</p>`:''}`);
       }
     }
     if(journalContentVersion()>=115&&tie.familyGiftsGiven?.length){
@@ -219,8 +219,8 @@ function whiteSpringFriendPanel(person){
       if(given.length)rows.push(`<p class="hint">曾亲手送给阿依慕：${given.map(esc).join('、')}。</p>`);
     }
     const actions=Object.entries(WHITE_SPRING_VISITS).filter(([key])=>!tie[key]).map(([key,v])=>
-      `<button class="btn jade sm" onclick="A.whiteSpringVisit(${c.id},'${key}')" ${S.over||tie.last===S.turn||friendshipTense(c,p)||relGet(c,p)<30?'disabled':''}>${v.title}</button>`).join('');
-    rows.push(`<p>与<button class="person-link" onclick="A.go('consort',${companion.id})">${esc(fullName(companion))}</button>有白泉铃声这段旧缘。</p>`+
+      `<button class="btn jade sm" data-onclick="A.whiteSpringVisit(${c.id},'${key}')" ${S.over||tie.last===S.turn||friendshipTense(c,p)||relGet(c,p)<30?'disabled':''}>${v.title}</button>`).join('');
+    rows.push(`<p>与<button class="person-link" data-onclick="A.go('consort',${companion.id})">${esc(fullName(companion))}</button>有白泉铃声这段旧缘。</p>`+
       (actions?`<div class="acts">${actions}</div>${tie.last===S.turn?'<p class="hint">这月已经相聚，下月可再约。</p>':friendshipTense(c,p)||relGet(c,p)<30?'<p class="hint">两人近来疏远，待交情转好再约。</p>':''}`:''));
   }
   return rows.length?detailSection('白泉旧缘',rows.join('')):'';

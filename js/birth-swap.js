@@ -99,5 +99,5 @@ function recoveredSwapEvent(){
 function outsideBirthFamilyPanel(){
   const children=S.children.filter(k=>k.birthSwap?.occurred&&k.birthSwap.confirmed);
   if(!children.length)return '';
-  return `<section class="family-branch"><h3>宫外亲缘与收养</h3>${children.map(k=>`<article class="card portrait-card"><button class="child-portrait" onclick="A.go('kid',${k.id})">${porImg(k,72)}</button><div class="grow"><button class="person-link" onclick="A.go('kid',${k.id})">${esc(kidName(k))}</button><p>生母 ${esc(k.momName)} · 生父 ${childFatherHTML(k)}</p>${fosterOf(k)?`<p>宫中养母 ${parentLink(k.foster)}</p>`:''}<p class="hint">${esc(k.parentage?.result||'身世已查明，安置待议。')}</p></div></article>`).join('')}</section>`;
+  return `<section class="family-branch"><h3>宫外亲缘与收养</h3>${children.map(k=>`<article class="card portrait-card"><button class="child-portrait" data-onclick="A.go('kid',${k.id})">${porImg(k,72)}</button><div class="grow"><button class="person-link" data-onclick="A.go('kid',${k.id})">${esc(kidName(k))}</button><p>生母 ${esc(k.momName)} · 生父 ${childFatherHTML(k)}</p>${fosterOf(k)?`<p>宫中养母 ${parentLink(k.foster)}</p>`:''}<p class="hint">${esc(k.parentage?.result||'身世已查明，安置待议。')}</p></div></article>`).join('')}</section>`;
 }

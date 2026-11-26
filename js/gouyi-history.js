@@ -70,7 +70,7 @@ const gouyiOldNostalgia=QEV['念旧'];
 QEV['念旧']=function(c){if(gouyiReadingActive()&&c.gouyi&&S.turn-(c.enteredAt??S.turn)>=2&&gouyiReadingReady(c)&&chance(.35))return gouyiReadingEvent(c);return gouyiOldNostalgia(c);};
 A.gouyiReadHistory=function(id){const c=byId(id);if(!modalOpen&&c?.gouyi&&S.turn-(c.enteredAt??S.turn)>=2)pushEv(gouyiReadingEvent(c));};
 const gouyiReadingPanel=gouyiInquiryPanel;
-gouyiInquiryPanel=function(c){const html=gouyiReadingPanel(c);return html+(c?.gouyi&&S.turn-(c.enteredAt??S.turn)>=2&&gouyiReadingReady(c)?`<button class="btn" onclick="A.gouyiReadHistory(${c.id})">陪令仪读到钩弋旧史</button>`:'');};
+gouyiInquiryPanel=function(c){const html=gouyiReadingPanel(c);return html+(c?.gouyi&&S.turn-(c.enteredAt??S.turn)>=2&&gouyiReadingReady(c)?`<button class="btn" data-onclick="A.gouyiReadHistory(${c.id})">陪令仪读到钩弋旧史</button>`:'');};
 const gouyiReadingVoice=consortVoicePool;
 consortVoicePool=function(c){const pool=gouyiReadingVoice(c);if(!gouyiReadingActive()||!inPalace(c)||maternalVoiceUrgent(c)||['悲恸','心如死灰'].includes(xinOf(c)))return pool;
   const d=c.gouyiReading,assurance=c.gouyi?.readingAssurance;

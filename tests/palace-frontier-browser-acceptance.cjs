@@ -12,13 +12,13 @@ async function importCase(page,name){await page.goto(url);await page.getByRole('
 async function menu(page,name){await page.locator('#menu').getByRole('button',{name,exact:true}).click();}
 async function click(page,label){await page.locator('#modal').getByRole('button',{name:label}).click();}
 async function finish(page){assert.ok((await read(page)).result);await page.locator('#modal .mch button').click();}
-async function person(page,id){await menu(page,'后宫');await page.locator(`[onclick="A.go('consort',${id})"]`).first().click();}
+async function person(page,id){await menu(page,'后宫');await page.locator(`[data-onclick="A.go('consort',${id})"]`).first().click();}
 async function history(page,needle){if(await page.locator('.chronicle-filter-fold:not([open]) > summary').count())await page.locator('.chronicle-filter-fold:not([open]) > summary').click();await page.getByRole('textbox',{name:'搜索人物纪事',exact:true}).fill(needle);await page.getByRole('button',{name:'搜索纪事',exact:true}).click();const item=page.locator('#panel li:visible').filter({hasText:needle}).last();await item.scrollIntoViewIfNeeded();assert.ok(await item.isVisible());}
 async function run(page,r){
  const name=r.name;await importCase(page,name);await reload(page,r,'imported');
  if(name.startsWith('dowager-')){
   assert.equal((await read(page)).title,name==='dowager-praise'?'慈宁宫':'慈宁宫 · 窗前时令');await shot(page,name+'-'+r.viewport);await page.locator('#modal .mch button').first().click();await reload(page,r,'dowager-answer');await finish(page);
-  const topic=JSON.stringify((await read(page)).dowager.conversations);await page.locator('[onclick="A.greet()"]').click();assert.equal((await read(page)).title,'慈宁宫 · 静坐');await reload(page,r,'same-month-quiet');await click(page,'陪她坐一会');assert.equal(JSON.stringify((await read(page)).dowager.conversations),topic);
+  const topic=JSON.stringify((await read(page)).dowager.conversations);await page.locator('[data-onclick="A.greet()"]').click();assert.equal((await read(page)).title,'慈宁宫 · 静坐');await reload(page,r,'same-month-quiet');await click(page,'陪她坐一会');assert.equal(JSON.stringify((await read(page)).dowager.conversations),topic);
  }else if(name==='arrivals'||name==='expired'){
   await menu(page,'选秀');const data=await read(page),first=data.consorts[0],cohort=first.selectionCohort;
   const panel=await page.locator('#panel').innerText();assert.equal(panel.includes('新妃安顿'),name==='arrivals');await shot(page,name+'-'+r.viewport);

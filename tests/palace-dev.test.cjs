@@ -79,7 +79,7 @@ test('invalid jumps and storage failures leave the original timeline unchanged',
 test('young portrait alternatives have exactly one selected identity and keep the target in sync',()=>{
   const {run}=boot();run(`var child=makeKid(harem()[0],'f','清嘉');child.portraitVariant=26;DEV.select('kid:'+child.id);
     assert.equal($('#dev-target').value,'kid:'+child.id);assert.equal(($('#dev-gallery').innerHTML.match(/aria-pressed="true"/g)||[]).length,1);
-    assert.ok($('#dev-gallery').innerHTML.includes('aria-pressed="true" onclick="DEV.face(26)"'));`);
+    assert.ok($('#dev-gallery').innerHTML.includes('aria-pressed="true" data-onclick="DEV.face(26)"'));`);
 });
 test('portrait preview through the real form handles newborn and legacy missing support as a number',()=>{
   const {run}=boot();run(`for(var sex of ['m','f'])for(var age of [0,8,20]){

@@ -9,6 +9,8 @@ const SaveManager = (() => {
   function getStorage() {
     if(typeof PalaceStorage!=='undefined'&&PalaceStorage.store)return PalaceStorage.store;
     if(typeof PalaceStorage!=='undefined'&&PalaceStorage.unsaved)return null;
+    // A host that forbids browser storage only ever saves through its own store.
+    if(typeof PALACE_EDITION!=='undefined'&&!PALACE_EDITION.feature('browserStorage'))return null;
     try { return globalThis.localStorage; } catch { return null; }
   }
 
@@ -184,6 +186,7 @@ const validPalaceSave=s=>record(s.emp)&&record(s.flags)&&
 // v1 saves are still accepted; migrate() fills in gameplay fields added since then.
 const migratePalaceSave=s=>s;
 function palaceSaveError(slot){
+  if(!PALACE_EDITION.feature('saveExport'))return palaceHostSaveError(slot);
   const status=SaveManager.status(SaveManager.getStorage(),SKEY+slot);
   if(status==='newer')return '此存档由新版游戏保存，请打开新版继续。';
   if(status==='conflict')return '另一标签页已更新此存档。本页已暂停覆盖，可下载备份文件后重新读取。';
@@ -194,6 +197,15 @@ function palaceSaveError(slot){
   if(e?.name==='QuotaExceededError'||e?.name==='NS_ERROR_DOM_QUOTA_REACHED'||e?.code===22||e?.code===1014||/exceed|quota|max ?size|storage.*full/i.test(e?.errMsg||''))return '可用存储空间不足，眼下的进度尚未写入。请先下载备份文件，再释放设备空间后重试。';
   if(e?.name==='SecurityError'||e?.name==='NotAllowedError')return '浏览器禁止了存档写入，眼下的进度尚未写入。请允许本站存储数据，或下载备份文件留存。';
   return '存档写入失败，眼下的进度尚未写入，之前的存档仍保留。请重试保存，或下载备份文件留存。';
+}
+// Same cases without file backups, for hosts that cannot download or import files.
+function palaceHostSaveError(slot){
+  const storage=SaveManager.getStorage();
+  if(!storage)return '当前无法存档，本局进度只在本次游玩中保留；退出后不会保存。';
+  if(SaveManager.status(storage,SKEY+slot)==='newer')return '此存档由新版游戏保存，请更新后继续。';
+  const e=storage.error||SaveManager.error;
+  if(e?.name==='QuotaExceededError'||/exceed|quota|max ?size|storage.*full|空间不足/i.test(e?.errMsg||e?.message||''))return '存档空间不足，眼下的进度尚未写入，之前的存档仍保留。可在「存档」页清理不用的存档位后重试。';
+  return '存档写入失败，眼下的进度尚未写入，之前的存档仍保留。请稍后重试保存。';
 }
 let lastAutoSaveError='';
 let dismissedSaveError='';
@@ -333,7 +345,7 @@ function pendingRecoveryEvent(){
         log('未能续接的未完事件已放下，从本月继续。');
         toast('已放下未完事件，进度会照常保存。');
         A.resumePendingScenes();return null;}},
-      {t:'先下载备份文件',f:()=>{A.downloadSave();pushEv(pendingRecoveryEvent());return null;}},
+      ...(PALACE_EDITION.feature('saveExport')?[{t:'先下载备份文件',f:()=>{A.downloadSave();pushEv(pendingRecoveryEvent());return null;}}]:[]),
       {t:'暂不处理，保持存档原样',f:()=>null}]};
 }
 A.resumePendingScenes=function(){
@@ -359,9 +371,12 @@ A.load=function(slot){
 // A report has one acknowledgement choice. Keep that tiny action in this tab
 // while IndexedDB commits the usual autosave. Never store the world here.
 const JINYIWEI_ACK_KEY=SKEY+'report-acknowledgements';
+// Hosts without browser storage keep the acknowledgement in memory for this session.
+const jinyiweiAckMemory={value:'[]'};
+const jinyiweiAckStore=()=>PALACE_EDITION.feature('browserStorage')?sessionStorage:{getItem:()=>jinyiweiAckMemory.value,setItem:(k,v)=>{jinyiweiAckMemory.value=String(v);}};
 function readJinyiweiAcknowledgements(){
   try{
-    const entries=JSON.parse(sessionStorage.getItem(JINYIWEI_ACK_KEY)||'[]');
+    const entries=JSON.parse(jinyiweiAckStore().getItem(JINYIWEI_ACK_KEY)||'[]');
     return Array.isArray(entries)?entries:[];
   }catch{return [];}
 }
@@ -375,7 +390,7 @@ function rememberJinyiweiAcknowledgement(event){
     if(!revisions.length)return;
     const recent=readJinyiweiAcknowledgements().filter(entry=>entry?.notice!==event.jinyiweiNoticeKey);
     recent.push({notice:event.jinyiweiNoticeKey,revisions});
-    sessionStorage.setItem(JINYIWEI_ACK_KEY,JSON.stringify(recent.slice(-8)));
+    jinyiweiAckStore().setItem(JINYIWEI_ACK_KEY,JSON.stringify(recent.slice(-8)));
   }catch{/* Standard autosave still runs if session storage is unavailable. */}
 }
 function resumeJinyiweiAcknowledgement(){
@@ -421,6 +436,7 @@ A.rewind=function(index, savedAt){
 const PALACE_FILE_LIMIT=64*1024*1024;
 A.downloadSave=function(){
   if(!S)return;
+  if(!PALACE_EDITION.feature('saveExport')){toast('当前版本不支持导出存档文件');return;}
   let url;
   try{
     const blob=new Blob([JSON.stringify({...PalaceActions.payload(),saveVersion:SaveManager.version})],{type:'application/json'});
@@ -444,6 +460,7 @@ function importPalaceFileText(raw){
 }
 let palaceFileReading=false;
 A.readSaveFile=async function(input){
+  if(!PALACE_EDITION.feature('saveExport'))return;
   const file=input?.files?.[0];if(!file||palaceFileReading)return;
   if(file.size>PALACE_FILE_LIMIT){input.value='';toast('文件过大，最多支持 64 MB 的游戏存档');return;}
   const previous=S,turn=S?.turn;palaceFileReading=true;

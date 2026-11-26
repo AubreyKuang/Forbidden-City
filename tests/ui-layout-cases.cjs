@@ -48,7 +48,8 @@ function signature(html){
  for(const token of tokens){
   if(!token.startsWith('<')){const s=decode(token);if(s)text.push(s);continue;}
   if(!/^<(button|input|select|option)\b/.test(token))continue;
-  const attrs=Object.fromEntries([...token.matchAll(/([\w-]+)="([^"]*)"/g)].map(m=>[m[1],decode(m[2])]));
+  // Handlers moved from onclick="" to data-onclick="" (CSP-safe); compare them under one name.
+  const attrs=Object.fromEntries([...token.matchAll(/([\w-]+)="([^"]*)"/g)].map(m=>[m[1].replace(/^data-(on[a-z]+)$/,'$1'),decode(m[2])]));
   const kind=token.match(/^<(\w+)/)[1];
   if(attrs.onclick||attrs.onchange||attrs.onkeydown||kind==='option'||kind==='input')controls.push({kind,...Object.fromEntries(Object.entries(attrs).filter(([k])=>['onclick','onchange','onkeydown','value','type','accept','name','id','aria-pressed'].includes(k))),disabled:/\sdisabled(?:\s|>|=)/.test(token),selected:/\sselected(?:\s|>|=)/.test(token)});
  }

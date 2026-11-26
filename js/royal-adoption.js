@@ -21,10 +21,10 @@ function princeAdoptionContactPanel(k){
   const rows=children.filter(adoptionLiving).map(son=>{
     const family=princeAdoptionFamily(son),mode=princeAdoptionContactMode(son,family),contact=son.princeAdoption.contact;
     const args=`${royalActionArg(k.id)},${royalActionArg(son.id)}`,months=Math.max(0,(contact?.last??-99)+4-S.turn);
-    if(contact?.reply?.unread)return `<p>${esc(son.name)}的家书已有回音。 <button class="btn sm jade" onclick="A.princeAdoptionReply(${args})">读生家回信</button></p>`;
+    if(contact?.reply?.unread)return `<p>${esc(son.name)}的家书已有回音。 <button class="btn sm jade" data-onclick="A.princeAdoptionReply(${args})">读生家回信</button></p>`;
     if(contact?.pending)return `<p>${esc(son.name)}的家书已送出，等候回信。</p>`;
     if(!mode)return '';
-    return `<p>${esc(son.name)} <button class="btn sm jade" onclick="A.princeAdoptionContact(${args})" ${months||S.over?'disabled':''}>${mode==='visit'?'回生家探望':'给生父母寄家书'}${months?`<small>还需 ${months} 个月</small>`:''}</button></p>`;
+    return `<p>${esc(son.name)} <button class="btn sm jade" data-onclick="A.princeAdoptionContact(${args})" ${months||S.over?'disabled':''}>${mode==='visit'?'回生家探望':'给生父母寄家书'}${months?`<small>还需 ${months} 个月</small>`:''}</button></p>`;
   }).join('');
   return detailSection('与生家往来',rows);
 }
@@ -160,7 +160,7 @@ function palaceAdoptionPanel(){
   if(!royalAdoptionStoriesActive()||S.over)return '';
   const options=palaceNeedsSon()&&availableRoyalWards().some(r=>r.child.sex==='m');
   const pending=palaceWardPending();
-  return detailSection('宗亲入继',`${options?'<button class="btn jade" onclick="A.palaceWard()">议请过继皇子</button>':''}${pending?'<button class="btn gold" onclick="A.palaceWard(true)">查看宗亲遗孤奏报</button>':''}`);
+  return detailSection('宗亲入继',`${options?'<button class="btn jade" data-onclick="A.palaceWard()">议请过继皇子</button>':''}${pending?'<button class="btn gold" data-onclick="A.palaceWard(true)">查看宗亲遗孤奏报</button>':''}`);
 }
 function palaceAdoptionOriginPanel(k){
   const from=k.palaceAdoption;if(!from||!royalAdoptionStoriesActive())return '';
@@ -169,5 +169,5 @@ function palaceAdoptionOriginPanel(k){
 function palaceAdoptionFamilyLinks(k){
   if(!royalAdoptionStoriesActive())return '';
   return (k.palaceAdoptedChildren||[]).map(royalById).filter(Boolean).map(c=>
-    `<p><button class="person-link" onclick="A.go('${S.children.includes(c)?'kid':'relative'}',${royalActionArg(c.id)})">${esc(c.name)}</button> · 已入继宫中</p>`).join('');
+    `<p><button class="person-link" data-onclick="A.go('${S.children.includes(c)?'kid':'relative'}',${royalActionArg(c.id)})">${esc(c.name)}</button> · 已入继宫中</p>`).join('');
 }

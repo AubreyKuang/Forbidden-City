@@ -114,7 +114,7 @@ function whiteSpringKinLinks(c){
   const f=whiteSpringFamily(c);
   return Object.entries(WHITE_SPRING_KIN).map(([role,data])=>{
     const p=f[role];
-    return `<button class="graph-kin-person${p.alive?'':' deceased'}" onclick="A.go('white-spring-kin','${p.id}')" aria-label="查看${data.relation}${p.name}">${porImg(p,34)}<span class="graph-person"><strong>${p.name}</strong><small>${data.relation} · ${data.title}${p.alive?'':' · 已故'}</small></span></button>`;
+    return `<button class="graph-kin-person${p.alive?'':' deceased'}" data-onclick="A.go('white-spring-kin','${p.id}')" aria-label="查看${data.relation}${p.name}">${porImg(p,34)}<span class="graph-person"><strong>${p.name}</strong><small>${data.relation} · ${data.title}${p.alive?'':' · 已故'}</small></span></button>`;
   }).join('');
 }
 function viewWhiteSpringKin(){
@@ -124,7 +124,7 @@ function viewWhiteSpringKin(){
   const past=WHITE_SPRING_PAST[role].map(t=>({d:'公主入宫前',t}));
   const chronicle={...p,story:[...past,...p.story]};
   return `${personBackButton('family')}<header class="detail-head person-detail-head">${porImg(p,144)}<div class="grow"><p>白泉王室 · ${data.title}${p.alive?'':' · 已故'}</p><h2>${p.name}</h2><p>${data.bio}</p>
-    <button class="btn quiet sm" onclick="A.go('consort',${c.id})">${role==='father'?'女儿':'妹妹'} · 阿依慕 ↗</button></div></header>${detailSection('人物纪事',detailStory(chronicle))}`;
+    <button class="btn quiet sm" data-onclick="A.go('consort',${c.id})">${role==='father'?'女儿':'妹妹'} · 阿依慕 ↗</button></div></header>${detailSection('人物纪事',detailStory(chronicle))}`;
 }
 function whiteSpringLetter(c,kind,fact,voices,replies,stamp){
   const family=whiteSpringFamily(c);
@@ -186,7 +186,7 @@ function whiteSpringMailPanel(c){
   if(!whiteSpringRoyal(c))return '';
   const f=whiteSpringFamily(c),m=f.latest;
   const notes=journalContentVersion()>=108?whiteSpringKinLinks(c):[f.father,f.brother].map(p=>p.story.length?`<details><summary>${p.name}的纪事</summary>${detailStory(p)}</details>`:'').join('');
-  const reply=m?.replies.length&&!m.answered&&c.alive&&!c.gone&&!S.over?`<button class="btn jade" onclick="A.whiteSpringReply(${c.id})">随使团回信</button>`:'';
+  const reply=m?.replies.length&&!m.answered&&c.alive&&!c.gone&&!S.over?`<button class="btn jade" data-onclick="A.whiteSpringReply(${c.id})">随使团回信</button>`:'';
   return detailSection('白泉王室家书',`<p>父王 · 王兄 · 来信随白泉使团递送</p>${m?`<p>${esc(m.date)} · ${esc(m.line)}</p>`:''}${reply}${notes}`);
 }
 A.whiteSpringReply=function(id){

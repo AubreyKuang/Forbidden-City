@@ -106,14 +106,14 @@ function childTemplePanel(k){
   const stay=k.templeStay;
   if(stay)return `<p><strong>护国寺${stay.reason==='parentage'?' · 暂居养护':' · 祈福'}</strong> · ${stay.due==null?'未定归期':`还有${Math.max(0,stay.due-S.turn)}个月`}</p>
     <p class="hint">${kidAge(k)<6?'乳母随行照护，不作剃度。':'随侍照料，课业照常。'}寺中居留时不参加宫内活动。</p>
-    ${!k.removedFromRoyal?`<button class="btn jade" onclick="A.recallTemple(${k.id})">${k.away||k.estate||k.princeEstate?'结束祈福，返回原居处':'接回宫中'}</button>`:''}`;
+    ${!k.removedFromRoyal?`<button class="btn jade" data-onclick="A.recallTemple(${k.id})">${k.away||k.estate||k.princeEstate?'结束祈福，返回原居处':'接回宫中'}</button>`:''}`;
   return '';
 }
 function motherConcernPanel(c){
   const children=distantChildren(c);if(!children.length)return '';
-  return `${bar('牵挂',c.childConcern?.value??35,'#936375')}<p>${children.map(k=>`<button class="person-link" onclick="A.go('kid',${k.id})">${esc(k.name)}</button> · ${esc(childWhereabouts(k))}`).join('；')}</p>
+  return `${bar('牵挂',c.childConcern?.value??35,'#936375')}<p>${children.map(k=>`<button class="person-link" data-onclick="A.go('kid',${k.id})">${esc(k.name)}</button> · ${esc(childWhereabouts(k))}`).join('；')}</p>
     <p class="hint">离别会加深牵挂，每隔数月影响心情；${c.templeStay?'结束清修、与孩子团聚':'递送平安信或让孩子回来'}，可稍解相思。</p>
-    ${inPalace(c)?`<button class="btn jade" onclick="A.childPeaceLetter(${c.id})" ${S.turn-(c.childConcern?.lastLetter??-99)<3?'disabled':''}>递一封孩子的平安信<small>${S.turn-(c.childConcern?.lastLetter??-99)<3?'三个月可再递信':'精力-1'}</small></button>`:''}`;
+    ${inPalace(c)?`<button class="btn jade" data-onclick="A.childPeaceLetter(${c.id})" ${S.turn-(c.childConcern?.lastLetter??-99)<3?'disabled':''}>递一封孩子的平安信<small>${S.turn-(c.childConcern?.lastLetter??-99)<3?'三个月可再递信':'精力-1'}</small></button>`:''}`;
 }
 function motherConcernVoice(c){
   const k=distantChildren(c)[0];if(!k)return null;
@@ -166,7 +166,7 @@ function returnConsortFromTemple(c){
 }
 function consortTemplePanel(c){
   if(!c.alive||!c.templeStay)return '';
-  return `<p>护国寺清修 · ${c.templeStay.due==null?'未定归期':`还有${Math.max(0,c.templeStay.due-S.turn)}个月`}</p><p class="hint">宫女随行，原宫室与位分保留。寺居期间不参与宫内活动、宴请或召幸。</p><button class="btn jade" onclick="A.recallConsortTemple(${c.id})">迎她回宫</button>`;
+  return `<p>护国寺清修 · ${c.templeStay.due==null?'未定归期':`还有${Math.max(0,c.templeStay.due-S.turn)}个月`}</p><p class="hint">宫女随行，原宫室与位分保留。寺居期间不参与宫内活动、宴请或召幸。</p><button class="btn jade" data-onclick="A.recallConsortTemple(${c.id})">迎她回宫</button>`;
 }
 function consortTemplePlanEvent(c){
   if(!consortTempleEligible(c))return null;

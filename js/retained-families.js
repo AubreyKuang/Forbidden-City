@@ -64,7 +64,7 @@ function retainedFamiliesPanel(){
     const members=hosts.filter(x=>x.house?.father.id===h.father.id);
     const from=members.some(p=>direct.has(p.id))?'太后母家':reignEra(c.familyArchive.gen)||'先朝';
     return `<details class="family-branch"><summary><strong>${esc(c.sur)}氏</strong><span class="hint">${esc(from)} · ${members.length} 位宫眷</span></summary>
-      <div class="acts">${members.map(p=>`<button class="btn sm quiet" onclick="A.go('consort',${royalActionArg(p.id)})">${esc(fullName(p))}<small>${esc(retainedHostTitle(p))}</small></button>`).join('')}</div>
+      <div class="acts">${members.map(p=>`<button class="btn sm quiet" data-onclick="A.go('consort',${royalActionArg(p.id)})">${esc(fullName(p))}<small>${esc(retainedHostTitle(p))}</small></button>`).join('')}</div>
       <dl class="family-kin-list">${officialRoles(h).filter(r=>!r.startsWith('relative')).map(role=>`<div><dt>${esc(retainedKinship(c,role))}</dt><dd>${officialLink(c,role)}<small>${esc(officialOfficeLabel(officialPerson(h,role)))} · ${esc(officialStatus(officialPerson(h,role)))}</small></dd></div>`).join('')}</dl>
       ${detailFold('展开家谱',familyHouseTree(c,true))}</details>`;
   }).join('');

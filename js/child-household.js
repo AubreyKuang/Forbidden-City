@@ -154,16 +154,16 @@ function palaceLifeScene(name){
   return youngChildMother(k)===mother&&mother?.palace===name?{scene,child:k,mother}:null;
 }
 function palaceConversation(title,prop,people){
-  return `<section class="family-room" aria-label="${esc(title)}"><p class="school-caption">${esc(title)}</p><div class="family-room-people">${people.map(({person,line,action})=>`<article><p class="school-speech">${esc(line)}</p>${action?`<button class="family-room-person" onclick="${action}">${porImg(person,112)}<span>${esc(porName(person))}</span></button>`:`<div class="family-room-person">${porImg(person,112)}<span>${esc(porName(person))}</span></div>`}</article>`).join('')}</div><div class="family-room-props">${esc(prop)}</div></section>`;
+  return `<section class="family-room" aria-label="${esc(title)}"><p class="school-caption">${esc(title)}</p><div class="family-room-people">${people.map(({person,line,action})=>`<article><p class="school-speech">${esc(line)}</p>${action?`<button class="family-room-person" data-onclick="${action}">${porImg(person,112)}<span>${esc(porName(person))}</span></button>`:`<div class="family-room-person">${porImg(person,112)}<span>${esc(porName(person))}</span></div>`}</article>`).join('')}</div><div class="family-room-props">${esc(prop)}</div></section>`;
 }
 function palaceLifePanel(name){
   const found=palaceLifeScene(name),children=nurseryChildren(name);
-  const residents=children.length?`<section class="nursery-residents"><h3>随母同住的孩子</h3><div class="activity-portraits">${children.map(k=>`<button class="activity-person" onclick="A.go('kid',${k.id})">${porImg(k,68)}<span>${esc(k.name)} · ${kidAge(k)}岁</span></button>`).join('')}</div><p class="hint">${children.map(k=>esc(`${k.name}随${childResidenceCareLabel(k,youngChildMother(k))}${cName(youngChildMother(k))}住在这里`)).join('；')}。</p></section>`:'';
+  const residents=children.length?`<section class="nursery-residents"><h3>随母同住的孩子</h3><div class="activity-portraits">${children.map(k=>`<button class="activity-person" data-onclick="A.go('kid',${k.id})">${porImg(k,68)}<span>${esc(k.name)} · ${kidAge(k)}岁</span></button>`).join('')}</div><p class="hint">${children.map(k=>esc(`${k.name}随${childResidenceCareLabel(k,youngChildMother(k))}${cName(youngChildMother(k))}住在这里`)).join('；')}。</p></section>`:'';
   if(!found)return residents;
   if(found.scene.kind==='guest')return youngGuestPanel(found,name)+residents;
   const {scene,child:k,mother}=found,act=scene.activity;
   const room=palaceConversation(act.title,act.prop,[{person:mother,line:act.mother,action:`A.go('consort',${mother.id})`},{person:k,line:act.child,action:`A.go('kid',${k.id})`}]);
-  return `${room}${scene.result?`<p class="initiative-note" role="status">${esc(scene.result)}</p>`:`<p class="hint">你走到门边，母子还没有察觉。可以陪一会儿，也可以静静离开。</p><div class="acts"><button class="btn jade" onclick="A.joinNursery('join')" ${E().energy>0?'':'disabled'}>坐下陪陪他们<small>精力-1</small></button><button class="btn" onclick="A.joinNursery('watch')">放轻脚步，听一会儿</button></div>`}${residents}`;
+  return `${room}${scene.result?`<p class="initiative-note" role="status">${esc(scene.result)}</p>`:`<p class="hint">你走到门边，母子还没有察觉。可以陪一会儿，也可以静静离开。</p><div class="acts"><button class="btn jade" data-onclick="A.joinNursery('join')" ${E().energy>0?'':'disabled'}>坐下陪陪他们<small>精力-1</small></button><button class="btn" data-onclick="A.joinNursery('watch')">放轻脚步，听一会儿</button></div>`}${residents}`;
 }
 A.joinNursery=function(mode){
   if(S.over||modalOpen||UI.view!=='palace'||!['join','watch'].includes(mode))return;

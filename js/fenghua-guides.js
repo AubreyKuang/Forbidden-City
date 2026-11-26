@@ -44,5 +44,5 @@ const FENGHUA_GUIDES={
 function fenghuaGuide(key,p){
  if(!hongjianContent())return '';const guide=FENGHUA_GUIDES[key];if(!guide)return '';
  const stage=p?.fenghua?.stage||0;
- return `<section class="fenghua-guide"><h4>人物来处</h4><p>${esc(guide.origin)}</p><h4>${key==='xueHongjian'?'宫外相知三章':'三段人物故事'}</h4><ol>${guide.chapters.map(([title,text],i)=>`<li><strong>${esc(title)}</strong>${p&&stage>i?' · 已经历':''}<p>${esc(text)}</p></li>`).join('')}</ol><p><strong>此后相处：</strong>${esc(guide.after)}</p>${!p?.hongjian?'<p class="hint">初识后每三个月可单独相见一次，消耗1点精力。离京、国丧或人物处境不合时暂缓；实际选择保存在个人纪事中。</p>':''}</section>`;
+ return `<section class="fenghua-guide"><h4>人物来处</h4><p>${esc(guide.origin)}</p><h4>${key==='xueHongjian'?'宫外相知三章':'三段人物故事'}</h4><ol>${guide.chapters.map(([title,text])=>[title,editionAllows('fenghua','xiean')?text:text.replace('已相识且在京的谢安可以同席。','')]).map(([title,text],i)=>`<li><strong>${esc(title)}</strong>${p&&stage>i?' · 已经历':''}<p>${esc(text)}</p></li>`).join('')}</ol><p><strong>此后相处：</strong>${esc(guide.after)}</p>${!p?.hongjian?'<p class="hint">初识后每三个月可单独相见一次，消耗1点精力。离京、国丧或人物处境不合时暂缓；实际选择保存在个人纪事中。</p>':''}</section>`;
 }

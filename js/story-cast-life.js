@@ -258,7 +258,7 @@ function storyCastLifePanel(c){
   const life=r.life,stage=life?.stage||0,chapter=storyCastLifeEvent(c,'chapter'),routine=storyCastLifeEvent(c,'routine'),secret=storyCastLifeEvent(c,'secret');
   const due=(stage<3?life?.due:life?.next)??S.turn,wait=Math.max(0,due-S.turn);
   const options=[['chapter',chapter],['routine',routine],['secret',secret],['after',storyCastLifeEvent(c,'after')]].filter(([,event])=>event)
-    .map(([key,event])=>`<button class="btn jade" onclick="A.storyCastLife(${c.id},'${key}')" ${E().energy?'':'disabled'}>${esc(event.title.split(' · ').at(-1))}<small>精力−1</small></button>`).join('');
+    .map(([key,event])=>`<button class="btn jade" data-onclick="A.storyCastLife(${c.id},'${key}')" ${E().energy?'':'disabled'}>${esc(event.title.split(' · ').at(-1))}<small>精力−1</small></button>`).join('');
   const status=c.fixedStory==='xiaoman'&&life?.performance!=null?'戏已演完，散席工钱尚待结算。':
     c.fixedStory==='xiaoman'&&life?.booking!=null?'戏班已经排入下一场宫宴。':
     !inPalace(c)?'在宫里相见后才可续谈。':

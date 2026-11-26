@@ -141,10 +141,10 @@ function heXingjianPanel(){
  const person=heXingjianPerson();
  if(!person||!fenghuaReleased('heXingjian'))return '';
  const assignment=person.fenghua.assignment,mission=heXingjianMission(person),months=assignment&&assignment.due-S.turn;
- if(assignment&&months<=0)return detailSection('东厂专案','<button class="btn jade" onclick="A.heXingjianReport()">阅贺行简回奏</button>');
+ if(assignment&&months<=0)return detailSection('东厂专案','<button class="btn jade" data-onclick="A.heXingjianReport()">阅贺行简回奏</button>');
  if(assignment)return detailSection('东厂专案',`<p>「${esc(mission.title)}」办理中，${months}个月后回奏。</p>`);
  if(!mission)return detailSection('东厂专案','<p>专案已结。旧案仍可从锦衣卫案卷交办。</p>');
- return detailSection('东厂专案',`<p>${esc(mission.brief)}</p><button class="btn jade" onclick="A.heXingjianMission()" ${heXingjianAvailable(person)&&E().energy>0?'':'disabled'}>差遣贺行简 · ${esc(mission.title)}</button>`);
+ return detailSection('东厂专案',`<p>${esc(mission.brief)}</p><button class="btn jade" data-onclick="A.heXingjianMission()" ${heXingjianAvailable(person)&&E().energy>0?'':'disabled'}>差遣贺行简 · ${esc(mission.title)}</button>`);
 }
 const heXingjianNormalCases=casesSection;
 casesSection=function(){return heXingjianPanel()+heXingjianNormalCases();};

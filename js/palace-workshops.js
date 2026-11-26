@@ -13,7 +13,7 @@ function workshopAt(id){return workshopsActive()&&UI.view==='place'&&UI.sel===id
 function workshopChild(k){return childInPalace(k)&&!k.pendingName&&kidAge(k)<15;}
 function workshopPicker(id,people,label,action,enabled){
   if(!people.length)return '';
-  return `<div class="acts workshop-picker"><span class="workshop-select"><select id="${id}" aria-label="${label}">${people.map(p=>`<option value="${p.id}">${esc(p.sex?kidName(p):cName(p)+' · '+fullName(p))}</option>`).join('')}</select></span><button class="btn jade" ${enabled?'':'disabled'} onclick="A.${action}(Number(document.getElementById('${id}').value))">${label}</button></div>`;
+  return `<div class="acts workshop-picker"><span class="workshop-select"><select id="${id}" aria-label="${label}">${people.map(p=>`<option value="${p.id}">${esc(p.sex?kidName(p):cName(p)+' · '+fullName(p))}</option>`).join('')}</select></span><button class="btn jade" ${enabled?'':'disabled'} data-onclick="A.${action}(Number(document.getElementById('${id}').value))">${label}</button></div>`;
 }
 function rehearsalPiece(c){
   if(c.fixedStory==='ayimu')return {name:'白泉鼓引',line:'她把故乡的鼓句拆成三拍，教乐工等银铃声落尽再接末拍。',show:'阿依慕轻击鼓沿，乐工等她腕上的银铃停住才齐齐入拍。'};
@@ -29,7 +29,7 @@ function musicRoom(){
   const book=workshopBook(),p=availableProgram(),people=harem().filter(workshopPresent);
   const ready=!mourningActive()&&book?.lastRehearsal!==S.turn&&E().energy>0;
   return `<h2>南府乐房${backBtn}</h2>`+(p?
-    `<p>节目单上留着${esc(fullName(byId(p.artist)))}的《${esc(p.name)}》，还能留 ${p.turn+6-S.turn} 个月。筹办御花园小宴时，先请本人入席，再勾选这个节目。</p><div class="acts">${banquetReady()&&!mourningActive()?'<button class="btn jade" onclick="A.openBanquet()">筹办御花园小宴</button>':''}<button class="btn quiet" onclick="A.withdrawWorkshopProgram()">撤下节目单</button></div>`:
+    `<p>节目单上留着${esc(fullName(byId(p.artist)))}的《${esc(p.name)}》，还能留 ${p.turn+6-S.turn} 个月。筹办御花园小宴时，先请本人入席，再勾选这个节目。</p><div class="acts">${banquetReady()&&!mourningActive()?'<button class="btn jade" data-onclick="A.openBanquet()">筹办御花园小宴</button>':''}<button class="btn quiet" data-onclick="A.withdrawWorkshopProgram()">撤下节目单</button></div>`:
     `<p>请妃嫔为御花园小宴排一段节目。少数人还可演一段自己的拿手戏。每月可排一次，耗 1 精力，节目单保留六个月。</p>`+
     (mourningActive()?'<p class="hint">宫中服丧，乐房暂歇。</p>':people.length?workshopPicker('music-artist',people,'请她排演','rehearseWorkshop',ready):'<p class="hint">眼下无人能来排演。</p>'));
 }
@@ -48,7 +48,7 @@ function banquetProgramReady(draft,people,p){
 function workshopBanquetPanel(draft,people){
   const p=workshopsActive()&&availableProgram();if(!p||draft.kind!=='garden')return '';
   const c=byId(p.artist),ready=banquetProgramReady(draft,people,p),chosen=ready&&draft.programTurn===p.turn;
-  return `<h3>南府节目单</h3><button class="btn sm ${chosen?'on':''}" aria-pressed="${!!chosen}" ${ready?'':'disabled'} onclick="A.toggleWorkshopProgram()">${esc(p.name)} · ${esc(fullName(c))}</button>${ready?'':'<p class="hint">须请排演者入席，当日能赴宴才可开演。</p>'}`;
+  return `<h3>南府节目单</h3><button class="btn sm ${chosen?'on':''}" aria-pressed="${!!chosen}" ${ready?'':'disabled'} data-onclick="A.toggleWorkshopProgram()">${esc(p.name)} · ${esc(fullName(c))}</button>${ready?'':'<p class="hint">须请排演者入席，当日能赴宴才可开演。</p>'}`;
 }
 A.toggleWorkshopProgram=function(){
   const d=banquetDraft(),f=d&&banquetKind(d.kind),p=availableProgram();
@@ -77,11 +77,11 @@ function wardrobeReady(o){
 }
 function wardrobeReceipt(o){
   const r=wardrobeRecipient(o),ready=wardrobeReady(o);
-  return `<p>${esc(o.child?kidName(r):fullName(r))}的${o.item} · ${S.turn===o.turn?'赶制中，下月可取':ready?'已制好':'已制好，等本人回宫得空再交付'}。</p><div class="acts"><button class="btn jade" ${ready?'':'disabled'} onclick="A.deliverWardrobe()">交付${o.item}</button></div>`;
+  return `<p>${esc(o.child?kidName(r):fullName(r))}的${o.item} · ${S.turn===o.turn?'赶制中，下月可取':ready?'已制好':'已制好，等本人回宫得空再交付'}。</p><div class="acts"><button class="btn jade" ${ready?'':'disabled'} data-onclick="A.deliverWardrobe()">交付${o.item}</button></div>`;
 }
 function wardrobeRoom(){
   const o=wardrobeOrder();
-  if(o)return `<h2>尚衣局${backBtn}</h2>`+wardrobeReceipt(o)+'<button class="btn quiet" onclick="A.closeWardrobeOrder()">撤下这张工单</button>';
+  if(o)return `<h2>尚衣局${backBtn}</h2>`+wardrobeReceipt(o)+'<button class="btn quiet" data-onclick="A.closeWardrobeOrder()">撤下这张工单</button>';
   const children=kidsAlive().filter(workshopChild),women=harem().filter(workshopPresent),ready=E().energy>0&&workshopBook()?.lastOrder!==S.turn;
   return `<h2>尚衣局${backBtn}</h2><p>料子从宫中现存的布帛里挑。每月可下一单，耗 1 精力，下月交付。未到读书年纪的孩子做夹衣，满五岁做书袋；妃嫔可制随身香囊。</p>`+
     workshopPicker('wardrobe-child',children,'给孩子裁制','orderChildWardrobe',ready)+workshopPicker('wardrobe-lady',women,'给她做香囊','orderConsortWardrobe',ready);

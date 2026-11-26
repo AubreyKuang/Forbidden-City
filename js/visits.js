@@ -233,7 +233,7 @@ function momVisitState(c){
 function momVisitButton(c){
   if(whiteSpringRoyal(c))return '';
   const state=momVisitState(c);
-  return `<button class="btn" onclick="A.momIn(${c.id})" ${state.ready?'':'disabled'}>接母亲入宫<small>${esc(state.hint)}</small></button>`;
+  return `<button class="btn" data-onclick="A.momIn(${c.id})" ${state.ready?'':'disabled'}>接母亲入宫<small>${esc(state.hint)}</small></button>`;
 }
 const momObj=c=>c.visitor?{isMom:true,seed:c.visitor.seed,name:c.visitor.name,alive:true}:null;
 function momVisit(c,months){if(whiteSpringRoyal(c))return false;if(homeMother(c)&&homeMother(c).status!=='well')return false;const v=c.visitor;if(v){v.until=Math.max(v.until,S.turn+months);return}

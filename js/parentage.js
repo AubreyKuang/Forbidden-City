@@ -40,7 +40,7 @@ function childFatherHTML(k){
   if(k.parentage.status==='hidden')return esc(k.parentage.claimedFather||E().sur+E().name);
   if(!knownBiologicalFather(k))return '待查证';
   const father=kidById(k.parentage.father.id);
-  return father?`<button class="person-link" onclick="A.go('kid',${father.id})">${esc(k.parentage.father.name)}</button>`:esc(k.parentage.father.name);
+  return father?`<button class="person-link" data-onclick="A.go('kid',${father.id})">${esc(k.parentage.father.name)}</button>`:esc(k.parentage.father.name);
 }
 function parentagePanel(k){
   if(!k.parentage||k.parentage.status==='hidden')return '';
@@ -48,11 +48,11 @@ function parentagePanel(k){
   const wait=p.status==='investigating'&&S.turn<p.due;
   return `<p><strong>${label}</strong>${knownBiologicalFather(k)?` · 生父 ${childFatherHTML(k)}`:''}</p>
     <p class="hint">${esc(p.result||(wait?`正在核对起居记录与证词，${p.due-S.turn}个月后回奏。`:'身世不会因反复查验而改变；调查前不会仅凭流言定罪。'))}</p>
-    ${parentageReady(k)?`<button class="btn jade" onclick="A.parentageInquiry(${k.id})" ${wait?'disabled':''}>${p.status==='suspected'?'查验身世':p.status==='investigating'?'听取查证回奏':'决定如何安置'}</button>`:''}${birthSwapCasePanel(k)}`;
+    ${parentageReady(k)?`<button class="btn jade" data-onclick="A.parentageInquiry(${k.id})" ${wait?'disabled':''}>${p.status==='suspected'?'查验身世':p.status==='investigating'?'听取查证回奏':'决定如何安置'}</button>`:''}${birthSwapCasePanel(k)}`;
 }
 function consortParentagePanel(c){
   const children=S.children.filter(k=>(k.mom===c.id||k.foster===c.id||k.birthSwap?.claimedMother===c.id||k.birthSwap?.confirmed&&k.birthSwap?.plotter===c.id)&&k.parentage&&k.parentage.status!=='hidden');
-  return children.map(k=>`<div><button class="person-link" onclick="A.go('kid',${k.id})">${esc(k.name)}</button>${parentagePanel(k)}</div>`).join('');
+  return children.map(k=>`<div><button class="person-link" data-onclick="A.go('kid',${k.id})">${esc(k.name)}</button>${parentagePanel(k)}</div>`).join('');
 }
 function beginParentageInquiry(k){
   if(!parentageReady(k)||k.parentage.status!=='suspected'||!useE())return null;
@@ -143,7 +143,7 @@ function parentageReportEvent(){
 }
 function recognizedChildrenPanel(k){
   const children=(k.recognizedChildren||[]).map(kidById).filter(Boolean);if(!children.length)return '';
-  return `<p>已接回府中：${children.map(child=>`<button class="person-link" onclick="A.go('kid',${child.id})">${esc(child.name)}</button> · ${child.alive?kidAge(child)+'岁':'已故'}`).join('；')}</p>`;
+  return `<p>已接回府中：${children.map(child=>`<button class="person-link" data-onclick="A.go('kid',${child.id})">${esc(child.name)}</button> · ${child.alive?kidAge(child)+'岁':'已故'}`).join('；')}</p>`;
 }
 
 /* Keep a bounded factual night register. Legacy pregnancies have no invented chronology. */

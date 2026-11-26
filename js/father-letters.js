@@ -274,9 +274,9 @@ function fatherLetterPanel(c){
  const p=fatherLetterPerson(c),s=c.fatherLetters;
  if(!p||!fatherLetterRoots(c)&&!s?.letter?.topic)return '';
  if(s?.letter?.topic||queenOfficialHouse(c)){
-  return `<div class="father-letter-panel"><h4>父女家书</h4>${s?.latest?`<p>${esc(s.latest.date)} · ${esc(s.latest.title)}<br>${esc(s.latest.text)}</p><p>她记下：${esc(s.latest.daughter)}</p>`:'<p class="hint">她常与父亲通信，写些中宫与家中的近况。</p>'}${fatherLetterAvailable(c)?`<button class="btn sm" onclick="A.fatherLetter(${c.id})">${s?.pending?'看看寄出的家书':s?.latest?'听她谈父亲的家书':'同她聊聊父亲的来信'}</button>`:p.alive===false?'<p class="hint">父亲已故，旧日书信仍留着。</p>':''}</div>`;
+  return `<div class="father-letter-panel"><h4>父女家书</h4>${s?.latest?`<p>${esc(s.latest.date)} · ${esc(s.latest.title)}<br>${esc(s.latest.text)}</p><p>她记下：${esc(s.latest.daughter)}</p>`:'<p class="hint">她常与父亲通信，写些中宫与家中的近况。</p>'}${fatherLetterAvailable(c)?`<button class="btn sm" data-onclick="A.fatherLetter(${c.id})">${s?.pending?'看看寄出的家书':s?.latest?'听她谈父亲的家书':'同她聊聊父亲的来信'}</button>`:p.alive===false?'<p class="hint">父亲已故，旧日书信仍留着。</p>':''}</div>`;
  }
- return `<div class="father-letter-panel"><h4>父女家书</h4>${s?.latest?`<p>${esc(s.latest.date)} · ${esc(s.latest.title)}<br>她记下：${esc(s.latest.daughter)}</p><p class="hint">父女情分：${s.closeness>=40?'亲近牵挂':s.closeness<0?'有些隔阂':'仍在磨合'} · 可支配体己 ${s.purse}份${s.pending?' · 家书待回音':''}</p>`:'<p class="hint">家门虽小，父亲与女儿也有各自的牵挂与盼头。</p>'}${fatherLetterAvailable(c)?`<button class="btn sm" onclick="A.fatherLetter(${c.id})">${s?.pending?'看看寄出的家书':s?.latest?'听她谈父亲的家书':'谈谈家中的用度'}</button>`:p.alive===false?'<p class="hint">父亲已故，旧日书信仍留着。</p>':''}</div>`;
+ return `<div class="father-letter-panel"><h4>父女家书</h4>${s?.latest?`<p>${esc(s.latest.date)} · ${esc(s.latest.title)}<br>她记下：${esc(s.latest.daughter)}</p><p class="hint">父女情分：${s.closeness>=40?'亲近牵挂':s.closeness<0?'有些隔阂':'仍在磨合'} · 可支配体己 ${s.purse}份${s.pending?' · 家书待回音':''}</p>`:'<p class="hint">家门虽小，父亲与女儿也有各自的牵挂与盼头。</p>'}${fatherLetterAvailable(c)?`<button class="btn sm" data-onclick="A.fatherLetter(${c.id})">${s?.pending?'看看寄出的家书':s?.latest?'听她谈父亲的家书':'谈谈家中的用度'}</button>`:p.alive===false?'<p class="hint">父亲已故，旧日书信仍留着。</p>':''}</div>`;
 }
 const letterHouseLine=houseLine;
 houseLine=function(c){

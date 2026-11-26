@@ -6,7 +6,7 @@ async function reload(p,r){const before=await read(p);await p.reload({waitUntil:
 async function shot(p,r,suffix=''){await p.evaluate(()=>document.fonts.ready);await p.locator('img').evaluateAll(imgs=>Promise.all(imgs.map(img=>img.decode().catch(()=>{}))));await p.screenshot({path:path.join(shots,r.name+'-'+r.viewport+suffix+'.jpg'),type:'jpeg',quality:85});}
 async function drain(p){for(let i=0;i<70;i++){if(!(await read(p)).title)return;await p.locator('#modal .mch button:not([disabled])').first().click();}throw Error('Modal queue did not settle');}
 async function menu(p,name){await p.locator('#menu').getByRole('button',{name,exact:true}).click();}
-async function visit(p,id){await menu(p,'皇嗣');await p.locator('#panel [onclick="A.go(\'kid\','+id+')"]').first().click();await p.locator('#panel').getByRole('button',{name:/^探望/}).click();}
+async function visit(p,id){await menu(p,'皇嗣');await p.locator('#panel [data-onclick="A.go(\'kid\','+id+')"]').first().click();await p.locator('#panel').getByRole('button',{name:/^探望/}).click();}
 (async()=>{await fs.mkdir(shots,{recursive:true});const browser=await chromium.launch({headless:true,executablePath:process.env.PALACE_CHROME||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});report.browser=browser.version();try{
  for(const [viewport,size] of [['desktop',{width:1440,height:1000}],['mobile',{width:390,height:844}]])for(const name of ['cold','old-cold','marriage','maid','factions']){
   const ctx=await browser.newContext({viewport:size}),p=await ctx.newPage(),r={name,viewport,reloads:0,errors:[],passed:false};report.runs.push(r);p.setDefaultTimeout(12000);p.on('dialog',d=>d.accept());p.on('pageerror',e=>r.errors.push(e.message));
