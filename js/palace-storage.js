@@ -8,7 +8,7 @@ const PalaceStorage=(()=>{
       [prefix+slot,prefix+slot+':backup',...(slot==='auto'?[prefix+slot+':snapshots']:[])]));
   let store=null, opening=null, startupError=null;
   const conflict=()=>Object.assign(new Error('另一标签页已更新存档'),{name:'SaveConflictError'});
-  const quota=e=>e?.name==='QuotaExceededError'||e?.name==='NS_ERROR_DOM_QUOTA_REACHED'||e?.code===22||e?.code===1014;
+  const quota=e=>e?.name==='QuotaExceededError'||e?.name==='NS_ERROR_DOM_QUOTA_REACHED'||e?.code===22||e?.code===1014||/exceed|quota|max ?size|storage.*full/i.test(e?.errMsg||e?.message||'');
   function readAll(db){return new Promise((resolve,reject)=>{
     const values=new Map(),tx=db.transaction(table,'readonly'),request=tx.objectStore(table).openCursor();
     request.onsuccess=()=>{const c=request.result;if(c){values.set(c.key,c.value);c.continue();}};
@@ -37,26 +37,88 @@ const PalaceStorage=(()=>{
       };}
     });
   }
-  function adapter(db,initial){
+  function idbBackend(db){
+    return {kind:'indexeddb',readAll:()=>readAll(db),
+      onversionchange(fail){db.onversionchange=()=>{db.close();fail();};},
+      transact:(batch,conflicts)=>new Promise((resolve,reject)=>{
+        let reason=null;const tx=db.transaction(table,'readwrite'),records=tx.objectStore(table);
+        tx.oncomplete=resolve;tx.onabort=()=>reject(reason||tx.error||Error('存档写入失败'));
+        // Every checked read and write shares the same transaction: two tabs cannot
+        // both pass a stale read and then overwrite one another's progress.
+        try{
+          for(const [key,expected] of batch.expected){
+            const req=records.get(key);req.onsuccess=()=>{
+              if((req.result??null)!==expected){reason=conflict();for(const [k] of batch.expected)conflicts.add(k);tx.abort();}
+            };
+          }
+          for(const [key,value] of batch.writes){if(value===null)records.delete(key);else records.put(value,key);}
+        }catch(e){reason=e;tx.abort();}
+      })};
+  }
+  // Key-value stores for containers whose IndexedDB is missing or refuses writes
+  // (some in-app WebViews, including mini-game hosts). One tab at a time is assumed;
+  // a save is still reported only after every chunk and its manifest are written.
+  // TapTap: 1MB per key, 10MB total. Long reigns are split into chunks; a new
+  // revision's chunks land before its manifest, so a torn write keeps the old copy.
+  const CHUNK=200000,PREFIX='cgj:';
+  function chunkedKV(kind,io){
+    const read=key=>{
+      const head=io.get(PREFIX+key);if(head===null||head===undefined||head==='')return null;
+      const {rev,n}=JSON.parse(head);let raw='';
+      for(let i=0;i<n;i++){const part=io.get(PREFIX+key+'#'+rev+':'+i);if(typeof part!=='string')throw Error('存档分块缺失');raw+=part;}
+      return raw;
+    };
+    const drop=(key,head)=>{if(!head)return;const {rev,n}=JSON.parse(head);for(let i=0;i<n;i++)io.remove(PREFIX+key+'#'+rev+':'+i);};
+    const put=(key,value)=>{
+      const prior=io.get(PREFIX+key)||null;
+      if(value===null){io.remove(PREFIX+key);drop(key,prior);return;}
+      const rev=Date.now().toString(36)+Math.random().toString(36).slice(2,6),n=Math.max(1,Math.ceil(value.length/CHUNK));
+      for(let i=0;i<n;i++)io.set(PREFIX+key+'#'+rev+':'+i,value.slice(i*CHUNK,(i+1)*CHUNK));
+      io.set(PREFIX+key,JSON.stringify({rev,n}));
+      try{drop(key,prior);}catch{/* Orphaned chunks of an older copy are harmless. */}
+    };
+    return {kind,
+      readAll:async()=>{const values=new Map();for(const key of keys){const raw=read(key);if(raw!==null)values.set(key,raw);}return values;},
+      transact:async(batch,conflicts)=>{
+        for(const [key,expected] of batch.expected)if(read(key)!==expected){for(const [k] of batch.expected)conflicts.add(k);throw conflict();}
+        // Without transactions, a failed batch puts back the copies it started from.
+        const prior=batch.writes.map(([key])=>[key,read(key)]);
+        try{for(const [key,value] of batch.writes)put(key,value);}
+        catch(e){for(const [key,value] of prior){try{if(read(key)!==value)put(key,value);}catch{/* Keep the first error. */}}throw e;}
+      }};
+  }
+  function tapBackend(){
+    const tap=globalThis.tap;
+    if(typeof tap?.setStorageSync!=='function'||typeof tap.getStorageSync!=='function')return null;
+    return chunkedKV('tap',{
+      get:key=>{const v=tap.getStorageSync(key);return v===''||v===undefined?null:v;},
+      set:(key,value)=>tap.setStorageSync(key,value),
+      remove:key=>{typeof tap.removeStorageSync==='function'?tap.removeStorageSync(key):tap.setStorageSync(key,'');}
+    });
+  }
+  // The plain localStorage path is SaveManager's own synchronous fallback; it is
+  // used only after a value written to it reads back unchanged.
+  function localWorks(){
+    try{
+      const ls=globalThis.localStorage,key='chengongji_probe',value='宸'+Date.now();
+      if(!ls||typeof ls.setItem!=='function')return false;
+      ls.setItem(key,value);const back=ls.getItem(key);ls.removeItem(key);return back===value;
+    }catch{return false;}
+  }
+  const unavailable=()=>Object.assign(Error('当前环境不允许游戏保存数据'),{name:'StorageUnavailableError'});
+  async function migrateInto(backend){
+    const legacy=[];
+    try{for(const key of keys){const raw=localStorage.getItem(key);if(raw!==null&&raw!==undefined)legacy.push([key,raw]);}}catch{/* Unreadable legacy storage holds nothing to copy. */}
+    const present=await backend.readAll(),missing=legacy.filter(([key])=>!present.has(key));
+    if(missing.length)await backend.transact({expected:[],writes:missing},new Set());
+  }
+  function adapter(backend,initial){
     let cache=new Map(initial),durable=new Map(initial),queue=[],running=false,error=null,revision=0;
     const waiters=[],conflicts=new Set();
     const emit=change=>{try{api.onchange?.(change);}catch(e){console.warn('Save status:',e);}};
     const apply=(map,writes)=>{for(const [key,value] of writes){if(value===null)map.delete(key);else map.set(key,value);}};
     const finish=()=>{if(!running&&!queue.length)while(waiters.length)waiters.shift()(!error);};
-    const transact=batch=>new Promise((resolve,reject)=>{
-      let reason=null;const tx=db.transaction(table,'readwrite'),records=tx.objectStore(table);
-      tx.oncomplete=resolve;tx.onabort=()=>reject(reason||tx.error||Error('存档写入失败'));
-      // Every checked read and write shares the same transaction: two tabs cannot
-      // both pass a stale read and then overwrite one another's progress.
-      try{
-        for(const [key,expected] of batch.expected){
-          const req=records.get(key);req.onsuccess=()=>{
-            if((req.result??null)!==expected){reason=conflict();for(const [k] of batch.expected)conflicts.add(k);tx.abort();}
-          };
-        }
-        for(const [key,value] of batch.writes){if(value===null)records.delete(key);else records.put(value,key);}
-      }catch(e){reason=e;tx.abort();}
-    });
+    const transact=batch=>backend.transact(batch,conflicts);
     async function write(batch){
       try{await transact(batch);return batch.writes;}
       catch(error){
@@ -93,7 +155,7 @@ const PalaceStorage=(()=>{
       running=false;finish();emit({type:'idle'});
     }
     const api={
-      kind:'indexeddb',onchange:null,
+      kind:backend.kind,onchange:null,
       getItem:key=>cache.get(key)??null,
       getConfirmedItem:key=>durable.get(key)??null,
       get pending(){return running||queue.length>0;},
@@ -109,25 +171,55 @@ const PalaceStorage=(()=>{
       removeItem(key){return api.commit([[key,null]]);},
       flush(){return !running&&!queue.length?Promise.resolve(!error):new Promise(resolve=>waiters.push(resolve));},
       async refresh(){
-        await api.flush();const start=revision,data=await readAll(db);
+        await api.flush();const start=revision,data=await backend.readAll();
         if(revision!==start)throw Error('读取期间进度有变化，请重试');
         cache=new Map(data);durable=new Map(data);
         conflicts.clear();error=null;
       }
     };
-    db.onversionchange=()=>{db.close();error=Error('存档数据库已更新，请刷新游戏');emit({type:'failed',error,keys:keys.slice()});};
+    backend.onversionchange?.(()=>{error=Error('存档数据库已更新，请刷新游戏');emit({type:'failed',error,keys:keys.slice()});});
     globalThis.addEventListener?.('beforeunload',event=>{
       if(!api.pending&&!error)return;event.preventDefault();event.returnValue='';
     });
     return api;
   }
+  const blocked=e=>/另一个标签页/.test(e?.message||'');
+  async function openIndexedDB(){
+    const db=await open();await migrate(db);const backend=idbBackend(db);
+    // Some WebViews open the database yet abort every write; find out before play starts.
+    await backend.transact({expected:[],writes:[['chengongji_probe','1']]},new Set());
+    await backend.transact({expected:[],writes:[['chengongji_probe',null]]},new Set());
+    return backend;
+  }
+  async function openFallback(make){
+    const backend=make();if(!backend)return null;
+    try{
+      // Write, read back (the expected check) and remove a probe before trusting the store.
+      const value='宸'+Date.now();
+      await backend.transact({expected:[],writes:[['chengongji_probe',value]]},new Set());
+      await backend.transact({expected:[['chengongji_probe',value]],writes:[['chengongji_probe',null]]},new Set());
+      await migrateInto(backend);return backend;
+    }catch(e){console.warn('Save store unavailable:',backend.kind,e);return null;}
+  }
   function init(){
-    if(globalThis.PALACE_DISPOSABLE_STORAGE||!globalThis.indexedDB)return null;
+    if(globalThis.PALACE_DISPOSABLE_STORAGE)return null;
+    if(!globalThis.indexedDB&&!tapBackend()){if(!localWorks())startupError=unavailable();return null;}
     if(!opening)opening=(async()=>{
-      try{const db=await open();await migrate(db);store=adapter(db,await readAll(db));return store;}
-      catch(e){startupError=e;return null;}
-    })();
+      let backend=null;
+      if(globalThis.indexedDB){
+        try{backend=await openIndexedDB();}
+        catch(e){
+          startupError=e;
+          // Another open tab is the player's to close; switching stores would hide their saves.
+          if(blocked(e))return null;
+        }
+      }
+      if(!backend)backend=await openFallback(tapBackend);
+      if(!backend){startupError=localWorks()?null:startupError||unavailable();return null;}
+      startupError=null;
+      store=adapter(backend,await backend.readAll());return store;
+    })().catch(e=>{startupError=e;return null;});
     return opening;
   }
-  return {init,get store(){return store;},get startupError(){return startupError;}};
+  return {init,get store(){return store;},get startupError(){return startupError;},get kind(){return store?.kind||null;}};
 })();
