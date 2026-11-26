@@ -9,7 +9,7 @@ function sisterAdmissionChildren(g){
   const c=sisterAdmissionHost(g),h=c&&houseOf(c);if(!h)return [];
   return (h.relatives||[]).filter(p=>p.alive!==false&&outsideMotherId(p)===g.natalOrigin.relative&&!p.consortId&&!p.married&&natalAge(p)<15);
 }
-const motherWardActive=p=>!!(p?.motherWard&&p.alive!==false&&inPalace(byId(p.motherWard.consortId)));
+const motherWardActive=p=>!!(p?.motherWard&&p.motherWard.ended==null&&p.alive!==false&&inPalace(byId(p.motherWard.consortId)));
 function wardAddress(p,daughters){
   const verified=p.outsideParentage?.privateInquiry?.status==='complete'&&p.outsideParentage.privateInquiry.imperial||['proved','stayed'].includes(p.outsideParentage?.status);
   if(verified)return '小公主';
@@ -87,7 +87,7 @@ function motherWardMonth(){
   for(const c of familyCourtHosts()){
     const h=houseOf(c);if(!h||seen.has(h))continue;seen.add(h);
     for(const p of h.relatives||[]){
-      const ward=p.motherWard;if(!ward||ward.ended)continue;
+      const ward=p.motherWard;if(!ward||ward.ended!=null)continue;
       const g=byId(ward.consortId);
       if(p.alive===false||!g?.alive||!inPalace(g)||natalAge(p)>=15||p.married){
         ward.ended=S.turn;

@@ -733,6 +733,7 @@ A.endMonth=function(){
   sisterAwarenessMailTick();
   nieceHandwrittenMailTick();
   if(journalContentVersion()>=165){if(typeof heirHopesMonth==='function')heirHopesMonth();if(typeof sisterBondsMonth==='function')sisterBondsMonth();}
+  if(journalContentVersion()>=166&&typeof storyPersonaMonth==='function')storyPersonaMonth();
   if(journalContentVersion()>=96)childUpbringingMonth();
   if(journalContentVersion()>=115)whiteSpringFamilyParcelTick();
   const passing=dowagerPassingEvent();if(passing)pushEv(passing);

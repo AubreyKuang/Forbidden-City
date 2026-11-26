@@ -88,8 +88,20 @@ function consortVoicePhase(c){
   if(months>=12&&c.aff>=55&&(visits>=3||c.nights>=3||c.bond))return 'familiar';
   return 'settling';
 }
+// Issue 35: the six story consorts speak in their own voices rather than the shared temperament lines.
+const STORY_CONSORT_VOICES={
+  qingyi:['从前在京里，说一句话要先看三家长辈的脸色。如今臣妾想说什么，就说什么，陛下别嫌不中听。','臣妾不是来讨旧账的。只是有些话，当年没人肯告诉我，如今我想自己问清楚。','姑苏的雨下起来没完。臣妾那几年学会了一件事：等人的时候，手里总得有件自己的事做。'],
+  luwan:['宫里的话要绕三道弯才落地。陛下有事直说，我也直说。','我哥又来信了，还是那四个字“边关无恙”。军报也这样写，问什么都含糊，我回信骂了他一顿。','南苑那匹枣红马前蹄有点虚，我跟马房说了两回。陛下若路过，替我看一眼。'],
+  ayimu:['嬷嬷说见陛下要先行三回礼，我数到第二回就忘了。陛下不会记着吧？','今天又有蝴蝶落在窗台上。宫女说是我身上的香招来的，我倒觉得它们是来看陛下的。','我给母亲写了信，写到一半不知道“御花园”三个字怎么写，就画了一朵花。她看得懂。'],
+  chuwan:['我三岁那年的事，只记得一扇很高的门，还有抱我出来的那位嬷嬷的手。别的，都是后来从粮册上读来的。','旁人说楚家可惜，我不觉得。被挪走的那些赈粮，总得有人记着是谁的。','照养人教我缝补，说手上有活，心就不慌。我如今还是这样，睡不着就绣几针。'],
+  suheng:['她把一只小瓷盒推过来：“这一味闻着像雨后的竹叶。陛下若不喜欢，直说就好，我再改。”','我不会和人吵。说不过的时候，我就去翻账，账上的字不会说谎。','臣妾知道自己想要什么，只是从前不敢说出口。现在想学着先开口问一句。'],
+  xiaoman:['她从袖里摸出三枚铜钱，在指间一翻就不见了：“这一手不收钱，陛下看个乐。”','赏钱我认，可我得知道赏的是什么。白给的，我心里不踏实。','大杂院的孩子今年冬被够了，我数过的。剩下的钱我留着，下个月还有房钱要交。']
+};
+const STORY_VOICE_GROUPS={qingyi:'reserved',luwan:'independent',ayimu:'bright',chuwan:'reserved',suheng:'reserved',xiaoman:'independent'};
+const storyConsortVoices=c=>journalContentVersion()>=166&&c?.fixedStory?STORY_CONSORT_VOICES[c.fixedStory]:null;
 function consortYearsVoice(c){
-  const phase=consortVoicePhase(c),group=['骄纵','骄矜','贪财'].includes(c.trait)?'proud':['沉静','城府','持重','聪慧'].includes(c.trait)?'reserved':c.trait==='活泼'||c.trait==='好客'?'bright':['痴情','善妒'].includes(c.trait)?'wistful':['将门','爽直','淡泊','好学'].includes(c.trait)?'independent':'gentle';
+  const storyGroup=journalContentVersion()>=166&&c?.fixedStory?STORY_VOICE_GROUPS[c.fixedStory]:null;
+  const phase=consortVoicePhase(c),group=storyGroup||(['骄纵','骄矜','贪财'].includes(c.trait)?'proud':['沉静','城府','持重','聪慧'].includes(c.trait)?'reserved':c.trait==='活泼'||c.trait==='好客'?'bright':['痴情','善妒'].includes(c.trait)?'wistful':['将门','爽直','淡泊','好学'].includes(c.trait)?'independent':'gentle');
   const stage={first:'初见时，她的话里还留着几分拘谨。',settling:'渐渐熟悉宫中日子，她试着多说一点自己的心意。',familiar:'私下相处渐多，她说话也不再句句斟酌。',years:'相伴多年，她省去了几句客套。',distant:'相识虽久，今日的话却隔着一层。'}[phase];
   return voiceLine('years-'+phase,stage,VOICE_YEARS[group][phase]);
 }
@@ -117,7 +129,7 @@ function consortVoicePool(c){
   const years=newcomerVoice(c)||consortYearsVoice(c),phase=consortVoicePhase(c);
   if(phase==='distant')return [years];
   const pool=[years,personal,maternal,firstChildWishVoice(c),originLifeVoice(c),rescueVoice(c),journeyVoice(c),cohabVoice(c),resemblanceVoice(c)].filter(Boolean);const soul=pastLifeVoice(c);if(soul)pool.push(soul);const traveler=timeTravelerVoice(c);if(traveler)pool.push(traveler);const spiritual=daoLifeVoice(c);if(spiritual)pool.push(spiritual);
-  if(phase!=='first')pool.push(voiceLine('trait',phase==='years'?'说着说着，她又露出你熟悉的性情。':'她试着把自己的意思说得更明白。',CONSORT_VOICES[c.trait]||CONSORT_VOICES.温婉));
+  if(phase!=='first')pool.push(voiceLine('trait',phase==='years'?'说着说着，她又露出你熟悉的性情。':'她试着把自己的意思说得更明白。',storyConsortVoices(c)||CONSORT_VOICES[c.trait]||CONSORT_VOICES.温婉));
   if(c.preg>=2)pool.push(voiceLine('pregnant','她轻拢衣襟，话里多了一分牵挂。',c.trait==='骄纵'&&c.favor>=65?['如今走得慢，陛下便也慢些。臣妾想要的照应，可不只是送几碟点心。','臣妾知道该惜身，可也不想日日闷着。陛下陪臣妾走到廊下，好不好？']:['小衣裳不用添得太急。臣妾盼的，只是平平安安等到那一日。','近来总会多想些。陛下坐在这里，臣妾便觉得心里稳妥。']));
   if(c.mood<35)pool.push(voiceLine('low','她望了一眼窗外，收回了目光。',['今日没什么精神，倒也不是要紧的事。陛下陪臣妾坐坐便好。','有时想说几句，又怕扫人的兴。陛下今日，可愿耐心听听？']));
   if(c.favor<25&&close)pool.push(voiceLine('miss','听见你的声音，她先是一怔。',['这院子里的花，开过一茬又一茬。臣妾也不催，只想知道陛下过得可好。','原来想说一句不曾想念，可一见陛下，便说不出口了。']));
