@@ -96,6 +96,11 @@ function dowagerCompanionEvent(d,fallback=false){
   if(answered)return null;answered=true;dowagerRecord(d,title,result);const h=d.conversations;h.notes=[...(h.notes||[]),{d:dateStr(),turn:S.turn,topic:'company:'+key,text:result}].slice(-24);return result;
  }}]},'company:'+key,{months:fresh?1:0});
 }
+// Issue 42: the dowager raises her own kin more often, and each refusal makes her slower to ask again.
+function dowagerProposalShare(d){
+ if(journalContentVersion()<165)return .04;
+ return [.2,.08,.04][d.kinRefusals||0]??.02;
+}
 const dowagerEarlierEvent=dowagerEvent;
 dowagerEvent=function(){
  if(!dowagerTalksEnabled())return dowagerEarlierEvent();
@@ -108,6 +113,6 @@ dowagerEvent=function(){
  if(r<.1){const favor=dowagerFavorEvent();if(favor)return favor;}
  else if(r<.18){const advice=dowagerPartialityEvent(d);if(advice)return advice;}
  else if(r<.24&&dowagerTopicReady(d,'children',12)&&kidsAlive().length<3&&S.turn>=12)return trackDowagerTalk(d,{title:'慈宁宫 · 开枝散叶',por:dowagerPerson(d),text:`${d.name}盼着子孙相伴，也叮嘱：“子嗣随缘，妃嫔的身子要先照料好。${harem().some(c=>c.preg)?'既已有孕，更不要催她们冒险。':'得空多相处，也别把盼望变成催逼。'}”`,choices:[{t:'先顾好她们的身体',f:()=>{log('帝听太后谈子嗣，先顾妃嫔身体，不以催逼求孕。');return '你记下嘱咐，子嗣仍看身体与缘分。';}}]},'children',{months:12});
- else if(r<.28){const proposal=dowagerProposal(d);if(proposal)return trackDowagerTalk(d,proposal,'proposal',{months:12});}
+ else if(r<.24+dowagerProposalShare(d)){const proposal=dowagerProposal(d);if(proposal)return trackDowagerTalk(d,proposal,'proposal',{months:12});}
  return dowagerEverydayEvent(d);
 };

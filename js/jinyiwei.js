@@ -47,10 +47,8 @@ for(let i=0;i<HAREM.length;i++){
 }
 
 /* —— 设立与差遣 —— */
-A.establishJinyiwei=function(){
-  if(modalOpen||S.over||jinyiwei())return;
-  pushEv({title:'设立锦衣卫',text:'锦衣卫掌侍卫、缉捕与诏狱，可替陛下密查宫闱疑案、核实风闻奏事，也能搜查宫室。\n文官们担心“厂卫横行”，设立之后每次搜宫或密查都会让朝野多一分侧目。',choices:[
-    {t:'设立锦衣卫，择人出任指挥使 · 精力−1 · 国库−50',cond:()=>E().energy>=1&&E().treasury>=50,why:'精力或国库不足',f:()=>{
+function jinyiweiEstablishChoice(label='设立锦衣卫，择人出任指挥使 · 精力−1 · 国库−50'){
+  const choice={t:'设立锦衣卫，择人出任指挥使 · 精力−1 · 国库−50',cond:()=>E().energy>=1&&E().treasury>=50,why:'精力或国库不足',f:()=>{
       if(jinyiwei()||!useE())return null;chg({treasury:-50});
       const sur=pick(courtNamesActive()?COURT_SURNAMES:SUR),given=courtNamesActive()?courtGivenName(sur,ri(0,2e9)):pick(BROTHER_NAMES),seed=ri(1,2e9),faces=[273,285,286,287];
       const commander={id:`jyw-${S.gen}-${S.turn}`,name:sur+given,sur,age:ri(30,46),seed,ability:ri(55,82),trust:50,merit:20,temperament:pick(['持正','谨慎','进取']),
@@ -59,8 +57,21 @@ A.establishJinyiwei=function(){
       S.jinyiwei={established:S.turn,commander,searched:{}};story(commander,'奉旨出任锦衣卫指挥使。');
       policyNudge('civil',-3);log(`设立锦衣卫，以${commander.name}为指挥使。`,1);save('auto');
       return {text:`${commander.name}领了绣春刀与飞鱼服，叩首谢恩。${fx(chg({prestige:1}))}`,por:commander};
-    }},{t:'暂不设立'}]});
+    }};
+  return {...choice,t:label};
+}
+A.establishJinyiwei=function(){
+  if(modalOpen||S.over||jinyiwei())return;
+  pushEv({title:'设立锦衣卫',text:'锦衣卫掌侍卫、缉捕与诏狱，可替陛下密查宫闱疑案、核实风闻奏事，也能搜查宫室。\n文官们担心“厂卫横行”，设立之后每次搜宫或密查都会让朝野多一分侧目。',choices:[
+    jinyiweiEstablishChoice(),{t:'暂不设立'}]});
 };
+// Issue 42: a new reign is reminded once that the Jinyiwei have not been set up.
+function jinyiweiAccessionReminder(){
+  if(journalContentVersion()<165||S.over||jinyiwei())return null;
+  return {title:'御前提醒 · 设立锦衣卫',por:'emp',valid:()=>!jinyiwei()&&!S.over,
+    text:'新朝初立，宫中还没有锦衣卫。\n锦衣卫掌侍卫、缉捕与诏狱：可密查宫闱疑案、核实风闻奏事、搜查宫室，也会呈报承宠宫女的喜脉与宫外孕讯，替你核查宫外孩子的生父。\n文官们担心“厂卫横行”，设立之后每次搜宫或密查都会让朝野多一分侧目。暂不设立，日后也可在「治国理政 → 锦衣卫」补设。',
+    choices:[{t:'稍后再议',f:()=>{log('新朝初立，暂缓设立锦衣卫；可在治国理政中补设。');return '你把此事记下。日后可在「治国理政 → 锦衣卫」设立。';}},{...jinyiweiEstablishChoice('即刻设立，择人出任指挥使 · 精力−1 · 国库−50'),primary:true}]};
+}
 function caseReady(x){return !!x&&x.status==='cold'&&S.turn-(x.lastTry??-99)>=JINYIWEI_RETRY;}
 const INTELLIGENCE_SOURCES={
  eunuch:{name:'内侍',specialty:'宫中人员动向',kind:'harem'},

@@ -31,7 +31,7 @@ function beginNatalPregnancy(c,p,{unconfirmed=false}={}){
   if(unconfirmed){
     p.natalPregnancy.unconfirmed=true;
     if(journalContentVersion()>=102)p.natalPregnancy.reportingHost=c.id;
-    if(outsideParentageActive())Object.assign(p.natalPregnancy,{imperialParentage:chance(.55),conceptionGen:S.gen,conceptionEmperor:E().sur+E().name});
+    if(outsideParentageActive())Object.assign(p.natalPregnancy,{imperialParentage:chance(outsideImperialPercent()/100),conceptionGen:S.gen,conceptionEmperor:E().sur+E().name});
     (p.lifeCourse||={}).last=S.turn;return true;
   }
   (p.lifeCourse ||= {}).last=S.turn;p.maritalMood=bond.kind==='affectionate'?'有喜，也盼着他的照料':bond.kind==='respectful'?'欢喜中谨慎将养':'有孕后更盼有人听她说话';

@@ -7,7 +7,7 @@ function source(script,from,to){return script.slice(script.indexOf(from),to?scri
 function setup(d={name:'沈太后',alive:true}){
   const S={flags:{dowager:d},emp:{sur:'萧',age:18},consorts:[],children:[],turn:1,month:1};
   let id=100;
-  const ctx=vm.createContext({S,legacyPendingAction:()=>false,E:()=>S.emp,dowagerPerson:d=>({isMom:true,name:d.name,seed:91}),SUR:['沈','苏'],pick:a=>a[0],ri:a=>a,fullName:c=>c.sur+'兰',remember:()=>{},story:()=>{},R:()=>.5,chance:()=>false,kidsAlive:()=>S.children,makeGirl:o=>({id:id++,alive:true,favor:10,lastBirth:-99,trait:'温婉',...o}),addConsort:g=>{g.enteredAt=S.turn;S.consorts.push(g)},chg:()=>'',fx:()=>'',harem:()=>S.consorts,byId:id=>S.consorts.find(c=>c.id===id),relGet:()=>80,rd:Math.round,esc:String});
+  const ctx=vm.createContext({S,legacyPendingAction:()=>false,journalContentVersion:()=>165,E:()=>S.emp,dowagerPerson:d=>({isMom:true,name:d.name,seed:91}),SUR:['沈','苏'],pick:a=>a[0],ri:a=>a,fullName:c=>c.sur+'兰',remember:()=>{},story:()=>{},R:()=>.5,chance:()=>false,kidsAlive:()=>S.children,makeGirl:o=>({id:id++,alive:true,favor:10,lastBirth:-99,trait:'温婉',...o}),addConsort:g=>{g.enteredAt=S.turn;S.consorts.push(g)},chg:()=>'',fx:()=>'',harem:()=>S.consorts,byId:id=>S.consorts.find(c=>c.id===id),relGet:()=>80,rd:Math.round,esc:String});
   vm.runInContext(read('js/harem-restraint.js'),ctx);
   vm.runInContext(source(visits,'function ensureDowager()','function festival()'),ctx);
   vm.runInContext(source(heirs,'const fosterOf=','const raisesKid='),ctx);
@@ -27,10 +27,11 @@ test('accepted introduction waits for sustained neglect, then creates a younger 
   ev.onShow();ev.choices[0].f();assert.equal(elder.kin[ev.por.id],'堂妹');assert.equal(ev.por.kin[elder.id],'堂姐');
   assert.equal(c.dowagerEvent(),null);
 });
-test('declining waits twelve months and creates no family members',()=>{
+test('declining waits three years, longer after each refusal, and creates no family members',()=>{
   const c=setup(),ev=c.dowagerEvent();ev.onShow();ev.choices[1].f();
-  c.S.turn=12;assert.equal(c.dowagerEvent(),null);c.S.turn=13;assert.ok(c.dowagerEvent());assert.equal(c.S.consorts.length,0);
-  const saved=JSON.parse(JSON.stringify(c.S.flags.dowager));assert.equal(saved.lastOffer,1);assert.equal(saved.cooldown,12);
+  c.S.turn=36;assert.equal(c.dowagerEvent(),null);c.S.turn=37;const again=c.dowagerEvent();assert.ok(again);assert.equal(c.S.consorts.length,0);
+  const saved=JSON.parse(JSON.stringify(c.S.flags.dowager));assert.equal(saved.lastOffer,1);assert.equal(saved.cooldown,36);assert.equal(saved.kinRefusals,1);
+  again.onShow();again.choices[1].f();assert.equal(c.S.flags.dowager.cooldown,48);assert.equal(c.S.flags.dowager.kinRefusals,2);
 });
 function established(){const c=setup();c.ensureDowager();c.S.turn=30;c.S.consorts=[{id:1,sur:'沈',clan:'沈|太后母家',fam:{t:'太后母家',p:72},alive:true,age:24,enteredAt:1,favor:60,lastBirth:-99}];return c;}
 test('two years without children is eligible even if favored',()=>{const c=established();assert.match(c.dowagerEvent().text,/膝下仍无子女/)});

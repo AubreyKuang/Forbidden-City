@@ -31,9 +31,15 @@ const COURT_PETITIONS={
 function palacePetitionReady(key){
  return !!(storyIntroductionsActive()&&Object.hasOwn(COURT_PETITIONS,key)&&!S.over&&!mourningActive()&&storyCastMeetReady(key)&&!(storyCastRecord(key)?.stage));
 }
+// Issue 42: the petition shows who wrote it; Shen Qingyi's old letter also has its own scene.
+const COURT_PETITION_ART={qingyi:{illustration:'frontier-family-letter',caption:'姑苏来的抄本里夹着一封私信，系信的丝绳还是旧年的样式。落款处，是沈清漪自己的字。',
+ portraitArt:{src:'./assets/images/story-cast/qingyi.webp?v=gouyi-style-3',alt:'沈清漪身着浅青绣花长衫，手执书卷'}}};
+function palacePetitionPortrait(key){
+ return storyCastPerson(storyCastRecord(key))||{...STORY_CAST[key],fixedStory:key,alive:true,known:true};
+}
 function palacePetition(key){
- const d=COURT_PETITIONS[key],valid=()=>palacePetitionReady(key);
- return {title:d.title,text:d.body,valid,choices:[{t:d.choice,f:()=>{
+ const d=COURT_PETITIONS[key],valid=()=>palacePetitionReady(key),art=COURT_PETITION_ART[key];
+ return {title:d.title,text:d.body,valid,...(journalContentVersion()>=165?{por:palacePetitionPortrait(key),...(art?{illustration:art.illustration,illustrationCaption:art.caption,portraitArt:art.portraitArt}:{})}:{}),choices:[{t:d.choice,f:()=>{
   if(!valid())return null;
   const r=storyCastRecord(key)||storyCastCreate(key);r.introduction='petition';
   return storyCastAdvance(r,r.person,d.line);

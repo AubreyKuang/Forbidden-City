@@ -289,3 +289,22 @@
  .log-filter .reign-picker{width:100%}
  .log-filter .reign-picker select{flex:1}
 }
+/* 邦交与使节 (issue 42): one card per country, one picker per kind of envoy. */
+.diplomacy-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));align-items:start}
+.diplomacy-card{display:flex!important;flex-direction:column;gap:10px;min-width:0}
+.diplomacy-card>*{margin:0}
+.diplomacy-head h3{margin:0 0 2px}
+.diplomacy-head p{margin:0;color:#6b4a33;font-size:13px}
+.diplomacy-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.diplomacy-stat{display:flex;flex-direction:column;align-items:center;padding:6px 4px;border:1px solid #dcc596;border-radius:8px;background:#fbf3e2}
+.diplomacy-stat small{font-size:12px;color:#8e6f57}
+.diplomacy-stat b{font-size:17px;color:#2a1712}
+.diplomacy-status{display:flex;flex-wrap:wrap;gap:4px}
+.diplomacy-mission{padding:6px 10px;border-left:3px solid #4f9078;background:#eef5f0}
+.diplomacy-block{padding:8px 10px;border:1px dashed #d9c6a8;border-radius:8px;background:#fbf6ec}
+.diplomacy-block p{margin:0 0 6px}
+.diplomacy-block .acts{margin:0}
+.diplomacy-acts{display:flex;flex-wrap:wrap;gap:6px}
+.diplomacy-acts .btn{margin:0;flex:1 1 calc(50% - 6px);min-width:0;white-space:normal}
+.diplomacy-memory summary{cursor:pointer;font-weight:600;color:#683d2c}
+.diplomacy-memory ul{margin:6px 0 0}
