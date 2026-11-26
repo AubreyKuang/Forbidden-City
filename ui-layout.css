@@ -289,3 +289,10 @@
  .log-filter .reign-picker{width:100%}
  .log-filter .reign-picker select{flex:1}
 }
+
+/* Phones with a notch, and in-app hosts such as TapTap H5, keep the top bar clear. */
+@media (max-width:760px){#app #top{padding-top:max(8px,env(safe-area-inset-top,0px))}}
+/* #panel scrolls inside its own padding, so a sticky chapter bar stops short of the
+   panel's top edge and scrolled text shows through the gap. A panel-coloured copy of
+   the bar, drawn as a shadow above it, covers that strip. */
+#app[data-layout] .section-jumps{box-shadow:0 3px 10px #71522e0c,0 -30px 0 0 rgb(251 242 223)}
