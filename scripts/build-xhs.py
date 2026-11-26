@@ -35,6 +35,10 @@ CACHE = ROOT / 'dist/.image-cache-xhs'
 EDITION = json.loads((ROOT / 'scripts/xhs-edition.json').read_text('utf8'))
 ZIP_LIMIT = 10 * 1024 * 1024
 ZIP_TARGET = 9.3 * 1024 * 1024
+FILE_LIMIT = 200      # platform: a package may hold at most 200 files
+FILE_TARGET = 150     # keep room for later additions
+BUNDLE = 'js/app.js'  # written as js/app-1.js, js/app-2.js, ... in load order
+BUNDLE_MAX = 1900 * 1024  # each joined script under the 2 MiB text-file warning
 ALLOWED_SUFFIXES = {'.html', '.css', '.js', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.woff', '.woff2', '.json'}
 SKIP_JS = {'dev-tools.js', 'taptap.js'}
 CSS_FILES = ['palace.css', 'ui-layout.css']
@@ -252,6 +256,8 @@ DEV_MARKERS = ['dev-tools', 'dev.html', 'dev.css', 'palace-dev', 'mountDevTools'
 
 def check_package(files, texts):
     problems = []
+    if len(files) > FILE_LIMIT:
+        problems.append(f'{len(files)} files; the platform allows at most {FILE_LIMIT}')
     for p in files:
         rel = p.relative_to(STAGE).as_posix()
         if p.suffix.lower() not in ALLOWED_SUFFIXES:
@@ -266,10 +272,13 @@ def check_package(files, texts):
             if marker in text:
                 problems.append(f'dev panel marker {marker!r} in {rel}')
         for pattern, label in FORBIDDEN:
-            if label == 'browser storage' and rel == 'js/palace-storage.js':
-                continue  # unreachable in this edition; proven by tests/xhs-storage and the Chrome trap
-            for m in re.finditer(pattern, text):
-                problems.append(f'{label} in {rel}: …{text[max(0, m.start() - 40):m.end() + 40]}…')
+            body = text
+            if label == 'browser storage':
+                # Only the storage module may name browser stores: its xhs branch returns before
+                # any of them (tests/xhs-storage, and the storage trap in xhs-browser-check).
+                body = re.sub(r'/\* --- js/palace-storage\.js --- \*/.*?(?=/\* --- js/|\Z)', '', text, flags=re.S)
+            for m in re.finditer(pattern, body):
+                problems.append(f'{label} in {rel}: …{body[max(0, m.start() - 40):m.end() + 40]}…')
                 break
     index = texts['index.html']
     if re.search(r'<script(?![^>]*\ssrc=)[^>]*>', index):
@@ -345,13 +354,15 @@ def main():
     order = ['js/compat.js', 'js/xhs-edition-config.js', 'js/xhs-has-patterns.js', 'js/xhs-compat-ui.js'] + source_scripts + ['js/xhs-host.js']
     job = {'tools': str(Path(args.tools).resolve()), 'hasOut': str(GEN / 'src/js/xhs-has-patterns.js'),
            'css': [{'src': str(GEN / 'src' / n), 'out': str(STAGE / n)} for n in CSS_FILES],
-           'js': [{'src': str(GEN / ('js/xhs-edition-config.js' if n == 'js/xhs-edition-config.js' else 'src/' + n)), 'out': str(STAGE / n)} for n in order]}
+           'js': [{'src': str(GEN / ('js/xhs-edition-config.js' if n == 'js/xhs-edition-config.js' else 'src/' + n)), 'out': str(STAGE / n)} for n in order],
+           # One classic script instead of ~200: the container caps a package at 200 files.
+           'bundle': {'stage': str(STAGE), 'order': order, 'out': BUNDLE, 'maxBytes': BUNDLE_MAX}}
     (GEN / 'job.json').write_text(json.dumps(job), 'utf8')
     result = subprocess.run([args.node, str(ROOT / 'scripts/lib/xhs-transform.cjs'), str(GEN / 'job.json')], capture_output=True, text=True)
     if result.returncode:
         sys.exit('transform failed:\n' + result.stderr)
     report = json.loads(result.stdout)
-    (STAGE / 'index.html').write_text(build_index(order), 'utf8')
+    (STAGE / 'index.html').write_text(build_index(report['bundle']['outputs']), 'utf8')
 
     # ---- checks
     files = sorted(p for p in STAGE.rglob('*') if p.is_file())
@@ -391,11 +402,11 @@ def main():
                'unpacked_bytes': sum(p.stat().st_size for p in files),
                'images': {k: {**v, 'px_before': sorted(v['px_before'])[:6], 'px_after': sorted(v['px_after'])[:6]} for k, v in cats.items()},
                'dropped_locked_art': dropped_locked, 'png_renamed': renamed, 'portrait_scale_factor': rescaled,
-               'js_bytes': sum(x['out'] for x in report['js']), 'js_files': len(report['js']), 'urls_removed': report['urlsRemoved'],
+               'js_bytes': report['bundle']['bytes'], 'js_files_joined': report['bundle']['files'], 'js_outputs': report['bundle']['outputs'], 'urls_removed': report['urlsRemoved'],
                'css': report['css'], 'has_patterns': len(report['has'])}
     (OUT / 'build-report.json').write_text(json.dumps(summary, ensure_ascii=False, indent=1), 'utf8')
     print(f'Xiaohongshu mini-tool V{args.version} -> {zip_path.relative_to(ROOT)}')
-    print(f'  zip {mb(summary["zip_bytes"])} ({summary["files"]} files), unpacked {mb(summary["unpacked_bytes"])}, JS {mb(summary["js_bytes"])} in {summary["js_files"]} files')
+    print(f'  zip {mb(summary["zip_bytes"])} ({summary["files"]} files), unpacked {mb(summary["unpacked_bytes"])}, JS {mb(summary["js_bytes"])} in {len(summary["js_outputs"])} files joined from {summary["js_files_joined"]} scripts')
     for cat, c in sorted(cats.items(), key=lambda kv: -kv[1]['before']):
         print(f'  {cat:<22} {c["files"]:>3} files  {mb(c["before"]):>9} -> {mb(c["after"]):>9}')
     print(f'  locked characters\' art left out: {len(dropped_locked)} files; external notes removed: {report["urlsRemoved"]}')
@@ -403,6 +414,8 @@ def main():
         print(f'  {Path(css["src"]).name}: {css["stats"]} still-modern (enhancement only): {css["remaining"]}')
     if summary['zip_bytes'] > ZIP_LIMIT:
         sys.exit('zip is over the 10 MiB limit')
+    if len(files) > FILE_TARGET:
+        print(f'  WARNING: {len(files)} files, above the working target of {FILE_TARGET} (hard limit {FILE_LIMIT})')
     if summary['zip_bytes'] > ZIP_TARGET:
         print('  WARNING: zip is above the 9.3 MiB working target')
 
