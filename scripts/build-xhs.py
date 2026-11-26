@@ -8,7 +8,7 @@
 transpilers (nothing from it ships):
 
     mkdir -p /tmp/xhs-tools && cd /tmp/xhs-tools && npm init -y >/dev/null && \\
-      npm install esbuild@0.24.2 lightningcss@1.28.2 acorn@8.14.0
+      npm install esbuild@0.24.2 lightningcss@1.28.2 acorn@8.14.0 sharp@0.33.5
 
 What the build does (rules: .claude/skills/minitool-zip-builder, performance-budget.md):
 - index.html is written fresh: <!DOCTYPE html>, lang/charset/viewport, a static first
@@ -288,7 +288,7 @@ def check_package(files, texts):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--tools', required=True, help='folder with node_modules for esbuild, lightningcss and acorn')
+    ap.add_argument('--tools', required=True, help='folder with node_modules for esbuild, lightningcss, acorn and sharp')
     ap.add_argument('--version', default='1.0.0')
     ap.add_argument('--node', default='node')
     args = ap.parse_args()
