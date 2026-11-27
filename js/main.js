@@ -14,7 +14,7 @@ function startPalacePage(){
 // A host that refuses every store still lets the reign be played and downloaded.
 function playWithoutSaving(){PalaceStorage.unsaved=true;globalThis.PALACE_UNSAVED=true;connectPalaceStorage();setScene('court');render();requestAnimationFrame(loop);}
 const palaceStorageOpening=PalaceStorage.init();
-if(palaceStorageOpening){$('#panel').innerHTML='<p role="status">正在读取本机存档…</p>';palaceStorageOpening.then(startPalacePage);}
+if(palaceStorageOpening){$('#panel').innerHTML='<p role="status">'+(PALACE_EDITION.name==='yiciyuan'?'正在读取云存档…':'正在读取本机存档…')+'</p>';palaceStorageOpening.then(startPalacePage);}
 else startPalacePage();
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'&&modalOpen&&curEv?.scene==='month-review'){

@@ -12,6 +12,11 @@
        (Storage with 1MB keys, getWindowInfo with a capsule, saveImageToPhotosAlbum) and
        browser storage trapped. Plays the script, reloads to check the save, and fails on
        any script error, CSP violation, missing file, browser-storage access or eval.
+   node scripts/xhs-browser-check.cjs yiciyuan [dist/yiciyuan/package] [--shots DIR]
+       Serves the 易次元 package with the platform SDK URL answered by a simulated
+       AvgAIGameSDK (login, cloud profiles, play-time log) and browser storage trapped.
+       Plays the script, reloads to check the cloud save, and checks the exit-button
+       clearance, that every character is open and that cards open for long-press saving.
    node scripts/xhs-browser-check.cjs nojs [dist/xhs/package] --shots DIR
        Screenshot of index.html with JavaScript disabled (the static first screen). */
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),os=require('node:os');
@@ -19,9 +24,11 @@ const {spawn}=require('node:child_process');
 const root=path.resolve(__dirname,'..');
 const CHROME=process.env.CHROME||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const SDK_HOST='https://s9.music.126.net';
+const CSP_YC=`default-src 'self'; script-src 'self' ${SDK_HOST}; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; media-src 'self'; connect-src 'self'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'`;
 const CSP="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; media-src 'self'; connect-src 'self'; object-src 'none'; frame-src 'none'; worker-src 'none'; base-uri 'none'; form-action 'none'";
 
-function serve(dir,{csp=true,only=null}={}){
+function serve(dir,{csp=true,only=null,policy=CSP}={}){
   const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.webp':'image/webp','.png':'image/png','.json':'application/json','.svg':'image/svg+xml'};
   const misses=[];
   const server=http.createServer((req,res)=>{
@@ -29,7 +36,7 @@ function serve(dir,{csp=true,only=null}={}){
     const file=path.join(dir,rel);
     if(!file.startsWith(dir)||!fs.existsSync(file)||fs.statSync(file).isDirectory()||(only&&!only(rel))){if(rel!=='/favicon.ico')misses.push(rel);res.writeHead(404);res.end();return;}
     const headers={'content-type':types[path.extname(file)]||'application/octet-stream','cache-control':'no-store'};
-    if(csp)headers['content-security-policy']=CSP;
+    if(csp)headers['content-security-policy']=policy;
     res.writeHead(200,headers);fs.createReadStream(file).pipe(res);
   });
   return new Promise(resolve=>server.listen(0,'127.0.0.1',()=>resolve({server,misses,url:`http://127.0.0.1:${server.address().port}`})));
@@ -104,8 +111,8 @@ for(let month=0;month<6;month++){
 const state=JSON.parse(JSON.stringify(S,(k,v)=>k==='savedAt'||k==='updatedAt'?undefined:v));
 return {trace,state:JSON.stringify(state),view:UI.view};`;
 
-async function run(site,{csp,inject='',frames=true,viewport={width:390,height:844,deviceScaleFactor:3,mobile:true},shots=null,label='run',reload=false}){
-  const {server,misses,url}=await serve(site,{csp});
+async function run(site,{csp,inject='',frames=true,viewport={width:390,height:844,deviceScaleFactor:3,mobile:true},shots=null,label='run',reload=false,target='xhs',intercept=null}){
+  const {server,misses,url}=await serve(site,{csp,policy:target==='yiciyuan'?CSP_YC:CSP});
   const browser=await chrome();const {send,on,evaluate}=browser;
   const problems=[];
   on('Runtime.exceptionThrown',p=>problems.push('exception: '+(p.exceptionDetails.exception?.description||p.exceptionDetails.text).split('\n')[0]));
@@ -114,11 +121,20 @@ async function run(site,{csp,inject='',frames=true,viewport={width:390,height:84
   on('Network.loadingFailed',p=>{if(!p.canceled)problems.push('request failed: '+p.errorText);});
   on('Network.responseReceived',p=>{if(p.response.status>=400&&!/favicon/.test(p.response.url))problems.push('HTTP '+p.response.status+' '+p.response.url.replace(url,''));});
   await send('Page.enable');await send('Runtime.enable');await send('Log.enable');await send('Network.enable');
+  if(intercept){
+    // Answer the external SDK script locally; any other outside request fails the run.
+    on('Fetch.requestPaused',p=>{
+      const body=p.request.url.startsWith(intercept.url)?intercept.body:null;
+      if(body===null){problems.push('outside request: '+p.request.url);send('Fetch.failRequest',{requestId:p.requestId,errorReason:'BlockedByClient'});return;}
+      send('Fetch.fulfillRequest',{requestId:p.requestId,responseCode:200,responseHeaders:[{name:'content-type',value:'text/javascript; charset=utf-8'}],body:Buffer.from(body).toString('base64')});
+    });
+    await send('Fetch.enable',{patterns:[{urlPattern:'https://*'}]});
+  }
   await send('Emulation.setDeviceMetricsOverride',viewport);
   await send('Emulation.setTouchEmulationEnabled',{enabled:true});
   await send('Page.addScriptToEvaluateOnNewDocument',{source:DETERMINISM+(frames?'':NO_FRAMES)+`document.addEventListener('securitypolicyviolation',e=>console.error('CSP violation',e.violatedDirective,e.blockedURI,e.sourceFile+':'+e.lineNumber));`+inject});
   const open=async()=>{await send('Page.navigate',{url:url+'/index.html'});
-    for(let i=0;i<150;i++){await sleep(100);if(await evaluate(`return document.readyState==='complete'&&!!document.querySelector('#panel button')&&!document.getElementById('xhs-boot')`).catch(()=>false))break;}
+    for(let i=0;i<150;i++){await sleep(100);if(await evaluate(`return document.readyState==='complete'&&!!document.querySelector('#panel button')&&!document.getElementById('xhs-boot')&&!document.getElementById('yc-boot')`).catch(()=>false))break;}
     await sleep(500);};
   const shot=async name=>{if(!shots)return;fs.mkdirSync(shots,{recursive:true});const r=await send('Page.captureScreenshot',{format:'png'});fs.writeFileSync(path.join(shots,name+'.png'),Buffer.from(r.data,'base64'));};
   try{
@@ -127,7 +143,28 @@ async function run(site,{csp,inject='',frames=true,viewport={width:390,height:84
   const result=await evaluate(SCRIPT);
   await shot(label+'-02-after-script');
   const extra={};
-  if(reload){
+  if(reload&&target==='yiciyuan'){
+    extra.page=await evaluate(`
+      const out={};
+      out.topPadLeft=parseFloat(getComputedStyle(document.querySelector('#top')).paddingLeft);
+      out.kind=SaveManager.getStorage()&&SaveManager.getStorage().kind;out.hud=document.querySelector('#top').innerText.slice(0,80);
+      A.go('home');await new Promise(r=>setTimeout(r,80));
+      out.lockedCards=document.querySelectorAll('.edition-locked').length;
+      return out;`);
+    extra.saveImage=await evaluate(`A.go('log');await new Promise(r=>setTimeout(r,50));const b=document.querySelector('[data-onclick="A.logCard()"]');if(b)b.click();await new Promise(r=>setTimeout(r,400));const box=document.getElementById('yiciyuan-picture');const ok=!!(box&&box.querySelector('img')&&box.querySelector('img').src.startsWith('data:image/png'));if(box)box.querySelector('button').click();return ok&&!document.getElementById('yiciyuan-picture');`);
+    await shot(label+'-03-log');
+    await evaluate(`await SaveManager.getStorage().flush();return true;`);
+    const turn=await evaluate(`return S.turn+':'+S.gen;`);
+    const before=await evaluate(`return window.__avg.calls.filter(c=>c[0]==='upload').length;`);
+    await open();
+    extra.titleSlots=await evaluate(`return [...document.querySelectorAll('[data-onclick^="A.load("]')].map(b=>b.textContent);`);
+    await evaluate(`document.querySelector('[data-onclick="A.load(\\'auto\\')"]').click();await new Promise(r=>setTimeout(r,800));return true;`);
+    extra.reloaded=await evaluate(`return S&&(S.turn+':'+S.gen);`);
+    extra.beforeReload=turn;
+    await shot(label+'-04-reloaded');
+    extra.storage=await evaluate(`const a=window.__avg;return {profiles:a.profiles.map(p=>[p.position,p.profileName,p.isAuto]),uploads:a.calls.filter(c=>c[0]==='upload').length,largestBody:Math.max(...[...a.cdn.values()].map(v=>new Blob([v]).size)),plays:a.calls.filter(c=>c[0]==='logGamePlay').length,inits:a.calls.filter(c=>c[0]==='init').map(c=>c[1]),trapped:window.__trapped};`);
+    extra.uploadsBeforeReload=before;
+  }else if(reload){
     extra.page=await evaluate(`
       const out={};
       const cs=getComputedStyle(document.querySelector('#top'));out.topPadding=parseFloat(cs.paddingTop);
@@ -190,6 +227,28 @@ const XHS_MOCK=`(()=>{
   const origEval=window.eval;window.eval=function(){window.__trapped.push('eval');return origEval.apply(this,arguments);};
 })();`;
 
+// A simulated 易次元 SDK (AvgAIGameSDK 2.0.x surface the game uses): a logged-in player,
+// a CDN that keeps uploaded bodies, and 50 profile positions. getProfileList answers []
+// on errors, as the real SDK does. State survives reloads of this tab.
+const AVG_SDK_MOCK=`(()=>{
+  const prior=(()=>{try{const s=window.name&&JSON.parse(window.name);return s&&s.avg||null;}catch(e){return null;}})();
+  const cdn=new Map(prior?prior.cdn:[]),profiles=prior?prior.profiles:[],calls=[];let nextId=prior?prior.nextId:1,n=cdn.size;
+  window.__avg={cdn,profiles,calls};
+  const keep=()=>{window.name=JSON.stringify({avg:{cdn:[...cdn],profiles,nextId}});};setInterval(keep,200);addEventListener('pagehide',keep);
+  const later=v=>new Promise(r=>setTimeout(()=>r(v),15));
+  window.AvgAIGameSDK={
+    init(o){calls.push(['init',o&&o.mode]);},
+    async createPlatformContext(){calls.push(['context']);return later({user:{id:'u1',displayName:'测试玩家',nickname:'测试玩家'},gameId:'100001',env:'platform'});},
+    async uploadProfile(content){if(typeof content!=='string')throw Error('content must be a string');calls.push(['upload',new Blob([content]).size]);const url='https://file.example/p/'+(++n);cdn.set(url,content);return later(url);},
+    async downloadProfile(url){calls.push(['download']);if(!cdn.has(url))throw Error('404');return later(cdn.get(url));},
+    async getProfileList(gameId){calls.push(['list']);return later(profiles.map(p=>Object.assign({},p)));},
+    async createProfile(gameId,p){calls.push(['create',p.position]);if(!(p.position>=0&&p.position<=49))throw Error('position');if(profiles.some(x=>x.position===p.position))throw Error('position taken');
+      profiles.push({id:nextId++,position:p.position,progress:p.progress,screenshot:p.screenshot||'Not Supported',profileName:p.profileName,isAuto:p.isAuto?1:0});return later({});},
+    async replaceProfile(gameId,id,p){calls.push(['replace',p.position]);const row=profiles.find(x=>x.id===id);if(!row)throw Error('no profile '+id);Object.assign(row,{position:p.position,progress:p.progress,profileName:p.profileName,isAuto:p.isAuto?1:0});return later({});},
+    async logGamePlay(){calls.push(['logGamePlay']);}
+  };
+})();`;
+
 async function main(){
   const [mode,arg1,...rest]=process.argv.slice(2);
   const shots=rest.includes('--shots')?path.resolve(rest[rest.indexOf('--shots')+1]):null;
@@ -216,6 +275,16 @@ async function main(){
     if(r.problems.length||r.misses.length||e.storage.trapped.length||e.reloaded!==e.beforeReload||e.page.kind!=='xhs'||!(e.page.topPadding>=83)||!e.saveImage)process.exitCode=1;
     return;
   }
+  if(mode==='yiciyuan'){
+    const site=path.resolve(arg1||path.join(root,'dist/yiciyuan/package'));
+    const trap=XHS_MOCK.slice(XHS_MOCK.indexOf("  for(const name of ['localStorage'"),XHS_MOCK.lastIndexOf('})();'));
+    const r=await run(site,{csp:true,target:'yiciyuan',label:'yiciyuan',shots,reload:true,
+      inject:`window.__trapped=[];(()=>{${trap}})();`,intercept:{url:SDK_HOST+'/musicst/npm/@avgjs/ai-game-sdk/',body:AVG_SDK_MOCK}});
+    console.log(JSON.stringify({clicks:r.trace.length,problems:r.problems,misses:r.misses,extra:r.extra,lastSteps:r.trace.slice(-3)},null,1));
+    const e=r.extra;
+    if(r.problems.length||r.misses.length||e.storage.trapped.length||e.reloaded!==e.beforeReload||e.page.kind!=='avg'||!(e.page.topPadLeft>=52)||e.page.lockedCards||!e.saveImage||!e.storage.plays||e.storage.inits.join()!=='production')process.exitCode=1;
+    return;
+  }
   if(mode==='nojs'){
     const site=path.resolve(arg1||path.join(root,'dist/xhs/package'));
     const {server,url}=await serve(site,{csp:true});const browser=await chrome();
@@ -229,6 +298,6 @@ async function main(){
     if(!/宸宫纪/.test(text)||!/正在准备/.test(text))process.exitCode=1;
     return;
   }
-  console.error('usage: equivalence <old-site> | xhs [package] | nojs [package] --shots DIR');process.exitCode=2;
+  console.error('usage: equivalence <old-site> | xhs [package] | yiciyuan [package] | nojs [package] --shots DIR');process.exitCode=2;
 }
 main().catch(e=>{console.error(e);process.exitCode=1;});

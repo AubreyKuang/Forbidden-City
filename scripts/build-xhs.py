@@ -4,6 +4,11 @@
     python3 scripts/build-xhs.py --tools /path/to/tools        # dist/xhs/chengongji-xhs-V1.0.0.zip
     python3 scripts/build-xhs.py --tools DIR --version 1.0.1
 
+The same pipeline builds the 易次元 package (--target yiciyuan, or scripts/build-yiciyuan.py):
+full content, cloud saves through the platform SDK, dist/yiciyuan/chengongji-yiciyuan-V*.zip.
+The notes below describe the xhs target; the yiciyuan differences are in TARGETS,
+scripts/yiciyuan-edition.json, YC_HEAD and js/yiciyuan-host.js.
+
 --tools is a folder outside the repository holding node_modules for the build-time
 transpilers (nothing from it ships):
 
@@ -28,15 +33,34 @@ import argparse, hashlib, io, json, re, shutil, subprocess, sys, zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-OUT = ROOT / 'dist/xhs'
-STAGE = OUT / 'package'
-GEN = OUT / '.gen'
-CACHE = ROOT / 'dist/.image-cache-xhs'
-EDITION = json.loads((ROOT / 'scripts/xhs-edition.json').read_text('utf8'))
-ZIP_LIMIT = 10 * 1024 * 1024
-ZIP_TARGET = 9.3 * 1024 * 1024
-FILE_LIMIT = 200      # platform: a package may hold at most 200 files
-FILE_TARGET = 150     # keep room for later additions
+CACHE = ROOT / 'dist/.image-cache-xhs'  # shared: both targets encode images the same way
+# 易次元 platform SDK (login, cloud saves, play time), loaded from the platform CDN as its
+# docs require; the version is pinned (the CDN has no "latest").
+AVG_SDK = 'https://s9.music.126.net/musicst/npm/@avgjs/ai-game-sdk/2.0.1/index.iife.js'
+TARGETS = {
+    'xhs': {'label': 'Xiaohongshu mini-tool', 'out': 'dist/xhs', 'edition': 'scripts/xhs-edition.json',
+            'zip': 'chengongji-xhs-V{}.zip', 'host': 'js/xhs-host.js',
+            # platform: zip at most 10 MB and at most 200 files; keep room for additions
+            'zip_limit': 10 * 1024 * 1024, 'zip_target': 9.3 * 1024 * 1024, 'file_limit': 200, 'file_target': 150},
+    'yiciyuan': {'label': '易次元 (万象笺) package', 'out': 'dist/yiciyuan', 'edition': 'scripts/yiciyuan-edition.json',
+                 'zip': 'chengongji-yiciyuan-V{}.zip', 'host': 'js/yiciyuan-host.js',
+                 # platform: .zip up to 4 GB; no file-count limit is documented
+                 'zip_limit': 4 * 1024 ** 3, 'zip_target': None, 'file_limit': None, 'file_target': None},
+}
+TARGET = None
+OUT = STAGE = GEN = EDITION = None
+ZIP_LIMIT = ZIP_TARGET = FILE_LIMIT = FILE_TARGET = None
+
+
+def configure(name):
+    global TARGET, OUT, STAGE, GEN, EDITION, ZIP_LIMIT, ZIP_TARGET, FILE_LIMIT, FILE_TARGET
+    TARGET = dict(TARGETS[name], name=name)
+    OUT = ROOT / TARGET['out']
+    STAGE = OUT / 'package'
+    GEN = OUT / '.gen'
+    EDITION = json.loads((ROOT / TARGET['edition']).read_text('utf8'))
+    ZIP_LIMIT, ZIP_TARGET = TARGET['zip_limit'], TARGET['zip_target']
+    FILE_LIMIT, FILE_TARGET = TARGET['file_limit'], TARGET['file_target']
 BUNDLE = 'js/app.js'  # written as js/app-1.js, js/app-2.js, ... in load order
 BUNDLE_MAX = 1900 * 1024  # each joined script under the 2 MiB text-file warning
 ALLOWED_SUFFIXES = {'.html', '.css', '.js', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.woff', '.woff2', '.json'}
@@ -94,10 +118,10 @@ def image_rule(rel, size):
 
 def locked_files():
     out = set()
-    allow = EDITION['allow']
+    allow = EDITION.get('allow', {})
     for kind, people in LOCKED_ART.items():
         for key, files in people.items():
-            if key not in allow.get(kind, []):
+            if kind in allow and key not in allow[kind]:
                 out.update(files)
     return out
 
@@ -219,6 +243,40 @@ BOOT = '''<div id="xhs-boot" role="status" aria-live="polite">
 '''
 
 
+YC_HEAD = '''<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>宸宫纪</title>
+<style>
+/* Static first screen: visible before any script runs. */
+#yc-boot{position:fixed;top:0;right:0;bottom:0;left:0;z-index:2000;display:-webkit-box;display:flex;-webkit-box-orient:vertical;flex-direction:column;-webkit-box-align:center;align-items:center;-webkit-box-pack:center;justify-content:center;padding:96px 24px 48px;background:#213e46;color:#f6ead2;text-align:center;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+#yc-boot h1{margin:0 0 10px;font-size:34px;letter-spacing:.3em;font-weight:700;color:#f0d79a}
+#yc-boot .yc-boot-sub{margin:0 0 28px;font-size:14px;line-height:1.7;opacity:.85}
+#yc-boot .yc-boot-status{margin:0;font-size:15px}
+#yc-boot .yc-boot-hint{margin:14px 0 0;font-size:12px;opacity:.7}
+/* The platform draws its exit button at the top left of the WebView. */
+html.yiciyuan-host #app #top{padding-left:calc(env(safe-area-inset-left,0px) + 52px) !important}
+html.yiciyuan-host #app[data-layout="landing"] .title-wrap{padding-top:calc(env(safe-area-inset-top,0px) + 48px)}
+/* Cards drawn on canvas, shown full screen for long-press saving. */
+#yiciyuan-picture{position:fixed;top:0;right:0;bottom:0;left:0;z-index:3000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:24px;background:rgba(20,16,14,.92);color:#f6ead2}
+#yiciyuan-picture img{max-width:100%;max-height:72vh;-webkit-touch-callout:default}
+#yiciyuan-picture p{margin:0;font-size:14px}
+html{-webkit-text-size-adjust:100%;touch-action:manipulation}
+body{-webkit-tap-highlight-color:transparent}
+</style>
+'''
+
+YC_BOOT = '''<div id="yc-boot" role="status" aria-live="polite">
+  <h1>宸宫纪</h1>
+  <p class="yc-boot-sub">宫廷人生模拟 · 处理朝政、走访后宫，写下属于你的一朝本纪</p>
+  <p class="yc-boot-status" id="yc-boot-status">正在准备…</p>
+  <p class="yc-boot-hint">首次打开需要读取立绘与云存档，请稍候。若长时间没有反应，请退出后重新打开。</p>
+</div>
+'''
+
+
 def build_index(scripts):
     source = (ROOT / 'index.html').read_text('utf8')
     body = source[source.index('<div id="app">'):]
@@ -226,6 +284,10 @@ def build_index(scripts):
     body = body.replace('<div id="app">', '<div id="app" aria-busy="true">', 1)
     css = ''.join(f'<link rel="stylesheet" href="./{name}">\n' for name in CSS_FILES)
     js = ''.join(f'<script defer src="./{path}"></script>\n' for path in scripts)
+    if TARGET['name'] == 'yiciyuan':
+        # The SDK runs first: defer scripts run in document order.
+        js = f'<script defer src="{AVG_SDK}"></script>\n' + js
+        return YC_HEAD + css + '</head>\n<body>\n' + YC_BOOT + body.strip() + '\n' + js + '</body>\n</html>\n'
     return INDEX_HEAD + css + '</head>\n<body>\n' + BOOT + body.strip() + '\n' + js + '</body>\n</html>\n'
 
 
@@ -256,7 +318,7 @@ DEV_MARKERS = ['dev-tools', 'dev.html', 'dev.css', 'palace-dev', 'mountDevTools'
 
 def check_package(files, texts):
     problems = []
-    if len(files) > FILE_LIMIT:
+    if FILE_LIMIT and len(files) > FILE_LIMIT:
         problems.append(f'{len(files)} files; the platform allows at most {FILE_LIMIT}')
     for p in files:
         rel = p.relative_to(STAGE).as_posix()
@@ -271,6 +333,9 @@ def check_package(files, texts):
         for marker in DEV_MARKERS:
             if marker in text:
                 problems.append(f'dev panel marker {marker!r} in {rel}')
+        if rel == 'index.html':
+            # The pinned platform SDK is the one external script this target may load.
+            text = text.replace(f'<script defer src="{AVG_SDK}"></script>', '')
         for pattern, label in FORBIDDEN:
             body = text
             if label == 'browser storage':
@@ -281,6 +346,8 @@ def check_package(files, texts):
                 problems.append(f'{label} in {rel}: …{body[max(0, m.start() - 40):m.end() + 40]}…')
                 break
     index = texts['index.html']
+    if TARGET['name'] == 'yiciyuan' and index.count(AVG_SDK) != 1:
+        problems.append('index.html must load the platform SDK once')
     if re.search(r'<script(?![^>]*\ssrc=)[^>]*>', index):
         problems.append('inline <script> in index.html')
     return problems
@@ -291,7 +358,10 @@ def main():
     ap.add_argument('--tools', required=True, help='folder with node_modules for esbuild, lightningcss, acorn and sharp')
     ap.add_argument('--version', default='1.0.0')
     ap.add_argument('--node', default='node')
+    ap.add_argument('--target', choices=sorted(TARGETS), default='xhs')
     args = ap.parse_args()
+    configure(args.target)
+    host = TARGET['host']
     if not re.fullmatch(r'\d+\.\d+\.\d+', args.version):
         sys.exit('version must look like 1.0.0')
 
@@ -303,7 +373,7 @@ def main():
 
     source_scripts = [s for s in game_scripts() if Path(s).name not in SKIP_JS]
     texts = {name: (ROOT / name).read_text('utf8') for name in source_scripts + CSS_FILES}
-    texts['js/xhs-host.js'] = (ROOT / 'js/xhs-host.js').read_text('utf8')
+    texts[host] = (ROOT / host).read_text('utf8')
 
     # ---- images
     locked = locked_files()
@@ -333,7 +403,7 @@ def main():
 
     # ---- generated sources
     (GEN / 'js/xhs-edition-config.js').write_text(
-        '/* Generated by scripts/build-xhs.py from scripts/xhs-edition.json. */\n'
+        f'/* Generated by scripts/build-xhs.py from {TARGET["edition"]}. */\n'
         f'window.PALACE_EDITION_CONFIG=Object.freeze({json.dumps(EDITION, ensure_ascii=False)});\n', 'utf8')
     # Every resized sheet must have exactly one scale entry to rewrite (portraitSheets or the
     # half-body CONSORT_DETAIL_SHEETS, which are SVG-only but kept consistent).
@@ -351,7 +421,7 @@ def main():
 
     # Load order: polyfills, edition config, :has() patterns and layout fallbacks, then the
     # game in its usual order, then the host bridge (after main.js has opened storage).
-    order = ['js/compat.js', 'js/xhs-edition-config.js', 'js/xhs-has-patterns.js', 'js/xhs-compat-ui.js'] + source_scripts + ['js/xhs-host.js']
+    order = ['js/compat.js', 'js/xhs-edition-config.js', 'js/xhs-has-patterns.js', 'js/xhs-compat-ui.js'] + source_scripts + [host]
     job = {'tools': str(Path(args.tools).resolve()), 'hasOut': str(GEN / 'src/js/xhs-has-patterns.js'),
            'css': [{'src': str(GEN / 'src' / n), 'out': str(STAGE / n)} for n in CSS_FILES],
            'js': [{'src': str(GEN / ('js/xhs-edition-config.js' if n == 'js/xhs-edition-config.js' else 'src/' + n)), 'out': str(STAGE / n)} for n in order],
@@ -384,7 +454,7 @@ def main():
         sys.exit('package check failed:\n' + '\n'.join(problems[:60]))
 
     # ---- zip (index.html at the root; the folder contents, not the folder)
-    zip_path = OUT / f'chengongji-xhs-V{args.version}.zip'
+    zip_path = OUT / TARGET['zip'].format(args.version)
     zip_path.unlink(missing_ok=True)
     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as z:
         for p in files:
@@ -405,7 +475,7 @@ def main():
                'js_bytes': report['bundle']['bytes'], 'js_files_joined': report['bundle']['files'], 'js_outputs': report['bundle']['outputs'], 'urls_removed': report['urlsRemoved'],
                'css': report['css'], 'has_patterns': len(report['has'])}
     (OUT / 'build-report.json').write_text(json.dumps(summary, ensure_ascii=False, indent=1), 'utf8')
-    print(f'Xiaohongshu mini-tool V{args.version} -> {zip_path.relative_to(ROOT)}')
+    print(f'{TARGET["label"]} V{args.version} -> {zip_path.relative_to(ROOT)}')
     print(f'  zip {mb(summary["zip_bytes"])} ({summary["files"]} files), unpacked {mb(summary["unpacked_bytes"])}, JS {mb(summary["js_bytes"])} in {len(summary["js_outputs"])} files joined from {summary["js_files_joined"]} scripts')
     for cat, c in sorted(cats.items(), key=lambda kv: -kv[1]['before']):
         print(f'  {cat:<22} {c["files"]:>3} files  {mb(c["before"]):>9} -> {mb(c["after"]):>9}')
@@ -413,10 +483,10 @@ def main():
     for css in report['css']:
         print(f'  {Path(css["src"]).name}: {css["stats"]} still-modern (enhancement only): {css["remaining"]}')
     if summary['zip_bytes'] > ZIP_LIMIT:
-        sys.exit('zip is over the 10 MiB limit')
-    if len(files) > FILE_TARGET:
+        sys.exit(f'zip is over the {mb(ZIP_LIMIT)} limit')
+    if FILE_TARGET and len(files) > FILE_TARGET:
         print(f'  WARNING: {len(files)} files, above the working target of {FILE_TARGET} (hard limit {FILE_LIMIT})')
-    if summary['zip_bytes'] > ZIP_TARGET:
+    if ZIP_TARGET and summary['zip_bytes'] > ZIP_TARGET:
         print('  WARNING: zip is above the 9.3 MiB working target')
 
 
