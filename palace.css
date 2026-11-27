@@ -986,3 +986,10 @@ button.family-room-person{cursor:pointer}button.family-room-person:hover{color:#
   .poem-prelude+.mbody>.mpor{float:left;width:64px;margin:0 12px 4px 0}
   .poem-prelude+.mbody>.mpor .por{width:100%;height:auto}
 }
+
+/* 商城 portrait gallery (js/palace-shop.js, only in builds with a shop). */
+.shop-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin:10px 0}
+.shop-gallery .shop-cell{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;min-width:0}
+.shop-gallery .shop-cell .por{max-width:100%;height:auto}
+.shop-gallery .shop-cell small{font-size:11px;line-height:1.3;text-align:center}
+.shop-gallery .shop-cell.on{outline:2px solid #c99a3b}

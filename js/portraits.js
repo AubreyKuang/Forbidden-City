@@ -379,7 +379,9 @@ function assignConsortPortrait(c,newlyCreated=false){
   const cells=newlyCreated===true&&version>=38&&base===CONSORT_PORTRAITS?
     (version>=164?NEW_DOMESTIC_CONSORT_PORTRAITS:version>=160?FINERY_DOMESTIC_CONSORT_PORTRAITS:COLOR_DOMESTIC_CONSORT_PORTRAITS):base;
   if(cells.includes(c.artPortrait))return;
-  const usage=new Map(cells.map(cell=>[cell,0]));
+  // Builds with a shop keep unbought portrait packs out of new faces.
+  const open=typeof PalaceShop!=='undefined'&&PalaceShop.enabled?cells.filter(PalaceShop.cellOpen):cells;
+  const usage=new Map(open.map(cell=>[cell,0]));
   const relatives=(S.children||[]).flatMap(k=>[k.spouse,...Object.values(k.marriageCandidates||{})]).filter(Boolean).map(p=>p.appearance).filter(Boolean);
   const seen=new Set();
   for(const other of [...S.consorts,...(S.cands||[]),...relatives]){
@@ -389,10 +391,10 @@ function assignConsortPortrait(c,newlyCreated=false){
       usage.set(cell,usage.get(cell)+1);
     }
   }
-  const start=Math.floor(mulberry32(c.seed||7)()*cells.length);
-  let best=cells[start];
-  for(let i=1;i<cells.length;i++){
-    const cell=cells[(start+i)%cells.length];
+  const start=Math.floor(mulberry32(c.seed||7)()*open.length);
+  let best=open[start];
+  for(let i=1;i<open.length;i++){
+    const cell=open[(start+i)%open.length];
     if(usage.get(cell)<usage.get(best))best=cell;
   }
   c.artPortrait=best;

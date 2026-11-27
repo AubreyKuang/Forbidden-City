@@ -16,11 +16,29 @@ const YiciyuanHost=(()=>{
     if(played)return;played=true;
     try{const s=sdk();if(s&&typeof s.logGamePlay==='function')Promise.resolve(s.logGamePlay()).catch(()=>{});}catch(e){/* Play-time logging never blocks the game. */}
   }
-  // Start a reign or load a save: wrap the actions the buttons call.
+  // Store for js/palace-shop.js. Spending always follows the player's own confirmation in
+  // the shop; the SDK shows no UI of its own and never charges by itself.
+  const store={
+    paidCount:async productId=>{const r=await sdk().fetchPaidCount({productId});return Number(r&&r.count)||0;},
+    purchase:(productId,price)=>sdk().purchaseGood({productId,price,count:1}),
+    getValue:name=>sdk().getUserValue(name),
+    setValue:(name,value)=>sdk().setUserValue(name,value),
+    openWallet:()=>sdk().openWallet()
+  };
+  const storeReady=()=>{const s=sdk();return !!s&&['fetchPaidCount','purchaseGood','getUserValue','setUserValue'].every(n=>typeof s[n]==='function');};
+  const refreshShop=()=>{if(typeof PalaceShop!=='undefined'&&PalaceShop.enabled&&storeReady())PalaceShop.refresh().catch(e=>console.warn('Shop:',e));};
+  // Start a reign or load a save: wrap the actions the buttons call. Each also checks
+  // purchases, so silver paid for earlier reaches the reign now open.
   for(const name of ['start','load']){
     const base=typeof A!=='undefined'&&A&&A[name];
-    if(typeof base==='function')A[name]=function(...args){const out=base.apply(this,args);markPlaying();return out;};
+    if(typeof base==='function')A[name]=function(...args){
+      const out=base.apply(this,args);markPlaying();
+      Promise.resolve(out).then(()=>setTimeout(refreshShop,0));
+      return out;
+    };
   }
+  const go=typeof A!=='undefined'&&A&&A.go;
+  if(typeof go==='function')A.go=function(view,...rest){const out=go.call(this,view,...rest);if(view==='shop')refreshShop();return out;};
   function saveCanvasImage(canvas,label){
     const old=document.getElementById('yiciyuan-picture');if(old)old.remove();
     const box=document.createElement('div');
@@ -32,7 +50,7 @@ const YiciyuanHost=(()=>{
     box.append(img,hint,close);document.body.append(box);
     return true;
   }
-  globalThis.PALACE_HOST={saveCanvasImage};
+  globalThis.PALACE_HOST={saveCanvasImage,get store(){return storeReady()?store:null;}};
 
   function finishBoot(){
     const boot=document.getElementById('yc-boot');
@@ -41,7 +59,7 @@ const YiciyuanHost=(()=>{
     boot.parentNode.removeChild(boot);
   }
   const slow=setTimeout(()=>{const s=document.getElementById('yc-boot-status');if(s)s.textContent='仍在准备…若长时间没有反应，请退出后重新打开。';},12000);
-  const ready=()=>{clearTimeout(slow);requestAnimationFrame(()=>requestAnimationFrame(finishBoot));};
+  const ready=()=>{clearTimeout(slow);requestAnimationFrame(()=>requestAnimationFrame(finishBoot));refreshShop();};
   if(typeof palaceStorageOpening!=='undefined'&&palaceStorageOpening&&typeof palaceStorageOpening.then==='function')palaceStorageOpening.then(ready,ready);
   else ready();
   return {markPlaying,saveCanvasImage};

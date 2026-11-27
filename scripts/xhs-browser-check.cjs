@@ -153,6 +153,32 @@ async function run(site,{csp,inject='',frames=true,viewport={width:390,height:84
       return out;`);
     extra.saveImage=await evaluate(`A.go('log');await new Promise(r=>setTimeout(r,50));const b=document.querySelector('[data-onclick="A.logCard()"]');if(b)b.click();await new Promise(r=>setTimeout(r,400));const box=document.getElementById('yiciyuan-picture');const ok=!!(box&&box.querySelector('img')&&box.querySelector('img').src.startsWith('data:image/png'));if(box)box.querySelector('button').click();return ok&&!document.getElementById('yiciyuan-picture');`);
     await shot(label+'-03-log');
+    // Shop: buy silver and the painter through the confirm step, repaint a consort.
+    extra.shop=await evaluate(`
+      const wait=ms=>new Promise(r=>setTimeout(r,ms));const out={};
+      out.menu=[...document.querySelectorAll('#menu [data-onclick]')].map(b=>b.getAttribute('data-onclick')).includes("A.go('shop')");
+      A.go('shop');await wait(300);
+      out.items=[...document.querySelectorAll('.shop-item b')].map(b=>b.textContent);
+      out.lockedBefore=PalaceShop.cellOpen(316);
+      const before=E().treasury;
+      document.querySelector('[data-onclick="A.shopConfirm(\\'silverSmall\\')"]').click();await wait(80);
+      document.querySelector('[data-onclick="A.shopBuy(\\'silverSmall\\')"]').click();await wait(600);
+      out.silver=E().treasury-before;
+      document.querySelector('[data-onclick="A.shopConfirm(\\'painter\\')"]').click();await wait(80);
+      document.querySelector('[data-onclick="A.shopBuy(\\'painter\\')"]').click();await wait(600);
+      document.querySelector('[data-onclick="A.shopConfirm(\\'legendsPack\\')"]').click();await wait(80);
+      document.querySelector('[data-onclick="A.shopBuy(\\'legendsPack\\')"]').click();await wait(600);
+      out.owned=['painter','legendsPack'].filter(k=>PalaceShop.owns(k));out.packs=S.flags.portraitPacks;out.lockedAfter=PalaceShop.cellOpen(316);
+      const c=S.consorts.find(x=>PalaceShop.repaintable(x));out.consort=!!c;
+      if(c){A.go('consort',c.id);await wait(200);const b=document.querySelector('[data-onclick="A.repaint('+c.id+')"]');out.repaintButton=!!b;b.click();await wait(300);
+        out.galleryCells=document.querySelectorAll('.shop-cell').length;const pick=[...document.querySelectorAll('.shop-cell')].find(x=>!x.classList.contains('on'));pick.click();await wait(300);out.repainted=c.portraitOverride;out.repaintedId=c.id;}
+      return out;`);
+    await shot(label+'-03b-repainted');
+    if(shots){
+      await evaluate(`A.go('shop');await new Promise(r=>setTimeout(r,300));return true;`);await shot(label+'-03c-shop');
+      await evaluate(`A.repaint(${JSON.stringify(extra.shop.repaintedId||0)});await new Promise(r=>setTimeout(r,400));return true;`);await shot(label+'-03d-gallery');
+      await evaluate(`A.repaintDone();return true;`);
+    }
     await evaluate(`await SaveManager.getStorage().flush();return true;`);
     const turn=await evaluate(`return S.turn+':'+S.gen;`);
     const before=await evaluate(`return window.__avg.calls.filter(c=>c[0]==='upload').length;`);
@@ -161,6 +187,8 @@ async function run(site,{csp,inject='',frames=true,viewport={width:390,height:84
     await evaluate(`document.querySelector('[data-onclick="A.load(\\'auto\\')"]').click();await new Promise(r=>setTimeout(r,800));return true;`);
     extra.reloaded=await evaluate(`return S&&(S.turn+':'+S.gen);`);
     extra.beforeReload=turn;
+    await sleep(800);
+    extra.afterReload=await evaluate(`return {repainted:(S.consorts.find(c=>c.id===${JSON.stringify(extra.shop&&extra.shop.repaintedId)})||{}).portraitOverride,owned:['painter','legendsPack'].filter(k=>PalaceShop.owns(k)),silverDone:window.__avg.values.paid_silverSmall};`);
     await shot(label+'-04-reloaded');
     extra.storage=await evaluate(`const a=window.__avg;return {profiles:a.profiles.map(p=>[p.position,p.profileName,p.isAuto]),uploads:a.calls.filter(c=>c[0]==='upload').length,largestBody:Math.max(...[...a.cdn.values()].map(v=>new Blob([v]).size)),plays:a.calls.filter(c=>c[0]==='logGamePlay').length,inits:a.calls.filter(c=>c[0]==='init').map(c=>c[1]),trapped:window.__trapped};`);
     extra.uploadsBeforeReload=before;
@@ -232,9 +260,9 @@ const XHS_MOCK=`(()=>{
 // on errors, as the real SDK does. State survives reloads of this tab.
 const AVG_SDK_MOCK=`(()=>{
   const prior=(()=>{try{const s=window.name&&JSON.parse(window.name);return s&&s.avg||null;}catch(e){return null;}})();
-  const cdn=new Map(prior?prior.cdn:[]),profiles=prior?prior.profiles:[],calls=[];let nextId=prior?prior.nextId:1,n=cdn.size;
-  window.__avg={cdn,profiles,calls};
-  const keep=()=>{window.name=JSON.stringify({avg:{cdn:[...cdn],profiles,nextId}});};setInterval(keep,200);addEventListener('pagehide',keep);
+  const cdn=new Map(prior?prior.cdn:[]),profiles=prior?prior.profiles:[],calls=[],paid=prior?prior.paid:{},values=prior?prior.values:{};let nextId=prior?prior.nextId:1,n=cdn.size;
+  window.__avg={cdn,profiles,calls,paid,values};
+  const keep=()=>{window.name=JSON.stringify({avg:{cdn:[...cdn],profiles,nextId,paid,values}});};setInterval(keep,200);addEventListener('pagehide',keep);
   const later=v=>new Promise(r=>setTimeout(()=>r(v),15));
   window.AvgAIGameSDK={
     init(o){calls.push(['init',o&&o.mode]);},
@@ -245,7 +273,12 @@ const AVG_SDK_MOCK=`(()=>{
     async createProfile(gameId,p){calls.push(['create',p.position]);if(!(p.position>=0&&p.position<=49))throw Error('position');if(profiles.some(x=>x.position===p.position))throw Error('position taken');
       profiles.push({id:nextId++,position:p.position,progress:p.progress,screenshot:p.screenshot||'Not Supported',profileName:p.profileName,isAuto:p.isAuto?1:0});return later({});},
     async replaceProfile(gameId,id,p){calls.push(['replace',p.position]);const row=profiles.find(x=>x.id===id);if(!row)throw Error('no profile '+id);Object.assign(row,{position:p.position,progress:p.progress,profileName:p.profileName,isAuto:p.isAuto?1:0});return later({});},
-    async logGamePlay(){calls.push(['logGamePlay']);}
+    async logGamePlay(){calls.push(['logGamePlay']);},
+    async fetchPaidCount({productId}){calls.push(['paidCount',productId]);return later({count:paid[productId]||0});},
+    async purchaseGood({productId,price,count}){calls.push(['purchase',productId,price,count]);paid[productId]=(paid[productId]||0)+1;return later({count:1,cost:{totalCost:price}});},
+    async getUserValue(name){return later(values[name]??null);},
+    async setUserValue(name,val){calls.push(['setUserValue',name,String(val)]);values[name]=String(val);return later({});},
+    openWallet(){calls.push(['openWallet']);}
   };
 })();`;
 
@@ -282,7 +315,10 @@ async function main(){
       inject:`window.__trapped=[];(()=>{${trap}})();`,intercept:{url:SDK_HOST+'/musicst/npm/@avgjs/ai-game-sdk/',body:AVG_SDK_MOCK}});
     console.log(JSON.stringify({clicks:r.trace.length,problems:r.problems,misses:r.misses,extra:r.extra,lastSteps:r.trace.slice(-3)},null,1));
     const e=r.extra;
-    if(r.problems.length||r.misses.length||e.storage.trapped.length||e.reloaded!==e.beforeReload||e.page.kind!=='avg'||!(e.page.topPadLeft>=52)||e.page.lockedCards||!e.saveImage||!e.storage.plays||e.storage.inits.join()!=='production')process.exitCode=1;
+    const sh=e.shop||{},ar=e.afterReload||{};
+    const shopOk=sh.menu&&sh.items.length===4&&sh.lockedBefore===false&&sh.silver===500&&sh.owned.length===2&&sh.lockedAfter===true&&sh.repaintButton&&sh.galleryCells>0&&Number.isInteger(sh.repainted)&&ar.repainted===sh.repainted&&ar.owned.length===2&&ar.silverDone==='1';
+    if(!shopOk)console.log('shop check failed');
+    if(!shopOk||r.problems.length||r.misses.length||e.storage.trapped.length||e.reloaded!==e.beforeReload||e.page.kind!=='avg'||!(e.page.topPadLeft>=52)||e.page.lockedCards||!e.saveImage||!e.storage.plays||e.storage.inits.join()!=='production')process.exitCode=1;
     return;
   }
   if(mode==='nojs'){
