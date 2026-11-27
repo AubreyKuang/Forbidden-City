@@ -233,6 +233,103 @@ const PalaceStorage=(()=>{
     }
     return backend;
   }
+  // 易次元 (NetEase avg, 万象笺 package upload): saves go to the platform's cloud profiles
+  // through AvgAIGameSDK 2.0.x, loaded from the platform CDN before the game. Each storage
+  // key owns one profile position (0-49); the body is uploaded to the platform CDN first,
+  // then the position is created or replaced. The platform has no delete and no
+  // compare-and-swap, so a removed key is replaced by an empty marker and one device at a
+  // time is assumed. The profile list call answers [] on any error, so the store is
+  // trusted only after a probe write shows up in it, and a known position that later
+  // goes missing from the list stops the write instead of creating a duplicate.
+  const AVG_PREFIX='chengongji_v1_',AVG_PROBE=49;
+  const AVG_SLOTS=['auto','1','2','3','before-import','dev-backup'].flatMap(slot=>[slot,slot+':backup',...(slot==='auto'?[slot+':snapshots']:[])]);
+  const avgPosition=key=>key.startsWith(AVG_PREFIX)?AVG_SLOTS.indexOf(key.slice(AVG_PREFIX.length)):-1;
+  const avgLabel=key=>{const slot=key.slice(AVG_PREFIX.length),[base,part]=slot.split(':');
+    const name=base==='auto'?'自动存档':base==='before-import'?'读入前备份':base==='dev-backup'?'测试备份':'存档'+base;
+    return name+(part==='backup'?'·上一份':part==='snapshots'?'·回溯点':'');};
+  const unavailableAvg=reason=>Object.assign(Error('当前无法存档：'+reason),{name:'StorageUnavailableError'});
+  async function avgPack(value){
+    if(typeof PalaceCompress==='undefined'||value.length<4096)return {z:0,parts:[value]};
+    const parts=[];
+    for(let i=0;i<value.length;i+=XHS_SEGMENT){parts.push(PalaceCompress.compress(value.slice(i,i+XHS_SEGMENT)));if(i+XHS_SEGMENT<value.length)await pause();}
+    return {z:1,parts};
+  }
+  function avgBackend(sdk,gameId){
+    const ids=new Map(),mirror=new Map();
+    const list=async()=>{const rows=await sdk.getProfileList(gameId);return Array.isArray(rows)?rows:[];};
+    const learn=rows=>{for(const row of rows)if(row&&Number.isInteger(row.position)&&row.id!==undefined&&row.id!==null)ids.set(row.position,row.id);};
+    const decode=raw=>{
+      const body=JSON.parse(raw);
+      if(!body||body.app!=='chengongji'||!Array.isArray(body.parts))throw Error('存档数据格式不对');
+      if(body.empty)return null;
+      return body.z?body.parts.map(p=>PalaceCompress.decompress(p)).join(''):body.parts.join('');
+    };
+    const upload=async(key,position,value)=>{
+      const packed=value===null?{z:0,parts:[]}:await avgPack(value);
+      const body=JSON.stringify({app:'chengongji',key,savedAt:Date.now(),z:packed.z,parts:packed.parts,...(value===null?{empty:1}:{})});
+      const progress=await sdk.uploadProfile(body);
+      const profile={progress,profileName:avgLabel(key),position,isAuto:key===AVG_PREFIX+'auto'};
+      if(ids.has(position)){await sdk.replaceProfile(gameId,ids.get(position),profile);return;}
+      const rows=await list();learn(rows);
+      if(ids.has(position)){await sdk.replaceProfile(gameId,ids.get(position),profile);return;}
+      await sdk.createProfile(gameId,profile);
+      learn(await list());
+    };
+    // The probe proves the list call works: a write must come back in the next list.
+    const probe=async()=>{
+      const progress=await sdk.uploadProfile(JSON.stringify({app:'chengongji',probe:Date.now()}));
+      const profile={progress,profileName:'存档检测',position:AVG_PROBE,isAuto:false};
+      let rows=await list();learn(rows);
+      if(ids.has(AVG_PROBE))await sdk.replaceProfile(gameId,ids.get(AVG_PROBE),profile);
+      else await sdk.createProfile(gameId,profile);
+      rows=await list();learn(rows);
+      const row=rows.find(r=>r&&r.position===AVG_PROBE);
+      if(!row||row.progress!==progress)throw Error('存档列表读不回刚写入的内容');
+    };
+    return {kind:'avg',coalesce:true,
+      probe,
+      async readAll(){
+        const rows=await list();learn(rows);
+        const values=new Map();mirror.clear();
+        for(const row of rows){
+          const key=AVG_SLOTS[row&&row.position];if(!key||!row.progress)continue;
+          let raw;
+          // One unreadable position must not hide the others.
+          try{raw=decode(await sdk.downloadProfile(row.progress));}catch(e){console.warn('Cloud save '+key+':',e);continue;}
+          if(raw!==null){values.set(AVG_PREFIX+key,raw);mirror.set(AVG_PREFIX+key,raw);}
+        }
+        return values;
+      },
+      // No expected-value check: the platform cannot compare-and-swap, and the game runs
+      // in one WebView at a time.
+      async transact(batch){
+        for(const [key] of batch.writes)if(avgPosition(key)<0)throw Error('这个存档位不能保存到云端');
+        const rows=await list();
+        // A position this session has seen must still be listed; an empty answer is an error.
+        for(const [position] of ids)if(position!==AVG_PROBE&&!rows.some(r=>r&&r.position===position))throw Error('云存档列表暂时读不到，请稍后重试');
+        learn(rows);
+        for(const [key,value] of batch.writes){
+          if(value===null&&!mirror.has(key))continue;
+          await upload(key,avgPosition(key),value);
+          if(value===null)mirror.delete(key);else mirror.set(key,value);
+        }
+      }
+    };
+  }
+  async function openAvg(){
+    const sdk=globalThis.AvgAIGameSDK;
+    if(!sdk||typeof sdk.init!=='function')throw unavailableAvg('没有连上易次元平台，请检查网络后重新打开。');
+    for(const name of ['createPlatformContext','getProfileList','createProfile','replaceProfile','uploadProfile','downloadProfile'])
+      if(typeof sdk[name]!=='function')throw unavailableAvg('易次元平台接口不完整，请更新 App 后重试。');
+    sdk.init({mode:'production'});
+    // Not logged in: the SDK sends the player to the login page and rejects; let it.
+    const {gameId}=await sdk.createPlatformContext();
+    const backend=avgBackend(sdk,gameId);
+    try{await backend.probe();}
+    catch(e){console.warn('Cloud save probe:',e);throw unavailableAvg('云存档暂时无法写入，请检查网络后重新打开。');}
+    return backend;
+  }
+  const avgEdition=()=>typeof PALACE_EDITION!=='undefined'&&PALACE_EDITION.name==='yiciyuan';
   const xhsEdition=()=>typeof PALACE_EDITION!=='undefined'&&PALACE_EDITION.name==='xhs';
   // The plain localStorage path is SaveManager's own synchronous fallback; it is
   // used only after a value written to it reads back unchanged.
@@ -276,6 +373,11 @@ const PalaceStorage=(()=>{
     async function pump(){
       if(running)return;running=true;
       while(queue.length){
+        // Remote stores send one upload per key for everything queued meanwhile.
+        if(backend.coalesce&&queue.length>1){
+          const writes=new Map();for(const b of queue)for(const [key,value] of b.writes){writes.delete(key);writes.set(key,value);}
+          queue=[{writes:[...writes],reclaim:[],expected:queue[0].expected}];
+        }
         const batch=queue[0];
         try{
           const writes=await write(batch);apply(durable,writes);queue.shift();
@@ -341,6 +443,13 @@ const PalaceStorage=(()=>{
   }
   function init(){
     if(globalThis.PALACE_DISPOSABLE_STORAGE)return null;
+    if(avgEdition()){
+      if(!opening)opening=(async()=>{
+        try{const backend=await openAvg();startupError=null;store=adapter(backend,await backend.readAll());return store;}
+        catch(e){startupError=e&&e.name==='StorageUnavailableError'?e:unavailableAvg('云存档暂时无法读取，请检查网络后重新打开。');console.warn('Save store unavailable:',e);return null;}
+      })();
+      return opening;
+    }
     if(xhsEdition()){
       if(!opening)opening=(async()=>{
         try{const backend=await openXhs();startupError=null;store=adapter(backend,await backend.readAll());return store;}

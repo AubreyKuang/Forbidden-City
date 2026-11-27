@@ -707,8 +707,8 @@ function viewLog(){
     `<p class="hint">${UI.logF==='big'?'所选朝代暂无大事记载。':'所选朝代暂无可查的起居记录。'}</p>`}`}
 function viewSys(){
   const fileBackup=PALACE_EDITION.feature('saveExport'),store=SaveManager.getStorage();
-  const storeHint=store?.kind==='indexeddb'?'已启用大容量本机存档；旧存档自动接续，人物纪事完整保留。':store?.kind==='xhs'?'存档写入小工具本机存储，写完会读回核对。':!store&&!fileBackup?'当前无法存档，本局进度只在本次游玩中保留。':'当前浏览器使用兼容存档，请定期下载备份文件。';
-  return `${pageHeading('存档',(store?.kind==='xhs'?'存档保存在本机':'存档保存在本浏览器中')+'；每月结束时会自动存档。剧情选择后也会保存，未完事件可继续。')}
+  const storeHint=store?.kind==='indexeddb'?'已启用大容量本机存档；旧存档自动接续，人物纪事完整保留。':store?.kind==='xhs'?'存档写入小工具本机存储，写完会读回核对。':store?.kind==='avg'?'存档保存在易次元云端，换设备登录同一账号也能读取。':!store&&!fileBackup?'当前无法存档，本局进度只在本次游玩中保留。':'当前浏览器使用兼容存档，请定期下载备份文件。';
+  return `${pageHeading('存档',(store?.kind==='xhs'?'存档保存在本机':store?.kind==='avg'?'存档保存在易次元账号的云端':'存档保存在本浏览器中')+'；每月结束时会自动存档。剧情选择后也会保存，未完事件可继续。')}
    <p class="hint">游戏版本 v${PalaceActions.releaseVersion}</p>
    ${lastAutoSaveError?`<p role="status">${esc(lastAutoSaveError)}</p>`:''}
    <p class="hint">${storeHint} 请等「正在写入」结束后再关闭页面。</p>
