@@ -1,1 +1,13 @@
-{"edition":"yiciyuan","features":{"saveExport":false,"browserStorage":false,"saveBackups":false},"saveSnapshots":1}
+{
+  "edition": "yiciyuan",
+  "features": {"saveExport": false, "browserStorage": false, "saveBackups": false},
+  "saveSnapshots": 1,
+  "shop": {
+    "products": [
+      {"key": "silverSmall", "productId": "2485888261127001", "name": "银两小包", "price": 60, "kind": "silver", "amount": 500, "doneKey": "paid_silverSmall", "desc": "国库增加 500 万两，到账当前这一朝。"},
+      {"key": "silverLarge", "productId": "2485888261127002", "name": "银两大包", "price": 200, "kind": "silver", "amount": 2000, "doneKey": "paid_silverLarge", "desc": "国库增加 2000 万两，到账当前这一朝。"},
+      {"key": "painter", "productId": "2485888261127003", "name": "画师换像", "price": 99, "kind": "painter", "desc": "妃嫔详情页多一个「更换立绘」，可以从图库里为她挑一张立绘。剧情人物的专属立绘不变。"},
+      {"key": "legendsPack", "productId": "2485888261127004", "name": "传说珠翠立绘包", "price": 30, "kind": "portraitPack", "pack": "legends", "desc": "解锁 30 张立绘（传说名妃 24 张、珠翠 6 张）：之后选秀会出现，也能在更换立绘时选用。"}
+    ]
+  }
+}
