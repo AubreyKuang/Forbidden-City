@@ -173,7 +173,9 @@ test('the lotus illustration follows the result where she hears the rain',()=>{
 test('each scholar chapter displays its own scene at the scheduled popup',()=>{
   const game=start();
   game.run(`const c=empress();c.trait='才女';c.aff=70;
-    c.arc={id:'scholar',st:0,t:S.turn,f:{}};pushEv(arcTick());`);
+    c.arc={id:'scholar',st:0,t:S.turn,f:{}};
+    ministryState().exams.push({gen:S.gen,year:S.year,turn:S.turn,top:[1,2,3]}); // the poem follows a palace exam
+    pushEv(arcTick());`);
   assert.match(game.run("$('#mbox').innerHTML"),/story-scholar-exam-papers\.webp/);
   game.run('choose(0);nextEv();S.turn=c.arc.t;pushEv(arcTick())');
   assert.match(game.run('curEv.text'),/翻了酒盏/);
