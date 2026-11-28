@@ -32,7 +32,7 @@ test('finance reconciliation, the popular-support cap and paths to parenthood ar
  b.run(`
    E().people=98;assert.equal(chg({people:9}),'民心+2（已达上限100）');assert.equal(E().people,100);
    assert.match($('#top').innerHTML,/民心范围 0–100/);
-   assert.match(viewKids(),/连续十二个月/);assert.match(viewKids(),/皇子满五岁/);assert.match(viewKids(),/护国寺祈福/);
+   assert.match(viewKids(),/data-onclick="openKidsGuide[^>]*>说明/);assert.match(kidsGuideHTML(),/连续十二个月/);assert.match(kidsGuideHTML(),/皇子满五岁/);assert.match(kidsGuideHTML(),/护国寺祈福/);
    E().nightsMonth=4;S.month=12;A.endMonth();
    const m=S.flags.lastMonthReview;
    assert.equal(m.finance.opening+m.inc-m.exp+m.finance.other,m.finance.closing);

@@ -106,7 +106,7 @@ function finishMourningVisit(women,action,d=S.flags.dowager){
 }
 function mourningNotice(){
   const d=mourningDowager(),m=d?.mourning;if(!m||(m.legacy?m.lastVisitYear!=null:m.handled&&S.turn-m.turn>3))return '';
-  return `<section class="mourning-notice" role="status"><strong>${esc(d.name)}已故</strong><span>${m.handled?'慈宁宫已设灵，可前往追思、安抚族女。':'慈宁宫已悬素幡，丧仪尚待陛下安排。'}</span><button class="btn sm" data-onclick="A.visitMapActivity('cn')">前往慈宁宫 →</button></section>`;
+  return `<section class="mourning-notice" role="status"><strong>${esc(d.name)}已故</strong><span>${m.handled?'慈宁宫已设灵，可前往追思、安抚族女。':'慈宁宫已悬素幡，丧仪尚待陛下安排。'}</span><button class="btn sm" data-onclick="A.visitMapActivity('cn')">前往慈宁宫</button></section>`;
 }
 function mourningPlacePanel(){
   const d=S.flags.dowager,m=d?.mourning;

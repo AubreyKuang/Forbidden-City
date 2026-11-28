@@ -137,7 +137,7 @@ function palaceRomanceLeads(){
   });
 }
 function palaceRomanceAt(place){
-  return palaceRomanceLeads().filter(l=>l.place===place).map(l=>`<section class="palace-activity"><h3>${esc(l.title)}</h3>${activityPortraits(...l.cast)}<p>${esc(l.text)}</p><button class="btn jade" data-onclick="A.reviewPalaceRomance('${l.romanceKey}')">走近过问 →</button></section>`).join('');
+  return palaceRomanceLeads().filter(l=>l.place===place).map(l=>`<section class="palace-activity"><h3>${esc(l.title)}</h3>${activityPortraits(...l.cast)}<p>${esc(l.text)}</p><button class="btn jade" data-onclick="A.reviewPalaceRomance('${l.romanceKey}')">走近过问</button></section>`).join('');
 }
 function palaceRomancePanel(person){
   if(S.palaceRomance?.gen!==S.gen)return '';

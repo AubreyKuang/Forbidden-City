@@ -87,7 +87,7 @@ function schoolPanel(){
   if(!present.length)return '<p class="hint">尚无六至十五岁的在宫皇嗣来此读书。</p>';
   const cast=found?.cast||present.slice(0,4),scene=found?.scene;
   return `<section class="school-room" aria-label="上书房课间"><p class="school-caption">窗下读书声 · ${scene?SCHOOL_TITLES[scene.kind]:'各自温书'}</p><div class="school-pupils">${cast.map((k,i)=>`<article><p class="school-speech">${esc(scene?.lines[i]||(k.policy==='习武'?'温完这一页，还想去练一会儿弓。':k.lit>=60?'这段批注与书里说的不同，我再想想。':'这几个字还不太熟，先描一遍。'))}</p><button class="activity-person" data-onclick="A.go('kid',${k.id})">${porImg(k,96)}<strong>${esc(k.name)}</strong></button><div class="school-desk">${k.policy==='习武'?'书卷 · 小木弓':'笔砚 · 书卷'}</div></article>`).join('')}</div></section>
-    ${scene?(scene.result?`<p class="hint" role="status">${esc(scene.result)}</p>`:`<button class="btn jade" data-onclick="A.joinSchool()">走近听听 →</button>`):'<p class="hint">孩子们正在温书，偶尔低声交换几句话。</p>'}`;
+    ${scene?(scene.result?`<p class="hint" role="status">${esc(scene.result)}</p>`:`<button class="btn jade" data-onclick="A.joinSchool()">走近听听</button>`):'<p class="hint">孩子们正在温书，偶尔低声交换几句话。</p>'}`;
 }
 A.joinSchool=function(){
   const found=schoolScene();if(!found||found.scene.result||modalOpen)return;

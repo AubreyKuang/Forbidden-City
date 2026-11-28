@@ -124,7 +124,7 @@ function viewWhiteSpringKin(){
   const past=WHITE_SPRING_PAST[role].map(t=>({d:'公主入宫前',t}));
   const chronicle={...p,story:[...past,...p.story]};
   return `${personBackButton('family')}<header class="detail-head person-detail-head">${porImg(p,144)}<div class="grow"><p>白泉王室 · ${data.title}${p.alive?'':' · 已故'}</p><h2>${p.name}</h2><p>${data.bio}</p>
-    <button class="btn quiet sm" data-onclick="A.go('consort',${c.id})">${role==='father'?'女儿':'妹妹'} · 阿依慕 ↗</button></div></header>${detailSection('人物纪事',detailStory(chronicle))}`;
+    <button class="btn quiet sm" data-onclick="A.go('consort',${c.id})">${role==='father'?'女儿':'妹妹'} · 阿依慕</button></div></header>${detailSection('人物纪事',detailStory(chronicle))}`;
 }
 function whiteSpringLetter(c,kind,fact,voices,replies,stamp){
   const family=whiteSpringFamily(c);

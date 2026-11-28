@@ -216,6 +216,11 @@ function claimDynastyGoal(id){
 const rankCount=r=>alive().filter(c=>c.rank===r&&!c.cold&&!c.maid).length;
 const season=()=>S?Math.floor(((S.month+11)%12)/3):0; // 0春(1-3)…
 function dateStr(s=S){return `${s.emp.era}${s.year===1?'元':cnNum(s.year)}年${MONTHS[s.month-1]}`}
+// 封号 shows from 嫔 up. Below 嫔 it shows only when the emperor granted it as a special
+// honour (journal content 166+); a title kept after a demotion stays hidden as before.
+const LOW_TITLE_JOURNAL=166;
+const lowTitleHonorActive=()=>journalContentVersion()>=LOW_TITLE_JOURNAL;
+function consortTitleShown(c){return !!c.title&&(c.rank>=4||!!c.lowTitle&&c.rank>=1&&c.rank<4&&lowTitleHonorActive())}
 function cName(c){
   if(c.rescuedGuest)return fullName(c)+'姑娘';
   if(c.maid) return c.near?`贴身宫女${c.given}`:`宫女${c.given}`;
@@ -223,14 +228,14 @@ function cName(c){
   if(!c.sur&&c.given&&journalContentVersion()>=165){
     if(c.cold&&(journalContentVersion()<PALACE_KIN_RESPONSE_JOURNAL||palaceKinCommoner(c)))return c.given+'庶人';
     if(c.rank===8)return '皇后';
-    if(c.title&&c.rank>=4)return c.title+RANKS[c.rank];
+    if(consortTitleShown(c))return c.title+RANKS[c.rank];
     return c.given+RANKS[c.rank];
   }
   if(c.cold&&(journalContentVersion()<PALACE_KIN_RESPONSE_JOURNAL||palaceKinCommoner(c))) return `${c.sur}庶人`;
   if(c.rank===8) return '皇后';
   if(journalContentVersion()>=24&&c.gouyi&&c.rank===2&&c.title==='瑞')return '瑞常在';
-  if(c.title&&c.rank>=4) return c.title+RANKS[c.rank];
-  if(S&&S.consorts.some(o=>o!==c&&o.alive&&!o.gone&&!o.maid&&!o.cold&&o.sur===c.sur&&o.rank===c.rank&&!(o.title&&o.rank>=4)))return c.sur+c.given[0]+RANKS[c.rank];
+  if(consortTitleShown(c)) return c.title+RANKS[c.rank];
+  if(S&&S.consorts.some(o=>o!==c&&o.alive&&!o.gone&&!o.maid&&!o.cold&&o.sur===c.sur&&o.rank===c.rank&&!consortTitleShown(o)))return c.sur+c.given[0]+RANKS[c.rank];
   return c.sur+RANKS[c.rank];
 }
 const fullName=c=>c.sur+c.given;
@@ -622,7 +627,11 @@ const A={
     else pushEv({title:'晋封',por:c,text:`晋${fullName(c)}为${RANKS[nr]}？`,choices:[{t:'准',f:()=>doIt()},{t:'再想想'}]});},
   demote(id){const c=byId(id);if(c.rank<=0||c.rank===8)return;
     pushEv({title:'降位',danger:true,por:c,text:`降${cName(c)}为${RANKS[c.rank-1]}？`,choices:[{t:'降位',f:()=>{c.rank--;reconcileResidences();const s=cchg(c,{mood:-25,aff:-10,favor:-5});story(c,`被降为${RANKS[c.rank]}。`);remember(c,'hurt','被降位');setXin(c,(c.t2==='记仇'||c.scheme>60)?'怨恨':'委屈','被降了位分','emp');log(`降${fullName(c)}为${RANKS[c.rank]}。`);AU.sfx('sad');return `${fullName(c)}跪地谢恩，泪落无声。${fx(s)}`}},{t:'作罢'}]})},
-  rename(id){const c=byId(id);pushEv({title:'更改封号',por:c,text:'请为她拟一个新的封号：',input:{def:c.title||pick(TITLES),max:2},choices:[{t:'赐此封号',f:v=>{grantConsortTitle(c,v);story(c,`陛下赐封号「${v}」。`);return `自今日起，她便是${cName(c)}。${fx(cchg(c,{mood:10,aff:4}))}`}},{t:'作罢'}]})},
+  rename(id){const c=byId(id);
+    if(lowTitleHonorActive()&&c.rank>=1&&c.rank<4&&!consortTitleShown(c)){const def=pick(TITLES.filter(t=>!harem().some(x=>x.title===t)))||pick(TITLES);
+      pushEv({title:'破格赐号',por:c,text:`按宫中旧例，嫔位以下不设封号。若破格赐${cName(c)}一个字，便是格外的荣宠，六宫上下都会看在眼里。\n请为她拟一个封号：`,input:{def,max:2},
+        choices:[{t:'破格赐号',f:v=>honorLowRankTitle(c,v)},{t:'作罢'}]});return}
+    pushEv({title:'更改封号',por:c,text:'请为她拟一个新的封号：',input:{def:c.title||pick(TITLES),max:2},choices:[{t:'赐此封号',f:v=>{grantConsortTitle(c,v);story(c,`陛下赐封号「${v}」。`);return `自今日起，她便是${cName(c)}。${fx(cchg(c,{mood:10,aff:4}))}`}},{t:'作罢'}]})},
   crown(id){const c=byId(id);if(c?.outerHouseholdId)return;if(empress()){toast('中宫已有皇后');return}
     pushEv({title:'册立皇后',por:c,valid:()=>journalContentVersion()<88||!empress()&&inPalace(c)&&!c.maid&&c.rank>=5&&c.rank<8,text:`册${fullName(c)}为皇后，入主坤宁宫？\n册封大典需耗费国库一百万两。`,choices:[
       {t:'择吉日行册封礼',f:()=>{c.rank=8;assignPalace(c);AU.sfx('gong');
@@ -927,6 +936,10 @@ A.start=function(){
   const old=makeGirl({});old.favor=55;old.aff=60;old.knownBeforeAccession=true;old.rank=3;S.consorts.push(old);assignPalace(old);story(old,'潜邸旧人，陪伴陛下多年。新帝登基，册为贵人。');
   if(journalContentVersion()>=85){em.accessionArrival={gen:S.gen,started:S.turn};old.accessionArrival={gen:S.gen,started:S.turn};}
   startDynastyScenario(scenario);
+  // A standard reign opens with a different 国库 each time (300–1100). Scenario openings keep
+  // their own amounts, which their goals are measured against.
+  // Derived from the emperor's own seed, so no extra random draw shifts the rest of the opening.
+  if(lowTitleHonorActive()&&scenario==='standard')e.treasury=300+e.seed%81*10;
   if(e.dynastyTrait)e.people=clamp(e.people+3);
   if(legacy){
     applyDynastyLegacy(e,legacy,true);
@@ -936,6 +949,7 @@ A.start=function(){
   log(`册嫡妻${fullName(em)}为皇后，潜邸旧人${fullName(old)}为贵人。`);
   migrate();initializeMinistryRoster();initializeDowagerOpening();UI.view='map';setScene('court');AU.sfx('gong');render();
   const accession=scenario==='founder'?'天下初定，你在钟声中登上了新朝的御座。':'先帝龙驭上宾，你在太和钟声中登上了宸极殿的御座。';
-  pushEv({title:'登基',scene:'coronation',por:'emp',text:`${era}元年三月，${accession}\n嫡妻${fullName(em)}册为皇后，潜邸旧人${fullName(old)}册为贵人。${dowagerCareActive()&&em.dowagerKin?"\n皇后亦是太后母家侄女，宫中有潜邸夫妻与母族两层亲缘。":""}\n礼部奏请：新帝登基，当广选秀女，以充后宫、绵延皇嗣。`,choices:[
+  pushEv({title:'登基',scene:'coronation',por:'emp',text:`${era}元年三月，${accession}\n嫡妻${fullName(em)}册为皇后，潜邸旧人${fullName(old)}册为贵人。${dowagerCareActive()&&em.dowagerKin?"\n皇后亦是太后母家侄女，宫中有潜邸夫妻与母族两层亲缘。":""}${lowTitleHonorActive()?`\n户部奏报：国库存银${e.treasury}万两，${e.treasury<400?'库银吃紧，诸事须量入为出':e.treasury<800?'收支尚可':'仓廪充盈'}。`:''}\n礼部奏请：新帝登基，当广选秀女，以充后宫、绵延皇嗣。`,choices:[
     {t:'进入宫城',primary:true},{t:'准奏，即刻选秀',f:()=>{genCands(7);UI.view='xx';return null}}]});
+  if(lowTitleHonorActive())pushEv(jinyiweiEstablishEvent(true));
 };

@@ -338,7 +338,7 @@ function mapLeadPlace(lead){return lead.place?PLACES.find(p=>p.id===lead.place).
 function mapActivityPanel(leads){
   if(!leads.length)return '<p class="hint map-quiet">宫中暂静，可以到各宫走走。</p>';
   const card=lead=>`<article class="map-activity-card"><div><strong>${esc(lead.title)}</strong><small>${lead.continuity?'前事有后话':lead.expires?'本月邀约':'本月动向'}</small><p>${esc(lead.text)}</p></div>
-    ${activityPortraits(...lead.cast)}<button class="btn sm jade" data-onclick="${mapLeadAction(lead)}">${esc(lead.button||mapLeadPlace(lead)+' · '+lead.title)} →</button></article>`;
+    ${activityPortraits(...lead.cast)}<button class="btn sm jade" data-onclick="${mapLeadAction(lead)}">${esc(lead.button||mapLeadPlace(lead)+' · '+lead.title)}</button></article>`;
   return `<section class="map-activity-panel" aria-label="本月值得一看">${leads.slice(0,2).map(card).join('')}</section>${leads.length>2?`<div class="initiative-notices">${leads.slice(2).map(lead=>`<button class="btn sm" data-onclick="${mapLeadAction(lead)}">${esc(mapLeadPlace(lead))} · ${esc(lead.title)}</button>`).join('')}</div>`:''}`;
 }
 A.visitMapActivity=function(place,resident){

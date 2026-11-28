@@ -106,7 +106,7 @@ function viewResidences(){
     <p>主位 ${heads}/12 · 侧殿 ${sides}/36 · 待安置 ${waiting.length} 人。空主位须嫔位及以上才能入住；无合适余位时暂居掖庭，身份不变。</p>
     ${waiting.length?`<section class="residence-palace"><h3>掖庭待安置</h3><p>选中人物查看可用宫室；没有合法余位时，保留待安置身份，不挤占中宫或增加侧殿名额。</p>${waiting.map(x=>`<button class="btn" data-onclick="A.openResidence(${x.id})">安排${esc(fullName(x))} · ${esc(cName(x))}</button>`).join('')}</section>`:''}
     <h3>选择妃嫔</h3><div class="residence-picker" role="group" aria-label="选择安排住处的妃嫔">${harem().filter(x=>x.rank!==8).map(x=>`<button class="btn ${x===selected?'primary':''}" aria-pressed="${x===selected}" data-onclick="A.openResidence(${x.id})">${esc(fullName(x))} · ${esc(cName(x))}</button>`).join('')}</div>
-    ${selected?`<header class="residence-selected">${porImg(selected,96)}<div><h3>为${esc(fullName(selected))}安排住处</h3><p>${esc(residenceLabel(selected))}</p><button class="btn quiet" data-onclick="A.go('consort',${selected.id})">查看人物 →</button></div></header>`:'<p>先选择要安排住处的人，再选择正殿或侧殿。</p>'}
+    ${selected?`<header class="residence-selected">${porImg(selected,96)}<div><h3>为${esc(fullName(selected))}安排住处</h3><p>${esc(residenceLabel(selected))}</p><button class="btn quiet" data-onclick="A.go('consort',${selected.id})">查看人物</button></div></header>`:'<p>先选择要安排住处的人，再选择正殿或侧殿。</p>'}
     <section class="residence-palace"><h3>坤宁宫 · 皇后专居</h3>${residenceSummary('坤宁宫')}<p>${empress()?esc(fullName(empress())):'中宫暂缺，保留宫室'}</p></section>
     <h3>宫室与安排</h3><div class="residence-grid">${PALACES.map(name=>{
       const host=palaceHost(name),sides=palaceSides(name),head=selected&&residenceMovePlan(selected,name,'main'),side=selected&&residenceMovePlan(selected,name,'side');
