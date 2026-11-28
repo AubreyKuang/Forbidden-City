@@ -104,7 +104,7 @@ def hi_res_image_rule(rel):
         return ('剧情妃立绘', None, 82, 70)
     if name.startswith('story-'):
         return ('事件插画', None, 74, 60)
-    if name.startswith('palace-painted-'):
+    if name.startswith('palace-painted-') or name == 'palace-title-emperor.webp':
         return ('季节场景', 1920, 72, 60)
     if name.startswith('palace-map-'):
         return ('地图图集（像素坐标，不缩放）', None, 72, 60)
@@ -126,7 +126,7 @@ def image_rule(rel, size):
         return ('剧情妃立绘', 640 if 'dance' in name else 448, 65, 50)
     if name.startswith('story-'):
         return ('事件插画', 800, 50, 50)
-    if name.startswith('palace-painted-'):
+    if name.startswith('palace-painted-') or name == 'palace-title-emperor.webp':
         return ('季节场景', 1280, 52, 50)
     if name.startswith('palace-map-'):
         return ('地图图集（像素坐标，不缩放）', None, 60, 50)
