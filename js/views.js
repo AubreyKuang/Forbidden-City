@@ -543,7 +543,7 @@ function viewConsort(){
     ${characterVoiceHTML(c)}${daoPracticePanel(c)}`+(act?arcLine(c):'')+
       consortTraitPanel(c)+consortHealthPanel(c)+birthCarePanel(c)+(act?deliveryMemorialPanel(c):'')+(typeof haremStewardPersonPanel==='function'?haremStewardPersonPanel(c):'')+(typeof hongjianPanel==='function'?hongjianPanel(c):'')+
       actionGroup('听她说说',conversations)+
-      detailSection('近况与性情',`<p class="hint">${esc(TRAITS[c.trait]?.d||'性情沿用旧日记载。')} · 侍寝 ${c.nights||0} 次</p>${proseVerdict(c.trait)?`<p class="verdict">${esc(proseVerdict(c.trait))}</p>`:''}${act?xinDetail(c)+schemeAftermathDetail(c)+consortSeasonsPanel(c)+deepLine(c):''}<div class="stats consort-stats">${st('容貌',c.looks)}${st('才情',c.talent)}${st('德行',c.virtue)}${st('心机',c.scheme,!c.known)}${Number.isFinite(c.hp)?st('健康',c.hp):''}${st('恩宠',c.favor)}${st('心情',c.mood)}${st('情分',c.aff)}</div>`)+
+      detailSection('近况与性情',`<p class="hint">${esc(proseLine(TRAITS[c.trait]?.d)||'性情沿用旧日记载。')} · 侍寝 ${c.nights||0} 次</p>${proseVerdict(c.trait)?`<p class="verdict">${esc(proseVerdict(c.trait))}</p>`:''}${act?xinDetail(c)+schemeAftermathDetail(c)+consortSeasonsPanel(c)+deepLine(c):''}<div class="stats consort-stats">${st('容貌',c.looks)}${st('才情',c.talent)}${st('德行',c.virtue)}${st('心机',c.scheme,!c.known)}${Number.isFinite(c.hp)?st('健康',c.hp):''}${st('恩宠',c.favor)}${st('心情',c.mood)}${st('情分',c.aff)}</div>`)+
       continuityPanel(c)+personalLifePanel(c)+detailSection('人和事的后续',cohortLifePanel(c)+parentEpisodePanel(c))+
       detailSection('孕中祈愿',pregnancyPrayerPanel(c))+detailSection('寺中清修',consortTemplePanel(c))+
       (act&&!c.cold?initiativeHTML(c):''),'近况'],

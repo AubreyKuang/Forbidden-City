@@ -83,18 +83,18 @@ function wishObstacle(c){
  return cost&&E().treasury<cost?'国库尚不足以支付'+cost+'万两':'';
 }
 const WISHES={
- mother:{t:'想再见母亲一面',btn:'接她母亲入宫小住（国库-15万两）',cond:c=>momVisitState(c).ready,f:c=>{chg({treasury:-15});momVisit(c,ri(2,3));return '她母亲进宫来了，要在宫里住上几个月。母女俩一见面就抱头哭了。'}},
+ mother:{t:'想再见母亲一面',btn:'接她母亲入宫小住（国库-15万两）',cond:c=>momVisitState(c).ready,f:c=>{chg({treasury:-15});momVisit(c,ri(2,3));return pz2('她母亲进宫来了，要在宫里住上几个月。母女俩一见面就抱头哭了。','她母亲进宫来了，要在宫里住上几个月。人还没跨过门槛，她已迎了出去，攥住母亲的手半天不肯松。')}},
  father:{t:'想为父亲求一个清白名声',btn:'下旨褒奖她父亲（威望-2）',f:c=>{chg({prestige:-2});c.fam.p=Math.min(95,c.fam.p+8);if(palaceDetailsActive()){
   const p=wishFather(c);
   if(!officialAlive(p))return c.sur+'氏家中收下了写有'+p.name+'姓名的诏书。她将抄本折好，留到下一回祭父时亲手读。';
   story(p,'女儿的心愿上达御前，收到褒奖家门的诏书。');return p.name+'接旨后，把诏书读到女儿的名字，又从头读了一遍。';
  }return '圣旨送到她老家，她父亲跪在门口，哭得像个孩子。'}},
  child:{t:'想要一个孩子',btn:null},
- south:{t:'想去江南看一眼',btn:'带她南巡（国库-150万两，龙体-2）',f:c=>{chg({treasury:-150,health:-2,people:2});return '烟雨江南，画舫笙歌。她靠在船舷上说，这辈子值了。'}},
+ south:{t:'想去江南看一眼',btn:'带她南巡（国库-150万两，龙体-2）',f:c=>{chg({treasury:-150,health:-2,people:2});return pz2('烟雨江南，画舫笙歌。她靠在船舷上说，这辈子值了。','船入江南，雨丝斜进舱来。她伸手接了一掌：“从前只在画上见过。”')}},
  title:{t:'想要一个属于自己的封号',btn:'赐她封号',cond:c=>!c.title,f:c=>{const title=pick(TITLES.filter(t=>!harem().some(x=>x.title===t)));if(lowTitleHonorActive()&&c.rank>=1&&c.rank<4)return honorLowRankTitle(c,title);grantConsortTitle(c,title);return `你赐她「${c.title}」字为号。她把那个字写了一遍又一遍。`}},
  ride:{t:'想学骑马',btn:'亲自教她骑马（精力-1）',cond:()=>E().energy>0,f:c=>{E().energy--;learnWishQuirk(c,'擅骑射');return '她在南苑摔了三回，第四回终于稳稳地跑完一圈，回头冲你笑。'}},
  cat:{t:'想养一只猫',btn:'送她一只狮子猫（国库-2万两）',f:c=>{chg({treasury:-2});learnWishQuirk(c,'爱猫');c.catAbsent=false;return '雪白的狮子猫一进门就钻进了她怀里。她给它起名叫“团圆”。'}},
- fire:{t:'想看一场烟火',btn:'上元夜放烟火（国库-40万两）',f:c=>{chg({treasury:-40});harem().forEach(o=>o.mood=clamp(o.mood+5));return '火树银花不夜天。她仰着头，烟火映在她眼睛里。'}},
+ fire:{t:'想看一场烟火',btn:'上元夜放烟火（国库-40万两）',f:c=>{chg({treasury:-40});harem().forEach(o=>o.mood=clamp(o.mood+5));return pz2('火树银花不夜天。她仰着头，烟火映在她眼睛里。','烟火升过角楼，东风里开了千树。她仰着头，明明灭灭都落在眼睛里。')}},
  poem:{t:'想要陛下亲笔写的诗',btn:'为她写一首诗（精力-1）',cond:()=>E().energy>0,f:c=>{E().energy--;return '你写了四句，字不算好，诗也平平。她却裱起来挂在了床头。'}},
 };
 const WOUNDS={
@@ -350,7 +350,7 @@ A.wish=function(id){const c=byId(id);if(!inPalace(c))return;const w=WISHES[c.wis
 
 /* ============ 小性子引出的宫中琐事 ============ */
 const QEV={
- '怕雷':c=>season()!==1?null:{title:'雷雨夜',por:c,text:`半夜电闪雷鸣，${c.palace}的宫女冒雨跑来乾清宫：“我们小主吓得缩在床角，谁也不让碰。”`,choices:[
+ '怕雷':c=>season()!==1?null:{title:'雷雨夜',por:c,text:pz2(`半夜电闪雷鸣，${c.palace}的宫女冒雨跑来乾清宫：“我们小主吓得缩在床角，谁也不让碰。”`,`三更一声炸雷，窗纸都亮了。${c.palace}的宫女冒雨跑来乾清宫：“我们小主吓得缩在床角，谁也不让碰。”`),choices:[
    {t:'披衣过去陪她（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{E().energy--;renderTop();remember(c,'care','雷雨夜');story(c,'雷雨夜，陛下冒雨来陪她，握着她的手到天亮。');return fx(cchg(c,{aff:12,mood:15}))}},
    {t:'让太医送安神汤过去',f:()=>fx(cchg(c,{mood:3}))}]},
  '爱猫':c=>{if(c.catAbsent)return null;const o=pick(harem().filter(x=>x!==c));if(!o)return null;return {title:'猫祸',por:c,cast:[c,o],text:`${cName(c)}养的猫溜进${o.palace}，抓破了${cName(o)}一件新做的蜀锦衣裳。${cName(o)}${o.t2==='爱哭'?'抱着破衣裳红了眼圈':['持重','沉静','城府'].includes(o.trait)||isSolitary(o)?'把破损处指给你看，请按实赔补':'拿着破衣裳来请你评理'}。`,choices:[
@@ -363,7 +363,7 @@ const QEV={
    {t:'罚她身边的宫女不尽心',f:()=>fx(cchg(c,{mood:-6}))}]}},
  '好胜':c=>{const o=pick(harem().filter(x=>x!==c&&x.talent>=50));if(!o)return null;return {title:'对弈',por:c,cast:[c,o],text:`${cName(c)}与${cName(o)}在御花园对弈，从晌午下到天黑。${cName(c)}还想再来一盘，${cName(o)}${o.t2==='好胜'?'也不肯先收棋':'提醒她天色已晚，胜负可以明日再论'}。`,choices:[
    {t:`判${cName(c)}胜`,f:()=>{relAdd(c,o,-3);return fx(cchg(c,{mood:15}),cchg(o,{mood:-6}))}},
-   {t:'判和局',f:()=>{relAdd(c,o,4);return '两人对视一眼，都笑了。'}},
+   {t:'判和局',f:()=>{relAdd(c,o,4);return pz2('两人对视一眼，都笑了。','两人同时伸手去收子，都笑了。')}},
    {t:'亲自下场，各杀一盘（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{E().energy--;renderTop();return `你陪两人各下一盘。${cName(c)}${c.trait==='爽直'?'爽快认了这一回的胜负，约好下次再比':'还想复盘，问起方才漏看的那一步'}。${fx(cchg(c,{aff:6}),cchg(o,{aff:4}))}`}}]}},
  '念旧':c=>oldKeepsakeEvent(c),
  '嘴硬心软':c=>({title:'参汤',por:c,text:'你批折子到三更，小太监端来一碗参汤，说是御膳房送的。你尝了一口，里面加了枸杞——御膳房从不这么做。',choices:[
@@ -378,7 +378,7 @@ const QEV={
    {t:'去（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{E().energy--;renderTop();remember(c,'care','来吃了她做的菜');return fx(cchg(c,{aff:8,favor:5,mood:10}),chg({health:2}))}},{t:'让她把菜送来乾清宫',f:()=>fx(cchg(c,{mood:4}),chg({health:1}))}]}),
  '信佛':c=>E().health>=70?null:{title:'抄经',por:c,text:`听说陛下龙体欠安，${cName(c)}在小佛堂跪着抄了七日《药师经》，膝盖都跪青了。`,choices:[
    {t:'去看她',f:()=>{remember(c,'care','为陛下抄经');return fx(cchg(c,{aff:10}),chg({health:2}))}},{t:'让她保重身子',f:()=>fx(cchg(c,{aff:4}))}]},
- '擅舞':c=>c.preg>=5||c.hp<45?null:({title:'绿腰',por:c,ref:'赵飞燕“掌上舞”（西汉）',text:`宫宴上，${cName(c)}一曲《绿腰》，满座皆惊。有老臣低声说：“颇有汉时赵飞燕之风。”`,choices:[
+ '擅舞':c=>c.preg>=5||c.hp<45?null:({title:'绿腰',por:c,ref:'赵飞燕“掌上舞”（西汉）',text:pz2(`宫宴上，${cName(c)}一曲《绿腰》，满座皆惊。有老臣低声说：“颇有汉时赵飞燕之风。”`,`宫宴上，${cName(c)}舞了一曲《绿腰》。曲终袖落，满座的酒盏还停在半空。有老臣低声说：“颇有汉时赵飞燕之风。”`),choices:[
    {t:'重赏',f:()=>{harem().forEach(o=>{if(o!==c&&TRAITS[o.trait].jealous){o.mood=clamp(o.mood-5);relAdd(o,c,-5)}});return fx(chg({treasury:-10}),cchg(c,{favor:10,mood:15}))}},
    {t:'“舞是好舞，只是宫宴不宜太过。”',f:()=>fx(cchg(c,{mood:-6}),chg({prestige:1}))}]}),
  '直言':c=>!S.flags.lastCourt?null:{title:'直言',por:c,text:`${cName(c)}听说了「${S.flags.lastCourt}」的处置，当着众人的面说：“臣妾斗胆，陛下这回怕是错了。”满屋子的人都吓得跪下了。`,choices:[
@@ -390,7 +390,7 @@ const QEV={
    {t:'笑着让太医去瞧',outcome:'太医问她松子糖吃了几颗。她抬手比了个数，自己先忍不住笑了。',f:()=>fx(cchg(c,{mood:5,aff:3}))},{t:'下令她宫里禁糖一月',outcome:'宫人依旨把糖盒收进柜中。她望了两眼，转身让人去沏茶。',f:()=>fx(cchg(c,{mood:-8}))}]}),
  // She asks this once and remembers the answer; asking again would make the answer meaningless.
  '好读史':c=>c.gouyiAnswer?null:({title:'读史',por:c,ref:'立子杀母（西汉·汉武帝与钩弋夫人）',text:`${cName(c)}合上书，问你：“陛下觉得，汉武帝该不该杀钩弋夫人？”\n汉武帝立幼子为太子，怕“主少母壮”，赐死了太子的生母。`,choices:[
-   {t:'“该。主少母壮，必生祸乱。”',f:()=>{c.gouyiAnswer='yes';remember(c,'hurt','陛下说钩弋夫人该杀');return `她沉默了很久，没有再说话。${fx(cchg(c,{mood:-10}))}`}},
+   {t:'“该。主少母壮，必生祸乱。”',f:()=>{c.gouyiAnswer='yes';remember(c,'hurt','陛下说钩弋夫人该杀');return pz2('她沉默了很久，没有再说话。','她的手还按在书封上，很久没有再说话。')+fx(cchg(c,{mood:-10}))}},
    {t:'“不该。防人之心，不该拿人命去换。”',f:()=>{c.gouyiAnswer='no';return fx(cchg(c,{aff:10,mood:8}))}},{t:'“朕不是汉武帝。”',f:()=>{c.gouyiAnswer='self';return fx(cchg(c,{aff:6}))}}]}),
  '爱哭':c=>{const o=pick(harem().filter(x=>x!==c&&relGet(c,x)<0));if(!o)return null;return {title:'梨花带雨',por:c,text:`${cName(c)}哭着来找你，说${cName(o)}笑她请安时裙角沾了泥。宫女们说，其实${cName(o)}只是多看了一眼。`,choices:[
    {t:'哄她',f:()=>fx(cchg(c,{mood:10,aff:3}))},{t:'“这点小事也值得哭？”',f:()=>{remember(c,'hurt','被说小题大做');return fx(cchg(c,{mood:-10}))}}]}},
@@ -473,7 +473,7 @@ const XEV={
    {t:'笑着替两人解围',f:()=>{relAdd(c,w,-5);return fx(cchg(w,{mood:-6}))}},
    {t:`赐${cName(w)}一身新衣，冷落那一位`,f:()=>{w.robeC=pick(RPAL[rTier(w.rank)]);relAdd(c,w,-12);return fx(chg({treasury:-10}),cchg(w,{mood:12}),cchg(c,{favor:-10}))}}]}},
  '怨恨':(c,x)=>{if(x.who==='emp')return c.cold?null:{title:'称病',por:c,text:`敬事房来报：今晚翻到了${cName(c)}的牌子，她却称病推了。太医去看，说脉象平和，并无病症。`,choices:[
-     {t:'去她宫里（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{E().energy--;renderTop();if(chance(.35+c.aff/300)){setXin(c,'释然','陛下夜里亲自来了');return `她开门看见是你，愣了很久，眼泪一下子掉了下来。${fx(cchg(c,{aff:10,mood:15}))}`}return `她隔着门说：“臣妾病着，怕过了病气给陛下。”你在门外站了一会儿，走了。${fx(cchg(c,{aff:-2}))}`}},
+     {t:'去她宫里（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{E().energy--;renderTop();if(chance(.35+c.aff/300)){setXin(c,'释然','陛下夜里亲自来了');return pz2('她开门看见是你，愣了很久，眼泪一下子掉了下来。','她开门看见是你，扶着门框愣了很久，眼泪落在手背上才觉出来。')+fx(cchg(c,{aff:10,mood:15}))}return `她隔着门说：“臣妾病着，怕过了病气给陛下。”你在门外站了一会儿，走了。${fx(cchg(c,{aff:-2}))}`}},
      {t:'由她去',f:()=>fx(cchg(c,{favor:-10}))}]};
    const w=byId(x.who);if(c.cold||!w||!w.alive||w.gone)return null;return {title:'怨毒',por:c,text:`有宫人密报：${cName(c)}最近常在小佛堂里待到深夜，佛龛下压着一张写了${cName(w)}生辰的黄纸。`,choices:[
      {t:'召她来，把话说开',f:()=>{if(chance(.4)){setXin(c,'释然','陛下替她和旧怨做了了断');relAdd(c,w,15);return `她哭着说了很久，说完了，人也松了。${fx(cchg(c,{aff:6}))}`}return `她一句也不肯认。${fx(cchg(c,{mood:-5}))}`}},
@@ -482,17 +482,17 @@ const XEV={
  '悲恸':c=>({title:'超度',por:c,text:`${c.cold?'冷宫里的'+fullName(c)+'托看守递来请求：':cName(c)+'求陛下'}准她请护国寺的僧人到${c.cold?'冷宫':'宫中'}，做七天法事。“臣妾只想让……走得安心些。”`,choices:[
    {t:'准（国库-20万两）',f:()=>{setXin(c,'释然','七天法事做完');return fx(chg({treasury:-20}),cchg(c,{aff:8,mood:10}))}},
    {t:'宫中不宜大做法事',f:()=>{setXin(c,'心如死灰','连一场法事也求不来');return fx(cchg(c,{mood:-10}))}}]}),
- '心如死灰':(c,x)=>S.turn-x.t<6?null:({title:'青灯',por:c,text:`${c.cold?'冷宫里':''}的${fullName(c)}托人递来一句话：求陛下准她剪发出家，从此青灯古佛，不再惹陛下心烦。`,choices:[
+ '心如死灰':(c,x)=>S.turn-x.t<6?null:({title:'青灯',por:c,text:pz2(`${c.cold?'冷宫里':''}的${fullName(c)}托人递来一句话：求陛下准她剪发出家，从此青灯古佛，不再惹陛下心烦。`,`${c.cold?'冷宫里的':''}${fullName(c)}托人递来一句话：求陛下准她剪发出家，往后只守着一盏青灯，不再惹陛下心烦。`),choices:[
    {t:'准她出家',f:()=>{c.gone=true;story(c,'剪发出家，从此青灯古佛。');log(`${fullName(c)}出家。`,1);return '她剪下的头发用红绳系着，托人送了回来。'}},
    {t:'去看她（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{E().energy--;renderTop();if(chance(.3+c.aff/250)){setXin(c,'感激','万念俱灰时陛下来了');if(c.cold)A.uncold(c.id);return '你握住她的手，她的手冰凉。过了很久，她轻轻回握了一下。'}return `她始终没有抬头。${fx(cchg(c,{aff:2}))}`}},
    {t:'不准',f:()=>fx(cchg(c,{mood:-5}))}]}),
- '欢喜':c=>c.cold||c.aff<30||!(['珠翠','绸缎'].includes(c.like)||['骄矜','骄纵'].includes(c.trait))?null:{title:'新衣',por:c,text:`${cName(c)}心情极好，派人来请陛下去看她新裁的衣裳，说用的是今年江南新进的料子。`,choices:[
+ '欢喜':c=>c.cold||c.aff<30||!(['珠翠','绸缎'].includes(c.like)||['骄矜','骄纵'].includes(c.trait))?null:{title:'新衣',por:c,text:pz2(`${cName(c)}心情极好，派人来请陛下去看她新裁的衣裳，说用的是今年江南新进的料子。`,`${cName(c)}一早就打发人来请陛下，说新裁的衣裳上了身，用的是今年江南新进的料子，要陛下头一个看。`),choices:[
    {t:'去看看（精力-1）',cond:()=>E().energy>0,why:'精力不足',f:()=>{E().energy--;renderTop();c.robeC=pick(RPAL[rTier(c.rank)]);return fx(cchg(c,{aff:6,favor:6}))+'\n§她换上了新衣裳'}},
    {t:'让她改日穿给朕看',f:()=>fx(cchg(c,{mood:-3}))}]},
  '感激':c=>c.cold?null:{title:'寝衣',por:c,text:`${cName(c)}为陛下备了一件寝衣。${c.trait==='巧手'||consortHobby(c)==='刺绣'?'她亲自收针，针脚细密整齐。':'裁剪请绣娘相助，她学着在袖口添了几针，虽不齐整，却做得认真。'}`,choices:[{t:'当晚就穿上',f:()=>fx(cchg(c,{aff:6,mood:10}))}]},
  '野心':c=>c.cold?null:{title:'野心',por:c,text:`${cName(c)}最近常召娘家人入宫，还托人打听朝中几位尚书的喜好。`,choices:[
    {t:'敲打她',f:()=>{setXin(c,'惶恐','野心被陛下点破');c.scheme=clamp(c.scheme-5);return fx(cchg(c,{mood:-8}))}},
-   {t:'由她去',f:()=>{c.fam.p=Math.min(95,c.fam.p+5);return '她娘家的门槛，被人踏破了。'}}]},
+   {t:'由她去',f:()=>{c.fam.p=Math.min(95,c.fam.p+5);return pz2('她娘家的门槛，被人踏破了。','她娘家门前的拴马桩，渐渐不够用了。')}}]},
 };
 function xinEvent(){
   const pace=S.flags.xinPacing ||= {byTitle:{}};
