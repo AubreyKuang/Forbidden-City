@@ -1,6 +1,6 @@
 {
   "edition": "yiciyuan",
-  "features": {"saveExport": false, "browserStorage": false, "saveBackups": false},
+  "features": {"saveExport": false, "browserStorage": false, "saveBackups": false, "cardsDock": false},
   "saveSnapshots": 1,
   "shop": {
     "products": [

@@ -14,7 +14,8 @@ const PALACE_EDITION=(()=>{
   const saveSnapshots=config&&Number.isInteger(config.saveSnapshots)&&config.saveSnapshots>=0?config.saveSnapshots:4;
   const maxGenerations=config&&Number.isInteger(config.maxGenerations)&&config.maxGenerations>0?config.maxGenerations:null;
   // Features default to on; a host build can switch off what its container forbids,
-  // e.g. {saveExport:false (no file download/import), browserStorage:false}.
+  // e.g. {saveExport:false (no file download/import), browserStorage:false,
+  // cardsDock:false (翻牌子 leaves the bottom bar and opens from 后宫, js/cards-sheet.js)}.
   const features=config&&config.features&&typeof config.features==='object'?config.features:{};
   const feature=key=>features[key]===undefined?true:features[key];
   // A host build may sell products (config.shop, see js/palace-shop.js); others have none.

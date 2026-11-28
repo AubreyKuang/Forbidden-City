@@ -209,6 +209,22 @@ async function run(site,{csp,inject='',frames=true,viewport={width:390,height:84
       return out;`);
     extra.afterReload=await evaluate(`return {repainted:(S.consorts.find(c=>c.id===${JSON.stringify(extra.shop&&extra.shop.repaintedId)})||{}).portraitOverride,owned:['painter','legendsPack','goldFinger'].filter(k=>PalaceShop.owns(k)),silverDone:window.__avg.values.paid_silverSmall};`);
     await shot(label+'-04-reloaded');
+    // 翻牌子 is out of the bottom bar; 后宫 opens it as a pop-up that closes on a choice.
+    extra.cards=await evaluate(`
+      const wait=ms=>new Promise(r=>setTimeout(r,ms));const out={};
+      out.dock=[...document.querySelectorAll('#menu [data-onclick]')].map(b=>b.getAttribute('data-onclick')).filter(x=>x.includes("'cards'")).length;
+      A.go('harem');await wait(200);
+      const b=document.querySelector('[data-onclick="A.cardsSheet()"]');out.button=!!b;if(b)b.click();await wait(200);
+      const d=document.getElementById('cards-sheet');out.open=!!(d&&d.open);out.pais=d?d.querySelectorAll('.pai').length:0;
+      return out;`);
+    if(shots)await shot(label+'-05-cards');
+    extra.cardsAfter=await evaluate(`
+      const wait=ms=>new Promise(r=>setTimeout(r,ms));const out={nights:E().nightsMonth||0};
+      const pai=[...document.querySelectorAll('#cards-sheet .pai')].find(x=>!x.disabled);out.enabled=!!pai;
+      if(pai){pai.click();await wait(500);}else{document.querySelector('[data-cards-close]').click();await wait(100);}
+      out.closed=!document.getElementById('cards-sheet');out.after=modalOpen||(E().nightsMonth||0)>out.nights;
+      return out;`);
+    if(shots)await shot(label+'-05b-night');
     extra.storage=await evaluate(`const a=window.__avg;return {profiles:a.profiles.map(p=>[p.position,p.profileName,p.isAuto]),uploads:a.calls.filter(c=>c[0]==='upload').length,largestBody:Math.max(...[...a.cdn.values()].map(v=>new Blob([v]).size)),plays:a.calls.filter(c=>c[0]==='logGamePlay').length,inits:a.calls.filter(c=>c[0]==='init').map(c=>c[1]),trapped:window.__trapped};`);
     extra.uploadsBeforeReload=before;
   }else if(reload){
@@ -330,7 +346,9 @@ async function main(){
   if(mode==='yiciyuan'){
     const site=path.resolve(arg1||path.join(root,'dist/yiciyuan/package'));
     const trap=XHS_MOCK.slice(XHS_MOCK.indexOf("  for(const name of ['localStorage'"),XHS_MOCK.lastIndexOf('})();'));
-    const r=await run(site,{csp:true,target:'yiciyuan',label:'yiciyuan',shots,reload:true,
+    // VIEWPORT=WxH checks another screen, e.g. 1227x899 for the 易次元 web page.
+    const vp=/^(\d+)x(\d+)$/.exec(process.env.VIEWPORT||'');
+    const r=await run(site,{csp:true,target:'yiciyuan',label:'yiciyuan',shots,reload:true,...(vp?{viewport:{width:+vp[1],height:+vp[2],deviceScaleFactor:1,mobile:false}}:{}),
       inject:`window.__trapped=[];(()=>{${trap}})();`,intercept:{url:SDK_HOST+'/musicst/npm/@avgjs/ai-game-sdk/',body:AVG_SDK_MOCK}});
     console.log(JSON.stringify({clicks:r.trace.length,problems:r.problems,misses:r.misses,extra:r.extra,lastSteps:r.trace.slice(-3)},null,1));
     const e=r.extra;
@@ -338,7 +356,10 @@ async function main(){
     const g=e.gold||{},ga=e.goldAfter||{};
     const goldOk=g.flag===true&&g.button&&g.modal&&!!g.title&&(g.summoned!=='fenghua:gaoHuaibi'||g.meritReady===false)&&ga.title===g.title&&ga.metAfter===true;
     if(!goldOk)console.log('gold finger check failed');
-    const shopOk=goldOk&&sh.menu&&sh.items.length===5&&sh.lockedBefore===false&&sh.silver===500&&sh.owned.length===2&&sh.lockedAfter===true&&sh.repaintButton&&sh.galleryCells>0&&Number.isInteger(sh.repainted)&&ar.repainted===sh.repainted&&ar.owned.length===3&&ar.silverDone==='1';
+    const c=e.cards||{},ca=e.cardsAfter||{};
+    const cardsOk=c.dock===0&&c.button&&c.open&&c.pais>0&&ca.closed&&(!ca.enabled||ca.after);
+    if(!cardsOk)console.log('cards sheet check failed');
+    const shopOk=goldOk&&cardsOk&&sh.menu&&sh.items.length===5&&sh.lockedBefore===false&&sh.silver===500&&sh.owned.length===2&&sh.lockedAfter===true&&sh.repaintButton&&sh.galleryCells>0&&Number.isInteger(sh.repainted)&&ar.repainted===sh.repainted&&ar.owned.length===3&&ar.silverDone==='1';
     if(!shopOk)console.log('shop check failed');
     if(!shopOk||r.problems.length||r.misses.length||e.storage.trapped.length||e.reloaded!==e.beforeReload||e.page.kind!=='avg'||!(e.page.topPadLeft>=52)||e.page.lockedCards||!e.saveImage||!e.storage.plays||e.storage.inits.join()!=='production')process.exitCode=1;
     return;
