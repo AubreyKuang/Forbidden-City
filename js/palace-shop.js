@@ -119,7 +119,7 @@ const PalaceShop=(()=>{
      ${status}${note?`<p role="status">${esc(note)}${wallet}</p>`:''}
      ${summonView()}
      <section class="save-section" aria-label="商品"><div class="save-slots">${products.map(productLine).join('')}</div></section>
-     <p class="hint">银两到账到当前打开的这一朝。立绘包、画师换像和金手指包跟着易次元账号走，换设备、开新朝也有效。${owned.has('painter')?'在妃嫔详情页点「更换立绘」即可换像。':''}</p>`;
+     <p class="hint">银两到账到当前打开的存档，传位后新君照样能用；新开一局不带过去。立绘包、画师换像和金手指包跟着易次元账号走，换设备、开新朝也有效。${owned.has('painter')?'在妃嫔详情页点「更换立绘」即可换像。':''}</p>`;
   }
   // 立即召见: who can still be met, each through their own first-meeting scene.
   function summonTargets(){
