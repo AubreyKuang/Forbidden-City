@@ -95,15 +95,15 @@ LOCKED_ART = {
 # (map, headpieces) keep their size. Illustrations fill the dialog (about 340 CSS px on a
 # phone, 800 px wide at about 2x). See the build report for before/after sizes.
 SHEET_WIDTH = 784
-# 易次元 allows a 4 GB package, so its portraits keep their full resolution (448 px a cell,
-# sharp at 2-3x on phones) and are compressed lightly; 小红书's 10 MB cap needs the rules below.
+# 易次元 allows a 4 GB package, so its portraits and illustrations keep their full resolution
+# (448 px a portrait cell, sharp at 2-3x on phones) and are compressed lightly; 小红书's 10 MB cap needs the rules below.
 # Sheets load one at a time when a portrait from them is shown.
 def hi_res_image_rule(rel):
     name = Path(rel).name
     if rel.startswith('story-cast/'):
         return ('剧情妃立绘', None, 82, 70)
     if name.startswith('story-'):
-        return ('事件插画', 1280, 74, 60)
+        return ('事件插画', None, 74, 60)
     if name.startswith('palace-painted-'):
         return ('季节场景', 1920, 72, 60)
     if name.startswith('palace-map-'):

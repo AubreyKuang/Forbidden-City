@@ -5,6 +5,7 @@ const baseline=require('./fixtures/ui-before-organization.json');
 const {boot}=require('./playtest-harness.cjs');
 const childTextChanges=new Map([['宫内','宫中'],['已出宫','宫外'],['尚无皇子公主出宫。','宫外暂无皇嗣。']]);
 
+const CONSORT_MOVES=new Map([['处置',null],['册封与宫务',null],['宫务',null],['改封号','赐封号']]);
 for(const c of cases)test(`layout preserves information and action availability: ${c[0]}`,()=>{
  const before=baseline.pages.find(p=>p.name===c[0]);
  const {html}=renderCase(c),after=signature(html);
@@ -48,7 +49,10 @@ for(const c of cases)test(`layout preserves information and action availability:
   const fragment=legacyFragment.replace('筛选不会删去原始记载。','')
     .replace('楚庶人',c[0]==='cold'?'楚妃':'楚庶人');
   // The guide now describes the three-reply quota; its other instructions remain.
-  const updated=c[0]==='home'?fragment.replace('上朝可先免费查看本月奏折，亲自批复通常花 1 点','每月最多批阅三份奏折，可先免费查看；亲自批复通常花 1 点'):fragment;
+  let updated=c[0]==='home'?fragment.replace('上朝可先免费查看本月奏折，亲自批复通常花 1 点','每月最多批阅三份奏折，可先免费查看；亲自批复通常花 1 点'):fragment;
+  // Consort pages: the 处置 chapter is gone (its buttons and 赐/改封号 sit beside 探亲与省亲
+  // under 封号与处置), and 册封与宫务 only shows when it has something in it.
+  if(CONSORT_MOVES.has(updated)&&!text.includes(updated)){const now=CONSORT_MOVES.get(updated);if(now===null)continue;updated=now;}
   assert.ok(text.includes(updated),`Missing text: ${updated}`);
   text=text.replace(updated,'');
  }
