@@ -188,4 +188,7 @@ test('the summon panel shows only to owners, and the action is journaled',()=>{
   shop._setOwned(['goldFinger']);context.S.flags.goldFinger=true;
   assert.match(shop.view(),/A\.goldSummon\('story:qingyi'\)/);
   assert.ok(context.installed.includes('goldSummon'));
+  context.eventFreqView=()=>'<section aria-label="事件频率"></section>';
+  assert.match(shop.view(),/aria-label="事件频率"/);
+  shop._setOwned([]);assert.doesNotMatch(shop.view(),/aria-label="事件频率"/);
 });

@@ -118,7 +118,7 @@ const PalaceShop=(()=>{
     const wallet=UI.shopWallet&&h&&typeof h.openWallet==='function'?' <button class="btn sm" data-onclick="A.shopWallet()">去充值</button>':'';
     return `${pageHeading('商城','用次元币购买；点「购买」后还要再确认一次才会付款。')}
      ${status}${note?`<p role="status">${esc(note)}${wallet}</p>`:''}
-     ${summonView()}${owned.has('goldFinger')?eventFreqView():''}
+     ${summonView()}${owned.has('goldFinger')&&typeof eventFreqView==='function'?eventFreqView():''}
      <section class="save-section" aria-label="商品"><div class="save-slots">${products.map(productLine).join('')}</div></section>
      <p class="hint">银两到账到当前打开的存档，传位后新君照样能用；新开一局不带过去。立绘包、画师换像和金手指包跟着易次元账号走，换设备、开新朝也有效。${owned.has('painter')?'在妃嫔详情页点「更换立绘」即可换像。':''}</p>`;
   }
