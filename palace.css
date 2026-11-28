@@ -1054,3 +1054,6 @@ button.family-room-person{cursor:pointer}button.family-room-person:hover{color:#
   #app[data-layout="landing"] .title-wrap{padding:16px 28px;gap:10px}
   #app[data-layout="landing"] .title-wrap h1{font-size:clamp(40px,11dvh,64px)}
 }
+/* Consort page: 探亲与省亲 beside 封号与处置 (赐/改封号 · 降位 · 打入冷宫 · 遣出宫) */
+.consort-action-row{display:flex;flex-wrap:wrap;gap:12px;align-items:stretch}
+.consort-action-row>.action-group{flex:1 1 260px;margin:0}

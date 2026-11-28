@@ -513,7 +513,7 @@ function viewConsort(){
     if(c.rank!==8)quickManagement+=`<button class="btn" data-onclick="A.openResidence(${c.id})">安排居所<small>主位 · 同住 · 换宫</small></button>`;
     if(c.rank<7)quickManagement+=`<button class="btn" data-onclick="A.promote(${c.id})">晋封<small>→${RANKS[c.rank+1]}</small></button>`;
     if(c.rank>0&&c.rank<8)penalties+=`<button class="btn danger" data-onclick="A.demote(${c.id})">降位</button>`;
-    if(c.rank>=4)management+=`<button class="btn" data-onclick="A.rename(${c.id})">改封号</button>`;
+    if(c.rank>=4)penalties=`<button class="btn" data-onclick="A.rename(${c.id})">${c.title?'改封号':'赐封号'}</button>`+penalties;
     if(c.rank>=5&&c.rank<8&&!empress()&&!c.outerHouseholdId)management+=`<button class="btn" data-onclick="A.crown(${c.id})">册立皇后</button>`;
     penalties+=`<button class="btn danger" data-onclick="A.cold(${c.id})">${c.rank===8?'废后':'打入冷宫'}</button><button class="btn danger" data-onclick="A.away(${c.id})">遣出宫</button>`;
   } else if(act&&c.cold){
@@ -547,7 +547,7 @@ function viewConsort(){
       detailSection('孕中祈愿',pregnancyPrayerPanel(c))+detailSection('寺中清修',consortTemplePanel(c))+
       (act&&!c.cold?initiativeHTML(c):''),'近况'],
     ['family','家人与孩子',
-      actionGroup('探亲与省亲',familyActions)+
+      (familyActions||penalties?`<div class="consort-action-row">${actionGroup('探亲与省亲',familyActions)}${actionGroup('封号与处置',penalties)}</div>`:'')+
       detailSection('白泉王室亲眷',whiteSpringKinLinks(c))+natalVisitorsPanel(c)+
       whiteSpringFriendPanel(c)+sisterPalaceConcernPanel(c)+courtFamilyNewsPanel(c)+palaceKinLettersPanel(c)+
       detailSection('家族与人际',`${kids.length?`<div>子女：${kids.map(k=>`<button class="btn quiet sm" data-onclick="A.go('kid',${k.id})">${esc(k.name)}</button>`).join(' ')}</div>`:''}${family}`)+
@@ -561,8 +561,7 @@ function viewConsort(){
       detailSection('御赐珍饰',jewelryPanel(c))+(act&&c.rank===8?birthdayBanquetButtons():''),'宫务'],
     ['past','往事与经历',
       storyCastPanel(c)+detailSection('宫墙往事',palaceRomancePanel(c))+journeyPanel(c)+solitaryPanel(c)+pastLifePanel(c)+
-      timeTravelerPanel(c)+personalExperiencePanel(c)+historyPanel(c)+lifeBiography(c),'往事'],
-    ['decisions','处置',detailFold('处置',penalties?`<div class="acts">${penalties}</div>`:''),'处置']
+      timeTravelerPanel(c)+personalExperiencePanel(c)+historyPanel(c)+lifeBiography(c),'往事']
    ],true)}`;
 }
 function viewCards(){
