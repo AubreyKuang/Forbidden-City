@@ -450,7 +450,7 @@ function openModal(ev){
   const choicePeople=new Set(ev.choices.filter(c=>c.portrait||c.person).map(c=>(c.portrait||c.person).id??c.person));
   const showChoicePortraits=choicePeople.size>1;
   const arrival=ev.scene==='palace-arrival';
-  let h=`<h2 class="mtitle" id="event-title" tabindex="-1">${esc(ev.displayTitle||ev.title)}</h2>${ev.scene==='mourning'?mourningScene():''}${eventIllustration(ev.illustration,ev.illustrationCaption)}${ev.poemPrelude?poemPreludeHTML(ev.poemPrelude):''}${arrival?palaceArrivalHTML(ev):ev.gardenTables?banquetSeating(ev.gardenTables):eventCast(people,ev)}<div class="mbody"${arrival?' hidden':''}>`;
+  let h=`<h2 class="mtitle" id="event-title" tabindex="-1">${esc(ev.displayTitle||ev.title)}</h2>${proseEpigraphHTML(ev)}${ev.scene==='mourning'?mourningScene():''}${eventIllustration(ev.illustration,ev.illustrationCaption)}${ev.poemPrelude?poemPreludeHTML(ev.poemPrelude):''}${arrival?palaceArrivalHTML(ev):ev.gardenTables?banquetSeating(ev.gardenTables):eventCast(people,ev)}<div class="mbody"${arrival?' hidden':''}>`;
   if(people.length===1&&!ev.gardenTables){
     h+=ev.portraitArt?`<figure class="event-full-portrait"><img src="${esc(ev.portraitArt.src)}" alt="${esc(ev.portraitArt.alt)}"><figcaption>${esc(people[0].fixedStory&&S.consorts.includes(people[0])?fullName(people[0])+' · '+cName(people[0]):porName(people[0]))}</figcaption></figure>`:eventPortrait(people[0],112,true);
   }
@@ -486,7 +486,7 @@ function choose(i,inputValue){
 function narrativeResult(res,event,choice){
   const text=typeof res==='string'?res:res.text||'';
   if(text.split('\n').some(line=>line.trim()&&!line.trimStart().startsWith('§')))return res;
-  const narration=choice?.outcome||(event.scene==='monthly-court'
+  const narration=choice?.outcome||(proseActive()?proseOutcome(event):event.scene==='monthly-court'
     ?`内侍收起「${event.title}」的折子，将你的批复交值班官员传下去。`
     :'你拿定主意，身边的人听了吩咐，各去料理。');
   const body=narration+(text?'\n'+text.trimStart():'');
@@ -816,11 +816,11 @@ A.endMonth=function(){
   toast(`${monthDate}　月入${inc}　支出${exp}`);
   // 岁末总结
   if(newYear)snapshotYear();
-  if(newYear){const y=S.ys;pushEv({title:'岁首',sfx:'chime',text:`爆竹声中一岁除。${dateStr()}，陛下${e.age}岁。\n去岁：新入宫${y.c}人，皇嗣降生${y.b}位，侍寝${y.n}次。\n国库${e.treasury}万两，威望${rd(e.prestige)}，民心${rd(e.people)}。`,choices:[{t:'新岁新气象'}]});S.ys={c:0,b:0,n:0}}
+  if(newYear){const y=S.ys;pushEv({title:'岁首',sfx:'chime',text:`${pz('爆竹声中一岁除。','又是一年。宫门换了新桃符，铜壶里的水照旧一滴一滴地漏。')}${dateStr()}，陛下${e.age}岁。\n去岁：新入宫${y.c}人，皇嗣降生${y.b}位，侍寝${y.n}次。\n国库${e.treasury}万两，威望${rd(e.prestige)}，民心${rd(e.people)}。`,choices:[{t:'新岁新气象'}]});S.ys={c:0,b:0,n:0}}
   if(revenue)pushEv(revenue.jewelry?tributeEnvoyEvent(revenue):revenue);
   // 事件
   if(selectionSkipTimingActive()){const selectionOffer=scheduledSelectionEvent();if(selectionOffer)pushEv(selectionOffer);}
-  else if(S.month===2&&S.turn-S.flags.lastXX>=34&&newConsortEventAllowed()) pushEv({title:'三年大选',sfx:'chime',text:'又到三年一度的大选之期，各地秀女已候于储秀宫。',choices:[{t:'前去看看',f:()=>{genCands();UI.view='xx';return null}},{t:'今年免了',f:()=>{S.flags.lastXX=S.turn;return fx(chg({people:2}))}}]});
+  else if(S.month===2&&S.turn-S.flags.lastXX>=34&&newConsortEventAllowed()) pushEv({title:'三年大选',sfx:'chime',text:pz('又到三年一度的大选之期，各地秀女已候于储秀宫。','又到三年一度的大选之期，各地秀女已候于储秀宫。\n车马从四方来，带着各家的指望。她们大多十六七岁，还不知道这道宫门进来容易，出去难。'),choices:[{t:'前去看看',f:()=>{genCands();UI.view='xx';return null}},{t:'今年免了',f:()=>{S.flags.lastXX=S.turn;return fx(chg({people:2}))}}]});
   reconcileResidences();archivePastLives();travelerLifeTick();daoLifeTick();immortalTick();royalTravelTick();travelInstitutionTick();childTempleTick();relTick();consortSocialTick();kidRelTick();clanTick();dowagerTick();initiativeTick();familyLifeTick();childLifeTick(true);courtTick();yiLandTick();natalFamilyTick();seasonalTick();palaceDutiesTick();restlessTrystTick();palaceRomanceTick();guardProtectionTick();diplomacyTick();palaceParentageTick();marriedLifeTick();royalKinContactTick();personalExperienceTick();journeyTick();maternalTick();historyTick();continuityTick();personalLifeTick();livedRelationshipsTick();
   commonerFavorMonth();
   courtFamilyReplyTick();
@@ -959,9 +959,10 @@ function deathEvent(why){
   const sons=kidsAlive().filter(k=>k.sex==='m'&&!k.princeSpouseOrigin&&!k.jailed&&!(journalContentVersion()>=85?royalJourneyAway(k):immortalAway(k))&&!storyCastHeirBar(k));let heir=S.heir&&kidById(S.heir);if(!heir||!heir.alive||heir.princeSpouseOrigin||(journalContentVersion()>=85?royalJourneyAway(heir):immortalAway(heir))||storyCastHeirBar(heir))heir=sons.sort((a,b)=>a.born-b.born)[0];
   const nC=S.consorts.length,nK=S.children.length;
   let t= why==='破产'?bankruptcyFallText(e)
-    :why==='民变'?`流民四起，叛军攻破京城。${e.era}${cnNum(yrs)}年，${e.sur}${e.name}自缢于宫中，享年${e.age}岁。`
-    :`${dateStr()}，${e.sur}${e.name}崩于养心殿，享年${e.age}岁，在位${yrs}年。`;
+    :why==='民变'?`流民四起，叛军攻破京城。${e.era}${cnNum(yrs)}年，${e.sur}${e.name}自缢于宫中，享年${e.age}岁。${pz('','\n城破那日，百姓夹道看着叛军进城，没有人哭。水则载舟，水则覆舟，这句话历代帝王都读过。')}`
+    :`${dateStr()}，${e.sur}${e.name}崩于养心殿，享年${e.age}岁，在位${yrs}年。${pz('','\n那一夜养心殿的灯亮到天明。更漏滴尽，案上还摊着一本没批完的折子，朱笔搁在砚边，墨已经干了。')}`;
   t+=`\n庙号${miao}，谥曰「${shi}皇帝」。\n一生册封后妃${nC}人，育皇子${S.children.filter(k=>k.sex==='m'&&!k.princeSpouseOrigin).length}人、公主${S.children.filter(k=>k.sex==='f'&&!k.princeSpouseOrigin).length}人。`;
+  if(proseActive()&&why==='驾崩')t+='\n'+proseReignVerdict(e,yrs,shi);
   if(why==='民变'||why==='破产')heir=null;
   t+=heir?`\n遗诏：传位于${kidName(heir)}。`:why==='民变'||why==='破产'?'\n社稷倾覆，国祚至此而终。':kidsAlive().some(k=>k.sex==='m'&&royalDiplomaticAway(k))?'\n皇子出使在外或尚未获释，未能及时归京继统，由宗室旁支承继大统。':immortalEnabled()&&kidsAlive().some(k=>k.sex==='m'&&immortalAway(k))?'\n皇子长留山门，未列入继统之序，宗室旁支承继大统。山中的亲人仍在人世。':kidsAlive().some(k=>k.sex==='m'&&storyCastHeirBar(k))?'\n礼部依异域皇嗣的储位成例议定，由宗室旁支继统。':'\n膝下无子，宗室旁支入继大统，本朝血脉至此而终。';
   S.history.push({sur:e.sur,name:e.name,era:e.era,yrs,miao,shi});
@@ -1049,7 +1050,7 @@ A.start=function(){
   log(`${era}元年三月，新帝${sur}${name}登基，改元${era}，大赦天下。`,1);
   log(`册嫡妻${fullName(em)}为皇后，潜邸旧人${fullName(old)}为贵人。`);
   migrate();initializeMinistryRoster();initializeDowagerOpening();UI.view='map';setScene('court');AU.sfx('gong');render();
-  const accession=scenario==='founder'?'天下初定，你在钟声中登上了新朝的御座。':'先帝龙驭上宾，你在太和钟声中登上了宸极殿的御座。';
+  const accession=scenario==='founder'?pz('天下初定，你在钟声中登上了新朝的御座。','烽烟初定，旧朝的宫阙换了新匾。你在钟声里走上丹陛，身后是打下来的江山，眼前是还没坐热的御座。\n马上得天下，不能马上治之。这句话，从今日起要一条一条去应。'):pz('先帝龙驭上宾，你在太和钟声中登上了宸极殿的御座。','先帝龙驭上宾。孝服未除，太和钟已响过九响，你一步一步走上宸极殿的丹陛。\n御座比想象中更高，也更冷。阶下山呼万岁，声浪一层层涌上来。从今往后，天下人的饥寒冷暖，都要问到你这里。');
   pushEv({title:'登基',scene:'coronation',por:'emp',text:`${era}元年三月，${accession}\n嫡妻${fullName(em)}册为皇后，潜邸旧人${fullName(old)}册为贵人。${dowagerCareActive()&&em.dowagerKin?"\n皇后亦是太后母家侄女，宫中有潜邸夫妻与母族两层亲缘。":""}${lowTitleHonorActive()?`\n户部奏报：国库存银${e.treasury}万两，${e.treasury<400?'库银吃紧，诸事须量入为出':e.treasury<800?'收支尚可':'仓廪充盈'}。`:''}\n礼部奏请：新帝登基，当广选秀女，以充后宫、绵延皇嗣。`,choices:[
     {t:'进入宫城',primary:true},{t:'准奏，即刻选秀',f:()=>{genCands(7);UI.view='xx';return null}}]});
   const jinyiweiReminder=typeof jinyiweiAccessionReminder==='function'&&jinyiweiAccessionReminder();if(jinyiweiReminder)pushEv(jinyiweiReminder);
