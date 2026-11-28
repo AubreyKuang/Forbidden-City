@@ -110,7 +110,34 @@ const PalaceShop=(()=>{
       buying===p.key?'<button class="btn sm" disabled>购买中…</button>':
       confirm?`<button class="btn sm gold" data-onclick="A.shopBuy('${p.key}')">确认支付 ${p.price} 次元币</button> <button class="btn sm" data-onclick="A.shopConfirm(null)">取消</button>`:
       `<button class="btn sm gold" data-onclick="A.shopConfirm('${p.key}')" ${buying||!host()?'disabled':''}>购买</button>`;
-    return `<article class="save-slot shop-item"><div class="save-slot-info"><b>${esc(p.name)}</b><span class="hint">${esc(p.desc||'')}</span><small>${price}${p.kind==='silver'?' · 可重复购买':' · 买一次永久有效'}</small></div><div class="save-slot-actions">${action}</div></article>`;
+    return `<article class="save-slot shop-item${p.featured?' shop-featured':''}"><div class="save-slot-info"><b>${esc(p.name)}</b><span class="hint">${esc(p.desc||'')}</span>${contentsPreview(p)}<small>${price}${p.kind==='silver'?' · 可重复购买':' · 买一次永久有效'}</small></div><div class="save-slot-actions">${action}</div></article>`;
+  }
+  /* The featured product (config featured: true, the 金手指包) leads the list. Before it is
+     bought its card shows what it holds: who 立即召见 can bring in this reign, the kinds of
+     events 事件频率 can tune and the four levels, and the products it includes. */
+  const featuredFirst=list=>[...list.filter(p=>p.featured),...list.filter(p=>!p.featured)];
+  function contentsPreview(p){
+    if(p.kind!=='bundle'||owned.has(p.key))return '';
+    const parts=[];
+    const targets=summonTargets(),stories=targets.filter(t=>t.group==='剧情妃'),people=targets.filter(t=>t.group==='风华人物');
+    const names=list=>list.map(t=>esc(t.name)).join('、');
+    const roster=!S?'<p class="hint">开始或读取一朝后，这里会列出本朝还没相遇、可以召见的人。</p>':
+      targets.length?`<p class="shop-roster">${stories.length?`<span><strong>剧情妃 ${stories.length} 位</strong>${names(stories)}</span>`:''}${people.length?`<span><strong>风华人物 ${people.length} 位</strong>${names(people)}</span>`:''}</p>`:
+      '<p class="hint">本朝的剧情妃和风华人物都已经相遇过了，换一朝仍可召见。</p>';
+    parts.push(`<section><h4>立即召见</h4><p>点名字就进入她 / 他的初遇剧情，不受时间、地点和前置条件限制，也不耗精力。</p>${roster}</section>`);
+    if(typeof EVENT_FREQ_CATEGORIES!=='undefined'&&typeof EVENT_FREQ_LEVELS!=='undefined'){
+      const levels=Object.values(EVENT_FREQ_LEVELS).map(l=>`<span class="tag">${esc(l.label)}</span>`).join('');
+      const kinds=EVENT_FREQ_CATEGORIES.map(c=>`<li><strong>${esc(c.name)}</strong><small class="hint">${esc(c.desc)}</small></li>`).join('');
+      parts.push(`<section><h4>事件频率 · ${EVENT_FREQ_CATEGORIES.length} 类</h4><p>每类事件单独选一档：${levels}</p>
+        <p class="shop-kinds">${EVENT_FREQ_CATEGORIES.map(c=>esc(c.name)).join(' · ')}</p>
+        <details class="shop-kinds-detail"><summary>每类包含哪些事</summary><ul>${kinds}</ul></details></section>`);
+    }
+    const included=(p.includes||[]).map(byKey).filter(Boolean);
+    if(included.length){
+      const worth=included.reduce((s,x)=>s+x.price,0);
+      parts.push(`<section><h4>另含</h4><p>${included.map(x=>`${esc(x.name)}（单买 ${yuan(x.price)} 元）${owned.has(x.key)?'<span class="tag">已拥有</span>':''}`).join('、')}，合计 ${yuan(worth)} 元。</p></section>`);
+    }
+    return `<div class="shop-contents">${parts.join('')}</div>`;
   }
   function view(){
     const h=host();
@@ -119,7 +146,7 @@ const PalaceShop=(()=>{
     return `${pageHeading('商城','用次元币购买；点「购买」后还要再确认一次才会付款。')}
      ${status}${note?`<p role="status">${esc(note)}${wallet}</p>`:''}
      ${summonView()}${owned.has('goldFinger')&&typeof eventFreqView==='function'?eventFreqView():''}
-     <section class="save-section" aria-label="商品"><div class="save-slots">${products.map(productLine).join('')}</div></section>
+     <section class="save-section" aria-label="商品"><div class="save-slots">${featuredFirst(products).map(productLine).join('')}</div></section>
      <p class="hint">银两到账到当前打开的存档，传位后新君照样能用；新开一局不带过去。立绘包、画师换像和金手指包跟着易次元账号走，换设备、开新朝也有效。${owned.has('painter')?'在妃嫔详情页点「更换立绘」即可换像。':''}</p>`;
   }
   // 立即召见: who can still be met, each through their own first-meeting scene.
