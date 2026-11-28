@@ -312,8 +312,9 @@ FORBIDDEN = [
     (r'type=["\']module|<base\s|http-equiv', 'module script / base / CSP meta'),
     (r'\blocalStorage\b|\bsessionStorage\b|\bindexedDB\b|document\.cookie|\bcaches\.', 'browser storage'),
 ]
-# Dev panel / test mode: none of it may reach the package.
-DEV_MARKERS = ['dev-tools', 'dev.html', 'dev.css', 'palace-dev', 'mountDevTools', '金手指', '测试模式', 'DEV.', 'dev-panel', 'chengongji_dev_']
+# Dev panel / test mode: none of it may reach the package. 「金手指」 alone is not a marker:
+# the 易次元 shop sells a 金手指包; the panel's own ids and DEV. calls still give it away.
+DEV_MARKERS = ['dev-tools', 'dev.html', 'dev.css', 'palace-dev', 'mountDevTools', '金手指面板', '测试模式', 'DEV.', 'dev-panel', 'chengongji_dev_']
 
 
 def check_package(files, texts):

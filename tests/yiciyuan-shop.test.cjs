@@ -21,8 +21,8 @@ function load({shop=SHOP,store=null,pending=false,modal=false}={}){
   const logs=[],saves=[];
   const context=vm.createContext({console:{...console,warn(){}},setTimeout,
     PALACE_EDITION_CONFIG:shop?{edition:'yiciyuan',shop}:null,
-    S:{emp:{treasury:800},flags:{},...(pending?{pendingActions:{}}:{})},
-    UI:{view:'shop'},modalOpen:modal,PalaceActions:{busy:false,blocked:false},
+    S:{turn:7,emp:{treasury:800},flags:{},...(pending?{pendingActions:{}}:{})},
+    UI:{view:'shop'},modalOpen:modal,installed:[],PalaceActions:{busy:false,blocked:false,install(names){context.installed.push(...names);}},
     MENU:[['map','宫城'],['sys','存档']],DOCK_ART:{},A:{},
     PALACE_HOST:store?{store}:undefined,
     STORY_CONSORT_PORTRAITS:{gouyi:422},ALL_CONSORT_PORTRAITS:[1,2,316,339,346,515,520],PORTRAIT_CLOTHES:{},
@@ -109,4 +109,82 @@ test('too few coins offers the wallet; a failed purchase credits nothing',async(
   assert.equal(context.S.emp.treasury,800);
   assert.equal(context.UI.shopWallet,true);
   assert.match(shop.view(),/次元币不足/);
+});
+
+// 金手指包: a one-time bundle that also owns what it includes and opens 立即召见.
+function summonWorld(extra={}){
+  const pushed=[],created=[];
+  const world={
+    STORY_CAST:{qingyi:{sur:'沈',given:'清漪',age:20,epithet:'曾经的京城第一美人'},chuwan:{sur:'方',given:'晚',age:15,epithet:'旧籍里的名字'}},
+    storyCastActive:()=>true,storyCastRecord:key=>world.records[key]||null,records:{},
+    livingStoryConsort:()=>null,editionAllows:()=>true,whiteSpringBanquetActive:()=>true,
+    storyCastCreate(key){const r={person:{age:3},stage:0};world.records[key]=r;created.push(key);return r;},
+    storyCastMeetEvent:(key,r)=>({title:'meet '+key,r}),
+    careersActive:()=>true,gouyiEncounter:()=>({title:'gouyi'}),
+    fenghuaActive:()=>true,FENGHUA_PEOPLE:{gaoHuaibi:{name:'高怀璧',role:'边关功臣'},xueHongjian:{name:'薛红笺',role:'诗人与笺铺主人'}},
+    fenghuaReleased:()=>true,fenghuaPerson:()=>null,hongjianContent:()=>true,
+    fenghuaMeetEvent:(key,summoned)=>summoned?{title:'fenghua '+key}:null,
+    fenghuaState(){return world.fh||(world.fh={attempts:{}});},
+    mourningActive:()=>false,setScene(){},pushEv:ev=>pushed.push(ev),...extra};
+  return {world,pushed,created};
+}
+function loadSummon(opts={},extra){
+  const {world,pushed,created}=summonWorld(extra);
+  const loaded=load(opts);
+  Object.assign(loaded.context,world);
+  return {...loaded,world,pushed,created};
+}
+
+test('the 金手指包 owns what it includes and records itself on the world',async()=>{
+  const host=fakeStore();
+  const {context,shop}=load({store:host.store});
+  await shop.buy('goldFinger');
+  assert.deepEqual(host.calls.filter(c=>c[0]==='buy'),[['buy','2485888261128001',198]]);
+  assert.ok(shop.owns('goldFinger')&&shop.owns('painter')&&shop.owns('legendsPack'));
+  assert.equal(context.S.flags.goldFinger,true);
+  assert.deepEqual([...context.S.flags.portraitPacks],['legends']);
+  await shop.buy('painter');
+  assert.equal(host.calls.filter(c=>c[0]==='buy').length,1,'included products are not sold again');
+});
+
+test('a 金手指包 paid on another device is found on refresh',async()=>{
+  const host=fakeStore({paid:{'2485888261128001':1}});
+  const {context,shop}=load({store:host.store});
+  await shop.refresh();
+  assert.ok(shop.owns('painter'));assert.equal(context.S.flags.goldFinger,true);
+});
+
+test('立即召见 lists everyone not yet met and opens their first meeting',()=>{
+  const {context,shop,pushed,created,world}=loadSummon();
+  context.S.flags.goldFinger=true;
+  assert.deepEqual(JSON.parse(JSON.stringify(shop.summonTargets().map(t=>[t.id,t.group]))),[
+    ['story:qingyi','剧情妃'],['story:chuwan','剧情妃'],['gouyi','剧情妃'],['fenghua:gaoHuaibi','风华人物'],['fenghua:xueHongjian','剧情妃']]);
+  assert.equal(shop.summon('story:chuwan'),true);
+  assert.deepEqual(created,['chuwan']);
+  assert.equal(world.records.chuwan.person.age,15,'met early, she keeps her listed age');
+  assert.equal(shop.summon('fenghua:gaoHuaibi'),true);
+  assert.equal(world.fh.attempts.gaoHuaibi,7);
+  assert.deepEqual(pushed.map(e=>e.title),['meet chuwan','fenghua gaoHuaibi']);
+  assert.ok(!shop.summonTargets().some(t=>t.id==='story:chuwan'),'met people leave the list');
+});
+
+test('立即召见 needs the pack on the world, no open scene and no mourning',()=>{
+  const {context,shop,pushed}=loadSummon();
+  assert.equal(shop.summon('gouyi'),false,'not owned');
+  context.S.flags.goldFinger=true;context.modalOpen=true;
+  assert.equal(shop.summon('gouyi'),false,'scene open');
+  context.modalOpen=false;context.mourningActive=()=>true;
+  assert.equal(shop.summon('gouyi'),false,'mourning');
+  context.mourningActive=()=>false;
+  assert.equal(shop.summon('nobody:x'),false);
+  assert.equal(shop.summon('gouyi'),true);
+  assert.equal(pushed.length,1);
+});
+
+test('the summon panel shows only to owners, and the action is journaled',()=>{
+  const {context,shop}=loadSummon();
+  assert.doesNotMatch(shop.view(),/aria-label="立即召见"/);
+  shop._setOwned(['goldFinger']);context.S.flags.goldFinger=true;
+  assert.match(shop.view(),/A\.goldSummon\('story:qingyi'\)/);
+  assert.ok(context.installed.includes('goldSummon'));
 });

@@ -993,3 +993,12 @@ button.family-room-person{cursor:pointer}button.family-room-person:hover{color:#
 .shop-gallery .shop-cell .por{max-width:100%;height:auto}
 .shop-gallery .shop-cell small{font-size:11px;line-height:1.3;text-align:center}
 .shop-gallery .shop-cell.on{outline:2px solid #c99a3b}
+/* 敬事房 · 翻牌子 pop-up (js/cards-sheet.js) and the 后宫 tools above it */
+.tool-stack{display:flex;flex-direction:column;align-items:stretch;gap:8px}
+#cards-sheet{position:fixed;inset:0;width:100%;height:100%;max-width:none;max-height:none;margin:0;border:0;color:inherit;box-sizing:border-box;background:#102720b8;
+  display:flex;align-items:center;justify-content:center;
+  padding:max(12px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) max(12px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
+#cards-sheet:not([open]){display:none}
+#cards-sheet::backdrop{background:transparent}
+.cards-sheet-box{width:100%;max-width:640px;max-height:100%;overflow:auto;overscroll-behavior:contain;padding:20px}
+.cards-sheet-foot{justify-content:flex-end;margin-top:12px}

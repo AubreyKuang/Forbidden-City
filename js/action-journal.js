@@ -147,9 +147,11 @@ const PalaceActions=(()=>{
     }finally{depth=Math.max(0,depth-1);replaying=false;step=null;fields=null;AU.sfx=sound;globalThis.confirm=ask;save=persist;}
   }
   function keepInput(value){if(!journal||!curEv?.input||modalResult)return;journal.draft=String(value).slice(0,curEv.input.max||4);save('auto');}
-  function install(){
+  // Called once for every action defined so far; files loaded later pass the names of
+  // the world-changing actions they add. An action is never wrapped twice.
+  function install(names){
     for(const [name,fn] of Object.entries(A)){
-      if(excluded.has(name))continue;
+      if(excluded.has(name)||actions.has(name)||names&&!names.includes(name))continue;
       actions.set(name,fn.bind(A));
       A[name]=function(...args){return run(name,args,()=>fn.apply(this,args));};
     }

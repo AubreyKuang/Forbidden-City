@@ -13,7 +13,12 @@
      painter's gallery until bought. Ownership is copied onto the world
      (S.flags.portraitPacks) only between actions, so replays of a pending scene draw from
      the same pool they were recorded with.
-   These actions run outside the action journal (this file loads after it). */
+   - bundle (金手指包): one-time. Owning it also owns the products it lists (includes), and
+     opens 「立即召见」: every 剧情妃 and 风华人物 not yet met can be met now, through the same
+     first-meeting scene the game already has, without its time, place or entry condition.
+     Like packs, ownership reaches the world (S.flags.goldFinger) only between actions,
+     and the summon is journaled, so a scene left open replays after a reload.
+   Shop actions run outside the action journal (this file loads after it). */
 const PORTRAIT_PACKS=Object.freeze({
   legends:Object.freeze({name:'传说珠翠',cells:Object.freeze([...Array.from({length:24},(_,i)=>316+i),...Array.from({length:6},(_,i)=>515+i)])})
 });
@@ -34,12 +39,18 @@ const PalaceShop=(()=>{
     for(const [pack,info] of Object.entries(PORTRAIT_PACKS))if(info.cells.includes(cell)&&!packOwned(pack))return false;
     return true;
   }
+  function own(key){
+    owned.add(key);
+    const p=byKey(key);
+    for(const k of p&&p.kind==='bundle'&&Array.isArray(p.includes)?p.includes:[])owned.add(k);
+  }
   function syncWorld(){
     if(!enabled||!safe())return false;
     let changed=false;
     for(const p of products)if(p.kind==='portraitPack'&&owned.has(p.key)&&!packOwned(p.pack)){
       S.flags.portraitPacks=[...(S.flags.portraitPacks||[]),p.pack];changed=true;
     }
+    if(products.some(p=>p.kind==='bundle'&&owned.has(p.key))&&S.flags.goldFinger!==true){S.flags.goldFinger=true;changed=true;}
     return changed;
   }
   async function deliver(){
@@ -67,7 +78,7 @@ const PalaceShop=(()=>{
     const h=host();if(!enabled||!h)return;
     for(const p of products){
       if(p.kind==='silver')continue;
-      try{if(Number(await h.paidCount(p.productId))>0)owned.add(p.key);}catch(e){console.warn('Shop entitlement check:',e);}
+      try{if(Number(await h.paidCount(p.productId))>0)own(p.key);}catch(e){console.warn('Shop entitlement check:',e);}
     }
     checked=true;
     if(syncWorld())save('auto');
@@ -83,7 +94,7 @@ const PalaceShop=(()=>{
     try{
       await h.purchase(p.productId,p.price);
       if(p.kind==='silver')await deliver();
-      else{owned.add(key);if(syncWorld())save('auto');toast(`已获得「${p.name}」`);}
+      else{own(key);if(syncWorld())save('auto');toast(`已获得「${p.name}」`);}
       note=`「${p.name}」购买成功。`;
     }catch(e){
       if(e&&e.code==='COIN_INSUFFICIENT'){note='次元币不足。';UI.shopWallet=true;}
@@ -106,8 +117,59 @@ const PalaceShop=(()=>{
     const wallet=UI.shopWallet&&h&&typeof h.openWallet==='function'?' <button class="btn sm" data-onclick="A.shopWallet()">去充值</button>':'';
     return `${pageHeading('商城','用次元币购买；点「购买」后还要再确认一次才会付款。')}
      ${status}${note?`<p role="status">${esc(note)}${wallet}</p>`:''}
+     ${summonView()}
      <section class="save-section" aria-label="商品"><div class="save-slots">${products.map(productLine).join('')}</div></section>
-     <p class="hint">银两到账到当前打开的这一朝。立绘包和画师换像跟着易次元账号走，换设备也有效。${owned.has('painter')?'在妃嫔详情页点「更换立绘」即可换像。':''}</p>`;
+     <p class="hint">银两到账到当前打开的这一朝。立绘包、画师换像和金手指包跟着易次元账号走，换设备、开新朝也有效。${owned.has('painter')?'在妃嫔详情页点「更换立绘」即可换像。':''}</p>`;
+  }
+  // 立即召见: who can still be met, each through their own first-meeting scene.
+  function summonTargets(){
+    if(!S||S.over)return [];
+    const list=[];
+    const storyCast=typeof storyCastActive==='function'&&storyCastActive();
+    if(storyCast)for(const [key,d] of Object.entries(STORY_CAST)){
+      if(!editionAllows('story',key)||storyCastRecord(key)||livingStoryConsort(key))continue;
+      list.push({id:'story:'+key,group:'剧情妃',name:key==='chuwan'?'方晚':d.sur+d.given,title:d.epithet});
+    }
+    if(typeof gouyiEncounter==='function'&&editionAllows('story','gouyi')&&careersActive()&&!S.flags.gouyiSeen&&!livingStoryConsort('gouyi'))
+      list.push({id:'gouyi',group:'剧情妃',name:'赵令仪',title:'钩弋夫人'});
+    if(typeof fenghuaActive==='function'&&fenghuaActive())for(const [key,d] of Object.entries(FENGHUA_PEOPLE)){
+      if(!fenghuaReleased(key)||fenghuaPerson(key)||S.fenghua&&S.fenghua.admitted&&S.fenghua.admitted[key]||key==='xueHongjian'&&livingStoryConsort('hongjian'))continue;
+      const consort=key==='xueHongjian'&&typeof hongjianContent==='function'&&hongjianContent()&&editionAllows('story','hongjian');
+      list.push({id:'fenghua:'+key,group:consort?'剧情妃':'风华人物',name:d.name,title:consort?'笺铺知己':d.role});
+    }
+    return list;
+  }
+  const summonBlocked=()=>!S?'请先开始或读取一朝。':S.over?'这一朝已经结束。':typeof mourningActive==='function'&&mourningActive()?'服丧期间不召见新人，下个月再来。':'';
+  function summonView(){
+    if(!owned.has('goldFinger'))return '';
+    if(!S)return '<section class="save-section" aria-label="立即召见"><h3>金手指 · 立即召见</h3><p class="hint">开始或读取一朝后，可在这里召见还没相遇的剧情妃和风华人物。</p></section>';
+    const list=summonTargets(),blocked=summonBlocked()||(S.flags.goldFinger!==true?'正在登记金手指包，处理完当前事件后再来。':'');
+    const groups=['剧情妃','风华人物'].map(group=>{
+      const items=list.filter(t=>t.group===group);
+      return items.length?`<p><b>${group}</b></p><div class="acts">${items.map(t=>`<button class="btn sm jade" data-onclick="A.goldSummon('${t.id}')" ${blocked||modalOpen?'disabled':''}>${esc(t.name)}<small>${esc(t.title)}</small></button>`).join('')}</div>`:'';
+    }).join('');
+    return `<section class="save-section" aria-label="立即召见"><h3>金手指 · 立即召见</h3>
+     <p class="hint">点名字，立刻开始与这位人物的初遇剧情，不受时间、地点和前置条件限制，也不耗精力。之后的故事照常展开。</p>
+     ${blocked?`<p role="status">${esc(blocked)}</p>`:''}${groups||'<p class="hint">本朝的剧情妃和风华人物都已经相遇过了。</p>'}</section>`;
+  }
+  // Runs inside the action journal (A.goldSummon), so it reads only the world, never the store.
+  function summon(id){
+    if(!S||S.flags.goldFinger!==true||modalOpen||summonBlocked()||!summonTargets().some(t=>t.id===id))return false;
+    const [kind,key]=id.split(':');
+    if(kind==='story'){
+      const r=storyCastCreate(key);if(!r)return false;
+      // Met before the usual year: the story keeps her listed age.
+      r.person.age=Math.max(r.person.age,STORY_CAST[key].age);
+      setScene((key==='luwan'||key==='ayimu'&&whiteSpringBanquetActive())?'garden':'city');
+      pushEv(storyCastMeetEvent(key,r));
+    }else if(kind==='gouyi'){
+      const ev=gouyiEncounter();if(!ev)return false;
+      setScene('garden');pushEv(ev);
+    }else if(kind==='fenghua'){
+      const ev=fenghuaMeetEvent(key,true);if(!ev)return false;
+      fenghuaState().attempts[key]=S.turn;setScene('city');pushEv(ev);
+    }else return false;
+    return true;
   }
   // 画师换像: ordinary consorts only; story characters keep their own art.
   function repaintable(c){
@@ -132,11 +194,11 @@ const PalaceShop=(()=>{
      <div class="shop-gallery">${shown.map(cell=>`<button class="btn shop-cell${cell===current?' on':''}" data-onclick="A.repaintPick(${c.id},${cell})" aria-label="立绘 ${cell}">${porImg({id:'shop-pick-'+cell,portraitOverride:cell,alive:true,seed:cell,rank:0},96)}<small>${esc(PORTRAIT_CLOTHES[cell]||'')}</small></button>`).join('')}</div>
      ${PalaceShop.lockedCount()?`<p class="hint">另有 ${PalaceShop.lockedCount()} 张在立绘包里，购买后可选。</p>`:''}`;
   }
-  return {enabled,cellOpen,refresh,deliver,buy,view,pickView,repaintButton,repaintable,
+  return {enabled,cellOpen,refresh,deliver,buy,view,pickView,repaintButton,repaintable,summon,summonTargets,
     owns:key=>owned.has(key),
     lockedCount:()=>Object.entries(PORTRAIT_PACKS).reduce((n,[pack,info])=>n+(packOwned(pack)?0:info.cells.length),0),
     get products(){return products.slice();},
-    _setOwned(keys){owned.clear();for(const k of keys)owned.add(k);checked=true;}};
+    _setOwned(keys){owned.clear();for(const k of keys)own(k);checked=true;}};
 })();
 
 if(PalaceShop.enabled){
@@ -155,4 +217,6 @@ if(PalaceShop.enabled){
     else{if(!ALL_CONSORT_PORTRAITS.includes(cell)||!PalaceShop.cellOpen(cell)){toast('这张立绘还没有解锁');return;}c.portraitOverride=cell;c.paintedPortrait=cell;}
     save('auto');toast('立绘已更换');UI.view='consort';UI.sel=id;render();
   };
+  A.goldSummon=function(id){if(!PalaceShop.summon(id))toast('现在不能召见');render();};
+  PalaceActions.install(['goldSummon']);
 }
