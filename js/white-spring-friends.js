@@ -1,6 +1,7 @@
 /* The seed fixes what she heard long before selection. Previously recorded admirers keep their history. */
 const whiteSpringAdmirationActive=()=>journalContentVersion()>=110;
 function admiresWhiteSpring(c){
+  if(journalContentVersion()>=168&&c?.whiteSpringAdmirer&&!c.maid&&!c.sex&&c.fixedStory!=='ayimu')return true;
   if(journalContentVersion()<104||!c||c.maid||c.sex||c.fixedStory==='ayimu'||(c.upbringing?.title||c.fam?.t)!=='皇商')return false;
   return !whiteSpringAdmirationActive()||!!c.whiteSpringFriend||voiceHash((c.seed??c.id)+':white-spring-admirer')%100<80;
 }
@@ -24,7 +25,24 @@ const WHITE_SPRING_MEMORIES=[
     joy:'听到留下的旨意，她应得又脆又快。回去给家里写信，刚落下「已蒙准入宫」几字，便向丫头借了纸，将满页写歪的字重抄一遍。'
   }
 ];
+// Issue 42: a consort already in the palace may have admired Ayimu from what reached the court.
+const WHITE_SPRING_PALACE_MEMORIES=[
+  {
+    glimpse:'她常向尚衣局打听白泉贡来的织锦，说那上头的纹样像是会动。',
+    words:'白泉的贡锦送进宫那年，臣妾在尚衣局看过一回。掌事说，那纹样是阿依慕公主亲自挑的，她嫌宫样太板，要织工照着鼓点的节拍排花。臣妾那时便想，能把鼓声织进布里的人，该是什么样子。',
+    record:'入宫后，在尚衣局见过白泉贡来的织锦，听掌事说纹样是阿依慕公主照鼓点亲自排的。从那以后，凡有白泉的消息，她都要问一句公主近来如何。',
+    joy:'听说阿依慕要入宫，她把那块偷偷留下的贡锦边角翻了出来，捧在手里看了又看。'
+  },
+  {
+    glimpse:'她记得白泉使团来朝那年，宫宴上有人讲过阿依慕踏鼓起舞的事。',
+    words:'白泉使团来朝时，臣妾在宫宴末席，听通译讲公主在白泉的鼓舞：先听见鼓，才听见她腕上的银铃。旁人只当是客套话，臣妾却记了好几年，总想亲眼看一回。',
+    record:'白泉使团来朝那年，在宫宴上听通译讲起阿依慕踏鼓起舞，先闻鼓、后闻铃。她把这段话记了许多年，一直盼着能亲眼见一回。',
+    joy:'听说阿依慕要入宫，她当着宫女的面笑出了声，又连忙掩住嘴，叫人把压箱底的舞铃找出来擦亮。'
+  }
+];
 function whiteSpringMemory(c){
+  if(journalContentVersion()>=168&&c?.whiteSpringAdmirer?.kind==='palace')
+    return WHITE_SPRING_PALACE_MEMORIES[voiceHash((c.seed??c.id)+':white-spring-palace-memory')%WHITE_SPRING_PALACE_MEMORIES.length];
   return WHITE_SPRING_MEMORIES[voiceHash((c.seed??c.id)+':white-spring-memory')%WHITE_SPRING_MEMORIES.length];
 }
 function whiteSpringSelectionHint(c){
@@ -236,4 +254,49 @@ A.whiteSpringVisit=function(id,key){
     tie[key]=true;tie.last=S.turn;relAdd(c,p,5);cchg(c,{mood:3});cchg(p,{mood:3});
     whiteSpringRecord([c,p],visit.title,line,'白泉铃声',visit.thoughts,[]);
   }}]});
+};
+
+// Issue 42: when the emperor first meets Ayimu and no consort admires her yet, one consort already in the palace
+// turns out to have long admired her. Every admirer is excited to hear Ayimu will enter, and befriends her first.
+function palaceWhiteSpringAdmirerScore(c){
+  return (['活泼','好客','好学','巧手','才女'].includes(c.trait)?3:0)+(['抚琴','侍花','刺绣'].includes(consortHobby(c))?1:0)+voiceHash((c.seed??c.id)+':white-spring-palace')%3;
+}
+function ensurePalaceWhiteSpringAdmirer(){
+  if(journalContentVersion()<168||!S||S.over)return null;
+  if(S.consorts.some(c=>c.alive&&!c.gone&&!c.familyArchive&&admiresWhiteSpring(c)))return null;
+  if(S.flags.whiteSpringPalaceAdmirer?.gen===S.gen)return null;
+  const pool=harem().filter(c=>inPalace(c)&&!c.maid&&c.rank<8&&c.fixedStory!=='ayimu'&&randomConsortOriginsAllowed(c));
+  if(!pool.length)return null;
+  const c=pool.sort((a,b)=>palaceWhiteSpringAdmirerScore(b)-palaceWhiteSpringAdmirerScore(a)||a.id-b.id)[0];
+  c.whiteSpringAdmirer={gen:S.gen,turn:S.turn,kind:'palace'};
+  S.flags.whiteSpringPalaceAdmirer={gen:S.gen,id:c.id,turn:S.turn};
+  if(!whiteSpringMemoryRecorded(c))story(c,'【仰慕阿依慕】'+whiteSpringMemory(c).record);
+  return c;
+}
+function whiteSpringArrivalNews(princess){
+  if(journalContentVersion()<168||!princess)return;
+  const admirers=S.consorts.filter(c=>c!==princess&&inPalace(c)&&admiresWhiteSpring(c)&&c.whiteSpringFriend?.arrivalNews==null);
+  if(!admirers.length)return;
+  for(const c of admirers){
+    (c.whiteSpringFriend||={}).arrivalNews=S.turn;
+    story(c,'【闻讯欣喜】听说白泉公主阿依慕要入宫，'+whiteSpringMemory(c).joy+'她当即备了帖子，打算等公主一安顿好就去拜见。');
+    cchg(c,{mood:12});
+    if(!['悲恸','心如死灰','怨恨'].includes(xinOf(c)))setXin(c,'欢喜','听说阿依慕要入宫',princess.id,{record:false});
+  }
+  const lead=admirers[0],others=admirers.slice(1);
+  pushEv({title:'闻讯 · 白泉公主入宫',por:lead,present:[lead,princess],valid:()=>inPalace(lead)&&!S.over,
+    text:`消息传到${lead.palace}，${fullName(lead)}正在窗下理丝线，听完手一松，线团滚了一地。\n“阿依慕公主真的要来了？”她拉着报信的宫女又问了一遍，才笑出声来：“${whiteSpringMemory(lead).words.split('。')[0]}。如今能当面见她了。”\n她当即叫人备帖，说等公主安顿好，头一个去拜见。${others.length?`\n${others.map(fullName).join('、')}也早听过公主的事，一样盼着相见。`:''}`,
+    choices:[{t:'由她去吧',f:()=>{story(lead,'【闻讯欣喜】陛下听说她盼着拜见阿依慕，笑着准了。');return `${cName(lead)}欢欢喜喜地谢了恩。`;}}]});
+}
+const earlierWhiteSpringStoryCastAdmit=storyCastAdmit;
+storyCastAdmit=function(c,r,reason){
+  const result=earlierWhiteSpringStoryCastAdmit(c,r,reason);
+  if(result!=null&&c?.fixedStory==='ayimu'&&S.consorts.includes(c))whiteSpringArrivalNews(c);
+  return result;
+};
+const earlierWhiteSpringStoryCastVisit=A.storyCastVisit;
+A.storyCastVisit=function(key){
+  const result=earlierWhiteSpringStoryCastVisit.call(this,key);
+  if(key==='ayimu'&&curEv&&storyCastRecord('ayimu'))ensurePalaceWhiteSpringAdmirer();
+  return result;
 };

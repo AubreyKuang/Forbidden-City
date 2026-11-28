@@ -1,9 +1,9 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),{boot}=require('./playtest-harness.cjs');
 function world(){const b=boot(17001);b.ctx.assert=assert;b.run(`A.start();drain();var c=harem()[0];c.known=true;c.kl=true;c.hp=85;c.distinctions.initialTalent=100;`);return b;}
 test('every distinction has a reachable genuine attribute combination',()=>{
- const b=world();b.run(`var seed=0;while(!restlessDisposition({seed}))seed++;var cases={restless:{seed},grace:{looks:91},poet:{talent:95},both:{looks:85,talent:90},kind:{virtue:90},hidden:{scheme:90},innocent:{scheme:10,virtue:75},reader:{hobby:'读书',talent:90},music:{hobby:'抚琴',talent:90},needle:{trait:'巧手',hobby:'刺绣',talent:85},paint:{like:'字画',talent:90},archer:{trait:'将门',t2:'擅骑射'},humble:{upbringing:{title:'寒门'},talent:90},quiet:{trait:'淡泊',scheme:10,virtue:80},clever:{talent:90,scheme:70},pretty:{looks:87},quick:{talent:85},gentle:{virtue:84},careful:{scheme:75},frail:{hp:49}};
+ const b=world();b.run(`var seed=0;while(!restlessDisposition({seed}))seed++;var cases={restless:{seed},grace:{looks:91},poet:{talent:95},both:{looks:85,talent:90},kind:{virtue:90},hidden:{scheme:90},innocent:{scheme:10,virtue:75},reader:{hobby:'读书',talent:90},music:{hobby:'抚琴',talent:90},needle:{trait:'巧手',hobby:'刺绣',talent:85},paint:{like:'字画',talent:90},archer:{trait:'将门',t2:'擅骑射'},humble:{upbringing:{title:'寒门'},talent:90},quiet:{trait:'淡泊',scheme:10,virtue:80},clever:{talent:90,scheme:70},pretty:{looks:87},quick:{talent:85},gentle:{virtue:84},careful:{scheme:75},counsel:{trait:'温婉',virtue:80,scheme:20},frail:{hp:49}};
  for(var r of CONSORT_DISTINCTIONS){var p={...c,looks:50,talent:50,virtue:50,scheme:50,hp:85,...cases[r.id]};assert.ok(consortTraitMatches(p,{reveal:true}).includes(r),r.name);}
- assert.equal(CONSORT_DISTINCTIONS.length,20);`);
+ assert.equal(CONSORT_DISTINCTIONS.length,21);`);
 });
 test('exact thresholds do not turn missing health into illness or include beauty 90',()=>{
  const b=world();b.run(`c.looks=90;c.hp=50;assert.ok(!consortTraitMatches(c).some(r=>r.id==='grace'||r.id==='frail'));

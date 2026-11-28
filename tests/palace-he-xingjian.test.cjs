@@ -24,7 +24,8 @@ for(const [name,action] of [
  test('the '+name+' entry opens his own contact and saves a single identity',()=>{
   let b=game();
   b.run(`${action};assert.ok(find('阅东厂附札')>=0);choose(find('阅东厂附札'));
-   assert.match(curEv.title,/贺行简/);assert.match(curEv.text,/不怕。我死了，东厂还有下一个首捕。/);save('auto');`);
+   assert.match(curEv.title,/贺行简/);assert.match(curEv.text,/腰牌上刻着「东厂」/);assert.doesNotMatch(curEv.text,/不怕/);
+   choose(find('你怕死吗'));assert.match(curEv.text,/不怕。我死了，东厂还有下一个首捕。/);assert.ok(!curEv.choices.some(c=>c.t.includes('你怕死吗')));save('auto');`);
   b=game(b.storage);
   b.run(`choose(0);drain();var p=heXingjianPerson();
    assert.equal(p.fenghua.contact,'${name}');assert.equal(portraitCell(p),502);
@@ -36,8 +37,11 @@ for(const [name,action] of [
 test('an accelerated old case always reports the saved culprit before any disposition',()=>{
  let b=game();
  b.run(`${openCase}createFenghuaPerson('heXingjian');PalaceActions.reset();var before=E().treasury;
+  var commander=jinyiwei().commander,merit=commander.merit;
   Math.random=()=>.999999;A.jinyiweiInvestigate(x.id);choose(find('交贺行简'));
   assert.equal(curEv.title,'贺行简 · 复命');assert.match(curEv.text,/办好了/);
+  assert.match(curEv.text,/贺行简呈上原卷/);assert.doesNotMatch(curEv.text,new RegExp(commander.name+'回奏'));
+  assert.equal(commander.merit,merit);assert.match(commander.story.at(-1).t,/交东厂首捕贺行简核查/);
   assert.match(curEv.text,new RegExp(cName(a)));assert.equal(x.culprit,a.id);
   assert.equal(x.status,'solved');assert.equal(x.solvedTurn,S.turn);assert.equal(E().treasury,before-15);
   assert.equal(x.tries,1);assert.ok(!x.withheld);assert.ok(!a.known);save('auto');`);
