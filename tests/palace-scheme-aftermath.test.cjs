@@ -21,3 +21,11 @@ test('demotion breaks the lenient streak: fear for a fond consort, a grudge agai
 test('older journals keep the old verdict wording and no aftermath',()=>{
  const b=setup(70);b.run(`PalaceActions.reset();var real=journalContentVersion;journalContentVersion=()=>166;var ev=punishEv(c,other,'香囊藏麝');assert.equal(ev.choices[2].t,'念其初犯，罚俸了事');ev.choices[2].f();assert.equal(c.schemeRecord,undefined);assert.equal(xinOf(c),'平和');assert.equal(c.scheme,55);journalContentVersion=real;`);
 });
+
+test('the aftermath shows in both people\'s story records, the court log and her profile',()=>{
+ const b=setup(70);b.run(`var third=makeGirl({sur:'柳',given:'如烟',age:22,trait:'温婉',fam:{t:'商户',p:30}});addConsort(third,3,'入宫');third.solitary=null;third.scheme=65;
+  fine();fine();fine();assert.match(other.story.at(-1).t,/【宫斗余波】.*第3回，这回仍只罚了俸/);assert.match(third.story.at(-1).t,/【宫中风声】/);assert.ok(S.log.some(l=>/连着3回害人事发/.test(l.t||l)));
+  assert.match(schemeAftermathDetail(c),/宫斗事发 3 回 · 最近一回：香囊藏麝，罚俸，已连着3回从轻/);
+  var n=c.story.length;XEV['有恃无恐'](c,c.xin).choices[1].f();assert.equal(c.story.length,n+1);assert.match(other.story.at(-1).t,/只是笑了笑/);`);
+ const d=setup(10);d.run(`punishEv(c,other,'石阶泼油').choices[1].f();assert.match(other.story.at(-1).t,/不认错/);assert.equal(schemeAftermathDetail(other),'');`);
+});
