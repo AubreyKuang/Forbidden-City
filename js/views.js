@@ -11,7 +11,7 @@ function renderTop(){
   const hd=e.health>=80?'康健':e.health>=55?'安好':e.health>=30?'欠安':'病笃';
   t.innerHTML=`<div class="hud-identity">${porImg('emp',38)}<div class="hud-name"><span class="date">${esc(dateStr())}</span><span class="hud-person">${esc(e.sur+e.name)} · ${e.age}岁</span></div></div>
    <div class="hud-stats"><span class="st" title="${hd}">龙体 <b>${rd(e.health)}</b></span><span class="st">威望 <b>${rd(e.prestige)}</b></span><span class="st" title="民心范围 0–100">民心 <b>${rd(e.people)}</b>${e.people>=100?'<small>（上限）</small>':''}</span>
-   <span class="st">国库 <b>${e.treasury}</b>万两</span><span class="st">精力 <b>${e.energy}／${mx}</b><span aria-hidden="true">${pips}</span></span></div>
+   <span class="st">国库 <b>${e.treasury}</b>万两${typeof PalaceShop!=='undefined'&&PalaceShop.enabled?'<button class="treasury-add" type="button" aria-label="补充银两（商城）" data-onclick="A.go(\'shop\')">+</button>':''}</span><span class="st">精力 <b>${e.energy}／${mx}</b><span aria-hidden="true">${pips}</span></span></div>
    <div class="hud-controls">${sound}${devLaunch}<button id="finish-month" class="btn gold sm hud-next" data-onclick="A.finishMonth()" ${S.over?'disabled':''}>结束本月 ▸</button></div>
    ${lastAutoSaveError&&lastAutoSaveError!==dismissedSaveError?`<div class="hud-save-warning"><span role="status"><strong>未能存档</strong> · ${esc(lastAutoSaveError)}</span><button class="btn sm" data-onclick="A.save('auto')">重试</button><button class="btn sm" data-onclick="A.downloadSave()">下载备份</button><button class="btn sm" aria-label="关闭存档提示" data-onclick="A.dismissSaveError()">关闭</button></div>`:''}`;
 }
@@ -574,11 +574,11 @@ function viewCards(){
 function viewXX(){
   const last=selectionLastHeldTurn(),since=S.turn-last;
   if(selectionArrivalsRecent())return viewSelectionArrivals();
-  if(!S.cands.length&&(!S.selection||S.selection.phase==='arrivals')) return `<h2>选秀</h2><p>距上次选秀：${last<0?'从未':`${Math.floor(since/12)}年${since%12}月`}。三年一度大选可在二月自动举行；${selectionSkipTimingActive()&&selectionFreeReady()?'目前可依例下旨开选，无须承担提前选秀的国库与民心代价。':'也可随时下旨，但未满三年会耗费国库、有损民心。'}</p>
+  if(!S.cands.length&&(!S.selection||S.selection.phase==='arrivals')) return `<h2>选秀</h2>${haremUpkeepHint()}<p>距上次选秀：${last<0?'从未':`${Math.floor(since/12)}年${since%12}月`}。三年一度大选可在二月自动举行；${selectionSkipTimingActive()&&selectionFreeReady()?'目前可依例下旨开选，无须承担提前选秀的国库与民心代价。':'也可随时下旨，但未满三年会耗费国库、有损民心。'}</p>
     <div class="acts"><button class="btn gold" data-onclick="A.xxDecree()">下旨选秀</button></div>`;
   if(selectionCurrent())return viewSelectionAudience();
   return `${selectionDiscussionPanel()}<section class="story-scene selection-scene" aria-labelledby="selection-title">
-    <header><p>储秀宫</p><h2 id="selection-title">选秀</h2></header>
+    <header><p>储秀宫</p><h2 id="selection-title">选秀</h2></header>${haremUpkeepHint()}
     <button class="btn gold" data-onclick="A.xxEnd()">确定名单，安排入宫</button>
    </section>
    <p>已留选 ${(S.selection?.accepted||[]).length} 人${(S.selection?.accepted||[]).length?' · '+S.selection.accepted.map(id=>parentLink(id)).join('、'):''}。${S.cands.length?'名单确定后，再看她们入宫时的反应。':'候选已全部处理，请确认本批名单。'}</p>
@@ -699,7 +699,7 @@ function viewLog(){
    <div class="log-filter" role="group" aria-label="纪事筛选与留存">${chooser}<div class="reign-switch" role="group" aria-label="纪事范围"><button class="btn sm" aria-pressed="${UI.logF==='all'}" data-onclick="UI.logF='all';render()">全部</button><button class="btn sm" aria-pressed="${UI.logF==='big'}" data-onclick="UI.logF='big';render()">只看大事</button></div>
    <button class="btn sm quiet" data-onclick="A.logCard()">保存上月纪念卡</button></div>
    ${month?`<section class="month-record"><h3>${esc(month.date)}回顾</h3>
-    <p>月入 ${esc(month.inc)} 万两 · 支出 ${esc(month.exp)} 万两</p>
+    <p>月入 ${esc(month.inc)} 万两 · 支出 ${esc(month.exp)} 万两</p>${month.upkeep?`<p class="hint">其中后宫 ${esc(month.upkeep.count)} 人：份例 ${esc(month.upkeep.stipend)}、宫人用度 ${esc(month.upkeep.staff)}${month.upkeep.crowd?`、逾制加派 ${esc(month.upkeep.crowd)}（超出 ${esc(month.upkeep.over)} 人）`:''} 万两</p>`:''}
     ${month.finance&&[month.finance.opening,month.finance.closing,month.finance.other].every(Number.isFinite)?`<p>换月前国库 ${month.finance.opening} 万两 · 换月后 ${month.finance.closing} 万两${month.finance.other?` · 其他换月收支 ${month.finance.other>0?'+':''}${month.finance.other} 万两`:''}</p>`:''}
     ${month.health&&[month.health.opening,month.health.closing,month.health.nightFatigue].every(Number.isFinite)?`<p>月底龙体 ${month.health.opening.toFixed(2)} → ${month.health.closing.toFixed(2)}${month.health.nightFatigue?`，其中召幸过频损耗 ${month.health.nightFatigue.toFixed(1)}`:''}。</p>`:''}
     ${month.hongjianIncome?`<p>月入含薛红笺经营增益 ${month.hongjianIncome} 万两。</p>`:''}

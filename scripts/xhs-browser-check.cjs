@@ -353,13 +353,14 @@ async function main(){
     console.log(JSON.stringify({clicks:r.trace.length,problems:r.problems,misses:r.misses,extra:r.extra,lastSteps:r.trace.slice(-3)},null,1));
     const e=r.extra;
     const sh=e.shop||{},ar=e.afterReload||{};
+    const SILVER_SMALL=JSON.parse(fs.readFileSync(path.join(root,'scripts/yiciyuan-edition.json'),'utf8')).shop.products.find(p=>p.key==='silverSmall').amount;
     const g=e.gold||{},ga=e.goldAfter||{};
     const goldOk=g.flag===true&&g.button&&g.modal&&!!g.title&&(g.summoned!=='fenghua:gaoHuaibi'||g.meritReady===false)&&ga.title===g.title&&ga.metAfter===true;
     if(!goldOk)console.log('gold finger check failed');
     const c=e.cards||{},ca=e.cardsAfter||{};
     const cardsOk=c.dock===0&&c.button&&c.open&&c.pais>0&&ca.closed&&(!ca.enabled||ca.after);
     if(!cardsOk)console.log('cards sheet check failed');
-    const shopOk=goldOk&&cardsOk&&sh.menu&&sh.items.length===5&&sh.lockedBefore===false&&sh.silver===500&&sh.owned.length===2&&sh.lockedAfter===true&&sh.repaintButton&&sh.galleryCells>0&&Number.isInteger(sh.repainted)&&ar.repainted===sh.repainted&&ar.owned.length===3&&ar.silverDone==='1';
+    const shopOk=goldOk&&cardsOk&&sh.menu&&sh.items.length===5&&sh.lockedBefore===false&&sh.silver===SILVER_SMALL&&sh.owned.length===2&&sh.lockedAfter===true&&sh.repaintButton&&sh.galleryCells>0&&Number.isInteger(sh.repainted)&&ar.repainted===sh.repainted&&ar.owned.length===3&&ar.silverDone==='1';
     if(!shopOk)console.log('shop check failed');
     if(!shopOk||r.problems.length||r.misses.length||e.storage.trapped.length||e.reloaded!==e.beforeReload||e.page.kind!=='avg'||!(e.page.topPadLeft>=52)||e.page.lockedCards||!e.saveImage||!e.storage.plays||e.storage.inits.join()!=='production')process.exitCode=1;
     return;

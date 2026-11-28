@@ -20,7 +20,10 @@ const PALACE_EDITION=(()=>{
   const feature=key=>features[key]===undefined?true:features[key];
   // A host build may sell products (config.shop, see js/palace-shop.js); others have none.
   const shop=config&&config.shop&&typeof config.shop==='object'?config.shop:null;
-  return Object.freeze({name,shop,allows,locked,maxGenerations,saveSnapshots,feature,limited:kind=>Array.isArray(allow[kind]),list:kind=>Array.isArray(allow[kind])?allow[kind].slice():null});
+  // A host build may run a tighter treasury (config.economy, see haremUpkeep and tributeAmount
+  // in js/game.js / js/governance-life.js); others keep the original numbers.
+  const economy=config&&config.economy&&typeof config.economy==='object'?config.economy:null;
+  return Object.freeze({name,shop,economy,allows,locked,maxGenerations,saveSnapshots,feature,limited:kind=>Array.isArray(allow[kind]),list:kind=>Array.isArray(allow[kind])?allow[kind].slice():null});
 })();
 function editionAllows(kind,key){return PALACE_EDITION.allows(kind,key);}
 // A codex card for a character this edition does not open yet: no portrait, no route.

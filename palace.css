@@ -1005,3 +1005,6 @@ button.family-room-person{cursor:pointer}button.family-room-person:hover{color:#
 /* Consort page: 容貌 才情 德行 心机 over 健康 恩宠 心情 情分, one grid, four to a row */
 .detail-content .consort-stats{grid-template-columns:repeat(4,minmax(0,1fr))}
 @media(max-width:560px){.detail-content .consort-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* 国库「+」: editions with a shop (js/palace-shop.js) */
+.treasury-add{margin-left:6px;width:20px;height:20px;padding:0;border:0;border-radius:50%;background:var(--gold);color:var(--ink);font:700 14px/20px var(--f-ui);cursor:pointer;vertical-align:1px}
+.treasury-add:focus-visible{outline:2px solid var(--paperhi);outline-offset:2px}
