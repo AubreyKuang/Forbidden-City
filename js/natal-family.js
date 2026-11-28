@@ -78,7 +78,7 @@ function natalRecord(c,p,text,emotion=0){
 }
 function natalFamilyLinks(c){
   const h=c.house;if(!h)return '';
-  return natalPeople(h).map(p=>`<div>${natalLabel(c,p)}：<button class="person-link" data-onclick="A.go('${p.sex==='m'&&natalAge(p)>=18?'official':'natal'}','${c.id}:${p.sex==='m'&&natalAge(p)>=18?'relative'+p.id:p.id}')">${esc(p.name)} ↗</button> <span class="hint">${natalAge(p)}岁 · ${p.sex==='m'?(p.post+' · '):''}${natalStatus(p)}</span></div>`).join('');
+  return natalPeople(h).map(p=>`<div>${natalLabel(c,p)}：<button class="person-link" data-onclick="A.go('${p.sex==='m'&&natalAge(p)>=18?'official':'natal'}','${c.id}:${p.sex==='m'&&natalAge(p)>=18?'relative'+p.id:p.id}')">${esc(p.name)}</button> <span class="hint">${natalAge(p)}岁 · ${p.sex==='m'?(p.post+' · '):''}${natalStatus(p)}</span></div>`).join('');
 }
 function natalVisitReady(c,p){return !queenWardResident(p)&&inPalace(c)&&!c.maid&&p.alive&&!p.consortId&&!p.visit&&!p.royalCompanionTrip&&(p.sex==='f'||natalAge(p)<13||betrothedYouthVisitReady(p))&&
   S.turn-(p.lastVisit??-99)>=12&&!mourningActive()&&!natalPeople(c.house).some(x=>x.visit);}

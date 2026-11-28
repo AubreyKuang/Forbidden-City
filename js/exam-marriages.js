@@ -55,7 +55,7 @@ marrySister=function(c,p,match,options){
 const examScholarView=viewScholar;
 viewScholar=function(){const html=examScholarView(),p=scholarById(UI.sel);return html+(examGroomReady(p)&&examMarriageCandidates(p).length?`<section class="detail-section"><h3>金榜姻缘</h3><button class="btn gold" data-onclick="A.examMarriage('${p.id}')">为探花商议婚事</button></section>`:'');};
 const examSpousePanel=officialSpousePanel;
-officialSpousePanel=function(person){const k=journalContentVersion()>=47?royalById(person.p.royalSpouseId):S.children.find(k=>k.id===person.p.royalSpouseId);return examSpousePanel(person)+(k?detailSection('尚主姻缘',`<p>妻子：<button class="person-link" data-onclick="A.go('${S.children.includes(k)?'kid':'relative'}',${k.id})">${esc(kidName(k))} ↗</button>${k.alive?'':' · 已故'}</p>`):'');};
+officialSpousePanel=function(person){const k=journalContentVersion()>=47?royalById(person.p.royalSpouseId):S.children.find(k=>k.id===person.p.royalSpouseId);return examSpousePanel(person)+(k?detailSection('尚主姻缘',`<p>妻子：<button class="person-link" data-onclick="A.go('${S.children.includes(k)?'kid':'relative'}',${k.id})">${esc(kidName(k))}</button>${k.alive?'':' · 已故'}</p>`):'');};
 const examMarriagePanel=marriagePanel;
 marriagePanel=function(k){const p=k.spouse?.scholarId&&scholarById(k.spouse.scholarId);return examMarriagePanel(k)+(p?`<p>驸马履历：${careerLink(courtPerson('scholar:'+p.id))} · ${esc(officialOfficeLabel(p))} · ${officialStatus(p)}</p>`:'');};
 

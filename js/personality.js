@@ -91,7 +91,7 @@ const WISHES={
  }return '圣旨送到她老家，她父亲跪在门口，哭得像个孩子。'}},
  child:{t:'想要一个孩子',btn:null},
  south:{t:'想去江南看一眼',btn:'带她南巡（国库-150万两，龙体-2）',f:c=>{chg({treasury:-150,health:-2,people:2});return '烟雨江南，画舫笙歌。她靠在船舷上说，这辈子值了。'}},
- title:{t:'想要一个属于自己的封号',btn:'赐她封号',cond:c=>!c.title,f:c=>{grantConsortTitle(c,pick(TITLES.filter(t=>!harem().some(x=>x.title===t))));return `你赐她「${c.title}」字为号。她把那个字写了一遍又一遍。`}},
+ title:{t:'想要一个属于自己的封号',btn:'赐她封号',cond:c=>!c.title,f:c=>{const title=pick(TITLES.filter(t=>!harem().some(x=>x.title===t)));if(lowTitleHonorActive()&&c.rank>=1&&c.rank<4)return honorLowRankTitle(c,title);grantConsortTitle(c,title);return `你赐她「${c.title}」字为号。她把那个字写了一遍又一遍。`}},
  ride:{t:'想学骑马',btn:'亲自教她骑马（精力-1）',cond:()=>E().energy>0,f:c=>{E().energy--;learnWishQuirk(c,'擅骑射');return '她在南苑摔了三回，第四回终于稳稳地跑完一圈，回头冲你笑。'}},
  cat:{t:'想养一只猫',btn:'送她一只狮子猫（国库-2万两）',f:c=>{chg({treasury:-2});learnWishQuirk(c,'爱猫');c.catAbsent=false;return '雪白的狮子猫一进门就钻进了她怀里。她给它起名叫“团圆”。'}},
  fire:{t:'想看一场烟火',btn:'上元夜放烟火（国库-40万两）',f:c=>{chg({treasury:-40});harem().forEach(o=>o.mood=clamp(o.mood+5));return '火树银花不夜天。她仰着头，烟火映在她眼睛里。'}},
@@ -153,6 +153,61 @@ const HISTC={
 const woundOK=(c,w)=>w==='exile'?!!c.rescue:c.rescue?false:w==='quiet'?isSolitary(c):!isSolitary(c)&&!((w==='scorn'&&c.fam.p>=30)||(w==='fall'&&c.fam.p>=55));
 const wishOK=(c,w)=>whiteSpringRoyal(c)&&['mother','father'].includes(w)?false:w==='rescueLetter'?!!c.rescue:c.rescue?false:!(w==='father'&&c.fam.p>=60);
 function grantConsortTitle(c,title){c.title=title;if(title&&c.wish==='title')c.wishDone=true;}
+/* 嫔位以下破格赐号：她本人欢喜，六宫各有看法。高位与她交恶者不屑，高位与她交好者替她高兴，
+   同为低位的人多半不服——凭什么是她。每类至多两人，各记一条人物纪事。 */
+const LOW_TITLE_JOY={
+ '活泼':t=>`拉着宫女在院子里转了好几圈，把「${t}」字念了一遍又一遍，笑声隔着宫墙都听得见。`,
+ '淡泊':t=>`素来不争不抢，接旨时却红了眼眶，回去把「${t}」字描在帕子上，压在枕下。`,
+ '沉静':t=>`接旨后一个人在窗下坐了许久，把「${t}」字临了满满一页纸，嘴角一直带着笑。`,
+ '骄纵':t=>`扬着下巴受了众人的贺，回宫后对着镜子把「${t}」字念了好几遍，越念越得意。`,
+ '骄矜':t=>`当着人只是端端正正地谢恩，回宫后却叫人把「${t}」字绣进了新做的衣襟里。`,
+ '痴情':t=>`把旨意捧在心口，说这是陛下亲手给她的字，这辈子都不换。`,
+ '城府':t=>`面上只淡淡谢了恩，夜里却把那道旨意展开看了三遍，才叫人收进匣子。`,
+ '才女':t=>`连夜作了一首诗，每一句都藏着一个「${t}」字。`,
+ '爱哭':t=>`接旨时就哭了，宫女劝了半天，她才笑着说是高兴的。`,
+};
+function lowTitleOnlookers(c){
+  const pool=harem().filter(o=>o!==c&&inPalace(o)&&!o.maid);
+  const scorn=[],glad=[],envy=[];
+  for(const o of pool){const r=relGet(o,c);
+    if(o.rank>=4){if(r<=-15||isRival(o,c)||r<0&&TRAITS[o.trait]?.jealous)scorn.push(o);else if(r>=20)glad.push(o);}
+    else if(r>=30)glad.push(o);
+    else if(r<10||TRAITS[o.trait]?.jealous)envy.push(o);}
+  scorn.sort((a,b)=>relGet(a,c)-relGet(b,c)||b.rank-a.rank);
+  glad.sort((a,b)=>relGet(b,c)-relGet(a,c)||b.rank-a.rank);
+  envy.sort((a,b)=>(TRAITS[b.trait]?.jealous?1:0)-(TRAITS[a.trait]?.jealous?1:0)||relGet(a,c)-relGet(b,c)||b.rank-a.rank);
+  return {scorn:scorn.slice(0,2),glad:glad.slice(0,2),envy:envy.slice(0,2)};
+}
+function honorLowRankTitle(c,title){
+  const rank=RANKS[c.rank];
+  grantConsortTitle(c,title);c.lowTitle=true;const name=cName(c);
+  const joy=(LOW_TITLE_JOY[c.trait]||LOW_TITLE_JOY[c.t2]||(t=>`跪接旨意时声音都在发抖，回宫后把「${t}」字写了一遍又一遍，舍不得放下笔。`))(title);
+  story(c,`蒙陛下破格赐号「${title}」，自此称${name}。以${rank}之位得封号，是宫里少有的荣宠。她${joy}`);
+  remember(c,'promo','以低位蒙赐封号');
+  setXin(c,'欢喜',`陛下破格赐下封号「${title}」`);
+  const s=cchg(c,{mood:18,aff:6,favor:3});
+  const {scorn,glad,envy}=lowTitleOnlookers(c),said=[];
+  scorn.forEach(o=>{relAdd(o,c,-5);relAdd(c,o,-3);
+    story(o,pick([`听说${name}得了封号，拈着护甲冷笑：“一个${rank}也配有封号？不过是陛下一时新鲜罢了。”`,
+      `宫人说起${name}得赐「${title}」字，她连眼皮都没抬：“陛下赏她一个字，她倒当成了凤印。”`,
+      `${name}来谢恩请安，她只叫人在门外回了句“知道了”，连杯茶也没赏。`]));
+    if(xinOf(o)==='平和')setXin(o,'不屑',`${name}以${rank}之位得了封号`,c.id,{record:false});
+    said.push(`${cName(o)}冷笑一声，说她不配`);});
+  glad.forEach(o=>{relAdd(o,c,4);relAdd(c,o,4);
+    story(o,o.rank>=4?pick([`得知${name}得赐封号，特地遣人送去一对玉镯道贺：“这是她该得的。”`,
+      `听说陛下给${name}赐了「${title}」字，笑着同宫人说：“这个字配她，正好。”`])
+      :`与${name}素来交好，听说她得了封号，比自己得了还高兴，连夜绣了个荷包送去道喜。`);
+    if(xinOf(o)==='平和')setXin(o,'欢喜',`${name}得赐封号`,c.id,{record:false});
+    said.push(o.rank>=4?`${cName(o)}遣人送去贺礼，替她高兴`:`${cName(o)}比她自己还高兴`);});
+  envy.forEach(o=>{relAdd(o,c,-4);relAdd(c,o,-2);o.mood=clamp(o.mood-4);
+    story(o,pick([o.rank===c.rank?`听说${name}得了封号，把手里的绣绷往桌上一搁：“一样的出身，一样是${rank}，凭什么偏是她？”`
+      :`${name}得赐封号的消息传来，她在廊下站了许久，回去对宫女说：“她有什么好？凭什么是她？”`,
+      `众人去给${name}道喜，她也去了，笑着说了几句吉祥话，回宫后却把贺礼的空匣子摔在了地上。`]));
+    if(['平和','委屈'].includes(xinOf(o)))setXin(o,'嫉恨',`${name}以${rank}之位得了封号`,c.id,{record:false});
+    said.push(`${cName(o)}暗暗不平：凭什么是她`);});
+  log(`破格赐${fullName(c)}封号「${title}」，称${name}。`);AU.sfx('joy');
+  return `旨意传到，${name}${joy}${said.length?`\n消息传遍六宫：${said.join('；')}。`:''}${fx(s)}`;
+}
 function deepen(c){if(!c)return;
   if(c.wish==='brother'){c.wish=c.rescue?'rescueLetter':'poem';c.wishKnown=false;c.wishDone=false;}
   ensureConsortFertility(c);
@@ -359,6 +414,7 @@ const XIN={
  '思念':{c:'y',d:4,expr:'sad',mood:-1,lines:['说你好久没来了。说完又低头笑笑，像是怕你嫌她多话。','把你上回来时用过的茶盏一直摆在桌上，没让宫女收。']},
  '委屈':{c:'y',d:3,expr:'sad',mood:-2,lines:['眼圈红红的，话说到一半就别过脸去。','低着头绞帕子，问一句答一句。']},
  '惶恐':{c:'y',d:3,expr:'worry',mood:-2,lines:['一见你就跪下了，说话时声音一直在抖。','宫女说，主子这些天夜里总是惊醒。']},
+ '不屑':{c:'r',d:3,expr:'',mood:0,lines:['说话时带着三分冷淡，一提到{who}，便轻轻哼了一声。']},
  '嫉恨':{c:'r',d:5,expr:'angry',mood:-1,scheme:1,lines:['笑着同你说话，可一提到{who}，那笑就僵在了脸上。']},
  '怨恨':{c:'r',d:12,expr:'angry',mood:-2,scheme:1.5,favorMul:.7,lines:['规规矩矩地行礼，规规矩矩地回话，眼神却冷得像冬天的井水。','说：“臣妾一切都好，劳陛下挂心。”可那语气，一点也不好。']},
  '悲恸':{c:'r',d:4,expr:'tear',mood:-4,lines:['哭得眼睛都肿了，见了你，眼泪又簌簌地掉下来。','抱着一件小衣裳坐在窗边，从早坐到晚。']},

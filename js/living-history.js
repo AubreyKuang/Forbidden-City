@@ -145,7 +145,7 @@ function historyPanel(p){
   const scene=historyScene(p),past=historyState(p)?.history?.at(-1);
   if(!scene&&!past)return '';
   const {rule,current,other}=scene||{},ready=scene&&!!historyEvent(p);
-  return `<section class="living-history-note"><small class="history-eyebrow">宫中故事 · 典故生新枝</small>${scene?`<h3>${esc(rule.title)}${current.stage==='working'?' · 后话':''}</h3><p>${esc(current.stage==='offered'?historyText(rule.begin,p,other):ready?'先前的事已有了后话，对方想亲口说给你听。':'事情正在慢慢往前走，不必催促。')}</p><button class="btn sm jade" data-onclick="A.historyScene(${p.id},${!!p.sex})" ${ready?'':'disabled'}>${ready?(current.stage==='offered'?'走近听听':'听听后话')+' →':`约${current.due-S.turn}个月后再来`}</button>`:''}
+  return `<section class="living-history-note"><small class="history-eyebrow">宫中故事 · 典故生新枝</small>${scene?`<h3>${esc(rule.title)}${current.stage==='working'?' · 后话':''}</h3><p>${esc(current.stage==='offered'?historyText(rule.begin,p,other):ready?'先前的事已有了后话，对方想亲口说给你听。':'事情正在慢慢往前走，不必催促。')}</p><button class="btn sm jade" data-onclick="A.historyScene(${p.id},${!!p.sex})" ${ready?'':'disabled'}>${ready?(current.stage==='offered'?'走近听听':'听听后话')+'':`约${current.due-S.turn}个月后再来`}</button>`:''}
     ${past?`<details><summary>曾经 · ${esc(past.title)}</summary><p>${esc(past.text)}</p></details>`:''}</section>`;
 }
 function historyAt(place){return historyPeople().filter(p=>historyScene(p)?.rule.place===place).map(historyPanel).join('');}

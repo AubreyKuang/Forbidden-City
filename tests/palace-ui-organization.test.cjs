@@ -9,6 +9,7 @@ const CONSORT_MOVES=new Map([['处置',null],['册封与宫务',null],['宫务',
 for(const c of cases)test(`layout preserves information and action availability: ${c[0]}`,()=>{
  const before=baseline.pages.find(p=>p.name===c[0]);
  const {html}=renderCase(c),after=signature(html);
+ const kidsGuide=['children','children-out'].includes(c[0])?signature(renderCase([c[0],'kidsGuideHTML()']).html).text.join(' ')+' 求嗣、会诊与立储':'';
  const remaining=after.controls.map(x=>{
   const control={...x};
   // The title button's assignment moved into a named function so it runs without inline script.
@@ -46,12 +47,15 @@ for(const c of cases)test(`layout preserves information and action availability:
   for(const label of ['龙体','威望','民心'])assert.ok(hud.includes(label));
  }
  for(const legacyFragment of fragments.sort((a,b)=>b.length-a.length)){
-  const fragment=legacyFragment.replace('筛选不会删去原始记载。','')
+  // Jump links and buttons no longer carry a trailing → or ↗; the label itself stays.
+  const fragment=legacyFragment.replace(/\s*[→↗]$/,'').replace('筛选不会删去原始记载。','')
     .replace('楚庶人',c[0]==='cold'?'楚妃':'楚庶人');
   // The guide now describes the three-reply quota; its other instructions remain.
   let updated=c[0]==='home'?fragment.replace('上朝可先免费查看本月奏折，亲自批复通常花 1 点','每月最多批阅三份奏折，可先免费查看；亲自批复通常花 1 点'):fragment;
   // Consort pages: the 处置 chapter is gone (its buttons and 赐/改封号 sit beside 探亲与省亲
   // under 封号与处置), and 册封与宫务 only shows when it has something in it.
+  // 皇嗣: the 求嗣、会诊与立储 guide moved into the pop-up behind 「说明」 beside the heading.
+  if(['children','children-out'].includes(c[0])&&!text.includes(updated)&&kidsGuide.includes(updated))continue;
   if(CONSORT_MOVES.has(updated)&&!text.includes(updated)){const now=CONSORT_MOVES.get(updated);if(now===null)continue;updated=now;}
   assert.ok(text.includes(updated),`Missing text: ${updated}`);
   text=text.replace(updated,'');

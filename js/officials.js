@@ -116,7 +116,7 @@ function officialDeath(c,role,reason,kind='illness'){
   return true;
 }
 function officialLink(c,role,label){
-  const p=officialPerson(houseOf(c),role);return p?`<button class="person-link" data-onclick="A.go('official','${c.id}:${role}')">${esc(label||p.name)} ↗</button>`:'';
+  const p=officialPerson(houseOf(c),role);return p?`<button class="person-link" data-onclick="A.go('official','${c.id}:${role}')">${esc(label||p.name)}</button>`:'';
 }
 function officialFamilyLine(c){
   const h=houseOf(c);if(!h)return '';

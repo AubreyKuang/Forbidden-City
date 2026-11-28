@@ -135,7 +135,7 @@ function dowagerFamilyPanel(){
   const kin=S.consorts.filter(c=>!c.maid&&clanKey(c)===d.clan);
   return `<section class="dowager-family" aria-label="太后与母家亲族">
     <div class="dowager-line"><div class="dowager-person">${porImg({...portrait,alive:d.alive},64)}<span><strong>${esc(name)}</strong><small>${d.alive?esc(dowagerResidence(d)):'已故'}</small></span></div>
-      <span class="family-link">${esc(d.relation||'母子')} →</span><button class="btn quiet dowager-person" data-onclick="A.go('home')">${porImg('emp',52)}<span><strong>${esc(E().sur+E().name)}</strong><small>皇帝</small></span></button></div>
+      <span class="family-link">${esc(d.relation||'母子')}</span><button class="btn quiet dowager-person" data-onclick="A.go('home')">${porImg('emp',52)}<span><strong>${esc(E().sur+E().name)}</strong><small>皇帝</small></span></button></div>
     ${S.flags.birthDowager?`<div class="dowager-line">${porImg(dowagerPerson(S.flags.birthDowager),64)}<span><strong>${esc(S.flags.birthDowager.name)}</strong><small>生母 · ${esc(S.flags.birthDowager.fullName)}${S.flags.birthDowager.alive?' · '+esc(dowagerResidence(S.flags.birthDowager)):' · 已故'}</small></span></div>`:''}
     <div class="dowager-clan"><span class="family-link">母家同族 ↳</span><div><strong>${esc(clanName(d.clan))}</strong>
       <p class="hint">${kin.length?kin.map(c=>esc(fullName(c))).join('、'):'尚无母家族女入宫'}</p><small>下方按父亲分支，同父姐妹共用一个父亲节点。</small></div></div></section>`;
@@ -461,8 +461,8 @@ function detailFold(title,content){
 function detailStory(person){return chronicleReader(person,{compact:true});}
 
 // Layout helpers only: every section stays expanded and keeps its original controls.
-function pageHeading(title,description='',actions=''){
-  return `<header class="page-heading"><div><h2>${esc(title)}</h2>${description?`<p class="hint">${description}</p>`:''}</div>${actions?`<div class="page-tools">${actions}</div>`:''}</header>`;
+function pageHeading(title,description='',actions='',aside=''){
+  return `<header class="page-heading"><div>${aside?`<div class="page-title-row"><h2>${esc(title)}</h2>${aside}</div>`:`<h2>${esc(title)}</h2>`}${description?`<p class="hint">${description}</p>`:''}</div>${actions?`<div class="page-tools">${actions}</div>`:''}</header>`;
 }
 function actionGroup(title,content){
   return content?.trim()?`<div class="action-group" role="group" aria-label="${esc(title)}"><p class="action-group-label">${esc(title)}</p><div class="acts">${content}</div></div>`:'';
@@ -513,7 +513,7 @@ function viewConsort(){
     if(c.rank!==8)quickManagement+=`<button class="btn" data-onclick="A.openResidence(${c.id})">安排居所<small>主位 · 同住 · 换宫</small></button>`;
     if(c.rank<7)quickManagement+=`<button class="btn" data-onclick="A.promote(${c.id})">晋封<small>→${RANKS[c.rank+1]}</small></button>`;
     if(c.rank>0&&c.rank<8)penalties+=`<button class="btn danger" data-onclick="A.demote(${c.id})">降位</button>`;
-    if(c.rank>=4)penalties=`<button class="btn" data-onclick="A.rename(${c.id})">${c.title?'改封号':'赐封号'}</button>`+penalties;
+    if(c.rank>=4||lowTitleHonorActive()&&c.rank>=1)penalties=`<button class="btn" data-onclick="A.rename(${c.id})">${consortTitleShown(c)?'改封号':'赐封号'}</button>`+penalties;
     if(c.rank>=5&&c.rank<8&&!empress()&&!c.outerHouseholdId)management+=`<button class="btn" data-onclick="A.crown(${c.id})">册立皇后</button>`;
     penalties+=`<button class="btn danger" data-onclick="A.cold(${c.id})">${c.rank===8?'废后':'打入冷宫'}</button><button class="btn danger" data-onclick="A.away(${c.id})">遣出宫</button>`;
   } else if(act&&c.cold){
@@ -528,7 +528,7 @@ function viewConsort(){
   return `${personBackButton('harem')}
    <header class="detail-head consort-detail-head">${porImg(c,224)}<div class="grow">
     <p>${esc(fullName(c))} · ${c.age}岁 · ${c.alive?c.gone?'已出宫':c.homeLeave?homeLeaveStatus(c):c.templeStay?'护国寺':esc(residenceLabel(c)):esc([c.passingDate,consortPassingReason(c)||'已故'].filter(Boolean).join(' · '))}</p>
-    <h2>${esc(cName(c))}</h2>${typeof PalaceShop!=='undefined'?PalaceShop.repaintButton(c):''}${consortHomePlace(c)?`<button class="btn sm jade" data-onclick="A.visitConsortHome(${c.id})">去宫里看看 →</button>`:''}
+    <h2>${esc(cName(c))}</h2>${typeof PalaceShop!=='undefined'?PalaceShop.repaintButton(c):''}${consortHomePlace(c)?`<button class="btn sm jade" data-onclick="A.visitConsortHome(${c.id})">去宫里看看</button>`:''}
     <p>${esc(c.fam.t)} · ${esc(c.trait)} ${solitaryTag(c)}${dowagerKinTag(c)}${consortTraitTags(c)}${c.preg>=2?` <span class="tag r">有孕${c.preg}月</span>`:''}</p>
    </div></header>
    ${!act?deliveryMemorialPanel(c):''}
@@ -602,6 +602,31 @@ A.kidsKind=function(kind){
   if(!KIDS_KIND_FILTERS.some(([id])=>id===kind))return;
   UI.kidsKind=kind;AU.sfx('click');render();
 };
+// 皇嗣 page help: read-only, opened from the 「说明」 button beside the heading.
+function kidsGuideHTML(){
+  const rates=harem().filter(c=>!consortNightReason(c)).map(consortConceptionChance).filter(p=>p>0);
+  const chanceHint=rates.length?`按本月可召幸妃嫔的体质估算，单次基础机会约 ${[...new Set([Math.min(...rates),Math.max(...rates)].map(p=>(100*p).toFixed(1)+'%'))].join('–')}。陛下的子嗣状况也会影响结果。`:'眼下暂无适宜受孕的人选，可以等身体恢复、产后静养期满或新的妃嫔入宫。';
+  return `<p>${chanceHint} 出巡时去护国寺祈福，可提高当月机会。</p>
+    <p>若陛下有子嗣方面的难处，连续十二个月各有一次可受孕的召幸且始终未有孕讯，太医院才会提出会诊。接到结论后，可在御书房寻访医者，或按宗人府礼例议请入继。</p>
+    <p>符合条件的皇子满五岁后，可在其人物页选择「立为太子」。</p>
+    <div class="acts"><button class="btn sm" data-onclick="A.go('cards')">去翻牌子</button><button class="btn sm" data-onclick="A.go('out')">出巡与祈福</button></div>`;
+}
+function openKidsGuide(){openInfoSheet('求嗣、会诊与立储',kidsGuideHTML());}
+// A read-only pop-up for page help. It never touches the save or the action journal;
+// a button inside it closes the pop-up, then runs as usual.
+function openInfoSheet(title,html){
+  if(!S||modalOpen)return;
+  document.getElementById('info-sheet')?.remove();
+  const d=document.createElement('dialog');d.id='info-sheet';d.setAttribute('aria-label',title);
+  d.innerHTML=`<div class="pix cards-sheet-box info-sheet-box"><h3>${esc(title)}</h3>${html}<div class="acts cards-sheet-foot"><button class="btn" type="button" data-info-close>关闭</button></div></div>`;
+  const close=()=>{try{if(d.open)d.close();}catch(e){}d.remove();};
+  d.addEventListener('click',event=>{const t=event.target;
+    if(t===d||t.closest?.('[data-info-close]')){close();return;}
+    if(t.closest?.('[data-onclick]'))setTimeout(close,0);});
+  d.addEventListener('cancel',event=>{event.preventDefault();close();});
+  document.body.append(d);
+  if(typeof d.showModal==='function')d.showModal();else d.setAttribute('open','');
+}
 function viewKids(){
   const living=S.children.filter(k=>k.alive);
   const groups={palace:living.filter(k=>!childHasLeftPalace(k)),out:living.filter(childHasLeftPalace)};
@@ -611,14 +636,7 @@ function viewKids(){
   const visible=groups[selected].filter(matches),past=S.children.filter(k=>!k.alive&&matches(k));
   const residenceLabel=selected==='palace'?'宫中':'宫外';
   const grid=ks=>`<div class="grid portrait-grid">${ks.map(childListCard).join('')}</div>`;
-  const rates=harem().filter(c=>!consortNightReason(c)).map(consortConceptionChance).filter(p=>p>0);
-  const chanceHint=rates.length?`按本月可召幸妃嫔的体质估算，单次基础机会约 ${[...new Set([Math.min(...rates),Math.max(...rates)].map(p=>(100*p).toFixed(1)+'%'))].join('–')}。陛下的子嗣状况也会影响结果。`:'眼下暂无适宜受孕的人选，可以等身体恢复、产后静养期满或新的妃嫔入宫。';
-  const guide=`<details class="detail-section" ${living.length?'':'open'}><summary>求嗣、会诊与立储</summary>
-    <p>${chanceHint} 出巡时去护国寺祈福，可提高当月机会。</p>
-    <p>若陛下有子嗣方面的难处，连续十二个月各有一次可受孕的召幸且始终未有孕讯，太医院才会提出会诊。接到结论后，可在御书房寻访医者，或按宗人府礼例议请入继。</p>
-    <p>符合条件的皇子满五岁后，可在其人物页选择「立为太子」。</p>
-    <div class="acts"><button class="btn sm" data-onclick="A.go('cards')">去翻牌子</button><button class="btn sm" data-onclick="A.go('out')">出巡与祈福</button></div></details>`;
-  return `${pageHeading('皇嗣','',`<button class="btn jade" data-onclick="A.visitMapActivity('ss')">去上书房看看 →</button>`)}${pendingBirthPanel()}${guide}${S.children.length?`
+  return `${pageHeading('皇嗣','',`<button class="btn jade" data-onclick="A.visitMapActivity('ss')">去上书房看看</button>`,`<button class="btn sm page-help" aria-label="求嗣、会诊与立储说明" data-onclick="openKidsGuide()">说明</button>`)}${pendingBirthPanel()}${S.children.length?`
     <div class="residence-tabs" role="group" aria-label="皇嗣居处">${[['palace','宫中'],['out','宫外']].map(([id,label])=>`<button class="btn ${selected===id?'primary on':''}" aria-pressed="${selected===id}" data-onclick="A.kidsResidence('${id}')">${label}<span>${groups[id].length}</span></button>`).join('')}</div>
     <div class="acts official-filters" role="group" aria-label="皇嗣类别">${KIDS_KIND_FILTERS.map(([id,label])=>`<button class="btn sm ${kind===id?'on':''}" aria-pressed="${kind===id}" data-onclick="A.kidsKind('${id}')">${label}</button>`).join('')}</div>
     <section aria-label="${residenceLabel}皇嗣">${visible.length?grid(visible):`<p class="hint">${residenceLabel}暂无${kind==='all'?'皇嗣':kindLabel}。</p>`}</section>
@@ -643,7 +661,7 @@ function viewKid(){
   const vitals=`<div class="detail-vitals">${bar('才学',k.lit,'#617991')}${bar('武艺',k.mar,'#92504a')}${bar('品德',k.vir,'#517369')}</div>`;
   return `${personBackButton('kids')}
    <header class="detail-head person-detail-head">${porImg(k,224)}<div class="grow"><p>${status}</p><h2>${esc(kidName(k))}</h2>
-    <p>生母 ${outsideMotherLink(k)}${foster?` · 养母 ${parentLink(k.foster)}`:''}</p>${childResidence(k)?`<p class="hint">${esc(childResidence(k))}</p>${youngChildMother(k)?`<button class="btn sm jade" data-onclick="A.visitChildHome(${k.id})">去宫里看看 →</button>`:''}`:''}${birthTags(k)}${outsideChildBadge(k)}${childHasLeftPalace(k)?`<p class="hint">居处 · ${esc(childWhereabouts(k))}</p>`:''}</div></header>
+    <p>生母 ${outsideMotherLink(k)}${foster?` · 养母 ${parentLink(k.foster)}`:''}</p>${childResidence(k)?`<p class="hint">${esc(childResidence(k))}</p>${youngChildMother(k)?`<button class="btn sm jade" data-onclick="A.visitChildHome(${k.id})">去宫里看看</button>`:''}`:''}${birthTags(k)}${outsideChildBadge(k)}${childHasLeftPalace(k)?`<p class="hint">居处 · ${esc(childWhereabouts(k))}</p>`:''}</div></header>
    ${nieceSelectionEntryActive()&&k.sex==='f'&&k.outsideFamilyOrigin?'<p class="hint">选秀 · 已列皇嗣</p>':''}
    ${k.pendingName?pendingBirthPanel():''}
    ${k.alive&&!k.removedFromRoyal&&!k.estate&&!k.jailed&&!k.pendingName?`<div class="detail-actions" role="group" aria-label="人物操作"><span class="detail-action-label" aria-hidden="true">人物操作</span><div class="acts"><button class="btn primary" data-onclick="A.kidVisit(${k.id})">${childHasLeftPalace(k)?'写家书':'探望'}<small>精力-1</small></button>${princeEstateOpenReady(k)?`<button class="btn jade" data-onclick="A.princeOpenEstate(${k.id})">安排出宫开府</button>`:''}</div></div>`:''}

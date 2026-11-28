@@ -12,6 +12,7 @@
 .page-heading p{margin:0;max-width:48em}
 .page-tools{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;flex-shrink:0;max-width:45%}
 .page-tools .btn{white-space:normal;text-align:left}
+.page-title-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.page-title-row h2{margin:0}.page-title-row .page-help{min-height:30px;padding:3px 12px;font-size:13px}
 .page-back{margin-bottom:10px}
 .page-actions,.view-switch{gap:10px;margin:16px 0 20px}
 .page-actions>.btn{flex:1 1 150px}

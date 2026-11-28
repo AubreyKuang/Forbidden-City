@@ -41,7 +41,7 @@ function marriageStatus(k){
   return '已满十五岁 · 可以议婚';
 }
 function marriageButton(k,small=false){
-  return marriageEligible(k)?`<button class="btn ${small?'sm ':''}gold" data-onclick="A.kidMarriage(${royalActionArg(k.id)})" ${marriageReady(k)?'':'disabled'}>议婚 / 赐婚${marriageReady(k)?' →':`<small>还需${k.marriageAfter-S.turn}个月</small>`}</button>`:'';
+  return marriageEligible(k)?`<button class="btn ${small?'sm ':''}gold" data-onclick="A.kidMarriage(${royalActionArg(k.id)})" ${marriageReady(k)?'':'disabled'}>议婚 / 赐婚${marriageReady(k)?'':`<small>还需${k.marriageAfter-S.turn}个月</small>`}</button>`:'';
 }
 function spouseAppearance(k){
   const spouse=k?.spouse;if(!spouse)return null;
@@ -310,7 +310,7 @@ function royalNatalMarriageTick(){
   }
 }
 function royalNatalPersonLink(view,id,name){
-  return `<button class="person-link" data-onclick="A.go('${view}',${royalActionArg(id)})">${esc(name)} ↗</button>`;
+  return `<button class="person-link" data-onclick="A.go('${view}',${royalActionArg(id)})">${esc(name)}</button>`;
 }
 function engagementTiming(due,waiting){
   if(!Number.isFinite(due))return waiting;

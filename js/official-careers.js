@@ -28,7 +28,7 @@ function officialMilitary(p,h){
   return h?.bloc==='army';
 }
 function careerPeople(){return [...officialEntries().map(e=>({p:e.p,key:e.key,e,bloc:e.h.bloc})),...scholarList().map(p=>({p,key:'scholar:'+p.id,scholar:true,bloc:scholarCourtBloc(p)}))];}
-function careerLink(person){return `<button class="person-link" data-onclick="A.go('${person.scholar?'scholar':'official'}','${person.scholar?person.p.id:person.key}')">${esc(person.p.name)} ↗</button>`;}
+function careerLink(person){return `<button class="person-link" data-onclick="A.go('${person.scholar?'scholar':'official'}','${person.scholar?person.p.id:person.key}')">${esc(person.p.name)}</button>`;}
 function careerEligible(p){return officialServing(p)&&p.age>=18&&!reliefSuspended(p)&&!!officialGrade(p);}
 function careerTarget(person,direction){
   if(!person||!careerEligible(person.p)||S.turn-(person.p.lastCareerChange??-99)<6)return null;
@@ -282,7 +282,7 @@ function recordSisterPalaceConcerns(c,old,kind,fact,key,stamp){
 }
 function sisterPalaceConcernPanel(p){
   const note=p.palaceConcern,c=note?.sister&&byId(note.c);
-  return c?detailSection('宫中牵挂',`<p>${esc(note.date)} · <button class="person-link" data-onclick="A.go('consort',${c.id})">${esc(fullName(c))} ↗</button></p><p>${esc(note.quote)}</p>`):'';
+  return c?detailSection('宫中牵挂',`<p>${esc(note.date)} · <button class="person-link" data-onclick="A.go('consort',${c.id})">${esc(fullName(c))}</button></p><p>${esc(note.quote)}</p>`):'';
 }
 const careersBaseConversation=officialConversation;
 officialConversation=function(e,topic){const n=e.p.palaceConcern,c=n&&byId(n.c);return topic==='family'&&n&&c&&S.turn-n.turn<=12?`“${fullName(c)}的事，臣仍记挂着。${n.quote}”`:careersBaseConversation(e,topic);};

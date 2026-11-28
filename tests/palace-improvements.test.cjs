@@ -106,7 +106,7 @@ test('the dowager and maternal clan are visible in both tree modes without inven
   for(const mode of ['graph','list']){
     run(`UI.familyMode='${mode}'`);
     const html=run(`viewFamily()`);
-    assert.match(html,/太后与母家亲族/);assert.match(html,/(母子|生母) →/);assert.match(html,/母家同族/);
+    assert.match(html,/太后与母家亲族/);assert.match(html,/(母子|生母)</);assert.match(html,/母家同族/);
     assert.ok(html.includes(run(`fullName(woman)`))||html.includes(run(`cName(woman)`)));
     assert.doesNotMatch(html,/太后之女/);
   }

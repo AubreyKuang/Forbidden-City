@@ -178,7 +178,8 @@ def used_images(sources):
 # the package) and file export. Each entry must match exactly once, so a source change
 # that moves the code fails the build instead of shipping it.
 STRIP = {
-    'js/governance-life.js': [("typeof DEV!=='undefined'&&DEV.autoMonth&&$('#dev-panel')?.hidden===true", 'false')],
+    # Packages have no dev panel, so the month always advances on its own once energy runs out.
+    'js/governance-life.js': [("typeof DEV!=='undefined'&&DEV.autoMonth&&$('#dev-panel')?.hidden===true", 'true')],
     'js/views.js': [("const devLaunch=typeof DEV==='undefined'?'':'<button id=\"dev-launch\" type=\"button\" aria-controls=\"dev-panel\" data-onclick=\"DEV.open()\">DEV · 金手指</button>';", "const devLaunch='';")],
     'js/palace-storage.js': [("['chengongji_v1_','chengongji_dev_v1_']", "['chengongji_v1_']")],
     'js/saves.js': [
