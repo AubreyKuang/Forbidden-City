@@ -21,7 +21,7 @@
       {"key": "silverLarge", "productId": "2485888261127002", "name": "银两大包", "price": 200, "kind": "silver", "amount": 4000, "doneKey": "paid_silverLarge", "desc": "国库增加 4000 万两，到账当前打开的存档，传位后新君照样能用：开运河、下西洋、养大后宫都够用，比小包更划算。"},
       {"key": "painter", "productId": "2485888261127003", "name": "画师换像", "price": 99, "kind": "painter", "desc": "妃嫔详情页多一个「更换立绘」，可以从图库里为她挑一张立绘。剧情人物的专属立绘不变。"},
       {"key": "legendsPack", "productId": "2485888261127004", "name": "传说珠翠立绘包", "price": 30, "kind": "portraitPack", "pack": "legends", "desc": "解锁 30 张立绘（传说名妃 24 张、珠翠 6 张）：之后选秀会出现，也能在更换立绘时选用。"},
-      {"key": "goldFinger", "productId": "2485888261128001", "name": "金手指包", "price": 198, "kind": "bundle", "includes": ["painter", "legendsPack"], "desc": "立即召见所有还没相遇的剧情妃和风华人物，不受时间、地点和前置条件限制；并含画师换像与传说珠翠立绘包。"}
+      {"key": "goldFinger", "productId": "2485888261128001", "name": "金手指包", "price": 198, "kind": "bundle", "includes": ["painter", "legendsPack"], "desc": "立即召见所有还没相遇的剧情妃和风华人物，不受时间、地点和前置条件限制；可分类调整事件频率（宫斗、妃嫔私情、穿越妃、天灾等 15 类，各选不触发 / 小概率 / 常规 / 高概率）；并含画师换像与传说珠翠立绘包。"}
     ]
   }
 }

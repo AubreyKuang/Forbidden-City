@@ -60,7 +60,7 @@ function monthlyIntroduction(){
  }
  if(S.turn-(S.flags.lastCastPetition??0)<6)return null;
  const key=Object.keys(COURT_PETITIONS).find(k=>palacePetitionReady(k)&&!S.flags.castPetitions?.[k]);
- if(!key||!chance(.15))return null;
+ if(!key||!chance(eventOdds('story',.15)))return null;
  (S.flags.castPetitions||={})[key]=true;S.flags.lastCastPetition=S.turn;return palacePetition(key);
 }
 const storyCastData=key=>Object.hasOwn(STORY_CAST,key)?STORY_CAST[key]:null;

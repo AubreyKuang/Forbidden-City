@@ -131,8 +131,8 @@ const HAREM=[
    {t:`判给${cName(a)}`,person:a,f:()=>{rememberQuarrel(a,b,a.id);return fx(cchg(a,{mood:10}),cchg(b,{mood:-10,aff:-3}))}},
    {t:`判给${cName(b)}`,person:b,f:()=>{rememberQuarrel(a,b,b.id);return fx(cchg(b,{mood:10}),cchg(a,{mood:-10,aff:-3}))}},
    {t:'各赏一匹，息事宁人',outcome:'内务府另送来一匹蜀锦。两人各自带着绸缎回宫，殿前终于安静下来。',f:()=>{rememberQuarrel(a,b);return fx(chg({treasury:-15}),cchg(a,{mood:4}),cchg(b,{mood:4}))}}]}},
- function coldPlea(){const cs=alive().filter(c=>c.cold);if(!cs.length)return null;const c=pick(cs);const w=S.flags.wronged&&S.flags.wronged.v===c.id;
-  return {title:'冷宫来信',por:c,present:[],valid:()=>c.alive&&!c.gone&&c.cold,text:w?`冷宫里的${fullName(c)}托一个老宫女捎来血书：“巫蛊一事，实乃有人栽赃。求陛下明察！”`:`冷宫里的${fullName(c)}托人送来一方旧帕，上面绣着近况，问你是否还愿意来看一眼。`,choices:[
+ function coldPlea(){const writes=c=>!palaceLifeActive()||coldWronged(c)||!['怨恨','麻木','心如死灰'].includes(xinOf(c));const cs=alive().filter(c=>c.cold&&writes(c));if(!cs.length)return null;const c=pick(cs);const w=S.flags.wronged&&S.flags.wronged.v===c.id;
+  return {title:'冷宫来信',por:c,present:[],valid:()=>c.alive&&!c.gone&&c.cold,text:w?`冷宫里的${fullName(c)}托一个老宫女捎来血书：“巫蛊一事，实乃有人栽赃。求陛下明察！”`:palaceLifeActive()&&xinOf(c)==='懊悔'?`冷宫里的${fullName(c)}托人送来一封认错书，字迹很慢，末尾写着：不求出去，只求陛下知道她悔了。`:`冷宫里的${fullName(c)}托人送来一方旧帕，上面绣着近况，问你是否还愿意来看一眼。`,choices:[
    {t:'放她出冷宫',f:()=>{A.uncold(c.id);if(w){const a=byId(S.flags.wronged.a);S.flags.wronged=null;if(a&&a.alive&&!a.cold){a.known=true;pushNow(punishEv(a,c,'栽赃巫蛊'))}}return `${fullName(c)}出了冷宫，形容憔悴，却仍向你深深一拜。`}},
    {t:'置之不理',f:()=>fx(cchg(c,{mood:-10}))}]}},
  function ambition(){const cs=harem().filter(c=>!isSolitary(c)&&!['淡泊','沉静'].includes(c.trait)&&!['悲恸','心如死灰'].includes(xinOf(c))&&c.favor>=60&&c.rank<7&&c.rank>=1);if(!cs.length)return null;const c=pick(cs);const nr=c.rank+1;
@@ -180,7 +180,7 @@ function restlessTrystTick(){
       life.keptLetter=true;
       story(c,'【未寄的笺】她抄完一首词，在末尾空了半行。提笔几回，那句想请人同看月色的话，终究只夹进了自己的书里。');
     }
-    const rate=(tryst ? .10 : .03)+restlessTrystBonus(c);
+    const rate=((tryst ? .10 : .03)+restlessTrystBonus(c))*eventFrequency('affair');
     if(roll('invitation')>=rate)continue;
     if(!tryst){
       const name=SUR[voiceHash(key+':surname')%SUR.length]+BOYC[voiceHash(key+':given')%BOYC.length];
@@ -270,7 +270,7 @@ function guardTrystEvent(witnessedConsort){
     if(!eligible.length)return null;
     const key=E().seed+':guard-tryst:'+S.turn;
     c=eligible[voiceHash(key+':who')%eligible.length];
-    if(voiceHash(key+':roll')%100>=(restlessDisposition(c)?6:2))return null;
+    if(voiceHash(key+':roll')%100>=(restlessDisposition(c)?6:2)*eventFrequency('affair'))return null;
   }
   const secret=witnessedConsort?.restlessCourt?.tryst;
   if(witnessedConsort&&(!secret?.witnessed||secret.affairReported))return null;
@@ -298,7 +298,16 @@ function guardTrystEvent(witnessedConsort){
     choices:[{t:'将侍卫调离内廷',f:()=>record('侍卫奉调离开内廷，两人就此别过。',-8)},
       {t:'封存此事',f:()=>record('陛下封存了信件，她回宫后亲手收起了最后一封回信。',-2)}]};
 }
-function haremEvent(){const guard=guardTrystEvent();if(guard)return guard;for(const f of shuffle(HAREM)){const ev=f();if(ev&&ambientEventReady(ev))return {...ev,present:ev.present||eventPortraits(ev)}}return null}
+const HAREM_SCHEMES=new Set(['jealous','musk','slip','wugu','clash','defect','poisonHeir']);
+function haremEventCategory(f){return HAREM_SCHEMES.has(f.name)?'scheme':'harem';}
+// The month's roll covers both kinds; each entry then answers to its own setting.
+function haremEventOdds(){return Math.min(1,.75*Math.max(eventFrequency('harem'),eventFrequency('scheme'),Math.min(1,eventFrequency('affair'))));}
+function haremEventOrder(){
+  const list=shuffle(HAREM);
+  if(eventFrequency('harem')===1&&eventFrequency('scheme')===1)return list;
+  return list.filter(f=>eventGate(haremEventCategory(f))).sort((a,b)=>eventFrequency(haremEventCategory(b))-eventFrequency(haremEventCategory(a)));
+}
+function haremEvent(){const guard=guardTrystEvent();if(guard)return guard;for(const f of haremEventOrder()){const ev=f();if(ev&&ambientEventReady(ev))return {...ev,present:ev.present||eventPortraits(ev)}}return null}
 function returnedMaidPregnancy(c){
   return journalContentVersion()>=49&&c.maid&&!c.near&&c.preg===2&&Number.isInteger(c.maidReturnedAt)&&
     c.maidReturnedAt===c.pregnancyCalendar?.conceived;
@@ -484,7 +493,7 @@ function afterMaidNight(g){return {title:'天明',por:g,text:`天快亮时，${g
   {t:'留在身边，做贴身宫女',f:()=>{g.near=true;g.palace='乾清宫';story(g,'承恩后未受册封，留在御前做贴身宫女，随时侍奉在侧。');return `她留在了乾清宫，每日为你奉茶研墨。${fx(cchg(g,{aff:8}))}\n§「后宫」页的「贴身宫女」里能找到她，翻牌子时也有她`}},
   {t:'赏些银子，让她回去当差',f:()=>{g.near=false;g.palace='尚衣局';if(journalContentVersion()>=49&&g.preg===1)g.maidReturnedAt=S.turn;story(g,'承恩一夜，次日被打发回尚衣局当差。');setXin(g,'委屈','承恩一夜，次日便被打发回去');return `她谢了恩，回去了。宫里没有人再提起那一夜。${fx(cchg(g,{mood:-10}))}`}}]}}
 function monthlyMaidEvent(){
-  if(!maidEncounterReady()||!chance(journalContentVersion()>=30?.25:.12))return null;
+  if(!maidEncounterReady()||!chance(eventOdds('maid',journalContentVersion()>=30?.25:.12)))return null;
   const pool=[()=>maidEvent('长街')];
   const attendants=maids().filter(m=>m.near);
   if(attendants.length<4)pool.push(teaMaid);

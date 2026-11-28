@@ -70,8 +70,9 @@ function palaceRomanceTick(){
   if(!matches.length)return;
   let pool=matches;
   const roll=R();
-  if(roll>=.04){
-    pool=matches.filter(({k,c})=>romanceAdults(k,c)&&restlessDisposition(c)&&roll<.08+restlessTrystBonus(c));
+  const affairOdds=eventFrequency('affair');
+  if(roll>=.04*affairOdds){
+    pool=matches.filter(({k,c})=>romanceAdults(k,c)&&restlessDisposition(c)&&roll<(.08+restlessTrystBonus(c))*affairOdds);
     if(!pool.length)return;
   }
   const {k,c}=pick(pool.sort((a,b)=>b.score-a.score).slice(0,3));

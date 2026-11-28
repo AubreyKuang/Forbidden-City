@@ -202,7 +202,7 @@ python3 .claude/skills/minitool-zip-builder/scripts/audit_artifact.py dist/xhs/c
 | 银两大包 | 2485888261127002 | 200 次元币（20 元） | 可重复 | 当前存档国库 +4000 万两（同上） |
 | 画师换像 | 2485888261127003 | 99 次元币（9.9 元） | 一次 | 普通妃嫔详情页出现「更换立绘」，从图库里挑；剧情人物不能换 |
 | 传说珠翠立绘包 | 2485888261127004 | 30 次元币（3 元） | 一次 | 传说名妃 24 张 + 珠翠 6 张：没买时不出现在新秀女里、也不能选；买后都可以 |
-| 金手指包 | 2485888261128001 | 198 次元币（19.8 元） | 一次 | 商城顶部出现「立即召见」：本朝还没相遇的剧情妃和风华人物，点名字马上进入她/他的初遇剧情，不受时间、地点、前置条件限制，不耗精力；含画师换像和传说珠翠立绘包 |
+| 金手指包 | 2485888261128001 | 198 次元币（19.8 元） | 一次 | 商城顶部出现「立即召见」：本朝还没相遇的剧情妃和风华人物，点名字马上进入她/他的初遇剧情，不受时间、地点、前置条件限制，不耗精力；商城里还多一块「事件频率」，15 类事件各选不触发 / 小概率 / 常规 / 高概率；含画师换像和传说珠翠立绘包 |
 
 华服、古风盛装等其他立绘都在普通立绘池里，不收费。
 
@@ -212,6 +212,7 @@ python3 .claude/skills/minitool-zip-builder/scripts/audit_artifact.py dist/xhs/c
 - 一次性商品：每次打开都按平台的已购次数判断，换设备也有效。
 - 立绘包的归属写进存档世界（`S.flags.portraitPacks`），只在没有进行中事件时写，保证未完事件重放时用的是同一个立绘池。
 - 金手指包（`kind: bundle`）：买了就同时拥有 `includes` 里的商品；归属写进存档（`S.flags.goldFinger`），规则同立绘包。「立即召见」（`A.goldSummon`）进动作日志，召见后没答完就关掉，重开读档还能接着答。服丧期间不能召见。
+- 事件频率（`js/event-frequency.js`，金手指包专属；网页测试版 dev.html 在「DEV · 金手指 → 调整事件频率」）：商城里「金手指 · 事件频率」列出 15 类事件，每类选 不触发 / 小概率（约 0.35 倍）/ 常规 / 高概率（2 倍，并在每月有限的名额里优先）。设置存在存档里（`S.flags.eventFreq`），经动作日志修改，下个月起生效；内容版本 171 以前的未完场面不受影响。分类：宫斗与夺嫡、妃嫔私情、天外来客、仙缘与前世、心境与小性子、后宫日常、娘家与家书、皇嗣日常、朝堂奏议、天灾、锦衣卫密报、节庆与进贡、宫女、风华人物与剧情来信、身世与隐情。玩家自己发起的事（翻牌、探望、微服、派案）和已经开始的故事后续不受影响。新增一类事件时，在决定概率的地方乘上 `eventFrequency('<类>')` 或用 `eventOdds` / `eventPick`。
 - 新加商品：后台建商品 → 在 `shop.products` 里加一行（`kind`：`silver` / `painter` / `portraitPack` / `bundle`）→ 重新打包上传。新的立绘包还要在 `PORTRAIT_PACKS` 里写上包含哪些立绘格。
 
 ### 打包和检查
@@ -220,6 +221,12 @@ python3 .claude/skills/minitool-zip-builder/scripts/audit_artifact.py dist/xhs/c
 python3 scripts/build-yiciyuan.py --tools ~/xhs-tools --version 1.0.0
 node --test tests/*.test.cjs
 node scripts/xhs-browser-check.cjs yiciyuan dist/yiciyuan/package
+```
+
+打包和测试都要用 node 22（仓库根目录有 `.nvmrc`；本机在 `~/.nvm/versions/node/v22.18.0/bin`）。默认的 node 18 读不了中文测试名，会把几十个测试文件报成失败。`~/xhs-tools` 是打包工具目录，不在仓库里；没有了就重装：
+
+```bash
+mkdir -p ~/xhs-tools && cd ~/xhs-tools && npm init -y >/dev/null && npm install esbuild@0.24.2 lightningcss@1.28.2 acorn@8.14.0 sharp@0.33.5 browserslist lz-string
 ```
 
 产物是 `dist/yiciyuan/chengongji-yiciyuan-V1.0.0.zip`（约 8.6MB，143 个文件）。打包流程和小红书版相同（同一个脚本，`--target yiciyuan`）。浏览器检查会把 SDK 地址换成模拟的平台 SDK，玩几个月后重开页面读档，并检查没有碰浏览器存储、左上角留出了退出按钮的位置。

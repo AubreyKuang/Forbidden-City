@@ -16,7 +16,7 @@ function beginConcealedLoss(c){
   // The sealed loss record is authoritative for delivery, so no live royal fetus is generated.
   c.mood=clamp(c.mood-8);return true;
 }
-function concealedLossTick(c){if(concealedLossEligible(c)&&chance(.006))beginConcealedLoss(c);}
+function concealedLossTick(c){if(concealedLossEligible(c)&&chance(eventOdds('secret',.006)))beginConcealedLoss(c);}
 function revealConcealedLoss(c,reason){
   const loss=c?.concealedLoss;if(!loss||loss.revealed)return null;
   loss.revealed=true;loss.settled=true;loss.pendingReport=false;c.preg=0;c.prot=false;c.swapRisk=false;
