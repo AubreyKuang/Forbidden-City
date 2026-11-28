@@ -14,6 +14,7 @@ function genCands(n=6){finishSelection();S.cands=[];for(let i=0;i<n;i++)S.cands.
   }
   S.cands.forEach(c=>{deepen(c);initTimeTraveler(c);});assignPastLifeCandidates();S.selection={phase:'audience',current:S.cands[0]?.id,performed:[]};selectionBatch();captureSelectionCourt();S.flags.peek=3;S.flags.lastXX=S.turn;if(typeof outerSelectionCall==='function')outerSelectionCall();
   if(selectionNiecesActive())for(const c of S.cands)recordSelectionNiece(c,'entered');
+  if(selectionSistersActive())for(const c of S.cands)recordSelectionSisters(c);
   log(`${dateStr()}，开选秀，各地秀女入宫待选。`,journalContentVersion()<41)}
 A.xxDecree=function(){
   if(selectionSkipTimingActive()&&(modalOpen||S.over||S.cands.length))return;
