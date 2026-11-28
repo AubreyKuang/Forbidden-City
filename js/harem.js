@@ -61,10 +61,10 @@ A.xxEnd=function(){if(modalOpen)return;finishSelection();save('auto');A.go(S.sel
 /* ============ 后宫事件 ============ */
 function punishEv(A_,B,crime){
   if(B)relAdd(A_,B,-40);
-  return {title:'真相大白',cast:[A_,inPalace(B)?B:null],sfx:'gong',text:`人证物证俱在，${crime}一事，竟是${cName(A_)}所为。\n${A_.cold?'侍卫将她从冷宫押来问话，她跪倒在殿中：“民妇……民妇一时糊涂！”':'她跪在殿中，钗环散乱：“臣妾……臣妾一时糊涂！”'}`,choices:[
-    {t:'打入冷宫',f:()=>{const s=A_.fam.p>=70?chg({prestige:-2}):'';A_.cold=true;A_.palace='冷宫';story(A_,`${crime}事发，被打入冷宫。`);clanEcho(A_,'down');setXin(A_,'怨恨',`${crime}事发，被打入冷宫`,B?B.id:'emp');log(`${fullName(A_)}因${crime}事发，打入冷宫。`,1);if(B){cchg(B,{aff:8,mood:15});story(B,`陛下查明${crime}真相，为她主持公道。`);setXin(B,'释然',`${crime}真相大白`)}AU.sfx('sad');return `${fx(s,cchg(A_,{mood:-50,aff:-30}))}`}},
-    {t:'降位禁足',f:()=>{A_.rank=Math.max(0,A_.rank-2);if(A_.rank===8)A_.rank=5;reconcileResidences();story(A_,`${crime}事发，被降为${RANKS[A_.rank]}，禁足宫中。`);setXin(A_,'惶恐',`${crime}事发`);log(`${fullName(A_)}因${crime}事发，降为${RANKS[A_.rank]}。`,1);if(B)cchg(B,{aff:5,mood:8});return fx(cchg(A_,{mood:-30,aff:-15,favor:-20}))}},
-    {t:'念其初犯，罚俸了事',f:()=>{story(A_,`${crime}事发，陛下网开一面，仅罚俸半年。`);if(B){cchg(B,{aff:-8,mood:-10});story(B,'陛下对害她之人从轻发落，她心中凉了半截。');setXin(B,'怨恨','害她的人只被罚了俸',A_.id)}A_.scheme=clamp(A_.scheme+5);return `${cName(A_)}叩头谢恩，眼底却闪过一丝庆幸。`}}]};
+  return {title:'真相大白',cast:[A_,inPalace(B)?B:null],sfx:'gong',text:`人证物证俱在，${crime}一事，竟是${cName(A_)}所为。${schemeAftermathHistory(A_)}\n${A_.cold?'侍卫将她从冷宫押来问话，她跪倒在殿中：“民妇……民妇一时糊涂！”':'她跪在殿中，钗环散乱：“臣妾……臣妾一时糊涂！”'}`,choices:[
+    {t:'打入冷宫',f:()=>{const s=A_.fam.p>=70?chg({prestige:-2}):'';A_.cold=true;A_.palace='冷宫';story(A_,`${crime}事发，被打入冷宫。`);clanEcho(A_,'down');setXin(A_,'怨恨',`${crime}事发，被打入冷宫`,B?B.id:'emp');log(`${fullName(A_)}因${crime}事发，打入冷宫。`,1);if(B){cchg(B,{aff:8,mood:15});story(B,`陛下查明${crime}真相，为她主持公道。`);setXin(B,'释然',`${crime}真相大白`)}AU.sfx('sad');const after=schemeAftermath(A_,B,crime,'cold');return `${fx(s,cchg(A_,{mood:-50,aff:-30}))}${after}`}},
+    {t:'降位禁足',f:()=>{A_.rank=Math.max(0,A_.rank-2);if(A_.rank===8)A_.rank=5;reconcileResidences();story(A_,`${crime}事发，被降为${RANKS[A_.rank]}，禁足宫中。`);setXin(A_,'惶恐',`${crime}事发`);log(`${fullName(A_)}因${crime}事发，降为${RANKS[A_.rank]}。`,1);if(B)cchg(B,{aff:5,mood:8});const r=fx(cchg(A_,{mood:-30,aff:-15,favor:-20}));return r+schemeAftermath(A_,B,crime,'demote')}},
+    {t:schemeAftermathFineLabel(A_),f:()=>{story(A_,`${crime}事发，陛下网开一面，仅罚俸半年。`);if(B){cchg(B,{aff:-8,mood:-10});story(B,'陛下对害她之人从轻发落，她心中凉了半截。');setXin(B,'怨恨','害她的人只被罚了俸',A_.id)}A_.scheme=clamp(A_.scheme+5);return `${cName(A_)}叩头谢恩，眼底却闪过一丝庆幸。`+schemeAftermath(A_,B,crime,'fine')}}]};
 }
 // Historical favor is not proof of a recent visit. Merely opening a profile
 // calls noteHaremVisit, so only personal conversations, nights and arrivals count.
