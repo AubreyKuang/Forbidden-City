@@ -347,7 +347,7 @@ assert.ok(byId(musician.id).story.some(event=>event.t.includes('诗会旧事')))
 A.go('consort',poet.id);
 assert.match($('#panel').innerHTML,/aria-label="人物操作"/);
 assert.match($('#panel').innerHTML,/闲话家常/);
-assert.match($('#panel').innerHTML,/detail-vitals/);
+assert.match($('#panel').innerHTML,/class="stats consort-stats"[^]*恩宠[^]*心情[^]*情分/);
 // A legacy consort retains her portrait ID, while older Western arrivals receive distinct dancer art.
 {
   const stateBefore=JSON.stringify(S);

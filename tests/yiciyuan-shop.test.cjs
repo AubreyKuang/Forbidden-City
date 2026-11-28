@@ -6,6 +6,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),vm=requir
 const read=file=>fs.readFileSync(path.join(__dirname,'..',file),'utf8');
 const editionSource=read('js/edition.js'),shopSource=read('js/palace-shop.js');
 const SHOP=JSON.parse(read('scripts/yiciyuan-edition.json')).shop;
+const AMOUNT=key=>SHOP.products.find(p=>p.key===key).amount;
 
 function fakeStore({paid={},values={},failPurchase=null}={}){
   const calls=[];
@@ -70,10 +71,10 @@ test('silver is delivered once for each paid purchase, and only what is owed',as
   const host=fakeStore({paid:{'2485888261127001':2},values:{paid_silverSmall:'1'}});
   const {context,shop,logs}=load({store:host.store});
   await shop.refresh();
-  assert.equal(context.S.emp.treasury,800+500);
+  assert.equal(context.S.emp.treasury,800+AMOUNT('silverSmall'));
   assert.equal(host.values.paid_silverSmall,'2');
   await shop.refresh();
-  assert.equal(context.S.emp.treasury,800+500,'nothing owed twice');
+  assert.equal(context.S.emp.treasury,800+AMOUNT('silverSmall'),'nothing owed twice');
   assert.equal(logs.length,1);
 });
 
@@ -82,7 +83,7 @@ test('buying silver pays once and credits the open reign',async()=>{
   const {context,shop}=load({store:host.store});
   await shop.buy('silverLarge');
   assert.deepEqual(host.calls.filter(c=>c[0]==='buy'),[['buy','2485888261127002',200]]);
-  assert.equal(context.S.emp.treasury,800+2000);
+  assert.equal(context.S.emp.treasury,800+AMOUNT('silverLarge'));
   assert.equal(host.values.paid_silverLarge,'1');
 });
 

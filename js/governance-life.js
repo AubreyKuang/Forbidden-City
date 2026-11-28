@@ -62,10 +62,18 @@ function governance(){
 }
 const TAX_PLANS={regular:{name:'依定额征收',rate:1,people:0},light:{name:'减免三成秋税',rate:.7,people:5}};
 function taxEstimate(){return Math.round((380+E().people*3)*TAX_PLANS[governance().tax].rate);}
+/* 岁贡 is 120 a year. An edition may tie it to the emperor's 威望 (config.economy.tribute:
+   base + 威望 × perPrestige, within min..max), so prestige is worth keeping. */
+function tributeRule(){return journalContentVersion()>=165&&typeof PALACE_EDITION!=='undefined'&&PALACE_EDITION.economy&&PALACE_EDITION.economy.tribute||null;}
+function tributeAmount(){
+  const t=tributeRule();
+  if(!t)return 120;
+  return Math.round(Math.min(t.max??Infinity,Math.max(t.min??0,t.base+E().prestige*t.perPrestige)));
+}
 function treasuryReceipt(type){return governance().receipts.find(r=>r.gen===S.gen&&r.year===S.year&&r.type===type);}
 function annualRevenueTick(){
   const type=S.month===10?'tax':S.month===1?'tribute':null;if(!type||treasuryReceipt(type))return null;
-  const g=governance(),amount=type==='tax'?taxEstimate():120;
+  const g=governance(),amount=type==='tax'?taxEstimate():tributeAmount();
   const row={gen:S.gen,year:S.year,turn:S.turn,date:dateStr(),type,amount,policy:g.tax};
   g.receipts.push(row);E().treasury+=amount;
   let text;
@@ -78,7 +86,7 @@ function annualRevenueTick(){
     const id=pick(ids.filter(id=>(v.received[id]||0)===least));row.jewelry=id;
     v.stock[id]=(v.stock[id]||0)+1;v.received[id]=(v.received[id]||0)+1;v.lastTribute=S.turn;
     jewelryRecord(`岁贡：${JEWELRY[id].name}一件收入内库。`);
-    text=`各地岁贡抵京：折色银 ${amount} 万两收入国库，${JEWELRY[id].name}一件交内库收存。进献按定额办理，不额外索取。`;
+    text=`各地岁贡抵京：折色银 ${amount} 万两收入国库，${JEWELRY[id].name}一件交内库收存。${tributeRule()?'各方依陛下威望进献，威望愈隆，岁贡愈丰。':'进献按定额办理，不额外索取。'}`;
   }
   row.text=text;log(text,1);
   return {title:type==='tax'?'户部 · 秋税入库':'岁首 · 各地进献',jewelry:row.jewelry,text:text+'\n可在「治国理政」查阅收支簿。',choices:[{t:'知道了'}]};
@@ -149,7 +157,7 @@ function viewGovernment(){
   ${typeof examSchedulePanel==='function'?examSchedulePanel():''}
   ${palaceKinPetitionsPanel()}${careerReportsHTML()}
   ${pageChapters('government',[
-    ['tax','户部岁入',`<section class="detail-section"><p>每年十月结算秋税，正月收取岁贡银 120 万两与珍饰一件。月常入与俸禄仍逐月结算。</p><p>${receipt?`本年秋税已实收 ${receipt.amount} 万两。`:`今年采用「${TAX_PLANS[g.tax].name}」，按当前民心估计秋税 ${taxEstimate()} 万两。`}</p><div class="acts">${Object.entries(TAX_PLANS).map(([id,p])=>`<button class="btn sm" data-onclick="A.taxPlan('${id}')" ${receipt||g.tax===id||E().energy<1?'disabled':''}>${p.name} · 精力−1${id==='light'?' · 秋税入库时民心+5':''}</button>`).join('')}</div><ul class="story">${g.receipts.slice(-8).reverse().map(r=>`<li><time>${esc(r.date)}</time>${esc(r.text)}</li>`).join('')||'<li>尚未到年度入库时节。</li>'}</ul></section>`],
+    ['tax','户部岁入',`<section class="detail-section"><p>每年十月结算秋税，正月收取岁贡银 ${tributeRule()?`约 ${tributeAmount()} 万两（随威望增减）`:'120 万两'}与珍饰一件。月常入与俸禄仍逐月结算。</p><p>${receipt?`本年秋税已实收 ${receipt.amount} 万两。`:`今年采用「${TAX_PLANS[g.tax].name}」，按当前民心估计秋税 ${taxEstimate()} 万两。`}</p><div class="acts">${Object.entries(TAX_PLANS).map(([id,p])=>`<button class="btn sm" data-onclick="A.taxPlan('${id}')" ${receipt||g.tax===id||E().energy<1?'disabled':''}>${p.name} · 精力−1${id==='light'?' · 秋税入库时民心+5':''}</button>`).join('')}</div><ul class="story">${g.receipts.slice(-8).reverse().map(r=>`<li><time>${esc(r.date)}</time>${esc(r.text)}</li>`).join('')||'<li>尚未到年度入库时节。</li>'}</ul></section>`],
     ['posts','吏部调度',`<section class="detail-section"><p class="hint">调任需精力 1、交接银 20 万两。同一官员半年内不再调任，在途差务、致仕或获罪期间不可调动。</p><div class="grid">${Object.entries(GOVERNMENT_POSTS).map(([id,p])=>{const e=postHolder(id);return `<article class="card government-post"><h3>${p.name}</h3><p>${p.detail}</p>${e?`<p>${officialLink(e.c,e.role)} · ${officialStatus(e.p)}</p>`:`<button class="btn sm jade" data-onclick="A.postCandidates('${id}')">择人调任</button>`}</article>`;}).join('')}</div></section>`],
     ['tasks','治事与回奏',`<section class="detail-section"><div class="grid government-tasks">${Object.entries(OFFICIAL_TASKS).map(([id,t])=>`<button class="card" data-onclick="A.governmentTask('${id}')"><div><b>${t.title}</b><p>${t.brief||'择人领差，期满回奏。'}</p><small>${t.months}个月 · 国库 ${t.cost} · ${t.army?'武职':'文职'}</small></div></button>`).join('')}</div></section>`],
     ['people','民情回访',incognitoLedger()],

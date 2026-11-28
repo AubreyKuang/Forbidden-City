@@ -11,7 +11,7 @@ function renderTop(){
   const hd=e.health>=80?'康健':e.health>=55?'安好':e.health>=30?'欠安':'病笃';
   t.innerHTML=`<div class="hud-identity">${porImg('emp',38)}<div class="hud-name"><span class="date">${esc(dateStr())}</span><span class="hud-person">${esc(e.sur+e.name)} · ${e.age}岁</span></div></div>
    <div class="hud-stats"><span class="st" title="${hd}">龙体 <b>${rd(e.health)}</b></span><span class="st">威望 <b>${rd(e.prestige)}</b></span><span class="st" title="民心范围 0–100">民心 <b>${rd(e.people)}</b>${e.people>=100?'<small>（上限）</small>':''}</span>
-   <span class="st">国库 <b>${e.treasury}</b>万两</span><span class="st">精力 <b>${e.energy}／${mx}</b><span aria-hidden="true">${pips}</span></span></div>
+   <span class="st">国库 <b>${e.treasury}</b>万两${typeof PalaceShop!=='undefined'&&PalaceShop.enabled?'<button class="treasury-add" type="button" aria-label="补充银两（商城）" data-onclick="A.go(\'shop\')">+</button>':''}</span><span class="st">精力 <b>${e.energy}／${mx}</b><span aria-hidden="true">${pips}</span></span></div>
    <div class="hud-controls">${sound}${devLaunch}<button id="finish-month" class="btn gold sm hud-next" data-onclick="A.finishMonth()" ${S.over?'disabled':''}>结束本月 ▸</button></div>
    ${lastAutoSaveError&&lastAutoSaveError!==dismissedSaveError?`<div class="hud-save-warning"><span role="status"><strong>未能存档</strong> · ${esc(lastAutoSaveError)}</span><button class="btn sm" data-onclick="A.save('auto')">重试</button><button class="btn sm" data-onclick="A.downloadSave()">下载备份</button><button class="btn sm" aria-label="关闭存档提示" data-onclick="A.dismissSaveError()">关闭</button></div>`:''}`;
 }
@@ -534,7 +534,6 @@ function viewConsort(){
    ${!act?deliveryMemorialPanel(c):''}
    ${acts?`<div class="detail-actions consort-detail-actions" role="group" aria-label="人物操作"><span class="detail-action-label" aria-hidden="true">人物操作</span><div class="acts">${acts}</div></div>`:''}
    ${quickManagement||cardAction?`<div class="consort-quick-management" role="group" aria-label="位分与居所">${quickManagement}${cardAction}</div>`:''}
-   <div class="detail-vitals">${bar('恩宠',c.favor)}${bar('心情',c.mood,'#517369')}${bar('情分',c.aff,'#936375')}</div>
    ${pageChapters('consort',[
     ['history','人物纪事',chronicleReader(c,{compact:true}),'纪事'],
     ['now','近况与心事',
@@ -543,7 +542,7 @@ function viewConsort(){
     ${characterVoiceHTML(c)}${daoPracticePanel(c)}`+(act?arcLine(c):'')+
       consortTraitPanel(c)+consortHealthPanel(c)+birthCarePanel(c)+(act?deliveryMemorialPanel(c):'')+(typeof haremStewardPersonPanel==='function'?haremStewardPersonPanel(c):'')+(typeof hongjianPanel==='function'?hongjianPanel(c):'')+
       actionGroup('听她说说',conversations)+
-      detailSection('近况与性情',`<p class="hint">${esc(TRAITS[c.trait]?.d||'性情沿用旧日记载。')} · 侍寝 ${c.nights||0} 次</p>${act?xinDetail(c)+deepLine(c):''}<div class="stats">${st('容貌',c.looks)}${st('才情',c.talent)}${st('德行',c.virtue)}${st('心机',c.scheme,!c.known)}</div>`)+
+      detailSection('近况与性情',`<p class="hint">${esc(TRAITS[c.trait]?.d||'性情沿用旧日记载。')} · 侍寝 ${c.nights||0} 次</p>${act?xinDetail(c)+deepLine(c):''}<div class="stats consort-stats">${st('容貌',c.looks)}${st('才情',c.talent)}${st('德行',c.virtue)}${st('心机',c.scheme,!c.known)}${Number.isFinite(c.hp)?st('健康',c.hp):''}${st('恩宠',c.favor)}${st('心情',c.mood)}${st('情分',c.aff)}</div>`)+
       continuityPanel(c)+personalLifePanel(c)+detailSection('人和事的后续',cohortLifePanel(c)+parentEpisodePanel(c))+
       detailSection('孕中祈愿',pregnancyPrayerPanel(c))+detailSection('寺中清修',consortTemplePanel(c))+
       (act&&!c.cold?initiativeHTML(c):''),'近况'],
@@ -575,11 +574,11 @@ function viewCards(){
 function viewXX(){
   const last=selectionLastHeldTurn(),since=S.turn-last;
   if(selectionArrivalsRecent())return viewSelectionArrivals();
-  if(!S.cands.length&&(!S.selection||S.selection.phase==='arrivals')) return `<h2>选秀</h2><p>距上次选秀：${last<0?'从未':`${Math.floor(since/12)}年${since%12}月`}。三年一度大选可在二月自动举行；${selectionSkipTimingActive()&&selectionFreeReady()?'目前可依例下旨开选，无须承担提前选秀的国库与民心代价。':'也可随时下旨，但未满三年会耗费国库、有损民心。'}</p>
+  if(!S.cands.length&&(!S.selection||S.selection.phase==='arrivals')) return `<h2>选秀</h2>${haremUpkeepHint()}<p>距上次选秀：${last<0?'从未':`${Math.floor(since/12)}年${since%12}月`}。三年一度大选可在二月自动举行；${selectionSkipTimingActive()&&selectionFreeReady()?'目前可依例下旨开选，无须承担提前选秀的国库与民心代价。':'也可随时下旨，但未满三年会耗费国库、有损民心。'}</p>
     <div class="acts"><button class="btn gold" data-onclick="A.xxDecree()">下旨选秀</button></div>`;
   if(selectionCurrent())return viewSelectionAudience();
   return `${selectionDiscussionPanel()}<section class="story-scene selection-scene" aria-labelledby="selection-title">
-    <header><p>储秀宫</p><h2 id="selection-title">选秀</h2></header>
+    <header><p>储秀宫</p><h2 id="selection-title">选秀</h2></header>${haremUpkeepHint()}
     <button class="btn gold" data-onclick="A.xxEnd()">确定名单，安排入宫</button>
    </section>
    <p>已留选 ${(S.selection?.accepted||[]).length} 人${(S.selection?.accepted||[]).length?' · '+S.selection.accepted.map(id=>parentLink(id)).join('、'):''}。${S.cands.length?'名单确定后，再看她们入宫时的反应。':'候选已全部处理，请确认本批名单。'}</p>
@@ -700,7 +699,7 @@ function viewLog(){
    <div class="log-filter" role="group" aria-label="纪事筛选与留存">${chooser}<div class="reign-switch" role="group" aria-label="纪事范围"><button class="btn sm" aria-pressed="${UI.logF==='all'}" data-onclick="UI.logF='all';render()">全部</button><button class="btn sm" aria-pressed="${UI.logF==='big'}" data-onclick="UI.logF='big';render()">只看大事</button></div>
    <button class="btn sm quiet" data-onclick="A.logCard()">保存上月纪念卡</button></div>
    ${month?`<section class="month-record"><h3>${esc(month.date)}回顾</h3>
-    <p>月入 ${esc(month.inc)} 万两 · 支出 ${esc(month.exp)} 万两</p>
+    <p>月入 ${esc(month.inc)} 万两 · 支出 ${esc(month.exp)} 万两</p>${month.upkeep?`<p class="hint">其中后宫 ${esc(month.upkeep.count)} 人：份例 ${esc(month.upkeep.stipend)}、宫人用度 ${esc(month.upkeep.staff)}${month.upkeep.crowd?`、逾制加派 ${esc(month.upkeep.crowd)}（超出 ${esc(month.upkeep.over)} 人）`:''} 万两</p>`:''}
     ${month.finance&&[month.finance.opening,month.finance.closing,month.finance.other].every(Number.isFinite)?`<p>换月前国库 ${month.finance.opening} 万两 · 换月后 ${month.finance.closing} 万两${month.finance.other?` · 其他换月收支 ${month.finance.other>0?'+':''}${month.finance.other} 万两`:''}</p>`:''}
     ${month.health&&[month.health.opening,month.health.closing,month.health.nightFatigue].every(Number.isFinite)?`<p>月底龙体 ${month.health.opening.toFixed(2)} → ${month.health.closing.toFixed(2)}${month.health.nightFatigue?`，其中召幸过频损耗 ${month.health.nightFatigue.toFixed(1)}`:''}。</p>`:''}
     ${month.hongjianIncome?`<p>月入含薛红笺经营增益 ${month.hongjianIncome} 万两。</p>`:''}

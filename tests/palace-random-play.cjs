@@ -9,7 +9,9 @@ function boot(seed,mode){
  const document={querySelector:key=>{if(!elements.has(key))elements.set(key,el());return elements.get(key)},createElement:el,addEventListener:noop};
  const math=Object.create(Math);let rs=seed;
  math.random=()=>((rs=(Math.imul(rs,1664525)+1013904223)>>>0)/4294967296);
- const ctx=vm.createContext({Math:math,btoa,atob,confirm:()=>true,document,localStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},requestAnimationFrame:noop,setTimeout:noop,setInterval:noop,getComputedStyle:()=>({getPropertyValue:()=>'sans-serif'}),console,mode,seed});
+ // PALACE_ECONOMY=scripts/yiciyuan-edition.json plays with that build's economy settings only.
+ const economy=process.env.PALACE_ECONOMY?JSON.parse(fs.readFileSync(process.env.PALACE_ECONOMY,'utf8')).economy:null;
+ const ctx=vm.createContext({PALACE_EDITION_CONFIG:economy?{edition:'sim',economy}:undefined,Math:math,btoa,atob,confirm:()=>true,document,localStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},requestAnimationFrame:noop,setTimeout:noop,setInterval:noop,getComputedStyle:()=>({getPropertyValue:()=>'sans-serif'}),console,mode,seed});
  runGameScripts(ctx);
  vm.runInContext(`
  var events=[],months=[],actions=[],errors=[],phase='setup',act='setup',prng=mulberry32(seed^0xaabbccdd),currentRecord=null;

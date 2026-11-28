@@ -219,6 +219,13 @@ function dateStr(s=S){return `${s.emp.era}${s.year===1?'元':cnNum(s.year)}年${
 function cName(c){
   if(c.rescuedGuest)return fullName(c)+'姑娘';
   if(c.maid) return c.near?`贴身宫女${c.given}`:`宫女${c.given}`;
+  // Someone without a surname (阿依慕) is called by her given name: 阿依慕贵人, not 贵人.
+  if(!c.sur&&c.given&&journalContentVersion()>=165){
+    if(c.cold&&(journalContentVersion()<PALACE_KIN_RESPONSE_JOURNAL||palaceKinCommoner(c)))return c.given+'庶人';
+    if(c.rank===8)return '皇后';
+    if(c.title&&c.rank>=4)return c.title+RANKS[c.rank];
+    return c.given+RANKS[c.rank];
+  }
   if(c.cold&&(journalContentVersion()<PALACE_KIN_RESPONSE_JOURNAL||palaceKinCommoner(c))) return `${c.sur}庶人`;
   if(c.rank===8) return '皇后';
   if(journalContentVersion()>=24&&c.gouyi&&c.rank===2&&c.title==='瑞')return '瑞常在';
@@ -636,6 +643,24 @@ const A={
   away(id){const c=byId(id);pushEv({title:'遣出宫',danger:true,por:c,text:`许${fullName(c)}出宫，往城外静慈庵带发修行？此后她便不在后宫名册之中。`,choices:[{t:'准她离宫',f:()=>{c.gone=true;story(c,'奉旨出宫，往静慈庵带发修行。青灯古佛，了此余生。');log(`${fullName(c)}出宫修行。`,1);return '马车驶出神武门，再没有回头。'}},{t:'作罢'}]})},
 };
 
+/* 后宫月例: each consort's stipend by rank (冷宫 1). An edition may add 宫人用度 for every
+   consort outside 冷宫 and a 逾制 fee for each one past a harem size (config.economy.upkeep),
+   so a crowded harem has to be paid for. Journals before content 165 keep the old sum. */
+function haremUpkeep(){
+  const people=alive(),stipend=people.reduce((s,c)=>s+(c.cold?1:STIPEND[c.rank]),0);
+  const u=journalContentVersion()>=165&&typeof PALACE_EDITION!=='undefined'&&PALACE_EDITION.economy&&PALACE_EDITION.economy.upkeep;
+  if(!u)return {stipend,staff:0,crowd:0,count:people.length,total:stipend};
+  const housed=people.filter(c=>!c.cold).length,over=Math.max(0,housed-(u.crowdFrom||Infinity));
+  const staff=housed*(u.staff||0),crowd=over*(u.crowdFee||0);
+  return {stipend,staff,crowd,count:housed,over,total:stipend+staff+crowd};
+}
+// One line for the 选秀 page, so the cost of a larger harem is known before choosing.
+function haremUpkeepHint(){
+  const u=journalContentVersion()>=165&&typeof PALACE_EDITION!=='undefined'&&PALACE_EDITION.economy&&PALACE_EDITION.economy.upkeep;
+  if(!u)return '';
+  const h=haremUpkeep();
+  return `<p class="hint">后宫现有 ${h.count} 人，每月用度约 ${h.total} 万两（份例按位分，另每人宫人用度 ${u.staff} 万两）。第 ${u.crowdFrom+1} 位起，每人每月再加逾制用度 ${u.crowdFee} 万两${h.over?`，眼下已超出 ${h.over} 人`:''}。</p>`;
+}
 /* ============ 回合推进 ============ */
 A.endMonth=function(){
   if(!S||S.over||modalOpen)return;const e=E();
@@ -645,7 +670,7 @@ A.endMonth=function(){
   const openingTreasury=e.treasury,openingHealth=e.health;
   const localGrainPayment=localGrainPaymentDue()?localGrainBalance():0;
   const hongjianIncome=typeof settleHongjianIncome==='function'?settleHongjianIncome():0;
-  const inc=rd(45+e.people*1.1+(S.flags.canal?25:0))+(S.flags.founderGranary?2:0)+hongjianIncome,exp=alive().reduce((s,c)=>s+(c.cold?1:STIPEND[c.rank]),0)+kidsAlive().reduce((s,k)=>s+3+(k.tutor?5:0),0)+localGrainPayment+(typeof outerHouseholdExpense==="function"?outerHouseholdExpense():0);
+  const inc=rd(45+e.people*1.1+(S.flags.canal?25:0))+(S.flags.founderGranary?2:0)+hongjianIncome,upkeep=haremUpkeep(),exp=upkeep.total+kidsAlive().reduce((s,k)=>s+3+(k.tutor?5:0),0)+localGrainPayment+(typeof outerHouseholdExpense==="function"?outerHouseholdExpense():0);
   e.treasury+=inc-exp;
   if(localGrainPayment){
     clearLocalGrainPayment();
@@ -675,7 +700,7 @@ A.endMonth=function(){
     const latest=c.story?.findLast(entry=>entry.d===monthDate);
     return latest&&!(S.turn===0&&latest===c.story[0])?[{id:c.id,text:latest.t}]:[];
   });
-  S.flags.lastMonthReview={date:monthDate,inc,exp,court,...(courts?{courts}:{}),people:continuityReview(people),...(hongjianIncome?{hongjianIncome}:{}),...(localGrainPayment?{localGrainPayment}:{})};
+  S.flags.lastMonthReview={date:monthDate,inc,exp,court,...(courts?{courts}:{}),people:continuityReview(people),...(hongjianIncome?{hongjianIncome}:{}),...(localGrainPayment?{localGrainPayment}:{}),...(upkeep.staff||upkeep.crowd?{upkeep}:{})};
   recordHaremCourtMonth();
   // 后宫
   const returnedMaidNotices=[];
