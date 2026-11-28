@@ -171,6 +171,19 @@ function banquetKind(kind) {
   return { title, host, cost:30, ready:!S.over && !mourningActive() && birthMonth(host)===S.month && host.birthFeastYear!==S.year };
 }
 
+// 宫城 page: banquets that can be held now sit in the top row; the dates of the others go to 宫中事务.
+function banquetReadyButtons() {
+  const feasts = ['emperor','empress'].map(kind=>[kind,banquetKind(kind)]).filter(([,feast])=>feast?.ready);
+  const seasonal=Object.keys(seasonalCourtFeasts).filter(kind=>banquetKind(kind)?.ready).map(kind=>
+    `<button class="btn sm gold" data-onclick="A.openBanquet('${kind}')">筹办${seasonalCourtFeasts[kind].title}</button>`).join('');
+  const family=storyIntroductionsActive()?harem().filter(familyBirthdayEligible).map(c=>
+    `<button class="btn sm gold" data-onclick="A.openBanquet('family-${c.id}')">娘家请贺 · ${esc(fullName(c))}生辰</button>`).join(''):'';
+  return family+seasonal+feasts.map(([kind,feast])=>`<button class="btn sm gold" data-onclick="A.openBanquet('${kind}')">筹办${feast.title}</button>`).join('');
+}
+function banquetSchedule() {
+  const later = ['emperor','empress'].map(kind=>banquetKind(kind)).filter(feast=>feast&&!feast.ready);
+  return later.map(feast=>`${feast.title} · ${MONTHS[birthMonth(feast.host)-1]}${feast.host.birthFeastYear===S.year?'（本年已办）':''}`).join('　');
+}
 function birthdayBanquetButtons() {
   const feasts = ['emperor','empress'].map(kind=>[kind,banquetKind(kind)]).filter(([,feast])=>feast);
   const seasonal=Object.keys(seasonalCourtFeasts).filter(kind=>banquetKind(kind)?.ready).map(kind=>

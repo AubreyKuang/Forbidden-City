@@ -388,6 +388,7 @@ function mapMemorial(){
     (S.flags.monthlyCourt?.turn===S.turn&&S.flags.monthlyCourt.gen===S.gen&&!S.flags.monthlyCourt.done&&S.flags.monthlyCourt.review&&impeachmentSubject(S.flags.monthlyCourt.person)));
   return {...status,name:!done&&locustReliefDue()?'远村补粮回奏':reviewReady?'查账回奏':!done&&floodReliefDue()?'赈灾回奏':'本月奏折'};
 }
+const MAP_SEASON_NAMES=['孟春','仲春','季春','孟夏','仲夏','季夏','孟秋','仲秋','季秋','孟冬','仲冬','季冬'];
 function viewMap(){
   const leads=mapActivityLeads();
   const {count,limit,done,name:report}=mapMemorial(),position=esc(nearestPlace());
@@ -397,9 +398,11 @@ function viewMap(){
     <header class="map-location"><h2>宫城</h2>
       <button id="map-next" class="btn sm jade" data-onclick="A.court()" aria-describedby="map-court-status" ${done?'disabled':''}>${done?'奏折已批复':'查看'+esc(report)}</button>
       <button class="btn sm" data-onclick="A.go('residences')">分配住所</button>
+      ${banquetReadyButtons()}
+      <span class="map-season" title="当前时令">${esc(MONTHS[S.month-1])} · ${esc(MAP_SEASON_NAMES[S.month-1])}</span>
       <span class="map-position" title="${position}">${position}</span>
     </header>
-    <section class="map-month-notices" aria-label="本月宫中消息">${mourningNotice()}${host?`<button class="btn sm jade" data-onclick="A.visitMapActivity('kn')">去坤宁宫见${esc(fullName(host))}</button>`:''}${mapActivityPanel(leads)}${princessMapNotice()}${birthdayBanquetButtons()}${proudDemandNotice()}</section>
+    <section class="map-month-notices" aria-label="本月宫中消息">${mourningNotice()}${host?`<button class="btn sm jade" data-onclick="A.visitMapActivity('kn')">去坤宁宫见${esc(fullName(host))}</button>`:''}${mapActivityPanel(leads)}${princessMapNotice()}${proudDemandNotice()}</section>
     <div id="mapwrap"></div>
     <div id="map-guide-preview" aria-live="polite"></div>
     <div class="map-dock">
@@ -408,6 +411,7 @@ function viewMap(){
         <summary>宫中事务与常平仓</summary>
         <div class="map-brief-content">
           <p id="map-court-status" class="hint">${esc(status)}</p>
+          ${banquetSchedule()?`<p class="hint">${esc(banquetSchedule())}</p>`:''}
           ${S.flags.lastMonthReview?`<button class="btn sm" data-onclick="A.go('log')">上月回顾</button>`:''}
           ${floodDikeReady()?'<p class="hint">黄河险堤已加固。日后一次直接赈济可少花 '+FLOOD_DIKE_SAVING+' 万两。</p>':''}
           <p class="hint">${grainReserveReady()?`常平仓有${grainReserveLabel()}备荒粮。遇到蝗灾月奏时可发放，免耗精力。`:'常平仓暂无备荒粮，可以向粮商买半批。'}</p>
