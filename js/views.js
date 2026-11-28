@@ -92,7 +92,7 @@ function render(){
 function viewTitle(){
   const slots=['auto','1','2','3'].map(s=>({s,i:slotInfo(s)})).filter(x=>x.i);
   return `<div class="title-wrap"><div class="eyebrow">FORBIDDEN CITY · v${PalaceActions.releaseVersion}</div><h1>宸宫纪</h1>
-   <p class="intro">在宫城里处理朝政、走访后宫，写下属于你的一朝本纪。</p>
+   <p class="intro">${PROSE_TITLE_INTRO.map(esc).join('<br>')}</p>
    <button class="btn gold" data-onclick="A.newGame()">新开一局</button>
    ${slots.length?`<div class="save-list">${slots.map(x=>`<button class="btn sm" data-onclick="A.load('${x.s}')">读取${x.s==='auto'?'自动存档':'存档'+x.s}：${esc(x.i)}</button>`).join('')}</div>`:''}</div>`}
 function viewNew(){
@@ -109,11 +109,11 @@ function viewNew(){
       <label>年号<input id="f-era" class="inp" maxlength="2" value="${pick(ERAS)}"></label>
     </div>
     <fieldset class="coronation-styles"><legend>帝王性情</legend>
-      <div>${Object.entries(STYLES).map(([k,d],i)=>`<label class="opt"><input type="radio" name="f-style" value="${k}" ${i===0?'checked':''}><span><b>${k}</b><span class="hint">${d}</span></span><span class="opt-check" aria-hidden="true">✓ 已选</span></label>`).join('')}</div>
+      <div>${Object.entries(STYLES).map(([k,d],i)=>`<label class="opt"><input type="radio" name="f-style" value="${k}" ${i===0?'checked':''}><span><b>${k}</b><span class="hint">${PROSE_STYLES[k]||d}</span></span><span class="opt-check" aria-hidden="true">✓ 已选</span></label>`).join('')}</div>
     </fieldset>
     ${profile.includes('grown')?`<fieldset class="coronation-styles"><legend>成就解锁 · 选择帝王画像</legend><div>${[['default','随性情选择'],['0','文雅画像'],['1','英武画像']].map(([id,label],i)=>`<label class="opt"><input type="radio" name="f-dynasty-portrait" value="${id}" ${i===0?'checked':''}><span><b>${label}</b></span><span class="opt-check" aria-hidden="true">✓ 已选</span></label>`).join('')}</div></fieldset>`:''}
     <fieldset class="coronation-styles"><legend>开局剧本</legend>
-      <div>${Object.entries(DYNASTY_SCENARIOS).filter(([,scenario])=>!scenario.unlock||profile.includes(scenario.unlock)).map(([id,scenario],i)=>`<label class="opt"><input type="radio" name="f-scenario" value="${id}" ${i===0?'checked':''}><span><b>${esc(scenario.name)}</b><span class="hint">${esc(scenario.description)}</span></span><span class="opt-check" aria-hidden="true">✓ 已选</span></label>`).join('')}</div>
+      <div>${Object.entries(DYNASTY_SCENARIOS).filter(([,scenario])=>!scenario.unlock||profile.includes(scenario.unlock)).map(([id,scenario],i)=>`<label class="opt"><input type="radio" name="f-scenario" value="${id}" ${i===0?'checked':''}><span><b>${esc(scenario.name)}</b><span class="hint">${esc(PROSE_SCENARIOS[id]||scenario.description)}</span></span><span class="opt-check" aria-hidden="true">✓ 已选</span></label>`).join('')}</div>
     </fieldset>
     ${profile.length?`<p class="hint">已继承成就奖励：${profile.includes('reigns')?'承祧之君剧本 ':''}${profile.includes('children')?'家学仁厚（开局民心+3） ':''}${profile.includes('companionship')?'皇后礼冠 ':''}${profile.includes('grown')?'选择帝王画像 ':''}</p>`:''}
     ${legacies.length?`<fieldset class="coronation-styles"><legend>前局传承</legend>
@@ -353,7 +353,7 @@ function viewHome(){
   const bookPanel=(id,content)=>`<section data-home-book="${id}" aria-label="${HOME_BOOKS.find(([key])=>key===id)[1]}"${book!==id?' hidden':''}>${content}</section>`;
   const historyAction='<button class="btn sm quiet" data-onclick="A.go(\'log\')">查看起居注</button>';
   const current=`<div class="acts study-shortcuts"><button class="btn primary" data-onclick="A.go('government')">治国理政</button><button class="btn jade" data-onclick="A.go('jewelry')">内库珍藏</button></div>
-    ${proudDemandNotice()}
+    ${proseSceneHTML('home')}${proudDemandNotice()}
     ${pageChapters('home',[
       ['recent','本朝近事',`<ul class="story">${recent.map(l=>`<li class="${l.b?'big':''}"><time>${esc(l.d)}</time>${esc(l.t)}</li>`).join('')||'<li>尚无记载</li>'}</ul>${historyAction}${birthdayBanquetButtons()}`,'近事'],
       ['fertility','太医院会诊',imperialFertilityPanel(),'会诊'],
@@ -438,7 +438,7 @@ function dynastyGoalsPanel(){
     succession:'让宗亲皇嗣入继宫中',prosperous:'五年后国库达到2500万两',
     crisis:'在期限内将民心提升至85',restoration:'五年后民心达到90'
   };
-  const chapter=scenario&&definition?`<h3>${esc(definition.name)}</h3><p>${esc(definition.description)}
+  const chapter=scenario&&definition?`<h3>${esc(definition.name)}</h3><p>${esc(PROSE_SCENARIOS[scenario.id]||definition.description)}
     ${scenario.status==='won'?' · 已完成':scenario.status==='lost'?` · ${esc(scenario.failure||'期限已过')}`:scenario.deadline!=null?` · 剩余 ${Math.max(0,scenario.deadline-S.turn)} 个月`:''}</p>
     ${scenario.id==='regent'?`<p>权臣掌控度 ${scenario.control}/100</p>${scenario.control>0&&scenario.gen===S.gen?`<button class="btn sm" data-onclick="A.lowerRegentControl()" ${scenario.lastReform===S.turn||E().energy<1?'disabled':''}>核对朝政 · 精力−1</button>`:''}`:''}
     ${scenario.id==='founder'&&scenario.foundations?`<p class="hint">新朝须逐步立制、设仓、议政；每月最多筹办一项。设议政前不能采纳派系建议。</p><div class="acts">${Object.entries(DYNASTY_FOUNDATIONS).map(([id,item])=>`<button class="btn sm" data-onclick="A.establishDynastyFoundation('${id}')" ${scenario.foundations[id]||scenario.status!=='active'||scenario.lastFoundation===S.turn||E().energy<1||E().treasury<item.cost?'disabled':''}>${item.name} · 银${item.cost} · 精力−1${scenario.foundations[id]?' · 已完成':''}</button>`).join('')}</div>`:''}
@@ -542,7 +542,7 @@ function viewConsort(){
     ${characterVoiceHTML(c)}${daoPracticePanel(c)}`+(act?arcLine(c):'')+
       consortTraitPanel(c)+consortHealthPanel(c)+birthCarePanel(c)+(act?deliveryMemorialPanel(c):'')+(typeof haremStewardPersonPanel==='function'?haremStewardPersonPanel(c):'')+(typeof hongjianPanel==='function'?hongjianPanel(c):'')+
       actionGroup('听她说说',conversations)+
-      detailSection('近况与性情',`<p class="hint">${esc(TRAITS[c.trait]?.d||'性情沿用旧日记载。')} · 侍寝 ${c.nights||0} 次</p>${act?xinDetail(c)+schemeAftermathDetail(c)+deepLine(c):''}<div class="stats consort-stats">${st('容貌',c.looks)}${st('才情',c.talent)}${st('德行',c.virtue)}${st('心机',c.scheme,!c.known)}${Number.isFinite(c.hp)?st('健康',c.hp):''}${st('恩宠',c.favor)}${st('心情',c.mood)}${st('情分',c.aff)}</div>`)+
+      detailSection('近况与性情',`<p class="hint">${esc(TRAITS[c.trait]?.d||'性情沿用旧日记载。')} · 侍寝 ${c.nights||0} 次</p>${proseVerdict(c.trait)?`<p class="verdict">${esc(proseVerdict(c.trait))}</p>`:''}${act?xinDetail(c)+schemeAftermathDetail(c)+deepLine(c):''}<div class="stats consort-stats">${st('容貌',c.looks)}${st('才情',c.talent)}${st('德行',c.virtue)}${st('心机',c.scheme,!c.known)}${Number.isFinite(c.hp)?st('健康',c.hp):''}${st('恩宠',c.favor)}${st('心情',c.mood)}${st('情分',c.aff)}</div>`)+
       continuityPanel(c)+personalLifePanel(c)+detailSection('人和事的后续',cohortLifePanel(c)+parentEpisodePanel(c))+
       detailSection('孕中祈愿',pregnancyPrayerPanel(c))+detailSection('寺中清修',consortTemplePanel(c))+
       (act&&!c.cold?initiativeHTML(c):''),'近况'],

@@ -1074,3 +1074,11 @@ button.family-room-person{cursor:pointer}button.family-room-person:hover{color:#
 /* Consort page: 探亲与省亲 beside 封号与处置 (赐/改封号 · 降位 · 打入冷宫 · 遣出宫) */
 .consort-action-row{display:flex;flex-wrap:wrap;gap:12px;align-items:stretch}
 .consort-action-row>.action-group{flex:1 1 260px;margin:0}
+
+/* 文采层：题记、月令、判词 */
+.epigraph{margin:2px auto 10px;max-width:34em;padding:0 8px;text-align:center;font-size:13px;line-height:1.8;letter-spacing:.06em;color:var(--ink2)}
+.epigraph cite{display:block;font-style:normal;font-size:11px;letter-spacing:.04em;color:var(--mut)}
+.map-almanac{margin:0 0 8px;padding:2px 0 2px 10px;border-left:2px solid #b08a4e;font-size:13px;line-height:1.75;letter-spacing:.03em;color:#5d4636}
+.verdict{margin:4px 0 0;font-size:13px;line-height:1.7;letter-spacing:.03em;color:var(--wall)}
+.title-wrap .intro{max-width:34ch}
+.scene-line{margin:4px 0 10px;font-size:14px;line-height:1.8;letter-spacing:.02em;color:var(--ink2)}

@@ -206,11 +206,11 @@ function dowagerPartialityEvent(d=ensureDowager()){
 }
 function festival(){const m=S.month,h=harem();if(!h.length)return null;
   const top=h.slice().sort((a,b)=>b.favor-a.favor).slice(0,3);
-  const pickOne=(name,desc,act)=>({title:name,text:desc,choices:[...top.map(c=>({t:`携${cName(c)}同往`,f:()=>{story(c,act);harem().forEach(o=>{if(o!==c&&TRAITS[o.trait].jealous)o.mood=clamp(o.mood-4)});return fx(cchg(c,{aff:10,favor:6,mood:12}))}})),{t:'独自一人',f:()=>'你独自站了很久。'}]});
-  if(m===1) return pickOne('上元灯节','正月十五，宫中张灯结彩，太液池畔挂满了花灯。',`上元节陪陛下赏灯，猜中了最难的一道灯谜。`);
-  if(m===7) return pickOne('七夕','七月初七，鹊桥相会。宫中女子都在穿针乞巧。','七夕之夜陪陛下看星，许了一个不肯说出口的愿。');
+  const pickOne=(name,desc,act)=>({title:name,text:desc,choices:[...top.map(c=>({t:`携${cName(c)}同往`,f:()=>{story(c,act);harem().forEach(o=>{if(o!==c&&TRAITS[o.trait].jealous)o.mood=clamp(o.mood-4)});return fx(cchg(c,{aff:10,favor:6,mood:12}))}})),{t:'独自一人',f:()=>pz('你独自站了很久。','你独自站了很久。灯火是别人的热闹，月色倒是谁都有一份。')}]});
+  if(m===1) return pickOne('上元灯节',pz('正月十五，宫中张灯结彩，太液池畔挂满了花灯。','正月十五，火树银花合，星桥铁锁开。太液池畔的花灯一路挂到水边，灯影落在冰面上，上下都是人间。'),`上元节陪陛下赏灯，猜中了最难的一道灯谜。`);
+  if(m===7) return pickOne('七夕',pz('七月初七，鹊桥相会。宫中女子都在穿针乞巧。','七月初七，天上一年一会。宫中女子对月穿针，乞的是巧，心里求的多半是别的。\n银汉迢迢，隔着的何止牛郎织女。'),'七夕之夜陪陛下看星，许了一个不肯说出口的愿。');
   if(m===8&&envoyFeastsActive())return midAutumnCourtEvent();
-  if(m===8) return {title:'中秋家宴',text:'八月十五，月圆人团圆。',choices:[{t:'设中秋家宴，六宫同乐（国库-30万两）',f:()=>{h.forEach(c=>c.mood=clamp(c.mood+6));kidsAlive().forEach(k=>k.love=clamp(k.love+5));log('中秋家宴，六宫同乐。');return fx(chg({treasury:-30}))+'\n§后宫心情+6　皇嗣父爱+5'}},{t:'简单赏月',f:()=>'你独自登上角楼赏月。'}]};
+  if(m===8) return {title:'中秋家宴',text:pz('八月十五，月圆人团圆。','八月十五，月到中天。宫里人的家都在千里之外，同一轮月亮，各宫看出各样的心事。'),choices:[{t:'设中秋家宴，六宫同乐（国库-30万两）',f:()=>{h.forEach(c=>c.mood=clamp(c.mood+6));kidsAlive().forEach(k=>k.love=clamp(k.love+5));log('中秋家宴，六宫同乐。');return fx(chg({treasury:-30}))+'\n§后宫心情+6　皇嗣父爱+5'}},{t:'简单赏月',f:()=>pz('你独自登上角楼赏月。','你独自登上角楼。高处不胜寒，这句词到今夜才算读懂。')}]};
   return null;
 }
 

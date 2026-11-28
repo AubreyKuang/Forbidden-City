@@ -36,27 +36,27 @@ const COURT=[
   if(gen){const h=houseOf(gen),role=brotherRole(h,p=>officialServing(p)&&officialMilitary(p,h))||'father',p=h[role];ch.push({t:`命${cName(gen)}之${role==='father'?'父':'兄'}${p.name}领兵`,cond:()=>officialServing(p),why:'已不在任或另有差事',f:()=>{if(!officialServing(p))return null;if(chance(.75)){p.merit=clamp(p.merit+15);officialRecord(gen,role,'领兵出征北境，大胜而归。',{emotion:.7});return `军报送达，${p.name}得胜归来。${fx(chg({treasury:-250,prestige:8}),cchg(gen,{aff:12,mood:15}))}`}
     officialDeath(gen,role,'领兵出征北境，中伏战死沙场。','battle');return `兵败。${p.name}战死沙场，讣报已送达家中。${fx(chg({treasury:-300,prestige:-6}))}`}});}
   return {title:'北境告急',person:gen?.id,sfx:'gong',text:'八百里加急：北狄铁骑南下，连破两道关隘，边民死伤无数。'+(S.flags.wolf?'\n各路诸侯想起骊山那场烽火，援军来得很慢。':''),choices:ch}},
- ()=>({title:'殿试',text:'三年一度的殿试之期已到，三百贡士候于殿外。',choices:[
+ ()=>({title:'殿试',text:pz('三年一度的殿试之期已到，三百贡士候于殿外。','三年一度的殿试之期已到。三百贡士候于殿外，十年寒窗，只等今日这一道策问。\n天下英雄能否入陛下彀中，就看这一支朱笔。'),choices:[
    {t:'亲自出题考校',f:()=>{E().wen=clamp(E().wen+2);log('帝亲临殿试，钦点状元。');return `你出了一道“论民本”的策问，钦点一位寒门士子为状元，天下读书人称颂。${fx(chg({prestige:4,people:2}))}`}},
    {t:'交由礼部操办',delegated:true,f:()=>`殿试循例而行。${fx(chg({prestige:1}))}`}]}),
  impeachmentEvent,
- ()=>({title:'祥瑞',text:'礼部奏报：终南山猎户献上一头白鹿，称是天降祥瑞，颂陛下圣德。',choices:[
+ ()=>({title:'祥瑞',text:pz('礼部奏报：终南山猎户献上一头白鹿，称是天降祥瑞，颂陛下圣德。','礼部奏报：终南山猎户献上一头白鹿，通体如雪，称是天降祥瑞，颂陛下圣德。\n史书上的祥瑞不少，哪一朝的末年也没缺过。'),choices:[
    {t:'大赦庆贺',f:()=>{log('终南山献白鹿，帝大赦天下。');return `举国同庆。${fx(chg({prestige:5,people:3,treasury:-80}))}`}},
    {t:'斥其谄媚，放鹿归山',f:()=>`你命人将白鹿放归山林。朝臣暗暗称是。${fx(chg({people:4,prestige:2}))}`}]}),
- ()=>({title:'蝗灾',text:'河南、山东飞蝗蔽日，禾稼尽毁。',choices:[
+ ()=>({title:'蝗灾',text:pz('河南、山东飞蝗蔽日，禾稼尽毁。','河南、山东飞蝗蔽日，所过之处禾稼尽毁，赤地千里。\n奏报上说，百姓夜里点起火堆扑打，天亮一看，田里只剩秆子。'),choices:[
    {t:'开仓放粮（国库-200万两）',f:()=>{log('蝗灾，帝开仓放粮。');return `${fx(chg({treasury:-200,people:8}))}`}},
    {t:'设坛祭天',f:()=>{if(typeof outerTripLead==='function')outerTripLead('altar');const rite=siblingTravelRite();return chance(.4)?`祭天三日，忽降大雨，蝗群散去。${rite}${fx(chg({prestige:4}))}`:`蝗灾未止，百姓流亡。${rite}${fx(chg({people:-7}))}`}},
    {t:'悬赏捕蝗，以蝗换粟',f:()=>`百姓争相捕蝗，灾情渐缓。${fx(chg({treasury:-80,people:4}))}`}]}),
  // With config reforms (economyRule), 盐政 is enacted once: a smaller sum now and a lasting
  // 盐课 each month (monthlyBaseIncome), after which the memorial leaves the pool.
  ()=>{const reform=economyRule('reforms');if(reform&&S.flags.saltReform!=null)return null;
-  return {title:'盐政',text:'户部尚书奏请整顿盐政：废除盐引世袭，可增岁入，但必触怒盐商与其背后的勋贵。',choices:[
+  return {title:'盐政',text:pz('户部尚书奏请整顿盐政：废除盐引世袭，可增岁入，但必触怒盐商与其背后的勋贵。','户部尚书奏请整顿盐政：废除盐引世袭，可增岁入，但必触怒盐商与其背后的勋贵。\n盐是百姓锅里的事，也是许多朱门里的事。利之所在，积重难返。'),choices:[
    {t:'准奏，雷厉风行',...(reform?{preview:`国库 +${reform.saltNow} 万两 · 此后每月盐课多入 ${reform.saltMonthly} 万两 · 威望 +2 · 民心 −3 · 推行后不再呈奏`}:{}),f:()=>{log('帝整顿盐政。',1);
      if(reform){S.flags.saltReform=S.turn;return `盐引不再世袭，户部另立盐课簿，勋贵怨声载道。${fx(chg({treasury:reform.saltNow,prestige:2,people:-3}))}\n§此后每月国库额外+${reform.saltMonthly}万两`;}
      return `盐税大增，勋贵怨声载道。${fx(chg({treasury:250,prestige:2,people:-3}))}`}},
    {t:'维持旧制',f:()=>`一切照旧。${fx(chg({prestige:-1}))}`}]};},
  ()=>{const cooldown=economyRule('tributeSaleCooldown');
-  return {title:'江南贡品',text:'江南织造进贡云锦百匹、东珠十斛。',choices:[
+  return {title:'江南贡品',text:pz('江南织造进贡云锦百匹、东珠十斛。','江南织造进贡云锦百匹、东珠十斛。\n云锦寸锦寸金，一匹要两个织工对坐半年。贡单写得轻巧，后头是多少架织机的日夜。'),choices:[
    {t:'分赏六宫',f:()=>{harem().forEach(c=>{c.mood=clamp(c.mood+8)});return '六宫欢喜，争相裁制新衣。\n§后宫众人心情+8'}},
    {t:'变卖充入国库',...(cooldown?{cond:()=>S.flags.tributeSale==null||S.turn-S.flags.tributeSale>=cooldown,why:`距上次变卖贡品不满 ${cooldown} 个月`}:{}),f:()=>{if(cooldown)S.flags.tributeSale=S.turn;return `${fx(chg({treasury:120}))}`}},
    {t:'下旨减免织造之役',f:()=>`江南织工感激涕零。${fx(chg({people:5}))}`}]};},
@@ -68,16 +68,16 @@ const COURT=[
   return {title:'请立储君',sons:sons.map(k=>k.id),text:`以内阁首辅为首，群臣联名上书：“国本未定，人心不安，伏请陛下早立储君。”`,choices:[
    ...sons.map(k=>({t:`立${kidName(k)}（${kidAge(k)}岁）`,preview:'册立储君 · 威望 +6 · 生母心情 +25',f:()=>{S.heir=k.id;kstory(k,'群臣请立储君，被册为皇太子。');log(`立${k.name}为皇太子。`,1);const m=byId(k.mom);if(m)cchg(m,{mood:25});return `${fx(chg({prestige:6}))}`}})),
    {t:'朕春秋正盛，此事容后再议',preview:'威望 −3',f:()=>`${fx(chg({prestige:-3}))}`}]}},
- ()=>({title:'京畿疫病',text:'京畿一带爆发时疫，染病者日增。',choices:[
+ ()=>({title:'京畿疫病',text:pz('京畿一带爆发时疫，染病者日增。','京畿一带爆发时疫，染病者日增。药铺门前排起长队，城南已有人家阖门不出。\n太医院的折子写得谨慎，字里行间却都是一个“急”字。'),choices:[
    {t:'命太医院全力救治（国库-150万两）',f:()=>{log('京畿时疫，太医院救治有方。');return `${fx(chg({treasury:-150,people:6}))}`}},
    {t:'封锁疫区',f:()=>`疫情被控制住了，但疫区百姓死伤惨重。${fx(chg({people:-6,prestige:1}))}`}]}),
- ()=>({title:'五谷丰登',text:'今年风调雨顺，各省奏报丰收。',choices:[
+ ()=>({title:'五谷丰登',text:pz('今年风调雨顺，各省奏报丰收。','今年风调雨顺，各省奏报丰收。\n只是谷贱伤农。仓满了，粮价也得有人看着。'),choices:[
    {t:'减免三成赋税',outcome:'县衙换下旧税榜。来交粮的人看了新榜，挑着余粮回家。',f:()=>{log('岁丰，帝减免赋税。');return fx(chg({treasury:-100,people:9}));}},
    {t:'照常征收，充实国库',outcome:'漕船依旧额交粮，户部把丰年所增的收入逐笔登账。',f:()=>fx(chg({treasury:180}))}]}),
- ()=>({title:'修建园林',text:'工部奏请于西郊修建避暑园林，以供圣驾消夏。',choices:[
+ ()=>({title:'修建园林',text:pz('工部奏请于西郊修建避暑园林，以供圣驾消夏。','工部奏请于西郊修建避暑园林，以供圣驾消夏。图样画得极好：叠石引泉，长廊九曲。\n图样旁边，户部附了一纸估银。'),choices:[
    {t:'准奏（国库-300万两）',outcome:'工部领了银，带人到西郊丈量地界。六宫得知有了消夏的去处，已在商量搬哪些书画。',f:()=>{harem().forEach(c=>c.mood=clamp(c.mood+10));log('帝修西郊园林。');return `${fx(chg({treasury:-300,people:-4}))}\n§后宫众人心情+10`}},
    {t:'不准，崇尚节俭',outcome:'工部撤下西郊的营造图册，原拟摊派的工役也一并撤回。',f:()=>fx(chg({people:3,prestige:2}))}]}),
- ()=>({title:'文武之争',text:'内阁首辅与镇国大将军在朝堂上争执不下：一要削减军费兴修水利，一要扩军备边。',choices:[
+ ()=>({title:'文武之争',text:pz('内阁首辅与镇国大将军在朝堂上争执不下：一要削减军费兴修水利，一要扩军备边。','内阁首辅与镇国大将军在朝堂上争执不下：一要削减军费兴修水利，一要扩军备边。\n一个说“民惟邦本”，一个说“忘战必危”。两句都是圣贤的话，银子却只有一份。'),choices:[
    {t:'偏向文臣，兴修水利',f:()=>{harem().filter(c=>c.trait==='将门').forEach(c=>cchg(c,{mood:-10}));return `${fx(chg({treasury:-100,people:6,prestige:-1}))}`}},
    {t:'偏向武将，扩军备边',f:()=>`${fx(chg({treasury:-150,prestige:5,people:-2}))}`},
    {t:'各打五十大板',f:()=>`两人都讨了没趣。${fx(chg({prestige:2}))}`}]}),
@@ -88,7 +88,7 @@ const COURT=[
     {t:'下罪己诏',outcome:`罪己诏传至${region}，州县在赈棚外张榜，吏员依诏逐户登记灾情。`,f:()=>{log(`${region}地震，帝下罪己诏。`,1);return fx(chg({prestige:-3,people:8}));}},
     {t:'拨银赈灾（国库-200万两）',outcome:`银车发往${region}，州县先拨一笔安置无处栖身的人家。`,f:()=>fx(chg({treasury:-200,people:5}))}]};
  },
- ()=>({title:'老臣乞骸骨',text:'三朝元老、太傅陈公年过七旬，上表请求告老还乡。',choices:[
+ ()=>({title:'老臣乞骸骨',text:pz('三朝元老、太傅陈公年过七旬，上表请求告老还乡。','三朝元老、太傅陈公年过七旬，上表请求告老还乡。\n表中写道：“臣犬马齿长，不复能驰驱。愿乞骸骨，归老故里。”字迹已不如当年稳了。'),choices:[
    {t:'厚赐金帛，亲送出城',f:()=>`老臣涕泪纵横。百官感念陛下仁厚。${fx(chg({treasury:-30,prestige:3}))}`},
    {t:'挽留：“朝廷离不开您老。”',f:()=>`老臣又留任一年，朝政井井有条。${fx(chg({prestige:1,people:2}))}`}]}),
 ];
