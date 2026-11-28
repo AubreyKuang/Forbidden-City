@@ -219,6 +219,13 @@ function dateStr(s=S){return `${s.emp.era}${s.year===1?'元':cnNum(s.year)}年${
 function cName(c){
   if(c.rescuedGuest)return fullName(c)+'姑娘';
   if(c.maid) return c.near?`贴身宫女${c.given}`:`宫女${c.given}`;
+  // Someone without a surname (阿依慕) is called by her given name: 阿依慕贵人, not 贵人.
+  if(!c.sur&&c.given&&journalContentVersion()>=165){
+    if(c.cold&&(journalContentVersion()<PALACE_KIN_RESPONSE_JOURNAL||palaceKinCommoner(c)))return c.given+'庶人';
+    if(c.rank===8)return '皇后';
+    if(c.title&&c.rank>=4)return c.title+RANKS[c.rank];
+    return c.given+RANKS[c.rank];
+  }
   if(c.cold&&(journalContentVersion()<PALACE_KIN_RESPONSE_JOURNAL||palaceKinCommoner(c))) return `${c.sur}庶人`;
   if(c.rank===8) return '皇后';
   if(journalContentVersion()>=24&&c.gouyi&&c.rank===2&&c.title==='瑞')return '瑞常在';

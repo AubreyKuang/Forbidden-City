@@ -105,7 +105,7 @@ const PalaceShop=(()=>{
     const isOwned=p.kind!=='silver'&&owned.has(p.key);
     const price=`${p.price} 次元币（${yuan(p.price)} 元）`;
     const confirm=UI.shopConfirm===p.key;
-    const action=isOwned?'<span class="tag">已拥有</span>':
+    const action=isOwned?'<span class="tag">已购买 · 已生效</span>':
       buying===p.key?'<button class="btn sm" disabled>购买中…</button>':
       confirm?`<button class="btn sm gold" data-onclick="A.shopBuy('${p.key}')">确认支付 ${p.price} 次元币</button> <button class="btn sm" data-onclick="A.shopConfirm(null)">取消</button>`:
       `<button class="btn sm gold" data-onclick="A.shopConfirm('${p.key}')" ${buying||!host()?'disabled':''}>购买</button>`;

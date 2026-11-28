@@ -296,3 +296,6 @@
    panel's top edge and scrolled text shows through the gap. A panel-coloured copy of
    the bar, drawn as a shadow above it, covers that strip. */
 #app[data-layout] .section-jumps{box-shadow:0 3px 10px #71522e0c,0 -30px 0 0 rgb(251 242 223)}
+/* The bar's mask reaches 30px up; the 御书房 shortcuts sit 12px above it and always scroll
+   away before the bar sticks, so they paint over the mask. */
+#app[data-layout] .study-shortcuts{position:relative;z-index:4}
