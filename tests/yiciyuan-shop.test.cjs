@@ -192,3 +192,21 @@ test('the summon panel shows only to owners, and the action is journaled',()=>{
   assert.match(shop.view(),/aria-label="事件频率"/);
   shop._setOwned([]);assert.doesNotMatch(shop.view(),/aria-label="事件频率"/);
 });
+
+// The featured product (金手指包) leads the list and shows its contents before purchase.
+test('the 金手指包 comes first and shows what it holds before it is bought',()=>{
+  const {context,shop}=loadSummon();
+  context.EVENT_FREQ_LEVELS={off:{label:'不触发'},low:{label:'小概率'},normal:{label:'常规'},high:{label:'高概率'}};
+  context.EVENT_FREQ_CATEGORIES=[{id:'scheme',name:'宫斗与夺嫡',desc:'争风吃醋'},{id:'disaster',name:'天灾',desc:'黄河决堤'}];
+  const html=shop.view();
+  const order=[...html.matchAll(/<article class="save-slot shop-item[^"]*"><div class="save-slot-info"><b>([^<]+)<\/b>/g)].map(m=>m[1]);
+  assert.equal(order[0],'金手指包');assert.equal(order.length,SHOP.products.length);
+  assert.match(html,/shop-featured/);
+  assert.match(html,/立即召见/);assert.match(html,/事件频率 · 2 类/);
+  for(const label of ['不触发','小概率','常规','高概率'])assert.match(html,new RegExp(label));
+  assert.match(html,/宫斗与夺嫡 · 天灾/);
+  assert.match(html,/剧情妃 \d+ 位/);
+  assert.match(html,/画师换像（单买 9\.9 元）/);
+  shop._setOwned(['goldFinger']);context.S.flags.goldFinger=true;
+  assert.doesNotMatch(shop.view(),/shop-contents/);
+});
