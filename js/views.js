@@ -266,7 +266,7 @@ A.logCard=function(){
 
 function viewFamily(){
   const graph=(UI.familyMode||'graph')==='graph';
-  const heading=pageHeading('家族关系树',`${esc(E().era)}朝`,S.gen>1?'<button class="btn sm quiet" data-onclick="openHomeBook(\'kin\')">去御书房看皇亲</button>':'');
+  const heading=pageHeading('家族关系树','',S.gen>1?'<button class="btn sm quiet" data-onclick="openHomeBook(\'kin\')">去御书房看皇亲</button>':'');
   const modes=`<div class="reign-switch" role="group" aria-label="家族查看方式">${[['graph','关系图'],['list','家族列表']].map(([id,label])=>`<button class="btn sm" aria-pressed="${(id==='graph')===graph}" data-onclick="A.familyMode('${id}')">${label}</button>`).join('')}</div>`;
   const dowagers=dowagerFamilyPanel();
   const maternal=dowagers?`<details class="family-branch family-context"><summary>太后与母家</summary>${dowagers}</details>`:'';
