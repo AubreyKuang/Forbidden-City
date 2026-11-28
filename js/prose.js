@@ -9,6 +9,22 @@ const pz=(old,neu)=>proseActive()?neu:old;
 // 第二批改写（内容版本 173 起）：172 已随 V1.0.13 发布，之后改写的存档文字另按 173 分流。
 const PROSE_BATCH2_VERSION=173;
 const pz2=(old,neu)=>typeof journalContentVersion!=='function'||journalContentVersion()>=PROSE_BATCH2_VERSION?neu:old;
+/* 第二批里改写的常量表文字（data.js 的各宫风物、性情说明）。这些表在脚本载入时求值，
+   不能在表内分流，故按旧文查表，在读取处经 proseLine() 取用。键须与原表逐字一致。 */
+const PROSE_REWRITES={
+ '东六宫之一，偏僻清静，少有人来。':'东六宫之一，地方偏，阶前的草比别处长得高。',
+ '东六宫之一，藏书最多，满室书香。':'东六宫之一，藏书最多，晴日里满院晒着书。',
+ '西六宫之一，四季常青，冬日也有绿意。':'西六宫之一，院里两株老柏，落雪时也是青的。',
+ '冰雪聪明，一点即透。':'心思敏捷，话听半句便知下文。',
+ '不争不抢，恩宠于她如浮云。':'不争不抢，得失都看得淡。',
+ '天真烂漫，笑声如铃。':'天真烂漫，爱说爱笑。',
+ '一往情深，眼里只有陛下。':'一往情深，认定了便不回头。',
+ '自幼多病，弱柳扶风。':'自幼多病，换季时总要卧床几日。',
+ '将门虎女，弓马娴熟。':'武将之家出身，弓马娴熟。',
+ '遇事先理清来龙去脉，答应的事会办完。':'遇事先理清来龙去脉，说话行事都不抢先。',
+ '肯向任何人请教，碰到不懂的事就记下来。':'肯向任何人请教，一个字也要问到明白。'
+};
+const proseLine=text=>Object.hasOwn(PROSE_REWRITES,text)?pz2(text,PROSE_REWRITES[text]):text;
 function proseHash(text){let h=2166136261;for(const ch of String(text)){h^=ch.codePointAt(0);h=Math.imul(h,16777619);}return h>>>0;}
 function prosePick(list,key){return list[proseHash(key)%list.length];}
 

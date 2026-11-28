@@ -4,6 +4,9 @@ const {cases,renderCase,signature}=require('./ui-layout-cases.cjs');
 const baseline=require('./fixtures/ui-before-organization.json');
 const {boot}=require('./playtest-harness.cjs');
 const childTextChanges=new Map([['宫内','宫中'],['已出宫','宫外'],['尚无皇子公主出宫。','宫外暂无皇嗣。']]);
+// Content version 173 reworded a few palace notes and trait descriptions (js/prose.js PROSE_REWRITES); nothing else about them moved.
+const proseRewrites=Object.entries(JSON.parse(boot(1).run('JSON.stringify(PROSE_REWRITES)')));
+const reworded=text=>proseRewrites.reduce((line,[old,neu])=>line.replace(old,neu),text);
 
 const CONSORT_MOVES=new Map([['处置',null],['册封与宫务',null],['宫务',null],['改封号','赐封号']]);
 for(const c of cases)test(`layout preserves information and action availability: ${c[0]}`,()=>{
@@ -36,7 +39,7 @@ for(const c of cases)test(`layout preserves information and action availability:
  // The family list intentionally replaces flat kin labels with a paternal hierarchy.
  // Its original person controls remain checked above; parent/child identity and both
  // family views have dedicated end-to-end assertions in palace-layered-family.
- const expected=c[0]==='family-list'?[]:[...before.text];
+ const expected=c[0]==='family-list'?[]:before.text.map(reworded);
  const fragments=['children','children-out'].includes(c[0])?expected.map(text=>childTextChanges.get(text)??text):expected;
  if(c[0]==='home'){
   // These three indicators are already readable in the HUD. The study displays
