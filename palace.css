@@ -1075,6 +1075,11 @@ button.family-room-person{cursor:pointer}button.family-room-person:hover{color:#
 .consort-action-row{display:flex;flex-wrap:wrap;gap:12px;align-items:stretch}
 .consort-action-row>.action-group{flex:1 1 260px;margin:0}
 
+/* 事件频率 (金手指包) */
+.event-freq-row{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid rgba(120,90,60,.18)}
+.event-freq-row>div:first-child{flex:1 1 220px;min-width:0}
+.event-freq-row small{display:block;margin-top:2px}
+.event-freq-row .acts{flex:0 0 auto;margin:0}
 /* 文采层：题记、月令、判词 */
 .epigraph{margin:2px auto 10px;max-width:34em;padding:0 8px;text-align:center;font-size:13px;line-height:1.8;letter-spacing:.06em;color:var(--ink2)}
 .epigraph cite{display:block;font-style:normal;font-size:11px;letter-spacing:.04em;color:var(--mut)}

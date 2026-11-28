@@ -147,6 +147,7 @@ const DEV={
   safely(fn){try{if(palaceStorageOpening&&!PalaceStorage.store)throw Error('存档仍在读取，请稍后再试');fn()}catch(e){DEV.message(e.message)}},
   open(){ $('#dev-panel').hidden=false;clearExhaustedMonthNotice();DEV.refresh(); },
   close(){ $('#dev-panel').hidden=true;syncExhaustedMonthNotice(); },
+  eventFreq(){ if(!S){toast('请先开始或读取一朝');return;} DEV.close();UI.view='event-freq';render(); },
   refresh(){
     const select=$('#dev-target');select.innerHTML='<option value="emp">皇帝</option><option value="dowager">太后</option>'+(S?[...S.consorts.map(c=>`<option value="consort:${c.id}">妃嫔 · ${esc(fullName(c))}${c.alive?'':'（已故）'}</option>`),...S.children.map(k=>`<option value="kid:${k.id}">皇嗣 · ${esc(kidName(k))}</option>`)].join(''):'')+'<option value="world">完整世界／存档属性</option>';
     if(!DEV.record())DEV.target='emp';select.value=DEV.target;DEV.select(DEV.target);
@@ -210,7 +211,7 @@ const DEV={
 function mountDevTools(){
   const root=document.createElement('div');root.innerHTML=`<section id="dev-panel" role="dialog" aria-label="金手指面板" hidden>
     <div class="dev-head"><h2>金手指</h2><button class="btn sm" data-onclick="DEV.close()">收起</button></div><p class="dev-help">测试模式 · 独立测试存档。选择人物，修改数值或立绘，预览后保存。</p>
-    <div class="dev-actions"><button class="btn sm" data-onclick="DEV.safely(DEV.copyProduction)">载入正式版存档副本</button><button class="btn sm" data-onclick="DEV.safely(DEV.restore)">回退上一次修改</button></div>
+    <div class="dev-actions"><button class="btn sm" data-onclick="DEV.safely(DEV.copyProduction)">载入正式版存档副本</button><button class="btn sm" data-onclick="DEV.safely(DEV.restore)">回退上一次修改</button><button class="btn sm" data-onclick="DEV.eventFreq()">调整事件频率</button></div>
     <label class="dev-month-option"><input id="dev-auto-month" type="checkbox" data-onchange="DEV.setAutoMonth(this.checked)">精力耗尽后自动转月</label>
     <p class="dev-help">点完本月全部剧情和弹窗后进入下月。关闭后可手动结束本月。</p>
     <section class="dev-time"><h3>跳过时间</h3><p class="dev-help">快进日历与人物年龄，便于预览成长。随机剧情、政务和生育不在这里自动结算，可回退上一次修改。</p><div class="dev-actions"><input id="dev-time-amount" type="number" min="1" max="1200" step="1" value="12" aria-label="跳过数量"><select id="dev-time-unit" aria-label="时间单位"><option value="month">个月</option><option value="year">年</option></select><button class="btn jade" data-onclick="DEV.safely(DEV.jumpFromPanel)">跳过并保存</button></div></section>

@@ -219,7 +219,7 @@ function fatherLetterTick(){
    if(receiveFatherLetter(queen,pressure))log(`${fullName(queen)}收到父亲${pressure?'关于皇嗣的':''}家书。`);
   }
  }
- if(S.turn-(S.flags.lastFatherLetter??-99)<3||!chance(.25))return;
+ if(S.turn-(S.flags.lastFatherLetter??-99)<3||!chance(eventOdds('family',.25)))return;
  const pool=S.consorts.filter(c=>!queenOfficialHouse(c)&&fatherLetterNewReady(c,12));
  if(!pool.length)return;
  const c=pick(pool);if(receiveFatherLetter(c)){S.flags.lastFatherLetter=S.turn;log(`${fullName(c)}收到父亲的家书，心里有些话想说。`);}

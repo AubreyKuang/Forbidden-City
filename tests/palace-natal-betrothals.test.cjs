@@ -144,7 +144,9 @@ test('a daughter already born or sons conceived in just one pregnancy do not pro
 
 test('a naturally triggered monthly proposal survives replay before any choice',()=>{
   const setup=family();
-  const b=boot(40);b.ctx.assert=assert;b.ctx.base=setup.run('JSON.stringify(S)');
+  // A seed whose month end naturally raises the proposal (the monthly heir-hope and
+  // sister-bond checks from journal 169 draw first, so the seed moved from 40).
+  const b=boot(7);b.ctx.assert=assert;b.ctx.base=setup.run('JSON.stringify(S)');
   b.run(`S=JSON.parse(base);migrate();UI.view='kids';PalaceActions.reset();A.endMonth();
     for(let j=0;modalOpen&&!curEv.title.includes('娃娃亲')&&j<90;j++){
       if(modalResult)nextEv();else choose(curEv.choices.findIndex(o=>!o.cond||o.cond()));

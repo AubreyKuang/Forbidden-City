@@ -378,7 +378,7 @@ function immortalTick(){
  if((immortalDiscoveryNewsActive()&&S.immortalDiscovery)||S.turn-p.last<6||mourningActive())return;
  p.last=S.turn;
  const candidates=S.children.filter(k=>immortalLocal(k)&&kidAge(k)>=12&&!k.immortal&&immortalRoot(k)&&daoInterest(k)>0);
- if(candidates.length&&chance(.35))immortalDiscover(pick(candidates));
+ if(candidates.length&&chance(eventOdds('mystic',.35)))immortalDiscover(pick(candidates));
 }
 function pendingImmortalEvent(){
  if(!immortalEnabled()||S.over||mourningActive())return null;

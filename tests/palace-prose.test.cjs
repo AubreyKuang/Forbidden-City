@@ -1,6 +1,6 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),{world}=require('./official-marriage-world.cjs');
 function setup(){const b=world();b.ctx.assert=assert;return b;}
-const legacy=`PalaceActions.reset();var real=journalContentVersion;journalContentVersion=()=>168;`,restore=`journalContentVersion=real;`;
+const legacy=`PalaceActions.reset();var real=journalContentVersion;journalContentVersion=()=>171;`,restore=`journalContentVersion=real;`;
 
 test('every month has three almanac lines and the choice never draws from the game\'s random numbers',()=>{
  const b=setup();b.run(`assert.equal(PROSE_ALMANAC.length,12);

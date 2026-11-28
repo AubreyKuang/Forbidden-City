@@ -1,9 +1,9 @@
-/* ============ 文采层（内容版本 169 起） ============
+/* ============ 文采层（内容版本 172 起） ============
    月令、题记、判词、史评，以及改写后的正文，都从这里取。
    写进存档的文字（纪事、起居注、批复结果）一律经 pz() 分流：
    旧版本留下的未完事件按旧文重放，回放校验才不会因措辞不同而中断。
    这里的挑选只依赖回合数与标题，不取游戏随机数，重放时结果不变。 */
-const PROSE_VERSION=169;
+const PROSE_VERSION=172;
 const proseActive=()=>typeof journalContentVersion!=='function'||journalContentVersion()>=PROSE_VERSION;
 const pz=(old,neu)=>proseActive()?neu:old;
 function proseHash(text){let h=2166136261;for(const ch of String(text)){h^=ch.codePointAt(0);h=Math.imul(h,16777619);}return h>>>0;}

@@ -432,9 +432,9 @@ const EVENT_ILLUSTRATIONS={
   'quiet-palace-keepsakes':'窗边的浅匣安安静静，外头的树影慢慢移过来。',
   'western-moon-window':'窗前静得只剩月色，远处的屋瓦也淡了下去。'
 };
-function eventIllustration(key){
+function eventIllustration(key,caption){
   if(!Object.hasOwn(EVENT_ILLUSTRATIONS,key))return '';
-  return `<figure class="event-illustration" data-illustration="${key}"><img src="./assets/images/story-${key}.webp" alt="" decoding="async" data-onload="this.classList.add('event-illustration-loaded')"><figcaption>${esc(EVENT_ILLUSTRATIONS[key])}</figcaption></figure>`;
+  return `<figure class="event-illustration" data-illustration="${key}"><img src="./assets/images/story-${key}.webp" alt="" decoding="async" data-onload="this.classList.add('event-illustration-loaded')"><figcaption>${esc(caption||EVENT_ILLUSTRATIONS[key])}</figcaption></figure>`;
 }
 function poemPreludeHTML({poet,title,verse,account}){
   return `<section class="poem-prelude"><div class="poem-leaf"><p>${esc(poet.name)}《${esc(title)}》</p><blockquote>${verse.map(esc).join('<br>')}</blockquote></div>
@@ -450,7 +450,7 @@ function openModal(ev){
   const choicePeople=new Set(ev.choices.filter(c=>c.portrait||c.person).map(c=>(c.portrait||c.person).id??c.person));
   const showChoicePortraits=choicePeople.size>1;
   const arrival=ev.scene==='palace-arrival';
-  let h=`<h2 class="mtitle" id="event-title" tabindex="-1">${esc(ev.displayTitle||ev.title)}</h2>${proseEpigraphHTML(ev)}${ev.scene==='mourning'?mourningScene():''}${eventIllustration(ev.illustration)}${ev.poemPrelude?poemPreludeHTML(ev.poemPrelude):''}${arrival?palaceArrivalHTML(ev):ev.gardenTables?banquetSeating(ev.gardenTables):eventCast(people,ev)}<div class="mbody"${arrival?' hidden':''}>`;
+  let h=`<h2 class="mtitle" id="event-title" tabindex="-1">${esc(ev.displayTitle||ev.title)}</h2>${proseEpigraphHTML(ev)}${ev.scene==='mourning'?mourningScene():''}${eventIllustration(ev.illustration,ev.illustrationCaption)}${ev.poemPrelude?poemPreludeHTML(ev.poemPrelude):''}${arrival?palaceArrivalHTML(ev):ev.gardenTables?banquetSeating(ev.gardenTables):eventCast(people,ev)}<div class="mbody"${arrival?' hidden':''}>`;
   if(people.length===1&&!ev.gardenTables){
     h+=ev.portraitArt?`<figure class="event-full-portrait"><img src="${esc(ev.portraitArt.src)}" alt="${esc(ev.portraitArt.alt)}"><figcaption>${esc(people[0].fixedStory&&S.consorts.includes(people[0])?fullName(people[0])+' · '+cName(people[0]):porName(people[0]))}</figcaption></figure>`:eventPortrait(people[0],112,true);
   }
@@ -500,7 +500,7 @@ function showRes(res,choice){
   const people=eventPortraits(curEv);
   const cast=res.por?'':eventCast(people,curEv);
   const portrait=res.por||(people.length===1&&people[0].storyPerson==='xiean'?people[0]:null);
-  const illustration=eventIllustration(res.illustration);
+  const illustration=eventIllustration(res.illustration,res.illustrationCaption);
   b.innerHTML=`<h2 class="mtitle" id="event-title"${illustration?' tabindex="-1"':''}>${esc(res.title||curEv.title)}</h2>${curEv.scene==='mourning'?mourningScene():''}${illustration}${cast}<div class="mbody">${portrait?eventPortrait(portrait,96,false):''}<div class="mtext">${fmt(res.text)}</div></div><div class="mch"><button class="btn gold" data-onclick="nextEv()">继续</button></div>`;
   b.scrollTop=0;renderTop();
   $(illustration?'#event-title':'#mbox .mch button')?.focus?.({preventScroll:true});
@@ -827,7 +827,10 @@ A.endMonth=function(){
   palaceKinMailTick();
   sisterAwarenessMailTick();
   nieceHandwrittenMailTick();
+  if(journalContentVersion()>=169){if(typeof heirHopesMonth==='function')heirHopesMonth();if(typeof sisterBondsMonth==='function')sisterBondsMonth();}
+  if(journalContentVersion()>=169&&typeof storyPersonaMonth==='function')storyPersonaMonth();
   if(journalContentVersion()>=96)childUpbringingMonth();
+  if(journalContentVersion()>=171)palaceLifeTick();
   if(journalContentVersion()>=115)whiteSpringFamilyParcelTick();
   const passing=dowagerPassingEvent();if(passing)pushEv(passing);
   const princeSuccession=princeSuccessionTick();
@@ -874,19 +877,21 @@ A.endMonth=function(){
   if(fiefDockets)must.push(fiefDockets);
   // 积压的奏折：离宫期间攒下的朝堂事务，月末一并呈上
   while((S.flags.memorials||0)>0){S.flags.memorials--;const memo=factionEvent();if(memo&&!must.some(e=>e.title===memo.title))must.push(memo)}
-  const add=(e,p)=>{if(e&&ambientEventReady(e))opt.push([e,p+R()-ambientNovelty(e)+continuityEventScore(e)])};
+  const add=(e,p,cat)=>{if(e&&ambientEventReady(e))opt.push([e,p+R()-ambientNovelty(e)+continuityEventScore(e)+(cat?eventPriority(cat):0)])};
+  // Each kind of optional scene answers to its 事件频率 setting (js/event-frequency.js).
+  const kind=(cat,make,p)=>add(eventPick(cat,make),p,cat),rolled=(cat,odds,make,p)=>add(chance(eventOdds(cat,odds))?make():null,p,cat);
   if(!passing){
-  add(continuityMonthlyEvent(),9);
-  add(pregnancyGardenEvent(true),8);
-  add(homeReturnSocialEvent(),8);add(natalVisitRequest(),7);add(awaitingNoticeEvent(null,firstNightReminder?.firstNightConsort),6);
-  add(pastLifeMonthlyEvent(),6);add(pregnancyPrayerMonthlyEvent(),6);add(residencePetitionEvent(),8);add(fiveBrotherMonthlyEvent(),6);add(travelerMonthlyEvent(),8);add(recoveredSwapEvent(),8);add(fosterPetitionEvent(),8);add(kinSuccessionEvent(),8);add(parentageClueEvent(),8);
-  add(coldFosterPetitionEvent(),9);add(coldFriendPetitionEvent(),8);
-  const tribute=jewelryTributeEvent();
-  add(revenue?.jewelry?tribute:tributeEnvoyEvent(tribute),7);add(jewelryRequestEvent(),7);
-  add(chance(.8)?festival():null,5);add(chance(.75)?haremEvent():null,6);
-  add(chance(.65)?quirkEvent():null,5);add(chance(.5)?histEvent():null,6);add(chance(.4)?courtEvent():null,4);if(!affairReports.length)add(palaceRomanceEvent(),8);add(courtFriendshipEvent(),9);add(motherAppealEvent(),9);
-  add(chance(.3)?youthEvent():null,7);add(chance(.45)?kidEvent():null,4);add(chance(.55)?xinEvent():null,6);add(monthlyMaidEvent(),4);add(chance(.3)?fosterEvent():null,4);add(chance(.45)?relEvent():null,5);add(chance(.35)?clanEvent():null,5);add(chance(.45)?factionEvent():null,6);add(chance(.5)?visitorEvent():null,5);add(chance(.15)?dowagerEvent():null,3);
-  add(typeof kinCourtEvent==='function'?kinCourtEvent():null,6);add(typeof betrothalEvent==='function'?betrothalEvent():null,5);
+  add(continuityMonthlyEvent(),9);add(favorInquiryEvent(),8,'heart');
+  kind('harem',()=>pregnancyGardenEvent(true),8);
+  add(homeReturnSocialEvent(),8);kind('family',natalVisitRequest,7);kind('heart',()=>awaitingNoticeEvent(null,firstNightReminder?.firstNightConsort),6);
+  add(pastLifeMonthlyEvent(),6,'mystic');kind('harem',pregnancyPrayerMonthlyEvent,6);kind('harem',residencePetitionEvent,8);kind('family',fiveBrotherMonthlyEvent,6);add(travelerMonthlyEvent(),8,'traveler');kind('secret',recoveredSwapEvent,8);kind('children',fosterPetitionEvent,8);kind('family',kinSuccessionEvent,8);kind('secret',parentageClueEvent,8);
+  kind('harem',coldFosterPetitionEvent,9);kind('harem',coldFriendPetitionEvent,8);
+  const tribute=eventPick('festival',jewelryTributeEvent);
+  add(revenue?.jewelry?tribute:eventPick('festival',()=>tributeEnvoyEvent(tribute)),7,'festival');kind('harem',jewelryRequestEvent,7);
+  rolled('festival',.8,festival,5);add(chance(haremEventOdds())?haremEvent():null,6);
+  rolled('heart',.65,quirkEvent,5);rolled('court',.5,histEvent,6);add(chance(Math.min(1,.4*Math.max(eventFrequency('court'),eventFrequency('disaster'))))?courtEvent():null,4);if(!affairReports.length)add(palaceRomanceEvent(),8);kind('harem',courtFriendshipEvent,9);kind('children',motherAppealEvent,9);
+  rolled('children',.3,youthEvent,7);rolled('children',.45,kidEvent,4);rolled('heart',.55,xinEvent,6);add(monthlyMaidEvent(),4,'maid');rolled('children',.3,fosterEvent,4);rolled('children',.45,relEvent,5);rolled('family',.35,clanEvent,5);rolled('court',.45,factionEvent,6);rolled('family',.5,visitorEvent,5);rolled('harem',.15,dowagerEvent,3);
+  if(typeof kinCourtEvent==='function')kind('family',kinCourtEvent,6);if(typeof betrothalEvent==='function')kind('family',betrothalEvent,5);
   }
   opt.sort((a,b)=>b[1]-a[1]);const seen=new Set();must.forEach(e=>{seen.add(e.title);pushEv(e)});
   const limit=Math.max(must.length,ri(1,3));
@@ -996,6 +1001,7 @@ function succeed(h){
     if(S.emp.age>=15&&!S.emp.natalMarriageHeir){const em=marriageEmpress(h)||makeGirl({fam:pick(FAMS.slice(0,4)),trait:pick(['温婉','聪慧','城府','骄矜'])});em.favor=35;em.aff=30;if(h.spouse)em.knownBeforeAccession=true;addConsort(em,8,h.spouse?'潜邸嫡妻，随新帝登基册立':'新帝登基，奉遗诏册立');if(h.spouse&&journalContentVersion()>=85)em.accessionArrival={gen:S.gen,started:S.turn};}
     inheritHousehold(h,empress());inheritLifeKeepsakes(h);S.ys={c:0,b:0,n:0};UI.kidsResidence='palace';
     migrate();UI.view='map';AU.sfx('gong');
+    const jinyiweiReminder=typeof jinyiweiAccessionReminder==='function'&&jinyiweiAccessionReminder();if(jinyiweiReminder)pushEv(jinyiweiReminder);
     return {title:'新朝家人',por:dowagerPerson(S.flags.dowager),text:`${v}元年，新帝登基，大赦天下。\n${S.flags.dowager.fullName||S.flags.dowager.name}${S.flags.dowager.alive?'尊为'+S.flags.dowager.name+'，居慈宁宫。':'已故，尊谥存于宗谱。'}${S.flags.birthDowager?.alive?'\n生母'+S.flags.birthDowager.fullName+'亦尊为皇太后。':''}${seniorNotice?'\n'+seniorNotice:''}\n潜邸妻儿与亲族的往来，由此接入新朝。`}}}]});
 }
 
@@ -1047,5 +1053,5 @@ A.start=function(){
   const accession=scenario==='founder'?pz('天下初定，你在钟声中登上了新朝的御座。','烽烟初定，旧朝的宫阙换了新匾。你在钟声里走上丹陛，身后是打下来的江山，眼前是还没坐热的御座。\n马上得天下，不能马上治之。这句话，从今日起要一条一条去应。'):pz('先帝龙驭上宾，你在太和钟声中登上了宸极殿的御座。','先帝龙驭上宾。孝服未除，太和钟已响过九响，你一步一步走上宸极殿的丹陛。\n御座比想象中更高，也更冷。阶下山呼万岁，声浪一层层涌上来。从今往后，天下人的饥寒冷暖，都要问到你这里。');
   pushEv({title:'登基',scene:'coronation',por:'emp',text:`${era}元年三月，${accession}\n嫡妻${fullName(em)}册为皇后，潜邸旧人${fullName(old)}册为贵人。${dowagerCareActive()&&em.dowagerKin?"\n皇后亦是太后母家侄女，宫中有潜邸夫妻与母族两层亲缘。":""}${lowTitleHonorActive()?`\n户部奏报：国库存银${e.treasury}万两，${e.treasury<400?'库银吃紧，诸事须量入为出':e.treasury<800?'收支尚可':'仓廪充盈'}。`:''}\n礼部奏请：新帝登基，当广选秀女，以充后宫、绵延皇嗣。`,choices:[
     {t:'进入宫城',primary:true},{t:'准奏，即刻选秀',f:()=>{genCands(7);UI.view='xx';return null}}]});
-  if(lowTitleHonorActive())pushEv(jinyiweiEstablishEvent(true));
+  const jinyiweiReminder=typeof jinyiweiAccessionReminder==='function'&&jinyiweiAccessionReminder();if(jinyiweiReminder)pushEv(jinyiweiReminder);
 };

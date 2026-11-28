@@ -57,7 +57,7 @@ jinyiweiTick=function(){
   clueJinyiweiTick();if(!careersActive()||!jinyiweiCommanderReady())return;const j=jinyiwei();
   if(j.clueTick===S.turn)return;j.clueTick=S.turn;
   const p=j.commander;p.ageTrackedAt??=j.established;const years=Math.floor((S.turn-p.ageTrackedAt)/12);if(years>0){p.age+=years;p.ageTrackedAt+=years*12;}
-  if(S.turn-(j.lastClue??j.established)<4||j.clues?.some(x=>x.status==='new')||palaceCases().some(x=>x.status==='investigating')||!chance(.35))return;
+  if(S.turn-(j.lastClue??j.established)<4||j.clues?.some(x=>x.status==='new')||palaceCases().some(x=>x.status==='investigating')||!chance(eventOdds('intel',.35)))return;
   const sources=jinyiweiClueSources();if(!sources.length)return;
   const clue=createJinyiweiClue(pick(sources));j.lastClue=S.turn;pushEv(jinyiweiClueEvent(clue));
 };

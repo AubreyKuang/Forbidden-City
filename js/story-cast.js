@@ -9,7 +9,7 @@ const STORY_CAST={
     intro:'陆将军独女，有一位兄长。十岁随父见过战阵，长成后百步穿杨，说不惯宫里的客套话。'},
   ayimu:{sur:'',given:'阿依慕',age:15,trait:'活泼',family:'白泉国王室',power:50,place:'envoy',
     epithet:'白泉国公主',route:'御花园 · 白泉国宫宴',rank:3,
-    intro:'白泉国王携女入朝求亲。她随父亲赴宫宴，亲自挑了一支故乡舞曲，袖上系着母亲缝的香囊。她在意互市，也想让远方的母亲能收到亲笔信。'},
+    intro:'白泉国王携女入朝求亲。她随父亲赴宫宴，亲自挑了一支故乡舞曲，袖上系着母亲缝的香囊，走过的地方总留着一阵淡淡的干花香。初来时不大懂宫里的规矩，行礼常数错次数。她在意互市，也想让远方的母亲能收到亲笔信。'},
   chuwan:{sur:'方',given:'晚',age:15,trait:'沉静',family:'民间寄居',power:8,place:'register',
     epithet:'旧籍里的名字',route:'查阅地方旧籍 · 第一代登基满十二年',rank:1,
     intro:'随照养人姓方，旧籍中还有一个被涂去的名字。'},
@@ -31,9 +31,15 @@ const COURT_PETITIONS={
 function palacePetitionReady(key){
  return !!(storyIntroductionsActive()&&Object.hasOwn(COURT_PETITIONS,key)&&!S.over&&!mourningActive()&&storyCastMeetReady(key)&&!(storyCastRecord(key)?.stage));
 }
+// Issue 42: the petition shows who wrote it; Shen Qingyi's old letter also has its own scene.
+const COURT_PETITION_ART={qingyi:{illustration:'frontier-family-letter',caption:'姑苏来的抄本里夹着一封私信，系信的丝绳还是旧年的样式。落款处，是沈清漪自己的字。',
+ portraitArt:{src:'./assets/images/story-cast/qingyi.webp?v=gouyi-style-3',alt:'沈清漪身着浅青绣花长衫，手执书卷'}}};
+function palacePetitionPortrait(key){
+ return storyCastPerson(storyCastRecord(key))||{...STORY_CAST[key],fixedStory:key,alive:true,known:true};
+}
 function palacePetition(key){
- const d=COURT_PETITIONS[key],valid=()=>palacePetitionReady(key);
- return {title:d.title,text:d.body,valid,choices:[{t:d.choice,f:()=>{
+ const d=COURT_PETITIONS[key],valid=()=>palacePetitionReady(key),art=COURT_PETITION_ART[key];
+ return {title:d.title,text:d.body,valid,...(journalContentVersion()>=169?{por:palacePetitionPortrait(key),...(art?{illustration:art.illustration,illustrationCaption:art.caption,portraitArt:art.portraitArt}:{})}:{}),choices:[{t:d.choice,f:()=>{
   if(!valid())return null;
   const r=storyCastRecord(key)||storyCastCreate(key);r.introduction='petition';
   return storyCastAdvance(r,r.person,d.line);
@@ -54,7 +60,7 @@ function monthlyIntroduction(){
  }
  if(S.turn-(S.flags.lastCastPetition??0)<6)return null;
  const key=Object.keys(COURT_PETITIONS).find(k=>palacePetitionReady(k)&&!S.flags.castPetitions?.[k]);
- if(!key||!chance(.15))return null;
+ if(!key||!chance(eventOdds('story',.15)))return null;
  (S.flags.castPetitions||={})[key]=true;S.flags.lastCastPetition=S.turn;return palacePetition(key);
 }
 const storyCastData=key=>Object.hasOwn(STORY_CAST,key)?STORY_CAST[key]:null;
@@ -102,6 +108,25 @@ function storyCastHouse(c){
     father:{name:fixed.father,office:fixed.office,post:fixed.office,career:fixed.career,age:c.age+25,alive:true,away:key==='luwan',story:[]},
     brother:fixed.brother?{...fixed.brother,age:c.age+4,alive:true,story:[]}:null};
 }
+// Issue 35 personas: each fixed consort's quirk, pastime and favourite fit her own story.
+const storyPersonaActive=()=>journalContentVersion()>=169;
+const STORY_CAST_IDENTITY_V98={qingyi:['念旧','读书','诗书'],luwan:['擅骑射','骑射','弓马'],ayimu:['擅舞','侍花','香料'],chuwan:['念旧','读书','诗书'],suheng:['护短','对弈','香料'],xiaoman:['直言','投壶','点心']};
+const STORY_CAST_IDENTITY={...STORY_CAST_IDENTITY_V98,chuwan:['好读史','刺绣','花草'],suheng:['记仇','品茶','香料']};
+const storyCastIdentity=key=>(storyPersonaActive()?STORY_CAST_IDENTITY:STORY_CAST_IDENTITY_V98)[key];
+function reconcileStoryCastIdentities(){
+  if(!S||!storyPersonaActive())return;
+  for(const c of S.consorts){
+    const old=STORY_CAST_IDENTITY_V98[c.fixedStory],next=STORY_CAST_IDENTITY[c.fixedStory];
+    if(!old||old===next||c.t2!==old[0]||c.hobby!==old[1])continue;
+    [c.t2,c.hobby]=next;if(c.like===old[2])c.like=next[2];if(c.hate===c.like)c.hate='珠翠';
+  }
+}
+function chuwanDowagerScene(d,c){
+  return {title:'慈宁宫 · 说起开国',por:dowagerPerson(d),valid:()=>!!d.alive,
+    text:`${d.name}听说查出了楚氏遗孤，另召你到慈宁宫。她没有提方晚，先说起当年：“那时候改弦更张，是拿多少条人命换来的，你没见过。江山打下来不容易，守住更难。哀家怕的不是一个小姑娘，是有人借她的姓翻旧账。”\n停了一会儿，她又说：“话说回来，有些旧账，连我们当年的人也没看全。”`,
+    choices:[{t:'请母后放心，朕会防着旧党借她生事',f:()=>{dowagerRecord(d,'说起开国','向皇帝讲当年夺取江山的不易，承认有些旧账当年也未见全貌。皇帝答应防着旧党借楚氏遗孤生事。');return '太后点头，没有再提。';}},
+      {t:'旧账该查清的，朕会查清',f:()=>{dowagerRecord(d,'说起开国','向皇帝讲当年夺取江山的不易。皇帝说旧账该查清的仍要查清，她沉默良久，只嘱咐小心。');story(c,'太后召皇帝说起开国旧事。陛下答应把该查的旧账查清。');return '太后叹了口气：“你比我们那时候胆子大。”';}}]};
+}
 const storyCastAdmissionAllowed=(c,r)=>editionAllows('story',c.fixedStory)&&!livingStoryConsort(c.fixedStory)&&!r.id&&!r.closed&&!S.over&&!mourningActive()&&c.age>=15&&E().age>=15;
 function storyCastAdmit(c,r,reason){
   if(!storyCastAdmissionAllowed(c,r))return null;
@@ -111,7 +136,7 @@ function storyCastAdmit(c,r,reason){
   const limit=RANK_CAP[d.rank];
   addConsort(c,limit&&rankCount(d.rank)>=limit?d.rank-1:d.rank,reason,{major:true});
   if(journalContentVersion()>=98){
-    const identity={qingyi:['念旧','读书','诗书'],luwan:['擅骑射','骑射','弓马'],ayimu:['擅舞','侍花','香料'],chuwan:['念旧','读书','诗书'],suheng:['护短','对弈','香料'],xiaoman:['直言','投壶','点心']}[c.fixedStory];
+    const identity=storyCastIdentity(c.fixedStory);
     if(identity){[c.t2,c.hobby,c.like]=identity;if(c.hate===c.like)c.hate='珠翠';}
     if(c.fixedStory==='luwan'&&c.wish==='ride'||c.fixedStory==='chuwan'&&['mother','father'].includes(c.wish)){c.wish='poem';c.wishKnown=false;c.wishDone=false;}
   }
@@ -160,7 +185,7 @@ function storyCastMeetEvent(key,r,feastTitle='御花园宫宴'){
     return {title:feastTitle+' · 白泉公主献舞',por:c,
       portraitArt:WHITE_SPRING_DANCE_ART,
       text:'宫中设宴款待白泉国王。酒过一巡，国王领女儿上前：“小女阿依慕，愿以一支家乡的舞为陛下祝酒。臣也有意将她许与陛下，求两家结亲。”'
-        +'\n乐工把三面扁鼓依次放平。阿依慕提起裙角，足尖踏上鼓面，一串轻响从席前传到花下。最后一拍，她忽然收袖，腕上的银铃还在响。一只白蝶停在袖口，她索性等它飞走才行礼。席间静了一瞬，连方才执壶的宫人也跟着喝起彩来。'
+        +'\n乐工把三面扁鼓依次放平。阿依慕提起裙角，足尖踏上鼓面，一串轻响从席前传到花下。最后一拍，她忽然收袖，腕上的银铃还在响。一只白蝶落在她肩头，她索性等它飞走才行礼。席间静了一瞬，连方才执壶的宫人也跟着喝起彩来。'
         +'\n你问她自己的意思。她望了父亲一眼，用才学的官话答道：“我愿意。若留下，明早可许我托父王给母亲带封信？她还在等我说，京里的鼓跟家里响得一不一样。”',
       valid:()=>!livingStoryConsort(key)&&!r.id&&!r.closed&&r.stage===0,choices:[keep,farewell,
         advance('请父女在京暂住，稍后再答复',(feastTitle==='御花园宫宴'?'父王在御花园席上':'父王在'+feastTitle+'上')+'求亲，她献过鼓舞，随父暂住馆舍，等候回音。')]};
@@ -175,8 +200,8 @@ function storyCastMeetEvent(key,r,feastTitle='御花园宫宴'){
   if(key==='chuwan'){
     if(stage===0)return scene('地方旧籍 · 方晚','地方重抄户籍，方晚的迁籍年月对不上。照养人先求一个安全住处。她只记得幼时一扇很高的宫门，旁的得问识字的老人。',
       advance('先保二人平安，待她同意后查档','官府安顿两人住处，方晚愿意查一查旧户籍。'));
-    if(stage===1)return scene('旧粮册 · 楚晚','旧籍与照养人笔录印证，她是前朝楚国皇帝之女。粮册记着被父亲挪走的赈粮，兄长争位时也有人枉死。遗臣求她署旧名，她问：“您当年签的是哪一本粮册？”',
-      storyCastChoice('依实证核旧案，保护她的住处',()=>{r.revealed=true;c.sur='楚';c.fam.t='前朝遗孤';const d=ensureDowager();if(d?.alive)dowagerRecord(d,'前朝旧案','闻楚氏遗孤旧案，说起当年开国不易，嘱防旧臣借名生事。');return storyCastAdvance(r,c,'确认本姓楚。愿意查清冤案，不愿替遗臣翻案。');}),
+    if(stage===1)return scene('旧粮册 · 楚晚','旧籍与照养人笔录印证，她是前朝楚国皇帝之女。亡国那年她才三岁，是一位旧宫人抱着她出了宫门，后来托给方家照养。粮册记着被父亲挪走的赈粮，兄长争位时也有人枉死。遗臣求她署旧名，她问：“您当年签的是哪一本粮册？”\n她说楚家的江山丢得有因，也恨自己流着这份血：一报出姓名，就得躲。',
+      storyCastChoice('依实证核旧案，保护她的住处',()=>{r.revealed=true;c.sur='楚';c.fam.t='前朝遗孤';const d=ensureDowager();if(d?.alive){dowagerRecord(d,'前朝旧案','闻楚氏遗孤旧案，说起当年开国不易，嘱防旧臣借名生事。');if(storyPersonaActive())pushEv(chuwanDowagerScene(d,c));}return storyCastAdvance(r,c,'确认本姓楚。愿意查清冤案，不愿替遗臣翻案。');}),
       close('封存私身档案，仍由她用方姓度日','已相识 · 方姓安居','旧籍封存，方晚与照养人留在民间。'));
     return scene('楚晚 · 选自己的去处','照养人已有安全住处。她游移了多日，若准她继续写家书，愿入宫住一段日子。日后要署旧姓，也只为自己肯作证的事。',
       join('旧案核实后自择入宫'),close('准她与照养人迁居','已相识 · 迁居民间','与照养人迁居，继续过平民日子。'));
@@ -454,7 +479,7 @@ function luwanFrontierReunion(c,leave){
 function storyCastFrontierReturn(c,early=false){
   const leave=c.homeLeave;
   delete c.homeLeave;
-  const text=early?'奉旨提前从北境军驿回宫，军中已另派人接手。':leave.delay?'军驿最后补发了迟到的回信。陆绾归宫，把亲手清过的伤员簿连同家书一并带回来。':'陆绾按期归宫，说军马伤病已核清，随队伤员也有人接手照应。';
+  const text=early?'奉旨提前从北境军驿回宫，军中已另派人接手。':leave.delay?(storyPersonaActive()?'敌骑一度逼到军驿外。陆绾和守卒一起上了墙，射退两拨游骑，才把伤员护送出去。军驿最后补发了迟到的回信，她归宫时把亲手清过的伤员簿连同家书一并带回来。':'军驿最后补发了迟到的回信。陆绾归宫，把亲手清过的伤员簿连同家书一并带回来。'):'陆绾按期归宫，说军马伤病已核清，随队伤员也有人接手照应。';
   storyCastRecordLine(c,text,true);
   if(PalaceActions.luwanFrontierChronicles)luwanFrontierReactions(c,leave,'return');
   else for(const k of storyCastOffspring(c,5)){if(k.fieldWorry){delete k.fieldWorry;k.mood=clamp(k.mood+10);}kstory(k,'亲眼见到母妃自北境回宫，这才放下心来。');}
@@ -494,8 +519,9 @@ function storyCastMilitaryEvent(c,w){
         const same=houseOf(c);
         for(const p of [same.father,same.brother].filter(officialServing))princePersonNote(p,'【陆绾出征】她奉旨来军驿照看军马与伤员，军令仍由守将发出。');
       }
-      const rival=harem().find(o=>o.trait==='持重'&&relGet(o,c)<0);
-      const pupil=harem().find(o=>o!==c&&o.age<=24&&consortHobby(o)==='骑射');
+      const persona=storyPersonaActive();
+      const rival=persona?harem().find(o=>o!==c&&inPalace(o)&&(['持重','骄矜'].includes(o.trait)||o.virtue>=80&&o.trait!=='将门')&&relGet(o,c)<20):harem().find(o=>o.trait==='持重'&&relGet(o,c)<0);
+      const pupil=persona?harem().find(o=>o!==c&&o!==rival&&inPalace(o)&&o.age<=c.age+4&&(['活泼','爽直','好学'].includes(o.trait)||consortHobby(o)==='骑射')&&relGet(o,c)>=0):harem().find(o=>o!==c&&o.age<=24&&consortHobby(o)==='骑射');
       if(rival){relAdd(c,rival,-10);story(rival,'说起陆绾赴边地，脱口道「女子就该在宫里」，被陆绾听见。');story(c,'听见'+fullName(rival)+'说女子就该在宫里，对她少了几分好感。');}
       if(pupil){relAdd(pupil,c,20);story(pupil,'偷偷学陆绾骑马、学她说话，熟了成了她的小跟班。');story(c,'离宫前替'+fullName(pupil)+'订了一份骑射功课，叫她莫光学自己的腔调。');}
       syncLuwanFrontierMap();return storyCastRecordLine(c,'奉旨赴北境军驿。保留位分居所，约三个月回宫，期间以家书往来。'+farewell,true);
@@ -545,9 +571,9 @@ function storyCastPalaceEvent(c){
       const queen=empress(),other=queen&&queen!==c&&inPalace(queen)?queen:null;
       const ill=()=>c.hp<65||c.illnessRecovery?.until>S.turn;
       const sick=!!ill();
-      const note=other?(sick?'皇后听说她身体不适，想遣人问候，也惦记着旧臣是否托人来过。':'皇后得知她在写信，想问书信是否顺利送出，以及旧臣可曾托人来过。'):'她把信仔细折好，惦记着旧址的人能否收到。';
+      const note=other?(sick?(storyPersonaActive()?'皇后听说她身体不适，悄悄遣人问候，也惦记着旧臣是否托人来过。':'皇后听说她身体不适，想遣人问候，也惦记着旧臣是否托人来过。'):'皇后得知她在写信，想问书信是否顺利送出，以及旧臣可曾托人来过。'):'她把信仔细折好，惦记着旧址的人能否收到。';
       const event=scene('楚晚 · 方姓家书','她仍用旧时的称呼写信问照养人是否吃得下饭。'+note,
-        storyCastChoice('安排按旧址送信',()=>{if(other&&inPalace(other)&&empress()===other)story(other,sick?'得知楚晚身体不适，遣人问候，另问她有无收到旧臣捎来的口信。':'遣人问楚晚家书是否顺利送出，另问她有无收到旧臣捎来的口信。');return advance('仍旧给照养人写方姓名的平安信，第一次在宫中安心睡了一夜。');}));
+        storyCastChoice('安排按旧址送信',()=>{if(other&&inPalace(other)&&empress()===other)story(other,sick?(storyPersonaActive()?'得知楚晚身体不适，悄悄遣人问候，另问她有无收到旧臣捎来的口信。':'得知楚晚身体不适，遣人问候，另问她有无收到旧臣捎来的口信。'):'遣人问楚晚家书是否顺利送出，另问她有无收到旧臣捎来的口信。');return advance('仍旧给照养人写方姓名的平安信，第一次在宫中安心睡了一夜。');}));
       const valid=event.valid;event.valid=()=>valid()&&(empress()&&empress()!==c&&inPalace(empress())?empress():null)===other&&!!ill()===sick;
       return event;
     }

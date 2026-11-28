@@ -126,7 +126,9 @@ function natalConsortProfile(c,p){
 }
 function linkNatalConsort(c,p,g,via){
   g.house=c.house;g.fatherId=c.fatherId;
-  for(const member of paternalFamily(c)){if(member.id===g.id)continue;g.kin[member.id]='亲'+(natalLabel(member,p)==='姐姐'?'妹':'姐');member.kin||={};member.kin[g.id]='亲'+(natalLabel(member,p)==='姐姐'?'姐':'妹');
+  for(const member of paternalFamily(c)){if(member.id===g.id)continue;
+    const label=natalLabel(member,p),cousin=journalContentVersion()>=169&&label.startsWith('堂');
+    g.kin[member.id]=cousin?(label==='堂姐'?'堂妹':'堂姐'):'亲'+(label==='姐姐'?'妹':'姐');member.kin||={};member.kin[g.id]=cousin?label:'亲'+(label==='姐姐'?'姐':'妹');
     if(relGet(member,p)<0){g.kinRival[member.id]=1;(member.kinRival||={})[g.id]=1;}}
   g.natalOrigin={host:c.id,relative:p.id};if(via)g.natalOrigin.via=via;
   p.consortId=g.id;delete p.visit;

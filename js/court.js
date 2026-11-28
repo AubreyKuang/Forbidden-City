@@ -823,7 +823,10 @@ function floodReliefEvent(brief){
   return event;
 }
 function courtEvent(){
-  const pool=playtestFeedbackActive()?SPONT.filter(courtSubjectReady):SPONT;
+  const ready=playtestFeedbackActive()?SPONT.filter(courtSubjectReady):SPONT;
+  // 天灾 has its own setting: left out when off, thinned when rare, doubled in the draw when often.
+  const disaster=i=>i===FLOOD_INDEX||i===LOCUST_INDEX||i===14,odds=eventFrequency('disaster');
+  const pool=odds===1?ready:ready.flatMap(i=>!disaster(i)?[i]:odds>1?[i,i]:eventGate('disaster')?[i]:[]);
   if(!pool.length)return null;
   const index=pick(pool),ev=COURT[index]();
   if(index===FLOOD_INDEX||index===LOCUST_INDEX)appendYiDisasterRelief(ev,index===FLOOD_INDEX?'水灾':'蝗灾',5);

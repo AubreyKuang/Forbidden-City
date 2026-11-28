@@ -19,7 +19,7 @@ function initTimeTraveler(c,force=false){
   if(c.travelerChecked&&!force)return null;
   c.travelerChecked=true;
   const random=mulberry32((c.seed||c.id)^0x5a1739);
-  if(!force&&random()>=.04)return null;
+  if(!force&&random()>=.04*eventFrequency('traveler'))return null;
   const century=random()<.65?21:22;
   return c.timeTraveler={version:1,century,past:Math.floor(random()*3)+(century===22?3:0),known:false,
     closed:false,spoken:0,lastSpoke:null,pending:null,history:[],peers:[]};
@@ -169,7 +169,7 @@ function pendingTravelerEvent(){
   return travelerPairEvent(travelerPairCandidates().find(p=>p.state?.pending));
 }
 function travelerMonthlyEvent(){
-  if(pendingTravelerEvent()||S.turn-(S.flags.lastTravelerEvent??-99)<6||!chance(.2))return null;
+  if(pendingTravelerEvent()||S.turn-(S.flags.lastTravelerEvent??-99)<6||!chance(eventOdds('traveler',.2)))return null;
   const pairs=travelerPairCandidates(),people=harem().filter(travelerReady);
   if(pairs.length&&(!people.length||chance(.5)))return travelerPairEvent(pick(pairs));
   return people.length?travelerConfessionEvent(pick(people)):null;

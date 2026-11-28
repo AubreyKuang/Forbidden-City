@@ -442,7 +442,8 @@ function xinTick(c){if(!c.alive||c.gone)return;
   if(k!=='平和'){const X=XIN[k];c.mood=clamp(c.mood+X.mood);if(X.scheme)c.scheme=clamp(c.scheme+X.scheme*.3);
     if(S.turn-x.t>=X.d&&!maternalUnsettled(c)&&!homeWorryActive(c)&&!(k==='清静被扰'&&solitaryNoiseActive(c))){if(k==='怨恨'||k==='心如死灰'){if(chance(.2))c.xin={k:'平和',t:S.turn}}else if(k==='悲恸'&&chance(.3))setXin(c,'心如死灰','悲伤久久不散');else c.xin={k:'平和',t:S.turn}}}
   const k2=xinOf(c);
-  if(c.cold&&!['心如死灰','怨恨'].includes(k2)&&S.turn-c.coldT>=3)setXin(c,'心如死灰','冷宫的日子一天比一天长');
+  if(c.cold&&palaceLifeActive())coldPalaceLifeTick(c);
+  else if(c.cold&&!['心如死灰','怨恨'].includes(k2)&&S.turn-c.coldT>=3)setXin(c,'心如死灰','冷宫的日子一天比一天长');
   if(c.cold)return;
   if(!isSolitary(c)&&k2==='平和'&&c.aff>=50&&c.favor<15&&chance(.15))setXin(c,'思念','陛下许久未来');
   else if(!isSolitary(c)&&k2==='平和'&&c.aff<35&&c.favor<10&&chance(.2))setXin(c,'委屈','备受冷落');
