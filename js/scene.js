@@ -5,7 +5,8 @@ function setScene(mode){scene=mode;AU.setMode(mode);drawScene()}
 function drawScene(){
   const stage=$('#stage'),s=PALACE_SEASONS[season()];
   const art=!S&&UI.view!=='new'?'cover':s;
-  const source=`url("./assets/images/palace-painted-${art}.webp")`;
+  // The title screen shows the emperor cover; the coronation and the court use the seasonal palace.
+  const source=art==='cover'?'url("./assets/images/palace-title-emperor.webp")':`url("./assets/images/palace-painted-${art}.webp")`;
   if(stage.style.backgroundImage!==source)stage.style.backgroundImage=source;
   stage.setAttribute('data-season',s);
   stage.setAttribute('data-time',S&&scene==='night'?'night':'day');

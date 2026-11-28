@@ -7,7 +7,7 @@ const art=b=>b.run("$('#stage').style.backgroundImage");
 
 test('opening cover, setup and every saved game month choose the correct artwork',()=>{
   const b=boot(143);
-  assert.match(art(b),/painted-cover\.webp/);
+  assert.match(art(b),/palace-title-emperor\.webp/);
   b.run('A.newGame()');assert.match(art(b),/painted-spring\.webp/);
   b.run('A.start();drain()');
   for(let month=1;month<=12;month++){
@@ -33,5 +33,5 @@ test('changing court scenes preserves seasonal artwork; returning to title resto
   for(const scene of ['garden','harem','night','city','court']){
     b.run(`setScene('${scene}')`);assert.match(art(b),/painted-winter\.webp/);
   }
-  b.run("S=null;UI.view='title';render()");assert.match(art(b),/painted-cover\.webp/);
+  b.run("S=null;UI.view='title';render()");assert.match(art(b),/palace-title-emperor\.webp/);
 });
