@@ -26,7 +26,7 @@ function assignPastLifeCandidates(){
   const sources=pastLifeCandidates(),a=S.pastLives;
   if(a.reigns[S.gen]||!sources.length)return;
   const people=S.cands.filter(c=>randomConsortOriginsAllowed(c)&&c.age>=18&&!c.kin&&!timeTravelerIdentity(c)&&!c.pastLife);
-  if(!people.length||!chance(.12))return;
+  if(!people.length||!chance(eventOdds('mystic',.12)))return;
   const c=pick(people),source=pick(sources);
   c.pastLife={source:JSON.parse(JSON.stringify(source)),gen:S.gen,stage:0,last:null,history:[],accepted:false};
 }
@@ -92,7 +92,7 @@ function pastLifeEvent(c){
 }
 function pastLifeMonthlyEvent(){
   if(S.turn-(S.flags.lastPastLifeEvent??-99)<12)return null;
-  const people=harem().filter(pastLifeReady);if(!people.length||!chance(.15))return null;
+  const people=harem().filter(pastLifeReady);if(!people.length||!chance(eventOdds('mystic',.15)))return null;
   const ev=pastLifeEvent(pick(people));ev.onQueue=()=>{S.flags.lastPastLifeEvent=S.turn;};return ev;
 }
 function pastLifeVoice(c){

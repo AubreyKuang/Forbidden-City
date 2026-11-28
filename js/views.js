@@ -76,7 +76,7 @@ function renderPanel(){
   const route=JSON.stringify([v,UI.sel]);
   if(!S)p.innerHTML=v==='new'?viewNew():viewTitle();
   else if(v==='regnal'&&regnalChronicleActive())p.innerHTML=viewRegnalChronicle();
-  else p.innerHTML=({government:viewGovernment,residences:viewResidences,officials:officialsRoster,official:viewOfficial,ministries:typeof viewMinistries==='function'?viewMinistries:viewGovernment,scholar:typeof viewScholar==='function'?viewScholar:viewGovernment,jinyiwei:typeof viewJinyiwei==='function'?viewJinyiwei:viewGovernment,jewelry:viewJewelryVault,natal:viewNatalRelative,'white-spring-kin':viewWhiteSpringKin,relative:viewRoyalRelative,family:viewFamily,map:viewMap,palace:viewPalace,place:viewPlace,banquet:viewBanquet,home:viewHome,fenghua:typeof viewFenghuaPerson==='function'?viewFenghuaPerson:viewHome,harem:viewHarem,consort:viewConsort,cards:viewCards,xx:viewXX,outer:typeof outerRegisterView==="function"?outerRegisterView:viewKids,kids:viewKids,kid:viewKid,princess:viewPrincessEstate,'prince-estate':viewPrinceEstate,'household-child':viewHouseholdChild,out:viewOut,log:viewLog,sys:viewSys,shop:typeof PalaceShop!=='undefined'&&PalaceShop.enabled?PalaceShop.view:viewHome,'portrait-pick':typeof PalaceShop!=='undefined'&&PalaceShop.enabled?PalaceShop.pickView:viewHome}[v]||viewHome)();
+  else p.innerHTML=({government:viewGovernment,residences:viewResidences,officials:officialsRoster,official:viewOfficial,ministries:typeof viewMinistries==='function'?viewMinistries:viewGovernment,scholar:typeof viewScholar==='function'?viewScholar:viewGovernment,jinyiwei:typeof viewJinyiwei==='function'?viewJinyiwei:viewGovernment,jewelry:viewJewelryVault,natal:viewNatalRelative,'white-spring-kin':viewWhiteSpringKin,relative:viewRoyalRelative,family:viewFamily,map:viewMap,palace:viewPalace,place:viewPlace,banquet:viewBanquet,home:viewHome,fenghua:typeof viewFenghuaPerson==='function'?viewFenghuaPerson:viewHome,harem:viewHarem,consort:viewConsort,cards:viewCards,xx:viewXX,outer:typeof outerRegisterView==="function"?outerRegisterView:viewKids,kids:viewKids,kid:viewKid,princess:viewPrincessEstate,'prince-estate':viewPrinceEstate,'household-child':viewHouseholdChild,out:viewOut,log:viewLog,sys:viewSys,shop:typeof PalaceShop!=='undefined'&&PalaceShop.enabled?PalaceShop.view:viewHome,'event-freq':eventFreqPage,'portrait-pick':typeof PalaceShop!=='undefined'&&PalaceShop.enabled?PalaceShop.pickView:viewHome}[v]||viewHome)();
   if(S&&v==='xx')rememberSelectionBlurt(selectionCurrent());
   if(route!==panelRoute){p.scrollTop=0;panelRoute=route;}
 }
@@ -124,7 +124,7 @@ function viewNew(){
     <div class="coronation-actions"><button type="button" class="btn quiet sm" data-onclick="A.go('title')">返回</button><button type="submit" class="btn primary">登基</button></div>
   </form>`}
 function consortCard(c){
-  const tags=[xinTag(c),c.visitor?'<span class="tag y">母亲在宫</span>':'',c.preg>=2?'<span class="tag r">有孕</span>':'',c.cold?'<span class="tag k">冷宫</span>':'',c.rank===8?'<span class="tag y">中宫</span>':''].join('');
+  const tags=[xinTag(c),palaceLifeTag(c),c.visitor?'<span class="tag y">母亲在宫</span>':'',c.preg>=2?'<span class="tag r">有孕</span>':'',c.cold?'<span class="tag k">冷宫</span>':'',c.rank===8?'<span class="tag y">中宫</span>':''].join('');
   return `<button class="card portrait-card" data-onclick="A.go('consort',${c.id})">${porImg(c,84)}<div class="grow"><div class="nm">${esc(cName(c))}</div><div>${esc(fullName(c))} · ${c.age}岁 · ${c.homeLeave?homeLeaveStatus(c):c.templeStay?'护国寺':esc(c.palace)}</div><div>${tags}<span class="tag">${c.trait}</span>${solitaryTag(c)}${dowagerKinTag(c)}${consortTraitTags(c)}</div>${bar('恩宠',c.favor)}${bar('心情',c.mood,'#4f9078')}</div></button>`}
 
 function dowagerFamilyPanel(){
@@ -452,7 +452,7 @@ function dynastyGoalsPanel(){
       return `<li><strong>${esc(goal.name)}</strong> · ${esc(goal.description)} · ${progress}/${goal.target}
         ${entry?.claimed?' · 已领取':entry?.completed?`<button class="btn sm gold" data-onclick="A.claimDynastyGoal('${goal.id}')" ${S.over?'disabled':''}>领取 ${goal.reward} 万两</button>`:` · 赏银 ${goal.reward} 万两`}</li>`;
     }).join('')}</ul>
-    <h3>隐藏成就</h3><ul class="story">${DYNASTY_HIDDEN_GOALS.map(goal=>{const entry=S.dynastyGoals?.[goal.id];return entry?.completed?`<li><strong>${esc(goal.name)}</strong> · ${esc(goal.description)} ${entry.claimed?'· 已领取':`<button class="btn sm gold" data-onclick="A.claimDynastyGoal('${goal.id}')" ${S.over?'disabled':''}>领取 ${goal.reward} 万两</button>`}</li>`:'<li>???</li>';}).join('')}</ul>
+    <h3>隐藏成就</h3><ul class="story">${DYNASTY_HIDDEN_GOALS.map(goal=>{const entry=S.dynastyGoals?.[goal.id];return entry?.completed?`<li><strong>${esc(goal.name)}</strong> · ${esc(goal.description)} ${entry.claimed?'· 已领取':`<button class="btn sm gold" data-onclick="A.claimDynastyGoal('${goal.id}')" ${S.over?'disabled':''}>领取 ${goal.reward} 万两</button>`}</li>`:`<li>??? ${goal.hint?`<span class="hint">线索：${esc(goal.hint)}</span>`:''}</li>`;}).join('')}</ul>
   </section>`;
 }
 function detailFold(title,content){
@@ -521,6 +521,7 @@ function viewConsort(){
     penalties+=`<button class="btn danger" data-onclick="A.away(${c.id})">遣出宫</button>`;
   }
   if(act&&!c.maid){cardAction=`<button class="btn quiet" data-onclick="A.toggleGreenCard(${c.id})">${c.cardWithdrawn?'恢复绿头牌':'撤下绿头牌'}</button>`;}
+  if(act)acts+=palaceLifeActions(c);
   if(act&&awaitingNoticeReason(c))conversations+=`<button class="btn" data-onclick="A.awaitingNotice(${c.id})">听她说久候的心事</button>`;
   const houseNews=courtFamilyPending(c);
   if(houseNews.length&&courtFamilyCanReply(c))acts+=`<button class="btn sm jade" data-onclick="A.courtFamilyReply(${c.id},'${houseNews[0].id}')">听她谈前朝家书</button>`;
@@ -542,7 +543,7 @@ function viewConsort(){
     ${characterVoiceHTML(c)}${daoPracticePanel(c)}`+(act?arcLine(c):'')+
       consortTraitPanel(c)+consortHealthPanel(c)+birthCarePanel(c)+(act?deliveryMemorialPanel(c):'')+(typeof haremStewardPersonPanel==='function'?haremStewardPersonPanel(c):'')+(typeof hongjianPanel==='function'?hongjianPanel(c):'')+
       actionGroup('听她说说',conversations)+
-      detailSection('近况与性情',`<p class="hint">${esc(TRAITS[c.trait]?.d||'性情沿用旧日记载。')} · 侍寝 ${c.nights||0} 次</p>${act?xinDetail(c)+schemeAftermathDetail(c)+deepLine(c):''}<div class="stats consort-stats">${st('容貌',c.looks)}${st('才情',c.talent)}${st('德行',c.virtue)}${st('心机',c.scheme,!c.known)}${Number.isFinite(c.hp)?st('健康',c.hp):''}${st('恩宠',c.favor)}${st('心情',c.mood)}${st('情分',c.aff)}</div>`)+
+      detailSection('近况与性情',`<p class="hint">${esc(TRAITS[c.trait]?.d||'性情沿用旧日记载。')} · 侍寝 ${c.nights||0} 次</p>${act?xinDetail(c)+schemeAftermathDetail(c)+consortSeasonsPanel(c)+deepLine(c):''}<div class="stats consort-stats">${st('容貌',c.looks)}${st('才情',c.talent)}${st('德行',c.virtue)}${st('心机',c.scheme,!c.known)}${Number.isFinite(c.hp)?st('健康',c.hp):''}${st('恩宠',c.favor)}${st('心情',c.mood)}${st('情分',c.aff)}</div>`)+
       continuityPanel(c)+personalLifePanel(c)+detailSection('人和事的后续',cohortLifePanel(c)+parentEpisodePanel(c))+
       detailSection('孕中祈愿',pregnancyPrayerPanel(c))+detailSection('寺中清修',consortTemplePanel(c))+
       (act&&!c.cold?initiativeHTML(c):''),'近况'],

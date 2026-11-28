@@ -259,7 +259,7 @@ function guardProtectionTick(){
  const laterMeeting=bond.months>18&&bond.stage===1&&journalContentVersion()>=118&&restlessDisposition(c);
  if((bond.months===18||laterMeeting)&&randomPalaceAffairsAllowed(c)&&c.aff<70&&!c.bond){
    const base=laterMeeting ? .03 : clamp(.25+guard.loyalty/400-c.aff/400,.1,.5);
-   if(chance(base+restlessTrystBonus(c))){
+   if(chance(eventOdds('affair',base+restlessTrystBonus(c)))){
      bond.stage=2;
      if(journalContentVersion()>=118)bond.closeSince=bond.months;
      story(c,`【守宫旧事】${guard.name}为她挡过一场雨，两人的心意渐渐有了变化。`);

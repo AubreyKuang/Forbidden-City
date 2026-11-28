@@ -62,7 +62,7 @@ const fenghuaOut=A.out;
 A.out=function(kind){
  if(kind==='city'&&fenghuaActive()&&!modalOpen&&E().energy>0&&!mourningActive()&&S.turn-(S.fenghua?.lastCity??-99)>=2){
   const possible=Object.keys(FENGHUA_PEOPLE).filter(key=>FENGHUA_PEOPLE[key].entry==='city'&&fenghuaEntryReady(key));
-  if(possible.length&&chance(.28)){
+  if(possible.length&&chance(eventOdds('story',.28))){
    const needDoctor=E().health<65||harem().some(c=>consortRecovery(c)),key=pickW(possible.map(key=>({key,w:key==='sunYunxiu'&&needDoctor?3:1}))).key,ev=fenghuaMeetEvent(key);
    if(ev&&useE()){const state=fenghuaState();state.lastCity=S.turn;state.attempts[key]=S.turn;setScene('city');pushEv(ev);return;}
   }

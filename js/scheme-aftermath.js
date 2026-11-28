@@ -49,7 +49,7 @@ function schemeAftermath(a,victim,crime,verdict){
   const r=schemeRecord(a),v=victim&&victim.alive&&!victim.gone?victim:null,who=v?v.id:null;
   r.n++;r.last=verdict;r.lastTurn=S.turn;r.crime=crime;
   if(verdict==='fine'){
-    r.lenient++;
+    r.lenient++;if(journalContentVersion()>=171)r.everFined=true;
     if(r.lenient>=3){
       a.scheme=clamp(a.scheme+6);
       schemeAftermathXin(a,'有恃无恐',`${crime}事发，又只罚了俸`,who);

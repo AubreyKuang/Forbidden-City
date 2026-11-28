@@ -14,7 +14,8 @@
      (S.flags.portraitPacks) only between actions, so replays of a pending scene draw from
      the same pool they were recorded with.
    - bundle (金手指包): one-time. Owning it also owns the products it lists (includes), and
-     opens 「立即召见」: every 剧情妃 and 风华人物 not yet met can be met now, through the same
+     opens 事件频率 (js/event-frequency.js: how often each kind of event happens) and
+     「立即召见」: every 剧情妃 and 风华人物 not yet met can be met now, through the same
      first-meeting scene the game already has, without its time, place or entry condition.
      Like packs, ownership reaches the world (S.flags.goldFinger) only between actions,
      and the summon is journaled, so a scene left open replays after a reload.
@@ -117,7 +118,7 @@ const PalaceShop=(()=>{
     const wallet=UI.shopWallet&&h&&typeof h.openWallet==='function'?' <button class="btn sm" data-onclick="A.shopWallet()">去充值</button>':'';
     return `${pageHeading('商城','用次元币购买；点「购买」后还要再确认一次才会付款。')}
      ${status}${note?`<p role="status">${esc(note)}${wallet}</p>`:''}
-     ${summonView()}
+     ${summonView()}${owned.has('goldFinger')?eventFreqView():''}
      <section class="save-section" aria-label="商品"><div class="save-slots">${products.map(productLine).join('')}</div></section>
      <p class="hint">银两到账到当前打开的存档，传位后新君照样能用；新开一局不带过去。立绘包、画师换像和金手指包跟着易次元账号走，换设备、开新朝也有效。${owned.has('painter')?'在妃嫔详情页点「更换立绘」即可换像。':''}</p>`;
   }

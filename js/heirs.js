@@ -338,12 +338,12 @@ function heirTick(){
   const reb=sons.find(k=>k.id!==S.heir&&kidAge(k)>=16&&k.amb>=78&&(k.sup||0)>=65&&(E().prestige<60||E().health<45));
   if(reb&&chance(.3))return coupEvent(reb);
   if(heir&&heir.alive){const rv=sons.filter(k=>k!==heir&&kidAge(k)>=12&&(k.sup||0)>(heir.sup||0)+15&&k.amb>=60).sort((a,b)=>b.sup-a.sup)[0];
-    if(rv&&chance(.35))return {title:'储位之争',por:rv,valid:()=>rv.alive&&!royalJourneyAway(rv),text:`朝中渐成两党：一派拥立太子${heir.name}，一派推举${kidName(rv)}。今日早朝，两边几乎当廷吵了起来。\n（太子得朝臣支持${rd(heir.sup||0)}，${rv.name}得${rd(rv.sup)}）`,choices:[
+    if(rv&&chance(eventOdds('scheme',.35)))return {title:'储位之争',por:rv,valid:()=>rv.alive&&!royalJourneyAway(rv),text:`朝中渐成两党：一派拥立太子${heir.name}，一派推举${kidName(rv)}。今日早朝，两边几乎当廷吵了起来。\n（太子得朝臣支持${rd(heir.sup||0)}，${rv.name}得${rd(rv.sup)}）`,choices:[
       {t:'力挺太子，申斥结党之人',f:()=>{rv.sup=clamp(rv.sup-25);rv.amb=clamp(rv.amb-8);rv.love=clamp(rv.love-10);heir.sup=clamp((heir.sup||0)+10);kstory(rv,'拥立他的大臣遭父皇申斥。');return fx(chg({prestige:3}))}},
       {t:`顺应人心，改立${rv.name}`,f:()=>{A.kidHeir(rv.id);return null}},
       {t:`命${rv.name}就藩，远离京城`,cond:()=>kidAge(rv)>=14,why:'年纪尚小',f:()=>{rv.away=true;rv.title=rv.title||pick(['晋','楚','燕','蜀','吴','齐'])+'王';rv.sup=clamp(rv.sup-40);rv.amb=clamp(rv.amb-15);kstory(rv,'被命就藩，离京而去。');log(`${rv.name}就藩。`,1);const m=byId(rv.mom);if(m&&m.alive)cchg(m,{mood:-25,aff:-10});return `${rv.name}跪别父皇，出了京城。`}}]}}
   const c=sons.find(k=>k.id!==S.heir&&kidAge(k)>=12&&k.amb>=55&&!k.facAsked);
-  if(c&&chance(.3)){c.facAsked=true;const m=byId(c.mom);return {title:'皇子结党',por:c,valid:()=>c.alive&&!royalJourneyAway(c),text:`有人密报：${kidName(c)}近来与${m?m.fam.t+'一系的':''}几位大臣过从甚密，常在府中宴饮至深夜。`,choices:[
+  if(c&&chance(eventOdds('scheme',.3))){c.facAsked=true;const m=byId(c.mom);return {title:'皇子结党',por:c,valid:()=>c.alive&&!royalJourneyAway(c),text:`有人密报：${kidName(c)}近来与${m?m.fam.t+'一系的':''}几位大臣过从甚密，常在府中宴饮至深夜。`,choices:[
     {t:'严加申斥',f:()=>{c.amb=clamp(c.amb-15);c.sup=clamp((c.sup||0)-15);c.love=clamp(c.love-10);kstory(c,'私结朝臣，被父皇严加申斥。');return '§野心-15　朝臣支持-15　父爱-10'}},
     {t:'默许，看他有几分本事',f:()=>{c.sup=clamp((c.sup||0)+12);c.amb=clamp(c.amb+5);return '§朝臣支持+12　野心+5'}},
     {t:'交给他一桩差事历练',f:()=>{c.lit=clamp(c.lit+4);c.mar=clamp(c.mar+4);c.sup=clamp((c.sup||0)+6);kstory(c,'奉旨办差，颇有建树。');return '§才学+4　武艺+4　朝臣支持+6'}}]}}

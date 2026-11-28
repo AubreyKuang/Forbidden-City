@@ -225,7 +225,7 @@ function outsideParentageTick(){
       const data=initializeOutsideParentage(child,history?.find(p=>p.childId===child.id),c.familyArchive?.gen);
       if(data.gen!==S.gen)continue;
       if(data.status==='quiet'&&S.turn>=data.ready&&officialAlive(f.husband)){
-        if(!data.suspected&&S.turn>=child.born+6&&!data.checked){data.checked=true;data.suspected=chance(.08);}
+        if(!data.suspected&&S.turn>=child.born+6&&!data.checked){data.checked=true;data.suspected=chance(eventOdds('secret',.08));}
         if(data.suspected){
           data.status='reported';
           outsideParentageChronicle(f,'丈夫起疑',{

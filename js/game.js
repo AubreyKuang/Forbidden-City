@@ -830,6 +830,7 @@ A.endMonth=function(){
   if(journalContentVersion()>=169){if(typeof heirHopesMonth==='function')heirHopesMonth();if(typeof sisterBondsMonth==='function')sisterBondsMonth();}
   if(journalContentVersion()>=169&&typeof storyPersonaMonth==='function')storyPersonaMonth();
   if(journalContentVersion()>=96)childUpbringingMonth();
+  if(journalContentVersion()>=171)palaceLifeTick();
   if(journalContentVersion()>=115)whiteSpringFamilyParcelTick();
   const passing=dowagerPassingEvent();if(passing)pushEv(passing);
   const princeSuccession=princeSuccessionTick();
@@ -876,19 +877,21 @@ A.endMonth=function(){
   if(fiefDockets)must.push(fiefDockets);
   // 积压的奏折：离宫期间攒下的朝堂事务，月末一并呈上
   while((S.flags.memorials||0)>0){S.flags.memorials--;const memo=factionEvent();if(memo&&!must.some(e=>e.title===memo.title))must.push(memo)}
-  const add=(e,p)=>{if(e&&ambientEventReady(e))opt.push([e,p+R()-ambientNovelty(e)+continuityEventScore(e)])};
+  const add=(e,p,cat)=>{if(e&&ambientEventReady(e))opt.push([e,p+R()-ambientNovelty(e)+continuityEventScore(e)+(cat?eventPriority(cat):0)])};
+  // Each kind of optional scene answers to its 事件频率 setting (js/event-frequency.js).
+  const kind=(cat,make,p)=>add(eventPick(cat,make),p,cat),rolled=(cat,odds,make,p)=>add(chance(eventOdds(cat,odds))?make():null,p,cat);
   if(!passing){
-  add(continuityMonthlyEvent(),9);
-  add(pregnancyGardenEvent(true),8);
-  add(homeReturnSocialEvent(),8);add(natalVisitRequest(),7);add(awaitingNoticeEvent(null,firstNightReminder?.firstNightConsort),6);
-  add(pastLifeMonthlyEvent(),6);add(pregnancyPrayerMonthlyEvent(),6);add(residencePetitionEvent(),8);add(fiveBrotherMonthlyEvent(),6);add(travelerMonthlyEvent(),8);add(recoveredSwapEvent(),8);add(fosterPetitionEvent(),8);add(kinSuccessionEvent(),8);add(parentageClueEvent(),8);
-  add(coldFosterPetitionEvent(),9);add(coldFriendPetitionEvent(),8);
-  const tribute=jewelryTributeEvent();
-  add(revenue?.jewelry?tribute:tributeEnvoyEvent(tribute),7);add(jewelryRequestEvent(),7);
-  add(chance(.8)?festival():null,5);add(chance(.75)?haremEvent():null,6);
-  add(chance(.65)?quirkEvent():null,5);add(chance(.5)?histEvent():null,6);add(chance(.4)?courtEvent():null,4);if(!affairReports.length)add(palaceRomanceEvent(),8);add(courtFriendshipEvent(),9);add(motherAppealEvent(),9);
-  add(chance(.3)?youthEvent():null,7);add(chance(.45)?kidEvent():null,4);add(chance(.55)?xinEvent():null,6);add(monthlyMaidEvent(),4);add(chance(.3)?fosterEvent():null,4);add(chance(.45)?relEvent():null,5);add(chance(.35)?clanEvent():null,5);add(chance(.45)?factionEvent():null,6);add(chance(.5)?visitorEvent():null,5);add(chance(.15)?dowagerEvent():null,3);
-  add(typeof kinCourtEvent==='function'?kinCourtEvent():null,6);add(typeof betrothalEvent==='function'?betrothalEvent():null,5);
+  add(continuityMonthlyEvent(),9);add(favorInquiryEvent(),8,'heart');
+  kind('harem',()=>pregnancyGardenEvent(true),8);
+  add(homeReturnSocialEvent(),8);kind('family',natalVisitRequest,7);kind('heart',()=>awaitingNoticeEvent(null,firstNightReminder?.firstNightConsort),6);
+  add(pastLifeMonthlyEvent(),6,'mystic');kind('harem',pregnancyPrayerMonthlyEvent,6);kind('harem',residencePetitionEvent,8);kind('family',fiveBrotherMonthlyEvent,6);add(travelerMonthlyEvent(),8,'traveler');kind('secret',recoveredSwapEvent,8);kind('children',fosterPetitionEvent,8);kind('family',kinSuccessionEvent,8);kind('secret',parentageClueEvent,8);
+  kind('harem',coldFosterPetitionEvent,9);kind('harem',coldFriendPetitionEvent,8);
+  const tribute=eventPick('festival',jewelryTributeEvent);
+  add(revenue?.jewelry?tribute:eventPick('festival',()=>tributeEnvoyEvent(tribute)),7,'festival');kind('harem',jewelryRequestEvent,7);
+  rolled('festival',.8,festival,5);add(chance(haremEventOdds())?haremEvent():null,6);
+  rolled('heart',.65,quirkEvent,5);rolled('court',.5,histEvent,6);add(chance(Math.min(1,.4*Math.max(eventFrequency('court'),eventFrequency('disaster'))))?courtEvent():null,4);if(!affairReports.length)add(palaceRomanceEvent(),8);kind('harem',courtFriendshipEvent,9);kind('children',motherAppealEvent,9);
+  rolled('children',.3,youthEvent,7);rolled('children',.45,kidEvent,4);rolled('heart',.55,xinEvent,6);add(monthlyMaidEvent(),4,'maid');rolled('children',.3,fosterEvent,4);rolled('children',.45,relEvent,5);rolled('family',.35,clanEvent,5);rolled('court',.45,factionEvent,6);rolled('family',.5,visitorEvent,5);rolled('harem',.15,dowagerEvent,3);
+  if(typeof kinCourtEvent==='function')kind('family',kinCourtEvent,6);if(typeof betrothalEvent==='function')kind('family',betrothalEvent,5);
   }
   opt.sort((a,b)=>b[1]-a[1]);const seen=new Set();must.forEach(e=>{seen.add(e.title);pushEv(e)});
   const limit=Math.max(must.length,ri(1,3));
