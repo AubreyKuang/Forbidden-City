@@ -45,7 +45,8 @@ TARGETS = {
     'yiciyuan': {'label': '易次元 (万象笺) package', 'out': 'dist/yiciyuan', 'edition': 'scripts/yiciyuan-edition.json',
                  'zip': 'chengongji-yiciyuan-V{}.zip', 'host': 'js/yiciyuan-host.js',
                  # platform: .zip up to 4 GB; no file-count limit is documented
-                 'zip_limit': 4 * 1024 ** 3, 'zip_target': None, 'file_limit': None, 'file_target': None},
+                 'zip_limit': 4 * 1024 ** 3, 'zip_target': None, 'file_limit': None, 'file_target': None,
+                 'images': 'hi-res'},
 }
 TARGET = None
 OUT = STAGE = GEN = EDITION = None
@@ -94,7 +95,31 @@ LOCKED_ART = {
 # (map, headpieces) keep their size. Illustrations fill the dialog (about 340 CSS px on a
 # phone, 800 px wide at about 2x). See the build report for before/after sizes.
 SHEET_WIDTH = 784
+# 易次元 allows a 4 GB package, so its portraits keep their full resolution (448 px a cell,
+# sharp at 2-3x on phones) and are compressed lightly; 小红书's 10 MB cap needs the rules below.
+# Sheets load one at a time when a portrait from them is shown.
+def hi_res_image_rule(rel):
+    name = Path(rel).name
+    if rel.startswith('story-cast/'):
+        return ('剧情妃立绘', None, 82, 70)
+    if name.startswith('story-'):
+        return ('事件插画', 1280, 74, 60)
+    if name.startswith('palace-painted-'):
+        return ('季节场景', 1920, 72, 60)
+    if name.startswith('palace-map-'):
+        return ('地图图集（像素坐标，不缩放）', None, 72, 60)
+    if name.startswith('palace-headpieces'):
+        return ('首饰图集（像素坐标，不缩放）', None, 80, 60)
+    if name in ('palace-daoist-portraits.png', 'palace-court-crane-portraits.png'):
+        return ('特殊人物立绘', None, 80, 60)
+    if name in ('palace-coronation.webp', 'palace-selection.webp'):
+        return ('开局横幅', 1600, 72, 60)
+    if name.startswith('palace-'):
+        return ('立绘图集', None, 80, 60)
+    return ('其他', None, 72, 60)
 def image_rule(rel, size):
+    if TARGET.get('images') == 'hi-res':
+        return hi_res_image_rule(rel)
     name = Path(rel).name
     w, h = size
     if rel.startswith('story-cast/'):

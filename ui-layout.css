@@ -295,7 +295,7 @@
 /* #panel scrolls inside its own padding, so a sticky chapter bar stops short of the
    panel's top edge and scrolled text shows through the gap. A panel-coloured copy of
    the bar, drawn as a shadow above it, covers that strip. */
-#app[data-layout] .section-jumps{box-shadow:0 3px 10px #71522e0c,0 -30px 0 0 rgb(251 242 223)}
-/* The bar's mask reaches 30px up; the 御书房 shortcuts sit 12px above it and always scroll
-   away before the bar sticks, so they paint over the mask. */
-#app[data-layout] .study-shortcuts{position:relative;z-index:4}
+/* Stuck at the top, the bar hides what scrolls through the panel's top padding (20px at
+   most in the game layout) with a solid mask above it. It keeps 22px clear above itself, so
+   the mask never covers the buttons that come before it (御书房 shortcuts, 安排居所 · 晋封). */
+#app[data-layout] .section-jumps{margin-top:22px;box-shadow:0 3px 10px #71522e0c,0 -20px 0 0 rgb(251 242 223)}
