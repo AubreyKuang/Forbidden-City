@@ -3,10 +3,12 @@ const marriedSisterAffairsActive=()=>journalContentVersion()>=34;
 
 function marriedSisterAvailable(c,p){
   return marriedSisterAffairsActive()&&!S.over&&!mourningActive()&&inPalace(c)&&p?.sex==='f'&&p.alive&&!p.consortId&&
-    !p.natalCollateral&&!p.parentRelativeId&&!p.motherRelativeId&&p.married&&p.spouse?.alive!==false&&(!!p.spouse||journalContentVersion()>=40)&&!p.widow&&natalAge(p)>=18&&
+    (!p.natalCollateral||introducedCousinVisitable(p))&&!p.parentRelativeId&&!p.motherRelativeId&&p.married&&p.spouse?.alive!==false&&(!!p.spouse||journalContentVersion()>=40)&&!p.widow&&natalAge(p)>=18&&
     (!p.spouse?.personId||officialAlive(maritalFather(p,null)?.p));
 }
 
+// Issue 42: the cousin a consort introduces for a childhood betrothal can be visited at home, and met privately.
+function introducedCousinVisitable(p){return journalContentVersion()>=169&&!!p?.betrothalIntroduction;}
 function marriedSisterVisitButton(c,p){
   const affair=p.marriedSisterAffair;
   if(!marriedSisterAvailable(c,p))return '';
@@ -21,7 +23,7 @@ function sisterPrivateChance(p){
   return chance(Math.min(.96,(p.willing===false?.80:forward?.90:.86)+(restlessDisposition(p)?.08:0)));
 }
 function sisterPrivateWords(c,p,meetings){
-  const kin=natalLabel(c,p)==='姐姐'?'妹妹':'姐姐',relation=relGet(c,p);
+  const label=natalLabel(c,p),kin=journalContentVersion()>=169&&label.startsWith('堂')?(label==='堂姐'?'堂妹':'堂姐'):label==='姐姐'?'妹妹':'姐姐',relation=relGet(c,p);
   const first=meetings===0;
   if(relation<=-25)return first
     ?`她吃了一惊，随即抬眼看你：“从小大家都先问我${kin}怎么想。她能得你喜欢，难道我就不能？今日你是来见我的，可别又只问起她。”`

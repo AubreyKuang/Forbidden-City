@@ -10,13 +10,14 @@ const HE_XINGJIAN_CONTACT={
  memorial:'本月奏折里附了一份东厂勘单。正文说案已办结，附札却另写一行：传来的那个人与原卷记载不合。'
 };
 
-function heXingjianLeadChoice(source){
- if(!heXingjianContactReady())return null;
- return {t:'阅东厂附札 · 见首捕',preview:'另阅附札，免耗精力',cond:heXingjianContactReady,f:()=>{
-  if(!heXingjianContactReady())return null;
-  const person=FENGHUA_PEOPLE.heXingjian;
-  pushNow({title:'东厂附札 · 贺行简',por:fenghuaPreview('heXingjian'),valid:heXingjianContactReady,
-   text:HE_XINGJIAN_CONTACT[source]+'\n'+person.intro,choices:[
+// Issue 36: the first audience lets the emperor ask him the question himself.
+function heXingjianContactEvent(source,asked=false){
+ const person=FENGHUA_PEOPLE.heXingjian,persona=journalContentVersion()>=169;
+ const answer=asked?'\n你问他：“你怕死吗？”\n他答：“不怕。我死了，东厂还有下一个首捕。”':'';
+ const legacy=persona?'':'你问他怕不怕死。他答：“不怕。我死了，东厂还有下一个首捕。”';
+ return {title:'东厂附札 · 贺行简',por:fenghuaPreview('heXingjian'),valid:heXingjianContactReady,
+   text:HE_XINGJIAN_CONTACT[source]+'\n'+person.intro+legacy+answer,choices:[
+    ...(persona&&!asked?[{t:'问他：“你怕死吗？”',f:()=>{if(!heXingjianContactReady())return null;pushNow(heXingjianContactEvent(source,true));return null;}}]:[]),
     {t:'收下原卷，准他听候差遣',f:()=>{
      if(!heXingjianContactReady())return null;
      const p=createFenghuaPerson('heXingjian');
@@ -28,7 +29,13 @@ function heXingjianLeadChoice(source){
      fenghuaState().attempts.heXingjian=S.turn;
      return '附札入卷，半年后仍可另行召见。原案各项照旧。';
     }}
-   ]});
+   ]};
+}
+function heXingjianLeadChoice(source){
+ if(!heXingjianContactReady())return null;
+ return {t:'阅东厂附札 · 见首捕',preview:'另阅附札，免耗精力',cond:heXingjianContactReady,f:()=>{
+  if(!heXingjianContactReady())return null;
+  pushNow(heXingjianContactEvent(source));
   return null;
  }};
 }
@@ -71,7 +78,14 @@ function heXingjianCaseChoice(x,docket){
    x.progress[x.progress.length-1].text='贺行简以双倍进度核对本案，当月回奏。';
    if(x.kind==='palace-secret')beginSecretEvidence(x,secretCaseSubject(x));
    if(beginMinistryFollowup(docket,'case',{name:person.name,commanderId:jinyiwei().commander.id,caseId:x.id,due:x.due}))x.ministryDocket=docket.id;
+   const commander=jinyiwei().commander,merit=commander.merit,stories=commander.story?.length??0;
    const report=caseReport(x);
+   // Issue 36: the work and the credit are his, not the commander's.
+   if(report&&journalContentVersion()>=169){
+    commander.merit=merit;if(commander.story)commander.story.length=stories;
+    story(commander,`「${x.title}」交东厂首捕${person.name}核查。`);
+    report.text=report.text.replace(commander.name+'回奏：',person.name+'呈上原卷：');
+   }
    if(report){
     const text='“办好了。”他将核实的原卷递上。\n'+report.text;
     fenghuaRecord(person,'办好了',`奉旨核查「${x.title}」。`,'照实回奏',report.text);

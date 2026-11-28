@@ -94,6 +94,14 @@ function linJianxiSoloVisit(p){
    {t:'共坐片刻，听竹叶里的风',trust:1,f:advance,result:'两个人静坐到茶尽，起身时才约好下回得空再见。'}
   ],{advance:false});
 }
+// Issue 36: the relative the emperor seats at the table is a real person.
+function linJianxiCompanion(k){
+ if(journalContentVersion()<169)return null;
+ const carer=byId(k.foster||k.mom);
+ if(carer&&inPalace(carer))return {id:carer.id,person:carer,name:cName(carer),label:carer.id===k.mom?'生母':'养母'};
+ const sibling=kidsAlive().find(x=>x!==k&&x.mom===k.mom&&childInPalace(x)&&kidAge(x)>=10);
+ return sibling?{id:sibling.id,person:sibling,name:sibling.name,label:sibling.sex==='m'?'兄弟':'姐妹'}:null;
+}
 function linJianxiVisit(p,k){
  if(!linJianxiMeetingReady(k,p))return null;
  const state=k.linJianxi;
@@ -101,8 +109,10 @@ function linJianxiVisit(p,k){
   const next=(fan,result)=>s=>{s.fan=fan;s.phase='met';p.fenghua.stage=Math.max(2,p.fenghua.stage);return result;};
   const route={label:'听她问一句，何时能去认这条溪路',apply:next('route','他指了指扇角的小桥：“从这里往上便是。殿下若愿，下回我先把路画清楚。”')};
   const sketch={label:'看她收好扇上的景，回去另画一幅',apply:next('sketch','过后她果真托人送来一小幅溪山图。他收在扇匣里，留待下回请她讲最喜欢哪一笔。')};
+  const companion=linJianxiCompanion(k);
+  if(companion)for(const option of [route,sketch]){const apply=option.apply;option.apply=s=>{s.companion=companion.id;(S.children.includes(companion.person)?kstory:story)(companion.person,`【扇上山水】陪${k.name}见林见溪，看他展开那柄无字山水扇。`);return apply(s);};}
   return linJianxiSharedEvent(k,p,'扇上山水',
-   '亲眷同席，林见溪放下茶盏，展开那柄没有题字的山水扇。公主问画的是何处。他轻声答：“城外常走的溪路。若由殿下来画，想往哪里添一笔？”',
+   (companion?`${companion.label}${companion.name}陪坐`:'亲眷同席')+'，林见溪放下茶盏，展开那柄没有题字的山水扇。公主问画的是何处。他轻声答：“城外常走的溪路。若由殿下来画，想往哪里添一笔？”',
    childDisposition(k)==='内敛'?[sketch,route]:[route,sketch]);
  }
  if(state.phase==='met'){
@@ -110,7 +120,7 @@ function linJianxiVisit(p,k){
    '他从扇匣取出那幅小画，指着溪边的一点淡墨，请公主讲讲画的是什么。';
   const next=(reply,result)=>s=>{s.reply=reply;s.phase='return';p.fenghua.stage=3;return result;};
   return linJianxiSharedEvent(k,p,'等她答完',recalled+
-   '\n席间有人问公主近来在读什么。她一时没出声，他怕她为难，便轻声把话岔开。散席后，公主叫住了他。',[
+   '\n'+(linJianxiCompanion(k)?.name?linJianxiCompanion(k).name+'笑着':'席间有人')+'问公主近来在读什么。她一时没出声，他怕她为难，便轻声把话岔开。散席后，公主叫住了他。',[
     {label:'让她告诉他，方才是想好了再答',apply:next('wait','他停了一停，向她道歉：“原来殿下还有话。我记下了，下回且等你说完。”')},
     {label:'听她说，方才确实想避开话头',apply:next('help','她谢他解围，又说自己有时只是答得慢。两人约好，要他接话时，她会先看他一眼。')}
    ]);
@@ -142,7 +152,7 @@ function linJianxiProposalEvent(k,p=linJianxiPerson()){
    {label:'公主应允，准两人依礼成婚',apply:s=>{
     const spouse={id:p.id,personId:p.id,name:p.name,sur:p.sur,sex:'m',seed:p.seed,
      fenghuaKey:p.fenghuaKey,portraitOverride:p.portraitOverride,born:p.fenghua.born,alive:true,
-     route:'scholar',background:'竹林贤客',marriageNature:{temperament:'温厚',hobby:'books',spending:'节俭',space:'需要独处'}};
+     route:'scholar',background:'竹林贤客',marriageNature:{temperament:'温厚',hobby:'books',spending:'节俭',space:journalContentVersion()>=169?'喜欢相伴':'需要独处'}};
     settlePrincessMarriage(k,spouse,'scholar','竹林贤客，两情相悦');
     p.married=true;p.royalSpouseId=k.id;s.phase='married';delete p.fenghua.matchId;
     return '公主亲口应下了。按两人的意思依礼成婚，平日留京。林见溪将她的回笺折好，与旧日的山水扇一处收了。';

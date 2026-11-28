@@ -71,6 +71,7 @@ const CONSORT_DISTINCTIONS=[
  {id:'quick',name:'才思敏捷',groups:['talent'],priority:20,why:'才情达到85，思路敏捷。',talent:85,art:'any',test:c=>c.talent>=85},
  {id:'gentle',name:'温良恭俭',groups:['virtue'],priority:20,why:'德行达到84，处事有分寸。',known:true,test:c=>c.virtue>=84},
  {id:'careful',name:'心思缜密',groups:['scheme'],priority:20,why:'心机达到75，思虑细密；不据此断定善恶。',known:true,test:c=>c.scheme>=75},
+ {id:'counsel',name:'贤良淑德',groups:['counsel'],priority:70,why:'性情温婉、持重或淡泊，德行至少75、心机不高于45；或德行至少88、心机不高于30。连日承宠时，会劝陛下顾惜龙体、雨露均沾。',known:true,test:c=>virtuousCounselDisposition(c)},
  {id:'frail',name:'弱柳扶风',groups:['health'],priority:110,why:'当前健康低于50，宜注意静养调护；健康恢复后不再显示。',test:c=>c.alive&&Number.isFinite(c.hp)&&c.hp<50}
 ];
 const CONSORT_DISTINCTION_NOTES={
@@ -93,6 +94,7 @@ const CONSORT_DISTINCTION_NOTES={
  quick:'她接话时思路很快，别人还在斟酌，她已经想出另一种说法。',
  gentle:'她待人温和，遇上分派用度、推让礼数一类的事，言语间自有分寸。',
  careful:'她听完一桩事，还会留意其中哪一步说得含糊，心里记得分明。',
+ counsel:'她承宠时也记得旁人。陛下若连日只召她一人，她会温声劝陛下顾惜龙体，也去看看别的姐妹。',
  frail:'她近日身子虚弱，宜把长久坐立的事分作几回，得闲便歇。'
 };
 function ensureConsortDistinctions(c){
@@ -147,3 +149,63 @@ function reconcileConsortDistinctions(){
   }
  }
 }
+
+// Issue 42: a virtuous consort asks the emperor not to summon only her, for his health and for harmony in the palace.
+function virtuousCounselDisposition(c){
+ if(journalContentVersion()<169||!c||c.maid)return false;
+ return ['温婉','持重','淡泊'].includes(c.trait)&&c.virtue>=75&&c.scheme<=45||c.virtue>=88&&c.scheme<=30;
+}
+const VIRTUOUS_COUNSEL_STREAK=3, VIRTUOUS_COUNSEL_GAP=4;
+function virtuousCounselOther(c){
+ return harem().filter(o=>o!==c&&inPalace(o)&&!o.maid&&!o.cold&&!o.preg&&!o.cardWithdrawn&&(!consortRecoveryActive()||!consortNightReason(o)))
+  .sort((a,b)=>(a.lastPersonalAttention??-99)-(b.lastPersonalAttention??-99)||a.favor-b.favor||a.id-b.id)[0]||null;
+}
+function virtuousCounselEvent(c,count){
+ const other=virtuousCounselOther(c),gen=S.gen;
+ const sisterly=other?(other.age>c.age?'姐姐':'妹妹'):'';
+ const otherLine=other?`${cName(other)}${sisterly}好些日子没见着陛下了，前几日还托人问陛下的寒暖。`:'六宫姐妹也都盼着陛下。';
+ const health=E().health<60||(E().nightsMonth||0)>=4?'陛下近来眉间有倦色，太医院也说要静养几夜。':'陛下白日理政已经辛苦，夜里也该好好歇一歇。';
+ const text=`已是连着第${cnNum(count)}回召${cName(c)}侍寝。熄灯前，她替你掖好被角，轻声说：\n“臣妾得陛下垂怜，心里是欢喜的。只是${health}${otherLine}陛下若只来臣妾这里，旁人难免多心，臣妾也不安。为龙体，也为六宫和睦，陛下明日去看看别的姐妹吧。”`;
+ const valid=()=>S.gen===gen&&inPalace(c)&&!S.over;
+ return {title:'贤良 · 枕边进言',por:c,present:other?[c,other]:[c],valid,text,choices:[
+  {t:other?`听她的，明日去看${cName(other)}`:'听她的，这几日雨露均沾',f:()=>{
+   if(!valid())return null;
+   const flags=S.flags.virtuousCounsel;flags.heeded=(flags.heeded||0)+1;S.flags.nightStreak={id:null,count:0,gen:S.gen};
+   story(c,`【枕边进言】连日承宠后，劝陛下顾惜龙体、雨露均沾${other?`，替${fullName(other)}说了句话`:''}。陛下听从了。`);
+   remember(c,'care','我劝陛下不要只来我这里，陛下听进去了。');
+   const parts=[cchg(c,{aff:4,mood:4,virtue:2})];
+   if(other){other.mood=clamp(other.mood+6);relAdd(other,c,8);story(other,`【姐妹情分】听说${fullName(c)}在陛下面前替自己说话，心里感念。`);remember(other,'family',`${cName(c)}在陛下面前提起我。`);}
+   for(const o of harem())if(o!==c&&o!==other&&TRAITS[o.trait]?.jealous)relAdd(o,c,2);
+   log(`【贤良进言】${cName(c)}劝帝顾惜龙体、雨露均沾，帝从之。`,1);
+   return `她松了口气，笑着说陛下肯听，便是体恤臣妾了。${other?`\n${cName(other)}听说是${cName(c)}替她说的话，心里很是感念。`:''}${fx(...parts,chg({prestige:1}))}`;
+  }},
+  {t:'“朕只想见你。”',f:()=>{
+   if(!valid())return null;
+   story(c,'【枕边进言】劝陛下雨露均沾，陛下却说只想见她。她心里欢喜，也更添了几分不安。');
+   remember(c,'care','我劝陛下去看看别的姐妹，陛下说只想见我。');
+   harem().forEach(o=>{if(o!==c&&TRAITS[o.trait]?.jealous){o.mood=clamp(o.mood-2);relAdd(o,c,-2);}});
+   return `她低下头，过了一会儿才说：“陛下这样说，臣妾更不敢恃宠了。”${fx(cchg(c,{aff:3,mood:-2}))}`;
+  }},
+  {t:'“你多虑了，朕自有分寸。”',f:()=>{
+   if(!valid())return null;
+   story(c,'【枕边进言】劝陛下顾惜龙体、雨露均沾。陛下说自有分寸。');
+   return '她不再多说，只叮嘱宫人明早备一盏参汤。';
+  }}]};
+}
+const earlierCounselNightWith=nightWith;
+nightWith=function(c,fromEvent){
+ const before=E()?.nightsMonth||0,beforeTurn=S?.turn;
+ const result=earlierCounselNightWith(c,fromEvent);
+ if(journalContentVersion()<169||!S||S.turn!==beforeTurn||(E().nightsMonth||0)===before)return result;
+ const streak=S.flags.nightStreak?.gen===S.gen&&S.flags.nightStreak.id===c.id?S.flags.nightStreak:{id:c.id,count:0,gen:S.gen};
+ streak.count++;S.flags.nightStreak=streak;
+ const flags=S.flags.virtuousCounsel||={last:-99};
+ if(streak.count>=VIRTUOUS_COUNSEL_STREAK&&virtuousCounselDisposition(c)&&S.turn-(flags.last??-99)>=VIRTUOUS_COUNSEL_GAP&&!mourningActive()){
+  const ev=virtuousCounselEvent(c,streak.count);
+  if(eventStillValid(ev)){
+   flags.last=S.turn;flags.person=c.id;
+   const at=Q.findIndex(e=>e.title==='春宵'&&e.por===c);Q.splice(at+1,0,ev);
+  }
+ }
+ return result;
+};

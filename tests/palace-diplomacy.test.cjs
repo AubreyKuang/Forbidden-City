@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),{boot}=require('./playtest-harness.cjs');
-function start(){const b=boot(66001);b.ctx.assert=assert;b.run(`A.start();drain();E().energy=10;E().treasury=1000;var envoy=officialEntries().find(e=>officialServing(e.p)&&!e.p.away);assert.ok(envoy);`);return b;}
+function start(){const b=boot(66001);b.ctx.assert=assert;b.run(`A.start();drain();E().energy=10;E().treasury=1000;var envoy=officialEntries().find(e=>diplomacyEnvoyInCapital(e.p));assert.ok(envoy);`);return b;}
 test('an envoy, their duty, and the predetermined outcome survive a reload and settle once',()=>{
  let b=start();b.force(.001);b.run(`var before=E().treasury;A.sendDiplomaticEnvoy('sea','trade',encodeURIComponent(envoy.key));
   var mission=diplomacyState().missions[0];assert.equal(E().treasury,before-30);assert.equal(officialServing(envoy.p),false);
@@ -11,7 +11,7 @@ test('an envoy, their duty, and the predetermined outcome survive a reload and s
 });
 test('a deceased envoy cannot complete a mission and a second mission is blocked',()=>{
  const b=start();b.run(`A.sendDiplomaticEnvoy('north','border',encodeURIComponent(envoy.key));var mission=diplomacyState().missions[0];
-  var other=officialEntries().find(e=>officialServing(e.p)&&!e.p.away);var amount=E().treasury;
+  var other=officialEntries().find(e=>diplomacyEnvoyInCapital(e.p));var amount=E().treasury;
   A.sendDiplomaticEnvoy('north','visit',encodeURIComponent(other.key));assert.equal(E().treasury,amount);
   envoy.p.alive=false;S.turn=mission.due;diplomacyTick();assert.equal(mission.status,'interrupted');
   assert.equal(diplomacyCountry('north').relation,35);assert.match(diplomacyPanel(),/未能完成此行/);`);
@@ -29,8 +29,8 @@ test('foreign envoys remember how they were received across saves and cannot be 
 test('treaty, tribute and a border negotiation have persistent effects',()=>{
  const b=start();b.force(.001,.001,.001);
  b.run(`A.sendDiplomaticEnvoy('north','treaty',encodeURIComponent(envoy.key));var m=diplomacyState().missions[0];
-  S.turn=m.due;diplomacyTick();var country=diplomacyCountry('north');assert.equal(country.treatyUntil,S.turn+60);
-  A.sendDiplomaticEnvoy('north','tribute',encodeURIComponent(envoy.key));m=diplomacyState().missions[1];S.turn=m.due;diplomacyTick();assert.equal(country.tribute,true);
+  S.turn=m.due;diplomacyTick();assert.equal(curEv.title,'使臣回奏 · 朔庭');drain();var country=diplomacyCountry('north');assert.equal(country.treatyUntil,S.turn+60);
+  A.sendDiplomaticEnvoy('north','tribute',encodeURIComponent(envoy.key));m=diplomacyState().missions[1];S.turn=m.due;diplomacyTick();drain();assert.equal(country.tribute,true);
   var amount=E().treasury;S.month=1;S.turn++;diplomacyTick();assert.equal(E().treasury,amount+60);
   country.tension=35;S.month=2;A.sendDiplomaticEnvoy('north','border',encodeURIComponent(envoy.key));m=diplomacyState().missions[2];S.turn=m.due;diplomacyTick();assert.equal(country.tension,15);`);
 });
@@ -88,7 +88,7 @@ test('an unanswered foreign marriage proposal resumes safely after reload',()=>{
 });
 test('an envoy can return a false report, with a cost for trusting it and delayed verification',()=>{
  let b=start();b.force(.001,.999);b.run(`A.sendDiplomaticEnvoy('north','visit',encodeURIComponent(envoy.key));var mission=diplomacyState().missions[0];
-  S.turn=mission.due;diplomacyTick();var report=diplomacyState().reports[0];assert.equal(report.truth,false);assert.equal(report.alarm,true);
+  S.turn=mission.due;diplomacyTick();assert.match(curEv.text,/边境见闻/);drain();var report=diplomacyState().reports[0];assert.equal(report.truth,false);assert.equal(report.alarm,true);
   var amount=E().treasury;A.trustForeignReport(report.id);A.trustForeignReport(report.id);assert.equal(E().treasury,amount-20);
   A.verifyForeignReport(report.id);assert.equal(report.verifyDue,S.turn+2);assert.doesNotMatch(diplomacyPanel(),/复核结果/);save('auto');`);
  b=boot(3,b.storage);b.ctx.assert=assert;b.run(`A.load('auto');var report=diplomacyState().reports[0];S.turn=report.verifyDue;
@@ -101,7 +101,7 @@ test('a foreign envoy remembers a reception and returns the favor or retaliates 
 });
 test('a false reassurance can leave the border exposed',()=>{
  const b=start();b.run(`A.receiveForeignEnvoy('north','gift');var country=diplomacyCountry('north');country.tension=50;`);b.force(.001,.999);
- b.run(`A.sendDiplomaticEnvoy('north','visit',encodeURIComponent(envoy.key));var mission=diplomacyState().missions[0];S.turn=mission.due;diplomacyTick();
+ b.run(`A.sendDiplomaticEnvoy('north','visit',encodeURIComponent(envoy.key));var mission=diplomacyState().missions[0];S.turn=mission.due;diplomacyTick();drain();
   var report=diplomacyState().reports[0];assert.equal(report.truth,true);assert.equal(report.alarm,false);
   var people=E().people;A.trustForeignReport(report.id);assert.equal(E().people,people-2);assert.equal(country.tension,55);`);
 });
