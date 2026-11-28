@@ -259,5 +259,117 @@ function selectionNieceArrivalNote(c){
   const prefix=`selection-niece:${S.selection?.batch}:`;
   const entry=(c.familyBranchOrigin||nieceSelectionEntryActive()&&c.outerHouseholdId!=null)&&
     c.story.find(e=>e.life?.title===NIECE_SELECTION_TITLES.entered&&e.thread?.startsWith(prefix));
-  return entry?.life?.reply?`<p class="hint">${esc(entry.life.reply)}</p>`:'';
+  return (entry?.life?.reply?`<p class="hint">${esc(entry.life.reply)}</p>`:'')+selectionSisterArrivalNote(c);
+}
+/* A consort hears that her own sister is on the new roster. Journal content 175. */
+const selectionSistersActive=()=>journalContentVersion()>=175;
+const SISTER_SELECTION_TITLE='姐妹应选 · 储秀宫名册';
+// [words, her own thought]; {s} is how she calls the candidate.
+const SISTER_SELECTION_VOICES={
+  glad:{
+    warm:['{s}要进宫候选了？我给你备了一双软底鞋，候着点名时站得久，别叫脚疼。','想到宫里往后能多一个说家乡话的人，夜里多点了一盏灯。'],
+    candid:['名册上看见你的名字，我差点叫出声来！殿上谁问你话，你只管照实答，有我在，没人敢欺负你。','已经把储秀宫的管事姑姑问了一遍，谁要给{s}脸色看，我头一个不答应。'],
+    quiet:['听说你的名帖也递上来了。等候时人多，若嫌吵，就想想家里后院那棵槐树。','把给{s}抄的一卷书又校了一遍。话不必多，只盼她在殿上不慌。'],
+    steady:['我把殿选的次序和礼部常问的几样写在这页纸上。照着准备，答不上的据实说，不丢人。','{s}进宫候选，是喜事，也是要紧事。我得先替她把规矩理清。'],
+    proud:['咱们家的女儿上殿，不必看谁脸色。你只管拿出自己的本事，旁人若嚼舌根，我替你挡着。','{s}若能留下，宫里便多一个自家人。我总得护着她。']
+  },
+  mixed:{
+    warm:['听说你也要来候选。宫里的日子不比家里，你想清楚了便好。我这里有暖手炉，冷了就叫人来取。','既盼着{s}能留下作伴，又怕她进来以后，才知道这里的日子没有家信里写的那样好。'],
+    candid:['你的名字在册上了。我不说吉利话哄你：宫里的路不好走，你若真愿意，就挺直腰杆走进来。','话说得硬了些。可{s}的事，我宁愿她听实话。'],
+    quiet:['名册我看到了。你若愿意来，就来；若不愿意，也别为了家里勉强。','在窗下坐了半日，不知该盼{s}留下，还是盼她回家。'],
+    steady:['家里既把你的名帖递上来，你便好好准备。留与不留，都是你自己的造化，我不替你求情，也不拦你。','亲姐妹同在宫中，往后有照应，也有牵扯。这一层我得先想明白。'],
+    proud:['家里倒是心急，又把你送来了。你来便来，只记得宫里人人看着，别叫人笑话咱们家。','说不上欢喜，也说不上不欢喜。只怕家里从此把指望分成两份。']
+  },
+  wary:{
+    warm:['你要来候选，我自然替你高兴……只是往后陛下若多看你一眼，你别怪我心里难受。','{s}是亲人，可宫里的眷顾就那么一点。夜里想起这件事，翻来覆去睡不着。'],
+    candid:['家里又送人来了？行，你来吧。丑话说在前头，宫里的事各凭本事，我不会让着你。','嘴上说得硬，其实是怕。怕{s}一来，陛下就不记得我了。'],
+    quiet:['你要来便来。我这里清静惯了，往后各过各的日子罢。','原想守着自己的一方清静。{s}一来，只怕连这点清静也要分出去。'],
+    steady:['家中的意思我明白。你若留下，我们各守位分，别让旁人看我们姐妹争一份恩宠的笑话。','账算得清楚，心里却算不清。只盼{s}来了以后，我们还能像在家时那样说话。'],
+    proud:['家里真当我在宫里站不住了，才又送你进来？你来便来，只别指望我替你铺路。','这份恩宠是我一步步挣来的。{s}若要来分，我面上依礼，心里不能不防。']
+  },
+  resent:{
+    warm:['殿上好好答就是了。别的，我同她之间不必再说。','原以为过了这些年能放下。看到{s}的名字，才知道旧事还梗在心口。'],
+    candid:['她也要进宫？好啊。从前在家里处处压我一头，到了这里，就各凭本事。','她要来，我不拦。可当年那些事，我一件也没忘。'],
+    quiet:['知道了。名册放下吧，不必再提。','把名册合上，在窗前坐到天黑。有些人，见与不见都一样难受。'],
+    steady:['各人有各人的路。她若留下，依礼相待便是，私下不必往来。','我不会害她，也不想再同她亲近。照礼数办，便是我能给的全部。'],
+    proud:['家里竟又把她送来了。也好，叫她亲眼看看，这宫里如今是谁站稳了脚。','旧账还没有算清，{s}倒要来同我争了。']
+  }
+};
+const SISTER_SELECTION_REPLIES={
+  glad:'{s}托人捎来话，我把那页纸折好收进袖里。原来进宫这条路上，有人在前头等我。',
+  mixed:'{s}的话里有暖也有冷。我知道她是替我担心，也知道往后的路得自己走。',
+  wary:'{s}的话听着不是滋味。我还没进宫门，倒先成了她心里的一根刺。',
+  resent:'等了几日，{s}那边没有一句话。早知道旧事没过去，只是没想到会这样冷。'
+};
+const fullSisterKin=(a,b)=>/^亲[姐妹]$/.test(a.kin?.[b.id]||b.kin?.[a.id]||'');
+// A relative from the household register is a sister only when she is the host's own 姐姐 or 妹妹.
+function selectionSisterRegister(g){
+  const host=g.selectionNatalHost==null?null:familyHostById(g.selectionNatalHost);
+  const p=host?.house?.relatives?.find(x=>x.id===g.id);
+  if(!p||p.parentRelativeId!=null||p.motherRelativeId!=null||p.natalCollateral)return null;
+  const label=natalLabel(host,p);
+  return ['姐姐','妹妹'].includes(label)?{host,p,label}:null;
+}
+function selectionSisterLabel(c,g,register){
+  if(c===register?.host)return register.label;
+  const own=c.kin?.[g.id],theirs=g.kin?.[c.id];
+  if(/^亲[姐妹]$/.test(own||''))return KIN_TXT[own].replace(/^亲/,'');
+  if(/^亲[姐妹]$/.test(theirs||''))return theirs==='亲姐'?'妹妹':'姐姐';
+  return g.age>c.age?'姐姐':g.age<c.age?'妹妹':register?.label||'妹妹';
+}
+function selectionSisters(g){
+  if(!selectionSistersActive()||g.familyBranchOrigin||g.outerHouseholdId!=null)return [];
+  const register=selectionSisterRegister(g);
+  if(g.selectionNatalHost!=null&&!register)return [];
+  const anchors=S.consorts.filter(c=>c.id!==g.id&&(register?c===register.host:fullSisterKin(c,g)));
+  const seen=new Set(),found=[];
+  for(const a of anchors)for(const c of [a,...S.consorts.filter(o=>o!==a&&o.id!==g.id&&fullSisterKin(a,o))]){
+    if(seen.has(c))continue;seen.add(c);
+    if(!c.alive||c.gone||c.maid||c.familyArchive||c.cold)continue;
+    found.push({c,label:selectionSisterLabel(c,g,register),register});
+  }
+  return found;
+}
+function selectionSisterKind(c,g){
+  // Before admission a generated sister has no stored score; addConsort would give her 45, or -30 for a rival.
+  const rival=isRival(c,g)||isRival(g,c),score=S.rel&&rk(c,g) in S.rel?relGet(c,g):rival?-30:45;
+  const voice=selectionNieceVoice(c),jealous=['善妒','骄纵','骄矜','痴情','好胜'].includes(c.trait);
+  if(rival||score<=-20)return 'resent';
+  if(voice!=='quiet'&&score<55&&(jealous||c.favor<25||voice==='proud'&&c.favor>=65))return 'wary';
+  return score>=35?'glad':'mixed';
+}
+const SISTER_SELECTION_MOOD={glad:6,mixed:1,wary:-6,resent:-10};
+function recordSelectionSisters(g,s=S.selection){
+  if(!s?.batch)return '';
+  let reply='';
+  for(const {c,label,register} of selectionSisters(g)){
+    const thread=`selection-sister:${s.batch}:${c.id}:${g.id}`;
+    if(c.story.some(e=>e.thread===thread))continue;
+    const kind=selectionSisterKind(c,g),voice=selectionNieceVoice(c),back=label==='姐姐'?'妹妹':'姐姐';
+    const [words,thought]=SISTER_SELECTION_VOICES[kind][voice].map(t=>t.replace(/\{s\}/g,label));
+    const cn=fullName(c),gn=fullName(g),fact=`${label}${gn}列入本届秀女名册，按礼入储秀宫候选。`;
+    const away=!inPalace(c),resent=kind==='resent';
+    const message=resent?`${cn}${away?'从家信得知消息':'听到消息'}，没有给${label}捎话，只对身边人说：“${words}”`:
+      `${cn}${away?'在宫外得了家信，托人给'+label+'带去一页回札':'听到消息，托宫人给'+label+'传话'}：“${words}”`;
+    livedRecord([c],'family',SISTER_SELECTION_TITLE,thread,`【${SISTER_SELECTION_TITLE}】${fact}${message}`,[thought]);
+    const heard=resent?`${back}${cn}那边没有捎来一句话。`:message;
+    livedRecord([g],'family',SISTER_SELECTION_TITLE,thread,`【${SISTER_SELECTION_TITLE}】${gn}列入本届秀女名册。${heard}`,[SISTER_SELECTION_REPLIES[kind].replace(/\{s\}/g,back)]);
+    const entry=g.story.at(-1);entry.life.reply=heard;entry.life.sister=c.id;
+    if(register&&register.p!==g)(register.p.story||=[]).push({...entry,life:{...entry.life}});
+    cchg(c,{mood:SISTER_SELECTION_MOOD[kind]});
+    if(!['悲恸','心如死灰'].includes(xinOf(c))){
+      const why={glad:`听说${label}${gn}入选秀名册`,mixed:`${label}${gn}入宫候选，放心不下`,
+        wary:`${label}${gn}也来候选，怕往后要分一份眷顾`,resent:`与${label}${gn}旧怨未消，她却也来候选`}[kind];
+      setXin(c,kind==='glad'?'欢喜':kind==='resent'?(voice==='proud'||voice==='candid'?'嫉恨':'委屈'):'忧心',why,g.id,{record:false});
+    }
+    c.selectionSisterNews={batch:s.batch,sister:g.id,kind,turn:S.turn};
+    reply||=heard;
+  }
+  return reply;
+}
+function selectionSisterArrivalNote(g){
+  if(!selectionSistersActive())return '';
+  const prefix=`selection-sister:${S.selection?.batch}:`;
+  return g.story.filter(e=>e.life?.title===SISTER_SELECTION_TITLE&&e.thread?.startsWith(prefix)&&e.life.reply)
+    .map(e=>`<p class="hint">${esc(e.life.reply)}</p>`).join('');
 }
