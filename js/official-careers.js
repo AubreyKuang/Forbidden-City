@@ -17,7 +17,7 @@ function officialGrade(p){
   return null;
 }
 function officialGradeLabel(p){const g=officialGrade(p);return g?GRADE_NAMES[g-1]:p?.career==='student'?'尚未授官':p?.career==='commoner'?'无官品':(p?.office||p?.post||'').startsWith('候补')?'候补 · 未实授':'未定品';}
-function officialOfficeLabel(p){return `${p.office||p.post||'未任职'} · ${!officialAlive(p)||p.retired||p.dismissed||p.exiled?'原任':''}${officialGradeLabel(p)}`;}
+function officialOfficeLabel(p){if(p.leftOffice)return `曾任${p.leftOffice.former}`;return `${p.office||p.post||'未任职'} · ${!officialAlive(p)||p.retired||p.dismissed||p.exiled?'原任':''}${officialGradeLabel(p)}`;}
 // Family allegiance can remain military while a son studies or holds a civil office.
 function officialMilitary(p,h){
   if(!careersActive())return h?.bloc==='army';
