@@ -827,7 +827,7 @@ A.endMonth=function(){
   palaceKinMailTick();
   sisterAwarenessMailTick();
   nieceHandwrittenMailTick();
-  if(journalContentVersion()>=168){if(typeof heirHopesMonth==='function')heirHopesMonth();if(typeof sisterBondsMonth==='function')sisterBondsMonth();}
+  if(journalContentVersion()>=169){if(typeof heirHopesMonth==='function')heirHopesMonth();if(typeof sisterBondsMonth==='function')sisterBondsMonth();}
   if(journalContentVersion()>=169&&typeof storyPersonaMonth==='function')storyPersonaMonth();
   if(journalContentVersion()>=96)childUpbringingMonth();
   if(journalContentVersion()>=115)whiteSpringFamilyParcelTick();

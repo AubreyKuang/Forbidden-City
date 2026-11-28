@@ -152,7 +152,7 @@ function reconcileConsortDistinctions(){
 
 // Issue 42: a virtuous consort asks the emperor not to summon only her, for his health and for harmony in the palace.
 function virtuousCounselDisposition(c){
- if(journalContentVersion()<168||!c||c.maid)return false;
+ if(journalContentVersion()<169||!c||c.maid)return false;
  return ['温婉','持重','淡泊'].includes(c.trait)&&c.virtue>=75&&c.scheme<=45||c.virtue>=88&&c.scheme<=30;
 }
 const VIRTUOUS_COUNSEL_STREAK=3, VIRTUOUS_COUNSEL_GAP=4;
@@ -196,7 +196,7 @@ const earlierCounselNightWith=nightWith;
 nightWith=function(c,fromEvent){
  const before=E()?.nightsMonth||0,beforeTurn=S?.turn;
  const result=earlierCounselNightWith(c,fromEvent);
- if(journalContentVersion()<168||!S||S.turn!==beforeTurn||(E().nightsMonth||0)===before)return result;
+ if(journalContentVersion()<169||!S||S.turn!==beforeTurn||(E().nightsMonth||0)===before)return result;
  const streak=S.flags.nightStreak?.gen===S.gen&&S.flags.nightStreak.id===c.id?S.flags.nightStreak:{id:c.id,count:0,gen:S.gen};
  streak.count++;S.flags.nightStreak=streak;
  const flags=S.flags.virtuousCounsel||={last:-99};

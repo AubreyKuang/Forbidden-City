@@ -159,7 +159,7 @@ function registerRoyalNatalBranch(c,k){
 }
 // Issue 42: cousins introduced before this release keep the same home-visit option.
 function markIntroducedBetrothalCousins(){
-  if(journalContentVersion()<168||!S)return;
+  if(journalContentVersion()<169||!S)return;
   const seen=new Set();
   for(const c of familyCourtHosts()){
     const h=houseOf(c);if(!h||seen.has(h))continue;seen.add(h);
@@ -196,8 +196,8 @@ function royalNatalMarriageProposal(){
   ];
   const valid=()=>inPalace(c)&&royalNatalChildReady(k)&&royalNatalRelativeReady(k,p);
   return {title:'外家有约 · 娃娃亲',por:c,cast:[k,natalPortrait(p)],present:[c],valid,
-    onShow:()=>{S.flags.lastRoyalNatalProposal=S.turn;if(journalContentVersion()>=168&&mother.married&&!mother.betrothalIntroduction){mother.betrothalIntroduction={host:c.id,child:k.id,turn:S.turn};story(mother,`【议亲引见】${fullName(c)}在陛下面前提起她和${p.name}，想为孩子们订下娃娃亲。`);}},
-    text:`${fullName(c)}趁问安时提起一封家书。${introduction}${name}今年${kidAge(k)}岁，两个孩子年岁相近。${letters[marriageHash(k.id+':match-letter')%letters.length]}\n她想求陛下准两家先交换婚帖，等孩子们都满${weddingAge}岁，照礼成婚。${journalContentVersion()>=168&&mother.married?`\n${fullName(c)}还说：“${mother.name}${collateral?'是臣妾的'+(host===c?natalLabel(c,mother):'堂亲'):'是臣妾的'+natalLabel(c,mother)}，性子${natalTrait(mother)}。陛下若想先见见这家人，可从家族名册到她的住所走一趟。”`:''}`,
+    onShow:()=>{S.flags.lastRoyalNatalProposal=S.turn;if(journalContentVersion()>=169&&mother.married&&!mother.betrothalIntroduction){mother.betrothalIntroduction={host:c.id,child:k.id,turn:S.turn};story(mother,`【议亲引见】${fullName(c)}在陛下面前提起她和${p.name}，想为孩子们订下娃娃亲。`);}},
+    text:`${fullName(c)}趁问安时提起一封家书。${introduction}${name}今年${kidAge(k)}岁，两个孩子年岁相近。${letters[marriageHash(k.id+':match-letter')%letters.length]}\n她想求陛下准两家先交换婚帖，等孩子们都满${weddingAge}岁，照礼成婚。${journalContentVersion()>=169&&mother.married?`\n${fullName(c)}还说：“${mother.name}${collateral?'是臣妾的'+(host===c?natalLabel(c,mother):'堂亲'):'是臣妾的'+natalLabel(c,mother)}，性子${natalTrait(mother)}。陛下若想先见见这家人，可从家族名册到她的住所走一趟。”`:''}`,
     choices:[
       {t:'准两家交换婚帖',f:()=>{
         if(!valid())return null;

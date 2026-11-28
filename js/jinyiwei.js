@@ -67,7 +67,7 @@ A.establishJinyiwei=function(){
 };
 // Issue 42: a new reign is reminded once that the Jinyiwei have not been set up.
 function jinyiweiAccessionReminder(){
-  if(journalContentVersion()<168||S.over||jinyiwei())return null;
+  if(journalContentVersion()<169||S.over||jinyiwei())return null;
   return {title:'御前提醒 · 设立锦衣卫',por:'emp',valid:()=>!jinyiwei()&&!S.over,
     text:'新朝初立，宫中还没有锦衣卫。\n锦衣卫掌侍卫、缉捕与诏狱：可密查宫闱疑案、核实风闻奏事、搜查宫室，也会呈报承宠宫女的喜脉与宫外孕讯，替你核查宫外孩子的生父。\n文官们担心“厂卫横行”，设立之后每次搜宫或密查都会让朝野多一分侧目。暂不设立，日后也可在「治国理政 → 锦衣卫」补设。',
     choices:[{t:'稍后再议',f:()=>{log('新朝初立，暂缓设立锦衣卫；可在治国理政中补设。');return '你把此事记下。日后可在「治国理政 → 锦衣卫」设立。';}},{...jinyiweiEstablishChoice('即刻设立，择人出任指挥使 · 精力−1 · 国库−50'),primary:true}]};

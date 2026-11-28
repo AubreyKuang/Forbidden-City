@@ -178,9 +178,9 @@ function dowagerProposal(d){
       addConsort(g,3,legacyPendingAction()?'由太后举荐入宫':`由太后举荐入宫，先说明是陛下的${relation}，再依礼相见`);
       remember(g,'family',sister?`太后因${fullName(sister)}${reason}，举荐我入宫与堂姐相伴。`:'太后举荐我入宫，陛下准许，封为贵人。');
       if(sister){story(sister,`太后因她${reason}，举荐堂妹${fullName(g)}入宫相伴。`);remember(sister,'family',`陛下准许太后举荐的堂妹${fullName(g)}入宫，与我作伴。`);}
-      if(journalContentVersion()>=168)d.kinRefusals=0;
+      if(journalContentVersion()>=169)d.kinRefusals=0;
       return '太后点头，嘱咐她入宫后恪守宫规。'+fx(chg({prestige:1}));}},
-    {t:'婉拒，暂不添新人',f:()=>{if(journalContentVersion()>=168){d.kinRefusals=(d.kinRefusals||0)+1;d.cooldown=24+12*d.kinRefusals;}else d.cooldown=12;if(sister)remember(sister,'family','太后想让堂妹入宫陪伴我，陛下暂未答应。');return '太后收起画像：“也罢，此事以后再议。”';}}
+    {t:'婉拒，暂不添新人',f:()=>{if(journalContentVersion()>=169){d.kinRefusals=(d.kinRefusals||0)+1;d.cooldown=24+12*d.kinRefusals;}else d.cooldown=12;if(sister)remember(sister,'family','太后想让堂妹入宫陪伴我，陛下暂未答应。');return '太后收起画像：“也罢，此事以后再议。”';}}
   ]};
 }
 function dowagerEvent(){const d=ensureDowager();if(!d||!d.alive)return null;

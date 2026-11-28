@@ -38,7 +38,7 @@ test('birth alert can order three-month investigation without changing the uncle
 test('saved non-imperial truth is not rewritten to the emperor',()=>{
  const b=setup(true,false);birth(b);b.run(`choose(0);drain();var q=child.outsideParentage.privateInquiry;S.turn=q.due;outsidePaternityTick();
   assert.equal(curEv.title,'锦衣卫回奏 · 宫外生父');assert.match(curEv.text,new RegExp(child.fatherName));assert.equal(curEv.choices.length,1);choose(0);drain();
-  // Journal 168 (issue 42): a report that confirms the husband removes the 身世未明 label.
+  // Journal 169 (issue 42): a report that confirms the husband removes the 身世未明 label.
   assert.notEqual(child.unconfirmedParentage,true);assert.equal(q.imperial,false);assert.doesNotMatch(outsideParentagePanel(other,child),/决定孩子归处/);assert.doesNotMatch(natalFatherPanel(child),/生父：皇帝/);`);
 });
 test('parallel inquiries cannot silently change the unclear label',()=>{

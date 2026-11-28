@@ -195,7 +195,7 @@ function diplomacyCountry(id,create=false){
 // Envoys must hold a post in the capital. Older records may lack the away flag for a county or prefecture post.
 const DIPLOMACY_LOCAL_POST=/知府|知州|知县|县令|县丞|主簿|典史|同知|通判|推官|道员|巡抚|总督|布政使|按察使|守备|总兵|提督|副将|参将|游击|都司|千总|把总|外放/;
 function diplomacyEnvoyInCapital(p){
- return officialServing(p)&&!p.away&&(journalContentVersion()<168||!DIPLOMACY_LOCAL_POST.test(p.office||p.post||''));
+ return officialServing(p)&&!p.away&&(journalContentVersion()<169||!DIPLOMACY_LOCAL_POST.test(p.office||p.post||''));
 }
 function diplomacyEnvoyEntries(){
  return officialEntries().filter(e=>diplomacyEnvoyInCapital(e.p)).sort((a,b)=>b.p.ability-a.p.ability).slice(0,8);
@@ -474,6 +474,6 @@ function diplomacyTick(){
   country.memory.push({d:dateStr(),turn:S.turn,text});if(country.memory.length>30)country.memory.shift();
   if(returned){country.envoy.attitude=clamp(country.envoy.attitude+(m.success?4:-3));country.envoy.memory.push({d:dateStr(),turn:S.turn,kind:m.kind,success:m.success,envoy:m.envoyName});if(country.envoy.memory.length>30)country.envoy.memory.shift();}
   if(returned)story(entry.p,`【出使${def.name}】${text}`);log(`【邦交 · ${def.name}】${text}`,1);
-  if(journalContentVersion()>=168&&returned)pushEv({title:`使臣回奏 · ${def.name}`,por:entry.p,text:`${text}${m.intelligence?`\n${m.envoyName}另呈一份边境见闻，已收入邦交册，可在「治国理政 → 邦交与使节」采信或复核。`:''}`,choices:[{t:'阅毕，记入邦交册'}]});
+  if(journalContentVersion()>=169&&returned)pushEv({title:`使臣回奏 · ${def.name}`,por:entry.p,text:`${text}${m.intelligence?`\n${m.envoyName}另呈一份边境见闻，已收入邦交册，可在「治国理政 → 邦交与使节」采信或复核。`:''}`,choices:[{t:'阅毕，记入邦交册'}]});
  }
 }

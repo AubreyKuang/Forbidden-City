@@ -39,7 +39,7 @@ function palacePetitionPortrait(key){
 }
 function palacePetition(key){
  const d=COURT_PETITIONS[key],valid=()=>palacePetitionReady(key),art=COURT_PETITION_ART[key];
- return {title:d.title,text:d.body,valid,...(journalContentVersion()>=168?{por:palacePetitionPortrait(key),...(art?{illustration:art.illustration,illustrationCaption:art.caption,portraitArt:art.portraitArt}:{})}:{}),choices:[{t:d.choice,f:()=>{
+ return {title:d.title,text:d.body,valid,...(journalContentVersion()>=169?{por:palacePetitionPortrait(key),...(art?{illustration:art.illustration,illustrationCaption:art.caption,portraitArt:art.portraitArt}:{})}:{}),choices:[{t:d.choice,f:()=>{
   if(!valid())return null;
   const r=storyCastRecord(key)||storyCastCreate(key);r.introduction='petition';
   return storyCastAdvance(r,r.person,d.line);

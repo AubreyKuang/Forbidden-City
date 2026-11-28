@@ -1,11 +1,11 @@
 const outsideParentageActive=()=>journalContentVersion()>=35;
 const outsideMotherId=p=>p.motherRelativeId??p.parentRelativeId;
 // Issue 42: private meetings with the emperor make him the likelier father of a child of unclear parentage.
-const outsideImperialPercent=()=>journalContentVersion()>=168?72:55;
+const outsideImperialPercent=()=>journalContentVersion()>=169?72:55;
 // Issue 42: once the Jinyiwei verify that the register's father is the real one, the child is no longer of unclear parentage.
 function clearVerifiedOutsideParentage(child){
   const data=child?.outsideParentage,investigation=data?.privateInquiry;
-  if(journalContentVersion()<168||!data||investigation?.status!=='complete'||investigation.imperial||!child.unconfirmedParentage)return false;
+  if(journalContentVersion()<169||!data||investigation?.status!=='complete'||investigation.imperial||!child.unconfirmedParentage)return false;
   data.status='cleared';data.resolvedAt??=investigation.completed??S.turn;data.verifiedBy='jinyiwei';
   delete child.unconfirmedParentage;delete child.unclearParentageOrigin;
   return true;
@@ -97,9 +97,9 @@ function outsidePaternityResult(f){
   };
   return {title:'锦衣卫回奏 · 宫外生父',por:jinyiweiCommanderReady()?jinyiwei().commander:natalPortrait(child),
     valid:()=>investigation.status==='investigating'&&S.turn>=investigation.due,
-    text:`锦衣卫核对接生簿、行程与经手人证词，查明${child.name}的生父为${father}。\n${journalContentVersion()>=168&&!investigation.imperial?`生父与家籍所载相符，孩子的「身世未明」标签将撤去，原家身份、姓名和照料不变。`:admitted?'她已有宫中名册，回奏可封存于私档。':privateImperialPlacement(f)?'你可以封存查证结果，或公开认亲，决定由谁照料孩子。':'这只是秘密查证结果：孩子仍显示「身世未明」，原家身份、姓名和照料不变；是否认亲另行决定。'}`,choices:[{t:journalContentVersion()>=168&&!investigation.imperial?'记下生父，撤去身世未明标签':'记下生父，不改变孩子身份',f:()=>{
+    text:`锦衣卫核对接生簿、行程与经手人证词，查明${child.name}的生父为${father}。\n${journalContentVersion()>=169&&!investigation.imperial?`生父与家籍所载相符，孩子的「身世未明」标签将撤去，原家身份、姓名和照料不变。`:admitted?'她已有宫中名册，回奏可封存于私档。':privateImperialPlacement(f)?'你可以封存查证结果，或公开认亲，决定由谁照料孩子。':'这只是秘密查证结果：孩子仍显示「身世未明」，原家身份、姓名和照料不变；是否认亲另行决定。'}`,choices:[{t:journalContentVersion()>=169&&!investigation.imperial?'记下生父，撤去身世未明标签':'记下生父，不改变孩子身份',f:()=>{
       if(!finish())return null;
-      save('auto');return journalContentVersion()>=168&&!investigation.imperial?'查证结果已写明：生父与家籍相符，已撤去「身世未明」标签。':admitted?'查证结果已封入私档，宫中名册照旧。':'查证结果已写明；孩子仍留在原家，身世未明标签不变。';
+      save('auto');return journalContentVersion()>=169&&!investigation.imperial?'查证结果已写明：生父与家籍相符，已撤去「身世未明」标签。':admitted?'查证结果已封入私档，宫中名册照旧。':'查证结果已写明；孩子仍留在原家，身世未明标签不变。';
     }},...(privateImperialPlacement(f)?[{t:'认回宫中 · 选择孩子的归处',f:place}]:[])]};
 }
 function outsidePaternityTick(){
@@ -148,7 +148,7 @@ function outsideParentageChronicle(family,title,lines){
 
 // This is a biographical label. The live case and its private findings stay on the original record.
 function hasUnclearBirthRecord(p){
-  if(journalContentVersion()>=168&&p?.outsideParentage?.status==='cleared'&&!p.unconfirmedParentage)return false;
+  if(journalContentVersion()>=169&&p?.outsideParentage?.status==='cleared'&&!p.unconfirmedParentage)return false;
   return !!(p&&(p.unconfirmedParentage||p.unclearParentageOrigin||p.outsideParentage||
     p.story?.some(entry=>entry.t?.startsWith('【身世未明】'))));
 }
@@ -168,7 +168,7 @@ function consortParentageBadge(c){
 }
 function restorePalaceParentageOrigins(){
   if(journalContentVersion()<161)return;
-  if(journalContentVersion()>=168)for(const c of familyCourtHosts())for(const child of houseOf(c)?.relatives||[])clearVerifiedOutsideParentage(child);
+  if(journalContentVersion()>=169)for(const c of familyCourtHosts())for(const child of houseOf(c)?.relatives||[])clearVerifiedOutsideParentage(child);
   for(const c of [...S.consorts,...(S.cands||[]),...(S.retainedFamilies||[])]){
     if(palaceUnclearOrigin(c))c.unclearParentageOrigin=true;
   }

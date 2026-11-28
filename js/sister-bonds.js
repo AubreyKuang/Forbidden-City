@@ -1,7 +1,7 @@
 /* Issue 42: sisters in the palace keep living alongside each other.
    A sister who enters with children may ask to bring a daughter (sons stay in the original household);
    sisters share more scenes whether close or estranged, and their father and brothers hear of it. */
-const sisterBondsActive=()=>!!S&&journalContentVersion()>=168;
+const sisterBondsActive=()=>!!S&&journalContentVersion()>=169;
 
 /* —— 带孩子入宫 —— */
 function sisterAdmissionHost(g){return g?.natalOrigin?familyHostById(g.natalOrigin.host)||byId(g.natalOrigin.host):null;}

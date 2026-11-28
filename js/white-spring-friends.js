@@ -1,7 +1,7 @@
 /* The seed fixes what she heard long before selection. Previously recorded admirers keep their history. */
 const whiteSpringAdmirationActive=()=>journalContentVersion()>=110;
 function admiresWhiteSpring(c){
-  if(journalContentVersion()>=168&&c?.whiteSpringAdmirer&&!c.maid&&!c.sex&&c.fixedStory!=='ayimu')return true;
+  if(journalContentVersion()>=169&&c?.whiteSpringAdmirer&&!c.maid&&!c.sex&&c.fixedStory!=='ayimu')return true;
   if(journalContentVersion()<104||!c||c.maid||c.sex||c.fixedStory==='ayimu'||(c.upbringing?.title||c.fam?.t)!=='皇商')return false;
   return !whiteSpringAdmirationActive()||!!c.whiteSpringFriend||voiceHash((c.seed??c.id)+':white-spring-admirer')%100<80;
 }
@@ -41,7 +41,7 @@ const WHITE_SPRING_PALACE_MEMORIES=[
   }
 ];
 function whiteSpringMemory(c){
-  if(journalContentVersion()>=168&&c?.whiteSpringAdmirer?.kind==='palace')
+  if(journalContentVersion()>=169&&c?.whiteSpringAdmirer?.kind==='palace')
     return WHITE_SPRING_PALACE_MEMORIES[voiceHash((c.seed??c.id)+':white-spring-palace-memory')%WHITE_SPRING_PALACE_MEMORIES.length];
   return WHITE_SPRING_MEMORIES[voiceHash((c.seed??c.id)+':white-spring-memory')%WHITE_SPRING_MEMORIES.length];
 }
@@ -262,7 +262,7 @@ function palaceWhiteSpringAdmirerScore(c){
   return (['活泼','好客','好学','巧手','才女'].includes(c.trait)?3:0)+(['抚琴','侍花','刺绣'].includes(consortHobby(c))?1:0)+voiceHash((c.seed??c.id)+':white-spring-palace')%3;
 }
 function ensurePalaceWhiteSpringAdmirer(){
-  if(journalContentVersion()<168||!S||S.over)return null;
+  if(journalContentVersion()<169||!S||S.over)return null;
   if(S.consorts.some(c=>c.alive&&!c.gone&&!c.familyArchive&&admiresWhiteSpring(c)))return null;
   if(S.flags.whiteSpringPalaceAdmirer?.gen===S.gen)return null;
   const pool=harem().filter(c=>inPalace(c)&&!c.maid&&c.rank<8&&c.fixedStory!=='ayimu'&&randomConsortOriginsAllowed(c));
@@ -274,7 +274,7 @@ function ensurePalaceWhiteSpringAdmirer(){
   return c;
 }
 function whiteSpringArrivalNews(princess){
-  if(journalContentVersion()<168||!princess)return;
+  if(journalContentVersion()<169||!princess)return;
   const admirers=S.consorts.filter(c=>c!==princess&&inPalace(c)&&admiresWhiteSpring(c)&&c.whiteSpringFriend?.arrivalNews==null);
   if(!admirers.length)return;
   for(const c of admirers){

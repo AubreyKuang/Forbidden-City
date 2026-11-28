@@ -98,7 +98,7 @@ function dowagerCompanionEvent(d,fallback=false){
 }
 // Issue 42: the dowager raises her own kin more often, and each refusal makes her slower to ask again.
 function dowagerProposalShare(d){
- if(journalContentVersion()<168)return .04;
+ if(journalContentVersion()<169)return .04;
  return [.2,.08,.04][d.kinRefusals||0]??.02;
 }
 const dowagerEarlierEvent=dowagerEvent;

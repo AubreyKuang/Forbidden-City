@@ -1,7 +1,7 @@
 /* Issue 42: the queen and other senior consorts hope for sons of their own.
    A forceful queen may ask to raise the eldest prince and feels relieved once he is hers to bring up;
    senior consorts without children worry, and another consort's pregnancy news weighs on them. */
-const heirHopesActive=()=>!!S&&journalContentVersion()>=168;
+const heirHopesActive=()=>!!S&&journalContentVersion()>=169;
 const HEIR_HOPES_SENIOR_RANK=5;
 function forcefulQueen(q){return !!q&&(['骄纵','骄矜','善妒','城府'].includes(q.trait)||q.scheme>=65)&&!isSolitary(q)&&q.trait!=='淡泊';}
 function eldestPrince(){
