@@ -83,7 +83,7 @@ function daoConversation(p){
 A.daoTalk=function(id){if(modalOpen)return;const p=byId(id)||kidById(id);pushEv(daoConversation(p));};
 function viewDaoHall(){
   const master=daoMaster(),visitors=daoVisitors(),promises=S.children.filter(k=>daoEligible(k)&&k.daoPractice?.seaWish?.status==='promised');
-  return `<section class="dao-hall"><header><p>文渊阁南 · 松风入殿</p><h2>钦安殿${backBtn}</h2></header><div class="dao-master">${porImg(master,190)}<div><span class="tag">${master.gender}国师 · ${master.temper}</span><h3>${master.name}国师</h3><blockquote>“${master.line}”</blockquote><p class="hint">讲读道经、静坐问道与宫中祈福之所。</p><div class="acts"><button class="btn gold" data-onclick="A.daoTeach()">请国师讲道<small>精力−1</small></button><button class="btn" data-onclick="A.daoRite()">为众人祈福<small>国库−${daoRiteCost()} · 精力−1</small></button>${daoBlessingActive()?`<button class="btn" data-onclick="A.daoLifespan()">向国师问寿<small>${daoLifespanDowagers().length?'自己与太后还有多少年':'自己还有多少年'}</small></button>`:''}</div></div></div></section>
+  return `<section class="dao-hall"><header><p>文渊阁南 · 松风入殿</p><h2>钦安殿${backBtn}</h2></header><div class="dao-master">${porImg(master,190)}<div><span class="tag">${master.gender}国师 · ${master.temper}</span><h3>${master.name}国师</h3><blockquote>“${master.line}”</blockquote><p class="hint">讲读道经、静坐问道与宫中祈福之所。</p><div class="acts"><button class="btn gold" data-onclick="A.daoTeach()">请国师讲道<small>精力−1</small></button><button class="btn" data-onclick="A.daoRite()">为众人祈福<small>国库−${daoRiteCost()} · 精力−1</small></button>${daoBlessingActive()?`<button class="btn" data-onclick="A.daoLifespan()">向国师问寿<small>${daoLifespanDowagers().length?'自己与太后还有多少年':'自己还有多少年'} · 每问一人国库−${DAO_LIFESPAN_COST}</small></button>`:''}</div></div></div></section>
     ${promises.map(k=>`<div class="card"><div class="grow"><strong>与${esc(k.name)}的东海之约</strong><p>已经答应带孩子去看海，可沿岸观潮、访舟人。</p><button class="btn jade" data-onclick="A.daoSea(${k.id})">相携赴东海<small>国库−50 · 精力−2 · 每年一次</small></button></div></div>`).join('')}
     ${pregnancyPrayerHall()}${immortalHall()}
     <h3>此刻在殿中听讲</h3>${visitors.length?`<div class="grid">${visitors.map(p=>`<button class="card portrait-card" data-onclick="A.daoTalk(${p.id})">${porImg(p,92)}<div class="grow"><strong>${esc(porName(p))}</strong><p>${esc(daoReading(p).title)} · ${p.daoPractice?.visits>=6?'常来听讲':'临窗读书'}</p><span class="person-link">听听心中所想</span></div></button>`).join('')}</div>`:'<p class="hint">此刻没有常规听讲的来客，不同性情的人会在往后的日子来访。</p>'}`;
@@ -123,7 +123,8 @@ function daoLifeVoice(p){
 
 /* ============ 钦安祈福与问寿（内容版本 173 起） ============
    祈福改为国库−100，在宫里的妃嫔与皇嗣健康各+3；太后在钦安殿依旧例点灯时同价同效。
-   问寿：国师按眼下的龙体与年岁推算皇帝余年，按既定的寿数说出太后余年。
+   问寿：设坛灼龟揲蓍，每问一人国库−200；国师按眼下的龙体与年岁推算皇帝余年，
+   按既定的寿数说出太后余年。先弹设坛占卜的经过，再弹带图的卦辞。
    旧版本留下的未完事件仍按国库−20、无健康加成重放。 */
 const DAO_BLESSING_VERSION=173;
 function daoBlessingActive(){return journalContentVersion()>=DAO_BLESSING_VERSION;}
@@ -152,13 +153,24 @@ function daoLifespanDowagers(){
   return (PalaceActions.longLivedDowagers?dowagerCourtMembers():[S.flags.dowager]).filter(d=>d?.alive);
 }
 function daoYearsLeft(months){const years=Math.floor(Math.max(0,months)/12);return years<1?'已不足一年':`约还有${cnNum(Math.min(99,years))}年`;}
+const DAO_LIFESPAN_COST=200;
 A.daoLifespan=function(){
   if(modalOpen||S.over||!daoBlessingActive())return;
-  const master=daoMaster(),art={title:'钦安问寿',illustration:'dao-lifespan-mist'};
-  const self=()=>{const months=daoEmperorMonthsLeft(),short=months<12;
-    return {...art,text:`${master.name}国师请你伸出手，三指搭在腕上，许久没有说话。\n“寿数不在星象里，在陛下每日的起居里。若一如今日，${daoYearsLeft(months)}。”\n${short?'他收回手，声音低了些：“陛下当早作安排。”':'他收回手，又添了一句：“少熬一夜，便多一分；多劳一分神，便少一分。这个数，陛下自己改得动。”'}`};};
-  const elder=d=>()=>{if(!d.alive)return null;const months=dowagerLifePlan(d).deathTurn-S.turn,name=d.fullName||d.name;
-    return {...art,text:`国师沉吟片刻：“${name}的气色与脉象，贫道请安时留意过。若调养如常，${daoYearsLeft(months)}。”\n“这话贫道只对陛下说。她老人家问起时，贫道答的是另一番话。”${months<12?'\n“陛下得空，多去慈宁宫坐坐。”':''}`};};
-  pushEv({title:'钦安问寿',por:master,text:'你屏退左右，向国师问起寿数。\n国师放下经卷，看了你一眼：“陛下想问谁的？”',choices:[
-    {t:'问朕自己的寿数',f:self},...daoLifespanDowagers().map(d=>({t:`问${d.fullName||d.name}的寿数`,f:elder(d)})),{t:'不问了'}]});
+  const master=daoMaster(),ready=()=>E().treasury>=DAO_LIFESPAN_COST;
+  const self=()=>{const months=daoEmperorMonthsLeft();
+    return `国师把龟甲翻过来，又对了一遍蓍数，才开口：“龟兆与蓍数相合。陛下的寿数，若一如今日，${daoYearsLeft(months)}。”\n${months<12?'他把龟甲收进匣中，声音低了些：“陛下当早作安排。”':'他把龟甲收进匣中：“卦只照得见今日的陛下。少熬一夜，便多一分；多劳一分神，便少一分。这个数，陛下自己改得动。”'}`;};
+  const elder=d=>()=>{const months=dowagerLifePlan(d).deathTurn-S.turn,name=d.fullName||d.name;
+    return `国师把龟甲翻过来，又对了一遍蓍数，才开口：“龟兆与蓍数相合。${name}的寿数，若调养如常，${daoYearsLeft(months)}。”\n“这一卦贫道只报与陛下。她老人家问起时，贫道答的是另一番话。”${months<12?'\n“陛下得空，多去慈宁宫坐坐。”':''}`;};
+  // The rite is paid for and shown first; the reading follows in its own illustrated scene.
+  const divine=(answer,alive=()=>true)=>()=>{
+    if(!ready()||!alive())return null;
+    const paid=chg({treasury:-DAO_LIFESPAN_COST});
+    pushNow({title:'卦成',por:master,illustration:'dao-lifespan-mist',text:answer(),choices:[{t:'朕知道了'}]});
+    save('auto');
+    return `钦安殿后设了坛。国师净手焚香，取出一片百年龟甲，以荆枝灼之。甲上“卜”的一声，裂纹自中而分。\n又数蓍草五十茎，去其一不用，分二、挂一、揲四、归奇，十八变而成一卦。\n殿外不知何时起了风，满坛烛火齐齐向一边倒去。国师盯着卦象看了很久，额上见了汗。${fx(paid)}`;
+  };
+  const cost=`（国库-${DAO_LIFESPAN_COST}万两）`,why=`国库须有${DAO_LIFESPAN_COST}万两`;
+  pushEv({title:'钦安问寿',por:master,text:`你屏退左右，向国师问起寿数。\n国师面有难色：“问寿是窥天机的事，不比讲经。须得百年龟甲一片、蓍草五十茎，设坛三日；斋戒的道众、供奉的香烛，样样省不得。龟甲一灼便废，一卜只问得一人。”\n他放下经卷，看了你一眼：“陛下想问谁的？”\n每问一人，耗银${DAO_LIFESPAN_COST}万两。`,choices:[
+    {t:'问朕自己的寿数'+cost,cond:ready,why,f:divine(self)},
+    ...daoLifespanDowagers().map(d=>({t:`问${d.fullName||d.name}的寿数`+cost,cond:ready,why,f:divine(elder(d),()=>d.alive)})),{t:'不问了'}]});
 };

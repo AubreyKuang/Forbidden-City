@@ -234,12 +234,20 @@ function assignArc(c){
   }
 }
 
+// 「故人诗」第一幕写的是今科状元的殿试文章，所以排在殿试点过状元之后（内容版本 173 起）。
+// 其余条件照旧；只是没有新科状元时先等着，点过状元的一年之内再出，并排在别的经历前面。
+function scholarExamFresh(){
+  const exam=S.ministries?.exams?.at(-1);
+  return !!exam?.top&&S.turn>=exam.turn&&S.turn-exam.turn<=12;
+}
+function scholarArcOpening(c){return journalContentVersion()>=173&&c.arc?.id==='scholar'&&c.arc.st===0&&!arcStarted(c)&&courtOfficesActive();}
 function arcTick(){
   reconcileScholarArcs();
   const pace=S.flags.arcPacing ||= {byType:{}};
   if(S.turn-(pace.last??-99)<2)return null;
-  const due=harem().filter(c=>c.arc&&!c.arc.done&&S.turn>=c.arc.t).sort((a,b)=>a.arc.t-b.arc.t);
-  for(const c of due){if(!officialArcEligible(c))continue;const st=ARCS[c.arc.id].stages[c.arc.st];if(!st){c.arc.done=true;continue}
+  const afterExam=c=>scholarArcOpening(c)&&scholarExamFresh()?0:1;
+  const due=harem().filter(c=>c.arc&&!c.arc.done&&S.turn>=c.arc.t).sort((a,b)=>afterExam(a)-afterExam(b)||a.arc.t-b.arc.t);
+  for(const c of due){if(!officialArcEligible(c))continue;if(scholarArcOpening(c)&&!scholarExamFresh())continue;const st=ARCS[c.arc.id].stages[c.arc.st];if(!st){c.arc.done=true;continue}
     const id=c.arc.id,last=pace.byType[id];
     if(journalContentVersion()>=26&&id==='love'){
       if(!loveArcEligible(c))continue;

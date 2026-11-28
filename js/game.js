@@ -832,6 +832,7 @@ A.endMonth=function(){
   if(journalContentVersion()>=169&&typeof storyPersonaMonth==='function')storyPersonaMonth();
   if(journalContentVersion()>=96)childUpbringingMonth();
   if(journalContentVersion()>=171)palaceLifeTick();
+  if(journalContentVersion()>=173)familyEnvyTick();
   if(journalContentVersion()>=115)whiteSpringFamilyParcelTick();
   const passing=dowagerPassingEvent();if(passing)pushEv(passing);
   const princeSuccession=princeSuccessionTick();

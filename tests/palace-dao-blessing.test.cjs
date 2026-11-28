@@ -26,14 +26,17 @@ test('the master reckons the emperor\'s years from his health, age and temperame
   var calls=0,random=PalaceActions.random;PalaceActions.random=()=>{calls++;return random();};daoEmperorMonthsLeft();assert.equal(calls,0);PalaceActions.random=random;`);
 });
 
-test('asking opens a choice of whose years, and the answer comes with the mist illustration',()=>{
- const b=setup();b.run(`E().health=17;E().age=30;E().style='勤政';S.month=1;var d=ensureDowager();d.alive=true;
-  assert.match(viewDaoHall(),/向国师问寿<small>自己与太后还有多少年/);A.daoLifespan();assert.equal(curEv.title,'钦安问寿');
-  assert.equal(curEv.choices[0].t,'问朕自己的寿数');assert.equal(curEv.choices.at(-1).t,'不问了');assert.ok(curEv.choices.length>=3);
-  var mine=curEv.choices[0].f();assert.equal(mine.illustration,'dao-lifespan-mist');assert.match(mine.text,/若一如今日，约还有八年。/);assert.match(mine.text,/陛下自己改得动/);
-  dowagerLifePlan(d).deathTurn=S.turn+30;var hers=curEv.choices[1].f();assert.match(hers.text,/若调养如常，约还有二年。/);assert.doesNotMatch(hers.text,/多去慈宁宫/);
-  d.lastYears.deathTurn=S.turn+5;assert.match(curEv.choices[1].f().text,/已不足一年。[\\s\\S]*多去慈宁宫坐坐/);
-  choose(0);assert.match($('#mbox').innerHTML,/story-dao-lifespan-mist\\.webp/);assert.match($('#mbox').innerHTML,/云海漫过石阶/);`);
+test('asking costs 200 a person: the rite is shown first, then the reading with the mist illustration',()=>{
+ const b=setup();b.run(`E().health=17;E().age=30;E().style='勤政';S.month=1;var d=ensureDowager();d.alive=true;dowagerLifePlan(d).deathTurn=S.turn+30;
+  assert.match(viewDaoHall(),/向国师问寿<small>自己与太后还有多少年 · 每问一人国库−200/);A.daoLifespan();assert.equal(curEv.title,'钦安问寿');
+  assert.match(curEv.text,/百年龟甲一片、蓍草五十茎[\\s\\S]*每问一人，耗银200万两/);
+  assert.equal(curEv.choices[0].t,'问朕自己的寿数（国库-200万两）');assert.match(curEv.choices[1].t,/的寿数（国库-200万两）$/);assert.equal(curEv.choices.at(-1).t,'不问了');
+  choose(0);assert.equal(E().treasury,300);assert.match($('#mbox').innerHTML,/灼之[\\s\\S]*十八变而成一卦[\\s\\S]*国库-200万两/);assert.doesNotMatch($('#mbox').innerHTML,/story-dao-lifespan-mist/);
+  nextEv();assert.equal(curEv.title,'卦成');assert.match(curEv.text,/陛下的寿数，若一如今日，约还有八年。/);assert.match(curEv.text,/陛下自己改得动/);
+  assert.match($('#mbox').innerHTML,/story-dao-lifespan-mist\\.webp[\\s\\S]*云海漫过石阶/);choose(0);
+  A.daoLifespan();choose(1);assert.equal(E().treasury,100);nextEv();assert.match(curEv.text,/的寿数，若调养如常，约还有二年。/);assert.doesNotMatch(curEv.text,/多去慈宁宫/);choose(0);
+  A.daoLifespan();assert.equal(curEv.choices[0].cond(),false);assert.equal(curEv.choices[0].f(),null);assert.equal(E().treasury,100);choose(curEv.choices.length-1);
+  E().treasury=200;d.lastYears.deathTurn=S.turn+5;A.daoLifespan();choose(1);nextEv();assert.match(curEv.text,/已不足一年。[\\s\\S]*多去慈宁宫坐坐/);`);
  assert.ok(require('node:fs').existsSync(require('node:path').join(__dirname,'../assets/images/story-dao-lifespan-mist.webp')));
- const alone=setup();alone.run(`for(var d of dowagerCourtMembers())d.alive=false;assert.match(viewDaoHall(),/向国师问寿<small>自己还有多少年/);A.daoLifespan();assert.deepEqual(curEv.choices.map(x=>x.t),['问朕自己的寿数','不问了']);`);
+ const alone=setup();alone.run(`for(var d of dowagerCourtMembers())d.alive=false;assert.match(viewDaoHall(),/向国师问寿<small>自己还有多少年/);A.daoLifespan();assert.deepEqual(curEv.choices.map(x=>x.t),['问朕自己的寿数（国库-200万两）','不问了']);`);
 });
