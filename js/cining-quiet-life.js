@@ -41,14 +41,14 @@ function dowagerDaoEvent(d=ensureDowager()){
  const q=d?.household?.daoVisit;if(!d?.alive||!q||q.answered||S.turn-q.turn>6)return null;
  const topic=DOWAGER_DAO_TOPICS[q.topic],master=q.master,late=d.feeling?.person&&byId(d.feeling.person);
  let done=false;const valid=()=>!done&&d.alive&&d.household.daoVisit===q&&!q.answered;
- const finish=kind=>{if(!valid()||kind==='rite'&&(E().treasury<20||S.turn-(S.flags.daoRite??-99)<12))return null;done=true;q.answered=true;q.answeredAt=S.turn;
+ const finish=kind=>{if(!valid()||kind==='rite'&&(E().treasury<daoRiteCost()||S.turn-(S.flags.daoRite??-99)<12))return null;done=true;q.answered=true;q.answeredAt=S.turn;
   let text=kind==='home'?'皇帝陪太后回宫，约好一道用膳，把未说尽的话留待日常。':'皇帝陪太后听完国师答话，未催她放下心事。';
-  if(kind==='rite'){S.flags.daoRite=S.turn;chg({treasury:-20,people:1});text='依钦安殿旧例，为故人与在世亲人点灯祈安，并记施济名册。';for(const p of daoVisitors()){recordDaoVisit(p);daoRemember(p,'太后与皇帝同在钦安殿寄愿，灯烛与施济一并办妥。');}}
-  q.response=text;d.mood=clamp(d.mood+5);dowagerRecord(d,topic.title,text+' 国师说：“'+topic.answer+'”');(S.daoCourtChronicle||=[]).push({d:dateStr(),t:master.name+'国师答太后：'+topic.answer});return text;};
+  let blessed='';if(kind==='rite'){S.flags.daoRite=S.turn;chg({treasury:-daoRiteCost(),people:1});blessed=daoRiteBless();text='依钦安殿旧例，为故人与在世亲人点灯祈安，并记施济名册。';for(const p of daoVisitors()){recordDaoVisit(p);daoRemember(p,'太后与皇帝同在钦安殿寄愿，灯烛与施济一并办妥。');}}
+  q.response=text;d.mood=clamp(d.mood+5);dowagerRecord(d,topic.title,text+' 国师说：“'+topic.answer+'”');(S.daoCourtChronicle||=[]).push({d:dateStr(),t:master.name+'国师答太后：'+topic.answer});return text+blessed;};
  return trackDowagerTalk(d,{title:'钦安殿 · 太后'+topic.title,cast:[dowagerPerson(d),master],present:[],valid,
   text:`${S.turn===q.turn?'你来到钦安殿，见太后在松影下与国师说话。':'太后提起日前在钦安殿问道的事，命人请来国师续谈。'}\n${late?'她提起'+fullName(late)+'，指尖停在一页旧经上。\n':''}太后问：“${topic.question}”\n${master.name}国师答：“${topic.answer}”`,choices:[
    {t:'陪母后听完，容她慢慢说',f:()=>finish('listen')},
-   {t:'依旧例点灯祈安、施济 · 国库−20',cond:()=>E().treasury>=20&&S.turn-(S.flags.daoRite??-99)>=12,why:'祈愿每年一次，需国库20',f:()=>finish('rite')},
+   {t:`依旧例点灯祈安、施济 · 国库−${daoRiteCost()}`,cond:()=>E().treasury>=daoRiteCost()&&S.turn-(S.flags.daoRite??-99)>=12,why:`祈愿每年一次，需国库${daoRiteCost()}`,f:()=>finish('rite')},
    {t:'陪母后回宫，约好一道用膳',f:()=>finish('home')}
   ]},'dowager-dao:'+q.turn,{months:12});
 }

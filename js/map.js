@@ -427,7 +427,7 @@ function viewMap(){
 }
 function viewPalace(){const name=UI.sel,res=name==='冷宫'?alive().filter(c=>c.cold):harem().filter(c=>c.palace===name);
   const extra=name==='储秀宫'&&S.cands.length?`<div class="acts"><button class="btn gold" data-onclick="A.go('xx')">秀女正在候选（${S.cands.length}人）</button></div>`:'';
-  const note=name==='冷宫'?'荒草萋萋，宫门深锁。':name==='坤宁宫'?'中宫所居，凤仪万方。':(PALACE_NOTES[name]||'宫门半掩，廊下挂着鸟笼。');
+  const note=name==='冷宫'?'荒草萋萋，宫门深锁。':name==='坤宁宫'?'中宫所居，凤仪万方。':(proseLine(PALACE_NOTES[name])||'宫门半掩，廊下挂着鸟笼。');
   const count=res.length?(name==='冷宫'?`<p class="hint">冷宫里关着 ${res.length} 人。</p>`:`<p class="hint">住着 ${res.length} 位妃嫔。</p>`):'';
   return `<h2>${esc(name)}${backBtn}</h2><p class="hint">${note}</p>${residenceSummary(name)}${PALACES.includes(name)?'<div class="acts"><button class="btn" data-onclick="A.openResidence()">分配主位与同住</button></div>':''}${extra}${storyCastPalaceRoom(name)}${palaceRomanceAt(initiativePlace(null,null,{place:'p'+name}))}${palaceLifePanel(name)}${initiativesAt(initiativePlace(null,null,{place:'p'+name}))}${count}${res.length?`<div class="grid">${res.map(consortCard).join('')}</div>`:'<p class="hint">此处暂无人居住。</p>'}`}
 function viewPlace(){const id=UI.sel;

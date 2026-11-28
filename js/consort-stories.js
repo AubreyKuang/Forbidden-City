@@ -28,18 +28,18 @@ const ARCS={
     {t:'平叛，只罪其父，不株连她',f:()=>{aEnd(c,'孤女','叛乱平定，父亲伏诛。她保住了位分，却再也没有笑过。');return fx(chg({prestige:4,treasury:-200}),cchg(c,{mood:-50,aff:5}))}},
     {t:'平叛，将她废入冷宫',f:()=>{c.cold=true;c.palace='冷宫';aEnd(c,'连坐','叛乱平定，她以罪臣之女的身份被打入冷宫。');return fx(chg({prestige:5,treasury:-200}),cchg(c,{mood:-60,aff:-30}))}}]})]},
  scholar:{name:'故人诗',fit:c=>c.trait==='才女'&&!isSolitary(c),stages:[
-  (c,f)=>c.aff<45?null:{illustration:'scholar-exam-papers',text:`今科状元的殿试文章里，引了一句诗：“${f.poem=pick(POEMS)}”\n你记得，这句诗曾写在${cName(c)}送你的花笺上。`,choices:[
+  (c,f)=>c.aff<45?null:{illustration:'scholar-exam-papers',text:`${scholarArcBind(f)}的殿试文章里，引了一句诗：“${f.poem=pick(POEMS)}”\n你记得，这句诗曾写在${cName(c)}送你的花笺上。`,choices:[
     {t:'召她来问个明白',f:()=>{f.asked=1;aNext(c,1,4,7);story(c,'陛下问起她与新科状元的旧事。她坦白入宫前曾与他有过诗书往来。');return `她跪下，坦白入宫前曾与他在诗社相识，有过几回诗书往来。“发乎情，止乎礼，此后再无联系。”${fx(cchg(c,{aff:3}))}`}},
     {t:'不动声色',f:()=>{aNext(c,1,4,7);return '你把那篇文章放在了一边。'}}]},
-  (c,f)=>({illustration:'qionglin-spilled-cup',text:`琼林宴上，状元奉旨献诗。他念到一半，${cName(c)}失手打翻了酒盏，满座寂然。`,choices:[
+  (c,f)=>({illustration:'qionglin-spilled-cup',text:`琼林宴上，${scholarArcName(f)}奉旨献诗。他念到一半，${cName(c)}失手打翻了酒盏，满座寂然。`,choices:[
     {t:'笑说“诗好，连娘娘都听醉了”',f:()=>{aNext(c,2,4,7);return fx(cchg(c,{aff:6}))}},
     {t:'冷眼看着',f:()=>{aNext(c,2,4,7);return fx(cchg(c,{mood:-10}))}},
     {t:'当晚召她侍寝',cond:()=>E().energy>0&&!c.preg&&(!consortRecoveryActive()||!consortNightReason(c)),why:(consortRecoveryActive()&&consortNightReason(c))||('精力不足'),f:()=>{aNext(c,2,4,7);nightWith(c);return null}}]}),
-  (c,f)=>({illustration:'scholar-gate-letter',text:`宫门侍卫截下一封信，是状元托人带给${cName(c)}的。信上只有两个字：“珍重”。`,choices:[
+  (c,f)=>({illustration:'scholar-gate-letter',text:`宫门侍卫截下一封信，是${scholarArcName(f)}托人带给${cName(c)}的。信上只有两个字：“珍重”。`,choices:[
     {t:'烧了信，什么也不说',f:()=>{c.talent=clamp(c.talent+5);aEnd(c,'知音','陛下烧了那封信，从未提起。后来她知道了，从此为陛下写的诗比从前多了许多。');return fx(cchg(c,{aff:22,mood:10}))}},
     {t:'召她对质',f:()=>{if(f.asked||c.aff>=60){aEnd(c,'此心已许','她看完信，当着陛下的面把它投进炭盆：“臣妾此生，只是陛下的人。”');return fx(cchg(c,{aff:15}))}aEnd(c,'心结','对质之后，两人之间多了一道看不见的墙。');return fx(cchg(c,{aff:-20,mood:-15}))}},
-    {t:'将状元外放岭南',f:()=>{c.talent=clamp(c.talent-10);aEnd(c,'诗绝','状元被外放岭南。她从此搁笔，再没写过一首诗。');return fx(cchg(c,{mood:-25,aff:-10}),chg({people:-2}))}},
-    {t:'成全他们，放她出宫',f:()=>{c.gone=true;aEnd(c,'成全','陛下下旨放她出宫。听说后来她与状元在江南开了一间书院。');return `她在殿前叩了三个头，泪流满面。${fx(chg({people:4,prestige:-3}))}`}}]})]},
+    {t:'将状元外放岭南',f:()=>{c.talent=clamp(c.talent-10);aEnd(c,'诗绝','状元被外放岭南。她从此搁笔，再没写过一首诗。');scholarArcSentAway(f);return fx(cchg(c,{mood:-25,aff:-10}),chg({people:-2}))}},
+    {t:'成全他们，放她出宫',f:()=>{c.gone=true;aEnd(c,'成全','陛下下旨放她出宫。听说后来她与状元在江南开了一间书院。');scholarArcUnited(c,f);return `她在殿前叩了三个头，泪流满面。${fx(chg({people:4,prestige:-3}))}`}}]})]},
  craft:{name:'宫中手艺',fit:c=>c.trait==='才女'||c.talent>=80,stages:[
   (c,f)=>{
     if(c.aff<35)return null;
@@ -234,12 +234,57 @@ function assignArc(c){
   }
 }
 
+/* 「故人诗」里的状元就是殿试钦点的那一位（内容版本 173 起）。第一幕记下他是谁；
+   「成全」之后他辞官、与她同归江南，官员表里留在末尾，写作曾任某职，
+   此后两人的纪事里各添三封江南来信。旧存档里没有记下是谁的，照旧只称状元。 */
+function scholarArcBind(f){
+  if(journalContentVersion()>=173&&courtOfficesActive()){
+    const p=scholarById(S.ministries?.exams?.at(-1)?.top?.[0]);
+    if(p&&officialAlive(p)&&p.examRank==='状元'&&!p.leftOffice){f.scholarId=p.id;return `今科状元${p.name}`;}
+  }
+  return '今科状元';
+}
+function scholarArcPerson(f){
+  const p=f?.scholarId!=null?scholarById(f.scholarId):null;
+  return p&&officialAlive(p)&&!p.exiled&&!p.dismissed&&!p.leftOffice?p:null;
+}
+function scholarArcName(f){const p=scholarArcPerson(f);return p?`状元${p.name}`:'状元';}
+function scholarArcSentAway(f){const p=scholarArcPerson(f);if(p)story(p,'【故人诗·诗绝】奉旨外放岭南。离京那日，没有人来相送。');}
+function scholarArcUnited(c,f){
+  const p=scholarArcPerson(f);if(!p)return;
+  const wife=fullName(c),former=p.office||p.post||'翰林院修撰',held=ministryHeldBy(p);
+  if(held)delete ministryState().heads[held];
+  Object.assign(p,{leftOffice:{turn:S.turn,former,wife},retired:true,retiredAt:S.turn,married:true,spouseName:wife});
+  story(p,`【故人诗·成全】陛下放${wife}出宫，成全二人。他上表辞去${former}，与她同归江南。`);
+  S.flags.scholarCouple={scholar:p.id,consort:c.id,turn:S.turn,notes:0,poem:f.poem||''};
+}
+const SCHOLAR_COUPLE_NOTES=[
+  [6,(p,wife)=>`${p.name}与${wife}在西泠桥畔开了一间书院，取名“归来堂”。开馆那日，匾是她亲手写的。`],
+  [14,(p,wife,poem)=>`南来的举子说，归来堂的先生每日讲完课，总要绕去后院看夫人写字。${poem?`她写的仍是当年花笺上那一句：“${poem}”`:'她写的仍是当年花笺上的那一句。'}`],
+  [26,(p,wife)=>`又一年春，归来堂的学生已有三十余人。${p.name}托人捎来一匣新茶，附笺只有四个字：如愿以偿。`]
+];
+function scholarCoupleTick(){
+  const couple=S.flags.scholarCouple;if(journalContentVersion()<173||!couple)return;
+  const note=SCHOLAR_COUPLE_NOTES[couple.notes];if(!note||S.turn-couple.turn<note[0])return;
+  const p=scholarById(couple.scholar),c=byId(couple.consort);couple.notes++;
+  if(!p||!officialAlive(p)||!c)return;
+  const text='【江南来信】'+note[1](p,p.leftOffice?.wife||fullName(c),couple.poem);
+  story(p,text);story(c,text);log(text);
+}
+// 「故人诗」第一幕写的是今科状元的殿试文章，所以排在殿试点过状元之后（内容版本 173 起）。
+// 其余条件照旧；只是没有新科状元时先等着，点过状元的一年之内再出，并排在别的经历前面。
+function scholarExamFresh(){
+  const exam=S.ministries?.exams?.at(-1);
+  return !!exam?.top&&S.turn>=exam.turn&&S.turn-exam.turn<=12;
+}
+function scholarArcOpening(c){return journalContentVersion()>=173&&c.arc?.id==='scholar'&&c.arc.st===0&&!arcStarted(c)&&courtOfficesActive();}
 function arcTick(){
   reconcileScholarArcs();
   const pace=S.flags.arcPacing ||= {byType:{}};
   if(S.turn-(pace.last??-99)<2)return null;
-  const due=harem().filter(c=>c.arc&&!c.arc.done&&S.turn>=c.arc.t).sort((a,b)=>a.arc.t-b.arc.t);
-  for(const c of due){if(!officialArcEligible(c))continue;const st=ARCS[c.arc.id].stages[c.arc.st];if(!st){c.arc.done=true;continue}
+  const afterExam=c=>scholarArcOpening(c)&&scholarExamFresh()?0:1;
+  const due=harem().filter(c=>c.arc&&!c.arc.done&&S.turn>=c.arc.t).sort((a,b)=>afterExam(a)-afterExam(b)||a.arc.t-b.arc.t);
+  for(const c of due){if(!officialArcEligible(c))continue;if(scholarArcOpening(c)&&!scholarExamFresh())continue;const st=ARCS[c.arc.id].stages[c.arc.st];if(!st){c.arc.done=true;continue}
     const id=c.arc.id,last=pace.byType[id];
     if(journalContentVersion()>=26&&id==='love'){
       if(!loveArcEligible(c))continue;
