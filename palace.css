@@ -1001,6 +1001,20 @@ button.family-room-person{cursor:pointer}button.family-room-person:hover{color:#
 }
 
 /* 商城 portrait gallery (js/palace-shop.js, only in builds with a shop). */
+/* 商城: the featured product (金手指包) leads the list and shows its contents before purchase. */
+.shop-item.shop-featured{align-items:start;border:2px solid #c99a3b;background:linear-gradient(180deg,#fbf1dc,#f5ecdc);box-shadow:0 2px 10px rgba(150,110,40,.12)}
+.shop-item.shop-featured>.save-slot-info>b{font-size:1.15em}
+.shop-contents{display:grid;gap:10px;margin:6px 0 4px}
+.shop-contents section{padding:8px 10px;border-radius:8px;background:rgba(255,250,238,.75);border:1px solid rgba(201,154,59,.28)}
+.shop-contents h4{margin:0 0 4px;font-size:.98em;color:#7a4b1d}
+.shop-contents p{margin:2px 0}
+.shop-contents .tag{margin:0 2px}
+.shop-roster{display:grid;gap:4px;line-height:1.6}
+.shop-roster strong{margin-right:6px}
+.shop-kinds{line-height:1.7}
+.shop-kinds-detail summary{cursor:pointer;color:#7a4b1d;font-size:.92em;margin-top:2px}
+.shop-kinds-detail ul{margin:6px 0 0;padding-left:1.1em;display:grid;gap:4px}
+.shop-kinds-detail small{display:block}
 .shop-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin:10px 0}
 .shop-gallery .shop-cell{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px;min-width:0}
 .shop-gallery .shop-cell .por{max-width:100%;height:auto}
