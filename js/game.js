@@ -430,7 +430,8 @@ const EVENT_ILLUSTRATIONS={
   'xie-homecoming-lamp':'门里还留着一盏灯，暖光顺着石阶落进院子。',
   'hongjian-poem-at-dusk':'傍晚的光从半开的窗进来，照到小笺折起的那一角。',
   'quiet-palace-keepsakes':'窗边的浅匣安安静静，外头的树影慢慢移过来。',
-  'western-moon-window':'窗前静得只剩月色，远处的屋瓦也淡了下去。'
+  'western-moon-window':'窗前静得只剩月色，远处的屋瓦也淡了下去。',
+  'dao-lifespan-mist':'云海漫过石阶。前头还有多少级，要走过去才数得清。'
 };
 function eventIllustration(key,caption){
   if(!Object.hasOwn(EVENT_ILLUSTRATIONS,key))return '';

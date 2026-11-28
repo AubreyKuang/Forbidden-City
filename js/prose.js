@@ -6,6 +6,9 @@
 const PROSE_VERSION=172;
 const proseActive=()=>typeof journalContentVersion!=='function'||journalContentVersion()>=PROSE_VERSION;
 const pz=(old,neu)=>proseActive()?neu:old;
+// 第二批改写（内容版本 173 起）：172 已随 V1.0.13 发布，之后改写的存档文字另按 173 分流。
+const PROSE_BATCH2_VERSION=173;
+const pz2=(old,neu)=>typeof journalContentVersion!=='function'||journalContentVersion()>=PROSE_BATCH2_VERSION?neu:old;
 function proseHash(text){let h=2166136261;for(const ch of String(text)){h^=ch.codePointAt(0);h=Math.imul(h,16777619);}return h>>>0;}
 function prosePick(list,key){return list[proseHash(key)%list.length];}
 
@@ -140,7 +143,8 @@ const PROSE_EPIGRAPHS={
  '少女心事':['和羞走，倚门回首，却把青梅嗅。','李清照《点绛唇》'],
  '烟雨西湖':['水光潋滟晴方好，山色空蒙雨亦奇。','苏轼《饮湖上初晴后雨》'],
  '听琴辨音':['曲有误，周郎顾。','《三国志·吴书·周瑜传》'],
- '后宫丧讯':['惟将终夜长开眼，报答平生未展眉。','元稹《遣悲怀》']
+ '后宫丧讯':['惟将终夜长开眼，报答平生未展眉。','元稹《遣悲怀》'],
+ '钦安问寿':['人生天地之间，若白驹之过隙，忽然而已。','《庄子·知北游》']
 };
 function proseEpigraph(ev){
   if(!ev||ev.ref||ev.poemPrelude||!proseActive())return null;
