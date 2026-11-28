@@ -258,6 +258,7 @@ function chg(o){
   const lab={prestige:'威望',people:'民心',treasury:'国库',health:'龙体'};const p=[];const e=E();
   for(const k in o){let v=o[k]; if(!v) continue;
     const before=e[k];
+    if(k==='treasury'&&v>0&&choiceGainScale!==1)v=rd(v*choiceGainScale);
     if(k==='treasury') e.treasury=rd(e.treasury+v); else e[k]=clamp(e[k]+v);
     if(k==='people'&&v>0&&e.people===100&&playtestFeedbackActive()){
       v=e.people-before;
@@ -442,7 +443,7 @@ function poemPreludeHTML({poet,title,verse,account}){
 }
 function openModal(ev){
   if(!modalOpen&&document.activeElement?.matches('button,input,select')) modalInvoker=document.activeElement;
-  modalOpen=true;curEv=ev;modalResult=null;if(ev.onShow)ev.onShow();const b=$('#mbox');
+  modalOpen=true;curEv=guardChoiceTreasury(ev);modalResult=null;if(ev.onShow)ev.onShow();const b=$('#mbox');
   const people=eventPortraits(ev);
   const rareNotice=jinyiweiRareNotice(ev,people);
   // Portrait buttons distinguish people, not several actions for the same person.
@@ -477,7 +478,8 @@ function choose(i,inputValue){
   if(i===0&&curEv.jinyiweiNoticeKey&&!PalaceActions.replaying)rememberJinyiweiAcknowledgement(curEv);
   const val=curEv.input?((entered||'').trim().slice(0,curEv.input.max||4)||curEv.input.def):undefined;
   const annal=dynastyFollowupActive()?reignEventEntry(curEv,c,val):null;
-  AU.sfx('click');const res=c.f?c.f(val):null;
+  AU.sfx('click');const gain=economyRule('choiceGain');choiceGainScale=gain&&!c.fullGain?gain:1;
+  let res;try{res=c.f?c.f(val):null;}finally{choiceGainScale=1;}
   if(annal&&S)recordReignEvent(annal,res);
   if(res) showRes(res,c); else nextEv();
 }
@@ -652,12 +654,70 @@ const A={
   away(id){const c=byId(id);pushEv({title:'遣出宫',danger:true,por:c,text:`许${fullName(c)}出宫，往城外静慈庵带发修行？此后她便不在后宫名册之中。`,choices:[{t:'准她离宫',f:()=>{c.gone=true;story(c,'奉旨出宫，往静慈庵带发修行。青灯古佛，了此余生。');log(`${fullName(c)}出宫修行。`,1);return '马车驶出神武门，再没有回头。'}},{t:'作罢'}]})},
 };
 
+/* Edition economy (config.economy). upkeep and tribute apply to journals from content 165.
+   config.economy.v167 holds a tighter second step for journals from content 167: its keys
+   replace the 165 ones, and add income (月常入 base + 民心 × perPeople), children (月例 by
+   age), debt (how far 国库 may be overdrawn, and the monthly penalty), reforms (盐政 and
+   青苗法 enacted once) and tributeSaleCooldown (months between selling 江南贡品).
+   Older journals and builds without the setting keep the original rules. */
+const ECONOMY_TIGHT_JOURNAL=167;
+function economyRule(key){
+  const economy=typeof PALACE_EDITION!=='undefined'&&PALACE_EDITION.economy;if(!economy)return null;
+  const v=journalContentVersion(),step=economy.v167;
+  if(v>=ECONOMY_TIGHT_JOURNAL&&step&&step[key]!==undefined)return step[key]||null;
+  return v>=165&&(key==='upkeep'||key==='tribute')?economy[key]||null:null;
+}
+function monthlyBaseIncome(e=E()){
+  const rule=economyRule('income'),reform=economyRule('reforms');
+  const base=rule?rule.base+e.people*rule.perPeople:45+e.people*1.1;
+  return rd(base+(S.flags.canal?25:0)+(reform&&S.flags.saltReform!=null?reform.saltMonthly||0:0));
+}
+function childUpkeep(k){
+  const rule=economyRule('children'),tutor=k.tutor?(rule?rule.tutor:5):0;
+  if(!rule)return 3+tutor;
+  const age=kidAge(k);
+  return (age>=rule.grownFrom?rule.grown:age>=rule.schoolFrom?rule.school:rule.young)+tutor;
+}
+/* 国库 may go below zero only as far as config debt.floor. A choice whose label or preview
+   names a cost (国库 −N, 花 N 万两) the treasury cannot cover is shown disabled; when every
+   choice would be, the cheapest stays open so no event is stuck. */
+function choiceTreasuryCost(c){
+  const text=`${c.t||''} ${c.preview||''}`;let cost=0;
+  for(const m of text.matchAll(/国库\s*[−\-－]\s*(\d+)(?:\s*至\s*[−\-－]?\s*(\d+))?/g))cost=Math.max(cost,+m[1],+(m[2]||0));
+  for(const m of text.matchAll(/花\s*(\d+)\s*万两/g))cost=Math.max(cost,+m[1]);
+  return cost;
+}
+/* config choiceGain: silver a choice brings in (chg with a positive 国库 while the choice
+   resolves) is scaled, and the 国库 +N its label or preview names is shown scaled too. A
+   choice marked fullGain (the 破产 emergency levies) keeps its full amount. */
+let choiceGainScale=1;
+function scaleChoiceGains(ev){
+  const gain=economyRule('choiceGain');if(!gain||gain===1||ev.gainScaled||!Array.isArray(ev.choices))return ev;
+  ev.gainScaled=true;
+  const scale=text=>typeof text==='string'?text.replace(/(国库\s*[+＋]\s*)(\d+)/g,(m,head,n)=>head+rd(+n*gain)):text;
+  ev.choices=ev.choices.map(c=>c.fullGain?c:{...c,t:scale(c.t),preview:scale(c.preview)});
+  return ev;
+}
+function guardChoiceTreasury(ev){
+  scaleChoiceGains(ev);
+  const debt=economyRule('debt');if(!debt||ev.treasuryGuarded||!Array.isArray(ev.choices))return ev;
+  ev.treasuryGuarded=true;
+  const costs=ev.choices.map(choiceTreasuryCost),floor=debt.floor??0;
+  const covers=i=>E().treasury-costs[i]>=floor;
+  const shop=typeof PalaceShop!=='undefined'&&PalaceShop.enabled;
+  const why=`国库不足${floor<0?`（最多可借内帑 ${-floor} 万两）`:''}${shop?'，可先暂缓，到商城补充银两':''}`;
+  const open=c=>!c.cond||c.cond(),original=ev.choices;
+  const blocked=i=>costs[i]>0&&!covers(i);
+  const fallback=()=>{const left=original.map((c,i)=>i).filter(i=>open(original[i]));if(left.length&&left.every(blocked))return left.reduce((a,b)=>costs[b]<costs[a]?b:a);return -1;};
+  ev.choices=original.map((c,i)=>costs[i]>0?{...c,cond:()=>open(c)&&(covers(i)||fallback()===i),why:open(c)?(covers(i)?c.why:why):c.why}:c);
+  return ev;
+}
 /* 后宫月例: each consort's stipend by rank (冷宫 1). An edition may add 宫人用度 for every
    consort outside 冷宫 and a 逾制 fee for each one past a harem size (config.economy.upkeep),
    so a crowded harem has to be paid for. Journals before content 165 keep the old sum. */
 function haremUpkeep(){
   const people=alive(),stipend=people.reduce((s,c)=>s+(c.cold?1:STIPEND[c.rank]),0);
-  const u=journalContentVersion()>=165&&typeof PALACE_EDITION!=='undefined'&&PALACE_EDITION.economy&&PALACE_EDITION.economy.upkeep;
+  const u=economyRule('upkeep');
   if(!u)return {stipend,staff:0,crowd:0,count:people.length,total:stipend};
   const housed=people.filter(c=>!c.cold).length,over=Math.max(0,housed-(u.crowdFrom||Infinity));
   const staff=housed*(u.staff||0),crowd=over*(u.crowdFee||0);
@@ -665,7 +725,7 @@ function haremUpkeep(){
 }
 // One line for the 选秀 page, so the cost of a larger harem is known before choosing.
 function haremUpkeepHint(){
-  const u=journalContentVersion()>=165&&typeof PALACE_EDITION!=='undefined'&&PALACE_EDITION.economy&&PALACE_EDITION.economy.upkeep;
+  const u=economyRule('upkeep');
   if(!u)return '';
   const h=haremUpkeep();
   return `<p class="hint">后宫现有 ${h.count} 人，每月用度约 ${h.total} 万两（份例按位分，另每人宫人用度 ${u.staff} 万两）。第 ${u.crowdFrom+1} 位起，每人每月再加逾制用度 ${u.crowdFee} 万两${h.over?`，眼下已超出 ${h.over} 人`:''}。</p>`;
@@ -679,7 +739,7 @@ A.endMonth=function(){
   const openingTreasury=e.treasury,openingHealth=e.health;
   const localGrainPayment=localGrainPaymentDue()?localGrainBalance():0;
   const hongjianIncome=typeof settleHongjianIncome==='function'?settleHongjianIncome():0;
-  const inc=rd(45+e.people*1.1+(S.flags.canal?25:0))+(S.flags.founderGranary?2:0)+hongjianIncome,upkeep=haremUpkeep(),exp=upkeep.total+kidsAlive().reduce((s,k)=>s+3+(k.tutor?5:0),0)+localGrainPayment+(typeof outerHouseholdExpense==="function"?outerHouseholdExpense():0);
+  const inc=monthlyBaseIncome(e)+(S.flags.founderGranary?2:0)+hongjianIncome,upkeep=haremUpkeep(),exp=upkeep.total+kidsAlive().reduce((s,k)=>s+childUpkeep(k),0)+localGrainPayment+(typeof outerHouseholdExpense==="function"?outerHouseholdExpense():0);
   e.treasury+=inc-exp;
   if(localGrainPayment){
     clearLocalGrainPayment();
@@ -751,7 +811,8 @@ A.endMonth=function(){
   const nightFatigue=Math.max(0,(e.nightsMonth||0)-3)*1.2;
   const dh=-.17-(e.age>40?(e.age-40)*.05:0)-nightFatigue-(e.style==='风流'?.05:0);
   e.health=clamp(e.health+dh);e.nightsMonth=0;e.energy=maxEnergy();
-  if(e.treasury<0){const d=Math.min(8,Math.ceil(-e.treasury/400));chg({people:-1-d,prestige:-1});log(`国库亏空${-e.treasury}万两，百官俸禄迟发，民间加征赋税。`)}
+  if(e.treasury<0){const d=Math.min(8,Math.ceil(-e.treasury/(economyRule('debt')?.step||400)));chg({people:-1-d,prestige:-1});log(`国库亏空${-e.treasury}万两，百官俸禄迟发，民间加征赋税。`)}
+  bankruptcyTick();
   toast(`${monthDate}　月入${inc}　支出${exp}`);
   // 岁末总结
   if(newYear)snapshotYear();
@@ -843,27 +904,61 @@ A.endMonth=function(){
   save('auto');
   render();if(!modalOpen)checkEnd();
 };
+/* 破产 (config debt.bankruptMonths, journal content 167+). A month that closes with 国库
+   below debt.floor counts toward ruin; one that closes above it clears the count. Each
+   counted month brings a worse report with a few ways to raise silver at a cost; when the
+   count reaches bankruptMonths the reign ends as 亡国之君 (checkEnd → deathEvent('破产')). */
+function bankruptcyRule(){const debt=economyRule('debt');return debt&&debt.bankruptMonths>0?debt:null;}
+function bankruptcyMonths(){const b=S.flags.bankrupt;return b&&b.gen===S.gen?b.months:0;}
+function bankruptcyReached(){const rule=bankruptcyRule();return !!rule&&bankruptcyMonths()>=rule.bankruptMonths;}
+function bankruptcyTick(){
+  const rule=bankruptcyRule();if(!rule)return;
+  const floor=rule.floor??0,e=E();
+  if(e.treasury>=floor){if(S.flags.bankrupt){delete S.flags.bankrupt;log('户部奏报：国库已稍得周转，欠饷陆续补发，京城人心渐定。',1);}return;}
+  const months=bankruptcyMonths()+1;S.flags.bankrupt={gen:S.gen,months};
+  if(months<rule.bankruptMonths)pushEv(bankruptcyWarningEvent(months,rule));
+}
+function bankruptcyWarningEvent(months,rule){
+  const e=E(),floor=rule.floor??0,need=floor-e.treasury,left=rule.bankruptMonths-months;
+  const shop=typeof PalaceShop!=='undefined'&&PalaceShop.enabled;
+  const scenes=[
+    `户部尚书跪在殿外不肯起来：国库亏空${-e.treasury}万两，京营已三个月没有发饷。\n营中兵丁白日聚在校场上骂娘，夜里有人往兵部衙门扔石头。光禄寺的米只够宫里吃半个月，御膳房悄悄减了菜。`,
+    `京营哗变了一半，乱兵抢了户部的银库，没抢到银子，放火烧了账房。\n山东、河南加征不下去，流民聚众数万，打出了旗号。宫里的太监开始偷运东西出宫，六宫人心惶惶，有人在夜里哭。`
+  ];
+  const text=`${scenes[Math.min(months,scenes.length)-1]}\n\n国库须回到 ${floor} 万两以上，乱局才能平息。再拖 ${left} 个月，京城就守不住了。${shop?'\n选「再撑一撑」之后，也可以到商城补充银两。':''}`;
+  return {title:months===1?'国库告急 · 欠饷':'国库告急 · 民变四起',danger:true,scene:'bankrupt-warning',text,choices:[
+    {t:'加征赋税，先补欠饷',fullGain:true,preview:`国库 +${rule.levy||150} 万两 · 民心 −12 · 威望 −3`,f:()=>{log('国库告急，帝下诏加征赋税。',1);return `各州县连夜催科，鞭子抽在交不起税的人身上。银子凑上来了，骂声也传遍了乡野。${fx(chg({treasury:rule.levy||150,people:-12,prestige:-3}))}`;}},
+    {t:'变卖内库珍宝，裁减六宫用度',fullGain:true,preview:`国库 +${rule.sell||100} 万两 · 后宫众人心情 −12 · 威望 −2`,f:()=>{harem().forEach(c=>{c.mood=clamp(c.mood-12)});log('国库告急，帝变卖内库珍宝，裁减六宫用度。',1);return `内库的珍宝装了十几车运去当铺，六宫的炭火和衣料一律减半。${fx(chg({treasury:rule.sell||100,prestige:-2}))}\n§后宫众人心情−12`;}},
+    {t:'再撑一撑',f:()=>`户部尚书叩首退下。殿外的天阴得厉害。`}
+  ]};
+}
+function bankruptcyFallText(e){
+  const debt=-e.treasury,em=empress(),others=alive().filter(c=>c!==em&&!c.cold&&!c.gone).length,sons=kidsAlive().filter(k=>k.sex==='m'&&!k.princeSpouseOrigin).length;
+  return `${dateStr()}，国库亏空${debt}万两，京营半年没有发饷。\n乱兵冲进户部，砸开银库，只找到几箱铜钱。各地流民应声而起，叛军不到十日便到了城下。守城的兵丁拿不到饷，自己打开了城门。\n宫里先乱了：太监宫女卷着细软四散奔逃，御膳房起火烧了一夜，没有人去救。${em?`皇后${fullName(em)}换上旧衣，在坤宁宫里自尽。`:''}${others?`后宫${others}人，或殉或散，再无音讯。`:''}${sons?`${sons}位皇子换了百姓衣裳，被老太监带出城去，生死不知。`:''}\n黎明时分，${e.sur}${e.name}登上煤山，在一棵槐树下自缢，享年${e.age}岁。衣襟上写着：“朕非亡国之君，诸臣皆亡国之臣。”`;
+}
 function checkEnd(){
   if(!S||S.over)return;const e=E();
   if(e.health<=0) pushEv(deathEvent('驾崩'));
   else if(e.people<=0) pushEv(deathEvent('民变'));
+  else if(bankruptcyReached()) pushEv(deathEvent('破产'));
 }
 function deathEvent(why){
   S.over=true;const e=E();const yrs=S.year;
   if(journalContentVersion()>=85&&S.scenario?.gen===S.gen&&S.scenario.status==='active'){
-    S.scenario.status='lost';S.scenario.completed=S.turn;S.scenario.failure=why==='民变'?'国祚倾覆':'君主驾崩前未完成目标';
+    S.scenario.status='lost';S.scenario.completed=S.turn;S.scenario.failure=why==='民变'?'国祚倾覆':why==='破产'?'国库破产，社稷倾覆':'君主驾崩前未完成目标';
     log(`【开局剧本】${DYNASTY_SCENARIOS[S.scenario.id]?.name||'本局'}：${S.scenario.failure}。`,1);
   }
   const score=e.prestige*.5+e.people*.5;
-  const shi=score>=80?'圣':score>=68?'文':score>=56?'景':score>=44?'恭':score>=32?'哀':'炀';
+  const shi=why==='破产'?'愍':score>=80?'圣':score>=68?'文':score>=56?'景':score>=44?'恭':score>=32?'哀':'炀';
   const miao=['太祖','太宗','高宗','仁宗','宣宗','英宗','宪宗','孝宗','穆宗','神宗'][S.gen-1]||'睿宗';
   const sons=kidsAlive().filter(k=>k.sex==='m'&&!k.princeSpouseOrigin&&!k.jailed&&!(journalContentVersion()>=85?royalJourneyAway(k):immortalAway(k))&&!storyCastHeirBar(k));let heir=S.heir&&kidById(S.heir);if(!heir||!heir.alive||heir.princeSpouseOrigin||(journalContentVersion()>=85?royalJourneyAway(heir):immortalAway(heir))||storyCastHeirBar(heir))heir=sons.sort((a,b)=>a.born-b.born)[0];
   const nC=S.consorts.length,nK=S.children.length;
-  let t= why==='民变'?`流民四起，叛军攻破京城。${e.era}${cnNum(yrs)}年，${e.sur}${e.name}自缢于宫中，享年${e.age}岁。`
+  let t= why==='破产'?bankruptcyFallText(e)
+    :why==='民变'?`流民四起，叛军攻破京城。${e.era}${cnNum(yrs)}年，${e.sur}${e.name}自缢于宫中，享年${e.age}岁。`
     :`${dateStr()}，${e.sur}${e.name}崩于养心殿，享年${e.age}岁，在位${yrs}年。`;
   t+=`\n庙号${miao}，谥曰「${shi}皇帝」。\n一生册封后妃${nC}人，育皇子${S.children.filter(k=>k.sex==='m'&&!k.princeSpouseOrigin).length}人、公主${S.children.filter(k=>k.sex==='f'&&!k.princeSpouseOrigin).length}人。`;
-  if(why==='民变')heir=null;
-  t+=heir?`\n遗诏：传位于${kidName(heir)}。`:why==='民变'?'\n社稷倾覆，国祚至此而终。':kidsAlive().some(k=>k.sex==='m'&&royalDiplomaticAway(k))?'\n皇子出使在外或尚未获释，未能及时归京继统，由宗室旁支承继大统。':immortalEnabled()&&kidsAlive().some(k=>k.sex==='m'&&immortalAway(k))?'\n皇子长留山门，未列入继统之序，宗室旁支承继大统。山中的亲人仍在人世。':kidsAlive().some(k=>k.sex==='m'&&storyCastHeirBar(k))?'\n礼部依异域皇嗣的储位成例议定，由宗室旁支继统。':'\n膝下无子，宗室旁支入继大统，本朝血脉至此而终。';
+  if(why==='民变'||why==='破产')heir=null;
+  t+=heir?`\n遗诏：传位于${kidName(heir)}。`:why==='民变'||why==='破产'?'\n社稷倾覆，国祚至此而终。':kidsAlive().some(k=>k.sex==='m'&&royalDiplomaticAway(k))?'\n皇子出使在外或尚未获释，未能及时归京继统，由宗室旁支承继大统。':immortalEnabled()&&kidsAlive().some(k=>k.sex==='m'&&immortalAway(k))?'\n皇子长留山门，未列入继统之序，宗室旁支承继大统。山中的亲人仍在人世。':kidsAlive().some(k=>k.sex==='m'&&storyCastHeirBar(k))?'\n礼部依异域皇嗣的储位成例议定，由宗室旁支继统。':'\n膝下无子，宗室旁支入继大统，本朝血脉至此而终。';
   S.history.push({sur:e.sur,name:e.name,era:e.era,yrs,miao,shi});
   log(t.split('\n')[0]+`庙号${miao}。`,1);
   if(regnalChronicleActive())closeRegnalChronicle();
@@ -871,7 +966,7 @@ function deathEvent(why){
   const ch=[];
   if(heir) ch.push(editionReignLimitReached()?editionTrialEndChoice():{t:`传位于${heir.name}，开启新朝`,f:()=>{succeed(heir);return null}});
   ch.push({t:'重新开局',f:()=>{S=null;UI.view='title';return null}},{t:'翻阅起居注',f:()=>{UI.view='log';return null}});
-  return {title:why==='民变'?'国破':'龙驭宾天',por:'emp',text:t,choices:ch};
+  return {title:why==='破产'?'亡国之君':why==='民变'?'国破':'龙驭宾天',por:'emp',...(why==='破产'?{scene:'bankrupt-fall'}:{}),text:t,choices:ch};
 }
 function succeed(h){
   if(editionReignLimitReached()){pushNow(editionTrialEndEvent());return;}

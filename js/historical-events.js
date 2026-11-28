@@ -19,8 +19,9 @@ COURT.push(
  ()=>({title:'宝船',ref:'郑和下西洋（明·永乐）',text:'兵部献议：造六十艘宝船，载二万七千人，出海宣扬国威，联络南洋诸国。',choices:[
    {t:'造船出海（国库-400万两）',f:()=>{log('帝遣宝船下西洋。',1);return `船队走了两年，带回了长颈鹿、象牙和十几国的使臣。${fx(chg({treasury:-400,prestige:10,people:-2}))}`}},
    {t:'海禁为上',outcome:'船图卷了起来。兵部将已经备下的木料交还官仓，折银入库。',f:()=>fx(chg({treasury:30}))}]}),
- ()=>({title:'青苗法',ref:'王安石变法·青苗法（北宋）',text:'新任参知政事上了一道万言书：春荒时官府借钱给农户，秋收后收二分利。既救了百姓，国库也有进项。',choices:[
-   {t:'推行新法',f:()=>chance(.5)?`各地推行得当，百姓称便。${fx(chg({treasury:150,people:4}))}`:`地方官强行摊派，借不借都要还利，民怨沸腾。${fx(chg({treasury:180,people:-8}))}`},
+ // With config reforms, 青苗法 is enacted once and then leaves the pool.
+ ()=>economyRule('reforms')&&S.flags.qingmiao!=null?null:({title:'青苗法',ref:'王安石变法·青苗法（北宋）',text:'新任参知政事上了一道万言书：春荒时官府借钱给农户，秋收后收二分利。既救了百姓，国库也有进项。',choices:[
+   {t:'推行新法',f:()=>(economyRule('reforms')&&(S.flags.qingmiao=S.turn),chance(.5))?`各地推行得当，百姓称便。${fx(chg({treasury:150,people:4}))}`:`地方官强行摊派，借不借都要还利，民怨沸腾。${fx(chg({treasury:180,people:-8}))}`},
    {t:'祖宗之法不可变',f:()=>fx(chg({prestige:-1}))}]}),
  ()=>({title:'文字狱',ref:'“清风不识字，何故乱翻书”（清）',text:'有人告发：翰林院某编修诗中有一句“清风不识字，何故乱翻书”，说是暗讽朝廷。',choices:[
    {t:'严办，以儆效尤',f:()=>{log('翰林编修因诗获罪。',1);return `编修被抄家问斩，从此读书人写诗都要先找人看三遍。${fx(chg({prestige:2,people:-7}))}`}},

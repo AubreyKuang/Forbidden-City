@@ -64,7 +64,7 @@ const TAX_PLANS={regular:{name:'依定额征收',rate:1,people:0},light:{name:'�
 function taxEstimate(){return Math.round((380+E().people*3)*TAX_PLANS[governance().tax].rate);}
 /* 岁贡 is 120 a year. An edition may tie it to the emperor's 威望 (config.economy.tribute:
    base + 威望 × perPrestige, within min..max), so prestige is worth keeping. */
-function tributeRule(){return journalContentVersion()>=165&&typeof PALACE_EDITION!=='undefined'&&PALACE_EDITION.economy&&PALACE_EDITION.economy.tribute||null;}
+function tributeRule(){return economyRule('tribute');}
 function tributeAmount(){
   const t=tributeRule();
   if(!t)return 120;
