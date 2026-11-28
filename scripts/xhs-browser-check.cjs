@@ -179,6 +179,20 @@ async function run(site,{csp,inject='',frames=true,viewport={width:390,height:84
       await evaluate(`A.repaint(${JSON.stringify(extra.shop.repaintedId||0)});await new Promise(r=>setTimeout(r,400));return true;`);await shot(label+'-03d-gallery');
       await evaluate(`A.repaintDone();return true;`);
     }
+    // 金手指包: buy it, summon a guest whose usual entry condition is unmet (高怀璧 needs
+    // a recent victory), and leave the meeting open across the reload below.
+    extra.gold=await evaluate(`
+      const wait=ms=>new Promise(r=>setTimeout(r,ms));const out={};
+      A.go('shop');await wait(300);
+      document.querySelector('[data-onclick="A.shopConfirm(\\'goldFinger\\')"]').click();await wait(80);
+      document.querySelector('[data-onclick="A.shopBuy(\\'goldFinger\\')"]').click();await wait(600);
+      out.flag=S.flags.goldFinger;out.targets=PalaceShop.summonTargets().map(t=>t.id);
+      out.meritReady=fenghuaEntryReady('gaoHuaibi');
+      const id=out.targets.includes('fenghua:gaoHuaibi')?'fenghua:gaoHuaibi':out.targets[0];out.summoned=id;
+      const b=document.querySelector('[data-onclick="A.goldSummon(\\''+id+'\\')"]');out.button=!!b;b.click();await wait(400);
+      out.title=curEv&&curEv.title;out.modal=modalOpen;out.pending=!!S.pendingActions||!!PalaceActions.payload().pendingActions;
+      return out;`);
+    if(shots)await shot(label+'-03e-summon');
     await evaluate(`await SaveManager.getStorage().flush();return true;`);
     const turn=await evaluate(`return S.turn+':'+S.gen;`);
     const before=await evaluate(`return window.__avg.calls.filter(c=>c[0]==='upload').length;`);
@@ -188,7 +202,12 @@ async function run(site,{csp,inject='',frames=true,viewport={width:390,height:84
     extra.reloaded=await evaluate(`return S&&(S.turn+':'+S.gen);`);
     extra.beforeReload=turn;
     await sleep(800);
-    extra.afterReload=await evaluate(`return {repainted:(S.consorts.find(c=>c.id===${JSON.stringify(extra.shop&&extra.shop.repaintedId)})||{}).portraitOverride,owned:['painter','legendsPack'].filter(k=>PalaceShop.owns(k)),silverDone:window.__avg.values.paid_silverSmall};`);
+    extra.goldAfter=await evaluate(`
+      const wait=ms=>new Promise(r=>setTimeout(r,ms));const out={title:curEv&&curEv.title,modal:modalOpen};
+      for(let i=0;i<8&&modalOpen;i++){const b=document.querySelector('#modal [data-onclick="choose(0)"]')||document.querySelector('#modal button');if(!b)break;b.click();await wait(300);}
+      out.metAfter=!PalaceShop.summonTargets().map(t=>t.id).includes(${JSON.stringify((extra.gold&&extra.gold.summoned)||'')});
+      return out;`);
+    extra.afterReload=await evaluate(`return {repainted:(S.consorts.find(c=>c.id===${JSON.stringify(extra.shop&&extra.shop.repaintedId)})||{}).portraitOverride,owned:['painter','legendsPack','goldFinger'].filter(k=>PalaceShop.owns(k)),silverDone:window.__avg.values.paid_silverSmall};`);
     await shot(label+'-04-reloaded');
     extra.storage=await evaluate(`const a=window.__avg;return {profiles:a.profiles.map(p=>[p.position,p.profileName,p.isAuto]),uploads:a.calls.filter(c=>c[0]==='upload').length,largestBody:Math.max(...[...a.cdn.values()].map(v=>new Blob([v]).size)),plays:a.calls.filter(c=>c[0]==='logGamePlay').length,inits:a.calls.filter(c=>c[0]==='init').map(c=>c[1]),trapped:window.__trapped};`);
     extra.uploadsBeforeReload=before;
@@ -316,7 +335,10 @@ async function main(){
     console.log(JSON.stringify({clicks:r.trace.length,problems:r.problems,misses:r.misses,extra:r.extra,lastSteps:r.trace.slice(-3)},null,1));
     const e=r.extra;
     const sh=e.shop||{},ar=e.afterReload||{};
-    const shopOk=sh.menu&&sh.items.length===4&&sh.lockedBefore===false&&sh.silver===500&&sh.owned.length===2&&sh.lockedAfter===true&&sh.repaintButton&&sh.galleryCells>0&&Number.isInteger(sh.repainted)&&ar.repainted===sh.repainted&&ar.owned.length===2&&ar.silverDone==='1';
+    const g=e.gold||{},ga=e.goldAfter||{};
+    const goldOk=g.flag===true&&g.button&&g.modal&&!!g.title&&(g.summoned!=='fenghua:gaoHuaibi'||g.meritReady===false)&&ga.title===g.title&&ga.metAfter===true;
+    if(!goldOk)console.log('gold finger check failed');
+    const shopOk=goldOk&&sh.menu&&sh.items.length===5&&sh.lockedBefore===false&&sh.silver===500&&sh.owned.length===2&&sh.lockedAfter===true&&sh.repaintButton&&sh.galleryCells>0&&Number.isInteger(sh.repainted)&&ar.repainted===sh.repainted&&ar.owned.length===3&&ar.silverDone==='1';
     if(!shopOk)console.log('shop check failed');
     if(!shopOk||r.problems.length||r.misses.length||e.storage.trapped.length||e.reloaded!==e.beforeReload||e.page.kind!=='avg'||!(e.page.topPadLeft>=52)||e.page.lockedCards||!e.saveImage||!e.storage.plays||e.storage.inits.join()!=='production')process.exitCode=1;
     return;
